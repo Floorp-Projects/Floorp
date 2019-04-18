@@ -854,6 +854,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   void StartCancelingTimer();
 
+  nsAString& Id();
+
  private:
   WorkerPrivate(WorkerPrivate* aParent, const nsAString& aScriptURL,
                 bool aIsChromeWorker, WorkerType aWorkerType,
@@ -1135,6 +1137,8 @@ class WorkerPrivate : public RelativeTimeline {
   // This pointer will be null if dom.performance.enable_scheduler_timing is
   // false (default value)
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
+
+  nsString mID;
 };
 
 class AutoSyncLoopHolder {

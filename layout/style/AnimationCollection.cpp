@@ -22,11 +22,15 @@ template <class AnimationType>
   MOZ_ASSERT(!collection->mCalledPropertyDtor, "can't call dtor twice");
   collection->mCalledPropertyDtor = true;
 #endif
+
+  PostRestyleMode postRestyle = collection->mCalledDestroy
+                                    ? PostRestyleMode::IfNeeded
+                                    : PostRestyleMode::Never;
   {
     nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
 
     for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0;) {
-      collection->mAnimations[animIdx]->CancelFromStyle();
+      collection->mAnimations[animIdx]->CancelFromStyle(postRestyle);
     }
   }
   delete collection;

@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-AddonTestUtils.init(this);
+AddonTestUtils.init(this, false);
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 add_task(async function setup() {

@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
+  GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
@@ -335,17 +336,34 @@ ProxyMessenger = {
   async receiveMessage({target, messageName, channelId, sender, recipient, data, responseType}) {
     if (recipient.toNativeApp) {
       let {childId, toNativeApp} = recipient;
+      let context = ParentAPIManager.getContextById(childId);
+
+      if (context.parentMessageManager !== target.messageManager
+            || (sender.envType === "addon_child" && context.envType !== "addon_parent")
+            || (sender.envType === "content_child" && context.envType !== "content_parent")
+            || context.extension.id !== sender.extensionId) {
+        throw new Error("Got message for an unexpected messageManager.");
+      }
+
+      if (AppConstants.platform === "android" && context.extension.hasPermission("geckoViewAddons")) {
+        let connection = new GeckoViewConnection(context, sender, target, toNativeApp);
+        if (messageName == "Extension:Message") {
+          return connection.sendMessage(data);
+        } else if (messageName == "Extension:Connect") {
+          return connection.onConnect(data.portId);
+        }
+        return;
+      }
+
       if (messageName == "Extension:Message") {
-        let context = ParentAPIManager.getContextById(childId);
         return new NativeApp(context, toNativeApp).sendMessage(data);
       }
       if (messageName == "Extension:Connect") {
-        let context = ParentAPIManager.getContextById(childId);
         NativeApp.onConnectNative(context, target.messageManager, data.portId, sender, toNativeApp);
         return true;
       }
       // "Extension:Port:Disconnect" and "Extension:Port:PostMessage" for
-      // native messages are handled by NativeApp.
+      // native messages are handled by NativeApp or GeckoViewConnection.
       return;
     }
 

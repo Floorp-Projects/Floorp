@@ -131,7 +131,7 @@ for (const override of [
      * To receive the proper mobile version instead of the desktop version or
      * a lower grade mobile experience, the UA is spoofed.
      */
-    id: "bug1177298",
+    id: "bug1177298-1",
     platform: "android",
     domain: "weather.yahoo.co.jp",
     bug: "1177298",
@@ -149,7 +149,7 @@ for (const override of [
      * To receive the proper mobile version instead of the desktop version or
      * a lower grade mobile experience, the UA is spoofed.
      */
-    id: "bug1177298",
+    id: "bug1177298-2",
     platform: "android",
     domain: "lohaco.jp",
     bug: "1177298",
@@ -167,7 +167,7 @@ for (const override of [
      * To receive the proper mobile version instead of the desktop version or
      * a lower grade mobile experience, the UA is spoofed.
      */
-    id: "bug1177298",
+    id: "bug1177298-3",
     platform: "android",
     domain: "nhk.or.jp",
     bug: "1177298",
@@ -185,7 +185,7 @@ for (const override of [
      * To receive the proper mobile version instead of the desktop version or
      * a lower grade mobile experience, the UA is spoofed.
      */
-    id: "bug1177298",
+    id: "bug1177298-4",
     platform: "android",
     domain: "uniqlo.com",
     bug: "1177298",

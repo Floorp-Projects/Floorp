@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const Actions = require("./index");
 
 const {
@@ -23,6 +25,7 @@ const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const {
+  CONNECT_RUNTIME_CANCEL,
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
@@ -54,6 +57,7 @@ const {
 } = require("../constants");
 
 const CONNECTION_TIMING_OUT_DELAY = 3000;
+const CONNECTION_CANCEL_DELAY = 13000;
 
 async function getRuntimeIcon(channel) {
   return (channel === "release" || channel === "beta" || channel === "aurora")
@@ -73,12 +77,29 @@ function onMultiE10sUpdated() {
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START, id });
+
+    // The preferences test-connection-timing-out-delay and test-connection-cancel-delay
+    // don't have a default value but will be overridden during our tests.
+    const connectionTimingOutDelay = Services.prefs.getIntPref(
+      "devtools.aboutdebugging.test-connection-timing-out-delay",
+      CONNECTION_TIMING_OUT_DELAY);
+    const connectionCancelDelay = Services.prefs.getIntPref(
+      "devtools.aboutdebugging.test-connection-cancel-delay", CONNECTION_CANCEL_DELAY);
+
     const connectionNotRespondingTimer = setTimeout(() => {
       // If connecting to the runtime takes time over CONNECTION_TIMING_OUT_DELAY,
       // we assume the connection prompt is showing on the runtime, show a dialog
       // to let user know that.
       dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
-    }, CONNECTION_TIMING_OUT_DELAY);
+    }, connectionTimingOutDelay);
+    const connectionCancelTimer = setTimeout(() => {
+      // Connect button of the runtime will be disabled during connection, but the status
+      // continues till the connection was either succeed or failed. This may have a
+      // possibility that the disabling continues unless page reloading, user will not be
+      // able to click again. To avoid this, revert the connect button status after
+      // CONNECTION_CANCEL_DELAY ms.
+      dispatch({ type: CONNECT_RUNTIME_CANCEL, id });
+    }, connectionCancelDelay);
 
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
@@ -148,6 +169,7 @@ function connectRuntime(id) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
     } finally {
       clearTimeout(connectionNotRespondingTimer);
+      clearTimeout(connectionCancelTimer);
     }
   };
 }
@@ -159,6 +181,7 @@ function createThisFirefoxRuntime() {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: false,
       isUnplugged: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
@@ -321,8 +344,10 @@ function updateNetworkRuntimes(locations) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: false,
       isUnplugged: false,
+      isUnknown: false,
       name: location,
       type: RUNTIMES.NETWORK,
     };
@@ -345,6 +370,7 @@ function updateUSBRuntimes(adbRuntimes) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: adbRuntime.isUnavailable,
       isUnplugged: adbRuntime.isUnplugged,
       name: adbRuntime.shortName,
@@ -363,7 +389,7 @@ function updateUSBRuntimes(adbRuntimes) {
 function _isRuntimeValid(runtime, runtimes) {
   const isRuntimeAvailable = runtimes.some(r => r.id === runtime.id);
   const isConnectionValid = runtime.runtimeDetails &&
-    !runtime.runtimeDetails.clientWrapper.isClosed();
+                            !runtime.runtimeDetails.clientWrapper.isClosed();
   return isRuntimeAvailable && isConnectionValid;
 }
 
@@ -374,7 +400,7 @@ function updateRemoteRuntimes(runtimes, type) {
     // Check if the updated remote runtimes should trigger a navigation out of the current
     // runtime page.
     if (currentRuntime && currentRuntime.type === type &&
-      !_isRuntimeValid(currentRuntime, runtimes)) {
+        !_isRuntimeValid(currentRuntime, runtimes)) {
       // Since current remote runtime is invalid, move to this firefox page.
       // This case is considered as followings and so on:
       // * Remove ADB addon
@@ -394,16 +420,19 @@ function updateRemoteRuntimes(runtimes, type) {
     // - isConnectionFailed (set by about:debugging if connection was failed)
     // - isConnectionNotResponding
     //     (set by about:debugging if connection is taking too much time)
+    // - isConnectionTimeout (set by about:debugging if connection was timeout)
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
-        !existingRuntime.runtimeDetails.clientWrapper.isClosed();
+                                !existingRuntime.runtimeDetails.clientWrapper.isClosed();
       runtime.runtimeDetails = isConnectionValid ? existingRuntime.runtimeDetails : null;
       runtime.isConnecting = existingRuntime ? existingRuntime.isConnecting : false;
       runtime.isConnectionFailed =
         existingRuntime ? existingRuntime.isConnectionFailed : false;
       runtime.isConnectionNotResponding =
         existingRuntime ? existingRuntime.isConnectionNotResponding : false;
+      runtime.isConnectionTimeout =
+        existingRuntime ? existingRuntime.isConnectionTimeout : false;
     });
 
     const existingRuntimes = getAllRuntimes(getState().runtimes);

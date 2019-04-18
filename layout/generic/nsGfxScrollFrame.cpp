@@ -2173,35 +2173,42 @@ void ScrollFrameHelper::ScrollToCSSPixels(
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
-  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
-
   if (aSnap == nsIScrollableFrame::DEFAULT) {
     aSnap = DefaultSnapMode();
   }
 
-  nsRect range;
-  if (aSnap != nsIScrollableFrame::ENABLE_SNAP) {
-    range = nsRect(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
-                   2 * halfPixel - 1);
-    // XXX I don't think the following blocks are needed anymore, now that
-    // ScrollToImpl simply tries to scroll an integer number of layer
-    // pixels from the current position
-    if (currentCSSPixels.x == aScrollPosition.x) {
-      pt.x = current.x;
-      range.x = pt.x;
-      range.width = 0;
-    }
-    if (currentCSSPixels.y == aScrollPosition.y) {
-      pt.y = current.y;
-      range.y = pt.y;
-      range.height = 0;
-    }
-  }
   if (aOrigin == nullptr) {
     aOrigin = nsGkAtoms::other;
   }
-  ScrollTo(pt, aMode, aOrigin,
-           aSnap == nsIScrollableFrame::ENABLE_SNAP ? nullptr : &range, aSnap);
+
+  if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
+    if (currentCSSPixels.x == aScrollPosition.x) {
+      pt.x = current.x;
+    }
+    if (currentCSSPixels.y == aScrollPosition.y) {
+      pt.y = current.y;
+    }
+    ScrollTo(pt, aMode, aOrigin, nullptr /* range */, aSnap);
+    return;
+  }
+
+  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
+               2 * halfPixel - 1);
+  // XXX I don't think the following blocks are needed anymore, now that
+  // ScrollToImpl simply tries to scroll an integer number of layer
+  // pixels from the current position
+  if (currentCSSPixels.x == aScrollPosition.x) {
+    pt.x = current.x;
+    range.x = pt.x;
+    range.width = 0;
+  }
+  if (currentCSSPixels.y == aScrollPosition.y) {
+    pt.y = current.y;
+    range.y = pt.y;
+    range.height = 0;
+  }
+  ScrollTo(pt, aMode, aOrigin, &range, aSnap);
   // 'this' might be destroyed here
 }
 
@@ -3739,6 +3746,9 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
       nsDisplayList topLayerList;
       viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
       if (!topLayerList.IsEmpty()) {
+        nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
+            aBuilder, viewportFrame);
+
         // Wrap the whole top layer in a single item with maximum z-index,
         // and append it at the very end, so that it stays at the topmost.
         nsDisplayWrapList* wrapList = MakeDisplayItem<nsDisplayWrapList>(
@@ -4257,36 +4267,43 @@ void ScrollFrameHelper::ScrollByCSSPixels(
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
   nsPoint current = GetScrollPosition();
   nsPoint pt = current + CSSPoint::ToAppUnits(aDelta);
-  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
 
   if (aSnap == nsIScrollableFrame::DEFAULT) {
     aSnap = DefaultSnapMode();
   }
 
-  nsRect range;
-  if (aSnap != nsIScrollableFrame::ENABLE_SNAP) {
-    range = nsRect(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
-                   2 * halfPixel - 1);
-    // XXX I don't think the following blocks are needed anymore, now that
-    // ScrollToImpl simply tries to scroll an integer number of layer
-    // pixels from the current position
-    if (aDelta.x == 0.0f) {
-      pt.x = current.x;
-      range.x = pt.x;
-      range.width = 0;
-    }
-    if (aDelta.y == 0.0f) {
-      pt.y = current.y;
-      range.y = pt.y;
-      range.height = 0;
-    }
-  }
   if (aOrigin == nullptr) {
     aOrigin = nsGkAtoms::other;
   }
-  ScrollToWithOrigin(
-      pt, aMode, aOrigin,
-      aSnap == nsIScrollableFrame::ENABLE_SNAP ? nullptr : &range, aSnap);
+
+  if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
+    if (aDelta.x == 0.0f) {
+      pt.x = current.x;
+    }
+    if (aDelta.y == 0.0f) {
+      pt.y = current.y;
+    }
+    ScrollToWithOrigin(pt, aMode, aOrigin, nullptr /* range */, aSnap);
+    return;
+  }
+
+  nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
+               2 * halfPixel - 1);
+  // XXX I don't think the following blocks are needed anymore, now that
+  // ScrollToImpl simply tries to scroll an integer number of layer
+  // pixels from the current position
+  if (aDelta.x == 0.0f) {
+    pt.x = current.x;
+    range.x = pt.x;
+    range.width = 0;
+  }
+  if (aDelta.y == 0.0f) {
+    pt.y = current.y;
+    range.y = pt.y;
+    range.height = 0;
+  }
+  ScrollToWithOrigin(pt, aMode, aOrigin, &range, aSnap);
   // 'this' might be destroyed here
 }
 

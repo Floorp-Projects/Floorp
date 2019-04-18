@@ -126,6 +126,9 @@ const runtime = {
   // or failing.
   isConnectionNotResponding: PropTypes.bool.isRequired,
 
+  // this flag will be true when the connection was timeout.
+  isConnectionTimeout: PropTypes.bool.isRequired,
+
   // unavailable runtimes are placeholders for devices where the runtime has not been
   // started yet. For instance an ADB device connected without a compatible runtime
   // running.

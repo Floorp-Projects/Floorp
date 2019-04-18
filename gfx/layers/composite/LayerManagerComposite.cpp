@@ -71,6 +71,7 @@
 #include "TextRenderer.h"  // for TextRenderer
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "TreeTraversal.h"  // for ForEachNode
+#include "CompositionRecorder.h"
 
 #ifdef USE_SKIA
 #  include "PaintCounter.h"  // For PaintCounter
@@ -895,6 +896,8 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     return;
   }
 
+  mCompositor->RequestRecordFrames(!!mCompositionRecorder);
+
   ClearLayerFlags(mRoot);
 
   // At this time, it doesn't really matter if these preferences change
@@ -1029,6 +1032,23 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
       &widgetContext, LayoutDeviceIntRect::FromUnknownRect(actualBounds));
 
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(mCompositor);
+
+  if (mCompositionRecorder) {
+    bool hasContentPaint = false;
+    for (CompositionPayload& payload : mPayload) {
+      if (payload.mType == CompositionPayloadType::eContentPaint) {
+        hasContentPaint = true;
+        break;
+      }
+    }
+
+    if (hasContentPaint) {
+      if (RefPtr<RecordedFrame> frame =
+              mCompositor->RecordFrame(TimeStamp::Now())) {
+        mCompositionRecorder->RecordFrame(frame);
+      }
+    }
+  }
 
   mCompositor->NormalDrawingDone();
 

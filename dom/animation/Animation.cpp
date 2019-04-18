@@ -467,9 +467,41 @@ Promise* Animation::GetFinished(ErrorResult& aRv) {
   return mFinished;
 }
 
-void Animation::Cancel() {
-  CancelNoUpdate();
-  PostUpdate();
+// https://drafts.csswg.org/web-animations/#cancel-an-animation
+void Animation::Cancel(PostRestyleMode aPostRestyle) {
+  bool newlyIdle = false;
+
+  if (PlayState() != AnimationPlayState::Idle) {
+    newlyIdle = true;
+
+    ResetPendingTasks();
+
+    if (mFinished) {
+      mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+    ResetFinishedPromise();
+
+    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"),
+                       GetTimelineCurrentTimeAsTimeStamp());
+  }
+
+  StickyTimeDuration activeTime =
+      mEffect ? mEffect->GetComputedTiming().mActiveTime : StickyTimeDuration();
+
+  mHoldTime.SetNull();
+  mStartTime.SetNull();
+
+  // Allow our effect to remove itself from the its target element's EffectSet.
+  UpdateEffect(aPostRestyle);
+
+  if (mTimeline) {
+    mTimeline->RemoveAnimation(this);
+  }
+  MaybeQueueCancelEvent(activeTime);
+
+  if (newlyIdle && aPostRestyle == PostRestyleMode::IfNeeded) {
+    PostUpdate();
+  }
 }
 
 // https://drafts.csswg.org/web-animations/#finish-an-animation
@@ -766,34 +798,6 @@ void Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime) {
   }
 
   mPreviousCurrentTime.SetNull();
-}
-
-// https://drafts.csswg.org/web-animations/#cancel-an-animation
-void Animation::CancelNoUpdate() {
-  if (PlayState() != AnimationPlayState::Idle) {
-    ResetPendingTasks();
-
-    if (mFinished) {
-      mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    }
-    ResetFinishedPromise();
-
-    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"),
-                       GetTimelineCurrentTimeAsTimeStamp());
-  }
-
-  StickyTimeDuration activeTime =
-      mEffect ? mEffect->GetComputedTiming().mActiveTime : StickyTimeDuration();
-
-  mHoldTime.SetNull();
-  mStartTime.SetNull();
-
-  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
-
-  if (mTimeline) {
-    mTimeline->RemoveAnimation(this);
-  }
-  MaybeQueueCancelEvent(activeTime);
 }
 
 bool Animation::ShouldBeSynchronizedWithMainThread(
@@ -1212,7 +1216,7 @@ void Animation::UpdateTiming(SeekFlag aSeekFlag,
   // We call UpdateFinishedState before UpdateEffect because the former
   // can change the current time, which is used by the latter.
   UpdateFinishedState(aSeekFlag, aSyncNotifyFlag);
-  UpdateEffect();
+  UpdateEffect(PostRestyleMode::IfNeeded);
 
   if (mTimeline) {
     mTimeline->NotifyAnimationUpdated(*this);
@@ -1267,13 +1271,13 @@ void Animation::UpdateFinishedState(SeekFlag aSeekFlag,
   mPreviousCurrentTime = GetCurrentTimeAsDuration();
 }
 
-void Animation::UpdateEffect() {
+void Animation::UpdateEffect(PostRestyleMode aPostRestyle) {
   if (mEffect) {
     UpdateRelevance();
 
     KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
     if (keyframeEffect) {
-      keyframeEffect->NotifyAnimationTimingUpdated();
+      keyframeEffect->NotifyAnimationTimingUpdated(aPostRestyle);
     }
   }
 }

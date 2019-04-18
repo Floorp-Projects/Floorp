@@ -19,7 +19,10 @@
 
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"
 
-static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
+#define INTL_UI_DIRECTION_PREF "intl.uidirection"
+
+static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, INTL_UI_DIRECTION_PREF,
+                                       nullptr};
 
 namespace mozilla {
 namespace dom {
@@ -128,7 +131,8 @@ DocumentL10n::Observe(nsISupports* aSubject, const char* aTopic,
   } else {
     MOZ_ASSERT(!strcmp("nsPref:changed", aTopic));
     nsDependentString pref(aData);
-    if (pref.EqualsLiteral(L10N_PSEUDO_PREF)) {
+    if (pref.EqualsLiteral(L10N_PSEUDO_PREF) ||
+        pref.EqualsLiteral(INTL_UI_DIRECTION_PREF)) {
       if (mDOMLocalization) {
         mDOMLocalization->OnChange();
       }

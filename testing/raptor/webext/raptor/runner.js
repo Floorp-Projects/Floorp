@@ -15,6 +15,10 @@
 // to serve out the pages that we want to prototype with. Also
 // update the manifest content 'matches' accordingly
 
+// Supported test types
+const TEST_BENCHMARK = "benchmark";
+const TEST_PAGE_LOAD = "pageload";
+
 // when the browser starts this webext runner will start automatically; we
 // want to give the browser some time (ms) to settle before starting tests
 var postStartupDelay;
@@ -88,7 +92,7 @@ function getTestSettings() {
         // to add a port as it's accessed via proxy and the playback tool
         // however for benchmark tests, their source is served out on a local
         // webserver, so we need to swap in the webserver port into the testURL
-        if (testType == "benchmark") {
+        if (testType == TEST_BENCHMARK) {
           // just replace the '<port>' keyword in the URL with actual benchmarkPort
           testURL = testURL.replace("<port>", benchmarkPort);
         }
@@ -98,7 +102,7 @@ function getTestSettings() {
           testURL = testURL.replace("<host>", host);
         }
 
-        console.log("testURL: " + testURL);
+        console.log(`testURL: ${testURL}`);
 
         results.page = testURL;
         results.type = testType;
@@ -139,34 +143,36 @@ function getTestSettings() {
         if (settings.page_timeout !== undefined) {
           pageTimeout = settings.page_timeout;
         }
-        console.log("using page timeout (ms): " + pageTimeout);
+        console.log(`using page timeout: ${pageTimeout}ms`);
 
-        if (testType == "pageload") {
-          if (settings.measure !== undefined) {
-            if (settings.measure.fnbpaint !== undefined) {
-              getFNBPaint = settings.measure.fnbpaint;
-            }
-            if (settings.measure.dcf !== undefined) {
-              getDCF = settings.measure.dcf;
-            }
-            if (settings.measure.fcp !== undefined) {
-              getFCP = settings.measure.fcp;
-            }
-            if (settings.measure.hero !== undefined) {
-              if (settings.measure.hero.length !== 0) {
-                getHero = true;
+        switch (testType) {
+          case TEST_PAGE_LOAD:
+            if (settings.measure !== undefined) {
+              if (settings.measure.fnbpaint !== undefined) {
+                getFNBPaint = settings.measure.fnbpaint;
               }
+              if (settings.measure.dcf !== undefined) {
+                getDCF = settings.measure.dcf;
+              }
+              if (settings.measure.fcp !== undefined) {
+                getFCP = settings.measure.fcp;
+              }
+              if (settings.measure.hero !== undefined) {
+                if (settings.measure.hero.length !== 0) {
+                  getHero = true;
+                }
+              }
+              if (settings.measure.ttfi !== undefined) {
+                getTTFI = settings.measure.ttfi;
+              }
+              if (settings.measure.loadtime !== undefined) {
+                getLoadTime = settings.measure.loadtime;
+              }
+            } else {
+              console.log("abort: 'measure' key not found in test settings");
+              cleanUp();
             }
-            if (settings.measure.ttfi !== undefined) {
-              getTTFI = settings.measure.ttfi;
-            }
-            if (settings.measure.loadtime !== undefined) {
-              getLoadTime = settings.measure.loadtime;
-            }
-          } else {
-            console.log("abort: 'measure' key not found in test settings");
-            cleanUp();
-          }
+            break;
         }
 
         // write options to storage that our content script needs to know
@@ -197,7 +203,7 @@ function getBrowserInfo() {
       var gettingInfo = browser.runtime.getBrowserInfo();
       gettingInfo.then(function(bi) {
         results.browser = bi.name + " " + bi.version + " " + bi.buildID;
-        console.log("testing on " + results.browser);
+        console.log(`testing on ${results.browser}`);
         resolve();
       });
     } else {
@@ -209,7 +215,7 @@ function getBrowserInfo() {
           break;
         }
       }
-      console.log("testing on " + results.browser);
+      console.log(`testing on ${results.browser}`);
       resolve();
     }
   });
@@ -217,18 +223,18 @@ function getBrowserInfo() {
 
 function testTabCreated(tab) {
   testTabID = tab.id;
-  postToControlServer("status", "opened new empty tab " + testTabID);
+  postToControlServer("status", `opened new empty tab: ${testTabID}`);
   // update raptor browser toolbar icon text, for a visual indicator when debugging
   ext.browserAction.setTitle({title: "Raptor RUNNING"});
 }
 
 function testTabRemoved(tab) {
-  postToControlServer("status", "Removed tab " + testTabID);
+  postToControlServer("status", `Removed tab: ${testTabID}`);
   testTabID = 0;
 }
 
 async function testTabUpdated(tab) {
-  postToControlServer("status", "test tab updated " + testTabID);
+  postToControlServer("status", `test tab updated: ${testTabID}`);
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
@@ -239,40 +245,44 @@ function waitForResult() {
   console.log("awaiting results...");
   return new Promise(resolve => {
     async function checkForResult() {
-      if (testType == "pageload") {
-        if (!isHeroPending &&
+      switch (testType) {
+        case TEST_BENCHMARK:
+          if (!isBenchmarkPending) {
+            cancelTimeoutAlarm("raptor-page-timeout");
+            postToControlServer("status", "results received");
+            if (geckoProfiling) {
+              await getGeckoProfile();
+            }
+            resolve();
+            if (screenCapture) {
+              await getScreenCapture();
+            }
+          } else {
+            setTimeout(checkForResult, 5);
+          }
+          break;
+
+        case TEST_PAGE_LOAD:
+          if (!isHeroPending &&
             !isFNBPaintPending &&
             !isFCPPending &&
             !isDCFPending &&
             !isTTFIPending &&
             !isLoadTimePending) {
-          cancelTimeoutAlarm("raptor-page-timeout");
-          postToControlServer("status", "results received");
-          if (geckoProfiling) {
-            await getGeckoProfile();
-          }
-          if (screenCapture) {
-            await getScreenCapture();
-          }
+            cancelTimeoutAlarm("raptor-page-timeout");
+            postToControlServer("status", "results received");
+            if (geckoProfiling) {
+              await getGeckoProfile();
+            }
+            if (screenCapture) {
+              await getScreenCapture();
+            }
 
-          resolve();
-        } else {
-          setTimeout(checkForResult, 5);
-        }
-      } else if (testType == "benchmark") {
-        if (!isBenchmarkPending) {
-          cancelTimeoutAlarm("raptor-page-timeout");
-          postToControlServer("status", "results received");
-          if (geckoProfiling) {
-            await getGeckoProfile();
+            resolve();
+          } else {
+            setTimeout(checkForResult, 5);
           }
-          resolve();
-          if (screenCapture) {
-            await getScreenCapture();
-          }
-        } else {
-          setTimeout(checkForResult, 5);
-        }
+          break;
       }
     }
     checkForResult();
@@ -349,7 +359,7 @@ async function getGeckoProfile() {
 async function nextCycle() {
   pageCycle++;
   if (pageCycle == 1) {
-    let text = "running " + pageCycles + " pagecycles of " + testURL;
+    let text = `running ${pageCycles} pagecycles of ${testURL}`;
     postToControlServer("status", text);
     // start the profiler if enabled
     if (geckoProfiling) {
@@ -364,36 +374,40 @@ async function nextCycle() {
       // set page timeout alarm
       setTimeoutAlarm("raptor-page-timeout", pageTimeout);
 
-      if (testType == "pageload") {
-        if (getHero) {
-          isHeroPending = true;
-          pendingHeroes = Array.from(settings.measure.hero);
-        }
-        if (getFNBPaint)
-          isFNBPaintPending = true;
-        if (getFCP)
-          isFCPPending = true;
-        if (getDCF)
-          isDCFPending = true;
-        if (getTTFI)
-          isTTFIPending = true;
-        if (getLoadTime)
-          isLoadTimePending = true;
-      } else if (testType == "benchmark") {
-        isBenchmarkPending = true;
+      switch (testType) {
+        case TEST_BENCHMARK:
+          isBenchmarkPending = true;
+          break;
+
+        case TEST_PAGE_LOAD:
+          if (getHero) {
+            isHeroPending = true;
+            pendingHeroes = Array.from(settings.measure.hero);
+          }
+          if (getFNBPaint)
+            isFNBPaintPending = true;
+          if (getFCP)
+            isFCPPending = true;
+          if (getDCF)
+            isDCFPending = true;
+          if (getTTFI)
+            isTTFIPending = true;
+          if (getLoadTime)
+            isLoadTimePending = true;
+          break;
       }
 
       if (reuseTab && testTabID != 0) {
         // close previous test tab
         ext.tabs.remove(testTabID);
-        postToControlServer("status", "closing Tab " + testTabID);
+        postToControlServer("status", `closing Tab: ${testTabID}`);
 
         // open new tab
         ext.tabs.create({url: "about:blank"});
         postToControlServer("status", "Open new tab");
       }
       setTimeout(function() {
-        postToControlServer("status", "update tab " + testTabID);
+        postToControlServer("status", `update tab: ${testTabID}`);
         // update the test page - browse to our test URL
         ext.tabs.update(testTabID, {url: testURL}, testTabUpdated);
         }, newTabDelay);
@@ -404,7 +418,7 @@ async function nextCycle() {
 }
 
 async function timeoutAlarmListener() {
-  console.error("raptor-page-timeout on %s" % testURL);
+  console.error(`raptor-page-timeout on ${testURL}`);
 
   var pendingMetrics = {
     "hero": isHeroPending,
@@ -416,7 +430,9 @@ async function timeoutAlarmListener() {
   };
 
   var msgData = [testName, testURL];
-  if (testType == "pageload") { msgData.push(pendingMetrics); }
+  if (testType == TEST_PAGE_LOAD) {
+    msgData.push(pendingMetrics);
+  }
   postToControlServer("raptor-page-timeout", msgData);
 
   // take a screen capture
@@ -432,8 +448,8 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
   var now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
   var timeout_when = now + timeoutMS;
   ext.alarms.create(timeoutName, { when: timeout_when });
-  console.log("now is " + now + ", set raptor alarm " +
-              timeoutName + " to expire at " + timeout_when);
+  console.log(`now is ${now}, set raptor alarm ${timeoutName} to expire ` +
+    `at ${timeout_when}`);
 }
 
 function cancelTimeoutAlarm(timeoutName) {
@@ -442,68 +458,72 @@ function cancelTimeoutAlarm(timeoutName) {
     var clearAlarm = ext.alarms.clear(timeoutName);
     clearAlarm.then(function(onCleared) {
       if (onCleared) {
-        console.log("cancelled " + timeoutName);
+        console.log(`cancelled raptor alarm ${timeoutName}`);
       } else {
-        console.error("failed to clear " + timeoutName);
+        console.error(`failed to clear raptor alarm ${timeoutName}`);
       }
     });
   } else {
     chrome.alarms.clear(timeoutName, function(wasCleared) {
       if (wasCleared) {
-        console.log("cancelled " + timeoutName);
+        console.log(`cancelled raptor alarm ${timeoutName}`);
       } else {
-        console.error("failed to clear " + timeoutName);
+        console.error(`failed to clear raptor alarm ${timeoutName}`);
       }
     });
   }
 }
 
 function resultListener(request, sender, sendResponse) {
-  console.log("received message from " + sender.tab.url);
+  console.log(`received message from ${sender.tab.url}`);
   if (request.type && request.value) {
-    console.log("result: " + request.type + " " + request.value);
-    sendResponse({text: "confirmed " + request.type});
+    console.log(`result: ${request.type} ${request.value}`);
+    sendResponse({text: `confirmed ${request.type}`});
 
     if (!(request.type in results.measurements))
       results.measurements[request.type] = [];
 
-    if (testType == "pageload") {
-      // a single pageload measurement was received
-      if (request.type.indexOf("hero") > -1) {
+    switch (testType) {
+      case TEST_BENCHMARK:
+        // benchmark results received (all results for that complete benchmark run)
+        console.log("received results from benchmark");
         results.measurements[request.type].push(request.value);
-        var _found = request.type.split("hero:")[1];
-        var index = pendingHeroes.indexOf(_found);
-        if (index > -1) {
-          pendingHeroes.splice(index, 1);
-          if (pendingHeroes.length == 0) {
-            console.log("measured all expected hero elements");
-            isHeroPending = false;
+        isBenchmarkPending = false;
+        break;
+
+      case TEST_PAGE_LOAD:
+        // a single pageload measurement was received
+        if (request.type.indexOf("hero") > -1) {
+          results.measurements[request.type].push(request.value);
+          var _found = request.type.split("hero:")[1];
+          var index = pendingHeroes.indexOf(_found);
+          if (index > -1) {
+            pendingHeroes.splice(index, 1);
+            if (pendingHeroes.length == 0) {
+              console.log("measured all expected hero elements");
+              isHeroPending = false;
+            }
           }
+        } else if (request.type == "fnbpaint") {
+          results.measurements.fnbpaint.push(request.value);
+          isFNBPaintPending = false;
+        } else if (request.type == "dcf") {
+          results.measurements.dcf.push(request.value);
+          isDCFPending = false;
+        } else if (request.type == "ttfi") {
+          results.measurements.ttfi.push(request.value);
+          isTTFIPending = false;
+        } else if (request.type == "fcp") {
+          results.measurements.fcp.push(request.value);
+          isFCPPending = false;
+        } else if (request.type == "loadtime") {
+          results.measurements.loadtime.push(request.value);
+          isLoadTimePending = false;
         }
-      } else if (request.type == "fnbpaint") {
-        results.measurements.fnbpaint.push(request.value);
-        isFNBPaintPending = false;
-      } else if (request.type == "dcf") {
-        results.measurements.dcf.push(request.value);
-        isDCFPending = false;
-      } else if (request.type == "ttfi") {
-        results.measurements.ttfi.push(request.value);
-        isTTFIPending = false;
-      } else if (request.type == "fcp") {
-        results.measurements.fcp.push(request.value);
-        isFCPPending = false;
-      } else if (request.type == "loadtime") {
-        results.measurements.loadtime.push(request.value);
-        isLoadTimePending = false;
-      }
-    } else if (testType == "benchmark") {
-      // benchmark results received (all results for that complete benchmark run)
-      console.log("received results from benchmark");
-      results.measurements[request.type].push(request.value);
-      isBenchmarkPending = false;
+        break;
     }
   } else {
-    console.log("unknown message received from content: " + request);
+    console.log(`unknown message received from content: ${request}`);
   }
 }
 
@@ -513,10 +533,10 @@ function verifyResults() {
   for (var x in results.measurements) {
     let count = results.measurements[x].length;
     if (count == pageCycles) {
-      console.log("have " + count + " results for " + x + ", as expected");
+      console.log(`have ${count} results for ${x}, as expected`);
     } else {
-      console.log("ERROR: expected " + pageCycles + " results for "
-                  + x + " but only have " + count);
+      console.log(`ERROR: expected ${pageCycles} results for ${x} ` +
+                  `but only have ${count}`);
     }
   }
   postToControlServer("results", results);
@@ -525,10 +545,10 @@ function verifyResults() {
 function postToControlServer(msgType, msgData) {
   // if posting a status message, log it to console also
   if (msgType == "status") {
-    console.log("\n" + msgData);
+    console.log(`\n${msgData}`);
   }
   // requires 'control server' running at port 8000 to receive results
-  var url = "http://" + host + ":" + csPort + "/";
+  var url = `http://${host}:${csPort}/`;
   var client = new XMLHttpRequest();
   client.onreadystatechange = function() {
     if (client.readyState == XMLHttpRequest.DONE && client.status == 200) {
@@ -542,7 +562,7 @@ function postToControlServer(msgType, msgData) {
   if (client.readyState == 1) {
     console.log("posting to control server");
     console.log(msgData);
-    var data = { "type": "webext_" + msgType, "data": msgData};
+    var data = { "type": `webext_${msgType}`, "data": msgData};
     client.send(JSON.stringify(data));
   }
   if (msgType == "results") {
@@ -555,19 +575,19 @@ function cleanUp() {
   // close tab unless raptor debug-mode is enabled
   if (debugMode != 1) {
     ext.tabs.remove(testTabID);
-    console.log("closed tab " + testTabID);
+    console.log(`closed tab ${testTabID}`);
   } else {
     console.log("raptor debug-mode enabled, leaving tab open");
   }
-  if (testType == "pageload") {
+
+  if (testType == TEST_PAGE_LOAD) {
     // remove listeners
+    ext.alarms.onAlarm.removeListener(timeoutAlarmListener);
     ext.runtime.onMessage.removeListener(resultListener);
     ext.tabs.onCreated.removeListener(testTabCreated);
-    ext.alarms.onAlarm.removeListener(timeoutAlarmListener);
-    console.log("pageloader test finished");
-  } else if (testType == "benchmark") {
-    console.log("benchmark complete");
   }
+  console.log(`${testType} test finished`);
+
   // if profiling was enabled, stop the profiler - may have already
   // been stopped but stop again here in cleanup in case of timeout
   if (geckoProfiling) {
@@ -580,8 +600,8 @@ function cleanUp() {
 
 function raptorRunner() {
   let config = getTestConfig();
-  console.log("test name is: " + config.test_name);
-  console.log("test settings url is: " + config.test_settings_url);
+  console.log(`test name is: ${config.test_name}`);
+  console.log(`test settings url is: ${config.test_settings_url}`);
   testName = config.test_name;
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
@@ -596,13 +616,11 @@ function raptorRunner() {
 
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {
-      if (testType == "benchmark") {
-        // webkit benchmark type of test
-        console.log("benchmark test start");
-      } else if (testType == "pageload") {
-        // standard pageload test
-        console.log("pageloader test start");
-      }
+      console.log(`${testType} test start`);
+
+      // timeout alarm listener
+      ext.alarms.onAlarm.addListener(timeoutAlarmListener);
+
       // results listener
       ext.runtime.onMessage.addListener(resultListener);
 
@@ -612,12 +630,9 @@ function raptorRunner() {
       // tab remove listener
       ext.tabs.onRemoved.addListener(testTabRemoved);
 
-      // timeout alarm listener
-      ext.alarms.onAlarm.addListener(timeoutAlarmListener);
-
       // create new empty tab, which starts the test; we want to
       // wait some time for the browser to settle before beginning
-      let text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
+      let text = `* pausing ${postStartupDelay / 1000} seconds to let browser settle... *`;
       postToControlServer("status", text);
 
       // setTimeout(function() { nextCycle(); }, postStartupDelay);

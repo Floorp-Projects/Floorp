@@ -265,8 +265,8 @@ ToolSidebar.prototype = {
     const allTabsItem = this._addItemToAllTabsMenu(id, tab, options);
 
     const onIFrameLoaded = (event) => {
-      const doc = event.target;
-      const win = doc.defaultView;
+      const win = iframe.contentWindow;
+      const doc = win.document;
       tab.setAttribute("label", doc.title);
 
       if (allTabsItem) {

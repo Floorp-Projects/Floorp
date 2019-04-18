@@ -409,6 +409,23 @@ async function toggleFilter(doc, filterIndex) {
     expected === filter.classList.contains("checked"), "Filter updated.");
 }
 
+async function findAccessibleFor({
+  toolbox: { walker: domWalker },
+  panel: { walker: a11yWalker },
+}, selector) {
+  const node = await domWalker.querySelector(domWalker.rootNode, selector);
+  return a11yWalker.getAccessibleFor(node);
+}
+
+async function selectAccessibleForNode(env, selector) {
+  const { panel, win } = env;
+  const front = await findAccessibleFor(env, selector);
+  const { EVENTS } = win;
+  const onSelected = win.once(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED);
+  panel.selectAccessible(front);
+  await onSelected;
+}
+
 /**
  * Iterate over setups/tests structure and test the state of the
  * accessibility panel.

@@ -2203,13 +2203,13 @@ void WebRenderBridgeParent::ScheduleGenerateFrame(
 }
 
 void WebRenderBridgeParent::ScheduleGenerateFrame(
-    const nsTArray<wr::RenderRoot>& aRenderRoots) {
+    const wr::RenderRootSet& aRenderRoots) {
   if (mCompositorScheduler) {
-    if (aRenderRoots.IsEmpty()) {
+    if (aRenderRoots.isEmpty()) {
       mAsyncImageManager->SetWillGenerateFrameAllRenderRoots();
     }
-    for (auto renderRoot : aRenderRoots) {
-      mAsyncImageManager->SetWillGenerateFrame(renderRoot);
+    for (auto it = aRenderRoots.begin(); it != aRenderRoots.end(); ++it) {
+      mAsyncImageManager->SetWillGenerateFrame(*it);
     }
     mCompositorScheduler->ScheduleComposition();
   }

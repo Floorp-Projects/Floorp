@@ -2861,7 +2861,7 @@ void nsDisplaySVGText::HitTest(nsDisplayListBuilder* aBuilder,
 
 void nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
-                                                    mDisableSubpixelAA);
+                                                    IsSubpixelAADisabled());
 
   uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 

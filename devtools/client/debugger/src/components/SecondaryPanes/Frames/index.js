@@ -8,12 +8,10 @@ import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
 import PropTypes from "prop-types";
 
-import type { Frame, Why, ThreadContext } from "../../../types";
+import type { Frame, ThreadContext } from "../../../types";
 
 import FrameComponent from "./Frame";
 import Group from "./Group";
-
-import renderWhyPaused from "./WhyPaused";
 
 import actions from "../../../actions";
 import { collapseFrames, formatCopyName } from "../../../utils/pause/frames";
@@ -23,7 +21,6 @@ import {
   getFrameworkGroupingState,
   getSelectedFrame,
   getCallStackFrames,
-  getPauseReason,
   getCurrentThread,
   getThreadContext
 } from "../../../selectors";
@@ -37,7 +34,6 @@ type Props = {
   frames: Array<Frame>,
   frameworkGroupingOn: boolean,
   selectedFrame: Object,
-  why: Why,
   selectFrame: typeof actions.selectFrame,
   toggleBlackBox: Function,
   toggleFrameworkGrouping: Function,
@@ -196,7 +192,7 @@ class Frames extends Component<Props, State> {
   }
 
   render() {
-    const { frames, disableFrameTruncate, why } = this.props;
+    const { frames, disableFrameTruncate } = this.props;
 
     if (!frames) {
       return (
@@ -211,7 +207,6 @@ class Frames extends Component<Props, State> {
     return (
       <div className="pane frames">
         {this.renderFrames(frames)}
-        {renderWhyPaused(why)}
         {disableFrameTruncate ? null : this.renderToggleButton(frames)}
       </div>
     );
@@ -223,7 +218,6 @@ Frames.contextTypes = { l10n: PropTypes.object };
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
   frames: getCallStackFrames(state),
-  why: getPauseReason(state, getCurrentThread(state)),
   frameworkGroupingOn: getFrameworkGroupingState(state),
   selectedFrame: getSelectedFrame(state, getCurrentThread(state))
 });

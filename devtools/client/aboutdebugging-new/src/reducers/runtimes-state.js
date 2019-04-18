@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  CONNECT_RUNTIME_CANCEL,
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
@@ -81,6 +82,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: true,
         isConnectionFailed: false,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
       };
       return _updateRuntimeById(id, updatedState, state);
     }
@@ -90,6 +92,17 @@ function runtimesReducer(state = RuntimesState(), action) {
       return _updateRuntimeById(id, { isConnectionNotResponding: true }, state);
     }
 
+    case CONNECT_RUNTIME_CANCEL: {
+      const { id } = action;
+      const updatedState = {
+        isConnecting: false,
+        isConnectionFailed: false,
+        isConnectionNotResponding: false,
+        isConnectionTimeout: true,
+      };
+      return _updateRuntimeById(id, updatedState, state);
+    }
+
     case CONNECT_RUNTIME_SUCCESS: {
       const { id, runtimeDetails, type } = action.runtime;
       remoteClientManager.setClient(id, type, runtimeDetails.clientWrapper.client);
@@ -97,6 +110,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: false,
         isConnectionFailed: false,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
         runtimeDetails,
       };
       return _updateRuntimeById(id, updatedState, state);
@@ -108,6 +122,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: false,
         isConnectionFailed: true,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
       };
       return _updateRuntimeById(id, updatedState, state);
     }

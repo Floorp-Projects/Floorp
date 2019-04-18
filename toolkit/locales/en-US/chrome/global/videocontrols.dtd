@@ -14,6 +14,10 @@
      accessibility software to clarify what the slider is for. -->
 <!ENTITY volumeScrubber.label "Volume slider">
 
+<!-- LOCALIZATION NOTE (pictureInPicture.label): This string is used as part of
+the Picture-in-Picture video toggle button when the mouse is hovering it. -->
+<!ENTITY pictureInPicture.label "Picture-in-Picture">
+
 <!ENTITY stats.media "Media">
 <!ENTITY stats.size "Size">
 <!ENTITY stats.activity "Activity">

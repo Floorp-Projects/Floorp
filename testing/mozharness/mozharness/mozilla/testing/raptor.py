@@ -64,6 +64,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
          {"dest": "activity",
           "help": "name of the android activity used to launch the android app"
           }],
+        [["--intent"],
+         {"dest": "intent",
+          "help": "name of the android intent action used to launch the android app"
+          }],
         [["--is-release-build"],
          {"action": "store_true",
           "dest": "is_release_build",
@@ -203,10 +207,19 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                             self.app = app
                             break
                 # repeat and get 'activity' argument
-                for activity in ['GeckoViewActivity', 'BrowserTestActivity']:
+                for activity in ['GeckoViewActivity',
+                                 'BrowserTestActivity',
+                                 'browser.BrowserPerformanceTestActivity']:
                     for next_arg in self.config['raptor_cmd_line_args']:
                         if activity in next_arg:
                             self.activity = activity
+                            break
+                # repeat and get 'intent' argument
+                for intent in ['android.intent.action.MAIN',
+                               'android.intent.action.VIEW']:
+                    for next_arg in self.config['raptor_cmd_line_args']:
+                        if intent in next_arg:
+                            self.intent = intent
                             break
         else:
             # raptor initiated in production via mozharness
@@ -281,10 +294,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
                 win: ['chrome-win', 'Chrome.exe']
             },
         }
-
-        if self.app == "chrome":
-            # remove this condition when integrating Google Chrome
-            raise ValueError("Google Chrome not currently integrated!")
 
         if self.app not in available_chromium_dists:
             self.info("Google Chrome or Chromium distributions are not required.")

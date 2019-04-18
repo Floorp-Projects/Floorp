@@ -142,7 +142,7 @@ class CSSTransition final : public Animation {
     MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing transition");
   }
 
-  void CancelFromStyle() override {
+  void CancelFromStyle(PostRestyleMode aPostRestyle) {
     // The animation index to use for compositing will be established when
     // this transition next transitions out of the idle state but we still
     // update it now so that the sort order of this transition remains
@@ -152,10 +152,10 @@ class CSSTransition final : public Animation {
     mAnimationIndex = sNextAnimationIndex++;
     mNeedsNewAnimationIndexWhenRun = true;
 
-    Animation::CancelFromStyle();
+    Animation::Cancel(aPostRestyle);
 
-    // It is important we do this *after* calling CancelFromStyle().
-    // This is because CancelFromStyle() will end up posting a restyle and
+    // It is important we do this *after* calling Cancel().
+    // This is because Cancel() will end up posting a restyle and
     // that restyle should target the *transitions* level of the cascade.
     // However, once we clear the owning element, CascadeLevel() will begin
     // returning CascadeLevel::Animations.
