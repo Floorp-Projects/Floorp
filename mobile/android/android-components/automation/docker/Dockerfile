@@ -14,6 +14,7 @@ ENV ANDROID_BUILD_TOOLS "28.0.3"
 ENV ANDROID_SDK_VERSION "3859397"
 ENV ANDROID_PLATFORM_VERSION "28"
 ENV PROJECT_REPOSITORY "https://github.com/mozilla-mobile/android-components.git"
+ENV GOOGLE_SDK_VERSION 233
 
 ENV LANG en_US.UTF-8
 
@@ -68,6 +69,28 @@ RUN curl -L https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_S
     && mkdir -p /build/android-sdk/.android/ \
     && touch /build/android-sdk/.android/repositories.cfg \
     && yes | sdkmanager --licenses
+ 
+#----------------------------------------------------------------------------------------------------------------------
+#-- Test tools --------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------
+
+RUN mkdir -p /build/test-tools
+
+WORKDIR /build
+
+ENV TEST_TOOLS /build/test-tools
+ENV GOOGLE_SDK_DOWNLOAD ./gcloud.tar.gz
+ENV PATH ${PATH}:${TEST_TOOLS}:${TEST_TOOLS}/google-cloud-sdk/bin
+
+RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GOOGLE_SDK_VERSION}.0.0-linux-x86_64.tar.gz --output ${GOOGLE_SDK_DOWNLOAD} \
+    && tar -xvf ${GOOGLE_SDK_DOWNLOAD} -C ${TEST_TOOLS} \
+    && rm -f ${GOOGLE_SDK_DOWNLOAD} \
+    && ${TEST_TOOLS}/google-cloud-sdk/install.sh --quiet \
+    && ${TEST_TOOLS}/google-cloud-sdk/bin/gcloud --quiet components update
+
+RUN URL_FLANK_BIN=$(curl -s "https://api.github.com/repos/TestArmada/flank/releases/latest" | grep "browser_download_url*" | sed -r "s/\"//g" | cut -d ":" -f3) \
+    && wget "https:${URL_FLANK_BIN}" -O ${TEST_TOOLS}/flank.jar \
+    && chmod +x ${TEST_TOOLS}/flank.jar
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- Project -----------------------------------------------------------------------------------------------------------
@@ -87,4 +110,3 @@ RUN ./gradlew clean \
     && ./gradlew --no-daemon ktlint \
     && ./gradlew --no-daemon docs \
     && ./gradlew clean
-
