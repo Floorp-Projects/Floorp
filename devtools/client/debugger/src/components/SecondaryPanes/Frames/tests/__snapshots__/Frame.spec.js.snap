@@ -37,7 +37,6 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -92,7 +91,6 @@ exports[`Frame getFrameTitle 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -154,7 +152,6 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -210,7 +207,6 @@ exports[`Frame library frame 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -271,7 +267,6 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -326,7 +321,6 @@ exports[`Frame user frame (not selected) 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -387,7 +381,6 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,
@@ -442,7 +435,6 @@ exports[`Frame user frame 1`] = `
           "type": "block",
         },
         "source": Object {
-          "actors": Array [],
           "contentType": "text/javascript",
           "id": "source",
           "introductionType": undefined,

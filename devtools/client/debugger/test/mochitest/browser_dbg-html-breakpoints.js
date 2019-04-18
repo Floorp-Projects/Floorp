@@ -12,6 +12,7 @@ add_task(async function() {
   // about new actors being created in the page content.
   await reload(dbg, "doc-html-breakpoints.html");
 
+  await waitForBreakableLine(dbg, "doc-html-breakpoints.html", 8);
   await addBreakpoint(dbg, "doc-html-breakpoints.html", 8);
 
   // Ensure that the breakpoints get added once the later scripts load.
