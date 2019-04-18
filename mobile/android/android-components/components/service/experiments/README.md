@@ -34,66 +34,95 @@ Note that this library depends on the Glean library, which has to be initialized
 
 ### Updating of experiments
 
-The library updates it's list of experiments automatically and async from Kinto on startup. As this is asynchronous, it will not have immediate effect.
+The library updates it's list of experiments automatically and async from Kinto on library initialization. As this is asynchronous, it will not have immediate effect.
+
+Afterwards, the list of experiments will be updated every 6 hours.
 
 ### Checking if a user is part of an experiment
-In order to check if a user is part of a specific experiment, `Experiments` provides two APIs: a Kotlin-friendly
-`withExperiment` API and a more Java-like `isInExperiment`. In both cases you pass the id of the experiment you want to check:
+In order to check if a user is part of a specific experiment, `Experiments` provides a Kotlin-friendly
+`withExperiment` API. You pass the id of the experiment you want to check and if the client is in the experiment, you get the selected branch name passed:
 
 ```Kotlin
-Experiments.withExperiment("first-experiment-name") {
-    someButton.setBackgroundColor(Color.RED)
+Experiments.withExperiment("button-color-experiment") {
+    when(it) { // `it` is the branch name.
+      "red" -> button.setBackgroundColor(Color.RED)
+      "control" -> button.setBackgroundColor(DEFAULT_COLOR)
+    }
 }
-
-otherButton.isEnabled = Experiments.isInExperiment("first-experiment-name")
 ```
 
-### Filters
-`Experiments` allows you to specify the following filters:
-- Buckets: Every user is in one of 100 buckets (0-99). For every experiment you can set up a min and max value (0 <= min <= max <= 100). The bounds are [min, max).
-    - Both max and min are optional. For example, specifying only min = 0 or only max = 100 includes all users
-    - 0-100 includes all users (as opposed to 0-99)
-    - 0-0 includes no users (as opposed to just bucket 0)
-    - 0-1 includes just bucket 0
-    - Users will always stay in the same bucket. An experiment targeting 0-25 will always target the same 25% of users
-- appId (regex): The app ID (package name)
-- version (regex): The app version
-- country (regex): country, pulled from the default locale
-- lang (regex): language, pulled from the default locale
-- device (regex): Android device name
-- manufacturer (regex): Android device manufacturer
-- *(TBD: region: custom region, different from the one from the default locale (like a GeoIP, or something similar).)*
-- *(TBD: release channel: release channel of the app (alpha, beta, etc))*
+## Experiments format for Kinto
 
-### Experiments format for Kinto
-The provided implementation for Kinto expects the experiments in the following JSON format:
-```json
+The library loads its list of experiments from Kinto. Kinto provides data in the following JSON format:
+```javascript
 {
-    "data":[
+    // The whole list of experiments lives in a Kinto "collection".
+    "data": [
+        // Each experiments data is described in a "record".
         {
-            "name": "",
-            "match":{
-                "lang":"",
-                "appId":"",
-                "regions":[],
-                "country":"",
-                "version":"",
-                "device":"",
-                "manufacturer":"",
-                "region":"",
-                "release_channel":""
-            },
-            "buckets": {
-                "min": "0",
-                "max": "100"
-            },
-            "description":"",
-            "id":"",
+            "id":"some-experiment",
+            // ... 
             "last_modified":1523549895713
-        }
+        },
+        // ... more records.
     ]
 }
 ```
+
+An individual experiment record looks e.g. like this:
+
+```javascript
+{
+  "id": "button-color-expirement",
+  "description": "The button color experiments tests ... per bug XYZ.",
+  // Enroll 50% of the population in the experiment.
+  "buckets": {
+    "start": 0,
+    "count": 500
+  },
+  // Distribute enrolled clients among two branches.
+  "branches": [
+    {
+      "name": "control",
+      "ratio": 1
+    },
+    {
+      "name": "red-button-color",
+      "ratio": 2 // Two thirds of the enrolled clients get red buttons.
+    }
+  ],
+  "match": {
+    "app_id": "^org.mozilla.firefox${'$'}",
+    "locale_language": "eng|zho|deu"
+    // Possibly more matchers...
+  }
+}
+```
+
+### Experiment fields
+The experiments records in Kinto contain the following properties:
+
+| Name                      | Type   | Required | Description                                                                                                                                     | Example                                                        |
+|---------------------------|--------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| id                        | string |     x    | The unique id of the experiment.                                                                                                                | `"login-button-color-test"`                                    |
+| description               | string |     x    | A detailed description of the experiment.                                                                                                       |                                                                |
+| last_modified             | number |     x    | Timestamp of when this experiment was last modified. This is provided by Kinto.                                                                 |                                                                |
+| schema                    | number |     x    | Timestamp of when the schema was last modified. This is provided by Kinto.                                                                      |                                                                |
+| buckets                   | object |     x    | Object containing a bucket range to match users. Every user is in one of 1000 buckets (0-999).                                                  |                                                                |
+|  buckets.start            | number |     x    | The minimum bucket to match.                                                                                                                    |                                                                |
+| buckets.count             | number |     x    | The number of buckets to match from start. If (start + count >= 999), evaluation will wrap around.                                              |                                                                |
+| branches                  | object |     x    | Object containing the parameters for ratios for randomized enrollment into different branches.                                                  |                                                                |
+| branches[i].name          | string |     x    | The name of that branch.                                                                                                                        | `"control"` or `"red-button"`                                  |
+| branches[i].ratio         | number |     x    | The weight to randomly distribute enrolled clients among the branches.                                                                          |                                                                |
+| match                     | object |     x    | Object containing the filter parameters to match specific user groups.                                                                          |                                                                |
+| match.app_id              | regex  |          | The app ID (package name)                                                                                                                       | "^org.mozilla.firefox_beta${'$'}|^org.mozilla.firefox${'$'}" |
+| match.device_manufacturer | regex  |          |                                                                                                                                                 |                                                                |
+| match.device_model        | regex  |          |                                                                                                                                                 |                                                                |
+| match.locale_country      |        |          |                                                                                                                                                 | "USA|DEU"                                                    |
+| match.locale_language     |        |          |                                                                                                                                                 | "eng|zho|deu"                                                |
+| match.app_display_version |        |          |                                                                                                                                                 |                                                                |
+| match.regions             | array  |          | Array of strings. Not currently supported. Custom regions, different from the one from the default locale (like a GeoIP, or something similar). | `["USA", "GBR"]`                                               |
+| match.debug_tags          | array  |          | Array of strings. Debug tags to match only specific client for QA of experiments launch & targeting.                                            | `["john-test-1"]`                                              |
 
 ## License
 
