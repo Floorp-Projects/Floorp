@@ -44,10 +44,11 @@ function getReportCheck(expectReport, expectedError) {
                               function(request, response) {
       if (expectReport) {
         let report = JSON.parse(readDataFromRequest(request));
-        Assert.equal(request.getHeader("Cookie"), "", "No cookie sent.");
+        throws(() => request.getHeader("Cookie"), /NS_ERROR_NOT_AVAILABLE/);
         Assert.equal(report.errorCode, expectedError);
         response.setStatusLine(null, 201, "Created");
         response.write("Created");
+        run_next_test(); // resolve a "test" waiting on this report to be sent/received
       } else {
         do_throw("No report should have been received");
       }
@@ -133,11 +134,13 @@ function run_test() {
   add_connection_test("good.include-subdomains.pinning.example.com",
                       PRErrorCodeSuccess, null,
                       getReportCheck(true, PRErrorCodeSuccess));
+  add_test(() => {}); // add a "test" so we wait for the report to be sent
 
   // Test sending a report where there is an error and a failed cert chain.
   add_connection_test("expired.example.com",
                       SEC_ERROR_EXPIRED_CERTIFICATE, null,
                       getReportCheck(true, SEC_ERROR_EXPIRED_CERTIFICATE));
+  add_test(() => {}); // add a "test" so we wait for the report to be sent
 
   run_next_test();
 }
