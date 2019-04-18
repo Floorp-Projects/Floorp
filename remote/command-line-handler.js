@@ -6,20 +6,13 @@
 
 // Stopgap module until we can land bug 1536862 and remove this temporary file
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-ChromeUtils.defineModuleGetter(this, "RemoteAgent",
-    "chrome://remote/content/RemoteAgent.jsm");
 
 const RemoteAgentFactory = {
   createInstance(outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    // we can't use Preferences.jsm before first paint
-    if (!Services.prefs.getBoolPref("remote.enabled")) {
-      return {};
     }
 
     return RemoteAgent.QueryInterface(iid);
