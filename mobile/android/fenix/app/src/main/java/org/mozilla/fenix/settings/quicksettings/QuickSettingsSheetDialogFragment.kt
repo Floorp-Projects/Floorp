@@ -145,6 +145,14 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
                             }
                         }
                         launch(Dispatchers.Main) {
+                            getManagedEmitter<QuickSettingsChange>().onNext(
+                                QuickSettingsChange.Change(
+                                    url,
+                                    isSecured,
+                                    trackingEnabled,
+                                    sitePermissions
+                                )
+                            )
                             requireContext().components.useCases.sessionUseCases.reload.invoke()
                         }
                     }
