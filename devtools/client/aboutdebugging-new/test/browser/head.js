@@ -88,6 +88,12 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
   await waitUntil(() =>
     devtoolsBrowser.contentWindow.location.href.startsWith("about:devtools-toolbox?"));
 
+  if (!shouldWaitToolboxReady) {
+    // Wait for show error page.
+    await waitUntil(() =>
+      devtoolsBrowser.contentDocument.querySelector(".js-error-page"));
+  }
+
   return {
     devtoolsBrowser,
     devtoolsDocument: devtoolsBrowser.contentDocument,
