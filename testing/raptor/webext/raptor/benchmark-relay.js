@@ -16,7 +16,7 @@ function receiveMessage(event) {
 
 function sendResult(_type, _value) {
   // send result back to background runner script
-  console.log("sending result back to runner: " + _type + " " + _value);
+  console.log(`sending result back to runner: ${_type} ${_value}`);
   chrome.runtime.sendMessage({"type": _type, "value": _value}, function(response) {
     console.log(response.text);
   });

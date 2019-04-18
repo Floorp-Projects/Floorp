@@ -52,6 +52,9 @@ GeckoViewStartup.prototype = {
           module: "resource://gre/modules/GeckoViewWebExtension.jsm",
           ged: [
             "GeckoView:RegisterWebExtension",
+            "GeckoView:UnregisterWebExtension",
+            "GeckoView:WebExtension:PortDisconnect",
+            "GeckoView:WebExtension:PortMessageFromApp",
           ],
         });
 

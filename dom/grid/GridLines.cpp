@@ -209,6 +209,82 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
         lastTrackEdge = aTrackInfo->mPositions[i] + aTrackInfo->mSizes[i];
       }
     }
+
+    // Define a function that gets the mLines index for a given line number.
+    // This is necessary since it's possible for a line number to not be
+    // represented in mLines. If this is the case, then return  -1.
+    const int32_t lineCount = mLines.Length();
+    const uint32_t lastLineNumber = mLines[lineCount - 1]->Number();
+    auto IndexForLineNumber =
+        [lineCount, lastLineNumber](uint32_t aLineNumber) -> int32_t {
+      if (lastLineNumber == 0) {
+        // None of the lines have addressable numbers, so none of them can have
+        // aLineNumber
+        return -1;
+      }
+
+      int32_t possibleIndex = (int32_t)aLineNumber - 1;
+      if (possibleIndex < 0 || possibleIndex > lineCount - 1) {
+        // aLineNumber is not represented in mLines.
+        return -1;
+      }
+
+      return possibleIndex;
+    };
+
+    // Post-processing loop for implicit grid areas.
+    for (const auto& area : aAreas) {
+      if (area->Type() == GridDeclaration::Implicit) {
+        // Get the appropriate indexes for the area's start and end lines as
+        // they are represented in mLines.
+        int32_t startIndex =
+            IndexForLineNumber(aIsRow ? area->RowStart() : area->ColumnStart());
+        int32_t endIndex =
+            IndexForLineNumber(aIsRow ? area->RowEnd() : area->ColumnEnd());
+
+        // If both start and end indexes are -1, then stop here since we cannot
+        // reason about the naming for either lines.
+        if (startIndex < 0 && endIndex < 0) {
+          break;
+        }
+
+        // Get the "-start" and "-end" line names of the grid area.
+        nsAutoString startLineName;
+        area->GetName(startLineName);
+        startLineName.AppendLiteral("-start");
+        nsAutoString endLineName;
+        area->GetName(endLineName);
+        endLineName.AppendLiteral("-end");
+
+        // Get the list of existing line names for the start and end of the grid
+        // area. In the case where one of the start or end indexes are -1, use a
+        // dummy line as a substitute for the start/end line.
+        RefPtr<GridLine> dummyLine = new GridLine(this);
+        RefPtr<GridLine> areaStartLine =
+            startIndex > -1 ? mLines[startIndex] : dummyLine;
+        nsTArray<nsString> startLineNames;
+        areaStartLine->GetNames(startLineNames);
+
+        RefPtr<GridLine> areaEndLine =
+            endIndex > -1 ? mLines[endIndex] : dummyLine;
+        nsTArray<nsString> endLineNames;
+        areaEndLine->GetNames(endLineNames);
+
+        if (startLineNames.Contains(endLineName) ||
+            endLineNames.Contains(startLineName)) {
+          // Add the reversed line names.
+          AddLineNameIfNotPresent(startLineNames, endLineName);
+          AddLineNameIfNotPresent(endLineNames, startLineName);
+        } else {
+          // Add the normal line names.
+          AddLineNameIfNotPresent(startLineNames, startLineName);
+          AddLineNameIfNotPresent(endLineNames, endLineName);
+        }
+
+        areaStartLine->SetLineNames(startLineNames);
+        areaEndLine->SetLineNames(endLineNames);
+      }
+    }
   }
 }
 

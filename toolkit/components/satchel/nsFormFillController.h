@@ -74,6 +74,8 @@ class nsFormFillController final : public nsIFormFillController,
   void StartControllingInput(mozilla::dom::HTMLInputElement* aInput);
   void StopControllingInput();
 
+  bool IsFocusedInputControlled() const;
+
   nsresult HandleFocus(mozilla::dom::HTMLInputElement* aInput);
 
   /**

@@ -150,15 +150,15 @@
                   </hbox>
                   <hbox class="extra-information-label all-third-party-cookies-option" hidden="true">
                     <image class="content-blocking-cookies-image"/>
-                    <label data-l10n-id="content-blocking-third-party-cookies"/>
+                    <label data-l10n-id="content-blocking-all-third-party-cookies"/>
                   </hbox>
                   <hbox class="extra-information-label all-cookies-option" hidden="true">
                     <image class="content-blocking-cookies-image"/>
-                    <label data-l10n-id="content-blocking-third-party-cookies"/>
+                    <label data-l10n-id="content-blocking-all-cookies"/>
                   </hbox>
                   <hbox class="extra-information-label unvisited-cookies-option" hidden="true">
                     <image class="content-blocking-cookies-image"/>
-                    <label data-l10n-id="content-blocking-third-party-cookies"/>
+                    <label data-l10n-id="content-blocking-unvisited-cookies"/>
                   </hbox>
                   <hbox class="extra-information-label third-party-tracking-cookies-option" hidden="true">
                     <image class="content-blocking-cookies-image"/>

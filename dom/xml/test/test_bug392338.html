@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=392338
 /** Test for Bug 392338 **/
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+function runTest() {
   var doc = document.implementation.createDocument("", "", null);
 
   var chromeScriptUrl = SimpleTest.getTestFileURL("file_bug392338.js");
@@ -33,7 +33,11 @@ addLoadEvent(function() {
   });
 
   doc.load(window.location.href);
-});
+}
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.xmldocument.load.enabled", true],
+]}, runTest);
 
 </script>
 </pre>

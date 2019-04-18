@@ -10,13 +10,13 @@ const todo_is = opener.todo_is.bind(opener);
 const info = opener.info.bind(opener);
 const original_finish = opener.SimpleTest.finish;
 const SimpleTest = opener.SimpleTest;
+const add_task = opener.add_task;
 SimpleTest.finish = function finish() {
   self.close();
   original_finish();
 }
 </script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
-<script src="/tests/SimpleTest/AddTask.js"></script>
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <script src="../testcommon.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">

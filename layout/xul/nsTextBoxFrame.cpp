@@ -278,7 +278,7 @@ static void PaintTextShadowCallback(gfxContext* aCtx, nsPoint aShadowOffset,
 void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
                                 gfxContext* aCtx) {
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
-                                                    mDisableSubpixelAA);
+                                                    IsSubpixelAADisabled());
 
   // Paint the text shadow before doing any foreground stuff
   nsRect drawRect =

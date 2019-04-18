@@ -321,7 +321,7 @@ class OSXBootstrapper(BaseBootstrapper):
 
         # Ensure that we can access old versions of packages.  This is
         # idempotent, so no need to avoid repeat invocation.
-        self.check_output([self.brew, 'tap', 'caskroom/versions'])
+        self.check_output([self.brew, 'tap', 'homebrew/cask-versions'])
 
         # Change |brew install cask| into |brew cask install cask|.
         return self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
@@ -388,7 +388,7 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        # Path to java from the caskroom/versions/java8 cask.
+        # Path to java from the homebrew/cask-versions/java8 cask.
         android.suggest_mozconfig('macosx', artifact_mode=artifact_mode,
                                   java_bin_path='/Library/Java/Home/bin')
 

@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=347174
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=347174">Mozilla Bug 347174</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -21,31 +21,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=347174
 /** Test for Bug 347174 **/
 // verifies that documents created with createDocument are born in "complete" state
 // (so we don't accidentally leave them in "interactive" state)
-window.readyStateText = [];
+function runTest() {
+  window.readyStateText = [];
 
-function xmlLoaded(e) {
-    var xslDoc = document.implementation.createDocument("", "test", null);
-    xslDoc.async=false;
-    xslDoc.load("347174transform.xsl");
-      
-    var processor = new XSLTProcessor();
-    processor.importStylesheet(xslDoc);
-    
-    window.transformedDoc = processor.transformToDocument(xmlDoc);
-      
-    showMessage("loaded: " + xmlDoc.readyState);
-    is(xmlDoc.readyState, "complete", "XML document.readyState should be 'complete' after transform");
-    SimpleTest.finish();
+  function xmlLoaded(e) {
+      var xslDoc = document.implementation.createDocument("", "test", null);
+      xslDoc.async=false;
+      xslDoc.load("347174transform.xsl");
+
+      var processor = new XSLTProcessor();
+      processor.importStylesheet(xslDoc);
+
+      window.transformedDoc = processor.transformToDocument(xmlDoc);
+
+      showMessage("loaded: " + xmlDoc.readyState);
+      is(xmlDoc.readyState, "complete", "XML document.readyState should be 'complete' after transform");
+      SimpleTest.finish();
+  }
+
+  var xmlDoc = document.implementation.createDocument("", "test", null);
+  showMessage("createDocument: " + xmlDoc.readyState);
+  is(xmlDoc.readyState, "complete", "created document readyState should be 'complete' before being associated with a parser");
+  xmlDoc.async=true;
+  xmlDoc.addEventListener("load", xmlLoaded);
+  xmlDoc.load("347174transformable.xml");
+  showMessage("load called: " + xmlDoc.readyState);
+  isnot(xmlDoc.readyState, "complete", "created document readyState should not be 'complete' after load called");
 }
-
-var xmlDoc = document.implementation.createDocument("", "test", null);
-showMessage("createDocument: " + xmlDoc.readyState);
-is(xmlDoc.readyState, "complete", "created document readyState should be 'complete' before being associated with a parser");
-xmlDoc.async=true;
-xmlDoc.addEventListener("load", xmlLoaded);
-xmlDoc.load("347174transformable.xml");
-showMessage("load called: " + xmlDoc.readyState);
-isnot(xmlDoc.readyState, "complete", "created document readyState should not be 'complete' after load called");
 
 
 function showMessage(msg) {
@@ -54,6 +56,11 @@ function showMessage(msg) {
 }
 
 SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.xmldocument.async.enabled", true],
+  ["dom.xmldocument.load.enabled", true],
+]}, runTest);
 
 </script>
 </pre>

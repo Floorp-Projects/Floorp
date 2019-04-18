@@ -499,9 +499,7 @@ BookmarksEngine.prototype = {
       }
     }
 
-    let maybeYield = Async.jankYielder();
-    for (let [node, parent] of walkBookmarksRoots(tree)) {
-      await maybeYield();
+    await Async.yieldingForEach(walkBookmarksRoots(tree), ([node, parent]) => {
       let {guid, type: placeType} = node;
       guid = PlacesSyncUtils.bookmarks.guidToRecordId(guid);
       let key;
@@ -520,7 +518,7 @@ BookmarksEngine.prototype = {
           break;
         default:
           this._log.error("Unknown place type: '" + placeType + "'");
-          continue;
+          return;
       }
 
       let parentName = parent.title || "";
@@ -537,7 +535,7 @@ BookmarksEngine.prototype = {
       // Remember this item's GUID for its parent-name/key pair.
       guidMap[parentName][key] = entry;
       this._log.trace("Mapped: " + [parentName, key, entry, entry.hasDupe]);
-    }
+    });
 
     return guidMap;
   },

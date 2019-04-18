@@ -211,6 +211,7 @@ PRCondVar* shutdown_condvar = nullptr;
 bool shutdown_server = false;
 bool do_http_proxy = false;
 bool any_host_spec_config = false;
+bool listen_public = false;
 
 int ClientAuthValueComparator(const void* v1, const void* v2) {
   int a = *static_cast<const client_auth_option*>(v1) -
@@ -889,10 +890,15 @@ void StartServer(void* data) {
   socket_option.value.reuse_addr = true;
   PR_SetSocketOption(listen_socket.get(), &socket_option);
 
-  // Explicitly listen on loopback to avoid users getting errors from their
-  // firewalls about ssltunnel needing permission.
   PRNetAddr server_addr;
-  PR_InitializeNetAddr(PR_IpAddrLoopback, si->listen_port, &server_addr);
+  PRNetAddrValue listen_addr;
+  if (listen_public) {
+    listen_addr = PR_IpAddrAny;
+  } else {
+    listen_addr = PR_IpAddrLoopback;
+  }
+  PR_InitializeNetAddr(listen_addr, si->listen_port, &server_addr);
+
   if (PR_Bind(listen_socket.get(), &server_addr) != PR_SUCCESS) {
     LOG_ERROR(("failed to bind socket on port %d: error %d\n", si->listen_port,
                PR_GetError()));
@@ -1053,11 +1059,20 @@ int processConfigLine(char* configLine) {
     return 0;
   }
 
-  // Configure all listen sockets and port+certificate bindings
+  // Configure all listen sockets and port+certificate bindings.
+  // Listen on the public address if "*" was specified as the listen
+  // address or listen on the loopback address if "127.0.0.1" was
+  // specified. Using loopback will prevent users getting errors from
+  // their firewalls about ssltunnel needing permission. A public
+  // address is required when proxying ssl traffic from a physical or
+  // emulated Android device since it has a different ip address from
+  // the host.
   if (!strcmp(keyword, "listen")) {
     char* hostname = strtok2(_caret, ":", &_caret);
     char* hostportstring = nullptr;
-    if (strcmp(hostname, "*")) {
+    if (!strcmp(hostname, "*")) {
+      listen_public = true;
+    } else if (strcmp(hostname, "127.0.0.1")) {
       any_host_spec_config = true;
       hostportstring = strtok2(_caret, ":", &_caret);
     }
@@ -1072,6 +1087,10 @@ int processConfigLine(char* configLine) {
     }
 
     if (server_info_t* existingServer = findServerInfo(port)) {
+      if (!hostportstring) {
+        LOG_ERROR(("Null hostportstring specified for hostname %s\n", hostname));
+        return 1;
+      }
       char* certnick_copy = new char[strlen(certnick) + 1];
       char* hostname_copy =
           new char[strlen(hostname) + strlen(hostportstring) + 2];

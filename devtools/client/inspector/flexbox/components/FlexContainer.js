@@ -58,7 +58,7 @@ class FlexContainer extends PureComponent {
     });
   }
 
-  componentWillUnMount() {
+  componentWillUnmount() {
     const tooltip = this.props.getSwatchColorPickerTooltip();
     tooltip.removeSwatch(this.swatchEl.current);
   }

@@ -136,18 +136,22 @@ JitExecStatus jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
                                          jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
 
-  BaselineScript* baseline = fp->script()->baselineScript();
-
   EnterJitData data(cx);
-  PCMappingSlotInfo slotInfo;
-  data.jitcode = baseline->nativeCodeForPC(fp->script(), pc, &slotInfo);
-  MOZ_ASSERT(slotInfo.isStackSynced());
 
-  // Skip debug breakpoint/trap handler, the interpreter already handled it
-  // for the current op.
-  if (fp->isDebuggee()) {
-    MOZ_RELEASE_ASSERT(baseline->hasDebugInstrumentation());
-    data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
+  if (fp->script()->hasBaselineScript()) {
+    BaselineScript* baseline = fp->script()->baselineScript();
+    PCMappingSlotInfo slotInfo;
+    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc, &slotInfo);
+    MOZ_ASSERT(slotInfo.isStackSynced());
+
+    // Skip debug breakpoint/trap handler, the interpreter already handled it
+    // for the current op.
+    if (fp->isDebuggee()) {
+      MOZ_RELEASE_ASSERT(baseline->hasDebugInstrumentation());
+      data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
+    }
+  } else {
+    MOZ_CRASH("NYI: Interpreter executeOp code");
   }
 
   // Note: keep this in sync with SetEnterJitData.
@@ -231,51 +235,12 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
 }
 
 static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
-                                        InterpreterFrame* osrFrame) {
+                                        AbstractFramePtr osrSourceFrame) {
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
   // Skip if the script has been disabled.
   if (!script->canBaselineCompile()) {
     return Method_Skipped;
-  }
-
-  if (script->length() > BaselineMaxScriptLength) {
-    return Method_CantCompile;
-  }
-
-  if (script->nslots() > BaselineMaxScriptSlots) {
-    return Method_CantCompile;
-  }
-
-  if (script->hasBaselineScript()) {
-    return Method_Compiled;
-  }
-
-  // Check script warm-up counter.
-  if (script->incWarmUpCounter() <= JitOptions.baselineWarmUpThreshold) {
-    return Method_Skipped;
-  }
-
-  // Check this before calling ensureJitRealmExists, so we're less
-  // likely to report OOM in JSRuntime::createJitRuntime.
-  if (!CanLikelyAllocateMoreExecutableMemory()) {
-    return Method_Skipped;
-  }
-
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
-    return Method_Error;
-  }
-
-  // Frames can be marked as debuggee frames independently of its underlying
-  // script being a debuggee script, e.g., when performing
-  // Debugger.Frame.prototype.eval.
-  return BaselineCompile(cx, script, osrFrame && osrFrame->isDebuggee());
-}
-
-MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
-                                           InterpreterFrame* fp) {
-  if (!CheckFrame(fp)) {
-    return Method_CantCompile;
   }
 
   // This check is needed in the following corner case. Consider a function h,
@@ -298,15 +263,98 @@ MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
   // already compiled in baseline, execution jumps directly into baseline
   // code. This is incorrect as h's baseline script does not have debug
   // instrumentation.
-  if (fp->isDebuggee() &&
-      !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, fp)) {
+  if (osrSourceFrame && osrSourceFrame.isDebuggee() &&
+      !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, osrSourceFrame)) {
     return Method_Error;
   }
 
-  RootedScript script(cx, fp->script());
-  return CanEnterBaselineJIT(cx, script, fp);
+  if (script->length() > BaselineMaxScriptLength) {
+    return Method_CantCompile;
+  }
+
+  if (script->nslots() > BaselineMaxScriptSlots) {
+    return Method_CantCompile;
+  }
+
+  if (script->hasBaselineScript()) {
+    return Method_Compiled;
+  }
+
+  // Check script warm-up counter.
+  if (script->getWarmUpCount() <= JitOptions.baselineWarmUpThreshold) {
+    return Method_Skipped;
+  }
+
+  // Check this before calling ensureJitRealmExists, so we're less
+  // likely to report OOM in JSRuntime::createJitRuntime.
+  if (!CanLikelyAllocateMoreExecutableMemory()) {
+    return Method_Skipped;
+  }
+
+  if (!cx->realm()->ensureJitRealmExists(cx)) {
+    return Method_Error;
+  }
+
+  // Frames can be marked as debuggee frames independently of its underlying
+  // script being a debuggee script, e.g., when performing
+  // Debugger.Frame.prototype.eval.
+  bool forceDebugInstrumentation =
+      osrSourceFrame && osrSourceFrame.isDebuggee();
+  return BaselineCompile(cx, script, forceDebugInstrumentation);
 }
 
+static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
+                                                HandleScript script) {
+  MOZ_ASSERT(jit::IsBaselineEnabled(cx));
+  MOZ_ASSERT(JitOptions.baselineInterpreter);
+
+  if (script->types()) {
+    return Method_Compiled;
+  }
+
+  // Check script warm-up counter.
+  if (script->getWarmUpCount() <=
+      JitOptions.baselineInterpreterWarmUpThreshold) {
+    return Method_Skipped;
+  }
+
+  if (!cx->realm()->ensureJitRealmExists(cx)) {
+    return Method_Error;
+  }
+
+  AutoKeepTypeScripts keepTypes(cx);
+  if (!script->ensureHasTypes(cx, keepTypes)) {
+    return Method_Error;
+  }
+
+  return Method_Compiled;
+}
+
+template <BaselineTier Tier>
+MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
+                                           InterpreterFrame* fp) {
+  if (!CheckFrame(fp)) {
+    return Method_CantCompile;
+  }
+
+  RootedScript script(cx, fp->script());
+  switch (Tier) {
+    case BaselineTier::Interpreter:
+      return CanEnterBaselineInterpreter(cx, script);
+
+    case BaselineTier::Compiler:
+      return CanEnterBaselineJIT(cx, script, fp);
+  }
+
+  MOZ_CRASH("Unexpected tier");
+}
+
+template MethodStatus jit::CanEnterBaselineAtBranch<BaselineTier::Interpreter>(
+    JSContext* cx, InterpreterFrame* fp);
+template MethodStatus jit::CanEnterBaselineAtBranch<BaselineTier::Compiler>(
+    JSContext* cx, InterpreterFrame* fp);
+
+template <BaselineTier Tier>
 MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
   if (state.isInvoke()) {
     InvokeState& invoke = *state.asInvoke();
@@ -323,8 +371,58 @@ MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
   }
 
   RootedScript script(cx, state.script());
-  return CanEnterBaselineJIT(cx, script, /* osrFrame = */ nullptr);
-};
+  switch (Tier) {
+    case BaselineTier::Interpreter:
+      return CanEnterBaselineInterpreter(cx, script);
+
+    case BaselineTier::Compiler:
+      return CanEnterBaselineJIT(cx, script,
+                                 /* osrSourceFrame = */ NullFramePtr());
+  }
+
+  MOZ_CRASH("Unexpected tier");
+}
+
+template MethodStatus jit::CanEnterBaselineMethod<BaselineTier::Interpreter>(
+    JSContext* cx, RunState& state);
+template MethodStatus jit::CanEnterBaselineMethod<BaselineTier::Compiler>(
+    JSContext* cx, RunState& state);
+
+bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
+                                                 BaselineFrame* frame,
+                                                 uint8_t** res) {
+  MOZ_ASSERT(frame->runningInInterpreter());
+
+  RootedScript script(cx, frame->script());
+  jsbytecode* pc = frame->interpreterPC();
+  MOZ_ASSERT(pc == script->code() || *pc == JSOP_LOOPENTRY);
+
+  MethodStatus status = CanEnterBaselineJIT(cx, script,
+                                            /* osrSourceFrame = */ frame);
+  switch (status) {
+    case Method_Error:
+      return false;
+
+    case Method_CantCompile:
+    case Method_Skipped:
+      *res = nullptr;
+      return true;
+
+    case Method_Compiled: {
+      if (*pc == JSOP_LOOPENTRY) {
+        PCMappingSlotInfo slotInfo;
+        *res = script->baselineScript()->nativeCodeForPC(script, pc, &slotInfo);
+        MOZ_ASSERT(slotInfo.isStackSynced());
+      } else {
+        *res = script->baselineScript()->warmUpCheckPrologueAddr();
+      }
+      frame->prepareForBaselineInterpreterToJitOSR();
+      return true;
+    }
+  }
+
+  MOZ_CRASH("Unexpected status");
+}
 
 BaselineScript* BaselineScript::New(
     JSScript* jsscript, uint32_t bailoutPrologueOffset,

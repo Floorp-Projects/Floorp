@@ -4428,7 +4428,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
 
   // IsTopLevelWindowInactive depends on the docshell, so
   // update the cached value now that it's available.
-  UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, false);
   if (!aContainer) {
     return;
   }
@@ -5055,11 +5055,6 @@ void Document::ContentStateChanged(nsIContent* aContent,
              "Someone forgot a scriptblocker");
   NS_DOCUMENT_NOTIFY_OBSERVERS(ContentStateChanged,
                                (this, aContent, aStateMask));
-}
-
-void Document::DocumentStatesChanged(EventStates aStateMask) {
-  UpdateDocumentStates(aStateMask);
-  NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
 }
 
 void Document::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule) {
@@ -8511,8 +8506,10 @@ void Document::ForgetImagePreload(nsIURI* aURI) {
   }
 }
 
-void Document::UpdateDocumentStates(EventStates aChangedStates) {
-  if (aChangedStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
+void Document::UpdateDocumentStates(EventStates aMaybeChangedStates,
+                                    bool aNotify) {
+  EventStates oldStates = mDocumentState;
+  if (aMaybeChangedStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
     if (IsDocumentRightToLeft()) {
       mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
     } else {
@@ -8520,11 +8517,18 @@ void Document::UpdateDocumentStates(EventStates aChangedStates) {
     }
   }
 
-  if (aChangedStates.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+  if (aMaybeChangedStates.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
     if (IsTopLevelWindowInactive()) {
       mDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
     } else {
       mDocumentState &= ~NS_DOCUMENT_STATE_WINDOW_INACTIVE;
+    }
+  }
+
+  EventStates changedStates = oldStates ^ mDocumentState;
+  if (aNotify && !changedStates.IsEmpty()) {
+    if (PresShell* ps = GetObservingPresShell()) {
+      ps->DocumentStatesChanged(changedStates);
     }
   }
 }
@@ -8571,7 +8575,7 @@ void Document::ResetDocumentDirection() {
   if (!(nsContentUtils::IsChromeDoc(this) || IsXULDocument())) {
     return;
   }
-  DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
+  UpdateDocumentStates(NS_DOCUMENT_STATE_RTL_LOCALE, true);
 }
 
 bool Document::IsDocumentRightToLeft() {

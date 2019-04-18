@@ -394,9 +394,6 @@ class UrlbarQueryContext {
    * @param {string} options.searchString
    *   The string the user entered in autocomplete. Could be the empty string
    *   in the case of the user opening the popup via the mouse.
-   * @param {number} options.lastKey
-   *   The last key the user entered (as a key code). Could be null if the search
-   *   was started via the mouse.
    * @param {boolean} options.isPrivate
    *   Set to true if this query was started from a private browsing window.
    * @param {number} options.maxResults
@@ -410,7 +407,6 @@ class UrlbarQueryContext {
     this._checkRequiredOptions(options, [
       "allowAutofill",
       "isPrivate",
-      "lastKey",
       "maxResults",
       "searchString",
     ]);

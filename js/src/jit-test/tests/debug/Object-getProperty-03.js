@@ -6,6 +6,7 @@ load(libdir + "/asserts.js");
 var global = newGlobal({newCompartment: true});
 var dbg = new Debugger();
 var globalDO = dbg.addDebuggee(global);
+var windowProxyDO = globalDO.makeDebuggeeValue(global);
 dbg.onDebuggerStatement = onDebuggerStatement;
 
 global.eval(`
@@ -28,8 +29,8 @@ function onDebuggerStatement(frame) {
     assertEq(sloppy.getProperty("getter", strict).return, strict);
     assertEq(sloppy.getProperty("getter", 1).return.class, "Number");
     assertEq(sloppy.getProperty("getter", true).return.class, "Boolean");
-    assertEq(sloppy.getProperty("getter", null).return, globalDO);
-    assertEq(sloppy.getProperty("getter", undefined).return, globalDO);
+    assertEq(sloppy.getProperty("getter", null).return, windowProxyDO);
+    assertEq(sloppy.getProperty("getter", undefined).return, windowProxyDO);
     assertErrorMessage(() => sloppy.getProperty("getter", {}), TypeError,
                        "Debugger: expected Debugger.Object, got Object");
 

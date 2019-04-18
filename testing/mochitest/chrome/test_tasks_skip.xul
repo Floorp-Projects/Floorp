@@ -4,7 +4,6 @@
 <window title="Test add_task.skip() function"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"/>
   <script type="application/javascript">
     <![CDATA[
 

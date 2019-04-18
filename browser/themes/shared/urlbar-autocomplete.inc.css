@@ -49,27 +49,30 @@
   border-radius: 2px;
   fill: currentColor;
   fill-opacity: .6;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: 6px;
+  padding-bottom: 6px;
   padding-inline-start: calc(var(--item-padding-start, calc(5px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
   padding-inline-end: var(--item-padding-end, 5px);
 }
 
 :root[uidensity=touch] .urlbarView-row {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-top: 11px;
+  padding-bottom: 11px;
 }
 
 .urlbarView-row-inner {
-  overflow: hidden;
-  display: block;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: end;
+  justify-content: start;
 }
 
-.urlbarView-row-inner[overflow] {
+.urlbarView-title[overflow],
+.urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
-.urlbarView-row-inner[overflow]:-moz-locale-dir(rtl) {
+.urlbarView-title[overflow]:-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
 
@@ -87,8 +90,7 @@
 .urlbarView-favicon {
   display: inline-block;
   vertical-align: middle;
-  transform: translateY(-2px);
-  width: 16px;
+  min-width: 16px;
   height: 16px;
   margin-inline-end: @urlbarViewIconMarginEnd@;
   background-repeat: no-repeat;
@@ -117,8 +119,10 @@
   vertical-align: text-bottom;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: calc(var(--item-content-width) * .7 - 2 * (16px + @urlbarViewIconMarginEnd@));
+  /* We prioritize the title over the url, so it can grow freely, but it should
+     never crop the url completely */
+  flex-shrink: 0;
+  max-width: calc(70% - 2 * (16px + @urlbarViewIconMarginEnd@));
 }
 
 .urlbarView-title-separator::before {
@@ -148,6 +152,7 @@
 }
 
 .urlbarView-url {
+  overflow: hidden;
   color: var(--urlbar-popup-url-color);
 }
 
@@ -172,6 +177,7 @@
 
 .urlbarView-tags {
   display: inline-block;
+  overflow: hidden;
 }
 
 .urlbarView-tag {

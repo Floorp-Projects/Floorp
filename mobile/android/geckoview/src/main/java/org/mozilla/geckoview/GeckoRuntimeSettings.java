@@ -78,6 +78,19 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         /**
+         * Path to configuration file from which GeckoView will read configuration options such as
+         * Gecko process arguments, environment variables, and preferences.
+         *
+         * @param configFilePath Configuration file path to read from, or <code>null</code> to use
+         *                       default location <code>/data/local/tmp/$PACKAGE-geckoview-config.yaml</code>.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder configFilePath(final @Nullable String configFilePath) {
+            getSettings().mConfigFilePath = configFilePath;
+            return this;
+        }
+
+        /**
          * Set whether JavaScript support should be enabled.
          *
          * @param flag A flag determining whether JavaScript should be enabled.
@@ -330,6 +343,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /* package */ boolean mUseContentProcess;
     /* package */ String[] mArgs;
     /* package */ Bundle mExtras;
+    /* package */ String mConfigFilePath;
 
     /* package */ ContentBlocking.Settings mContentBlocking;
 
@@ -412,6 +426,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         mScreenHeightOverride = settings.mScreenHeightOverride;
         mCrashHandler = settings.mCrashHandler;
         mRequestedLocales = settings.mRequestedLocales;
+        mConfigFilePath = settings.mConfigFilePath;
     }
 
     /* package */ void commit() {
@@ -444,6 +459,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @NonNull Bundle getExtras() {
         return mExtras;
+    }
+
+    /**
+     * Path to configuration file from which GeckoView will read configuration options such as
+     * Gecko process arguments, environment variables, and preferences.
+     *
+     * @return Path to configuration file from which GeckoView will read configuration options,
+     * or <code>null</code> for default location
+     * <code>/data/local/tmp/$PACKAGE-geckoview-config.yaml</code>.
+     */
+    public @Nullable String getConfigFilePath() {
+        return mConfigFilePath;
     }
 
     /**
@@ -822,6 +849,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         out.writeInt(mScreenHeightOverride);
         out.writeString(mCrashHandler != null ? mCrashHandler.getName() : null);
         out.writeStringArray(mRequestedLocales);
+        out.writeString(mConfigFilePath);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -851,6 +879,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         }
 
         mRequestedLocales = source.createStringArray();
+        mConfigFilePath = source.readString();
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
