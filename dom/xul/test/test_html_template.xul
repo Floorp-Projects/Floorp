@@ -4,7 +4,6 @@
 <window title="HTML template in XUL"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
-  <script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js" />
   <body xmlns="http://www.w3.org/1999/xhtml">
     <template id="template">Content<span>Content</span></template>
 <script type="application/javascript"><![CDATA[
