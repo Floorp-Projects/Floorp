@@ -127,7 +127,6 @@ class Animation : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(cancel);
 
   void Cancel();
-  virtual void CancelFromStyle() { CancelNoUpdate(); }
 
   void Finish(ErrorResult& aRv);
 

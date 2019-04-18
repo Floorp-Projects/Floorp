@@ -467,8 +467,33 @@ Promise* Animation::GetFinished(ErrorResult& aRv) {
   return mFinished;
 }
 
+// https://drafts.csswg.org/web-animations/#cancel-an-animation
 void Animation::Cancel() {
-  CancelNoUpdate();
+  if (PlayState() != AnimationPlayState::Idle) {
+    ResetPendingTasks();
+
+    if (mFinished) {
+      mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+    ResetFinishedPromise();
+
+    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"),
+                       GetTimelineCurrentTimeAsTimeStamp());
+  }
+
+  StickyTimeDuration activeTime =
+      mEffect ? mEffect->GetComputedTiming().mActiveTime : StickyTimeDuration();
+
+  mHoldTime.SetNull();
+  mStartTime.SetNull();
+
+  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+
+  if (mTimeline) {
+    mTimeline->RemoveAnimation(this);
+  }
+  MaybeQueueCancelEvent(activeTime);
+
   PostUpdate();
 }
 
@@ -766,34 +791,6 @@ void Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime) {
   }
 
   mPreviousCurrentTime.SetNull();
-}
-
-// https://drafts.csswg.org/web-animations/#cancel-an-animation
-void Animation::CancelNoUpdate() {
-  if (PlayState() != AnimationPlayState::Idle) {
-    ResetPendingTasks();
-
-    if (mFinished) {
-      mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    }
-    ResetFinishedPromise();
-
-    QueuePlaybackEvent(NS_LITERAL_STRING("cancel"),
-                       GetTimelineCurrentTimeAsTimeStamp());
-  }
-
-  StickyTimeDuration activeTime =
-      mEffect ? mEffect->GetComputedTiming().mActiveTime : StickyTimeDuration();
-
-  mHoldTime.SetNull();
-  mStartTime.SetNull();
-
-  UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
-
-  if (mTimeline) {
-    mTimeline->RemoveAnimation(this);
-  }
-  MaybeQueueCancelEvent(activeTime);
 }
 
 bool Animation::ShouldBeSynchronizedWithMainThread(
