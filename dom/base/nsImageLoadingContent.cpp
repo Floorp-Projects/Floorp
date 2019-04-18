@@ -375,7 +375,7 @@ already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
 
   if (++mOutstandingDecodePromises == 1) {
     MOZ_ASSERT(mDecodePromises.IsEmpty());
-    doc->RegisterActivityObserver(this);
+    doc->RegisterActivityObserver(AsContent()->AsElement());
   }
 
   auto task = MakeRefPtr<QueueDecodeTask>(this, promise, mRequestGeneration);
@@ -501,7 +501,7 @@ void nsImageLoadingContent::MaybeAgeRequestGeneration(nsIURI* aNewURI) {
 void nsImageLoadingContent::MaybeDeregisterActivityObserver() {
   if (mOutstandingDecodePromises == 0) {
     MOZ_ASSERT(mDecodePromises.IsEmpty());
-    GetOurOwnerDoc()->UnregisterActivityObserver(this);
+    GetOurOwnerDoc()->UnregisterActivityObserver(AsContent()->AsElement());
   }
 }
 
