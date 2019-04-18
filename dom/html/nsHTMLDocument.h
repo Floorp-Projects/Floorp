@@ -106,8 +106,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
 
   virtual EditingState GetEditingState() override { return mEditingState; }
 
-  virtual void DisableCookieAccess() override { mDisableCookieAccess = true; }
-
   class nsAutoEditingState {
    public:
     nsAutoEditingState(nsHTMLDocument* aDoc, EditingState aState)
@@ -147,8 +145,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   bool IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffixString,
                                             const nsACString& aOrigHost);
-  void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
-  void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   void NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
                    JS::MutableHandle<JSObject*> aRetval,
                    mozilla::ErrorResult& rv) {
@@ -239,10 +235,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   // A version of WriteCommon used by WebIDL bindings
   void WriteCommon(const mozilla::dom::Sequence<nsString>& aText,
                    bool aNewlineTerminate, mozilla::ErrorResult& rv);
-
-  // This should *ONLY* be used in GetCookie/SetCookie.
-  already_AddRefed<nsIChannel> CreateDummyChannelForCookies(
-      nsIURI* aCodebaseURI);
 
   /**
    * Like IsEditingOn(), but will flush as needed first.
@@ -335,9 +327,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
 
   uint32_t mContentEditableCount;
   EditingState mEditingState;
-
-  // When false, the .cookies property is completely disabled
-  bool mDisableCookieAccess;
 
   /**
    * Temporary flag that is set in EndUpdate() to ignore
