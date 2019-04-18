@@ -46,6 +46,7 @@
         // to remove here.
         // Also, XBL and the customize toolbar code sometimes interact poorly.
         try {
+          this.closest("searchbar")._textboxInitialized = false;
           this.controllers.removeController(this.searchbarController);
         } catch (ex) { }
       ]]></destructor>
