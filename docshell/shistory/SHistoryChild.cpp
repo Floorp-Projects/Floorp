@@ -283,6 +283,12 @@ SHistoryChild::EvictAllContentViewers(void) {
 }
 
 NS_IMETHODIMP_(void)
+SHistoryChild::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry, bool aReplace) {
+  SendEvictContentViewersOrReplaceEntry(
+      static_cast<SHEntryChild*>(aNewSHEntry), aReplace);
+}
+
+NS_IMETHODIMP_(void)
 SHistoryChild::AddToExpirationTracker(nsIBFCacheEntry* aBFEntry) {
   RefPtr<SHEntryChildShared> entry = static_cast<SHEntryChildShared*>(aBFEntry);
   if (mHistoryTracker && entry) {

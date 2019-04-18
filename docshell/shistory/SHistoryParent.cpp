@@ -139,6 +139,15 @@ bool SHistoryParent::RecvEvictAllContentViewers() {
   return NS_SUCCEEDED(mHistory->EvictAllContentViewers());
 }
 
+bool SHistoryParent::RecvEvictContentViewersOrReplaceEntry(
+    PSHEntryParent* aNewSHEntry, bool aReplace) {
+  mHistory->EvictContentViewersOrReplaceEntry(
+      aNewSHEntry ? static_cast<SHEntryParent*>(aNewSHEntry)->mEntry.get()
+                  : nullptr,
+      aReplace);
+  return true;
+}
+
 bool SHistoryParent::RecvRemoveDynEntries(int32_t aIndex,
                                           PSHEntryParent* aEntry) {
   MOZ_ASSERT(Manager() == aEntry->Manager());
