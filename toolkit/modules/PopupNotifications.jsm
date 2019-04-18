@@ -26,9 +26,9 @@ const TELEMETRY_STAT_ACTION_1 = 1;
 const TELEMETRY_STAT_ACTION_2 = 2;
 // const TELEMETRY_STAT_ACTION_3 = 3;
 const TELEMETRY_STAT_ACTION_LAST = 4;
-const TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE = 5;
-const TELEMETRY_STAT_DISMISSAL_LEAVE_PAGE = 6;
-const TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON = 7;
+// const TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE = 5;
+const TELEMETRY_STAT_REMOVAL_LEAVE_PAGE = 6;
+// const TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON = 7;
 const TELEMETRY_STAT_OPEN_SUBMENU = 10;
 const TELEMETRY_STAT_LEARN_MORE = 11;
 
@@ -270,8 +270,21 @@ function PopupNotifications(tabbrowser, panel,
   }, true);
 
   this.window.addEventListener("activate", this, true);
-  if (this.tabbrowser.tabContainer)
+  if (this.tabbrowser.tabContainer) {
     this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
+
+    this.tabbrowser.tabContainer.addEventListener("TabClose", aEvent => {
+      // If the tab was just closed and we have notifications associated with it,
+      // then the notifications were closed because of the tab removal. We need to
+      // record this event in telemetry and fire the removal callback.
+      this.nextRemovalReason = TELEMETRY_STAT_REMOVAL_LEAVE_PAGE;
+      let notifications = this._getNotificationsForBrowser(aEvent.target.linkedBrowser);
+      for (let notification of notifications) {
+        this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
+        notification._recordTelemetryStat(this.nextRemovalReason);
+      }
+    });
+  }
 }
 
 PopupNotifications.prototype = {
@@ -556,6 +569,8 @@ PopupNotifications.prototype = {
 
     let notifications = this._getNotificationsForBrowser(aBrowser);
 
+    this.nextRemovalReason = TELEMETRY_STAT_REMOVAL_LEAVE_PAGE;
+
     notifications = notifications.filter(function(notification) {
       // The persistWhileVisible option allows an open notification to persist
       // across location changes
@@ -581,7 +596,8 @@ PopupNotifications.prototype = {
         return true;
       }
 
-      this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED);
+      notification._recordTelemetryStat(this.nextRemovalReason);
+      this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
       return false;
     }, this);
 
@@ -647,12 +663,6 @@ PopupNotifications.prototype = {
 
       case "TabSelect":
         let self = this;
-        // This is where we could detect if the panel is dismissed if the page
-        // was switched. Unfortunately, the user usually has clicked elsewhere
-        // at this point so this value only gets recorded for programmatic
-        // reasons, like the "Learn More" link being clicked and resulting in a
-        // tab switch.
-        this.nextDismissReason = TELEMETRY_STAT_DISMISSAL_LEAVE_PAGE;
         // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
         // handler results in the popup being hidden again for some reason...
         this.window.setTimeout(function() {
@@ -694,20 +704,20 @@ PopupNotifications.prototype = {
 
     // remove the notification
     notifications.splice(index, 1);
-    this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED);
+    this._fireCallback(notification, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
   },
 
   /**
    * Dismisses the notification without removing it.
+   *
+   * @param {Event} the event associated with the user interaction that
+   *                caused the dismissal
+   * @param {boolean} whether to disable persistent status. Normally,
+   *                  persistent prompts can not be dismissed. You can
+   *                  use this argument to force dismissal.
    */
-  _dismiss: function PopupNotifications_dismiss(event, telemetryReason) {
-    if (telemetryReason) {
-      this.nextDismissReason = telemetryReason;
-    }
-
-    // An explicitly dismissed persistent notification effectively becomes
-    // non-persistent.
-    if (event && telemetryReason == TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON) {
+  _dismiss: function PopupNotifications_dismiss(event, disablePersistent = false) {
+    if (disablePersistent) {
       let notificationEl = getNotificationFromElement(event.target);
       if (notificationEl) {
         notificationEl.notification.options.persistent = false;
@@ -826,7 +836,7 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute("oncommand", "PopupNotifications._onCommand(event);");
-      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
+      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, true);`);
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
@@ -1051,10 +1061,6 @@ PopupNotifications.prototype = {
         // Remember the time the notification was shown for the security delay.
         n.timeShown = this.window.performance.now();
       }, this);
-
-      // Unless the panel closing is triggered by a specific known code path,
-      // the next reason will be that the user clicked elsewhere.
-      this.nextDismissReason = TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE;
 
       let target = this.panel;
       if (target.parentNode) {
@@ -1370,7 +1376,7 @@ PopupNotifications.prototype = {
         n.owner = this;
         return true;
       }
-      other._fireCallback(n, NOTIFICATION_EVENT_REMOVED);
+      other._fireCallback(n, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
       return false;
     });
 
@@ -1380,7 +1386,7 @@ PopupNotifications.prototype = {
         n.owner = other;
         return true;
       }
-      this._fireCallback(n, NOTIFICATION_EVENT_REMOVED);
+      this._fireCallback(n, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
       return false;
     });
 
@@ -1450,11 +1456,11 @@ PopupNotifications.prototype = {
         notificationObj._recordTelemetry("POPUP_NOTIFICATION_DISMISSAL_MS",
                                          timeSinceShown);
       }
-      notificationObj._recordTelemetryStat(this.nextDismissReason);
 
       // Do not mark the notification as dismissed or fire NOTIFICATION_EVENT_DISMISSED
       // if the notification is removed.
       if (notificationObj.options.removeOnDismissal) {
+        notificationObj._recordTelemetryStat(this.nextRemovalReason);
         this._remove(notificationObj);
       } else {
         notificationObj.dismissed = true;
