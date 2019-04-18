@@ -65,36 +65,55 @@ class DecodedStreamGraphListener {
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aAudioTrackID)
                                 : nullptr),
-        mAudioTrackID(aAudioTrackID),
         mAudioEndedHolder(std::move(aAudioEndedHolder)),
         mVideoTrackListener(IsTrackIDExplicit(aVideoTrackID)
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aVideoTrackID)
                                 : nullptr),
-        mVideoTrackID(aVideoTrackID),
         mVideoEndedHolder(std::move(aVideoEndedHolder)),
         mStream(aStream),
+        mAudioTrackID(aAudioTrackID),
+        mVideoTrackID(aVideoTrackID),
         mAbstractMainThread(aMainThread) {
     MOZ_ASSERT(NS_IsMainThread());
     if (mAudioTrackListener) {
       mStream->AddTrackListener(mAudioTrackListener, mAudioTrackID);
     } else {
+      mAudioEnded = true;
       mAudioEndedHolder.ResolveIfExists(true, __func__);
     }
 
     if (mVideoTrackListener) {
       mStream->AddTrackListener(mVideoTrackListener, mVideoTrackID);
     } else {
+      mVideoEnded = true;
       mVideoEndedHolder.ResolveIfExists(true, __func__);
     }
   }
 
   void NotifyOutput(TrackID aTrackID, StreamTime aCurrentTrackTime) {
-    if (aTrackID != mAudioTrackID && mAudioTrackID != TRACK_NONE) {
-      // Only audio playout drives the clock forward, if present.
+    if (aTrackID != mAudioTrackID && mAudioTrackID != TRACK_NONE &&
+        !mAudioEnded) {
+      // Only audio playout drives the clock forward, if present and live.
       return;
     }
+    MOZ_ASSERT_IF(aTrackID == mAudioTrackID, !mAudioEnded);
+    MOZ_ASSERT_IF(aTrackID == mVideoTrackID, !mVideoEnded);
     mOnOutput.Notify(mStream->StreamTimeToMicroseconds(aCurrentTrackTime));
+  }
+
+  void NotifyEnded(TrackID aTrackID) {
+    if (aTrackID == mAudioTrackID) {
+      mAudioEnded = true;
+    } else if (aTrackID == mVideoTrackID) {
+      mVideoEnded = true;
+    } else {
+      MOZ_CRASH("Unexpected TrackID");
+    }
+    mStream->Graph()->DispatchToMainThreadStableState(
+        NewRunnableMethod<mozilla::TrackID>(
+            "DecodedStreamGraphListener::DoNotifyTrackEnded", this,
+            &DecodedStreamGraphListener::DoNotifyTrackEnded, aTrackID));
   }
 
   TrackID AudioTrackID() const { return mAudioTrackID; }
@@ -142,13 +161,18 @@ class DecodedStreamGraphListener {
 
   // Main thread only.
   RefPtr<DecodedStreamTrackListener> mAudioTrackListener;
-  const TrackID mAudioTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mAudioEndedHolder;
   RefPtr<DecodedStreamTrackListener> mVideoTrackListener;
-  const TrackID mVideoTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mVideoEndedHolder;
 
+  // Graph thread only.
+  bool mAudioEnded = false;
+  bool mVideoEnded = false;
+
+  // Any thread.
   const RefPtr<SourceMediaStream> mStream;
+  const TrackID mAudioTrackID;
+  const TrackID mVideoTrackID;
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
@@ -163,10 +187,7 @@ void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
 }
 
 void DecodedStreamTrackListener::NotifyEnded() {
-  mStream->Graph()->DispatchToMainThreadStableState(
-      NewRunnableMethod<mozilla::TrackID>(
-          "DecodedStreamGraphListener::DoNotifyTrackEnded", mGraphListener,
-          &DecodedStreamGraphListener::DoNotifyTrackEnded, mTrackID));
+  mGraphListener->NotifyEnded(mTrackID);
 }
 
 /*
