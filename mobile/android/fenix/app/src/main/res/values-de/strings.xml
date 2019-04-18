@@ -63,7 +63,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scannen</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Tastenkombinationen</string>
+    <string name="search_shortcuts_button">Shortcuts</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Suchmaschinen-Einstellungen</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -77,7 +77,7 @@
 
     <!-- Preferences -->
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Grundlagen</string>
+    <string name="preferences_category_basics">Grundeinstellungen</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Über</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -143,7 +143,7 @@
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">Synchronisierung fehlgeschlagen. Zuletzt synchronisiert: nie</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">Letzte Synchronisation: %@</string>
+    <string name="sync_last_synced_summary">Letzte Synchronisation: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Letzte Synchronisierung: nie</string>
 
@@ -153,9 +153,9 @@
     <!-- Preference switch for crash reporter -->
     <string name="preferences_crash_reporter">Absturzmelder</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla-Location-Service</string>
+    <string name="preferences_mozilla_location_service">Mozilla-Standortdienst</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Gesundheitsbericht zu %s</string>
+    <string name="preferences_fenix_health_report">%s-Statusbericht</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->

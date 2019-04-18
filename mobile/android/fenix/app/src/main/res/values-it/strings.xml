@@ -259,6 +259,9 @@
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Passa a schermo intero</string>
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title">Siamo spiacenti, %1$s non può ripristinare la scheda</string>
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">Cerca di ripristinare o chiudi la seguente scheda.</string>
     <!-- Send crash report checkbox text on the tab crash page -->

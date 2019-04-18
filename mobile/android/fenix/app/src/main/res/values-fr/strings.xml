@@ -201,6 +201,8 @@
     <string name="library_title">Bibliothèque</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Paramètres</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menu des éléments d’historique</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Fermer</string>
 
