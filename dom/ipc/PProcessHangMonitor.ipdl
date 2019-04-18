@@ -5,6 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// ParamTraits stuff for nsITabParent::NavigationType
+include "mozilla/dom/TabMessageUtils.h";
+using nsITabParent::NavigationType from "nsITabParent.h";
+
 using base::ProcessId from "base/process.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
@@ -44,7 +48,9 @@ child:
 
   async PaintWhileInterruptingJS(TabId tabId, bool forceRepaint, LayersObserverEpoch aEpoch);
 
-  async CancelContentJSExecutionIfRunning(TabId tabId);
+  async CancelContentJSExecutionIfRunning(
+      TabId tabId, NavigationType aNavigationType,
+      int32_t aNavigationIndex, nsCString? aNavigationURI);
 };
 
 } // namespace mozilla

@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Event.h"
 #include "nsExceptionHandler.h"
+#include "nsITabParent.h"
 #include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
 
@@ -64,6 +65,13 @@ struct ParamTraits<UIStateChangeType>
     : public ContiguousEnumSerializer<UIStateChangeType,
                                       UIStateChangeType_NoChange,
                                       UIStateChangeType_Invalid> {};
+
+template <>
+struct ParamTraits<nsITabParent::NavigationType>
+    : public ContiguousEnumSerializerInclusive<
+          nsITabParent::NavigationType,
+          nsITabParent::NavigationType::NAVIGATE_BACK,
+          nsITabParent::NavigationType::NAVIGATE_URL> {};
 
 }  // namespace IPC
 

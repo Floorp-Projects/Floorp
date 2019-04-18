@@ -40,6 +40,7 @@
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
@@ -5249,12 +5250,14 @@ void ContentParent::PaintTabWhileInterruptingJS(
                                                aForceRepaint, aEpoch);
 }
 
-void ContentParent::CancelContentJSExecutionIfRunning(TabParent* aTabParent) {
+void ContentParent::CancelContentJSExecutionIfRunning(
+    TabParent* aTabParent, nsITabParent::NavigationType aNavigationType,
+    const CancelContentJSOptions& aCancelContentJSOptions) {
   if (!mHangMonitorActor) {
     return;
   }
-  ProcessHangMonitor::CancelContentJSExecutionIfRunning(mHangMonitorActor,
-                                                        aTabParent);
+  ProcessHangMonitor::CancelContentJSExecutionIfRunning(
+      mHangMonitorActor, aTabParent, aNavigationType, aCancelContentJSOptions);
 }
 
 void ContentParent::UpdateCookieStatus(nsIChannel* aChannel) {
