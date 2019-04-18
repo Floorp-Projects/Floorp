@@ -43,8 +43,6 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine, Flags aFlags,
   mSuspendedCount = !(mIsActive || mFlags & EXTERNAL_OUTPUT);
   mChannelCountMode = ChannelCountMode::Max;
   mChannelInterpretation = ChannelInterpretation::Speakers;
-  // AudioNodes are always producing data
-  mHasCurrentData = true;
   mLastChunks.SetLength(std::max(uint16_t(1), mEngine->OutputCount()));
   MOZ_COUNT_CTOR(AudioNodeStream);
 }
