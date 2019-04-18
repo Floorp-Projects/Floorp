@@ -743,6 +743,18 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
+    if (!mData->mLastVideoImage) {
+      // We have video, but the video queue finished before we received any
+      // frame. We insert a black frame to progress any consuming
+      // HTMLMediaElement. This mirrors the behavior of VideoSink.
+
+      // Force a frame - can be null
+      compensateEOS = true;
+      // Force frame to be black
+      aIsSameOrigin = false;
+      // Override the frame's size (will be 0x0 otherwise)
+      mData->mLastVideoImageDisplaySize = mInfo.mVideo.mDisplay;
+    }
     if (compensateEOS) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
