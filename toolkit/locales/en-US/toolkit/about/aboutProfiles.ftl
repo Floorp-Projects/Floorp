@@ -9,11 +9,6 @@ profiles-create = Create a New Profile
 profiles-restart-title = Restart
 profiles-restart-in-safe-mode = Restart with Add-ons Disabled…
 profiles-restart-normal = Restart normally…
-profiles-conflict = Another copy of { -brand-product-name } has made changes to profiles. You must restart { -brand-short-name } before making more changes.
-profiles-flush-fail-title = Changes not saved
-profiles-flush-conflict = { profiles-conflict }
-profiles-flush-failed = An unexpected error has prevented your changes from being saved.
-profiles-flush-restart-button = Restart { -brand-short-name }
 
 # Variables:
 #   $name (String) - Name of the profile
