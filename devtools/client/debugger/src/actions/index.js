@@ -16,6 +16,7 @@ import * as projectTextSearch from "./project-text-search";
 import * as quickOpen from "./quick-open";
 import * as sourceTree from "./source-tree";
 import * as sources from "./sources";
+import * as sourcesActors from "./source-actors";
 import * as tabs from "./tabs";
 import * as debuggee from "./debuggee";
 import * as toolbox from "./toolbox";
@@ -27,6 +28,7 @@ export default {
   ...expressions,
   ...eventListeners,
   ...sources,
+  ...sourcesActors,
   ...tabs,
   ...pause,
   ...ui,
