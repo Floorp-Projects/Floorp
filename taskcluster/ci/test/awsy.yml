@@ -38,6 +38,7 @@ awsy-tp6:
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
+            .*-ccov/.*: []  # don't run on coverage
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
