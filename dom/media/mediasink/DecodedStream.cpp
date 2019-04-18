@@ -758,8 +758,10 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
     if (compensateEOS) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
+      // We round the nr of microseconds up, because WriteVideoToMediaStream
+      // will round the conversion from microseconds to StreamTime down.
       auto deviation =
-          FromMicroseconds(sourceStream->StreamTimeToMicroseconds(1));
+          FromMicroseconds(sourceStream->StreamTimeToMicroseconds(1) + 1);
       WriteVideoToMediaStream(
           sourceStream, mData->mLastVideoImage, mData->mNextVideoTime,
           mData->mNextVideoTime + deviation, mData->mLastVideoImageDisplaySize,
