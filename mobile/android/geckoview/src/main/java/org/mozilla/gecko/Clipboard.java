@@ -11,6 +11,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 public final class Clipboard {
     private final static String HTML_MIME = "text/html";
@@ -68,10 +69,11 @@ public final class Clipboard {
      *
      * @param context application context
      * @param text a plain text to set to clipboard
+     * @return true if copy is successful.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public static void setText(final Context context, final CharSequence text) {
-        setData(context, ClipData.newPlainText("text", text));
+    public static boolean setText(final Context context, final CharSequence text) {
+        return setData(context, ClipData.newPlainText("text", text));
     }
 
     /**
@@ -80,10 +82,11 @@ public final class Clipboard {
      * @param context application context
      * @param text a plain text to set to clipboard
      * @param html a html text to set to clipboard
+     * @return true if copy is successful.
      */
     @WrapForJNI(calledFrom = "gecko")
-    public static void setHTML(final Context context, final CharSequence text, final String htmlText) {
-        setData(context, ClipData.newHtmlText("html", text, htmlText));
+    public static boolean setHTML(final Context context, final CharSequence text, final String htmlText) {
+        return setData(context, ClipData.newHtmlText("html", text, htmlText));
     }
 
     /**
@@ -91,8 +94,9 @@ public final class Clipboard {
      *
      * @param context application context
      * @param clipData a {@link android.content.ClipData} to set to clipboard
+     * @return true if copy is successful.
      */
-    private static void setData(final Context context, final ClipData clipData) {
+    private static boolean setData(final Context context, final ClipData clipData) {
         // In API Level 11 and above, CLIPBOARD_SERVICE returns android.content.ClipboardManager,
         // which is a subclass of android.text.ClipboardManager.
         final ClipboardManager cm = (ClipboardManager)
@@ -103,7 +107,12 @@ public final class Clipboard {
             // Bug 776223: This is a Samsung clipboard bug. setPrimaryClip() can throw
             // a NullPointerException if Samsung's /data/clipboard directory is full.
             // Fortunately, the text is still successfully copied to the clipboard.
+        } catch (RuntimeException e) {
+            // If clipData is too large, TransactionTooLargeException occurs.
+            Log.e(LOGTAG, "Couldn't set clip data to clipboard", e);
+            return false;
         }
+        return true;
     }
 
     /**
