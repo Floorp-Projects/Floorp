@@ -601,7 +601,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
             that->mInputProcessing, StartStopMessage::Stop));
         CubebUtils::AudioDeviceID deviceID = that->mDeviceInfo->DeviceID();
         Maybe<CubebUtils::AudioDeviceID> id = Some(deviceID);
-        stream->CloseAudioInput(id, that->mInputProcessing);
+        stream->CloseAudioInput(id);
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
