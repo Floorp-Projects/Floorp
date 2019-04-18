@@ -1918,7 +1918,7 @@ LocaleData.prototype = {
       // Substitutions are case-insensitive, so normalize all of their names
       // to lower-case.
       let placeholders = new Map();
-      if (isPlainObject(msg.placeholders)) {
+      if ("placeholders" in msg && isPlainObject(msg.placeholders)) {
         for (let key of Object.keys(msg.placeholders)) {
           placeholders.set(key.toLowerCase(), msg.placeholders[key]);
         }

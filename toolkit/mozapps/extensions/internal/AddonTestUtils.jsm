@@ -263,6 +263,7 @@ var AddonTestUtils = {
   appInfo: null,
   addonStartup: null,
   collectedTelemetryEvents: [],
+  testScope: null,
   testUnpacked: false,
   useRealCertChecks: false,
   usePrivilegedSignatures: true,
