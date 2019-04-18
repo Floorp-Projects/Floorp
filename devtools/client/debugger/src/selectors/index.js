@@ -20,7 +20,9 @@ export * from "../reducers/source-tree";
 
 export {
   getSourceActor,
-  getSourceActorsForThread,
+  hasSourceActor,
+  getSourceActors,
+  getSourceActorsForThread
 } from "../reducers/source-actors";
 
 export {
