@@ -175,47 +175,30 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvAsyncMessage(const nsString& aActorName,
-                                               const nsString& aMessageName,
-                                               const ClonedMessageData& aData) {
+IPCResult WindowGlobalParent::RecvRawMessage(
+    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForParent(aData);
-  HandleAsyncMessage(aActorName, aMessageName, data);
+  ReceiveRawMessage(aMeta, std::move(data));
   return IPC_OK();
 }
 
-void WindowGlobalParent::HandleAsyncMessage(const nsString& aActorName,
-                                            const nsString& aMessageName,
-                                            StructuredCloneData& aData) {
-  if (NS_WARN_IF(mIPCClosed)) {
-    return;
+void WindowGlobalParent::ReceiveRawMessage(
+    const JSWindowActorMessageMeta& aMeta, StructuredCloneData&& aData) {
+  RefPtr<JSWindowActorParent> actor =
+      GetActor(aMeta.actorName(), IgnoreErrors());
+  if (actor) {
+    actor->ReceiveRawMessage(aMeta, std::move(aData));
   }
-
-  // Force creation of the actor if it hasn't been created yet.
-  IgnoredErrorResult rv;
-  RefPtr<JSWindowActorParent> actor = GetActor(aActorName, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
-
-  // Get the JSObject for the named actor.
-  JS::RootedObject obj(RootingCx(), actor->GetWrapper());
-  if (NS_WARN_IF(!obj)) {
-    // If we don't have a preserved wrapper, there won't be any receiver
-    // method to call.
-    return;
-  }
-
-  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
-  if (NS_WARN_IF(!actorSvc)) {
-    return;
-  }
-
-  actorSvc->ReceiveMessage(actor, obj, aMessageName, aData);
 }
 
 already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
     const nsAString& aName, ErrorResult& aRv) {
+  if (mIPCClosed) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   // Check if this actor has already been created, and return it if it has.
   if (mWindowActors.Contains(aName)) {
     return do_AddRef(mWindowActors.GetWeak(aName));
@@ -315,6 +298,13 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCClosed = true;
   gWindowGlobalParentsById->Remove(mInnerWindowId);
   mBrowsingContext->UnregisterWindowGlobal(this);
+
+  // Destroy our JSWindowActors, and reject any pending queries.
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorParent> windowActors;
+  mWindowActors.SwapElements(windowActors);
+  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+  }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
