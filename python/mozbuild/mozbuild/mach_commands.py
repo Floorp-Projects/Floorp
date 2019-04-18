@@ -1678,6 +1678,7 @@ class StaticAnalysis(MachCommandBase):
     _format_ignore_file = '.clang-format-ignore'
 
     _clang_tidy_config = None
+    _cov_config = None
 
     @Command('static-analysis', category='testing',
              description='Run C++ static analysis checks')
@@ -1826,10 +1827,14 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         commands_list = self.get_files_with_commands(source)
-
         if len(commands_list) == 0:
             self.log(logging.INFO, 'static-analysis', {}, 'There are no files that need to be analyzed.')
             return 0
+
+        # Load the configuration file for coverity static-analysis
+        # For the moment we store only the reliability index for each checker
+        # as the rest is managed on the https://github.com/mozilla/release-services side.
+        self._cov_config = self._get_cov_config()
 
         rc = self.setup_coverity()
         if rc != 0:
@@ -1880,6 +1885,29 @@ class StaticAnalysis(MachCommandBase):
         if output is not None:
             self.dump_cov_artifact(cov_result, output)
 
+    def get_reliability_index_for_cov_checker(self, checker_name):
+        if self._cov_config is None:
+            self.log(logging.INFO, 'static-analysis', {}, 'Coverity config file not found, '
+                'using default-value \'reliablity\' = medium. for checker {}'.format(checker_name))
+            return 'medium'
+
+        checkers = self._cov_config['coverity_checkers']
+        if checker_name not in checkers:
+            self.log(logging.INFO, 'static-analysis', {},
+                'Coverity checker {} not found to determine reliability index. '
+                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+            return 'medium'
+
+        if 'reliability' not in checkers[checker_name]:
+            # This checker doesn't have a reliability index
+            self.log(logging.INFO, 'static-analysis', {},
+                'Coverity checker {} doesn\'t have a reliability index set, '
+                'field \'reliability is missing\', please cosinder adding it. '
+                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+            return 'medium'
+
+        return checkers[checker_name]['reliability']
+
     def dump_cov_artifact(self, cov_results, output):
         # Parse Coverity json into structured issues
         with open(cov_results) as f:
@@ -1898,6 +1926,7 @@ class StaticAnalysis(MachCommandBase):
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
                     'message': event_path['eventDescription'],
+                    'reliability': self.get_reliability_index_for_cov_checker(issue['checkerName']),
                     'extra': {
                         'category': issue['checkerProperties']['category'],
                         'stateOnServer': issue['stateOnServer'],
@@ -2210,7 +2239,18 @@ class StaticAnalysis(MachCommandBase):
             config = yaml.safe_load(file_handler)
         except Exception:
             print('Looks like config.yaml is not valid, we are going to use default'
-                  ' values for the rest of the analysis.')
+                  ' values for the rest of the analysis for clang-tidy.')
+            return None
+        return config
+
+    def _get_cov_config(self):
+        try:
+            file_handler = open(mozpath.join(self.topsrcdir, "tools", "coverity", "config.yaml"))
+            config = yaml.safe_load(file_handler)
+        except Exception:
+            self.log(logging.ERROR, 'static-analysis', {},
+                    'Looks like config.yaml is not valid, we are going to use default'
+                    ' values for the rest of the analysis for coverity.')
             return None
         return config
 
