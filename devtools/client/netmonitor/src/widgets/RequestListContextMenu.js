@@ -18,7 +18,6 @@ loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
 loader.lazyRequireGetter(this, "saveAs", "devtools/client/shared/file-saver", true);
 loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
 loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
-loader.lazyRequireGetter(this, "openRequestInTab", "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab", true);
 loader.lazyRequireGetter(this, "HarMenuUtils", "devtools/client/netmonitor/src/har/har-menu-utils", true);
 
 class RequestListContextMenu {
@@ -49,6 +48,7 @@ class RequestListContextMenu {
       cloneSelectedRequest,
       sendCustomRequest,
       openStatistics,
+      openRequestInTab,
     } = this.props;
     const menu = [];
     const copySubmenu = [];
@@ -202,7 +202,7 @@ class RequestListContextMenu {
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
-      click: () => this.openRequestInTab(id, url, requestHeaders, requestPostData),
+      click: () => openRequestInTab(id, url, requestHeaders, requestPostData),
     });
 
     menu.push({
@@ -235,19 +235,6 @@ class RequestListContextMenu {
       screenX: event.screenX,
       screenY: event.screenY,
     });
-  }
-
-  /**
-   * Opens selected item in a new tab.
-   */
-  async openRequestInTab(id, url, requestHeaders, requestPostData) {
-    requestHeaders = requestHeaders ||
-      await this.props.connector.requestData(id, "requestHeaders");
-
-    requestPostData = requestPostData ||
-      await this.props.connector.requestData(id, "requestPostData");
-
-    openRequestInTab(url, requestHeaders, requestPostData);
   }
 
   /**
