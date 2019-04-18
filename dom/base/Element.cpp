@@ -1912,14 +1912,15 @@ void Element::UnbindFromTree(bool aDeep, bool aNullParent) {
   }
 #endif
 
-  ClearInDocument();
-  SetIsConnected(false);
-
   // Ensure that CSS transitions don't continue on an element at a
   // different place in the tree (even if reinserted before next
   // animation refresh).
+  //
   // We need to delete the properties while we're still in document
-  // (if we were in document).
+  // (if we were in document) so that they can look up the
+  // PendingAnimationTracker on the document and remove their animations,
+  // and so they can find their pres context for dispatching cancel events.
+  //
   // FIXME (Bug 522599): Need a test for this.
   if (MayHaveAnimations()) {
     DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
@@ -1939,6 +1940,9 @@ void Element::UnbindFromTree(bool aDeep, bool aNullParent) {
       }
     }
   }
+
+  ClearInDocument();
+  SetIsConnected(false);
 
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
