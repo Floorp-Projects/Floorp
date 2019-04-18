@@ -16,9 +16,10 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val intent = intent?.let { Intent(it) } ?: Intent()
+
         components.sessionIntentProcessor.process(intent)
 
-        val intent = Intent(intent)
         if (CustomTabConfig.isCustomTabIntent(SafeIntent(intent))) {
             intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
         } else {
