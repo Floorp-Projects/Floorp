@@ -1508,6 +1508,9 @@ class alignas(uintptr_t) SharedScriptData final {
   uint32_t noteLength_ = 0;
   uint32_t natoms_ = 0;
 
+  // NOTE: The raw bytes of this structure are used for hashing so use explicit
+  // padding values as needed for predicatable results across compilers.
+
   // Size to allocate
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
                                uint32_t natoms);
@@ -1532,12 +1535,28 @@ class alignas(uintptr_t) SharedScriptData final {
     }
   }
 
-  size_t dataLength() const {
-    return (natoms_ * sizeof(GCPtrAtom)) + codeLength_ + noteLength_;
+  // Span over all raw bytes in this struct and its trailing arrays.
+  mozilla::Span<const uint8_t> allocSpan() const {
+    size_t allocSize = AllocationSize(codeLength_, noteLength_, natoms_);
+    return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
-  const uint8_t* data() const {
-    return reinterpret_cast<const uint8_t*>(this + 1);
+
+  // Span over all immutable bytes in allocation. This excludes part of
+  // structure used for reference counting and is the basis of how we
+  // de-duplicate data.
+  mozilla::Span<const uint8_t> immutableData() const {
+    // The refCount_ must be first field of structure.
+    static_assert(offsetof(SharedScriptData, refCount_) == 0,
+                  "refCount_ must be at start of SharedScriptData");
+    constexpr size_t dataOffset = sizeof(refCount_);
+
+    static_assert(offsetof(SharedScriptData, natoms_) + sizeof(natoms_) ==
+                      sizeof(SharedScriptData),
+                  "SharedScriptData should not have padding after last field");
+
+    return allocSpan().From(dataOffset);
   }
+
   uint8_t* data() { return reinterpret_cast<uint8_t*>(this + 1); }
 
   uint32_t natoms() const { return natoms_; }
@@ -1580,38 +1599,25 @@ class alignas(uintptr_t) SharedScriptData final {
   SharedScriptData& operator=(const SharedScriptData&) = delete;
 };
 
-struct ScriptBytecodeHasher {
-  class Lookup {
-    friend struct ScriptBytecodeHasher;
+// Two SharedScriptData instances may be de-duplicated if they have the same
+// data in their immutableData() span. This Hasher enables that comparison.
+struct SharedScriptDataHasher {
+  using Lookup = RefPtr<SharedScriptData>;
 
-    RefPtr<SharedScriptData> scriptData;
-    HashNumber hash;
+  static HashNumber hash(const Lookup& l) {
+    mozilla::Span<const uint8_t> immutableData = l->immutableData();
+    return mozilla::HashBytes(immutableData.data(), immutableData.size());
+  }
 
-   public:
-    explicit Lookup(SharedScriptData* data);
-  };
-
-  static HashNumber hash(const Lookup& l) { return l.hash; }
   static bool match(SharedScriptData* entry, const Lookup& lookup) {
-    const SharedScriptData* data = lookup.scriptData;
-    if (entry->natoms() != data->natoms()) {
-      return false;
-    }
-    if (entry->codeLength() != data->codeLength()) {
-      return false;
-    }
-    if (entry->numNotes() != data->numNotes()) {
-      return false;
-    }
-    return mozilla::ArrayEqual<uint8_t>(entry->data(), data->data(),
-                                        data->dataLength());
+    return entry->immutableData() == lookup->immutableData();
   }
 };
 
 class AutoLockScriptData;
 
 using ScriptDataTable =
-    HashSet<SharedScriptData*, ScriptBytecodeHasher, SystemAllocPolicy>;
+    HashSet<SharedScriptData*, SharedScriptDataHasher, SystemAllocPolicy>;
 
 extern void SweepScriptData(JSRuntime* rt);
 
