@@ -144,10 +144,10 @@ import java.util.Map;
     private WebExtension.MessageDelegate getDelegate(
             final String nativeApp, final WebExtension.MessageSender sender,
             final EventCallback callback) {
-        final WebExtension.MessageDelegateInfo delegateInfo =
+        final WebExtension.MessageDelegate delegate =
                 sender.webExtension.messageDelegates.get(nativeApp);
 
-        if (delegateInfo == null) {
+        if (delegate == null) {
             callback.sendError("Native app not found or this WebExtension does not have permissions.");
             return null;
         }
@@ -158,7 +158,7 @@ import java.util.Map;
             return null;
         }
 
-        return delegateInfo.delegate;
+        return delegate;
     }
 
     private void connect(final String nativeApp, final long portId, final EventCallback callback,
