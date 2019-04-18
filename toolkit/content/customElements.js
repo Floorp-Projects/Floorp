@@ -564,8 +564,8 @@ MozElements.BaseControlMixin = Base => {
     }
   }
 
-  Base.implementCustomInterface(BaseControl,
-                                [Ci.nsIDOMXULControlElement]);
+  MozXULElement.implementCustomInterface(BaseControl,
+                                         [Ci.nsIDOMXULControlElement]);
   return BaseControl;
 };
 MozElements.BaseControl = MozElements.BaseControlMixin(MozXULElement);
@@ -622,6 +622,7 @@ const BaseTextMixin = Base => class BaseText extends MozElements.BaseControlMixi
     return this.labelElement ? this.labelElement.accessKey : this.getAttribute("accesskey");
   }
 };
+MozElements.BaseTextMixin = BaseTextMixin;
 MozElements.BaseText = BaseTextMixin(MozXULElement);
 
 // Attach the base class to the window so other scripts can use it:
