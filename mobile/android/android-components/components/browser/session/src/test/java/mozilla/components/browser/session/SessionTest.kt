@@ -155,7 +155,6 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
         session.register(observer)
 
-        session.searchTerms = ""
         session.searchTerms = "mozilla android"
 
         assertEquals("mozilla android", session.searchTerms)

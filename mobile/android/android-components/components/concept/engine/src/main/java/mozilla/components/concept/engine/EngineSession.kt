@@ -51,6 +51,14 @@ abstract class EngineSession(
         fun onMediaRemoved(media: Media) = Unit
         fun onCrashStateChange(crashed: Boolean) = Unit
 
+        /**
+         * The engine received a request to load a request.
+         *
+         * @param triggeredByUserInteraction True if and only if the request was triggered by user interaction (e.g.
+         * clicking on a link on a website).
+         */
+        fun onLoadRequest(triggeredByUserInteraction: Boolean) = Unit
+
         @Suppress("LongParameterList")
         fun onExternalResource(
             url: String,

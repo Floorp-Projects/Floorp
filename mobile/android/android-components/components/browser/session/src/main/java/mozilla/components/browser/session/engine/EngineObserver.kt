@@ -16,18 +16,29 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 
+/**
+ * [EngineSession.Observer] implementation responsible to update the state of a [Session] from the events coming out of
+ * an [EngineSession].
+ */
 @Suppress("TooManyFunctions")
-internal class EngineObserver(val session: Session) : EngineSession.Observer {
+internal class EngineObserver(
+    val session: Session
+) : EngineSession.Observer {
 
     override fun onLocationChange(url: String) {
         session.url = url
-        session.searchTerms = ""
         session.title = ""
         session.icon = null
 
         session.contentPermissionRequest.consume {
             it.reject()
             true
+        }
+    }
+
+    override fun onLoadRequest(triggeredByUserInteraction: Boolean) {
+        if (triggeredByUserInteraction) {
+            session.searchTerms = ""
         }
     }
 

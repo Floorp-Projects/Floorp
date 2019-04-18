@@ -186,10 +186,12 @@ class Session(
     }
 
     /**
-     * The currently / last used search terms.
+     * The currently / last used search terms (or an empty string).
      */
     var searchTerms: String by Delegates.observable("") {
-        _, _, new -> notifyObservers { if (!new.isEmpty()) onSearch(this@Session, new) }
+        _, _, new -> notifyObservers {
+            onSearch(this@Session, new)
+        }
     }
 
     /**

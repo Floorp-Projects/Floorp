@@ -1516,6 +1516,55 @@ class GeckoEngineSessionTest {
         verify(engineSession.geckoSession, never()).restoreState(any())
     }
 
+    @Test
+    fun `onLoadRequest will notify observers if request was not intercepted`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var triggeredByUser: Boolean? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLoadRequest(triggeredByUserInteraction: Boolean) {
+                triggeredByUser = triggeredByUserInteraction
+            }
+        })
+
+        navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = true))
+
+        assertNotNull(triggeredByUser)
+        assertTrue(triggeredByUser!!)
+
+        navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = false))
+
+        assertFalse(triggeredByUser!!)
+    }
+
+    @Test
+    fun `onLoadRequest will not notify observers if request was intercepted`() {
+        val defaultSettings = DefaultSettings(requestInterceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
+            }
+        })
+
+        val engineSession = GeckoEngineSession(
+            mock(), geckoSessionProvider = geckoSessionProvider, defaultSettings = defaultSettings)
+
+        captureDelegates()
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        navigationDelegate.value.onLoadRequest(
+            mock(), mockLoadRequest("sample:about", triggeredByUserInteraction = true))
+
+        verify(observer, never()).onLoadRequest(anyBoolean())
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock(GeckoSession::class.java)
         `when`(session.settings).thenReturn(
@@ -1523,7 +1572,16 @@ class GeckoEngineSessionTest {
         return session
     }
 
-    private fun mockLoadRequest(uri: String, target: Int = 0): GeckoSession.NavigationDelegate.LoadRequest {
+    private fun mockLoadRequest(
+        uri: String,
+        target: Int = 0,
+        triggeredByUserInteraction: Boolean = false
+    ): GeckoSession.NavigationDelegate.LoadRequest {
+        var flags = 0
+        if (triggeredByUserInteraction) {
+            flags = flags or 0x800000
+        }
+
         val constructor = GeckoSession.NavigationDelegate.LoadRequest::class.java.getDeclaredConstructor(
             String::class.java,
             String::class.java,
@@ -1531,6 +1589,6 @@ class GeckoEngineSessionTest {
             Int::class.java)
         constructor.isAccessible = true
 
-        return constructor.newInstance(uri, uri, target, 0)
+        return constructor.newInstance(uri, uri, target, flags)
     }
 }

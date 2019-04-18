@@ -31,6 +31,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
@@ -438,6 +439,65 @@ class SystemEngineSessionTest {
         assertEquals("<h1>Hello World</h1>", response!!.data.bufferedReader().use { it.readText() })
         assertEquals("text/html", response.mimeType)
         assertEquals("UTF-8", response.encoding)
+    }
+
+    @Test
+    fun `shouldInterceptRequest notifies observers if request was not intercepted`() {
+        val request: WebResourceRequest = mock()
+        doReturn(true).`when`(request).isForMainFrame
+        doReturn(true).`when`(request).hasGesture()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val engineSession = SystemEngineSession(getApplicationContext())
+        engineSession.webView = spy(engineSession.webView)
+        val engineView = SystemEngineView(getApplicationContext())
+        engineView.render(engineSession)
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
+
+        verify(observer).onLoadRequest(true)
+
+        val redirect: WebResourceRequest = mock()
+        doReturn(true).`when`(redirect).isForMainFrame
+        doReturn(false).`when`(redirect).hasGesture()
+        doReturn(Uri.parse("sample:about")).`when`(redirect).url
+
+        engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, redirect)
+
+        verify(observer).onLoadRequest(false)
+    }
+
+    @Test
+    fun `shouldInterceptRequest does not notify observers if request was intercepted`() {
+        val request: WebResourceRequest = mock()
+        doReturn(true).`when`(request).isForMainFrame
+        doReturn(true).`when`(request).hasGesture()
+        doReturn(Uri.parse("sample:about")).`when`(request).url
+
+        val interceptor = object : RequestInterceptor {
+            override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
+                return RequestInterceptor.InterceptionResponse.Content("<h1>Hello World</h1>")
+            }
+        }
+
+        val defaultSettings = DefaultSettings(requestInterceptor = interceptor)
+
+        val engineSession = SystemEngineSession(getApplicationContext(), defaultSettings)
+        engineSession.webView = spy(engineSession.webView)
+        val engineView = SystemEngineView(getApplicationContext())
+        engineView.render(engineSession)
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        engineSession.webView.webViewClient.shouldInterceptRequest(
+            engineSession.webView,
+            request)
+
+        verify(observer, never()).onLoadRequest(anyBoolean())
     }
 
     @Test

@@ -404,4 +404,37 @@ class EngineObserverTest {
 
         assertNull(session.icon)
     }
+
+    @Test
+    fun `onLocationChange does not clear search terms`() {
+        val session = Session("https://www.mozilla.org")
+        session.searchTerms = "Mozilla Foundation"
+
+        val observer = EngineObserver(session)
+        observer.onLocationChange("https://www.mozilla.org/en-US/")
+
+        assertEquals("Mozilla Foundation", session.searchTerms)
+    }
+
+    @Test
+    fun `onLoadRequest clears search terms for requests triggered by user interaction`() {
+        val session = Session("https://www.mozilla.org")
+        session.searchTerms = "Mozilla Foundation"
+
+        val observer = EngineObserver(session)
+        observer.onLoadRequest(triggeredByUserInteraction = true)
+
+        assertEquals("", session.searchTerms)
+    }
+
+    @Test
+    fun `onLoadRequest does not clear search terms for requests not triggered by user interaction`() {
+        val session = Session("https://www.mozilla.org")
+        session.searchTerms = "Mozilla Foundation"
+
+        val observer = EngineObserver(session)
+        observer.onLoadRequest(triggeredByUserInteraction = false)
+
+        assertEquals("Mozilla Foundation", session.searchTerms)
+    }
 }

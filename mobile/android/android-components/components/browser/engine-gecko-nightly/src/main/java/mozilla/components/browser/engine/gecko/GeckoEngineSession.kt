@@ -302,7 +302,19 @@ class GeckoEngineSession(
                     is InterceptionResponse.Url -> loadUrl(url)
                 }
             }
-            return GeckoResult.fromValue(if (response != null) AllowOrDeny.DENY else AllowOrDeny.ALLOW)
+
+            return if (response != null) {
+                GeckoResult.fromValue(AllowOrDeny.DENY)
+            } else {
+                notifyObservers {
+                    // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
+                    // is "true if and only if the request was triggered by user interaction."
+                    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
+                    onLoadRequest(triggeredByUserInteraction = request.isRedirect)
+                }
+
+                GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
         }
 
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {

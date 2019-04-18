@@ -65,13 +65,14 @@ class ToolbarPresenter(
             ?: sessionManager.selectedSession
 
         renderer.post(session?.url ?: "")
+
+        toolbar.setSearchTerms(session?.searchTerms ?: "")
         toolbar.displayProgress(session?.progress ?: 0)
         updateToolbarSecurity(session?.securityInfo ?: Session.SecurityInfo())
     }
 
     override fun onUrlChanged(session: Session, url: String) {
         renderer.post(url)
-        toolbar.setSearchTerms(session.searchTerms)
     }
 
     override fun onProgress(session: Session, progress: Int) {

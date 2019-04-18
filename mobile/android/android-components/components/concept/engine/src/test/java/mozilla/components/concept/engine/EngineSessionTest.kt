@@ -60,6 +60,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onCrashStateChange(true) }
+        session.notifyInternalObservers { onLoadRequest(true) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
@@ -83,6 +84,7 @@ class EngineSessionTest {
         verify(observer).onMediaAdded(mediaAdded)
         verify(observer).onMediaRemoved(mediaRemoved)
         verify(observer).onCrashStateChange(true)
+        verify(observer).onLoadRequest(true)
         verifyNoMoreInteractions(observer)
     }
 
@@ -116,6 +118,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onOpenWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCloseWindowRequest(windowRequest) }
         session.notifyInternalObservers { onCrashStateChange(false) }
+        session.notifyInternalObservers { onLoadRequest(true) }
         session.unregister(observer)
 
         val mediaAdded: Media = mock()
@@ -141,6 +144,7 @@ class EngineSessionTest {
         session.notifyInternalObservers { onMediaAdded(mediaAdded) }
         session.notifyInternalObservers { onMediaRemoved(mediaRemoved) }
         session.notifyInternalObservers { onCrashStateChange(true) }
+        session.notifyInternalObservers { onLoadRequest(false) }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
@@ -160,6 +164,7 @@ class EngineSessionTest {
         verify(observer).onOpenWindowRequest(windowRequest)
         verify(observer).onCloseWindowRequest(windowRequest)
         verify(observer).onCrashStateChange(false)
+        verify(observer).onLoadRequest(true)
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
         verify(observer, never()).onLoadingStateChange(false)
@@ -180,6 +185,7 @@ class EngineSessionTest {
         verify(observer, never()).onMediaAdded(mediaAdded)
         verify(observer, never()).onMediaRemoved(mediaRemoved)
         verify(observer, never()).onCrashStateChange(true)
+        verify(observer, never()).onLoadRequest(false)
         verifyNoMoreInteractions(observer)
     }
 

@@ -211,6 +211,10 @@ class SystemEngineView @JvmOverloads constructor(
                 }
             }
 
+            if (request.isForMainFrame) {
+                session?.let { it.notifyObservers { onLoadRequest(request.hasGesture()) } }
+            }
+
             return super.shouldInterceptRequest(view, request)
         }
 
