@@ -234,4 +234,40 @@
       closed
         The RTCIceTransport has shut down and is no longer responding to STUN requests.
    */
+  promise_test(async t => {
+    const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
+    const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+    const [track] = stream.getTracks();
+    caller.addTrack(track, stream);
+
+    await doSignalingHandshake(caller, callee);
+
+    assert_equals(caller.iceConnectionState, 'new');
+    assert_equals(callee.iceConnectionState, 'new');
+  }, 'connectionState remains new when not adding remote ice candidates');
+
+  promise_test(async t => {
+
+    const caller = new RTCPeerConnection();
+    t.add_cleanup(() => caller.close());
+    const callee = new RTCPeerConnection();
+    t.add_cleanup(() => callee.close());
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => stream.getTracks().forEach(track => track.stop()));
+    const [track] = stream.getTracks();
+    caller.addTrack(track, stream);
+
+    const states = [];
+    caller.addEventListener('connectionstatechange', () => states.push(caller.connectionState));
+    exchangeIceCandidates(caller, callee);
+    await doSignalingHandshake(caller, callee);
+
+    await listenToConnected(caller);
+
+    assert_array_equals(states, ['connecting', 'connected']);
+  }, 'connectionState transitions to connected via connecting');
 </script>
