@@ -66,6 +66,8 @@ loader.lazyRequireGetter(this, "remoteClientManager",
   "devtools/client/shared/remote-debugging/remote-client-manager.js", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager",
   "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(this, "DevToolsUtils",
+  "devtools/shared/DevToolsUtils");
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -387,7 +389,7 @@ Toolbox.prototype = {
    * regardless of the frame type. See Bug 1539979.
    */
   get topWindow() {
-    return this.win.windowRoot.ownerGlobal;
+    return DevToolsUtils.getTopWindow(this.win);
   },
 
   /**
