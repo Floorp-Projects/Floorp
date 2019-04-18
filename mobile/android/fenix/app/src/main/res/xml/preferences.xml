@@ -54,10 +54,6 @@
             android:key="@string/pref_key_site_permissions"
             android:title="@string/preferences_site_permissions" />
         <androidx.preference.Preference
-            android:icon="@drawable/ic_language"
-            android:key="@string/pref_key_language"
-            android:title="@string/preferences_language" />
-        <androidx.preference.Preference
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />
