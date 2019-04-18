@@ -2430,18 +2430,14 @@
  * @param   _KEY
  *          The registry subkey (typically this will be Software\Mozilla).
  *
- * XXXrstrong - there is the potential for Key: Software/Mozilla/AppName,
- * ValueName: CurrentVersion, ValueData: AppVersion to reference a key that is
- * no longer available due to this cleanup. This should be no worse than prior
- * to this reg cleanup since the referenced key would be for an app that is no
- * longer installed on the system.
- *
+ * $0  = loop counter
+ * $1  = temporary value used for string searches
  * $R0 = on x64 systems set to 'false' at the beginning of the macro when
  *       enumerating the x86 registry view and set to 'true' when enumerating
  *       the x64 registry view.
  * $R1 = stores the long path to $INSTDIR
  * $R2 = return value from the stack from the GetParent and GetLongPath macros
- * $R3 = return value from the outer loop's EnumRegKey
+ * $R3 = return value from the outer loop's EnumRegKey and ESR string
  * $R4 = return value from the inner loop's EnumRegKey
  * $R5 = return value from ReadRegStr
  * $R6 = counter for the outer loop's EnumRegKey
@@ -2475,6 +2471,8 @@
       Push $R2
       Push $R1
       Push $R0
+      Push $0
+      Push $1
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R1
       StrCpy $R6 0  ; set the counter for the outer loop to 0
@@ -2539,6 +2537,70 @@
       GoTo outerloop
 
       end:
+      ; Check if _KEY\${BrandFullNameInternal} refers to a key that's been
+      ; removed, either just now by this function or earlier by something else,
+      ; and if so either update it to a key that does exist or remove it if we
+      ; can't find anything to update it to.
+      ; We'll run this check twice, once looking for non-ESR keys and then again
+      ; looking specifically for the separate ESR keys.
+      StrCpy $R3 ""
+      ${For} $0 0 1
+        ClearErrors
+        ReadRegStr $R5 SHCTX "$R9\${BrandFullNameInternal}$R3" "CurrentVersion"
+        ${IfNot} ${Errors}
+          ReadRegStr $R5 SHCTX "$R9\${BrandFullNameInternal}\$R5" ""
+          ${If} ${Errors}
+            ; Key doesn't exist, update or remove CurrentVersion and default.
+            StrCpy $R5 ""
+            StrCpy $R6 0
+            EnumRegKey $R4 SHCTX "$R9\${BrandFullNameInternal}" $R6
+            ${While} $R4 != ""
+              ClearErrors
+              ${WordFind} "$R4" "esr" "E#" $1
+              ${If} $R3 == ""
+                ; The key we're looking to update is a non-ESR, so we need to
+                ; select only another non-ESR to update it with.
+                ${If} ${Errors}
+                  StrCpy $R5 "$R4"
+                  ${Break}
+                ${EndIf}
+              ${Else}
+                ; The key we're looking to update is an ESR, so we need to
+                ; select only another ESR to update it with.
+                ${IfNot} ${Errors}
+                  StrCpy $R5 "$R4"
+                  ${Break}
+                ${EndIf}
+              ${EndIf}
+
+              IntOp $R6 $R6 + 1
+              EnumRegKey $R4 SHCTX "$R9\${BrandFullNameInternal}" $R6
+            ${EndWhile}
+
+            ${If} $R5 == ""
+              ; We didn't find an install to update the key with, so delete the
+              ; CurrentVersion value and the entire key if it has no subkeys.
+              DeleteRegValue SHCTX "$R9\${BrandFullNameInternal}$R3" "CurrentVersion"
+              DeleteRegValue SHCTX "$R9\${BrandFullNameInternal}$R3" ""
+              DeleteRegKey /ifempty SHCTX "$R9\${BrandFullNameInternal}$R3"
+            ${Else}
+              ; We do have another still-existing install, so update the key to
+              ; that version.
+              WriteRegStr SHCTX "$R9\${BrandFullNameInternal}$R3" \
+                                "CurrentVersion" "$R5"
+              ${WordFind} "$R5" " " "+1{" $R5
+              WriteRegStr SHCTX "$R9\${BrandFullNameInternal}$R3" "" "$R5"
+            ${EndIf}
+          ${EndIf}
+          ; Else, the key referenced in CurrentVersion still exists,
+          ; so there's nothing to update or remove.
+        ${EndIf}
+
+        ; Set up for the second iteration of the loop, where we'll be looking
+        ; for the separate ESR keys.
+        StrCpy $R3 " ESR"
+      ${Next}
+
       ${If} ${RunningX64}
       ${OrIf} ${IsNativeARM64}
         ${If} "$R0" == "false"
@@ -2557,6 +2619,8 @@
 
       ClearErrors
 
+      Pop $1
+      Pop $0
       Pop $R0
       Pop $R1
       Pop $R2
