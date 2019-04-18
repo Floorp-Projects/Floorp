@@ -121,4 +121,11 @@ interface nsITabParent : nsISupports
    * see nsISecureBrowserUI.contentBlockingLogJSON.
    */
   Promise getContentBlockingLog();
+
+  /**
+   * Interrupt content scripts if possible/needed to allow chrome scripts in the
+   * content process to run (in particular, to allow navigating through browser
+   * history.
+   */
+  void maybeCancelContentJSExecution();
 };
