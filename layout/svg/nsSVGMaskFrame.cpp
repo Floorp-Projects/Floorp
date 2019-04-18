@@ -112,16 +112,15 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
       GetMaskTransform(aParams.maskedFrame) * aParams.toUserSpace;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+    gfxMatrix m = mMatrixForChildren;
+
     // The CTM of each frame referencing us can be different
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
+      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) * m;
     }
-    gfxMatrix m = mMatrixForChildren;
-    if (kid->GetContent()->IsSVGElement()) {
-      m = static_cast<SVGElement*>(kid->GetContent())
-              ->PrependLocalTransformsTo(m, eUserSpaceToParent);
-    }
+
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);
   }
 
