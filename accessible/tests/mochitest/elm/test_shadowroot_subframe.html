@@ -24,6 +24,16 @@
         ],
       });
 
+      // Shadow root boundary between table and row
+      testElm("table", {
+        role: ROLE_TABLE,
+        children: [
+        {
+          role: ROLE_ROW,
+        },
+        ],
+      });
+
       SimpleTest.finish();
     }
 
@@ -33,6 +43,8 @@
 </head>
 <body>
   <div role="group" id="component"></div>
+  <div id="table" role="table" style="display: table;"></div>
+
   <script>
     var component = document.getElementById("component");
     var shadow = component.attachShadow({mode: "open"});
@@ -46,5 +58,11 @@
 
     shadow.appendChild(button);
     shadow.appendChild(a);
+
+    var table = document.getElementById("table");
+    shadow = table.attachShadow({mode: "open"});
+    shadow.innerHTML = "<div style='display: table-row'>" +
+      "<div style='display: table-cell'>hi</div>" +
+      "</div>";
   </script>
 </body>
