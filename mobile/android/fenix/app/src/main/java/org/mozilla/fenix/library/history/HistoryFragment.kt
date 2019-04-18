@@ -25,7 +25,6 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -126,11 +125,6 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
             R.id.libraryClose -> {
                 Navigation.findNavController(requireActivity(), R.id.container)
                     .popBackStack(R.id.libraryFragment, true)
-                true
-            }
-            R.id.librarySearch -> {
-                // TODO Library Search #1118
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)

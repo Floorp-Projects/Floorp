@@ -18,7 +18,6 @@ import kotlinx.android.synthetic.main.fragment_library.*
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentArgs
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 class LibraryFragment : Fragment() {
 
@@ -65,11 +64,6 @@ class LibraryFragment : Fragment() {
         return when (item.itemId) {
             R.id.libraryClose -> {
                 Navigation.findNavController(requireActivity(), R.id.container).navigateUp()
-                true
-            }
-            R.id.librarySearch -> {
-                // TODO Library Search
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1118")
                 true
             }
             else -> super.onOptionsItemSelected(item)

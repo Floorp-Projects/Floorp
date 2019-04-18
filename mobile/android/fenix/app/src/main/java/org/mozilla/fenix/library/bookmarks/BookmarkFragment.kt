@@ -314,10 +314,6 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     .popBackStack(R.id.libraryFragment, true)
                 true
             }
-            R.id.librarySearch -> {
-                // TODO Library Search
-                true
-            }
             R.id.open_bookmarks_in_new_tabs_multi_select -> {
                 getSelectedBookmarks().forEach { node ->
                     node.url?.let {
