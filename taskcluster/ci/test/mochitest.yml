@@ -3,11 +3,10 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
-    serviceworker-e10s:
+    variants:
         by-test-platform:
-            linux64/debug: both
-            default: false
-    socketprocess-e10s: false
+            linux64/debug: ['serviceworker']
+            default: []
     run-on-projects:
         by-test-platform:
             android-em-4.3-arm7-api-16/opt: ['try']
@@ -319,10 +318,11 @@ mochitest-media:
             android-em-4.3-arm7-api-16/opt: ['try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
-    socketprocess-e10s:
+    variants:
         by-test-platform:
-            android.*: false
-            default: both
+            android.*: []
+            linux64/debug: ['serviceworker', 'socketprocess']
+            default: ['socketprocess']
     loopback-video: true
     virtualization:
         by-test-platform:
@@ -386,7 +386,7 @@ mochitest-valgrind:
     # We could re-enable e10s later.
     # There's no intrinsic reason not to use it.
     e10s: false
-    serviceworker-e10s: false
+    variants: []
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain

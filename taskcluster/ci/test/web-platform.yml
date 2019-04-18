@@ -1,10 +1,10 @@
 job-defaults:
     instance-size: xlarge
     max-run-time: 5400
-    serviceworker-e10s:
+    variants:
         by-test-platform:
-            linux64/debug: both
-            default: false
+            linux64/debug: ['serviceworker']
+            default: []
     virtualization:
         by-test-platform:
             windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
