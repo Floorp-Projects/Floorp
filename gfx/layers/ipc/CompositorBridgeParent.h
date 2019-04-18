@@ -426,8 +426,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread(
-      const nsTArray<wr::RenderRoot>& aRenderRoots =
-          nsTArray<wr::RenderRoot>()) override;
+      const wr::RenderRootSet& aRenderRoots) override;
   void SchedulePauseOnCompositorThread();
   void InvalidateOnCompositorThread();
   /**
@@ -437,8 +436,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool ScheduleResumeOnCompositorThread();
   bool ScheduleResumeOnCompositorThread(int x, int y, int width, int height);
 
-  void ScheduleComposition(const nsTArray<wr::RenderRoot>& aRenderRoots =
-                               nsTArray<wr::RenderRoot>());
+  void ScheduleComposition(const wr::RenderRootSet& aRenderRoots =
+                               wr::RenderRootSet());
 
   void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
                                    const FocusTarget& aFocusTarget,

@@ -333,6 +333,33 @@ public class GeckoSession implements Parcelable {
             }
         };
 
+    private final class WebExtensionListener implements BundleEventListener {
+        /* package */ void registerListeners() {
+            getEventDispatcher().registerUiThreadListener(this,
+                    "GeckoView:WebExtension:Message",
+                    "GeckoView:WebExtension:PortMessage",
+                    "GeckoView:WebExtension:Connect",
+                    null);
+        }
+
+        @Override
+        public void handleMessage(final String event, final GeckoBundle message,
+                                  final EventCallback callback) {
+            if (mWindow == null || mWindow.runtime.getWebExtensionDispatcher() == null) {
+                return;
+            }
+
+            if ("GeckoView:WebExtension:Message".equals(event)
+                    || "GeckoView:WebExtension:PortMessage".equals(event)
+                    || "GeckoView:WebExtension:Connect".equals(event)) {
+                mWindow.runtime.getWebExtensionDispatcher()
+                        .handleMessage(event, message, callback, GeckoSession.this);
+            }
+        }
+    }
+
+    private final WebExtensionListener mWebExtensionListener;
+
     private final GeckoSessionHandler<ContentDelegate> mContentHandler =
         new GeckoSessionHandler<ContentDelegate>(
             "GeckoViewContent", this,
@@ -1132,6 +1159,9 @@ public class GeckoSession implements Parcelable {
     public GeckoSession(final @Nullable GeckoSessionSettings settings) {
         mSettings = new GeckoSessionSettings(settings, this);
         mListener.registerListeners();
+
+        mWebExtensionListener = new WebExtensionListener();
+        mWebExtensionListener.registerListeners();
 
         if (BuildConfig.DEBUG && handlersCount != mSessionHandlers.length) {
             throw new AssertionError("Add new handler to handlers list");

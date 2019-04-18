@@ -9,7 +9,7 @@ const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function MozProtocolHandler() {
   XPCOMUtils.defineLazyPreferenceGetter(this, "urlToLoad", "toolkit.mozprotocol.url",
-                                        "https://www.mozilla.org/protocol");
+                                        "https://www.mozilla.org/about/manifesto/");
 }
 
 MozProtocolHandler.prototype = {

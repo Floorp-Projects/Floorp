@@ -664,6 +664,7 @@ bool FrameIter::principalsSubsumeFrame() const {
     return true;
   }
 
+  JS::AutoSuppressGCAnalysis nogc;
   return subsumes(data_.principals_, realm()->principals());
 }
 
@@ -752,8 +753,6 @@ FrameIter::Data::Data(const FrameIter::Data& other)
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)
     : data_(cx, debuggerEvalOption, nullptr),
       ionInlineFrames_(cx, (js::jit::JSJitFrameIter*)nullptr) {
-  // settleOnActivation can only GC if principals are given.
-  JS::AutoSuppressGCAnalysis nogc;
   settleOnActivation();
 
   // No principals so we can see all frames.

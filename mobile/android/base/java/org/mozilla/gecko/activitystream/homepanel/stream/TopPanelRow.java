@@ -122,7 +122,8 @@ public class TopPanelRow extends StreamViewHolder {
         final Set<String> urls = new HashSet<String>(limit);
         do {
             String baseUrl = getBaseForUrl(cursor.getString(cursor.getColumnIndex(BrowserContract.Combined.URL)));
-            if (!urls.contains(baseUrl)) {
+            boolean isPinned = isTopSitePinned(cursor.getInt(cursor.getColumnIndex(BrowserContract.TopSites.TYPE)));
+            if (isPinned || !urls.contains(baseUrl)) {
                 final Object[] originalColumns = new Object[] {
                         cursor.getLong(cursor.getColumnIndex(BrowserContract.Combined._ID)),
                         cursor.getLong(cursor.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)),
@@ -140,6 +141,10 @@ public class TopPanelRow extends StreamViewHolder {
         } while (filteredCursor.getCount() < limit && cursor.moveToNext());
 
         return filteredCursor;
+    }
+
+    private boolean isTopSitePinned(final int topSiteType) {
+        return topSiteType == BrowserContract.TopSites.TYPE_PINNED;
     }
 
     private String getBaseForUrl(final String url) {

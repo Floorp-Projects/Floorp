@@ -4058,7 +4058,7 @@ static void WorkerMain(WorkerInput* input) {
     SetStandardRealmOptions(realmOptions);
 
     RootedObject global(cx, NewGlobalObject(cx, realmOptions, nullptr,
-                                            ShellGlobalKind::GlobalObject));
+                                            ShellGlobalKind::WindowProxy));
     if (!global) {
       break;
     }
@@ -6161,7 +6161,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
   JS::RealmOptions options;
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   JS::RealmBehaviors& behaviors = options.behaviors();
-  ShellGlobalKind kind = ShellGlobalKind::GlobalObject;
+  ShellGlobalKind kind = ShellGlobalKind::WindowProxy;
 
   SetStandardRealmOptions(options);
 
@@ -10740,7 +10740,7 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   JS::RealmOptions options;
   SetStandardRealmOptions(options);
   RootedObject glob(
-      cx, NewGlobalObject(cx, options, nullptr, ShellGlobalKind::GlobalObject));
+      cx, NewGlobalObject(cx, options, nullptr, ShellGlobalKind::WindowProxy));
   if (!glob) {
     return 1;
   }

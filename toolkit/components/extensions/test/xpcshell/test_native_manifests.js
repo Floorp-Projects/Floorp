@@ -82,6 +82,7 @@ let context = {
   extension: {
     id: "extension@tests.mozilla.org",
   },
+  envType: "addon_parent",
   url: null,
   jsonStringify(...args) { return JSON.stringify(...args); },
   cloneScope: global,
@@ -94,7 +95,7 @@ let context = {
 class MockContext extends ExtensionCommon.BaseContext {
   constructor(extensionId) {
     let fakeExtension = {id: extensionId};
-    super("testEnv", fakeExtension);
+    super("addon_parent", fakeExtension);
     this.sandbox = Cu.Sandbox(global);
   }
 

@@ -50,17 +50,12 @@ function toComponentData(workers, isServiceWorker) {
     const icon = "chrome://devtools/skin/images/debugging-workers.svg";
     let { fetch } = worker;
     const {
+      id,
       name,
       registrationFront,
       scope,
       subscription,
-      workerTargetFront,
     } = worker;
-
-    // For registering service workers, workerTargetFront will not be available.
-    // The only valid identifier we can use at that point is the actorID for the
-    // service worker registration.
-    const id = workerTargetFront ? workerTargetFront.actorID : registrationFront.actorID;
 
     let pushServiceEndpoint = null;
     let status = null;

@@ -12,9 +12,56 @@ namespace dom {
 
 // GamepadId is (vendorId << 16) | productId)
 enum class GamepadId : uint32_t {
-  kSonyDualshock4 = 0x054c05c4,
-  kSonyDualshock4Slim = 0x054c09cc,
-  kSonyDualshock4USBReceiver = 0x054c0ba0,
+  // Nexus Player Controller
+  kAsusTekProduct4500 = 0x0b054500,
+  // 2Axes 8Keys Game Pad
+  kDragonRiseProduct0011 = 0x00790011,
+  // ADT-1 Controller
+  kGoogleProduct2c40 = 0x18d12c40,
+  // Stadia Controller
+  kGoogleProduct9400 = 0x18d19400,
+  // Logitech F310, D-mode
+  kLogitechProductc216 = 0x046dc216,
+  // Logitech F510, D-mode
+  kLogitechProductc218 = 0x046dc218,
+  // Logitech F710, D-mode
+  kLogitechProductc219 = 0x046dc219,
+  // Switch Joy-Con L
+  kNintendoProduct2006 = 0x057e2006,
+  // Switch Joy-Con R
+  kNintendoProduct2007 = 0x057e2007,
+  // Switch Pro Controller
+  kNintendoProduct2009 = 0x057e2009,
+  // Switch Charging Grip
+  kNintendoProduct200e = 0x057e200e,
+  // Nvidia Shield gamepad (2015)
+  kNvidiaProduct7210 = 0x09557210,
+  // Nvidia Shield gamepad (2017)
+  kNvidiaProduct7214 = 0x09557214,
+  // iBuffalo Classic
+  kPadixProduct2060 = 0x05832060,
+  // XSkills Gamecube USB adapter
+  kPlayComProduct0005 = 0x0b430005,
+  // boom PSX+N64 USB Converter
+  kPrototypeVendorProduct0667 = 0x66660667,
+  // Analog game controller
+  kPrototypeVendorProduct9401 = 0x66669401,
+  // Razer Serval Controller
+  kRazer1532Product0900 = 0x15320900,
+  // Playstation Dualshock 4
+  kSonyProduct05c4 = 0x054c05c4,
+  // Dualshock 4 (PS4 Slim)
+  kSonyProduct09cc = 0x054c09cc,
+  // Dualshock 4 USB receiver
+  kSonyProduct0ba0 = 0x054c0ba0,
+  // Moga Pro Controller (HID mode)
+  kVendor20d6Product6271 = 0x20d66271,
+  // OnLive Controller (Bluetooth)
+  kVendor2378Product1008 = 0x23781008,
+  // OnLive Controller (Wired)
+  kVendor2378Product100a = 0x2378100a,
+  // OUYA Controller
+  kVendor2836Product0001 = 0x28360001,
 };
 
 class GamepadRemapper {

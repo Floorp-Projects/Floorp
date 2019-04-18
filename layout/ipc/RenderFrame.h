@@ -90,6 +90,8 @@ class RenderFrame final {
  * nsFrameLoader) into its parent frame's layer tree.
  */
 class nsDisplayRemote final : public nsDisplayItem {
+  friend class nsDisplayItem;
+
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
@@ -102,8 +104,6 @@ class nsDisplayRemote final : public nsDisplayItem {
 
  public:
   nsDisplayRemote(nsDisplayListBuilder* aBuilder, nsSubDocumentFrame* aFrame);
-
-  bool HasDeletedFrame() const override;
 
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,

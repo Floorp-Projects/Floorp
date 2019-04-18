@@ -495,208 +495,206 @@ void OpenVRSession::SetupContollerActions() {
   mControllerHand[OpenVRHand::Left] = leftContollerInfo;
   mControllerHand[OpenVRHand::Right] = rightContollerInfo;
 
-  if (FileIsExisting(controllerAction)) {
-    return;
-  }
+  if (!FileIsExisting(controllerAction)) {
+    nsAutoString actionData;
+    JSONWriter actionWriter(MakeUnique<StringWriteFunc>(actionData));
+    actionWriter.Start();
 
-  nsAutoString actionData;
-  JSONWriter actionWriter(MakeUnique<StringWriteFunc>(actionData));
-  actionWriter.Start();
-
-  actionWriter.StringProperty("version",
-                              "0.1.0");  // TODO: adding a version check.
-  // "default_bindings": []
-  actionWriter.StartArrayProperty("default_bindings");
-  actionWriter.StartObjectElement();
-  actionWriter.StringProperty("controller_type", "vive_controller");
-  actionWriter.StringProperty("binding_url", viveManifest.BeginReading());
-  actionWriter.EndObject();
-  actionWriter.StartObjectElement();
-  actionWriter.StringProperty("controller_type", "knuckles");
-  actionWriter.StringProperty("binding_url", knucklesManifest.BeginReading());
-  actionWriter.EndObject();
+    actionWriter.StringProperty("version",
+                                "0.1.0");  // TODO: adding a version check.
+    // "default_bindings": []
+    actionWriter.StartArrayProperty("default_bindings");
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "vive_controller");
+    actionWriter.StringProperty("binding_url", viveManifest.BeginReading());
+    actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "knuckles");
+    actionWriter.StringProperty("binding_url", knucklesManifest.BeginReading());
+    actionWriter.EndObject();
 #if defined(XP_WIN)
-  actionWriter.StartObjectElement();
-  actionWriter.StringProperty("controller_type", "holographic_controller");
-  actionWriter.StringProperty("binding_url", WMRManifest.BeginReading());
-  actionWriter.EndObject();
+    actionWriter.StartObjectElement();
+    actionWriter.StringProperty("controller_type", "holographic_controller");
+    actionWriter.StringProperty("binding_url", WMRManifest.BeginReading());
+    actionWriter.EndObject();
 #endif
-  actionWriter.EndArray();  // End "default_bindings": []
+    actionWriter.EndArray();  // End "default_bindings": []
 
-  // "actions": [] Action paths must take the form: "/actions/<action
-  // set>/in|out/<action>"
-  actionWriter.StartArrayProperty("actions");
+    // "actions": [] Action paths must take the form: "/actions/<action
+    // set>/in|out/<action>"
+    actionWriter.StartArrayProperty("actions");
 
-  for (auto& controller : mControllerHand) {
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty("name",
-                                controller.mActionPose.name.BeginReading());
-    actionWriter.StringProperty("type",
-                                controller.mActionPose.type.BeginReading());
-    actionWriter.EndObject();
+    for (auto& controller : mControllerHand) {
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty("name",
+                                  controller.mActionPose.name.BeginReading());
+      actionWriter.StringProperty("type",
+                                  controller.mActionPose.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionTrackpad_Analog.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionTrackpad_Analog.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionTrackpad_Analog.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionTrackpad_Analog.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionTrackpad_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionTrackpad_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionTrackpad_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionTrackpad_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionTrackpad_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionTrackpad_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionTrackpad_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionTrackpad_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionTrigger_Value.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionTrigger_Value.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionTrigger_Value.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionTrigger_Value.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionGrip_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionGrip_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionGrip_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionGrip_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionGrip_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionGrip_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionGrip_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionGrip_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionMenu_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionMenu_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionMenu_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionMenu_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionMenu_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionMenu_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionMenu_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionMenu_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionSystem_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionSystem_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionSystem_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionSystem_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionSystem_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionSystem_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionSystem_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionSystem_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionA_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionA_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionA_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionA_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionA_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionA_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionA_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionA_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionB_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionB_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionB_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionB_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionB_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionB_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionB_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionB_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionThumbstick_Analog.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionThumbstick_Analog.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionThumbstick_Analog.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionThumbstick_Analog.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionThumbstick_Pressed.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionThumbstick_Pressed.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionThumbstick_Pressed.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionThumbstick_Pressed.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionThumbstick_Touched.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionThumbstick_Touched.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionThumbstick_Touched.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionThumbstick_Touched.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionFingerIndex_Value.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionFingerIndex_Value.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionFingerIndex_Value.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionFingerIndex_Value.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionFingerMiddle_Value.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionFingerMiddle_Value.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionFingerMiddle_Value.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionFingerMiddle_Value.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionFingerRing_Value.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionFingerRing_Value.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionFingerRing_Value.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionFingerRing_Value.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty(
-        "name", controller.mActionFingerPinky_Value.name.BeginReading());
-    actionWriter.StringProperty(
-        "type", controller.mActionFingerPinky_Value.type.BeginReading());
-    actionWriter.EndObject();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty(
+          "name", controller.mActionFingerPinky_Value.name.BeginReading());
+      actionWriter.StringProperty(
+          "type", controller.mActionFingerPinky_Value.type.BeginReading());
+      actionWriter.EndObject();
 
-    actionWriter.StartObjectElement();
-    actionWriter.StringProperty("name",
-                                controller.mActionHaptic.name.BeginReading());
-    actionWriter.StringProperty("type",
-                                controller.mActionHaptic.type.BeginReading());
-    actionWriter.EndObject();
-  }
-  actionWriter.EndArray();  // End "actions": []
-  actionWriter.End();
+      actionWriter.StartObjectElement();
+      actionWriter.StringProperty("name",
+                                  controller.mActionHaptic.name.BeginReading());
+      actionWriter.StringProperty("type",
+                                  controller.mActionHaptic.type.BeginReading());
+      actionWriter.EndObject();
+    }
+    actionWriter.EndArray();  // End "actions": []
+    actionWriter.End();
 
-  std::ofstream actionfile(controllerAction.BeginReading());
-  nsCString actionResult(NS_ConvertUTF16toUTF8(actionData.get()));
-  if (actionfile.is_open()) {
-    actionfile << actionResult.get();
-    actionfile.close();
+    std::ofstream actionfile(controllerAction.BeginReading());
+    nsCString actionResult(NS_ConvertUTF16toUTF8(actionData.get()));
+    if (actionfile.is_open()) {
+      actionfile << actionResult.get();
+      actionfile.close();
+    }
   }
 
   vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());

@@ -34,10 +34,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1384661
     SimpleTest.finish();
   }
 
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.xmldocument.load.enabled", true],
+  ]}, runTest);
+
 
   </script>
 </head>
-<body onload="runTest()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1384661">Mozilla Bug 1384661</a>
 <p id="display"></p>
 <div id="content" style="display: none">

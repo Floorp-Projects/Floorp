@@ -39,6 +39,8 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute unsigned long serviceWorkerID;
 
+  readonly attribute AString id;
+
   void initialize(in AString url);
 
   [binaryname(PostMessageMoz)]

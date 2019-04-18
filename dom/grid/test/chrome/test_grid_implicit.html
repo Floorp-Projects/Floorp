@@ -38,6 +38,14 @@ body {
   grid-template-rows: 50px;
 }
 
+.template5 {
+  grid-template-columns: [a-end] 100px [b];
+}
+
+.template6 {
+  grid-template-columns: [foo-end] 100px [foo-start];
+}
+
 .box {
   background-color: #444;
   color: #fff;
@@ -57,6 +65,15 @@ body {
 }
 .e {
   grid-column: -7 / 5;
+}
+.f {
+  grid-column: a-start / a-end;
+}
+.g {
+  grid-column: a-start / 2 a-end;
+}
+.h {
+  grid-column: foo-start;
 }
 </style>
 
@@ -104,13 +121,12 @@ function runTests() {
       "Grid row line 3 has the name 'middle'."
     );
 
-    // test that implicit column line names are not assigned for
-    // implicit area 'areaD'
-    is(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
-      "Grid column line 5 doesn't have the name 'areaD-start'."
+    // test the names of the implicit column lines that were created for area 'areaD'
+    isnot(grid.cols.lines[4].names.indexOf("areaD-start"), -1,
+      "Grid column line 5 has the name 'areaD-start'."
     );
-    is(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
-      "Grid column line 6 doesn't have the name 'areaD-end'."
+    isnot(grid.cols.lines[5].names.indexOf("areaD-end"), -1,
+      "Grid column line 6 has the name 'areaD-end'."
     );
   }
 
@@ -288,6 +304,54 @@ function runTests() {
     }
   }
 
+  // Test the fifth grid wrapper
+  wrapper = document.getElementById("wrapper5");
+  grid = wrapper.getGridFragments()[0];
+
+  // Test that lineName-reversed implicit areas have the correct names.
+  for (var i = 0; i < grid.areas.length; i++) {
+    var area = grid.areas[i];
+    // test the resulting start/end lines of the areas has:
+    // Start line: [a-end]
+    // End Line: [a-start]
+    if (area.name == "a") {
+      const startLineNames = grid.cols.lines[area.columnStart - 1].names;
+      const endLineNames = grid.cols.lines[area.columnEnd - 1].names;
+
+      isnot(startLineNames.indexOf("a-end"), -1,
+        `Grid column line ${area.columnStart} has the name a-end`);
+      is(startLineNames.indexOf("a-start"), -1,
+        `Grid column line ${area.columnStart} does not have the name a-start`);
+
+      isnot(endLineNames.indexOf("a-start"), -1,
+        `Grid column line ${area.columnEnd} has the name a-start`);
+      todo_isnot(endLineNames.indexOf("a-end"), -1,
+        `Grid column line ${area.columnEnd} has the name a-end`);
+
+      // Also test that the fourth line has the name a-end.
+      todo_isnot(grid.cols.lines[3].names.indexOf("a-end"), -1,
+        "Grid column line 4 has the line name a-end");
+    }
+  }
+
+  // Test the sixth grid wrapper
+  wrapper = document.getElementById("wrapper6");
+  grid = wrapper.getGridFragments()[0];
+
+  // Test that the grid has two explicit lines: [foo-end][foo-start] and a third implicit
+  // line that follows.
+  is(grid.cols.lines.length, 3, "Grid should have three lines.");
+
+  isnot(grid.cols.lines[0].names.indexOf("foo-end"), -1,
+    "Grid column line 1 has the name 'foo-end'",
+  );
+
+  isnot(grid.cols.lines[1].names.indexOf("foo-start"), -1,
+    "Grid column line 2 has the name 'foo-start'",
+  );
+
+  is(grid.cols.lines[2].type, "implicit", "Grid column line 3 is implicit");
+
   SimpleTest.finish();
 }
 </script>
@@ -317,5 +381,12 @@ function runTests() {
     <div id="boxE" class="box e">E</div>
   </div>
 
+  <div id="wrapper5" class="wrapper template5">
+    <div id="boxF" class="box f">F</div>
+    <div id="boxG" class="box g">G</div>
+  </div>
+  <div id="wrapper6" class="wrapper template6">
+    <div id="boxH" class="box h">H</div>
+  </div>
 </body>
 </html>

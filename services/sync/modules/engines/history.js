@@ -180,7 +180,7 @@ HistoryStore.prototype = {
     let failed = [];
     let toAdd = [];
     let toRemove = [];
-    for await (let record of Async.yieldingIterator(records)) {
+    await Async.yieldingForEach(records, async (record) => {
       if (record.deleted) {
         toRemove.push(record);
       } else {
@@ -198,7 +198,7 @@ HistoryStore.prototype = {
           failed.push(record.id);
         }
       }
-    }
+    });
     if (toAdd.length || toRemove.length) {
       // We want to notify history observers that a batch operation is underway
       // so they don't do lots of work for each incoming record.
@@ -221,7 +221,7 @@ HistoryStore.prototype = {
           // but the error semantics are tricky - a single "bad" entry will cause
           // an exception before anything is removed. So we do remove them one at
           // a time.
-          for await (let record of Async.yieldingIterator(toRemove)) {
+          await Async.yieldingForEach(toRemove, async (record) => {
             try {
               await this.remove(record);
             } catch (ex) {
@@ -232,7 +232,7 @@ HistoryStore.prototype = {
               this._log.trace("The record that failed", record);
               failed.push(record.id);
             }
-          }
+          });
         }
         for (let chunk of this._generateChunks(toAdd)) {
           // Per bug 1415560, we ignore any exceptions returned by insertMany

@@ -5,16 +5,31 @@ exports[`WhyPaused should pause reason with message 1`] = `
   className="pane why-paused"
 >
   <div>
-    <div>
+    <div
+      className="pause reason"
+    >
       Paused on breakpoint
+      <div
+        className="message"
+      >
+        bla is hit
+      </div>
     </div>
     <div
-      className="message"
+      className="info icon"
     >
-      bla is hit
+      <AccessibleImage
+        className="info"
+      />
     </div>
   </div>
 </div>
+`;
+
+exports[`WhyPaused should show an empty div when there is no pause reason 1`] = `
+<div
+  className=""
+/>
 `;
 
 exports[`WhyPaused should show pause reason with exception details 1`] = `
@@ -22,13 +37,22 @@ exports[`WhyPaused should show pause reason with exception details 1`] = `
   className="pane why-paused"
 >
   <div>
-    <div>
+    <div
+      className="pause reason"
+    >
       Paused on exception
+      <div
+        className="message warning"
+      >
+        ReferenceError: o is not defined
+      </div>
     </div>
     <div
-      className="message warning"
+      className="info icon"
     >
-      ReferenceError: o is not defined
+      <AccessibleImage
+        className="info"
+      />
     </div>
   </div>
 </div>
@@ -39,13 +63,22 @@ exports[`WhyPaused should show pause reason with exception string 1`] = `
   className="pane why-paused"
 >
   <div>
-    <div>
+    <div
+      className="pause reason"
+    >
       Paused on exception
+      <div
+        className="message warning"
+      >
+        Not Available
+      </div>
     </div>
     <div
-      className="message warning"
+      className="info icon"
     >
-      Not Available
+      <AccessibleImage
+        className="info"
+      />
     </div>
   </div>
 </div>

@@ -4,32 +4,62 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# cbindgen is needed by the style system build.
-cbindgen = check_prog('CBINDGEN', ['cbindgen'], paths=toolchain_search_path,
-                      when=depends(build_project)
-                      (lambda build_project: build_project != 'js'))
+# cbindgen is needed by the style system build and webrender.
+cbindgen_is_needed = depends(build_project)(lambda build_project: build_project != 'js')
+
+option(env='CBINDGEN', nargs=1, when=cbindgen_is_needed,
+       help='Path to cbindgen')
 
 
-@depends_if(cbindgen)
-@checking('cbindgen version')
 @imports(_from='textwrap', _import='dedent')
-def cbindgen_version(cbindgen):
+def check_cbindgen_version(cbindgen, fatal=False):
+    log.debug("trying cbindgen: %s" % cbindgen)
+
     cbindgen_min_version = Version('0.8.3')
 
     # cbindgen x.y.z
     version = Version(check_cmd_output(cbindgen, '--version').strip().split(" ")[1])
+    log.debug("%s has version %s" % (cbindgen, version))
+    if version >= cbindgen_min_version:
+        return True
+    if not fatal:
+        return False
 
-    if version < cbindgen_min_version:
-        die(dedent('''\
-        cbindgen version {} is too old. At least version {} is required.
+    die(dedent('''\
+    cbindgen version {} is too old. At least version {} is required.
 
-        Please update using 'cargo install cbindgen --force' or running
-        './mach bootstrap', after removing the existing executable located at
-        {}.
-        '''.format(version, cbindgen_min_version, cbindgen)))
+    Please update using 'cargo install cbindgen --force' or running
+    './mach bootstrap', after removing the existing executable located at
+    {}.
+    '''.format(version, cbindgen_min_version, cbindgen)))
 
-    return version
 
+@depends_if('CBINDGEN', toolchain_search_path, when=cbindgen_is_needed)
+@checking('for cbindgen')
+@imports(_from='textwrap', _import='dedent')
+def cbindgen(cbindgen_override, toolchain_search_path):
+    if cbindgen_override:
+        check_cbindgen_version(cbindgen_override[0], fatal=True)
+        return cbindgen_override[0]
+
+    candidates = []
+    for path in toolchain_search_path:
+        candidate = find_program('cbindgen', [path])
+        if not candidate:
+            continue
+        if check_cbindgen_version(candidate):
+            return candidate
+        candidates.append(candidate)
+
+    if not candidates:
+        raise FatalCheckError(dedent('''\
+        Cannot find cbindgen. Please run `mach bootstrap`,
+        `cargo install cbindgen`, ensure that `cbindgen` is on your PATH,
+        or point at an executable with `CBINDGEN`.
+        '''))
+    check_cbindgen_version(candidates[0], fatal=True)
+
+set_config('CBINDGEN', cbindgen)
 
 # Bindgen can use rustfmt to format Rust file, but it's not required.
 js_option(env='RUSTFMT', nargs=1, help='Path to the rustfmt program')

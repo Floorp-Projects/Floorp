@@ -37,3 +37,9 @@ export function createEditor() {
     }
   });
 }
+
+export function createHeadlessEditor() {
+  const editor = createEditor();
+  editor.appendToLocalElement(document.createElement("div"));
+  return editor;
+}

@@ -65,7 +65,7 @@ void JSWindowActorParent::SendAsyncMessage(JSContext* aCx,
                                            JS::Handle<JS::Value> aTransfers,
                                            ErrorResult& aRv) {
   // If we've closed our channel already, just raise a warning.
-  if (NS_WARN_IF(mManager->IsClosed())) {
+  if (NS_WARN_IF(!mManager || mManager->IsClosed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }

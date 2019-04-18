@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Supported test types
+const TEST_BENCHMARK = "benchmark";
+const TEST_PAGE_LOAD = "pageload";
+
 // content script for use with pageload tests
 var perfData = window.performance;
 var gRetryCounter = 0;
@@ -63,7 +67,7 @@ function raptorContentHandler() {
 }
 
 function setup(settings) {
-  if (settings.type != "pageload") {
+  if (settings.type != TEST_PAGE_LOAD) {
     return;
   }
 
@@ -100,7 +104,7 @@ function setup(settings) {
     if (settings.measure.hero.length !== 0) {
       getHero = true;
       heroesToCapture = settings.measure.hero;
-      console.log("hero elements to measure: " + heroesToCapture);
+      console.log(`hero elements to measure: ${heroesToCapture}`);
       measureHero();
     }
   }
@@ -126,7 +130,7 @@ function measureHero() {
   var obs = null;
 
   var heroElementsFound = window.document.querySelectorAll("[elementtiming]");
-  console.log("found " + heroElementsFound.length + " hero elements in the page");
+  console.log(`found ${heroElementsFound.length} hero elements in the page`);
 
   if (heroElementsFound) {
     function callbackHero(entries, observer) {
@@ -134,8 +138,8 @@ function measureHero() {
         var heroFound = entry.target.getAttribute("elementtiming");
         // mark the time now as when hero element received
         perfData.mark(heroFound);
-        console.log("found hero:" + heroFound);
-        var resultType = "hero:" + heroFound;
+        var resultType = `hero:${heroFound}`;
+        console.log(`found ${resultType}`);
         // calculcate result: performance.timing.fetchStart - time when we got hero element
         perfData.measure(name = resultType,
                          startMark = startMeasure,
@@ -180,10 +184,10 @@ function measureFNBPaint() {
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log("\nfnbpaint is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log(`\nfnbpaint is not yet available (0), retry number ${gRetryCounter}...\n`);
       window.setTimeout(measureFNBPaint, 100);
     } else {
-      console.log("\nunable to get a value for fnbpaint after " + gRetryCounter + " retries\n");
+      console.log(`\nunable to get a value for fnbpaint after ${gRetryCounter} retries\n`);
     }
   }
 }
@@ -196,17 +200,17 @@ function measureDCF() {
     return;
   }
   if (x > 0) {
-    console.log("got domContentFlushed: " + x);
+    console.log(`got domContentFlushed: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("dcf", x - startTime);
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log("\dcf is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log(`\dcf is not yet available (0), retry number ${gRetryCounter}...\n`);
       window.setTimeout(measureDCF, 100);
     } else {
-      console.log("\nunable to get a value for dcf after " + gRetryCounter + " retries\n");
+      console.log(`\nunable to get a value for dcf after ${gRetryCounter} retries\n`);
     }
   }
 }
@@ -219,7 +223,7 @@ function measureTTFI() {
     return;
   }
   if (x > 0) {
-    console.log("got timeToFirstInteractive: " + x);
+    console.log(`got timeToFirstInteractive: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("ttfi", x - startTime);
@@ -232,7 +236,7 @@ function measureTTFI() {
     // times out at 30 seconds).  Some pages will never get 5 seconds
     // without a busy period!
     if (gRetryCounter <= 25 * (1000 / 200)) {
-      console.log("TTFI is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log(`TTFI is not yet available (0), retry number ${gRetryCounter}...\n`);
       window.setTimeout(measureTTFI, 200);
     } else {
       // unable to get a value for TTFI - negative value will be filtered out later
@@ -275,10 +279,10 @@ function measureFCP() {
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 10) {
-      console.log("\ntime to first-contentful-paint is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log(`\ntime to first-contentful-paint is not yet available (0), retry number ${gRetryCounter}...\n`);
       window.setTimeout(measureFCP, 100);
     } else {
-      console.log("\nunable to get a value for time-to-fcp after " + gRetryCounter + " retries\n");
+      console.log(`\nunable to get a value for time-to-fcp after ${gRetryCounter} retries\n`);
     }
   }
 }
@@ -291,24 +295,24 @@ function measureLoadTime() {
     return;
   }
   if (x > 0) {
-    console.log("got loadEventStart: " + x);
+    console.log(`got loadEventStart: ${x}`);
     gRetryCounter = 0;
     var startTime = perfData.timing.fetchStart;
     sendResult("loadtime", x - startTime);
   } else {
     gRetryCounter += 1;
     if (gRetryCounter <= 40 * (1000 / 200)) {
-      console.log("\loadEventStart is not yet available (0), retry number " + gRetryCounter + "...\n");
+      console.log(`\nloadEventStart is not yet available (0), retry number ${gRetryCounter}...\n`);
       window.setTimeout(measureLoadTime, 100);
     } else {
-      console.log("\nunable to get a value for loadEventStart after " + gRetryCounter + " retries\n");
+      console.log(`\nunable to get a value for loadEventStart after ${gRetryCounter} retries\n`);
     }
   }
 }
 
 function sendResult(_type, _value) {
   // send result back to background runner script
-  console.log("sending result back to runner: " + _type + " " + _value);
+  console.log(`sending result back to runner: ${_type} ${_value}`);
   chrome.runtime.sendMessage({"type": _type, "value": _value}, function(response) {
     if (response !== undefined) {
       console.log(response.text);

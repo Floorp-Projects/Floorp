@@ -1132,6 +1132,11 @@ class nsDisplayListBuilder {
    */
   class AutoBuildingDisplayList {
    public:
+    AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild)
+        : AutoBuildingDisplayList(
+              aBuilder, aForChild, aBuilder->GetVisibleRect(),
+              aBuilder->GetDirtyRect(), aForChild->IsTransformed()) {}
+
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
                             const nsRect& aVisibleRect,
                             const nsRect& aDirtyRect)
@@ -1140,52 +1145,8 @@ class nsDisplayListBuilder {
 
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
                             const nsRect& aVisibleRect,
-                            const nsRect& aDirtyRect, const bool aIsTransformed)
-        : mBuilder(aBuilder),
-          mPrevFrame(aBuilder->mCurrentFrame),
-          mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
-          mPrevHitTestArea(aBuilder->mHitTestArea),
-          mPrevHitTestInfo(aBuilder->mHitTestInfo),
-          mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
-          mPrevVisibleRect(aBuilder->mVisibleRect),
-          mPrevDirtyRect(aBuilder->mDirtyRect),
-          mPrevAGR(aBuilder->mCurrentAGR),
-          mPrevAncestorHasApzAwareEventHandler(
-              aBuilder->mAncestorHasApzAwareEventHandler),
-          mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
-          mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
-      if (aIsTransformed) {
-        aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
-        aBuilder->mCurrentReferenceFrame = aForChild;
-      } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
-        aBuilder->mCurrentOffsetToReferenceFrame += aForChild->GetPosition();
-      } else {
-        aBuilder->mCurrentReferenceFrame = aBuilder->FindReferenceFrameFor(
-            aForChild, &aBuilder->mCurrentOffsetToReferenceFrame);
-      }
-
-      bool isAsync;
-      mCurrentAGRState = aBuilder->IsAnimatedGeometryRoot(aForChild, isAsync);
-
-      if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
-        if (mCurrentAGRState == AGR_YES) {
-          aBuilder->mCurrentAGR = aBuilder->WrapAGRForFrame(
-              aForChild, isAsync, aBuilder->mCurrentAGR);
-        }
-      } else if (aBuilder->mCurrentFrame != aForChild) {
-        aBuilder->mCurrentAGR =
-            aBuilder->FindAnimatedGeometryRootFor(aForChild);
-      }
-
-      MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
-          aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
-      aBuilder->mInInvalidSubtree =
-          aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
-      aBuilder->mCurrentFrame = aForChild;
-      aBuilder->mVisibleRect = aVisibleRect;
-      aBuilder->mDirtyRect =
-          aBuilder->mInInvalidSubtree ? aVisibleRect : aDirtyRect;
-    }
+                            const nsRect& aDirtyRect,
+                            const bool aIsTransformed);
 
     void SetReferenceFrameAndCurrentOffset(const nsIFrame* aFrame,
                                            const nsPoint& aOffset) {
@@ -1761,17 +1722,7 @@ class nsDisplayListBuilder {
     return false;
   }
 
-  bool MarkCurrentFrameModifiedDuringBuilding() {
-    if (MarkFrameModifiedDuringBuilding(const_cast<nsIFrame*>(mCurrentFrame))) {
-      mInInvalidSubtree = true;
-      mDirtyRect = mVisibleRect;
-      return true;
-    }
-    return false;
-  }
-
   void RebuildAllItemsInCurrentSubtree() {
-    mInInvalidSubtree = true;
     mDirtyRect = mVisibleRect;
   }
 
@@ -2112,10 +2063,21 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  if (aBuilder->InInvalidSubtree() ||
+      item->FrameForInvalidation()->IsFrameModified()) {
+    item->SetModifiedFrame(true);
+  }
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (aBuilder->IsRetainingDisplayList() && !aBuilder->IsInPageSequence() &&
       aBuilder->IsBuilding()) {
     AssertUniqueItem(item);
+  }
+
+  // Verify that InInvalidSubtree matches invalidation frame's modified state.
+  if (aBuilder->InInvalidSubtree()) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        AnyContentAncestorModified(item->FrameForInvalidation()));
   }
 #endif
 
@@ -2184,13 +2146,14 @@ class nsDisplayItem : public nsDisplayItemLink {
   virtual void RestoreState() {
     mClipChain = mState.mClipChain;
     mClip = mState.mClip;
-    mDisableSubpixelAA = false;
+    mItemFlags -= ItemFlag::DisableSubpixelAA;
   }
 
   virtual void RemoveFrame(nsIFrame* aFrame) {
     if (mFrame && aFrame == mFrame) {
       MOZ_ASSERT(!mFrame->HasDisplayItem(this));
       mFrame = nullptr;
+      SetDeletedFrame();
       SetDisplayItemData(nullptr, nullptr);
     }
   }
@@ -2216,6 +2179,7 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   nsDisplayItem(nsDisplayListBuilder* aBuilder, const nsDisplayItem& aOther)
       : mFrame(aOther.mFrame),
+        mItemFlags(),
         mClipChain(aOther.mClipChain),
         mClip(aOther.mClip),
         mActiveScrolledRoot(aOther.mActiveScrolledRoot),
@@ -2223,21 +2187,21 @@ class nsDisplayItem : public nsDisplayItemLink {
         mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot),
         mToReferenceFrame(aOther.mToReferenceFrame),
         mBuildingRect(aOther.mBuildingRect),
-        mPaintRect(aOther.mPaintRect),
-        mForceNotVisible(aOther.mForceNotVisible),
-        mDisableSubpixelAA(aOther.mDisableSubpixelAA),
-        mReusedItem(false),
-        mBackfaceIsHidden(aOther.mBackfaceIsHidden),
-        mCombines3DTransformWithAncestors(
-            aOther.mCombines3DTransformWithAncestors),
-        mPaintRectValid(false),
-        mCanBeReused(true)
-#ifdef MOZ_DUMP_PAINTING
-        ,
-        mPainted(false)
-#endif
-  {
+        mPaintRect(aOther.mPaintRect) {
     MOZ_COUNT_CTOR(nsDisplayItem);
+    // TODO: It might be better to remove the flags that aren't copied.
+    if (aOther.ForceNotVisible()) {
+      mItemFlags += ItemFlag::ForceNotVisible;
+    }
+    if (aOther.IsSubpixelAADisabled()) {
+      mItemFlags += ItemFlag::DisableSubpixelAA;
+    }
+    if (mFrame->In3DContextAndBackfaceIsHidden()) {
+      mItemFlags += ItemFlag::BackfaceHidden;
+    }
+    if (aOther.Combines3DTransformWithAncestors()) {
+      mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
+    }
   }
 
   struct HitTestState {
@@ -2301,7 +2265,10 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   virtual nsIFrame* FrameForInvalidation() const { return mFrame; }
 
-  virtual bool HasDeletedFrame() const { return !mFrame; }
+  bool HasModifiedFrame() const;
+  void SetModifiedFrame(bool aModified);
+
+  bool HasDeletedFrame() const;
 
   virtual nsIFrame* StyleFrame() const { return mFrame; }
 
@@ -2545,12 +2512,12 @@ class nsDisplayItem : public nsDisplayItemLink {
    * Mark this display item as being painted via
    * FrameLayerBuilder::DrawPaintedLayer.
    */
-  bool Painted() const { return mPainted; }
+  bool Painted() const { return mItemFlags.contains(ItemFlag::Painted); }
 
   /**
    * Check if this display item has been painted.
    */
-  void SetPainted() { mPainted = true; }
+  void SetPainted() { mItemFlags += ItemFlag::Painted; }
 #endif
 
   /**
@@ -2733,14 +2700,16 @@ class nsDisplayItem : public nsDisplayItemLink {
       return;
     }
     mPaintRect = mBuildingRect = aBuildingRect;
-    mPaintRectValid = false;
+    mItemFlags -= ItemFlag::PaintRectValid;
   }
 
   void SetPaintRect(const nsRect& aPaintRect) {
     mPaintRect = aPaintRect;
-    mPaintRectValid = true;
+    mItemFlags += ItemFlag::PaintRectValid;
   }
-  bool HasPaintRect() const { return mPaintRectValid; }
+  bool HasPaintRect() const {
+    return mItemFlags.contains(ItemFlag::PaintRectValid);
+  }
 
   /**
    * Returns the building rect for the children, relative to their
@@ -2766,7 +2735,9 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   virtual bool CanApplyOpacity() const { return false; }
 
-  bool ForceNotVisible() const { return mForceNotVisible; }
+  bool ForceNotVisible() const {
+    return mItemFlags.contains(ItemFlag::ForceNotVisible);
+  }
 
   /**
    * For debugging and stuff
@@ -2832,9 +2803,11 @@ class nsDisplayItem : public nsDisplayItemLink {
    * Disable usage of component alpha. Currently only relevant for items that
    * have text.
    */
-  void DisableComponentAlpha() { mDisableSubpixelAA = true; }
+  void DisableComponentAlpha() { mItemFlags += ItemFlag::DisableSubpixelAA; }
 
-  bool IsSubpixelAADisabled() const { return mDisableSubpixelAA; }
+  bool IsSubpixelAADisabled() const {
+    return mItemFlags.contains(ItemFlag::DisableSubpixelAA);
+  }
 
   /**
    * Check if we can add async animations to the layer for this display item.
@@ -2870,14 +2843,17 @@ class nsDisplayItem : public nsDisplayItemLink {
   void FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
                          const ActiveScrolledRoot* aASR);
 
-  bool BackfaceIsHidden() const { return mBackfaceIsHidden; }
+  bool BackfaceIsHidden() const {
+    return mItemFlags.contains(ItemFlag::BackfaceHidden);
+  }
 
   bool Combines3DTransformWithAncestors() const {
-    return mCombines3DTransformWithAncestors;
+    return mItemFlags.contains(ItemFlag::Combines3DTransformWithAncestors);
   }
 
   bool In3DContextAndBackfaceIsHidden() const {
-    return mBackfaceIsHidden && mCombines3DTransformWithAncestors;
+    return mItemFlags.contains(ItemFlag::BackfaceHidden) &&
+           mItemFlags.contains(ItemFlag::Combines3DTransformWithAncestors);
   }
 
   bool HasDifferentFrame(const nsDisplayItem* aOther) const {
@@ -2893,14 +2869,22 @@ class nsDisplayItem : public nsDisplayItemLink {
     return mFrame->GetContent() == aOther->Frame()->GetContent();
   }
 
-  bool IsReused() const { return mReusedItem; }
+  bool IsReused() const { return mItemFlags.contains(ItemFlag::ReusedItem); }
+  void SetReused(bool aReused) {
+    if (aReused) {
+      mItemFlags += ItemFlag::ReusedItem;
+    } else {
+      mItemFlags -= ItemFlag::ReusedItem;
+    }
+  }
 
-  void SetReused(bool aReused) { mReusedItem = aReused; }
-
-  bool CanBeReused() const { return mCanBeReused; }
+  bool CanBeReused() const {
+    return !mItemFlags.contains(ItemFlag::CantBeReused);
+  }
+  void SetCantBeReused() { mItemFlags += ItemFlag::CantBeReused; }
   void DiscardIfOldItem() {
     if (mOldList) {
-      mCanBeReused = false;
+      SetCantBeReused();
     }
   }
   virtual void NotifyUsed(nsDisplayListBuilder* aBuilder) {}
@@ -2972,11 +2956,34 @@ class nsDisplayItem : public nsDisplayItemLink {
 #endif
 
  protected:
+  void SetDeletedFrame();
+
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
 
+  enum class ItemFlag {
+    ModifiedFrame,
+    DeletedFrame,
+    ForceNotVisible,
+    DisableSubpixelAA,
+    CantBeReused,
+    ReusedItem,
+    BackfaceHidden,
+    Combines3DTransformWithAncestors,
+    PaintRectValid,
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MergedItem,
+    PreProcessedItem,
+#endif
+#ifdef MOZ_DUMP_PAINTING
+    // True if this frame has been painted.
+    Painted,
+#endif
+  };
+
   nsIFrame* mFrame;
+  mozilla::EnumSet<ItemFlag, uint16_t> mItemFlags;
   RefPtr<const DisplayItemClipChain> mClipChain;
   const DisplayItemClip* mClip;
   RefPtr<const ActiveScrolledRoot> mActiveScrolledRoot;
@@ -3010,25 +3017,30 @@ class nsDisplayItem : public nsDisplayItemLink {
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
  public:
+  bool IsMergedItem() const {
+    return mItemFlags.contains(ItemFlag::MergedItem);
+  }
+  bool IsPreProcessedItem() const {
+    return mItemFlags.contains(ItemFlag::PreProcessedItem);
+  }
+  void SetMergedPreProcessed(bool aMerged, bool aPreProcessed) {
+    if (aMerged) {
+      mItemFlags += ItemFlag::MergedItem;
+    } else {
+      mItemFlags -= ItemFlag::MergedItem;
+    }
+
+    if (aPreProcessed) {
+      mItemFlags += ItemFlag::PreProcessedItem;
+    } else {
+      mItemFlags -= ItemFlag::PreProcessedItem;
+    }
+  }
+
   uint32_t mOldListKey = 0;
   uint32_t mOldNestingDepth = 0;
-  bool mMergedItem = false;
-  bool mPreProcessedItem = false;
 
  protected:
-#endif
-
-  bool mForceNotVisible;
-  bool mDisableSubpixelAA;
-  bool mReusedItem;
-  bool mBackfaceIsHidden;
-  bool mCombines3DTransformWithAncestors;
-  bool mPaintRectValid;
-  bool mCanBeReused;
-
-#ifdef MOZ_DUMP_PAINTING
-  // True if this frame has been painted.
-  bool mPainted;
 #endif
 };
 
@@ -4162,7 +4174,9 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
-    mCanBeReused = aCanBeReused;
+    if (!aCanBeReused) {
+      SetCantBeReused();
+    }
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -4500,13 +4514,10 @@ class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 
   nsIFrame* FrameForInvalidation() const override { return mStyleFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mStyleFrame || nsDisplayBackgroundImage::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mStyleFrame) {
       mStyleFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBackgroundImage::RemoveFrame(aFrame);
   }
@@ -4631,13 +4642,10 @@ class nsDisplayTableThemedBackground : public nsDisplayThemedBackground {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayThemedBackground::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayThemedBackground::RemoveFrame(aFrame);
   }
@@ -4811,13 +4819,10 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBackgroundColor::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBackgroundColor::RemoveFrame(aFrame);
   }
@@ -5633,13 +5638,10 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBlendMode::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBlendMode::RemoveFrame(aFrame);
   }
@@ -5740,13 +5742,10 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBlendContainer::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBlendContainer::RemoveFrame(aFrame);
   }
@@ -5973,7 +5972,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
       const ContainerLayerParameters& aContainerParameters);
 
   nsIFrame* FrameForInvalidation() const override;
-  bool HasDeletedFrame() const override;
   void RemoveFrame(nsIFrame* aFrame) override;
 
   void Disown();
@@ -6155,13 +6153,10 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayFixedPosition::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayFixedPosition::RemoveFrame(aFrame);
   }

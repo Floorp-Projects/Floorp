@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>Test XML document prompts</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/AddTask.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="text/javascript" src="../../../prompts/test/prompt_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -64,6 +63,12 @@ runInParent(function initLogins() {
 
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login2);
+});
+
+add_task(async function prepare() {
+  await new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [
+    ["dom.xmldocument.load.enabled", true],
+  ]}, resolve));
 });
 
 add_task(async function test_promptUsernameAndPassword_accept() {

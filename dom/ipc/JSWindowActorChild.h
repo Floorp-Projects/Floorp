@@ -17,7 +17,12 @@
 namespace mozilla {
 namespace dom {
 
+template <typename>
+struct Nullable;
+
+class Document;
 class WindowGlobalChild;
+class WindowProxyHolder;
 
 }  // namespace dom
 }  // namespace mozilla
@@ -49,6 +54,10 @@ class JSWindowActorChild final : public nsISupports, public nsWrapperCache {
   void SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                         JS::Handle<JS::Value> aObj,
                         JS::Handle<JS::Value> aTransfers, ErrorResult& aRv);
+
+  Document* GetDocument(ErrorResult& aRv);
+  BrowsingContext* GetBrowsingContext(ErrorResult& aRv);
+  Nullable<WindowProxyHolder> GetContentWindow(ErrorResult& aRv);
 
  private:
   nsString mName;

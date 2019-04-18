@@ -27,6 +27,7 @@ DevToolsModules(
     'globe.svg',
     'help.svg',
     'home.svg',
+    'info.svg',
     'loader.svg',
     'next-circle.svg',
     'next.svg',

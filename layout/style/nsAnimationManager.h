@@ -84,7 +84,7 @@ class CSSAnimation final : public Animation {
 
   void PlayFromStyle();
   void PauseFromStyle();
-  void CancelFromStyle() override {
+  void CancelFromStyle(PostRestyleMode aPostRestyle) {
     // When an animation is disassociated with style it enters an odd state
     // where its composite order is undefined until it first transitions
     // out of the idle state.
@@ -98,10 +98,10 @@ class CSSAnimation final : public Animation {
     mAnimationIndex = sNextAnimationIndex++;
     mNeedsNewAnimationIndexWhenRun = true;
 
-    Animation::CancelFromStyle();
+    Animation::Cancel(aPostRestyle);
 
-    // We need to do this *after* calling CancelFromStyle() since
-    // CancelFromStyle might synchronously trigger a cancel event for which
+    // We need to do this *after* calling Cancel() since
+    // Cancel() might synchronously trigger a cancel event for which
     // we need an owning element to target the event at.
     mOwningElement = OwningElementRef();
   }

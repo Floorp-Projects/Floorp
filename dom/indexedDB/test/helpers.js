@@ -49,12 +49,6 @@ function* testHarnessSteps() {
     testHarnessGenerator.next(val);
   }
 
-  let script = document.createElement("script");
-  script.src = "/tests/SimpleTest/AddTask.js";
-  script.onload = nextTestHarnessStep;
-  document.head.appendChild(script);
-  yield undefined;
-
   let testScriptPath;
   let testScriptFilename;
 

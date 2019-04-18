@@ -136,6 +136,7 @@ class BasicCompositor;
 class TextureReadLock;
 struct GPUStats;
 class AsyncReadbackBuffer;
+class RecordedFrame;
 
 enum SurfaceInitMode { INIT_MODE_NONE, INIT_MODE_CLEAR };
 
@@ -520,6 +521,21 @@ class Compositor : public TextureSourceProvider {
   void SetInvalid();
   bool IsValid() const override;
   CompositorBridgeParent* GetCompositorBridgeParent() const { return mParent; }
+
+  /**
+   * Request the compositor to record its frames.
+   *
+   * For all compositors except |BasicCompositor|, this is a noop.
+   */
+  virtual void RequestRecordFrames(bool aWillRecord) {}
+
+  /**
+   * Record the current frame for readback by the |CompositionRecorder|.
+   *
+   * If this compositor does not support this feature, a null pointer is
+   * returned instead.
+   */
+  already_AddRefed<RecordedFrame> RecordFrame(const TimeStamp& aTimeStamp);
 
  protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,

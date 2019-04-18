@@ -15,6 +15,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h"  // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
+#include "mozilla/PostRestyleMode.h"
 #include "mozilla/TimeStamp.h"             // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h"  // for AnimationPlayState
 #include "mozilla/dom/AnimationEffect.h"
@@ -126,8 +127,7 @@ class Animation : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(finish);
   IMPL_EVENT_HANDLER(cancel);
 
-  void Cancel();
-  virtual void CancelFromStyle() { CancelNoUpdate(); }
+  void Cancel(PostRestyleMode aPostRestyle = PostRestyleMode::IfNeeded);
 
   void Finish(ErrorResult& aRv);
 
@@ -428,7 +428,7 @@ class Animation : public DOMEventTargetHelper,
 
   virtual void UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag);
   void UpdateFinishedState(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag);
-  void UpdateEffect();
+  void UpdateEffect(PostRestyleMode aPostRestyle);
   /**
    * Flush all pending styles other than throttled animation styles (e.g.
    * animations running on the compositor).

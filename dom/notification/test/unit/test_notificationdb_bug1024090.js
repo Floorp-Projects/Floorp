@@ -9,8 +9,8 @@ function run_test() {
 add_test(function test_bug1024090_purge() {
   const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   const NOTIFICATION_STORE_PATH =
-    OS.Path.join(OS.Constants.Path.profileDir, "notificationstore.json");
-  let cleanup = OS.File.writeAtomic(NOTIFICATION_STORE_PATH, "");
+    OS.Path.join(OS.Constants.Path.profileDir, "notificationstore");
+  let cleanup = OS.File.removeDir(NOTIFICATION_STORE_PATH);
   cleanup.then(
     function onSuccess() {
       ok(true, "Notification database cleaned.");

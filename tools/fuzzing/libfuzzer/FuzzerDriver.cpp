@@ -1,9 +1,8 @@
 //===- FuzzerDriver.cpp - FuzzerDriver function and flags -----------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // FuzzerDriver and flag parsing.
@@ -11,12 +10,13 @@
 
 #include "FuzzerCommand.h"
 #include "FuzzerCorpus.h"
+#include "FuzzerFork.h"
 #include "FuzzerIO.h"
 #include "FuzzerInterface.h"
 #include "FuzzerInternal.h"
+#include "FuzzerMerge.h"
 #include "FuzzerMutate.h"
 #include "FuzzerRandom.h"
-#include "FuzzerShmem.h"
 #include "FuzzerTracePC.h"
 #include <algorithm>
 #include <atomic>
@@ -26,10 +26,16 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <fstream>
 
 // This function should be present in the libFuzzer so that the client
 // binary can test for its existence.
+#if LIBFUZZER_MSVC
+extern "C" void __libfuzzer_is_present() {}
+#pragma comment(linker, "/include:__libfuzzer_is_present")
+#else
 extern "C" __attribute__((used)) void __libfuzzer_is_present() {}
+#endif  // LIBFUZZER_MSVC
 
 namespace fuzzer {
 
@@ -316,10 +322,8 @@ int CleanseCrashInput(const Vector<std::string> &Args,
   assert(Cmd.hasArgument(InputFilePath));
   Cmd.removeArgument(InputFilePath);
 
-  auto LogFilePath = DirPlusFile(
-      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".txt");
-  auto TmpFilePath = DirPlusFile(
-      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".repro");
+  auto LogFilePath = TempPath(".txt");
+  auto TmpFilePath = TempPath(".repro");
   Cmd.addArgument(TmpFilePath);
   Cmd.setOutputFile(LogFilePath);
   Cmd.combineOutAndErr();
@@ -379,8 +383,7 @@ int MinimizeCrashInput(const Vector<std::string> &Args,
     BaseCmd.addFlag("max_total_time", "600");
   }
 
-  auto LogFilePath = DirPlusFile(
-      TmpDir(), "libFuzzerTemp." + std::to_string(GetPid()) + ".txt");
+  auto LogFilePath = TempPath(".txt");
   BaseCmd.setOutputFile(LogFilePath);
   BaseCmd.combineOutAndErr();
 
@@ -464,6 +467,34 @@ int MinimizeCrashInputInternalStep(Fuzzer *F, InputCorpus *Corpus) {
   return 0;
 }
 
+void Merge(Fuzzer *F, FuzzingOptions &Options, const Vector<std::string> &Args,
+           const Vector<std::string> &Corpora, const char *CFPathOrNull) {
+  if (Corpora.size() < 2) {
+    Printf("INFO: Merge requires two or more corpus dirs\n");
+    exit(0);
+  }
+
+  Vector<SizedFile> OldCorpus, NewCorpus;
+  GetSizedFilesFromDir(Corpora[0], &OldCorpus);
+  for (size_t i = 1; i < Corpora.size(); i++)
+    GetSizedFilesFromDir(Corpora[i], &NewCorpus);
+  std::sort(OldCorpus.begin(), OldCorpus.end());
+  std::sort(NewCorpus.begin(), NewCorpus.end());
+
+  std::string CFPath = CFPathOrNull ? CFPathOrNull : TempPath(".txt");
+  Vector<std::string> NewFiles;
+  Set<uint32_t> NewFeatures, NewCov;
+  CrashResistantMerge(Args, OldCorpus, NewCorpus, &NewFiles, {}, &NewFeatures,
+                      {}, &NewCov, CFPath, true);
+  for (auto &Path : NewFiles)
+    F->WriteToOutputCorpus(FileToVector(Path, Options.MaxLen));
+  // We are done, delete the control file if it was a temporary one.
+  if (!Flags.merge_control_file)
+    RemoveFile(CFPath);
+
+  exit(0);
+}
+
 int AnalyzeDictionary(Fuzzer *F, const Vector<Unit>& Dict,
                       UnitVector& Corpus) {
   Printf("Started dictionary minimization (up to %d tests)\n",
@@ -537,6 +568,8 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   EF = new ExternalFunctions();
   if (EF->LLVMFuzzerInitialize)
     EF->LLVMFuzzerInitialize(argc, argv);
+  if (EF->__msan_scoped_disable_interceptor_checks)
+    EF->__msan_scoped_disable_interceptor_checks();
   const Vector<std::string> Args(*argv, *argv + *argc);
   assert(!Args.empty());
   ProgName = new std::string(Args[0]);
@@ -571,6 +604,9 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   Options.UnitTimeoutSec = Flags.timeout;
   Options.ErrorExitCode = Flags.error_exitcode;
   Options.TimeoutExitCode = Flags.timeout_exitcode;
+  Options.IgnoreTimeouts = Flags.ignore_timeouts;
+  Options.IgnoreOOMs = Flags.ignore_ooms;
+  Options.IgnoreCrashes = Flags.ignore_crashes;
   Options.MaxTotalTimeSec = Flags.max_total_time;
   Options.DoCrossOver = Flags.cross_over;
   Options.MutateDepth = Flags.mutate_depth;
@@ -615,13 +651,15 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   Options.PrintFinalStats = Flags.print_final_stats;
   Options.PrintCorpusStats = Flags.print_corpus_stats;
   Options.PrintCoverage = Flags.print_coverage;
-  Options.DumpCoverage = Flags.dump_coverage;
-  Options.UseClangCoverage = Flags.use_clang_coverage;
-  Options.UseFeatureFrequency = Flags.use_feature_frequency;
   if (Flags.exit_on_src_pos)
     Options.ExitOnSrcPos = Flags.exit_on_src_pos;
   if (Flags.exit_on_item)
     Options.ExitOnItem = Flags.exit_on_item;
+  if (Flags.focus_function)
+    Options.FocusFunction = Flags.focus_function;
+  if (Flags.data_flow_trace)
+    Options.DataFlowTrace = Flags.data_flow_trace;
+  Options.LazyCounters = Flags.lazy_counters;
 
   unsigned Seed = Flags.seed;
   // Initialize Seed.
@@ -665,32 +703,6 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
   if (Flags.cleanse_crash)
     return CleanseCrashInput(Args, Options);
 
-  if (auto Name = Flags.run_equivalence_server) {
-    SMR.Destroy(Name);
-    if (!SMR.Create(Name)) {
-       Printf("ERROR: can't create shared memory region\n");
-      return 1;
-    }
-    Printf("INFO: EQUIVALENCE SERVER UP\n");
-    while (true) {
-      SMR.WaitClient();
-      size_t Size = SMR.ReadByteArraySize();
-      SMR.WriteByteArray(nullptr, 0);
-      const Unit tmp(SMR.GetByteArray(), SMR.GetByteArray() + Size);
-      F->ExecuteCallback(tmp.data(), tmp.size());
-      SMR.PostServer();
-    }
-    return 0;
-  }
-
-  if (auto Name = Flags.use_equivalence_server) {
-    if (!SMR.Open(Name)) {
-      Printf("ERROR: can't open shared memory region\n");
-      return 1;
-    }
-    Printf("INFO: EQUIVALENCE CLIENT UP\n");
-  }
-
   if (DoPlainRun) {
     Options.SaveArtifacts = false;
     int Runs = std::max(1, Flags.runs);
@@ -713,13 +725,11 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
     exit(0);
   }
 
-  if (Flags.merge) {
-    F->CrashResistantMerge(Args, *Inputs,
-                           Flags.load_coverage_summary,
-                           Flags.save_coverage_summary,
-                           Flags.merge_control_file);
-    exit(0);
-  }
+  if (Flags.fork)
+    FuzzWithFork(F->GetMD().GetRand(), Options, Args, *Inputs, Flags.fork);
+
+  if (Flags.merge)
+    Merge(F, Options, Args, *Inputs, Flags.merge_control_file);
 
   if (Flags.merge_inner) {
     const size_t kDefaultMaxMergeLen = 1 << 20;
@@ -751,7 +761,19 @@ int FuzzerDriver(int *argc, char ***argv, UserCallback Callback) {
     exit(0);
   }
 
-  F->Loop(*Inputs);
+  // Parse -seed_inputs=file1,file2,...
+  Vector<std::string> ExtraSeedFiles;
+  if (Flags.seed_inputs) {
+    std::string s = Flags.seed_inputs;
+    size_t comma_pos;
+    while ((comma_pos = s.find_last_of(',')) != std::string::npos) {
+      ExtraSeedFiles.push_back(s.substr(comma_pos + 1));
+      s = s.substr(0, comma_pos);
+    }
+    ExtraSeedFiles.push_back(s);
+  }
+
+  F->Loop(*Inputs, ExtraSeedFiles);
 
   if (Flags.verbosity)
     Printf("Done %zd runs in %zd second(s)\n", F->getTotalNumberOfRuns(),
