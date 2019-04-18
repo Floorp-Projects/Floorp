@@ -666,6 +666,7 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
   bool mWithCredentials;
   uint32_t mTimeout;
   XMLHttpRequestResponseType mResponseType;
+  const nsString mMimeTypeOverride;
 
  public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
@@ -673,14 +674,16 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable {
                const Optional<nsAString>& aUser,
                const Optional<nsAString>& aPassword, bool aBackgroundRequest,
                bool aWithCredentials, uint32_t aTimeout,
-               XMLHttpRequestResponseType aResponseType)
+               XMLHttpRequestResponseType aResponseType,
+               const nsString& aMimeTypeOverride)
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
         mMethod(aMethod),
         mURL(aURL),
         mBackgroundRequest(aBackgroundRequest),
         mWithCredentials(aWithCredentials),
         mTimeout(aTimeout),
-        mResponseType(aResponseType) {
+        mResponseType(aResponseType),
+        mMimeTypeOverride(aMimeTypeOverride) {
     if (aUser.WasPassed()) {
       mUserStr = aUser.Value();
       mUser = &mUserStr;
@@ -1289,6 +1292,13 @@ nsresult OpenRunnable::MainThreadRunInternal() {
     }
   }
 
+  if (!mMimeTypeOverride.IsVoid()) {
+    mProxy->mXHR->OverrideMimeType(mMimeTypeOverride, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
+  }
+
   MOZ_ASSERT(!mProxy->mInOpen);
   mProxy->mInOpen = true;
 
@@ -1424,7 +1434,8 @@ XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
       mWithCredentials(false),
       mCanceled(false),
       mMozAnon(false),
-      mMozSystem(false) {
+      mMozSystem(false),
+      mMimeTypeOverride(VoidString()) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   mozilla::HoldJSObjects(this);
@@ -1747,6 +1758,7 @@ void XMLHttpRequestWorker::Open(const nsACString& aMethod,
     return;
   }
 
+  bool alsoOverrideMimeType = false;
   if (mProxy) {
     MaybeDispatchPrematureAbortEvents(aRv);
     if (aRv.Failed()) {
@@ -1760,14 +1772,15 @@ void XMLHttpRequestWorker::Open(const nsACString& aMethod,
     }
     mProxy = new Proxy(this, clientInfo.ref(), mWorkerPrivate->GetController(),
                        mMozAnon, mMozSystem);
+    alsoOverrideMimeType = true;
   }
 
   mProxy->mOuterEventStreamId++;
 
   RefPtr<OpenRunnable> runnable = new OpenRunnable(
       mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
-      mBackgroundRequest, mWithCredentials, mTimeout, mResponseType);
-
+      mBackgroundRequest, mWithCredentials, mTimeout, mResponseType,
+      alsoOverrideMimeType ? mMimeTypeOverride : VoidString());
   ++mProxy->mOpenCount;
   runnable->Dispatch(Canceling, aRv);
   if (aRv.Failed()) {
@@ -2125,20 +2138,20 @@ void XMLHttpRequestWorker::OverrideMimeType(const nsAString& aMimeType,
     return;
   }
 
-  // We're supposed to throw if the state is not OPENED or HEADERS_RECEIVED. We
-  // can detect OPENED really easily but we can't detect HEADERS_RECEIVED in a
-  // non-racy way until the XHR state machine actually runs on this thread
-  // (bug 671047). For now we're going to let this work only if the Send()
-  // method has not been called, unless the send has been aborted.
-  if (!mProxy || (SendInProgress() &&
-                  (mProxy->mSeenLoadStart || mStateData.mReadyState > 1))) {
+  // We're supposed to throw if the state is LOADING or DONE.
+  if (mStateData.mReadyState == XMLHttpRequest_Binding::LOADING ||
+      mStateData.mReadyState == XMLHttpRequest_Binding::DONE) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  RefPtr<OverrideMimeTypeRunnable> runnable =
-      new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, aMimeType);
-  runnable->Dispatch(Canceling, aRv);
+  mMimeTypeOverride = aMimeType;
+
+  if (mProxy) {
+    RefPtr<OverrideMimeTypeRunnable> runnable =
+        new OverrideMimeTypeRunnable(mWorkerPrivate, mProxy, aMimeType);
+    runnable->Dispatch(Canceling, aRv);
+  }
 }
 
 void XMLHttpRequestWorker::SetResponseType(
