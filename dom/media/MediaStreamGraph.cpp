@@ -2786,16 +2786,15 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
   // Pass buffered data to the listener
   VideoSegment bufferedData;
   size_t videoFrames = 0;
-  // For video we append all non-null chunks, as we're only interested in
-  // real frames and their timestamps.
   VideoSegment& trackSegment = static_cast<VideoSegment&>(*track->GetSegment());
   for (VideoSegment::ConstChunkIterator iter(trackSegment); !iter.IsEnded();
        iter.Next()) {
-    if (iter->IsNull()) {
+    if (iter->mTimeStamp.IsNull()) {
+      // No timestamp means this is only for the graph's internal book-keeping,
+      // denoting a late start of the track.
       continue;
     }
     ++videoFrames;
-    MOZ_ASSERT(!iter->mTimeStamp.IsNull());
     bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                              iter->mFrame.GetIntrinsicSize(),
                              iter->mFrame.GetPrincipalHandle(),
@@ -2806,10 +2805,8 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
     VideoSegment& video = static_cast<VideoSegment&>(*updateData->mData);
     for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
          iter.Next()) {
-      if (iter->IsNull()) {
-        continue;
-      }
       ++videoFrames;
+      MOZ_ASSERT(!iter->mTimeStamp.IsNull());
       bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
                                iter->mFrame.GetIntrinsicSize(),
                                iter->mFrame.GetPrincipalHandle(),
@@ -2821,9 +2818,7 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
       ("%p: Notifying direct listener %p of %zu video frames and duration "
        "%" PRId64,
        GraphImpl(), listener.get(), videoFrames, bufferedData.GetDuration()));
-  if (!bufferedData.IsNull()) {
-    listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
-  }
+  listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
 }
 
 void SourceMediaStream::RemoveDirectTrackListenerImpl(
