@@ -19,7 +19,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.lib.crash.Crash
@@ -39,8 +38,6 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 @SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
     open val isCustomTab = false
-    private var sessionObserver: SessionManager.Observer? = null
-    var allSessionsRemoved = false
 
     val themeManager = DefaultThemeManager().also {
         it.onThemeChange = { theme ->
@@ -57,7 +54,6 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sessionObserver = subscribeToSessions()
 
         themeManager.temporaryThemeManagerStorage =
             when (PreferenceManager.getDefaultSharedPreferences(this)
@@ -94,20 +90,7 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // All sessions have been removed; we should try to pop inclusive to browser if not in private mode
-        if (allSessionsRemoved && !browsingModeManager.isPrivate) {
-            navHost.navController.popBackStack(R.id.browserFragment, true)
-            allSessionsRemoved = false
-        }
-
         showSoftwareKeyboardIfNecessary()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        sessionObserver?.let {
-            components.core.sessionManager.unregister(it)
-        }
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -231,17 +214,6 @@ open class HomeActivity : AppCompatActivity() {
         } else {
             searchUseCase.invoke(text)
         }
-    }
-
-    private fun subscribeToSessions(): SessionManager.Observer {
-        val observer = object : SessionManager.Observer {
-            override fun onAllSessionsRemoved() {
-                super.onAllSessionsRemoved()
-                allSessionsRemoved = true
-            }
-        }
-        components.core.sessionManager.register(observer)
-        return observer
     }
 
     companion object {
