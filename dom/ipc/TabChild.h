@@ -613,6 +613,10 @@ class TabChild final : public TabChildBase,
   void PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch,
                                 bool aForceRepaint);
 
+  nsresult CanCancelContentJS(nsITabParent::NavigationType aNavigationType,
+                              int32_t aNavigationIndex, nsIURI* aNavigationURI,
+                              bool* aCanCancel);
+
   layers::LayersObserverEpoch LayersObserverEpoch() const {
     return mLayersObserverEpoch;
   }
@@ -808,6 +812,9 @@ class TabChild final : public TabChildBase,
                                        nsIRequest* aRequest,
                                        Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
+
+  nsresult CanCancelContentJSBetweenURIs(nsIURI* aFirstURI, nsIURI* aSecondURI,
+                                         bool* aCanCancel);
 
   class DelayedDeleteRunnable;
 
