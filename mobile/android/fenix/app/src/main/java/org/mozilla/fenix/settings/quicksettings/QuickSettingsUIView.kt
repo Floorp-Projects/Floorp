@@ -108,8 +108,6 @@ class QuickSettingsUIView(
             context
         ) else DefaultThemeManager.resolveAttribute(R.attr.neutral, context)
         val icon = AppCompatResources.getDrawable(context, drawableId)
-        val resolvedColor = ContextCompat.getColor(context, drawableTint)
-        icon?.setTint(resolvedColor)
         trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         trackingProtectionSwitch.isChecked = isTrackingProtectionOn
 
