@@ -172,14 +172,8 @@
       }
 
       inherit() {
-        let map = {
-          "label": [[ "label", "text" ]],
-          "foo": [[ "label", "foo" ]],
-          "boo": [[ "label", "boo" ]],
-          "bar": [[ "label", "bardo" ]],
-        };
-        for (let attr of InheritsElementImperative.observedAttributes) {
-          this.inheritAttribute(map[attr], this.getAttribute(attr));
+        for (let attr of [ "text=label", "foo", "boo", "bardo=bar" ]) {
+          this.inheritAttribute(this.label, attr);
         }
       }
 

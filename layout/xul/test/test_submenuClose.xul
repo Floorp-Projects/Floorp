@@ -77,10 +77,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1181560
     mainMenu = document.getElementById("menu");
     menuB = document.getElementById("b");
     menuC = document.getElementById("c");
-    menuB.menupopup.addEventListener("popupshown", handleBOpens, false);
-    menuB.menupopup.addEventListener("popuphidden", handleBCloses, false);
-    menuC.menupopup.addEventListener("popupshown", handleCOpens, false);
-    menuC.menupopup.addEventListener("popuphidden", handleCCloses, false);
+    menuB.firstChild.addEventListener("popupshown", handleBOpens, false);
+    menuB.firstChild.addEventListener("popuphidden", handleBCloses, false);
+    menuC.firstChild.addEventListener("popupshown", handleCOpens, false);
+    menuC.firstChild.addEventListener("popuphidden", handleCCloses, false);
     mainMenu.addEventListener("popupshown", ev => {
       synthesizeMouseAtCenter(menuB, {}, window);
     });

@@ -245,6 +245,22 @@ toolbarspring {
 
 /********* menu ***********/
 
+menubar > menu {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-menubar");
+}
+
+menubar > menu.menu-iconic {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-menubar-iconic");
+}
+
+menu {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu");
+}
+
+menu.menu-iconic {
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
+}
+
 menubar > menu:empty {
   visibility: collapse;
 }

@@ -260,9 +260,7 @@ uint8_t XULMenuitemAccessible::ActionCount() const { return 1; }
 
 bool XULMenuitemAccessible::IsActiveWidget() const {
   // Parent menu item is a widget, it's active when its popup is open.
-  // Typically the <menupopup> is included in the document markup, and
-  // <menu> prepends content in front of it.
-  nsIContent* menuPopupContent = mContent->GetLastChild();
+  nsIContent* menuPopupContent = mContent->GetFirstChild();
   if (menuPopupContent) {
     nsMenuPopupFrame* menuPopupFrame =
         do_QueryFrame(menuPopupContent->GetPrimaryFrame());
@@ -274,7 +272,7 @@ bool XULMenuitemAccessible::IsActiveWidget() const {
 bool XULMenuitemAccessible::AreItemsOperable() const {
   // Parent menu item is a widget, its items are operable when its popup is
   // open.
-  nsIContent* menuPopupContent = mContent->GetLastChild();
+  nsIContent* menuPopupContent = mContent->GetFirstChild();
   if (menuPopupContent) {
     nsMenuPopupFrame* menuPopupFrame =
         do_QueryFrame(menuPopupContent->GetPrimaryFrame());
