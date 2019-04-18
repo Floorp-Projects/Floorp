@@ -14,6 +14,7 @@
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "prenv.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 
@@ -202,23 +203,41 @@ bool nsMacUtilsImpl::GetAppPath(nsCString& aAppPath) {
 }
 
 #  if defined(DEBUG)
+// If XPCOM_MEM_BLOAT_LOG or XPCOM_MEM_LEAK_LOG is set to a log file
+// path, return the path to the parent directory (where sibling log
+// files will be saved.)
+nsresult nsMacUtilsImpl::GetBloatLogDir(nsCString& aDirectoryPath) {
+  nsAutoCString bloatLog(PR_GetEnv("XPCOM_MEM_BLOAT_LOG"));
+  if (bloatLog.IsEmpty()) {
+    bloatLog = PR_GetEnv("XPCOM_MEM_LEAK_LOG");
+  }
+  if (!bloatLog.IsEmpty() && bloatLog != "1" && bloatLog != "2") {
+    return GetDirectoryPath(bloatLog.get(), aDirectoryPath);
+  }
+  return NS_OK;
+}
+
 // Given a path to a file, return the directory which contains it.
-nsAutoCString nsMacUtilsImpl::GetDirectoryPath(const char* aPath) {
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  if (!file || NS_FAILED(file->InitWithNativePath(nsDependentCString(aPath)))) {
-    MOZ_CRASH("Failed to create or init an nsIFile");
-  }
+nsresult nsMacUtilsImpl::GetDirectoryPath(const char* aPath,
+                                          nsCString& aDirectoryPath) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = file->InitWithNativePath(nsDependentCString(aPath));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIFile> directoryFile;
-  if (NS_FAILED(file->GetParent(getter_AddRefs(directoryFile))) ||
-      !directoryFile) {
-    MOZ_CRASH("Failed to get parent for an nsIFile");
-  }
-  directoryFile->Normalize();
-  nsAutoCString directoryPath;
-  if (NS_FAILED(directoryFile->GetNativePath(directoryPath))) {
+  rv = file->GetParent(getter_AddRefs(directoryFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = directoryFile->Normalize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_FAILED(directoryFile->GetNativePath(aDirectoryPath))) {
     MOZ_CRASH("Failed to get path for an nsIFile");
   }
-  return directoryPath;
+  return NS_OK;
 }
 #  endif /* DEBUG */
 #endif   /* MOZ_SANDBOX */

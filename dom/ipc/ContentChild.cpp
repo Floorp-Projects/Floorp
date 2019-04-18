@@ -1669,16 +1669,12 @@ static bool StartMacOSContentSandbox() {
   }
 
 #  ifdef DEBUG
-  // When a content process dies intentionally (|NoteIntentionalCrash|), for
-  // tests it wants to log that it did this. Allow writing to this location
-  // that the testrunner wants.
-  char* bloatLog = PR_GetEnv("XPCOM_MEM_BLOAT_LOG");
-  if (bloatLog != nullptr) {
-    // |bloatLog| points to a specific file, but we actually write to a sibling
-    // of that path.
-    nsAutoCString bloatDirectoryPath =
-        nsMacUtilsImpl::GetDirectoryPath(bloatLog);
-    info.debugWriteDir.assign(bloatDirectoryPath.get());
+  // For bloat/leak logging or when a content process dies intentionally
+  // (|NoteIntentionalCrash|) for tests, it wants to log that it did this.
+  // Allow writing to this location.
+  nsAutoCString bloatLogDirPath;
+  if (NS_SUCCEEDED(nsMacUtilsImpl::GetBloatLogDir(bloatLogDirPath))) {
+    info.debugWriteDir = bloatLogDirPath.get();
   }
 #  endif  // DEBUG
 
