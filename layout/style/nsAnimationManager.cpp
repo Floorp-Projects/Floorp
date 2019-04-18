@@ -606,6 +606,6 @@ void nsAnimationManager::DoUpdateAnimations(
   // Cancel removed animations
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0;) {
     aBuilder.NotifyNewOrRemovedAnimation(*newAnimations[newAnimIdx]);
-    newAnimations[newAnimIdx]->CancelFromStyle();
+    newAnimations[newAnimIdx]->CancelFromStyle(PostRestyleMode::IfNeeded);
   }
 }
