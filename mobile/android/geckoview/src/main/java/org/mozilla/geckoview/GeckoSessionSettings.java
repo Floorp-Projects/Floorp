@@ -93,6 +93,7 @@ public final class GeckoSessionSettings implements Parcelable {
          * @param value The custom context ID.
          *              The default ID is null, which removes isolation for this
          *              instance.
+         * @return This Builder instance.
          */
         public @NonNull Builder contextId(final @Nullable String value) {
             mSettings.setContextId(value);
