@@ -34,7 +34,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
-            "actors": Array [],
             "contentType": "text/javascript",
             "id": "1",
             "introductionType": undefined,
@@ -81,7 +80,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
-            "actors": Array [],
             "contentType": "text/javascript",
             "id": "1",
             "introductionType": undefined,
@@ -130,7 +128,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
-            "actors": Array [],
             "contentType": "text/javascript",
             "id": "1",
             "introductionType": undefined,
@@ -177,7 +174,6 @@ exports[`Frames Blackboxed Frames filters blackboxed frames 1`] = `
             "type": "block",
           },
           "source": Object {
-            "actors": Array [],
             "contentType": "text/javascript",
             "id": "1",
             "introductionType": undefined,

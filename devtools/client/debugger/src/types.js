@@ -5,6 +5,9 @@
 // @flow
 
 import type { SourcePayload } from "./client/firefox/types";
+import type { SourceActorId, SourceActor } from "./reducers/source-actors";
+
+export type { SourceActorId, SourceActor };
 
 export type SearchModifiers = {
   caseSensitive: boolean,
@@ -68,7 +71,7 @@ export type GeneratedSourceData = {
 };
 
 export type SourceActorLocation = {|
-  +sourceActor: SourceActor,
+  +sourceActor: SourceActorId,
   +line: number,
   +column?: number
 |};
@@ -118,7 +121,7 @@ export type BreakpointLocation = {
   +line: number,
   +column?: number,
   +sourceUrl?: string,
-  +sourceId?: SourceId
+  +sourceId?: SourceActorId
 };
 
 export type ASTLocation = {|
@@ -352,12 +355,6 @@ export type Grip = {
   name?: string
 };
 
-export type SourceActor = {|
-  +actor: ActorId,
-  +source: SourceId,
-  +thread: ThreadId
-|};
-
 /**
  * BaseSource
  *
@@ -377,8 +374,7 @@ type BaseSource = {|
   +relativeUrl: string,
   +introductionUrl: ?string,
   +introductionType: ?string,
-  +isExtension: boolean,
-  +actors: SourceActor[]
+  +isExtension: boolean
 |};
 
 /**

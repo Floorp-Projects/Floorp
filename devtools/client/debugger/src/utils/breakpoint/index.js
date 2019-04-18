@@ -4,7 +4,11 @@
 
 // @flow
 
-import { getBreakpoint, getSource } from "../../selectors";
+import {
+  getBreakpoint,
+  getSource,
+  getSourceActorsForSource
+} from "../../selectors";
 import { isGenerated } from "../source";
 import { sortSelectedLocations } from "../location";
 import assert from "../assert";
@@ -75,7 +79,10 @@ export function makeBreakpointLocation(
   if (source.url) {
     breakpointLocation.sourceUrl = source.url;
   } else {
-    breakpointLocation.sourceId = source.actors[0].actor;
+    breakpointLocation.sourceId = getSourceActorsForSource(
+      state,
+      source.id
+    )[0].id;
   }
   return breakpointLocation;
 }
@@ -95,7 +102,7 @@ export function makeSourceActorLocation(
 export function makeBreakpointActorId(location: SourceActorLocation) {
   const { sourceActor, line, column } = location;
   const columnString = column || "";
-  return `${sourceActor.actor}:${line}:${columnString}`;
+  return `${(sourceActor: any)}:${line}:${columnString}`;
 }
 
 export function assertBreakpoint(breakpoint: Breakpoint) {
