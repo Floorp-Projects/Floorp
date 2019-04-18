@@ -27,10 +27,10 @@
             android:text="@string/sign_in" />
 
         <Button
-            android:id="@+id/buttonSyncHistory"
+            android:id="@+id/buttonSync"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/sync_history" />
+            android:text="@string/sync" />
 
         <Button
             android:id="@+id/buttonLogout"
@@ -48,7 +48,7 @@
         android:text="" />
 
     <TextView
-        android:id="@+id/historySyncStatus"
+        android:id="@+id/syncStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/fxaStatusView"
@@ -59,7 +59,15 @@
         android:id="@+id/historySyncResult"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/historySyncStatus"
+        android:layout_below="@+id/syncStatus"
+        android:layout_gravity="center"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/bookmarksSyncResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/historySyncResult"
         android:layout_gravity="center"
         android:text="" />
 

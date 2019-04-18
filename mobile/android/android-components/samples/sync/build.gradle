@@ -10,7 +10,7 @@ android {
     compileSdkVersion config.compileSdkVersion
 
     defaultConfig {
-        applicationId "org.mozilla.samples.history"
+        applicationId "org.mozilla.samples.sync"
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
         versionCode 1

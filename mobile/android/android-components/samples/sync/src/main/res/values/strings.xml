@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <string name="app_name">Firefox Sync History Demo</string>
+    <string name="app_name">Firefox Sync Demo</string>
     <string name="sign_in">FxA sign in</string>
     <string name="signed_in_waiting_for_profile">Signed in; waiting for profile</string>
     <string name="signed_in_with_profile">Signed in: %1$s</string>
@@ -16,7 +16,8 @@
         <item quantity="one">There is %d visited URL</item>
         <item quantity="other">There are %d visited URLs</item>
     </plurals>
+    <string name="no_bookmarks_root">No Bookmarks Root node</string>
     <string name="log_out">FxA Log Out</string>
     <string name="logged_out">Logged out!</string>
-    <string name="sync_history">Sync history</string>
+    <string name="sync">Sync history + bookmarks</string>
 </resources>

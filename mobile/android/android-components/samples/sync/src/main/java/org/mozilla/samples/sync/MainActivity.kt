@@ -2,17 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.samples.sync.history
+package org.mozilla.samples.sync
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_main.historySyncStatus
+import kotlinx.android.synthetic.main.activity_main.syncStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
@@ -33,10 +34,16 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         PlacesHistoryStorage(this)
     }
 
+    private val bookmarksStorage by lazy {
+        PlacesBookmarksStorage(this)
+    }
+
     private val syncManager by lazy {
         GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
+        GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarksStorage)
         BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
             it.addStore("history")
+            it.addStore("bookmarks")
         }
     }
 
@@ -91,7 +98,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
         // Now that our account state observer is registered, we can kick off the account manager.
         launch { accountManager.initAsync().await() }
 
-        findViewById<View>(R.id.buttonSyncHistory).setOnClickListener {
+        findViewById<View>(R.id.buttonSync).setOnClickListener {
             syncManager.syncNow()
         }
     }
@@ -125,7 +132,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
                 findViewById<View>(R.id.buttonLogout).visibility = View.INVISIBLE
                 findViewById<View>(R.id.buttonSignIn).visibility = View.VISIBLE
-                findViewById<View>(R.id.buttonSyncHistory).visibility = View.INVISIBLE
+                findViewById<View>(R.id.buttonSync).visibility = View.INVISIBLE
             }
         }
 
@@ -136,7 +143,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
                 findViewById<View>(R.id.buttonLogout).visibility = View.VISIBLE
                 findViewById<View>(R.id.buttonSignIn).visibility = View.INVISIBLE
-                findViewById<View>(R.id.buttonSyncHistory).visibility = View.VISIBLE
+                findViewById<View>(R.id.buttonSync).visibility = View.VISIBLE
             }
         }
 
@@ -161,27 +168,39 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val syncObserver = object : SyncStatusObserver {
         override fun onStarted() {
             CoroutineScope(Dispatchers.Main).launch {
-                historySyncStatus?.text = getString(R.string.syncing)
+                syncStatus?.text = getString(R.string.syncing)
             }
         }
 
         override fun onIdle() {
             CoroutineScope(Dispatchers.Main).launch {
-                historySyncStatus?.text = getString(R.string.sync_idle)
+                syncStatus?.text = getString(R.string.sync_idle)
 
-                val resultTextView: TextView = findViewById(R.id.historySyncResult)
+                val historyResultTextView: TextView = findViewById(R.id.historySyncResult)
                 val visitedCount = historyStorage.getVisited().size
                 // visitedCount is passed twice: to get the correct plural form, and then as
                 // an argument for string formatting.
-                resultTextView.text = resources.getQuantityString(
+                historyResultTextView.text = resources.getQuantityString(
                     R.plurals.visited_url_count, visitedCount, visitedCount
                 )
+
+                val bookmarksResultTextView: TextView = findViewById(R.id.bookmarksSyncResult)
+                val bookmarksRoot = bookmarksStorage.getTree("root________")
+                if (bookmarksRoot == null) {
+                    bookmarksResultTextView.text = getString(R.string.no_bookmarks_root)
+                } else {
+                    var bookmarksRootAndChildren = "Bookmarks, root ->"
+                    bookmarksRoot.children!!.forEach {
+                        bookmarksRootAndChildren += "\n-- ${it?.title}"
+                    }
+                    bookmarksResultTextView.text = bookmarksRootAndChildren
+                }
             }
         }
 
         override fun onError(error: Exception?) {
             CoroutineScope(Dispatchers.Main).launch {
-                historySyncStatus?.text = getString(R.string.sync_error, error)
+                syncStatus?.text = getString(R.string.sync_error, error)
             }
         }
     }

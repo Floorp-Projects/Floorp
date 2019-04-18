@@ -304,9 +304,9 @@ projects:
     path: samples/glean/samples-glean-library
     description: 'A third-party library used by samples-glean to demonstrate multi-library support for Glean.'
     publish: false
-  samples-sync-history:
-    path: samples/sync-history
-    description: 'A simple app demoing Firefox Sync (History) integration.'
+  samples-sync:
+    path: samples/sync
+    description: 'A simple app demoing Firefox Sync (History, Bookmarks, etc) integration.'
     publish: false
   samples-sync-logins:
     path: samples/sync-logins
