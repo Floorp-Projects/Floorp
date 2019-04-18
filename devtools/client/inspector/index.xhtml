@@ -48,16 +48,19 @@
     <div id="inspector-main-content" class="devtools-main-content" style="visibility: hidden;">
       <!-- Toolbar -->
       <div id="inspector-toolbar" class="devtools-toolbar" nowindowdrag="true">
-        <button id="inspector-element-add-button" class="devtools-button"
-                data-localization="title=inspectorAddNode.label"></button>
-        <div class="devtools-toolbar-spacer"></div>
-        <span id="inspector-searchlabel"></span>
         <div id="inspector-search" class="devtools-searchbox has-clear-btn">
           <input id="inspector-searchbox" class="devtools-searchinput"
                  type="search"
                  data-localization="placeholder=inspectorSearchHTML.label3"/>
           <button id="inspector-searchinput-clear" class="devtools-searchinput-clear" hidden="true" tabindex="-1"></button>
         </div>
+        <div id="inspector-searchlabel-container" hidden="true">
+          <div class="devtools-separator"></div>
+          <span id="inspector-searchlabel"></span>
+        </div>
+        <div class="devtools-separator"></div>
+        <button id="inspector-element-add-button" class="devtools-button"
+                data-localization="title=inspectorAddNode.label"></button>
         <button id="inspector-eyedropper-toggle" class="devtools-button"></button>
       </div>
 
@@ -94,6 +97,7 @@
                      data-localization="placeholder=inspector.filterStyles.placeholder"/>
               <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
             </div>
+            <div class="devtools-separator"></div>
             <div id="ruleview-command-toolbar">
               <button id="ruleview-add-rule-button" data-localization="title=inspector.addRule.tooltip" class="devtools-button"></button>
               <button id="pseudo-class-panel-toggle" data-localization="title=inspector.togglePseudo.tooltip" class="devtools-button"></button>
