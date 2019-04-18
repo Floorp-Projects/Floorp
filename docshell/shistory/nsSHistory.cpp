@@ -799,6 +799,25 @@ nsSHistory::EvictOutOfRangeContentViewers(int32_t aIndex) {
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsSHistory::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
+                                              bool aReplace) {
+  if (!aReplace) {
+    int32_t curIndex;
+    GetIndex(&curIndex);
+    if (curIndex > -1) {
+      EvictOutOfRangeContentViewers(curIndex);
+    }
+  } else {
+    nsCOMPtr<nsISHEntry> rootSHEntry = nsSHistory::GetRootSHEntry(aNewSHEntry);
+
+    int32_t index = GetIndexOfEntry(rootSHEntry);
+    if (index > -1) {
+      ReplaceEntry(index, rootSHEntry);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsSHistory::EvictAllContentViewers() {
   // XXXbz we don't actually do a good job of evicting things as we should, so

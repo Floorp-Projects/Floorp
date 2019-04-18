@@ -77,6 +77,7 @@ class SHistoryParent final : public PSHistoryParent {
                                MaybeNewPSHEntry* aEntry, int32_t* aIndex);
   bool RecvEvict(nsTArray<PSHEntryParent*>&& aEntries);
   bool RecvEnsureCorrectEntryAtCurrIndex(PSHEntryParent* aEntry);
+  bool RecvEvictContentViewersOrReplaceEntry(PSHEntryParent* aNewSHEntry, bool aReplace);
 
   RefPtr<CanonicalBrowsingContext> mContext;
   RefPtr<LegacySHistory> mHistory;
