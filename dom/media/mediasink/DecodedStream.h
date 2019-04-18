@@ -73,9 +73,6 @@ class DecodedStream : public MediaSink {
   virtual ~DecodedStream();
 
  private:
-  media::TimeUnit FromMicroseconds(int64_t aTime) {
-    return media::TimeUnit::FromMicroseconds(aTime);
-  }
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
   void SendAudio(double aVolume, bool aIsSameOrigin,
                  const PrincipalHandle& aPrincipalHandle);
