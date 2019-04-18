@@ -55,7 +55,7 @@ function startTests() {
     SimpleTest.executeSoon(runNextTest);
   }, false);
 
-  SpecialPowers.addSystemEventListener(window, "click", function(aEvent) {
+  SpecialPowers.addSystemEventListener(window, "auxclick", function(aEvent) {
     // When the click event should cause default action, e.g., opening the link,
     // the event shouldn't have been consumed except the link handler.
     // However, in e10s mode, it's not consumed during propagating the event but

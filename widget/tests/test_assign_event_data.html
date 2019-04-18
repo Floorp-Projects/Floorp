@@ -292,8 +292,7 @@ const kTests = [
     todoMismatch: [],
   },
   { description: "WidgetMouseEvent (click of middle button with Shift)",
-    // XXX I'm not sure why middle click event isn't fired on button element.
-    targetID: "input-text", eventType: "click",
+    targetID: "button", eventType: "auxclick",
     dispatchEvent() {
       document.getElementById(this.targetID).value = "";
       synthesizeMouseAtCenter(document.getElementById(this.targetID),

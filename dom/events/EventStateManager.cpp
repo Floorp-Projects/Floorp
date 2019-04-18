@@ -5017,7 +5017,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     nsEventStatus* aStatus, TextEditor* aTextEditor) {
   MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMouseEvent);
-  MOZ_ASSERT((aMouseEvent->mMessage == eMouseClick &&
+  MOZ_ASSERT((aMouseEvent->mMessage == eMouseAuxClick &&
               aMouseEvent->button == WidgetMouseEventBase::eMiddleButton) ||
              EventCausesClickEvents(*aMouseEvent));
   MOZ_ASSERT(aStatus);
