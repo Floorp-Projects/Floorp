@@ -4625,7 +4625,8 @@ PContentPermissionRequestParent*
 ContentParent::AllocPContentPermissionRequestParent(
     const InfallibleTArray<PermissionRequest>& aRequests,
     const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
-    const bool& aIsHandlingUserInput, const TabId& aTabId) {
+    const bool& aIsHandlingUserInput, const bool& aDocumentHasUserInput,
+    const DOMTimeStamp& aPageLoadTimestamp, const TabId& aTabId) {
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   RefPtr<TabParent> tp =
       cpm->GetTopLevelTabParentByProcessAndTabId(this->ChildID(), aTabId);
@@ -4635,7 +4636,7 @@ ContentParent::AllocPContentPermissionRequestParent(
 
   return nsContentPermissionUtils::CreateContentPermissionRequestParent(
       aRequests, tp->GetOwnerElement(), aPrincipal, aTopLevelPrincipal,
-      aIsHandlingUserInput, aTabId);
+      aIsHandlingUserInput, aDocumentHasUserInput, aPageLoadTimestamp, aTabId);
 }
 
 bool ContentParent::DeallocPContentPermissionRequestParent(
