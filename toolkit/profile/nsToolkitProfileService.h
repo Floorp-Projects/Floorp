@@ -102,8 +102,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
                                 nsACString& aDescriptor, bool* aIsRelative);
   bool IsProfileForCurrentInstall(nsIToolkitProfile* aProfile);
   void ClearProfileFromOtherInstalls(nsIToolkitProfile* aProfile);
-  nsresult MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile,
-                                            bool* aResult);
+  bool MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile);
   bool IsSnapEnvironment();
   nsresult CreateDefaultProfile(nsIToolkitProfile** aResult);
   void SetNormalDefault(nsIToolkitProfile* aProfile);
@@ -150,17 +149,10 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   bool mCreatedAlternateProfile;
   nsString mStartupReason;
   bool mMaybeLockProfile;
+
   // Holds the current application update channel. This is only really held
   // so it can be overriden in tests.
   nsCString mUpdateChannel;
-  // Keep track of some attributes of the databases so we can tell if another
-  // process has changed them.
-  bool mProfileDBExists;
-  int64_t mProfileDBFileSize;
-  PRTime mProfileDBModifiedTime;
-  bool mInstallDBExists;
-  int64_t mInstallDBFileSize;
-  PRTime mInstallDBModifiedTime;
 
   static nsToolkitProfileService* gService;
 
