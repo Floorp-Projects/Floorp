@@ -13,6 +13,7 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
@@ -47,6 +48,7 @@ class AwesomeBarUIView(
     private var sessionProvider: SessionSuggestionProvider? = null
     private var historyStorageProvider: HistoryStorageSuggestionProvider? = null
     private var shortcutsEnginePickerProvider: ShortcutsSuggestionProvider? = null
+    private var bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider? = null
 
     private val searchSuggestionProvider: SearchSuggestionProvider?
         get() = searchSuggestionFromShortcutProvider ?: defaultSearchSuggestionProvider!!
@@ -117,6 +119,13 @@ class AwesomeBarUIView(
                     components.utils.icons
                 )
 
+            bookmarksStorageSuggestionProvider =
+                BookmarksStorageSuggestionProvider(
+                    components.core.bookmarksStorage,
+                    loadUrlUseCase,
+                    components.utils.icons
+                )
+
             if (Settings.getInstance(container.context).showSearchSuggestions()) {
                 val draw = getDrawable(R.drawable.ic_search)
                 draw?.setColorFilter(
@@ -156,6 +165,7 @@ class AwesomeBarUIView(
         }
 
         if (Settings.getInstance(container.context).shouldShowVisitedSitesBookmarks) {
+            view.addProviders(bookmarksStorageSuggestionProvider!!)
             view.addProviders(historyStorageProvider!!)
         }
 
