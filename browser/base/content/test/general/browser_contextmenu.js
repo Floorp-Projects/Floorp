@@ -199,7 +199,6 @@ add_task(async function test_video_ok() {
   await SpecialPowers.pushPrefEnv({
     set: [["media.videocontrols.picture-in-picture.enabled", true]],
   });
-
   await test_contextmenu("#test-video-ok",
     ["context-media-play",             true,
      "context-media-mute",             true,
@@ -222,12 +221,7 @@ add_task(async function test_video_ok() {
      "context-sendvideo",              true,
     ]
   );
-
   await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", false]],
-  });
 
   await test_contextmenu("#test-video-ok",
     ["context-media-play",             true,
@@ -250,8 +244,6 @@ add_task(async function test_video_ok() {
      "context-sendvideo",              true,
     ]
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_audio_in_video() {
@@ -276,39 +268,6 @@ add_task(async function test_audio_in_video() {
 });
 
 add_task(async function test_video_bad() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", true]],
-  });
-
-  await test_contextmenu("#test-video-bad",
-    ["context-media-play",         false,
-     "context-media-mute",         false,
-     "context-media-playbackrate", null,
-         ["context-media-playbackrate-050x", false,
-          "context-media-playbackrate-100x", false,
-          "context-media-playbackrate-125x", false,
-          "context-media-playbackrate-150x", false,
-          "context-media-playbackrate-200x", false], null,
-     "context-media-loop",         true,
-     "context-media-hidecontrols", false,
-     "context-video-fullscreen",   false,
-     "context-video-pictureinpicture", false,
-     "---",                        null,
-     "context-viewvideo",          true,
-     "context-copyvideourl",       true,
-     "---",                        null,
-     "context-savevideo",          true,
-     "context-video-saveimage",    false,
-     "context-sendvideo",          true,
-    ]
-  );
-
-  await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", false]],
-  });
-
   await test_contextmenu("#test-video-bad",
     ["context-media-play",         false,
      "context-media-mute",         false,
@@ -330,44 +289,9 @@ add_task(async function test_video_bad() {
      "context-sendvideo",          true,
     ]
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_video_bad2() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", true]],
-  });
-
-  await test_contextmenu("#test-video-bad2",
-    ["context-media-play",         false,
-     "context-media-mute",         false,
-     "context-media-playbackrate", null,
-         ["context-media-playbackrate-050x", false,
-          "context-media-playbackrate-100x", false,
-          "context-media-playbackrate-125x", false,
-          "context-media-playbackrate-150x", false,
-          "context-media-playbackrate-200x", false], null,
-     "context-media-loop",         true,
-     "context-media-hidecontrols", false,
-     "context-video-fullscreen",   false,
-     "context-video-pictureinpicture", false,
-     "---",                        null,
-     "context-viewvideo",          false,
-     "context-copyvideourl",       false,
-     "---",                        null,
-     "context-savevideo",          false,
-     "context-video-saveimage",    false,
-     "context-sendvideo",          false,
-    ]
-  );
-
-  await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", false]],
-  });
-
   await test_contextmenu("#test-video-bad2",
     ["context-media-play",         false,
      "context-media-mute",         false,
@@ -389,8 +313,6 @@ add_task(async function test_video_bad2() {
      "context-sendvideo",          false,
     ]
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_iframe() {
@@ -430,51 +352,6 @@ add_task(async function test_iframe() {
 });
 
 add_task(async function test_video_in_iframe() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", true]],
-  });
-
-  await test_contextmenu("#test-video-in-iframe",
-    ["context-media-play",         true,
-     "context-media-mute",         true,
-     "context-media-playbackrate", null,
-         ["context-media-playbackrate-050x", true,
-          "context-media-playbackrate-100x", true,
-          "context-media-playbackrate-125x", true,
-          "context-media-playbackrate-150x", true,
-          "context-media-playbackrate-200x", true], null,
-     "context-media-loop",         true,
-     "context-media-hidecontrols", true,
-     "context-video-fullscreen",   true,
-     "context-video-pictureinpicture", true,
-     "---",                        null,
-     "context-viewvideo",          true,
-     "context-copyvideourl",       true,
-     "---",                        null,
-     "context-savevideo",          true,
-     "context-video-saveimage",    true,
-     "context-sendvideo",          true,
-     "frame",                null,
-         ["context-showonlythisframe", true,
-          "context-openframeintab",    true,
-          "context-openframe",         true,
-          "---",                       null,
-          "context-reloadframe",       true,
-          "---",                       null,
-          "context-bookmarkframe",     true,
-          "context-saveframe",         true,
-          "---",                       null,
-          "context-printframe",        true,
-          "---",                       null,
-          "context-viewframeinfo",     true], null]
-  );
-
-  await SpecialPowers.popPrefEnv();
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.enabled", false]],
-  });
-
   await test_contextmenu("#test-video-in-iframe",
     ["context-media-play",         true,
      "context-media-mute",         true,
@@ -508,8 +385,6 @@ add_task(async function test_video_in_iframe() {
           "---",                       null,
           "context-viewframeinfo",     true], null]
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_audio_in_iframe() {

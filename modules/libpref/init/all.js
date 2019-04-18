@@ -426,16 +426,6 @@ pref("media.decoder-doctor.verbose", false);
 // URL to report decode issues
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
-pref("media.videocontrols.picture-in-picture.enabled", true);
-pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
-#else
-pref("media.videocontrols.picture-in-picture.enabled", false);
-pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
-#endif
-pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
-pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
-
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
@@ -454,6 +444,11 @@ pref("media.peerconnection.sdp.rust.compare", true);
 pref("media.peerconnection.sdp.rust.enabled", false);
 pref("media.peerconnection.sdp.rust.compare", false);
 #endif
+
+pref("media.videocontrols.picture-in-picture.enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
 
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
