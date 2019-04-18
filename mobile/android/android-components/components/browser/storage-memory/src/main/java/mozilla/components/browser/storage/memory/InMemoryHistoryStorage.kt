@@ -57,12 +57,20 @@ class InMemoryHistoryStorage : HistoryStorage {
         return pages.keys.toList()
     }
 
-    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> = synchronized(pages + pageMeta) {
+    override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
+        throw UnsupportedOperationException("Pagination is not yet supported by the in-memory history storage")
+    }
+
+    override suspend fun getDetailedVisits(
+        start: Long,
+        end: Long,
+        excludeTypes: List<VisitType>
+    ): List<VisitInfo> = synchronized(pages + pageMeta) {
         val visits = mutableListOf<VisitInfo>()
 
         pages.forEach {
             it.value.forEach { visit ->
-                if (visit.timestamp >= start && visit.timestamp <= end) {
+                if (visit.timestamp >= start && visit.timestamp <= end && !excludeTypes.contains(visit.type)) {
                     visits.add(VisitInfo(
                         url = it.key,
                         title = pageMeta[it.key]?.title,

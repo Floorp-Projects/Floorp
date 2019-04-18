@@ -53,7 +53,9 @@ class InMemoryHistoryStorageTest {
         history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
         history.recordVisit("http://www.firefox.com", VisitType.LINK)
 
-        val visits = history.getDetailedVisits(0)
+        history.recordVisit("http://www.firefox.com", VisitType.REDIRECT_TEMPORARY)
+
+        val visits = history.getDetailedVisits(0, excludeTypes = listOf(VisitType.REDIRECT_TEMPORARY))
         assertEquals(3, visits.size)
         assertEquals("http://www.mozilla.org", visits[0].url)
         assertEquals("Mozilla", visits[0].title)
@@ -66,6 +68,9 @@ class InMemoryHistoryStorageTest {
         assertEquals("http://www.firefox.com", visits[2].url)
         assertEquals(null, visits[2].title)
         assertEquals(VisitType.LINK, visits[2].visitType)
+
+        val visitsAll = history.getDetailedVisits(0)
+        assertEquals(4, visitsAll.size)
     }
 
     @Test

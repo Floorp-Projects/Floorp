@@ -66,7 +66,12 @@ class HistoryDelegateTest {
                 return emptyList()
             }
 
-            override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+            override suspend fun getDetailedVisits(start: Long, end: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
+                fail()
+                return emptyList()
+            }
+
+            override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
                 fail()
                 return emptyList()
             }

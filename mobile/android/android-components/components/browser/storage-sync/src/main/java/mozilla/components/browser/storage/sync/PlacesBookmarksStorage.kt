@@ -11,10 +11,14 @@ import mozilla.appservices.places.BookmarkItem
 import mozilla.appservices.places.BookmarkSeparator
 import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.BookmarkUpdateInfo
+import mozilla.appservices.places.PlacesApi
+import mozilla.appservices.places.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 
 /**
@@ -137,6 +141,23 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
                     BookmarkNode(BookmarkNodeType.SEPARATOR, it.guid, it.parentGUID, it.position, null, null, null)
                 }
             }
+        }
+    }
+
+    /**
+     * Runs syncBookmarks() method on the places Connection
+     *
+     * @param authInfo The authentication information to sync with.
+     * @return Sync status of OK or Error
+     */
+    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
+        return try {
+            withContext(scope.coroutineContext) {
+                places.syncBookmarks(authInfo.into())
+                SyncStatus.Ok
+            }
+        } catch (e: PlacesException) {
+            SyncStatus.Error(e)
         }
     }
 }

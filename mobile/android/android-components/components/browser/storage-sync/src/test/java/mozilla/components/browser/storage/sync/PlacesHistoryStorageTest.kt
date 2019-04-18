@@ -144,17 +144,49 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `storage passes through getVisitsPaginated() calls`() = runBlocking {
+        val storage = storage!!
+        val reader = reader!!
+
+        storage.getVisitsPaginated(0, 20)
+        verify(reader, times(1)).getVisitPage(
+            eq(0),
+            eq(20),
+            eq(listOf())
+        )
+
+        storage.getVisitsPaginated(20, 20, listOf(VisitType.REDIRECT_PERMANENT, VisitType.REDIRECT_TEMPORARY))
+        verify(reader, times(1)).getVisitPage(
+            eq(20),
+            eq(20),
+            eq(listOf(
+                mozilla.appservices.places.VisitType.REDIRECT_PERMANENT,
+                mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY
+            ))
+        )
+
+        Unit
+    }
+
+    @Test
     fun `storage passes through getDetailedVisits() calls`() = runBlocking {
         val storage = storage!!
         val reader = reader!!
 
         storage.getDetailedVisits(15, 25)
-        verify(reader, times(1)).getVisitInfos(eq(15), eq(25))
+        verify(reader, times(1)).getVisitInfos(eq(15), eq(25), eq(listOf()))
+
+        storage.getDetailedVisits(15, 25, listOf(VisitType.REDIRECT_TEMPORARY))
+        verify(reader, times(1)).getVisitInfos(
+            eq(15),
+            eq(25),
+            eq(listOf(mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY))
+        )
 
         storage.getDetailedVisits(12345)
-        verify(reader, times(1)).getVisitInfos(eq(12345), eq(Long.MAX_VALUE))
+        verify(reader, times(1)).getVisitInfos(eq(12345), eq(Long.MAX_VALUE), eq(listOf()))
 
-        `when`(reader.getVisitInfos(15, 25)).thenReturn(listOf(
+        `when`(reader.getVisitInfos(15, 25, listOf())).thenReturn(listOf(
             VisitInfo(
                 url = "http://www.mozilla.org",
                 visitType = mozilla.appservices.places.VisitType.TYPED,
@@ -311,9 +343,13 @@ class PlacesHistoryStorageTest {
                 return mock()
             }
 
-            override fun sync(syncInfo: SyncAuthInfo) {
+            override fun syncHistory(syncInfo: SyncAuthInfo) {
                 assertNull(passedAuthInfo)
                 passedAuthInfo = syncInfo
+            }
+
+            override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+                fail()
             }
 
             override fun close() {
@@ -343,7 +379,9 @@ class PlacesHistoryStorageTest {
                 return mock()
             }
 
-            override fun sync(syncInfo: SyncAuthInfo) {}
+            override fun syncHistory(syncInfo: SyncAuthInfo) {}
+
+            override fun syncBookmarks(syncInfo: SyncAuthInfo) {}
 
             override fun close() {
                 fail()
@@ -369,8 +407,12 @@ class PlacesHistoryStorageTest {
                 return mock()
             }
 
-            override fun sync(syncInfo: SyncAuthInfo) {
+            override fun syncHistory(syncInfo: SyncAuthInfo) {
                 throw exception
+            }
+
+            override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+                fail()
             }
 
             override fun close() {

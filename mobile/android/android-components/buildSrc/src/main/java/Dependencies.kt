@@ -34,7 +34,7 @@ object Versions {
     const val paging = "1.0.1"
     const val zxing = "3.3.0"
 
-    const val mozilla_appservices = "0.25.2"
+    const val mozilla_appservices = "0.27.0"
     const val servo = "0.0.1.20181017.aa95911"
 }
 

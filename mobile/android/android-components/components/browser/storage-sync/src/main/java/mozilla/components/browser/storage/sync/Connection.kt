@@ -25,7 +25,11 @@ const val DB_NAME = "places.sqlite"
 interface Connection : Closeable {
     fun reader(): PlacesReaderConnection
     fun writer(): PlacesWriterConnection
-    fun sync(syncInfo: SyncAuthInfo)
+
+    // Until we get a real SyncManager in application-services libraries, we'll have to live with this
+    // strange split that doesn't quite map all that well to our internal storage model.
+    fun syncHistory(syncInfo: SyncAuthInfo)
+    fun syncBookmarks(syncInfo: SyncAuthInfo)
 }
 
 /**
@@ -43,11 +47,10 @@ internal object RustPlacesConnection : Connection {
      * Writer connection is maintained by [PlacesApi] itself, and is created upon its initialization.
      *
      * @param parentDir Location of the parent directory in which database is/will be stored.
-     * @param encryptionString Optional encryption key; if used, database will be encrypted at rest.
      */
-    fun init(parentDir: File, encryptionString: String? = null) = synchronized(this) {
+    fun init(parentDir: File) = synchronized(this) {
         if (api == null) {
-            api = PlacesApi(File(parentDir, DB_NAME).canonicalPath, encryptionString)
+            api = PlacesApi(File(parentDir, DB_NAME).canonicalPath)
         }
         cachedReader = api!!.openReader()
     }
@@ -62,9 +65,14 @@ internal object RustPlacesConnection : Connection {
         return api!!.getWriter()
     }
 
-    override fun sync(syncInfo: SyncAuthInfo) {
+    override fun syncHistory(syncInfo: SyncAuthInfo) {
         check(api != null) { "must call init first" }
-        api!!.sync(syncInfo)
+        api!!.syncHistory(syncInfo)
+    }
+
+    override fun syncBookmarks(syncInfo: SyncAuthInfo) {
+        check(api != null) { "must call init first" }
+        api!!.syncBookmarks(syncInfo)
     }
 
     override fun close() = synchronized(this) {

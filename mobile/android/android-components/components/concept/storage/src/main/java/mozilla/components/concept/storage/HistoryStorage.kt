@@ -41,9 +41,32 @@ interface HistoryStorage : Storage {
      * Retrieves detailed information about all visits that occurred in the given time range.
      * @param start The (inclusive) start time to bound the query.
      * @param end The (inclusive) end time to bound the query.
+     * @param excludeTypes List of visit types to exclude.
      * @return A list of all visits within the specified range, described by [VisitInfo].
      */
-    suspend fun getDetailedVisits(start: Long, end: Long = Long.MAX_VALUE): List<VisitInfo>
+    suspend fun getDetailedVisits(
+        start: Long,
+        end: Long = Long.MAX_VALUE,
+        excludeTypes: List<VisitType> = listOf()
+    ): List<VisitInfo>
+
+    /**
+     * Return a "page" of history results. Each page will have visits in descending order
+     * with respect to their visit timestamps. In the case of ties, their row id will
+     * be used.
+     *
+     * Note that you may get surprising results if the items in the database change
+     * while you are paging through records.
+     *
+     * @param offset The offset where the page begins.
+     * @param count The number of items to return in the page.
+     * @param excludeTypes List of visit types to exclude.
+     */
+    suspend fun getVisitsPaginated(
+        offset: Long,
+        count: Long,
+        excludeTypes: List<VisitType> = listOf()
+    ): List<VisitInfo>
 
     /**
      * Retrieves suggestions matching the [query].

@@ -6,6 +6,7 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import kotlinx.coroutines.withContext
+import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -13,6 +14,8 @@ import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
@@ -59,9 +62,15 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
         }
     }
 
-    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+    override suspend fun getDetailedVisits(start: Long, end: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
         return withContext(scope.coroutineContext) {
-            places.reader().getVisitInfos(start, end).map { it.into() }
+            places.reader().getVisitInfos(start, end, excludeTypes.map { it.into() }).map { it.into() }
+        }
+    }
+
+    override suspend fun getVisitsPaginated(offset: Long, count: Long, excludeTypes: List<VisitType>): List<VisitInfo> {
+        return withContext(scope.coroutineContext) {
+            places.reader().getVisitPage(offset, count, excludeTypes.map { it.into() }).map { it.into() }
         }
     }
 
@@ -144,6 +153,23 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
     override suspend fun prune() {
         withContext(scope.coroutineContext) {
             places.writer().pruneDestructively()
+        }
+    }
+
+    /**
+     * Runs syncHistory() method on the places Connection
+     *
+     * @param authInfo The authentication information to sync with.
+     * @return Sync status of OK or Error
+     */
+    override suspend fun sync(authInfo: AuthInfo): SyncStatus {
+        return try {
+            withContext(scope.coroutineContext) {
+                places.syncHistory(authInfo.into())
+                SyncStatus.Ok
+            }
+        } catch (e: PlacesException) {
+            SyncStatus.Error(e)
         }
     }
 }
