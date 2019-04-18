@@ -38,6 +38,9 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
 
+  static void AssertEvalNotUsingSystemPrincipal(nsIPrincipal* subjectPrincipal,
+                                                JSContext* cx);
+
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
   static nsresult CheckFTPSubresourceLoad(nsIChannel* aChannel);
