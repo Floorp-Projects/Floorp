@@ -414,10 +414,8 @@ talos-xperf:
             default: []
     tier:
         by-test-platform:
-            windows7-32.*: default
-            windows10-64(-pgo)?/.*: default
             windows10-64-ccov/debug: 3
-            default: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
+            default: default
     mozharness:
         extra-options:
             - --suite=xperf
