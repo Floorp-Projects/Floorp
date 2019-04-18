@@ -36,12 +36,16 @@ class StringTest {
         assertTrue("file://somefile.txt".isUrl())
         assertTrue("http://mozilla".isUrl())
         assertTrue("http://192.168.255.255".isUrl())
+        assertTrue("about:crashcontent".isUrl())
+        assertTrue(" about:crashcontent ".isUrl())
+        assertTrue("sample:about ".isUrl())
 
         assertFalse("mozilla".isUrl())
         assertFalse("mozilla android".isUrl())
         assertFalse(" mozilla android ".isUrl())
         assertFalse("Tweet:".isUrl())
         assertFalse("inurl:mozilla.org advanced search".isUrl())
+        assertFalse("what is about:crashes".isUrl())
 
         val extraText = "Check out @asa’s Tweet: https://twitter.com/asa/status/123456789?s=09"
         val url = extraText.split(" ").find { it.isUrl() }

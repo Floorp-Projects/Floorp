@@ -26,7 +26,7 @@ fun String.toNormalizedUrl(): String {
  * A collection of regular expressions used in the `is*` methods below.
  */
 private val re = object {
-    val urlish = "^\\s*\\w+(://|\\.)\\w+\\S*\\s*$".toRegex()
+    val urlish = "^\\s*\\w+(://|:|\\.)\\w+\\S*\\s*$".toRegex()
     val phoneish = "^\\s*tel:\\S?\\d+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
     val emailish = "^\\s*mailto:\\w+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
     val geoish = "^\\s*geo:\\S*\\d+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
