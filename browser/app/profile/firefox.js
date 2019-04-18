@@ -412,6 +412,10 @@ pref("permissions.desktop-notification.postPrompt.enabled", false);
 
 pref("permissions.postPrompt.animate", true);
 
+// This is meant to be enabled only for studies, not for
+// permanent data collection on any channel.
+pref("permissions.eventTelemetry.enabled", false);
+
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
