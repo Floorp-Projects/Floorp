@@ -26,7 +26,7 @@ private object Versions {
 
     const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.51.0-SNAPSHOT"
-    const val mozilla_appservices = "0.25.2"
+    const val mozilla_appservices = "0.26.0"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"

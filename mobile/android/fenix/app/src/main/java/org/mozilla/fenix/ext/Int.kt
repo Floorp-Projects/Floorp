@@ -5,12 +5,6 @@
 package org.mozilla.fenix.ext
 
 import android.content.Context
-import android.util.TypedValue
+import org.mozilla.fenix.DefaultThemeManager
 
-fun Int.getColorFromAttr(context: Context): Int {
-    val typedValue = TypedValue()
-    val typedArray = context.obtainStyledAttributes(typedValue.data, intArrayOf(this))
-    val color = typedArray.getColor(0, 0)
-    typedArray.recycle()
-    return color
-}
+fun Int.getColorFromAttr(context: Context): Int = DefaultThemeManager.resolveAttribute(this, context)
