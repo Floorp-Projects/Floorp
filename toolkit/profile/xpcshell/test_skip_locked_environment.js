@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that the environment variables are used to select a profile and that
  * on the first run of a dedicated profile build we don't snatch it if it is
