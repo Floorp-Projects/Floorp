@@ -47,7 +47,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
@@ -5531,49 +5530,6 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::DeallocPSessionStorageObserverParent(aActor);
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvFileCreationRequest(
-    const nsID& aID, const nsString& aFullPath, const nsString& aType,
-    const nsString& aName, const bool& aLastModifiedPassed,
-    const int64_t& aLastModified, const bool& aExistenceCheck,
-    const bool& aIsFromNsIFile) {
-  // We allow the creation of File via this IPC call only for the 'file' process
-  // or for testing.
-  if (!mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE) &&
-      !Preferences::GetBool("dom.file.createInChild", false)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  RefPtr<BlobImpl> blobImpl;
-  nsresult rv = FileCreatorHelper::CreateBlobImplForIPC(
-      aFullPath, aType, aName, aLastModifiedPassed, aLastModified,
-      aExistenceCheck, aIsFromNsIFile, getter_AddRefs(blobImpl));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendFileCreationResponse(aID, FileCreationErrorResult(rv))) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-
-    return IPC_OK();
-  }
-
-  MOZ_ASSERT(blobImpl);
-
-  IPCBlob ipcBlob;
-  rv = IPCBlobUtils::Serialize(blobImpl, this, ipcBlob);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendFileCreationResponse(aID, FileCreationErrorResult(rv))) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-
-    return IPC_OK();
-  }
-
-  if (!SendFileCreationResponse(aID, FileCreationSuccessResult(ipcBlob))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  return IPC_OK();
 }
 
 nsresult ContentParent::SaveRecording(nsIFile* aFile, bool* aRetval) {
