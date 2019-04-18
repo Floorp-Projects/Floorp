@@ -521,7 +521,7 @@ bool nsTransitionManager::DoUpdateTransitions(
             effectSet->UpdateAnimationGeneration(mPresContext);
           }
         }
-        anim->CancelFromStyle();
+        anim->CancelFromStyle(PostRestyleMode::IfNeeded);
         animations.RemoveElementAt(i);
       }
     } while (i != 0);
@@ -668,7 +668,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       // just got a style change to a value that can't be interpolated.
       OwningCSSTransitionPtrArray& animations =
           aElementTransitions->mAnimations;
-      animations[currentIndex]->CancelFromStyle();
+      animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
       oldPT = nullptr;  // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
       EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
@@ -801,7 +801,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
                oldPT->GetAnimation()->PlaybackRate(), oldPT->SpecifiedTiming(),
                segment.mTimingFunction, segment.mFromValue, segment.mToValue}));
     }
-    animations[currentIndex]->CancelFromStyle();
+    animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
     oldPT = nullptr;  // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
