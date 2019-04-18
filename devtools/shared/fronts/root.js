@@ -106,7 +106,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
     workers.forEach(front => {
       const worker = {
-        id: front.actorID,
+        id: front.id,
         name: front.url,
         url: front.url,
         workerTargetFront: front,

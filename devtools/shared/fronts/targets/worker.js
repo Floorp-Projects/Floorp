@@ -24,6 +24,10 @@ class WorkerTargetFront extends
 
   form(json) {
     this.actorID = json.actor;
+    // `id` was added in Firefox 68 to the worker target actor. Fallback to the actorID
+    // when debugging older clients.
+    // Fallback can be removed when Firefox 68 will be in the Release channel.
+    this.id = json.id || this.actorID;
 
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method

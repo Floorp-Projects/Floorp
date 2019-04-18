@@ -38,6 +38,7 @@ const WorkerTargetActor = protocol.ActorClassWithSpec(workerTargetSpec, {
     const form = {
       actor: this.actorID,
       consoleActor: this._consoleActor,
+      id: this._dbg.id,
       url: this._dbg.url,
       type: this._dbg.type,
     };
