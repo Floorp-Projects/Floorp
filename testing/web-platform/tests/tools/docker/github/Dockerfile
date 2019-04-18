@@ -6,11 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get -qqy update \
   && apt-get -qqy install \
+    bzip2 \
     git \
     locales \
     python \
     python-pip \
-    tzdata
+    tzdata \
+    zstd
 
 RUN pip install --upgrade pip
 RUN pip install virtualenv
