@@ -198,6 +198,40 @@ jobs:
     dependsOn: results_edge
     artifactName: edge-results
 
+- job: results_safari
+  displayName: 'all tests (Safari)'
+  condition: eq(variables['Build.Reason'], 'Schedule')
+  strategy:
+    parallel: 4 # chosen to make runtime ~2h
+  timeoutInMinutes: 360
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - template: tools/ci/azure/checkout.yml
+  - template: tools/ci/azure/pip_install.yml
+    parameters:
+      packages: virtualenv
+  - template: tools/ci/azure/install_fonts.yml
+  - template: tools/ci/azure/install_certs.yml
+  - template: tools/ci/azure/install_safari.yml
+    parameters:
+      channel: stable
+  - template: tools/ci/azure/update_hosts.yml
+  - template: tools/ci/azure/update_manifest.yml
+  - script: |
+      # TODO: drop this when `safaridriver --version` is supported.
+      SAFARI_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' /Applications/Safari.app/Contents/Info.plist) ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' /Applications/Safari.app/Contents/Info.plist))"
+      no_proxy='*' ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --browser-version "$SAFARI_VERSION" safari
+    displayName: 'Run tests'
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish results'
+    inputs:
+      artifactName: 'safari-results'
+- template: tools/ci/azure/fyi_hook.yml
+  parameters:
+    dependsOn: results_safari
+    artifactName: safari-results
+
 - job: results_safari_preview
   displayName: 'all tests (Safari Technology Preview)'
   condition: |
