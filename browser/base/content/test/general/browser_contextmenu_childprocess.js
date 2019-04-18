@@ -32,7 +32,7 @@ function checkItems(menuitem, arr) {
     } else if ("children" in details) {
       is(menuitem.localName, "menu", "submenu");
       is(menuitem.getAttribute("label"), str, str + " label");
-      checkItems(menuitem.menupopup.firstElementChild, details.children);
+      checkItems(menuitem.firstElementChild.firstElementChild, details.children);
     } else {
       is(menuitem.localName, "menuitem", str + " menuitem");
 
