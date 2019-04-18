@@ -7,8 +7,8 @@
 window,
 dialog {
   -moz-appearance: none;
-  background-color: #fbfbfb;
-  color: #424e5a;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
   margin: 0;
   padding: 0;
 }

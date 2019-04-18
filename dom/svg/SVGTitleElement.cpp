@@ -32,8 +32,6 @@ SVGTitleElement::SVGTitleElement(
   AddMutationObserver(this);
 }
 
-SVGTitleElement::~SVGTitleElement() {}
-
 void SVGTitleElement::CharacterDataChanged(nsIContent* aContent,
                                            const CharacterDataChangeInfo&) {
   SendTitleChangeEvent(false);

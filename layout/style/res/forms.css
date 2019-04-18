@@ -467,7 +467,7 @@ input[type="image"]:-moz-focusring {
 input[type="file"] {
   display: inline-block;
   white-space: nowrap !important;
-  overflow: hidden;
+  overflow: hidden !important;
   overflow-clip-box: padding-box;
   color: unset;
 
