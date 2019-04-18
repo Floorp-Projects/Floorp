@@ -4,7 +4,6 @@
 <window title="TODO: Insert title here"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
-  <script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js" />
   <script><![CDATA[
     add_task(async function test_TODO() {
       ok(true, "TODO: implement the test");

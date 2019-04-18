@@ -1,6 +1,5 @@
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SimpleTest.js */
 /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
-/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/AddTask.js */
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 /* eslint-disable no-unused-vars */
 
