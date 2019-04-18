@@ -587,6 +587,8 @@ class ContentParent final : public PContentParent,
   void PaintTabWhileInterruptingJS(TabParent* aTabParent, bool aForceRepaint,
                                    const layers::LayersObserverEpoch& aEpoch);
 
+  void CancelContentJSExecutionIfRunning(TabParent* aTabParent);
+
   // This function is called when we are about to load a document from an
   // HTTP(S) or FTP channel for a content process.  It is a useful place
   // to start to kick off work as early as possible in response to such

@@ -312,6 +312,7 @@ using XPCWrappedNativeScopeList = mozilla::LinkedList<XPCWrappedNativeScope>;
 class XPCJSContext final : public mozilla::CycleCollectedJSContext,
                            public mozilla::LinkedListElement<XPCJSContext> {
  public:
+  static mozilla::Atomic<uint64_t> gTabIdToCancelContentJS;
   static void InitTLS();
   static XPCJSContext* NewXPCJSContext(XPCJSContext* aPrimaryContext);
   static XPCJSContext* Get();
