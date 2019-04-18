@@ -89,16 +89,17 @@ tasks:
                       --browser=${browser.name}
                       --channel=${browser.channel}
                       --xvfb
+                      run-all
                       ./tools/ci/taskcluster-run.py
-                      ${browser.name}
-                      --
-                      --channel=${browser.channel}
-                      --log-wptreport=../artifacts/wpt_report.json
-                      --log-wptscreenshot=../artifacts/wpt_screenshot.txt
-                      --no-fail-on-unexpected
-                      --test-type=${chunk[0]}
-                      --this-chunk=${chunk[1]}
-                      --total-chunks=${chunk[2]};
+                        ${browser.name}
+                        --
+                        --channel=${browser.channel}
+                        --log-wptreport=../artifacts/wpt_report.json
+                        --log-wptscreenshot=../artifacts/wpt_screenshot.txt
+                        --no-fail-on-unexpected
+                        --test-type=${chunk[0]}
+                        --this-chunk=${chunk[1]}
+                        --total-chunks=${chunk[2]};
       - $if: tasks_for == "github-pull-request"
         # PR tasks that run the tests in various configurations
         then:
