@@ -10,6 +10,8 @@
 #include "mozilla/ErrorResult.h"
 #include "nsGlobalWindowInner.h"
 #include "mozilla/dom/Document.h"
+#include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 
@@ -18,13 +20,22 @@ using namespace mozilla::dom;
 
 namespace {
 
+// We use the subjectPrincipal to assert that eval() is never
+// executed in system privileged context.
 nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
                        nsICSPEventListener* aCSPEventListener,
+                       nsIPrincipal* aSubjectPrincipal,
                        const nsAString& aExpression,
                        const nsAString& aFileNameString, uint32_t aLineNum,
                        uint32_t aColumnNum, bool* aAllowed) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aAllowed);
+
+#if defined(DEBUG) && !defined(ANDROID)
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(aSubjectPrincipal,
+                                                              cx);
+#endif
 
   // The value is set at any "return", but better to have a default value here.
   *aAllowed = false;
@@ -69,7 +80,8 @@ class WorkerCSPCheckRunnable final : public WorkerMainThreadRunnable {
   bool MainThreadRun() override {
     mResult = CheckInternal(
         mWorkerPrivate->GetCSP(), mWorkerPrivate->CSPEventListener(),
-        mExpression, mFileNameString, mLineNum, mColumnNum, &mEvalAllowed);
+        mWorkerPrivate->GetLoadingPrincipal(), mExpression, mFileNameString,
+        mLineNum, mColumnNum, &mEvalAllowed);
     return true;
   }
 
@@ -128,8 +140,8 @@ nsresult CSPEvalChecker::CheckForWindow(JSContext* aCx,
   }
 
   rv = CheckInternal(csp, nullptr /* no CSPEventListener for window */,
-                     aExpression, fileNameString, lineNum, columnNum,
-                     aAllowEval);
+                     doc->NodePrincipal(), aExpression, fileNameString, lineNum,
+                     columnNum, aAllowEval);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     *aAllowEval = false;
     return rv;
