@@ -27,13 +27,16 @@ APPS = {
         "long_name": "Firefox Fennec on Android"},
     GECKOVIEW: {
         "long_name": "Firefox Geckoview on Android",
-        "default_activity": "GeckoViewActivity"},
+        "default_activity": "GeckoViewActivity",
+        "default_intent": "android.intent.action.MAIN"},
     REFBROW: {
         "long_name": "Firefox Android Components Reference Browser",
-        "default_activity": "BrowserTestActivity"},
+        "default_activity": "BrowserTestActivity",
+        "default_intent": "android.intent.action.MAIN"},
     FENIX: {
         "long_name": "Firefox Android Fenix Browser",
-        "default_activity": "HomeActivity"}
+        "default_activity": "browser.BrowserPerformanceTestActivity",
+        "default_intent": "android.intent.action.VIEW"}
 }
 INTEGRATED_APPS = list(APPS.keys())
 
@@ -45,6 +48,15 @@ def print_all_activities():
             _activity = "%s:%s" % (next_app, APPS[next_app]['default_activity'])
             all_activities.append(_activity)
     return all_activities
+
+
+def print_all_intents():
+    all_intents = []
+    for next_app in APPS:
+        if APPS[next_app].get('default_intent', None) is not None:
+            _intent = "%s:%s" % (next_app, APPS[next_app]['default_intent'])
+            all_intents.append(_intent)
+    return all_intents
 
 
 def create_parser(mach_interface=False):
@@ -61,6 +73,9 @@ def create_parser(mach_interface=False):
     add_arg('-a', '--activity', dest='activity', default=None,
             help="Name of android activity used to launch the android app."
             "i.e.: %s" % print_all_activities())
+    add_arg('-i', '--intent', dest='intent', default=None,
+            help="Name of android intent action used to launch the android app."
+            "i.e.: %s" % print_all_intents())
     add_arg('--host', dest='host',
             help="Hostname from which to serve urls, defaults to 127.0.0.1. "
             "The value HOST_IP will cause the value of host to be "
@@ -141,7 +156,7 @@ def verify_options(parser, args):
             parser.error("Power test is only supported when running raptor on Firefox Android "
                          "browsers when host is specified!")
 
-    # if running on geckoview/refbrow/fenix, we need an activity name
+    # if running on geckoview/refbrow/fenix, we need an activity and intent
     if args.app in ["geckoview", "refbrow", "fenix"]:
         if not args.activity:
             # if we have a default activity specified in APPS above, use that
@@ -150,6 +165,13 @@ def verify_options(parser, args):
             else:
                 # otherwise fail out
                 parser.error("--activity command line argument is required!")
+        if not args.intent:
+            # if we have a default intent specified in APPS above, use that
+            if APPS[args.app].get("default_intent", None) is not None:
+                args.intent = APPS[args.app]['default_intent']
+            else:
+                # otherwise fail out
+                parser.error("--intent command line argument is required!")
 
 
 def parse_args(argv=None):

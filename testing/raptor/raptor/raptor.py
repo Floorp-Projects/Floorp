@@ -69,7 +69,8 @@ class Raptor(object):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -422,7 +423,8 @@ class RaptorDesktop(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path,
                         host, power_test, memory_test, is_release_build, debug_mode,
@@ -489,7 +491,8 @@ class RaptorDesktopFirefox(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
                                host, power_test, memory_test, is_release_build, debug_mode,
@@ -534,7 +537,8 @@ class RaptorDesktopChrome(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
                                host, power_test, memory_test, is_release_build, debug_mode,
@@ -573,7 +577,8 @@ class RaptorAndroid(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, memory_test=False,
-                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None,
+                 intent=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path, host,
                         power_test, memory_test, is_release_build, debug_mode, post_startup_delay)
@@ -581,6 +586,7 @@ class RaptorAndroid(Raptor):
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
         self.config['activity'] = activity
+        self.config['intent'] = intent
 
     def create_browser_handler(self):
         # create the android device handler; it gets initiated and sets up adb etc
@@ -656,6 +662,7 @@ class RaptorAndroid(Raptor):
             else:
                 self.device.launch_activity(self.config['binary'],
                                             self.config['activity'],
+                                            self.config['intent'],
                                             extra_args=extra_args,
                                             url='about:blank',
                                             e10s=True,
@@ -893,7 +900,8 @@ def main(args=sys.argv[1:]):
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,
                           post_startup_delay=args.post_startup_delay,
-                          activity=args.activity)
+                          activity=args.activity,
+                          intent=args.intent)
 
     raptor.create_browser_profile()
     raptor.create_browser_handler()
