@@ -51,11 +51,6 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   });
 }
 
-XPCOMUtils.defineLazyGetter(Services, "xulStore", () => {
-  const {XULStore} = ChromeUtils.import("resource://gre/modules/XULStore.jsm");
-  return XULStore;
-});
-
 XPCOMUtils.defineLazyGetter(Services, "io", () => {
   return Cc["@mozilla.org/network/io-service;1"]
            .getService(Ci.nsIIOService)
@@ -104,6 +99,7 @@ var initTable = {
   netUtils: ["@mozilla.org/network/util;1", "nsINetUtil"],
   loadContextInfo: ["@mozilla.org/load-context-info-factory;1", "nsILoadContextInfoFactory"],
   qms: ["@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
+  xulStore: ["@mozilla.org/xul/xulstore;1", "nsIXULStore"],
 };
 
 if (AppConstants.platform == "android") {

@@ -5,19 +5,31 @@
 #include "nsISupports.idl"
 
 interface nsIStringEnumerator;
+webidl Node;
 
 /**
  * The XUL store is used to store information related to a XUL document/application.
  * Typically it is used to store the persisted state for the document, such as
  * window location, toolbars that are open and nodes that are open and closed in a tree.
  *
- * XULStore.jsm wraps this API in useful abstractions for JS consumers.
- * XULStore.h provides a more idiomatic API for C++ consumers.
- * You should use those APIs unless you have good reasons to use this one.
+ * The data is serialized to [profile directory]/xulstore.json
  */
 [scriptable, uuid(987c4b35-c426-4dd7-ad49-3c9fa4c65d20)]
+
 interface nsIXULStore: nsISupports
 {
+  /**
+   * Sets a value for a specified node's attribute, except in
+   * the case below (following the original XULDocument::persist):
+   * If the value is empty and if calling `hasValue` with the node's
+   * document and ID and `attr` would return true, then the
+   * value instead gets removed from the store (see Bug 1476680).
+   *
+   * @param node - DOM node
+   * @param attr - attribute to store
+   */
+  void persist(in Node aNode, in AString attr);
+
   /**
    * Sets a value in the store.
    *
