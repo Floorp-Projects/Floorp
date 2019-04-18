@@ -59,7 +59,7 @@
   padding: 3px 3px;
   font: inherit;
   line-height: 14px;
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
   background-color: var(--theme-body-background);
 }
 

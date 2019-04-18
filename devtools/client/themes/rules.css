@@ -5,7 +5,6 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 :root {
   --rule-highlight-background-color: var(--theme-highlight-yellow);
-  --rule-overridden-item-border-color: var(--theme-content-color3);
   --rule-header-background-color: var(--theme-toolbar-background);
   --rule-pseudo-class-text-color: var(--yellow-70) ;
   /* This should be --yellow-50 but since we need an opacity of 0.4, we hard-code the
@@ -15,7 +14,6 @@
 
 :root.theme-dark {
   --rule-highlight-background-color: #521C76;
-  --rule-overridden-item-border-color: var(--theme-content-color1);
   --rule-header-background-color: #222225;
   --rule-pseudo-class-text-color: var(--yellow-50);
   /* This should be --yellow-50 but since we need an opacity of 0.3, we hard-code the
@@ -415,29 +413,31 @@
   position: relative;
 }
 
-.ruleview-overridden-item::before {
+.ruleview-overridden-item::before,
+.ruleview-overridden-item::after {
+  content: "";
   position: absolute;
-  left: -15px;
-  top: 0px;
-  content: '';
   display: block;
-  border-left: 0.5px solid var(--rule-overridden-item-border-color);
+  border: 0px solid var(--theme-body-color-alt);
+}
+
+.ruleview-overridden-item::before {
+  top: 0px;
+  left: -15px;
   height: 0.8em;
-  border-bottom: 0.5px solid var(--rule-overridden-item-border-color);
   width: 10px;
+  border-left-width: 0.5px;
+  border-bottom-width: 0.5px;
 }
 
 .ruleview-overridden-item::after {
-  position: absolute;
   left: -15px;
   bottom: -7px;
-  content: '';
-  display: block;
-  border-left: 0.5px solid var(--rule-overridden-item-border-color);
   height: 100%;
+  border-left-width: 0.5px;
 }
 
-.ruleview-overridden-item:last-child:after {
+.ruleview-overridden-item:last-child::after {
   display: none;
 }
 
@@ -541,7 +541,7 @@
 }
 
 .ruleview-overridden {
-  text-decoration: line-through;
+  text-decoration: line-through solid var(--theme-body-color-alt);
 }
 
 /**
@@ -554,10 +554,6 @@
 .ruleview-overridden .ruleview-shapeswatch,
 .ruleview-overridden .ruleview-swatch {
   display: none;
-}
-
-.theme-light .ruleview-overridden {
-  text-decoration-color: var(--theme-content-color3);
 }
 
 .ruleview-font-family.used-font {
