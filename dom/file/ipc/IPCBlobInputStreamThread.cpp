@@ -47,23 +47,13 @@ class MigrateActorRunnable final : public Runnable {
 
   NS_IMETHOD
   Run() override {
-    MOZ_ASSERT(mActor->State() == IPCBlobInputStreamChild::eInactiveMigrating);
-
     PBackgroundChild* actorChild =
         BackgroundChild::GetOrCreateForCurrentThread();
     if (!actorChild) {
       return NS_OK;
     }
 
-    if (actorChild->SendPIPCBlobInputStreamConstructor(mActor, mActor->ID(),
-                                                       mActor->Size())) {
-      // We need manually to increase the reference for this actor because the
-      // IPC allocator method is not triggered. The Release() is called by IPDL
-      // when the actor is deleted.
-      mActor.get()->AddRef();
-      mActor->Migrated();
-    }
-
+    mActor->MigrateTo(actorChild);
     return NS_OK;
   }
 

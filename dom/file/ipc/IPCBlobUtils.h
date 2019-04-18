@@ -166,9 +166,10 @@
  *    used to assign IPCBlobInputStreamChild actor to the DOM-File thread.
  *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
  *    doesn't exist yet and it initializes PBackground on it if needed.
- * 5. IPCBlobInputStreamChild is reused on the DOM-File thread for the creation
- *    of a new IPCBlobInputStreamParent actor on the parent side. Doing this,
- *    IPCBlobInputStreamChild will now be owned by the DOM-File thread.
+ * 5. A new IPCBlobInputStreamChild is created on the DOM-File thread for the
+ *    creation of a new IPCBlobInputStreamParent actor on the parent side.
+ *    Pending operations and IPCBlobInputStreams are moved onto the new actor,
+ *    and back references are updated.
  * 6. When the new IPCBlobInputStreamParent actor is created, it will receive
  *    the same UUID of the previous parent actor. The nsIInputStream will be
  *    retrieved from IPCBlobInputStreamStorage.
