@@ -19,7 +19,8 @@ ChromeUtils.defineModuleGetter(this, "E10SUtils",
 
 class ClickHandlerChild extends ActorChild {
   handleEvent(event) {
-    if (!event.isTrusted || event.defaultPrevented || event.button == 2) {
+    if (!event.isTrusted || event.defaultPrevented || event.button == 2 ||
+        (event.type == "click" && event.button == 1)) {
       return;
     }
 
