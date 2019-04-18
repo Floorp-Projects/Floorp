@@ -16,12 +16,13 @@ NS_IMPL_ISUPPORTS_CI(nsPermission, nsIPermission)
 
 nsPermission::nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
                            uint32_t aCapability, uint32_t aExpireType,
-                           int64_t aExpireTime)
+                           int64_t aExpireTime, int64_t aModificationTime)
     : mPrincipal(aPrincipal),
       mType(aType),
       mCapability(aCapability),
       mExpireType(aExpireType),
-      mExpireTime(aExpireTime) {}
+      mExpireTime(aExpireTime),
+      mModificationTime(aModificationTime) {}
 
 already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
     nsIPrincipal* aPrincipal) {
@@ -42,11 +43,9 @@ already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
   return mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 }
 
-already_AddRefed<nsPermission> nsPermission::Create(nsIPrincipal* aPrincipal,
-                                                    const nsACString& aType,
-                                                    uint32_t aCapability,
-                                                    uint32_t aExpireType,
-                                                    int64_t aExpireTime) {
+already_AddRefed<nsPermission> nsPermission::Create(
+    nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aCapability,
+    uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime) {
   NS_ENSURE_TRUE(aPrincipal, nullptr);
 
   nsCOMPtr<nsIPrincipal> principal =
@@ -54,7 +53,8 @@ already_AddRefed<nsPermission> nsPermission::Create(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(principal, nullptr);
 
   RefPtr<nsPermission> permission =
-      new nsPermission(principal, aType, aCapability, aExpireType, aExpireTime);
+      new nsPermission(principal, aType, aCapability, aExpireType, aExpireTime,
+                       aModificationTime);
   return permission.forget();
 }
 
@@ -86,6 +86,12 @@ nsPermission::GetExpireType(uint32_t* aExpireType) {
 NS_IMETHODIMP
 nsPermission::GetExpireTime(int64_t* aExpireTime) {
   *aExpireTime = mExpireTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPermission::GetModificationTime(int64_t* aModificationTime) {
+  *aModificationTime = mModificationTime;
   return NS_OK;
 }
 
