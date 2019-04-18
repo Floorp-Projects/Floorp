@@ -191,6 +191,12 @@ pub trait Parser<'i> {
     type Impl: SelectorImpl;
     type Error: 'i + From<SelectorParseErrorKind<'i>>;
 
+    /// Whether the name is a pseudo-element that can be specified with
+    /// the single colon syntax in addition to the double-colon syntax.
+    fn pseudo_element_allows_single_colon(name: &str) -> bool {
+        is_css2_pseudo_element(name)
+    }
+
     /// Whether to parse the `::slotted()` pseudo-element.
     fn parse_slotted(&self) -> bool {
         false
@@ -2032,7 +2038,7 @@ where
 /// Returns whether the name corresponds to a CSS2 pseudo-element that
 /// can be specified with the single colon syntax (in addition to the
 /// double-colon syntax, which can be used for all pseudo-elements).
-fn is_css2_pseudo_element(name: &str) -> bool {
+pub fn is_css2_pseudo_element(name: &str) -> bool {
     // ** Do not add to this list! **
     match_ignore_ascii_case! { name,
         "before" | "after" | "first-line" | "first-letter" => true,
@@ -2108,7 +2114,7 @@ where
                 },
             };
             let is_pseudo_element =
-                !is_single_colon || is_css2_pseudo_element(&name);
+                !is_single_colon || P::pseudo_element_allows_single_colon(&name);
             if is_pseudo_element {
                 if state.intersects(SelectorParsingState::AFTER_PSEUDO_ELEMENT) {
                     return Err(input.new_custom_error(SelectorParseErrorKind::InvalidState));
