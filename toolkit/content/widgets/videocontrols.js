@@ -2276,6 +2276,7 @@ this.VideoControlsImplWidget = class {
 
             <button id="pictureInPictureToggleButton" class="pictureInPictureToggleButton">
               <div id="pictureInPictureToggleIcon" class="pictureInPictureToggleIcon"></div>
+              <span class="pictureInPictureToggleLabel">&pictureInPicture.label;</span>
             </button>
 
             <div id="controlBar" class="controlBar" role="none" hidden="true">
@@ -2596,6 +2597,7 @@ this.NoControlsDesktopImplWidget = class {
           <div class="controlsOverlay stackItem">
             <button id="pictureInPictureToggleButton" class="pictureInPictureToggleButton">
               <div id="pictureInPictureToggleIcon" class="pictureInPictureToggleIcon"></div>
+              <span class="pictureInPictureToggleLabel">&pictureInPicture.label;</span>
             </button>
           </div>
         </div>
