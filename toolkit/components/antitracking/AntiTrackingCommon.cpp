@@ -397,7 +397,7 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
     MOZ_ASSERT(chan);
 
     nsresult rv = chan->GetTopWindowURI(getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+    if (NS_FAILED(rv) || !uri) {
       LOG(
           ("Could not check the content blocking allow list because the top "
            "window wasn't accessible"));
