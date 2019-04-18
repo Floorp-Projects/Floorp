@@ -191,9 +191,9 @@ def set_variables(event):
 
 
 def include_job(job):
-    # Special case things that unconditionally run on master
+    # Special case things that unconditionally run on pushes,
+    # assuming a higher layer is filtering the required list of branches
     if (os.environ["GITHUB_PULL_REQUEST"] == "false" and
-        os.environ["GITHUB_BRANCH"] == "master" and
         job == "run-all"):
         return True
 
