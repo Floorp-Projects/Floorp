@@ -70,6 +70,8 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "URICountListener",
   "resource:///modules/BrowserUsageTelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "PermissionUITelemetry",
+  "resource:///modules/PermissionUITelemetry.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "IDNService",
   "@mozilla.org/network/idn-service;1", "nsIIDNService");
@@ -145,6 +147,17 @@ var PermissionPromptPrototype = {
    * will be selected automatically.
    */
   get permissionKey() {
+    return undefined;
+  },
+
+  /**
+   * A string that needs to be set to include this prompt in
+   * experimental event telemetry collection.
+   *
+   * This needs to conform to event telemetry string rules,
+   * i.e. it needs to be an alphabetic string under 20 characters.
+   */
+  get permissionTelemetryKey() {
     return undefined;
   },
 
@@ -403,6 +416,8 @@ var PermissionPromptPrototype = {
       return;
     }
 
+    this._buttonAction = null;
+
     // Transform the PermissionPrompt actions into PopupNotification actions.
     let popupNotificationActions = [];
     for (let promptAction of this.promptActions) {
@@ -440,9 +455,16 @@ var PermissionPromptPrototype = {
             }
 
             // Grant permission if action is ALLOW.
+            // Record buttonAction for telemetry.
             if (promptAction.action == SitePermissions.ALLOW) {
+              this._buttonAction = "accept";
               this.allow();
             } else {
+              if (promptAction.scope == SitePermissions.SCOPE_PERSISTENT) {
+                this._buttonAction = "never";
+              } else {
+                this._buttonAction = "deny";
+              }
               this.cancel();
             }
           } else if (this.permissionKey) {
@@ -526,10 +548,23 @@ var PermissionPromptPrototype = {
   },
 
   _showNotification(actions, postPrompt = false) {
+    let chromeWin = this.browser.ownerGlobal;
     let mainAction = actions.length ? actions[0] : null;
     let secondaryActions = actions.splice(1);
 
     let options = this.popupOptions;
+
+    let telemetryData = null;
+    if (this.request && this.permissionTelemetryKey) {
+      telemetryData = {
+        permissionTelemetryKey: this.permissionTelemetryKey,
+        permissionKey: this.permissionKey,
+        principal: this.principal,
+        documentDOMContentLoadedTimestamp: this.request.documentDOMContentLoadedTimestamp,
+        isHandlingUserInput: this.request.isHandlingUserInput,
+        userHadInteractedWithDocument: this.request.userHadInteractedWithDocument,
+      };
+    }
 
     if (!options.hasOwnProperty("displayURI") || options.displayURI) {
       options.displayURI = this.principal.URI;
@@ -541,7 +576,7 @@ var PermissionPromptPrototype = {
       options.hideClose = true;
     }
 
-    options.eventCallback = (topic) => {
+    options.eventCallback = (topic, nextRemovalReason) => {
       // When the docshell of the browser is aboout to be swapped to another one,
       // the "swapping" event is called. Returning true causes the notification
       // to be moved to the new browser.
@@ -562,6 +597,10 @@ var PermissionPromptPrototype = {
       // You can remove this restriction if you need it, but be
       // mindful of other consumers.
       if (topic == "removed" && !postPrompt) {
+        if (telemetryData) {
+          PermissionUITelemetry.onRemoved(telemetryData, this._buttonAction,
+                                          nextRemovalReason);
+        }
         this.onAfterShow();
       }
       return false;
@@ -575,7 +614,6 @@ var PermissionPromptPrototype = {
     // You can remove this restriction if you need it, but be
     // mindful of other consumers.
     if (postPrompt || this.onBeforeShow() !== false) {
-      let chromeWin = this.browser.ownerGlobal;
       chromeWin.PopupNotifications.show(this.browser,
                                         this.notificationID,
                                         this.message,
@@ -583,6 +621,9 @@ var PermissionPromptPrototype = {
                                         mainAction,
                                         secondaryActions,
                                         options);
+      if (telemetryData) {
+        PermissionUITelemetry.onShow(telemetryData);
+      }
     }
   },
 };
@@ -641,6 +682,10 @@ GeolocationPermissionPrompt.prototype = {
   __proto__: PermissionPromptForRequestPrototype,
 
   get permissionKey() {
+    return "geo";
+  },
+
+  get permissionTelemetryKey() {
     return "geo";
   },
 
@@ -725,6 +770,10 @@ DesktopNotificationPermissionPrompt.prototype = {
 
   get permissionKey() {
     return "desktop-notification";
+  },
+
+  get permissionTelemetryKey() {
+    return "notifications";
   },
 
   get popupOptions() {
