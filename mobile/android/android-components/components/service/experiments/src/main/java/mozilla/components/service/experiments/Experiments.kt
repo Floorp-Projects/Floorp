@@ -137,7 +137,6 @@ open class ExperimentsInternalAPI internal constructor() {
      * Requests new experiments from the server and
      * saves them to local storage
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @Synchronized
     internal fun onExperimentsUpdated(serverState: ExperimentsSnapshot) {
         assert(experimentsLoaded) { "Experiments should have been loaded." }

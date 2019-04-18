@@ -116,7 +116,6 @@ internal class ExperimentsUpdater(
      *
      * @return true if the experiments were updated, false if there was an [ExperimentDownloadException]
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @Synchronized
     internal fun updateExperiments(): Boolean {
         return try {

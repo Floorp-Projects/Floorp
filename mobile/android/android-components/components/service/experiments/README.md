@@ -51,6 +51,36 @@ Experiments.withExperiment("button-color-experiment") {
 }
 ```
 
+### ExperimentsDebugActivity usage
+Experiments exports the [`ExperimentsDebugActivity`](src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt)
+that can be used to trigger functionality or toggle debug features on or off. Users can invoke this special activity, at
+run-time, using the following [`adb`](https://developer.android.com/studio/command-line/adb) command:
+
+`adb shell am start -n [applicationId]/mozilla.components.service.experiments.debug.ExperimentsDebugActivity [extra keys]`
+
+In the above:
+
+- `[applicationId]` is the product's application id as defined in the manifest
+  file and/or build script. For the glean sample application, this is
+  `org.mozilla.samples.glean` for a release build and
+  `org.mozilla.samples.glean.debug` for a debug build.
+
+- `[extra keys]` is a list of extra keys to be passed to the debug activity. See the
+  [documentation](https://developer.android.com/studio/command-line/adb#IntentSpec)
+  for the command line switches used to pass the extra keys. These are the
+  currently supported keys:
+
+    |key|type|description|
+    |---|----|-----------|
+    | updateExperiments | boolean (--ez) | forces the experiments updater to run and fetch experiments immediately |
+
+For example, to direct a release build of the glean sample application to update experiments immediately, the following command
+can be used:
+
+```
+adb shell am start -n org.mozilla.samples.glean.debug/mozilla.components.service.experiments.debug.ExperimentsDebugActivity --ez updateExperiments true
+```
+
 ## Experiments format for Kinto
 
 The library loads its list of experiments from Kinto. Kinto provides data in the following JSON format:
