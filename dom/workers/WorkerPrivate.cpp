@@ -4794,6 +4794,27 @@ RemoteWorkerChild* WorkerPrivate::GetRemoteWorkerController() {
   return mRemoteWorkerController;
 }
 
+nsAString& WorkerPrivate::Id() {
+  AssertIsOnMainThread();
+
+  if (mID.IsEmpty()) {
+    nsresult rv;
+    nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
+        do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    nsID uuid;
+    rv = uuidGenerator->GenerateUUIDInPlace(&uuid);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    char buffer[NSID_LENGTH];
+    uuid.ToProvidedString(buffer);
+    // Remove {} and the null terminator
+    mID.AssignASCII(&buffer[1], NSID_LENGTH - 3);
+  }
+
+  return mID;
+}
+
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)
 NS_IMPL_RELEASE(WorkerPrivate::EventTarget)
 

@@ -318,6 +318,18 @@ WorkerDebugger::GetServiceWorkerID(uint32_t* aResult) {
 }
 
 NS_IMETHODIMP
+WorkerDebugger::GetId(nsAString& aResult) {
+  AssertIsOnMainThread();
+
+  if (!mWorkerPrivate) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aResult = mWorkerPrivate->Id();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WorkerDebugger::Initialize(const nsAString& aURL) {
   AssertIsOnMainThread();
 
