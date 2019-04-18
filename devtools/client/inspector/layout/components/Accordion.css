@@ -43,7 +43,7 @@
 }
 
 .accordion ._header:hover svg {
-  fill: var(--theme-comment-alt);
+  fill: var(--theme-text-color-inactive);
 }
 
 .accordion ._header .truncate {
