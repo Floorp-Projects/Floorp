@@ -1888,7 +1888,7 @@ nsresult nsPermissionManager::AddInternal(
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(aPrincipal, mTypeArray[typeIndex],
                                       aPermission, aExpireType, aExpireTime,
-                                      u"added");
+                                      aModificationTime, u"added");
       }
 
       break;
@@ -1926,7 +1926,7 @@ nsresult nsPermissionManager::AddInternal(
         NotifyObserversWithPermission(
             aPrincipal, mTypeArray[typeIndex], oldPermissionEntry.mPermission,
             oldPermissionEntry.mExpireType, oldPermissionEntry.mExpireTime,
-            u"deleted");
+            oldPermissionEntry.mModificationTime, u"deleted");
       }
 
       // If there are no more permissions stored for that entry, clear it.
@@ -1983,7 +1983,7 @@ nsresult nsPermissionManager::AddInternal(
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(aPrincipal, mTypeArray[typeIndex],
                                       aPermission, aExpireType, aExpireTime,
-                                      u"changed");
+                                      aModificationTime, u"changed");
       }
 
       break;
@@ -2032,7 +2032,7 @@ nsresult nsPermissionManager::AddInternal(
       if (aNotifyOperation == eNotify) {
         NotifyObserversWithPermission(aPrincipal, mTypeArray[typeIndex],
                                       aPermission, aExpireType, aExpireTime,
-                                      u"changed");
+                                      aModificationTime, u"changed");
       }
 
     } break;
@@ -2356,9 +2356,9 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PermissionEntry& perm = entry->GetPermissions()[idx];
-  nsCOMPtr<nsIPermission> r =
-      nsPermission::Create(principal, mTypeArray[perm.mType], perm.mPermission,
-                           perm.mExpireType, perm.mExpireTime);
+  nsCOMPtr<nsIPermission> r = nsPermission::Create(
+      principal, mTypeArray[perm.mType], perm.mPermission, perm.mExpireType,
+      perm.mExpireTime, perm.mModificationTime);
   if (NS_WARN_IF(!r)) {
     return NS_ERROR_FAILURE;
   }
@@ -2603,7 +2603,8 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
 
       RefPtr<nsIPermission> permission = nsPermission::Create(
           principal, mTypeArray[permEntry.mType], permEntry.mPermission,
-          permEntry.mExpireType, permEntry.mExpireTime);
+          permEntry.mExpireType, permEntry.mExpireTime,
+          permEntry.mModificationTime);
       if (NS_WARN_IF(!permission)) {
         continue;
       }
@@ -2649,7 +2650,8 @@ nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
 
       nsCOMPtr<nsIPermission> permission = nsPermission::Create(
           aPrincipal, mTypeArray[permEntry.mType], permEntry.mPermission,
-          permEntry.mExpireType, permEntry.mExpireTime);
+          permEntry.mExpireType, permEntry.mExpireTime,
+          permEntry.mModificationTime);
       if (NS_WARN_IF(!permission)) {
         continue;
       }
@@ -2750,9 +2752,11 @@ nsresult nsPermissionManager::RemoveAllFromMemory() {
 // set into an nsIPermission.
 void nsPermissionManager::NotifyObserversWithPermission(
     nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aPermission,
-    uint32_t aExpireType, int64_t aExpireTime, const char16_t* aData) {
-  nsCOMPtr<nsIPermission> permission = nsPermission::Create(
-      aPrincipal, aType, aPermission, aExpireType, aExpireTime);
+    uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime,
+    const char16_t* aData) {
+  nsCOMPtr<nsIPermission> permission =
+      nsPermission::Create(aPrincipal, aType, aPermission, aExpireType,
+                           aExpireTime, aModificationTime);
   if (permission) NotifyObservers(permission, aData);
 }
 

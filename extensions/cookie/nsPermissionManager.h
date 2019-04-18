@@ -475,6 +475,7 @@ class nsPermissionManager final : public nsIPermissionManager,
                                      const nsACString& aType,
                                      uint32_t aPermission, uint32_t aExpireType,
                                      int64_t aExpireTime,
+                                     int64_t aModificationTime,
                                      const char16_t* aData);
   void NotifyObservers(nsIPermission* aPermission, const char16_t* aData);
 
