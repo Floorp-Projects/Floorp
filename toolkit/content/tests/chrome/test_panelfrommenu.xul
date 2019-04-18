@@ -74,13 +74,13 @@ function menuClosed()
   // the panel will be open at this point, but the popupshown event
   // still needs to fire
   is($("panel").state, "showing", "panel is open after menu hide");
-  is($("menu").menupopup.state, "closed", "menu is closed after menu hide");
+  is($("menu").firstChild.state, "closed", "menu is closed after menu hide");
 }
 
 function panelOpened()
 {
   is($("panel").state, "open", "panel is open");
-  is($("menu").menupopup.state, "closed", "menu is closed");
+  is($("menu").firstChild.state, "closed", "menu is closed");
   $("panel").hidePopup();
 }
 
