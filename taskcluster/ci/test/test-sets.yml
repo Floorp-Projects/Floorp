@@ -470,6 +470,20 @@ android-hw-arm7-raptor:
     - raptor-tp6m-8-refbrow
     - raptor-tp6m-9-refbrow
     - raptor-tp6m-10-refbrow
+    - raptor-tp6m-1-fenix-cold
+    - raptor-tp6m-2-fenix-cold
+    - raptor-tp6m-3-fenix-cold
+    - raptor-tp6m-4-fenix-cold
+    - raptor-tp6m-5-fenix-cold
+    - raptor-tp6m-6-fenix-cold
+    - raptor-tp6m-7-fenix-cold
+    - raptor-tp6m-8-fenix-cold
+    - raptor-tp6m-9-fenix-cold
+    - raptor-tp6m-10-fenix-cold
+    - raptor-tp6m-11-fenix-cold
+    - raptor-tp6m-12-fenix-cold
+    - raptor-tp6m-13-fenix-cold
+    - raptor-tp6m-14-fenix-cold
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -495,6 +509,20 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-8-refbrow
     - raptor-tp6m-9-refbrow
     - raptor-tp6m-10-refbrow
+    - raptor-tp6m-1-fenix-cold
+    - raptor-tp6m-2-fenix-cold
+    - raptor-tp6m-3-fenix-cold
+    - raptor-tp6m-4-fenix-cold
+    - raptor-tp6m-5-fenix-cold
+    - raptor-tp6m-6-fenix-cold
+    - raptor-tp6m-7-fenix-cold
+    - raptor-tp6m-8-fenix-cold
+    - raptor-tp6m-9-fenix-cold
+    - raptor-tp6m-10-fenix-cold
+    - raptor-tp6m-11-fenix-cold
+    - raptor-tp6m-12-fenix-cold
+    - raptor-tp6m-13-fenix-cold
+    - raptor-tp6m-14-fenix-cold
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
