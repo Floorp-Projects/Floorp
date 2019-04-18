@@ -5,4 +5,5 @@
 dictionary CancelContentJSOptions {
   long index = 0;
   URI? uri = null;
+  long epoch = 0;
 };
