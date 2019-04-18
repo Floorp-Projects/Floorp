@@ -1106,7 +1106,7 @@ parent:
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                                     Principal aTopLevelPrincipal, bool aIsHandlingUserInput,
-                                    TabId tabId);
+                                    bool aDocumentHasUserInput, uint64_t aPageLoadTimestamp, TabId tabId);
 
     async ShutdownProfile(nsCString aProfile);
 

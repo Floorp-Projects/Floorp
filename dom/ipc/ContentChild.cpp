@@ -2975,7 +2975,8 @@ PContentPermissionRequestChild*
 ContentChild::AllocPContentPermissionRequestChild(
     const InfallibleTArray<PermissionRequest>& aRequests,
     const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
-    const bool& aIsHandlingUserInput, const TabId& aTabId) {
+    const bool& aIsHandlingUserInput, const bool& aDocumentHasUserInput,
+    const DOMTimeStamp aPageLoadTimestamp, const TabId& aTabId) {
   MOZ_CRASH("unused");
   return nullptr;
 }
