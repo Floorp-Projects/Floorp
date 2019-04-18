@@ -244,7 +244,8 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget)
       mType(0),
       mGeneration(0),
       mITimer(aTimer),
-      mMutex("nsTimerImpl::mMutex") {
+      mMutex("nsTimerImpl::mMutex"),
+      mFiring(0) {
   // XXX some code creates timers during xpcom shutdown, when threads are no
   // longer available, so we cannot turn this on yet.
   // MOZ_ASSERT(mEventTarget);
@@ -406,8 +407,7 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
 
     // Don't clear this if we're firing; once Fire returns, we'll get this call
     // again.
-    if (aClearITimer &&
-        (mCallbackDuringFire.mType == Callback::Type::Unknown)) {
+    if (aClearITimer && !mFiring) {
       MOZ_RELEASE_ASSERT(
           mITimer,
           "mITimer was nulled already! "
@@ -510,6 +510,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
   uint8_t oldType;
   uint32_t oldDelay;
   TimeStamp oldTimeout;
+  Callback callbackDuringFire;
   nsCOMPtr<nsITimer> kungFuDeathGrip;
 
   {
@@ -520,7 +521,8 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
       return;
     }
 
-    mCallbackDuringFire.swap(mCallback);
+    ++mFiring;
+    callbackDuringFire = mCallback;
     oldType = mType;
     oldDelay = mDelay.ToMilliseconds();
     oldTimeout = mTimeout;
@@ -551,39 +553,42 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
   }
 
   if (MOZ_LOG_TEST(GetTimerFiringsLog(), LogLevel::Debug)) {
-    LogFiring(mCallbackDuringFire, oldType, oldDelay);
+    LogFiring(callbackDuringFire, oldType, oldDelay);
   }
 
-  switch (mCallbackDuringFire.mType) {
+  switch (callbackDuringFire.mType) {
     case Callback::Type::Function:
-      mCallbackDuringFire.mCallback.c(mITimer, mCallbackDuringFire.mClosure);
+      callbackDuringFire.mCallback.c(mITimer, callbackDuringFire.mClosure);
       break;
     case Callback::Type::Interface:
-      mCallbackDuringFire.mCallback.i->Notify(mITimer);
+      callbackDuringFire.mCallback.i->Notify(mITimer);
       break;
     case Callback::Type::Observer:
-      mCallbackDuringFire.mCallback.o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC,
-                                               nullptr);
+      callbackDuringFire.mCallback.o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC,
+                                              nullptr);
       break;
     default:;
   }
 
-  Callback trash;  // Swap into here to dispose of callback after the unlock
   MutexAutoLock lock(mMutex);
-  if (aGeneration == mGeneration && IsRepeating()) {
-    // Repeating timer has not been re-init or canceled; reschedule
-    mCallbackDuringFire.swap(mCallback);
-    if (IsSlack()) {
-      mTimeout = TimeStamp::Now() + mDelay;
+  if (aGeneration == mGeneration) {
+    if (IsRepeating()) {
+      // Repeating timer has not been re-init or canceled; reschedule
+      if (IsSlack()) {
+        mTimeout = TimeStamp::Now() + mDelay;
+      } else {
+        mTimeout = mTimeout + mDelay;
+      }
+      if (gThread) {
+        gThread->AddTimer(this);
+      }
     } else {
-      mTimeout = mTimeout + mDelay;
-    }
-    if (gThread) {
-      gThread->AddTimer(this);
+      // Non-repeating timer that has not been re-scheduled. Clear.
+      mCallback.clear();
     }
   }
 
-  mCallbackDuringFire.swap(trash);
+  --mFiring;
 
   MOZ_LOG(GetTimerLog(), LogLevel::Debug,
           ("[this=%p] Took %fms to fire timer callback\n", this,
