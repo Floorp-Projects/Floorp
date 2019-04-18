@@ -10,7 +10,7 @@
       padding: 0;
       margin: 0;
     }
-    
+
     div.test {
       position: absolute;
       height: 10px;
@@ -77,7 +77,7 @@ async function testElementFromPoint() {
     let [x, y, ignoreScroll, flushLayout] = testData[i][0];
     let moveData = testData[i][1];
     let expected = testData[i][2];
-    
+
     if (moveData) {
       let moveEl = moveData[1];
       let [moveX, moveY] = moveData[0];
@@ -107,6 +107,11 @@ async function testHandlingUserInput() {
       result: true,
     },
     {
+      eventName: "auxclick",
+      button: 1,
+      result: true,
+    },
+    {
       eventName: "mousemove",
       result: false,
     },
@@ -128,23 +133,25 @@ async function testHandlingUserInput() {
     },
   ];
 
-  for (let i=0; i<data.length; ++i) {
+  for (const {eventName, result, button} of data) {
     let eventPromise = new Promise(resolve => {
-      document.addEventListener(data[i].eventName, function() {
-        is(domWindowUtils.isHandlingUserInput, data[i].result,
-           "isHandlingUserInput should be " + data[i].result);
+      document.addEventListener(eventName, function() {
+        is(domWindowUtils.isHandlingUserInput, result,
+           `isHandlingUserInput should be ${result} for ${eventName}`);
 
         SimpleTest.executeSoon(resolve);
       }, {once: true});
     });
 
     SimpleTest.executeSoon(function() {
-      if (data[i].eventName == "click") {
+      if (eventName == "click") {
         synthesizeMouseAtCenter(document.body, {});
-      } else if (data[i].eventName.indexOf("key") == 0) {
-        synthesizeKey("VK_A", { type: data[i].eventName });
+      } else if (eventName == "auxclick" && button) {
+        synthesizeMouseAtCenter(document.body, { button });
+      } else if (eventName.startsWith("key")) {
+        synthesizeKey("VK_A", { type: eventName });
       } else {
-        synthesizeMouseAtCenter(document.body, { type: data[i].eventName });
+        synthesizeMouseAtCenter(document.body, { type: eventName });
       }
     });
 
