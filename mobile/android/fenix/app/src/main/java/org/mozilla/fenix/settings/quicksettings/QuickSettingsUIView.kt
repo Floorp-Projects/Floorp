@@ -110,7 +110,6 @@ class QuickSettingsUIView(
         val icon = AppCompatResources.getDrawable(context, drawableId)
         val resolvedColor = ContextCompat.getColor(context, drawableTint)
         icon?.setTint(resolvedColor)
-        trackingProtectionSwitch.setTextColor(resolvedColor)
         trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         trackingProtectionSwitch.isChecked = isTrackingProtectionOn
 
