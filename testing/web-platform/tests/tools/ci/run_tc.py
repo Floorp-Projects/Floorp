@@ -220,6 +220,7 @@ def main():
     try:
         event = json.loads(os.environ["TASK_EVENT"])
     except KeyError:
+        print("WARNING: Missing TASK_EVENT environment variable")
         # For example under local testing
         event = {}
 
