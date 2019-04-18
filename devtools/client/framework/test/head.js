@@ -367,7 +367,7 @@ function getElementByToolIdOrExtensionIdOrSelector(toolbox, idOrSelector) {
 }
 
 function getWindow(toolbox) {
-  return toolbox.win.parent;
+  return toolbox.topWindow;
 }
 
 async function resizeWindow(toolbox, width, height) {

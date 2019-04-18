@@ -50,6 +50,6 @@ add_task(async function() {
   is(toolbox.getCurrentPanel(), scratchpadPanel,
     "Clicking link switches to Scratchpad panel");
 
-  is(Services.ww.activeWindow, toolbox.win.parent,
+  is(Services.ww.activeWindow, toolbox.topWindow,
      "Scratchpad's toolbox is focused");
 });
