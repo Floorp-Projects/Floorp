@@ -129,22 +129,21 @@ def create_release(owner, repo, sha, tag, summary, body):
 def should_run_action():
     with open(os.environ["GITHUB_EVENT_PATH"]) as f:
         event = json.load(f)
+        logger.info(json.dumps(event, indent=2))
 
     if "pull_request" in event:
         logger.info("Not tagging for PR")
         return False
     if event.get("ref") != "refs/heads/master":
-        logger.info("Not tagging for non-master branch")
+        logger.info("Not tagging for ref %s" % event.get("ref"))
         return False
     return True
 
 
 def main():
     repo_key = "GITHUB_REPOSITORY"
-    should_run = should_run_action()
 
-    if not should_run:
-        logger.info("Not tagging master for this push")
+    if not should_run_action():
         return
 
     owner, repo = os.environ[repo_key].split("/", 1)
