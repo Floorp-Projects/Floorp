@@ -849,7 +849,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
       }
 
       bool unused = false;
-      return (!mSuppressOnInput && mController && mFocusedInput)
+      return (!mSuppressOnInput && IsFocusedInputControlled())
                  ? mController->HandleText(&unused)
                  : NS_OK;
     }
@@ -860,13 +860,13 @@ nsFormFillController::HandleEvent(Event* aEvent) {
       return NS_OK;
     case eCompositionStart:
       NS_ASSERTION(mController, "should have a controller!");
-      if (mController && mFocusedInput) {
+      if (IsFocusedInputControlled()) {
         mController->HandleStartComposition();
       }
       return NS_OK;
     case eCompositionEnd:
       NS_ASSERTION(mController, "should have a controller!");
-      if (mController && mFocusedInput) {
+      if (IsFocusedInputControlled()) {
         mController->HandleEndComposition();
       }
       return NS_OK;
@@ -881,10 +881,8 @@ nsFormFillController::HandleEvent(Event* aEvent) {
         return NS_OK;
       }
 
-      if (mFocusedInput) {
-        if (doc == mFocusedInput->OwnerDoc()) {
-          StopControllingInput();
-        }
+      if (mFocusedInput && doc == mFocusedInput->OwnerDoc()) {
+        StopControllingInput();
       }
 
       // Only remove the observer notifications and marked autofill and password
@@ -948,13 +946,9 @@ void nsFormFillController::MaybeStartControllingInput(
     return;
   }
 
-  if (aInput->ReadOnly()) {
-    return;
-  }
-
   bool autocomplete = nsContentUtils::IsAutocompleteEnabled(aInput);
 
-  bool hasList = aInput->GetList() != nullptr;
+  bool hasList = !!aInput->GetList();
 
   bool isPwmgrInput = false;
   if (mPwmgrInputs.Get(aInput) ||
@@ -1021,7 +1015,7 @@ nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
 
 nsresult nsFormFillController::Focus(Event* aEvent) {
   nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetComposedTarget());
-  return this->HandleFocus(HTMLInputElement::FromNodeOrNull(input));
+  return HandleFocus(HTMLInputElement::FromNodeOrNull(input));
 }
 
 nsresult nsFormFillController::KeyDown(Event* aEvent) {
@@ -1029,7 +1023,7 @@ nsresult nsFormFillController::KeyDown(Event* aEvent) {
 
   mPasswordPopupAutomaticallyOpened = false;
 
-  if (!mFocusedInput || !mController) {
+  if (!IsFocusedInputControlled()) {
     return NS_OK;
   }
 
@@ -1065,7 +1059,7 @@ nsresult nsFormFillController::KeyPress(Event* aEvent) {
 
   mPasswordPopupAutomaticallyOpened = false;
 
-  if (!mFocusedInput || !mController) {
+  if (!IsFocusedInputControlled()) {
     return NS_OK;
   }
 
@@ -1333,13 +1327,18 @@ void nsFormFillController::StartControllingInput(HTMLInputElement* aInput) {
   aInput->AddMutationObserverUnlessExists(this);
   mFocusedInput = aInput;
 
-  Element* list = mFocusedInput->GetList();
-  if (list) {
+  if (Element* list = mFocusedInput->GetList()) {
     list->AddMutationObserverUnlessExists(this);
     mListNode = list;
   }
 
-  mController->SetInput(this);
+  if (!mFocusedInput->ReadOnly()) {
+    mController->SetInput(this);
+  }
+}
+
+bool nsFormFillController::IsFocusedInputControlled() const {
+  return mFocusedInput && mController && !mFocusedInput->ReadOnly();
 }
 
 void nsFormFillController::StopControllingInput() {
@@ -1367,7 +1366,6 @@ void nsFormFillController::StopControllingInput() {
           ("StopControllingInput: Stopped controlling %p", mFocusedInput));
   if (mFocusedInput) {
     MaybeRemoveMutationObserver(mFocusedInput);
-
     mFocusedInput = nullptr;
   }
 
