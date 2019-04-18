@@ -10,9 +10,17 @@ include protocol PBrowserBridge;
 
 include DOMTypes;
 
+using JSWindowActorMessageKind from "mozilla/dom/JSWindowActor.h";
 
 namespace mozilla {
 namespace dom {
+
+struct JSWindowActorMessageMeta {
+  nsString actorName;
+  nsString messageName;
+  uint64_t queryId;
+  JSWindowActorMessageKind kind;
+};
 
 /**
  * A PWindowGlobal actor has a lifetime matching that of a single Window Global,
@@ -33,7 +41,7 @@ child:
       returns (nsresult rv, nullable PBrowserBridge bridge);
 
 both:
-  async AsyncMessage(nsString aActorName, nsString aMessage, ClonedMessageData aData);
+  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
 
 parent:
   /// Update the URI of the document in this WindowGlobal.
