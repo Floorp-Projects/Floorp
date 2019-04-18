@@ -500,8 +500,9 @@ class ContentParent final : public PContentParent,
   PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
       const InfallibleTArray<PermissionRequest>& aRequests,
       const IPC::Principal& aPrincipal,
-      const IPC::Principal& aTopLevelPrincipal, const bool& aIsTrusted,
-      const TabId& aTabId);
+      const IPC::Principal& aTopLevelPrincipal,
+      const bool& aIsHandlingUserInput, const bool& aDocumentHasUserInput,
+      const DOMTimeStamp& aPageLoadTimestamp, const TabId& aTabId);
 
   bool DeallocPContentPermissionRequestParent(
       PContentPermissionRequestParent* actor);
