@@ -5,15 +5,13 @@
     <script src='/resources/testharnessreport.js'></script>
   </head>
   <body>
+    <img src="./unoptimized-image.jpg">
     <script>
-var image = new Image();
-image.src = "./unoptimized-image.jpg";
-
 var check_report_format = (reports, observer) => {
   let report = reports[0];
   assert_equals(report.type, "feature-policy-violation");
   assert_equals(report.url, document.location.href);
-  assert_equals(report.body.featureId, "unoptimized-images");
+  assert_equals(report.body.featureId, "unoptimized-lossy-images");
   assert_equals(report.body.disposition, "enforce");
 };
 
