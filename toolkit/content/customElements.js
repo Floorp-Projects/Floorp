@@ -234,23 +234,40 @@ MozElements.MozElementMixin = Base => {
     return null;
   }
 
+  static get flippedInheritedAttributes() {
+    let {inheritedAttributes} = this;
+    if (!inheritedAttributes) {
+      return null;
+    }
+    if (!this._flippedInheritedAttributes) {
+      this._flippedInheritedAttributes = {};
+      for (let selector in inheritedAttributes) {
+        let attrRules = inheritedAttributes[selector].split(",");
+        for (let attrRule of attrRules) {
+          let attrName = attrRule;
+          let attrNewName = attrRule;
+          let split = attrName.split("=");
+          if (split.length == 2) {
+            attrName = split[1];
+            attrNewName = split[0];
+          }
+
+          if (!this._flippedInheritedAttributes[attrName]) {
+            this._flippedInheritedAttributes[attrName] = [];
+          }
+          this._flippedInheritedAttributes[attrName].push([selector, attrNewName]);
+        }
+      }
+    }
+
+    return this._flippedInheritedAttributes;
+  }
   /*
    * Generate this array based on `inheritedAttributes`, if any. A class is free to override
    * this if it needs to do something more complex or wants to opt out of this behavior.
    */
   static get observedAttributes() {
-    let {inheritedAttributes} = this;
-    if (!inheritedAttributes) {
-      return [];
-    }
-
-    let allAttributes = new Set();
-    for (let sel in inheritedAttributes) {
-      for (let attrName of inheritedAttributes[sel].split(",")) {
-        allAttributes.add(attrName.split("=").pop());
-      }
-    }
-    return [...allAttributes];
+    return Object.keys(this.flippedInheritedAttributes || {});
   }
 
   /*
@@ -258,11 +275,14 @@ MozElements.MozElementMixin = Base => {
    * based on the static `inheritedAttributes` Object. This can be overridden by callers.
    */
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue === newValue || !this.inheritedAttributesCache) {
+    if (oldValue === newValue || !this.initializedAttributeInheritance) {
       return;
     }
 
-    this.inheritAttributes();
+    let list = this.constructor.flippedInheritedAttributes[name];
+    if (list) {
+      this.inheritAttribute(list, newValue);
+    }
   }
 
   /*
@@ -279,113 +299,52 @@ MozElements.MozElementMixin = Base => {
   *
   */
   initializeAttributeInheritance() {
-    let {inheritedAttributes} = this.constructor;
-    if (!inheritedAttributes) {
-      return;
-    }
-    this._inheritedAttributesValuesCache = null;
-    this.inheritedAttributesCache = new Map();
-    for (let selector in inheritedAttributes) {
-      let parent = this.shadowRoot || this;
-      let el = parent.querySelector(selector);
-      // Skip unmatched selectors in case an element omits some elements in certain cases:
-      if (!el) {
-        continue;
-      }
-      if (this.inheritedAttributesCache.has(el)) {
-        console.error(`Error: duplicate element encountered with ${selector}`);
-      }
-
-      this.inheritedAttributesCache.set(el, inheritedAttributes[selector]);
-    }
-    this.inheritAttributes();
-  }
-
-  /*
-   * Loop through the static `inheritedAttributes` Map and inherit attributes to child elements.
-   *
-   * This usually won't need to be called directly - `this.initializeAttributeInheritance()` and
-   * `this.attributeChangedCallback` will call it for you when appropriate.
-   */
-  inheritAttributes() {
-    let {inheritedAttributes} = this.constructor;
-    if (!inheritedAttributes) {
+    let {flippedInheritedAttributes} = this.constructor;
+    if (!flippedInheritedAttributes) {
       return;
     }
 
-    if (!this.inheritedAttributesCache) {
-     console.error(`You must call this.initializeAttributeInheritance() for ${this.tagName}`);
-     return;
-    }
-
-    for (let [ el, attrs ] of this.inheritedAttributesCache.entries()) {
-      for (let attr of attrs.split(",")) {
-        this.inheritAttribute(el, attr);
+    this.initializedAttributeInheritance = true;
+    for (let attr in flippedInheritedAttributes) {
+      let value = this.getAttribute(attr);
+      if (value) {
+        this.inheritAttribute(flippedInheritedAttributes[attr], value);
       }
     }
   }
 
   /*
-   * Implements attribute inheritance by a child element. Uses XBL @inherit
-   * syntax of |to=from|. This can be used directly, but for simple cases
-   * you should use the inheritedAttributes getter and let the base class
-   * handle this for you.
+   * Implements attribute value inheritance by child elements.
    *
-   * @param {element} child
-   *        A child element that inherits an attribute.
-   * @param {string} attr
-   *        An attribute to inherit. Optionally in the form of |to=from|, where
-   *        |to| is an attribute defined on custom element, whose value will be
-   *        inherited to |from| attribute, defined a child element. Note |from| may
-   *        take a special value of "text" to propogate attribute value as
-   *        a child's text.
+   * @param {array} list
+   *        An array of (to-element-selector, to-attr) pairs.
+   * @param {string} value
+   *        An attribute value to propagate.
    */
-  inheritAttribute(child, attr) {
-    let attrName = attr;
-    let attrNewName = attr;
-    let split = attrName.split("=");
-    if (split.length == 2) {
-      attrName = split[1];
-      attrNewName = split[0];
-    }
-    let hasAttr = this.hasAttribute(attrName);
-    let attrValue = this.getAttribute(attrName);
-
-    // If our attribute hasn't changed since we last inherited, we don't want to
-    // propagate it down to the child. This prevents overriding an attribute that's
-    // been changed on the child (for instance, [checked]).
-    if (!this._inheritedAttributesValuesCache) {
-      this._inheritedAttributesValuesCache = new WeakMap();
-    }
-    if (!this._inheritedAttributesValuesCache.has(child)) {
-      this._inheritedAttributesValuesCache.set(child, {});
-    }
-    let lastInheritedAttributes = this._inheritedAttributesValuesCache.get(child);
-
-    if ((hasAttr && attrValue === lastInheritedAttributes[attrName]) ||
-        (!hasAttr && !lastInheritedAttributes.hasOwnProperty(attrName))) {
-      // We got a request to inherit an unchanged attribute - bail.
-      return;
+  inheritAttribute(list, value) {
+    if (!this._inheritedElements) {
+      this._inheritedElements = {};
     }
 
-    // Store the value we're about to pass down to the child.
-    if (hasAttr) {
-      lastInheritedAttributes[attrName] = attrValue;
-    } else {
-      delete lastInheritedAttributes[attrName];
-    }
+    for (let [selector, attr] of list) {
+      if (!(selector in this._inheritedElements)) {
+        let parent = this.shadowRoot || this;
+        this._inheritedElements[selector] = parent.querySelector(selector);
+      }
+      let el = this._inheritedElements[selector];
+      if (el) {
+        if (attr == "text") {
+          el.textContent = value;
+        } else if (value) {
+          el.setAttribute(attr, value);
+        } else {
+          el.removeAttribute(attr);
+        }
 
-    // Actually set the attribute.
-    if (attrNewName === "text") {
-      child.textContent = hasAttr ? attrValue : "";
-    } else if (hasAttr) {
-      child.setAttribute(attrNewName, attrValue);
-    } else {
-      child.removeAttribute(attrNewName);
-    }
-
-    if (attrNewName == "accesskey" && child.formatAccessKey) {
-      child.formatAccessKey(false);
+        if (attr == "accesskey" && el.formatAccessKey) {
+          el.formatAccessKey(false);
+        }
+      }
     }
   }
 
