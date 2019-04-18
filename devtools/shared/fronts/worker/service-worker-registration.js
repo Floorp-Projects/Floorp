@@ -17,6 +17,10 @@ class ServiceWorkerRegistrationFront extends
     return this._form.fetch;
   }
 
+  get id() {
+    return this.url;
+  }
+
   get lastUpdateTime() {
     return this._form.lastUpdateTime;
   }

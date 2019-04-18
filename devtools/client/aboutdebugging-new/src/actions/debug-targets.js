@@ -70,6 +70,7 @@ function getTabForUrl(url) {
 function inspectDebugTarget(type, id) {
   return async (dispatch, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
+    id = encodeURIComponent(id);
 
     let url;
     if (runtime.id === RUNTIMES.THIS_FIREFOX && !isCachedActorNeeded(runtime, type, id)) {
