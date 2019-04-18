@@ -7,7 +7,6 @@
 // which may modify the following variables to add or remove expected APIs.
 /* globals expectedContentApisTargetSpecific */
 /* globals expectedBackgroundApisTargetSpecific */
-/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/AddTask.js */
 
 // Generates a list of expectations.
 function generateExpectations(list) {
