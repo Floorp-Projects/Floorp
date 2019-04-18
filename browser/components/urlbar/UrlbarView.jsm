@@ -353,7 +353,6 @@ class UrlbarView {
     // icon if it's not too far from the edge of the window.  We define
     // "too far" as "more than 30% of the window's width AND more than
     // 250px".
-    let contentWidth = width;
     let boundToCheck = this.window.RTL_UI ? "right" : "left";
     let inputRect = this._getBoundsWithoutFlushing(this.input.textbox);
     let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
@@ -377,12 +376,10 @@ class UrlbarView {
 
       this.panel.style.setProperty("--item-padding-start", px(start));
       this.panel.style.setProperty("--item-padding-end", px(endOffset));
-      contentWidth -= start + endOffset;
     } else {
       this.panel.style.removeProperty("--item-padding-start");
       this.panel.style.removeProperty("--item-padding-end");
     }
-    this.panel.style.setProperty("--item-content-width", px(contentWidth));
 
     // Align the panel with the input's parent toolbar.
     let toolbarRect =
@@ -683,13 +680,15 @@ class UrlbarView {
   }
 
   _on_overflow(event) {
-    if (event.target.classList.contains("urlbarView-row-inner")) {
+    if (event.target.classList.contains("urlbarView-url") ||
+        event.target.classList.contains("urlbarView-title")) {
       event.target.toggleAttribute("overflow", true);
     }
   }
 
   _on_underflow(event) {
-    if (event.target.classList.contains("urlbarView-row-inner")) {
+    if (event.target.classList.contains("urlbarView-url") ||
+        event.target.classList.contains("urlbarView-title")) {
       event.target.toggleAttribute("overflow", false);
     }
   }
