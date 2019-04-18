@@ -370,7 +370,8 @@ void TabParent::AddWindowListeners() {
 }
 
 void TabParent::RemoveWindowListeners() {
-  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
+  if (mFrameElement && mFrameElement->OwnerDoc() &&
+      mFrameElement->OwnerDoc()->GetWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> window =
         mFrameElement->OwnerDoc()->GetWindow();
     nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
