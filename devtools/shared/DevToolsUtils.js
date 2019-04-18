@@ -812,3 +812,13 @@ function* makeDebuggeeIterator(object) {
 }
 
 exports.makeDebuggeeIterator = makeDebuggeeIterator;
+
+/**
+ * Shared helper to retrieve the topmost window. This can be used to retrieve the chrome
+ * window embedding the DevTools frame.
+ */
+function getTopWindow(win) {
+  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
+}
+
+exports.getTopWindow = getTopWindow;
