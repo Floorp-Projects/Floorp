@@ -243,8 +243,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
       uint32_t *aIsClassificationFlags) override;
   NS_IMETHOD GetThirdPartyClassificationFlags(
       uint32_t *aIsClassificationFlags) override;
-  NS_IMETHOD OverrideTrackingFlagsForDocumentCookieAccessor(
-      nsIHttpChannel *aDocumentChannel) override;
   NS_IMETHOD GetFlashPluginState(
       nsIHttpChannel::FlashPluginState *aState) override;
 

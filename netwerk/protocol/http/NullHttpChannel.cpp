@@ -117,12 +117,6 @@ NullHttpChannel::GetThirdPartyClassificationFlags(
 }
 
 NS_IMETHODIMP
-NullHttpChannel::OverrideTrackingFlagsForDocumentCookieAccessor(
-    nsIHttpChannel *aDocumentChannel) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::GetTransferSize(uint64_t *aTransferSize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

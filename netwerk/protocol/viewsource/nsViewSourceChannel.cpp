@@ -747,15 +747,6 @@ nsViewSourceChannel::GetFlashPluginState(
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OverrideTrackingFlagsForDocumentCookieAccessor(
-    nsIHttpChannel *aDocumentChannel) {
-  return !mHttpChannel
-             ? NS_ERROR_NULL_POINTER
-             : mHttpChannel->OverrideTrackingFlagsForDocumentCookieAccessor(
-                   aDocumentChannel);
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::GetRequestMethod(nsACString &aRequestMethod) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetRequestMethod(aRequestMethod);
