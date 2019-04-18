@@ -17,11 +17,9 @@ class nsPermission : public nsIPermission {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPERMISSION
 
-  static already_AddRefed<nsPermission> Create(nsIPrincipal* aPrincipal,
-                                               const nsACString& aType,
-                                               uint32_t aCapability,
-                                               uint32_t aExpireType,
-                                               int64_t aExpireTime);
+  static already_AddRefed<nsPermission> Create(
+      nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aCapability,
+      uint32_t aExpireType, int64_t aExpireTime, int64_t aModificationTime);
 
   // This method creates a new nsIPrincipal with a stripped OriginAttributes (no
   // userContextId, and no FirstPartyDomain) and a codebase equal to the origin
@@ -31,7 +29,8 @@ class nsPermission : public nsIPermission {
 
  protected:
   nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
-               uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime);
+               uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime,
+               int64_t aModificationTime);
 
   virtual ~nsPermission(){};
 
@@ -40,6 +39,7 @@ class nsPermission : public nsIPermission {
   uint32_t mCapability;
   uint32_t mExpireType;
   int64_t mExpireTime;
+  int64_t mModificationTime;
 };
 
 #endif  // nsPermission_h__
