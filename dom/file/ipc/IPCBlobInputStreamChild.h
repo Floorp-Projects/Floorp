@@ -64,12 +64,10 @@ class IPCBlobInputStreamChild final
 
   void Shutdown();
 
-  void MigrateTo(PBackgroundChild* aManager);
+  void Migrated();
 
  private:
   ~IPCBlobInputStreamChild();
-
-  void MigratedFrom(IPCBlobInputStreamChild* aOldActor);
 
   // Raw pointers because these streams keep this actor alive. When the last
   // stream is unregister, the actor will be deleted. This list is protected by
