@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 /*
  * Tests that when passing the -P command line argument and not passing a
  * profile name the profile manager is opened.
