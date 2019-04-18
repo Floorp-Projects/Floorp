@@ -1,0 +1,4 @@
+libmozglue.so {
+global:
+  *;
+};

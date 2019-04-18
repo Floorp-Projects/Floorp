@@ -15,6 +15,7 @@ else:
     Library('mozglue')
 
 if CONFIG['OS_TARGET'] == 'Android':
+    LDFLAGS += ['-Wl,--version-script,%s/mozglue.ver' % SRCDIR]
     SOURCES += [
         'BionicGlue.cpp',
     ]
