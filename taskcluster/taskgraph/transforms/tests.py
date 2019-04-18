@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
+from taskgraph.util.templates import merge
 from taskgraph.util.treeherder import split_symbol, join_symbol, add_suffix
 from taskgraph.util.platforms import platform_family
 from taskgraph.util.schema import (
@@ -147,6 +148,39 @@ MACOSX_WORKER_TYPES = {
     'macosx64': 'releng-hardware/gecko-t-osx-1010',
 }
 
+
+def runs_on_central(test):
+    return match_run_on_projects('mozilla-central', test['run-on-projects'])
+
+
+TEST_VARIANTS = {
+    'serviceworker': {
+        'description': "{description} with serviceworker-e10s redesign enabled",
+        'filterfn': runs_on_central,
+        'suffix': 'sw',
+        'config': {
+            'run-on-projects': ['mozilla-central'],
+            'tier': 2,
+            'mozharness': {
+                'extra-options': ['--setpref="dom.serviceWorkers.parent_intercept=true"'],
+            },
+        }
+    },
+    'socketprocess': {
+        'description': "{description} with socket process enabled",
+        'suffix': 'spi',
+        'config': {
+            'mozharness': {
+                'extra-options': [
+                    '--setpref="media.peerconnection.mtransport_process=true"',
+                    '--setpref="network.process.enabled=true"',
+                ],
+            }
+        }
+    }
+}
+
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -225,27 +259,17 @@ test_description_schema = Schema({
     # the branch (see below)
     Optional('expires-after'): basestring,
 
-    # Whether to run this task with the serviceworker e10s redesign enabled
-    # (desktop-test only).  If 'both', run one task with and one task without.
-    # Tasks with this enabled have have "-sw" appended to the test name and
-    # treeherder group.
-    Optional('serviceworker-e10s'): optionally_keyed_by(
+    # The different configurations that should be run against this task, defined
+    # in the TEST_VARIANTS object.
+    Optional('variants'): optionally_keyed_by(
         'test-platform', 'project',
-        Any(bool, 'both')),
+        Any(TEST_VARIANTS.keys())),
 
     # Whether to run this task with e10s.  If false, run
     # without e10s; if true, run with e10s; if 'both', run one task with and
     # one task without e10s.  E10s tasks have "-e10s" appended to the test name
     # and treeherder group.
     Required('e10s'): optionally_keyed_by(
-        'test-platform', 'project',
-        Any(bool, 'both')),
-
-    # Whether to run this task with the socket process enabled (desktop-test
-    # only).  If 'both', run one task with and one task without.  Tasks with
-    # this enabled have have "-spi" appended to the test name and treeherder
-    # group.
-    Optional('socketprocess-e10s'): optionally_keyed_by(
         'test-platform', 'project',
         Any(bool, 'both')),
 
@@ -508,9 +532,8 @@ def set_defaults(config, tests):
         test.setdefault('loopback-video', False)
         test.setdefault('docker-image', {'in-tree': 'desktop1604-test'})
         test.setdefault('checkout', False)
-        test.setdefault('serviceworker-e10s', False)
-        test.setdefault('socketprocess-e10s', False)
         test.setdefault('require-signed-extensions', False)
+        test.setdefault('variants', [])
 
         test['mozharness'].setdefault('extra-options', [])
         test['mozharness'].setdefault('requires-signed-builds', False)
@@ -768,9 +791,8 @@ def handle_keyed_by(config, tests):
         'docker-image',
         'max-run-time',
         'chunks',
-        'serviceworker-e10s',
+        'variants',
         'e10s',
-        'socketprocess-e10s',
         'suite',
         'run-on-projects',
         'os-groups',
@@ -938,39 +960,34 @@ def handle_run_on_projects(config, tests):
 
 
 @transforms.add
-def split_serviceworker_e10s(config, tests):
+def split_variants(config, tests):
     for test in tests:
-        if test['attributes'].get('socketprocess_e10s'):
-            yield test
-            continue
+        variants = test.pop('variants')
 
-        sw = test.pop('serviceworker-e10s')
+        yield copy.deepcopy(test)
 
-        test['serviceworker-e10s'] = False
-        test['attributes']['serviceworker_e10s'] = False
+        for name in variants:
+            testv = copy.deepcopy(test)
+            variant = TEST_VARIANTS[name]
 
-        if sw == 'both':
-            yield copy.deepcopy(test)
-            sw = True
-        if sw:
-            if not match_run_on_projects('mozilla-central', test['run-on-projects']):
+            if 'filterfn' in variant and not variant['filterfn'](testv):
                 continue
 
-            test['description'] += " with serviceworker-e10s redesign enabled"
-            test['run-on-projects'] = ['mozilla-central']
-            test['test-name'] += '-sw'
-            test['try-name'] += '-sw'
-            test['attributes']['serviceworker_e10s'] = True
-            group, symbol = split_symbol(test['treeherder-symbol'])
+            testv['attributes']['unittest_variant'] = name
+            testv['description'] = variant['description'].format(**testv)
+
+            suffix = '-' + variant['suffix']
+            testv['test-name'] += suffix
+            testv['try-name'] += suffix
+
+            group, symbol = split_symbol(testv['treeherder-symbol'])
             if group != '?':
-                group += '-sw'
+                group += suffix
             else:
-                symbol += '-sw'
-            test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'].append(
-                '--setpref="dom.serviceWorkers.parent_intercept=true"')
-            test['tier'] = 2
-        yield test
+                symbol += suffix
+            testv['treeherder-symbol'] = join_symbol(group, symbol)
+
+            yield merge(testv, variant['config'])
 
 
 @transforms.add
@@ -996,39 +1013,6 @@ def split_e10s(config, tests):
             test['treeherder-symbol'] = join_symbol(group, symbol)
             test['mozharness']['extra-options'].append('--disable-e10s')
             yield test
-
-
-@transforms.add
-def split_socketprocess_e10s(config, tests):
-    for test in tests:
-        if test['attributes'].get('serviceworker_e10s'):
-            yield test
-            continue
-
-        sw = test.pop('socketprocess-e10s')
-
-        test['socketprocess-e10s'] = False
-        test['attributes']['socketprocess_e10s'] = False
-
-        if sw == 'both':
-            yield copy.deepcopy(test)
-            sw = True
-        if sw:
-            test['description'] += " with socket process enabled"
-            test['test-name'] += '-spi'
-            test['try-name'] += '-spi'
-            test['attributes']['socketprocess_e10s'] = True
-            group, symbol = split_symbol(test['treeherder-symbol'])
-            if group != '?':
-                group += '-spi'
-            else:
-                symbol += '-spi'
-            test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'].append(
-                '--setpref="media.peerconnection.mtransport_process=true"')
-            test['mozharness']['extra-options'].append(
-                '--setpref="network.process.enabled=true"')
-        yield test
 
 
 @transforms.add
