@@ -1,1 +1,1 @@
-[["warning", "escaped string literal can be written as a raw string literal", "modernize-raw-string-literal"]]
+[["warning", "escaped string literal can be written as a raw string literal", "modernize-raw-string-literal"], {"reliability": "high"}]

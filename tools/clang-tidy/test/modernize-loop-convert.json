@@ -1,1 +1,1 @@
-[["warning", "use range-based for loop instead", "modernize-loop-convert"]]
+[["warning", "use range-based for loop instead", "modernize-loop-convert"], {"reliability": "high"}]

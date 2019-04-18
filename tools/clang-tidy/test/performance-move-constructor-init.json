@@ -1,1 +1,1 @@
-[["warning", "move constructor initializes base class by calling a copy constructor", "performance-move-constructor-init"]]
+[["warning", "move constructor initializes base class by calling a copy constructor", "performance-move-constructor-init"], {"reliability": "high"}]
