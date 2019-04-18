@@ -78,6 +78,8 @@ add_test(function test_sockets() {
 });
 
 function run_test() {
+  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+
   let ioService = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService);
 
