@@ -48,7 +48,7 @@ class SVGViewportElement : public SVGGraphicsElement {
 
  protected:
   SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  ~SVGViewportElement();
+  ~SVGViewportElement() = default;
 
  public:
   // nsIContent interface

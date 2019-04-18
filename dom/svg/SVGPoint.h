@@ -29,14 +29,6 @@ class SVGPoint {
     NS_ASSERTION(IsValid(), "Constructed an invalid SVGPoint");
   }
 
-  SVGPoint(const SVGPoint& aOther) : mX(aOther.mX), mY(aOther.mY) {}
-
-  SVGPoint& operator=(const SVGPoint& rhs) {
-    mX = rhs.mX;
-    mY = rhs.mY;
-    return *this;
-  }
-
   bool operator==(const SVGPoint& rhs) const {
     return mX == rhs.mX && mY == rhs.mY;
   }

@@ -62,7 +62,7 @@ class SVGContextPaint : public RefCounted<SVGContextPaint> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SVGContextPaint)
 
-  virtual ~SVGContextPaint() {}
+  virtual ~SVGContextPaint() = default;
 
   virtual already_AddRefed<gfxPattern> GetFillPattern(
       const DrawTarget* aDrawTarget, float aOpacity, const gfxMatrix& aCTM,

@@ -93,7 +93,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   }
 
  protected:
-  virtual ~SVGAElement();
+  virtual ~SVGAElement() = default;
 
   virtual StringAttributesInfo GetStringInfo() override;
 

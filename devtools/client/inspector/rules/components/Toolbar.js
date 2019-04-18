@@ -89,6 +89,7 @@ class Toolbar extends PureComponent {
         },
         dom.div({ id: "ruleview-toolbar" },
           SearchBox({}),
+          dom.div({ className: "devtools-separator" }),
           dom.div({ id: "ruleview-command-toolbar" },
             dom.button({
               id: "ruleview-add-rule-button",

@@ -16,15 +16,11 @@ inline bool SMILSetAnimationFunction::IsDisallowedAttribute(
   //                         by) -- BUT has 'to'
   //   AnimationAddition.attrib(additive, accumulate)
   //
-  if (aAttribute == nsGkAtoms::calcMode || aAttribute == nsGkAtoms::values ||
-      aAttribute == nsGkAtoms::keyTimes ||
-      aAttribute == nsGkAtoms::keySplines || aAttribute == nsGkAtoms::from ||
-      aAttribute == nsGkAtoms::by || aAttribute == nsGkAtoms::additive ||
-      aAttribute == nsGkAtoms::accumulate) {
-    return true;
-  }
-
-  return false;
+  return aAttribute == nsGkAtoms::calcMode || aAttribute == nsGkAtoms::values ||
+         aAttribute == nsGkAtoms::keyTimes ||
+         aAttribute == nsGkAtoms::keySplines || aAttribute == nsGkAtoms::from ||
+         aAttribute == nsGkAtoms::by || aAttribute == nsGkAtoms::additive ||
+         aAttribute == nsGkAtoms::accumulate;
 }
 
 bool SMILSetAnimationFunction::SetAttr(nsAtom* aAttribute,

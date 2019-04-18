@@ -41,7 +41,7 @@ class nsSVGImageListener final : public imgINotificationObserver {
   void SetFrame(nsSVGImageFrame* frame) { mFrame = frame; }
 
  private:
-  ~nsSVGImageListener() {}
+  ~nsSVGImageListener() = default;
 
   nsSVGImageFrame* mFrame;
 };

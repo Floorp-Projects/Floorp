@@ -54,8 +54,6 @@ NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 SVGAElement::SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGAElementBase(std::move(aNodeInfo)), Link(this) {}
 
-SVGAElement::~SVGAElement() {}
-
 already_AddRefed<DOMSVGAnimatedString> SVGAElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)

@@ -22,7 +22,7 @@ class SVGPolyElement : public SVGPolyElementBase {
  protected:
   explicit SVGPolyElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  virtual ~SVGPolyElement();
+  virtual ~SVGPolyElement() = default;
 
  public:
   // interfaces

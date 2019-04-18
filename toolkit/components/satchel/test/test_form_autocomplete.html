@@ -217,6 +217,11 @@ function popupShownListener() {
     expectingPopup = false;
     SimpleTest.executeSoon(runTest);
   } else {
+    if (testNum == 253) {
+      // Bug 1420103
+      todo(false, "Autocomplete popup not expected during test " + testNum);
+      return;
+    }
     ok(false, "Autocomplete popup not expected during test " + testNum);
   }
 }
@@ -1072,8 +1077,7 @@ function startTest() {
   });
 }
 
-window.onload = startTest;
-
+SimpleTest.waitForFocus(startTest);
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 </script>
