@@ -3220,6 +3220,18 @@ bool nsDisplayItem::ForceActiveLayers() {
   return sForce;
 }
 
+bool nsDisplayItem::HasModifiedFrame() const {
+  return mItemFlags.contains(ItemFlag::ModifiedFrame);
+}
+
+void nsDisplayItem::SetModifiedFrame(bool aModified) {
+  if (aModified) {
+    mItemFlags += ItemFlag::ModifiedFrame;
+  } else {
+    mItemFlags -= ItemFlag::ModifiedFrame;
+  }
+}
+
 bool nsDisplayItem::HasDeletedFrame() const {
   return mItemFlags.contains(ItemFlag::DeletedFrame) ||
          (GetType() == DisplayItemType::TYPE_REMOTE &&
