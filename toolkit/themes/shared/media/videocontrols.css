@@ -448,8 +448,8 @@
   padding: var(--pip-toggle-padding);
   right: 0;
   top: 50%;
-  transform: translateY(-50%);
-  transition: opacity 160ms linear;
+  transform: translateY(-50%) translateX(calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding)));
+  transition: opacity 160ms linear, transform 160ms linear;
   min-width: max-content;
   pointer-events: auto;
   opacity: 0;
@@ -468,12 +468,17 @@
   min-width: max-content;
 }
 
+.pictureInPictureToggleLabel {
+  margin-inline-start: var(--pip-toggle-padding);
+}
+
 .controlsOverlay:hover > .pictureInPictureToggleButton {
   opacity: 0.8;
 }
 
 .controlsOverlay:hover > .pictureInPictureToggleButton:hover {
   opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 /* Overlay Play button */

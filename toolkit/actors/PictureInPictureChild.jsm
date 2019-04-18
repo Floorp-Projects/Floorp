@@ -262,6 +262,9 @@ class PictureInPictureToggleChild extends ActorChild {
           bubbles: true,
         });
       video.dispatchEvent(pipEvent);
+      // Since we've initiated Picture-in-Picture, we can go ahead and
+      // hide the toggle now.
+      this.onMouseLeaveVideo(video);
     }
   }
 
