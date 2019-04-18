@@ -306,14 +306,14 @@ bool OldItemInfo::IsChanged() {
 class MergeState {
  public:
   MergeState(RetainedDisplayListBuilder* aBuilder,
-             RetainedDisplayList& aOldList, uint32_t aOuterKey)
+             RetainedDisplayList& aOldList, nsDisplayItem* aOuterItem)
       : mBuilder(aBuilder),
         mOldList(&aOldList),
         mOldItems(std::move(aOldList.mOldItems)),
         mOldDAG(
             std::move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(
                 &aOldList.mDAG))),
-        mOuterKey(aOuterKey),
+        mOuterItem(aOuterItem),
         mResultIsModified(false) {
     mMergedDAG.EnsureCapacityFor(mOldDAG);
     MOZ_RELEASE_ASSERT(mOldItems.Length() == mOldDAG.Length());
@@ -462,10 +462,11 @@ class MergeState {
         aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
     // Look for an item that matches aItem's frame and per-frame-key, but isn't
     // the same item.
+    uint32_t outerKey = mOuterItem ? mOuterItem->GetPerFrameKey() : 0;
     for (nsDisplayItem* i : *items) {
       if (i != aItem && i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-        if (i->GetOldListIndex(mOldList, mOuterKey, aOutIndex)) {
+        if (i->GetOldListIndex(mOldList, outerKey, aOutIndex)) {
           return true;
         }
       }
@@ -474,7 +475,8 @@ class MergeState {
   }
 
   bool HasModifiedFrame(nsDisplayItem* aItem) {
-    return AnyContentAncestorModified(aItem->FrameForInvalidation());
+    nsIFrame* stopFrame = mOuterItem ? mOuterItem->Frame() : nullptr;
+    return AnyContentAncestorModified(aItem->FrameForInvalidation(), stopFrame);
   }
 
   void UpdateContainerASR(nsDisplayItem* aItem) {
@@ -617,7 +619,7 @@ class MergeState {
   // and assert when we try swap the contents
   nsDisplayList mMergedItems;
   DirectedAcyclicGraph<MergedListUnits> mMergedDAG;
-  uint32_t mOuterKey;
+  nsDisplayItem* mOuterItem;
   bool mResultIsModified;
 };
 
@@ -639,8 +641,7 @@ bool RetainedDisplayListBuilder::MergeDisplayLists(
     nsDisplayItem* aOuterItem) {
   AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_DisplayListMerging);
 
-  MergeState merge(this, *aOldList,
-                   aOuterItem ? aOuterItem->GetPerFrameKey() : 0);
+  MergeState merge(this, *aOldList, aOuterItem);
 
   Maybe<MergedListIndex> previousItemIndex;
   while (nsDisplayItem* item = aNewList->RemoveBottom()) {
