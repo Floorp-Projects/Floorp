@@ -11,7 +11,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
-import junit.framework.Assert.assertTrue
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders
@@ -185,6 +186,24 @@ internal fun isWorkScheduled(tag: String): Boolean {
 }
 
 /**
+ * Wait for a specifically tagged [WorkManager]'s Worker to be enqueued.
+ *
+ * @param workTag the tag of the expected Worker
+ * @param timeoutMillis how log before stopping the wait. This defaults to 5000ms (5 seconds).
+ */
+internal fun waitForEnqueuedWorker(workTag: String, timeoutMillis: Long = 5000) = runBlocking {
+    runBlocking {
+        withTimeout(timeoutMillis) {
+            do {
+                if (isWorkScheduled(workTag)) {
+                    return@withTimeout
+                }
+            } while (true)
+        }
+    }
+}
+
+/**
  * Helper function to simulate WorkManager being triggered since there appears to be a bug in
  * the current WorkManager test utilites that prevent it from being triggered by a test.  Once this
  * is fixed, the contents of this can be amended to trigger WorkManager directly.
@@ -196,7 +215,7 @@ internal fun triggerWorkManager() {
 
     // Since WorkManager does not properly run in tests, simulate the work being done
     // We also assertTrue here to ensure that uploadPings() was successful
-    assertTrue("Upload Pings must return true", PingUploadWorker.uploadPings())
+    Assert.assertTrue("Upload Pings must return true", PingUploadWorker.uploadPings())
 }
 
 /**

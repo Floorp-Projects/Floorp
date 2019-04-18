@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean
 
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -19,7 +18,7 @@ class DispatchersTest {
         val mainThread = Thread.currentThread()
         var threadCanary = false
         @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.testingMode = false
+        Dispatchers.API.setTestingMode(false)
 
         runBlocking {
             @Suppress("EXPERIMENTAL_API_USAGE")
@@ -33,7 +32,7 @@ class DispatchersTest {
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.testingMode = true
+        Dispatchers.API.setTestingMode(true)
         assertEquals(true, threadCanary)
         assertSame(mainThread, Thread.currentThread())
     }

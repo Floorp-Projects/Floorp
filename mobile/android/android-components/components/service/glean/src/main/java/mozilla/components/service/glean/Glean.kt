@@ -353,9 +353,8 @@ open class GleanInternalAPI internal constructor () {
      * If the ping currently contains no content, it will not be sent.
      *
      * @param pingNames List of pings to send.
-     * @return true if any pings had content and were queued for uploading
      */
-    public fun sendPings(pingNames: List<String>): Boolean {
+    fun sendPings(pingNames: List<String>) {
         val pingsToSend = pingNames.filter { pingName ->
             if (BUILTIN_PINGNAMES.contains(pingName)) {
                 logger.error("Attempted to send built-in ping $pingName")
@@ -365,7 +364,9 @@ open class GleanInternalAPI internal constructor () {
             }
         }
 
-        return sendPingsInternal(pingsToSend)
+        // Send pings is a "fire and forget" operation, we don't need to wait on
+        // it and we don't care about its return value.
+        sendPingsInternal(pingsToSend)
     }
 
     /**
@@ -379,47 +380,33 @@ open class GleanInternalAPI internal constructor () {
      * If the ping currently contains no content, it will not be sent.
      *
      * @param pingNames List of pings to send.
-     * @return true if any pings had content and were queued for uploading
      */
-    internal fun sendPingsInternal(pingNames: List<String>): Boolean {
+    internal fun sendPingsInternal(pingNames: List<String>) = Dispatchers.API.launch {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before sending pings.")
-            return false
+            return@launch
         }
 
         if (!uploadEnabled) {
             logger.error("Glean must be enabled before sending pings.")
-            return false
+            return@launch
         }
 
-        val pingSerializationTasks: MutableList<Job> = mutableListOf()
+        val pingSerializationTasks = mutableListOf<Job>()
         for (pingName in pingNames) {
             assembleAndSerializePing(pingName)?.let {
                 pingSerializationTasks.add(it)
-            } ?: run {
-                if (!BUILTIN_PINGNAMES.contains(pingName)) {
-                    logger.debug(
-                        "No content for custom ping {pingName}, therefore no ping queued."
-                    )
-                }
-            }
+            } ?: logger.debug("No content for ping '$pingName', therefore no ping queued.")
         }
 
-        // If there are any pings to serialize, await the IO in a background thread before we
-        // enqueue the PingUploadWorker
+        // If any ping is being serialized to disk, wait for the to finish before spinning up
+        // the WorkManager upload job.
         if (pingSerializationTasks.any()) {
-            // Await the serialization tasks in a background thread as they run blocking and we
-            // don't necessarily want to block any calling thread.  Once the serialization tasks
-            // have all completed, we can then safely enqueue the PingUploadWorker
-            Dispatchers.API.launch {
-                pingSerializationTasks.joinAll()
-                PingUploadWorker.enqueueWorker()
-            }
+            // Await the serialization tasks. Once the serialization tasks have all completed,
+            // we can then safely enqueue the PingUploadWorker.
+            pingSerializationTasks.joinAll()
+            PingUploadWorker.enqueueWorker()
         }
-
-        // Return whether or not we uploaded any pings.  Even though the tasks have joined, the
-        // list will not be empty if there were any serialization/uploads done.
-        return pingSerializationTasks.any()
     }
 
     /**
@@ -448,7 +435,7 @@ open class GleanInternalAPI internal constructor () {
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun enableTestingMode() {
         @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.enableTestingMode()
+        Dispatchers.API.setTestingMode(enabled = true)
     }
 }
 

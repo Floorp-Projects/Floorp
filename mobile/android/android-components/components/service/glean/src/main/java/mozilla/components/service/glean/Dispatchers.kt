@@ -21,21 +21,21 @@ internal object Dispatchers {
         /**
          * Launch a block of work asyncronously.
          *
-         * If [enableTestingMode] has been called, the work will run
+         * If [setTestingMode] has enabled testing mode, the work will run
          * synchronously.
          *
-         * @return Job, or null if run synchronously.
+         * @return [Job], or null if run synchronously.
          */
         fun launch(
             block: suspend CoroutineScope.() -> Unit
         ): Job? {
-            if (testingMode) {
+            return if (testingMode) {
                 runBlocking {
                     block()
                 }
-                return null
+                null
             } else {
-                return coroutineScope.launch(block = block)
+                coroutineScope.launch(block = block)
             }
         }
 
@@ -48,20 +48,21 @@ internal object Dispatchers {
         @VisibleForTesting(otherwise = VisibleForTesting.NONE)
         fun assertInTestingMode() {
             assert(
-                testingMode,
-                {
-                    "To use the testing API, glean must be in testing mode by calling " +
-                    "Glean.enableTestingMode() (for example, in a @Before method)."
-                }
-            )
+                testingMode
+            ) {
+                "To use the testing API, glean must be in testing mode by calling " +
+                "Glean.enableTestingMode() (for example, in a @Before method)."
+            }
         }
 
         /**
          * Enable testing mode, which makes all of the glean public API synchronous.
+         *
+         * @param enabled whether or not to enable the testing mode
          */
         @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-        fun enableTestingMode() {
-            testingMode = true
+        fun setTestingMode(enabled: Boolean) {
+            testingMode = enabled
         }
     }
 

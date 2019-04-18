@@ -532,4 +532,64 @@ class GleanTest {
 
         assertEquals("custom", docType)
     }
+
+    @Test
+    fun `ping collection must happen after currently scheduled metrics recordings`() {
+        // Given the following block of code:
+        //
+        // Metric.A.set("SomeTestValue")
+        // Glean.sendPings(listOf("custom-ping-1"))
+        //
+        // This test ensures that "custom-ping-1" contains "metric.a" with a value of "SomeTestValue"
+        // when the ping is collected.
+
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        val pingName = "custom_ping_1"
+        val stringMetric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_metric",
+            sendInPings = listOf(pingName)
+        )
+
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
+
+        // This test relies on testing mode to be disabled, since we need to prove the
+        // real-world async behaviour of this. We don't need to care about clearing it,
+        // the test-unit hooks will call `resetGlean` anyway.
+        Dispatchers.API.setTestingMode(false)
+
+        // This is the important part of the test. Even though both the metrics API and
+        // sendPings are async and off the main thread, "SomeTestValue" should be recorded,
+        // the order of the calls must be preserved.
+        val testValue = "SomeTestValue"
+        stringMetric.set(testValue)
+        Glean.sendPings(listOf(pingName))
+
+        // Trigger worker task to upload the pings in the background. We need
+        // to wait for the work to be enqueued first, since this test runs
+        // asynchronously.
+        waitForEnqueuedWorker(PingUploadWorker.PING_WORKER_TAG)
+        triggerWorkManager()
+
+        // Validate the received data.
+        val request = server.takeRequest(20L, TimeUnit.SECONDS)
+        val docType = request.path.split("/")[3]
+        assertEquals(pingName, docType)
+
+        val pingJson = JSONObject(request.body.readUtf8())
+        assertEquals(pingName, pingJson.getJSONObject("ping_info")["ping_type"])
+        checkPingSchema(pingJson)
+
+        val pingMetricsObject = pingJson.getJSONObject("metrics")!!
+        val pingStringMetrics = pingMetricsObject.getJSONObject("string")!!
+        assertEquals(1, pingStringMetrics.length())
+        assertEquals(testValue, pingStringMetrics.get("telemetry.string_metric"))
+    }
 }
