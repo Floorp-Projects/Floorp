@@ -79,7 +79,7 @@ void IPCBlobInputStreamParent::ActorDestroy(
   if (mMigrating) {
     if (callback && storage) {
       // We need to assign this callback to the next parent.
-      storage->StoreCallback(mID, callback);
+      IPCBlobInputStreamStorage::Get()->StoreCallback(mID, callback);
     }
     return;
   }

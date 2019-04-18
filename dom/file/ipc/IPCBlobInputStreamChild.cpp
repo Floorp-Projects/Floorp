@@ -10,7 +10,6 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -183,6 +182,7 @@ void IPCBlobInputStreamChild::ActorDestroy(
         IPCBlobInputStreamThread::GetOrCreate();
     MOZ_ASSERT(thread, "We cannot continue without DOMFile thread.");
 
+    ResetManager();
     thread->MigrateActor(this);
     return;
   }
@@ -386,41 +386,14 @@ mozilla::ipc::IPCResult IPCBlobInputStreamChild::RecvLengthReady(
 
   return IPC_OK();
 }
-
-void IPCBlobInputStreamChild::MigrateTo(PBackgroundChild* aManager) {
+void IPCBlobInputStreamChild::Migrated() {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mState == eInactiveMigrating);
 
-  // Construct the replacement actor, sending the IPC constructor. The reference
-  // taken will be freed by DeallocPIPCBlobInputStreamConstructor.
-  RefPtr<IPCBlobInputStreamChild> actor =
-      new IPCBlobInputStreamChild(mID, mSize);
-  if (!aManager->SendPIPCBlobInputStreamConstructor(do_AddRef(actor).take(),
-                                                    mID, mSize)) {
-    return;
-  }
-
-  actor->MigratedFrom(this);
-
-  // Finally, complete teardown of the old actor.
-  MOZ_ASSERT(mStreams.IsEmpty() && mPendingOperations.IsEmpty());
   mWorkerRef = nullptr;
-  mState = eInactive;
-}
 
-void IPCBlobInputStreamChild::MigratedFrom(IPCBlobInputStreamChild* aOldActor) {
-  MutexAutoLock lock(mMutex);
-  aOldActor->mMutex.AssertCurrentThreadOwns();
-
+  mOwningEventTarget = GetCurrentThreadSerialEventTarget();
   MOZ_ASSERT(IPCBlobInputStreamThread::IsOnFileEventTarget(mOwningEventTarget));
-  MOZ_ASSERT(mState == eActive);
-
-  // Take streams & pending operations from |aOldActor|.
-  mStreams.SwapElements(aOldActor->mStreams);
-  mPendingOperations.SwapElements(aOldActor->mPendingOperations);
-  for (auto* stream : mStreams) {
-    stream->ActorMigrated(this);
-  }
 
   // Maybe we have no reasons to keep this actor alive.
   if (mStreams.IsEmpty()) {
@@ -428,6 +401,8 @@ void IPCBlobInputStreamChild::MigratedFrom(IPCBlobInputStreamChild* aOldActor) {
     SendClose();
     return;
   }
+
+  mState = eActive;
 
   // Let's processing the pending operations. We need a stream for each pending
   // operation.
