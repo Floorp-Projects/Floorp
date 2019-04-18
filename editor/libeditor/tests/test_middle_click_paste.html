@@ -164,12 +164,12 @@ async function doTextareaTests(aTextarea) {
   document.body.addEventListener("click", (event) => { event.preventDefault(); }, {capture: true, once: true});
   inputEvents = [];
   synthesizeMouseAtCenter(aTextarea, {button: 1});
-  is(aTextarea.value, "",
-     "If 'click' event is consumed at capturing phase of the <body>, paste should be canceled");
-  is(pasteEventCount, 0,
-     "If 'click' event is consumed at capturing phase of the <body>, 'paste' event should not be fired");
-  is(inputEvents.length, 0,
-     'No "input" event should be fired when the "click" event is canceled');
+  is(aTextarea.value, "abc",
+     "If 'click' event is consumed at capturing phase of the <body>, paste should not be canceled");
+  is(pasteEventCount, 1,
+     "If 'click' event is consumed at capturing phase of the <body>, 'paste' event should still be fired");
+  is(inputEvents.length, 1,
+     '"input" event should be fired when the "click" event is canceled');
   aTextarea.value = "";
 
   await copyPlaintext("abc");
@@ -194,9 +194,9 @@ async function doTextareaTests(aTextarea) {
   inputEvents = [];
   synthesizeMouseAtCenter(aTextarea, {button: 1});
   is(aTextarea.value, "abc",
-     "Even if 'click' event handler is added to the <textarea>, paste should not be canceled");
+     "If 'click' event handler is added to the <textarea>, paste should not be canceled");
   is(pasteEventCount, 1,
-     "Even if 'click' event handler is added to the <textarea>, 'paste' event should be fired once");
+     "If 'click' event handler is added to the <textarea>, 'paste' event should be fired once");
   is(inputEvents.length, 1,
      'One "input" event should be fired even if "click" event is canceled in bubbling phase');
   checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, 'even if "click" event is canceled in bubbling phase');
@@ -208,12 +208,12 @@ async function doTextareaTests(aTextarea) {
   pasteEventCount = 0;
   inputEvents = [];
   synthesizeMouseAtCenter(aTextarea, {button: 1});
-  todo_is(aTextarea.value, "",
-          "If 'auxclick' event is consumed, paste should be canceled");
-  todo_is(pasteEventCount, 0,
-          "If 'auxclick' event is consumed, 'paste' event should not be fired once");
-  todo_is(inputEvents.length, 0,
-          'No "input" event should be fired if "auxclick" event is canceled');
+  is(aTextarea.value, "",
+     "If 'auxclick' event is consumed, paste should be canceled");
+  is(pasteEventCount, 0,
+     "If 'auxclick' event is consumed, 'paste' event should not be fired once");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "auxclick" event is canceled');
   aTextarea.value = "";
 
   aTextarea.removeEventListener("paste", pasteEventLogger);
@@ -251,12 +251,12 @@ async function doContenteditableTests(aEditableDiv) {
   window.addEventListener("click", (event) => { event.preventDefault(); }, {capture: true, once: true});
   inputEvents = [];
   synthesizeMouseAtCenter(aEditableDiv, {button: 1});
-  is(aEditableDiv.innerHTML, "",
-     "If 'click' event is consumed at capturing phase of the window, paste should be canceled");
-  is(pasteEventCount, 0,
+  is(aEditableDiv.innerHTML, "abc",
+     "If 'click' event is consumed at capturing phase of the window, paste should not be canceled");
+  is(pasteEventCount, 1,
      "If 'click' event is consumed at capturing phase of the window, 'paste' event should be fired once");
-  is(inputEvents.length, 0,
-     'No "input" event should be fired when the "click" event is canceled (contenteditable)');
+  is(inputEvents.length, 1,
+     '"input" event should still be fired when the "click" event is canceled (contenteditable)');
   aEditableDiv.innerHTML = "";
 
   await copyPlaintext("abc");
@@ -297,12 +297,12 @@ async function doContenteditableTests(aEditableDiv) {
   pasteEventCount = 0;
   inputEvents = [];
   synthesizeMouseAtCenter(aEditableDiv, {button: 1});
-  todo_is(aEditableDiv.innerHTML, "",
-          "If 'auxclick' event is consumed, paste should be canceled");
-  todo_is(pasteEventCount, 0,
-          "If 'auxclick' event is consumed, 'paste' event should not be fired");
-  todo_is(inputEvents.length, 0,
-          'No "input" event should be fired if "auxclick" event is canceled (contenteditable)');
+  is(aEditableDiv.innerHTML, "",
+     "If 'auxclick' event is consumed, paste should be canceled");
+  is(pasteEventCount, 0,
+     "If 'auxclick' event is consumed, 'paste' event should not be fired");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired if "auxclick" event is canceled (contenteditable)');
   aEditableDiv.innerHTML = "";
 
   // If clipboard event is disabled, InputEvent.dataTransfer should have only empty string.
@@ -383,8 +383,8 @@ async function doNestedEditorTests(aEditableDiv) {
   textarea.readOnly = true;
   pasteTarget = null;
   synthesizeMouseAtCenter(textarea, {button: 1});
-  todo_is(pasteTarget, textarea,
-          "Target of 'paste' event should be the clicked <textarea> even if it's read-only");
+  is(pasteTarget, textarea,
+     "Target of 'paste' event should be the clicked <textarea> even if it's read-only");
   is(textarea.value, "",
      "Clicking in read-only <textarea> in an editable <div> should not paste the clipboard text into the read-only <textarea>");
   // HTMLEditor thinks that read-only <textarea> is not modifiable.
@@ -425,8 +425,8 @@ async function doAfterRemoveOfClickedElementTest(aEditableDiv) {
     span.parentElement.removeChild(span);
   }, {once: true});
   synthesizeMouseAtCenter(span, {button: 1});
-  todo_is(pasteTarget.getAttribute("id"), "p",
-          "Target of 'paste' event should be the <p> element since <span> has gone");
+  is(pasteTarget.getAttribute("id"), "p",
+     "Target of 'paste' event should be the <p> element since <span> has gone");
   // XXX Currently, pasted to start of the <p> because EventStateManager
   //     do not recompute event target frame.
   todo_is(aEditableDiv.innerHTML, '<p id="p">fooCLIPBOARD TEXT</p>',
