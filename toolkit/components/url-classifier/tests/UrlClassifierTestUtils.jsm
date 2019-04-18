@@ -24,6 +24,7 @@ var UrlClassifierTestUtils = {
     let annotationURL2 = "itisatracker.org/";
     let annotationURL3 = "trackertest.org/";
     let annotationURL4 = "another-tracking.example.net/";
+    let annotationURL5 = "tlsresumptiontest.example.org/";
     let annotationWhitelistedURL = "itisatrap.org/?resource=example.org";
     let trackingURL1 = "tracking.example.com/"; // only for TP
     let trackingURL2 = "itisatracker.org/";
@@ -39,7 +40,9 @@ var UrlClassifierTestUtils = {
           "a:3:32:" + annotationURL3.length + "\n" +
           annotationURL3 + "\n" +
           "a:4:32:" + annotationURL4.length + "\n" +
-          annotationURL4 + "\n";
+          annotationURL4 + "\n" +
+          "a:5:32:" + annotationURL5.length + "\n" +
+          annotationURL5 + "\n";
     let annotationWhitelistUpdate =
           "n:1000\ni:" + ANNOTATION_WHITELIST_TABLE_NAME + "\nad:1\n" +
           "a:1:32:" + annotationWhitelistedURL.length + "\n" +
