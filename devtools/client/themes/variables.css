@@ -53,7 +53,6 @@
 
   /* Text color */
   --theme-comment: var(--grey-50);
-  --theme-comment-alt: var(--grey-40);
   --theme-body-color: var(--grey-60);
   --theme-text-color-alt: var(--grey-50);
   --theme-text-color-inactive: var(--grey-40);
@@ -144,7 +143,6 @@
 
   /* Text color */
   --theme-comment: var(--grey-45);
-  --theme-comment-alt: var(--grey-50);
   --theme-body-color: var(--grey-40);
   --theme-text-color-alt: var(--grey-45);
   --theme-text-color-inactive: var(--grey-50);
