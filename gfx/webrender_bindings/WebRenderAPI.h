@@ -392,7 +392,8 @@ class DisplayListBuilder final {
       const wr::RasterSpace& aRasterSpace);
   void PopStackingContext(bool aIsReferenceFrame);
 
-  wr::WrClipChainId DefineClipChain(const nsTArray<wr::WrClipId>& aClips);
+  wr::WrClipChainId DefineClipChain(const nsTArray<wr::WrClipId>& aClips,
+                                    const wr::WrClipChainId* aParent = nullptr);
 
   wr::WrClipId DefineClip(
       const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
