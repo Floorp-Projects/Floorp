@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 /*
  * Tests from a clean state.
  * Then does some testing that creating new profiles and marking them as

@@ -47,12 +47,10 @@ class ProfileResetCleanupAsyncTask : public mozilla::Runnable {
    * local profile dir.
    */
   NS_IMETHOD Run() override {
-    // Copy profile's files to the destination. The profile folder will be
-    // removed after the changes to the known profiles have been flushed to disk
-    // in nsToolkitProfileService::ApplyResetProfile which isn't called until
-    // after this thread finishes copying the files.
+    // Copy to the destination then delete the profile. A move doesn't follow
+    // links.
     nsresult rv = mProfileDir->CopyToFollowingLinks(mTargetDir, mLeafName);
-    // I guess we just warn if we fail to make the backup?
+    if (NS_SUCCEEDED(rv)) rv = mProfileDir->Remove(true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_WARNING("Could not backup the root profile directory");
     }
@@ -64,9 +62,8 @@ class ProfileResetCleanupAsyncTask : public mozilla::Runnable {
     nsresult rvLocal = mProfileDir->Equals(mProfileLocalDir, &sameDir);
     if (NS_SUCCEEDED(rvLocal) && !sameDir) {
       rvLocal = mProfileLocalDir->Remove(true);
-      if (NS_FAILED(rvLocal)) {
+      if (NS_FAILED(rvLocal))
         NS_WARNING("Could not remove the old local profile directory (cache)");
-      }
     }
     gProfileResetCleanupCompleted = true;
 
