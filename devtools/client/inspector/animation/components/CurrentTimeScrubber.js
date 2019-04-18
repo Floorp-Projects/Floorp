@@ -4,6 +4,7 @@
 
 "use strict";
 
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -60,7 +61,7 @@ class CurrentTimeScrubber extends PureComponent {
     event.stopPropagation();
     const thisEl = ReactDOM.findDOMNode(this);
     this.controllerArea = thisEl.getBoundingClientRect();
-    this.listenerTarget = thisEl.ownerGlobal.top;
+    this.listenerTarget = DevToolsUtils.getTopWindow(thisEl.ownerGlobal);
     this.listenerTarget.addEventListener("mousemove", this.onMouseMove);
     this.listenerTarget.addEventListener("mouseup", this.onMouseUp);
     this.decorationTarget = thisEl.closest(".animation-list-container");
