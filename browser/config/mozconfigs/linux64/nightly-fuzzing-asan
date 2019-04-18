@@ -15,6 +15,9 @@ ac_add_options --enable-valgrind
 . $topsrcdir/build/unix/mozconfig.asan
 ac_add_options --disable-elf-hack
 
+# gold is required for libFuzzer to work properly
+ac_add_options --enable-gold
+
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 

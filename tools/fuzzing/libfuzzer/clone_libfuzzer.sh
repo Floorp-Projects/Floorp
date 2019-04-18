@@ -2,10 +2,10 @@
 
 # Optionally get revision from cmd line
 # Changelog: https://reviews.llvm.org/source/compiler-rt/history/compiler-rt/trunk/lib/fuzzer/
-[ $1 ] && REVISION=$1 || REVISION=329438
+[ $1 ] && REVISION=$1 || REVISION=356365
 
 mkdir tmp
-svn co -qr $REVISION http://llvm.org/svn/llvm-project/compiler-rt/trunk tmp || exit
+svn co -qr $REVISION https://llvm.org/svn/llvm-project/compiler-rt/trunk tmp || exit
 
 if [ $1 ]; then
   # libFuzzer source files

@@ -1,9 +1,8 @@
 //===- FuzzerUtil.cpp - Misc utils ----------------------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // Misc utils.
@@ -16,6 +15,7 @@
 #include <chrono>
 #include <cstring>
 #include <errno.h>
+#include <mutex>
 #include <signal.h>
 #include <sstream>
 #include <stdio.h>
@@ -179,8 +179,12 @@ std::string Base64(const Unit &U) {
   return Res;
 }
 
+static std::mutex SymbolizeMutex;
+
 std::string DescribePC(const char *SymbolizedFMT, uintptr_t PC) {
-  if (!EF->__sanitizer_symbolize_pc) return "<can not symbolize>";
+  std::unique_lock<std::mutex> l(SymbolizeMutex, std::try_to_lock);
+  if (!EF->__sanitizer_symbolize_pc || !l.owns_lock())
+    return "<can not symbolize>";
   char PcDescr[1024] = {};
   EF->__sanitizer_symbolize_pc(reinterpret_cast<void*>(PC),
                                SymbolizedFMT, PcDescr, sizeof(PcDescr));
@@ -193,6 +197,18 @@ void PrintPC(const char *SymbolizedFMT, const char *FallbackFMT, uintptr_t PC) {
     Printf("%s", DescribePC(SymbolizedFMT, PC).c_str());
   else
     Printf(FallbackFMT, PC);
+}
+
+void PrintStackTrace() {
+  std::unique_lock<std::mutex> l(SymbolizeMutex, std::try_to_lock);
+  if (EF->__sanitizer_print_stack_trace && l.owns_lock())
+    EF->__sanitizer_print_stack_trace();
+}
+
+void PrintMemoryProfile() {
+  std::unique_lock<std::mutex> l(SymbolizeMutex, std::try_to_lock);
+  if (EF->__sanitizer_print_memory_profile && l.owns_lock())
+    EF->__sanitizer_print_memory_profile(95, 8);
 }
 
 unsigned NumberOfCpuCores() {

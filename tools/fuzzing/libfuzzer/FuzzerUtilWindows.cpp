@@ -1,9 +1,8 @@
 //===- FuzzerUtilWindows.cpp - Misc utils for Windows. --------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // Misc utils implementation for Windows.
@@ -24,7 +23,7 @@
 #include <windows.h>
 
 // This must be included after windows.h.
-#include <Psapi.h>
+#include <psapi.h>
 
 namespace fuzzer {
 
@@ -86,11 +85,11 @@ void CALLBACK AlarmHandler(PVOID, BOOLEAN) {
 class TimerQ {
   HANDLE TimerQueue;
  public:
-  TimerQ() : TimerQueue(NULL) {};
+  TimerQ() : TimerQueue(NULL) {}
   ~TimerQ() {
     if (TimerQueue)
       DeleteTimerQueueEx(TimerQueue, NULL);
-  };
+  }
   void SetTimer(int Seconds) {
     if (!TimerQueue) {
       TimerQueue = CreateTimerQueue();
@@ -105,12 +104,16 @@ class TimerQ {
       Printf("libFuzzer: CreateTimerQueueTimer failed.\n");
       exit(1);
     }
-  };
+  }
 };
 
 static TimerQ Timer;
 
 static void CrashHandler(int) { Fuzzer::StaticCrashSignalCallback(); }
+
+bool Mprotect(void *Ptr, size_t Size, bool AllowReadWrite) {
+  return false;  // UNIMPLEMENTED
+}
 
 void SetSignalHandler(const FuzzingOptions& Options) {
   HandlerOpt = &Options;
@@ -179,7 +182,9 @@ const void *SearchMemory(const void *Data, size_t DataLen, const void *Patt,
 }
 
 std::string DisassembleCmd(const std::string &FileName) {
-  if (ExecuteCommand("dumpbin /summary > nul") == 0)
+  Vector<std::string> command_vector;
+  command_vector.push_back("dumpbin /summary > nul");
+  if (ExecuteCommand(Command(command_vector)) == 0)
     return "dumpbin /disasm " + FileName;
   Printf("libFuzzer: couldn't find tool to disassemble (dumpbin)\n");
   exit(1);
