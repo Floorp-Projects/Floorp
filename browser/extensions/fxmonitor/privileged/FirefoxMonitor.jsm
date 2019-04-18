@@ -4,6 +4,17 @@
 
 /* globals Services, XPCOMUtils */
 
+ChromeUtils.defineModuleGetter(this, "EveryWindow",
+                               "resource:///modules/EveryWindow.jsm");
+ChromeUtils.defineModuleGetter(this, "PluralForm",
+                               "resource://gre/modules/PluralForm.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings",
+                               "resource://services-settings/remote-settings.js");
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 this.FirefoxMonitor = {
   // Map of breached site host -> breach metadata.
   domainMap: new Map(),
@@ -97,11 +108,6 @@ this.FirefoxMonitor = {
     }
 
     this._delayedInited = true;
-
-    /* globals EveryWindow, Preferences, RemoteSettings, fetch, btoa, XUL_NS */
-    Services.scriptloader.loadSubScript(
-      this.getURL("privileged/subscripts/Globals.jsm"));
-
 
     // Expire our telemetry on November 1, at which time
     // we should redo data-review.
@@ -407,8 +413,6 @@ this.FirefoxMonitor = {
     this.notificationsByWindow.get(win).add(n);
   },
 };
-
-/* globals PluralForm */
 
 function PanelUI(doc) {
   this.site = null;

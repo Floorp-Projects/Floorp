@@ -26,9 +26,5 @@ FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged'] += [
   'privileged/schema.json'
 ]
 
-FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged']['subscripts'] += [
-  'privileged/subscripts/Globals.jsm'
-]
-
 with Files('**'):
   BUG_COMPONENT = ('Firefox', 'Firefox Monitor')
