@@ -2112,10 +2112,21 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  if (aBuilder->InInvalidSubtree() ||
+      item->FrameForInvalidation()->IsFrameModified()) {
+    item->SetModifiedFrame(true);
+  }
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (aBuilder->IsRetainingDisplayList() && !aBuilder->IsInPageSequence() &&
       aBuilder->IsBuilding()) {
     AssertUniqueItem(item);
+  }
+
+  // Verify that InInvalidSubtree matches invalidation frame's modified state.
+  if (aBuilder->InInvalidSubtree()) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        AnyContentAncestorModified(item->FrameForInvalidation()));
   }
 #endif
 
@@ -2302,6 +2313,9 @@ class nsDisplayItem : public nsDisplayItemLink {
    * be checked when deciding if this display item can be reused.
    */
   virtual nsIFrame* FrameForInvalidation() const { return mFrame; }
+
+  bool HasModifiedFrame() const;
+  void SetModifiedFrame(bool aModified);
 
   bool HasDeletedFrame() const;
 
@@ -2998,6 +3012,7 @@ class nsDisplayItem : public nsDisplayItemLink {
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
 
   enum class ItemFlag {
+    ModifiedFrame,
     DeletedFrame,
     ForceNotVisible,
     DisableSubpixelAA,

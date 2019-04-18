@@ -213,8 +213,7 @@ void RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(
   mBuilder.IncrementPresShellPaintCount(presShell);
 }
 
-static bool AnyContentAncestorModified(nsIFrame* aFrame,
-                                       nsIFrame* aStopAtFrame = nullptr) {
+bool AnyContentAncestorModified(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->IsFrameModified()) {
@@ -274,6 +273,14 @@ static void UpdateASR(nsDisplayItem* aItem,
   wrapList->UpdateHitTestInfoActiveScrolledRoot(*asr);
 }
 
+OldItemInfo::OldItemInfo(nsDisplayItem* aItem)
+    : mItem(aItem), mUsed(false), mDiscarded(false) {
+  if (mItem) {
+    // Clear cached modified frame state when adding an item to the old list.
+    mItem->SetModifiedFrame(false);
+  }
+}
+
 void OldItemInfo::AddedMatchToMergedList(RetainedDisplayListBuilder* aBuilder,
                                          MergedListIndex aIndex) {
   AddedToMergedList(aIndex);
@@ -322,7 +329,9 @@ class MergeState {
   Maybe<MergedListIndex> ProcessItemFromNewList(
       nsDisplayItem* aNewItem, const Maybe<MergedListIndex>& aPreviousItem) {
     OldListIndex oldIndex;
-    if (!HasModifiedFrame(aNewItem) &&
+    MOZ_DIAGNOSTIC_ASSERT(aNewItem->HasModifiedFrame() ==
+                          HasModifiedFrame(aNewItem));
+    if (!aNewItem->HasModifiedFrame() &&
         HasMatchingItemInOldList(aNewItem, &oldIndex)) {
       nsDisplayItem* oldItem = mOldItems[oldIndex.val].mItem;
       MOZ_DIAGNOSTIC_ASSERT(oldItem->GetPerFrameKey() ==
