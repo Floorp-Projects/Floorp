@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -188,6 +189,12 @@ const DEFAULT_TAG = "default";
  * Prefixed to all search debug output.
  */
 const SEARCH_LOG_PREFIX = "*** Search: ";
+
+/**
+ * This is the Remote Settings key that we use to get the ignore lists for
+ * engines.
+ */
+const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";
 
 /**
  * Outputs text to the JavaScript console as well as to stdout.
@@ -2638,7 +2645,12 @@ ParseSubmissionResult.prototype = {
 const gEmptyParseSubmissionResult =
       Object.freeze(new ParseSubmissionResult(null, "", -1, 0));
 
-// nsISearchService
+/**
+ * The search service handles loading and maintaining of search engines. It will
+ * also work out the default lists for each locale/region.
+ *
+ * @implements {nsISearchService}
+ */
 function SearchService() {
   this._initObservers = PromiseUtils.defer();
 }
@@ -2661,6 +2673,18 @@ SearchService.prototype = {
   // with sync disk I/O and handling lz4 decompression synchronously.
   // This is set back to null as soon as the initialization is finished.
   _cacheFileJSON: null,
+
+  /**
+   * Various search engines may be ignored if their submission urls contain a
+   * string that is in the list. The list is controlled via remote settings.
+   */
+  _submissionURLIgnoreList: [],
+
+  /**
+   * Various search engines may be ignored if their load path is contained
+   * in this list. The list is controlled via remote settings.
+   */
+  _loadPathIgnoreList: [],
 
   // If initialization has not been completed yet, perform synchronous
   // initialization.
@@ -2708,6 +2732,8 @@ SearchService.prototype = {
       await this._ensureKnownRegionPromise;
     }
 
+    this._setupRemoteSettings().catch(Cu.reportError);
+
     try {
       await this._loadEngines(cache);
     } catch (ex) {
@@ -2727,6 +2753,90 @@ SearchService.prototype = {
 
     LOG("_init: Completed _init");
     return this._initRV;
+  },
+
+  /**
+   * Obtains the remote settings for the search service. This should only be
+   * called from init(). Any subsequent updates to the remote settings are
+   * handled via a sync listener.
+   *
+   * For desktop, the initial remote settings are obtained from dumps in
+   * `services/settings/dumps/main/`. These are not shipped with Android, and
+   * hence the `get` may take a while to return.
+   */
+  async _setupRemoteSettings() {
+    const ignoreListSettings = RemoteSettings(SETTINGS_IGNORELIST_KEY);
+    // Trigger a get of the initial value.
+    const current = await ignoreListSettings.get();
+
+    // Now we have the values, listen for future updates.
+    this._ignoreListListener = this._handleIgnoreListUpdated.bind(this);
+    ignoreListSettings.on("sync", this._ignoreListListener);
+
+    await this._handleIgnoreListUpdated({data: {current}});
+    Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "settings-update-complete");
+  },
+
+  /**
+   * This handles updating of the ignore list settings, and removing any ignored
+   * engines.
+   *
+   * @param {object} eventData
+   *   The event in the format received from RemoteSettings.
+   */
+  async _handleIgnoreListUpdated(eventData) {
+    LOG("_handleIgnoreListUpdated");
+    const {data: {current}} = eventData;
+
+    for (const entry of current) {
+      if (entry.id == "load-paths") {
+        this._loadPathIgnoreList = [...entry.matches];
+      } else if (entry.id == "submission-urls") {
+        this._submissionURLIgnoreList = [...entry.matches];
+      }
+    }
+
+    // If we have not finished initializing, then we wait for the initialization
+    // to complete.
+    if (!this.isInitialized) {
+      await this._initObservers;
+    }
+    // We try to remove engines manually, as this should be more efficient and
+    // we don't really want to cause a re-init as this upsets unit tests.
+    let engineRemoved = false;
+    for (let name in this._engines) {
+      let engine = this._engines[name];
+      if (this._engineMatchesIgnoreLists(engine)) {
+        await this.removeEngine(engine);
+        engineRemoved = true;
+      }
+    }
+    // If we've removed an engine, and we don't have any left, we need to do
+    // a re-init - it is possible the cache just had one engine in it, and that
+    // is now empty, so we need to load from our main list.
+    if (engineRemoved && !Object.keys(this._engines).length) {
+      this._reInit();
+    }
+  },
+
+  /**
+   * Determines if a given engine matches the ignorelists or not.
+   *
+   * @param {Engine} engine
+   *   The engine to check against the ignorelists.
+   * @returns {boolean}
+   *   Returns true if the engine matches a ignorelists entry.
+   */
+  _engineMatchesIgnoreLists(engine) {
+    if (this._loadPathIgnoreList.includes(engine._loadPath)) {
+      return true;
+    }
+    let url = engine._getURLOfType("text/html")
+                    .getSubmission("dummy", engine).uri.spec.toLowerCase();
+    if (this._submissionURLIgnoreList.some(code => url.includes(code.toLowerCase()))) {
+      return true;
+    }
+    return false;
   },
 
   _metaData: { },
@@ -2926,7 +3036,14 @@ SearchService.prototype = {
     // If we are reiniting, delete previously installed built in
     // extensions that arent in the current engine list.
     for (let id of this._extensions.keys()) {
-      let {extension} = WebExtensionPolicy.getByID(id);
+      let policy = WebExtensionPolicy.getByID(id);
+      if (!policy) {
+        // If we are reiniting due to a remote settings update, we may have
+        // removed all the engines and be rebuilding without the cache. In this
+        // case, we won't have the cached engines loaded, so just skip this check.
+        continue;
+      }
+      let extension = policy.extension;
       if (extension.addonData.builtIn && !engines.some(name => extensionId(name) === id)) {
         this._extensions.delete(id);
       }
@@ -3158,34 +3275,8 @@ SearchService.prototype = {
     return this._batchTask;
   },
 
-  _submissionURLIgnoreList: [
-    "ignore=true",
-    "hspart=lvs",
-    "pc=COSP",
-    "clid=2308146",
-    "fr=mca",
-    "PC=MC0",
-    "lavasoft.gosearchresults",
-    "securedsearch.lavasoft",
-  ],
-
-  _loadPathIgnoreList: [
-    "[other]addEngineWithDetails:searchignore@mozilla.com",
-    "[https]opensearch.startpageweb.com/bing-search.xml",
-    "[https]opensearch.startwebsearch.com/bing-search.xml",
-    "[https]opensearch.webstartsearch.com/bing-search.xml",
-    "[https]opensearch.webofsearch.com/bing-search.xml",
-    "[profile]/searchplugins/Yahoo! Powered.xml",
-    "[profile]/searchplugins/yahoo! powered.xml",
-  ],
-
   _addEngineToStore(engine) {
-    let url = engine._getURLOfType("text/html").getSubmission("dummy", engine).uri.spec.toLowerCase();
-    if (this._submissionURLIgnoreList.some(code => url.includes(code.toLowerCase()))) {
-      LOG("_addEngineToStore: Ignoring engine");
-      return;
-    }
-    if (this._loadPathIgnoreList.includes(engine._loadPath)) {
+    if (this._engineMatchesIgnoreLists(engine)) {
       LOG("_addEngineToStore: Ignoring engine");
       return;
     }
@@ -4691,6 +4782,11 @@ SearchService.prototype = {
   _observersAdded: false,
 
   _removeObservers() {
+    if (this._ignoreListListener) {
+      RemoteSettings(SETTINGS_IGNORELIST_KEY).off("sync", this._ignoreListListener);
+      delete this._ignoreListListener;
+    }
+
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
