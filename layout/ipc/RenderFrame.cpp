@@ -195,11 +195,6 @@ mozilla::LayerState nsDisplayRemote::GetLayerState(
   return mozilla::LAYER_ACTIVE_FORCE;
 }
 
-bool nsDisplayRemote::HasDeletedFrame() const {
-  // RenderFrame might change without invalidating nsSubDocumentFrame.
-  return !GetFrameLoader() || nsDisplayItem::HasDeletedFrame();
-}
-
 already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
