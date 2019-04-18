@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that from an empty database profile reset doesn't create a new profile.
  */
