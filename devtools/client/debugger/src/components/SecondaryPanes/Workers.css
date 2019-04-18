@@ -13,7 +13,7 @@
 
 .workers-list > .worker {
   font-size: inherit;
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
   padding: 2px 6px;
   padding-inline-start: 20px;
   line-height: 16px;

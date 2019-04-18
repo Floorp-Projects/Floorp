@@ -506,7 +506,7 @@ html, body, #app, #memory-tool {
 .heap-tree-number {
   padding: 0 3px;
   flex: 1;
-  color: var(--theme-content-color3);
+  color: var(--theme-body-color-alt);
   /* Make sure number doesn't appear backwards on RTL locales */
   direction: ltr;
 }

@@ -175,7 +175,7 @@
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  fill: var(--theme-content-color3);
+  fill: var(--theme-icon-dimmed-color);
   /* make the icons smaller than regular twistys (10->8px) */
   background-size: 8px;
   cursor: pointer;

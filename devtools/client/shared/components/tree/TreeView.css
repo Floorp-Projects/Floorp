@@ -54,7 +54,7 @@
   outline: none;
   box-shadow: none;
   padding: 0 1px;
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
   background: var(--theme-sidebar-background);
 }
 

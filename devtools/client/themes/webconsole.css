@@ -398,7 +398,7 @@ html #webconsole-notificationbox {
 .jsterm-input-node {
   box-sizing: border-box;
   min-height: 100%;
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
   /* input icon */
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   background-position-x: calc(10px + var(--console-icon-horizontal-offset));
