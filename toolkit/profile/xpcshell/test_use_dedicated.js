@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 /**
  * Tests that if installs.ini lists a profile we use it as the default.
  */

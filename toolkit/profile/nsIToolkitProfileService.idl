@@ -14,12 +14,6 @@ interface nsIProfileLock;
 interface nsIToolkitProfileService : nsISupports
 {
     /**
-     * Tests whether the profile lists on disk have changed since they were
-     * loaded. When this is true attempts to flush changes to disk will fail.
-     */
-    [infallible] readonly attribute boolean isListOutdated;
-
-    /**
      * When a downgrade is detected UI is presented to the user to ask how to
      * proceed. These flags are used to pass some information to the UI.
      */
@@ -34,12 +28,6 @@ interface nsIToolkitProfileService : nsISupports
     cenum downgradeUIChoice: 8 {
         quit = 0,
         createNewProfile = 1,
-    };
-
-    cenum profileManagerResult: 8 {
-        exit = 0,
-        launchWithProfile = 1,
-        restart = 2,
     };
 
     attribute boolean startWithLastProfile;
@@ -140,9 +128,7 @@ interface nsIToolkitProfileService : nsISupports
     readonly attribute unsigned long profileCount;
 
     /**
-     * Flush the profiles list file. This will fail with
-     * NS_ERROR_DATABASE_CHANGED if the files on disk have changed since the
-     * profiles were loaded.
+     * Flush the profiles list file.
      */
     void flush();
 };
