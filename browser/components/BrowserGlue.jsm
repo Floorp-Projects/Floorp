@@ -1005,6 +1005,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "sync-ui-state:update");
     os.removeObserver(this, "shield-init-complete");
 
+    Services.prefs.removeObserver("permissions.eventTelemetry.enabled", this._togglePermissionPromptTelemetry);
     Services.prefs.removeObserver("privacy.trackingprotection", this._matchCBCategory);
     Services.prefs.removeObserver("urlclassifier.trackingTable", this._matchCBCategory);
     Services.prefs.removeObserver("network.cookie.cookieBehavior", this._matchCBCategory);
@@ -1401,6 +1402,20 @@ BrowserGlue.prototype = {
     ContentBlockingCategoriesPrefs.updateCBCategory();
   },
 
+  _togglePermissionPromptTelemetry() {
+    let enablePermissionPromptTelemetry =
+      Services.prefs.getBoolPref("permissions.eventTelemetry.enabled", false);
+
+    Services.telemetry.setEventRecordingEnabled("security.ui.permissionprompt",
+      enablePermissionPromptTelemetry);
+
+    if (!enablePermissionPromptTelemetry) {
+      // Remove the saved unique identifier to reduce the (remote) chance
+      // of leaking it to our servers in the future.
+      Services.prefs.clearUserPref("permissions.eventTelemetry.uuid");
+    }
+  },
+
   _recordContentBlockingTelemetry() {
     let recordIdentityPopupEvents = Services.prefs.getBoolPref("security.identitypopup.recordEventElemetry");
     Services.telemetry.setEventRecordingEnabled("security.ui.identitypopup", recordIdentityPopupEvents);
@@ -1639,6 +1654,11 @@ BrowserGlue.prototype = {
         Services.prefs.getBoolPref("security.certerrors.recordEventTelemetry", false);
       Services.telemetry.setEventRecordingEnabled("security.ui.certerror",
         enableCertErrorUITelemetry);
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      Services.prefs.addObserver("permissions.eventTelemetry.enabled", this._togglePermissionPromptTelemetry);
+      this._togglePermissionPromptTelemetry();
     });
 
     Services.tm.idleDispatchToMainThread(() => {
