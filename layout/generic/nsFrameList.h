@@ -271,12 +271,18 @@ class nsFrameList {
 
   bool NotEmpty() const { return nullptr != mFirstChild; }
 
+  /**
+   * Return true if aFrame is on this list.
+   * @note this method has O(n) time complexity over the length of the list
+   * XXXmats: ideally, we should make this function #ifdef DEBUG
+   */
   bool ContainsFrame(const nsIFrame* aFrame) const;
 
   /**
    * Get the number of frames in this list. Note that currently the
    * implementation has O(n) time complexity. Do not call it repeatedly in hot
    * code.
+   * XXXmats: ideally, we should make this function #ifdef DEBUG
    */
   int32_t GetLength() const;
 

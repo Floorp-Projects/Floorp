@@ -308,7 +308,7 @@ class GCRuntime {
   State state() const { return incrementalState; }
   bool isHeapCompacting() const { return state() == State::Compact; }
   bool isForegroundSweeping() const { return state() == State::Sweep; }
-  bool isBackgroundSweeping() { return sweepTask.isRunning(); }
+  bool isBackgroundSweeping() const { return sweepTask.isRunning(); }
   void waitBackgroundSweepEnd();
   void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
@@ -332,6 +332,7 @@ class GCRuntime {
            incrementalAllowed;
   }
   bool isIncrementalGCInProgress() const { return state() != State::NotActive; }
+  bool hasForegroundWork() const;
 
   bool isCompactingGCEnabled() const;
 

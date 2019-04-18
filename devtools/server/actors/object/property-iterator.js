@@ -348,14 +348,26 @@ function enumWeakMapEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   const raw = objectActor.obj.unsafeDereference();
-  const keys = Cu.waiveXrays(
-    ChromeUtils.nondeterministicGetWeakMapKeys(raw));
+  const basekeys = ChromeUtils.nondeterministicGetWeakMapKeys(raw);
+  const keys = isWorker ? basekeys : Cu.waiveXrays(basekeys);
+
+  const values = [];
+  if (isWorker) {
+    for (const k of keys) {
+      const nk = ObjectUtils.makeDebuggeeValueIfNeeded(objectActor.obj, k);
+      const v = DevToolsUtils.callPropertyOnObject(objectActor.obj, "get", nk);
+      values.push(ObjectUtils.unwrapDebuggeeValue(v));
+    }
+  } else {
+    for (const k of keys) {
+      values.push(WeakMap.prototype.get.call(raw, k));
+    }
+  }
 
   return {
     [Symbol.iterator]: function* () {
-      for (const key of keys) {
-        const value = WeakMap.prototype.get.call(raw, key);
-        yield [ key, value ].map(val => gripFromEntry(objectActor, val));
+      for (let i = 0; i < keys.length; i++) {
+        yield [ keys[i], values[i] ].map(val => gripFromEntry(objectActor, val));
       }
     },
     size: keys.length,
@@ -364,7 +376,7 @@ function enumWeakMapEntries(objectActor) {
     },
     propertyDescription(index) {
       const key = keys[index];
-      const val = WeakMap.prototype.get.call(raw, key);
+      const val = values[index];
       return {
         enumerable: true,
         value: {
@@ -431,8 +443,8 @@ function enumWeakSetEntries(objectActor) {
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
   const raw = objectActor.obj.unsafeDereference();
-  const keys = Cu.waiveXrays(
-    ChromeUtils.nondeterministicGetWeakSetKeys(raw));
+  const basekeys = ChromeUtils.nondeterministicGetWeakSetKeys(raw);
+  const keys = isWorker ? basekeys : Cu.waiveXrays(basekeys);
 
   return {
     [Symbol.iterator]: function* () {

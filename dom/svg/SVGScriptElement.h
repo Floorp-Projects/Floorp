@@ -72,7 +72,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
   already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
-  ~SVGScriptElement();
+  ~SVGScriptElement() = default;
 
   virtual StringAttributesInfo GetStringInfo() override;
 

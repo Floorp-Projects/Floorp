@@ -440,10 +440,10 @@ bool SMILParserUtils::ParseKeySplines(
                   nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
     double values[4];
-    for (int i = 0; i < 4; i++) {
+    for (auto& value : values) {
       if (!tokenizer.hasMoreTokens() ||
-          !SVGContentUtils::ParseNumber(tokenizer.nextToken(), values[i]) ||
-          values[i] > 1.0 || values[i] < 0.0) {
+          !SVGContentUtils::ParseNumber(tokenizer.nextToken(), value) ||
+          value > 1.0 || value < 0.0) {
         return false;
       }
     }

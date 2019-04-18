@@ -311,6 +311,9 @@ class Scope : public js::gc::TenuredCell {
   template <typename ConcreteScope>
   void initData(MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
 
+  template <typename F>
+  void applyScopeDataTyped(F&& f);
+
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
 
@@ -1014,6 +1017,49 @@ class WasmFunctionScope : public Scope {
 
   static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
+
+template <typename F>
+void Scope::applyScopeDataTyped(F&& f) {
+  switch (kind()) {
+    case ScopeKind::Function: {
+      f(&as<FunctionScope>().data());
+      break;
+    case ScopeKind::FunctionBodyVar:
+    case ScopeKind::ParameterExpressionVar:
+      f(&as<VarScope>().data());
+      break;
+    case ScopeKind::Lexical:
+    case ScopeKind::SimpleCatch:
+    case ScopeKind::Catch:
+    case ScopeKind::NamedLambda:
+    case ScopeKind::StrictNamedLambda:
+      f(&as<LexicalScope>().data());
+      break;
+    case ScopeKind::With:
+      // With scopes do not have data.
+      break;
+    case ScopeKind::Eval:
+    case ScopeKind::StrictEval:
+      f(&as<EvalScope>().data());
+      break;
+    case ScopeKind::Global:
+    case ScopeKind::NonSyntactic:
+      f(&as<GlobalScope>().data());
+      break;
+    case ScopeKind::Module:
+      f(&as<ModuleScope>().data());
+      break;
+    case ScopeKind::WasmInstance:
+      f(&as<WasmInstanceScope>().data());
+      break;
+    case ScopeKind::WasmFunction:
+      f(&as<WasmFunctionScope>().data());
+      break;
+    default:
+      MOZ_CRASH("Unexpected scope type in ApplyScopeDataTyped");
+    }
+  }
+}
 
 //
 // An iterator for a Scope's bindings. This is the source of truth for frame

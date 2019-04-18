@@ -59,8 +59,6 @@ SVGViewportElement::SVGViewportElement(
       mViewportHeight(0),
       mHasChildrenOnlyTransform(false) {}
 
-SVGViewportElement::~SVGViewportElement() {}
-
 //----------------------------------------------------------------------
 
 already_AddRefed<SVGAnimatedRect> SVGViewportElement::ViewBox() {

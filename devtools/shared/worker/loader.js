@@ -575,6 +575,7 @@ this.worker = new WorkerDebuggerLoader({
     "Services": Object.create(null),
     "chrome": chrome,
     "xpcInspector": xpcInspector,
+    "ChromeUtils": ChromeUtils,
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

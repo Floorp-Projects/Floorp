@@ -7,3 +7,5 @@ fuzzy-if(gtkWidget,0-1,0-10) fails-if(Android) == style.html style-ref.xul
 fails-if(Android) == color-inherit.html color-inherit-ref.html
 fuzzy-if(Android,0-2,0-2) fails-if(webrender&&!cocoaWidget) == dynamic-max-width.html dynamic-max-width-ref.html # bug 1496542 for webrender.
 == label-min-inline-size.html label-min-inline-size-ref.html
+== css-overflow.html css-overflow-ref.html
+== css-display.html css-display-ref.html
