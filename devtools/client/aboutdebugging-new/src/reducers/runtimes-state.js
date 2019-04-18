@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  CONNECT_RUNTIME_CANCEL,
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
@@ -88,6 +89,16 @@ function runtimesReducer(state = RuntimesState(), action) {
     case CONNECT_RUNTIME_NOT_RESPONDING: {
       const { id } = action;
       return _updateRuntimeById(id, { isConnectionNotResponding: true }, state);
+    }
+
+    case CONNECT_RUNTIME_CANCEL: {
+      const { id } = action;
+      const updatedState = {
+        isConnecting: false,
+        isConnectionFailed: false,
+        isConnectionNotResponding: false,
+      };
+      return _updateRuntimeById(id, updatedState, state);
     }
 
     case CONNECT_RUNTIME_SUCCESS: {
