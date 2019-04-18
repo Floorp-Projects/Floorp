@@ -10,6 +10,7 @@
  */
 
 import expressions from "./expressions";
+import sourceActors from "./source-actors";
 import sources from "./sources";
 import tabs from "./tabs";
 import breakpoints from "./breakpoints";
@@ -28,6 +29,7 @@ import eventListenerBreakpoints from "./event-listeners";
 
 export default {
   expressions,
+  sourceActors,
   sources,
   tabs,
   breakpoints,
