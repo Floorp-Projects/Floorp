@@ -29,6 +29,7 @@ include protocol PRemoteWorker;
 include protocol PRemoteWorkerService;
 include protocol PSharedWorker;
 include protocol PTemporaryIPCBlob;
+include protocol PFileCreator;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PMIDIManager;
@@ -94,6 +95,7 @@ sync protocol PBackground
   manages PRemoteWorkerService;
   manages PSharedWorker;
   manages PTemporaryIPCBlob;
+  manages PFileCreator;
   manages PMessagePort;
   manages PCameras;
   manages PMIDIManager;
@@ -197,6 +199,10 @@ parent:
 
   async PTemporaryIPCBlob();
 
+  async PFileCreator(nsString aFullPath, nsString aType, nsString aName,
+                     int64_t? lastModified, bool aExistenceCheck,
+                     bool aIsFromNsIFile);
+
   async PClientManager();
 
   async PMIDIManager();
@@ -228,6 +234,7 @@ child:
   async PPendingIPCBlob(IPCBlob blob);
 
   async PRemoteWorker(RemoteWorkerData data);
+
 both:
   // PIPCBlobInputStream is created on the parent side only if the child starts
   // a migration.

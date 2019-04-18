@@ -30,9 +30,11 @@
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/ipc/FileCreatorParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
@@ -56,6 +58,7 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyRelease.h"
@@ -535,6 +538,53 @@ bool BackgroundParentImpl::DeallocPSharedWorkerParent(
     mozilla::dom::PSharedWorkerParent* aActor) {
   RefPtr<mozilla::dom::SharedWorkerParent> actor =
       dont_AddRef(static_cast<mozilla::dom::SharedWorkerParent*>(aActor));
+  return true;
+}
+
+PFileCreatorParent* BackgroundParentImpl::AllocPFileCreatorParent(
+    const nsString& aFullPath, const nsString& aType, const nsString& aName,
+    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+    const bool& aIsFromNsIFile) {
+  RefPtr<mozilla::dom::FileCreatorParent> actor =
+      new mozilla::dom::FileCreatorParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
+    PFileCreatorParent* aActor, const nsString& aFullPath,
+    const nsString& aType, const nsString& aName,
+    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+    const bool& aIsFromNsIFile) {
+  bool isFileRemoteType = false;
+
+  // If the ContentParent is null we are dealing with a same-process actor.
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  if (!parent) {
+    isFileRemoteType = true;
+  } else {
+    isFileRemoteType = parent->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
+    NS_ReleaseOnMainThreadSystemGroup("ContentParent release", parent.forget());
+  }
+
+  mozilla::dom::FileCreatorParent* actor =
+      static_cast<mozilla::dom::FileCreatorParent*>(aActor);
+
+  // We allow the creation of File via this IPC call only for the 'file' process
+  // or for testing.
+  if (!isFileRemoteType && !StaticPrefs::dom_file_createInChild()) {
+    Unused << mozilla::dom::FileCreatorParent::Send__delete__(
+        actor, FileCreationErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    return IPC_OK();
+  }
+
+  return actor->CreateAndShareFile(aFullPath, aType, aName, aLastModified,
+                                   aExistenceCheck, aIsFromNsIFile);
+}
+
+bool BackgroundParentImpl::DeallocPFileCreatorParent(
+    PFileCreatorParent* aActor) {
+  RefPtr<mozilla::dom::FileCreatorParent> actor =
+      dont_AddRef(static_cast<mozilla::dom::FileCreatorParent*>(aActor));
   return true;
 }
 

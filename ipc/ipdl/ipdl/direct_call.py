@@ -29,6 +29,13 @@ DIRECT_CALL_OVERRIDES = {
         "RemotePermissionRequest", "nsContentPermissionHelper.h"
     ),
 
+    ("PFileCreator", "child"): (
+        "mozilla::dom::FileCreatorChild", "mozilla/dom/ipc/FileCreatorChild.h"
+    ),
+    ("PFileCreator", "parent"): (
+        "mozilla::dom::FileCreatorParent", "mozilla/dom/ipc/FileCreatorParent.h"
+    ),
+
     ("PFileSystemRequest", "child"): (
         "FileSystemTaskChildBase", "mozilla/dom/FileSystemTaskBase.h"
     ),
