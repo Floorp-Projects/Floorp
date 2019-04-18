@@ -60,7 +60,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             Adjust.onPause()
         }
 
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle) {}
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
 
         override fun onActivityStarted(activity: Activity) {}
 
