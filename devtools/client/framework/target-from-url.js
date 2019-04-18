@@ -43,16 +43,32 @@ exports.targetFromURL = async function targetFromURL(url) {
   const params = url.searchParams;
 
   // Clients retrieved from the remote-client-manager are already connected.
-  if (!params.get("remoteId")) {
+  const isCachedClient = params.get("remoteId");
+  if (!isCachedClient) {
     // Connect any other client.
     await client.connect();
   }
 
+  const id = params.get("id");
   const type = params.get("type");
+  const chrome = params.has("chrome");
+
+  try {
+    return await _targetFromURL(client, id, type, chrome);
+  } catch (e) {
+    if (!isCachedClient) {
+      // If the client was not cached, then the client was created here. If the target
+      // creation failed, we should close the client.
+      await client.close();
+    }
+    throw e;
+  }
+};
+
+async function _targetFromURL(client, id, type, chrome) {
   if (!type) {
     throw new Error("targetFromURL, missing type parameter");
   }
-  let id = params.get("id");
 
   let front;
   if (type === "tab") {
@@ -78,7 +94,7 @@ exports.targetFromURL = async function targetFromURL(url) {
 
     front = await addonFront.connect();
   } else if (type === "worker") {
-    front = client.getActor(id);
+    front = await client.mainRoot.getWorker(id);
 
     if (!front) {
       throw new Error(`targetFromURL, worker with actor id '${id}' doesn't exist`);
@@ -121,13 +137,12 @@ exports.targetFromURL = async function targetFromURL(url) {
 
   // Allows to spawn a chrome enabled target for any context
   // (handy to debug chrome stuff in a content process)
-  const chrome = params.has("chrome");
   if (chrome) {
     front.forceChrome();
   }
 
   return front;
-};
+}
 
 /**
  * Create a DebuggerClient for a given URL object having various query parameters:
