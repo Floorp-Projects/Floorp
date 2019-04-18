@@ -23,6 +23,7 @@ const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const {
+  CONNECT_RUNTIME_CANCEL,
   CONNECT_RUNTIME_FAILURE,
   CONNECT_RUNTIME_NOT_RESPONDING,
   CONNECT_RUNTIME_START,
@@ -54,6 +55,7 @@ const {
 } = require("../constants");
 
 const CONNECTION_TIMING_OUT_DELAY = 3000;
+const CONNECTION_CANCEL_DELAY = 13000;
 
 async function getRuntimeIcon(channel) {
   return (channel === "release" || channel === "beta" || channel === "aurora")
@@ -79,6 +81,14 @@ function connectRuntime(id) {
       // to let user know that.
       dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
     }, CONNECTION_TIMING_OUT_DELAY);
+    const connectionCancelTimer = setTimeout(() => {
+      // Connect button of the runtime will be disabled during connection, but the status
+      // continues till the connection was either succeed or failed. This may have a
+      // possibility that the disabling continues unless page reloading, user will not be
+      // able to click again. To avoid this, revert the connect button status after
+      // CONNECTION_CANCEL_DELAY ms.
+      dispatch({ type: CONNECT_RUNTIME_CANCEL, id });
+    }, CONNECTION_CANCEL_DELAY);
 
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
@@ -148,6 +158,7 @@ function connectRuntime(id) {
       dispatch({ type: CONNECT_RUNTIME_FAILURE, id, error: e });
     } finally {
       clearTimeout(connectionNotRespondingTimer);
+      clearTimeout(connectionCancelTimer);
     }
   };
 }
