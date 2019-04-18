@@ -295,10 +295,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             },
         }
 
-        if self.app == "chrome":
-            # remove this condition when integrating Google Chrome
-            raise ValueError("Google Chrome not currently integrated!")
-
         if self.app not in available_chromium_dists:
             self.info("Google Chrome or Chromium distributions are not required.")
             return
