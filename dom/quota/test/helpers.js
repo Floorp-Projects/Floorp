@@ -161,8 +161,6 @@ function* testHarnessSteps()
       await requestFinished(clearAllDatabases());
     });
 
-    yield* loadScript("/tests/SimpleTest/AddTask.js");
-
     add_task(testSteps);
   } else {
     testGenerator.next();
