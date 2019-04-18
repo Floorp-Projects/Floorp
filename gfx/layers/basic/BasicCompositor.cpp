@@ -1060,21 +1060,21 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
   if (mRenderTarget->mDrawTarget != mDrawTarget || mFullWindowRenderTarget) {
     RefPtr<SourceSurface> source;
 
-    // Note: Most platforms require us to buffer drawing to the widget
-    // surface. That's why we don't draw to mDrawTarget directly.
-    IntPoint srcOffset = mTarget ? mTargetBounds.TopLeft() : IntPoint();
-    IntPoint dstOffset = mRenderTarget->GetOrigin();
-
     if (mRenderTarget->mDrawTarget != mDrawTarget) {
       source = mWidget->EndBackBufferDrawing();
+
+      // Note: Most platforms require us to buffer drawing to the widget
+      // surface. That's why we don't draw to mDrawTarget directly.
+      nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
 
       // The source DrawTarget is clipped to the invalidation region, so we have
       // to copy the individual rectangles in the region or else we'll draw
       // blank pixels.
       for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
         const LayoutDeviceIntRect& r = iter.Get();
-        mDrawTarget->CopySurface(source, r.ToUnknownRect() - srcOffset,
-                                 r.TopLeft().ToUnknownPoint() - dstOffset);
+        mDrawTarget->CopySurface(source,
+                                 r.ToUnknownRect() - mRenderTarget->GetOrigin(),
+                                 r.TopLeft().ToUnknownPoint() - offset);
       }
     } else {
       source = mRenderTarget->mDrawTarget->Snapshot();
@@ -1084,8 +1084,7 @@ void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
       for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
         const LayoutDeviceIntRect& r = iter.Get();
         mFullWindowRenderTarget->mDrawTarget->CopySurface(
-            source, r.ToUnknownRect() - srcOffset,
-            r.TopLeft().ToUnknownPoint() - dstOffset);
+            source, r.ToUnknownRect(), r.TopLeft().ToUnknownPoint());
       }
 
       mFullWindowRenderTarget->mDrawTarget->Flush();
