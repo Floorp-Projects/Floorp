@@ -16,6 +16,7 @@ var EXPORTED_SYMBOLS = [
   "ContentTaskUtils",
 ];
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {clearInterval, setInterval, setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 var ContentTaskUtils = {
@@ -162,5 +163,37 @@ var ContentTaskUtils = {
         }
       }, capture, wantsUntrusted);
     });
+  },
+
+  /**
+   * Gets an instance of the `EventUtils` helper module for usage in
+   * content tasks. See https://searchfox.org/mozilla-central/source/testing/mochitest/tests/SimpleTest/EventUtils.js
+   *
+   * @param content
+   *        The `content` global object from your content task.
+   *
+   * @returns an EventUtils instance.
+   */
+  getEventUtils(content) {
+    if (content._EventUtils) {
+      return content._EventUtils;
+    }
+
+    let EventUtils = content._EventUtils = {};
+
+    EventUtils.window = {};
+    EventUtils.parent = EventUtils.window;
+    /* eslint-disable camelcase */
+    EventUtils._EU_Ci = Ci;
+    EventUtils._EU_Cc = Cc;
+    /* eslint-enable camelcase */
+    // EventUtils' `sendChar` function relies on the navigator to synthetize events.
+    EventUtils.navigator = content.navigator;
+    EventUtils.KeyboardEvent = content.KeyboardEvent;
+
+    Services.scriptloader.loadSubScript(
+      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+
+    return EventUtils;
   },
 };
