@@ -1,1 +1,1 @@
-[["warning", "Passed-by-value struct argument contains uninitialized data (e.g., field: 'x')", "clang-analyzer-core.CallAndMessage"]]
+[["warning", "Passed-by-value struct argument contains uninitialized data (e.g., field: 'x')", "clang-analyzer-core.CallAndMessage"], {"reliability": "medium"}]

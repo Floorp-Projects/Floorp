@@ -1,1 +1,1 @@
-[["warning", "Call to 'mkstemp' should have at least 6 'X's in the format string to be secure (2 'X's seen)", "clang-analyzer-security.insecureAPI.mkstemp"]]
+[["warning", "Call to 'mkstemp' should have at least 6 'X's in the format string to be secure (2 'X's seen)", "clang-analyzer-security.insecureAPI.mkstemp"], {"reliability": "high"}]

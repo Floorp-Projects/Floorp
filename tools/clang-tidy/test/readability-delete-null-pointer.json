@@ -1,1 +1,1 @@
-[["warning", "'if' statement is unnecessary; deleting null pointer has no effect", "readability-delete-null-pointer"]]
+[["warning", "'if' statement is unnecessary; deleting null pointer has no effect", "readability-delete-null-pointer"], {"reliability": "high"}]
