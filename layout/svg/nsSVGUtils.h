@@ -594,6 +594,13 @@ class nsSVGUtils {
     // Returns true if the frame is an SVGTextFrame or one of its descendants.
     return aFrame->GetStateBits() & NS_FRAME_IS_SVG_TEXT;
   }
+
+  /**
+   * A simple wrapper of nsLayoutUtils::GetTransformToAncestor to avoid
+   * boilerplate code for changing unit and matrix format.
+   */
+  static gfxMatrix GetTransformMatrixInUserSpace(const nsIFrame* aFrame,
+                                                 const nsIFrame* aAncestor);
 };
 
 #endif
