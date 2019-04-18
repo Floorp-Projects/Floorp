@@ -4297,6 +4297,25 @@ impl Renderer {
             return;
         }
 
+        // TODO(gw): This is a hack / workaround for a resizing glitch. What
+        //           happens is that the framebuffer rect / content origin are
+        //           determined during frame building, rather than at render
+        //           time (which is what used to happen). This means that the
+        //           framebuffer rect/origin can be wrong by the time a frame
+        //           is drawn, if resizing is occurring. This hack just makes
+        //           the framebuffer rect/origin be hard coded to the current
+        //           framebuffer size at render time. It seems like this probably
+        //           breaks some assumptions elsewhere, but it seems to fix the
+        //           bug and I haven't noticed any other issues so far. We will
+        //           need to investigate this further and make a "proper" fix.
+        if let Some(framebuffer_size) = framebuffer_size {
+            frame.framebuffer_rect = FramebufferIntRect::new(
+                FramebufferIntPoint::zero(),
+                framebuffer_size,
+            );
+            frame.content_origin = DeviceIntPoint::zero();
+        }
+
         self.device.disable_depth_write();
         self.set_blend(false, FramebufferKind::Other);
         self.device.disable_stencil();
