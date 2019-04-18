@@ -56,7 +56,7 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  bool Disabled();
+  bool Disabled() const;
   void SetDisabled(bool aDisabled);
   void GetMedia(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::media, aValue); }
   void SetMedia(const nsAString& aMedia, ErrorResult& aError) {
