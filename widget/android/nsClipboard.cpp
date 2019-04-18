@@ -62,13 +62,13 @@ nsClipboard::SetData(nsITransferable *aTransferable, nsIClipboardOwner *anOwner,
     }
   }
 
-  if (!html.IsEmpty()) {
-    java::Clipboard::SetHTML(GeckoAppShell::GetApplicationContext(), text,
-                             html);
+  if (!html.IsEmpty() &&
+      java::Clipboard::SetHTML(GeckoAppShell::GetApplicationContext(), text,
+                               html)) {
     return NS_OK;
   }
-  if (!text.IsEmpty()) {
-    java::Clipboard::SetText(GeckoAppShell::GetApplicationContext(), text);
+  if (!text.IsEmpty() &&
+      java::Clipboard::SetText(GeckoAppShell::GetApplicationContext(), text)) {
     return NS_OK;
   }
 
