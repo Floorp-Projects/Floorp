@@ -27,7 +27,7 @@ object SupportUtils {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
         val appVersion = getAppVersion(context)
         val osTarget = "Android"
-        val langTag = Locale.getDefault().isO3Language
+        val langTag = getLanguageTag(Locale.getDefault())
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
     }
 
@@ -46,5 +46,13 @@ object SupportUtils {
             // This should be impossible - we should always be able to get information about ourselves:
             throw IllegalStateException("Unable find package details for Fenix", e)
         }
+    }
+
+    private fun getLanguageTag(locale: Locale): String {
+        val language = locale.language
+        val country = locale.country // Can be an empty string.
+        return if (country == "") {
+            language
+        } else "$language-$country"
     }
 }
