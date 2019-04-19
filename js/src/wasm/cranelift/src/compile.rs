@@ -95,6 +95,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
     pub fn compile(&mut self) -> CodegenResult<()> {
         let size = self.context.compile(&*self.isa)?;
+        debug!("Optimized wasm function IR: {}", self);
         self.binemit(size as usize)
     }
 
@@ -120,7 +121,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         )?;
 
         info!("Translated wasm function {}.", func.index);
-        debug!("Content: {}", self.context.func.display(&*self.isa));
+        debug!("Translated wasm function IR: {}", self);
         Ok(wsig)
     }
 
