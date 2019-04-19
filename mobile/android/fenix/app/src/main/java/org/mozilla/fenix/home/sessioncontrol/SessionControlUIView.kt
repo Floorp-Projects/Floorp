@@ -19,17 +19,18 @@ import androidx.recyclerview.widget.ItemTouchHelper
 @SuppressWarnings("ComplexMethod")
 private fun SessionControlState.toAdapterList(): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
+    items.add(AdapterItem.TabHeader)
 
     if (tabs.isNotEmpty()) {
-        items.add(AdapterItem.TabHeader)
         tabs.reversed().map(AdapterItem::TabItem).forEach { items.add(it) }
         if (mode == Mode.Private) {
             items.add(AdapterItem.DeleteTabs)
         }
     } else {
-        if (mode == Mode.Private) {
-            items.add(AdapterItem.PrivateBrowsingDescription)
-        }
+        val item = if (mode == Mode.Private) AdapterItem.PrivateBrowsingDescription
+                    else AdapterItem.NoTabMessage
+
+        items.add(item)
     }
 
     return items

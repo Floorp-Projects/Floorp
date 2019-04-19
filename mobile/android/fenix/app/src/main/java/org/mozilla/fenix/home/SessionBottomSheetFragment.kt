@@ -90,7 +90,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
     private fun getCardTitle(): String? {
         return sessionType?.let {
             when (it) {
-                is SessionType.Current -> getString(R.string.tabs_header_title)
+                is SessionType.Current -> getString(R.string.tab_header_label)
                 is SessionType.Private -> getString(R.string.tabs_header_private_title)
             }
         }

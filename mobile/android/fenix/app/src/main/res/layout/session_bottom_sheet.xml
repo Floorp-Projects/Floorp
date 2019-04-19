@@ -46,7 +46,7 @@
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
                 android:layout_marginBottom="8dp"
-                android:text="@string/tabs_header_title"
+                android:text="@string/tab_header_label"
                 android:textAppearance="@style/HeaderTextStyle"
                 android:textColor="?primaryText"
                 app:layout_constraintStart_toEndOf="@id/current_session_image"

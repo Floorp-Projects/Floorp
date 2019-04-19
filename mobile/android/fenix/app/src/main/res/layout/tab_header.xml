@@ -14,7 +14,7 @@
         android:id="@+id/header_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/tabs_header_title"
+        android:text="@string/tab_header_label"
         android:textAppearance="@style/HeaderTextStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

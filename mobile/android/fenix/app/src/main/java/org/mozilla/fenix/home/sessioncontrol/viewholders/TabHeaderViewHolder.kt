@@ -28,7 +28,7 @@ class TabHeaderViewHolder(
                 actionEmitter.onNext(TabAction.Add)
             }
 
-            val headerTextResourceId = if (isPrivate) R.string.tabs_header_private_title else R.string.tabs_header_title
+            val headerTextResourceId = if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
             header_text.text = context.getString(headerTextResourceId)
             tabs_overflow_button.increaseTapArea(overflowButtonIncreaseDps)
             tabs_overflow_button.setOnClickListener {

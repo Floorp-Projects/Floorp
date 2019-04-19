@@ -222,8 +222,8 @@
     <string name="content_description_close_button">Close</string>
 
     <!-- Sessions -->
-    <!-- Title for the list of tabs in the current session -->
-    <string name="tabs_header_title">Current session</string>
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Open tabs</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Private session</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -249,6 +249,11 @@
     <!-- Text to tell the user how many more tabs this session has.
         The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
     <string name="session_items_more">%1$d sites…</string>
+
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header">No tabs opened</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Your open tabs will be shown here.</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -393,4 +398,8 @@
     <string name="tracking_protection_on">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
+
+
+    <!-- DEPRECATED -->
+    <string name="tabs_header_title">DEPRECATED</string>
 </resources>

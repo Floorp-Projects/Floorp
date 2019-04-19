@@ -11,6 +11,7 @@ import io.reactivex.Observer
 import kotlinx.coroutines.Job
 import org.mozilla.fenix.home.sessioncontrol.viewholders.ArchiveTabsViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.DeleteTabsViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.NoTabMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
@@ -18,6 +19,7 @@ import java.lang.IllegalStateException
 
 sealed class AdapterItem {
     object TabHeader : AdapterItem()
+    object NoTabMessage : AdapterItem()
     data class TabItem(val tab: Tab) : AdapterItem()
     object PrivateBrowsingDescription : AdapterItem()
     object ArchiveTabs : AdapterItem()
@@ -26,6 +28,7 @@ sealed class AdapterItem {
     val viewType: Int
         get() = when (this) {
             TabHeader -> TabHeaderViewHolder.LAYOUT_ID
+            NoTabMessage -> NoTabMessageViewHolder.LAYOUT_ID
             is TabItem -> TabViewHolder.LAYOUT_ID
             ArchiveTabs -> ArchiveTabsViewHolder.LAYOUT_ID
             PrivateBrowsingDescription -> PrivateBrowsingDescriptionViewHolder.LAYOUT_ID
@@ -51,6 +54,7 @@ class SessionControlAdapter(
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
             TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, actionEmitter)
+            NoTabMessageViewHolder.LAYOUT_ID -> NoTabMessageViewHolder(view)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, actionEmitter, job)
             ArchiveTabsViewHolder.LAYOUT_ID -> ArchiveTabsViewHolder(view, actionEmitter)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
