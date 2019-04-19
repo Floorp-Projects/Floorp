@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_XULPersist_h
 #define mozilla_dom_XULPersist_h
 
+class nsIXULStore;
+
 namespace mozilla {
 namespace dom {
 
@@ -31,6 +33,7 @@ class XULPersist final : public nsStubDocumentObserver {
   nsresult ApplyPersistentAttributesToElements(const nsAString& aID,
                                                nsCOMArray<Element>& aElements);
 
+  nsCOMPtr<nsIXULStore> mLocalStore;
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   Document* MOZ_NON_OWNING_REF mDocument;
 };
