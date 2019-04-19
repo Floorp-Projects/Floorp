@@ -38,6 +38,7 @@
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/arm64/vixl/Instrument-vixl.h"
+#include "jit/arm64/vixl/MozCachingDecoder.h"
 #include "jit/arm64/vixl/Simulator-Constants-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
 #include "jit/IonTypes.h"
@@ -697,6 +698,9 @@ class Redirection;
 
 class Simulator : public DecoderVisitor {
  public:
+#ifdef JS_CACHE_SIMULATOR_ARM64
+  using Decoder = CachingDecoder;
+#endif
   explicit Simulator(Decoder* decoder, FILE* stream = stdout);
   ~Simulator();
 
@@ -715,6 +719,9 @@ class Simulator : public DecoderVisitor {
   void setGPR64Result(int64_t result);
   void setFP32Result(float result);
   void setFP64Result(double result);
+#ifdef JS_CACHE_SIMULATOR_ARM64
+  void FlushICache();
+#endif
   void VisitCallRedirection(const Instruction* instr);
   static uintptr_t StackLimit() {
     return Simulator::Current()->stackLimit();
@@ -2698,6 +2705,26 @@ class SimulatorProcess
   js::Mutex lock_;
   vixl::Redirection* redirection_;
 
+#ifdef JS_CACHE_SIMULATOR_ARM64
+  // For each simulator, record what other thread registered as instruction
+  // being invalidated.
+  struct ICacheFlush {
+    void* start;
+    size_t length;
+  };
+  using ICacheFlushes = mozilla::Vector<ICacheFlush, 2>;
+  struct SimFlushes {
+    Simulator* thread;
+    ICacheFlushes records;
+  };
+  mozilla::Vector<SimFlushes, 1> pendingFlushes_;
+
+  static void recordICacheFlush(void* start, size_t length);
+  static ICacheFlushes& getICacheFlushes(Simulator* sim);
+  static MOZ_MUST_USE bool registerSimulator(Simulator* sim);
+  static void unregisterSimulator(Simulator* sim);
+#endif
+
   static void setRedirection(vixl::Redirection* redirection) {
     MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
     singleton_->redirection_ = redirection;
@@ -2715,6 +2742,18 @@ class SimulatorProcess
   static void destroy() {
     js_delete(singleton_);
     singleton_ = nullptr;
+  }
+};
+
+// Protects the icache and redirection properties of the simulator.
+class AutoLockSimulatorCache : public js::LockGuard<js::Mutex>
+{
+  using Base = js::LockGuard<js::Mutex>;
+
+ public:
+  explicit AutoLockSimulatorCache()
+    : Base(SimulatorProcess::singleton_->lock_)
+  {
   }
 };
 

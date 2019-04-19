@@ -38,12 +38,9 @@ add_task(async function test_ui_state_signedin() {
   };
 
   gSync.updateAllUI(state);
-
-  let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   let lastSyncTooltip = gSync.formatLastSyncDate(new Date(state.lastSync));
   checkPanelUIStatusBar({
     label: "Foo Bar",
-    tooltip: statusBarTooltip,
     fxastatus: "signedin",
     avatarURL: "https://foo.bar",
     syncing: false,
@@ -68,7 +65,6 @@ add_task(async function test_ui_state_syncing() {
 
   gSync.updateAllUI(state);
 
-  checkSyncNowButton("appMenu-fxa-icon", true);
   checkSyncNowButton("PanelUI-remotetabs-syncnow", true);
 
   // Be good citizens and remove the "syncing" state.
@@ -90,10 +86,8 @@ add_task(async function test_ui_state_unconfigured() {
   gSync.updateAllUI(state);
 
   let signedOffLabel = gSync.appMenuStatus.getAttribute("defaultlabel");
-  let statusBarTooltip = gSync.appMenuStatus.getAttribute("signedinTooltiptext");
   checkPanelUIStatusBar({
     label: signedOffLabel,
-    tooltip: statusBarTooltip,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-setupsync");
   checkMenuBarItem("sync-setup");
@@ -158,7 +152,9 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
   let avatar = document.getElementById("appMenu-fxa-avatar");
 
   is(labelNode.getAttribute("label"), label, "fxa label has the right value");
-  is(tooltipNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
+  if (tooltipNode.getAttribute("tooltiptext")) {
+    is(tooltipNode.getAttribute("tooltiptext"), tooltip, "fxa tooltip has the right value");
+  }
   if (fxastatus) {
     is(statusNode.getAttribute("fxastatus"), fxastatus, "fxa fxastatus has the right value");
   } else {
@@ -168,10 +164,6 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, s
     is(avatar.style.listStyleImage, `url("${avatarURL}")`, "fxa avatar URL is set");
   } else {
     ok(!statusNode.style.listStyleImage, "fxa avatar URL is unset");
-  }
-
-  if (syncing != undefined && syncNowTooltip != undefined) {
-    checkSyncNowButton("appMenu-fxa-icon", syncing, syncNowTooltip);
   }
 }
 
