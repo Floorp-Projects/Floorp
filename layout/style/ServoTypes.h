@@ -10,20 +10,20 @@
 #define mozilla_ServoTypes_h
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/SheetType.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsCoord.h"
 
 struct RawServoFontFaceRule;
 
 namespace mozilla {
+enum class StyleOrigin : uint8_t;
 struct LangGroupFontPrefs;
 }
 
-// used for associating sheet type with specific @font-face rules
+// used for associating origin with specific @font-face rules
 struct nsFontFaceRuleContainer {
   RefPtr<RawServoFontFaceRule> mRule;
-  mozilla::SheetType mSheetType;
+  mozilla::StyleOrigin mOrigin;
 };
 
 namespace mozilla {

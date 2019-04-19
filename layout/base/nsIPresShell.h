@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
@@ -1793,7 +1794,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   void AddUserSheet(mozilla::StyleSheet*);
   void AddAgentSheet(mozilla::StyleSheet*);
   void AddAuthorSheet(mozilla::StyleSheet*);
-  void RemoveSheet(mozilla::SheetType, mozilla::StyleSheet*);
+  void RemoveSheet(mozilla::StyleOrigin, mozilla::StyleSheet*);
   void RemovePreferenceStyles();
 
   void WillDoReflow();
