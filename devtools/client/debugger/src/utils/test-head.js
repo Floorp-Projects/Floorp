@@ -103,7 +103,6 @@ function createSourceObject(
     introductionUrl: props.introductionUrl || null,
     introductionType: props.introductionType || null,
     isExtension: false,
-    actors: [],
     ...(typeof props.text === "string"
       ? {
           text: props.text || "",

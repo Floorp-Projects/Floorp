@@ -11,15 +11,22 @@ import {
   makeSource,
   waitForState
 } from "../../../utils/test-head";
+import { createSource } from "../../tests/helpers/threadClient";
 
 describe("breakpointPositions", () => {
   it("fetches positions", async () => {
+    const fooContent = createSource("foo", "");
+
     const store = createStore({
-      getBreakpointPositions: async () => ({ "9": [1] })
+      getBreakpointPositions: async () => ({ "9": [1] }),
+      sourceContents: async () => fooContent
     });
 
     const { dispatch, getState, cx } = store;
-    await dispatch(actions.newGeneratedSource(makeSource("foo")));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo"))
+    );
+    await dispatch(actions.loadSourceById(cx, source.id));
 
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
 
@@ -48,6 +55,8 @@ describe("breakpointPositions", () => {
   });
 
   it("doesn't re-fetch positions", async () => {
+    const fooContent = createSource("foo", "");
+
     let resolve = _ => {};
     let count = 0;
     const store = createStore({
@@ -55,11 +64,15 @@ describe("breakpointPositions", () => {
         new Promise(r => {
           count++;
           resolve = r;
-        })
+        }),
+      sourceContents: async () => fooContent
     });
 
     const { dispatch, getState, cx } = store;
-    await dispatch(actions.newGeneratedSource(makeSource("foo")));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo"))
+    );
+    await dispatch(actions.loadSourceById(cx, source.id));
 
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
