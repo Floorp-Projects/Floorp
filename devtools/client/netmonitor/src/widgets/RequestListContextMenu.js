@@ -44,6 +44,7 @@ class RequestListContextMenu {
       url,
     } = selectedRequest;
     const {
+      blockSelectedRequestURL,
       connector,
       cloneSelectedRequest,
       sendCustomRequest,
@@ -199,6 +200,13 @@ class RequestListContextMenu {
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
       visible: !!(selectedRequest && !isCustom),
       click: cloneSelectedRequest,
+    });
+
+    menu.push({
+      id: "request-list-context-block-url",
+      label: L10N.getStr("netmonitor.context.blockURL"),
+      visible: !!selectedRequest,
+      click: blockSelectedRequestURL,
     });
 
     menu.push({

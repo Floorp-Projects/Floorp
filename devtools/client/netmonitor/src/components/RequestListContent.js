@@ -50,6 +50,7 @@ const MAX_SCROLL_HEIGHT = 2147483647;
 class RequestListContent extends Component {
   static get propTypes() {
     return {
+      blockSelectedRequestURL: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
       columns: PropTypes.object.isRequired,
       networkDetailsOpen: PropTypes.bool.isRequired,
@@ -265,12 +266,14 @@ class RequestListContent extends Component {
 
     if (!this.contextMenu) {
       const {
+        blockSelectedRequestURL,
         connector,
         cloneSelectedRequest,
         sendCustomRequest,
         openStatistics,
       } = this.props;
       this.contextMenu = new RequestListContextMenu({
+        blockSelectedRequestURL,
         connector,
         cloneSelectedRequest,
         sendCustomRequest,
@@ -359,6 +362,9 @@ module.exports = connect(
     requestFilterTypes: state.filters.requestFilterTypes,
   }),
   (dispatch, props) => ({
+    blockSelectedRequestURL: () => {
+      dispatch(Actions.blockSelectedRequestURL(props.connector));
+    },
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
     sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),

@@ -234,6 +234,15 @@ class FirefoxConnector {
   }
 
   /**
+   * Block future requests matching a filter.
+   *
+   * @param {object} filter request filter specifying what to block
+   */
+  blockRequest(filter) {
+    return this.webConsoleClient.blockRequest(filter);
+  }
+
+  /**
    * Set network preferences to control network flow
    *
    * @param {object} request request payload would like to sent to backend
