@@ -988,8 +988,8 @@ void nsColumnSetFrame::DrainOverflowColumns() {
 void nsColumnSetFrame::FindBestBalanceBSize(
     const ReflowInput& aReflowInput, nsPresContext* aPresContext,
     ReflowConfig& aConfig, ColumnBalanceData& aColData,
-    ReflowOutput& aDesiredSize, bool& aUnboundedLastColumn,
-    bool& aRunWasFeasible, nsReflowStatus& aStatus) {
+    ReflowOutput& aDesiredSize, bool aUnboundedLastColumn, bool aRunWasFeasible,
+    nsReflowStatus& aStatus) {
   bool feasible = aRunWasFeasible;
 
   nsMargin bp = aReflowInput.ComputedPhysicalBorderPadding();
@@ -1129,8 +1129,6 @@ void nsColumnSetFrame::FindBestBalanceBSize(
                                aColData);
     }
   }
-
-  aRunWasFeasible = feasible;
 }
 
 void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,

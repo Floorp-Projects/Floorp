@@ -193,7 +193,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
    *        can be of any height. Used during the first iteration of the
    *        balancing procedure to measure the height of all content in
    *        descendant frames of the column set.
-   * @param aRunWasFeasible An input/output parameter indicating whether or not
+   * @param aRunWasFeasible An input parameter indicating whether or not
    *        the last iteration of the balancing loop was a feasible height to
    *        fit all content from descendant frames.
    * @param aStatus A final reflow status of the column set frame, passed in as
@@ -203,7 +203,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
                             nsPresContext* aPresContext, ReflowConfig& aConfig,
                             ColumnBalanceData& aColData,
                             ReflowOutput& aDesiredSize,
-                            bool& aUnboundedLastColumn, bool& aRunWasFeasible,
+                            bool aUnboundedLastColumn, bool aRunWasFeasible,
                             nsReflowStatus& aStatus);
   /**
    * Reflow column children. Returns true iff the content that was reflowed
