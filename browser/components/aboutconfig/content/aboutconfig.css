@@ -126,6 +126,7 @@ body.config-warning {
 }
 
 .cell-value {
+  overflow-wrap: anywhere;
   white-space: pre-wrap;
   word-break: break-all;
 }
