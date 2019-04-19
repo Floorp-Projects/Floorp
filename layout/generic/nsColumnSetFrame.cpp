@@ -283,8 +283,7 @@ static nscoord GetColumnGap(nsColumnSetFrame* aFrame,
   return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
 }
 
-/* static */
-nscoord nsColumnSetFrame::ClampUsedColumnWidth(const Length& aColumnWidth) {
+static nscoord ClampUsedColumnWidth(const Length& aColumnWidth) {
   // Per spec, used values will be clamped to a minimum of 1px.
   return std::max(CSSPixel::ToAppUnits(1), aColumnWidth.ToAppUnits());
 }
