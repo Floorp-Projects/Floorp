@@ -490,6 +490,8 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   bool IsFinishedOnGraphThread() const { return mFinished; }
   virtual void FinishOnGraphThread();
 
+  bool HasCurrentData() const { return mHasCurrentData; }
+
   /**
    * Find track by track id.
    */
@@ -608,6 +610,13 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    * and fired NotifyFinished notifications.
    */
   bool mNotifiedFinished;
+  /**
+   * True if some data can be present by this stream if/when it's unblocked.
+   * Set by the stream itself on the MediaStreamGraph thread. Only changes
+   * from false to true once a stream has data, since we won't
+   * unblock it until there's more data.
+   */
+  bool mHasCurrentData;
 
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;

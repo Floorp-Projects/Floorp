@@ -49,7 +49,7 @@ class DecodedStreamTrackListener : public MediaStreamTrackListener {
  private:
   const RefPtr<DecodedStreamGraphListener> mGraphListener;
   const RefPtr<SourceMediaStream> mStream;
-  const TrackID mTrackID;
+  const mozilla::TrackID mTrackID;
 };
 
 class DecodedStreamGraphListener {
@@ -65,101 +65,41 @@ class DecodedStreamGraphListener {
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aAudioTrackID)
                                 : nullptr),
+        mAudioTrackID(aAudioTrackID),
         mAudioEndedHolder(std::move(aAudioEndedHolder)),
         mVideoTrackListener(IsTrackIDExplicit(aVideoTrackID)
                                 ? MakeRefPtr<DecodedStreamTrackListener>(
                                       this, aStream, aVideoTrackID)
                                 : nullptr),
+        mVideoTrackID(aVideoTrackID),
         mVideoEndedHolder(std::move(aVideoEndedHolder)),
         mStream(aStream),
-        mAudioTrackID(aAudioTrackID),
-        mVideoTrackID(aVideoTrackID),
         mAbstractMainThread(aMainThread) {
     MOZ_ASSERT(NS_IsMainThread());
     if (mAudioTrackListener) {
       mStream->AddTrackListener(mAudioTrackListener, mAudioTrackID);
     } else {
-      mAudioEnded = true;
       mAudioEndedHolder.ResolveIfExists(true, __func__);
     }
 
     if (mVideoTrackListener) {
       mStream->AddTrackListener(mVideoTrackListener, mVideoTrackID);
     } else {
-      mVideoEnded = true;
       mVideoEndedHolder.ResolveIfExists(true, __func__);
     }
   }
 
   void NotifyOutput(TrackID aTrackID, StreamTime aCurrentTrackTime) {
-    if (aTrackID == mAudioTrackID) {
-      if (aCurrentTrackTime >= mAudioEnd) {
-        mStream->EndTrack(mAudioTrackID);
-      }
-    } else if (aTrackID == mVideoTrackID) {
-      if (aCurrentTrackTime >= mVideoEnd) {
-        mStream->EndTrack(mVideoTrackID);
-      }
-    } else {
-      MOZ_CRASH("Unexpected TrackID");
-    }
-    if (aTrackID != mAudioTrackID && mAudioTrackID != TRACK_NONE &&
-        !mAudioEnded) {
-      // Only audio playout drives the clock forward, if present and live.
+    if (aTrackID != mAudioTrackID && mAudioTrackID != TRACK_NONE) {
+      // Only audio playout drives the clock forward, if present.
       return;
     }
-    MOZ_ASSERT_IF(aTrackID == mAudioTrackID, !mAudioEnded);
-    MOZ_ASSERT_IF(aTrackID == mVideoTrackID, !mVideoEnded);
     mOnOutput.Notify(mStream->StreamTimeToMicroseconds(aCurrentTrackTime));
-  }
-
-  void NotifyEnded(TrackID aTrackID) {
-    if (aTrackID == mAudioTrackID) {
-      mAudioEnded = true;
-    } else if (aTrackID == mVideoTrackID) {
-      mVideoEnded = true;
-    } else {
-      MOZ_CRASH("Unexpected TrackID");
-    }
-    mStream->Graph()->DispatchToMainThreadStableState(
-        NewRunnableMethod<TrackID>(
-            "DecodedStreamGraphListener::DoNotifyTrackEnded", this,
-            &DecodedStreamGraphListener::DoNotifyTrackEnded, aTrackID));
   }
 
   TrackID AudioTrackID() const { return mAudioTrackID; }
 
   TrackID VideoTrackID() const { return mVideoTrackID; }
-
-  /**
-   * Tell the graph listener to end the given track after it has seen at least
-   * aEnd worth of output reported as processed by the graph.
-   *
-   * A StreamTime of STREAM_TIME_MAX indicates that the track has no end and is
-   * the default.
-   *
-   * This method of ending tracks is needed because the MediaStreamGraph
-   * processes ended tracks (through SourceMediaStream::EndTrack) at the
-   * beginning of an iteration, but waits until the end of the iteration to
-   * process any ControlMessages. When such a ControlMessage is a listener that
-   * is to be added to a track that has ended in its very first iteration, the
-   * track ends before the listener tracking this ending is added. This can lead
-   * to a MediaStreamTrack ending on main thread (it uses another listener)
-   * before the listeners to render the track get added, potentially meaning a
-   * media element doesn't progress before reaching the end although data was
-   * available.
-   *
-   * Callable from any thread.
-   */
-  void EndTrackAt(TrackID aTrackID, StreamTime aEnd) {
-    if (aTrackID == mAudioTrackID) {
-      mAudioEnd = aEnd;
-    } else if (aTrackID == mVideoTrackID) {
-      mVideoEnd = aEnd;
-    } else {
-      MOZ_CRASH("Unexpected TrackID");
-    }
-  }
 
   void DoNotifyTrackEnded(TrackID aTrackID) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -202,26 +142,19 @@ class DecodedStreamGraphListener {
 
   // Main thread only.
   RefPtr<DecodedStreamTrackListener> mAudioTrackListener;
+  const TrackID mAudioTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mAudioEndedHolder;
   RefPtr<DecodedStreamTrackListener> mVideoTrackListener;
+  const TrackID mVideoTrackID;
   MozPromiseHolder<DecodedStream::EndedPromise> mVideoEndedHolder;
 
-  // Graph thread only.
-  bool mAudioEnded = false;
-  bool mVideoEnded = false;
-
-  // Any thread.
   const RefPtr<SourceMediaStream> mStream;
-  const TrackID mAudioTrackID;
-  Atomic<StreamTime> mAudioEnd{STREAM_TIME_MAX};
-  const TrackID mVideoTrackID;
-  Atomic<StreamTime> mVideoEnd{STREAM_TIME_MAX};
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 DecodedStreamTrackListener::DecodedStreamTrackListener(
     DecodedStreamGraphListener* aGraphListener, SourceMediaStream* aStream,
-    TrackID aTrackID)
+    mozilla::TrackID aTrackID)
     : mGraphListener(aGraphListener), mStream(aStream), mTrackID(aTrackID) {}
 
 void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
@@ -230,7 +163,10 @@ void DecodedStreamTrackListener::NotifyOutput(MediaStreamGraph* aGraph,
 }
 
 void DecodedStreamTrackListener::NotifyEnded() {
-  mGraphListener->NotifyEnded(mTrackID);
+  mStream->Graph()->DispatchToMainThreadStableState(
+      NewRunnableMethod<mozilla::TrackID>(
+          "DecodedStreamGraphListener::DoNotifyTrackEnded", mGraphListener,
+          &DecodedStreamGraphListener::DoNotifyTrackEnded, mTrackID));
 }
 
 /*
@@ -253,12 +189,6 @@ class DecodedStreamData {
   void Forget();
   nsCString GetDebugInfo();
 
-  void WriteVideoToSegment(layers::Image* aImage, const TimeUnit& aStart,
-                           const TimeUnit& aEnd,
-                           const gfx::IntSize& aIntrinsicSize,
-                           const TimeStamp& aTimeStamp, VideoSegment* aOutput,
-                           const PrincipalHandle& aPrincipalHandle);
-
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
    */
@@ -268,21 +198,11 @@ class DecodedStreamData {
   StreamTime mStreamVideoWritten;
   // Count of audio frames written to the stream in the stream's rate
   StreamTime mStreamAudioWritten;
-  // mNextAudioTime is the end timestamp for the last packet sent to the stream.
-  // Therefore audio packets starting at or after this time need to be copied
+  // mNextVideoTime is the end timestamp for the last packet sent to the stream.
+  // Therefore video packets starting at or after this time need to be copied
   // to the output stream.
+  TimeUnit mNextVideoTime;
   TimeUnit mNextAudioTime;
-  // mLastVideoStartTime is the start timestamp for the last packet sent to the
-  // stream. Therefore video packets starting after this time need to be copied
-  // to the output stream.
-  Maybe<TimeUnit> mLastVideoStartTime;
-  // mLastVideoEndTime is the end timestamp for the last packet sent to the
-  // stream. It is used to adjust durations of chunks sent to the output stream
-  // when there are overlaps in VideoData.
-  Maybe<TimeUnit> mLastVideoEndTime;
-  // The timestamp of the last frame, so we can ensure time never goes
-  // backwards.
-  TimeStamp mLastVideoTimeStamp;
   // The last video image sent to the stream. Useful if we need to replicate
   // the image.
   RefPtr<layers::Image> mLastVideoImage;
@@ -306,6 +226,7 @@ DecodedStreamData::DecodedStreamData(
     : mAudioFramesWritten(0),
       mStreamVideoWritten(0),
       mStreamAudioWritten(0),
+      mNextVideoTime(aInit.mStartTime),
       mNextAudioTime(aInit.mStartTime),
       mHaveSentFinishAudio(false),
       mHaveSentFinishVideo(false),
@@ -359,15 +280,10 @@ nsCString DecodedStreamData::GetDebugInfo() {
   return nsPrintfCString(
       "DecodedStreamData=%p mAudioFramesWritten=%" PRId64
       " mStreamAudioWritten=%" PRId64 " mStreamVideoWritten=%" PRId64
-      " mNextAudioTime=%" PRId64 " mLastVideoStartTime=%" PRId64
-      " mLastVideoEndTime=%" PRId64
-      " mHaveSentFinishAudio=%d mHaveSentFinishVideo=%d",
+      " mNextAudioTime=%" PRId64 " mNextVideoTime=%" PRId64
+      "mHaveSentFinishAudio=%d mHaveSentFinishVideo=%d",
       this, mAudioFramesWritten, mStreamAudioWritten, mStreamVideoWritten,
-      mNextAudioTime.ToMicroseconds(),
-      mLastVideoStartTime.valueOr(TimeUnit::FromMicroseconds(-1))
-          .ToMicroseconds(),
-      mLastVideoEndTime.valueOr(TimeUnit::FromMicroseconds(-1))
-          .ToMicroseconds(),
+      mNextAudioTime.ToMicroseconds(), mNextVideoTime.ToMicroseconds(),
       mHaveSentFinishAudio, mHaveSentFinishVideo);
 }
 
@@ -488,7 +404,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
                                   std::move(videoEndedHolder),
                                   mOutputStreamManager, mAbstractMainThread);
   SyncRunnable::DispatchToThread(
-      SystemGroup::EventTargetFor(TaskCategory::Other), r);
+      SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), r);
   mData = static_cast<R*>(r.get())->ReleaseData();
 
   if (mData) {
@@ -653,36 +569,36 @@ void DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin,
   }
 
   // |mNextAudioTime| is updated as we process each audio sample in
-  // SendStreamAudio().
+  // SendStreamAudio(). This is consistent with how |mNextVideoTime|
+  // is updated for video samples.
   if (output.GetDuration() > 0) {
     mData->mStreamAudioWritten +=
         sourceStream->AppendToTrack(audioTrackId, &output);
   }
 
   if (mAudioQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
-    mData->mListener->EndTrackAt(audioTrackId, mData->mStreamAudioWritten);
+    sourceStream->EndTrack(audioTrackId);
     mData->mHaveSentFinishAudio = true;
   }
 }
 
-void DecodedStreamData::WriteVideoToSegment(
-    layers::Image* aImage, const TimeUnit& aStart, const TimeUnit& aEnd,
-    const gfx::IntSize& aIntrinsicSize, const TimeStamp& aTimeStamp,
-    VideoSegment* aOutput, const PrincipalHandle& aPrincipalHandle) {
+static void WriteVideoToMediaStream(MediaStream* aStream, layers::Image* aImage,
+                                    const TimeUnit& aStart,
+                                    const TimeUnit& aEnd,
+                                    const mozilla::gfx::IntSize& aIntrinsicSize,
+                                    const TimeStamp& aTimeStamp,
+                                    VideoSegment* aOutput,
+                                    const PrincipalHandle& aPrincipalHandle) {
   RefPtr<layers::Image> image = aImage;
-  auto end = mStream->MicrosecondsToStreamTimeRoundDown(aEnd.ToMicroseconds());
+  auto end = aStream->MicrosecondsToStreamTimeRoundDown(aEnd.ToMicroseconds());
   auto start =
-      mStream->MicrosecondsToStreamTimeRoundDown(aStart.ToMicroseconds());
+      aStream->MicrosecondsToStreamTimeRoundDown(aStart.ToMicroseconds());
   aOutput->AppendFrame(image.forget(), aIntrinsicSize, aPrincipalHandle, false,
                        aTimeStamp);
   // Extend this so we get accurate durations for all frames.
   // Because this track is pushed, we need durations so the graph can track
   // when playout of the track has finished.
   aOutput->ExtendLastFrameBy(end - start);
-
-  mLastVideoStartTime = Some(aStart);
-  mLastVideoEndTime = Some(aEnd);
-  mLastVideoTimeStamp = aTimeStamp;
 }
 
 static bool ZeroDurationAtLastChunk(VideoSegment& aInput) {
@@ -720,20 +636,15 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
                        aPrincipalHandle, false, currentTime);
   mData->mStream->AppendToTrack(mInfo.mVideo.mTrackId, &resetter);
 
-  // Consumer buffers have been reset. We now set the next time to the start
+  // Consumer buffers have been reset. We now set mNextVideoTime to the start
   // time of the current frame, so that it can be displayed again on resuming.
   if (RefPtr<VideoData> v = mVideoQueue.PeekFront()) {
-    mData->mLastVideoStartTime = Some(v->mTime - TimeUnit::FromMicroseconds(1));
-    mData->mLastVideoEndTime = Some(v->mTime);
+    mData->mNextVideoTime = v->mTime;
   } else {
-    // There was no current frame in the queue. We set the next time to the
-    // current time, so we at least don't resume starting in the future.
-    mData->mLastVideoStartTime =
-        Some(currentPosition - TimeUnit::FromMicroseconds(1));
-    mData->mLastVideoEndTime = Some(currentPosition);
+    // There was no current frame in the queue. We set the next time to push to
+    // the current time, so we at least don't resume starting in the future.
+    mData->mNextVideoTime = currentPosition;
   }
-
-  mData->mLastVideoTimeStamp = currentTime;
 }
 
 void DecodedStream::SendVideo(bool aIsSameOrigin,
@@ -755,22 +666,15 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
 
   // It's OK to hold references to the VideoData because VideoData
   // is ref-counted.
-  mVideoQueue.GetElementsAfter(
-      mData->mLastVideoStartTime.valueOr(mStartTime.ref()), &video);
+  mVideoQueue.GetElementsAfter(mData->mNextVideoTime, &video);
 
   TimeStamp currentTime;
   TimeUnit currentPosition = GetPosition(&currentTime);
 
-  if (mData->mLastVideoTimeStamp.IsNull()) {
-    mData->mLastVideoTimeStamp = currentTime;
-  }
-
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i];
-    TimeUnit lastStart = mData->mLastVideoStartTime.valueOr(mStartTime.ref());
-    TimeUnit lastEnd = mData->mLastVideoEndTime.valueOr(mStartTime.ref());
 
-    if (lastEnd < v->mTime) {
+    if (mData->mNextVideoTime < v->mTime) {
       // Write last video frame to catch up. mLastVideoImage can be null here
       // which is fine, it just means there's no video.
 
@@ -780,28 +684,25 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
       // video frame). E.g. if we have a video frame that is 30 sec long
       // and capture happens at 15 sec, we'll have to append a black frame
       // that is 15 sec long.
-      TimeStamp t =
-          std::max(mData->mLastVideoTimeStamp,
-                   currentTime + (lastEnd - currentPosition).ToTimeDuration());
-      mData->WriteVideoToSegment(mData->mLastVideoImage, lastEnd, v->mTime,
-                                 mData->mLastVideoImageDisplaySize, t, &output,
-                                 aPrincipalHandle);
-    } else if (lastStart < v->mTime) {
-      // This frame starts after the last frame's start. Note that this could be
-      // before the last frame's end time for some videos. This only matters for
-      // the track's lifetime in the MSG, as rendering is based on timestamps,
-      // aka frame start times.
-      TimeStamp t =
-          std::max(mData->mLastVideoTimeStamp,
-                   currentTime + (lastEnd - currentPosition).ToTimeDuration());
-      TimeUnit end = std::max(
-          v->GetEndTime(),
-          lastEnd + TimeUnit::FromMicroseconds(
-                        sourceStream->StreamTimeToMicroseconds(1) + 1));
+      WriteVideoToMediaStream(
+          sourceStream, mData->mLastVideoImage, mData->mNextVideoTime, v->mTime,
+          mData->mLastVideoImageDisplaySize,
+          currentTime +
+              (mData->mNextVideoTime - currentPosition).ToTimeDuration(),
+          &output, aPrincipalHandle);
+      mData->mNextVideoTime = v->mTime;
+    }
+
+    if (mData->mNextVideoTime < v->GetEndTime()) {
+      WriteVideoToMediaStream(
+          sourceStream, v->mImage, mData->mNextVideoTime, v->GetEndTime(),
+          v->mDisplay,
+          currentTime +
+              (mData->mNextVideoTime - currentPosition).ToTimeDuration(),
+          &output, aPrincipalHandle);
+      mData->mNextVideoTime = v->GetEndTime();
       mData->mLastVideoImage = v->mImage;
       mData->mLastVideoImageDisplaySize = v->mDisplay;
-      mData->WriteVideoToSegment(v->mImage, lastEnd, end, v->mDisplay, t,
-                                 &output, aPrincipalHandle);
     }
   }
 
@@ -821,31 +722,18 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
   }
 
   if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
-    if (!mData->mLastVideoImage) {
-      // We have video, but the video queue finished before we received any
-      // frame. We insert a black frame to progress any consuming
-      // HTMLMediaElement. This mirrors the behavior of VideoSink.
-
-      // Force a frame - can be null
-      compensateEOS = true;
-      // Force frame to be black
-      aIsSameOrigin = false;
-      // Override the frame's size (will be 0x0 otherwise)
-      mData->mLastVideoImageDisplaySize = mInfo.mVideo.mDisplay;
-    }
     if (compensateEOS) {
       VideoSegment endSegment;
       // Calculate the deviation clock time from DecodedStream.
-      // We round the nr of microseconds up, because WriteVideoToSegment
-      // will round the conversion from microseconds to StreamTime down.
-      auto deviation = TimeUnit::FromMicroseconds(
-          sourceStream->StreamTimeToMicroseconds(1) + 1);
-      auto start = mData->mLastVideoEndTime.valueOr(mStartTime.ref());
-      mData->WriteVideoToSegment(
-          mData->mLastVideoImage, start, start + deviation,
-          mData->mLastVideoImageDisplaySize,
-          currentTime + (start + deviation - currentPosition).ToTimeDuration(),
+      auto deviation =
+          FromMicroseconds(sourceStream->StreamTimeToMicroseconds(1));
+      WriteVideoToMediaStream(
+          sourceStream, mData->mLastVideoImage, mData->mNextVideoTime,
+          mData->mNextVideoTime + deviation, mData->mLastVideoImageDisplaySize,
+          currentTime + (mData->mNextVideoTime + deviation - currentPosition)
+                            .ToTimeDuration(),
           &endSegment, aPrincipalHandle);
+      mData->mNextVideoTime += deviation;
       MOZ_ASSERT(endSegment.GetDuration() > 0);
       if (!aIsSameOrigin) {
         endSegment.ReplaceWithDisabled();
@@ -853,7 +741,7 @@ void DecodedStream::SendVideo(bool aIsSameOrigin,
       mData->mStreamVideoWritten +=
           sourceStream->AppendToTrack(videoTrackId, &endSegment);
     }
-    mData->mListener->EndTrackAt(videoTrackId, mData->mStreamVideoWritten);
+    sourceStream->EndTrack(videoTrackId);
     mData->mHaveSentFinishVideo = true;
   }
 }
@@ -894,7 +782,7 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
       return t;
     }
   } else if (aType == TrackInfo::kVideoTrack && mData) {
-    return mData->mLastVideoEndTime.valueOr(mStartTime.ref());
+    return mData->mNextVideoTime;
   }
   return TimeUnit::Zero();
 }
@@ -912,12 +800,7 @@ TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) const {
 
 void DecodedStream::NotifyOutput(int64_t aTime) {
   AssertOwnerThread();
-  TimeUnit time = TimeUnit::FromMicroseconds(aTime);
-  if (time == mLastOutputTime) {
-    return;
-  }
-  MOZ_ASSERT(mLastOutputTime < time);
-  mLastOutputTime = time;
+  mLastOutputTime = FromMicroseconds(aTime);
   auto currentTime = GetPosition();
 
   // Remove audio samples that have been played by MSG from the queue.
