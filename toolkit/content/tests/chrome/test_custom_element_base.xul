@@ -16,10 +16,10 @@
   <simpleelement id="two" style="-moz-user-focus: normal;"/>
   <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
   <button id="four"/>
-  <inherited-element-declarative foo="fuagra"></inherited-element-declarative>
-  <inherited-element-shadowdom-declarative foo="fuagra"></inherited-element-shadowdom-declarative>
-  <inherited-element-imperative foo="fuagra"></inherited-element-imperative>
-  <inherited-element-beforedomloaded foo="fuagra"></inherited-element-beforedomloaded>
+  <inherited-element-declarative foo="fuagra" empty-string=""></inherited-element-declarative>
+  <inherited-element-shadowdom-declarative foo="fuagra" empty-string=""></inherited-element-shadowdom-declarative>
+  <inherited-element-imperative foo="fuagra" empty-string=""></inherited-element-imperative>
+  <inherited-element-beforedomloaded foo="fuagra" empty-string=""></inherited-element-beforedomloaded>
 
   <!-- test code running before page load goes here -->
   <script type="application/javascript"><![CDATA[
@@ -126,7 +126,7 @@
     class InheritsElementDeclarative extends MozXULElement {
       static get inheritedAttributes() {
         return {
-          "label": "text=label,foo,boo,bardo=bar",
+          "label": "text=label,foo,empty-string,bardo=bar",
           "unmatched": "foo", // Make sure we don't throw on unmatched selectors
         };
       }
@@ -144,7 +144,7 @@
     class InheritsElementShadowDOMDeclarative extends MozXULElement {
       static get inheritedAttributes() {
         return {
-          "label": "text=label,foo,boo,bardo=bar",
+          "label": "text=label,foo,empty-string,bardo=bar",
           "unmatched": "foo", // Make sure we don't throw on unmatched selectors
         };
       }
@@ -162,7 +162,7 @@
 
     class InheritsElementImperative extends MozXULElement {
       static get observedAttributes() {
-        return [ "label", "foo", "boo", "bar" ];
+        return [ "label", "foo", "empty-string", "bar" ];
       }
 
       attributeChangedCallback(name, oldValue, newValue) {
@@ -175,11 +175,11 @@
         let map = {
           "label": [[ "label", "text" ]],
           "foo": [[ "label", "foo" ]],
-          "boo": [[ "label", "boo" ]],
+          "empty-string": [[ "label", "empty-string" ]],
           "bar": [[ "label", "bardo" ]],
         };
         for (let attr of InheritsElementImperative.observedAttributes) {
-          this.inheritAttribute(map[attr], this.getAttribute(attr));
+          this.inheritAttribute(map[attr], attr);
         }
       }
 
@@ -197,13 +197,13 @@
     for (let el of [declarativeEl, shadowDOMDeclarativeEl, imperativeEl]) {
       info(`Running checks for ${el.tagName}`);
       is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
-      ok(!el.label.hasAttribute("boo"), "predefined attribute @boo");
+      ok(el.label.hasAttribute("empty-string"), "predefined attribute @empty-string");
       ok(!el.label.hasAttribute("bardo"), "predefined attribute @bardo");
       ok(!el.label.textContent, "predefined attribute @label");
 
-      el.setAttribute("boo", "boo-test");
-      is(el.label.getAttribute("boo"), "boo-test",
-        "attribute inheritance: boo");
+      el.setAttribute("empty-string", "not-empty-anymore");
+      is(el.label.getAttribute("empty-string"), "not-empty-anymore",
+        "attribute inheritance: empty-string");
 
       el.setAttribute("label", "label-test");
       is(el.label.textContent, "label-test",
