@@ -1011,7 +1011,8 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-1proc'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'].append('--disable-e10s')
+            if get_mobile_project(test) not in ['fennec']:
+                test['mozharness']['extra-options'].append('--disable-e10s')
             yield test
 
 
