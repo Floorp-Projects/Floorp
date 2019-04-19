@@ -1033,7 +1033,7 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
 
       if (aUnboundedLastColumn) {
         // The last column is unbounded, so all content got reflowed, so the
-        // mColMaxBSize is feasible.
+        // mMaxBSize is feasible.
         aConfig.mKnownFeasibleBSize =
             std::min(aConfig.mKnownFeasibleBSize, aColData.mMaxBSize);
       }
