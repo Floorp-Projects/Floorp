@@ -1071,9 +1071,8 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
       rdd->LaunchRDDProcess();
 
       bool rddOpened = rdd->CreateContentBridge(OtherPid(), aEndpoint);
-      MOZ_ASSERT(rddOpened);
 
-      if (!rddOpened) {
+      if (NS_WARN_IF(!rddOpened)) {
         *aRv = NS_ERROR_NOT_AVAILABLE;
       }
     } else {
