@@ -40,8 +40,7 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
     already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
     mozilla::net::ReferrerPolicy aReferrerPolicy, mozilla::CORSMode aCORSMode,
     const nsAString& aTitle, const nsAString& aMedia,
-    HasAlternateRel aHasAlternateRel, IsInline aIsInline,
-    IsExplicitlyEnabled aIsExplicitlyEnabled)
+    HasAlternateRel aHasAlternateRel, IsInline aIsInline)
     : mContent(aContent),
       mURI(aURI),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -50,8 +49,7 @@ nsStyleLinkElement::SheetInfo::SheetInfo(
       mTitle(aTitle),
       mMedia(aMedia),
       mHasAlternateRel(aHasAlternateRel == HasAlternateRel::Yes),
-      mIsInline(aIsInline == IsInline::Yes),
-      mIsExplicitlyEnabled(aIsExplicitlyEnabled) {
+      mIsInline(aIsInline == IsInline::Yes) {
   MOZ_ASSERT(!mIsInline || aContent);
   MOZ_ASSERT_IF(aContent, aContent->OwnerDoc() == &aDocument);
 

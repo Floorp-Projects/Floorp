@@ -199,7 +199,6 @@ class Loader final {
   typedef nsIStyleSheetLinkingElement::HasAlternateRel HasAlternateRel;
   typedef nsIStyleSheetLinkingElement::IsAlternate IsAlternate;
   typedef nsIStyleSheetLinkingElement::IsInline IsInline;
-  typedef nsIStyleSheetLinkingElement::IsExplicitlyEnabled IsExplicitlyEnabled;
   typedef nsIStyleSheetLinkingElement::MediaMatched MediaMatched;
   typedef nsIStyleSheetLinkingElement::Update LoadSheetResult;
   typedef nsIStyleSheetLinkingElement::SheetInfo SheetInfo;
@@ -481,8 +480,8 @@ class Loader final {
   //
   // This method will set the sheet's enabled state based on aIsAlternate
   MediaMatched PrepareSheet(StyleSheet* aSheet, const nsAString& aTitle,
-                            const nsAString& aMediaString, dom::MediaList*,
-                            IsAlternate, IsExplicitlyEnabled);
+                            const nsAString& aMediaString,
+                            dom::MediaList* aMediaList, IsAlternate);
 
   // Inserts a style sheet in a document or a ShadowRoot.
   void InsertSheetInTree(StyleSheet& aSheet, nsIContent* aLinkingContent);

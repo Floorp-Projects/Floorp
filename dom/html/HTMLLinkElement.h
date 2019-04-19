@@ -78,8 +78,8 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   virtual bool HasDeferredDNSPrefetchRequest() override;
 
   // WebIDL
-  bool Disabled() const;
-  void SetDisabled(bool aDisabled, ErrorResult& aRv);
+  bool Disabled();
+  void SetDisabled(bool aDisabled);
 
   void GetHref(nsAString& aValue) {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
@@ -170,14 +170,8 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   // nsStyleLinkElement
   Maybe<SheetInfo> GetStyleSheetInfo() final;
 
+ protected:
   RefPtr<nsDOMTokenList> mRelList;
-
-  // The "explicitly enabled" flag. This flag is set whenever the `disabled`
-  // attribute is explicitly unset, and makes alternate stylesheets not be
-  // disabled by default anymore.
-  //
-  // See https://github.com/whatwg/html/issues/3840#issuecomment-481034206.
-  bool mExplicitlyEnabled = false;
 };
 
 }  // namespace dom
