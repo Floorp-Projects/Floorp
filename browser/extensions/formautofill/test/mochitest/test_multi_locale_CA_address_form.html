@@ -80,7 +80,7 @@ function checkElementFilled(element, expectedvalue) {
 
 function checkAutoCompleteInputFilled(element, expectedvalue) {
   return new Promise(resolve => {
-    element.addEventListener("DOMAutoComplete", function onChange() {
+    element.addEventListener("input", function onInput() {
       is(element.value, expectedvalue, "Checking " + element.name + " field");
       resolve();
     }, {once: true});
@@ -125,7 +125,7 @@ add_task(async function setup() {
 
 // Autofill the address with address level 1 code.
 add_task(async function autofill_with_level1_code() {
-  await setInput("#organization-en", "Mozilla Toronto");
+  await setInput("#organization-en", "Mozilla Toront");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
 
@@ -134,7 +134,7 @@ add_task(async function autofill_with_level1_code() {
   let result = Object.assign({}, MOCK_STORAGE[1], {"address-level1": "Ontario"});
   await checkFormFilled("#form-en", result);
 
-  await setInput("#organization-fr", "Mozilla Vancouver");
+  await setInput("#organization-fr", "Mozilla Vancouve");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
 
@@ -148,7 +148,7 @@ add_task(async function autofill_with_level1_code() {
 
 // Autofill the address with address level 1 full name.
 add_task(async function autofill_with_level1_full_name() {
-  await setInput("#organization-en", "ExpoCité");
+  await setInput("#organization-en", "ExpoCit");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
 
@@ -157,7 +157,7 @@ add_task(async function autofill_with_level1_full_name() {
   let result = Object.assign({}, MOCK_STORAGE[3], {"address-level1": "Quebec"});
   await checkFormFilled("#form-en", result);
 
-  await setInput("#organization-fr", "Prince of Wales Northern Heritage");
+  await setInput("#organization-fr", "Prince of Wales");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
 
