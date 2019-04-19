@@ -227,7 +227,7 @@
         },
         {
           "name": "value",
-          "type": "string",
+          "type": "integer",
           "optional": true,
           "description": "An optional string value to record."
         },
