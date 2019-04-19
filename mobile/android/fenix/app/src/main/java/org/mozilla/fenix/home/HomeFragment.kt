@@ -34,6 +34,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.urlToHost
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
@@ -284,7 +285,14 @@ class HomeFragment : Fragment(), CoroutineScope {
                     .filter { (activity as HomeActivity).browsingModeManager.isPrivate == it.private }
                     .map {
                         val selected = it == sessionManager.selectedSession
-                        org.mozilla.fenix.home.sessioncontrol.Tab(it.id, it.url, selected, it.thumbnail)
+                        org.mozilla.fenix.home.sessioncontrol.Tab(
+                            it.id,
+                            it.url,
+                            it.url.urlToHost(),
+                            it.title,
+                            selected,
+                            it.thumbnail
+                        )
                     }
             )
         )

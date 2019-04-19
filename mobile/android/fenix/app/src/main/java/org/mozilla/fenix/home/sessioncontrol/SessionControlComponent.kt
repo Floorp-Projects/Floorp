@@ -40,7 +40,15 @@ class SessionControlComponent(
     }
 }
 
-data class Tab(val sessionId: String, val url: String, val selected: Boolean, val thumbnail: Bitmap? = null)
+data class Tab(
+    val sessionId: String,
+    val url: String,
+    val hostname: String,
+    val title: String,
+    val selected: Boolean,
+    val thumbnail: Bitmap? = null
+)
+
 sealed class Mode {
     object Normal : Mode()
     object Private : Mode()

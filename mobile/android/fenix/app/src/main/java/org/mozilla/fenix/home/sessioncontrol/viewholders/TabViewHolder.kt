@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
+import android.graphics.Outline
 import android.view.View
+import android.view.ViewOutlineProvider
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -15,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -49,20 +52,34 @@ class TabViewHolder(
                 actionEmitter.onNext(TabAction.Close(tab?.sessionId!!))
             }
         }
+
+        favicon_image.clipToOutline = true
+        favicon_image.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View?, outline: Outline?) {
+                outline?.setRoundRect(
+                    0,
+                    0,
+                    view!!.width,
+                    view.height,
+                    view.context.resources.pxToDp(favIconBorderRadiusInPx).toFloat()
+                )
+            }
+        }
     }
 
     fun bindSession(tab: Tab, position: Int) {
         this.tab = tab
         updateTabBackground(position)
-        updateUrl(tab.url)
+        updateText(tab)
         updateSelected(tab.selected)
     }
 
-    fun updateUrl(url: String) {
-        text_url.text = url
+    fun updateText(tab: Tab) {
+        hostname.text = tab.hostname
+        tab_title.text = tab.title
         launch(Dispatchers.IO) {
             val bitmap = favicon_image.context.components.utils.icons
-                .loadIcon(IconRequest(url)).await().bitmap
+                .loadIcon(IconRequest(tab.url)).await().bitmap
             launch(Dispatchers.Main) {
                 favicon_image.setImageBitmap(bitmap)
             }
@@ -75,16 +92,17 @@ class TabViewHolder(
 
     fun updateTabBackground(id: Int) {
         if (tab?.thumbnail != null) {
-            tab_background.setImageBitmap(tab?.thumbnail)
+//            tab_background.setImageBitmap(tab?.thumbnail)
         } else {
             val background = availableBackgrounds[id % availableBackgrounds.size]
-            tab_background.image = ContextCompat.getDrawable(view.context, background)
+            favicon_image.image = ContextCompat.getDrawable(view.context, background)
         }
     }
 
     companion object {
         const val LAYOUT_ID = R.layout.tab_list_row
         const val closeButtonIncreaseDps = 12
+        const val favIconBorderRadiusInPx = 8
 
         private val availableBackgrounds = listOf(
             R.drawable.sessions_01, R.drawable.sessions_02,

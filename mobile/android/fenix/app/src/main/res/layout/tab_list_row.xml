@@ -22,57 +22,68 @@
 
         <ImageView
             android:id="@+id/favicon_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="8dp"
+            android:adjustViewBounds="true"
             android:importantForAccessibility="no"
-            android:minWidth="32dp"
-            android:minHeight="32dp"
+            android:scaleType="centerInside"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/text_url"
+            android:id="@+id/hostname"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
             android:ellipsize="none"
-            android:requiresFadingEdge="horizontal"
             android:singleLine="true"
-            android:textColor="?primaryText"
-            android:textSize="16sp"
+            android:textColor="?secondaryText"
+            android:textSize="12sp"
+            android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@id/close_tab_button"
-            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
             app:layout_constraintTop_toTopOf="@id/favicon_image" />
+
+        <TextView
+            android:id="@+id/tab_title"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="?primaryText"
+            android:textSize="15sp"
+            app:layout_constraintStart_toEndOf="@id/favicon_image"
+            app:layout_constraintEnd_toEndOf="@id/hostname"
+            app:layout_constraintTop_toBottomOf="@id/hostname"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageView
             android:id="@+id/close_tab_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="1dp"
+            android:layout_margin="8dp"
             android:contentDescription="@string/close_tab"
-            android:paddingStart="12dp"
-            android:paddingEnd="10dp"
             android:src="@drawable/ic_close"
-            app:layout_constraintBottom_toBottomOf="@id/text_url"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/text_url" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <org.mozilla.fenix.home.ImageViewTopCrop
-            android:id="@+id/tab_background"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginTop="10dp"
-            android:adjustViewBounds="false"
-            android:focusable="false"
-            android:importantForAccessibility="no"
-            android:scaleType="matrix"
+        <ImageButton
+            android:id="@+id/tab_overflow_button"
+            android:layout_width="@dimen/glyph_button_width"
+            android:layout_height="@dimen/glyph_button_height"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tab_menu"
+            android:src="@drawable/ic_menu"
+            android:translationX="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/favicon_image" />
+            app:layout_constraintTop_toBottomOf="@id/close_tab_button" />
 
         <View
             android:id="@+id/selected_border"
