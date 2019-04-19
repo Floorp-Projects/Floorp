@@ -117,7 +117,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?foundation"
-        android:drawableStart="@drawable/ic_share"
+        android:drawableStart="@drawable/mozac_ic_share"
         android:drawablePadding="14dp"
         android:drawableTint="?primaryText"
         android:paddingStart="20dp"

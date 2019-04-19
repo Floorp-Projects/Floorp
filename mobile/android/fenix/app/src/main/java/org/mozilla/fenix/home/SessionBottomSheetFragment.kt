@@ -67,7 +67,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         }
 
         view.send_and_share_session_button.apply {
-            val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_share)
+            val drawable = ContextCompat.getDrawable(context!!, R.drawable.mozac_ic_share)
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
