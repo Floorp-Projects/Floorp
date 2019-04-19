@@ -760,8 +760,10 @@ function originalToGeneratedId(sourceId) {
   return match ? match[1] : "";
 }
 
+const getMd5 = memoize(url => md5(url));
+
 function generatedToOriginalId(generatedId, url) {
-  return `${generatedId}/originalSource-${md5(url)}`;
+  return `${generatedId}/originalSource-${getMd5(url)}`;
 }
 
 function isOriginalId(id) {
@@ -818,6 +820,20 @@ function getContentType(url) {
     }
   }
   return "text/plain";
+}
+
+function memoize(func) {
+  const map = new Map();
+
+  return arg => {
+    if (map.has(arg)) {
+      return map.get(arg);
+    }
+
+    const result = func(arg);
+    map.set(arg, result);
+    return result;
+  };
 }
 
 module.exports = {
