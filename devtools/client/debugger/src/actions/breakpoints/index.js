@@ -17,7 +17,6 @@ import {
   getBreakpointAtLocation,
   getConditionalPanelLocation,
   getBreakpointsForSource,
-  isEmptyLineInSource,
   getBreakpointsAtLine
 } from "../../selectors";
 import { createXHRBreakpoint } from "../../utils/breakpoint";
@@ -220,17 +219,11 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
       return;
     }
 
-    const bp = getBreakpointAtLocation(state, { line, column: undefined });
-    const isEmptyLine = isEmptyLineInSource(state, line, selectedSource.id);
-
-    if (!bp && isEmptyLine) {
-      return;
-    }
-
     if (getConditionalPanelLocation(getState())) {
       dispatch(closeConditionalPanel());
     }
 
+    const bp = getBreakpointAtLocation(state, { line, column: undefined });
     if (bp) {
       return dispatch(removeBreakpoint(cx, bp));
     }
@@ -254,7 +247,7 @@ export function addBreakpointAtLine(
     const state = getState();
     const source = getSelectedSource(state);
 
-    if (!source || isEmptyLineInSource(state, line, source.id)) {
+    if (!source) {
       return;
     }
     const breakpointLocation = {

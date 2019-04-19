@@ -4,7 +4,7 @@
 
 // @flow
 
-import { findEmptyLines } from "../empty-lines";
+import { findBreakableLines } from "../breakable-lines";
 import { createSourceObject } from "../test-head";
 
 function ml(gLine) {
@@ -12,22 +12,22 @@ function ml(gLine) {
   return { generatedLocation, location: generatedLocation };
 }
 
-describe("emptyLines", () => {
+describe("breakableLines", () => {
   it("no positions", () => {
-    const source = createSourceObject("foo", { text: "\n" });
-    const lines = findEmptyLines(source, []);
-    expect(lines).toEqual([1, 2]);
+    const source = createSourceObject("foo");
+    const lines = findBreakableLines(source, []);
+    expect(lines).toEqual([]);
   });
 
   it("one position", () => {
-    const source = createSourceObject("foo", { text: "\n" });
-    const lines = findEmptyLines(source, [ml(1)]);
-    expect(lines).toEqual([2]);
+    const source = createSourceObject("foo");
+    const lines = findBreakableLines(source, [ml(1)]);
+    expect(lines).toEqual([1]);
   });
 
   it("outside positions are not included", () => {
-    const source = createSourceObject("foo", { text: "\n" });
-    const lines = findEmptyLines(source, [ml(10)]);
-    expect(lines).toEqual([1, 2]);
+    const source = createSourceObject("foo");
+    const lines = findBreakableLines(source, [ml(1), ml(2), ml(10)]);
+    expect(lines).toEqual([1, 2, 10]);
   });
 });
