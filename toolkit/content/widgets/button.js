@@ -224,8 +224,7 @@
       return {
         ".box-inherit": "align,dir,pack,orient",
         ".button-icon": "src=image",
-        ".button-text": "value=label,accesskey,crop,highlightable",
-        ".button-highlightable-text": "text=label,accesskey,crop,highlightable",
+        ".button-text": "value=label,accesskey,crop",
         ".button-menu-dropmarker": "open,disabled,label",
       };
     }
@@ -239,7 +238,6 @@
         <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
           <image class="button-icon"></image>
           <label class="button-text"></label>
-          <label class="button-highlightable-text"></label>
         </hbox>`), true);
       Object.defineProperty(this, "buttonFragment", {value: frag});
       return frag;
@@ -281,7 +279,7 @@
           }
         });
       } else {
-        fragment = MozButton.buttonFragment;
+        fragment = this.constructor.buttonFragment;
       }
 
       this.appendChild(fragment.cloneNode(true));
