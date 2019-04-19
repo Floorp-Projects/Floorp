@@ -19,6 +19,7 @@ a11y:
       - 'main'
     release_channel_collection: opt-out
     keyed: false
+    cpp_guard: 'ACCESSIBILITY'
 
   indicator_acted_on:
     bug_numbers:
@@ -4039,6 +4040,34 @@ telemetry.test:
     record_into_store:
       - 'main'
       - 'sync'
+
+# The following section contains counters for corruption of internal JAR and XPI files.
+corroborate:
+  omnijar_corrupted:
+    bug_numbers:
+      - 1515712
+    description: >-
+          Whether the omni jar (omni.ja) was found to be missing or corrupt when checked during startup.
+    expires: "71"
+    kind: boolean
+    notification_emails:
+      - rhelmer@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
+  system_addons_corrupted:
+    bug_numbers:
+      - 1515712
+    description: >-
+      Whether any system add-on (XPI files) were found to be missing or corrupt when checked during startup.
+    expires: "71"
+    kind: boolean
+    notification_emails:
+      - rhelmer@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
