@@ -7,6 +7,7 @@
 package mozilla.components.feature.readerview.view
 
 import android.content.Context
+import android.graphics.Rect
 import android.support.annotation.IdRes
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.AppCompatButton
@@ -110,6 +111,13 @@ class ReaderViewControlsBar @JvmOverloads constructor(
      */
     override fun hideControls() {
         visibility = View.GONE
+    }
+
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        if (!gainFocus) {
+            hideControls()
+        }
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
     }
 
     private fun bindViews() {

@@ -19,6 +19,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
@@ -132,6 +133,21 @@ class ReaderViewControlsBarTest {
         bar.hideControls()
 
         verify(bar).visibility = View.GONE
+    }
+
+    @Test
+    fun `when focus is lost, hide controls`() {
+        val bar = spy(ReaderViewControlsBar(context))
+
+        bar.clearFocus()
+
+        verify(bar, never()).hideControls()
+
+        bar.requestFocus()
+
+        bar.clearFocus()
+
+        verify(bar).hideControls()
     }
 
     @Test
