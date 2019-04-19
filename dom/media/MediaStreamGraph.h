@@ -655,14 +655,14 @@ class SourceMediaStream : public MediaStream {
 
   // Users of audio inputs go through the stream so it can track when the
   // last stream referencing an input goes away, so it can close the cubeb
-  // input.  Also note: callable on any thread (though it bounces through
-  // MainThread to set the command if needed).
+  // input. Main thread only.
   nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
                           AudioDataListener* aListener);
-  // Note: also implied when Destroy() happens
-  void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
-                       AudioDataListener* aListener);
+  // Main thread only.
+  void CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID);
 
+  // Main thread only.
+  void Destroy() override;
   // MediaStreamGraph thread only
   void DestroyImpl() override;
 

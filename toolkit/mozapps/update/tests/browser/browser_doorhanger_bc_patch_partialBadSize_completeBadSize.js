@@ -1,9 +1,5 @@
 add_task(async function testCompleteAndPartialPatchesWithBadSizes() {
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS, 2],
-  ]});
   let updateParams = "invalidPartialSize=1&invalidCompleteSize=1";
-
   await runUpdateTest(updateParams, 1, [
     {
       // if we fail maxBackgroundErrors download attempts, then we want to

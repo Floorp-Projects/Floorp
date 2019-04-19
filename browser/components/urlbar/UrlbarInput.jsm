@@ -1294,6 +1294,8 @@ class UrlbarInput {
   _on_input() {
     let value = this.textValue;
     this.valueIsTyped = true;
+    let valueIsPasted = this._valueIsPasted;
+    this._valueIsPasted = false;
     this._untrimmedValue = value;
     this.window.gBrowser.userTypedValue = value;
 
@@ -1351,7 +1353,7 @@ class UrlbarInput {
       return;
     }
 
-    let allowAutofill =
+    let allowAutofill = !valueIsPasted &&
       this._maybeAutofillOnInput(value, deletedAutofilledSubstring);
 
     this.startQuery({
@@ -1417,7 +1419,7 @@ class UrlbarInput {
     if (!originalPasteData) {
       return;
     }
-
+    this._valueIsPasted = true;
     let oldValue = this.inputField.value;
     let oldStart = oldValue.substring(0, this.selectionStart);
     // If there is already non-whitespace content in the URL bar
