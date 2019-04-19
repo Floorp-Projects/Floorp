@@ -281,7 +281,7 @@ MozElements.MozElementMixin = Base => {
 
     let list = this.constructor.flippedInheritedAttributes[name];
     if (list) {
-      this.inheritAttribute(list, newValue);
+      this.inheritAttribute(list, name);
     }
   }
 
@@ -306,9 +306,8 @@ MozElements.MozElementMixin = Base => {
 
     this.initializedAttributeInheritance = true;
     for (let attr in flippedInheritedAttributes) {
-      let value = this.getAttribute(attr);
-      if (value) {
-        this.inheritAttribute(flippedInheritedAttributes[attr], value);
+      if (this.hasAttribute(attr)) {
+        this.inheritAttribute(flippedInheritedAttributes[attr], attr);
       }
     }
   }
@@ -318,30 +317,33 @@ MozElements.MozElementMixin = Base => {
    *
    * @param {array} list
    *        An array of (to-element-selector, to-attr) pairs.
-   * @param {string} value
-   *        An attribute value to propagate.
+   * @param {string} attr
+   *        An attribute to propagate.
    */
-  inheritAttribute(list, value) {
+  inheritAttribute(list, attr) {
     if (!this._inheritedElements) {
       this._inheritedElements = {};
     }
 
-    for (let [selector, attr] of list) {
+    let hasAttr = this.hasAttribute(attr);
+    let attrValue = this.getAttribute(attr);
+
+    for (let [selector, newAttr] of list) {
       if (!(selector in this._inheritedElements)) {
         let parent = this.shadowRoot || this;
         this._inheritedElements[selector] = parent.querySelector(selector);
       }
       let el = this._inheritedElements[selector];
       if (el) {
-        if (attr == "text") {
-          el.textContent = value;
-        } else if (value) {
-          el.setAttribute(attr, value);
+        if (newAttr == "text") {
+          el.textContent = hasAttr ? attrValue : "";
+        } else if (hasAttr) {
+          el.setAttribute(newAttr, attrValue);
         } else {
-          el.removeAttribute(attr);
+          el.removeAttribute(newAttr);
         }
 
-        if (attr == "accesskey" && el.formatAccessKey) {
+        if (newAttr == "accesskey" && el.formatAccessKey) {
           el.formatAccessKey(false);
         }
       }
