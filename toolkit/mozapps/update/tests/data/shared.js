@@ -10,38 +10,36 @@
 
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {TelemetryTestUtils} =
-  ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ctypes",
                                "resource://gre/modules/ctypes.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils",
                                "resource://gre/modules/UpdateUtils.jsm");
 
-const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
-const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
-const PREF_APP_UPDATE_BITS_ENABLED         = "app.update.BITS.enabled";
-const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
-const PREF_APP_UPDATE_CHANNEL              = "app.update.channel";
-const PREF_APP_UPDATE_DOORHANGER           = "app.update.doorhanger";
-const PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS = "app.update.download.maxAttempts";
-const PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS    = "app.update.download.attempts";
-const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
-const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
-const PREF_APP_UPDATE_INTERVAL             = "app.update.interval";
-const PREF_APP_UPDATE_LASTUPDATETIME       = "app.update.lastUpdateTime.background-update-timer";
-const PREF_APP_UPDATE_LOG                  = "app.update.log";
-const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
-const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_RETRYTIMEOUT         = "app.update.socket.retryTimeout";
-const PREF_APP_UPDATE_SERVICE_ENABLED      = "app.update.service.enabled";
-const PREF_APP_UPDATE_SILENT               = "app.update.silent";
-const PREF_APP_UPDATE_SOCKET_MAXERRORS     = "app.update.socket.maxErrors";
-const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
-const PREF_APP_UPDATE_URL                  = "app.update.url";
-const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
-const PREF_APP_UPDATE_URL_MANUAL           = "app.update.url.manual";
+const PREF_APP_UPDATE_AUTO                       = "app.update.auto";
+const PREF_APP_UPDATE_BACKGROUNDERRORS           = "app.update.backgroundErrors";
+const PREF_APP_UPDATE_BACKGROUNDMAXERRORS        = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_BITS_ENABLED               = "app.update.BITS.enabled";
+const PREF_APP_UPDATE_CANCELATIONS               = "app.update.cancelations";
+const PREF_APP_UPDATE_CHANNEL                    = "app.update.channel";
+const PREF_APP_UPDATE_DOORHANGER                 = "app.update.doorhanger";
+const PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS     = "app.update.download.attempts";
+const PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS = "app.update.download.maxAttempts";
+const PREF_APP_UPDATE_DISABLEDFORTESTING         = "app.update.disabledForTesting";
+const PREF_APP_UPDATE_IDLETIME                   = "app.update.idletime";
+const PREF_APP_UPDATE_INTERVAL                   = "app.update.interval";
+const PREF_APP_UPDATE_LASTUPDATETIME             = "app.update.lastUpdateTime.background-update-timer";
+const PREF_APP_UPDATE_LOG                        = "app.update.log";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED        = "app.update.notifiedUnsupported";
+const PREF_APP_UPDATE_PROMPTWAITTIME             = "app.update.promptWaitTime";
+const PREF_APP_UPDATE_RETRYTIMEOUT               = "app.update.socket.retryTimeout";
+const PREF_APP_UPDATE_SERVICE_ENABLED            = "app.update.service.enabled";
+const PREF_APP_UPDATE_SILENT                     = "app.update.silent";
+const PREF_APP_UPDATE_SOCKET_MAXERRORS           = "app.update.socket.maxErrors";
+const PREF_APP_UPDATE_STAGING_ENABLED            = "app.update.staging.enabled";
+const PREF_APP_UPDATE_URL                        = "app.update.url";
+const PREF_APP_UPDATE_URL_DETAILS                = "app.update.url.details";
+const PREF_APP_UPDATE_URL_MANUAL                 = "app.update.url.manual";
 
 const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";

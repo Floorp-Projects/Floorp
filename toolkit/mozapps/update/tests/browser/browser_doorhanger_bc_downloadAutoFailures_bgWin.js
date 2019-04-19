@@ -2,6 +2,7 @@ add_task(async function testBackgroundWindowFailures() {
   const maxBackgroundErrors = 5;
   SpecialPowers.pushPrefEnv({set: [
     [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
+    [PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS, 2],
   ]});
 
   let updateParams = "badURL=1";
