@@ -441,6 +441,7 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
   bool mBootstrappedTimingsSet;
 
   nsTArray<HttpTrafficCategory> mTrafficCategory;
+  bool mThroughCaptivePortal;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
