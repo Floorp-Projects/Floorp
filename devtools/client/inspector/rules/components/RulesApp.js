@@ -34,6 +34,7 @@ class RulesApp extends PureComponent {
       onSetClassState: PropTypes.func.isRequired,
       onToggleClassPanelExpanded: PropTypes.func.isRequired,
       onToggleDeclaration: PropTypes.func.isRequired,
+      onTogglePrintSimulation: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
       onToggleSelectorHighlighter: PropTypes.func.isRequired,
       rules: PropTypes.arrayOf(PropTypes.shape(Types.rule)).isRequired,
@@ -183,6 +184,7 @@ class RulesApp extends PureComponent {
           onAddRule: this.props.onAddRule,
           onSetClassState: this.props.onSetClassState,
           onToggleClassPanelExpanded: this.props.onToggleClassPanelExpanded,
+          onTogglePrintSimulation: this.props.onTogglePrintSimulation,
           onTogglePseudoClass: this.props.onTogglePseudoClass,
         }),
         dom.div(

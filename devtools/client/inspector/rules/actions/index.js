@@ -31,6 +31,9 @@ createEnum([
   // Updates the highlighted selector.
   "UPDATE_HIGHLIGHTED_SELECTOR",
 
+  // Updates whether or not the print simulation button is hidden.
+  "UPDATE_PRINT_SIMULATION_HIDDEN",
+
   // Updates the rules state with the new list of CSS rules for the selected element.
   "UPDATE_RULES",
 
