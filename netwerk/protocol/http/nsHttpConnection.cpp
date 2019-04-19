@@ -120,6 +120,8 @@ nsHttpConnection::nsHttpConnection()
   mIdleTimeout = (k5Sec < gHttpHandler->IdleTimeout())
                      ? k5Sec
                      : gHttpHandler->IdleTimeout();
+
+ mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
 nsHttpConnection::~nsHttpConnection() {
@@ -153,6 +155,20 @@ nsHttpConnection::~nsHttpConnection() {
                                         : Telemetry::HTTP_KBREAD_PER_CONN2,
                           totalKBRead);
   }
+
+  if (mThroughCaptivePortal) {
+    if (mTotalBytesRead || mTotalBytesWritten) {
+      auto total = Clamp<uint32_t>(
+          (mTotalBytesRead >> 10) + (mTotalBytesWritten >> 10), 0,
+          std::numeric_limits<uint32_t>::max());
+      Telemetry::ScalarAdd(
+          Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_CAPTIVE_PORTAL, total);
+    }
+
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_HTTP_CONNECTIONS_CAPTIVE_PORTAL, 1);
+  }
+
   if (mForceSendTimer) {
     mForceSendTimer->Cancel();
     mForceSendTimer = nullptr;

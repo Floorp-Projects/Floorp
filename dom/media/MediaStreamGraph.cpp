@@ -761,14 +761,7 @@ void MediaStreamGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
 
 nsresult MediaStreamGraphImpl::OpenAudioInput(CubebUtils::AudioDeviceID aID,
                                               AudioDataListener* aListener) {
-  // So, so, so annoying.  Can't AppendMessage except on Mainthread
-  if (!NS_IsMainThread()) {
-    RefPtr<nsIRunnable> runnable =
-        WrapRunnable(this, &MediaStreamGraphImpl::OpenAudioInput, aID,
-                     RefPtr<AudioDataListener>(aListener));
-    mAbstractMainThread->Dispatch(runnable.forget());
-    return NS_OK;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
   class Message : public ControlMessage {
    public:
     Message(MediaStreamGraphImpl* aGraph, CubebUtils::AudioDeviceID aID,
@@ -845,14 +838,7 @@ void MediaStreamGraphImpl::CloseAudioInputImpl(
 
 void MediaStreamGraphImpl::CloseAudioInput(
     Maybe<CubebUtils::AudioDeviceID>& aID, AudioDataListener* aListener) {
-  // So, so, so annoying.  Can't AppendMessage except on Mainthread
-  if (!NS_IsMainThread()) {
-    RefPtr<nsIRunnable> runnable =
-        WrapRunnable(this, &MediaStreamGraphImpl::CloseAudioInput, aID,
-                     RefPtr<AudioDataListener>(aListener));
-    mAbstractMainThread->Dispatch(runnable.forget());
-    return;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
   class Message : public ControlMessage {
    public:
     Message(MediaStreamGraphImpl* aGraph, Maybe<CubebUtils::AudioDeviceID>& aID,
@@ -2421,25 +2407,32 @@ SourceMediaStream::SourceMediaStream()
 
 nsresult SourceMediaStream::OpenAudioInput(CubebUtils::AudioDeviceID aID,
                                            AudioDataListener* aListener) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
+  MOZ_ASSERT(!mInputListener);
   mInputListener = aListener;
   return GraphImpl()->OpenAudioInput(aID, aListener);
 }
 
-void SourceMediaStream::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID,
-                                        AudioDataListener* aListener) {
-  MOZ_ASSERT(mInputListener == aListener);
-  // Destroy() may have run already and cleared this
-  if (GraphImpl() && mInputListener) {
-    GraphImpl()->CloseAudioInput(aID, aListener);
+void SourceMediaStream::CloseAudioInput(Maybe<CubebUtils::AudioDeviceID>& aID) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GraphImpl());
+  if (!mInputListener) {
+    return;
   }
+  GraphImpl()->CloseAudioInput(aID, mInputListener);
   mInputListener = nullptr;
 }
 
-void SourceMediaStream::DestroyImpl() {
+void SourceMediaStream::Destroy() {
+  MOZ_ASSERT(NS_IsMainThread());
   Maybe<CubebUtils::AudioDeviceID> id = Nothing();
-  CloseAudioInput(id, mInputListener);
+  CloseAudioInput(id);
 
+  MediaStream::Destroy();
+}
+
+void SourceMediaStream::DestroyImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     // Disconnect before we come under mMutex's lock since it can call back
