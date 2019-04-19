@@ -69,6 +69,7 @@ class RequestListContent extends Component {
       openStatistics: PropTypes.func.isRequired,
       scale: PropTypes.number,
       selectedRequest: PropTypes.object,
+      unblockSelectedRequestURL: PropTypes.func.isRequired,
       requestFilterTypes: PropTypes.object.isRequired,
     };
   }
@@ -271,6 +272,7 @@ class RequestListContent extends Component {
         cloneSelectedRequest,
         sendCustomRequest,
         openStatistics,
+        unblockSelectedRequestURL,
       } = this.props;
       this.contextMenu = new RequestListContextMenu({
         blockSelectedRequestURL,
@@ -279,6 +281,7 @@ class RequestListContent extends Component {
         sendCustomRequest,
         openStatistics,
         openRequestInTab: this.openRequestInTab,
+        unblockSelectedRequestURL,
       });
     }
 
@@ -369,6 +372,9 @@ module.exports = connect(
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
     sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),
+    unblockSelectedRequestURL: () => {
+      dispatch(Actions.unblockSelectedRequestURL(props.connector));
+    },
     /**
      * A handler that opens the stack trace tab when a stack trace is available
      */

@@ -240,6 +240,12 @@ const webconsoleSpecPrototype = {
         filter: Arg(0, "json"),
       },
     },
+
+    unblockRequest: {
+      request: {
+        filter: Arg(0, "json"),
+      },
+    },
   },
 };
 
