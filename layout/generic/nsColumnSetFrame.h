@@ -24,31 +24,30 @@ class nsColumnSetFrame final : public nsContainerFrame {
 
   explicit nsColumnSetFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override;
-  virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
-                            nsFrameList& aFrameList) override;
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList& aChildList) override;
+  void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
+  void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    nsFrameList& aFrameList) override;
+  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * Retrieve the available height for content of this frame. The available
    * content height is the available height for the frame, minus borders and
    * padding.
    */
-  virtual nscoord GetAvailableContentBSize(const ReflowInput& aReflowInput);
+  nscoord GetAvailableContentBSize(const ReflowInput& aReflowInput);
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override {
+  nsContainerFrame* GetContentInsertionFrame() override {
     nsIFrame* frame = PrincipalChildList().FirstChild();
 
     // if no children return nullptr
@@ -57,13 +56,13 @@ class nsColumnSetFrame final : public nsContainerFrame {
     return frame->GetContentInsertionFrame();
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eCanContainOverflowContainers));
   }
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   /**
    * Similar to nsBlockFrame::DrainOverflowLines. Locate any columns not
@@ -76,7 +75,7 @@ class nsColumnSetFrame final : public nsContainerFrame {
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("ColumnSet"), aResult);
   }
 #endif

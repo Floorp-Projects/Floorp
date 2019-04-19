@@ -37,20 +37,19 @@ class nsDisplayColumnRule : public nsDisplayItem {
   /**
    * Returns the frame's visual overflow rect instead of the frame's bounds.
    */
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override {
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
     *aSnap = false;
     return static_cast<nsColumnSetFrame*>(mFrame)->CalculateColumnRuleBounds(
         ToReferenceFrame());
   }
 
-  virtual bool CreateWebRenderCommands(
+  bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
   NS_DISPLAY_DECL_NAME("ColumnRule", TYPE_COLUMN_RULE);
 
