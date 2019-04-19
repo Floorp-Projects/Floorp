@@ -91,6 +91,15 @@ class RequestListContextMenu {
     });
 
     copySubmenu.push({
+      id: "request-list-context-copy-as-fetch",
+      label: L10N.getStr("netmonitor.context.copyAsFetch"),
+      accesskey: L10N.getStr("netmonitor.context.copyAsFetch.accesskey"),
+      visible: !!selectedRequest,
+      click: () =>
+        this.copyAsFetch(id, url, method, requestHeaders, requestPostData),
+    });
+
+    copySubmenu.push({
       type: "separator",
       visible: copySubmenu.slice(0, 4).some((subMenu) => subMenu.visible),
     });
@@ -231,6 +240,19 @@ class RequestListContextMenu {
       click: () => openStatistics(true),
     });
 
+    menu.push({
+      type: "separator",
+    });
+
+    menu.push({
+      id: "request-list-context-use-as-fetch",
+      label: L10N.getStr("netmonitor.context.useAsFetch"),
+      accesskey: L10N.getStr("netmonitor.context.useAsFetch.accesskey"),
+      visible: !!selectedRequest,
+      click: () =>
+        this.useAsFetch(id, url, method, requestHeaders, requestPostData),
+    });
+
     showMenu(menu, {
       screenX: event.screenX,
       screenY: event.screenY,
@@ -322,6 +344,107 @@ class RequestListContextMenu {
       postDataText: requestPostData ? requestPostData.postData.text : "",
     };
     copyString(Curl.generateCommand(data));
+  }
+
+  /**
+   * Generate fetch string
+   */
+  async generateFetchString(id, url, method, requestHeaders, requestPostData) {
+    requestHeaders = requestHeaders ||
+      await this.props.connector.requestData(id, "requestHeaders");
+
+    requestPostData = requestPostData ||
+      await this.props.connector.requestData(id, "requestPostData");
+
+    // https://fetch.spec.whatwg.org/#forbidden-header-name
+    const forbiddenHeaders = {
+      "accept-charset": 1,
+      "accept-encoding": 1,
+      "access-control-request-headers": 1,
+      "access-control-request-method": 1,
+      "connection": 1,
+      "content-length": 1,
+      "cookie": 1,
+      "cookie2": 1,
+      "date": 1,
+      "dnt": 1,
+      "expect": 1,
+      "host": 1,
+      "keep-alive": 1,
+      "origin": 1,
+      "referer": 1,
+      "te": 1,
+      "trailer": 1,
+      "transfer-encoding": 1,
+      "upgrade": 1,
+      "via": 1,
+    };
+    const credentialHeaders = {"cookie": 1, "authorization": 1};
+
+    const headers = {};
+    for (const {name, value} of requestHeaders.headers) {
+      if (!forbiddenHeaders[name.toLowerCase()]) {
+        headers[name] = value;
+      }
+    }
+
+    const referrerHeader = requestHeaders.headers.find(
+      ({ name }) => name.toLowerCase() === "referer"
+    );
+
+    const referrerPolicy = requestHeaders.headers.find(
+      ({ name }) => name.toLowerCase() === "referrer-policy"
+    );
+
+    const referrer = referrerHeader ? referrerHeader.value : undefined;
+    const credentials = requestHeaders.headers.some(
+      ({name}) => credentialHeaders[name.toLowerCase()]
+    ) ? "include" : "omit";
+
+    const fetchOptions = {
+      credentials,
+      headers,
+      referrer,
+      referrerPolicy,
+      body: requestPostData.postData.text,
+      method: method,
+      mode: "cors",
+    };
+
+    const options = JSON.stringify(fetchOptions, null, 4);
+    const fetchString = `await fetch("${url}", ${options});`;
+    return fetchString;
+  }
+
+  /**
+   * Copy the currently selected item as fetch request.
+   */
+  async copyAsFetch(id, url, method, requestHeaders, requestPostData) {
+    const fetchString = await this.generateFetchString(
+      id,
+      url,
+      method,
+      requestHeaders,
+      requestPostData
+    );
+    copyString(fetchString);
+  }
+
+  /**
+   * Open split console and fill it with fetch command for selected item
+   */
+  async useAsFetch(id, url, method, requestHeaders, requestPostData) {
+    const fetchString = await this.generateFetchString(
+      id,
+      url,
+      method,
+      requestHeaders,
+      requestPostData
+    );
+    const toolbox = gDevTools.getToolbox(this.props.connector.getTabTarget());
+    await toolbox.openSplitConsole();
+    const { hud } = await toolbox.getPanel("webconsole");
+    hud.setInputValue(fetchString);
   }
 
   /**
