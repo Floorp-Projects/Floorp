@@ -944,7 +944,7 @@ impl CPPExporter {
                     spec_name = name))
                 .format(" \\\n")));
         buffer.push_str("
-enum class BinASTKind {
+enum class BinASTKind: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
@@ -968,7 +968,7 @@ enum class BinASTKind {
                     enum_name = name.to_cpp_enum_case()))
                 .format(" \\\n")));
         buffer.push_str("
-enum class BinASTField {
+enum class BinASTField: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
@@ -995,7 +995,7 @@ enum class BinASTField {
                 .format(" \\\n")));
 
         buffer.push_str("
-enum class BinASTVariant {
+enum class BinASTVariant: uint16_t {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
