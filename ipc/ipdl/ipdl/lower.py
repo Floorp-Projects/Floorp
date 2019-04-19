@@ -1655,6 +1655,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
     def visitProtocol(self, p):
         self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, '') + '.h')
+        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, 'Parent') + '.h')
+        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, 'Child') + '.h')
 
         # Forward declare our own actors.
         self.hdrfile.addthings([
