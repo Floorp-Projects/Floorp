@@ -199,19 +199,6 @@ raptor-tp6-8-firefox:
         extra-options:
             - --test=raptor-tp6-8
 
-raptor-tp6-8-404-firefox:
-    description: "Raptor tp6-8-404 on Firefox"
-    try-name: raptor-tp6-8-404-firefox
-    treeherder-symbol: Rap(tp6-8-404)
-    run-on-projects:
-        by-test-platform:
-            .*shippable(?:-qr)?/opt: built-projects
-            default: ['try', 'mozilla-central']
-    tier: 3
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6-8-404
-
 raptor-tp6-8-firefox-profiling:
     description: "Raptor tp6-8 on Firefox with Gecko Profiling"
     try-name: raptor-tp6-8-firefox-profiling
