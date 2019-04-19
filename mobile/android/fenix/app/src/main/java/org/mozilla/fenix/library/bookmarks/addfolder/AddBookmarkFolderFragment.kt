@@ -97,9 +97,10 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
                     return true
                 }
                 launch(IO) {
-                    requireComponents.core.bookmarksStorage.addFolder(
+                    val newGuid = requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid, bookmark_add_folder_title_edit.text.toString(), null
                     )
+                    sharedViewModel.selectedFolder = requireComponents.core.bookmarksStorage.getTree(newGuid)
                     requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)
                     launch(Main) {
                         Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
