@@ -99,7 +99,7 @@ class ReaderViewControlsBar @JvmOverloads constructor(
     }
 
     /**
-     * Requests visibility and focus of the UI controls.
+     * Updates visibility to [View.VISIBLE] and requests focus for the UI controls.
      */
     override fun showControls() {
         visibility = View.VISIBLE
@@ -107,7 +107,7 @@ class ReaderViewControlsBar @JvmOverloads constructor(
     }
 
     /**
-     * Requests invisibility of the UI controls.
+     * Updates visibility to [View.GONE] of the UI controls.
      */
     override fun hideControls() {
         visibility = View.GONE

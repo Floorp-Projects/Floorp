@@ -7,8 +7,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clickable="true"
-    android:focusable="true"
     tools:background="#ffffffff"
     tools:parentTag="android.support.constraint.ConstraintLayout">
 
@@ -34,9 +32,9 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:contentDescription="@string/mozac_feature_readerview_sans_serif_font_desc"
+            android:textSize="21sp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            tools:state_checked="true"
             android:layout_weight="1" />
 
         <android.support.v7.widget.AppCompatRadioButton
@@ -48,6 +46,7 @@
             android:fontFamily="serif"
             android:gravity="center"
             android:contentDescription="@string/mozac_feature_readerview_serif_font_desc"
+            android:textSize="24sp"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1" />
@@ -101,9 +100,11 @@
         <android.support.v7.widget.AppCompatRadioButton
             android:id="@+id/mozac_feature_readerview_color_dark"
             style="@style/RadioButtonSelectedBorderStyle"
+            android:background="@drawable/radiobutton_color_scheme_dark_selector"
             android:text="@string/mozac_feature_readerview_dark"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:textColor="@color/mozac_feature_readerview_dark_text_color"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
@@ -114,7 +115,9 @@
         <android.support.v7.widget.AppCompatRadioButton
             android:id="@+id/mozac_feature_readerview_color_sepia"
             style="@style/RadioButtonSelectedBorderStyle"
+            android:background="@drawable/radiobutton_color_scheme_sepia_selector"
             android:text="@string/mozac_feature_readerview_sephia"
+            android:textColor="@color/mozac_feature_readerview_text_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -126,7 +129,9 @@
         <android.support.v7.widget.AppCompatRadioButton
             android:id="@+id/mozac_feature_readerview_color_light"
             style="@style/RadioButtonSelectedBorderStyle"
+            android:background="@drawable/radiobutton_color_scheme_light_selector"
             android:text="@string/mozac_feature_readerview_light"
+            android:textColor="@color/mozac_feature_readerview_text_color"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

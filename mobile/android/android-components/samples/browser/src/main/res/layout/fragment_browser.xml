@@ -55,6 +55,7 @@
             android:background="#FFFFFFFF"
             android:elevation="10dp"
             android:visibility="gone"
+            android:layout_gravity="bottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
