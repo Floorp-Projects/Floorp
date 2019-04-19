@@ -406,7 +406,6 @@ WEBIDL_FILES = [
     'BrowserElementDictionaries.webidl',
     'Cache.webidl',
     'CacheStorage.webidl',
-    'CancelContentJSOptions.webidl',
     'CanvasCaptureMediaStream.webidl',
     'CanvasRenderingContext2D.webidl',
     'CaretPosition.webidl',
