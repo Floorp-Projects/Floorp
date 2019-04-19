@@ -83,10 +83,11 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/loopfilter.asm',
             '../../../third_party/dav1d/src/x86/looprestoration.asm',
             '../../../third_party/dav1d/src/x86/mc.asm',
+            '../../../third_party/dav1d/src/x86/msac.asm',
         ]
 
     SOURCES += [
-        '../../../third_party/dav1d/src/x86/cdef_ssse3.asm',
+        '../../../third_party/dav1d/src/x86/cdef_sse.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
         '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
