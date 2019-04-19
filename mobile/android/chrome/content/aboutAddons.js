@@ -9,6 +9,7 @@
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 const AMO_ICON = "chrome://browser/skin/images/amo-logo.png";
 const UPDATE_INDICATOR = "chrome://browser/skin/images/extension-update.svg";
@@ -261,11 +262,32 @@ var Addons = {
     let title = document.createElement("div");
     title.id = "browse-title";
     title.className = "title";
-    title.textContent = gStringBundle.GetStringFromName("addons.browseAll");
+    title.textContent = this._getAmoTitle();
     inner.appendChild(title);
 
     outer.appendChild(inner);
     return outer;
+  },
+
+  // Ensure we get a localized string by using the previous title as a fallback
+  // if the new one has not yet been translated.
+  _getAmoTitle: function _getAmoTitle() {
+    const initialTitleUS = "Browse all Firefox Add-ons";
+    const updatedTitleUS = "Browse Firefox’s Recommended Extensions";
+    const initialTitleLocalized = gStringBundle.GetStringFromName("addons.browseAll");
+    const updatedTitleLocalized = gStringBundle.GetStringFromName("addons.browseRecommended");
+    let title = initialTitleLocalized;
+
+    const titleWasLocalized = updatedTitleLocalized !== updatedTitleUS;
+    const localeIsDefaultUS = updatedTitleLocalized === updatedTitleUS &&
+                              initialTitleLocalized === initialTitleUS;
+
+    if (titleWasLocalized || localeIsDefaultUS) {
+        title = updatedTitleLocalized;
+    }
+
+    EventDispatcher.instance.dispatch("about:addons", {amoTitle: title} );
+    return title;
   },
 
   _createItemForAddon: function _createItemForAddon(aAddon) {
