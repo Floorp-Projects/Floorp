@@ -20,6 +20,7 @@ CompiledModules(
     'pending-breakpoints.js',
     'project-text-search.js',
     'quick-open.js',
+    'source-actors.js',
     'source-tree.js',
     'sources.js',
     'tabs.js',
