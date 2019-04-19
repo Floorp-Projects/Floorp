@@ -9,14 +9,14 @@ const kContract = "@testing/notxpcomtest";
 function run_test() {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
-  ok(Ci.ScriptableWithNotXPCOM);
+  ok(Ci.nsIScriptableWithNotXPCOM);
 
   let method1Called = false;
 
   let testObject = {
-    QueryInterface: ChromeUtils.generateQI([Ci.ScriptableOK,
-                                            Ci.ScriptableWithNotXPCOM,
-                                            Ci.ScriptableWithNotXPCOMBase]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIScriptableOK,
+                                            Ci.nsIScriptableWithNotXPCOM,
+                                            Ci.nsIScriptableWithNotXPCOMBase]),
 
     method1() {
       method1Called = true;
@@ -50,24 +50,24 @@ function run_test() {
   ok(xpcomObject);
   strictEqual(xpcomObject.jsonly, undefined);
 
-  xpcomObject.QueryInterface(Ci.ScriptableOK);
+  xpcomObject.QueryInterface(Ci.nsIScriptableOK);
 
   xpcomObject.method1();
   ok(method1Called);
 
   try {
-    xpcomObject.QueryInterface(Ci.ScriptableWithNotXPCOM);
-    ok(false, "Should not have implemented ScriptableWithNotXPCOM");
+    xpcomObject.QueryInterface(Ci.nsIScriptableWithNotXPCOM);
+    ok(false, "Should not have implemented nsIScriptableWithNotXPCOM");
   } catch (e) {
-    ok(true, "Should not have implemented ScriptableWithNotXPCOM. Correctly threw error: " + e);
+    ok(true, "Should not have implemented nsIScriptableWithNotXPCOM. Correctly threw error: " + e);
   }
   strictEqual(xpcomObject.method2, undefined);
 
   try {
-    xpcomObject.QueryInterface(Ci.ScriptableWithNotXPCOMBase);
-    ok(false, "Should not have implemented ScriptableWithNotXPCOMBase");
+    xpcomObject.QueryInterface(Ci.nsIScriptableWithNotXPCOMBase);
+    ok(false, "Should not have implemented nsIScriptableWithNotXPCOMBase");
   } catch (e) {
-    ok(true, "Should not have implemented ScriptableWithNotXPCOMBase. Correctly threw error: " + e);
+    ok(true, "Should not have implemented nsIScriptableWithNotXPCOMBase. Correctly threw error: " + e);
   }
   strictEqual(xpcomObject.method3, undefined);
 }
