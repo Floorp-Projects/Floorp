@@ -764,6 +764,13 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
     ssd = script->scriptData();
   }
 
+  MOZ_TRY(xdr->codeUint32(&ssd->mainOffset));
+  MOZ_TRY(xdr->codeUint32(&ssd->nfixed));
+  MOZ_TRY(xdr->codeUint32(&ssd->nslots));
+  MOZ_TRY(xdr->codeUint32(&ssd->bodyScopeIndex));
+  MOZ_TRY(xdr->codeUint16(&ssd->funLength));
+  MOZ_TRY(xdr->codeUint16(&ssd->numBytecodeTypeSets));
+
   JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
   JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
 
@@ -826,8 +833,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   uint32_t toStringStart = 0;
   uint32_t toStringEnd = 0;
   uint32_t immutableFlags = 0;
-  uint16_t funLength = 0;
-  uint16_t numBytecodeTypeSets = 0;
 
   // NOTE: |mutableFlags| are not preserved by XDR.
 
@@ -875,9 +880,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     toStringEnd = script->toStringEnd();
 
     immutableFlags = script->immutableFlags_;
-
-    funLength = script->funLength();
-    numBytecodeTypeSets = script->numBytecodeTypeSets();
   }
 
   MOZ_TRY(xdr->codeUint32(&lineno));
@@ -891,8 +893,6 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   MOZ_TRY(xdr->codeUint32(&toStringStart));
   MOZ_TRY(xdr->codeUint32(&toStringEnd));
   MOZ_TRY(xdr->codeUint32(&immutableFlags));
-  MOZ_TRY(xdr->codeUint16(&funLength));
-  MOZ_TRY(xdr->codeUint16(&numBytecodeTypeSets));
 
   RootedScriptSourceObject sourceObject(cx, sourceObjectArg);
   Maybe<CompileOptions> options;
@@ -963,13 +963,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
 
     script->lineno_ = lineno;
     script->column_ = column;
-    script->mainOffset_ = mainOffset;
-    script->nfixed_ = nfixed;
-    script->nslots_ = nslots;
-    script->bodyScopeIndex_ = bodyScopeIndex;
     script->immutableFlags_ = immutableFlags;
-    script->funLength_ = funLength;
-    script->numBytecodeTypeSets_ = numBytecodeTypeSets;
 
     if (script->hasFlag(ImmutableFlags::ArgsHasVarBinding)) {
       // Call setArgumentsHasVarBinding to initialize the
@@ -3462,8 +3456,6 @@ bool JSScript::initFunctionPrototype(JSContext* cx, HandleScript script,
     return false;
   }
 
-  script->numBytecodeTypeSets_ = 0;
-
   RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
   Scope* functionProtoScope = FunctionScope::create(cx, nullptr, false, false,
                                                     functionProto, enclosing);
@@ -3524,8 +3516,6 @@ static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
 }
 
 void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
-  funLength_ = funbox->length;
-
   setFlag(ImmutableFlags::FunHasExtensibleScope, funbox->hasExtensibleScope());
   setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
   setFlag(ImmutableFlags::IsDerivedClassConstructor,
@@ -3574,11 +3564,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 
   // Initialize POD fields
   script->lineno_ = bce->firstLine;
-  script->mainOffset_ = bce->mainOffset();
-  script->nfixed_ = bce->maxFixedSlots;
-  script->nslots_ = nslots;
-  script->bodyScopeIndex_ = bce->bodyScopeIndex;
-  script->numBytecodeTypeSets_ = bce->bytecodeSection().typesetCount();
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
@@ -3603,7 +3588,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   }
 
   // Create and initialize SharedScriptData
-  if (!SharedScriptData::InitFromEmitter(cx, script, bce)) {
+  if (!SharedScriptData::InitFromEmitter(cx, script, bce, nslots)) {
     return false;
   }
   if (!script->shareScriptData(cx)) {
@@ -4227,13 +4212,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   // Copy POD fields
   dst->lineno_ = src->lineno();
   dst->column_ = src->column();
-  dst->mainOffset_ = src->mainOffset();
-  dst->nfixed_ = src->nfixed();
-  dst->nslots_ = src->nslots();
-  dst->bodyScopeIndex_ = src->bodyScopeIndex();
   dst->immutableFlags_ = src->immutableFlags_;
-  dst->funLength_ = src->funLength();
-  dst->numBytecodeTypeSets_ = src->numBytecodeTypeSets();
 
   dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
@@ -4518,7 +4497,8 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 }
 
 /* static */ bool SharedScriptData::InitFromEmitter(
-    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
+    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce,
+    uint32_t nslots) {
   uint32_t natoms = bce->perScriptData().atomIndices()->count();
   uint32_t codeLength = bce->bytecodeSection().code().length();
 
@@ -4532,6 +4512,17 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   }
 
   js::SharedScriptData* data = script->scriptData_;
+
+  // Initialize POD fields
+  data->mainOffset = bce->mainOffset();
+  data->nfixed = bce->maxFixedSlots;
+  data->nslots = nslots;
+  data->bodyScopeIndex = bce->bodyScopeIndex;
+  data->numBytecodeTypeSets = bce->bytecodeSection().typesetCount();
+
+  if (bce->sc->isFunctionBox()) {
+    data->funLength = bce->sc->asFunctionBox()->length;
+  }
 
   // Initialize trailing arrays
   std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
