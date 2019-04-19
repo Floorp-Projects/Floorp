@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyServiceGetter(
 async function flush() {
   try {
     ProfileService.flush();
-    refreshUI();
+    rebuildProfileList();
   } catch (e) {
     let [title, msg, button] = await document.l10n.formatValues([
       { id: "profiles-flush-fail-title" },
@@ -38,7 +38,7 @@ async function flush() {
   }
 }
 
-function refreshUI() {
+function rebuildProfileList() {
   let parent = document.getElementById("profiles");
   while (parent.firstChild) {
     parent.firstChild.remove();
@@ -72,19 +72,6 @@ function refreshUI() {
       isInUse,
     });
   }
-
-  let createButton = document.getElementById("create-button");
-  createButton.onclick = createProfileWizard;
-
-  let restartSafeModeButton = document.getElementById("restart-in-safe-mode-button");
-  if (!Services.policies || Services.policies.isAllowed("safeMode")) {
-    restartSafeModeButton.onclick = function() { restart(true); };
-  } else {
-    restartSafeModeButton.setAttribute("disabled", "true");
-  }
-
-  let restartNormalModeButton = document.getElementById("restart-button");
-  restartNormalModeButton.onclick = function() { restart(false); };
 }
 
 function display(profileData) {
@@ -352,10 +339,23 @@ function restart(safeMode) {
 }
 
 window.addEventListener("DOMContentLoaded", function() {
+  let createButton = document.getElementById("create-button");
+  createButton.addEventListener("click", createProfileWizard);
+
+  let restartSafeModeButton = document.getElementById("restart-in-safe-mode-button");
+  if (!Services.policies || Services.policies.isAllowed("safeMode")) {
+    restartSafeModeButton.addEventListener("click", () => { restart(true); });
+  } else {
+    restartSafeModeButton.setAttribute("disabled", "true");
+  }
+
+  let restartNormalModeButton = document.getElementById("restart-button");
+  restartNormalModeButton.addEventListener("click", () => { restart(false); });
+
   if (ProfileService.isListOutdated) {
     document.getElementById("owned").hidden = true;
   } else {
     document.getElementById("conflict").hidden = true;
-    refreshUI();
+    rebuildProfileList()();
   }
 }, {once: true});
