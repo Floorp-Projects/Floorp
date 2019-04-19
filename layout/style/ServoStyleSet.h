@@ -85,6 +85,9 @@ class ServoStyleSet {
   using Origin = StyleOrigin;
 
  public:
+  static constexpr const StyleOrigin kOrigins[] = {
+      StyleOrigin::UserAgent, StyleOrigin::User, StyleOrigin::Author};
+
   static bool IsInServoTraversal() { return mozilla::IsInServoTraversal(); }
 
 #ifdef DEBUG
@@ -294,8 +297,6 @@ class ServoStyleSet {
 
   template <typename T>
   void EnumerateStyleSheets(T aCb) {
-    const StyleOrigin kOrigins[] = {StyleOrigin::UserAgent, StyleOrigin::User,
-                                    StyleOrigin::Author};
     for (auto origin : kOrigins) {
       for (size_t i = 0, count = SheetCount(origin); i < count; ++i) {
         aCb(*SheetAt(origin, i));
