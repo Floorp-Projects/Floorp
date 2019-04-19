@@ -67,6 +67,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
       private: this._private,
       isThirdPartyTrackingResource: this._isThirdPartyTrackingResource,
       referrerPolicy: this._referrerPolicy,
+      blockedReason: this._blockedReason,
     };
   },
 
@@ -126,6 +127,8 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // Consider as not discarded if networkEvent.discard*Body is undefined
     this._discardRequestBody = !!networkEvent.discardRequestBody;
     this._discardResponseBody = !!networkEvent.discardResponseBody;
+
+    this._blockedReason = networkEvent.blockedReason;
 
     this._truncated = false;
     this._private = networkEvent.private;

@@ -73,7 +73,14 @@ class FirefoxDataProvider {
       fromServiceWorker,
       isThirdPartyTrackingResource,
       referrerPolicy,
+      blockedReason,
     } = data;
+
+    // Insert blocked reason in the payload queue as well, as we'll need it later
+    // when deciding if the request is complete.
+    this.pushRequestToQueue(id, {
+      blockedReason,
+    });
 
     if (this.actionsEnabled && this.actions.addRequest) {
       await this.actions.addRequest(id, {
@@ -93,6 +100,7 @@ class FirefoxDataProvider {
         fromServiceWorker,
         isThirdPartyTrackingResource,
         referrerPolicy,
+        blockedReason,
       }, true);
     }
 
@@ -329,6 +337,7 @@ class FirefoxDataProvider {
       startedDateTime,
       isThirdPartyTrackingResource,
       referrerPolicy,
+      blockedReason,
     } = networkInfo;
 
     await this.addRequest(actor, {
@@ -341,6 +350,7 @@ class FirefoxDataProvider {
       url,
       isThirdPartyTrackingResource,
       referrerPolicy,
+      blockedReason,
     });
 
     this.emit(EVENTS.NETWORK_EVENT, actor);
@@ -411,8 +421,16 @@ class FirefoxDataProvider {
   async onPayloadDataReceived(actor) {
     const payload = this.payloadQueue.get(actor) || {};
 
-    if (!payload.requestHeadersAvailable || !payload.requestCookiesAvailable ||
-        !payload.eventTimingsAvailable || !payload.responseContentAvailable) {
+    // For blocked requests, we should only expect the request portions and not
+    // the response portions to be available.
+    if (!payload.requestHeadersAvailable || !payload.requestCookiesAvailable) {
+      return;
+    }
+    // For unblocked requests, we should wait for all major portions to be available.
+    if (
+      !payload.blockedReason &&
+      (!payload.eventTimingsAvailable || !payload.responseContentAvailable)
+    ) {
       return;
     }
 

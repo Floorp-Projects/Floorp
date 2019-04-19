@@ -325,6 +325,7 @@ class RequestListContent extends Component {
             style: { "--timings-scale": scale, "--timings-rev-scale": 1 / scale },
           },
             displayedRequests.map((item, index) => RequestListItem({
+              blocked: !!item.blockedReason,
               firstRequestStartedMillis,
               fromCache: item.status === "304" || item.fromCache,
               connector,

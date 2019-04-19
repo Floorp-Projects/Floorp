@@ -96,6 +96,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
       fromServiceWorker: actor.fromServiceWorker,
       isThirdPartyTrackingResource: actor.isThirdPartyTrackingResource,
       referrerPolicy: actor.referrerPolicy,
+      blockedReason: actor.blockedReason,
     };
     this._networkRequests.set(actor.actor, networkInfo);
 
