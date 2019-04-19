@@ -490,10 +490,10 @@
 
       // Set resizeafter="farthest" on the splitters if nothing else has been
       // specified.
-      Array.forEach(this.getElementsByTagName("splitter"), function(splitter) {
+      for (let splitter of this.getElementsByTagName("splitter")) {
         if (!splitter.hasAttribute("resizeafter"))
           splitter.setAttribute("resizeafter", "farthest");
-      });
+      }
     }
   }
 

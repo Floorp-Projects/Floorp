@@ -87,7 +87,7 @@ class ByteBufferStream final : public nsIInputStream {
         std::min(uint64_t(mBuffer->Capacity() - mPosition), uint64_t(aCount)));
 
     if (*aCountRead > 0) {
-      memcpy(aBuf, (char*)mBuffer->Address(), *aCountRead);
+      memcpy(aBuf, (char*)mBuffer->Address() + mPosition, *aCountRead);
       mPosition += *aCountRead;
     }
 

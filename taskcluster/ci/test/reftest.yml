@@ -3,10 +3,10 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
-    serviceworker-e10s:
+    variants:
         by-test-platform:
-            linux64/debug: both
-            default: false
+            linux64/debug: ['serviceworker']
+            default: []
     run-on-projects:
         by-test-platform:
             android-em-4.3-arm7-api-16/opt: ['try']

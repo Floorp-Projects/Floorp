@@ -202,13 +202,12 @@
 
 .recording-list-item-duration,
 .recording-list-item-save {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .recording-list-item.selected .recording-list-item-duration,
 .recording-list-item.selected .recording-list-item-save {
-  color: var(--theme-body-color-alt);
-  color: var(--theme-selection-color);
+  color: inherit;
 }
 
 #recordings-list .selected label {
@@ -427,7 +426,7 @@
 .call-tree-host {
   margin-inline-start: 8px !important;
   font-size: 90%;
-  color: var(--theme-content-color2);
+  color: var(--theme-body-color);
 }
 
 .call-tree-category {

@@ -32,7 +32,7 @@
 }
 
 .worker:not(:last-child) {
-  border-bottom: 1px solid var(--theme-body-color-alt);
+  border-bottom: 1px solid var(--theme-text-color-alt);
 }
 
 .worker__header {
@@ -71,5 +71,5 @@
 }
 
 .worker__data__updated {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }

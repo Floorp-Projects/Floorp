@@ -9,7 +9,7 @@
  }
 
  .theme-dark:root {
-  --breadcrumb-id-class-color: var(--theme-content-color1);
+  --breadcrumb-id-class-color: var(--theme-text-color-strong);
   --breadcrumb-pseudo-class-text-color: var(--yellow-50);
  }
 

@@ -1,1 +1,1 @@
-[["warning", "The left expression of the compound assignment is an uninitialized value. The computed value will also be garbage", "clang-analyzer-core.uninitialized.Assign"]]
+[["warning", "The left expression of the compound assignment is an uninitialized value. The computed value will also be garbage", "clang-analyzer-core.uninitialized.Assign"], {"reliability": "medium"}]

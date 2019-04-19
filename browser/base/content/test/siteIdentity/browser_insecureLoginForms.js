@@ -47,9 +47,9 @@ add_task(async function test_simple() {
 
     // Messages should be visible when the scheme is HTTP, and invisible when
     // the scheme is HTTPS.
-    is(Array.every(document.getElementById("identity-popup-mainView")
-                           .querySelectorAll("[when-loginforms=insecure]"),
-                   element => !BrowserTestUtils.is_hidden(element)),
+    is(Array.prototype.every.call(document.getElementById("identity-popup-mainView")
+                                          .querySelectorAll("[when-loginforms=insecure]"),
+                                  element => !BrowserTestUtils.is_hidden(element)),
        expectWarning,
        "The relevant messages should be visible or hidden in the main view.");
 
@@ -85,9 +85,9 @@ add_task(async function test_simple() {
 
     // Messages should be visible when the scheme is HTTP, and invisible when
     // the scheme is HTTPS.
-    is(Array.every(document.getElementById("identity-popup-securityView")
-                           .querySelectorAll("[when-loginforms=insecure]"),
-                   element => !BrowserTestUtils.is_hidden(element)),
+    is(Array.prototype.every.call(document.getElementById("identity-popup-securityView")
+                                          .querySelectorAll("[when-loginforms=insecure]"),
+                                  element => !BrowserTestUtils.is_hidden(element)),
        expectWarning,
        "The relevant messages should be visible or hidden in the security view.");
 
@@ -161,9 +161,9 @@ add_task(async function test_ignoring_window_opener() {
     gIdentityHandler._identityBox.click();
     await promisePanelOpen;
 
-    ok(Array.every(document.getElementById("identity-popup-mainView")
-                           .querySelectorAll("[when-loginforms=insecure]"),
-                   element => BrowserTestUtils.is_hidden(element)),
+    ok(Array.prototype.every.call(document.getElementById("identity-popup-mainView")
+                                          .querySelectorAll("[when-loginforms=insecure]"),
+                                  element => BrowserTestUtils.is_hidden(element)),
        "All messages should be hidden in the main view.");
 
     let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
@@ -195,9 +195,9 @@ add_task(async function test_ignoring_window_opener() {
        "url(\"chrome://browser/skin/controlcenter/connection.svg\")",
        "Using expected icon image in the Control Center subview");
 
-    ok(Array.every(document.getElementById("identity-popup-securityView")
-                           .querySelectorAll("[when-loginforms=insecure]"),
-                   element => BrowserTestUtils.is_hidden(element)),
+    ok(Array.prototype.every.call(document.getElementById("identity-popup-securityView")
+                                          .querySelectorAll("[when-loginforms=insecure]"),
+                                  element => BrowserTestUtils.is_hidden(element)),
        "All messages should be hidden in the security view.");
 
     if (gIdentityHandler._identityPopup.state != "closed") {

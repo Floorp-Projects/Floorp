@@ -179,7 +179,7 @@
   text-overflow: ellipsis;
   display: block;
   order: 3;
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 #filter-container .remove-button {

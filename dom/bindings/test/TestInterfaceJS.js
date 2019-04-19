@@ -85,11 +85,11 @@ TestInterfaceJS.prototype = {
   },
 
   testThrowXraySelfHosted() {
-    this._win.Array.indexOf();
+    this._win.Array.prototype.forEach();
   },
 
   testThrowSelfHosted() {
-    Array.indexOf();
+    Array.prototype.forEach();
   },
 
   testPromiseWithThrowingChromePromiseInit() {

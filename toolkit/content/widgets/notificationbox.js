@@ -54,7 +54,8 @@ MozElements.NotificationBox = class NotificationBox {
 
     var closedNotification = this._closedNotification;
     var notifications = this.stack.getElementsByTagName("notification");
-    return Array.filter(notifications, n => n != closedNotification);
+    return Array.prototype.filter.call(
+      notifications, n => n != closedNotification);
   }
 
   getNotificationWithValue(aValue) {

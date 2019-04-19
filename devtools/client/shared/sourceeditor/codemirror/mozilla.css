@@ -104,8 +104,8 @@
   position: absolute;
   border-top-style: solid;
   border-bottom-style: solid;
-  border-top-color: var(--theme-comment-alt);
-  border-bottom-color: var(--theme-comment-alt);
+  border-top-color: var(--theme-text-color-inactive);
+  border-bottom-color: var(--theme-text-color-inactive);
   border-top-width: 1px;
   border-bottom-width: 1px;
   top: -1px;
@@ -117,13 +117,13 @@
 }
 
 .cm-highlight-full:before {
-  border: 1px solid var(--theme-comment-alt);
+  border: 1px solid var(--theme-text-color-inactive);
 }
 
 .cm-highlight-start:before {
   border-left-width: 1px;
   border-left-style: solid;
-  border-left-color: var(--theme-comment-alt);
+  border-left-color: var(--theme-text-color-inactive);
   margin: 0 0 -1px -1px;
   border-top-left-radius: 2px;
   border-bottom-left-radius: 2px;
@@ -132,7 +132,7 @@
 .cm-highlight-end:before {
   border-right-width: 1px;
   border-right-style: solid;
-  border-right-color: var(--theme-comment-alt);
+  border-right-color: var(--theme-text-color-inactive);
   margin: 0 -1px -1px 0;
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
@@ -175,7 +175,7 @@
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  fill: var(--theme-content-color3);
+  fill: var(--theme-icon-dimmed-color);
   /* make the icons smaller than regular twistys (10->8px) */
   background-size: 8px;
   cursor: pointer;

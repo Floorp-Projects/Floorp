@@ -14,12 +14,12 @@
 }
 
 .theme-light .generic-chart-container {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .chart-colored-blob {
-  fill: var(--theme-content-color2);
-  background: var(--theme-content-color2);
+  fill: var(--theme-body-color);
+  background: var(--theme-body-color);
 }
 
 /* Chart: Pie */
@@ -118,7 +118,7 @@
 }
 
 .table-chart-totals {
-  border-top: 1px solid var(--theme-body-color-alt); /* Grey foreground text */
+  border-top: 1px solid var(--theme-text-color-alt); /* Grey foreground text */
 }
 
 .table-chart-summary-label {

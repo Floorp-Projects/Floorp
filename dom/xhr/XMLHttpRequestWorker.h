@@ -63,6 +63,8 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   bool mMozAnon;
   bool mMozSystem;
 
+  nsString mMimeTypeOverride;
+
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestWorker,

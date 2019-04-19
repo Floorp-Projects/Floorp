@@ -154,7 +154,8 @@ function computeButton(aEvent) {
 }
 
 function sendMouseEvent(aEvent, aTarget, aWindow) {
-  if (!['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].includes(aEvent.type)) {
+  if (!['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover',
+        'mouseout'].includes(aEvent.type)) {
     throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
   }
 

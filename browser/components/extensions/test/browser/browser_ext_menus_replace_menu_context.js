@@ -200,7 +200,7 @@ add_task(async function overrideContext_with_context() {
     ], "Expected menu items after changing context to tab");
 
     let submenu = await openSubmenu(topLevels[0]);
-    is(submenu, topLevels[0].firstElementChild, "Correct submenu opened");
+    is(submenu, topLevels[0].menupopup, "Correct submenu opened");
 
     Assert.deepEqual(getVisibleChildrenIds(submenu), [
       `${makeWidgetId(otherExtension.id)}-menuitem-_tab_context`,
@@ -303,7 +303,7 @@ add_task(async function overrideContext_with_context() {
     ], "Expected menu items after changing context to bookmark");
 
     let submenu = await openSubmenu(topLevels[0]);
-    is(submenu, topLevels[0].firstElementChild, "Correct submenu opened");
+    is(submenu, topLevels[0].menupopup, "Correct submenu opened");
 
     Assert.deepEqual(getVisibleChildrenIds(submenu), [
       `${makeWidgetId(otherExtension.id)}-menuitem-_bookmark_context`,

@@ -43,7 +43,7 @@
 
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint {
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
   position: relative;
   cursor: pointer;
 }

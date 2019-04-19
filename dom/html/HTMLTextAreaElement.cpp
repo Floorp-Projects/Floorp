@@ -43,8 +43,6 @@
 #include "nsBaseCommandController.h"
 #include "nsXULControllers.h"
 
-#define NS_NO_CONTENT_DISPATCH (1 << 0)
-
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 
 namespace mozilla {
@@ -452,18 +450,6 @@ void HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     mHandlingSelect = true;
   }
 
-  // If noContentDispatch is true we will not allow content to handle
-  // this event.  But to allow middle mouse button paste to work we must allow
-  // middle clicks to go to text fields anyway.
-  if (aVisitor.mEvent->mFlags.mNoContentDispatch) {
-    aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
-  }
-  if (aVisitor.mEvent->mMessage == eMouseClick &&
-      aVisitor.mEvent->AsMouseEvent()->button ==
-          WidgetMouseEvent::eMiddleButton) {
-    aVisitor.mEvent->mFlags.mNoContentDispatch = false;
-  }
-
   if (aVisitor.mEvent->mMessage == eBlur) {
     // Set mWantsPreHandleEvent and fire change event in PreHandleEvent to
     // prevent it breaks event target chain creation.
@@ -519,10 +505,6 @@ nsresult HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 
     UpdateState(true);
   }
-
-  // Reset the flag for other content besides this text field
-  aVisitor.mEvent->mFlags.mNoContentDispatch =
-      ((aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH) != 0);
 
   return NS_OK;
 }

@@ -311,11 +311,7 @@ var LoginManagerParent = {
       prompterSvc.browser = target;
 
       for (let win of Services.wm.getEnumerator(null)) {
-        if (!win.gBrowser && !win.getBrowser) {
-          continue;
-        }
-
-        let tabbrowser = win.gBrowser || win.getBrowser();
+        let tabbrowser = win.gBrowser;
         if (tabbrowser) {
           let browser = tabbrowser.getBrowserForOuterWindowID(openerTopWindowID);
           if (browser) {

@@ -18,6 +18,9 @@ const {
   getWaterfallScale,
 } = require("../selectors/index");
 
+loader.lazyRequireGetter(this, "openRequestInTab",
+  "devtools/client/netmonitor/src/utils/firefox/open-request-in-tab",
+  true);
 loader.lazyGetter(this, "setImageTooltip", function() {
   return require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper")
     .setImageTooltip;
@@ -76,6 +79,8 @@ class RequestListContent extends Component {
     this.onScroll = this.onScroll.bind(this);
     this.onResize = this.onResize.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.openRequestInTab = this.openRequestInTab.bind(this);
+    this.onDoubleClick = this.onDoubleClick.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onFocusedNodeChange = this.onFocusedNodeChange.bind(this);
   }
@@ -237,6 +242,23 @@ class RequestListContent extends Component {
     }
   }
 
+  /**
+   * Opens selected item in a new tab.
+   */
+  async openRequestInTab(id, url, requestHeaders, requestPostData) {
+    requestHeaders = requestHeaders ||
+      await this.props.connector.requestData(id, "requestHeaders");
+
+    requestPostData = requestPostData ||
+      await this.props.connector.requestData(id, "requestPostData");
+
+    openRequestInTab(url, requestHeaders, requestPostData);
+  }
+
+  onDoubleClick({ id, url, requestHeaders, requestPostData }) {
+    this.openRequestInTab(id, url, requestHeaders, requestPostData);
+  }
+
   onContextMenu(evt) {
     evt.preventDefault();
     const { selectedRequest, displayedRequests } = this.props;
@@ -253,6 +275,7 @@ class RequestListContent extends Component {
         cloneSelectedRequest,
         sendCustomRequest,
         openStatistics,
+        openRequestInTab: this.openRequestInTab,
       });
     }
 
@@ -309,6 +332,7 @@ class RequestListContent extends Component {
               key: item.id,
               onContextMenu: this.onContextMenu,
               onFocusedNodeChange: this.onFocusedNodeChange,
+              onDoubleClick: () => this.onDoubleClick(item),
               onMouseDown: () => onItemMouseDown(item.id),
               onCauseBadgeMouseDown: () => onCauseBadgeMouseDown(item.cause),
               onSecurityIconMouseDown: () => onSecurityIconMouseDown(item.securityState),

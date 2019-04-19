@@ -355,15 +355,13 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
         NS_FRAME_DRAWING_AS_PAINTSERVER)) {
     AutoSetRestorePaintServerState paintServer(patternWithChildren);
     for (nsIFrame *kid = firstKid; kid; kid = kid->GetNextSibling()) {
+      gfxMatrix tm = *(patternWithChildren->mCTM);
+
       // The CTM of each frame referencing us can be different
       nsSVGDisplayableFrame *SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
-      }
-      gfxMatrix tm = *(patternWithChildren->mCTM);
-      if (kid->GetContent()->IsSVGElement()) {
-        tm = static_cast<SVGElement *>(kid->GetContent())
-                 ->PrependLocalTransformsTo(tm, eUserSpaceToParent);
+        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid, patternWithChildren) * tm;
       }
 
       nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, aImgParams);

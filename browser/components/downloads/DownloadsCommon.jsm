@@ -153,14 +153,14 @@ var DownloadsCommon = {
         strings[stringName] = function() {
           // Convert "arguments" to a real array before calling into XPCOM.
           return sb.formatStringFromName(stringName,
-                                         Array.slice(arguments, 0),
+                                         Array.from(arguments),
                                          arguments.length);
         };
       } else if (stringName in kDownloadsStringsRequiringPluralForm) {
         strings[stringName] = function(aCount) {
           // Convert "arguments" to a real array before calling into XPCOM.
           let formattedString = sb.formatStringFromName(stringName,
-                                         Array.slice(arguments, 0),
+                                         Array.from(arguments),
                                          arguments.length);
           return PluralForm.get(aCount, formattedString);
         };

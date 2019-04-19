@@ -81,10 +81,9 @@ function testColorExistence() {
     "body-background", "sidebar-background", "contrast-background",
     "tab-toolbar-background", "toolbar-background", "selection-background",
     "selection-color", "selection-background-hover", "splitter-color",
-    "comment", "body-color", "body-color-alt", "content-color1", "content-color2",
-    "content-color3", "highlight-green", "highlight-blue", "highlight-bluegrey",
-    "highlight-purple", "highlight-lightorange", "highlight-orange", "highlight-red",
-    "highlight-pink",
+    "comment", "body-color", "text-color-alt", "text-color-inactive", "text-color-strong",
+    "highlight-green", "highlight-blue", "highlight-bluegrey", "highlight-purple",
+    "highlight-lightorange", "highlight-orange", "highlight-red", "highlight-pink",
   ];
 
   for (const type of vars) {

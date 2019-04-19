@@ -14,5 +14,5 @@
   margin: 8px;
   white-space: pre-wrap;
   font-family: var(--monospace-font-family);
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }

@@ -190,7 +190,7 @@ var gDisplay = document.getElementById("display")
 [ 'omta_is', 'omta_todo_is', 'omta_is_approx' ].forEach(function(fn) {
   var origFn = window[fn];
   window[fn] = function() {
-    var args = Array.slice(arguments);
+    var args = Array.from(arguments);
     if (!(args[0] instanceof Element)) {
       args.unshift(gDiv);
     }

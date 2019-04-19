@@ -110,7 +110,7 @@
   font-size: 14px;
   line-height: 30px;
   background: var(--theme-toolbar-background);
-  color: var(--theme-comment-alt);
+  color: var(--theme-text-color-inactive);
   padding: 0 4px;
 }
 

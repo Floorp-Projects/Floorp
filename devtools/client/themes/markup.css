@@ -124,7 +124,7 @@ body.dragging .tag-line {
   /* Offset these by 1000px to make sure they cover the full width of the view */
   width: calc(100% + 1000px);
   left: -1000px;
-  background-color: var(--theme-content-color2);
+  background-color: var(--theme-body-color);
 }
 
 .tag-line.drop-target::before {
@@ -305,7 +305,7 @@ ul.children + .tag-line::before {
 }
 
 .theme-dark .editor.text pre {
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }
 
 /* Whitespace only text nodes are sometimes shown in the markup-view, and when they do
@@ -323,7 +323,7 @@ ul.children + .tag-line::before {
   margin: 0 2px;
   line-height: 7px;
   font-size: 0.6em;
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-text-color-inactive);
   border-radius: 3px;
   border-style: solid;
   border-width: 1px;

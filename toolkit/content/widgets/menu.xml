@@ -44,128 +44,12 @@
     </implementation>
   </binding>
 
-  <binding id="menu-base"
-           extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-
-    <implementation implements="nsIDOMXULContainerElement">
-      <property name="open" onget="return this.hasAttribute('open');">
-        <setter><![CDATA[
-          this.openMenu(val);
-          return val;
-        ]]></setter>
-      </property>
-
-      <!-- nsIDOMXULContainerElement interface -->
-      <method name="appendItem">
-        <parameter name="aLabel"/>
-        <parameter name="aValue"/>
-        <body>
-          var menupopup = this.menupopup;
-          if (!menupopup) {
-            menupopup = this.ownerDocument.createXULElement("menupopup");
-            this.appendChild(menupopup);
-          }
-
-          var menuitem = this.ownerDocument.createXULElement("menuitem");
-          menuitem.setAttribute("label", aLabel);
-          menuitem.setAttribute("value", aValue);
-
-          return menupopup.appendChild(menuitem);
-        </body>
-      </method>
-
-      <property name="itemCount" readonly="true">
-        <getter>
-          var menupopup = this.menupopup;
-          return menupopup ? menupopup.children.length : 0;
-        </getter>
-      </property>
-
-      <method name="getIndexOfItem">
-        <parameter name="aItem"/>
-        <body>
-        <![CDATA[
-          var menupopup = this.menupopup;
-          if (menupopup) {
-            var items = menupopup.children;
-            var length = items.length;
-            for (var index = 0; index < length; ++index) {
-              if (items[index] == aItem)
-                return index;
-            }
-          }
-          return -1;
-        ]]>
-        </body>
-      </method>
-
-      <method name="getItemAtIndex">
-        <parameter name="aIndex"/>
-        <body>
-        <![CDATA[
-          var menupopup = this.menupopup;
-          if (!menupopup || aIndex < 0 || aIndex >= menupopup.children.length)
-            return null;
-
-          return menupopup.children[aIndex];
-        ]]>
-        </body>
-      </method>
-
-      <property name="menupopup" readonly="true">
-        <getter>
-        <![CDATA[
-          const XUL_NS =
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-          for (var child = this.firstElementChild; child; child = child.nextElementSibling) {
-            if (child.namespaceURI == XUL_NS && child.localName == "menupopup")
-              return child;
-          }
-          return null;
-        ]]>
-        </getter>
-      </property>
-    </implementation>
-  </binding>
-
-  <binding id="menu"
-           extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:hbox class="menu-accel-container" anonid="accel">
-        <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
-      </xul:hbox>
-      <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
-        <xul:image/>
-      </xul:hbox>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="menu-menubar"
-           extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
-  <binding id="menu-menubar-iconic"
-           extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:image class="menubar-left" xbl:inherits="src=image"/>
-      <xul:label class="menubar-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
-      <children includes="menupopup"/>
     </content>
   </binding>
 
@@ -194,21 +78,4 @@
     </content>
   </binding>
 
-  <binding id="menu-iconic"
-           extends="chrome://global/content/bindings/menu.xml#menu-base">
-    <content>
-      <xul:hbox class="menu-iconic-left" align="center" pack="center">
-        <xul:image class="menu-iconic-icon" xbl:inherits="src=image"/>
-      </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
-      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right"/>
-      <xul:hbox class="menu-accel-container" anonid="accel">
-        <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
-      </xul:hbox>
-      <xul:hbox align="center" class="menu-right" xbl:inherits="_moz-menuactive,disabled">
-        <xul:image/>
-      </xul:hbox>
-      <children includes="menupopup|template"/>
-    </content>
-  </binding>
 </bindings>

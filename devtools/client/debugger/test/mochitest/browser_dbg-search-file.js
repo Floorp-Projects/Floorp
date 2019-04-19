@@ -49,6 +49,12 @@ add_task(async function() {
   pressKey(dbg, "ShiftEnter");
   is(state.posFrom.line, 3);
 
+  pressKey(dbg, "fileSearchNext");
+  is(state.posFrom.line, 4);
+
+  pressKey(dbg, "fileSearchPrev");
+  is(state.posFrom.line, 3);
+
   pressKey(dbg, "fileSearch");
   type(dbg, "fun");
 

@@ -8,8 +8,6 @@
 interface HTMLDocument : Document {
            [SetterThrows]
            attribute DOMString domain;
-           [Throws]
-           attribute DOMString cookie;
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);

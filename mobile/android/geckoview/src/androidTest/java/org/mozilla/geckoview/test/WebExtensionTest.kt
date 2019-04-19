@@ -112,7 +112,11 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messaging = WebExtension(if (background) MESSAGING_BACKGROUND else MESSAGING_CONTENT,
                 "{${UUID.randomUUID()}}", !background)
-        messaging.setMessageDelegate(messageDelegate, "browser")
+        if (background) {
+            messaging.setMessageDelegate(messageDelegate, "browser")
+        } else {
+            sessionRule.session.setMessageDelegate(messageDelegate, "browser");
+        }
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(messageResult)
@@ -190,7 +194,11 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messaging = WebExtension(if (background) MESSAGING_BACKGROUND else MESSAGING_CONTENT,
                 "{${UUID.randomUUID()}}", !background)
-        messaging.setMessageDelegate(messageDelegate, "browser")
+        if (background) {
+            messaging.setMessageDelegate(messageDelegate, "browser")
+        } else {
+            sessionRule.session.setMessageDelegate(messageDelegate, "browser");
+        }
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
@@ -274,7 +282,11 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = WebExtension(if (background) MESSAGING_BACKGROUND else MESSAGING_CONTENT,
                 "{${UUID.randomUUID()}}", !background)
-        messaging.setMessageDelegate(messageDelegate, "browser")
+        if (background) {
+            messaging.setMessageDelegate(messageDelegate, "browser")
+        } else {
+            sessionRule.session.setMessageDelegate(messageDelegate, "browser");
+        }
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
@@ -356,7 +368,11 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = WebExtension(if (background) MESSAGING_BACKGROUND else MESSAGING_CONTENT,
                 "{${UUID.randomUUID()}}", !background)
-        messaging.setMessageDelegate(messageDelegate, "browser")
+        if (background) {
+            messaging.setMessageDelegate(messageDelegate, "browser")
+        } else {
+            sessionRule.session.setMessageDelegate(messageDelegate, "browser");
+        }
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
@@ -426,7 +442,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = WebExtension("resource://android/assets/web_extensions/messaging-iframe/",
                 "{${UUID.randomUUID()}}", true)
-        messaging.setMessageDelegate(messageDelegate, "browser")
+        sessionRule.session.setMessageDelegate(messageDelegate, "browser");
 
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(portTopLevel)

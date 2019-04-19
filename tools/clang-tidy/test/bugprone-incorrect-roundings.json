@@ -1,1 +1,1 @@
-[["warning", "casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead", "bugprone-incorrect-roundings"]]
+[["warning", "casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead", "bugprone-incorrect-roundings"], {"reliability": "high"}]

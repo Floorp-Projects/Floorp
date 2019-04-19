@@ -38,7 +38,7 @@ function spawnWithObserver(browser, observerFunc, func) {
     "  let gLevel, gArgs, gStyle;",
     "  let expect = function(level) {",
     "    gLevel = level;",
-    "    gArgs = Array.slice(arguments, 1);",
+    "    gArgs = Array.prototype.slice.call(arguments, 1);",
     "  }",
     // To ease the transition to the new format, content.window is avaliable as gWindow
     // in the content.
