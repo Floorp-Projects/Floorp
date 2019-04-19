@@ -36,12 +36,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
 function TestProtocolHandler() {
 }
 TestProtocolHandler.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolHandler) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
   scheme: "moz-test",
   defaultPort: -1,
   protocolFlags: Ci.nsIProtocolHandler.URI_NOAUTH |
@@ -109,12 +104,7 @@ TestFilter.prototype = {
   _port: -1,
   _flags: 0,
   _timeout: 0,
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
   applyFilter: function(pps, uri, pi, cb) {
     var pi_tail = pps.newProxyInfo(this._type, this._host, this._port,
                                    this._flags, this._timeout, null);
@@ -128,12 +118,7 @@ TestFilter.prototype = {
 
 function BasicFilter() {}
 BasicFilter.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
   applyFilter: function(pps, uri, pi, cb) {
     cb.onProxyFilterResult(
       pps.newProxyInfo("http", "localhost", 8080, 0, 10,
@@ -144,12 +129,7 @@ BasicFilter.prototype = {
 
 function BasicChannelFilter() {}
 BasicChannelFilter.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyChannelFilter) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyChannelFilter]),
   applyFilter: function(pps, channel, pi, cb) {
     cb.onProxyFilterResult(
       pps.newProxyInfo("http", channel.URI.host, 7777, 0, 10,
@@ -162,13 +142,7 @@ function resolveCallback() { }
 resolveCallback.prototype = {
   nextFunction: null,
 
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIProtocolProxyCallback,
-                        Ci.nsISupports];
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyCallback]),
 
   onProxyAvailable : function (req, channel, pi, status) {
     this.nextFunction(pi);
@@ -491,13 +465,7 @@ function TestResolveCallback(type, nexttest) {
   this.nexttest = nexttest;
 }
 TestResolveCallback.prototype = {
-  QueryInterface:
-  function TestResolveCallback_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyCallback) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyCallback]),
 
   onProxyAvailable:
   function TestResolveCallback_onProxyAvailable(req, channel, pi, status) {
@@ -658,13 +626,7 @@ function finish_pac_test() {
 function TestResolveCancelationCallback() {
 }
 TestResolveCancelationCallback.prototype = {
-  QueryInterface:
-  function TestResolveCallback_QueryInterface(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyCallback) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyCallback]),
 
   onProxyAvailable:
   function TestResolveCancelationCallback_onProxyAvailable(req, channel, pi, status) {

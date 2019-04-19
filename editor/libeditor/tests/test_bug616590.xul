@@ -40,14 +40,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616590
       this.mEditor = aEditor;
     },
 
-    QueryInterface : function(aIID)
-    {
-      if (aIID.equals(Ci.nsIWebProgressListener) ||
-          aIID.equals(Ci.nsISupportsWeakReference) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_NOINTERFACE;
-    },
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                            Ci.nsISupportsWeakReference]),
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {

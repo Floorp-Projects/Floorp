@@ -22,13 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
     const serv = Cc["@mozilla.org/consoleservice;1"]
                    .getService(Ci.nsIConsoleService);
     var listener = {
-      QueryInterface : function(iid) {
-        if (!iid.equals(Ci.nsISupports) &&
-            !iid.equals(Ci.nsIConsoleListener)) {
-	  throw Cr.NS_NOINTERFACE;
-	}
-	return this;
-      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIConsoleListener]),
       observe : function (msg) { errorLogged = true; }
     };
 
