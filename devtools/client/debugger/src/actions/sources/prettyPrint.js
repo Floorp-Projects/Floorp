@@ -26,12 +26,13 @@ import {
 
 import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type { JsSource, Source, Context } from "../../types";
+import type { JsSource, Source, SourceActor, Context } from "../../types";
 
 export async function prettyPrintSource(
   sourceMaps: typeof SourceMaps,
   prettySource: Source,
-  generatedSource: any
+  generatedSource: Source,
+  actors: Array<SourceActor>
 ) {
   const url = getPrettySourceURL(generatedSource.url);
   const { code, mappings } = await prettyPrint({
@@ -42,8 +43,8 @@ export async function prettyPrintSource(
 
   // The source map URL service used by other devtools listens to changes to
   // sources based on their actor IDs, so apply the mapping there too.
-  for (const sourceActor of generatedSource.actors) {
-    await sourceMaps.applySourceMap(sourceActor.actor, url, code, mappings);
+  for (const { actor } of actors) {
+    await sourceMaps.applySourceMap(actor, url, code, mappings);
   }
   return {
     id: prettySource.id,
@@ -69,8 +70,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
       loadedState: "loading",
       introductionUrl: null,
       introductionType: undefined,
-      isExtension: false,
-      actors: []
+      isExtension: false
     };
 
     dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));

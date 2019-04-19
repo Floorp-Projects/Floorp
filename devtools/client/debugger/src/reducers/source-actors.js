@@ -69,6 +69,11 @@ export default function update(
       state = removeResources(state, items);
       break;
     }
+
+    case "NAVIGATE": {
+      state = initial;
+      break;
+    }
   }
 
   return state;
