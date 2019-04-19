@@ -14,6 +14,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -50,6 +51,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -71,6 +73,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -100,6 +103,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -123,6 +127,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -153,6 +158,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -188,6 +194,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -209,6 +216,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -241,6 +249,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -283,6 +292,7 @@ Object {
       "hasMatchingGeneratedSource": true,
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -305,6 +315,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -335,6 +346,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -359,6 +371,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -389,6 +402,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -430,6 +444,7 @@ Object {
     "hasMatchingGeneratedSource": true,
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -452,6 +467,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -506,6 +522,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -528,6 +545,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -558,6 +576,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -582,6 +601,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -633,6 +653,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -655,6 +676,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -718,6 +740,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -759,6 +782,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -819,6 +843,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -883,6 +908,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -925,6 +951,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -986,6 +1013,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -1174,6 +1202,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -1214,6 +1243,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -1273,6 +1303,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -1582,6 +1613,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -1623,6 +1655,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -1683,6 +1716,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -1745,6 +1779,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -1785,6 +1820,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -1844,6 +1880,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -1876,6 +1913,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -1912,6 +1950,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -1934,6 +1973,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -1963,6 +2003,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -1987,6 +2028,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -2017,6 +2059,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -2052,6 +2095,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -2074,6 +2118,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -2106,6 +2151,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -2144,6 +2190,7 @@ Object {
       "focused": true,
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -2165,6 +2212,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -2196,6 +2244,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -2219,6 +2268,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -2249,6 +2299,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -2286,6 +2337,7 @@ Object {
     "focused": true,
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -2307,6 +2359,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
@@ -2339,6 +2392,7 @@ Object {
     <Connect(SourceIcon)
       source={
         Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -2375,6 +2429,7 @@ Object {
       "focusItem": [MockFunction],
       "item": Object {
         "contents": Object {
+          "actors": Array [],
           "contentType": "text/javascript",
           "id": "server1.conn13.child1/39",
           "introductionType": undefined,
@@ -2397,6 +2452,7 @@ Object {
       "setExpanded": [MockFunction],
       "setProjectDirectoryRoot": [MockFunction],
       "source": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -2426,6 +2482,7 @@ Object {
           item={
             Object {
               "contents": Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -2450,6 +2507,7 @@ Object {
           setProjectDirectoryRoot={[MockFunction]}
           source={
             Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/39",
               "introductionType": undefined,
@@ -2480,6 +2538,7 @@ Object {
           <Connect(SourceIcon)
             source={
               Object {
+                "actors": Array [],
                 "contentType": "text/javascript",
                 "id": "server1.conn13.child1/39",
                 "introductionType": undefined,
@@ -2515,6 +2574,7 @@ Object {
     "focusItem": [MockFunction],
     "item": Object {
       "contents": Object {
+        "actors": Array [],
         "contentType": "text/javascript",
         "id": "server1.conn13.child1/39",
         "introductionType": undefined,
@@ -2537,6 +2597,7 @@ Object {
     "setExpanded": [MockFunction],
     "setProjectDirectoryRoot": [MockFunction],
     "source": Object {
+      "actors": Array [],
       "contentType": "text/javascript",
       "id": "server1.conn13.child1/39",
       "introductionType": undefined,
