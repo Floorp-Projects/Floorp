@@ -19,7 +19,6 @@ a11y:
       - 'main'
     release_channel_collection: opt-out
     keyed: false
-    cpp_guard: 'ACCESSIBILITY'
 
   indicator_acted_on:
     bug_numbers:
