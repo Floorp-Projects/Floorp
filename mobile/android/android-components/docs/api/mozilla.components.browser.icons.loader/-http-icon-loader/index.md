@@ -12,14 +12,8 @@
 |---|---|
 | [&lt;init&gt;](-init-.md) | `HttpIconLoader(httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`)`<br>[IconLoader](../-icon-loader/index.md) implementation that will try to download the icon for resources that point to an http(s) URL. |
 
-### Properties
-
-| Name | Summary |
-|---|---|
-| [source](source.md) | `val source: `[`Source`](../../mozilla.components.browser.icons/-icon/-source/index.md) |
-
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [load](load.md) | `fun load(request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?`<br>Tries to load the [IconRequest.Resource](../../mozilla.components.browser.icons/-icon-request/-resource/index.md) for the given [IconRequest](../../mozilla.components.browser.icons/-icon-request/index.md). |
+| [load](load.md) | `fun load(request: `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)`, resource: `[`Resource`](../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`Result`](../-icon-loader/-result/index.md)<br>Tries to load the [IconRequest.Resource](../../mozilla.components.browser.icons/-icon-request/-resource/index.md) for the given [IconRequest](../../mozilla.components.browser.icons/-icon-request/index.md). |

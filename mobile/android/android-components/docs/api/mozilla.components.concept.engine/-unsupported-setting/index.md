@@ -2,7 +2,7 @@
 
 # UnsupportedSetting
 
-`class UnsupportedSetting<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L170)
+`class UnsupportedSetting<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L176)
 
 ### Constructors
 

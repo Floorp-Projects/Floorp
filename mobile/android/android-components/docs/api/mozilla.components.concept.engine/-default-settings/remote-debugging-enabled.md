@@ -2,7 +2,7 @@
 
 # remoteDebuggingEnabled
 
-`var remoteDebuggingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L164)
+`var remoteDebuggingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L169)
 
 Overrides [Settings.remoteDebuggingEnabled](../-settings/remote-debugging-enabled.md)
 

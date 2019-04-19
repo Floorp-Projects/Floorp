@@ -2,7 +2,7 @@
 
 # InMemoryHistoryStorage
 
-`class InMemoryHistoryStorage : `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L24)
+`class InMemoryHistoryStorage : `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L25)
 
 An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md).
 

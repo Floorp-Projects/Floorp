@@ -1,0 +1,9 @@
+[android-components](../index.md) / [mozilla.components.browser.session.helper](./index.md)
+
+## Package mozilla.components.browser.session.helper
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [onlyIfChanged](only-if-changed.md) | `fun <T> onlyIfChanged(onMainThread: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, map: (`[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md)`) -> `[`T`](only-if-changed.md#T)`?, then: (`[`BrowserState`](../mozilla.components.browser.session.state/-browser-state/index.md)`, `[`T`](only-if-changed.md#T)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Observer`](../mozilla.components.browser.session.store/-observer.md)<br>Creates an [Observer](../mozilla.components.browser.session.store/-observer.md) that will map the received [BrowserState](../mozilla.components.browser.session.state/-browser-state/index.md) to [T](only-if-changed.md#T) (using [map](only-if-changed.md#mozilla.components.browser.session.helper$onlyIfChanged(kotlin.Boolean, kotlin.Function1((mozilla.components.browser.session.state.BrowserState, mozilla.components.browser.session.helper.onlyIfChanged.T)), kotlin.Function2((mozilla.components.browser.session.state.BrowserState, mozilla.components.browser.session.helper.onlyIfChanged.T, kotlin.Unit)))/map)) and will invoke the callback [then](only-if-changed.md#mozilla.components.browser.session.helper$onlyIfChanged(kotlin.Boolean, kotlin.Function1((mozilla.components.browser.session.state.BrowserState, mozilla.components.browser.session.helper.onlyIfChanged.T)), kotlin.Function2((mozilla.components.browser.session.state.BrowserState, mozilla.components.browser.session.helper.onlyIfChanged.T, kotlin.Unit)))/then) only if the value has changed from the last mapped value. |

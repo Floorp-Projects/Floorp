@@ -2,7 +2,7 @@
 
 # ReaderViewControlsBar
 
-`class ReaderViewControlsBar : ConstraintLayout, `[`ReaderViewControlsView`](../-reader-view-controls-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsBar.kt#L26)
+`class ReaderViewControlsBar : ConstraintLayout, `[`ReaderViewControlsView`](../-reader-view-controls-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsBar.kt#L27)
 
 A customizable ReaderView control bar implementing [ReaderViewControlsView](../-reader-view-controls-view/index.md).
 
@@ -23,6 +23,7 @@ A customizable ReaderView control bar implementing [ReaderViewControlsView](../-
 | Name | Summary |
 |---|---|
 | [hideControls](hide-controls.md) | `fun hideControls(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests invisibility of the UI controls. |
+| [onFocusChanged](on-focus-changed.md) | `fun onFocusChanged(gainFocus: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, direction: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, previouslyFocusedRect: `[`Rect`](https://developer.android.com/reference/android/graphics/Rect.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setColorScheme](set-color-scheme.md) | `fun setColorScheme(scheme: `[`ColorScheme`](../../mozilla.components.feature.readerview/-reader-view-feature/-config/-color-scheme/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the color scheme of the current and future ReaderView sessions. |
 | [setFont](set-font.md) | `fun setFont(font: `[`FontType`](../../mozilla.components.feature.readerview/-reader-view-feature/-config/-font-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the font type of the current and future ReaderView sessions. |
 | [setFontSize](set-font-size.md) | `fun setFontSize(size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the font size of the current and future ReaderView sessions. |

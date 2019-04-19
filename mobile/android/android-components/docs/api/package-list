@@ -97,6 +97,8 @@ mozilla.components.browser.icons.decoder
 mozilla.components.browser.icons.decoder.ico
 mozilla.components.browser.icons.generator
 mozilla.components.browser.icons.loader
+mozilla.components.browser.icons.preparer
+mozilla.components.browser.icons.processor
 mozilla.components.browser.menu
 mozilla.components.browser.menu.item
 mozilla.components.browser.search
@@ -105,9 +107,14 @@ mozilla.components.browser.search.provider.filter
 mozilla.components.browser.search.provider.localization
 mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
+mozilla.components.browser.session.action
 mozilla.components.browser.session.ext
+mozilla.components.browser.session.helper
 mozilla.components.browser.session.manifest
+mozilla.components.browser.session.selector
+mozilla.components.browser.session.state
 mozilla.components.browser.session.storage
+mozilla.components.browser.session.store
 mozilla.components.browser.session.tab
 mozilla.components.browser.storage.memory
 mozilla.components.browser.storage.sync
@@ -172,6 +179,7 @@ mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
 mozilla.components.lib.publicsuffixlist
 mozilla.components.service.experiments
+mozilla.components.service.experiments.debug
 mozilla.components.service.fretboard
 mozilla.components.service.fretboard.scheduler.jobscheduler
 mozilla.components.service.fretboard.scheduler.workmanager
