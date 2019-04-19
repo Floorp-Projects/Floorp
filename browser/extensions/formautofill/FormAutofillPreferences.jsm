@@ -79,7 +79,7 @@ FormAutofillPreferences.prototype = {
     let addressAutofillCheckboxGroup = document.createXULElement("hbox");
     let addressAutofillCheckbox = document.createXULElement("checkbox");
     let addressAutofillLearnMore = document.createXULElement("label", {is: "text-link"});
-    let savedAddressesBtn = document.createXULElement("button");
+    let savedAddressesBtn = document.createXULElement("button", {is: "highlightable-button"});
     // Wrappers are used to properly compute the search tooltip positions
     let savedAddressesBtnWrapper = document.createXULElement("hbox");
     let savedCreditCardsBtnWrapper = document.createXULElement("hbox");
@@ -138,7 +138,7 @@ FormAutofillPreferences.prototype = {
       let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
       let creditCardAutofillCheckbox = document.createXULElement("checkbox");
       let creditCardAutofillLearnMore = document.createXULElement("label", {is: "text-link"});
-      let savedCreditCardsBtn = document.createXULElement("button");
+      let savedCreditCardsBtn = document.createXULElement("button", {is: "highlightable-button"});
       savedCreditCardsBtn.className = "accessory-button";
       creditCardAutofillCheckbox.className = "tail-with-learn-more";
       creditCardAutofillLearnMore.className = "learnMore";
