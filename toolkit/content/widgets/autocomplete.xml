@@ -45,14 +45,7 @@
         this._searchCompleteHandler = this.initEventHandler("searchcomplete");
         this._textEnteredHandler = this.initEventHandler("textentered");
         this._textRevertedHandler = this.initEventHandler("textreverted");
-
-        // For security reasons delay searches on pasted values.
-        this.inputField.controllers.insertControllerAt(0, this._pasteController);
       ]]></constructor>
-
-      <destructor><![CDATA[
-        this.inputField.controllers.removeController(this._pasteController);
-      ]]></destructor>
 
       <!-- =================== nsIAutoCompleteInput =================== -->
 
@@ -113,18 +106,8 @@
                 onget="var m = parseInt(this.getAttribute('minresultsforpopup')); return isNaN(m) ? 1 : m;"/>
 
       <property name="timeout"
-                onset="this.setAttribute('timeout', val); return val;">
-        <getter><![CDATA[
-          // For security reasons delay searches on pasted values.
-          if (this._valueIsPasted) {
-            let t = parseInt(this.getAttribute("pastetimeout"));
-            return isNaN(t) ? 1000 : t;
-          }
-
-          let t = parseInt(this.getAttribute("timeout"));
-          return isNaN(t) ? 50 : t;
-        ]]></getter>
-      </property>
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('timeout')); return isNaN(t) ? 50 : t;"/>
 
       <property name="searchParam"
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
@@ -553,25 +536,6 @@
           this.removeAttribute("actiontype");
         ]]></body>
       </method>
-
-      <field name="_valueIsPasted">false</field>
-      <field name="_pasteController"><![CDATA[
-        ({
-          _autocomplete: this,
-          _kGlobalClipboard: Ci.nsIClipboard.kGlobalClipboard,
-          supportsCommand: aCommand => aCommand == "cmd_paste",
-          doCommand(aCommand) {
-            this._autocomplete._valueIsPasted = true;
-            this._autocomplete.editor.paste(this._kGlobalClipboard);
-            this._autocomplete._valueIsPasted = false;
-          },
-          isCommandEnabled(aCommand) {
-            return this._autocomplete.editor.isSelectionEditable &&
-                   this._autocomplete.editor.canPaste(this._kGlobalClipboard);
-          },
-          onEvent() {},
-        })
-      ]]></field>
 
       <method name="_setValueInternal">
         <parameter name="aValue"/>
