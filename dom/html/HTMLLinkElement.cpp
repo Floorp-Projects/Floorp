@@ -85,12 +85,18 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLLinkElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLLinkElement)
 
-bool HTMLLinkElement::Disabled() {
+bool HTMLLinkElement::Disabled() const {
+  if (StaticPrefs::dom_link_disabled_attribute_enabled()) {
+    return GetBoolAttr(nsGkAtoms::disabled);
+  }
   StyleSheet* ss = GetSheet();
   return ss && ss->Disabled();
 }
 
-void HTMLLinkElement::SetDisabled(bool aDisabled) {
+void HTMLLinkElement::SetDisabled(bool aDisabled, ErrorResult& aRv) {
+  if (StaticPrefs::dom_link_disabled_attribute_enabled()) {
+    return SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aRv);
+  }
   if (StyleSheet* ss = GetSheet()) {
     ss->SetDisabled(aDisabled);
   }
@@ -314,7 +320,9 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
          aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
          aName == nsGkAtoms::type || aName == nsGkAtoms::as ||
-         aName == nsGkAtoms::crossorigin)) {
+         aName == nsGkAtoms::crossorigin ||
+         (aName == nsGkAtoms::disabled &&
+          StaticPrefs::dom_link_disabled_attribute_enabled()))) {
       bool dropSheet = false;
       if (aName == nsGkAtoms::rel) {
         nsAutoString value;
@@ -338,18 +346,25 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
       const bool forceUpdate = dropSheet || aName == nsGkAtoms::title ||
                                aName == nsGkAtoms::media ||
-                               aName == nsGkAtoms::type;
+                               aName == nsGkAtoms::type ||
+                               aName == nsGkAtoms::disabled;
 
       Unused << UpdateStyleSheetInternal(
           nullptr, nullptr, forceUpdate ? ForceUpdate::Yes : ForceUpdate::No);
     }
   } else {
-    // Since removing href or rel makes us no longer link to a
-    // stylesheet, force updates for those too.
     if (aNameSpaceID == kNameSpaceID_None) {
+      if (aName == nsGkAtoms::disabled &&
+          StaticPrefs::dom_link_disabled_attribute_enabled()) {
+        mExplicitlyEnabled = true;
+      }
+      // Since removing href or rel makes us no longer link to a stylesheet,
+      // force updates for those too.
       if (aName == nsGkAtoms::href || aName == nsGkAtoms::rel ||
           aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
-          aName == nsGkAtoms::type) {
+          aName == nsGkAtoms::type ||
+          (aName == nsGkAtoms::disabled &&
+           StaticPrefs::dom_link_disabled_attribute_enabled())) {
         Unused << UpdateStyleSheetInternal(nullptr, nullptr, ForceUpdate::Yes);
       }
       if ((aName == nsGkAtoms::as || aName == nsGkAtoms::type ||
@@ -415,6 +430,10 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
     return Nothing();
   }
 
+  if (StaticPrefs::dom_link_disabled_attribute_enabled() && Disabled()) {
+    return Nothing();
+  }
+
   nsAutoString title;
   nsAutoString media;
   GetTitleAndMediaForElement(*this, title, media);
@@ -444,6 +463,7 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
       media,
       alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
       IsInline::No,
+      mExplicitlyEnabled ? IsExplicitlyEnabled::Yes : IsExplicitlyEnabled::No,
   });
 }
 

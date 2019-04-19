@@ -59,7 +59,7 @@ async function testBody(testRoot) {
 
   stateChanged =
     ContentTaskUtils.waitForEvent(this, "StyleSheetApplicableStateChanged", true);
-  link.disabled = true;
+  link.sheet.disabled = true;
 
   evt = await stateChanged;
   is(evt.type, "StyleSheetApplicableStateChanged", "evt.type has expected value");
