@@ -29,17 +29,9 @@ Optimization failed because there was no type information associated with
 object containing the property. This failure mode is unlikely, and occurs
 if the target object is obtained in some roundabout way.
 
-### NoAnalysisInfo
-
-TODO
-
 ### NoShapeInfo
 
 The baseline compiler recorded no usable shape information for this operation.
-
-### UnknownObject
-
-The type of the object is not known.  This can happen if the operation sees many different types of objects, and so the type of the input to the operation cannot be resolved to a single type.
 
 ### UnknownProperties
 
@@ -77,28 +69,9 @@ optimization strategy fails in this case.
 
 The object holding the property is not a typed struct object.
 
-### NotUnboxed
-
-The object whose property is being accessed is not formatted as an
-unboxed object.
-
-### UnboxedConvertedToNative
-
-The object whose property is being accessed was previously unboxed,
-but was deoptimized and converted to a native object.
-
 ### StructNoField
 
-The unboxed property being accessed does not correspond to a field on typed
-object.
-
-### InconsistentFieldType
-
-The type of an unboxed field is not consistent across all the different types of objects it could be accessed from.
-
-### InconsistentFieldOffset
-
-The offset of an unboxed field is not consistent across all the different types of objects it could be accessed from.
+The property being accessed does not correspond to a field on typed object.
 
 ### NeedsTypeBarrier
 
@@ -109,10 +82,6 @@ unlikely failure mode, and should not occur.
 ### InDictionaryMode
 
 The object whose property is being accessed is in dictionary mode.  Objects which are used in ways that suggest they are hashtables, are turned into dictionary objects and their types marked as such.
-
-### NoProtoFound
-
-A prototype object was not found for all the object used by this operation.
 
 ### MultiProtoPaths
 
@@ -175,10 +144,6 @@ Optimization failed because of failing to speculate the operand is a string.
 
 Optimization failed because of failing to speculate the operand is a number.
 
-### OperandNotStringOrNumber
-
-Optimization failed because of failing to speculate the operand is a string or a number.
-
 ### OperandNotSimpleArith
 
 Optimization failed because of failing to speculate the operand is a simple arithmetic type. I.e. definitely not an object, string, symbol or internal magic type.
@@ -197,25 +162,10 @@ Typed Arrays of uint32 values are not yet fully optimized.
 The element access has been observed to be out of the length bounds of
 the string being accessed.
 
-### GetElemStringNotCached
-
-IonMonkey does not generate inline caches for element accesses on
-target values which may be strings.
-
-### NonNativeReceiver
-
-IonMonkey does not generate inline caches for indexed element accesses on
-target values which may be non-native objects (e.g. DOM elements).
-
 ### IndexType
 
 IonMonkey does not generate inline caches for element reads in which
 the keys have never been observed to be a String, Symbol, or Int32.
-
-### SetElemNonDenseNonTANotCached
-
-IonMonkey only generates inline caches for element accesses which are
-either on dense objects (e.g. dense Arrays), or Typed Arrays.
 
 ### HasCommonInliningPath
 
@@ -259,164 +209,6 @@ them are being checked for.  In pseudocode:
         return obj[CONSTANT_SLOT_OFFSET_K]
     else
         BAILOUT()
-
-## Inline Cache Outcomes
-
-Outcomes describing inline cache stubs that were generated.
-
-### ICOptStub_GenericSuccess
-
-Generic success condition for generating an optimized inline cache stub.
-
-### ICGetPropStub_ReadSlot
-
-An inline cache property read which loads a value from a known slot
-location within an object.
-
-### ICGetPropStub_CallGetter
-
-An inline cache property read which calls a getter function.
-
-### ICGetPropStub_ArrayLength
-
-An inline cache property read which retrieves the length of an array
-object.
-
-### ICGetPropStub_UnboxedRead
-
-An inline cache property read which retrieves an value from an unboxed
-object.
-
-### ICGetPropStub_UnboxedReadExpando
-
-An inline cache property read which retrieves an value from the expando
-component of an unboxed object.
-
-### ICGetPropStub_UnboxedArrayLength
-
-An inline cache property read which retrieves the length of an unboxed
-array object.
-
-### ICGetPropStub_TypedArrayLength
-
-An inline cache property read which retrieves the length of an typed array
-object.
-
-### ICGetPropStub_DOMProxyShadowed
-
-An inline cache property read which retrieves a shadowed property from a
-DOM object.  A shadowed property is an inbuilt DOM property that has been
-overwritten by JS code.
-
-### ICGetPropStub_DOMProxyUnshadowed
-
-An inline cache property read which retrieves an unshadowed property from
-a DOM object.
-
-### ICGetPropStub_GenericProxy
-
-An inline cache property read which retrieves the property by calling into
-a generic proxy trap.
-
-### ICGetPropStub_ArgumentsLength
-
-An inline cache property read which reads the length value from an
-arguments object.
-
-### ICSetPropStub_Slot
-
-An inline cache property write which sets a value to a known slot location
-in an object.
-
-### ICSetPropStub_GenericProxy
-
-An inline cache property write which sets the value by calling into a
-generic proxy trap.
-
-### ICSetPropStub_DOMProxyShadowed
-
-An inline cache property write which sets a shadowed property from a DOM
-object.  A shadowed property is an inbuilt DOM property that has been
-overwritten by JS code.
-
-### ICSetPropStub_DOMProxyUnshadowed
-
-An inline cache property write which sets an unshadowed property on an
-DOM object.
-
-### ICSetPropStub_CallSetter
-
-An inline cache property write which calls a setter function on an object.
-
-### ICSetPropStub_AddSlot
-
-An inline cache property write which adds a new slot to an object,
-because the object is known to not have such a property already.
-
-### ICSetPropStub_SetUnboxed
-
-An inline cache property write which sets an unboxed value on an unboxed
-object.
-
-### ICGetElemStub_ReadSlot
-
-An inline cache element read which loads a value from a known property
-slot in an object.
-
-### ICGetElemStub_CallGetter
-
-An inline cache element read which calls a getter function on the object.
-
-### ICGetElemStub_ReadUnboxed
-
-An inline cache element read which loads an unboxed value from a known
-property slot on an unboxed object.
-
-### ICGetElemStub_Dense
-
-An inline cache element read which loads an element from a dense array.
-
-### ICGetElemStub_DenseHole
-
-An inline cache element read which loads an element from a dense array
-which might have a hole.
-
-### ICGetElemStub_TypedArray
-
-An inline cache element read which loads an element from a typed array.
-
-### ICGetElemStub_ArgsElement
-
-An inline cache element read which loads an element from an `arguments`
-object.
-
-### ICGetElemStub_ArgsElementStrict
-
-An inline cache element read which loads an element from an `arguments`
-object in strict mode.
-
-### ICSetElemStub_Dense
-
-An inline cache element write which sets an element on a dense array.
-
-### ICSetElemStub_TypedArray
-
-An inline cache element write which sets an element on a typed array.
-
-### ICNameStub_ReadSlot
-
-An inline cache element which loads a bare variable name from a slot on
-a scope chain object.
-
-### ICNameStub_CallGetter
-
-An inline cache element which loads a bare variable name by calling a
-getter function on the global object.
-
-### ICNameStub_TypeOfNoProperty
-
-An inline cache element which loads undefined for the type
-of a missing property.
 
 ## Call Inlining Outcomes
 
