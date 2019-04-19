@@ -1314,10 +1314,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool mSrcStreamTracksAvailable = false;
 
   // While mPaused is true and mSrcStream is set, this is the value to use for
-  // CurrentTime(). Otherwise this is Nothing.
-  Maybe<GraphTime> mSrcStreamPausedGraphTime;
+  // CurrentTime(). Otherwise this is set to GRAPH_TIME_MAX.
+  GraphTime mSrcStreamPausedGraphTime = GRAPH_TIME_MAX;
 
-  // The offset in GraphTime at which this media element started playing the
+  // The offset in GraphTime that this media element started playing the
   // playback stream of mSrcStream.
   GraphTime mSrcStreamGraphTimeOffset = 0;
 

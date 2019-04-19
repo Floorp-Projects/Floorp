@@ -2626,10 +2626,11 @@ bool HTMLMediaElement::Seeking() const {
 double HTMLMediaElement::CurrentTime() const {
   if (MediaStream* stream = GetSrcMediaStream()) {
     MediaStreamGraph* graph = stream->Graph();
-    GraphTime currentGraphTime =
-        mSrcStreamPausedGraphTime.valueOr(graph->CurrentTime());
-    StreamTime currentStreamTime = currentGraphTime - mSrcStreamGraphTimeOffset;
-    return stream->StreamTimeToSeconds(currentStreamTime);
+    GraphTime currentTime =
+        mSrcStreamPausedGraphTime == GRAPH_TIME_MAX
+            ? graph->CurrentTime() - mSrcStreamGraphTimeOffset
+            : mSrcStreamPausedGraphTime;
+    return stream->StreamTimeToSeconds(currentTime);
   }
 
   if (mDefaultPlaybackStartPosition == 0.0 && mDecoder) {
@@ -4665,9 +4666,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
 
   if (shouldPlay) {
     mSrcStreamPlaybackEnded = false;
-    mSrcStreamGraphTimeOffset +=
-        graph->CurrentTime() - mSrcStreamPausedGraphTime.ref();
-    mSrcStreamPausedGraphTime = Nothing();
+    mSrcStreamGraphTimeOffset =
+        graph->CurrentTime() - mSrcStreamPausedGraphTime;
+    mSrcStreamPausedGraphTime = GRAPH_TIME_MAX;
 
     mWatchManager.Watch(graph->CurrentTime(),
                         &HTMLMediaElement::UpdateSrcStreamTime);
@@ -4692,8 +4693,8 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
     SetAudibleState(true);
   } else {
     if (stream) {
-      MOZ_DIAGNOSTIC_ASSERT(mSrcStreamPausedGraphTime.isNothing());
-      mSrcStreamPausedGraphTime = Some(graph->CurrentTime().Ref());
+      mSrcStreamPausedGraphTime =
+          graph->CurrentTime() - mSrcStreamGraphTimeOffset;
 
       mWatchManager.Unwatch(graph->CurrentTime(),
                             &HTMLMediaElement::UpdateSrcStreamTime);
@@ -4733,12 +4734,11 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
     return;
   }
 
-  mSrcStreamPausedGraphTime = Some(0);
+  mSrcStreamPausedGraphTime = 0;
   if (MediaStream* stream = GetSrcMediaStream()) {
     if (MediaStreamGraph* graph = stream->Graph()) {
       // The current graph time will represent 0 for this media element.
-      mSrcStreamGraphTimeOffset = graph->CurrentTime();
-      mSrcStreamPausedGraphTime = Some(mSrcStreamGraphTimeOffset);
+      mSrcStreamPausedGraphTime = graph->CurrentTime();
     }
   }
 
