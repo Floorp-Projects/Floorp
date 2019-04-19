@@ -65,7 +65,6 @@ open class HomeActivity : AppCompatActivity() {
         DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
         browsingModeManager = DefaultBrowsingModeManager(this)
 
-        components.core.setEnginePreferredColorScheme()
         setContentView(R.layout.activity_home)
 
         val appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.libraryFragment)).build()

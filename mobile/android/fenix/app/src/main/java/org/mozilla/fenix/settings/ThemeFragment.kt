@@ -100,6 +100,9 @@ class ThemeFragment : PreferenceFragmentCompat() {
     private fun setNewTheme(mode: Int) {
         AppCompatDelegate.setDefaultNightMode(mode)
         activity?.recreate()
+        with(requireComponents.core) {
+            engine.settings.preferredColorScheme = getPreferredColorScheme()
+        }
         requireComponents.useCases.sessionUseCases.reload.invoke()
     }
 }

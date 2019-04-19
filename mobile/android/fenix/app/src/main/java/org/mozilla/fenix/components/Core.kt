@@ -62,7 +62,8 @@ class Core(private val context: Context) {
             remoteDebuggingEnabled = Settings.getInstance(context).isRemoteDebuggingEnabled,
             testingModeEnabled = false,
             trackingProtectionPolicy = createTrackingProtectionPolicy(),
-            historyTrackingDelegate = HistoryDelegate(historyStorage)
+            historyTrackingDelegate = HistoryDelegate(historyStorage),
+            preferredColorScheme = getPreferredColorScheme()
         )
 
         GeckoEngine(context, defaultSettings, runtime)
@@ -153,11 +154,11 @@ class Core(private val context: Context) {
     /**
      * Sets Preferred Color scheme based on Dark/Light Theme Settings or Current Configuration
      */
-    fun setEnginePreferredColorScheme() {
+    fun getPreferredColorScheme(): PreferredColorScheme {
         val inDark =
             (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                     Configuration.UI_MODE_NIGHT_YES
-        engine.settings.preferredColorScheme = when {
+        return when {
             Settings.getInstance(context).shouldUseDarkTheme -> PreferredColorScheme.Dark
             Settings.getInstance(context).shouldUseLightTheme -> PreferredColorScheme.Light
             inDark -> PreferredColorScheme.Dark
