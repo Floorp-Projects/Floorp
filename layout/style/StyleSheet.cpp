@@ -426,6 +426,9 @@ void StyleSheet::AddStyleSet(ServoStyleSet* aStyleSet) {
 void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
   bool found = mStyleSets.RemoveElement(aStyleSet);
   MOZ_DIAGNOSTIC_ASSERT(found, "didn't find style set");
+#ifndef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  Unused << found;
+#endif
 }
 
 void StyleSheet::EnsureUniqueInner() {
