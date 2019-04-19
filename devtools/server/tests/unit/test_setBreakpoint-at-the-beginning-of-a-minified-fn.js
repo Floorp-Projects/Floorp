@@ -9,7 +9,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 
   // Pause inside of the nested function so we can make sure that we don't
   // add any other breakpoints at other places on this line.
-  const location = { sourceUrl: source.url, line: 3, column: 47 };
+  const location = { sourceUrl: source.url, line: 3, column: 56 };
   setBreakpoint(threadClient, location);
 
   const packet = await executeOnNextTickAndWaitForPause(function() {
