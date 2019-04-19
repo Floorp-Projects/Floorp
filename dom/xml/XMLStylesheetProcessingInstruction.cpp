@@ -137,7 +137,6 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo() {
       media,
       alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
       IsInline::No,
-      IsExplicitlyEnabled::No,
   });
 }
 
