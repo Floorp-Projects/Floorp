@@ -108,7 +108,8 @@ window {
 /* Add element toolbar button */
 #inspector-element-add-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
-  list-style-image: url("chrome://devtools/skin/images/add.svg");
+  background-position: center;
+  background-size: 14px;
   -moz-user-focus: normal;
 }
 
@@ -121,6 +122,8 @@ window {
 
 #inspector-eyedropper-toggle::before {
   background-image: url(images/command-eyedropper.svg);
+  background-position: center;
+  background-size: 14px;
 }
 
 #inspector-breadcrumbs-toolbar {
