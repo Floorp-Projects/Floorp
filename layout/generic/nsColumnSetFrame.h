@@ -133,9 +133,9 @@ class nsColumnSetFrame final : public nsContainerFrame {
     nscoord mConsumedBSize = 0;
   };
 
-  /**
-   * Some data that is better calculated during reflow
-   */
+  // Collect various block-size data calculated in ReflowChildren(), which are
+  // mainly used for column balancing. This is the output of ReflowChildren()
+  // and ReflowColumns().
   struct ColumnBalanceData {
     // The maximum "content block-size" of any column
     nscoord mMaxBSize = 0;
@@ -155,16 +155,22 @@ class nsColumnSetFrame final : public nsContainerFrame {
     // this maximum allowable bSize, and continue reflow without balancing.
     bool mHasExcessBSize = false;
 
-    void Reset() {
-      mMaxBSize = mSumBSize = mLastBSize = mMaxOverflowingBSize = 0;
-      mHasExcessBSize = false;
-    }
+    // This flag indicates the content that was reflowed fits into the
+    // mColMaxBSize in ReflowConfig.
+    bool mFeasible = false;
   };
 
-  bool ReflowColumns(ReflowOutput& aDesiredSize,
-                     const ReflowInput& aReflowInput,
-                     nsReflowStatus& aReflowStatus, ReflowConfig& aConfig,
-                     bool aLastColumnUnbounded, ColumnBalanceData& aColData);
+  ColumnBalanceData ReflowColumns(ReflowOutput& aDesiredSize,
+                                  const ReflowInput& aReflowInput,
+                                  nsReflowStatus& aReflowStatus,
+                                  ReflowConfig& aConfig,
+                                  bool aUnboundedLastColumn);
+
+  ColumnBalanceData ReflowChildren(ReflowOutput& aDesiredSize,
+                                   const ReflowInput& aReflowInput,
+                                   nsReflowStatus& aStatus,
+                                   const ReflowConfig& aConfig,
+                                   bool aUnboundedLastColumn);
 
   /**
    * The basic reflow strategy is to call this function repeatedly to
@@ -193,26 +199,14 @@ class nsColumnSetFrame final : public nsContainerFrame {
    *        can be of any block-size. Used during the first iteration of the
    *        balancing procedure to measure the block-size of all content in
    *        descendant frames of the column set.
-   * @param aRunWasFeasible An input parameter indicating whether or not
-   *        the last iteration of the balancing loop was a feasible block-size
-   *        to fit all content from descendant frames.
    * @param aStatus A final reflow status of the column set frame, passed in as
    *        an output parameter.
    */
   void FindBestBalanceBSize(const ReflowInput& aReflowInput,
                             nsPresContext* aPresContext, ReflowConfig& aConfig,
-                            ColumnBalanceData& aColData,
+                            ColumnBalanceData aColData,
                             ReflowOutput& aDesiredSize,
-                            bool aUnboundedLastColumn, bool aRunWasFeasible,
-                            nsReflowStatus& aStatus);
-  /**
-   * Reflow column children. Returns true iff the content that was reflowed
-   * fit into the mColMaxBSize.
-   */
-  bool ReflowChildren(ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
-                      const ReflowConfig& aConfig, bool aLastColumnUnbounded,
-                      ColumnBalanceData& aColData);
+                            bool aUnboundedLastColumn, nsReflowStatus& aStatus);
 
   void ForEachColumnRule(
       const std::function<void(const nsRect& lineRect)>& aSetLineRect,
