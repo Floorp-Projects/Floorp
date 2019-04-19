@@ -24,6 +24,7 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -92,6 +93,10 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             launch(Main) {
                 if (currentGuid != BookmarkRoot.Root.id) (activity as HomeActivity).title = currentRoot!!.title
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
+
+                activity?.run {
+                    ViewModelProviders.of(this).get(BookmarksSharedViewModel::class.java)
+                }!!.selectedFolder = null
             }
         }
     }
