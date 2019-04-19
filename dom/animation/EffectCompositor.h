@@ -195,9 +195,6 @@ class EffectCompositor {
   // Returns true if there are elements needing a restyle for animation.
   bool PreTraverse(ServoTraversalFlags aFlags);
 
-  // Similar to the above but only for the (pseudo-)element.
-  bool PreTraverse(dom::Element* aElement, PseudoStyleType aPseudoType);
-
   // Similar to the above but for all elements in the subtree rooted
   // at aElement.
   bool PreTraverseInSubtree(ServoTraversalFlags aFlags, dom::Element* aRoot);
