@@ -47,9 +47,14 @@ bool PaintedLayerComposite::SetCompositableHost(CompositableHost* aHost) {
   switch (aHost->GetType()) {
     case CompositableType::CONTENT_TILED:
     case CompositableType::CONTENT_SINGLE:
-    case CompositableType::CONTENT_DOUBLE:
-      mBuffer = static_cast<ContentHost*>(aHost);
+    case CompositableType::CONTENT_DOUBLE: {
+      ContentHost* newBuffer = static_cast<ContentHost*>(aHost);
+      if (mBuffer && newBuffer != mBuffer) {
+        mBuffer->Detach(this);
+      }
+      mBuffer = newBuffer;
       return true;
+    }
     default:
       return false;
   }
