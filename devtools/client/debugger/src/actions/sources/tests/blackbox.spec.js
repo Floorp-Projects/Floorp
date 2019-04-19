@@ -27,10 +27,7 @@ describe("blackbox", () => {
       throw new Error("foo should exist");
     }
 
-    const { thread } = selectors.getSourceActorsForSource(
-      getState(),
-      foo1Source.id
-    )[0];
+    const thread = foo1Source.actors[0].thread;
     const displayedSources = selectors.getDisplayedSourcesForThread(
       getState(),
       thread

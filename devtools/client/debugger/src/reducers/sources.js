@@ -23,32 +23,18 @@ import {
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
-import {
-  hasSourceActor,
-  getSourceActor,
-  getSourceActors,
-  getThreadsBySource,
-  type SourceActorId,
-  type SourceActorOuterState
-} from "./source-actors";
-import type {
-  Source,
-  SourceId,
-  SourceActor,
-  SourceLocation,
-  ThreadId
-} from "../types";
+import type { Source, SourceId, SourceLocation, ThreadId } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
-import { uniq } from "lodash";
+import { mapValues, uniqBy } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
-type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 
 type UrlsMap = { [string]: SourceId[] };
-type DisplayedSources = Set<SourceId>;
+type DisplayedSources = { [ThreadId]: { [SourceId]: boolean } };
+type GetDisplayedSourcesSelector = OuterState => { [ThreadId]: SourcesMap };
 type PlainUrlsMap = { [string]: string[] };
 
 export type SourcesState = {
@@ -56,9 +42,6 @@ export type SourcesState = {
 
   // All known sources.
   sources: SourcesMap,
-
-  // A link between each source object and the source actor they wrap over.
-  actors: SourceActorMap,
 
   // All sources associated with a given URL. When using source maps, multiple
   // sources can have the same URL.
@@ -82,15 +65,14 @@ export type SourcesState = {
 
 const emptySources = {
   sources: {},
-  displayed: new Set(),
   urls: {},
-  plainUrls: {}
+  plainUrls: {},
+  displayed: {}
 };
 
 export function initialSourcesState(): SourcesState {
   return {
     ...emptySources,
-    actors: {},
     epoch: 1,
     selectedLocation: undefined,
     pendingSelectedLocation: prefs.pendingSelectedLocation,
@@ -115,6 +97,7 @@ export function createSource(state: SourcesState, source: Object): Source {
     error: undefined,
     loadedState: "unloaded",
     relativeUrl: getRelativeUrl(source, root),
+    actors: [],
     ...source
   };
 }
@@ -135,11 +118,8 @@ function update(
     case "ADD_SOURCES":
       return addSources(state, action.sources);
 
-    case "INSERT_SOURCE_ACTORS":
-      return insertSourceActors(state, action);
-
-    case "REMOVE_SOURCE_ACTORS":
-      return removeSourceActors(state, action);
+    case "REMOVE_WORKERS":
+      return removeWorkers(state, action);
 
     case "SET_SELECTED_LOCATION":
       location = {
@@ -248,19 +228,33 @@ function updateAllSources(state: SourcesState, callback: any) {
  * Add sources to the sources store
  * - Add the source to the sources store
  * - Add the source URL to the urls map
+ * - Add the source ID to the thread displayed map
  */
-function addSources(state: SourcesState, sources: Source[]): SourcesState {
+function addSources(state: SourcesState, sources: Source[]) {
   state = {
     ...state,
     sources: { ...state.sources },
-    displayed: new Set(state.displayed),
     urls: { ...state.urls },
-    plainUrls: { ...state.plainUrls }
+    plainUrls: { ...state.plainUrls },
+    displayed: { ...state.displayed }
   };
 
   for (const source of sources) {
+    const existingSource = state.sources[source.id];
+    let updatedSource = existingSource || source;
+
+    // Merge the source actor list
+    if (existingSource && source.actors) {
+      const actors = uniqBy(
+        [...existingSource.actors, ...source.actors],
+        ({ actor }) => actor
+      );
+
+      updatedSource = (({ ...updatedSource, actors }: any): Source);
+    }
+
     // 1. Add the source to the sources map
-    state.sources[source.id] = state.sources[source.id] || source;
+    state.sources[source.id] = updatedSource;
 
     // 2. Update the source url map
     const existing = state.urls[source.url] || [];
@@ -283,25 +277,13 @@ function addSources(state: SourcesState, sources: Source[]): SourcesState {
       (!source.isExtension ||
         getChromeAndExtenstionsEnabled({ sources: state }))
     ) {
-      state.displayed.add(source.id);
+      for (const actor of getSourceActors(state, source)) {
+        if (!state.displayed[actor.thread]) {
+          state.displayed[actor.thread] = {};
+        }
+        state.displayed[actor.thread][source.id] = true;
+      }
     }
-  }
-
-  return state;
-}
-
-function insertSourceActors(state: SourcesState, action): SourcesState {
-  const { items } = action;
-  state = {
-    ...state,
-    actors: { ...state.actors }
-  };
-
-  for (const sourceActor of items) {
-    state.actors[sourceActor.source] = [
-      ...(state.actors[sourceActor.source] || []),
-      sourceActor.id
-    ];
   }
 
   return state;
@@ -312,22 +294,12 @@ function insertSourceActors(state: SourcesState, action): SourcesState {
  * - filter source actor lists so that missing threads no longer appear
  * - NOTE: we do not remove sources for destroyed threads
  */
-function removeSourceActors(state: SourcesState, action) {
-  const { items } = action;
+function removeWorkers(state: SourcesState, action: Object) {
+  const { workers } = action;
 
-  const actors = new Set(items.map(item => item.id));
-  const sources = new Set(items.map(item => item.source));
-
-  state = {
-    ...state,
-    actors: { ...state.actors }
-  };
-
-  for (const source of sources) {
-    state.actors[source] = state.actors[source].filter(id => !actors.has(id));
-  }
-
-  return state;
+  return updateAllSources(state, source => ({
+    actors: source.actors.filter(({ thread }) => !workers.includes(thread))
+  }));
 }
 
 /*
@@ -404,15 +376,14 @@ type OuterState = { sources: SourcesState };
 
 const getSourcesState = (state: OuterState) => state.sources;
 
-export function getSourceThreads(
-  state: OuterState & SourceActorOuterState,
-  source: Source
-): ThreadId[] {
-  return uniq(
-    getSourceActors(state, state.sources.actors[source.id]).map(
-      actor => actor.thread
-    )
-  );
+function getSourceActors(state, source) {
+  if (isGenerated(source)) {
+    return source.actors;
+  }
+
+  // Original sources do not have actors, so use the generated source.
+  const generatedSource = state.sources[originalToGeneratedId(source.id)];
+  return generatedSource ? generatedSource.actors : [];
 }
 
 export function getSourceInSources(sources: SourcesMap, id: string): ?Source {
@@ -432,14 +403,17 @@ export function getSourceFromId(state: OuterState, id: string): Source {
 }
 
 export function getSourceByActorId(
-  state: OuterState & SourceActorOuterState,
-  actorId: SourceActorId
+  state: OuterState,
+  actorId: string
 ): ?Source {
-  if (!hasSourceActor(state, actorId)) {
-    return null;
+  // We don't index the sources by actor IDs, so this method should be used
+  // sparingly.
+  for (const source of getSourceList(state)) {
+    if (source.actors.some(({ actor }) => actor == actorId)) {
+      return source;
+    }
   }
-
-  return getSource(state, getSourceActor(state, actorId).source);
+  return null;
 }
 
 export function getSourcesByURLInSources(
@@ -586,9 +560,7 @@ export function getSourceList(state: OuterState): Source[] {
   return (Object.values(getSources(state)): any);
 }
 
-export function getDisplayedSourcesList(
-  state: OuterState & SourceActorOuterState
-): Source[] {
+export function getDisplayedSourcesList(state: OuterState): Source[] {
   return ((Object.values(getDisplayedSources(state)): any).flatMap(
     Object.values
   ): any);
@@ -624,7 +596,7 @@ export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
 }
 
-function getAllDisplayedSources(state: OuterState): DisplayedSources {
+function getAllDisplayedSources(state: OuterState) {
   return state.sources.displayed;
 }
 
@@ -632,55 +604,19 @@ function getChromeAndExtenstionsEnabled(state: OuterState) {
   return state.sources.chromeAndExtenstionsEnabled;
 }
 
-type GetDisplayedSourceIDsSelector = (
-  OuterState & SourceActorOuterState
-) => { [ThreadId]: Set<SourceId> };
-const getDisplayedSourceIDs: GetDisplayedSourceIDsSelector = createSelector(
-  getThreadsBySource,
-  getAllDisplayedSources,
-  (threadsBySource, displayedSources) => {
-    const sourceIDsByThread = {};
-
-    for (const sourceId of displayedSources) {
-      const threads =
-        threadsBySource[sourceId] ||
-        threadsBySource[originalToGeneratedId(sourceId)] ||
-        [];
-
-      for (const thread of threads) {
-        if (!sourceIDsByThread[thread]) {
-          sourceIDsByThread[thread] = new Set();
-        }
-        sourceIDsByThread[thread].add(sourceId);
-      }
-    }
-    return sourceIDsByThread;
-  }
-);
-type GetDisplayedSourcesSelector = (
-  OuterState & SourceActorOuterState
-) => { [ThreadId]: { [SourceId]: Source } };
 export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
-  state => state.sources.sources,
-  getDisplayedSourceIDs,
-  (sources, idsByThread) => {
-    const result = {};
-
-    for (const thread of Object.keys(idsByThread)) {
-      for (const id of idsByThread[thread]) {
-        if (!result[thread]) {
-          result[thread] = {};
-        }
-        result[thread][id] = sources[id];
-      }
-    }
-
-    return result;
+  getSources,
+  getChromeAndExtenstionsEnabled,
+  getAllDisplayedSources,
+  (sources, chromeAndExtenstionsEnabled, displayed) => {
+    return mapValues(displayed, threadSourceIds =>
+      mapValues(threadSourceIds, (_, id) => sources[id])
+    );
   }
 );
 
 export function getDisplayedSourcesForThread(
-  state: OuterState & SourceActorOuterState,
+  state: OuterState,
   thread: string
 ): SourcesMap {
   return getDisplayedSources(state)[thread] || {};
@@ -688,18 +624,6 @@ export function getDisplayedSourcesForThread(
 
 export function getFocusedSourceItem(state: OuterState): ?FocusItem {
   return state.sources.focusedItem;
-}
-
-export function getSourceActorsForSource(
-  state: OuterState & SourceActorOuterState,
-  id: SourceId
-): Array<SourceActor> {
-  const actors = state.sources.actors[id];
-  if (!actors) {
-    return [];
-  }
-
-  return getSourceActors(state, actors);
 }
 
 export default update;

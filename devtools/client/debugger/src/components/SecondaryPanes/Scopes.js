@@ -122,7 +122,7 @@ class Scopes extends PureComponent<Props, State> {
     const scopes =
       (showOriginal && mapScopesEnabled && originalScopes) || generatedScopes;
 
-    if (scopes && scopes.length > 0 && !isLoading) {
+    if (scopes && !isLoading) {
       return (
         <div className="pane scopes-list">
           <ObjectInspector

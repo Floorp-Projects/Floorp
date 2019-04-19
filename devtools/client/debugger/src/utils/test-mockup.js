@@ -40,6 +40,7 @@ function makeMockSource(
     relativeUrl: url,
     introductionUrl: null,
     introductionType: undefined,
+    actors: [],
     isWasm: false,
     contentType,
     isExtension: false,
@@ -57,6 +58,7 @@ function makeMockWasmSource(text: {| binary: Object |}): WasmSource {
     relativeUrl: "url",
     introductionUrl: null,
     introductionType: undefined,
+    actors: [],
     isWasm: true,
     isExtension: false,
     text

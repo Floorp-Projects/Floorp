@@ -14,6 +14,7 @@ import { isEqual } from "lodash";
 
 import { makeBreakpointId, findPosition } from "../utils/breakpoint";
 import { findEmptyLines } from "../utils/empty-lines";
+import { isInlineScript } from "../utils/source";
 
 // eslint-disable-next-line max-len
 import { getBreakpointsList as getBreakpointsListSelector } from "../selectors/breakpoints";
@@ -106,20 +107,18 @@ function update(
       };
     }
 
-    case "INSERT_SOURCE_ACTORS": {
-      const { items } = action;
+    case "ADD_SOURCES": {
+      const { sources } = action;
 
-      const scriptActors = items.filter(
-        item => item.introductionType === "scriptElement"
-      );
+      const scriptSources = sources.filter(source => isInlineScript(source));
 
-      if (scriptActors.length > 0) {
+      if (scriptSources.length > 0) {
         const { ...breakpointPositions } = state.breakpointPositions;
 
         // If new HTML sources are being added, we need to clear the breakpoint
         // positions since the new source is a <script> with new breakpoints.
-        for (const { source } of scriptActors) {
-          delete breakpointPositions[source];
+        for (const source of scriptSources) {
+          delete breakpointPositions[source.id];
         }
 
         state = { ...state, breakpointPositions };

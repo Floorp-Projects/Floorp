@@ -8,29 +8,39 @@ declare var it: (desc: string, func: () => void) => void;
 declare var expect: (value: any) => any;
 
 import update, { initialSourcesState, getDisplayedSources } from "../sources";
-import updateSourceActors from "../source-actors";
-import type { Source, SourceActor } from "../../types";
+import type { Source } from "../../types";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource, mockcx } from "../../utils/test-mockup";
 
 const extensionSource = {
   ...makeMockSource(),
   id: "extensionId",
-  url: "http://example.com/script.js"
+  url: "http://example.com/script.js",
+  actors: [{ actor: "extensionId-actor", source: "extensionId", thread: "foo" }]
 };
 
 const firefoxExtensionSource = {
   ...makeMockSource(),
   id: "firefoxExtension",
   url: "moz-extension://id/js/content.js",
-  isExtension: true
+  isExtension: true,
+  actors: [
+    {
+      actor: "firefoxExtension-actor",
+      source: "firefoxExtension",
+      thread: "foo"
+    }
+  ]
 };
 
 const chromeExtensionSource = {
   ...makeMockSource(),
   id: "chromeExtension",
   isExtension: true,
-  url: "chrome-extension://id/js/content.js"
+  url: "chrome-extension://id/js/content.js",
+  actors: [
+    { actor: "chromeExtension-actor", source: "chromeExtension", thread: "foo" }
+  ]
 };
 
 const mockedSources = [
@@ -38,27 +48,6 @@ const mockedSources = [
   firefoxExtensionSource,
   chromeExtensionSource
 ];
-
-const mockSourceActors: Array<SourceActor> = ([
-  {
-    id: "extensionId-actor",
-    actor: "extensionId-actor",
-    source: "extensionId",
-    thread: "foo"
-  },
-  {
-    id: "firefoxExtension-actor",
-    actor: "firefoxExtension-actor",
-    source: "firefoxExtension",
-    thread: "foo"
-  },
-  {
-    id: "chromeExtension-actor",
-    actor: "chromeExtension-actor",
-    source: "chromeExtension",
-    thread: "foo"
-  }
-]: any);
 
 describe("sources reducer", () => {
   it("should work", () => {
@@ -82,16 +71,7 @@ describe("sources selectors", () => {
         cx: mockcx,
         // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
-      }),
-      sourceActors: undefined
-    };
-    const insertAction = {
-      type: "INSERT_SOURCE_ACTORS",
-      items: mockSourceActors
-    };
-    state = {
-      sources: update(state.sources, insertAction),
-      sourceActors: updateSourceActors(state.sourceActors, insertAction)
+      })
     };
     const selectedDisplayedSources = getDisplayedSources(state);
     const threadSources = selectedDisplayedSources.foo;
@@ -107,18 +87,7 @@ describe("sources selectors", () => {
         cx: mockcx,
         // coercing to a Source for the purpose of this test
         sources: ((mockedSources: any): Source[])
-      }),
-      sourceActors: undefined
-    };
-
-    const insertAction = {
-      type: "INSERT_SOURCE_ACTORS",
-      items: mockSourceActors
-    };
-
-    state = {
-      sources: update(state.sources, insertAction),
-      sourceActors: updateSourceActors(state.sourceActors, insertAction)
+      })
     };
     const selectedDisplayedSources = getDisplayedSources(state);
     const threadSources = selectedDisplayedSources.foo;

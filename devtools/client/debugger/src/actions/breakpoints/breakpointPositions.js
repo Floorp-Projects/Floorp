@@ -14,12 +14,10 @@ import {
   getSource,
   getSourceFromId,
   hasBreakpointPositions,
-  getBreakpointPositionsForSource,
-  getSourceActorsForSource
+  getBreakpointPositionsForSource
 } from "../../selectors";
 
 import type {
-  SourceId,
   MappedLocation,
   Range,
   SourceLocation,
@@ -31,6 +29,8 @@ import {
   memoizeableAction,
   type MemoizedAction
 } from "../../utils/memoizableAction";
+
+// const requests = new Map();
 
 async function mapLocations(
   generatedLocations: SourceLocation[],
@@ -108,18 +108,13 @@ async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
         };
       }
 
-      const bps = await client.getBreakpointPositions(
-        getSourceActorsForSource(getState(), generatedSource.id),
-        range
-      );
+      const bps = await client.getBreakpointPositions(generatedSource, range);
       for (const line in bps) {
         results[line] = (results[line] || []).concat(bps[line]);
       }
     }
   } else {
-    results = await client.getBreakpointPositions(
-      getSourceActorsForSource(getState(), generatedSource.id)
-    );
+    results = await client.getBreakpointPositions(generatedSource);
   }
 
   let positions = convertToList(results, generatedSource);
@@ -130,7 +125,7 @@ async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
 
   const source = getSource(getState(), sourceId);
   // NOTE: it's possible that the source was removed during a navigate
-  if (!source || source.loadedState !== "loaded") {
+  if (!source) {
     return;
   }
 
@@ -142,11 +137,6 @@ async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
   });
 
   return positions;
-}
-
-const runningFetches = {};
-export function isFetchingBreakpoints(id: SourceId) {
-  return id in runningFetches;
 }
 
 export const setBreakpointPositions: MemoizedAction<
@@ -163,21 +153,10 @@ export const setBreakpointPositions: MemoizedAction<
       isOriginalId(sourceId) ? originalToGeneratedId(sourceId) : sourceId
     );
     const actors = generatedSource
-      ? getSourceActorsForSource(getState(), generatedSource.id).map(
-          ({ actor }) => actor
-        )
+      ? generatedSource.actors.map(({ actor }) => actor)
       : [];
     return [sourceId, ...actors].join(":");
   },
-  action: async ({ cx, sourceId }, thunkArgs) => {
-    runningFetches[sourceId] = (runningFetches[sourceId] | 0) + 1;
-    try {
-      return await _setBreakpointPositions(cx, sourceId, thunkArgs);
-    } finally {
-      runningFetches[sourceId] -= 0;
-      if (runningFetches[sourceId] === 0) {
-        delete runningFetches[sourceId];
-      }
-    }
-  }
+  action: ({ cx, sourceId }, thunkArgs) =>
+    _setBreakpointPositions(cx, sourceId, thunkArgs)
 });

@@ -7,7 +7,6 @@ DIRS += [
     'breakpoint',
     'editor',
     'pause',
-    'resource',
     'sources-tree',
 ]
 

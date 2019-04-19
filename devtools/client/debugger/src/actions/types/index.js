@@ -13,7 +13,6 @@ import type { SearchOperation } from "../../reducers/project-text-search";
 
 import type { BreakpointAction } from "./BreakpointAction";
 import type { SourceAction } from "./SourceAction";
-import type { SourceActorAction } from "./SourceActorAction";
 import type { UIAction } from "./UIAction";
 import type { PauseAction } from "./PauseAction";
 import type { ASTAction } from "./ASTAction";
@@ -163,7 +162,6 @@ export type { ASTAction } from "./ASTAction";
 export type Action =
   | AddTabAction
   | UpdateTabAction
-  | SourceActorAction
   | SourceAction
   | BreakpointAction
   | PauseAction

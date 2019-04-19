@@ -35,6 +35,13 @@ Array [
       },
     ],
     "source": Object {
+      "actors": Array [
+        Object {
+          "actor": "a-1-actor",
+          "source": "a",
+          "thread": "FakeThread",
+        },
+      ],
       "contentType": "text/javascript",
       "id": "a",
       "introductionType": null,
@@ -122,6 +129,13 @@ Array [
       },
     ],
     "source": Object {
+      "actors": Array [
+        Object {
+          "actor": "a-1-actor",
+          "source": "a",
+          "thread": "FakeThread",
+        },
+      ],
       "contentType": "text/javascript",
       "id": "a",
       "introductionType": null,

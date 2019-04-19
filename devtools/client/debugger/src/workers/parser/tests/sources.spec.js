@@ -21,7 +21,8 @@ describe("sources", () => {
       isPrettyPrinted: false,
       isWasm: false,
       loadedState: "loaded",
-      isExtension: false
+      isExtension: false,
+      actors: []
     };
 
     expect(hasSource(sourceId)).toEqual(false);
