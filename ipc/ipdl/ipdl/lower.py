@@ -2245,9 +2245,9 @@ before this struct.  Some types generate multiple kinds.'''
         self.fortype = fortype
         self.unqualifiedTypedefs = unqualifiedTypedefs
 
-    def maybeTypedef(self, fqname, name):
+    def maybeTypedef(self, fqname, name, templateargs=[]):
         if fqname != name or self.unqualifiedTypedefs:
-            self.usingTypedefs.append(Typedef(Type(fqname), name))
+            self.usingTypedefs.append(Typedef(Type(fqname), name, templateargs))
 
     def visitImportedCxxType(self, t):
         if t in self.visited:
@@ -2316,6 +2316,19 @@ before this struct.  Some types generate multiple kinds.'''
             return
         self.visited.add(s)
         self.maybeTypedef('mozilla::ipc::FileDescriptor', 'FileDescriptor')
+
+    def visitEndpointType(self, s):
+        if s in self.visited:
+            return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::Endpoint', 'Endpoint', ['FooSide'])
+
+    def visitManagedEndpointType(self, s):
+        if s in self.visited:
+            return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::ManagedEndpoint', 'ManagedEndpoint',
+                          ['FooSide'])
 
     def visitUniquePtrType(self, s):
         if s in self.visited:
