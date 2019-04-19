@@ -41,9 +41,9 @@ class nsColumnSetFrame final : public nsContainerFrame {
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
-   * Retrieve the available height for content of this frame. The available
-   * content height is the available height for the frame, minus borders and
-   * padding.
+   * Retrieve the available block-size for content of this frame. The available
+   * content block-size is the available block-size for the frame, minus borders
+   * and padding.
    */
   nscoord GetAvailableContentBSize(const ReflowInput& aReflowInput);
 
@@ -177,7 +177,8 @@ class nsColumnSetFrame final : public nsContainerFrame {
                                     bool aForceAuto);
 
   /**
-   * Perform the binary search for the best balance height for this column set.
+   * Perform the binary search for the best balance block-size for this column
+   * set.
    *
    * @param aReflowInput The input parameters for the current reflow iteration.
    * @param aPresContext The presentation context in which the current reflow
@@ -189,12 +190,12 @@ class nsColumnSetFrame final : public nsContainerFrame {
    * @param aDesiredSize The final output size of the column set frame (output
    *        of reflow procedure).
    * @param aUnboundedLastColumn A boolean value indicating that the last column
-   *        can be of any height. Used during the first iteration of the
-   *        balancing procedure to measure the height of all content in
+   *        can be of any block-size. Used during the first iteration of the
+   *        balancing procedure to measure the block-size of all content in
    *        descendant frames of the column set.
    * @param aRunWasFeasible An input parameter indicating whether or not
-   *        the last iteration of the balancing loop was a feasible height to
-   *        fit all content from descendant frames.
+   *        the last iteration of the balancing loop was a feasible block-size
+   *        to fit all content from descendant frames.
    * @param aStatus A final reflow status of the column set frame, passed in as
    *        an output parameter.
    */
