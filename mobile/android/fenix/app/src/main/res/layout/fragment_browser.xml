@@ -16,16 +16,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-
     <androidx.core.widget.NestedScrollView
         android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:background="?foundation"
         android:clipToPadding="true"
         app:behavior_hideable="true"
-        app:behavior_peekHeight="15dp"
+        app:behavior_peekHeight="12dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior"/>
+
+    <View
+        android:focusable="false"
+        android:id="@+id/toolbarDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:background="?neutral"
+        app:layout_behavior="org.mozilla.fenix.browser.BrowserToolbarDividerBehavior" />
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"

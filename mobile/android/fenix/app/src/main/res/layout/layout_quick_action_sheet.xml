@@ -10,7 +10,14 @@
     android:background="?foundation"
     android:orientation="vertical">
 
+    <View
+        android:focusable="false"
+        android:background="?attr/neutral"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
+
     <ImageButton
+        android:paddingTop="7dp"
         android:id="@+id/quick_action_sheet_handle"
         android:layout_width="match_parent"
         android:layout_height="12dp"
@@ -20,6 +27,7 @@
 
     <LinearLayout
         android:id="@+id/quick_action_buttons_layout"
+        android:layout_margin="4dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
