@@ -2406,7 +2406,6 @@ class Document : public nsINode,
                                           nsAtom* aAttrName,
                                           const nsAString& aAttrValue) const;
 
-
   /**
    * To batch DOMSubtreeModified, document needs to be informed when
    * a mutation event might be dispatched, even if the event isn't actually
@@ -3497,7 +3496,30 @@ class Document : public nsINode,
   void ReportHasScrollLinkedEffect();
   bool HasScrollLinkedEffect() const { return mHasScrollLinkedEffect; }
 
-  DocGroup* GetDocGroup() const;
+#ifdef DEBUG
+  void AssertDocGroupMatchesKey() const;
+#endif
+
+  DocGroup* GetDocGroup() const {
+#ifdef DEBUG
+    AssertDocGroupMatchesKey();
+#endif
+    return mDocGroup;
+  }
+
+  /**
+   * If we're a sub-document, the parent document's layout can affect our style
+   * and layout (due to the viewport size, viewport units, media queries...).
+   *
+   * This function returns true if our parent document and our child document
+   * can observe each other. If they cannot, then we don't need to synchronously
+   * update the parent document layout every time the child document may need
+   * up-to-date layout information.
+   */
+  bool StyleOrLayoutObservablyDependsOnParentDocumentLayout() const {
+    return GetParentDocument() &&
+           GetDocGroup() == GetParentDocument()->GetDocGroup();
+  }
 
   void AddIntersectionObserver(DOMIntersectionObserver* aObserver) {
     MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
