@@ -40,13 +40,12 @@ import mozilla.components.concept.sync.Profile
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
-import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.getColorIntFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToHost
@@ -104,17 +103,32 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             ?: getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }
 
+    fun setToolbarColors(foreground: Int, background: Int) {
+        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+        val colorFilter = PorterDuffColorFilter(
+            ContextCompat.getColor(context!!, foreground), PorterDuff.Mode.SRC_IN
+        )
+        toolbar.setBackgroundColor(ContextCompat.getColor(context!!, background))
+        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, foreground))
+
+        themeToolbar(
+            toolbar, foreground,
+            background, colorFilter
+        )
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Reset the toolbar color
+        setToolbarColors(
+            R.attr.primaryText.getColorIntFromAttr(context!!),
+            R.attr.foundation.getColorIntFromAttr(context!!)
+        )
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
-
-        // Reset the toolbar color
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-        val colorFilter = PorterDuffColorFilter(
-            R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
-
-        themeToolbar(toolbar, DefaultThemeManager.resolveAttribute(R.attr.primaryText, context!!),
-            DefaultThemeManager.resolveAttribute(R.attr.foundation, context!!), colorFilter)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -128,25 +142,28 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             null
                         )
                     ) getString(R.string.library_bookmarks) else currentRoot!!.title
-                toolbar.setBackgroundColor(R.attr.foundation.getColorFromAttr(context!!))
-                toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
+
+                setToolbarColors(
+                    R.attr.primaryText.getColorIntFromAttr(context!!),
+                    R.attr.foundation.getColorIntFromAttr(context!!)
+                )
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
-                val colorFilter = PorterDuffColorFilter(
-                    ContextCompat.getColor(context!!, R.color.white_color), PorterDuff.Mode.SRC_IN)
 
-                val enableEditButton = mode.selectedItems.size == 1
                 menu.findItem(R.id.edit_bookmark_multi_select).run {
-                    isVisible = enableEditButton
-                    if (enableEditButton) {
-                        icon.colorFilter = colorFilter
-                    }
+                    isVisible = mode.selectedItems.size == 1
+                    icon.colorFilter = PorterDuffColorFilter(
+                        ContextCompat.getColor(context!!, R.color.white_color),
+                        PorterDuff.Mode.SRC_IN
+                    )
                 }
 
                 activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
-                themeToolbar(toolbar, R.color.white_color,
-                    DefaultThemeManager.resolveAttribute(R.attr.accentBright, context!!), colorFilter)
+                setToolbarColors(
+                    R.color.white_color,
+                    R.attr.accentBright.getColorIntFromAttr(context!!)
+                )
             }
         }
     }
