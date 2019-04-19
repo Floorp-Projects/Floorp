@@ -371,7 +371,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
     }
 
     companion object {
-        private const val bookmarkOverflowExtraDips = 8
+        private const val bookmarkOverflowExtraDips = 16
     }
 
     enum class ViewType {

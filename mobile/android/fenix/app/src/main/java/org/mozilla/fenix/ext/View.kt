@@ -7,15 +7,18 @@ package org.mozilla.fenix.ext
 import android.graphics.Rect
 import android.view.TouchDelegate
 import android.view.View
+import mozilla.components.support.ktx.android.content.res.pxToDp
 
 fun View?.increaseTapArea(extraDps: Int) {
-    this!!.post {
+    val dips = this!!.resources.pxToDp(extraDps)
+    val parent = this.parent as View
+    parent.post {
         val touchRect = Rect()
         getHitRect(touchRect)
-        touchRect.top -= extraDps
-        touchRect.left -= extraDps
-        touchRect.right += extraDps
-        touchRect.bottom += extraDps
-        (parent as View).touchDelegate = TouchDelegate(touchRect, this)
+        touchRect.top -= dips
+        touchRect.left -= dips
+        touchRect.right += dips
+        touchRect.bottom += dips
+        parent.touchDelegate = TouchDelegate(touchRect, this)
     }
 }
