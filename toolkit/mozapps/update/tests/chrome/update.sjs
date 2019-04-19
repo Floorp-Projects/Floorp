@@ -179,7 +179,9 @@ function parseQueryString(aQueryString) {
   for (let i = 0, sz = paramArray.length; i < sz; i++) {
     let match = regex.exec(paramArray[i]);
     if (!match) {
-      throw "Bad parameter in queryString!  '" + paramArray[i] + "'";
+      throw Components.Exception(
+        "Bad parameter in queryString! '" + paramArray[i] + "'",
+        Cr.NS_ERROR_ILLEGAL_VALUE);
     }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }
