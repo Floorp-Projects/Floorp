@@ -66,7 +66,7 @@ class ReaderView {
    */
   setFontSize(fontSize) {
     let size = (10 + 2 * fontSize) + "px";
-    let readerView = document.getElementById("readerview");
+    let readerView = document.getElementById("mozac-readerview-container");
     readerView.style.setProperty("font-size", size);
     this.fontSize = fontSize;
   }
@@ -119,21 +119,21 @@ class ReaderView {
 
   createHtml(article) {
     return `
-      <body class="readerview-body">
-        <div id="readerview" class="container" dir=${article.dir}>
-          <div class="header reader-header">
-            <a class="domain reader-domain">${article.url}</a>
+      <body class="mozac-readerview-body">
+        <div id="mozac-readerview-container" class="container" dir=${article.dir}>
+          <div class="header">
+            <a class="domain">${article.url}</a>
             <div class="domain-border"></div>
-            <h1 class="reader-title">${article.title}</h1>
-            <div class="credits reader-credits">${article.byline}</div>
-            <div class="meta-data">
-              <div class="reader-estimated-time">${article.readingTime}</div>
+            <h1>${article.title}</h1>
+            <div class="credits">${article.byline}</div>
+            <div>
+              <div>${article.readingTime}</div>
             </div>
           </div>
           <hr>
 
           <div class="content">
-            <div class="moz-reader-content">${article.content}</div>
+            <div class="mozac-readerview-content">${article.content}</div>
           </div>
         </div>
       </body>
