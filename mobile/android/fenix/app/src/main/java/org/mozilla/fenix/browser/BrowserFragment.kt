@@ -358,21 +358,23 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                                 .addItem(BookmarkRoot.Mobile.id, session.url, session.title, null)
                             launch(Main) {
                                 requireComponents.analytics.metrics.track(Event.AddBookmark)
-                                FenixSnackbar.make(
-                                    view!!,
-                                    Snackbar.LENGTH_LONG
-                                )
-                                    .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                        Navigation.findNavController(requireActivity(), R.id.container)
-                                            .navigate(
-                                                BrowserFragmentDirections
-                                                    .actionBrowserFragmentToBookmarkEditFragment(
-                                                        guid
-                                                    )
-                                            )
-                                    }
-                                    .setText(getString(R.string.bookmark_saved_snackbar))
-                                    .show()
+                                view?.let {
+                                    FenixSnackbar.make(
+                                        it,
+                                        Snackbar.LENGTH_LONG
+                                    )
+                                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                            Navigation.findNavController(requireActivity(), R.id.container)
+                                                .navigate(
+                                                    BrowserFragmentDirections
+                                                        .actionBrowserFragmentToBookmarkEditFragment(
+                                                            guid
+                                                        )
+                                                )
+                                        }
+                                        .setText(getString(R.string.bookmark_saved_snackbar))
+                                        .show()
+                                }
                             }
                         }
                     }
