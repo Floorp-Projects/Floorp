@@ -279,17 +279,12 @@ function assertPaused(dbg) {
 }
 
 function assertEmptyLines(dbg, lines) {
-  function every(array, predicate) {
-    return !array.some(item => !predicate(item));
-  }
-
-  function subset(subArray, superArray) {
-    return every(subArray, subItem => superArray.includes(subItem));
-  }
-
   const sourceId = dbg.selectors.getSelectedSourceId();
-  const emptyLines = dbg.selectors.getEmptyLines(sourceId);
-  ok(subset(lines, emptyLines), "empty lines should match");
+  const breakableLines = dbg.selectors.getBreakableLines(sourceId);
+  ok(
+    lines.every(line => !breakableLines.includes(line)),
+    "empty lines should match"
+  );
 }
 
 function getVisibleSelectedFrameLine(dbg) {
@@ -1604,10 +1599,10 @@ async function waitForBreakableLine(dbg, source, lineNumber) {
     state => {
       const currentSource = findSource(dbg, source);
 
-      const emptyLines =
-        currentSource && dbg.selectors.getEmptyLines(currentSource.id);
+      const breakableLines =
+        currentSource && dbg.selectors.getBreakableLines(currentSource.id);
 
-      return emptyLines && !emptyLines.includes(lineNumber);
+      return breakableLines && breakableLines.includes(lineNumber);
     },
     `waiting for breakable line ${lineNumber}`
   );
