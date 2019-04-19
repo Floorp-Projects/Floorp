@@ -7435,7 +7435,8 @@ bool nsIFrame::IsBlockWrapper() const {
   auto pseudoType = Style()->GetPseudoType();
   return pseudoType == PseudoStyleType::mozBlockInsideInlineWrapper ||
          pseudoType == PseudoStyleType::buttonContent ||
-         pseudoType == PseudoStyleType::cellContent;
+         pseudoType == PseudoStyleType::cellContent ||
+         pseudoType == PseudoStyleType::columnSpanWrapper;
 }
 
 bool nsIFrame::IsBlockFrameOrSubclass() const {
