@@ -490,6 +490,10 @@
   opacity: 0.7;
 }
 
+.request-list-item.blocked {
+  color: var(--timing-blocked-color);
+}
+
 /* Responsive web design support */
 
 @media (max-width: 700px) {
