@@ -96,6 +96,10 @@ class Connector {
     return this.connector.sendHTTPRequest(...arguments);
   }
 
+  blockRequest() {
+    return this.connector.blockRequest(...arguments);
+  }
+
   setPreferences() {
     return this.connector.setPreferences(...arguments);
   }

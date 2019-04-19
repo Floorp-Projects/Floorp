@@ -1682,6 +1682,28 @@ WebConsoleActor.prototype =
   },
 
   /**
+   * Block a request based on certain filtering options.
+   *
+   * Currently, an exact URL match is the only supported filter type.
+   * In the future, there may be other types of filters, such as domain.
+   * For now, ignore anything other than URL.
+   *
+   * @param object filter
+   *   An object containing a `url` key with a URL to block.
+   */
+  async blockRequest({ filter }) {
+    if (this.netmonitors) {
+      for (const { messageManager } of this.netmonitors) {
+        messageManager.sendAsyncMessage("debug:block-request", {
+          filter,
+        });
+      }
+    }
+
+    return {};
+  },
+
+  /**
    * Handler for file activity. This method sends the file request information
    * to the remote Web Console client.
    *
@@ -1832,6 +1854,7 @@ WebConsoleActor.prototype.requestTypes =
   getPreferences: WebConsoleActor.prototype.getPreferences,
   setPreferences: WebConsoleActor.prototype.setPreferences,
   sendHTTPRequest: WebConsoleActor.prototype.sendHTTPRequest,
+  blockRequest: WebConsoleActor.prototype.blockRequest,
 };
 
 exports.WebConsoleActor = WebConsoleActor;

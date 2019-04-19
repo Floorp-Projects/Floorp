@@ -78,6 +78,22 @@ function sendCustomRequest(connector) {
 }
 
 /**
+ * Tell the backend to block future requests that match the URL of the selected one.
+ */
+function blockSelectedRequestURL(connector) {
+  return (dispatch, getState) => {
+    const selected = getSelectedRequest(getState());
+
+    if (!selected) {
+      return;
+    }
+
+    const { url } = selected;
+    connector.blockRequest({ url });
+  };
+}
+
+/**
  * Remove a request from the list. Supports removing only cloned requests with a
  * "isCustom" attribute. Other requests never need to be removed.
  */
@@ -104,6 +120,7 @@ function toggleRecording() {
 
 module.exports = {
   addRequest,
+  blockSelectedRequestURL,
   clearRequests,
   cloneSelectedRequest,
   removeSelectedCustomRequest,
