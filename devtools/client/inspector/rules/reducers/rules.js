@@ -9,6 +9,7 @@ const Services = require("Services");
 const {
   UPDATE_ADD_RULE_ENABLED,
   UPDATE_HIGHLIGHTED_SELECTOR,
+  UPDATE_PRINT_SIMULATION_HIDDEN,
   UPDATE_RULES,
   UPDATE_SOURCE_LINK_ENABLED,
   UPDATE_SOURCE_LINK,
@@ -19,6 +20,8 @@ const INITIAL_RULES = {
   highlightedSelector: "",
   // Whether or not the add new rule button should be enabled.
   isAddRuleEnabled: false,
+  // Whether or not the print simulation button is hidden.
+  isPrintSimulationHidden: false,
   // Whether or not the source links are enabled. This is determined by
   // whether or not the style editor is registered.
   isSourceLinkEnabled: Services.prefs.getBoolPref("devtools.styleeditor.enabled"),
@@ -118,10 +121,18 @@ const reducers = {
     };
   },
 
+  [UPDATE_PRINT_SIMULATION_HIDDEN](rules, { hidden }) {
+    return {
+      ...rules,
+      isPrintSimulationHidden: hidden,
+    };
+  },
+
   [UPDATE_RULES](rules, { rules: newRules }) {
     return {
       highlightedSelector: rules.highlightedSelector,
       isAddRuleEnabled: rules.isAddRuleEnabled,
+      isPrintSimulationHidden: rules.isPrintSimulationHidden,
       isSourceLinkEnabled: rules.isSourceLinkEnabled,
       rules: newRules.map(rule => getRuleState(rule)),
     };
