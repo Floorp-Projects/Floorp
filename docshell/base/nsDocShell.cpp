@@ -671,15 +671,6 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
 }
 
 NS_IMETHODIMP
-nsDocShell::SetCancelContentJSEpoch(int32_t aEpoch) {
-  // Note: this gets called fairly early (before a pageload actually starts).
-  // We could probably defer this even longer.
-  nsCOMPtr<nsITabChild> tabChild = GetTabChild();
-  static_cast<TabChild*>(tabChild.get())->SetCancelContentJSEpoch(aEpoch);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState, "Must have a valid load state!");
   MOZ_ASSERT(

@@ -27,13 +27,13 @@ class WebNavigationChild extends ActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "WebNavigation:GoBack":
-        this.goBack(message.data);
+        this.goBack();
         break;
       case "WebNavigation:GoForward":
-        this.goForward(message.data);
+        this.goForward();
         break;
       case "WebNavigation:GotoIndex":
-        this.gotoIndex(message.data);
+        this.gotoIndex(message.data.index);
         break;
       case "WebNavigation:LoadURI":
         let histogram = Services.telemetry.getKeyedHistogramById("FX_TAB_REMOTE_NAVIGATION_DELAY_MS");
@@ -65,26 +65,19 @@ class WebNavigationChild extends ActorChild {
     }
   }
 
-  goBack(params) {
+  goBack() {
     if (this.webNavigation.canGoBack) {
-      this.mm.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
       this._wrapURIChangeCall(() => this.webNavigation.goBack());
     }
   }
 
-  goForward(params) {
+  goForward() {
     if (this.webNavigation.canGoForward) {
-      this.mm.docShell.setCancelContentJSEpoch(params.cancelContentJSEpoch);
       this._wrapURIChangeCall(() => this.webNavigation.goForward());
     }
   }
 
-  gotoIndex(params) {
-    let {
-      index,
-      cancelContentJSEpoch,
-    } = params || {};
-    this.mm.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
+  gotoIndex(index) {
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
   }
 
@@ -98,7 +91,6 @@ class WebNavigationChild extends ActorChild {
       baseURI,
       triggeringPrincipal,
       csp,
-      cancelContentJSEpoch,
     } = params || {};
 
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
@@ -139,7 +131,6 @@ class WebNavigationChild extends ActorChild {
       headers,
       baseURI,
     };
-    this.mm.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURI(uri, loadURIOptions);
     });

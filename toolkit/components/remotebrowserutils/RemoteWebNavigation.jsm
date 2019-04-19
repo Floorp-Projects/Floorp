@@ -18,7 +18,6 @@ function makeURI(url) {
 
 function RemoteWebNavigation() {
   this.wrappedJSObject = this;
-  this._cancelContentJSEpoch = 1;
 }
 
 RemoteWebNavigation.prototype = {
@@ -56,35 +55,22 @@ RemoteWebNavigation.prototype = {
   canGoBack: false,
   canGoForward: false,
   goBack() {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.tabParent.maybeCancelContentJSExecution(
-      Ci.nsITabParent.NAVIGATE_BACK, {epoch: cancelContentJSEpoch});
-    this._sendMessage("WebNavigation:GoBack", {cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GoBack", {});
   },
   goForward() {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.tabParent.maybeCancelContentJSExecution(
-      Ci.nsITabParent.NAVIGATE_FORWARD, {epoch: cancelContentJSEpoch});
-    this._sendMessage("WebNavigation:GoForward", {cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GoForward", {});
   },
   gotoIndex(aIndex) {
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.tabParent.maybeCancelContentJSExecution(
-      Ci.nsITabParent.NAVIGATE_INDEX,
-      {index: aIndex, epoch: cancelContentJSEpoch});
-    this._sendMessage("WebNavigation:GotoIndex", {index: aIndex,
-                                                  cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
   },
   loadURI(aURI, aLoadURIOptions) {
-    let uri;
-
     // We know the url is going to be loaded, let's start requesting network
     // connection before the content process asks.
     // Note that we might have already setup the speculative connection in some
     // cases, especially when the url is from location bar or its popup menu.
     if (aURI.startsWith("http:") || aURI.startsWith("https:")) {
       try {
-        uri = makeURI(aURI);
+        let uri = makeURI(aURI);
         let principal = aLoadURIOptions.triggeringPrincipal;
         // We usually have a triggeringPrincipal assigned, but in case we
         // don't have one or if it's a SystemPrincipal, let's create it with OA
@@ -103,9 +89,6 @@ RemoteWebNavigation.prototype = {
       }
     }
 
-    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
-    this._browser.frameLoader.tabParent.maybeCancelContentJSExecution(
-      Ci.nsITabParent.NAVIGATE_URL, {uri, epoch: cancelContentJSEpoch});
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadURIOptions.loadFlags,
@@ -117,7 +100,6 @@ RemoteWebNavigation.prototype = {
                            aLoadURIOptions.triggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
       csp: aLoadURIOptions.csp ? E10SUtils.serializeCSP(aLoadURIOptions.csp) : null,
       requestTime: Services.telemetry.msSystemNow(),
-      cancelContentJSEpoch,
     });
   },
   setOriginAttributesBeforeLoading(aOriginAttributes) {
