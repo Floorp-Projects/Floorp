@@ -795,16 +795,56 @@ var Policies = {
 
   "SanitizeOnShutdown": {
     onBeforeUIStartup(manager, param) {
-      setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);
-      if (param) {
-        setAndLockPref("privacy.clearOnShutdown.cache", true);
-        setAndLockPref("privacy.clearOnShutdown.cookies", true);
-        setAndLockPref("privacy.clearOnShutdown.downloads", true);
-        setAndLockPref("privacy.clearOnShutdown.formdata", true);
-        setAndLockPref("privacy.clearOnShutdown.history", true);
-        setAndLockPref("privacy.clearOnShutdown.sessions", true);
-        setAndLockPref("privacy.clearOnShutdown.siteSettings", true);
-        setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
+      if (typeof param === "boolean") {
+        setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);
+        if (param) {
+          setAndLockPref("privacy.clearOnShutdown.cache", true);
+          setAndLockPref("privacy.clearOnShutdown.cookies", true);
+          setAndLockPref("privacy.clearOnShutdown.downloads", true);
+          setAndLockPref("privacy.clearOnShutdown.formdata", true);
+          setAndLockPref("privacy.clearOnShutdown.history", true);
+          setAndLockPref("privacy.clearOnShutdown.sessions", true);
+          setAndLockPref("privacy.clearOnShutdown.siteSettings", true);
+          setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
+        }
+      } else {
+        setAndLockPref("privacy.sanitize.sanitizeOnShutdown", true);
+        if ("Cache" in param) {
+          setAndLockPref("privacy.clearOnShutdown.cache", param.Cache);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.cache", false);
+        }
+        if ("Cookies" in param) {
+          setAndLockPref("privacy.clearOnShutdown.cookies", param.Cookies);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.cookies", false);
+        }
+        if ("Downloads" in param) {
+          setAndLockPref("privacy.clearOnShutdown.downloads", param.Downloads);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.downloads", false);
+        }
+        if ("FormData" in param) {
+          setAndLockPref("privacy.clearOnShutdown.formdata", param.FormData);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.formdata", false);
+        }
+        if ("History" in param) {
+          setAndLockPref("privacy.clearOnShutdown.history", param.History);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.history", false);
+        }
+        if ("Sessions" in param) {
+          setAndLockPref("privacy.clearOnShutdown.sessions", param.Sessions);
+        } else {
+          setAndLockPref("privacy.clearOnShutdown.sessions", false);
+        }
+        if ("SiteSettings" in param) {
+          setAndLockPref("privacy.clearOnShutdown.siteSettings", param.SiteSettings);
+        }
+        if ("OfflineApps" in param) {
+          setAndLockPref("privacy.clearOnShutdown.offlineApps", param.OfflineApps);
+        }
       }
     },
   },

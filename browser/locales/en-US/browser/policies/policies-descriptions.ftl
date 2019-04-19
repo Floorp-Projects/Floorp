@@ -119,7 +119,7 @@ policy-Proxy = Configure proxy settings.
 
 policy-RequestedLocales = Set the list of requested locales for the application in order of preference.
 
-policy-SanitizeOnShutdown = Clear all navigation data on shutdown.
+policy-SanitizeOnShutdown2 = Clear navigation data on shutdown.
 
 policy-SearchBar = Set the default location of the search bar. The user is still allowed to customize it.
 
