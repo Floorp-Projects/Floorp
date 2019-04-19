@@ -30,6 +30,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "MobileViewportManager.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -1460,13 +1461,13 @@ void nsIPresShell::UpdatePreferenceStyles() {
   // it to be modifiable from devtools and similar, see bugs 1239336 and
   // 1436782. I think it conceptually should be a user sheet, and could be
   // without too much trouble I'd think.
-  StyleSet()->AppendStyleSheet(SheetType::Agent, newPrefSheet);
+  StyleSet()->AppendStyleSheet(StyleOrigin::UserAgent, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
 }
 
 void nsIPresShell::RemovePreferenceStyles() {
   if (mPrefStyleSheet) {
-    StyleSet()->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet);
+    StyleSet()->RemoveStyleSheet(StyleOrigin::UserAgent, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
@@ -1493,14 +1494,14 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
   // Assert that all of userSheets (except for the last, new element) matches up
   // with what's in the style set.
   for (size_t i = 0; i < index; ++i) {
-    MOZ_ASSERT(StyleSet()->StyleSheetAt(SheetType::User, i) == userSheets[i]);
+    MOZ_ASSERT(StyleSet()->SheetAt(StyleOrigin::User, i) == userSheets[i]);
   }
 
-  if (index == static_cast<size_t>(StyleSet()->SheetCount(SheetType::User))) {
-    StyleSet()->AppendStyleSheet(SheetType::User, aSheet);
+  if (index == static_cast<size_t>(StyleSet()->SheetCount(StyleOrigin::User))) {
+    StyleSet()->AppendStyleSheet(StyleOrigin::User, aSheet);
   } else {
-    StyleSheet* ref = StyleSet()->StyleSheetAt(SheetType::User, index);
-    StyleSet()->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
+    StyleSheet* ref = StyleSet()->SheetAt(StyleOrigin::User, index);
+    StyleSet()->InsertStyleSheetBefore(StyleOrigin::User, aSheet, ref);
   }
 
   mDocument->ApplicableStylesChanged();
@@ -1509,7 +1510,7 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
 void nsIPresShell::AddAgentSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
-  StyleSet()->AppendStyleSheet(SheetType::Agent, aSheet);
+  StyleSet()->AppendStyleSheet(StyleOrigin::UserAgent, aSheet);
   mDocument->ApplicableStylesChanged();
 }
 
@@ -1518,17 +1519,17 @@ void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
   // ones added with the StyleSheetService.
   StyleSheet* firstAuthorSheet = mDocument->GetFirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    StyleSet()->InsertStyleSheetBefore(SheetType::Doc, aSheet,
+    StyleSet()->InsertStyleSheetBefore(StyleOrigin::Author, aSheet,
                                        firstAuthorSheet);
   } else {
-    StyleSet()->AppendStyleSheet(SheetType::Doc, aSheet);
+    StyleSet()->AppendStyleSheet(StyleOrigin::Author, aSheet);
   }
 
   mDocument->ApplicableStylesChanged();
 }
 
-void nsIPresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet) {
-  StyleSet()->RemoveStyleSheet(aType, aSheet);
+void nsIPresShell::RemoveSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
+  StyleSet()->RemoveStyleSheet(aOrigin, aSheet);
   mDocument->ApplicableStylesChanged();
 }
 
@@ -8812,14 +8813,14 @@ bool PresShell::IsDisplayportSuppressed() {
 
 nsresult PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) {
   aSheets.Clear();
-  int32_t sheetCount = StyleSet()->SheetCount(SheetType::Agent);
+  int32_t sheetCount = StyleSet()->SheetCount(StyleOrigin::UserAgent);
 
   if (!aSheets.SetCapacity(sheetCount, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   for (int32_t i = 0; i < sheetCount; ++i) {
-    StyleSheet* sheet = StyleSet()->StyleSheetAt(SheetType::Agent, i);
+    StyleSheet* sheet = StyleSet()->SheetAt(StyleOrigin::UserAgent, i);
     aSheets.AppendElement(sheet);
   }
 
@@ -8828,15 +8829,18 @@ nsresult PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) {
 
 nsresult PresShell::SetAgentStyleSheets(
     const nsTArray<RefPtr<StyleSheet>>& aSheets) {
-  return StyleSet()->ReplaceSheets(SheetType::Agent, aSheets);
+  StyleSet()->ReplaceSheets(StyleOrigin::UserAgent, aSheets);
+  return NS_OK;
 }
 
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  return StyleSet()->AppendStyleSheet(SheetType::Override, aSheet);
+  StyleSet()->AppendStyleSheet(aSheet->GetOrigin(), aSheet);
+  return NS_OK;
 }
 
 nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
-  return StyleSet()->RemoveStyleSheet(SheetType::Override, aSheet);
+  StyleSet()->RemoveStyleSheet(aSheet->GetOrigin(), aSheet);
+  return NS_OK;
 }
 
 static void FreezeElement(nsISupports* aSupports, void* /* unused */) {
@@ -9979,9 +9983,9 @@ void PresShell::ListComputedStyles(FILE* out, int32_t aIndent) {
 }
 
 void PresShell::ListStyleSheets(FILE* out, int32_t aIndent) {
-  int32_t sheetCount = StyleSet()->SheetCount(SheetType::Doc);
+  int32_t sheetCount = StyleSet()->SheetCount(StyleOrigin::Author);
   for (int32_t i = 0; i < sheetCount; ++i) {
-    StyleSet()->StyleSheetAt(SheetType::Doc, i)->List(out, aIndent);
+    StyleSet()->SheetAt(StyleOrigin::Author, i)->List(out, aIndent);
     fputs("\n", out);
   }
 }
@@ -10866,18 +10870,18 @@ void nsIPresShell::SyncWindowProperties(nsView* aView) {
   }
 }
 
-static SheetType ToSheetType(uint32_t aServiceSheetType) {
+static StyleOrigin ToOrigin(uint32_t aServiceSheetType) {
   switch (aServiceSheetType) {
     case nsIStyleSheetService::AGENT_SHEET:
-      return SheetType::Agent;
+      return StyleOrigin::UserAgent;
       break;
     case nsIStyleSheetService::USER_SHEET:
-      return SheetType::User;
+      return StyleOrigin::User;
       break;
     default:
       MOZ_FALLTHROUGH_ASSERT("unexpected aSheetType value");
     case nsIStyleSheetService::AUTHOR_SHEET:
-      return SheetType::Doc;
+      return StyleOrigin::Author;
   }
 }
 
@@ -10907,7 +10911,7 @@ void nsIPresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
 
 void nsIPresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                                        uint32_t aSheetType) {
-  RemoveSheet(ToSheetType(aSheetType), aSheet);
+  RemoveSheet(ToOrigin(aSheetType), aSheet);
 }
 
 nsIContent* PresShell::EventHandler::GetOverrideClickTarget(

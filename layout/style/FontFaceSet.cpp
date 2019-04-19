@@ -453,7 +453,7 @@ void FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv) {
 
   FontFaceRecord* rec = mNonRuleFaces.AppendElement();
   rec->mFontFace = &aFontFace;
-  rec->mSheetType = SheetType::Unknown;  // unused for mNonRuleFaces
+  rec->mOrigin = Nothing();
   rec->mLoadEventShouldFire =
       aFontFace.Status() == FontFaceLoadStatus::Unloaded ||
       aFontFace.Status() == FontFaceLoadStatus::Loading;
@@ -726,7 +726,7 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
     if (!f.get()) {
       f = FontFace::CreateForRule(GetParentObject(), this, rule);
     }
-    InsertRuleFontFace(f, aRules[i].mSheetType, oldRecords, modified);
+    InsertRuleFontFace(f, aRules[i].mOrigin, oldRecords, modified);
   }
 
   for (size_t i = 0, i_end = mNonRuleFaces.Length(); i < i_end; ++i) {
@@ -816,7 +816,7 @@ void FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
     // XXX Should we be checking mUserFontSet->mLocalRulesUsed like
     // InsertRuleFontFace does?
     RefPtr<gfxUserFontEntry> entry = FindOrCreateUserFontEntryFromFontFace(
-        family, aFontFace, SheetType::Doc);
+        family, aFontFace, StyleOrigin::Author);
     if (!entry) {
       return;
     }
@@ -827,7 +827,8 @@ void FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
   mUserFontSet->AddUserFontEntry(family, aFontFace->GetUserFontEntry());
 }
 
-void FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
+void FontFaceSet::InsertRuleFontFace(FontFace* aFontFace,
+                                     StyleOrigin aSheetType,
                                      nsTArray<FontFaceRecord>& aOldRecords,
                                      bool& aFontSetModified) {
   nsAtom* fontFamily = aFontFace->GetFamilyName();
@@ -848,7 +849,7 @@ void FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
   for (size_t i = 0; i < aOldRecords.Length(); ++i) {
     FontFaceRecord& rec = aOldRecords[i];
 
-    if (rec.mFontFace == aFontFace && rec.mSheetType == aSheetType) {
+    if (rec.mFontFace == aFontFace && rec.mOrigin == Some(aSheetType)) {
       // if local rules were used, don't use the old font entry
       // for rules containing src local usage
       if (mUserFontSet->mLocalRulesUsed && mUserFontSet->mRebuildLocalRules) {
@@ -900,7 +901,7 @@ void FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
 
   FontFaceRecord rec;
   rec.mFontFace = aFontFace;
-  rec.mSheetType = aSheetType;
+  rec.mOrigin = Some(aSheetType);
   rec.mLoadEventShouldFire =
       aFontFace->Status() == FontFaceLoadStatus::Unloaded ||
       aFontFace->Status() == FontFaceLoadStatus::Loading;
@@ -934,7 +935,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace) {
   }
 
   return FindOrCreateUserFontEntryFromFontFace(nsAtomCString(fontFamily),
-                                               aFontFace, SheetType::Doc);
+                                               aFontFace, StyleOrigin::Author);
 }
 
 static WeightRange GetWeightRangeForDescriptor(
@@ -985,7 +986,7 @@ static StretchRange GetStretchRangeForDescriptor(
 /* static */
 already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
-    const nsACString& aFamilyName, FontFace* aFontFace, SheetType aSheetType) {
+    const nsACString& aFamilyName, FontFace* aFontFace, StyleOrigin aOrigin) {
   FontFaceSet* set = aFontFace->GetPrimaryFontFaceSet();
 
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
@@ -1070,7 +1071,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
           // enforced against the sheet principal rather than the document
           // principal to allow user stylesheets to include @font-face rules
           face->mUseOriginPrincipal =
-              (aSheetType == SheetType::User || aSheetType == SheetType::Agent);
+              aOrigin == StyleOrigin::User || aOrigin == StyleOrigin::UserAgent;
 
           face->mLocalName.Truncate();
           face->mFormatFlags = 0;

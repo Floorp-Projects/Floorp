@@ -418,13 +418,14 @@ void StyleSheet::WillDirty() {
 }
 
 void StyleSheet::AddStyleSet(ServoStyleSet* aStyleSet) {
-  NS_ASSERTION(!mStyleSets.Contains(aStyleSet), "style set already registered");
+  MOZ_DIAGNOSTIC_ASSERT(!mStyleSets.Contains(aStyleSet),
+                        "style set already registered");
   mStyleSets.AppendElement(aStyleSet);
 }
 
 void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
-  DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
-  NS_ASSERTION(found, "didn't find style set");
+  bool found = mStyleSets.RemoveElement(aStyleSet);
+  MOZ_DIAGNOSTIC_ASSERT(found, "didn't find style set");
 }
 
 void StyleSheet::EnsureUniqueInner() {
@@ -991,7 +992,7 @@ nsresult StyleSheet::ReparseSheet(const nsAString& aInput) {
   // Allowing to modify UA sheets is dangerous (in the sense that C++ code
   // relies on rules in those sheets), plus they're probably going to be shared
   // across processes in which case this is directly a no-go.
-  if (GetOrigin() == OriginFlags::UserAgent) {
+  if (GetOrigin() == StyleOrigin::UserAgent) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
@@ -1176,9 +1177,8 @@ nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
   return rules->InsertRule(aRule, aIndex);
 }
 
-OriginFlags StyleSheet::GetOrigin() {
-  return static_cast<OriginFlags>(
-      Servo_StyleSheet_GetOrigin(Inner().mContents));
+StyleOrigin StyleSheet::GetOrigin() const {
+  return Servo_StyleSheet_GetOrigin(Inner().mContents);
 }
 
 void StyleSheet::SetSharedContents(nsLayoutStylesheetCache::Shm* aSharedMemory,

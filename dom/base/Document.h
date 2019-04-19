@@ -1711,17 +1711,10 @@ class Document : public nsINode,
   }
 
   /**
-   * Assuming that aDocSheets is an array of document-level style
-   * sheets for this document, returns the index that aSheet should
-   * be inserted at to maintain document ordering.
-   *
-   * Type T has to cast to StyleSheet*.
-   *
-   * Defined in DocumentInlines.h.
+   * Returns the index that aSheet should be inserted at to maintain document
+   * ordering.
    */
-  template <typename T>
-  size_t FindDocStyleSheetInsertionPoint(const nsTArray<T>& aDocSheets,
-                                         const StyleSheet& aSheet);
+  size_t FindDocStyleSheetInsertionPoint(const StyleSheet& aSheet);
 
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
@@ -3829,7 +3822,7 @@ class Document : public nsINode,
 
   void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(
-      const nsTArray<RefPtr<StyleSheet>>& aSheets, SheetType aType);
+      const nsTArray<RefPtr<StyleSheet>>& aSheets, StyleOrigin);
   void ResetStylesheetsToURI(nsIURI* aURI);
   void FillStyleSet();
   void FillStyleSetUserAndUASheets();

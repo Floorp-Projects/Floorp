@@ -470,6 +470,7 @@ cbindgen-types = [
     { gecko = "StyleGenericColorOrAuto", servo = "values::generics::color::ColorOrAuto" },
     { gecko = "StyleGenericScrollbarColor", servo = "values::generics::ui::ScrollbarColor" },
     { gecko = "StyleRGBA", servo = "cssparser::RGBA" },
+    { gecko = "StyleOrigin", servo = "stylesheets::Origin" },
 ]
 
 mapped-generic-types = [

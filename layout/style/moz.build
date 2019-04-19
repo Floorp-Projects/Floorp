@@ -106,7 +106,6 @@ EXPORTS.mozilla += [
     'ServoTraversalStatistics.h',
     'ServoTypes.h',
     'ServoUtils.h',
-    'SheetType.h',
     'StyleAnimationValue.h',
     'StyleColorInlines.h',
     'StyleSheet.h',

@@ -141,7 +141,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   ServoCSSRuleList* GetCssRulesInternal();
 
   // Returns the stylesheet's Servo origin as an OriginFlags value.
-  mozilla::OriginFlags GetOrigin();
+  mozilla::StyleOrigin GetOrigin() const;
 
   /**
    * The different changes that a stylesheet may go through.

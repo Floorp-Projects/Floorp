@@ -14,7 +14,6 @@
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/SheetType.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
 #include "nsCSSPseudoElements.h"
@@ -82,6 +81,8 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OriginFlags)
 class ServoStyleSet {
   friend class RestyleManager;
   typedef ServoElementSnapshotTable SnapshotTable;
+
+  using Origin = StyleOrigin;
 
  public:
   static bool IsInServoTraversal() { return mozilla::IsInServoTraversal(); }
@@ -200,27 +201,21 @@ class ServoStyleSet {
 #endif
 
   // manage the set of style sheets in the style set
-  nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);
-  nsresult RemoveStyleSheet(SheetType aType, StyleSheet* aSheet);
-  nsresult ReplaceSheets(SheetType aType,
-                         const nsTArray<RefPtr<StyleSheet>>& aNewSheets);
-  nsresult InsertStyleSheetBefore(SheetType aType, StyleSheet* aNewSheet,
-                                  StyleSheet* aReferenceSheet);
+  void AppendStyleSheet(Origin, StyleSheet*);
+  void RemoveStyleSheet(Origin, StyleSheet*);
+  void ReplaceSheets(Origin, const nsTArray<RefPtr<StyleSheet>>& aNewSheets);
+  void InsertStyleSheetBefore(Origin, StyleSheet*, StyleSheet* aReferenceSheet);
 
-  int32_t SheetCount(SheetType aType) const;
-  StyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
+  size_t SheetCount(Origin) const;
+  StyleSheet* SheetAt(Origin, size_t aIndex) const;
 
   void AppendAllNonDocumentAuthorSheets(nsTArray<StyleSheet*>& aArray) const;
 
-  template <typename Func>
-  void EnumerateStyleSheetArrays(Func aCallback) const {
-    for (const auto& sheetArray : mSheets) {
-      aCallback(sheetArray);
-    }
+  void RemoveDocStyleSheet(StyleSheet* aSheet) {
+    RemoveStyleSheet(StyleOrigin::Author, aSheet);
   }
 
-  nsresult RemoveDocStyleSheet(StyleSheet* aSheet);
-  nsresult AddDocStyleSheet(StyleSheet* aSheet, dom::Document* aDocument);
+  void AddDocStyleSheet(StyleSheet* aSheet);
 
   // check whether there is ::before/::after style for an element
   already_AddRefed<ComputedStyle> ProbePseudoElementStyle(
@@ -296,6 +291,17 @@ class ServoStyleSet {
    * changed.
    */
   void CompatibilityModeChanged();
+
+  template <typename T>
+  void EnumerateStyleSheets(T aCb) {
+    const StyleOrigin kOrigins[] = {StyleOrigin::UserAgent, StyleOrigin::User,
+                                    StyleOrigin::Author};
+    for (auto origin : kOrigins) {
+      for (size_t i = 0, count = SheetCount(origin); i < count; ++i) {
+        aCb(*SheetAt(origin, i));
+      }
+    }
+  }
 
   /**
    * Resolve style for the given element, and return it as a
@@ -488,18 +494,10 @@ class ServoStyleSet {
 
   void RunPostTraversalTasks();
 
-  void PrependSheetOfType(SheetType aType, StyleSheet* aSheet);
-
-  void AppendSheetOfType(SheetType aType, StyleSheet* aSheet);
-
-  void InsertSheetOfType(SheetType aType, StyleSheet* aSheet,
-                         StyleSheet* aBeforeSheet);
-
-  void RemoveSheetOfType(SheetType aType, StyleSheet* aSheet);
-
-  // The owner document of this style set. Never null, and always outlives the
-  // StyleSet.
-  dom::Document* mDocument;
+  void PrependSheetOfType(Origin, StyleSheet*);
+  void AppendSheetOfType(Origin, StyleSheet*);
+  void InsertSheetOfType(Origin, StyleSheet*, StyleSheet* aBeforeSheet);
+  void RemoveSheetOfType(Origin, StyleSheet*);
 
   const nsPresContext* GetPresContext() const {
     return const_cast<ServoStyleSet*>(this)->GetPresContext();
@@ -511,20 +509,15 @@ class ServoStyleSet {
    */
   nsPresContext* GetPresContext();
 
+  // The owner document of this style set. Never null, and always outlives the
+  // StyleSet.
+  dom::Document* mDocument;
   UniquePtr<RawServoStyleSet> mRawSet;
-  EnumeratedArray<SheetType, SheetType::Count, nsTArray<RefPtr<StyleSheet>>>
-      mSheets;
-  bool mAuthorStyleDisabled;
-  StylistState mStylistState;
-  uint64_t mUserFontSetUpdateGeneration;
 
-  bool mNeedsRestyleAfterEnsureUniqueInner;
-
-  // Stores pointers to our cached ComputedStyles for non-inheriting anonymous
-  // boxes.
-  EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
-                  nsCSSAnonBoxes::NonInheriting::_Count, RefPtr<ComputedStyle>>
-      mNonInheritingComputedStyles;
+  // Map from raw Servo style rule to Gecko's wrapper object.
+  // Constructed lazily when requested by devtools.
+  UniquePtr<ServoStyleRuleMap> mStyleRuleMap;
+  uint64_t mUserFontSetUpdateGeneration = 0;
 
   // Tasks to perform after a traversal, back on the main thread.
   //
@@ -532,9 +525,15 @@ class ServoStyleSet {
   // posted by C++ code running on style worker threads.
   nsTArray<PostTraversalTask> mPostTraversalTasks;
 
-  // Map from raw Servo style rule to Gecko's wrapper object.
-  // Constructed lazily when requested by devtools.
-  UniquePtr<ServoStyleRuleMap> mStyleRuleMap;
+  // Stores pointers to our cached ComputedStyles for non-inheriting anonymous
+  // boxes.
+  EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
+                  nsCSSAnonBoxes::NonInheriting::_Count, RefPtr<ComputedStyle>>
+      mNonInheritingComputedStyles;
+
+  StylistState mStylistState = StylistState::NotDirty;
+  bool mAuthorStyleDisabled = false;
+  bool mNeedsRestyleAfterEnsureUniqueInner = false;
 };
 
 class UACacheReporter final : public nsIMemoryReporter {

@@ -1645,6 +1645,25 @@ pub extern "C" fn Servo_StyleSet_RemoveStyleSheet(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_StyleSet_GetSheetAt(
+    raw_data: &RawServoStyleSet,
+    origin: Origin,
+    index: usize,
+) -> *const DomStyleSheet {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    data.stylist.sheet_at(origin, index).map_or(ptr::null(), |s| s.raw())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_StyleSet_GetSheetCount(
+    raw_data: &RawServoStyleSet,
+    origin: Origin,
+) -> usize {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    data.stylist.sheet_count(origin)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_StyleSet_FlushStyleSheets(
     raw_data: &RawServoStyleSet,
     doc_element: Option<&RawGeckoElement>,
@@ -1743,19 +1762,8 @@ pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: &RawServoStyleSheetContents) -> u8 {
-    let origin = match StylesheetContents::as_arc(&sheet).origin {
-        Origin::UserAgent => OriginFlags::UserAgent,
-        Origin::User => OriginFlags::User,
-        Origin::Author => OriginFlags::Author,
-    };
-    // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
-    // work as return values with the Linux 32-bit ABI at the moment because
-    // they wrap the value in a struct (and bindgen doesn't have support for
-    // repr(transparent), so for now just unwrap it.
-    //
-    // See https://github.com/rust-lang/rust-bindgen/issues/1474
-    origin.0
+pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: &RawServoStyleSheetContents) -> Origin {
+    StylesheetContents::as_arc(&sheet).origin
 }
 
 #[no_mangle]
@@ -5518,9 +5526,9 @@ pub extern "C" fn Servo_StyleSet_GetFontFaceRules(
         .flat_map(|(d, o)| d.font_faces.iter().zip(iter::repeat(o)));
 
     unsafe { rules.set_len(len) };
-    for (src, dest) in font_face_iter.zip(rules.iter_mut()) {
-        dest.mRule.set_arc_leaky(src.0.clone());
-        dest.mSheetType = src.1.into();
+    for ((rule, origin), dest) in font_face_iter.zip(rules.iter_mut()) {
+        dest.mRule.set_arc_leaky(rule.clone());
+        dest.mOrigin = origin;
     }
 }
 
