@@ -43,8 +43,8 @@ StackTraceCollector.prototype = {
     }
   },
 
-  _saveStackTrace(channel, stacktrace) {
-    if (this.stacktracesById.has(channel.channelId)) {
+  _saveStackTrace(id, stacktrace) {
+    if (this.stacktracesById.has(id)) {
       // We can get up to two stack traces for the same channel: one each from
       // the two observer topics we are listening to. Use the first stack trace
       // which is specified, and ignore any later one.
@@ -52,15 +52,27 @@ StackTraceCollector.prototype = {
     }
     for (const { messageManager } of this.netmonitors) {
       messageManager.sendAsyncMessage("debug:request-stack-available", {
-        channelId: channel.channelId,
+        channelId: id,
         stacktrace: stacktrace && stacktrace.length > 0,
       });
     }
-    this.stacktracesById.set(channel.channelId, stacktrace);
+    this.stacktracesById.set(id, stacktrace);
   },
 
   observe(subject, topic, data) {
-    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    let channel, id;
+    try {
+      channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      id = channel.channelId;
+    } catch (e) {
+      // WebSocketChannels do not have IDs, so use the URL. When a WebSocket is
+      // opened in a content process, a channel is created locally but the HTTP
+      // channel for the connection lives entirely in the parent process. When
+      // the server code running in the parent sees that HTTP channel, it will
+      // look for the creation stack using the websocket's URL.
+      channel = subject.QueryInterface(Ci.nsIWebSocketChannel);
+      id = channel.URI.spec;
+    }
 
     if (!matchRequest(channel, this.filters)) {
       return;
@@ -121,7 +133,7 @@ StackTraceCollector.prototype = {
         throw new Error("Unexpected observe() topic");
     }
 
-    this._saveStackTrace(channel, stacktrace);
+    this._saveStackTrace(id, stacktrace);
   },
 
   // eslint-disable-next-line no-shadow
@@ -137,7 +149,7 @@ StackTraceCollector.prototype = {
     const oldId = oldChannel.channelId;
     const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
-      this._saveStackTrace(newChannel, stacktrace);
+      this._saveStackTrace(newChannel.channelId, stacktrace);
     }
   },
 
