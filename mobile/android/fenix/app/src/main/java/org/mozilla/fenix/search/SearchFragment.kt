@@ -14,12 +14,13 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.feature.qr.QrFeature
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -42,6 +43,7 @@ class SearchFragment : Fragment() {
     private lateinit var awesomeBarComponent: AwesomeBarComponent
     private var sessionId: String? = null
     private var isPrivate = false
+    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,10 +58,6 @@ class SearchFragment : Fragment() {
                 session.url
             }
         } ?: ""
-
-        view.search_scan_button.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "113")
-        }
 
         toolbarComponent = ToolbarComponent(
             view.toolbar_component_wrapper,
@@ -79,6 +77,26 @@ class SearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         layoutComponents(view.search_layout)
+
+        qrFeature.set(
+            QrFeature(
+                requireContext(),
+                fragmentManager = requireFragmentManager(),
+                onNeedToRequestPermissions = { permissions ->
+                    requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
+                },
+                onScanResult = { result ->
+                    (activity as HomeActivity)
+                        .openToBrowserAndLoad(result, from = BrowserDirection.FromSearch)
+                    // TODO add metrics, also should we have confirmation before going to a URL?
+                }),
+            owner = this,
+            view = view
+        )
+
+        view.search_scan_button.setOnClickListener {
+            qrFeature.get()?.scan(R.id.container)
+        }
 
         lifecycle.addObserver((toolbarComponent.uiView as ToolbarUIView).toolbarIntegration)
 
@@ -114,13 +132,17 @@ class SearchFragment : Fragment() {
                 when (it) {
                     is SearchAction.UrlCommitted -> {
                         if (it.url.isNotBlank()) {
-                            (activity as HomeActivity).openToBrowserAndLoad(it.url, it.session, it.engine,
-                                BrowserDirection.FromSearch)
+                            (activity as HomeActivity).openToBrowserAndLoad(
+                                it.url, it.session, it.engine,
+                                BrowserDirection.FromSearch
+                            )
 
                             val event = if (it.url.isUrl()) {
                                 Event.EnteredUrl(false)
                             } else {
-                                if (it.engine == null) { return@subscribe }
+                                if (it.engine == null) {
+                                    return@subscribe
+                                }
 
                                 createSearchEvent(it.engine, false)
                             }
@@ -152,7 +174,9 @@ class SearchFragment : Fragment() {
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
 
-                        if (it.engine == null) { return@subscribe }
+                        if (it.engine == null) {
+                            return@subscribe
+                        }
                         val event = createSearchEvent(it.engine, true)
 
                         requireComponents.analytics.metrics.track(event)
@@ -203,5 +227,9 @@ class SearchFragment : Fragment() {
             true -> context.components.useCases.tabsUseCases.addPrivateTab
             false -> context.components.useCases.tabsUseCases.addTab
         }
+    }
+
+    companion object {
+        private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }
