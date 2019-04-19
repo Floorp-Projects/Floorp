@@ -216,8 +216,6 @@ class nsColumnSetFrame final : public nsContainerFrame {
   void ForEachColumnRule(
       const std::function<void(const nsRect& lineRect)>& aSetLineRect,
       const nsPoint& aPt);
-
-  static nscoord ClampUsedColumnWidth(const mozilla::Length& aColumnWidth);
 };
 
 #endif  // nsColumnSetFrame_h___
