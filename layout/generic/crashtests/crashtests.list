@@ -584,7 +584,7 @@ load 1003441.xul
 load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-asserts(11) asserts-if(Android,274) load 1015844.html # bug 574889, bug 1374479
+load 1015844.html
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html

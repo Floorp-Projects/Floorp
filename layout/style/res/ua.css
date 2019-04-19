@@ -256,9 +256,9 @@
   text-overflow: inherit;
   /* inherit the outer frame's display, otherwise we turn into an inline */
   display: inherit;
-  /* Carry through our parent's height so that %-height children get
-  their heights set */
-  height: 100%;
+  /* -moz-column-set and -moz-column-content's max block size cannot exceed
+   * ColumnSetWrapperFrame's block size. */
+  max-block-size: 100%;
 }
 
 *|*::-moz-column-set {
