@@ -255,12 +255,6 @@ class TemporaryTypeSet;
  *   the new group. When this occurs, the properties of the old and new group
  *   will both be marked as unknown, which will prevent Ion from optimizing
  *   based on the object's type information.
- *
- * - If an unboxed object is converted to a native object, its group will also
- *   change and type sets containing the old group will not necessarily contain
- *   the new group. Unlike the above case, this will not degrade property type
- *   information, but Ion will no longer optimize unboxed objects with the old
- *   group.
  */
 class TypeSet {
  protected:

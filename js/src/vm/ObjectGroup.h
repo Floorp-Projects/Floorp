@@ -114,10 +114,9 @@ class ObjectGroup : public gc::TenuredCell {
    * The type sets in the properties of a group describe the possible values
    * that can be read out of that property in actual JS objects. In native
    * objects, property types account for plain data properties (those with a
-   * slot and no getter or setter hook) and dense elements. In typed objects
-   * and unboxed objects, property types account for object and value
-   * properties and elements in the object, and expando properties in unboxed
-   * objects.
+   * slot and no getter or setter hook) and dense elements. In typed objects,
+   * property types account for object and value properties and elements in the
+   * object.
    *
    * For accesses on these properties, the correspondence is as follows:
    *
@@ -140,10 +139,9 @@ class ObjectGroup : public gc::TenuredCell {
    * 2. Array lengths are special cased by the compiler and VM and are not
    *    reflected in property types.
    *
-   * 3. In typed objects (but not unboxed objects), the initial values of
-   *    properties (null pointers and undefined values) are not reflected in
-   *    the property types. These values are always possible when reading the
-   *    property.
+   * 3. In typed objects, the initial values of properties (null pointers and
+   *    undefined values) are not reflected in the property types. These values
+   *    are always possible when reading the property.
    *
    * We establish these by using write barriers on calls to setProperty and
    * defineProperty which are on native properties, and on any jitcode which

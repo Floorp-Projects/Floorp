@@ -3975,8 +3975,7 @@ void JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 size_t JSObject::sizeOfIncludingThisInNursery() const {
-  // This function doesn't concern itself yet with typed objects (bug 1133593)
-  // nor unboxed objects (bug 1133592).
+  // This function doesn't concern itself yet with typed objects (bug 1133593).
 
   MOZ_ASSERT(!isTenured());
 
