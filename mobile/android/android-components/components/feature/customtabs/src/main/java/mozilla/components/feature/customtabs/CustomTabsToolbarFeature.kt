@@ -14,6 +14,7 @@ import android.net.Uri
 import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -34,6 +35,7 @@ class CustomTabsToolbarFeature(
     private val toolbar: BrowserToolbar,
     private val sessionId: String? = null,
     private val menuBuilder: BrowserMenuBuilder? = null,
+    private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, BackHandler {
@@ -69,7 +71,7 @@ class CustomTabsToolbarFeature(
             // Show share button
             if (config.showShareMenuItem) addShareButton(session)
             // Add menu items
-            if (config.menuItems.isNotEmpty()) addMenuItems(session, config.menuItems)
+            if (config.menuItems.isNotEmpty()) addMenuItems(session, config.menuItems, menuItemIndex)
 
             // Explicitly set the title regardless of the customTabConfig settings
             toolbar.titleTextSize = TITLE_TEXT_SIZE
@@ -144,7 +146,11 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun addMenuItems(session: Session, menuItems: List<CustomTabMenuItem>) {
+    internal fun addMenuItems(
+        session: Session,
+        menuItems: List<CustomTabMenuItem>,
+        index: Int
+    ) {
         menuItems.map {
             SimpleBrowserMenuItem(it.name) {
                 it.pendingIntent.send(
@@ -154,10 +160,26 @@ class CustomTabsToolbarFeature(
                 )
             }
         }.also { items ->
-            val combinedItems = menuBuilder?.let { builder -> builder.items + items } ?: items
-            val combinedExtras = menuBuilder?.let {
-                    builder -> builder.extras + Pair("customTab", true)
+            val combinedItems = menuBuilder?.let { builder ->
+                val newMenuItemList = mutableListOf<BrowserMenuItem>()
+                val maxIndex = builder.items.size
+
+                val insertIndex: Int = if (index in 0..maxIndex) {
+                    index
+                } else {
+                    maxIndex
+                }
+
+                newMenuItemList.apply {
+                    addAll(builder.items)
+                    addAll(insertIndex, items)
+                }
+            } ?: items
+
+            val combinedExtras = menuBuilder?.let { builder ->
+                builder.extras + Pair("customTab", true)
             }
+
             toolbar.setMenuBuilder(BrowserMenuBuilder(combinedItems, combinedExtras ?: emptyMap()))
         }
     }

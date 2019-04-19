@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.widget.FrameLayout
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
@@ -262,13 +263,13 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature, never()).addMenuItems(any(), anyList())
+        verify(feature, never()).addMenuItems(any(), anyList(), anyInt())
 
         `when`(customTabConfig.menuItems).thenReturn(listOf(CustomTabMenuItem("Share", mock())))
 
         feature.initialize(session)
 
-        verify(feature).addMenuItems(any(), anyList())
+        verify(feature).addMenuItems(any(), anyList(), anyInt())
     }
 
     @Test
@@ -282,7 +283,7 @@ class CustomTabsToolbarFeatureTest {
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
 
-        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())))
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 0)
 
         verify(toolbar).setMenuBuilder(captor.capture())
         assertEquals(1, captor.value.items.size)
@@ -300,11 +301,71 @@ class CustomTabsToolbarFeatureTest {
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
         `when`(builder.items).thenReturn(listOf(mock(), mock()))
 
-        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())))
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 0)
 
         verify(toolbar).setMenuBuilder(captor.capture())
 
         assertEquals(3, captor.value.items.size)
+    }
+
+    @Test
+    fun `menu item added at specified index`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val builder: BrowserMenuBuilder = mock()
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
+        val captor = argumentCaptor<BrowserMenuBuilder>()
+        val customTabConfig: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(customTabConfig.menuItems).thenReturn(emptyList())
+        `when`(builder.items).thenReturn(listOf(mock(), mock()))
+
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 1)
+
+        verify(toolbar).setMenuBuilder(captor.capture())
+
+        assertEquals(3, captor.value.items.size)
+        assertTrue(captor.value.items[1] is SimpleBrowserMenuItem)
+    }
+
+    @Test
+    fun `menu item added appended if index too large`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val builder: BrowserMenuBuilder = mock()
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
+        val captor = argumentCaptor<BrowserMenuBuilder>()
+        val customTabConfig: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(customTabConfig.menuItems).thenReturn(emptyList())
+        `when`(builder.items).thenReturn(listOf(mock(), mock()))
+
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 4)
+
+        verify(toolbar).setMenuBuilder(captor.capture())
+
+        assertEquals(3, captor.value.items.size)
+        assertTrue(captor.value.items[2] is SimpleBrowserMenuItem)
+    }
+
+    @Test
+    fun `menu item added appended if index too small`() {
+        val session: Session = mock()
+        val toolbar = spy(BrowserToolbar(RuntimeEnvironment.application))
+        val builder: BrowserMenuBuilder = mock()
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
+        val captor = argumentCaptor<BrowserMenuBuilder>()
+        val customTabConfig: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(customTabConfig.menuItems).thenReturn(emptyList())
+        `when`(builder.items).thenReturn(listOf(mock(), mock()))
+
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), -4)
+
+        verify(toolbar).setMenuBuilder(captor.capture())
+
+        assertEquals(3, captor.value.items.size)
+        assertTrue(captor.value.items[2] is SimpleBrowserMenuItem)
     }
 
     @Test

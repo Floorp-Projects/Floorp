@@ -21,6 +21,7 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added fact emitting.
   * Bugfix to call with app-contributed pending intents from menu items and action buttons.
+  * Added ability to decide where menu items requested by the launching app should be inserted into the combined menu by setting `menuItemIndex`
 
 * **service-glean**
    * ⚠️ **This is a breaking API change**: Timespan and timing distribution
