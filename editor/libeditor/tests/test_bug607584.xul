@@ -34,22 +34,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
   {
     this.init(aEditor);
   }
-  
+
   EditorContentListener.prototype = {
     init : function(aEditor)
       {
         this.mEditor = aEditor;
       },
-  
-    QueryInterface : function(aIID)
-      {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_NOINTERFACE;
-      },
-  
+
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                            Ci.nsISupportsWeakReference]),
+
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
@@ -73,24 +67,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
               SimpleTest.finish();
           }
         }
-  
+
     },
-  
-  
+
+
     onProgressChange : function(aWebProgress, aRequest,
                                 aCurSelfProgress, aMaxSelfProgress,
                                 aCurTotalProgress, aMaxTotalProgress)
       {
       },
-  
+
     onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags)
       {
       },
-  
+
     onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
       {
       },
-  
+
     onSecurityChange : function(aWebProgress, aRequest, aState)
       {
       },
@@ -98,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
     onContentBlockingEvent : function(aWebProgress, aRequest, aEvent)
       {
       },
-  
+
       mEditor: null
   };
 

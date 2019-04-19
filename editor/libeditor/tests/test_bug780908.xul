@@ -36,22 +36,16 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
   {
     this.init(aEditor);
   }
-  
+
   EditorContentListener.prototype = {
     init : function(aEditor)
       {
         this.mEditor = aEditor;
       },
-  
-    QueryInterface : function(aIID)
-      {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_NOINTERFACE;
-      },
-  
+
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener,
+                                            Ci.nsISupportsWeakReference]),
+
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
