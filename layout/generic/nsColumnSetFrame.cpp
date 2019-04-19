@@ -117,7 +117,7 @@ nsColumnSetFrame::nsColumnSetFrame(ComputedStyle* aStyle,
 
 void nsColumnSetFrame::ForEachColumnRule(
     const std::function<void(const nsRect& lineRect)>& aSetLineRect,
-    const nsPoint& aPt) {
+    const nsPoint& aPt) const {
   nsIFrame* child = mFrames.FirstChild();
   if (!child) return;  // no columns
 
@@ -167,7 +167,8 @@ void nsColumnSetFrame::ForEachColumnRule(
   }
 }
 
-nsRect nsColumnSetFrame::CalculateColumnRuleBounds(const nsPoint& aOffset) {
+nsRect nsColumnSetFrame::CalculateColumnRuleBounds(
+    const nsPoint& aOffset) const {
   nsRect combined;
   ForEachColumnRule(
       [&combined](const nsRect& aLineRect) {
@@ -262,7 +263,7 @@ static nscoord GetAvailableContentISize(const ReflowInput& aReflowInput) {
 }
 
 nscoord nsColumnSetFrame::GetAvailableContentBSize(
-    const ReflowInput& aReflowInput) {
+    const ReflowInput& aReflowInput) const {
   if (aReflowInput.AvailableBSize() == NS_INTRINSICSIZE) {
     return NS_INTRINSICSIZE;
   }
@@ -274,7 +275,7 @@ nscoord nsColumnSetFrame::GetAvailableContentBSize(
   return std::max(0, aReflowInput.AvailableBSize() - bp.BStartEnd(wm));
 }
 
-static nscoord GetColumnGap(nsColumnSetFrame* aFrame,
+static nscoord GetColumnGap(const nsColumnSetFrame* aFrame,
                             nscoord aPercentageBasis) {
   const auto& columnGap = aFrame->StylePosition()->mColumnGap;
   if (columnGap.IsNormal()) {
@@ -289,7 +290,7 @@ static nscoord ClampUsedColumnWidth(const Length& aColumnWidth) {
 }
 
 nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
-    const ReflowInput& aReflowInput, bool aForceAuto = false) {
+    const ReflowInput& aReflowInput, bool aForceAuto = false) const {
   WritingMode wm = aReflowInput.GetWritingMode();
 
   const nsStyleColumn* colStyle = StyleColumn();
