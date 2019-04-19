@@ -128,6 +128,17 @@ extern JS_PUBLIC_API SavedFrameResult GetSavedFrameParent(
     MutableHandle<JSObject*> parentp,
     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
 
+/**
+ * Given a SavedFrame object, convert it and its transitive parents to plain
+ * objects. Because SavedFrame objects store their properties on the prototype,
+ * they cannot be usefully stringified to JSON. Assigning their properties to
+ * plain objects allow those objects to be stringified and the saved frame stack
+ * can be encoded as a string.
+ */
+JS_PUBLIC_API JSObject* ConvertSavedFrameToPlainObject(
+    JSContext* cx, JS::HandleObject savedFrame,
+    JS::SavedFrameSelfHosted selfHosted);
+
 }  // namespace JS
 
 namespace js {
