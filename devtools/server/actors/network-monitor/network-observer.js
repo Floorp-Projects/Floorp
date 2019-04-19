@@ -671,6 +671,21 @@ NetworkObserver.prototype = {
   },
 
   /**
+   * Unblock a request based on certain filtering options.
+   *
+   * Currently, an exact URL match is the only supported filter type.
+   */
+  unblockRequest(filter) {
+    if (!filter || !filter.url) {
+      // In the future, there may be other types of filters, such as domain.
+      // For now, ignore anything other than URL.
+      return;
+    }
+
+    this.blockedURLs.delete(filter.url);
+  },
+
+  /**
    * Setup the network response listener for the given HTTP activity. The
    * NetworkResponseListener is responsible for storing the response body.
    *

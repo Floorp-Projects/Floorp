@@ -243,6 +243,15 @@ class FirefoxConnector {
   }
 
   /**
+   * Unblock future requests matching a filter.
+   *
+   * @param {object} filter request filter specifying what to unblock
+   */
+  unblockRequest(filter) {
+    return this.webConsoleClient.unblockRequest(filter);
+  }
+
+  /**
    * Set network preferences to control network flow
    *
    * @param {object} request request payload would like to sent to backend

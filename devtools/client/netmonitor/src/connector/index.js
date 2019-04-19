@@ -100,6 +100,10 @@ class Connector {
     return this.connector.blockRequest(...arguments);
   }
 
+  unblockRequest() {
+    return this.connector.unblockRequest(...arguments);
+  }
+
   setPreferences() {
     return this.connector.setPreferences(...arguments);
   }

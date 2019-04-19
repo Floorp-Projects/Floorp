@@ -94,6 +94,22 @@ function blockSelectedRequestURL(connector) {
 }
 
 /**
+ * Tell the backend to unblock future requests that match the URL of the selected one.
+ */
+function unblockSelectedRequestURL(connector) {
+  return (dispatch, getState) => {
+    const selected = getSelectedRequest(getState());
+
+    if (!selected) {
+      return;
+    }
+
+    const { url } = selected;
+    connector.unblockRequest({ url });
+  };
+}
+
+/**
  * Remove a request from the list. Supports removing only cloned requests with a
  * "isCustom" attribute. Other requests never need to be removed.
  */
@@ -126,5 +142,6 @@ module.exports = {
   removeSelectedCustomRequest,
   sendCustomRequest,
   toggleRecording,
+  unblockSelectedRequestURL,
   updateRequest,
 };
