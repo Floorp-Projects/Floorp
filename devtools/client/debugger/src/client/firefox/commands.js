@@ -20,6 +20,7 @@ import type {
   Script,
   SourceId,
   SourceActor,
+  Source,
   Worker,
   Range
 } from "../../types";
@@ -187,7 +188,7 @@ function removeXHRBreakpoint(path: string, method: string) {
 function locationKey(location: BreakpointLocation) {
   const { sourceUrl, line, column } = location;
   const sourceId = location.sourceId || "";
-  return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
+  return `${(sourceUrl: any)}:${sourceId}:${line}:${(column: any)}`;
 }
 
 function waitForWorkers(shouldWait: boolean) {
@@ -445,12 +446,12 @@ function getMainThread() {
 }
 
 async function getBreakpointPositions(
-  actors: Array<SourceActor>,
+  source: Source,
   range: ?Range
 ): Promise<{ [string]: number[] }> {
   const sourcePositions = {};
 
-  for (const { thread, actor } of actors) {
+  for (const { thread, actor } of source.actors) {
     const sourceThreadClient = lookupThreadClient(thread);
     const sourceClient = sourceThreadClient.source({ actor });
     const { positions } = await sourceClient.getBreakpointPositionsCompressed(

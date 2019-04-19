@@ -10,8 +10,7 @@ import {
   getSourceFromId,
   getGeneratedSource,
   getSourcesEpoch,
-  getBreakpointsForSource,
-  getSourceActorsForSource
+  getBreakpointsForSource
 } from "../../selectors";
 import { setBreakpointPositions, addBreakpoint } from "../breakpoints";
 
@@ -37,23 +36,14 @@ const telemetry = new Telemetry();
 async function loadSource(
   state,
   source: Source,
-  { sourceMaps, client, getState }
+  { sourceMaps, client }
 ): Promise<?{
   text: string,
   contentType: string
 }> {
   if (isPretty(source) && isOriginal(source)) {
     const generatedSource = getGeneratedSource(state, source);
-    if (!generatedSource) {
-      throw new Error("Unable to find minified original.");
-    }
-
-    return prettyPrintSource(
-      sourceMaps,
-      source,
-      generatedSource,
-      getSourceActorsForSource(state, generatedSource.id)
-    );
+    return prettyPrintSource(sourceMaps, source, generatedSource);
   }
 
   if (isOriginal(source)) {
@@ -68,13 +58,12 @@ async function loadSource(
     return result;
   }
 
-  const actors = getSourceActorsForSource(state, source.id);
-  if (!actors.length) {
+  if (!source.actors.length) {
     throw new Error("No source actor for loadSource");
   }
 
   telemetry.start(loadSourceHistogram, source);
-  const response = await client.sourceContents(actors[0]);
+  const response = await client.sourceContents(source.actors[0]);
   telemetry.finish(loadSourceHistogram, source);
 
   return {
@@ -93,7 +82,7 @@ async function loadSourceTextPromise(
     type: "LOAD_SOURCE_TEXT",
     sourceId: source.id,
     epoch,
-    [PROMISE]: loadSource(getState(), source, { sourceMaps, client, getState })
+    [PROMISE]: loadSource(getState(), source, { sourceMaps, client })
   });
 
   const newSource = getSource(getState(), source.id);

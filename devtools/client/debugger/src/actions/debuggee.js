@@ -6,9 +6,8 @@
 
 import { differenceBy } from "lodash";
 import type { Action, ThunkArgs } from "./types";
-import { removeSourceActors } from "./source-actors";
 
-import { getContext, getWorkers, getSourceActorsForThread } from "../selectors";
+import { getContext, getWorkers } from "../selectors";
 
 export function updateWorkers() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
@@ -20,11 +19,6 @@ export function updateWorkers() {
     const addedWorkers = differenceBy(workers, currentWorkers, w => w.actor);
     const removedWorkers = differenceBy(currentWorkers, workers, w => w.actor);
     if (removedWorkers.length > 0) {
-      const sourceActors = getSourceActorsForThread(
-        getState(),
-        removedWorkers.map(w => w.actor)
-      );
-      dispatch(removeSourceActors(sourceActors));
       dispatch(
         ({
           type: "REMOVE_WORKERS",

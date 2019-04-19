@@ -200,6 +200,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
         Array [
           Object {
             "contents": Object {
+              "actors": Array [],
               "contentType": "text/javascript",
               "id": "server1.conn13.child1/41",
               "introductionType": undefined,
@@ -222,6 +223,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
             "contents": Array [
               Object {
                 "contents": Object {
+                  "actors": Array [],
                   "contentType": "text/javascript",
                   "id": "server1.conn13.child1/42",
                   "introductionType": undefined,
@@ -242,6 +244,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "actors": Array [],
                   "contentType": "text/javascript",
                   "id": "server1.conn13.child1/42/originalSource-sha",
                   "introductionType": undefined,
@@ -262,6 +265,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "actors": Array [],
                   "contentType": "text/javascript",
                   "id": "server1.conn13.child1/39",
                   "introductionType": undefined,
@@ -282,6 +286,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "actors": Array [],
                   "contentType": "text/javascript",
                   "id": "server1.conn13.child1/41",
                   "introductionType": undefined,
@@ -302,6 +307,7 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
               },
               Object {
                 "contents": Object {
+                  "actors": Array [],
                   "contentType": "text/javascript",
                   "id": "server1.conn13.child1/40",
                   "introductionType": undefined,

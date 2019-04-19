@@ -2,6 +2,7 @@
 
 exports[`sources - pretty print returns a pretty source for a minified file 1`] = `
 Object {
+  "actors": Array [],
   "contentType": "text/javascript",
   "id": "base.js/originalSource-36c718d4bde9a75edb388ff7733efe7f",
   "introductionType": undefined,
