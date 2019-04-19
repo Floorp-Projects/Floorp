@@ -62,6 +62,7 @@ static const struct {
     const char *name;
     void (*func)(void);
 } tests[] = {
+    { "msac", checkasm_check_msac },
 #if CONFIG_8BPC
     { "cdef_8bpc", checkasm_check_cdef_8bpc },
     { "ipred_8bpc", checkasm_check_ipred_8bpc },

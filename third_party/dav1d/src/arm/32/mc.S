@@ -217,8 +217,8 @@ bidir_fn mask
 
 // This has got the same signature as the put_8tap functions,
 // assumes that the caller has loaded the h argument into r5,
-// and assumes that r8 is set to (24-clz(w)).
-function put
+// and assumes that r8 is set to (clz(w)-24).
+function put_neon
         adr             r9,  L(put_tbl)
         ldr             r8,  [r9, r8, lsl #2]
         add             r9,  r9,  r8
@@ -307,9 +307,9 @@ endfunc
 
 
 // This has got the same signature as the put_8tap functions,
-// assumes that the caller has loaded the h argument into r5,
-// and assumes that r8 is set to (24-clz(w)), and r7 to w*2.
-function prep
+// assumes that the caller has loaded the h argument into r4,
+// and assumes that r8 is set to (clz(w)-24), and r7 to w*2.
+function prep_neon
         adr             r9,  L(prep_tbl)
         ldr             r8,  [r9, r8, lsl #2]
         add             r9,  r9,  r8
@@ -660,7 +660,7 @@ function \op\()_8tap_\type\()_8bpc_neon, export=1
         push            {r4-r11,lr}
         movw            r8,  \type_h
         movw            r9,  \type_v
-        b               \op\()_8tap
+        b               \op\()_8tap_neon
 endfunc
 .endm
 
@@ -680,7 +680,7 @@ make_8tap_fn \type, sharp,          SHARP,   SHARP
 make_8tap_fn \type, sharp_regular,  SHARP,   REGULAR
 make_8tap_fn \type, sharp_smooth,   SHARP,   SMOOTH
 
-function \type\()_8tap
+function \type\()_8tap_neon
         ldrd            r4,  r5,  [sp, #36]
         ldrd            r6,  r7,  [sp, #44]
         movw            r10,  #0x4081  // (1 << 14) | (1 << 7) | (1 << 0)
@@ -699,7 +699,7 @@ function \type\()_8tap
         bne             L(\type\()_8tap_h)
         tst             \my, #(0x7f << 14)
         bne             L(\type\()_8tap_v)
-        b               \type
+        b               \type\()_neon
 
 L(\type\()_8tap_h):
         cmp             \w,  #4
@@ -1831,7 +1831,7 @@ function \type\()_bilin_8bpc_neon, export=1
         bne             L(\type\()_bilin_h)
         cmp             \my, #0
         bne             L(\type\()_bilin_v)
-        b               \type
+        b               \type\()_neon
 
 L(\type\()_bilin_h):
         cmp             \my, #0

@@ -250,7 +250,11 @@ void bitfn(dav1d_loop_filter_dsp_init)(Dav1dLoopFilterDSPContext *const c) {
     c->loop_filter_sb[1][0] = loop_filter_h_sb128uv_c;
     c->loop_filter_sb[1][1] = loop_filter_v_sb128uv_c;
 
-#if HAVE_ASM && ARCH_X86
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+    bitfn(dav1d_loop_filter_dsp_init_arm)(c);
+#elif ARCH_X86
     bitfn(dav1d_loop_filter_dsp_init_x86)(c);
+#endif
 #endif
 }
