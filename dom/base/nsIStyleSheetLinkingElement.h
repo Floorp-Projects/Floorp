@@ -24,37 +24,26 @@ class nsIURI;
 
 class nsIStyleSheetLinkingElement : public nsISupports {
  public:
-  enum class ForceUpdate : uint8_t {
-    No,
+  enum class ForceUpdate {
     Yes,
+    No,
   };
 
-  enum class Completed : uint8_t {
-    No,
+  enum class Completed {
     Yes,
+    No,
   };
 
-  enum class HasAlternateRel : uint8_t {
-    No,
+  enum class HasAlternateRel { Yes, No };
+
+  enum class IsAlternate {
     Yes,
+    No,
   };
 
-  enum class IsAlternate : uint8_t {
-    No,
-    Yes,
-  };
+  enum class IsInline { Yes, No };
 
-  enum class IsInline : uint8_t {
-    No,
-    Yes,
-  };
-
-  enum class IsExplicitlyEnabled : uint8_t {
-    No,
-    Yes,
-  };
-
-  enum class MediaMatched : uint8_t {
+  enum class MediaMatched {
     Yes,
     No,
   };
@@ -101,14 +90,14 @@ class nsIStyleSheetLinkingElement : public nsISupports {
 
     bool mHasAlternateRel;
     bool mIsInline;
-    IsExplicitlyEnabled mIsExplicitlyEnabled;
 
     SheetInfo(const mozilla::dom::Document&, nsIContent*,
               already_AddRefed<nsIURI> aURI,
               already_AddRefed<nsIPrincipal> aTriggeringPrincipal,
-              mozilla::net::ReferrerPolicy aReferrerPolicy, mozilla::CORSMode,
-              const nsAString& aTitle, const nsAString& aMedia, HasAlternateRel,
-              IsInline, IsExplicitlyEnabled);
+              mozilla::net::ReferrerPolicy aReferrerPolicy,
+              mozilla::CORSMode aCORSMode, const nsAString& aTitle,
+              const nsAString& aMedia, HasAlternateRel aHasAlternateRel,
+              IsInline aIsInline);
 
     ~SheetInfo();
   };

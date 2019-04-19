@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLStyleElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 
-bool HTMLStyleElement::Disabled() const {
+bool HTMLStyleElement::Disabled() {
   StyleSheet* ss = GetSheet();
   return ss && ss->Disabled();
 }
@@ -186,7 +186,6 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
       media,
       HasAlternateRel::No,
       IsInline::Yes,
-      IsExplicitlyEnabled::No,
   });
 }
 

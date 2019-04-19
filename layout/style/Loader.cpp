@@ -1088,10 +1088,11 @@ static Loader::MediaMatched MediaListMatches(const MediaList* aMediaList,
  * well as setting the enabled state based on the title and whether
  * the sheet had "alternate" in its rel.
  */
-Loader::MediaMatched Loader::PrepareSheet(
-    StyleSheet* aSheet, const nsAString& aTitle, const nsAString& aMediaString,
-    MediaList* aMediaList, IsAlternate aIsAlternate,
-    IsExplicitlyEnabled aIsExplicitlyEnabled) {
+Loader::MediaMatched Loader::PrepareSheet(StyleSheet* aSheet,
+                                          const nsAString& aTitle,
+                                          const nsAString& aMediaString,
+                                          MediaList* aMediaList,
+                                          IsAlternate aIsAlternate) {
   MOZ_ASSERT(aSheet, "Must have a sheet!");
 
   RefPtr<MediaList> mediaList(aMediaList);
@@ -1105,8 +1106,7 @@ Loader::MediaMatched Loader::PrepareSheet(
   aSheet->SetMedia(mediaList);
 
   aSheet->SetTitle(aTitle);
-  aSheet->SetEnabled(aIsAlternate == IsAlternate::No ||
-                     aIsExplicitlyEnabled == IsExplicitlyEnabled::Yes);
+  aSheet->SetEnabled(aIsAlternate == IsAlternate::No);
   return MediaListMatches(mediaList, mDocument);
 }
 
@@ -1835,8 +1835,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
-                              isAlternate, aInfo.mIsExplicitlyEnabled);
+  auto matched =
+      PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
   InsertSheetInTree(*sheet, aInfo.mContent);
 
@@ -1940,8 +1940,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
 
   LOG(("  Sheet is alternate: %d", static_cast<int>(isAlternate)));
 
-  auto matched = PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
-                              isAlternate, aInfo.mIsExplicitlyEnabled);
+  auto matched =
+      PrepareSheet(sheet, aInfo.mTitle, aInfo.mMedia, nullptr, isAlternate);
 
   InsertSheetInTree(*sheet, aInfo.mContent);
 
@@ -2107,8 +2107,7 @@ nsresult Loader::LoadChildSheet(StyleSheet* aParentSheet,
                      &sheet);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PrepareSheet(sheet, empty, empty, aMedia, IsAlternate::No,
-                 IsExplicitlyEnabled::No);
+    PrepareSheet(sheet, empty, empty, aMedia, IsAlternate::No);
   }
 
   MOZ_ASSERT(sheet);
@@ -2219,8 +2218,7 @@ nsresult Loader::InternalLoadNonDocumentSheet(
                    aReferrerPolicy, aIntegrity, syncLoad, state, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PrepareSheet(sheet, empty, empty, nullptr, IsAlternate::No,
-               IsExplicitlyEnabled::No);
+  PrepareSheet(sheet, empty, empty, nullptr, IsAlternate::No);
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));

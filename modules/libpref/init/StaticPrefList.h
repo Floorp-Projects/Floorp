@@ -253,18 +253,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Whether the disabled attribute in HTMLLinkElement disables the sheet loading
-// altogether, or forwards to the inner stylesheet method without attribute
-// reflection.
-//
-// Historical behavior is the second, the first is being discussed at:
-// https://github.com/whatwg/html/issues/3840
-VARCACHE_PREF(
-  "dom.link.disabled_attribute.enabled",
-   dom_link_disabled_attribute_enabled,
-  bool, true
-)
-
 VARCACHE_PREF(
   "dom.performance.enable_scheduler_timing",
   dom_performance_enable_scheduler_timing,

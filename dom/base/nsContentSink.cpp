@@ -758,7 +758,6 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
       aMedia,
       aAlternate ? Loader::HasAlternateRel::Yes : Loader::HasAlternateRel::No,
       Loader::IsInline::No,
-      Loader::IsExplicitlyEnabled::No,
   };
 
   auto loadResultOrErr =
