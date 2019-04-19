@@ -52,6 +52,7 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     this.onStackTraceAvailable = this.onStackTraceAvailable.bind(this);
     this.onRequestContent = this.onRequestContent.bind(this);
     this.onSetPreference = this.onSetPreference.bind(this);
+    this.onBlockRequest = this.onBlockRequest.bind(this);
     this.onGetNetworkEventActor = this.onGetNetworkEventActor.bind(this);
     this.onDestroyMessage = this.onDestroyMessage.bind(this);
 
@@ -71,6 +72,8 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.onRequestContent);
     this.messageManager.addMessageListener("debug:netmonitor-preference",
       this.onSetPreference);
+    this.messageManager.addMessageListener("debug:block-request",
+      this.onBlockRequest);
     this.messageManager.addMessageListener("debug:get-network-event-actor:request",
       this.onGetNetworkEventActor);
     this.messageManager.addMessageListener("debug:destroy-network-monitor",
@@ -84,6 +87,8 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
       this.onRequestContent);
     this.messageManager.removeMessageListener("debug:netmonitor-preference",
       this.onSetPreference);
+    this.messageManager.removeMessageListener("debug:block-request",
+      this.onBlockRequest);
     this.messageManager.removeMessageListener("debug:get-network-event-actor:request",
       this.onGetNetworkEventActor);
     this.messageManager.removeMessageListener("debug:destroy-network-monitor",
@@ -170,6 +175,11 @@ const NetworkMonitorActor = ActorClassWithSpec(networkMonitorSpec, {
     if ("throttleData" in data) {
       this.observer.throttleData = data.throttleData;
     }
+  },
+
+  onBlockRequest({ data }) {
+    const { filter } = data;
+    this.observer.blockRequest(filter);
   },
 
   onGetNetworkEventActor({ data }) {

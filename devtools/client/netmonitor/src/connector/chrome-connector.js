@@ -89,6 +89,15 @@ class ChromeConnector {
     // TODO : not support. currently didn't provide this feature in CDP API.
   }
 
+  /**
+   * Block future requests matching a filter.
+   *
+   * @param {object} filter request filter specifying what to block
+   */
+  blockRequest(filter) {
+    // TODO: Implement for Chrome as well.
+  }
+
   setPreferences() {
     // TODO : implement.
   }

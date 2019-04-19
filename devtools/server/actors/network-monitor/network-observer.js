@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const {Cc, Ci, Cr} = require("chrome");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
 
@@ -125,6 +125,8 @@ function NetworkObserver(filters, owner) {
 
   this.openRequests = new Map();
   this.openResponses = new Map();
+
+  this.blockedURLs = new Set();
 
   this._httpResponseExaminer =
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
@@ -645,6 +647,21 @@ NetworkObserver.prototype = {
   },
 
   /**
+   * Block a request based on certain filtering options.
+   *
+   * Currently, an exact URL match is the only supported filter type.
+   */
+  blockRequest(filter) {
+    if (!filter || !filter.url) {
+      // In the future, there may be other types of filters, such as domain.
+      // For now, ignore anything other than URL.
+      return;
+    }
+
+    this.blockedURLs.add(filter.url);
+  },
+
+  /**
    * Setup the network response listener for the given HTTP activity. The
    * NetworkResponseListener is responsible for storing the response body.
    *
@@ -655,6 +672,11 @@ NetworkObserver.prototype = {
   _setupResponseListener: function(httpActivity, fromCache) {
     const channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
+
+    if (this.blockedURLs.has(httpActivity.url)) {
+      channel.cancel(Cr.NS_BINDING_ABORTED);
+      return;
+    }
 
     if (!fromCache) {
       const throttler = this._getThrottler();
