@@ -124,6 +124,10 @@ class TimeUnit final {
     return mValue.value() <= aOther.mValue.value();
   }
   bool operator<(const TimeUnit& aOther) const { return !(*this >= aOther); }
+  TimeUnit operator%(const TimeUnit& aOther) const {
+    MOZ_ASSERT(IsValid() && aOther.IsValid());
+    return TimeUnit(mValue % aOther.mValue);
+  }
   TimeUnit operator+(const TimeUnit& aOther) const {
     if (IsInfinite() || aOther.IsInfinite()) {
       return FromInfinity();
@@ -156,10 +160,12 @@ class TimeUnit final {
   TimeUnit MultDouble(double aVal) const {
     return TimeUnit::FromSeconds(ToSeconds() * aVal);
   }
-  friend TimeUnit operator/(const TimeUnit& aUnit, int aVal) {
+  friend TimeUnit operator/(const TimeUnit& aUnit, int64_t aVal) {
+    MOZ_DIAGNOSTIC_ASSERT(INT32_MIN <= aVal && aVal <= INT32_MAX);
     return TimeUnit(aUnit.mValue / aVal);
   }
-  friend TimeUnit operator%(const TimeUnit& aUnit, int aVal) {
+  friend TimeUnit operator%(const TimeUnit& aUnit, int64_t aVal) {
+    MOZ_DIAGNOSTIC_ASSERT(INT32_MIN <= aVal && aVal <= INT32_MAX);
     return TimeUnit(aUnit.mValue % aVal);
   }
 
