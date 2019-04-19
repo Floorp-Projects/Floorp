@@ -1,1 +1,1 @@
-[["warning", "The bcmp() function is obsoleted by memcmp()", "clang-analyzer-security.insecureAPI.bcmp"]]
+[["warning", "The bcmp() function is obsoleted by memcmp()", "clang-analyzer-security.insecureAPI.bcmp"], {"reliability": "high"}]

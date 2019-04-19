@@ -55,6 +55,13 @@ void MacroAssembler::move32To64SignExtend(Register src, Register64 dest) {
 }
 
 // ===============================================================
+// Load instructions
+
+void MacroAssembler::load32SignExtendToPtr(const Address& src, Register dest) {
+  loadPtr(src, dest);
+}
+
+// ===============================================================
 // Logical instructions
 
 void MacroAssembler::andPtr(Register src, Register dest) { ma_and(dest, src); }
@@ -259,6 +266,8 @@ void MacroAssembler::inc64(AbsoluteAddress dest) {
 }
 
 void MacroAssembler::neg64(Register64 reg) { as_dsubu(reg.reg, zero, reg.reg); }
+
+void MacroAssembler::negPtr(Register reg) { as_dsubu(reg, zero, reg); }
 
 // ===============================================================
 // Shift functions
@@ -544,6 +553,20 @@ void MacroAssembler::branchTestSymbol(Condition cond, const ValueOperand& value,
   SecondScratchRegisterScope scratch2(*this);
   splitTag(value, scratch2);
   branchTestSymbol(cond, scratch2, label);
+}
+
+void MacroAssembler::branchTestBigInt(Condition cond, Register tag,
+                                      Label* label) {
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  ma_b(tag, ImmTag(JSVAL_TAG_BIGINT), label, cond);
+}
+
+void MacroAssembler::branchTestBigInt(Condition cond, const BaseIndex& address,
+                                      Label* label) {
+  SecondScratchRegisterScope scratch2(*this);
+  computeEffectiveAddress(address, scratch2);
+  splitTag(scratch2, scratch2);
+  branchTestBigInt(cond, scratch2, label);
 }
 
 void MacroAssembler::branchTestBigInt(Condition cond, const ValueOperand& value,

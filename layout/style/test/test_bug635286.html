@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=635286
 /** Test for Bug 635286 **/
 
 window.addEventListener("load", function() {
-  var cases = Array.slice(document.getElementsByTagName("div"));
+  var cases = Array.from(document.getElementsByTagName("div"));
   cases.forEach(function(aCase, aIndex) {
     aCase.className = "after";
   });

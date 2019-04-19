@@ -192,7 +192,12 @@ class MessageManagerProxy {
   handleEvent(event) {
     if (event.type == "SwapDocShells") {
       this.removeListeners(this.eventTarget);
-      this.addListeners(event.detail);
+      // The SwapDocShells event is dispatched for both browsers that are being
+      // swapped. To avoid double-swapping, register the event handler after
+      // both SwapDocShells events have fired.
+      this.eventTarget.addEventListener("EndSwapDocShells", () => {
+        this.addListeners(event.detail);
+      }, {once: true});
     }
   }
 }

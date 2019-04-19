@@ -182,7 +182,7 @@ Preferences
 ``toolkit.telemetry.prioping.enabled``
 
   Whether the :doc:`../data/prio-ping` is enabled.
-  Defaults to false except on Firefox Nightly where it is true. Change requires restart.
+  Defaults to true. Change requires restart.
 
 ``toolkit.telemetry.prioping.dataLimit``
 

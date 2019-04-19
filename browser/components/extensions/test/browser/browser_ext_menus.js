@@ -87,7 +87,7 @@ add_task(async function test_actionContextMenus() {
     is(submenu.label, "parent", "Correct submenu title");
 
     const popup = await openSubmenu(submenu);
-    is(popup, submenu.firstElementChild, "Correct submenu opened");
+    is(popup, submenu.menupopup, "Correct submenu opened");
     is(popup.children.length, 2, "Correct number of submenu items");
 
     let idPrefix = `${makeWidgetId(extension.id)}-menuitem-_`;
@@ -146,7 +146,7 @@ add_task(async function test_hiddenPageActionContextMenu() {
   await extension.awaitMessage("ready");
 
   const menu = await openContextMenuInPageActionPanel(extension);
-  const menuItems = Array.filter(menu.children, node => {
+  const menuItems = Array.prototype.filter.call(menu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 
@@ -251,7 +251,7 @@ add_task(async function test_tabContextMenu() {
   is(gamma.label, "gamma", "Third menu item label is correct");
 
   const popup = await openSubmenu(submenu);
-  is(popup, submenu.firstElementChild, "Correct submenu opened");
+  is(popup, submenu.menupopup, "Correct submenu opened");
   is(popup.children.length, 2, "Correct number of submenu items");
 
   const [alpha, beta] = popup.children;
@@ -396,7 +396,7 @@ add_task(async function test_tools_menu() {
 
   is(submenu.tagName, "menu", "Correct submenu type");
   is(submenu.getAttribute("label"), "Generated extension", "Correct submenu title");
-  is(submenu.firstElementChild.children.length, 2, "Correct number of submenu items");
+  is(submenu.menupopup.children.length, 2, "Correct number of submenu items");
 
   is(gamma.tagName, "menuitem", "Third menu item type is correct");
   is(gamma.getAttribute("label"), "gamma", "Third menu item label is correct");

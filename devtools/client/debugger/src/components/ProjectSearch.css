@@ -68,7 +68,7 @@
 }
 
 .project-text-search .no-result-msg {
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-text-color-inactive);
   font-size: 24px;
   padding: 4px 15px;
   max-width: 100%;

@@ -41,7 +41,7 @@
         await helper.waitForPixel(video, px => {
           let result = helper.isPixel(px, color, 16);
           info("Checking pixel against " + color.name + ". Got ["
-            + Array.slice(px) + "] (" + (result ? "YES" : "NO") + ")");
+            + Array.from(px) + "] (" + (result ? "YES" : "NO") + ")");
           return result;
         }, {offsetX: x, offsetY: y});
       }

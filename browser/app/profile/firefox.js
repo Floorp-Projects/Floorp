@@ -419,6 +419,10 @@ pref("permissions.desktop-notification.postPrompt.enabled", false);
 
 pref("permissions.postPrompt.animate", true);
 
+// This is meant to be enabled only for studies, not for
+// permanent data collection on any channel.
+pref("permissions.eventTelemetry.enabled", false);
+
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
@@ -1857,10 +1861,6 @@ pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35
 // Coverage ping is disabled by default.
 pref("toolkit.coverage.enabled", false);
 pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
-// Whether Prio-encoded Telemetry will be sent in the prio ping.
-#if defined(NIGHTLY_BUILD)
-pref("toolkit.telemetry.prioping.enabled", true);
-#endif
 
 // Discovery prefs
 pref("browser.discovery.enabled", true);

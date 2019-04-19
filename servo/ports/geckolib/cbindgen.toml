@@ -103,6 +103,7 @@ include = [
   "TransformOrigin",
   "WordBreak",
   "Contain",
+  "Origin",
   "RestyleHint",
   "TouchAction",
   "WillChangeBits",

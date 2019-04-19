@@ -144,21 +144,26 @@ import java.util.Map;
     private WebExtension.MessageDelegate getDelegate(
             final String nativeApp, final WebExtension.MessageSender sender,
             final EventCallback callback) {
-        final WebExtension.MessageDelegateInfo delegateInfo =
-                sender.webExtension.messageDelegates.get(nativeApp);
-
-        if (delegateInfo == null) {
-            callback.sendError("Native app not found or this WebExtension does not have permissions.");
-            return null;
-        }
-
         if (!sender.webExtension.allowContentMessaging &&
                 sender.environmentType == WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT) {
             callback.sendError("This NativeApp can't receive messages from Content Scripts.");
             return null;
         }
 
-        return delegateInfo.delegate;
+        WebExtension.MessageDelegate delegate = null;
+
+        if (sender.session != null) {
+            delegate = sender.session.getMessageDelegate(nativeApp);
+        } else if (sender.environmentType == WebExtension.MessageSender.ENV_TYPE_EXTENSION) {
+            delegate = sender.webExtension.messageDelegates.get(nativeApp);
+        }
+
+        if (delegate == null) {
+            callback.sendError("Native app not found or this WebExtension does not have permissions.");
+            return null;
+        }
+
+        return delegate;
     }
 
     private void connect(final String nativeApp, final long portId, final EventCallback callback,

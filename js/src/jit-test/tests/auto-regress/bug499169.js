@@ -31,7 +31,7 @@ var Native = function(k) {
 } ());
 Array.alias("forEach", "each");
 function $merge() {
-    var a = Array.slice(arguments);
+    var a = Array.prototype.slice.call(arguments);
     a.unshift({});
     return $mixin.apply(null, a);
 }

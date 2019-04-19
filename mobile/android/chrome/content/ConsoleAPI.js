@@ -7,8 +7,8 @@ var ConsoleAPI = {
   observe: function observe(aMessage, aTopic, aData) {
     aMessage = aMessage.wrappedJSObject;
 
-    let mappedArguments = Array.map(aMessage.arguments, this.formatResult, this);
-    let joinedArguments = Array.join(mappedArguments, " ");
+    let mappedArguments = Array.from(aMessage.arguments, this.formatResult, this);
+    let joinedArguments = mappedArguments.join(" ");
 
     if (aMessage.level == "error" || aMessage.level == "warn") {
       let flag = (aMessage.level == "error" ? Ci.nsIScriptError.errorFlag : Ci.nsIScriptError.warningFlag);

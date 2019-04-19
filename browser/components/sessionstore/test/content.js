@@ -54,7 +54,7 @@ addEventListener("hashchange", function() {
 
 addMessageListener("ss-test:getStyleSheets", function(msg) {
   let sheets = content.document.styleSheets;
-  let titles = Array.map(sheets, ss => [ss.title, ss.disabled]);
+  let titles = Array.from(sheets, ss => [ss.title, ss.disabled]);
   sendSyncMessage("ss-test:getStyleSheets", titles);
 });
 

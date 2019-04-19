@@ -1983,10 +1983,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
     isCrossSite = loadInfo->GetTainting() != LoadTainting::Basic;
 
     if (isCrossSite) {
-      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
-      if (htmlDoc) {
-        htmlDoc->DisableCookieAccess();
-      }
+      mResponseXML->DisableCookieAccess();
     }
 
     nsCOMPtr<nsIStreamListener> listener;

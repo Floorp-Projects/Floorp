@@ -1,1 +1,1 @@
-[["warning", "'f' declared as type 'FILE', which is unsafe to copy; did you mean 'FILE *'?", "misc-non-copyable-objects"]]
+[["warning", "'f' declared as type 'FILE', which is unsafe to copy; did you mean 'FILE *'?", "misc-non-copyable-objects"], {"reliability": "high"}]

@@ -29,7 +29,8 @@ add_task(function() {
 
   is(container.childNodes.length, 7,
     "The container node should have all children available.");
-  is(Array.filter(container.childNodes, e => e.className != "call-tree-item").length, 0,
+  is(Array.from(container.childNodes).filter(e => e.className != "call-tree-item").length,
+     0,
     "All item nodes in the tree have the correct class name.");
 
   is($$fun(0).style.marginInlineStart, "0px",

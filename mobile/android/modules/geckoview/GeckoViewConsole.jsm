@@ -51,8 +51,8 @@ var GeckoViewConsole = {
   _handleConsoleMessage(aMessage) {
     aMessage = aMessage.wrappedJSObject;
 
-    const mappedArguments = Array.map(aMessage.arguments, this.formatResult, this);
-    const joinedArguments = Array.join(mappedArguments, " ");
+    const mappedArguments = Array.from(aMessage.arguments, this.formatResult, this);
+    const joinedArguments = mappedArguments.join(" ");
 
     if (aMessage.level == "error" || aMessage.level == "warn") {
       const flag = (aMessage.level == "error" ? Ci.nsIScriptError.errorFlag : Ci.nsIScriptError.warningFlag);

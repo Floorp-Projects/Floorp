@@ -1,1 +1,1 @@
-[["warning", "Access to field 'x' results in a dereference of a null pointer (loaded from variable 'pc')", "clang-analyzer-core.NullDereference"]]
+[["warning", "Access to field 'x' results in a dereference of a null pointer (loaded from variable 'pc')", "clang-analyzer-core.NullDereference"], {"reliability": "medium"}]

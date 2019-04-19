@@ -207,11 +207,6 @@ class Editor extends PureComponent<Props, State> {
   componentDidMount() {
     const { shortcuts } = this.context;
 
-    const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
-    const searchAgainPrevKey = L10N.getStr(
-      "sourceSearch.search.againPrev.key2"
-    );
-
     shortcuts.on(L10N.getStr("toggleBreakpoint.key"), this.onToggleBreakpoint);
     shortcuts.on(
       L10N.getStr("toggleCondPanel.breakpoint.key"),
@@ -223,8 +218,6 @@ class Editor extends PureComponent<Props, State> {
     );
     shortcuts.on(L10N.getStr("sourceTabs.closeTab.key"), this.onClosePress);
     shortcuts.on("Esc", this.onEscape);
-    shortcuts.on(searchAgainPrevKey, this.onSearchAgain);
-    shortcuts.on(searchAgainKey, this.onSearchAgain);
   }
 
   onClosePress = (key, e: KeyboardEvent) => {
@@ -243,17 +236,11 @@ class Editor extends PureComponent<Props, State> {
       this.setState({ editor: (null: any) });
     }
 
-    const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
-    const searchAgainPrevKey = L10N.getStr(
-      "sourceSearch.search.againPrev.key2"
-    );
     const shortcuts = this.context.shortcuts;
     shortcuts.off(L10N.getStr("sourceTabs.closeTab.key"));
     shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
     shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));
     shortcuts.off(L10N.getStr("toggleCondPanel.logPoint.key"));
-    shortcuts.off(searchAgainPrevKey);
-    shortcuts.off(searchAgainKey);
   }
 
   getCurrentLine() {
@@ -327,10 +314,6 @@ class Editor extends PureComponent<Props, State> {
       codeMirror.execCommand("singleSelection");
       e.preventDefault();
     }
-  };
-
-  onSearchAgain = (_, e: KeyboardEvent) => {
-    this.props.traverseResults(this.props.cx, e.shiftKey, this.state.editor);
   };
 
   openMenu(event: MouseEvent) {

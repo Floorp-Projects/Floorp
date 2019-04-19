@@ -223,7 +223,7 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-repeat: no-repeat;
   content: "";
   display: block;
-  fill: var(--theme-content-color3);
+  fill: var(--theme-icon-dimmed-color);
   height: 100%;
   position: absolute;
   right: 0;

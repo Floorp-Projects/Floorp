@@ -22,9 +22,9 @@ function test() {
 
     gBrowser.removeTab(tabOne);
     gBrowser.removeTab(tabTwo);
-    Array.forEach(gBrowser.tabs, function(tab) {
+    for (let tab of gBrowser.tabs) {
       gBrowser.showTab(tab);
-    });
+    }
 
     finish();
   });

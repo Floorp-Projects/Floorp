@@ -33,7 +33,7 @@ const browserElementTestHelpers = {
 
   _setPrefs() {
     this.lockTestReady();
-    SpecialPowers.pushPrefEnv({"set": Array.slice(arguments)}, this.unlockTestReady.bind(this));
+    SpecialPowers.pushPrefEnv({"set": Array.from(arguments)}, this.unlockTestReady.bind(this));
   },
 
   _testReadyLockCount: 0,

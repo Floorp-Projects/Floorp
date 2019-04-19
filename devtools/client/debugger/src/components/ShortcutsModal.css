@@ -12,7 +12,7 @@
 .shortcuts-content h2 {
   margin-top: 2px;
   margin-bottom: 2px;
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }
 
 .shortcuts-section {

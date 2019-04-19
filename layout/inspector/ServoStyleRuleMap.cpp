@@ -26,12 +26,8 @@ void ServoStyleRuleMap::EnsureTable(ServoStyleSet& aStyleSet) {
   if (!IsEmpty()) {
     return;
   }
-  aStyleSet.EnumerateStyleSheetArrays(
-      [this](const nsTArray<RefPtr<StyleSheet>>& aArray) {
-        for (auto& sheet : aArray) {
-          FillTableFromStyleSheet(*sheet);
-        }
-      });
+  aStyleSet.EnumerateStyleSheets(
+      [&](StyleSheet& aSheet) { FillTableFromStyleSheet(aSheet); });
 }
 
 void ServoStyleRuleMap::EnsureTable(nsXBLPrototypeResources& aXBLResources) {

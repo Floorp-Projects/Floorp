@@ -47,7 +47,7 @@
 /* Empty notices in tab panels */
 
 .network-monitor .empty-notice {
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-text-color-inactive);
   padding: 3px 8px;
   text-align: center;
   display: flex;

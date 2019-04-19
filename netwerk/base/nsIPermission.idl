@@ -51,6 +51,12 @@ interface nsIPermission : nsISupports
     readonly attribute int64_t expireTime;
 
     /**
+     * The last modification time of the permission (milliseconds since Jan 1 1970
+     * 0:00:00).
+     */
+    readonly attribute int64_t modificationTime;
+
+    /**
      * Test whether a principal would be affected by this permission.
      *
      * @param principal  the principal to test
