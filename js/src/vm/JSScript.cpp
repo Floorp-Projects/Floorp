@@ -710,7 +710,7 @@ void SharedScriptData::initElements(size_t offset, size_t length) {
 
 SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
                                    uint32_t natoms)
-    : codeLength_(codeLength), noteLength_(noteLength), natoms_(natoms) {
+    : codeLength_(codeLength) {
   // Variable-length data begins immediately after SharedScriptData itself.
   size_t cursor = sizeof(*this);
 
@@ -723,6 +723,7 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
 
   static_assert(alignof(GCPtrAtom) >= alignof(jsbytecode),
                 "Incompatible alignment");
+  codeOffset_ = cursor;
   initElements<jsbytecode>(cursor, codeLength);
   cursor += codeLength * sizeof(jsbytecode);
 
@@ -730,6 +731,12 @@ SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
                 "Incompatible alignment");
   initElements<jssrcnote>(cursor, noteLength);
   cursor += noteLength * sizeof(jssrcnote);
+  tailOffset_ = cursor;
+
+  // Check that we correctly recompute the expected values.
+  MOZ_ASSERT(this->natoms() == natoms);
+  MOZ_ASSERT(this->codeLength() == codeLength);
+  MOZ_ASSERT(this->noteLength() == noteLength);
 
   // Sanity check
   MOZ_ASSERT(AllocationSize(codeLength, noteLength, natoms) == cursor);
@@ -750,7 +757,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
 
     natoms = ssd->natoms();
     codeLength = ssd->codeLength();
-    noteLength = ssd->numNotes();
+    noteLength = ssd->noteLength();
   }
 
   MOZ_TRY(xdr->codeUint32(&natoms));
@@ -2929,7 +2936,7 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
  * --------------   -------------         ------
  * GCPtrAtom        atoms()               natoms()
  * jsbytecode       code()                codeLength()
- * jsscrnote        notes()               numNotes()
+ * jsscrnote        notes()               noteLength()
  */
 
 SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,

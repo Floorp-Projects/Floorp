@@ -1504,9 +1504,9 @@ class alignas(uintptr_t) SharedScriptData final {
                   mozilla::recordreplay::Behavior::DontPreserve>
       refCount_ = {};
 
+  uint32_t codeOffset_ = 0;  // Byte-offset from 'this'
   uint32_t codeLength_ = 0;
-  uint32_t noteLength_ = 0;
-  uint32_t natoms_ = 0;
+  uint32_t tailOffset_ = 0;
 
   // Offset of main entry point from code, after predef'ing prologue.
   uint32_t mainOffset = 0;
@@ -1536,6 +1536,11 @@ class alignas(uintptr_t) SharedScriptData final {
   friend class ::JSScript;
 
  private:
+  // Layout of trailing arrays
+  size_t atomOffset() const { return sizeof(SharedScriptData); };
+  size_t codeOffset() const { return codeOffset_; }
+  size_t noteOffset() const { return codeOffset_ + codeLength_; }
+
   // Size to allocate
   static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
                                uint32_t natoms);
@@ -1562,7 +1567,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
   // Span over all raw bytes in this struct and its trailing arrays.
   mozilla::Span<const uint8_t> allocSpan() const {
-    size_t allocSize = AllocationSize(codeLength_, noteLength_, natoms_);
+    size_t allocSize = tailOffset_;
     return mozilla::MakeSpan(reinterpret_cast<const uint8_t*>(this), allocSize);
   }
 
@@ -1583,25 +1588,28 @@ class alignas(uintptr_t) SharedScriptData final {
     return allocSpan().From(dataOffset);
   }
 
-  uint8_t* data() { return reinterpret_cast<uint8_t*>(this + 1); }
-
-  uint32_t natoms() const { return natoms_; }
+  uint32_t natoms() const {
+    return (codeOffset_ - atomOffset()) / sizeof(GCPtrAtom);
+  }
   GCPtrAtom* atoms() {
-    if (!natoms_) {
-      return nullptr;
-    }
-    return reinterpret_cast<GCPtrAtom*>(data());
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
   }
 
   uint32_t codeLength() const { return codeLength_; }
   jsbytecode* code() {
-    return reinterpret_cast<jsbytecode*>(data() + natoms_ * sizeof(GCPtrAtom));
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<jsbytecode*>(base + codeOffset_);
   }
 
-  uint32_t numNotes() const { return noteLength_; }
+  uint32_t noteLength() const { return tailOffset_ - noteOffset(); }
   jssrcnote* notes() {
-    return reinterpret_cast<jssrcnote*>(data() + natoms_ * sizeof(GCPtrAtom) +
-                                        codeLength_);
+    uintptr_t base = reinterpret_cast<uintptr_t>(this);
+    return reinterpret_cast<jssrcnote*>(base + noteOffset());
+  }
+
+  static constexpr size_t offsetOfCodeOffset() {
+    return offsetof(SharedScriptData, codeOffset_);
   }
   static constexpr size_t offsetOfNfixed() {
     return offsetof(SharedScriptData, nfixed);
@@ -1614,10 +1622,6 @@ class alignas(uintptr_t) SharedScriptData final {
   }
 
   void traceChildren(JSTracer* trc);
-
-  static constexpr size_t offsetOfNatoms() {
-    return offsetof(SharedScriptData, natoms_);
-  }
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult XDR(js::XDRState<mode>* xdr,
@@ -2723,7 +2727,7 @@ class JSScript : public js::gc::TenuredCell {
 
   uint32_t numNotes() const {
     MOZ_ASSERT(scriptData_);
-    return scriptData_->numNotes();
+    return scriptData_->noteLength();
   }
   jssrcnote* notes() const {
     MOZ_ASSERT(scriptData_);
