@@ -161,6 +161,7 @@ ext.gleanGenerateMetricsAPI = {
         args "-s"
         args "namespace=$fullNamespace"
         args "$projectDir/metrics.yaml"
+        args "$projectDir/pings.yaml"
 
         // If we're building the Glean library itself (rather than an
         // application using Glean) pass the --allow-reserved flag so we can
@@ -183,7 +184,7 @@ ext.gleanGenerateMetricsAPI = {
     // Only attach the generation task if the metrics file is available. We don't need to
     // fail hard otherwise, as some 3rd party project might just want metrics included in
     // glean and nothing more.
-    if (file("$projectDir/metrics.yaml").exists()) {
+    if (file("$projectDir/metrics.yaml").exists() || file("$projectDir/pings.yaml").exists()) {
         // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
         // searching for "registerJavaGeneratingTask", and finding
         // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.

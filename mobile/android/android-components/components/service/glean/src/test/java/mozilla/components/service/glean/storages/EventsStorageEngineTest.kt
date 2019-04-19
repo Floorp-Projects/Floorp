@@ -365,7 +365,7 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event",
             lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1"),
+            sendInPings = listOf("events"),
             allowedExtraKeys = listOf("someExtra")
         )
 
@@ -390,7 +390,7 @@ class EventsStorageEngineTest {
         assertEquals("POST", request.method)
         val applicationId = "mozilla-components-service-glean"
         assert(
-            request.path.startsWith("/submit/$applicationId/store1/${Glean.SCHEMA_VERSION}/")
+            request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/")
         )
         val pingJsonData = request.body.readUtf8()
         val pingJson = JSONObject(pingJsonData)
@@ -417,7 +417,7 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event",
             lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1"),
+            sendInPings = listOf("events"),
             allowedExtraKeys = listOf("key1", "key2")
         )
 
@@ -426,9 +426,9 @@ class EventsStorageEngineTest {
         EventsStorageEngine.testWaitForWrites()
         // Add a couple of truncated events to disk. One is still valid JSON, the other isn't.
         // These event should be skipped, all others intact.
-        EventsStorageEngine.writeEventToDisk("store1", "[500]")
+        EventsStorageEngine.writeEventToDisk("events", "[500]")
         EventsStorageEngine.testWaitForWrites()
-        EventsStorageEngine.writeEventToDisk("store1", "[500, \"foo")
+        EventsStorageEngine.writeEventToDisk("events", "[500, \"foo")
         EventsStorageEngine.testWaitForWrites()
         event.record(mapOf(ExtraKeys.Key1 to "baz"))
         EventsStorageEngine.testWaitForWrites()
@@ -452,7 +452,7 @@ class EventsStorageEngineTest {
         assertEquals("POST", request.method)
         val applicationId = "mozilla-components-service-glean"
         assert(
-            request.path.startsWith("/submit/$applicationId/store1/${Glean.SCHEMA_VERSION}/")
+            request.path.startsWith("/submit/$applicationId/events/${Glean.SCHEMA_VERSION}/")
         )
         val pingJsonData = request.body.readUtf8()
         val pingJson = JSONObject(pingJsonData)

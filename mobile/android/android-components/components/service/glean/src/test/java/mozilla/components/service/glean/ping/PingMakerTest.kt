@@ -7,6 +7,7 @@ package mozilla.components.service.glean.ping
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.BuildConfig
+import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.storages.MockStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import org.json.JSONArray
@@ -29,6 +30,11 @@ import java.time.format.DateTimeFormatter
 class PingMakerTest {
     private val mockApplicationContext = mock(Context::class.java)
 
+    private val customPing = PingType(
+        name = "test",
+        includeClientId = true
+    )
+
     // This test requires us to test against the minSdk of 21 in order to make sure that a date
     // related issue is not regressed. We do this using @Config(sdk = [21, 28]) annotation which
     // accepts an array of sdk versions to test against. Since loading the sdk versions is time
@@ -50,7 +56,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect("test")
+        val data = maker.collect(customPing)
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -80,7 +86,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect("test")
+        val data = maker.collect(customPing)
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -106,7 +112,7 @@ class PingMakerTest {
         )
 
         // Gather the data. We expect an empty ping with the "ping_info" information
-        val data = maker.collect("test")
+        val data = maker.collect(customPing)
         assertTrue("We expect a non-empty JSON blob", "{}" != data)
 
         // Parse the data so that we can easily check the other fields
@@ -134,7 +140,7 @@ class PingMakerTest {
 
         // Gather the data, this should have everything in the 'test' ping which is the default
         // storex
-        val data = maker.collect("test")
+        val data = maker.collect(customPing)
         assertNotNull("We expect a non-null JSON blob", data)
 
         // Parse the data so that we can easily check the other fields
@@ -160,8 +166,13 @@ class PingMakerTest {
             mockApplicationContext
         )
 
+        val noSuchPing = PingType(
+            name = "noSuchPing",
+            includeClientId = true
+        )
+
         // Gather the data. We expect an empty string
-        val data = maker.collect("noSuchData")
+        val data = maker.collect(noSuchPing)
         assertNull("We expect an empty string", data)
     }
 
@@ -193,7 +204,11 @@ class PingMakerTest {
         val results = mutableListOf<Int>()
         for (i in 1..2) {
             for (pingName in arrayOf("test1", "test2")) {
-                val data = maker.collect(pingName)
+                val ping = PingType(
+                    name = pingName,
+                    includeClientId = true
+                )
+                val data = maker.collect(ping)
                 val jsonData = JSONObject(data)
                 val pingInfo = jsonData["ping_info"] as JSONObject
                 val seqNum = pingInfo.getInt("seq")

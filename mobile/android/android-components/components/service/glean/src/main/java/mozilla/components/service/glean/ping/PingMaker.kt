@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
+import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.utils.getISOTimeString
@@ -85,23 +86,25 @@ internal class PingMaker(
     /**
      * Return the object containing the "client_info" section of a ping.
      *
+     * @param includeClientId When `true`, include the "client_id" metric.
      * @return a [JSONObject] containing the "client_info" data
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getClientInfo(): JSONObject {
+    fun getClientInfo(includeClientId: Boolean): JSONObject {
         val clientInfo = JSONObject()
         clientInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
-        clientInfo.mergeWith(getClientInfoMetrics())
+        clientInfo.mergeWith(getClientInfoMetrics(includeClientId))
         return clientInfo
     }
 
     /**
      * Collect the metrics stored in the "glean_client_info" bucket.
      *
+     * @param includeClientId When `true`, include the "client_id" metric.
      * @return a [JSONObject] containing the metrics belonging to the "client_info"
      *         section of the ping.
      */
-    private fun getClientInfoMetrics(): JSONObject {
+    private fun getClientInfoMetrics(includeClientId: Boolean): JSONObject {
         val pingInfoData = storageManager.collect("glean_client_info")
 
         // The data returned by the manager is keyed by the storage engine name.
@@ -118,19 +121,22 @@ internal class PingMaker(
             logger.warn("Empty client info data.")
         }
 
+        if (!includeClientId) {
+            flattenedData.remove("client_id")
+        }
+
         return flattenedData
     }
 
     /**
      * Collects the relevant data and assembles the requested ping.
      *
-     * @param storage the name of the storage containing the data for the ping.
-     *        This usually matches with the name of the ping.
+     * @param ping The metadata describing the ping to collect.
      * @return a string holding the data for the ping, or null if there is no data to send.
      */
-    fun collect(storage: String): String? {
-        logger.debug("Collecting $storage")
-        val jsonPing = storageManager.collect(storage)
+    fun collect(ping: PingType): String? {
+        logger.debug("Collecting ${ping.name}")
+        val jsonPing = storageManager.collect(ping.name)
 
         // Return null if there is nothing in the jsonPing object so that this can be used by
         // consuming functions (i.e. sendPing()) to indicate no ping data is available to send.
@@ -138,8 +144,8 @@ internal class PingMaker(
             return null
         }
 
-        jsonPing.put("ping_info", getPingInfo(storage))
-        jsonPing.put("client_info", getClientInfo())
+        jsonPing.put("ping_info", getPingInfo(ping.name))
+        jsonPing.put("client_info", getClientInfo(ping.includeClientId))
 
         return jsonPing.toString()
     }

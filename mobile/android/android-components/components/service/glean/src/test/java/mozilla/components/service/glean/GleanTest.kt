@@ -16,11 +16,11 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
-import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.NoExtraKeys
+import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.private.StringMetricType
 import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
 import mozilla.components.service.glean.private.UuidMetricType
@@ -459,81 +459,6 @@ class GleanTest {
     }
 
     @Test
-    fun `test sending of custom pings`() {
-        val server = MockWebServer()
-
-        server.enqueue(MockResponse().setBody("OK"))
-
-        val counter = CounterMetricType(
-            disabled = false,
-            category = "test",
-            lifetime = Lifetime.Ping,
-            name = "counter",
-            sendInPings = listOf("custom")
-        )
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        counter.add()
-        assertTrue(counter.testHasValue())
-
-        Glean.sendPings(listOf("custom"))
-        // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
-
-        val request = server.takeRequest(20L, TimeUnit.SECONDS)
-        val docType = request.path.split("/")[3]
-
-        assertEquals("custom", docType)
-    }
-
-    @Test
-    fun `don't send built-in pings through sendPings`() {
-        val server = MockWebServer()
-
-        server.enqueue(MockResponse().setBody("OK"))
-
-        val customCounter = CounterMetricType(
-            disabled = false,
-            category = "test",
-            lifetime = Lifetime.Ping,
-            name = "counter",
-            sendInPings = listOf("custom")
-        )
-        val defaultCounter = CounterMetricType(
-            disabled = false,
-            category = "test",
-            lifetime = Lifetime.Ping,
-            name = "counter",
-            sendInPings = listOf("default")
-        )
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        customCounter.add()
-        assertTrue(customCounter.testHasValue())
-        defaultCounter.add()
-        assertTrue(defaultCounter.testHasValue())
-
-        Glean.sendPings(listOf("metrics", "custom"))
-        // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
-
-        // Only the "custom" ping should have been sent through the public sendPings API
-
-        val request = server.takeRequest(20L, TimeUnit.SECONDS)
-        val docType = request.path.split("/")[3]
-
-        assertEquals("custom", docType)
-    }
-
-    @Test
     fun `ping collection must happen after currently scheduled metrics recordings`() {
         // Given the following block of code:
         //
@@ -547,6 +472,10 @@ class GleanTest {
         server.enqueue(MockResponse().setBody("OK"))
 
         val pingName = "custom_ping_1"
+        val ping = PingType(
+            name = pingName,
+            includeClientId = true
+        )
         val stringMetric = StringMetricType(
             disabled = false,
             category = "telemetry",
@@ -570,7 +499,7 @@ class GleanTest {
         // the order of the calls must be preserved.
         val testValue = "SomeTestValue"
         stringMetric.set(testValue)
-        Glean.sendPings(listOf(pingName))
+        ping.send()
 
         // Trigger worker task to upload the pings in the background. We need
         // to wait for the work to be enqueued first, since this test runs

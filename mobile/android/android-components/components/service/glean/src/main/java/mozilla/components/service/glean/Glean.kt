@@ -18,7 +18,9 @@ import java.util.UUID
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
+import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.ping.PingMaker
+import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
 import mozilla.components.service.glean.scheduler.PingUploadWorker
@@ -59,15 +61,6 @@ open class GleanInternalAPI internal constructor () {
     internal lateinit var metricsPingScheduler: MetricsPingScheduler
 
     internal lateinit var pingStorageEngine: PingStorageEngine
-
-    companion object {
-        internal const val BASELINE_STORE_NAME = "baseline"
-        internal val BUILTIN_PINGNAMES = listOf(
-            BASELINE_STORE_NAME,
-            MetricsPingScheduler.STORE_NAME,
-            "events"
-        )
-    }
 
     /**
      * Initialize glean.
@@ -336,15 +329,11 @@ open class GleanInternalAPI internal constructor () {
      */
     fun handleBackgroundEvent() {
         // Schedule the baseline and event pings
-        sendPingsInternal(listOf(BASELINE_STORE_NAME, "events"))
+        sendPings(listOf(Pings.baseline, Pings.events))
     }
 
     /**
-     * Send a list of pings by name.
-     *
-     * Only custom pings (pings not managed by Glean itself) will be sent by
-     * this function. If the name of a Glean-managed ping is passed in, an
-     * error is logged to logcat.
+     * Send a list of pings.
      *
      * While the collection of metrics into pings happens synchronously, the
      * ping queuing and ping uploading happens asyncronously.
@@ -352,36 +341,9 @@ open class GleanInternalAPI internal constructor () {
      *
      * If the ping currently contains no content, it will not be sent.
      *
-     * @param pingNames List of pings to send.
+     * @param pings List of pings to send.
      */
-    fun sendPings(pingNames: List<String>) {
-        val pingsToSend = pingNames.filter { pingName ->
-            if (BUILTIN_PINGNAMES.contains(pingName)) {
-                logger.error("Attempted to send built-in ping $pingName")
-                false
-            } else {
-                true
-            }
-        }
-
-        // Send pings is a "fire and forget" operation, we don't need to wait on
-        // it and we don't care about its return value.
-        sendPingsInternal(pingsToSend)
-    }
-
-    /**
-     * Send a list of pings by name.
-     *
-     * While the collection of metrics into pings happens synchronously, the
-     * ping queuing and ping uploading happens asyncronously.
-     * There are no guarantees that this will happen immediately.
-     *
-     *
-     * If the ping currently contains no content, it will not be sent.
-     *
-     * @param pingNames List of pings to send.
-     */
-    internal fun sendPingsInternal(pingNames: List<String>) = Dispatchers.API.launch {
+    internal fun sendPings(pings: List<PingType>) = Dispatchers.API.launch {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before sending pings.")
             return@launch
@@ -393,10 +355,10 @@ open class GleanInternalAPI internal constructor () {
         }
 
         val pingSerializationTasks = mutableListOf<Job>()
-        for (pingName in pingNames) {
-            assembleAndSerializePing(pingName)?.let {
+        for (ping in pings) {
+            assembleAndSerializePing(ping)?.let {
                 pingSerializationTasks.add(it)
-            } ?: logger.debug("No content for ping '$pingName', therefore no ping queued.")
+            } ?: logger.debug("No content for ping '$ping.name', therefore no ping queued.")
         }
 
         // If any ping is being serialized to disk, wait for the to finish before spinning up
@@ -410,19 +372,46 @@ open class GleanInternalAPI internal constructor () {
     }
 
     /**
+     * Send a list of pings by name.
+     *
+     * Each ping will be looked up in the known instances of [PingType]. If the
+     * ping isn't known, an error is logged and the ping isn't queued for uploading.
+     *
+     * While the collection of metrics into pings happens synchronously, the
+     * ping queuing and ping uploading happens asyncronously.
+     * There are no guarantees that this will happen immediately.
+     *
+     * If the ping currently contains no content, it will not be sent.
+     *
+     * @param pingNames List of ping names to send.
+     * @return true if any pings had content and were queued for uploading
+     */
+    internal fun sendPingsByName(pingNames: List<String>): Job? {
+        val pings = pingNames.mapNotNull { pingName ->
+            PingType.pingRegistry.get(pingName)?.let {
+                it
+            } ?: run {
+                logger.error("Attempted to send unknown ping '$pingName'")
+                null
+            }
+        }
+        return sendPings(pings)
+    }
+
+    /**
      * Collect and assemble the ping and serialize the ping to be read when uploaded, but only if
      * glean is initialized, upload is enabled, and there is ping data to send.
      *
-     * @param pingName This is the ping store/name for which to build and schedule the ping
+     * @param ping This is the object describing the ping
      */
-    internal fun assembleAndSerializePing(pingName: String): Job? {
+    internal fun assembleAndSerializePing(ping: PingType): Job? {
         // Since the pingMaker.collect() function returns null if there is nothing to send we can
         // use this to avoid sending an empty ping
-        return pingMaker.collect(pingName)?.let { pingContent ->
+        return pingMaker.collect(ping)?.let { pingContent ->
             // Store the serialized ping to file for PingUploadWorker to read and upload when the
             // schedule is triggered
             val pingId = UUID.randomUUID()
-            pingStorageEngine.store(pingId, makePath(pingName, pingId), pingContent)
+            pingStorageEngine.store(pingId, makePath(ping.name, pingId), pingContent)
         }
     }
 

@@ -21,6 +21,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.ping.PingMaker
+import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
@@ -94,16 +95,16 @@ internal fun checkPingSchema(content: String): JSONObject {
 /**
  * Collects a specified ping type and checks it against the glean ping schema.
  *
- * @param storeName The name of the ping to check
+ * @param ping The ping to check
  * @return the ping contents, in a JSONObject
  * @throws AssertionError If the JSON content is not valid
  */
-internal fun collectAndCheckPingSchema(storeName: String): JSONObject {
+internal fun collectAndCheckPingSchema(ping: PingType): JSONObject {
     val appContext = ApplicationProvider.getApplicationContext<Context>()
     val jsonString = PingMaker(
         StorageEngineManager(applicationContext = appContext),
         appContext
-    ).collect(storeName)!!
+    ).collect(ping)!!
     return checkPingSchema(jsonString)
 }
 

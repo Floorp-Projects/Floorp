@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
@@ -93,7 +94,7 @@ class LabeledMetricTypeTest {
         assertEquals(2, snapshot.get("telemetry.labeled_counter_metric/label2"))
         assertEquals(3, snapshot.get("telemetry.labeled_counter_metric"))
 
-        val json = collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        val json = collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
         // Do the same checks again on the JSON structure
         assertEquals(
             1,
@@ -151,7 +152,7 @@ class LabeledMetricTypeTest {
         assertNull(snapshot.get("telemetry.labeled_counter_metric/baz"))
         assertEquals(3, snapshot.get("telemetry.labeled_counter_metric/__other__"))
 
-        val json = collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        val json = collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
         // Do the same checks again on the JSON structure
         assertEquals(
             2,
@@ -209,7 +210,7 @@ class LabeledMetricTypeTest {
         }
         assertEquals(5, snapshot.get("telemetry.labeled_counter_metric/__other__"))
 
-        val json = collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        val json = collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
         // Do the same checks again on the JSON structure
         assertEquals(
             2,
@@ -304,7 +305,7 @@ class LabeledMetricTypeTest {
 
         assertTrue(labeledTimespanMetric["label1"].testHasValue())
 
-        collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
     }
 
     @Test
@@ -329,7 +330,7 @@ class LabeledMetricTypeTest {
         UuidsStorageEngine.record(labeledUuidMetric["label1"], UUID.randomUUID())
         UuidsStorageEngine.record(labeledUuidMetric["label2"], UUID.randomUUID())
 
-        collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
     }
 
     @Test
@@ -356,7 +357,7 @@ class LabeledMetricTypeTest {
         StringListsStorageEngine.set(labeledStringListMetric["label1"], listOf("a", "b", "c"))
         StringListsStorageEngine.set(labeledStringListMetric["label2"], listOf("a", "b", "c"))
 
-        collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
     }
 
     @Test
@@ -381,7 +382,7 @@ class LabeledMetricTypeTest {
         StringsStorageEngine.record(labeledStringMetric["label1"], "foo")
         StringsStorageEngine.record(labeledStringMetric["label2"], "bar")
 
-        collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
     }
 
     @Test
@@ -408,7 +409,7 @@ class LabeledMetricTypeTest {
         BooleansStorageEngine.record(labeledBooleanMetric["label1"], false)
         BooleansStorageEngine.record(labeledBooleanMetric["label2"], true)
 
-        collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
+        collectAndCheckPingSchema(Pings.metrics).getJSONObject("metrics")!!
     }
 
     @Test(expected = IllegalStateException::class)

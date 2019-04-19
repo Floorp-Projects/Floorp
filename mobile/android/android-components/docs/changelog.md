@@ -27,7 +27,8 @@ permalink: /changelog/
    * ⚠️ **This is a breaking API change**: Timespan and timing distribution
      metrics now have a thread-safe API. See `adding-new-metrics.md` for more
      information.
-   * `Glean.sendPings` has been added for sending custom pings.
+   * A method for sending metrics on custom pings has been added. See
+     `docs/pings/custom.md` for more information.
 
 * **concept-engine**
   * Add boolean `allowAutoplayMedia` setting.

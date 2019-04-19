@@ -120,7 +120,7 @@ class GleanDebugActivityTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "boolean_metric",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("metrics")
         )
 
         booleanMetric.set(true)
@@ -129,7 +129,7 @@ class GleanDebugActivityTest {
         // Set the extra values and start the intent.
         val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
         GleanDebugActivity::class.java)
-        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "store1")
+        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "metrics")
         val activity = Robolectric.buildActivity(GleanDebugActivity::class.java, intent)
         activity.create().start().resume()
 
@@ -144,7 +144,7 @@ class GleanDebugActivityTest {
         val request = server.takeRequest(10L, TimeUnit.SECONDS)
 
         assertTrue(
-            request.requestUrl.encodedPath().startsWith("/submit/mozilla-components-service-glean/store1")
+            request.requestUrl.encodedPath().startsWith("/submit/mozilla-components-service-glean/metrics")
         )
 
         server.shutdown()
@@ -166,7 +166,7 @@ class GleanDebugActivityTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "boolean_metric",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("metrics")
         )
 
         booleanMetric.set(true)
@@ -175,7 +175,7 @@ class GleanDebugActivityTest {
         // Set the extra values and start the intent.
         val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
             GleanDebugActivity::class.java)
-        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "store1")
+        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "metrics")
         intent.putExtra(GleanDebugActivity.TAG_DEBUG_VIEW_EXTRA_KEY, "inv@lid_id")
         val activity = Robolectric.buildActivity(GleanDebugActivity::class.java, intent)
         activity.create().start().resume()
@@ -190,7 +190,7 @@ class GleanDebugActivityTest {
 
         assertTrue(
             "Request path must be correct",
-            request.requestUrl.encodedPath().startsWith("/submit/mozilla-components-service-glean/store1")
+            request.requestUrl.encodedPath().startsWith("/submit/mozilla-components-service-glean/metrics")
         )
 
         assertNull(
@@ -223,7 +223,7 @@ class GleanDebugActivityTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "boolean_metric",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("metrics")
         )
 
         booleanMetric.set(true)
@@ -232,7 +232,7 @@ class GleanDebugActivityTest {
         // Set the extra values and start the intent.
         val intent = Intent(ApplicationProvider.getApplicationContext<Context>(),
             GleanDebugActivity::class.java)
-        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "store1")
+        intent.putExtra(GleanDebugActivity.SEND_PING_EXTRA_KEY, "metrics")
         intent.putExtra(GleanDebugActivity.TAG_DEBUG_VIEW_EXTRA_KEY, pingTag)
         val activity = Robolectric.buildActivity(GleanDebugActivity::class.java, intent)
         activity.create().start().resume()

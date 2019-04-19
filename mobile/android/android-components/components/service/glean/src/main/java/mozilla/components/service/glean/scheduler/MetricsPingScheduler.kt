@@ -15,6 +15,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
@@ -39,7 +40,6 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
 
     companion object {
         const val LAST_METRICS_PING_SENT_DATETIME = "last_metrics_ping_iso_datetime"
-        const val STORE_NAME = "metrics"
         const val DUE_HOUR_OF_THE_DAY = 4
     }
 
@@ -209,7 +209,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun collectPingAndReschedule(now: Calendar) {
         logger.info("Collecting the 'metrics' ping, now = $now")
-        Glean.sendPingsInternal(listOf(STORE_NAME))
+        Pings.metrics.send()
         // Update the collection date: we don't really care if we have data or not, let's
         // always update the sent date.
         updateSentDate(getISOTimeString(now, truncateTo = TimeUnit.Day))

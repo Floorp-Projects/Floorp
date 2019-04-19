@@ -3,9 +3,29 @@
 Applications can define metrics that are sent in custom pings. Unlike the
 built-in pings, custom pings are sent explicitly by the application.
 
+## Defining a custom ping
+
+Custom pings must be defined in a `pings.yaml` file, which is in the same
+directory alongside your app's `metrics.yaml` file.
+
+Each ping has the following parameters:
+
+- `description` (required): A human-readable description of the ping.
+- `include_client_id` (required): A boolean indicating whether to include the
+  `client_id` in the [`client_info` section](pings.md#The-client_info-section)).
+
+For example, to define a custom ping specifically for search information:
+
+```YAML
+search:
+  description: >
+    A ping to record search data.
+  include_client_id: false
+```
+
 ## Sending metrics in a custom ping
 
-To send a metric on a custom ping, you must first add the custom ping's name to
+To send a metric on a custom ping, you add the custom ping's name to
 the `send_in_pings` parameter in the `metrics.yaml` file.
 
 For example, to define a new metric to record the default search engine, which
@@ -32,9 +52,12 @@ type, you can add the special value `default` to `send_in_pings`:
 
 ## Sending a custom ping
 
-To send a custom ping, use `Glean.sendPings`. It is up to the application to
-call this method at the schedule and cadence that is appropriate for the ping.
+To send a custom ping, call the `send` method on the `PingType` object that
+glean generated for your ping.
+
+For example, to send the custom ping defined above:
 
 ```kotlin
-Glean.sendPings(listOf("search"))
+import org.mozilla.yourApplication.GleanMetrics.Pings
+Pings.search.send()
 ```
