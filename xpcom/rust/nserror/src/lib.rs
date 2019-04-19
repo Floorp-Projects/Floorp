@@ -52,18 +52,6 @@ impl fmt::Debug for nsresult {
     }
 }
 
-impl<T, E> From<Result<T, E>> for nsresult
-where
-    E: Into<nsresult>,
-{
-    fn from(result: Result<T, E>) -> nsresult {
-        match result {
-            Ok(_) => NS_OK,
-            Err(e) => e.into(),
-        }
-    }
-}
-
 impl Error for nsresult {}
 
 extern "C" {
