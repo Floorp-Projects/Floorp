@@ -37,6 +37,7 @@ class FileBlobImpl : public BaseBlobImpl {
   virtual uint64_t GetSize(ErrorResult& aRv) override;
   virtual void GetType(nsAString& aType) override;
   virtual int64_t GetLastModified(ErrorResult& aRv) override;
+  virtual void SetLastModified(int64_t aLastModified) override;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
                                       ErrorResult& aRv) const override;
   virtual void CreateInputStream(nsIInputStream** aInputStream,
@@ -56,8 +57,6 @@ class FileBlobImpl : public BaseBlobImpl {
 
   void SetFileId(int64_t aFileId) { mFileId = aFileId; }
 
-  void SetEmptyMozFullPath() { mHasEmptyMozFullPath = true; }
-
  protected:
   virtual ~FileBlobImpl() = default;
 
@@ -71,13 +70,8 @@ class FileBlobImpl : public BaseBlobImpl {
                                                  ErrorResult& aRv) override;
 
   nsCOMPtr<nsIFile> mFile;
-  int64_t mFileId;
   bool mWholeFile;
-
-  // When this is set to true, mozFullPath is returned as an empty string. This
-  // is useful in case the file doesn't exist (yet). See:
-  // FileCreatorHelper::CreateFile and aExistenceCheck.
-  bool mHasEmptyMozFullPath;
+  int64_t mFileId;
 };
 
 }  // namespace dom
