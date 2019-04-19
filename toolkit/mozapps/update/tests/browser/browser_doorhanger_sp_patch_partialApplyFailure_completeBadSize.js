@@ -1,11 +1,9 @@
 add_task(async function testPartialPatchApplyFailureWithCompleteValidationFailure() {
   // because of the way we're simulating failure, we have to just pretend we've already
   // retried.
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS, 0],
-    ],
-  });
+  SpecialPowers.pushPrefEnv({set: [
+    [PREF_APP_UPDATE_DOWNLOADPROMPT_MAXATTEMPTS, 0],
+  ]});
 
   let patchProps = {type: "partial",
                     state: STATE_PENDING};
