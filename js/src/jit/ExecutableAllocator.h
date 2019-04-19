@@ -216,7 +216,7 @@ class ExecutableAllocator {
   static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_SIMULATOR_ARM64) || defined(JS_CODEGEN_NONE)
+    defined(JS_CODEGEN_NONE)
   static void cacheFlush(void*, size_t) {}
 #elif defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || \
     defined(JS_SIMULATOR_MIPS64)
@@ -289,7 +289,7 @@ class ExecutableAllocator {
           : "r0", "r1", "r2");
     }
   }
-#elif defined(JS_CODEGEN_ARM64)
+#elif defined(JS_SIMULATOR_ARM64) || defined(JS_CODEGEN_ARM64)
   static void cacheFlush(void* code, size_t size) {
     vixl::CPU::EnsureIAndDCacheCoherency(code, size);
   }

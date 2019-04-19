@@ -523,8 +523,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   margin-inline-end: 0;
 }
 
-#appMenu-fxa-label,
-#appMenu-fxa-icon {
+#appMenu-fxa-label {
   -moz-context-properties: fill;
   fill: currentColor;
   list-style-image: url(chrome://browser/skin/sync.svg);
@@ -539,7 +538,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   to { transform: rotate(360deg); }
 }
 
-#appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon {
   animation: syncRotate 0.8s linear infinite;
@@ -557,8 +555,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* Handle different UI states. */
 #appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-label > .toolbarbutton-icon,
-#appMenu-fxa-container:not([fxastatus="signedin"]) > toolbarseparator,
-#appMenu-fxa-container:not([fxastatus="signedin"]) > #appMenu-fxa-icon,
 #appMenu-fxa-container:not([fxastatus="signedin"]) > #appMenu-fxa-status > #appMenu-fxa-avatar {
   display: none;
 }
@@ -695,7 +691,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   list-style-image: url(chrome://browser/skin/fxa/avatar-empty-badged.svg);
 }
 
-:root:not([fxastatus]) #fxa-toolbar-menu-button {
+:root:not([fxatoolbarmenu]) #fxa-toolbar-menu-button {
   display: none;
 }
 
@@ -1169,7 +1165,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
   text-align: center;
 }
 
-.toolbaritem-combined-buttons > toolbarseparator[orient="vertical"] + .subviewbutton,
 #appMenu-zoom-controls > toolbarseparator[orient="vertical"] + .subviewbutton {
   margin-inline-start: 0;
 }
@@ -1330,7 +1325,6 @@ menuitem.panel-subview-footer@menuStateActive@,
 
 #appMenu-fxa-avatar,
 #appMenu-fxa-label > .toolbarbutton-icon,
-#appMenu-fxa-icon > .toolbarbutton-icon,
 #PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon,
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,
 #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
