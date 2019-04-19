@@ -3127,7 +3127,8 @@ bool XPCJSRuntime::NoteCustomGCThingXPCOMChildren(
 
   // A tearoff holds a strong reference to its native object
   // (see XPCWrappedNative::FlatJSObjectFinalized). Its XPCWrappedNative
-  // will be held alive through the parent of the JSObject of the tearoff.
+  // will be held alive through tearoff's XPC_WN_TEAROFF_FLAT_OBJECT_SLOT,
+  // which points to the XPCWrappedNative's mFlatJSObject.
   XPCWrappedNativeTearOff* to =
       static_cast<XPCWrappedNativeTearOff*>(xpc_GetJSPrivate(obj));
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)->mNative");
