@@ -1667,7 +1667,7 @@ nsXPCComponents_Utils::ForceShrinkingGC() {
 
 class PreciseGCRunnable : public Runnable {
  public:
-  PreciseGCRunnable(ScheduledGCCallback* aCallback, bool aShrinking)
+  PreciseGCRunnable(nsIScheduledGCCallback* aCallback, bool aShrinking)
       : mozilla::Runnable("PreciseGCRunnable"),
         mCallback(aCallback),
         mShrinking(aShrinking) {}
@@ -1682,19 +1682,19 @@ class PreciseGCRunnable : public Runnable {
   }
 
  private:
-  RefPtr<ScheduledGCCallback> mCallback;
+  nsCOMPtr<nsIScheduledGCCallback> mCallback;
   bool mShrinking;
 };
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback) {
+nsXPCComponents_Utils::SchedulePreciseGC(nsIScheduledGCCallback* aCallback) {
   RefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, false);
   return NS_DispatchToMainThread(event);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::SchedulePreciseShrinkingGC(
-    ScheduledGCCallback* aCallback) {
+    nsIScheduledGCCallback* aCallback) {
   RefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, true);
   return NS_DispatchToMainThread(event);
 }

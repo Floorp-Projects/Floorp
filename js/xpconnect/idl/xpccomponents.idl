@@ -90,7 +90,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
  * interface for callback to be passed to Cu.schedulePreciseGC
  */
 [scriptable, function, uuid(71000535-b0fd-44d1-8ce0-909760e3953c)]
-interface ScheduledGCCallback : nsISupports
+interface nsIScheduledGCCallback : nsISupports
 {
     void callback();
 };
@@ -309,13 +309,13 @@ interface nsIXPCComponents_Utils : nsISupports
      * Schedule a garbage collection cycle for a point in the future when no JS
      * is running. Call the provided function once this has occurred.
      */
-    void schedulePreciseGC(in ScheduledGCCallback callback);
+    void schedulePreciseGC(in nsIScheduledGCCallback callback);
 
     /*
      * Schedule a shrinking garbage collection cycle for a point in the future
      * when no JS is running. Call the provided function once this has occured.
      */
-    void schedulePreciseShrinkingGC(in ScheduledGCCallback callback);
+    void schedulePreciseShrinkingGC(in nsIScheduledGCCallback callback);
 
     /*
      * In a debug build, unlink any ghost windows. This is only for debugging
