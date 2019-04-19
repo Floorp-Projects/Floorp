@@ -3825,8 +3825,11 @@ class Document : public nsINode,
   void CompatibilityModeChanged();
   bool NeedsQuirksSheet() const {
     // SVG documents never load quirk.css.
+    // FIXME(emilio): Can SVG documents be in quirks mode anyway?
     return mCompatMode == eCompatibility_NavQuirks && !IsSVGDocument();
   }
+  void AddContentEditableStyleSheetsToStyleSet(bool aDesignMode);
+  void RemoveContentEditableStyleSheets();
   void AddStyleSheetToStyleSets(StyleSheet* aSheet);
   void RemoveStyleSheetFromStyleSets(StyleSheet* aSheet);
   void NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet);
@@ -4219,6 +4222,12 @@ class Document : public nsINode,
 
   // Whether we have a quirks mode stylesheet in the style set.
   bool mQuirkSheetAdded : 1;
+
+  // Whether we have a contenteditable.css stylesheet in the style set.
+  bool mContentEditableSheetAdded : 1;
+
+  // Whether we have a designmode.css stylesheet in the style set.
+  bool mDesignModeSheetAdded : 1;
 
   // Keeps track of whether we have a pending
   // 'style-sheet-applicable-state-changed' notification.
