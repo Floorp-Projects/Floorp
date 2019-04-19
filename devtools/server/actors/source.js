@@ -14,6 +14,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
+const { findClosestScriptBySource } = require("devtools/server/actors/utils/closest-scripts");
 
 loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
 
@@ -432,14 +433,14 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   applyBreakpoint: function(actor) {
     const { line, column } = actor.location;
 
+    // Find all scripts that match the given source actor and line
+    // number.
+    let scripts = this._findDebuggeeScripts({ line });
+    scripts = scripts.filter((script) => !actor.hasScript(script));
+
     // Find all entry points that correspond to the given location.
     const entryPoints = [];
     if (column === undefined) {
-      // Find all scripts that match the given source actor and line
-      // number.
-      const scripts = this._findDebuggeeScripts({ line })
-        .filter((script) => !actor.hasScript(script));
-
       // This is a line breakpoint, so we add a breakpoint on the first
       // breakpoint on the line.
       const lineMatches = [];
@@ -465,23 +466,54 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         }
       }
     } else {
-      // Find all scripts that match the given source actor, line,
-      // and column number.
-      const scripts = this._findDebuggeeScripts({ line, column })
-        .filter((script) => !actor.hasScript(script));
+      // Compute columnToOffsetMaps for each script so that we can
+      // find matching entrypoints for the column breakpoint.
+      const columnToOffsetMaps = scripts.map(script =>
+        [
+          script,
+          script.getPossibleBreakpoints({ line }),
+        ]
+      );
 
-      for (const script of scripts) {
-        // Check to see if the script contains a breakpoint position at
-        // this line and column.
-        const possibleBreakpoint = script.getPossibleBreakpoints({
+      // This is a column breakpoint, so we are interested in all column
+      // offsets that correspond to the given line *and* column number.
+      for (const [script, columnToOffsetMap] of columnToOffsetMaps) {
+        for (const { columnNumber, offset } of columnToOffsetMap) {
+          if (columnNumber >= column && columnNumber <= column + 1) {
+            entryPoints.push({ script, offsets: [offset] });
+          }
+        }
+      }
+
+      // If we don't find any matching entrypoints,
+      // then we should see if the breakpoint comes before or after the column offsets.
+      if (entryPoints.length === 0) {
+        // It's not entirely clear if the scripts that make it here can come
+        // from a variety of sources. This function allows filtering by URL
+        // so it seems like it may be possible and we are erring on the side
+        // of caution by handling it here.
+        const closestScripts = findClosestScriptBySource(
+          columnToOffsetMaps.map(pair => pair[0]),
           line,
-          minColumn: column,
-          maxColumn: column + 1,
-        }).pop();
+          column,
+        );
 
-        if (possibleBreakpoint) {
-          const { offset } = possibleBreakpoint;
-          entryPoints.push({ script, offsets: [offset] });
+        const columnToOffsetLookup = new Map(columnToOffsetMaps);
+        for (const script of closestScripts) {
+          const columnToOffsetMap = columnToOffsetLookup.get(script);
+
+          if (columnToOffsetMap.length > 0) {
+            const firstColumnOffset = columnToOffsetMap[0];
+            const lastColumnOffset = columnToOffsetMap[columnToOffsetMap.length - 1];
+
+            if (column < firstColumnOffset.columnNumber) {
+              entryPoints.push({ script, offsets: [firstColumnOffset.offset] });
+            }
+
+            if (column > lastColumnOffset.columnNumber) {
+              entryPoints.push({ script, offsets: [lastColumnOffset.offset] });
+            }
+          }
         }
       }
     }
