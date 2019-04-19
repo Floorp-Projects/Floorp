@@ -107,7 +107,9 @@ static int decode_coefs(Dav1dTileContext *const t,
             uint16_t *const txtp_cdf = intra ?
                        ts->cdf.m.txtp_intra[set_idx][t_dim->min][y_mode_nofilt] :
                        ts->cdf.m.txtp_inter[set_idx][t_dim->min];
-            idx = dav1d_msac_decode_symbol_adapt(&ts->msac, txtp_cdf, set_cnt);
+            idx = (set_cnt <= 8 ? dav1d_msac_decode_symbol_adapt8 :
+                     dav1d_msac_decode_symbol_adapt16)(&ts->msac, txtp_cdf, set_cnt);
+
             if (dbg)
             printf("Post-txtp[%d->%d][%d->%d][%d][%d->%d]: r=%d\n",
                    set, set_idx, tx, t_dim->min, intra ? (int)y_mode_nofilt : -1,
@@ -122,19 +124,19 @@ static int decode_coefs(Dav1dTileContext *const t,
     const enum TxClass tx_class = dav1d_tx_type_class[*txtp];
     const int is_1d = tx_class != TX_CLASS_2D;
     switch (tx2dszctx) {
-#define case_sz(sz, bin) \
+#define case_sz(sz, bin, ns) \
     case sz: { \
         uint16_t *const eob_bin_cdf = ts->cdf.coef.eob_bin_##bin[chroma][is_1d]; \
-        eob_bin = dav1d_msac_decode_symbol_adapt(&ts->msac, eob_bin_cdf, 5 + sz); \
+        eob_bin = dav1d_msac_decode_symbol_adapt##ns(&ts->msac, eob_bin_cdf, 5 + sz); \
         break; \
     }
-    case_sz(0,   16);
-    case_sz(1,   32);
-    case_sz(2,   64);
-    case_sz(3,  128);
-    case_sz(4,  256);
-    case_sz(5,  512);
-    case_sz(6, 1024);
+    case_sz(0,   16,  4);
+    case_sz(1,   32,  8);
+    case_sz(2,   64,  8);
+    case_sz(3,  128,  8);
+    case_sz(4,  256, 16);
+    case_sz(5,  512, 16);
+    case_sz(6, 1024, 16);
 #undef case_sz
     }
     if (dbg)
@@ -179,8 +181,8 @@ static int decode_coefs(Dav1dTileContext *const t,
         uint16_t *const lo_cdf = is_last ?
             ts->cdf.coef.eob_base_tok[t_dim->ctx][chroma][ctx] :
             ts->cdf.coef.base_tok[t_dim->ctx][chroma][ctx];
-        int tok = dav1d_msac_decode_symbol_adapt(&ts->msac, lo_cdf,
-                                                 4 - is_last) + is_last;
+        int tok = dav1d_msac_decode_symbol_adapt4(&ts->msac, lo_cdf,
+                                                  4 - is_last) + is_last;
         if (dbg)
         printf("Post-lo_tok[%d][%d][%d][%d=%d=%d]: r=%d\n",
                t_dim->ctx, chroma, ctx, i, rc, tok, ts->msac.rng);
@@ -190,7 +192,7 @@ static int decode_coefs(Dav1dTileContext *const t,
         if (tok == 3) {
             const int br_ctx = get_br_ctx(levels, rc, tx, tx_class);
             do {
-                const int tok_br = dav1d_msac_decode_symbol_adapt(&ts->msac,
+                const int tok_br = dav1d_msac_decode_symbol_adapt4(&ts->msac,
                                        br_cdf[br_ctx], 4);
                 if (dbg)
                 printf("Post-hi_tok[%d][%d][%d][%d=%d=%d->%d]: r=%d\n",

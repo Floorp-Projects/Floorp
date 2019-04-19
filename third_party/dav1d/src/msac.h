@@ -38,20 +38,37 @@ typedef struct MsacContext {
     const uint8_t *buf_pos;
     const uint8_t *buf_end;
     ec_win dif;
-    uint16_t rng;
+    unsigned rng;
     int cnt;
     int allow_update_cdf;
 } MsacContext;
 
-void dav1d_msac_init(MsacContext *c, const uint8_t *data, size_t sz,
+void dav1d_msac_init(MsacContext *s, const uint8_t *data, size_t sz,
                      int disable_cdf_update_flag);
-unsigned dav1d_msac_decode_symbol_adapt(MsacContext *s, uint16_t *cdf,
-                                        const unsigned n_symbols);
-unsigned dav1d_msac_decode_bool_equi(MsacContext *const s);
+unsigned dav1d_msac_decode_symbol_adapt_c(MsacContext *s, uint16_t *cdf,
+                                          size_t n_symbols);
+unsigned dav1d_msac_decode_bool_equi(MsacContext *s);
 unsigned dav1d_msac_decode_bool(MsacContext *s, unsigned f);
 unsigned dav1d_msac_decode_bool_adapt(MsacContext *s, uint16_t *cdf);
-unsigned dav1d_msac_decode_bools(MsacContext *c, unsigned l);
-int dav1d_msac_decode_subexp(MsacContext *c, int ref, int n, unsigned k);
-int dav1d_msac_decode_uniform(MsacContext *c, unsigned n);
+unsigned dav1d_msac_decode_bools(MsacContext *s, unsigned n);
+int dav1d_msac_decode_subexp(MsacContext *s, int ref, int n, unsigned k);
+int dav1d_msac_decode_uniform(MsacContext *s, unsigned n);
+
+/* Supported n_symbols ranges: adapt4: 1-5, adapt8: 1-8, adapt16: 4-16 */
+#if ARCH_X86_64 && HAVE_ASM
+unsigned dav1d_msac_decode_symbol_adapt4_sse2(MsacContext *s, uint16_t *cdf,
+                                              size_t n_symbols);
+unsigned dav1d_msac_decode_symbol_adapt8_sse2(MsacContext *s, uint16_t *cdf,
+                                              size_t n_symbols);
+unsigned dav1d_msac_decode_symbol_adapt16_sse2(MsacContext *s, uint16_t *cdf,
+                                               size_t n_symbols);
+#define dav1d_msac_decode_symbol_adapt4  dav1d_msac_decode_symbol_adapt4_sse2
+#define dav1d_msac_decode_symbol_adapt8  dav1d_msac_decode_symbol_adapt8_sse2
+#define dav1d_msac_decode_symbol_adapt16 dav1d_msac_decode_symbol_adapt16_sse2
+#else
+#define dav1d_msac_decode_symbol_adapt4  dav1d_msac_decode_symbol_adapt_c
+#define dav1d_msac_decode_symbol_adapt8  dav1d_msac_decode_symbol_adapt_c
+#define dav1d_msac_decode_symbol_adapt16 dav1d_msac_decode_symbol_adapt_c
+#endif
 
 #endif /* DAV1D_SRC_MSAC_H */

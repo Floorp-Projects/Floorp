@@ -31,12 +31,12 @@
 #include "config.h"
 
 #if ARCH_ARM
-    .syntax unified
+        .syntax unified
 #ifdef __ELF__
-    .arch armv7-a
-    .fpu neon
-    .eabi_attribute 10, 0           // suppress Tag_FP_arch
-    .eabi_attribute 12, 0           // suppress Tag_Advanced_SIMD_arch
+        .arch armv7-a
+        .fpu neon
+        .eabi_attribute 10, 0           // suppress Tag_FP_arch
+        .eabi_attribute 12, 0           // suppress Tag_Advanced_SIMD_arch
 #endif
 
 #ifdef _WIN32
@@ -46,7 +46,7 @@
 #endif
 
 #if CONFIG_THUMB
-    .thumb
+        .thumb
 #define A @
 #define T
 #else
@@ -86,25 +86,25 @@
 #endif
         .purgem endfunc
     .endm
-    .text
-    .align \align
-  .if \export
-    .global EXTERN\name
+        .text
+        .align \align
+    .if \export
+        .global EXTERN\name
 #ifdef __ELF__
-    .type   EXTERN\name, %function
+        .type   EXTERN\name, %function
 #endif
 #if HAVE_AS_FUNC
-    .func   EXTERN\name
+        .func   EXTERN\name
 #endif
 EXTERN\name:
-  .else
+    .else
 #ifdef __ELF__
-    .type \name, %function
+        .type \name, %function
 #endif
 #if HAVE_AS_FUNC
-    .func \name
+        .func \name
 #endif
-  .endif
+    .endif
 \name:
 .endm
 

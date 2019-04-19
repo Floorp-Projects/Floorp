@@ -57,6 +57,7 @@ int xor128_rand(void);
 name##_8bpc(void); \
 name##_16bpc(void)
 
+void checkasm_check_msac(void);
 decl_check_bitfns(void checkasm_check_cdef);
 decl_check_bitfns(void checkasm_check_ipred);
 decl_check_bitfns(void checkasm_check_itx);

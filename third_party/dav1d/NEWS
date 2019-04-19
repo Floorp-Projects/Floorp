@@ -1,6 +1,14 @@
 Changes for 0.2.2 'Antelope':
 ----------------------------
 
+ - Large improvement on MSAC decoding with SSE, bringing 4-6% speed increase
+   The impact is important on SSSE3, SSE4 and AVX-2 cpus
+ - SSSE3 optimizations for all blocks size in itx
+ - SSSE3 optimizations for ipred_paeth and ipref_cfl (420, 422 and 444)
+ - Speed improvements on CDEF for SSE4 CPUs
+ - NEON optimizations for SGR and loop filter
+ - Minor crashes, improvements and build changes
+
 
 Changes for 0.2.1 'Antelope':
 ----------------------------

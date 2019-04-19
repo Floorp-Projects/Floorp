@@ -34,7 +34,10 @@ endif
 libdav1d_nasm_objs_if_needed = []
 
 if is_asm_enabled
-    checkasm_sources = files('checkasm/checkasm.c')
+    checkasm_sources = files(
+        'checkasm/checkasm.c',
+        'checkasm/msac.c',
+    )
 
     checkasm_tmpl_sources = files(
         'checkasm/cdef.c',

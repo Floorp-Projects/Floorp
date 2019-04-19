@@ -86,12 +86,14 @@ if is_asm_enabled
         )
         libdav1d_tmpl_sources += files(
             'arm/cdef_init_tmpl.c',
+            'arm/loopfilter_init_tmpl.c',
             'arm/looprestoration_init_tmpl.c',
             'arm/mc_init_tmpl.c',
         )
         if host_machine.cpu_family() == 'aarch64'
             libdav1d_sources += files(
                 'arm/64/cdef.S',
+                'arm/64/loopfilter.S',
                 'arm/64/looprestoration.S',
                 'arm/64/mc.S',
             )
@@ -118,19 +120,30 @@ if is_asm_enabled
 
         # NASM source files
         libdav1d_sources_asm = files(
-            'x86/cdef.asm',
-            'x86/cdef_ssse3.asm',
             'x86/cpuid.asm',
-            'x86/ipred.asm',
-            'x86/itx.asm',
-            'x86/loopfilter.asm',
-            'x86/looprestoration.asm',
-            'x86/looprestoration_ssse3.asm',
-            'x86/mc.asm',
-            'x86/mc_ssse3.asm',
-            'x86/itx_ssse3.asm',
-            'x86/ipred_ssse3.asm',
+            'x86/msac.asm',
         )
+
+        if dav1d_bitdepths.contains('8')
+            libdav1d_sources_asm += files(
+                'x86/cdef.asm',
+                'x86/cdef_sse.asm',
+                'x86/ipred.asm',
+                'x86/ipred_ssse3.asm',
+                'x86/itx.asm',
+                'x86/itx_ssse3.asm',
+                'x86/loopfilter.asm',
+                'x86/looprestoration.asm',
+                'x86/looprestoration_ssse3.asm',
+                'x86/mc.asm',
+                'x86/mc_ssse3.asm',
+            )
+        endif
+
+        if dav1d_bitdepths.contains('16')
+            libdav1d_sources_asm += files(
+            )
+        endif
 
         # Compile the ASM sources with NASM
         libdav1d_nasm_objs = nasm_gen.process(libdav1d_sources_asm)
@@ -139,8 +152,10 @@ endif
 
 
 
+api_export_flags = []
+
 #
-# Windows .rc file
+# Windows .rc file and API export flags
 #
 
 if host_machine.system() == 'windows' and get_option('default_library') != 'static'
@@ -162,6 +177,8 @@ if host_machine.system() == 'windows' and get_option('default_library') != 'stat
     )
 
     libdav1d_rc_obj = winmod.compile_resources(rc_file)
+
+    api_export_flags = ['-DDAV1D_BUILDING_DLL']
 else
     libdav1d_rc_obj = []
 endif
@@ -180,7 +197,7 @@ libdav1d_entrypoints_objs = static_library('dav1d_entrypoint',
 
     include_directories : dav1d_inc_dirs,
     dependencies: [stdatomic_dependency],
-    c_args : [stackalign_flag, stackrealign_flag],
+    c_args : [stackalign_flag, stackrealign_flag, api_export_flags],
     install : false,
     build_by_default : false,
 ).extract_all_objects()
@@ -222,7 +239,7 @@ libdav1d = library('dav1d',
         thread_dependency,
         thread_compat_dep,
         ],
-    c_args : [stackalign_flag],
+    c_args : [stackalign_flag, api_export_flags],
     version : dav1d_soname_version,
     soversion : dav1d_soversion,
     install : true,
