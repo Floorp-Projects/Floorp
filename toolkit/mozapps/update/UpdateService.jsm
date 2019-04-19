@@ -3927,6 +3927,10 @@ Downloader.prototype = {
     this.isCompleteUpdate = this._patch.type == "complete";
 
     let canUseBits = this._canUseBits(this._patch);
+    // Allow the advertised update to disable BITS.
+    if (this._update.getProperty("disableBITS") != null) {
+      canUseBits = false;
+    }
     if (!canUseBits) {
       this._downloaderName = "internal";
     }
