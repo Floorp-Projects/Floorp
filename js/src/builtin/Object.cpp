@@ -797,8 +797,7 @@ static bool TryAssignNative(JSContext* cx, HandleObject to, HandleObject from,
     shape = shapes[i - 1];
     nextKey = shape->propid();
 
-    // Ensure |from| is still native: a getter/setter might have turned
-    // |from| or |to| into an unboxed object or it could have been swapped
+    // Ensure |from| is still native: a getter/setter might have been swapped
     // with a non-native object.
     if (MOZ_LIKELY(from->isNative() &&
                    from->as<NativeObject>().lastProperty() == fromShape &&
@@ -1436,8 +1435,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       Shape* shape = shapes[i - 1];
       id = shape->propid();
 
-      // Ensure |obj| is still native: a getter might have turned it
-      // into an unboxed object or it could have been swapped with a
+      // Ensure |obj| is still native: a getter might have been swapped with a
       // non-native object.
       if (obj->isNative() &&
           obj->as<NativeObject>().lastProperty() == objShape &&

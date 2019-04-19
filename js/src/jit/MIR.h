@@ -337,7 +337,7 @@ class AliasSet {
     Element = 1 << 1,         // A Value member of obj->elements or
                               // a typed object.
     UnboxedElement = 1 << 2,  // An unboxed scalar or reference member of
-                              // typed object or unboxed object.
+                              // typed object.
     DynamicSlot = 1 << 3,     // A Value member of obj->slots.
     FixedSlot = 1 << 4,       // A Value member of obj->fixedSlots().
     DOMProperty = 1 << 5,     // A DOM property
