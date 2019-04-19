@@ -105,8 +105,11 @@ add_task(async function test_field_highlight_on_autocomplete() {
 
   is(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
      "Highlight was successfully removed on the password field");
+
+  // Clear login fields.
+  username.value = "";
+  password.value = "";
 });
 </script>
 </body>
 </html>
-
