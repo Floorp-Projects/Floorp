@@ -170,6 +170,8 @@ nsresult EditorEventListener::InstallToEditor() {
                                TrustedEventsAtCapture());
   elmP->AddEventListenerByType(this, NS_LITERAL_STRING("click"),
                                TrustedEventsAtCapture());
+  elmP->AddEventListenerByType(this, NS_LITERAL_STRING("auxclick"),
+                               TrustedEventsAtSystemGroupCapture());
   // Focus event doesn't bubble so adding the listener to capturing phase as
   // system event group.
   elmP->AddEventListenerByType(this, NS_LITERAL_STRING("blur"),
@@ -242,6 +244,8 @@ void EditorEventListener::UninstallFromEditor() {
                                   TrustedEventsAtCapture());
   elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("click"),
                                   TrustedEventsAtCapture());
+  elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("auxclick"),
+                                  TrustedEventsAtSystemGroupCapture());
   elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("blur"),
                                   TrustedEventsAtSystemGroupCapture());
   elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("focus"),
@@ -397,6 +401,15 @@ EditorEventListener::HandleEvent(Event* aEvent) {
     }
     // click
     case eMouseClick: {
+      WidgetMouseEvent* widgetMouseEvent = internalEvent->AsMouseEvent();
+      // Don't handle non-primary click events
+      if (widgetMouseEvent->button != WidgetMouseEventBase::eLeftButton) {
+        return NS_OK;
+      }
+      MOZ_FALLTHROUGH;
+    }
+    // auxclick
+    case eMouseAuxClick: {
       WidgetMouseEvent* widgetMouseEvent = internalEvent->AsMouseEvent();
       if (NS_WARN_IF(!widgetMouseEvent)) {
         return NS_OK;
@@ -650,9 +663,9 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Failed to paste for the middle button click");
   if (status == nsEventStatus_eConsumeNoDefault) {
-    // Prevent the event from propagating up to be possibly handled
-    // again by the containing window:
-    aMouseClickEvent->StopImmediatePropagation();
+    // We no longer need to StopImmediatePropagation here since
+    // ClickHandlerChild.jsm checks for and ignores editables, so won't
+    // re-handle the event
     aMouseClickEvent->PreventDefault();
   }
   return NS_OK;

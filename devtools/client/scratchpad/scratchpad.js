@@ -1232,7 +1232,7 @@ var Scratchpad = {
       return;
     }
 
-    const recentFilesPopup = recentFilesMenu.firstChild;
+    const recentFilesPopup = recentFilesMenu.menupopup;
     const filePaths = this.getRecentFiles();
     const filename = this.getState().filename;
 
@@ -1305,7 +1305,7 @@ var Scratchpad = {
       menu.setAttribute("hidden", true);
     } else {
       if (menu.hasAttribute("hidden")) {
-        if (!menu.firstChild.hasChildNodes()) {
+        if (!menu.menupopup.hasChildNodes()) {
           this.populateRecentFilesMenu();
         }
 

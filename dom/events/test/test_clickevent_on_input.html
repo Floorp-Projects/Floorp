@@ -60,14 +60,11 @@ function isEnabledAccessibleCaret()
 
 function doTest(aButton)
 {
-  // NOTE #1: Right click causes a context menu to popup, then, the click event
-  //          isn't generated.
-  // NOTE #2: If middle click causes text to be pasted, then, the click event
-  //          isn't generated.
-  // NOTE #3: If touch caret is enabled, touch caret would ovelap input element,
+  // NOTE #1: Non-primary buttons don't generate 'click' events
+  // NOTE #2: If touch caret is enabled, touch caret would ovelap input element,
   //          then, the click event isn't generated.
   if (aButton != 2 &&
-      (aButton != 1 || !isEnabledMiddleClickPaste()) &&
+      aButton != 1 &&
       (aButton != 0 || !isEnabledAccessibleCaret())) {
     gClickCount = 0;
     // click on border of input

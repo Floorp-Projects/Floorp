@@ -65,13 +65,13 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
     ServoStyleSet* styleSet = presShell->StyleSet();
 
     if (!aDocumentOnly) {
-      SheetType sheetType = SheetType::Agent;
-      for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-        aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
-      }
-      sheetType = SheetType::User;
-      for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-        aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+      const StyleOrigin kOrigins[] = {StyleOrigin::UserAgent,
+                                      StyleOrigin::User};
+      for (const auto origin : kOrigins) {
+        for (size_t i = 0, count = styleSet->SheetCount(origin); i < count;
+             i++) {
+          aResult.AppendElement(styleSet->SheetAt(origin, i));
+        }
       }
     }
 

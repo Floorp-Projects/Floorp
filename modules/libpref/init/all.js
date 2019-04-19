@@ -229,6 +229,12 @@ pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "www.icloud.
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode", "*.collabserv.com,*.gov.online.office365.us,*.officeapps-df.live.com,*.officeapps.live.com,*.online.office.de,*.partner.officewebapps.cn,*.scniris.com");
 
+// Blacklist of domains of web apps which listen for non-primary click events
+// on window global or document. The format is exactly same as
+// "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So, check its
+// explanation for the detail.
+pref("dom.mouseevent.click.hack.use_legacy_non-primary_dispatch", "");
+
 // Whether InputEvent.data is enabled.
 pref("dom.inputevent.data.enabled", true);
 
@@ -426,6 +432,16 @@ pref("media.decoder-doctor.verbose", false);
 // URL to report decode issues
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+pref("media.videocontrols.picture-in-picture.enabled", true);
+pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
+#else
+pref("media.videocontrols.picture-in-picture.enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+#endif
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
+
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
@@ -444,11 +460,6 @@ pref("media.peerconnection.sdp.rust.compare", true);
 pref("media.peerconnection.sdp.rust.enabled", false);
 pref("media.peerconnection.sdp.rust.compare", false);
 #endif
-
-pref("media.videocontrols.picture-in-picture.enabled", false);
-pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
-pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
-pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
 
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
@@ -1287,7 +1298,7 @@ pref("dom.allow_scripts_to_close_windows",          false);
 pref("dom.require_user_interaction_for_beforeunload", true);
 
 pref("dom.popup_maximum",                           20);
-pref("dom.popup_allowed_events", "change click dblclick mouseup pointerup notificationclick reset submit touchend contextmenu");
+pref("dom.popup_allowed_events", "change click dblclick auxclick mouseup pointerup notificationclick reset submit touchend contextmenu");
 
 pref("dom.disable_open_click_delay", 1000);
 pref("dom.serviceWorkers.disable_open_click_delay", 1000);
@@ -2701,7 +2712,7 @@ pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
 // assertion flag will be set to false after fixing Bug 1473549
 pref("security.allow_eval_with_system_principal", false);
-pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,setup,jsol.js,parent_utils.js,chrometask_chromescript");
+pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,setup,jsol.js,parent_utils.js,chrometask_chromescript,simpletest/testrunner.js,simpletest/simpletest.js,file_bug1018265.xul,helperappdlg.jsm,test_execute_async_script.py");
 #endif
 
 #if defined(DEBUG) || defined(FUZZING)
@@ -6072,9 +6083,6 @@ pref("dom.datatransfer.mozAtAPIs", false);
 #else
 pref("dom.datatransfer.mozAtAPIs", true);
 #endif
-
-// Whether or not the Prio Ping is supported on this platform.
-pref("toolkit.telemetry.prioping.enabled", false);
 
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.

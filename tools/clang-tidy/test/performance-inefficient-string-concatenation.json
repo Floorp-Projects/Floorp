@@ -1,1 +1,1 @@
-[["warning", "string concatenation results in allocation of unnecessary temporary strings; consider using 'operator+=' or 'string::append()' instead", "performance-inefficient-string-concatenation"]]
+[["warning", "string concatenation results in allocation of unnecessary temporary strings; consider using 'operator+=' or 'string::append()' instead", "performance-inefficient-string-concatenation"], {"reliability": "high"}]

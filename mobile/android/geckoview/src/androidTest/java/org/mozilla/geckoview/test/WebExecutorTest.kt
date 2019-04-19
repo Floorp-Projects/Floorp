@@ -44,6 +44,7 @@ import org.mozilla.geckoview.test.util.Environment
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import java.net.UnknownHostException
+import java.util.*
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -106,10 +107,22 @@ class WebExecutorTest {
         return JSONObject(bodyString)
     }
 
+    private fun randomString(count: Int): String {
+        val chars = "01234567890abcdefghijklmnopqrstuvwxyz[],./?;'"
+        val builder = StringBuilder(count)
+        val rand = Random(System.currentTimeMillis())
+
+        for (i in 0 until count) {
+            builder.append(chars[rand.nextInt(chars.length)])
+        }
+
+        return builder.toString()
+    }
+
     @Test
     fun smoke() {
         val uri = "$TEST_ENDPOINT/anything"
-        val bodyString = "This is the POST data"
+        val bodyString = randomString(8192)
         val referrer = "http://foo/bar"
 
         val request = WebRequest.Builder(uri)

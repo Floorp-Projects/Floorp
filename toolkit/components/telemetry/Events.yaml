@@ -1091,3 +1091,73 @@ intl.ui.browserLanguage:
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     bug_numbers: [1486507]
+
+# This data collection is intended for study-only collection
+# and is not meant to be enabled permanently on opt-in or opt-out.
+# It is controlled by the permissions.eventTelemetry.enabled pref.
+security.ui.permissionprompt:
+  show:
+    objects: [
+      "notifications",
+      "geo",
+    ]
+    bug_numbers:
+      - 1536454
+    description: >
+      When a permission prompt was shown.
+    expiry_version: "72"
+    notification_emails:
+      - jhofmann@mozilla.com
+      - ehsan@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    extra_keys:
+      previousVisits: How often the user has visited this site before today
+      timeOnPage: How much time the user has spent on this page so far
+      hasUserInput: Whether the prompt was handling user input (not including scrolling)
+      docHasUserInput: Whether the document has been interacted with (includes scrolling)
+      lastInteraction: When the site was last interacted with (includes scrolling)
+      allPermsDenied: How many permissions were denied by the user in total
+      allPermsGranted: How many permissions were granted by the user in total
+      thisPermDenied: How many permissions of the same kind were denied by the user in total
+      thisPermGranted: How many permissions of the same kind were granted by the user in total
+    products:
+      - firefox
+  remove:
+    objects: [
+      "notifications",
+      "geo",
+    ]
+    methods: [
+      "accept",
+      "deny",
+      "never",
+      "leave",
+      "other",
+    ]
+    bug_numbers:
+      - 1536454
+    description: >
+      When a permission prompt was removed, with the reasons being represented in the method field.
+    expiry_version: "72"
+    notification_emails:
+      - jhofmann@mozilla.com
+      - ehsan@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    extra_keys:
+      previousVisits: How often the user has visited this site before today
+      timeOnPage: How much time the user has spent on this page so far
+      hasUserInput: Whether the prompt was handling user input (not including scrolling)
+      docHasUserInput: Whether the document has been interacted with (includes scrolling)
+      lastInteraction: When the site was last interacted with (includes scrolling)
+      allPermsDenied: How many permissions were denied by the user in total
+      allPermsGranted: How many permissions were granted by the user in total
+      thisPermDenied: How many permissions of the same kind were denied by the user in total
+      thisPermGranted: How many permissions of the same kind were granted by the user in total
+    products:
+      - firefox

@@ -1044,6 +1044,8 @@ const keyMappings = {
   quickOpenFunc: { code: "o", modifiers: cmdShift },
   quickOpenLine: { code: ":", modifiers: cmdOrCtrl },
   fileSearch: { code: "f", modifiers: cmdOrCtrl },
+  fileSearchNext: { code: "g", modifiers: cmdOrCtrl },
+  fileSearchPrev: { code: "g", modifiers: cmdShift },
   Enter: { code: "VK_RETURN" },
   ShiftEnter: { code: "VK_RETURN", modifiers: shiftOrAlt },
   Up: { code: "VK_UP" },

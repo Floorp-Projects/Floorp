@@ -14,7 +14,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleColorInlines.h"
 #include "mozilla/UniquePtr.h"

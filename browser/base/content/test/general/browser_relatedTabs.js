@@ -40,7 +40,7 @@ add_task(async function() {
   await addTab("http://mochi.test:8888/#7");
 
   function testPosition(tabNum, expectedPosition, msg) {
-    is(Array.indexOf(gBrowser.tabs, tabs[tabNum]), expectedPosition, msg);
+    is(Array.prototype.indexOf.call(gBrowser.tabs, tabs[tabNum]), expectedPosition, msg);
   }
 
   testPosition(0, 3, "tab without referrer was opened to the far right");

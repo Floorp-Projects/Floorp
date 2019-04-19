@@ -1,1 +1,1 @@
-[["warning", "std::move of the variable 'obj' of the trivially-copyable type 'TriviallyCopyable' has no effect; remove std::move()", "performance-move-const-arg"]]
+[["warning", "std::move of the variable 'obj' of the trivially-copyable type 'TriviallyCopyable' has no effect; remove std::move()", "performance-move-const-arg"], {"reliability": "high"}]

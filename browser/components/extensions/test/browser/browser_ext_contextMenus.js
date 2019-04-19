@@ -183,7 +183,7 @@ add_task(async function() {
   items = extensionMenuRoot.getElementsByAttribute("label", "parent");
   is(items.length, 1, "contextMenu item for parent was found (context=image)");
 
-  is(items[0].childNodes[0].childNodes.length, 2, "child items for parent were found (context=image)");
+  is(items[0].menupopup.children.length, 2, "child items for parent were found (context=image)");
 
   // Click on ext-image item and check the click results
   await closeExtensionContextMenu(image);

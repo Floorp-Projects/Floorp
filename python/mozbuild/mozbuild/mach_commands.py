@@ -1615,11 +1615,18 @@ class StaticAnalysisSubCommand(SubCommand):
 
 
 class StaticAnalysisMonitor(object):
-    def __init__(self, srcdir, objdir, total):
+    def __init__(self, srcdir, objdir, clang_tidy_config, total):
         self._total = total
         self._processed = 0
         self._current = None
         self._srcdir = srcdir
+
+        self._clang_tidy_config = clang_tidy_config['clang_checkers']
+        # Transform the configuration to support Regex
+        for item in self._clang_tidy_config:
+            if item['name'] == '-*':
+                continue
+            item['name'].replace('*', '.*')
 
         from mozbuild.compilation.warnings import (
             WarningsCollector,
@@ -1665,6 +1672,24 @@ class StaticAnalysisMonitor(object):
                 self._current = None
             self._processed = self._processed + 1
             return (warning, False)
+        if warning is not None:
+            def get_reliability(checker_name):
+                # get the matcher from self._clang_tidy_config that is the 'name' field
+                reliability = None
+                for item in self._clang_tidy_config:
+                    if item['name'] == checker_name:
+                        reliability = item.get('reliability', 'low')
+                        break
+                    else:
+                        # We are using a regex in order to also match 'mozilla-.* like checkers'
+                        matcher = re.match(item['name'], checker_name)
+                        if matcher is not None and matcher.group(0) == checker_name:
+                            reliability = item.get('reliability', 'low')
+                            break
+                return reliability
+            reliability = get_reliability(warning['flag'])
+            if reliability is not None:
+                warning['reliability'] = reliability
         return (warning, True)
 
 
@@ -1678,6 +1703,7 @@ class StaticAnalysis(MachCommandBase):
     _format_ignore_file = '.clang-format-ignore'
 
     _clang_tidy_config = None
+    _cov_config = None
 
     @Command('static-analysis', category='testing',
              description='Run C++ static analysis checks')
@@ -1768,7 +1794,7 @@ class StaticAnalysis(MachCommandBase):
         args = self._get_clang_tidy_command(
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
-        monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
+        monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, self._clang_tidy_config, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
@@ -1826,10 +1852,14 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         commands_list = self.get_files_with_commands(source)
-
         if len(commands_list) == 0:
             self.log(logging.INFO, 'static-analysis', {}, 'There are no files that need to be analyzed.')
             return 0
+
+        # Load the configuration file for coverity static-analysis
+        # For the moment we store only the reliability index for each checker
+        # as the rest is managed on the https://github.com/mozilla/release-services side.
+        self._cov_config = self._get_cov_config()
 
         rc = self.setup_coverity()
         if rc != 0:
@@ -1880,6 +1910,29 @@ class StaticAnalysis(MachCommandBase):
         if output is not None:
             self.dump_cov_artifact(cov_result, output)
 
+    def get_reliability_index_for_cov_checker(self, checker_name):
+        if self._cov_config is None:
+            self.log(logging.INFO, 'static-analysis', {}, 'Coverity config file not found, '
+                'using default-value \'reliablity\' = medium. for checker {}'.format(checker_name))
+            return 'medium'
+
+        checkers = self._cov_config['coverity_checkers']
+        if checker_name not in checkers:
+            self.log(logging.INFO, 'static-analysis', {},
+                'Coverity checker {} not found to determine reliability index. '
+                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+            return 'medium'
+
+        if 'reliability' not in checkers[checker_name]:
+            # This checker doesn't have a reliability index
+            self.log(logging.INFO, 'static-analysis', {},
+                'Coverity checker {} doesn\'t have a reliability index set, '
+                'field \'reliability is missing\', please cosinder adding it. '
+                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+            return 'medium'
+
+        return checkers[checker_name]['reliability']
+
     def dump_cov_artifact(self, cov_results, output):
         # Parse Coverity json into structured issues
         with open(cov_results) as f:
@@ -1898,6 +1951,7 @@ class StaticAnalysis(MachCommandBase):
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
                     'message': event_path['eventDescription'],
+                    'reliability': self.get_reliability_index_for_cov_checker(issue['checkerName']),
                     'extra': {
                         'category': issue['checkerProperties']['category'],
                         'stateOnServer': issue['stateOnServer'],
@@ -2209,8 +2263,20 @@ class StaticAnalysis(MachCommandBase):
             file_handler = open(mozpath.join(self.topsrcdir, "tools", "clang-tidy", "config.yaml"))
             config = yaml.safe_load(file_handler)
         except Exception:
-            print('Looks like config.yaml is not valid, we are going to use default'
-                  ' values for the rest of the analysis.')
+            self.log(logging.ERROR, 'static-analysis', {},
+                    'Looks like config.yaml is not valid, we are going to use default'
+                    ' values for the rest of the analysis for clang-tidy.')
+            return None
+        return config
+
+    def _get_cov_config(self):
+        try:
+            file_handler = open(mozpath.join(self.topsrcdir, "tools", "coverity", "config.yaml"))
+            config = yaml.safe_load(file_handler)
+        except Exception:
+            self.log(logging.ERROR, 'static-analysis', {},
+                    'Looks like config.yaml is not valid, we are going to use default'
+                    ' values for the rest of the analysis for coverity.')
             return None
         return config
 
@@ -2512,6 +2578,10 @@ class StaticAnalysis(MachCommandBase):
             test_file_path_json = mozpath.join(self._clang_tidy_base_path, "test", checker) + '.json'
             # Read the pre-determined issues
             baseline_issues = self._get_autotest_stored_issues(test_file_path_json)
+
+            # We also stored the 'reliability' index so strip that from the baseline_issues
+            baseline_issues[:] = [item for item in baseline_issues if 'reliability' not in item]
+
             found = all([element_base in issues for element_base in baseline_issues])
 
             if not found:
@@ -2851,6 +2921,9 @@ class StaticAnalysis(MachCommandBase):
             checker_error['info1'] = clang_output
             checkers_results.append(checker_error)
             return self.TOOLS_CHECKER_RETURNED_NO_ISSUES
+
+        # Also store the 'reliability' index for this checker
+        issues.append({'reliability': item['reliability']})
 
         if self._dump_results:
             self._build_autotest_result(test_file_path_json, json.dumps(issues))

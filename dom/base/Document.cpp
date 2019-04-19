@@ -126,6 +126,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 
@@ -1237,6 +1238,7 @@ Document::Document(const char* aContentType)
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
       mSkipLoadEventAfterClose(false),
+      mDisableCookieAccess(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -2203,6 +2205,40 @@ already_AddRefed<nsIPrincipal> Document::MaybeDowngradePrincipal(
   return principal.forget();
 }
 
+size_t Document::FindDocStyleSheetInsertionPoint(const StyleSheet& aSheet) {
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+
+  // lowest index first
+  int32_t newDocIndex = IndexOfSheet(aSheet);
+
+  size_t count = mStyleSet->SheetCount(StyleOrigin::Author);
+  size_t index = 0;
+  for (; index < count; index++) {
+    auto* sheet = mStyleSet->SheetAt(StyleOrigin::Author, index);
+    MOZ_ASSERT(sheet);
+    int32_t sheetDocIndex = IndexOfSheet(*sheet);
+    if (sheetDocIndex > newDocIndex) break;
+
+    // If the sheet is not owned by the document it can be an author
+    // sheet registered at nsStyleSheetService or an additional author
+    // sheet on the document, which means the new
+    // doc sheet should end up before it.
+    if (sheetDocIndex < 0) {
+      if (sheetService) {
+        auto& authorSheets = *sheetService->AuthorStyleSheets();
+        if (authorSheets.IndexOf(sheet) != authorSheets.NoIndex) {
+          break;
+        }
+      }
+      if (sheet == GetFirstAdditionalAuthorSheet()) {
+        break;
+      }
+    }
+  }
+
+  return index;
+}
+
 void Document::RemoveDocStyleSheetsFromStyleSets() {
   MOZ_ASSERT(mStyleSetFilled);
   // The stylesheets should forget us
@@ -2216,7 +2252,7 @@ void Document::RemoveDocStyleSheetsFromStyleSets() {
 }
 
 void Document::RemoveStyleSheetsFromStyleSets(
-    const nsTArray<RefPtr<StyleSheet>>& aSheets, SheetType aType) {
+    const nsTArray<RefPtr<StyleSheet>>& aSheets, StyleOrigin aType) {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(aSheets)) {
     sheet->ClearAssociatedDocumentOrShadowRoot();
@@ -2236,16 +2272,16 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
     // GetStyleBackendType() too early.)
     RemoveDocStyleSheetsFromStyleSets();
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet],
-                                   SheetType::Agent);
+                                   StyleOrigin::UserAgent);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet],
-                                   SheetType::User);
+                                   StyleOrigin::User);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet],
-                                   SheetType::Doc);
+                                   StyleOrigin::Author);
 
     if (nsStyleSheetService* sheetService =
             nsStyleSheetService::GetInstance()) {
       RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(),
-                                     SheetType::Doc);
+                                     StyleOrigin::Author);
     }
   }
 
@@ -2282,9 +2318,9 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
 
 static void AppendSheetsToStyleSet(ServoStyleSet* aStyleSet,
                                    const nsTArray<RefPtr<StyleSheet>>& aSheets,
-                                   SheetType aType) {
+                                   StyleOrigin aOrigin) {
   for (StyleSheet* sheet : Reversed(aSheets)) {
-    aStyleSet->AppendStyleSheet(aType, sheet);
+    aStyleSet->AppendStyleSheet(aOrigin, sheet);
   }
 }
 
@@ -2301,57 +2337,59 @@ void Document::FillStyleSetUserAndUASheets() {
              "service has gone");
 
   for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-    mStyleSet->AppendStyleSheet(SheetType::User, sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::User, sheet);
   }
 
   StyleSheet* sheet = IsInChromeDocShell() ? cache->GetUserChromeSheet()
                                            : cache->GetUserContentSheet();
   if (sheet) {
-    mStyleSet->AppendStyleSheet(SheetType::User, sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::User, sheet);
   }
 
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->UASheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->UASheet());
 
   if (MOZ_LIKELY(NodeInfoManager()->MathMLEnabled())) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->MathMLSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->MathMLSheet());
   }
 
   if (MOZ_LIKELY(NodeInfoManager()->SVGEnabled())) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->SVGSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->SVGSheet());
   }
 
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->HTMLSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->HTMLSheet());
 
   if (nsLayoutUtils::ShouldUseNoFramesSheet(this)) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->NoFramesSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->NoFramesSheet());
   }
 
   if (nsLayoutUtils::ShouldUseNoScriptSheet(this)) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->NoScriptSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->NoScriptSheet());
   }
 
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->CounterStylesSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                              cache->CounterStylesSheet());
 
   // Load the minimal XUL rules for scrollbars and a few other XUL things
   // that non-XUL (typically HTML) documents commonly use.
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->MinimalXULSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->MinimalXULSheet());
 
   // Only load the full XUL sheet if we'll need it.
   if (LoadsFullXULStyleSheetUpFront()) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->XULSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->XULSheet());
   }
 
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->FormsSheet());
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->ScrollbarsSheet());
-  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->PluginProblemSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->FormsSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->ScrollbarsSheet());
+  mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                              cache->PluginProblemSheet());
 
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
   }
 
   MOZ_ASSERT(!mQuirkSheetAdded);
   if (NeedsQuirksSheet()) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->QuirkSheet());
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->QuirkSheet());
     mQuirkSheetAdded = true;
   }
 }
@@ -2364,26 +2402,26 @@ void Document::FillStyleSet() {
 }
 
 void Document::FillStyleSetDocumentSheets() {
-  MOZ_ASSERT(mStyleSet->SheetCount(SheetType::Doc) == 0,
+  MOZ_ASSERT(mStyleSet->SheetCount(StyleOrigin::Author) == 0,
              "Style set already has document sheets?");
 
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
-      mStyleSet->AddDocStyleSheet(sheet, this);
+      mStyleSet->AddDocStyleSheet(sheet);
     }
   }
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-    mStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::Author, sheet);
   }
 
   AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAgentSheet],
-                         SheetType::Agent);
+                         StyleOrigin::UserAgent);
   AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eUserSheet],
-                         SheetType::User);
+                         StyleOrigin::User);
   AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAuthorSheet],
-                         SheetType::Doc);
+                         StyleOrigin::Author);
 }
 
 void Document::CompatibilityModeChanged() {
@@ -2405,9 +2443,9 @@ void Document::CompatibilityModeChanged() {
   auto cache = nsLayoutStylesheetCache::Singleton();
   StyleSheet* sheet = cache->QuirkSheet();
   if (mQuirkSheetAdded) {
-    mStyleSet->RemoveStyleSheet(SheetType::Agent, sheet);
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, sheet);
   } else {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, sheet);
   }
   mQuirkSheetAdded = !mQuirkSheetAdded;
   ApplicableStylesChanged();
@@ -3382,6 +3420,152 @@ void Document::GetReferrer(nsAString& aReferrer) const {
     CopyUTF8toUTF16(mReferrer, aReferrer);
 }
 
+void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
+  aCookie.Truncate();  // clear current cookie in case service fails;
+                       // no cookie isn't an error condition.
+
+  if (mDisableCookieAccess) {
+    return;
+  }
+
+  // If the document's sandboxed origin flag is set, access to read cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return;
+  }
+
+  // If the document is a cookie-averse Document... return the empty string.
+  if (IsCookieAverse()) {
+    return;
+  }
+
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service =
+      do_GetService(NS_COOKIESERVICE_CONTRACTID);
+  if (service) {
+    // Get a URI from the document principal. We use the original
+    // codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIURI> codebaseURI;
+    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+
+    if (!codebaseURI) {
+      // Document's principal is not a codebase (may be system), so
+      // can't set cookies
+
+      return;
+    }
+
+    nsCOMPtr<nsIChannel> channel(mChannel);
+    if (!channel) {
+      channel = CreateDummyChannelForCookies(codebaseURI);
+      if (!channel) {
+        return;
+      }
+    }
+
+    nsCString cookie;
+    service->GetCookieString(codebaseURI, channel, getter_Copies(cookie));
+    // CopyUTF8toUTF16 doesn't handle error
+    // because it assumes that the input is valid.
+    UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
+  }
+}
+
+void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
+  if (mDisableCookieAccess) {
+    return;
+  }
+
+  // If the document's sandboxed origin flag is set, access to write cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return;
+  }
+
+  // If the document is a cookie-averse Document... do nothing.
+  if (IsCookieAverse()) {
+    return;
+  }
+
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service =
+      do_GetService(NS_COOKIESERVICE_CONTRACTID);
+  if (service && mDocumentURI) {
+    // The code for getting the URI matches Navigator::CookieEnabled
+    nsCOMPtr<nsIURI> codebaseURI;
+    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+
+    if (!codebaseURI) {
+      // Document's principal is not a codebase (may be system), so
+      // can't set cookies
+
+      return;
+    }
+
+    nsCOMPtr<nsIChannel> channel(mChannel);
+    if (!channel) {
+      channel = CreateDummyChannelForCookies(codebaseURI);
+      if (!channel) {
+        return;
+      }
+    }
+
+    NS_ConvertUTF16toUTF8 cookie(aCookie);
+    service->SetCookieString(codebaseURI, nullptr, cookie.get(), channel);
+  }
+}
+
+already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
+    nsIURI* aCodebaseURI) {
+  // The cookie service reads the privacy status of the channel we pass to it in
+  // order to determine which cookie database to query.  In some cases we don't
+  // have a proper channel to hand it to the cookie service though.  This
+  // function creates a dummy channel that is not used to load anything, for the
+  // sole purpose of handing it to the cookie service.  DO NOT USE THIS CHANNEL
+  // FOR ANY OTHER PURPOSE.
+  MOZ_ASSERT(!mChannel);
+
+  // The following channel is never openend, so it does not matter what
+  // securityFlags we pass; let's follow the principle of least privilege.
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel), aCodebaseURI, this,
+                nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+                nsIContentPolicy::TYPE_INVALID);
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  if (!pbChannel || !loadContext) {
+    return nullptr;
+  }
+  pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
+
+  return channel.forget();
+}
+
 mozilla::net::ReferrerPolicy Document::GetReferrerPolicy() const {
   if (mIsSrcdocDocument && mParentDocument &&
       mReferrerPolicy == mozilla::net::RP_Unset) {
@@ -3803,8 +3987,6 @@ void Document::DeletePresShell() {
     presContext->RefreshDriver()->CancelPendingFullscreenEvents(this);
   }
 
-  mStyleSet->ShellDetachedFromDocument();
-
   // When our shell goes away, request that all our images be immediately
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
@@ -3822,6 +4004,10 @@ void Document::DeletePresShell() {
 
   ClearStaleServoData();
   AssertNoStaleServoDataIn(*this);
+
+  mStyleSet->ShellDetachedFromDocument();
+  mStyleSetFilled = false;
+  mQuirkSheetAdded = false;
 }
 
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
@@ -4013,7 +4199,7 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify) {
 
 void Document::AddStyleSheetToStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
-    mStyleSet->AddDocStyleSheet(aSheet, this);
+    mStyleSet->AddDocStyleSheet(aSheet);
     ApplicableStylesChanged();
   }
 }
@@ -4186,19 +4372,17 @@ void Document::NotifyStyleSheetApplicableStateChanged() {
   }
 }
 
-static SheetType ConvertAdditionalSheetType(
+static StyleOrigin ConvertAdditionalSheetType(
     Document::additionalSheetType aType) {
   switch (aType) {
     case Document::eAgentSheet:
-      return SheetType::Agent;
+      return StyleOrigin::UserAgent;
     case Document::eUserSheet:
-      return SheetType::User;
+      return StyleOrigin::User;
     case Document::eAuthorSheet:
-      return SheetType::Doc;
+      return StyleOrigin::Author;
     default:
-      MOZ_ASSERT(false, "wrong type");
-      // we must return something although this should never happen
-      return SheetType::Count;
+      MOZ_CRASH("Wrong sheet type");
   }
 }
 
@@ -4264,8 +4448,7 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
   mAdditionalSheets[aType].AppendElement(aSheet);
 
   if (mStyleSetFilled) {
-    SheetType type = ConvertAdditionalSheetType(aType);
-    mStyleSet->AppendStyleSheet(type, aSheet);
+    mStyleSet->AppendStyleSheet(ConvertAdditionalSheetType(aType), aSheet);
     ApplicableStylesChanged();
   }
 
@@ -4289,8 +4472,8 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
     if (!mIsGoingAway) {
       MOZ_ASSERT(sheetRef->IsApplicable());
       if (mStyleSetFilled) {
-        SheetType type = ConvertAdditionalSheetType(aType);
-        mStyleSet->RemoveStyleSheet(type, sheetRef);
+        mStyleSet->RemoveStyleSheet(ConvertAdditionalSheetType(aType),
+                                    sheetRef);
         ApplicableStylesChanged();
       }
     }

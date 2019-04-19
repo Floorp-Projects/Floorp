@@ -69,7 +69,7 @@ function popupShowingEventOccurred(event)
   // considers the zeroth position to be before the first element, the value
   // should be one higher than its index within its parent.
   is(event.rangeParent, trigger.parentNode, testname + "rangeParent");
-  is(event.rangeOffset, Array.indexOf(trigger.parentNode.childNodes, trigger) + 1, testname + "rangeOffset");
+  is(event.rangeOffset, Array.prototype.indexOf.call(trigger.parentNode.childNodes, trigger) + 1, testname + "rangeOffset");
 
   var popuprect = event.target.getBoundingClientRect();
   is(Math.round(popuprect.left), Math.round(rect.left + 4), "popup left");

@@ -143,7 +143,8 @@ const ToolbarView = {
   _onHiddenMarkersChanged: function() {
     const checkedMenuItems =
       $$("#performance-filter-menupopup menuitem[marker-type]:not([checked])");
-    const hiddenMarkers = Array.map(checkedMenuItems, e => e.getAttribute("marker-type"));
+    const hiddenMarkers =
+      Array.from(checkedMenuItems, e => e.getAttribute("marker-type"));
     PerformanceController.setPref("hidden-markers", hiddenMarkers);
   },
 

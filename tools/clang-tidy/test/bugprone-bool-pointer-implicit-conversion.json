@@ -1,1 +1,1 @@
-[["warning", "dubious check of 'bool *' against 'nullptr', did you mean to dereference it?", "bugprone-bool-pointer-implicit-conversion"]]
+[["warning", "dubious check of 'bool *' against 'nullptr', did you mean to dereference it?", "bugprone-bool-pointer-implicit-conversion"], {"reliability": "low"}]

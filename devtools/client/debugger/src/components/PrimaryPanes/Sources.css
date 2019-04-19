@@ -34,7 +34,7 @@
   width: 5px;
   margin: 0 2px 0 6px;
   vertical-align: bottom;
-  background: var(--theme-body-color-alt);
+  background: var(--theme-text-color-alt);
 }
 
 .sources-clear-root-label {
