@@ -13,7 +13,6 @@
 #  include "nsAccessibilityService.h"
 #endif
 #include "mozilla/BrowserElementParent.h"
-#include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -42,8 +41,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ProcessHangMonitor.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
@@ -3109,21 +3106,6 @@ TabParent::GetContentBlockingLog(Promise** aPromise) {
         jsPromise->MaybeRejectWithUndefined();
       });
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::MaybeCancelContentJSExecutionFromScript(
-    nsITabParent::NavigationType aNavigationType,
-    JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx) {
-  dom::CancelContentJSOptions cancelContentJSOptions;
-  if (!cancelContentJSOptions.Init(aCx, aCancelContentJSOptions)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (StaticPrefs::dom_ipc_cancel_content_js_when_navigating()) {
-    Manager()->CancelContentJSExecutionIfRunning(this, aNavigationType,
-                                                 cancelContentJSOptions);
-  }
   return NS_OK;
 }
 

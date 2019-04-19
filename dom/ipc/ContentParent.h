@@ -32,7 +32,6 @@
 #include "nsHashKeys.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
-#include "nsITabParent.h"
 #include "nsIThreadInternal.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
@@ -110,7 +109,6 @@ class MemoryReport;
 class TabContext;
 class GetFilesHelper;
 class MemoryReportRequestHost;
-struct CancelContentJSOptions;
 
 #define NS_CONTENTPARENT_IID                         \
   {                                                  \
@@ -588,10 +586,6 @@ class ContentParent final : public PContentParent,
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void PaintTabWhileInterruptingJS(TabParent* aTabParent, bool aForceRepaint,
                                    const layers::LayersObserverEpoch& aEpoch);
-
-  void CancelContentJSExecutionIfRunning(
-      TabParent* aTabParent, nsITabParent::NavigationType aNavigationType,
-      const CancelContentJSOptions& aCancelContentJSOptions);
 
   // This function is called when we are about to load a document from an
   // HTTP(S) or FTP channel for a content process.  It is a useful place
