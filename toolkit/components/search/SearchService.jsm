@@ -2862,6 +2862,8 @@ SearchService.prototype = {
     return val;
   },
 
+  _listJSONURL: ((AppConstants.platform == "android") ? APP_SEARCH_PREFIX : EXT_SEARCH_PREFIX) + "list.json",
+
   _engines: { },
   __sortedEngines: null,
   _visibleDefaultEngines: [],
@@ -3467,11 +3469,9 @@ SearchService.prototype = {
   async _findEngines() {
     LOG("_findEngines: looking for engines in JARs");
 
-    let prefix = AppConstants.platform == "android" ? APP_SEARCH_PREFIX : EXT_SEARCH_PREFIX;
-    let listURL = prefix + "list.json";
-    let chan = makeChannel(listURL);
+    let chan = makeChannel(this._listJSONURL);
     if (!chan) {
-      LOG("_findEngines: " + prefix + " isn't registered");
+      LOG("_findEngines: " + this._listJSONURL + " isn't registered");
       return [];
     }
 
@@ -3485,10 +3485,10 @@ SearchService.prototype = {
         resolve(event.target.responseText);
       };
       request.onerror = function(event) {
-        LOG("_findEngines: failed to read " + listURL);
+        LOG("_findEngines: failed to read " + this._listJSONURL);
         resolve();
       };
-      request.open("GET", Services.io.newURI(listURL).spec, true);
+      request.open("GET", Services.io.newURI(this._listJSONURL).spec, true);
       request.send();
     });
 
