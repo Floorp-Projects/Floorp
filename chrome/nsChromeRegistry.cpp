@@ -339,41 +339,9 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
     RefreshWindow(piWindow);
   }
 
-  nsresult rv;
   // Get the document.
   RefPtr<Document> document = aWindow->GetDoc();
   if (!document) return NS_OK;
-
-  // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  RefPtr<PresShell> presShell = document->GetPresShell();
-  if (presShell) {
-    // Reload only the chrome URL agent style sheets.
-    nsTArray<RefPtr<StyleSheet>> agentSheets;
-    rv = presShell->GetAgentStyleSheets(agentSheets);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsTArray<RefPtr<StyleSheet>> newAgentSheets;
-    for (StyleSheet* sheet : agentSheets) {
-      nsIURI* uri = sheet->GetSheetURI();
-
-      if (IsChromeURI(uri)) {
-        // Reload the sheet.
-        RefPtr<StyleSheet> newSheet;
-        rv = document->LoadChromeSheetSync(uri, true, &newSheet);
-        if (NS_FAILED(rv)) return rv;
-        if (newSheet) {
-          newAgentSheets.AppendElement(newSheet);
-          return NS_OK;
-        }
-      } else {  // Just use the same sheet.
-        rv = newAgentSheets.AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
-        if (NS_FAILED(rv)) return rv;
-      }
-    }
-
-    rv = presShell->SetAgentStyleSheets(newAgentSheets);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   size_t count = document->SheetCount();
 
@@ -389,6 +357,9 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
 
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a non-inline sheet with a chrome URL.
+  //
+  // FIXME(emilio): What about user sheets? Also, does this do anything useful
+  // anymore?
   for (StyleSheet* sheet : oldSheets) {
     MOZ_ASSERT(sheet,
                "SheetAt shouldn't return nullptr for "
@@ -397,12 +368,11 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow) {
 
     if (!sheet->IsInline() && IsChromeURI(uri)) {
       // Reload the sheet.
-      RefPtr<StyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
-      document->LoadChromeSheetSync(uri, false, &newSheet);
-      // Even if it's null, we put in in there.
-      newSheets.AppendElement(newSheet);
+      if (RefPtr<StyleSheet> newSheet = document->LoadChromeSheetSync(uri)) {
+        newSheets.AppendElement(newSheet);
+      }
     } else {
       // Just use the same sheet.
       newSheets.AppendElement(sheet);

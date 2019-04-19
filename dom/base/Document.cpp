@@ -8747,11 +8747,10 @@ void Document::PreloadStyle(
                          aReferrerPolicy, aIntegrity);
 }
 
-nsresult Document::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
-                                       RefPtr<mozilla::StyleSheet>* aSheet) {
-  css::SheetParsingMode mode =
-      isAgentSheet ? css::eAgentSheetFeatures : css::eAuthorSheetFeatures;
-  return CSSLoader()->LoadSheetSync(uri, mode, isAgentSheet, aSheet);
+RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
+  RefPtr<StyleSheet> sheet;
+  CSSLoader()->LoadSheetSync(uri, css::eAuthorSheetFeatures, false, &sheet);
+  return sheet;
 }
 
 void Document::ResetDocumentDirection() {
