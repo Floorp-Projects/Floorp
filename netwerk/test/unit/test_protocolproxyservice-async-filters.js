@@ -25,12 +25,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
 function TestProtocolHandler() {
 }
 TestProtocolHandler.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolHandler) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolHandler]),
   scheme: "moz-test",
   defaultPort: -1,
   protocolFlags: Ci.nsIProtocolHandler.URI_NOAUTH |
@@ -106,12 +101,7 @@ TestFilter.prototype = {
   _async: false,
   _throwing: false,
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIProtocolProxyFilter) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyFilter]),
 
   applyFilter: function(pps, uri, pi, cb) {
     if (this._result == THROW) {
@@ -137,13 +127,7 @@ function resolveCallback() { }
 resolveCallback.prototype = {
   nextFunction: null,
 
-  QueryInterface : function (iid) {
-    const interfaces = [Ci.nsIProtocolProxyCallback,
-                        Ci.nsISupports];
-    if (!interfaces.some( function(v) { return iid.equals(v) } ))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  },
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProtocolProxyCallback]),
 
   onProxyAvailable : function (req, channel, pi, status) {
     this.nextFunction(pi);
