@@ -537,7 +537,7 @@ class UrlbarView {
       row = next;
     }
   }
-  
+
   _startRemoveStaleRowsTimer() {
     this._removeStaleRowsTimer = this.window.setTimeout(() => {
       this._removeStaleRowsTimer = null;
