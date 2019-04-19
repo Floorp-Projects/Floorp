@@ -605,9 +605,6 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
       cb.NoteXPCOMChild(sheet);
     } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-          cb, "mStyleSet->mStyleSheets[SheetType::Author][i]");
-      cb.NoteXPCOMChild(sheet);
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
           cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
       cb.NoteXPCOMChild(sheet);
     }
