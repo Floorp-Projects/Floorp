@@ -31,16 +31,26 @@ SECTION_RODATA 16
 
 %if ARCH_X86_32
 pb_0: times 16 db 0
+pb_0xFF: times 16 db 0xFF
 %endif
 pw_128: times 8 dw 128
 pw_256: times 8 dw 256
 pw_2048: times 8 dw 2048
+%if ARCH_X86_32
 pw_0x7FFF: times 8 dw 0x7FFF
-pd_0to7: dd 0, 4, 2, 6, 1, 5, 3, 7
-div_table: dw 840, 840, 420, 420, 280, 280, 210, 210, 168, 168, 140, 140, 120, 120, 105, 105
-           dw 420, 420, 210, 210, 140, 140, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105
+pw_0x8000: times 8 dw 0x8000
+%endif
+div_table_sse4: dd 840, 420, 280, 210, 168, 140, 120, 105
+                dd 420, 210, 140, 105, 105, 105, 105, 105
+div_table_ssse3: dw 840, 840, 420, 420, 280, 280, 210, 210, 168, 168, 140, 140, 120, 120, 105, 105
+                 dw 420, 420, 210, 210, 140, 140, 105, 105, 105, 105, 105, 105, 105, 105, 105, 105
+shufb_lohi: db 0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15
 shufw_6543210x: db 12, 13, 10, 11, 8, 9, 6, 7, 4, 5, 2, 3, 0, 1, 14, 15
-tap_table: dw 4, 2, 3, 3, 2, 1
+tap_table: ; masks for 8-bit shift emulation
+           db 0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01
+           ; weights
+           db 4, 2, 3, 3, 2, 1
+           ; taps indices
            db -1 * 16 + 1, -2 * 16 + 2
            db  0 * 16 + 1, -1 * 16 + 2
            db  0 * 16 + 1,  0 * 16 + 2
@@ -58,8 +68,6 @@ tap_table: dw 4, 2, 3, 3, 2, 1
            db  1 * 16 + 0,  2 * 16 + 1
 
 SECTION .text
-
-INIT_XMM ssse3
 
 %macro movif32 2
  %if ARCH_X86_32
@@ -111,23 +119,32 @@ INIT_XMM ssse3
  %endif
 %endmacro
 
-%macro ACCUMULATE_TAP 6 ; tap_offset, shift, strength, mul_tap, w, stride
- %if ARCH_X86_64
+%macro ACCUMULATE_TAP 7 ; tap_offset, shift, shift_mask, strength, mul_tap, w, stride
     ; load p0/p1
     movsx         offq, byte [dirq+kq+%1]       ; off1
-  %if %5 == 4
-    movq            m5, [stkq+offq*2+%6*0]      ; p0
-    movhps          m5, [stkq+offq*2+%6*1]
-  %else
-    movu            m5, [stkq+offq*2+%6*0]      ; p0
-  %endif
+ %if %6 == 4
+    movq            m5, [stkq+offq*2+%7*0]      ; p0
+    movhps          m5, [stkq+offq*2+%7*1]
+ %else
+    movu            m5, [stkq+offq*2+%7*0]      ; p0
+ %endif
     neg           offq                          ; -off1
-  %if %5 == 4
-    movq            m6, [stkq+offq*2+%6*0]      ; p1
-    movhps          m6, [stkq+offq*2+%6*1]
-  %else
-    movu            m6, [stkq+offq*2+%6*0]      ; p1
-  %endif
+ %if %6 == 4
+    movq            m6, [stkq+offq*2+%7*0]      ; p1
+    movhps          m6, [stkq+offq*2+%7*1]
+ %else
+    movu            m6, [stkq+offq*2+%7*0]      ; p1
+ %endif
+ %if cpuflag(sse4)
+    ; out of bounds values are set to a value that is a both a large unsigned
+    ; value and a negative signed value.
+    ; use signed max and unsigned min to remove them
+    pmaxsw          m7, m5
+    pminuw          m8, m5
+    pmaxsw          m7, m6
+    pminuw          m8, m6
+ %else
+  %if ARCH_X86_64
     pcmpeqw         m9, m14, m5
     pcmpeqw        m10, m14, m6
     pandn           m9, m5
@@ -136,77 +153,42 @@ INIT_XMM ssse3
     pminsw          m8, m5                      ; min after p0
     pmaxsw          m7, m10                     ; max after p1
     pminsw          m8, m6                      ; min after p1
-
-    ; accumulate sum[m13] over p0/p1
-    psubw           m5, m4                      ; diff_p0(p0 - px)
-    psubw           m6, m4                      ; diff_p1(p1 - px)
-    pabsw           m9, m5
-    pabsw          m10, m6
-    mova           m12, m9
-    psrlw           m9, %2
-    psignw         m11, %4, m5
-    psubusw         m5, %3, m9
-    mova            m9, m10
-    pminsw          m5, m12                     ; constrain(diff_p0)
-    psrlw          m10, %2
-    psignw         m12, %4, m6
-    psubusw         m6, %3, m10
-    pmullw          m5, m11                     ; constrain(diff_p0) * taps
-    pminsw          m6, m9                      ; constrain(diff_p1)
-    pmullw          m6, m12                     ; constrain(diff_p1) * taps
-    paddw          m13, m5
-    paddw          m13, m6
- %else
-    ; load p0
-    movsx         offq, byte [dirq+kq+%1]       ; off1
-  %if %5 == 4
-    movq            m5, [stkq+offq*2+%6*0]      ; p0
-    movhps          m5, [stkq+offq*2+%6*1]
   %else
-    movu            m5, [stkq+offq*2+%6*0]      ; p0
-  %endif
-    pcmpeqw         m3, m5, [PIC_sym(pw_0x7FFF)]
+    pcmpeqw         m3, m5, OUT_OF_BOUNDS_MEM
     pandn           m3, m5
     pmaxsw          m7, m3                      ; max after p0
     pminsw          m8, m5                      ; min after p0
-
-    ; accumulate sum[m7] over p0
-    psubw           m5, m4                      ; diff_p0(p0 - px)
-    psignw          m6, %4, m5                      ; constrain(diff_p0)
-    pabsw           m5, m5
-    mova            m3, m5
-    psrlw           m5, %2
-    paddsw          m5, %3
-    pandn           m5, [PIC_sym(pw_0x7FFF)]
-    pminsw          m5, m3
-    pmullw          m5, m6                      ; constrain(diff_p0) * taps
-    paddw          m13, m5
-
-    ; load p1
-    neg           offq                          ; -off1
-  %if %5 == 4
-    movq            m5, [stkq+offq*2+%6*0]      ; p1
-    movhps          m5, [stkq+offq*2+%6*1]
-  %else
-    movu            m5, [stkq+offq*2+%6*0]      ; p1
-  %endif
-    pcmpeqw         m3, m5, [PIC_sym(pw_0x7FFF)]
-    pandn           m3, m5
+    pcmpeqw         m3, m6, OUT_OF_BOUNDS_MEM
+    pandn           m3, m6
     pmaxsw          m7, m3                      ; max after p1
-    pminsw          m8, m5                      ; min after p1
-
-    ; accumulate sum[m7] over p1
-    psubw           m5, m4                      ; diff_p1(p1 - px)
-    psignw          m6, %4, m5                  ; constrain(diff_p1)
-    pabsw           m5, m5
-    mova            m3, m5
-    psrlw           m5, %2
-    paddsw          m5, %3
-    pandn           m5, [PIC_sym(pw_0x7FFF)]
-    pminsw          m5, m3
-    pmullw          m5, m6                      ; constrain(diff_p1) * taps
-    paddw          m13, m5
+    pminsw          m8, m6                      ; min after p1
+  %endif
  %endif
+
+    ; accumulate sum[m13] over p0/p1
+    psubw           m5, m4          ; diff_p0(p0 - px)
+    psubw           m6, m4          ; diff_p1(p1 - px)
+    packsswb        m5, m6          ; convert pixel diff to 8-bit
+ %if ARCH_X86_64 && cpuflag(sse4)
+    pshufb          m5, m14         ; group diffs p0 and p1 into pairs
+ %else
+    pshufb          m5, [PIC_sym(shufb_lohi)]
+ %endif
+    pabsb           m6, m5
+    psignb          m9, %5, m5
+ %if ARCH_X86_64
+    psrlw          m10, m6, %2      ; emulate 8-bit shift
+    pand           m10, %3
+    psubusb         m5, %4, m10
+ %else
+    psrlw           m5, m6, %2      ; emulate 8-bit shift
+    pand            m5, %3
+    paddusb         m5, %4
+    pxor            m5, [PIC_sym(pb_0xFF)]
+ %endif
+    pminub          m5, m6          ; constrain(diff_p)
+    pmaddubsw       m5, m9          ; constrain(diff_p) * taps
+    paddw          m13, m5
 %endmacro
 
 %macro PMOVZXBW 2-3 0 ; %3 = half
@@ -250,17 +232,28 @@ INIT_XMM ssse3
  %endif
 %endmacro
 
-%macro cdef_filter_fn 3 ; w, h, stride
+%macro CDEF_FILTER 3 ; w, h, stride
+
+ %if cpuflag(sse4)
+  %define OUT_OF_BOUNDS 0x80008000
+ %else
+  %define OUT_OF_BOUNDS 0x7FFF7FFF
+ %endif
+
  %if ARCH_X86_64
 cglobal cdef_filter_%1x%2, 4, 9, 16, 3 * 16 + (%2+4)*%3, \
                            dst, stride, left, top, pri, sec, stride3, dst4, edge
     pcmpeqw        m14, m14
+  %if cpuflag(sse4)
+    psllw          m14, 15                  ; 0x8000
+  %else
     psrlw          m14, 1                   ; 0x7FFF
+  %endif
     pxor           m15, m15
 
   %define px rsp+3*16+2*%3
  %else
-cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
+cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
                            dst, stride, left, top, stride3, dst4, edge
     SAVE_ARG      left, 2
     SAVE_ARG       top, 3
@@ -272,9 +265,15 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
   %define PIC_reg r2
     LEA        PIC_reg, PIC_base_offset
 
+  %if cpuflag(sse4)
+   %define OUT_OF_BOUNDS_MEM [PIC_sym(pw_0x8000)]
+  %else
+   %define OUT_OF_BOUNDS_MEM [PIC_sym(pw_0x7FFF)]
+  %endif
+
   %define m15 [PIC_sym(pb_0)]
 
-  %define px esp+5*16+2*%3
+  %define px esp+7*16+2*%3
  %endif
 
     mov          edged, r8m
@@ -311,15 +310,15 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     mova     [px+5*%3], m5
     mova     [px+6*%3], m6
     mova     [px+7*%3], m7
-    mov dword [px+4*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+5*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+6*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+7*%3+%1*2], 0x7FFF7FFF
+    mov dword [px+4*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+5*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+6*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+7*%3+%1*2], OUT_OF_BOUNDS
  %endif
-    mov dword [px+0*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+1*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+2*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+3*%3+%1*2], 0x7FFF7FFF
+    mov dword [px+0*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+1*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+2*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+3*%3+%1*2], OUT_OF_BOUNDS
 .body_done:
 
     ; top
@@ -371,8 +370,8 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     mova [px-1*%3-8*2], m1
     mova [px-1*%3-0*2], m3
  %endif
-    mov dword [px-2*%3+%1*2], 0x7FFF7FFF
-    mov dword [px-1*%3+%1*2], 0x7FFF7FFF
+    mov dword [px-2*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px-1*%3+%1*2], OUT_OF_BOUNDS
     jmp .top_done
 .top_no_left:
     test         edged, 2                   ; have_right
@@ -392,24 +391,24 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
  %endif
     mova     [px-2*%3], m0
     mova     [px-1*%3], m1
-    mov dword [px-2*%3-4], 0x7FFF7FFF
-    mov dword [px-1*%3-4], 0x7FFF7FFF
+    mov dword [px-2*%3-4], OUT_OF_BOUNDS
+    mov dword [px-1*%3-4], OUT_OF_BOUNDS
     jmp .top_done
 .top_no_left_right:
     PMOVZXBW        m0, [top1q], %1 == 4
     PMOVZXBW        m1, [top2q], %1 == 4
     mova     [px-2*%3], m0
     mova     [px-1*%3], m1
-    mov dword [px-2*%3+%1*2], 0x7FFF7FFF
-    mov dword [px-1*%3+%1*2], 0x7FFF7FFF
-    mov dword [px-2*%3-4], 0X7FFF7FFF
-    mov dword [px-1*%3-4], 0X7FFF7FFF
+    mov dword [px-2*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px-1*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px-2*%3-4], OUT_OF_BOUNDS
+    mov dword [px-1*%3-4], OUT_OF_BOUNDS
     jmp .top_done
 .no_top:
  %if ARCH_X86_64
     SWAP            m0, m14
  %else
-    mova            m0, [PIC_sym(pw_0x7FFF)]
+    mova            m0, OUT_OF_BOUNDS_MEM
  %endif
     movu   [px-2*%3-4], m0
     movu   [px-1*%3-4], m0
@@ -455,15 +454,15 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     movd   [px+3*%3-4], m2
     jmp .left_done
 .no_left:
-    mov dword [px+0*%3-4], 0x7FFF7FFF
-    mov dword [px+1*%3-4], 0x7FFF7FFF
-    mov dword [px+2*%3-4], 0x7FFF7FFF
-    mov dword [px+3*%3-4], 0x7FFF7FFF
+    mov dword [px+0*%3-4], OUT_OF_BOUNDS
+    mov dword [px+1*%3-4], OUT_OF_BOUNDS
+    mov dword [px+2*%3-4], OUT_OF_BOUNDS
+    mov dword [px+3*%3-4], OUT_OF_BOUNDS
  %if %2 == 8
-    mov dword [px+4*%3-4], 0x7FFF7FFF
-    mov dword [px+5*%3-4], 0x7FFF7FFF
-    mov dword [px+6*%3-4], 0x7FFF7FFF
-    mov dword [px+7*%3-4], 0x7FFF7FFF
+    mov dword [px+4*%3-4], OUT_OF_BOUNDS
+    mov dword [px+5*%3-4], OUT_OF_BOUNDS
+    mov dword [px+6*%3-4], OUT_OF_BOUNDS
+    mov dword [px+7*%3-4], OUT_OF_BOUNDS
  %endif
 .left_done:
 
@@ -513,10 +512,10 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     mova [px+(%2+0)*%3-0*2], m2
     mova [px+(%2+1)*%3-8*2], m1
     mova [px+(%2+1)*%3-0*2], m3
-    mov dword [px+(%2-1)*%3+8*2], 0x7FFF7FFF    ; overwritten by first mova
+    mov dword [px+(%2-1)*%3+8*2], OUT_OF_BOUNDS     ; overwritten by first mova
  %endif
-    mov dword [px+(%2+0)*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+(%2+1)*%3+%1*2], 0x7FFF7FFF
+    mov dword [px+(%2+0)*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+(%2+1)*%3+%1*2], OUT_OF_BOUNDS
     jmp .bottom_done
 .bottom_no_left:
     test          edged, 2                  ; have_right
@@ -536,24 +535,24 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
  %endif
     mova [px+(%2+0)*%3], m0
     mova [px+(%2+1)*%3], m1
-    mov dword [px+(%2+0)*%3-4], 0x7FFF7FFF
-    mov dword [px+(%2+1)*%3-4], 0x7FFF7FFF
+    mov dword [px+(%2+0)*%3-4], OUT_OF_BOUNDS
+    mov dword [px+(%2+1)*%3-4], OUT_OF_BOUNDS
     jmp .bottom_done
 .bottom_no_left_right:
     PMOVZXBW        m0, [dst8q+strideq*0], %1 == 4
     PMOVZXBW        m1, [dst8q+strideq*1], %1 == 4
     mova [px+(%2+0)*%3], m0
     mova [px+(%2+1)*%3], m1
-    mov dword [px+(%2+0)*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+(%2+1)*%3+%1*2], 0x7FFF7FFF
-    mov dword [px+(%2+0)*%3-4], 0x7FFF7FFF
-    mov dword [px+(%2+1)*%3-4], 0x7FFF7FFF
+    mov dword [px+(%2+0)*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+(%2+1)*%3+%1*2], OUT_OF_BOUNDS
+    mov dword [px+(%2+0)*%3-4], OUT_OF_BOUNDS
+    mov dword [px+(%2+1)*%3-4], OUT_OF_BOUNDS
     jmp .bottom_done
 .no_bottom:
  %if ARCH_X86_64
     SWAP            m0, m14
  %else
-    mova            m0, [PIC_sym(pw_0x7FFF)]
+    mova            m0, OUT_OF_BOUNDS_MEM
  %endif
     movu [px+(%2+0)*%3-4], m0
     movu [px+(%2+1)*%3-4], m0
@@ -592,47 +591,74 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     cmovl      pridmpd, dampingd
     neg        secdmpd
     cmovl      secdmpd, dampingd
+ %if ARCH_X86_64
     mov       [rsp+ 0], pridmpq                 ; pri_shift
     mov       [rsp+16], secdmpq                 ; sec_shift
- %if ARCH_X86_32
-    mov dword [esp+ 4], 0                       ; zero upper 32 bits of psraw
-    mov dword [esp+20], 0                       ; source operand in ACCUMULATE_TAP
-  %define PIC_reg r6
+ %else
+    mov     [esp+0x00], pridmpd
+    mov     [esp+0x30], secdmpd
+    mov dword [esp+0x04], 0                     ; zero upper 32 bits of psrlw
+    mov dword [esp+0x34], 0                     ; source operand in ACCUMULATE_TAP
+  %define PIC_reg r4
     LOAD_PIC_REG     8
  %endif
 
-    ; pri/sec_taps[k] [4 total]
-    DEFINE_ARGS dst, stride, tap, dummy, pri, sec
+    DEFINE_ARGS dst, stride, pridmp, table, pri, sec, secdmp
+    lea         tableq, [PIC_sym(tap_table)]
  %if ARCH_X86_64
-    mova           m14, [pw_256]
- %else
-  %define m14   [PIC_sym(pw_256)]
+    SWAP            m2, m11
+    SWAP            m3, m12
  %endif
+    movd            m2, [tableq+pridmpq]
+    movd            m3, [tableq+secdmpq]
+    pshufb          m2, m15                     ; pri_shift_mask
+    pshufb          m3, m15                     ; sec_shift_mask
+ %if ARCH_X86_64
+    SWAP            m2, m11
+    SWAP            m3, m12
+ %else
+  %define PIC_reg r6
+    mov        PIC_reg, r4
+    DEFINE_ARGS dst, stride, dir, table, pri, sec, secdmp
+    LOAD_ARG       pri
+    LOAD_ARG       dir, 1
+    mova    [esp+0x10], m2
+    mova    [esp+0x40], m3
+ %endif
+
+    ; pri/sec_taps[k] [4 total]
+    DEFINE_ARGS dst, stride, dummy, tap, pri, sec
     movd            m0, prid
     movd            m1, secd
-    pshufb          m0, m14
-    pshufb          m1, m14
- %if ARCH_X86_32
-    mova            m2, [PIC_sym(pw_0x7FFF)]
-    pandn           m0, m2
-    pandn           m1, m2
+ %if ARCH_X86_64
+    pshufb          m0, m15
+    pshufb          m1, m15
+ %else
+    mova            m2, m15
+    mova            m3, [PIC_sym(pb_0xFF)]
+    pshufb          m0, m2
+    pshufb          m1, m2
+    pxor            m0, m3
+    pxor            m1, m3
     mova    [esp+0x20], m0
-    mova    [esp+0x30], m1
+    mova    [esp+0x50], m1
  %endif
     and           prid, 1
-    lea           tapq, [PIC_sym(tap_table)]
-    lea           priq, [tapq+priq*4]           ; pri_taps
-    lea           secq, [tapq+8]                ; sec_taps
+    lea           priq, [tapq+8+priq*2]         ; pri_taps
+    lea           secq, [tapq+12]               ; sec_taps
+
+ %if ARCH_X86_64 && cpuflag(sse4)
+    mova           m14, [shufb_lohi]
+ %endif
 
     ; off1/2/3[k] [6 total] from [tapq+12+(dir+0/2/6)*2+k]
-    DEFINE_ARGS dst, stride, tap, dir, pri, sec
+    DEFINE_ARGS dst, stride, dir, tap, pri, sec
  %if ARCH_X86_64
     mov           dird, r6m
-    lea           tapq, [tapq+dirq*2+12]
+    lea           dirq, [tapq+14+dirq*2]
     DEFINE_ARGS dst, stride, dir, stk, pri, sec, h, off, k
  %else
-    LOAD_ARG       dir, 1
-    lea           tapd, [tapd+dird*2+12]
+    lea           dird, [tapd+14+dird*2]
     DEFINE_ARGS dst, stride, dir, stk, pri, sec
   %define hd    dword [esp+8]
   %define offq  dstq
@@ -640,9 +666,9 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
  %endif
     mov             hd, %1*%2*2/mmsize
     lea           stkq, [px]
-    movif32 [esp+0x1C], strided
+    movif32 [esp+0x3C], strided
 .v_loop:
-    movif32 [esp+0x18], dstd
+    movif32 [esp+0x38], dstd
     mov             kq, 1
  %if %1 == 4
     movq            m4, [stkq+%3*0]
@@ -652,7 +678,7 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
  %endif
 
  %if ARCH_X86_32
-  %xdefine m11  m6
+  %xdefine m9   m3
   %xdefine m13  m7
   %xdefine  m7  m0
   %xdefine  m8  m1
@@ -663,36 +689,41 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     mova            m8, m4                      ; min
 .k_loop:
  %if ARCH_X86_64
-    movd            m2, [priq+kq*2]             ; pri_taps
-    movd            m3, [secq+kq*2]             ; sec_taps
-    pshufb          m2, m14
-    pshufb          m3, m14
-    ACCUMULATE_TAP 0*2, [rsp+ 0], m0, m2, %1, %3
-    ACCUMULATE_TAP 2*2, [rsp+16], m1, m3, %1, %3
-    ACCUMULATE_TAP 6*2, [rsp+16], m1, m3, %1, %3
+    movd            m2, [priq+kq]               ; pri_taps
+    movd            m3, [secq+kq]               ; sec_taps
+    pshufb          m2, m15
+    pshufb          m3, m15
+    ACCUMULATE_TAP 0*2, [rsp+ 0], m11, m0, m2, %1, %3
+    ACCUMULATE_TAP 2*2, [rsp+16], m12, m1, m3, %1, %3
+    ACCUMULATE_TAP 6*2, [rsp+16], m12, m1, m3, %1, %3
  %else
-    movd            m2, [priq+kq*2]             ; pri_taps
-    pshufb          m2, m14
-    ACCUMULATE_TAP 0*2, [esp+0x00], [esp+0x20], m2, %1, %3
+    movd            m2, [priq+kq]             ; pri_taps
+    pshufb          m2, m15
+    ACCUMULATE_TAP 0*2, [esp+0x00], [esp+0x10], [esp+0x20], m2, %1, %3
 
-    movd            m2, [secq+kq*2]             ; sec_taps
-    pshufb          m2, m14
-    ACCUMULATE_TAP 2*2, [esp+0x10], [esp+0x30], m2, %1, %3
-    ACCUMULATE_TAP 6*2, [esp+0x10], [esp+0x30], m2, %1, %3
+    movd            m2, [secq+kq]             ; sec_taps
+    pshufb          m2, m15
+    ACCUMULATE_TAP 2*2, [esp+0x30], [esp+0x40], [esp+0x50], m2, %1, %3
+    ACCUMULATE_TAP 6*2, [esp+0x30], [esp+0x40], [esp+0x50], m2, %1, %3
  %endif
 
     dec             kq
     jge .k_loop
 
-    pcmpgtw        m11, m15, m13
-    paddw          m13, m11
+ %if cpuflag(sse4)
+    pcmpgtw         m6, m15, m13
+ %else
+    pxor            m6, m6
+    pcmpgtw         m6, m13
+ %endif
+    paddw          m13, m6
     pmulhrsw       m13, [PIC_sym(pw_2048)]
     paddw           m4, m13
     pminsw          m4, m7
     pmaxsw          m4, m8
     packuswb        m4, m4
-    movif32       dstd, [esp+0x18]
-    movif32    strided, [esp+0x1C]
+    movif32       dstd, [esp+0x38]
+    movif32    strided, [esp+0x3C]
  %if %1 == 4
     movd [dstq+strideq*0], m4
     psrlq           m4, 32
@@ -715,22 +746,23 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 5 * 16 - (%2+4)*%3, \
     RET
 %endmacro
 
-cdef_filter_fn 8, 8, 32
-cdef_filter_fn 4, 8, 32
-cdef_filter_fn 4, 4, 32
-
 %macro MULLD 2
- %if ARCH_X86_32
-  %define m15 m1
- %endif
+ %if cpuflag(sse4)
+    pmulld          %1, %2
+ %else
+  %if ARCH_X86_32
+   %define m15 m1
+  %endif
     pmulhuw        m15, %1, %2
     pmullw          %1, %2
     pslld          m15, 16
     paddd           %1, m15
+ %endif
 %endmacro
 
-%if ARCH_X86_64
-cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
+%macro CDEF_DIR 0
+ %if ARCH_X86_64
+cglobal cdef_dir, 3, 5, 16, 32, src, stride, var, stride3
     lea       stride3q, [strideq*3]
     movq            m1, [srcq+strideq*0]
     movhps          m1, [srcq+strideq*1]
@@ -785,7 +817,7 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     pmaddwd         m9, m9
     phaddd          m9, m8
     SWAP            m8, m9
-    MULLD           m8, [div_table+48]
+    MULLD           m8, [div_table%+SUFFIX+48]
 
     pslldq          m9, m1, 2
     psrldq         m10, m1, 14
@@ -819,8 +851,8 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     punpcklwd       m9, m10
     pmaddwd        m11, m11
     pmaddwd         m9, m9
-    MULLD          m11, [div_table+16]
-    MULLD           m9, [div_table+0]
+    MULLD          m11, [div_table%+SUFFIX+16]
+    MULLD           m9, [div_table%+SUFFIX+0]
     paddd           m9, m11                 ; cost[0a-d]
 
     pslldq         m10, m0, 14
@@ -855,8 +887,8 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     punpcklwd      m10, m11
     pmaddwd        m12, m12
     pmaddwd        m10, m10
-    MULLD          m12, [div_table+16]
-    MULLD          m10, [div_table+0]
+    MULLD          m12, [div_table%+SUFFIX+16]
+    MULLD          m10, [div_table%+SUFFIX+0]
     paddd          m10, m12                 ; cost[4a-d]
     phaddd          m9, m10                 ; cost[0a/b,4a/b]
 
@@ -881,14 +913,14 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     paddw           m4, m6
     paddw           m5, m15                 ; partial_sum_alt[3] right
     paddw           m4, m14                 ; partial_sum_alt[3] left
-    pshuflw         m5, m5, q3012
-    punpckhwd       m6, m4, m5
-    punpcklwd       m4, m5
-    pmaddwd         m6, m6
+    pshuflw         m6, m5, q3012
+    punpckhwd       m5, m4
+    punpcklwd       m4, m6
+    pmaddwd         m5, m5
     pmaddwd         m4, m4
-    MULLD           m6, [div_table+48]
-    MULLD           m4, [div_table+32]
-    paddd           m4, m6                  ; cost[7a-d]
+    MULLD           m5, [div_table%+SUFFIX+48]
+    MULLD           m4, [div_table%+SUFFIX+32]
+    paddd           m4, m5                  ; cost[7a-d]
 
     pslldq          m5, m10, 6
     psrldq          m6, m10, 10
@@ -901,14 +933,14 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     paddw           m5, m11
     paddw           m6, m12
     paddw           m5, m13
-    pshuflw         m6, m6, q3012
-    punpckhwd       m7, m5, m6
-    punpcklwd       m5, m6
-    pmaddwd         m7, m7
+    pshuflw         m7, m6, q3012
+    punpckhwd       m6, m5
+    punpcklwd       m5, m7
+    pmaddwd         m6, m6
     pmaddwd         m5, m5
-    MULLD           m7, [div_table+48]
-    MULLD           m5, [div_table+32]
-    paddd           m5, m7                  ; cost[5a-d]
+    MULLD           m6, [div_table%+SUFFIX+48]
+    MULLD           m5, [div_table%+SUFFIX+32]
+    paddd           m5, m6                  ; cost[5a-d]
 
     pslldq          m6, m1, 2
     psrldq          m7, m1, 14
@@ -921,14 +953,14 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     paddw           m6, m10
     paddw           m7, m13                 ; partial_sum_alt[3] right
     paddw           m6, m12                 ; partial_sum_alt[3] left
-    pshuflw         m7, m7, q3012
-    punpckhwd      m10, m6, m7
-    punpcklwd       m6, m7
-    pmaddwd        m10, m10
+    pshuflw        m10, m7, q3012
+    punpckhwd       m7, m6
+    punpcklwd       m6, m10
+    pmaddwd         m7, m7
     pmaddwd         m6, m6
-    MULLD          m10, [div_table+48]
-    MULLD           m6, [div_table+32]
-    paddd           m6, m10                 ; cost[1a-d]
+    MULLD           m7, [div_table%+SUFFIX+48]
+    MULLD           m6, [div_table%+SUFFIX+32]
+    paddd           m6, m7                  ; cost[1a-d]
 
     pshufd          m0, m0, q1032
     pshufd          m1, m1, q1032
@@ -946,63 +978,64 @@ cglobal cdef_dir, 3, 4, 16, src, stride, var, stride3
     paddw          m10, m14
     paddw          m11, m2
     paddw          m10, m3
-    pshuflw        m11, m11, q3012
-    punpckhwd      m12, m10, m11
-    punpcklwd      m10, m11
-    pmaddwd        m12, m12
+    pshuflw        m12, m11, q3012
+    punpckhwd      m11, m10
+    punpcklwd      m10, m12
+    pmaddwd        m11, m11
     pmaddwd        m10, m10
-    MULLD          m12, [div_table+48]
-    MULLD          m10, [div_table+32]
-    paddd          m10, m12                 ; cost[3a-d]
+    MULLD          m11, [div_table%+SUFFIX+48]
+    MULLD          m10, [div_table%+SUFFIX+32]
+    paddd          m10, m11                 ; cost[3a-d]
 
-    phaddd          m0, m9, m8              ; cost[0,4,2,6]
-    phaddd          m6, m5
-    phaddd         m10, m4
-    phaddd          m1, m6, m10             ; cost[1,5,3,7]
+    phaddd          m9, m8                  ; cost[0,4,2,6]
+    phaddd          m6, m10
+    phaddd          m5, m4
+    phaddd          m6, m5                  ; cost[1,3,5,7]
+    pshufd          m4, m9, q3120
 
-    pcmpgtd         m2, m1, m0              ; [1/5/3/7] > [0/4/2/6]
-    pand            m3, m2, m1
-    pandn           m4, m2, m0
-    por             m3, m4                  ; higher 4 values
-    pshufd          m1, m1, q2301
-    pshufd          m0, m0, q2301
-    pand            m1, m2, m1
-    pandn           m4, m2, m0
-    por             m0, m4, m1              ; 4 values at idx^4 offset
-    pand           m14, m2, [pd_0to7+16]
-    pandn          m15, m2, [pd_0to7]
-    por            m15, m14
+    ; now find the best cost
+  %if cpuflag(sse4)
+    pmaxsd          m9, m6
+    pshufd          m0, m9, q1032
+    pmaxsd          m0, m9
+    pshufd          m1, m0, q2301
+    pmaxsd          m0, m1                  ; best cost
+  %else
+    pcmpgtd         m0, m9, m6
+    pand            m9, m0
+    pandn           m0, m6
+    por             m9, m0
+    pshufd          m1, m9, q1032
+    pcmpgtd         m0, m9, m1
+    pand            m9, m0
+    pandn           m0, m1
+    por             m9, m0
+    pshufd          m1, m9, q2301
+    pcmpgtd         m0, m9, m1
+    pand            m9, m0
+    pandn           m0, m1
+    por             m0, m9
+  %endif
 
-    punpckhqdq      m4, m3, m0
-    punpcklqdq      m3, m0
-    pcmpgtd         m5, m4, m3              ; [2or3-6or7] > [0or1/4or5]
-    punpcklqdq      m5, m5
-    pand            m6, m5, m4
-    pandn           m7, m5, m3
-    por             m6, m7                  ; { highest 2 values, complements at idx^4 }
-    movhlps        m14, m15
-    pand           m14, m5, m14
-    pandn          m13, m5, m15
-    por            m15, m13, m14
-
-    pshufd          m7, m6, q3311
-    pcmpgtd         m8, m7, m6              ; [4or5or6or7] > [0or1or2or3]
-    punpcklqdq      m8, m8
-    pand            m9, m8, m7
-    pandn          m10, m8, m6
-    por             m9, m10                 ; max
-    movhlps        m10, m9                  ; complement at idx^4
-    psubd           m9, m10
-    psrld           m9, 10
-    movd        [varq], m9
-    pshufd         m14, m15, q1111
-    pand           m14, m8, m14
-    pandn          m13, m8, m15
-    por            m15, m13, m14
-    movd           eax, m15
-%else
+    ; get direction and variance
+    punpckhdq       m1, m4, m6
+    punpckldq       m4, m6
+    psubd           m2, m0, m1
+    psubd           m3, m0, m4
+    mova    [rsp+0x00], m2                  ; emulate ymm in stack
+    mova    [rsp+0x10], m3
+    pcmpeqd         m1, m0                  ; compute best cost mask
+    pcmpeqd         m4, m0
+    packssdw        m4, m1
+    pmovmskb       eax, m4                  ; get byte-idx from mask
+    tzcnt          eax, eax
+    mov            r1d, [rsp+rax*2]         ; get idx^4 complement from emulated ymm
+    shr            eax, 1                   ; get direction by converting byte-idx to word-idx
+    shr            r1d, 10
+    mov         [varq], r1d
+ %else
 cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
- %define PIC_reg r4
+  %define PIC_reg r4
     LEA        PIC_reg, PIC_base_offset
 
     pxor            m0, m0
@@ -1065,7 +1098,7 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     pmaddwd         m0, m0
 
     phaddd          m2, m0
-    MULLD           m2, [PIC_sym(div_table)+48]
+    MULLD           m2, [PIC_sym(div_table%+SUFFIX)+48]
     mova    [esp+0x30], m2
 
     mova            m1, [esp+0x10]
@@ -1103,8 +1136,8 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     punpcklwd       m0, m1
     pmaddwd         m2, m2
     pmaddwd         m0, m0
-    MULLD           m2, [PIC_sym(div_table)+16]
-    MULLD           m0, [PIC_sym(div_table)+0]
+    MULLD           m2, [PIC_sym(div_table%+SUFFIX)+16]
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+0]
     paddd           m0, m2                  ; cost[0a-d]
     mova    [esp+0x40], m0
 
@@ -1144,8 +1177,8 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     punpcklwd       m0, m1
     pmaddwd         m2, m2
     pmaddwd         m0, m0
-    MULLD           m2, [PIC_sym(div_table)+16]
-    MULLD           m0, [PIC_sym(div_table)+0]
+    MULLD           m2, [PIC_sym(div_table%+SUFFIX)+16]
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+0]
     paddd           m0, m2                  ; cost[4a-d]
     phaddd          m1, [esp+0x40], m0      ; cost[0a/b,4a/b]
     phaddd          m1, [esp+0x30]          ; cost[0,4,2,6]
@@ -1181,8 +1214,8 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     punpcklwd       m0, m1
     pmaddwd         m2, m2
     pmaddwd         m0, m0
-    MULLD           m2, [PIC_sym(div_table)+48]
-    MULLD           m0, [PIC_sym(div_table)+32]
+    MULLD           m2, [PIC_sym(div_table%+SUFFIX)+48]
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+32]
     paddd           m0, m2                  ; cost[7a-d]
     mova    [esp+0x40], m0
 
@@ -1197,44 +1230,44 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     paddw           m0, m1
     paddw           m7, m4
     paddw           m0, m2
-    pshuflw         m7, m7, q3012
-    punpckhwd       m2, m0, m7
-    punpcklwd       m0, m7
-    pmaddwd         m2, m2
+    pshuflw         m2, m7, q3012
+    punpckhwd       m7, m0
+    punpcklwd       m0, m2
+    pmaddwd         m7, m7
     pmaddwd         m0, m0
-    MULLD           m2, [PIC_sym(div_table)+48]
-    MULLD           m0, [PIC_sym(div_table)+32]
-    paddd           m0, m2                  ; cost[5a-d]
+    MULLD           m7, [PIC_sym(div_table%+SUFFIX)+48]
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+32]
+    paddd           m0, m7                  ; cost[5a-d]
     mova    [esp+0x50], m0
 
-    mova            m1, [esp+0x10]
+    mova            m7, [esp+0x10]
     mova            m2, [esp+0x20]
-    pslldq          m0, m1, 2
-    psrldq          m1, 14
+    pslldq          m0, m7, 2
+    psrldq          m7, 14
     pslldq          m4, m2, 4
     psrldq          m2, 12
     pslldq          m5, m3, 6
     psrldq          m6, m3, 10
     paddw           m0, [esp+0x00]
-    paddw           m1, m2
+    paddw           m7, m2
     paddw           m4, m5
-    paddw           m1, m6                  ; partial_sum_alt[3] right
+    paddw           m7, m6                  ; partial_sum_alt[3] right
     paddw           m0, m4                  ; partial_sum_alt[3] left
-    pshuflw         m1, m1, q3012
-    punpckhwd       m2, m0, m1
-    punpcklwd       m0, m1
-    pmaddwd         m2, m2
+    pshuflw         m2, m7, q3012
+    punpckhwd       m7, m0
+    punpcklwd       m0, m2
+    pmaddwd         m7, m7
     pmaddwd         m0, m0
-    MULLD           m2, [PIC_sym(div_table)+48]
-    MULLD           m0, [PIC_sym(div_table)+32]
-    paddd           m0, m2                  ; cost[1a-d]
-    phaddd          m0, [esp+0x50]
-    mova    [esp+0x50], m0
+    MULLD           m7, [PIC_sym(div_table%+SUFFIX)+48]
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+32]
+    paddd           m0, m7                  ; cost[1a-d]
+    SWAP            m0, m4
 
     pshufd          m0, [esp+0x00], q1032
     pshufd          m1, [esp+0x10], q1032
     pshufd          m2, [esp+0x20], q1032
     pshufd          m3, m3, q1032
+    mova    [esp+0x00], m4
 
     pslldq          m4, m0, 6
     psrldq          m0, 10
@@ -1247,60 +1280,76 @@ cglobal cdef_dir, 3, 5, 16, 96, src, stride, var, stride3
     paddw           m5, m6
     paddw           m0, m2
     paddw           m4, m5
-    pshuflw         m0, m0, q3012
-    punpckhwd      m2, m4, m0
-    punpcklwd      m4, m0
-    pmaddwd        m2, m2
-    pmaddwd        m4, m4
-    MULLD          m2, [PIC_sym(div_table)+48]
-    MULLD          m4, [PIC_sym(div_table)+32]
-    paddd          m4, m2                   ; cost[3a-d]
-    phaddd         m4, [esp+0x40]
+    pshuflw         m2, m0, q3012
+    punpckhwd       m0, m4
+    punpcklwd       m4, m2
+    pmaddwd         m0, m0
+    pmaddwd         m4, m4
+    MULLD           m0, [PIC_sym(div_table%+SUFFIX)+48]
+    MULLD           m4, [PIC_sym(div_table%+SUFFIX)+32]
+    paddd           m4, m0                   ; cost[3a-d]
 
-    mova            m1, [esp+0x50]
+    mova            m1, [esp+0x00]
+    mova            m2, [esp+0x50]
     mova            m0, [esp+0x30]          ; cost[0,4,2,6]
-    phaddd          m1, m4                  ; cost[1,5,3,7]
+    phaddd          m1, m4
+    phaddd          m2, [esp+0x40]          ; cost[1,3,5,7]
+    phaddd          m1, m2
+    pshufd          m2, m0, q3120
 
-    pcmpgtd         m2, m1, m0              ; [1/5/3/7] > [0/4/2/6]
-    pand            m3, m2, m1
-    pandn           m4, m2, m0
-    por             m3, m4                  ; higher 4 values
-    pshufd          m1, m1, q2301
-    pshufd          m0, m0, q2301
-    pand            m1, m2, m1
-    pandn           m4, m2, m0
-    por             m0, m4, m1              ; 4 values at idx^4 offset
-    pand            m5, m2, [PIC_sym(pd_0to7)+16]
-    pandn           m6, m2, [PIC_sym(pd_0to7)]
-    por             m6, m5
+    ; now find the best cost
+  %if cpuflag(sse4)
+    pmaxsd          m0, m1
+    pshufd          m3, m0, q1032
+    pmaxsd          m3, m0
+    pshufd          m0, m3, q2301
+    pmaxsd          m0, m3
+  %else
+    pcmpgtd         m3, m0, m1
+    pand            m0, m3
+    pandn           m3, m1
+    por             m0, m3
+    pshufd          m4, m0, q1032
+    pcmpgtd         m3, m0, m4
+    pand            m0, m3
+    pandn           m3, m4
+    por             m0, m3
+    pshufd          m4, m0, q2301
+    pcmpgtd         m3, m0, m4
+    pand            m0, m3
+    pandn           m3, m4
+    por             m0, m3
+  %endif
 
-    punpckhqdq      m4, m3, m0
-    punpcklqdq      m3, m0
-    pcmpgtd         m0, m4, m3              ; [2or3-6or7] > [0or1/4or5]
-    punpcklqdq      m0, m0
-    pand            m1, m0, m4
-    pandn           m7, m0, m3
-    por             m1, m7                  ; { highest 2 values, complements at idx^4 }
-    movhlps         m5, m6
-    pand            m5, m0, m5
-    pandn           m3, m0, m6
-    por             m6, m3, m5
-
-    pshufd          m7, m1, q3311
-    pcmpgtd         m2, m7, m1              ; [4or5or6or7] > [0or1or2or3]
-    punpcklqdq      m2, m2
-    pand            m0, m2, m7
-    pandn           m7, m2, m1
-    por             m0, m7                  ; max
-    movhlps         m7, m0                  ; complement at idx^4
-    psubd           m0, m7
-    psrld           m0, 10
-    movd        [varq], m0
-    pshufd          m5, m6, q1111
-    pand            m5, m2, m5
-    pandn           m3, m2, m6
-    por             m6, m3, m5
-    movd           eax, m6
-%endif
+    ; get direction and variance
+    punpckhdq       m3, m2, m1
+    punpckldq       m2, m1
+    psubd           m1, m0, m3
+    psubd           m4, m0, m2
+    mova    [esp+0x00], m1                  ; emulate ymm in stack
+    mova    [esp+0x10], m4
+    pcmpeqd         m3, m0                  ; compute best cost mask
+    pcmpeqd         m2, m0
+    packssdw        m2, m3
+    pmovmskb       eax, m2                  ; get byte-idx from mask
+    tzcnt          eax, eax
+    mov            r1d, [esp+eax*2]         ; get idx^4 complement from emulated ymm
+    shr            eax, 1                   ; get direction by converting byte-idx to word-idx
+    shr            r1d, 10
+    mov         [vard], r1d
+ %endif
 
     RET
+%endmacro
+
+INIT_XMM sse4
+CDEF_FILTER 8, 8, 32
+CDEF_FILTER 4, 8, 32
+CDEF_FILTER 4, 4, 32
+CDEF_DIR
+
+INIT_XMM ssse3
+CDEF_FILTER 8, 8, 32
+CDEF_FILTER 4, 8, 32
+CDEF_FILTER 4, 4, 32
+CDEF_DIR

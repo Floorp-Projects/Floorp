@@ -12,6 +12,12 @@ style-check:
     script:
         - git grep -n -P "\t|\r| $" -- . ':(exclude)*/compat/*' && exit 1
         - git grep -n -i "david" -- . ':(exclude)THANKS.md' ':(exclude).gitlab-ci.yml' && exit 1
+        - for i in $(git ls-files -- . ':(exclude)*/compat/*'); do
+              if [ -n "$(tail -c 1 "$i")" ]; then
+                  echo "No newline at end of $i";
+                  exit 1;
+              fi;
+          done
         - git remote rm upstream 2> /dev/null || true
         - git remote add upstream https://code.videolan.org/videolan/dav1d.git
         - git fetch -q upstream master

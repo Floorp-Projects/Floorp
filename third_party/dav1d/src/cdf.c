@@ -813,7 +813,7 @@ static const uint16_t default_mv_joint_cdf[N_MV_JOINTS + 1] = {
     AOM_CDF4(4096, 11264, 19328)
 };
 
-static const uint16_t default_kf_y_mode_cdf[5][5][N_INTRA_PRED_MODES + 1] = {
+static const uint16_t default_kf_y_mode_cdf[5][5][N_INTRA_PRED_MODES + 1 + 2] = {
     {
         { AOM_CDF13(15588, 17027, 19338, 20218, 20682, 21110, 21825, 23244,
                     24189, 28165, 29093, 30466) },

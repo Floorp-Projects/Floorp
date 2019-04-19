@@ -113,7 +113,7 @@ SECTION .text
     paddw          m15, m5
 %endmacro
 
-%macro cdef_filter_fn 3 ; w, h, stride
+%macro CDEF_FILTER 3 ; w, h, stride
 INIT_YMM avx2
 %if %1 != 4 || %2 != 8
 cglobal cdef_filter_%1x%2, 4, 9, 16, 2 * 16 + (%2+4)*%3, \
@@ -135,7 +135,7 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
     lea          dst4q, [dstq+strideq*4]
 %endif
     lea       stride3q, [strideq*3]
-    test         edged, 2                   ; have_right
+    test         edgeb, 2                   ; have_right
     jz .no_right
     pmovzxbw        m1, [dstq+strideq*0]
     pmovzxbw        m2, [dstq+strideq*1]
@@ -217,13 +217,13 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
 
     ; top
     DEFINE_ARGS dst, stride, left, top2, pri, sec, stride3, top1, edge
-    test         edged, 4                    ; have_top
+    test         edgeb, 4                    ; have_top
     jz .no_top
     mov          top1q, [top2q+0*gprsize]
     mov          top2q, [top2q+1*gprsize]
-    test         edged, 1                    ; have_left
+    test         edgeb, 1                    ; have_left
     jz .top_no_left
-    test         edged, 2                    ; have_right
+    test         edgeb, 2                    ; have_right
     jz .top_no_right
     pmovzxbw        m1, [top1q-(%1/2)]
     pmovzxbw        m2, [top2q-(%1/2)]
@@ -239,7 +239,7 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
     movd [px-1*%3+%1*2], xm14
     jmp .top_done
 .top_no_left:
-    test         edged, 2                   ; have_right
+    test         edgeb, 2                   ; have_right
     jz .top_no_left_right
     pmovzxbw        m1, [top1q]
     pmovzxbw        m2, [top2q]
@@ -272,7 +272,7 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
 .top_done:
 
     ; left
-    test         edged, 1                   ; have_left
+    test         edgeb, 1                   ; have_left
     jz .no_left
     pmovzxbw       xm1, [leftq+ 0]
 %if %2 == 8
@@ -304,12 +304,12 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
 
     ; bottom
     DEFINE_ARGS dst, stride, dst8, dummy1, pri, sec, stride3, dummy3, edge
-    test         edged, 8                   ; have_bottom
+    test         edgeb, 8                   ; have_bottom
     jz .no_bottom
     lea          dst8q, [dstq+%2*strideq]
-    test         edged, 1                   ; have_left
+    test         edgeb, 1                   ; have_left
     jz .bottom_no_left
-    test         edged, 2                   ; have_right
+    test         edgeb, 2                   ; have_right
     jz .bottom_no_right
     pmovzxbw        m1, [dst8q-(%1/2)]
     pmovzxbw        m2, [dst8q+strideq-(%1/2)]
@@ -328,7 +328,7 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
     movd  [px+(%2+1)*%3+%1*2], xm14
     jmp .bottom_done
 .bottom_no_left:
-    test          edged, 2                  ; have_right
+    test          edgeb, 2                  ; have_right
     jz .bottom_no_left_right
     pmovzxbw        m1, [dst8q]
     pmovzxbw        m2, [dst8q+strideq]
@@ -362,50 +362,49 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
 
     ; actual filter
     INIT_YMM avx2
-    DEFINE_ARGS dst, stride, pridmp, damping, pri, sec, stride3, secdmp
+    DEFINE_ARGS dst, stride, pridmp, damping, pri, secdmp, stride3, zero
 %undef edged
     ; register to shuffle values into after packing
     vbroadcasti128 m12, [shufb_lohi]
 
     movifnidn     prid, prim
-    movifnidn     secd, secm
     mov       dampingd, r7m
-
-    mov        pridmpd, prid
-    mov        secdmpd, secd
-    or         pridmpd, 1
-    or         secdmpd, 1
-    lzcnt      pridmpd, pridmpd
-    lzcnt      secdmpd, secdmpd
-    lea        pridmpd, [pridmpd+dampingd-31]
-    lea        secdmpd, [secdmpd+dampingd-31]
-    xor       dampingd, dampingd
-    test       pridmpd, pridmpd
-    cmovl      pridmpd, dampingd
-    test       secdmpd, secdmpd
-    cmovl      secdmpd, dampingd
+    lzcnt      pridmpd, prid
+%if UNIX64
+    movd           xm0, prid
+    movd           xm1, secdmpd
+%endif
+    lzcnt      secdmpd, secdmpm
+    sub       dampingd, 31
+    xor          zerod, zerod
+    add        pridmpd, dampingd
+    cmovl      pridmpd, zerod
+    add        secdmpd, dampingd
+    cmovl      secdmpd, zerod
     mov        [rsp+0], pridmpq                 ; pri_shift
     mov        [rsp+8], secdmpq                 ; sec_shift
 
-    DEFINE_ARGS dst, stride, pridmp, table, pri, sec, stride3, secdmp
+    DEFINE_ARGS dst, stride, pridmp, table, pri, secdmp, stride3
     lea         tableq, [tap_table]
     vpbroadcastb   m13, [tableq+pridmpq]        ; pri_shift_mask
     vpbroadcastb   m14, [tableq+secdmpq]        ; sec_shift_mask
 
     ; pri/sec_taps[k] [4 total]
-    DEFINE_ARGS dst, stride, dummy, table, pri, sec, stride3
-    movd           xm0, prid
-    movd           xm1, secd
+    DEFINE_ARGS dst, stride, dir, table, pri, sec, stride3
+%if UNIX64
     vpbroadcastb    m0, xm0                     ; pri_strength
     vpbroadcastb    m1, xm1                     ; sec_strength
+%else
+    vpbroadcastb    m0, prim
+    vpbroadcastb    m1, secm
+%endif
     and           prid, 1
     lea           priq, [tableq+priq*2+8]       ; pri_taps
     lea           secq, [tableq+12]             ; sec_taps
 
     ; off1/2/3[k] [6 total] from [tapq+12+(dir+0/2/6)*2+k]
-    DEFINE_ARGS dst, stride, dir, tap, pri, sec, stride3
     mov           dird, r6m
-    lea           dirq, [tapq+dirq*2+14]
+    lea           dirq, [tableq+dirq*2+14]
 %if %1*%2*2/mmsize > 1
  %if %1 == 4
     DEFINE_ARGS dst, stride, dir, stk, pri, sec, stride3, h, off, k
@@ -476,9 +475,9 @@ cglobal cdef_filter_%1x%2, 4, 10, 16, 2 * 16 + (%2+4)*%3, \
     RET
 %endmacro
 
-cdef_filter_fn 8, 8, 32
-cdef_filter_fn 4, 8, 32
-cdef_filter_fn 4, 4, 32
+CDEF_FILTER 8, 8, 32
+CDEF_FILTER 4, 8, 32
+CDEF_FILTER 4, 4, 32
 
 INIT_YMM avx2
 cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
@@ -614,9 +613,9 @@ cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
     paddw          m11, m13                 ; partial_sum_alt[3/2] right
     vbroadcasti128 m13, [div_table+32]
     paddw           m4, m5                  ; partial_sum_alt[3/2] left
-    pshuflw        m11, m11, q3012
-    punpckhwd       m6, m4, m11
-    punpcklwd       m4, m11
+    pshuflw         m5, m11, q3012
+    punpckhwd       m6, m11, m4
+    punpcklwd       m4, m5
     pmaddwd         m6, m6
     pmaddwd         m4, m4
     pmulld          m6, m12
@@ -642,14 +641,14 @@ cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
     paddw           m6, m7
     paddw           m1, m3                  ; partial_sum_alt[0/1] right
     paddw           m5, m6                  ; partial_sum_alt[0/1] left
-    pshuflw         m1, m1, q3012
-    punpckhwd       m6, m5, m1
-    punpcklwd       m5, m1
-    pmaddwd         m6, m6
+    pshuflw         m0, m1, q3012
+    punpckhwd       m1, m5
+    punpcklwd       m5, m0
+    pmaddwd         m1, m1
     pmaddwd         m5, m5
-    pmulld          m6, m12
+    pmulld          m1, m12
     pmulld          m5, m13
-    paddd           m5, m6                  ; cost1[a-d] | cost3[a-d]
+    paddd           m5, m1                  ; cost1[a-d] | cost3[a-d]
 
     mova           xm0, [pd_47130256+ 16]
     mova            m1, [pd_47130256]
@@ -661,11 +660,10 @@ cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
 
     ; now find the best cost
     pmaxsd         xm2, xm0, xm1
-    pshufd         xm3, xm2, q3232
+    pshufd         xm3, xm2, q1032
     pmaxsd         xm2, xm3
-    pshufd         xm3, xm2, q1111
-    pmaxsd         xm2, xm3
-    pshufd         xm2, xm2, q0000 ; best cost
+    pshufd         xm3, xm2, q2301
+    pmaxsd         xm2, xm3 ; best cost
 
     ; find the idx using minpos
     ; make everything other than the best cost negative via subtraction
@@ -676,7 +674,7 @@ cglobal cdef_dir, 3, 4, 15, src, stride, var, stride3
     phminposuw     xm3, xm3
 
     ; convert idx to 32-bits
-    psrldq         xm3, 2
+    psrld          xm3, 16
     movd           eax, xm3
 
     ; get idx^4 complement
