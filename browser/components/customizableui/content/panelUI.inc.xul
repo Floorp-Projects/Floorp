@@ -220,23 +220,19 @@
           <hbox id="appMenu-fxa-status"
                 flex="1"
                 defaultlabel="&fxaSignIn.label;"
-                signedinTooltiptext="&fxaSignedIn.tooltip;"
+# Despite the name, the tooltip says "Open Sync Preferences" and it is only used when *not* signed in.
+# Bug 1542334 changed the behaviour of the item when signed in so the tooltip was no longer appropriate there.
                 tooltiptext="&fxaSignedIn.tooltip;"
                 errorlabel="&fxaSignInError.label;"
                 unverifiedlabel="&fxaUnverified.label;"
                 onclick="if (event.which == 1) gSync.onMenuPanelCommand();">
             <image id="appMenu-fxa-avatar"/>
             <toolbarbutton id="appMenu-fxa-label"
-                           class="subviewbutton subviewbutton-iconic"
-                           label="&fxaSignIn.label;"
-                           fxabrandname="&syncBrand.fxAccount.label;"/>
+                class="subviewbutton subviewbutton-iconic"
+                label="&fxaSignIn.label;"
+                fxabrandname="&syncBrand.fxAccount.label;"
+                closemenu="none"/>
           </hbox>
-          <toolbarseparator orient="vertical"/>
-          <toolbarbutton id="appMenu-fxa-icon"
-                         class="subviewbutton subviewbutton-iconic"
-                         onmouseover="gSync.refreshSyncButtonsTooltip();"
-                         oncommand="gSync.doSync();"
-                         closemenu="none"/>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem>
