@@ -124,6 +124,7 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun showSoftwareKeyboardIfNecessary() {
+        if (navHost.navController.currentDestination?.id != R.id.searchFragment) { return }
         (getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager).apply {
             currentFocus?.also {
                 this.showSoftInput(it, 0)
@@ -132,6 +133,7 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun hideSoftwareKeyboardIfNecessary() {
+        if (navHost.navController.currentDestination?.id != R.id.searchFragment) { return }
         (getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager).apply {
             currentFocus?.also {
                 this.hideSoftInputFromWindow(it.windowToken, 0)
