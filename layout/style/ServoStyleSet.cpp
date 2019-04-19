@@ -51,6 +51,9 @@ bool ServoStyleSet::IsCurrentThreadInServoTraversal() {
 #endif
 
 namespace mozilla {
+
+constexpr const StyleOrigin ServoStyleSet::kOrigins[];
+
 ServoStyleSet* sInServoTraversal = nullptr;
 
 // On construction, sets sInServoTraversal to the given ServoStyleSet.
@@ -117,13 +120,22 @@ void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
 }
 
 void ServoStyleSet::ShellDetachedFromDocument() {
-  // Make sure we drop our cached styles before the presshell arena starts going
-  // away.
-  //
-  // TODO(emilio): The presshell arena comment is no longer relevant. We could
-  // avoid doing this if we wanted to.
   ClearNonInheritingComputedStyles();
   mStyleRuleMap = nullptr;
+
+  // Remove all our stylesheets...
+  for (const Origin origin : kOrigins) {
+    for (size_t count = SheetCount(origin); count--;) {
+      RemoveStyleSheet(origin, SheetAt(origin, count));
+    }
+  }
+
+  // And remove all the CascadeDatas from memory.
+  UpdateStylistIfNeeded();
+
+  // Also GC the ruletree if it got big now that the DOM no longer has
+  // references to styles around anymore.
+  MaybeGCRuleTree();
 }
 
 void ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
@@ -600,24 +612,17 @@ void ServoStyleSet::ReplaceSheets(
 
   SetStylistStyleSheetsDirty();
 
+  mStyleRuleMap = nullptr;
+
   // Remove all the existing sheets first.
   for (size_t count = SheetCount(aOrigin); count--;) {
-    StyleSheet* sheet = SheetAt(aOrigin, count);
-    sheet->DropStyleSet(this);
-    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet);
+    RemoveStyleSheet(aOrigin, SheetAt(aOrigin, count));
   }
 
   // Add in all the new sheets.
   for (auto& sheet : aNewSheets) {
-    sheet->AddStyleSet(this);
-    MOZ_ASSERT(sheet->RawContents(),
-               "Raw sheet should be in place before replacement.");
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet);
+    AppendStyleSheet(aOrigin, sheet);
   }
-
-  // Just don't bother calling SheetRemoved / SheetAdded, and recreate the rule
-  // map when needed.
-  mStyleRuleMap = nullptr;
 }
 
 void ServoStyleSet::InsertStyleSheetBefore(Origin aOrigin,

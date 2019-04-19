@@ -3987,8 +3987,6 @@ void Document::DeletePresShell() {
     presContext->RefreshDriver()->CancelPendingFullscreenEvents(this);
   }
 
-  mStyleSet->ShellDetachedFromDocument();
-
   // When our shell goes away, request that all our images be immediately
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
@@ -4006,6 +4004,10 @@ void Document::DeletePresShell() {
 
   ClearStaleServoData();
   AssertNoStaleServoDataIn(*this);
+
+  mStyleSet->ShellDetachedFromDocument();
+  mStyleSetFilled = false;
+  mQuirkSheetAdded = false;
 }
 
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
