@@ -31,6 +31,7 @@
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <button id="trackingProtectionExceptions"
+                  is="highlightable-button"
                   class="accessory-button"
                   flex="1"
                   data-l10n-id="tracking-manage-exceptions"
@@ -57,6 +58,7 @@
                      data-l10n-id="content-blocking-setting-standard"
                      flex="1"/>
               <button id="standardArrow"
+                      is="highlightable-button"
                       class="arrowhead default-content-blocking-ui"
                       data-l10n-id="content-blocking-expand-section"
                       aria-expanded="false"/>
@@ -116,6 +118,7 @@
                     <vbox>
                       <spacer flex="1"/>
                       <button class="accessory-button reload-tabs-button"
+                              is="highlightable-button"
                               data-l10n-id="content-blocking-reload-tabs-button"/>
                       <spacer flex="1"/>
                     </vbox>
@@ -131,6 +134,7 @@
                      data-l10n-id="content-blocking-setting-strict"
                      flex="1"/>
               <button id="strictArrow"
+                      is="highlightable-button"
                       class="arrowhead"
                       data-l10n-id="content-blocking-expand-section"
                       aria-expanded="false"/>
@@ -190,6 +194,7 @@
                     <vbox>
                       <spacer flex="1"/>
                       <button class="accessory-button reload-tabs-button"
+                              is="highlightable-button"
                               data-l10n-id="content-blocking-reload-tabs-button"/>
                       <spacer flex="1"/>
                     </vbox>
@@ -217,6 +222,7 @@
                    data-l10n-id="content-blocking-setting-custom"
                    flex="1"/>
             <button id="customArrow"
+                    is="highlightable-button"
                     class="arrowhead"
                     data-l10n-id="content-blocking-expand-section"
                     aria-expanded="false"/>
@@ -228,6 +234,7 @@
                     align="center" hidden="true" class="extension-controlled">
                 <description control="contentBlockingDisableTrackingProtectionExtension" flex="1"/>
                 <button id="contentBlockingDisableTrackingProtectionExtension"
+                        is="highlightable-button"
                         class="extension-controlled-button accessory-button"
                         data-l10n-id="disable-extension" hidden="true"/>
               </hbox>
@@ -306,6 +313,7 @@
                   <vbox>
                     <spacer flex="1"/>
                     <button class="accessory-button reload-tabs-button"
+                            is="highlightable-button"
                             data-l10n-id="content-blocking-reload-tabs-button"/>
                     <spacer flex="1"/>
                   </vbox>
@@ -368,6 +376,7 @@
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox>
         <button id="clearSiteDataButton"
+            is="highlightable-button"
             class="accessory-button"
             icon="clear"
             search-l10n-ids="clear-site-data-cookies-empty.label, clear-site-data-cache-empty.label"
@@ -375,6 +384,7 @@
       </hbox>
       <hbox>
         <button id="siteDataSettings"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="sitedata-settings"
                 search-l10n-ids="
@@ -388,6 +398,7 @@
       </hbox>
       <hbox>
         <button id="cookieExceptions"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="sitedata-cookies-permissions"
                 preference="pref.privacy.disable_button.cookie_exceptions"
@@ -420,6 +431,7 @@
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox>
         <button id="passwordExceptions"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="forms-exceptions"
                 preference="pref.privacy.disable_button.view_passwords_exceptions"
@@ -434,6 +446,7 @@
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox>
         <button id="showPasswords"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="forms-saved-logins"
                 search-l10n-ids="forms-saved-logins.label"
@@ -448,6 +461,7 @@
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="changeMasterPassword"
+              is="highlightable-button"
               class="accessory-button"
               data-l10n-id="forms-master-pw-change"/>
     </hbox>
@@ -537,12 +551,14 @@
     </deck>
     <vbox id="historyButtons" align="end">
       <button id="clearHistoryButton"
+              is="highlightable-button"
               class="accessory-button"
               icon="clear"
               data-l10n-id="history-clear-button"/>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox>
         <button id="clearDataSettings"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="history-clear-on-close-settings"
                 search-l10n-ids="
@@ -599,6 +615,7 @@
       </description>
       <hbox pack="end">
         <button id="locationSettingsButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="permissions-location-settings"
                 search-l10n-ids="
@@ -622,6 +639,7 @@
       </description>
       <hbox pack="end">
         <button id="cameraSettingsButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="permissions-camera-settings"
                 search-l10n-ids="
@@ -645,6 +663,7 @@
       </description>
       <hbox pack="end">
         <button id="microphoneSettingsButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="permissions-microphone-settings"
                 search-l10n-ids="
@@ -674,6 +693,7 @@
       </description>
       <hbox pack="end">
         <button id="notificationSettingsButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="permissions-notification-settings"
                 search-l10n-ids="
@@ -703,6 +723,7 @@
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="autoplayMediaPolicyButton"
+              is="highlightable-button"
               class="accessory-button"
               data-l10n-id="permissions-block-autoplay-media-exceptions"
               search-l10n-ids="permissions-address,
@@ -723,6 +744,7 @@
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="popupPolicyButton"
+              is="highlightable-button"
               class="accessory-button"
               data-l10n-id="permissions-block-popups-exceptions"
               search-l10n-ids="
@@ -744,6 +766,7 @@
     <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <hbox>
       <button id="addonExceptions"
+              is="highlightable-button"
               class="accessory-button"
               data-l10n-id="permissions-addon-exceptions"
               search-l10n-ids="
@@ -895,6 +918,7 @@
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox pack="end">
         <button id="viewCertificatesButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="certs-view"
                 preference="security.disable_button.openCertManager"
@@ -917,6 +941,7 @@
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
       <hbox pack="end">
         <button id="viewSecurityDevicesButton"
+                is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="certs-devices"
                 preference="security.disable_button.openDeviceManager"

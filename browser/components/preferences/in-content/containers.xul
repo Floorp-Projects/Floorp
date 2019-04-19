@@ -27,7 +27,10 @@
   </vbox>
   <vbox>
     <hbox flex="1">
-      <button id="containersAdd" oncommand="gContainersPane.onAddButtonCommand();" data-l10n-id="containers-add-button"/>
+      <button id="containersAdd"
+              is="highlightable-button"
+              oncommand="gContainersPane.onAddButtonCommand();"
+              data-l10n-id="containers-add-button"/>
     </hbox>
   </vbox>
 </groupbox>
