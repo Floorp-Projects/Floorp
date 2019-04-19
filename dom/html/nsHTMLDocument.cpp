@@ -1712,25 +1712,8 @@ static void NotifyEditableStateChange(nsINode* aNode, Document* aDocument) {
 
 void nsHTMLDocument::TearingDownEditor() {
   if (IsEditingOn()) {
-    EditingState oldState = mEditingState;
     mEditingState = eTearingDown;
-
-    RefPtr<PresShell> presShell = GetPresShell();
-    if (!presShell) {
-      return;
-    }
-
-    nsTArray<RefPtr<StyleSheet>> agentSheets;
-    presShell->GetAgentStyleSheets(agentSheets);
-
-    auto cache = nsLayoutStylesheetCache::Singleton();
-
-    agentSheets.RemoveElement(cache->ContentEditableSheet());
-    if (oldState == eDesignMode)
-      agentSheets.RemoveElement(cache->DesignModeSheet());
-
-    presShell->SetAgentStyleSheets(agentSheets);
-    ApplicableStylesChanged();
+    RemoveContentEditableStyleSheets();
   }
 }
 
@@ -1864,43 +1847,21 @@ nsresult nsHTMLDocument::EditingStateChanged() {
     RefPtr<PresShell> presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
+    MOZ_ASSERT(mStyleSetFilled);
+
     // Before making this window editable, we need to modify UA style sheet
     // because new style may change whether focused element will be focusable
     // or not.
-    nsTArray<RefPtr<StyleSheet>> agentSheets;
-    rv = presShell->GetAgentStyleSheets(agentSheets);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    auto cache = nsLayoutStylesheetCache::Singleton();
-
-    StyleSheet* contentEditableSheet = cache->ContentEditableSheet();
-
-    if (!agentSheets.Contains(contentEditableSheet)) {
-      agentSheets.AppendElement(contentEditableSheet);
-    }
+    AddContentEditableStyleSheetsToStyleSet(designMode);
 
     // Should we update the editable state of all the nodes in the document? We
     // need to do this when the designMode value changes, as that overrides
     // specific states on the elements.
+    updateState = designMode || oldState == eDesignMode;
     if (designMode) {
       // designMode is being turned on (overrides contentEditable).
-      StyleSheet* designModeSheet = cache->DesignModeSheet();
-      if (!agentSheets.Contains(designModeSheet)) {
-        agentSheets.AppendElement(designModeSheet);
-      }
-
-      updateState = true;
       spellRecheckAll = oldState == eContentEditable;
-    } else if (oldState == eDesignMode) {
-      // designMode is being turned off (contentEditable is still on).
-      agentSheets.RemoveElement(cache->DesignModeSheet());
-      updateState = true;
     }
-
-    rv = presShell->SetAgentStyleSheets(agentSheets);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ApplicableStylesChanged();
 
     // Adjust focused element with new style but blur event shouldn't be fired
     // until mEditingState is modified with newState.

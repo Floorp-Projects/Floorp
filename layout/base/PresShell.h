@@ -115,12 +115,8 @@ class PresShell final : public nsIPresShell,
 
   void UnsuppressPainting() override;
 
-  nsresult GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) override;
-  nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<StyleSheet>>& aSheets) override;
-
-  nsresult AddOverrideStyleSheet(StyleSheet* aSheet) override;
-  nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet) override;
+  nsresult AddOverrideStyleSheet(StyleSheet*) override;
+  nsresult RemoveOverrideStyleSheet(StyleSheet*) override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult HandleEventWithTarget(

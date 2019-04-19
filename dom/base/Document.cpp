@@ -1213,6 +1213,8 @@ Document::Document(const char* aContentType)
       mNeedsReleaseAfterStackRefCntRelease(false),
       mStyleSetFilled(false),
       mQuirkSheetAdded(false),
+      mContentEditableSheetAdded(false),
+      mDesignModeSheetAdded(false),
       mSSApplicableStateNotificationPending(false),
       mMayHaveTitleElement(false),
       mDOMLoadingSet(false),
@@ -2399,6 +2401,52 @@ void Document::FillStyleSet() {
   FillStyleSetUserAndUASheets();
   FillStyleSetDocumentSheets();
   mStyleSetFilled = true;
+}
+
+void Document::RemoveContentEditableStyleSheets() {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+
+  auto* cache = nsLayoutStylesheetCache::Singleton();
+  bool changed = false;
+  if (mDesignModeSheetAdded) {
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, cache->DesignModeSheet());
+    mDesignModeSheetAdded = false;
+    changed = true;
+  }
+  if (mContentEditableSheetAdded) {
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, cache->ContentEditableSheet());
+    mContentEditableSheetAdded = false;
+    changed = true;
+  }
+  if (changed) {
+    MOZ_ASSERT(mStyleSetFilled);
+    ApplicableStylesChanged();
+  }
+}
+
+void Document::AddContentEditableStyleSheetsToStyleSet(bool aDesignMode) {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+  MOZ_DIAGNOSTIC_ASSERT(mStyleSetFilled, "Caller should ensure we're being rendered");
+
+  auto* cache = nsLayoutStylesheetCache::Singleton();
+  bool changed = false;
+  if (!mContentEditableSheetAdded) {
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->ContentEditableSheet());
+    mContentEditableSheetAdded = true;
+    changed = true;
+  }
+  if (mDesignModeSheetAdded != aDesignMode) {
+    if (mDesignModeSheetAdded) {
+      mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent, cache->DesignModeSheet());
+    } else {
+      mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent, cache->DesignModeSheet());
+    }
+    mDesignModeSheetAdded = !mDesignModeSheetAdded;
+    changed = true;
+  }
+  if (changed) {
+    ApplicableStylesChanged();
+  }
 }
 
 void Document::FillStyleSetDocumentSheets() {
@@ -4008,6 +4056,8 @@ void Document::DeletePresShell() {
   mStyleSet->ShellDetachedFromDocument();
   mStyleSetFilled = false;
   mQuirkSheetAdded = false;
+  mContentEditableSheetAdded = false;
+  mDesignModeSheetAdded = false;
 }
 
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {

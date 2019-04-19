@@ -8825,28 +8825,6 @@ bool PresShell::IsDisplayportSuppressed() {
   return sDisplayPortSuppressionRespected && mActiveSuppressDisplayport > 0;
 }
 
-nsresult PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) {
-  aSheets.Clear();
-  int32_t sheetCount = StyleSet()->SheetCount(StyleOrigin::UserAgent);
-
-  if (!aSheets.SetCapacity(sheetCount, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  for (int32_t i = 0; i < sheetCount; ++i) {
-    StyleSheet* sheet = StyleSet()->SheetAt(StyleOrigin::UserAgent, i);
-    aSheets.AppendElement(sheet);
-  }
-
-  return NS_OK;
-}
-
-nsresult PresShell::SetAgentStyleSheets(
-    const nsTArray<RefPtr<StyleSheet>>& aSheets) {
-  StyleSet()->ReplaceSheets(StyleOrigin::UserAgent, aSheets);
-  return NS_OK;
-}
-
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
   StyleSet()->AppendStyleSheet(aSheet->GetOrigin(), aSheet);
   return NS_OK;

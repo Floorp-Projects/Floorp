@@ -584,28 +584,6 @@ void ServoStyleSet::RemoveStyleSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
   }
 }
 
-void ServoStyleSet::ReplaceSheets(
-    StyleOrigin aOrigin, const nsTArray<RefPtr<StyleSheet>>& aNewSheets) {
-  // Gecko uses a two-dimensional array keyed by sheet type, whereas Servo
-  // stores a flattened list. This makes ReplaceSheets a pretty clunky thing
-  // to express. If the need ever arises, we can easily make this more efficent,
-  // probably by aligning the representations better between engines.
-
-  SetStylistStyleSheetsDirty();
-
-  mStyleRuleMap = nullptr;
-
-  // Remove all the existing sheets first.
-  for (size_t count = SheetCount(aOrigin); count--;) {
-    RemoveStyleSheet(aOrigin, SheetAt(aOrigin, count));
-  }
-
-  // Add in all the new sheets.
-  for (auto& sheet : aNewSheets) {
-    AppendStyleSheet(aOrigin, sheet);
-  }
-}
-
 void ServoStyleSet::InsertStyleSheetBefore(Origin aOrigin,
                                            StyleSheet* aNewSheet,
                                            StyleSheet* aReferenceSheet) {
