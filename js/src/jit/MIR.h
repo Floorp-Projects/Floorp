@@ -2476,17 +2476,6 @@ class MNewDerivedTypedObject
   bool canRecoverOnBailout() const override { return true; }
 };
 
-// This vector is used when the recovered object is kept unboxed. We map the
-// offset of each property to the index of the corresponding operands in the
-// object state.
-struct OperandIndexMap : public TempObject {
-  // The number of properties is limited by scalar replacement. Thus we cannot
-  // have any large number of properties.
-  FixedList<uint8_t> map;
-
-  MOZ_MUST_USE bool init(TempAllocator& alloc, JSObject* templateObject);
-};
-
 // Represent the content of all slots of an object.  This instruction is not
 // lowered and is not used to generate code.
 class MObjectState : public MVariadicInstruction,
