@@ -2169,16 +2169,6 @@ nsresult Loader::LoadSheet(nsIURI* aURL, SheetParsingMode aParsingMode,
                                       aSheet, aObserver);
 }
 
-nsresult Loader::LoadSheet(nsIURI* aURL, nsIPrincipal* aOriginPrincipal,
-                           nsICSSLoaderObserver* aObserver,
-                           RefPtr<StyleSheet>* aSheet) {
-  LOG(("css::Loader::LoadSheet(aURL, aObserver, aSheet) api call"));
-  MOZ_ASSERT(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, false, eAuthorSheetFeatures, false,
-                                      aOriginPrincipal, nullptr, aSheet,
-                                      aObserver);
-}
-
 nsresult Loader::LoadSheet(nsIURI* aURL, bool aIsPreload,
                            nsIPrincipal* aOriginPrincipal,
                            const Encoding* aPreloadEncoding,
