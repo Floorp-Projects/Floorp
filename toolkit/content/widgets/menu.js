@@ -144,6 +144,7 @@ window.addEventListener("popupshowing", (e) => {
   if (e.originalTarget.ownerDocument != document) {
     return;
   }
+  e.originalTarget.setAttribute("hasbeenopened", "true");
   for (let menu of e.originalTarget.querySelectorAll("menu")) {
     menu.render();
   }
@@ -167,7 +168,7 @@ class MozMenu extends MozMenuBaseMixin(MozElements.MozElementMixin(XULMenuElemen
   }
 
   get needsEagerRender() {
-    return this.isMenubarChild || this.isSizingPopup || !this.isInMenupopup;
+    return this.isMenubarChild || this.isSizingPopup || !this.isInHiddenMenupopup;
   }
 
   get isMenubarChild() {
@@ -178,8 +179,8 @@ class MozMenu extends MozMenuBaseMixin(MozElements.MozElementMixin(XULMenuElemen
     return this.matches("[sizetopopup] menu") || this.matches("menulist menu");
   }
 
-  get isInMenupopup() {
-    return this.matches("menupopup menu");
+  get isInHiddenMenupopup() {
+    return this.matches("menupopup:not([hasbeenopened]) menu");
   }
 
   get isIconic() {

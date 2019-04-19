@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
 
 <menu id="menu">
-  <menupopup onpopupshown="this.firstChild.open = true" onpopuphidden="if (event.target == this) done()">
+  <menupopup onpopuphidden="if (event.target == this) done()">
     <menu id="submenu" label="One">
       <menupopup onpopupshown="submenuOpened();">
         <menuitem label="Two"/>
@@ -26,12 +26,25 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests()
 {
-  $("menu").open = true;
+  var menu = $("menu");
+  menu.menupopup.addEventListener("popupshown", () => {
+    var submenu = $("submenu");
+    is(submenu.querySelector(".menu-text").value, "One", "submenu has rendered.");
+
+    var submenuDynamic = document.createXULElement("menu");
+    submenuDynamic.setAttribute("label", "Dynamic");
+    ok(!submenuDynamic.querySelector(".menu-text"), "dynamic subment hasn't rendered yet.");
+    menu.menupopup.append(submenuDynamic);
+    is(submenuDynamic.querySelector(".menu-text").value, "Dynamic", "dynamic submenu has rendered.");
+
+    menu.menupopup.firstElementChild.open = true;
+  }, { once: true });
+  menu.open = true;
 }
 
 function submenuOpened()
 {
-  var submenu = $("submenu")
+  var submenu = $("submenu");
   is(submenu.getAttribute('_moz-menuactive'), "true", "menu highlighted");
   submenu.hidden = true;
   $("menu").open = false;
