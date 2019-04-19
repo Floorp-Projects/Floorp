@@ -22,12 +22,13 @@
 
         <ImageView
             android:id="@+id/favicon_image"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:layout_margin="8dp"
             android:adjustViewBounds="true"
             android:importantForAccessibility="no"
-            android:scaleType="centerInside"
+            android:scaleType="fitCenter"
+            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -49,12 +50,13 @@
         <TextView
             android:id="@+id/tab_title"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
             android:maxLines="2"
+            android:minLines="2"
             android:textColor="?primaryText"
             android:textSize="15sp"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
@@ -81,7 +83,7 @@
             android:contentDescription="@string/tab_menu"
             android:src="@drawable/ic_menu"
             android:translationX="4dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tab_title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/close_tab_button" />
 

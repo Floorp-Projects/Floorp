@@ -4,10 +4,10 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
+import android.content.Context
 import android.graphics.Outline
 import android.view.View
 import android.view.ViewOutlineProvider
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
@@ -17,8 +17,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.ktx.android.content.res.pxToDp
-import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
@@ -40,8 +42,15 @@ class TabViewHolder(
         get() = Dispatchers.IO + job
 
     var tab: Tab? = null
+    private lateinit var tabMenu: TabItemMenu
 
     init {
+        tabMenu = TabItemMenu(view.context) {
+            when (it) {
+                is TabItemMenu.Item.Share ->
+                    actionEmitter.onNext(TabAction.Share(tab?.sessionId!!))
+            }
+        }
         item_tab.setOnClickListener {
             actionEmitter.onNext(TabAction.Select(tab?.sessionId!!))
         }
@@ -65,11 +74,16 @@ class TabViewHolder(
                 )
             }
         }
+
+        tab_overflow_button.setOnClickListener {
+            tabMenu.menuBuilder
+                .build(view.context)
+                .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+        }
     }
 
     fun bindSession(tab: Tab, position: Int) {
         this.tab = tab
-        updateTabBackground(position)
         updateText(tab)
         updateSelected(tab.selected)
     }
@@ -90,24 +104,30 @@ class TabViewHolder(
         selected_border.visibility = if (selected) View.VISIBLE else View.GONE
     }
 
-    fun updateTabBackground(id: Int) {
-        if (tab?.thumbnail != null) {
-//            tab_background.setImageBitmap(tab?.thumbnail)
-        } else {
-            val background = availableBackgrounds[id % availableBackgrounds.size]
-            favicon_image.image = ContextCompat.getDrawable(view.context, background)
-        }
-    }
-
     companion object {
         const val LAYOUT_ID = R.layout.tab_list_row
         const val closeButtonIncreaseDps = 12
         const val favIconBorderRadiusInPx = 8
+    }
+}
 
-        private val availableBackgrounds = listOf(
-            R.drawable.sessions_01, R.drawable.sessions_02,
-            R.drawable.sessions_03, R.drawable.sessions_06,
-            R.drawable.sessions_07, R.drawable.sessions_08
+class TabItemMenu(
+    private val context: Context,
+    private val onItemTapped: (Item) -> Unit = {}
+) {
+    sealed class Item {
+        object Share : Item()
+    }
+
+    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+
+    private val menuItems by lazy {
+        listOf(
+            SimpleBrowserMenuItem(
+                context.getString(R.string.tab_share)
+            ) {
+                onItemTapped.invoke(Item.Share)
+            }
         )
     }
 }

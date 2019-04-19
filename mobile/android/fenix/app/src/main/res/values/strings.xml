@@ -232,6 +232,8 @@
     <string name="close_tab">Close tab</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tab menu</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Share tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Delete</string>
     <!-- Button in the current session menu. Saves the session when pressed -->

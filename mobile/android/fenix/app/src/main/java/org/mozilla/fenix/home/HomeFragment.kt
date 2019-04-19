@@ -34,6 +34,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToHost
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
@@ -199,6 +200,11 @@ class HomeFragment : Fragment(), CoroutineScope {
             is TabAction.Close -> {
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
                     requireComponents.core.sessionManager.remove(session)
+                }
+            }
+            is TabAction.Share -> {
+                requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
+                    requireContext().share(session.url)
                 }
             }
             is TabAction.CloseAll -> {
