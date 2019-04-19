@@ -53,6 +53,7 @@ class BookmarkComponent(
                 )
                 state.copy(mode = mode)
             }
+            is BookmarkChange.ClearSelection -> state.copy(mode = BookmarkState.Mode.Normal)
         }
     }
 
@@ -64,7 +65,7 @@ class BookmarkComponent(
     }
 }
 
-data class BookmarkState(val tree: BookmarkNode?, val mode: BookmarkState.Mode) : ViewState {
+data class BookmarkState(val tree: BookmarkNode?, val mode: Mode) : ViewState {
     sealed class Mode {
         object Normal : Mode()
         data class Selecting(val selectedItems: Set<BookmarkNode>) : Mode()
@@ -90,6 +91,7 @@ sealed class BookmarkChange : Change {
     data class Change(val tree: BookmarkNode) : BookmarkChange()
     data class IsSelected(val newlySelectedItem: BookmarkNode) : BookmarkChange()
     data class IsDeselected(val newlyDeselectedItem: BookmarkNode) : BookmarkChange()
+    object ClearSelection : BookmarkChange()
 }
 
 operator fun BookmarkNode.contains(item: BookmarkNode): Boolean {

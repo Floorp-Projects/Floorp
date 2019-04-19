@@ -17,14 +17,11 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.menu.ActionMenuItemView
-import androidx.appcompat.widget.ActionMenuView
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -46,7 +43,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
-import org.mozilla.fenix.ext.getColorIntFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToHost
@@ -62,6 +58,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     private lateinit var bookmarkComponent: BookmarkComponent
     private lateinit var signInComponent: SignInComponent
     private var currentRoot: BookmarkNode? = null
+    private val navigation by lazy { Navigation.findNavController(requireActivity(), R.id.container) }
+    private val onDestinationChangedListener =
+        NavController.OnDestinationChangedListener { _, destination, args ->
+            if (destination.id != R.id.bookmarkFragment ||
+                args != null && BookmarkFragmentArgs.fromBundle(args).currentRoot != currentRoot?.guid
+            )
+                getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.ClearSelection)
+        }
 
     override val coroutineContext: CoroutineContext
         get() = Main + job
@@ -85,13 +89,13 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         (activity as AppCompatActivity).supportActionBar?.show()
         checkIfSignedIn()
 
+        navigation.addOnDestinationChangedListener(onDestinationChangedListener)
         val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Root.id }
 
         launch(IO) {
             currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
 
             launch(Main) {
-                if (currentGuid != BookmarkRoot.Root.id) (activity as HomeActivity).title = currentRoot!!.title
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
 
                 activity?.run {
@@ -108,114 +112,26 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             ?: getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }
 
-    fun setToolbarColors(foreground: Int, background: Int) {
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-        val colorFilter = PorterDuffColorFilter(
-            ContextCompat.getColor(context!!, foreground), PorterDuff.Mode.SRC_IN
-        )
-        toolbar.setBackgroundColor(ContextCompat.getColor(context!!, background))
-        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, foreground))
-
-        themeToolbar(
-            toolbar, foreground,
-            background, colorFilter
-        )
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Reset the toolbar color
-        setToolbarColors(
-            R.attr.primaryText.getColorIntFromAttr(context!!),
-            R.attr.foundation.getColorIntFromAttr(context!!)
-        )
-    }
-
     override fun onDestroy() {
         super.onDestroy()
+        navigation.removeOnDestinationChangedListener(onDestinationChangedListener)
         job.cancel()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
         when (val mode = (bookmarkComponent.uiView as BookmarkUIView).mode) {
             BookmarkState.Mode.Normal -> {
                 inflater.inflate(R.menu.library_menu, menu)
-                activity?.title =
-                    if (currentRoot?.title in setOf(
-                            "root",
-                            null
-                        )
-                    ) getString(R.string.library_bookmarks) else currentRoot!!.title
-
-                setToolbarColors(
-                    R.attr.primaryText.getColorIntFromAttr(context!!),
-                    R.attr.foundation.getColorIntFromAttr(context!!)
-                )
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
-
-                menu.findItem(R.id.edit_bookmark_multi_select).run {
+                menu.findItem(R.id.edit_bookmark_multi_select)?.run {
                     isVisible = mode.selectedItems.size == 1
                     icon.colorFilter = PorterDuffColorFilter(
                         ContextCompat.getColor(context!!, R.color.white_color),
                         PorterDuff.Mode.SRC_IN
                     )
                 }
-
-                activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
-                setToolbarColors(
-                    R.color.white_color,
-                    R.attr.accentBright.getColorIntFromAttr(context!!)
-                )
-            }
-        }
-    }
-
-    private fun themeToolbar(
-        toolbar: Toolbar,
-        textColor: Int,
-        backgroundColor: Int,
-        colorFilter: PorterDuffColorFilter? = null
-    ) {
-        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, textColor))
-        toolbar.setBackgroundColor(ContextCompat.getColor(context!!, backgroundColor))
-
-        if (colorFilter == null) {
-            return
-        }
-
-        toolbar.overflowIcon?.colorFilter = colorFilter
-        (0 until toolbar.childCount).forEach {
-            when (val item = toolbar.getChildAt(it)) {
-                is ImageButton -> item.drawable.colorFilter = colorFilter
-                is ActionMenuView -> themeActionMenuView(item, colorFilter)
-            }
-        }
-    }
-
-    private fun themeActionMenuView(
-        item: ActionMenuView,
-        colorFilter: PorterDuffColorFilter
-    ) {
-        (0 until item.childCount).forEach {
-            val innerChild = item.getChildAt(it)
-            if (innerChild is ActionMenuItemView) {
-                themeChildren(innerChild, item, colorFilter)
-            }
-        }
-    }
-
-    private fun themeChildren(
-        innerChild: ActionMenuItemView,
-        item: ActionMenuView,
-        colorFilter: PorterDuffColorFilter
-    ) {
-        val drawables = innerChild.compoundDrawables
-        for (k in drawables.indices) {
-            drawables[k]?.let {
-                item.post { innerChild.compoundDrawables[k].colorFilter = colorFilter }
             }
         }
     }
@@ -236,14 +152,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         requireComponents.analytics.metrics.track(Event.OpenedBookmark)
                     }
                     is BookmarkAction.Expand -> {
-                        Navigation.findNavController(requireActivity(), R.id.container)
+                        navigation
                             .navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(it.folder.guid))
                     }
                     is BookmarkAction.BackPressed -> {
-                        Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
+                        navigation.popBackStack()
                     }
                     is BookmarkAction.Edit -> {
-                        Navigation.findNavController(requireActivity(), R.id.container)
+                        navigation
                             .navigate(
                                 BookmarkFragmentDirections
                                     .actionBookmarkFragmentToBookmarkEditFragment(it.item.guid)
@@ -310,7 +226,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.libraryClose -> {
-                Navigation.findNavController(requireActivity(), R.id.container)
+                navigation
                     .popBackStack(R.id.libraryFragment, true)
                 true
             }
@@ -322,14 +238,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 }
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
-                Navigation.findNavController(requireActivity(), R.id.container)
+                navigation
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 requireComponents.analytics.metrics.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.edit_bookmark_multi_select -> {
                 val bookmark = getSelectedBookmarks().first()
-                Navigation.findNavController(requireActivity(), R.id.container)
+                navigation
                     .navigate(
                         BookmarkFragmentDirections
                             .actionBookmarkFragmentToBookmarkEditFragment(bookmark.guid)
@@ -344,7 +260,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 }
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
-                Navigation.findNavController(requireActivity(), R.id.container)
+                navigation
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 requireComponents.analytics.metrics.track(Event.OpenedBookmarksInPrivateTabs)
                 true
