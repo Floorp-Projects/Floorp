@@ -474,7 +474,8 @@ void BaselineInterpreterCodeGen::emitInitializeLocals() {
 
   Register scratch = R0.scratchReg();
   loadScript(scratch);
-  masm.load32(Address(scratch, JSScript::offsetOfNfixed()), scratch);
+  masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.load32(Address(scratch, SharedScriptData::offsetOfNfixed()), scratch);
 
   Label top, done;
   masm.bind(&top);
@@ -779,7 +780,8 @@ void BaselineInterpreterCodeGen::subtractScriptSlotsSize(Register reg,
   // reg = reg - script->nslots() * sizeof(Value)
   MOZ_ASSERT(reg != scratch);
   loadScript(scratch);
-  masm.load32(Address(scratch, JSScript::offsetOfNslots()), scratch);
+  masm.loadPtr(Address(scratch, JSScript::offsetOfScriptData()), scratch);
+  masm.load32(Address(scratch, SharedScriptData::offsetOfNslots()), scratch);
   static_assert(sizeof(Value) == 8,
                 "shift by 3 below assumes Value is 8 bytes");
   masm.lshiftPtr(Imm32(3), scratch);
