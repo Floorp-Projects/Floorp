@@ -391,7 +391,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  Corroborate: "resource://gre/modules/Corroborate.jsm",
   DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
   Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
@@ -1574,10 +1573,6 @@ BrowserGlue.prototype = {
 
     this._monitorScreenshotsPref();
     this._monitorWebcompatReporterPref();
-
-    if (Services.prefs.getBoolPref("corroborator.enabled", true)) {
-      Corroborate.init().catch(Cu.reportError);
-    }
 
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].
                   getService(Ci.nsIToolkitProfileService);

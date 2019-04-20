@@ -309,8 +309,7 @@ for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_WIDGET_TOOLKIT',
             'DLL_PREFIX',
             'DLL_SUFFIX',
-            'DEBUG_JS_MODULES',
-            'OMNIJAR_NAME'):
+            'DEBUG_JS_MODULES'):
             DEFINES[var] = CONFIG[var]
 
 for var in ('MOZ_TOOLKIT_SEARCH',
