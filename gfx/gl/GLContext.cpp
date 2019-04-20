@@ -2879,13 +2879,14 @@ void GLContext::AfterGLCall_Debug(const char* const funcName) const {
   }
 
   if (err && !mLocalErrorScopeStack.size()) {
-    printf_stderr("[gl:%p] %s: Generated unexpected %s error.\n", this,
-                  funcName, GLErrorToString(err).c_str());
+    const auto errStr = GLErrorToString(err);
+    const auto text = nsPrintfCString("%s: Generated unexpected %s error", funcName, errStr.c_str());
+    printf_stderr("[gl:%p] %s.\n", this, text.BeginReading());
 
-    if (mDebugFlags & DebugFlagAbortOnError) {
-      MOZ_CRASH(
-          "Unexpected error with MOZ_GL_DEBUG_ABORT_ON_ERROR. (Run"
-          " with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
+    const bool abortOnError = mDebugFlags & DebugFlagAbortOnError;
+    if (abortOnError && err != LOCAL_GL_CONTEXT_LOST) {
+      gfxCriticalErrorOnce() << text.BeginReading();
+      MOZ_CRASH("Aborting... (Run with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
     }
   }
 }
