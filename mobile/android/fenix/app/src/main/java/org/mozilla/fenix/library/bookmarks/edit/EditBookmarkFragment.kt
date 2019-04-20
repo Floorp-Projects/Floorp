@@ -92,8 +92,8 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
                     bookmark_name_edit.setText(bookmarkNode!!.title)
                     bookmark_url_edit.setText(bookmarkNode!!.url)
 
-                    if (sharedViewModel.selectedFolder != null) {
-                        val bookmarkPair = Pair(bookmarkNode?.title!!, bookmarkNode?.url!!)
+                    if (sharedViewModel.selectedFolder != null && bookmarkNode?.title != null) {
+                        val bookmarkPair = Pair(bookmarkNode?.title, bookmarkNode?.url)
                         updateBookmarkNode(bookmarkPair)
                     }
                 }
@@ -160,7 +160,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun updateBookmarkNode(pair: Pair<String, String>) {
+    private fun updateBookmarkNode(pair: Pair<String?, String?>) {
         launch(IO) {
             try {
                 requireComponents.let {
