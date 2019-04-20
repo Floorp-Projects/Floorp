@@ -117,6 +117,9 @@
             l3.detach();
             l4.detach();
 
+            // swapDocShells reflows asynchronously, ensure layout is
+            // clean so that the viewport of f1 is the right size.
+            $("f1").getBoundingClientRect();
             var s1_new = snapshotWindow($("f1").contentWindow);
             var [same, first, second] = compareSnapshots(s1_new, s2, true);
             ok(same, "Should reflow on swap. Expected " + second + " but got " + first);
