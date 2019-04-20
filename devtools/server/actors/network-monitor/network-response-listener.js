@@ -295,7 +295,13 @@ NetworkResponseListener.prototype = {
     const secinfo = this.httpActivity.channel.securityInfo;
     const info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
 
-    this.httpActivity.owner.addSecurityInfo(info);
+    let isRacing = false;
+    const channel = this.httpActivity.channel;
+    if (channel instanceof Ci.nsICacheInfoChannel) {
+      isRacing = channel.isRacing();
+    }
+
+    this.httpActivity.owner.addSecurityInfo(info, isRacing);
   }),
 
   /**

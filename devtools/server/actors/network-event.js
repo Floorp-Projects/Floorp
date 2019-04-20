@@ -403,16 +403,16 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * @param object info
    *        The object containing security information.
    */
-  addSecurityInfo(info) {
+  addSecurityInfo(info, isRacing) {
     // Ignore calls when this actor is already destroyed
     if (!this.actorID) {
       return;
     }
 
     this._securityInfo = info;
-
     this.emit("network-event-update:security-info", "securityInfo", {
       state: info.state,
+      isRacing: isRacing,
     });
   },
 

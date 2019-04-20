@@ -26,6 +26,10 @@ function registerEvent(extension, eventName, fire, filter, info, tabParent = nul
     event.tabId = browserData.tabId;
 
     if (data.registerTraceableChannel) {
+      // If this is a primed listener, no tabParent was passed in here,
+      // but the convert() callback later in this function will be called
+      // when the background page is started.  Force that to happen here
+      // after which we'll have a valid tabParent.
       if (fire.wakeup) {
         await fire.wakeup();
       }

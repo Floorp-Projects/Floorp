@@ -139,6 +139,10 @@ DebuggerPanel.prototype = {
     return { frames, selected };
   },
 
+  lookupConsoleClient: function(thread) {
+    return this._client.lookupConsoleClient(thread);
+  },
+
   getMappedExpression(expression) {
     return this._actions.getMappedExpression(expression);
   },

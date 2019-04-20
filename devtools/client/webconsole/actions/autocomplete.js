@@ -26,7 +26,7 @@ function autocompleteUpdate(force, getterPath) {
     }
 
     const inputValue = services.getInputValue();
-    const frameActorId = services.getFrameActor();
+    const { frameActor: frameActorId, client } = services.getFrameActor();
     const cursor = services.getInputCursor();
 
     const state = getState().autocomplete;
@@ -73,7 +73,7 @@ function autocompleteUpdate(force, getterPath) {
     return dispatch(autocompleteDataFetch({
       input,
       frameActorId,
-      client: services.getWebConsoleClient(),
+      client,
       authorizedEvaluations,
       force,
     }));

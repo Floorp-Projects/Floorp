@@ -371,6 +371,7 @@ class FirefoxDataProvider {
       case "securityInfo":
         this.pushRequestToQueue(actor, {
           securityState: networkInfo.securityState,
+          isRacing: packet.isRacing,
         });
         break;
       case "responseStart":
