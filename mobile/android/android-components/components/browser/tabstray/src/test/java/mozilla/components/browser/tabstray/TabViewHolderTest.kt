@@ -16,10 +16,14 @@ import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.test.mock
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -116,6 +120,68 @@ class TabViewHolderTest {
     }
 
     @Test
+    fun `url from session is displayed by default`() {
+        val observer: TabsTray.Observer = mock()
+        val registry = ObserverRegistry<TabsTray.Observer>().also {
+            it.register(observer)
+        }
+
+        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+
+        val session = Session("https://www.mozilla.org")
+        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
+
+        holder.bind(session, isSelected = true, observable = registry)
+
+        assertEquals(session.url, titleView.text)
+    }
+
+    @Test
+    fun `title from session is displayed if available`() {
+        val observer: TabsTray.Observer = mock()
+        val registry = ObserverRegistry<TabsTray.Observer>().also {
+            it.register(observer)
+        }
+
+        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+
+        val session = Session("https://www.mozilla.org")
+        val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
+
+        session.title = "Mozilla Firefox"
+
+        holder.bind(session, isSelected = true, observable = registry)
+
+        assertEquals("Mozilla Firefox", titleView.text)
+    }
+
+    @Test
+    fun `session unregisters on unbind`() {
+        val observer: TabsTray.Observer = mock()
+        val registry = ObserverRegistry<TabsTray.Observer>().also {
+            it.register(observer)
+        }
+
+        val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
+        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val session = spy(Session("https://www.mozilla.org"))
+
+        holder.unbind()
+
+        assertNull(holder.session)
+        verify(session, never()).unregister(holder)
+
+        holder.bind(session, isSelected = true, observable = registry)
+
+        holder.unbind()
+
+        assertNotNull(holder.session)
+        verify(session).unregister(holder)
+    }
+
+    @Test
     fun `thumbnail from session is assigned to thumbnail image view`() {
         val view = LayoutInflater.from(context).inflate(R.layout.mozac_browser_tabstray_item, null)
         val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
@@ -130,12 +196,14 @@ class TabViewHolderTest {
         assertTrue(thumbnailView.drawable != null)
     }
 
-    private fun mockTabsTrayWithStyles(): BrowserTabsTray {
-        val styles: TabsTrayStyling = mock()
+    companion object {
+        fun mockTabsTrayWithStyles(): BrowserTabsTray {
+            val styles: TabsTrayStyling = mock()
 
-        val tabsTray: BrowserTabsTray = mock()
-        doReturn(styles).`when`(tabsTray).styling
+            val tabsTray: BrowserTabsTray = mock()
+            doReturn(styles).`when`(tabsTray).styling
 
-        return tabsTray
+            return tabsTray
+        }
     }
 }

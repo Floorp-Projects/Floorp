@@ -29,7 +29,7 @@ class TabViewHolder(
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
 
-    private var session: Session? = null
+    internal var session: Session? = null
 
     /**
      * Displays the data of the given session and notifies the given observable about events.

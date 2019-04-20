@@ -39,6 +39,7 @@ permalink: /changelog/
 
 * **browser-tabstray**
   * Add `TabThumbnailView` to Tabs Tray show the top of the thumbnail and fill up the width of the tile.
+  * Added swipe gesture support with a `TabTouchCallback` for the TabsTray.
 
 # 0.50.0
 

@@ -23,7 +23,7 @@ class BrowserTabsTray @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    private val tabsAdapter: TabsAdapter = TabsAdapter()
+    val tabsAdapter: TabsAdapter = TabsAdapter()
 ) : RecyclerView(context, attrs, defStyleAttr),
     TabsTray by tabsAdapter {
 

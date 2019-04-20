@@ -75,10 +75,7 @@ class TabsTrayPresenter(
         sessions = updatedSessions
         selectedIndex = updatedIndex
 
-        tabsTray.apply {
-            displaySessions(updatedSessions, updatedIndex)
-            updateSessions(updatedSessions, updatedIndex)
-        }
+        tabsTray.updateSessions(updatedSessions, updatedIndex)
 
         result.dispatchUpdatesTo(object : ListUpdateCallback {
             override fun onChanged(position: Int, count: Int, payload: Any?) {
