@@ -1,0 +1,29 @@
+<html>
+
+<head>
+  <script>
+    function start() {
+      o1 = new Int32Array(51488)
+      o2 = new ArrayBuffer(13964)
+      for (let i = 0; i < 51488; i++) o1[i] = 0x41
+      const dbRequest = window.indexedDB.open('', {})
+      dbRequest.onupgradeneeded = function(event) {
+        const store = event.target.result.createObjectStore('IDBStore_0', {})
+        store.add({}, 'ObjectKey_0')
+        store.add({
+          data: undefined,
+          index_key_0: o1,
+          index_key_1: o2
+        }, 'ObjectKey_1')
+        store.createIndex('IDBIndex_1', ['index_key_0', 'index_key_1'], {
+          unique: false,
+          multiEntry: false,
+          locale: 'fr'
+        })
+      }
+    }
+    document.addEventListener('DOMContentLoaded', start)
+  </script>
+</head>
+
+</html>
