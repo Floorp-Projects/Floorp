@@ -26,18 +26,28 @@
 const CC = Components.Constructor;
 
 // Create a sandbox with the resources we need. require() doesn't work here.
-const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")());
+const sandbox = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(), {
+  wantGlobalProperties: [
+    "InspectorUtils",
+    "CSSRule",
+  ],
+});
 Cu.evalInSandbox(
   "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
   "Components.utils.import('resource://gre/modules/Services.jsm');" +
   "addDebuggerToGlobal(this);",
   sandbox
 );
-const Debugger = sandbox.Debugger;
-const RecordReplayControl = sandbox.RecordReplayControl;
-const Services = sandbox.Services;
+const {
+  Debugger,
+  RecordReplayControl,
+  Services,
+  InspectorUtils,
+  CSSRule,
+} = sandbox;
 
 const dbg = new Debugger();
+const firstGlobal = dbg.makeGlobalObjectReference(sandbox);
 
 // We are interested in debugging all globals in the process.
 dbg.onNewGlobalObject = function(global) {
@@ -547,9 +557,16 @@ function convertValueFromParent(value) {
 function makeDebuggeeValue(value) {
   if (isNonNullObject(value)) {
     assert(!(value instanceof Debugger.Object));
-    const global = Cu.getGlobalForObject(value);
-    const dbgGlobal = dbg.makeGlobalObjectReference(global);
-    return dbgGlobal.makeDebuggeeValue(value);
+    try {
+      const global = Cu.getGlobalForObject(value);
+      const dbgGlobal = dbg.makeGlobalObjectReference(global);
+      return dbgGlobal.makeDebuggeeValue(value);
+    } catch (e) {
+      // Sometimes the global which Cu.getGlobalForObject finds has
+      // isInvisibleToDebugger set. Wrap the object into the first global we
+      // found in this case.
+      return firstGlobal.makeDebuggeeValue(value);
+    }
   }
   return value;
 }
@@ -718,7 +735,7 @@ const gRequestHandlers = {
   getObject(request) {
     const object = gPausedObjects.getObject(request.id);
     if (object instanceof Debugger.Object) {
-      return {
+      const rv = {
         id: request.id,
         kind: "Object",
         callable: object.callable,
@@ -738,6 +755,12 @@ const gRequestHandlers = {
         isSealed: object.isSealed(),
         isFrozen: object.isFrozen(),
       };
+      if (rv.isBoundFunction) {
+        rv.boundTargetFunction = getObjectId(object.boundTargetFunction);
+        rv.boundThis = convertValue(object.boundThis);
+        rv.boundArguments = getObjectId(makeDebuggeeValue(object.boundArguments));
+      }
+      return rv;
     }
     if (object instanceof Debugger.Environment) {
       return {
@@ -881,13 +904,19 @@ const gRequestHandlers = {
   // Inspector Requests
   /////////////////////////////////////////////////////////
 
-  getWindow(request) {
+  getFixedObjects(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {
       return { throw: "Recording divergence in getWindow" };
     }
 
-    // Hopefully there is exactly one window in this enumerator.
-    return { id: getObjectId(makeDebuggeeValue(getWindow())) };
+    const window = getWindow();
+    return {
+      window: getObjectId(makeDebuggeeValue(window)),
+      document: getObjectId(makeDebuggeeValue(window.document)),
+      Services: getObjectId(makeDebuggeeValue(Services)),
+      InspectorUtils: getObjectId(makeDebuggeeValue(InspectorUtils)),
+      CSSRule: getObjectId(makeDebuggeeValue(CSSRule)),
+    };
   },
 
   newDeepTreeWalker(request) {
@@ -944,16 +973,6 @@ const gRequestHandlers = {
       return { id: 0 };
     }
     const obj = makeDebuggeeValue(element);
-    return { id: getObjectId(obj) };
-  },
-
-  getListenerInfoFor(request) {
-    if (!RecordReplayControl.maybeDivergeFromRecording()) {
-      return { throw: "Recording divergence in getListenerInfoFor" };
-    }
-
-    const node = gPausedObjects.getObject(request.id).unsafeDereference();
-    const obj = makeDebuggeeValue(Services.els.getListenerInfoFor(node) || []);
     return { id: getObjectId(obj) };
   },
 };

@@ -58,6 +58,7 @@ let gIsFromCache = 0;
 function checkContent(request, buffer, context, isFromCache)
 {
   Assert.equal(buffer, gResponseBody);
+  info("isRacing: " + request.QueryInterface(Ci.nsICacheInfoChannel).isRacing() + "\n");
   gResponseCounter++;
   if (isFromCache) {
     gIsFromCache++;

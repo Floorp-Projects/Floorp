@@ -8663,6 +8663,15 @@ nsHttpChannel::GetAltDataInputStream(const nsACString &aType,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsHttpChannel::IsRacing(bool *aIsRacing) {
+  if (!mAfterOnStartRequestBegun) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsRacing = mRaceCacheWithNetwork;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetCacheToken(nsISupports **token) {
   NS_ENSURE_ARG_POINTER(token);
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
