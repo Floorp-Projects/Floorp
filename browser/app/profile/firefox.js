@@ -1879,10 +1879,3 @@ pref("browser.toolbars.keyboard_navigation", true);
 // quick access to sign-in and manage your Firefox Account.
 pref("identity.fxaccounts.toolbar.enabled", true);
 pref("identity.fxaccounts.toolbar.accessed", false);
-
-// Check bundled JAR and XPI files for corruption.
-#ifdef RELEASE_OR_BETA
-pref("corroborator.enabled", false);
-#else
-pref("corroborator.enabled", true);
-#endif
