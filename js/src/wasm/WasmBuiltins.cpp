@@ -121,6 +121,8 @@ const SymbolicAddressSignature SASigTableCopy = {
     {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigElemDrop = {
     SymbolicAddress::ElemDrop, _I32, 2, {_PTR, _I32, _END}};
+const SymbolicAddressSignature SASigTableFill = {
+    SymbolicAddress::TableFill, _I32, 5, {_PTR, _I32, _RoN, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGet = {
     SymbolicAddress::TableGet, _PTR, 3, {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
@@ -766,6 +768,9 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::ElemDrop:
       *abiType = Args_General2;
       return FuncCast(Instance::elemDrop, *abiType);
+    case SymbolicAddress::TableFill:
+      *abiType = Args_General5;
+      return FuncCast(Instance::tableFill, *abiType);
     case SymbolicAddress::TableInit:
       *abiType = Args_General6;
       return FuncCast(Instance::tableInit, *abiType);
@@ -895,6 +900,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::MemInit:
     case SymbolicAddress::TableCopy:
     case SymbolicAddress::ElemDrop:
+    case SymbolicAddress::TableFill:
     case SymbolicAddress::TableGet:
     case SymbolicAddress::TableGrow:
     case SymbolicAddress::TableInit:
