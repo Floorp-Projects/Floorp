@@ -2952,7 +2952,7 @@ void RestyleManager::ClearSnapshots() {
 }
 
 ServoElementSnapshot& RestyleManager::SnapshotFor(Element& aElement) {
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
   // NOTE(emilio): We can handle snapshots from a one-off restyle of those that
   // we do to restyle stuff for reconstruction, for example.
@@ -2989,7 +2989,7 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
                  !presContext->HasPendingMediaQueryUpdates(),
              "Someone forgot to update media queries?");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh, "Reentrant call?");
+  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
   if (MOZ_UNLIKELY(!shell->DidInitialize())) {
     // PresShell::FlushPendingNotifications doesn't early-return in the case
@@ -3168,7 +3168,7 @@ void RestyleManager::UpdateOnlyAnimationStyles() {
 
 void RestyleManager::ContentStateChanged(nsIContent* aContent,
                                          EventStates aChangedBits) {
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
   if (!aContent->IsElement()) {
     return;
@@ -3279,7 +3279,7 @@ void RestyleManager::ClassAttributeWillBeChangedBySMIL(Element* aElement) {
 void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
                                                     int32_t aNameSpaceID,
                                                     nsAtom* aAttribute) {
-  MOZ_RELEASE_ASSERT(!mInStyleRefresh);
+  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
   if (!aElement.HasServoData()) {
     return;
