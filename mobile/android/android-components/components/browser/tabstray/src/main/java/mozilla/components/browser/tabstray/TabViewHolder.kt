@@ -9,9 +9,9 @@ import android.support.v7.widget.AppCompatImageButton
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import android.widget.ImageView
 import android.widget.TextView
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 
@@ -27,7 +27,7 @@ class TabViewHolder(
     }
     private val tabView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
-    private val thumbnailView: ImageView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
+    private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
 
     private var session: Session? = null
 

@@ -35,12 +35,12 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/mozac_ic_close" />
 
-        <ImageView
+        <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
             android:id="@+id/mozac_browser_tabstray_thumbnail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@id/mozac_browser_tabstray_url"
-            android:contentDescription="@string/mozac_browser_tabstray_close_tab" />
+            android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
 
     </RelativeLayout>
 </android.support.v7.widget.CardView>
