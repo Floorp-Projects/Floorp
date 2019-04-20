@@ -1248,13 +1248,12 @@ bool nsSVGUtils::GetNonScalingStrokeTransform(nsIFrame* aFrame,
     return false;
   }
 
-  nsIContent* content = aFrame->GetContent();
-  MOZ_ASSERT(content->IsSVGElement(), "bad cast");
+  MOZ_ASSERT(aFrame->GetContent()->IsSVGElement(), "should be an SVG element");
 
-  *aUserToOuterSVG = ThebesMatrix(
-      SVGContentUtils::GetCTM(static_cast<SVGElement*>(content), true));
+  nsSVGOuterSVGFrame* outer = nsSVGUtils::GetOuterSVGFrame(aFrame);
+  *aUserToOuterSVG = nsSVGUtils::GetTransformMatrixInUserSpace(aFrame, outer);
 
-  return !aUserToOuterSVG->IsIdentity();
+  return aUserToOuterSVG->HasNonTranslation();
 }
 
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
@@ -1705,19 +1704,21 @@ gfxMatrix nsSVGUtils::GetTransformMatrixInUserSpace(const nsIFrame* aFrame,
              "Only use this wrapper for SVG elements");
 
   Matrix mm;
-  auto trans = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
+  auto trans = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor,
+                                                     nsIFrame::IN_CSS_UNITS);
+
   trans.ProjectTo2D();
   trans.CanDraw2D(&mm);
   gfxMatrix ret = ThebesMatrix(mm);
 
-  float devPixelPerCSSPixel = float(AppUnitsPerCSSPixel()) /
-                              aFrame->PresContext()->AppUnitsPerDevPixel();
+  float initPositionX = NSAppUnitsToFloatPixels(aFrame->GetPosition().x,
+                                                AppUnitsPerCSSPixel()),
+        initPositionY = NSAppUnitsToFloatPixels(aFrame->GetPosition().y,
+                                                AppUnitsPerCSSPixel());
 
-  // The matrix obtained by nsIFrame::GetTransformMatrix is "from
-  // device space to device space", we need to change it to be "from
-  // user space to user space".
-  ret.PreScale(devPixelPerCSSPixel, devPixelPerCSSPixel);
-  ret.PostScale(1.f / devPixelPerCSSPixel, 1.f / devPixelPerCSSPixel);
+  // Remove the initial displacement to mimic the behavior
+  // of SVGElement::PrependLocalTransformsTo().
+  ret = ret.PreTranslate(-initPositionX, -initPositionY);
 
   return ret;
 }
