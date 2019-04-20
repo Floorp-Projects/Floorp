@@ -168,6 +168,7 @@ enum class OpKind {
   DataOrElemDrop,
   MemFill,
   MemOrTableInit,
+  TableFill,
   TableGet,
   TableGrow,
   TableSet,
@@ -466,6 +467,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                        uint32_t* dstTableIndex, Value* dst,
                                        Value* src, Value* len);
+  MOZ_MUST_USE bool readTableFill(uint32_t* tableIndex, Value* start,
+                                  Value* val, Value* len);
   MOZ_MUST_USE bool readTableGet(uint32_t* tableIndex, Value* index);
   MOZ_MUST_USE bool readTableGrow(uint32_t* tableIndex, Value* initValue,
                                   Value* delta);
@@ -1968,6 +1971,38 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
     }
+  }
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readTableFill(uint32_t* tableIndex, Value* start,
+                                          Value* val, Value* len) {
+  MOZ_ASSERT(Classify(op_) == OpKind::TableFill);
+
+  if (!popWithType(ValType::I32, len)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::AnyRef, val)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::I32, start)) {
+    return false;
+  }
+
+  if (!readVarU32(tableIndex)) {
+    return false;
+  }
+
+  if (*tableIndex >= env_.tables.length()) {
+    return fail("table index out of range for table.fill");
+  }
+
+  if (env_.tables[*tableIndex].kind != TableKind::AnyRef) {
+    return fail("table.fill only on tables of anyref");
   }
 
   return true;

@@ -870,6 +870,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+          case uint32_t(MiscOp::TableFill): {
+            uint32_t unusedTableIndex;
+            CHECK(iter.readTableFill(&unusedTableIndex,
+                                     &nothing, &nothing, &nothing));
+          }
           case uint32_t(MiscOp::TableGrow): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
