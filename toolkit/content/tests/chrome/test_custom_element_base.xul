@@ -17,6 +17,7 @@
   <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
   <button id="four"/>
   <inherited-element-declarative foo="fuagra" empty-string=""></inherited-element-declarative>
+  <inherited-element-derived foo="fuagra"></inherited-element-derived>
   <inherited-element-shadowdom-declarative foo="fuagra" empty-string=""></inherited-element-shadowdom-declarative>
   <inherited-element-imperative foo="fuagra" empty-string=""></inherited-element-imperative>
   <inherited-element-beforedomloaded foo="fuagra" empty-string=""></inherited-element-beforedomloaded>
@@ -141,6 +142,13 @@
     let declarativeEl = document.querySelector("inherited-element-declarative");
     ok(declarativeEl, "declarative inheritance element exists");
 
+    class InheritsElementDerived extends InheritsElementDeclarative {
+      static get inheritedAttributes() {
+        return { label: "renamedfoo=foo" };
+      }
+    }
+    customElements.define("inherited-element-derived", InheritsElementDerived);
+
     class InheritsElementShadowDOMDeclarative extends MozXULElement {
       static get inheritedAttributes() {
         return {
@@ -233,6 +241,13 @@
       is(el.label.getAttribute("bardo"), "changed-from-host-2",
         "attribute inheritance: does apply when host attr has changed after being removed");
     }
+
+    let derivedEl = document.querySelector("inherited-element-derived");
+    ok(derivedEl, "derived inheritance element exists");
+    ok(!derivedEl.label.hasAttribute("foo"),
+       "attribute inheritance: base class attribute is not applied in derived class that overrides it");
+    ok(derivedEl.label.hasAttribute("renamedfoo"),
+       "attribute inheritance: attribute defined in derived class is present");
   }
 
   async function testCustomInterface() {

@@ -235,27 +235,34 @@ MozElements.MozElementMixin = Base => {
   }
 
   static get flippedInheritedAttributes() {
-    let {inheritedAttributes} = this;
-    if (!inheritedAttributes) {
-      return null;
-    }
-    if (!this._flippedInheritedAttributes) {
-      this._flippedInheritedAttributes = {};
-      for (let selector in inheritedAttributes) {
-        let attrRules = inheritedAttributes[selector].split(",");
-        for (let attrRule of attrRules) {
-          let attrName = attrRule;
-          let attrNewName = attrRule;
-          let split = attrName.split("=");
-          if (split.length == 2) {
-            attrName = split[1];
-            attrNewName = split[0];
-          }
+    // Have to be careful here, if a subclass overrides inheritedAttributes
+    // and its parent class is instantiated first, then reading
+    // this._flippedInheritedAttributes on the child class will return the
+    // computed value from the parent.  We store it separately on each class
+    // to ensure everything works correctly when inheritedAttributes is
+    // overridden.
+    if (!this.hasOwnProperty("_flippedInheritedAttributes")) {
+      let {inheritedAttributes} = this;
+      if (!inheritedAttributes) {
+        this._flippedInheritedAttributes = null;
+      } else {
+        this._flippedInheritedAttributes = {};
+        for (let selector in inheritedAttributes) {
+          let attrRules = inheritedAttributes[selector].split(",");
+          for (let attrRule of attrRules) {
+            let attrName = attrRule;
+            let attrNewName = attrRule;
+            let split = attrName.split("=");
+            if (split.length == 2) {
+              attrName = split[1];
+              attrNewName = split[0];
+            }
 
-          if (!this._flippedInheritedAttributes[attrName]) {
-            this._flippedInheritedAttributes[attrName] = [];
+            if (!this._flippedInheritedAttributes[attrName]) {
+              this._flippedInheritedAttributes[attrName] = [];
+            }
+            this._flippedInheritedAttributes[attrName].push([selector, attrNewName]);
           }
-          this._flippedInheritedAttributes[attrName].push([selector, attrNewName]);
         }
       }
     }
