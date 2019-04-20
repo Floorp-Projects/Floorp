@@ -242,8 +242,8 @@
     <string name="current_session_share">Share</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
-    <!-- Text for the button to save a session -->
-    <string name="session_save">Save session</string>
+    <!-- Button to save the current set of tabs into a group -->
+    <string name="save_tab_group">Save Tab Group</string>
     <!-- Text for the button to delete a session -->
     <string name="session_delete">Delete session</string>
     <!-- Text for the button to delete a single session -->
@@ -401,7 +401,7 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
 
-
     <!-- DEPRECATED -->
     <string name="tabs_header_title">DEPRECATED</string>
+    <string name="session_save">DEPRECATED</string>
 </resources>

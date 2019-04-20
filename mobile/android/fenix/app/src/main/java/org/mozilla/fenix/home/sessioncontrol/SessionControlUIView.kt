@@ -14,6 +14,7 @@ import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
 import androidx.recyclerview.widget.ItemTouchHelper
+import org.mozilla.fenix.BuildConfig
 
 // Convert HomeState into a data structure HomeAdapter understands
 @SuppressWarnings("ComplexMethod")
@@ -25,6 +26,8 @@ private fun SessionControlState.toAdapterList(): List<AdapterItem> {
         tabs.reversed().map(AdapterItem::TabItem).forEach { items.add(it) }
         if (mode == Mode.Private) {
             items.add(AdapterItem.DeleteTabs)
+        } else if (BuildConfig.COLLECTIONS_ENABLED) {
+            items.add(AdapterItem.SaveTabGroup)
         }
     } else {
         val item = if (mode == Mode.Private) AdapterItem.PrivateBrowsingDescription

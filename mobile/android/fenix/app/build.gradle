@@ -149,6 +149,8 @@ android.applicationVariants.all { variant ->
 
     def buildType = variant.buildType.name
 
+    buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (buildType != "release").toString()
+
     if (buildType == "release") {
         def versionCode = generatedVersionCode
 
@@ -358,7 +360,7 @@ dependencies {
     }
 
     androidTestImplementation Deps.espresso_idling_resources
-    
+
     androidTestImplementation Deps.tools_test_runner
     androidTestImplementation Deps.tools_test_rules
     androidTestUtil Deps.orchestrator

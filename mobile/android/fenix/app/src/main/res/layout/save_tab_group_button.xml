@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/save_session_button"
+    android:id="@+id/save_tab_group_button"
     android:layout_width="match_parent"
     android:layout_height="36dp"
     android:layout_marginTop="16dp"
@@ -17,7 +17,7 @@
     android:padding="6dp">
 
     <TextView
-        android:id="@+id/save_session_button_text"
+        android:id="@+id/save_tab_group_button_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -28,6 +28,6 @@
         android:focusable="false"
         android:gravity="center"
         android:textStyle="bold"
-        android:text="@string/session_save"
+        android:text="@string/save_tab_group"
         android:textColor="@color/foundation_light_theme"/>
 </FrameLayout>

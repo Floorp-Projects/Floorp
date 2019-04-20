@@ -7,24 +7,24 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
-import kotlinx.android.synthetic.main.archive_tabs_button.view.*
+import kotlinx.android.synthetic.main.save_tab_group_button.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
 
-class ArchiveTabsViewHolder(
+class SaveTabGroupViewHolder(
     view: View,
     private val actionEmitter: Observer<SessionControlAction>
 ) : RecyclerView.ViewHolder(view) {
 
     init {
-        view.save_session_button.setOnClickListener {
-            actionEmitter.onNext(TabAction.Archive)
+        view.save_tab_group_button.setOnClickListener {
+            actionEmitter.onNext(TabAction.SaveTabGroup)
         }
     }
 
     companion object {
-        const val LAYOUT_ID = R.layout.archive_tabs_button
+        const val LAYOUT_ID = R.layout.save_tab_group_button
     }
 }

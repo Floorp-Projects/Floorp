@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.coroutines.Job
-import org.mozilla.fenix.home.sessioncontrol.viewholders.ArchiveTabsViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.SaveTabGroupViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.DeleteTabsViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoTabMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
@@ -22,7 +22,7 @@ sealed class AdapterItem {
     object NoTabMessage : AdapterItem()
     data class TabItem(val tab: Tab) : AdapterItem()
     object PrivateBrowsingDescription : AdapterItem()
-    object ArchiveTabs : AdapterItem()
+    object SaveTabGroup : AdapterItem()
     object DeleteTabs : AdapterItem()
 
     val viewType: Int
@@ -30,7 +30,7 @@ sealed class AdapterItem {
             TabHeader -> TabHeaderViewHolder.LAYOUT_ID
             NoTabMessage -> NoTabMessageViewHolder.LAYOUT_ID
             is TabItem -> TabViewHolder.LAYOUT_ID
-            ArchiveTabs -> ArchiveTabsViewHolder.LAYOUT_ID
+            SaveTabGroup -> SaveTabGroupViewHolder.LAYOUT_ID
             PrivateBrowsingDescription -> PrivateBrowsingDescriptionViewHolder.LAYOUT_ID
             DeleteTabs -> DeleteTabsViewHolder.LAYOUT_ID
         }
@@ -56,7 +56,7 @@ class SessionControlAdapter(
             TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, actionEmitter)
             NoTabMessageViewHolder.LAYOUT_ID -> NoTabMessageViewHolder(view)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, actionEmitter, job)
-            ArchiveTabsViewHolder.LAYOUT_ID -> ArchiveTabsViewHolder(view, actionEmitter)
+            SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, actionEmitter)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
                 view,
                 actionEmitter
