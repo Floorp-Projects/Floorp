@@ -20,7 +20,8 @@ using namespace mozilla::gfx;
 static float ClampFactor(float aFactor) {
   if (aFactor > 1) {
     return 1;
-  } else if (aFactor < 0) {
+  }
+  if (aFactor < 0) {
     MOZ_ASSERT_UNREACHABLE("A negative value should not have been parsed.");
     return 0;
   }
