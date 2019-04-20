@@ -9,7 +9,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -313,7 +312,6 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     private fun BookmarkNode.copyUrl(context: Context) {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val uri = Uri.parse(url)
-        clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
+        clipBoard.primaryClip = ClipData.newPlainText(url, url)
     }
 }

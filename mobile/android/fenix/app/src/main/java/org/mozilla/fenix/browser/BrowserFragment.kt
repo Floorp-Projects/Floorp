@@ -542,8 +542,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun Session.copyUrl(context: Context) {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val uri = Uri.parse(url)
-        clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
+        clipBoard.primaryClip = ClipData.newPlainText(url, url)
     }
 
     private fun subscribeToSession(): Session.Observer {
