@@ -42,11 +42,8 @@ static SVGAttrTearoffTable<SVGAnimatedLength, DOMSVGAnimatedLength>
 /* Helper functions */
 
 static bool IsValidUnitType(uint16_t unit) {
-  if (unit > SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
-      unit <= SVGLength_Binding::SVG_LENGTHTYPE_PC)
-    return true;
-
-  return false;
+  return unit > SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
+         unit <= SVGLength_Binding::SVG_LENGTHTYPE_PC;
 }
 
 static void GetUnitString(nsAString& unit, uint16_t unitType) {

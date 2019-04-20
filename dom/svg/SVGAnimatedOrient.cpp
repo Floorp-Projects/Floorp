@@ -76,9 +76,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
 };
 
 static bool IsValidAngleUnitType(uint16_t unit) {
-  if (unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD) return true;
-
-  return false;
+  return unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD;
 }
 
 static void GetAngleUnitString(nsAString& unit, uint16_t unitType) {

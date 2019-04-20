@@ -1273,7 +1273,7 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
   ClosePopup();
 
   bool cancel;
-  bool itemWasSelected = selectedIndex >= 0;
+  bool itemWasSelected = selectedIndex >= 0 && !value.IsEmpty();
   input->OnTextEntered(aEvent, itemWasSelected, &cancel);
 
   return NS_OK;
