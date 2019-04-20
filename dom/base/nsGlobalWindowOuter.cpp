@@ -7357,9 +7357,13 @@ void nsGlobalWindowOuter::EnsureSizeAndPositionUpToDate() {
   // If we're a subframe, make sure our size is up to date.  It's OK that this
   // crosses the content/chrome boundary, since chrome can have pending reflows
   // too.
-  nsGlobalWindowOuter* parent = nsGlobalWindowOuter::Cast(GetPrivateParent());
-  if (parent) {
-    parent->FlushPendingNotifications(FlushType::Layout);
+  //
+  // Make sure to go through the document chain rather than the window chain to
+  // not flush on detached iframes, see bug 1545516.
+  if (mDoc) {
+    if (RefPtr<Document> parent = mDoc->GetParentDocument()) {
+      parent->FlushPendingNotifications(FlushType::Layout);
+    }
   }
 }
 

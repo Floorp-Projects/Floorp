@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1545516: We don't flush layout unnecessarily on the parent
+  document when the frame is already disconnected.
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id="content"></div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  const iframe = document.createElement("iframe");
+  const content = document.querySelector("#content");
+  const parentUtils = SpecialPowers.getDOMWindowUtils(window);
+  iframe.onload = function() {
+    const win = iframe.contentWindow;
+    iframe.offsetTop; // flush layout
+    content.style.display = "inline"; // Dirty style with something that will reframe.
+
+    const previousConstructCount = parentUtils.framesConstructed;
+    let pagehideRan = false;
+    win.addEventListener("pagehide", function() {
+      pagehideRan = true;
+      win.foo = win.innerWidth;
+      is(parentUtils.framesConstructed, previousConstructCount, "innerWidth shouldn't have flushed parent document layout")
+      win.bar = win.document.documentElement.offsetHeight;
+      is(parentUtils.framesConstructed, previousConstructCount, "offsetHeight shouldn't have flushed parent document layout")
+      win.baz = win.getComputedStyle(win.document.documentElement).color;
+      is(parentUtils.framesConstructed, previousConstructCount, "getComputedStyle shouldn't have flushed parent document layout")
+    });
+
+    iframe.remove(); // Remove the iframe
+    is(pagehideRan, true, "pagehide handler should've ran");
+    is(parentUtils.framesConstructed, previousConstructCount, "Nothing should've flushed the parent document layout yet");
+    content.offsetTop;
+    isnot(parentUtils.framesConstructed, previousConstructCount, "We should've flushed layout now");
+    SimpleTest.finish();
+  };
+  document.body.appendChild(iframe);
+</script>
