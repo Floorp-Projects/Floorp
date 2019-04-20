@@ -212,8 +212,9 @@ float DOMSVGLength::GetValue(ErrorResult& aRv) {
       aRv.Throw(NS_ERROR_FAILURE);
     }
     return value;
-  } else if (mUnit == SVGLength_Binding::SVG_LENGTHTYPE_NUMBER ||
-             mUnit == SVGLength_Binding::SVG_LENGTHTYPE_PX) {
+  }
+  if (mUnit == SVGLength_Binding::SVG_LENGTHTYPE_NUMBER ||
+      mUnit == SVGLength_Binding::SVG_LENGTHTYPE_PX) {
     return mValue;
   }
   // else [SVGWG issue] Can't convert this length's value to user units

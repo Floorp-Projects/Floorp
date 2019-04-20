@@ -1209,10 +1209,7 @@ bool nsSVGUtils::CanOptimizeOpacity(nsIFrame* aFrame) {
     return false;
   }
 
-  if (!style->HasFill() || !HasStroke(aFrame)) {
-    return true;
-  }
-  return false;
+  return !style->HasFill() || !HasStroke(aFrame);
 }
 
 gfxMatrix nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix& aMatrix,

@@ -65,7 +65,8 @@ void DOMSVGAngle::SetValueInSpecifiedUnits(float aValue, ErrorResult& rv) {
   if (mType == AnimValue) {
     rv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
-  } else if (mType == BaseValue) {
+  }
+  if (mType == BaseValue) {
     mVal->SetBaseValueInSpecifiedUnits(aValue, mSVGElement);
   } else {
     mVal->mBaseVal = aValue;

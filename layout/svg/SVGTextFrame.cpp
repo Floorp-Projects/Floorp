@@ -216,11 +216,7 @@ static bool IsTextContentElement(nsIContent* aContent) {
     return parent && parent->IsSVGElement(nsGkAtoms::text);
   }
 
-  if (aContent->IsAnyOfSVGElements(nsGkAtoms::a, nsGkAtoms::tspan)) {
-    return true;
-  }
-
-  return false;
+  return aContent->IsAnyOfSVGElements(nsGkAtoms::a, nsGkAtoms::tspan);
 }
 
 /**
@@ -3241,13 +3237,9 @@ static bool ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret) {
     return false;
   }
 
-  if (uint32_t(caretOffset) >= aThisRun.mTextFrameContentOffset &&
-      uint32_t(caretOffset) <
-          aThisRun.mTextFrameContentOffset + aThisRun.mTextFrameContentLength) {
-    return true;
-  }
-
-  return false;
+  return uint32_t(caretOffset) >= aThisRun.mTextFrameContentOffset &&
+         uint32_t(caretOffset) < aThisRun.mTextFrameContentOffset +
+                                     aThisRun.mTextFrameContentLength;
 }
 
 void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
