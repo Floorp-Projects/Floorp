@@ -125,7 +125,8 @@ nsresult nsSVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
           nsChangeHint_InvalidateRenderingObservers);
       nsSVGUtils::ScheduleReflowSVG(this);
       return NS_OK;
-    } else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
+    }
+    if (aAttribute == nsGkAtoms::preserveAspectRatio) {
       // We don't paint the content of the image using display lists, therefore
       // we have to invalidate for this children-only transform changes since
       // there is no layer tree to notice that the transform changed and
