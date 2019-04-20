@@ -6700,6 +6700,11 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
 {
   aFocusedEditor.value = "";
 
+  // The frames and panel are cross-origin, and we no longer
+  // propagate flushes to parent cross-origin iframes explicitly,
+  // so flush our own layout here so the positions are correct.
+  document.documentElement.getBoundingClientRect();
+
   var editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect, aTestName + ": editorRect")) {
     return;
