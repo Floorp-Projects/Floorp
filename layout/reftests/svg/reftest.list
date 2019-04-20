@@ -162,6 +162,7 @@ fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-1200) == dynamic-rect-02.svg dynamic-re
 == dynamic-stroke-01.svg pass.svg
 == dynamic-stroke-opacity-01.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
+== test_bug1247218.html test_bug1247218-ref.html
 == dynamic-switch-01.svg pass.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-01.svg dynamic-text-01-ref.svg # bug 1392106
 fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
