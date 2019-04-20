@@ -1576,6 +1576,15 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
   MOZ_ASSERT(aLoadData);
   aLoadData->mIsBeingParsed = true;
 
+  // Tell the record/replay system about any sheets that are being parsed,
+  // so that devtools code can find them later.
+  if (recordreplay::IsRecordingOrReplaying() && aLoadData->mURI) {
+    recordreplay::NoteContentParse(
+        aLoadData, aLoadData->mURI->GetSpecOrDefault().get(), "text/css",
+        reinterpret_cast<const Utf8Unit*>(aBytes.BeginReading()),
+        aBytes.Length());
+  }
+
   StyleSheet* sheet = aLoadData->mSheet;
   MOZ_ASSERT(sheet);
 

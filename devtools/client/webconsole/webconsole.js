@@ -253,6 +253,18 @@ class WebConsole {
   }
 
   /**
+   * Return the console client to use when interacting with a thread.
+   *
+   * @param {String} thread: The ID of the target thread.
+   * @returns {Object} The console client associated with the thread.
+   */
+  lookupConsoleClient(thread) {
+    const toolbox = gDevTools.getToolbox(this.target);
+    const panel = toolbox.getPanel("jsdebugger");
+    return panel.lookupConsoleClient(thread);
+  }
+
+  /**
    * Given an expression, returns an object containing a new expression, mapped by the
    * parser worker to provide additional feature for the user (top-level await,
    * original languages mapping, …).

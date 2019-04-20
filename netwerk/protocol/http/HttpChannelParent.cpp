@@ -1364,6 +1364,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   }
 
   bool isFromCache = false;
+  bool isRacing = false;
   uint64_t cacheEntryId = 0;
   int32_t fetchCount = 0;
   uint32_t expirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
@@ -1373,6 +1374,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   if (httpChannelImpl) {
     httpChannelImpl->IsFromCache(&isFromCache);
+    httpChannelImpl->IsRacing(&isRacing);
     httpChannelImpl->GetCacheEntryId(&cacheEntryId);
     httpChannelImpl->GetCacheTokenFetchCount(&fetchCount);
     httpChannelImpl->GetCacheTokenExpirationTime(&expirationTime);
@@ -1473,11 +1475,11 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
       !SendOnStartRequest(
           channelStatus, *responseHead, useResponseHead,
           cleanedUpRequest ? cleanedUpRequestHeaders : requestHead->Headers(),
-          loadInfoForwarderArg, isFromCache, mCacheEntry ? true : false,
-          cacheEntryId, fetchCount, expirationTime, cachedCharset,
-          secInfoSerialization, chan->GetSelfAddr(), chan->GetPeerAddr(),
-          redirectCount, cacheKey, altDataType, altDataLen, deliveringAltData,
-          applyConversion, timing)) {
+          loadInfoForwarderArg, isFromCache, isRacing,
+          mCacheEntry ? true : false, cacheEntryId, fetchCount, expirationTime,
+          cachedCharset, secInfoSerialization, chan->GetSelfAddr(),
+          chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
+          deliveringAltData, applyConversion, timing)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();

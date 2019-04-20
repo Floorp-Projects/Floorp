@@ -39,18 +39,44 @@ function dbg() {
 const ReplayInspector = {
   // Return a proxy for the window in the replaying process.
   get window() {
-    return gWindow;
+    if (!gFixedProxy.window) {
+      updateFixedProxies();
+    }
+    return gFixedProxy.window;
   },
 
   // Create the InspectorUtils object to bind for other server users.
   createInspectorUtils(utils) {
-    // Overwrite some APIs that will fail if called on proxies from the
-    // replaying process.
+    return new Proxy({}, {
+      get(_, name) {
+        switch (name) {
+        case "getAllStyleSheets":
+        case "getCSSStyleRules":
+        case "getRuleLine":
+        case "getRuleColumn":
+        case "getRelativeRuleLine":
+        case "getSelectorCount":
+        case "getSelectorText":
+        case "selectorMatchesElement":
+        case "hasRulesModifiedByCSSOM":
+        case "getSpecificity":
+          return gFixedProxy.InspectorUtils[name];
+        case "hasPseudoClassLock":
+          return () => false;
+        default:
+          return utils[name];
+        }
+      },
+    });
+  },
+
+  // Create the CSSRule object to bind for other server users.
+  createCSSRule(rule) {
     return {
-      ...utils,
-      hasPseudoClassLock() { return false; },
-      getAllStyleSheets() { return []; },
-      getCSSStyleRules() { return []; },
+      ...rule,
+      isInstance(node) {
+        return gFixedProxy.CSSRule.isInstance(node);
+      },
     };
   },
 
@@ -138,13 +164,7 @@ function createSubstituteServices(Services) {
   return newSubstituteProxy(Services, {
     els: {
       getListenerInfoFor(node) {
-        const id = unwrapValue(node)._data.id;
-        const rv = dbg()._sendRequestAllowDiverge({
-          type: "getListenerInfoFor",
-          id,
-        });
-        const obj = dbg()._getObject(rv.id);
-        return wrapValue(obj);
+        return gFixedProxy.Services.els.getListenerInfoFor(node);
       },
     },
   });
@@ -365,7 +385,7 @@ const ReplayInspectorProxyHandler = {
     const proxy = wrapObject(target);
 
     // Create fake MutationObservers to satisfy callers in the inspector.
-    if (proxy == gWindow.MutationObserver) {
+    if (proxy == gFixedProxy.window.MutationObserver) {
       return {
         observe: () => {},
         disconnect: () => {},
@@ -417,9 +437,8 @@ const ReplayInspectorProxyHandler = {
 
 // Proxies for the window and root document are reused to ensure consistent
 // actors are used for these objects.
-const gWindowTarget = { object: {} }, gDocumentTarget = { object: {} };
-const gWindow = new Proxy(gWindowTarget, ReplayInspectorProxyHandler);
-const gDocument = new Proxy(gDocumentTarget, ReplayInspectorProxyHandler);
+const gFixedProxyTargets = {};
+const gFixedProxy = {};
 
 function initFixedProxy(proxy, target, obj) {
   target.object = obj;
@@ -430,13 +449,14 @@ function initFixedProxy(proxy, target, obj) {
 function updateFixedProxies() {
   dbg()._ensurePaused();
 
-  const data = dbg()._sendRequestAllowDiverge({ type: "getWindow" });
-  const dbgWindow = dbg()._getObject(data.id);
-  initFixedProxy(gWindow, gWindowTarget, dbgWindow);
-
-  const rv = getObjectProperty(dbgWindow, "document");
-  assert(rv.return instanceof ReplayDebugger.Object);
-  initFixedProxy(gDocument, gDocumentTarget, rv.return);
+  const data = dbg()._sendRequestAllowDiverge({ type: "getFixedObjects" });
+  for (const [key, value] of Object.entries(data)) {
+    if (!gFixedProxyTargets[key]) {
+      gFixedProxyTargets[key] = { object: {} };
+      gFixedProxy[key] = new Proxy(gFixedProxyTargets[key], ReplayInspectorProxyHandler);
+    }
+    initFixedProxy(gFixedProxy[key], gFixedProxyTargets[key], dbg()._getObject(value));
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -56,6 +56,15 @@ interface nsICacheInfoChannel : nsISupports
   boolean isFromCache();
 
   /**
+   * Returns true if the channel raced the cache and network requests.
+   * In order to determine if the response is coming from the cache or the
+   * network, the consumer can check isFromCache().
+   * The method can only be called after the channel fires its OnStartRequest
+   * notification.
+   */
+  boolean isRacing();
+
+  /**
    * The unique ID of the corresponding nsICacheEntry from which the response is
    * retrieved. By comparing the returned value, we can judge whether the data
    * of two distinct nsICacheInfoChannels is from the same nsICacheEntry. This
