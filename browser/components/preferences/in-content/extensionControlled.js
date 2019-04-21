@@ -127,6 +127,11 @@ function settingNameToL10nID(settingName) {
 /**
  * Set the localization data for the description of the controlling extension.
  *
+ * The function alters the inner DOM structure of the fragment to, depending
+ * on the `addon` argument, remove the `<img/>` element or ensure it's
+ * set to the correct src.
+ * This allows Fluent DOM Overlays to localize the fragment.
+ *
  * @param elem {Element}
  *        <description> element to be annotated
  * @param addon {Object?}
@@ -138,22 +143,32 @@ function settingNameToL10nID(settingName) {
  *        element.
  */
 function setControllingExtensionDescription(elem, addon, settingName) {
-  // Remove the old content from the description.
-  while (elem.firstChild) {
-    elem.firstChild.remove();
-  }
-
+  const existingImg = elem.querySelector("img");
   if (addon === null) {
+    // If the element has an image child element,
+    // remove it.
+    if (existingImg) {
+      existingImg.remove();
+    }
     document.l10n.setAttributes(elem, settingName);
     return;
   }
 
-  let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
   const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-  image.setAttribute("src", addon.iconURL || defaultIcon);
-  image.setAttribute("data-l10n-name", "icon");
-  image.classList.add("extension-controlled-icon");
-  elem.appendChild(image);
+  const src = addon.iconURL || defaultIcon;
+
+  if (!existingImg) {
+    // If an element doesn't have an image child
+    // node, add it.
+    let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
+    image.setAttribute("src", src);
+    image.setAttribute("data-l10n-name", "icon");
+    image.classList.add("extension-controlled-icon");
+    elem.appendChild(image);
+  } else if (existingImg.getAttribute("src") !== src) {
+    existingImg.setAttribute("src", src);
+  }
+
   const l10nId = settingNameToL10nID(settingName);
   document.l10n.setAttributes(elem, l10nId, {
     name: addon.name,
