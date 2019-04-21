@@ -131,7 +131,13 @@ void ServoStyleSet::ShellDetachedFromDocument() {
   }
 
   // And remove all the CascadeDatas from memory.
-  UpdateStylistIfNeeded();
+  //
+  // FIXME(emilio, bug 1545979): This line should be uncommented, but causes
+  // some issues if dropping our cascade data of the user-agent origin ends up
+  // destroying another pres shell, since it that case it could reenter there
+  // and deadlock. Proper fix will be written in that bug.
+  //
+  // UpdateStylistIfNeeded();
 
   // Also GC the ruletree if it got big now that the DOM no longer has
   // references to styles around anymore.
