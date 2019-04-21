@@ -132,7 +132,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
     WriteParam(aMsg, aParam.button);
-    WriteParam(aMsg, aParam.buttons);
+    WriteParam(aMsg, aParam.mButtons);
     WriteParam(aMsg, aParam.pressure);
     WriteParam(aMsg, aParam.hitCluster);
     WriteParam(aMsg, aParam.inputSource);
@@ -143,7 +143,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->button) &&
-           ReadParam(aMsg, aIter, &aResult->buttons) &&
+           ReadParam(aMsg, aIter, &aResult->mButtons) &&
            ReadParam(aMsg, aIter, &aResult->pressure) &&
            ReadParam(aMsg, aIter, &aResult->hitCluster) &&
            ReadParam(aMsg, aIter, &aResult->inputSource);

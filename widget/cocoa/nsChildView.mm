@@ -4587,23 +4587,23 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   outGeckoEvent->mRefPoint = [self convertWindowCoordinates:locationInWindow];
 
   WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
-  mouseEvent->buttons = 0;
+  mouseEvent->mButtons = 0;
   NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 
   if (mouseButtons & 0x01) {
-    mouseEvent->buttons |= WidgetMouseEvent::eLeftButtonFlag;
+    mouseEvent->mButtons |= WidgetMouseEvent::eLeftButtonFlag;
   }
   if (mouseButtons & 0x02) {
-    mouseEvent->buttons |= WidgetMouseEvent::eRightButtonFlag;
+    mouseEvent->mButtons |= WidgetMouseEvent::eRightButtonFlag;
   }
   if (mouseButtons & 0x04) {
-    mouseEvent->buttons |= WidgetMouseEvent::eMiddleButtonFlag;
+    mouseEvent->mButtons |= WidgetMouseEvent::eMiddleButtonFlag;
   }
   if (mouseButtons & 0x08) {
-    mouseEvent->buttons |= WidgetMouseEvent::e4thButtonFlag;
+    mouseEvent->mButtons |= WidgetMouseEvent::e4thButtonFlag;
   }
   if (mouseButtons & 0x10) {
-    mouseEvent->buttons |= WidgetMouseEvent::e5thButtonFlag;
+    mouseEvent->mButtons |= WidgetMouseEvent::e5thButtonFlag;
   }
 
   switch ([aMouseEvent type]) {

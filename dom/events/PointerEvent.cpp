@@ -99,7 +99,7 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
   widgetEvent->twist = aParam.mTwist;
   widgetEvent->inputSource = ConvertStringToPointerType(aParam.mPointerType);
   widgetEvent->mIsPrimary = aParam.mIsPrimary;
-  widgetEvent->buttons = aParam.mButtons;
+  widgetEvent->mButtons = aParam.mButtons;
 
   if (!aParam.mCoalescedEvents.IsEmpty()) {
     e->mCoalescedEvents.AppendElements(aParam.mCoalescedEvents);
@@ -174,7 +174,7 @@ float PointerEvent::Pressure(CallerType aCallerType) {
   //
   // [1] https://www.w3.org/TR/pointerevents/#dom-pointerevent-pressure
   float spoofedPressure = 0.0;
-  if (mEvent->AsPointerEvent()->buttons) {
+  if (mEvent->AsPointerEvent()->mButtons) {
     spoofedPressure = 0.5;
   }
 

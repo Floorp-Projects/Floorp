@@ -28,7 +28,7 @@ void CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
     MOZ_ASSERT(mCoalescedInputEvent->mReason == aEvent.mReason);
     MOZ_ASSERT(mCoalescedInputEvent->inputSource == aEvent.inputSource);
     MOZ_ASSERT(mCoalescedInputEvent->button == aEvent.button);
-    MOZ_ASSERT(mCoalescedInputEvent->buttons == aEvent.buttons);
+    MOZ_ASSERT(mCoalescedInputEvent->mButtons == aEvent.mButtons);
     mCoalescedInputEvent->mTimeStamp = aEvent.mTimeStamp;
     mCoalescedInputEvent->mRefPoint = aEvent.mRefPoint;
     mCoalescedInputEvent->pressure = aEvent.pressure;
@@ -62,7 +62,7 @@ bool CoalescedMouseData::CanCoalesce(const WidgetMouseEvent& aEvent,
           mCoalescedInputEvent->inputSource == aEvent.inputSource &&
           mCoalescedInputEvent->pointerId == aEvent.pointerId &&
           mCoalescedInputEvent->button == aEvent.button &&
-          mCoalescedInputEvent->buttons == aEvent.buttons && mGuid == aGuid &&
+          mCoalescedInputEvent->mButtons == aEvent.mButtons && mGuid == aGuid &&
           mInputBlockId == aInputBlockId);
 }
 

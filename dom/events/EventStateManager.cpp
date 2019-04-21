@@ -1613,7 +1613,7 @@ void EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
     }
   }
   mGestureModifiers = inDownEvent->mModifiers;
-  mGestureDownButtons = inDownEvent->buttons;
+  mGestureDownButtons = inDownEvent->mButtons;
 
   if (inDownEvent->mMessage != eMouseTouchDrag &&
       Prefs::ClickHoldContextMenu()) {
@@ -1661,7 +1661,7 @@ void EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent) {
   aEvent->mRefPoint =
       mGestureDownPoint - aEvent->mWidget->WidgetToScreenOffset();
   aEvent->mModifiers = mGestureModifiers;
-  aEvent->buttons = mGestureDownButtons;
+  aEvent->mButtons = mGestureDownButtons;
 }
 
 void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
@@ -2303,7 +2303,7 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
+  event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aDelta;
   event.inputSource = aEvent->inputSource;
@@ -2339,7 +2339,7 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
+  event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aPixelDelta;
   event.inputSource = aEvent->inputSource;
@@ -4095,7 +4095,7 @@ static void CreateMouseOrPointerWidgetEvent(
   aNewEvent->mRefPoint = aMouseEvent->mRefPoint;
   aNewEvent->mModifiers = aMouseEvent->mModifiers;
   aNewEvent->button = aMouseEvent->button;
-  aNewEvent->buttons = aMouseEvent->buttons;
+  aNewEvent->mButtons = aMouseEvent->mButtons;
   aNewEvent->pressure = aMouseEvent->pressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   aNewEvent->inputSource = aMouseEvent->inputSource;
@@ -4860,7 +4860,7 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   event.mRefPoint = aMouseUpEvent->mRefPoint;
   event.mClickCount = aMouseUpEvent->mClickCount;
   event.mModifiers = aMouseUpEvent->mModifiers;
-  event.buttons = aMouseUpEvent->buttons;
+  event.mButtons = aMouseUpEvent->mButtons;
   event.mTime = aMouseUpEvent->mTime;
   event.mTimeStamp = aMouseUpEvent->mTimeStamp;
   event.mFlags.mOnlyChromeDispatch =

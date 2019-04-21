@@ -916,21 +916,21 @@ void ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const {
                "called with non-mouse event");
 
   WidgetMouseEventBase& mouseEvent = *aMouseEvent.AsMouseEventBase();
-  mouseEvent.buttons = 0;
+  mouseEvent.mButtons = 0;
   if (::GetKeyState(VK_LBUTTON) < 0) {
-    mouseEvent.buttons |= WidgetMouseEvent::eLeftButtonFlag;
+    mouseEvent.mButtons |= WidgetMouseEvent::eLeftButtonFlag;
   }
   if (::GetKeyState(VK_RBUTTON) < 0) {
-    mouseEvent.buttons |= WidgetMouseEvent::eRightButtonFlag;
+    mouseEvent.mButtons |= WidgetMouseEvent::eRightButtonFlag;
   }
   if (::GetKeyState(VK_MBUTTON) < 0) {
-    mouseEvent.buttons |= WidgetMouseEvent::eMiddleButtonFlag;
+    mouseEvent.mButtons |= WidgetMouseEvent::eMiddleButtonFlag;
   }
   if (::GetKeyState(VK_XBUTTON1) < 0) {
-    mouseEvent.buttons |= WidgetMouseEvent::e4thButtonFlag;
+    mouseEvent.mButtons |= WidgetMouseEvent::e4thButtonFlag;
   }
   if (::GetKeyState(VK_XBUTTON2) < 0) {
-    mouseEvent.buttons |= WidgetMouseEvent::e5thButtonFlag;
+    mouseEvent.mButtons |= WidgetMouseEvent::e5thButtonFlag;
   }
 }
 
