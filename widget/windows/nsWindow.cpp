@@ -4252,7 +4252,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     // Mouse events from Windows WM_POINTER*. Fill more information in
     // WidgetMouseEvent.
     event.AssignPointerHelperData(*aPointerInfo);
-    event.pressure = aPointerInfo->mPressure;
+    event.mPressure = aPointerInfo->mPressure;
     event.mButtons = aPointerInfo->mButtons;
   } else {
     // If we get here the mouse events must be from non-touch sources, so

@@ -2405,7 +2405,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent) {
   // Sometime gdk generate 0 pressure value between normal values
   // We have to ignore that and use last valid value
   if (pressure) mLastMotionPressure = pressure;
-  event.pressure = mLastMotionPressure;
+  event.mPressure = mLastMotionPressure;
 
   guint modifierState;
   if (synthEvent) {
@@ -2538,7 +2538,7 @@ void nsWindow::DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
     WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
                                       WidgetMouseEvent::eReal);
     InitButtonEvent(contextMenuEvent, aEvent);
-    contextMenuEvent.pressure = mLastMotionPressure;
+    contextMenuEvent.mPressure = mLastMotionPressure;
     DispatchInputEvent(&contextMenuEvent);
   }
 }
@@ -2603,7 +2603,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton *aEvent) {
   WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
   event.mButton = domButton;
   InitButtonEvent(event, aEvent);
-  event.pressure = mLastMotionPressure;
+  event.mPressure = mLastMotionPressure;
 
   nsEventStatus eventStatus = DispatchInputEvent(&event);
 
@@ -2650,7 +2650,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   InitButtonEvent(event, aEvent);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent *)aEvent, GDK_AXIS_PRESSURE, &pressure);
-  event.pressure = pressure ? pressure : mLastMotionPressure;
+  event.mPressure = pressure ? pressure : mLastMotionPressure;
 
   // The mRefPoint is manipulated in DispatchInputEvent, we're saving it
   // to use it for the doubleclick position check.
