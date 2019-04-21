@@ -1974,7 +1974,7 @@ void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
     nsEventStatus status;
     DispatchEvent(&hittest, status);
 
-    if (mAPZEventState && hittest.hitCluster) {
+    if (mAPZEventState && hittest.mHitCluster) {
       mAPZEventState->ProcessClusterHit();
     }
   }
