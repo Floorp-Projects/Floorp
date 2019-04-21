@@ -15,5 +15,5 @@ interface nsIVariant;
  *             nsPIDOMWindow for C++ callers.
  */
 
-[scriptable, uuid(b8343993-0383-4add-9930-ad176b189240)]
+[scriptable, builtinclass, uuid(b8343993-0383-4add-9930-ad176b189240)]
 interface nsIDOMWindow : nsISupports {};
