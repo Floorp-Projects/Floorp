@@ -15,7 +15,6 @@ webidl Node;
  * The data is serialized to [profile directory]/xulstore.json
  */
 [scriptable, uuid(987c4b35-c426-4dd7-ad49-3c9fa4c65d20)]
-
 interface nsIXULStore: nsISupports
 {
   /**

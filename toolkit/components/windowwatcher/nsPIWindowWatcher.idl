@@ -24,7 +24,6 @@ interface nsITabParent;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
-
 interface nsPIWindowWatcher : nsISupports
 {
   /** A window has been created. Add it to our list.

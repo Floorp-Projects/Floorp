@@ -12,7 +12,6 @@
  */
 
 [scriptable, uuid(be205dae-4f4c-11e6-80ba-ea5cd310c1a8)]
-
 interface nsICookie2 : nsICookie
 {
     const uint32_t SAMESITE_UNSET  = 0;

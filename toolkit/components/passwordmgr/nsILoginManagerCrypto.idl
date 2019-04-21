@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(2030770e-542e-40cd-8061-cd9d4ad4227f)]
-
 interface nsILoginManagerCrypto : nsISupports {
 
   const unsigned long ENCTYPE_BASE64 = 0; // obsolete

@@ -11,7 +11,7 @@
  * This interface allows the security manager to query custom per-addon security
  * policy.
  */
-[scriptable,uuid(8a034ef9-9d14-4c5d-8319-06c1ab574baa)]
+[scriptable, uuid(8a034ef9-9d14-4c5d-8319-06c1ab574baa)]
 interface nsIAddonPolicyService : nsISupports
 {
   /**
@@ -73,7 +73,7 @@ interface nsIAddonPolicyService : nsISupports
  * This interface exposes functionality related to add-on content policy
  * enforcement.
  */
-[scriptable,uuid(7a4fe60b-9131-45f5-83f3-dc63b5d71a5d)]
+[scriptable, uuid(7a4fe60b-9131-45f5-83f3-dc63b5d71a5d)]
 interface nsIAddonContentPolicy : nsISupports
 {
   /**

@@ -10,7 +10,6 @@ interface nsIArray;
 webidl Node;
 
 [scriptable, builtinclass, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
-
 interface nsIEditorMailSupport : nsISupports
 {
   /** Insert a string as quoted text

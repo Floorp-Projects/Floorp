@@ -26,7 +26,6 @@ Editor Action Listener interface to outside world
  * nsIDocumentObserver.
  */
 [scriptable, uuid(b22907b1-ee93-11d2-8d50-000064657374)]
-
 interface nsIEditActionListener : nsISupports
 {
   /**
