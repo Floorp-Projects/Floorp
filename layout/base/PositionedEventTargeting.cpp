@@ -567,7 +567,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
     clickableAncestor = GetClickableAncestor(target, nsGkAtoms::body);
     if (clickableAncestor) {
       if (!IsElementClickableAndReadable(target, aEvent, prefs)) {
-        aEvent->AsMouseEventBase()->hitCluster = true;
+        aEvent->AsMouseEventBase()->mHitCluster = true;
       }
       PET_LOG("Target %p is clickable\n", target);
       // If the target that was directly hit has a clickable ancestor, that
@@ -616,7 +616,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
         (!IsElementClickableAndReadable(closestClickable, aEvent, prefs))) {
       if (aEvent->mClass == eMouseEventClass) {
         WidgetMouseEventBase* mouseEventBase = aEvent->AsMouseEventBase();
-        mouseEventBase->hitCluster = true;
+        mouseEventBase->mHitCluster = true;
       }
     }
     target = closestClickable;

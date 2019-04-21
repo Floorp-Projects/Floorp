@@ -98,7 +98,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
       : mButton(0),
         mButtons(0),
         mPressure(0),
-        hitCluster(false)
+        mHitCluster(false)
         // Including MouseEventBinding.h here leads to an include loop, so
         // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
         ,
@@ -110,7 +110,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
         mButton(0),
         mButtons(0),
         mPressure(0),
-        hitCluster(false)
+        mHitCluster(false)
         // Including MouseEventBinding.h here leads to an include loop, so
         // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
         ,
@@ -153,7 +153,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
   float mPressure;
   // Touch near a cluster of links (true)
-  bool hitCluster;
+  bool mHitCluster;
 
   // Possible values a in MouseEvent
   uint16_t inputSource;
@@ -176,7 +176,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
     mButton = aEvent.mButton;
     mButtons = aEvent.mButtons;
     mPressure = aEvent.mPressure;
-    hitCluster = aEvent.hitCluster;
+    mHitCluster = aEvent.mHitCluster;
     inputSource = aEvent.inputSource;
   }
 

@@ -293,7 +293,7 @@ float MouseEvent::MozPressure() const {
 }
 
 bool MouseEvent::HitCluster() const {
-  return mEvent->AsMouseEventBase()->hitCluster;
+  return mEvent->AsMouseEventBase()->mHitCluster;
 }
 
 uint16_t MouseEvent::MozInputSource() const {
