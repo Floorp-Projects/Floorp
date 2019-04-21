@@ -403,7 +403,7 @@ EditorEventListener::HandleEvent(Event* aEvent) {
     case eMouseClick: {
       WidgetMouseEvent* widgetMouseEvent = internalEvent->AsMouseEvent();
       // Don't handle non-primary click events
-      if (widgetMouseEvent->button != WidgetMouseEventBase::eLeftButton) {
+      if (widgetMouseEvent->mButton != WidgetMouseEventBase::eLeftButton) {
         return NS_OK;
       }
       MOZ_FALLTHROUGH;
@@ -642,7 +642,7 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   //     though this makes web apps cannot prevent middle click paste with
   //     calling preventDefault() of "click" nor "auxclick".
 
-  if (aMouseClickEvent->button != WidgetMouseEventBase::eMiddleButton ||
+  if (aMouseClickEvent->mButton != WidgetMouseEventBase::eMiddleButton ||
       !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
     return NS_OK;
   }

@@ -334,7 +334,7 @@ nsresult nsSplitterFrame::HandleEvent(nsPresContext* aPresContext,
       break;
 
     case eMouseUp:
-      if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
+      if (aEvent->AsMouseEvent()->mButton == WidgetMouseEvent::eLeftButton) {
         inner->MouseUp(aPresContext, aEvent);
       }
       break;

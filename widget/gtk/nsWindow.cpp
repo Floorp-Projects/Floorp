@@ -2478,7 +2478,7 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent) {
       // position, widget, modifiers, or time/order.
       WidgetMouseEvent synthEvent(true, eMouseUp, this,
                                   WidgetMouseEvent::eSynthesized);
-      synthEvent.button = buttonType;
+      synthEvent.mButton = buttonType;
       DispatchInputEvent(&synthEvent);
     }
   }
@@ -2601,7 +2601,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton *aEvent) {
   gButtonState |= ButtonMaskFromGDKButton(aEvent->button);
 
   WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
-  event.button = domButton;
+  event.mButton = domButton;
   InitButtonEvent(event, aEvent);
   event.pressure = mLastMotionPressure;
 
@@ -2646,7 +2646,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
   WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
-  event.button = domButton;
+  event.mButton = domButton;
   InitButtonEvent(event, aEvent);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent *)aEvent, GDK_AXIS_PRESSURE, &pressure);
@@ -2662,8 +2662,8 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   // Check if mouse position in titlebar and doubleclick happened to
   // trigger restore/maximize.
   if (!defaultPrevented && mDrawInTitlebar &&
-      event.button == WidgetMouseEvent::eLeftButton && event.mClickCount == 2 &&
-      mDraggableRegion.Contains(pos.x, pos.y)) {
+      event.mButton == WidgetMouseEvent::eLeftButton &&
+      event.mClickCount == 2 && mDraggableRegion.Contains(pos.x, pos.y)) {
     if (mSizeState == nsSizeMode_Maximized) {
       SetSizeMode(nsSizeMode_Normal);
     } else {
@@ -5939,7 +5939,7 @@ void nsWindow::EndRemoteDrawingInRegion(DrawTarget *aDrawTarget,
 // Code shared begin BeginMoveDrag and BeginResizeDrag
 bool nsWindow::GetDragInfo(WidgetMouseEvent *aMouseEvent, GdkWindow **aWindow,
                            gint *aButton, gint *aRootX, gint *aRootY) {
-  if (aMouseEvent->button != WidgetMouseEvent::eLeftButton) {
+  if (aMouseEvent->mButton != WidgetMouseEvent::eLeftButton) {
     // we can only begin a move drag with the left mouse button
     return false;
   }

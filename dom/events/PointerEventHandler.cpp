@@ -442,9 +442,9 @@ void PointerEventHandler::InitPointerEventFromMouse(
   aPointerEvent->pointerId = aMouseEvent->pointerId;
   aPointerEvent->inputSource = aMouseEvent->inputSource;
   aPointerEvent->mMessage = aMessage;
-  aPointerEvent->button = aMouseEvent->mMessage == eMouseMove
-                              ? WidgetMouseEvent::eNoButton
-                              : aMouseEvent->button;
+  aPointerEvent->mButton = aMouseEvent->mMessage == eMouseMove
+                               ? WidgetMouseEvent::eNoButton
+                               : aMouseEvent->mButton;
 
   aPointerEvent->mButtons = aMouseEvent->mButtons;
   aPointerEvent->pressure =
@@ -479,7 +479,7 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mTime = aTouchEvent->mTime;
   aPointerEvent->mTimeStamp = aTouchEvent->mTimeStamp;
   aPointerEvent->mFlags = aTouchEvent->mFlags;
-  aPointerEvent->button = button;
+  aPointerEvent->mButton = button;
   aPointerEvent->mButtons = buttons;
   aPointerEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 }
@@ -503,7 +503,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         !aEvent->IsAllowedToDispatchDOMEvent()) {
       return;
     }
-    int16_t button = mouseEvent->button;
+    int16_t button = mouseEvent->mButton;
     switch (mouseEvent->mMessage) {
       case eMouseMove:
         button = WidgetMouseEvent::eNoButton;

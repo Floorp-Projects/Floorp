@@ -729,8 +729,8 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
     nsAutoString eventType;
     MOZ_LOG(sISMLog, LogLevel::Info,
             ("  OnMouseButtonEventInEditor(), "
-             "mouse event (mMessage=%s, button=%d) is %s",
-             ToChar(aMouseEvent->mMessage), aMouseEvent->button,
+             "mouse event (mMessage=%s, mButton=%d) is %s",
+             ToChar(aMouseEvent->mMessage), aMouseEvent->mButton,
              consumed ? "consumed" : "not consumed"));
   }
 
@@ -773,7 +773,7 @@ void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
     return;  // ignore untrusted event.
   }
 
-  if (aMouseEvent->button) {
+  if (aMouseEvent->mButton) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
             ("  OnClickInEditor(), "
              "the mouse event isn't a left mouse button event"));
