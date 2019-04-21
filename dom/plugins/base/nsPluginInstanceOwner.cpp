@@ -1473,7 +1473,7 @@ nsresult nsPluginInstanceOwner::ProcessMouseDown(Event* aMouseEvent) {
 
   WidgetMouseEvent* mouseEvent = aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   if (mouseEvent && mouseEvent->mClass == eMouseEventClass) {
-    mLastMouseDownButtonType = mouseEvent->button;
+    mLastMouseDownButtonType = mouseEvent->mButton;
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aMouseEvent->PreventDefault();  // consume event
@@ -1864,7 +1864,7 @@ static NPCocoaEvent TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent,
     case eMouseUp: {
       WidgetMouseEvent* mouseEvent = anEvent->AsMouseEvent();
       if (mouseEvent) {
-        switch (mouseEvent->button) {
+        switch (mouseEvent->mButton) {
           case WidgetMouseEvent::eLeftButton:
             cocoaEvent.data.mouse.buttonNumber = 0;
             break;
@@ -1875,7 +1875,7 @@ static NPCocoaEvent TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent,
             cocoaEvent.data.mouse.buttonNumber = 2;
             break;
           default:
-            NS_WARNING("Mouse button we don't know about?");
+            NS_WARNING("Mouse mButton we don't know about?");
         }
         cocoaEvent.data.mouse.clickCount = mouseEvent->mClickCount;
       } else {
@@ -2033,7 +2033,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
   bool handled = (response == kNPEventHandled || response == kNPEventStartIME);
   bool leftMouseButtonDown =
       (anEvent.mMessage == eMouseDown) &&
-      (anEvent.AsMouseEvent()->button == WidgetMouseEvent::eLeftButton);
+      (anEvent.AsMouseEvent()->mButton == WidgetMouseEvent::eLeftButton);
   if (handled && !(leftMouseButtonDown && !mContentFocused)) {
     rv = nsEventStatus_eConsumeNoDefault;
   }
@@ -2065,9 +2065,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
                                              WM_RBUTTONDBLCLK};
           const WidgetMouseEvent* mouseEvent = anEvent.AsMouseEvent();
           if (mouseEvent->mClickCount == 2) {
-            pluginEvent.event = dblClickMsgs[mouseEvent->button];
+            pluginEvent.event = dblClickMsgs[mouseEvent->mButton];
           } else {
-            pluginEvent.event = downMsgs[mouseEvent->button];
+            pluginEvent.event = downMsgs[mouseEvent->mButton];
           }
           break;
         }
@@ -2075,7 +2075,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           static const int upMsgs[] = {WM_LBUTTONUP, WM_MBUTTONUP,
                                        WM_RBUTTONUP};
           const WidgetMouseEvent* mouseEvent = anEvent.AsMouseEvent();
-          pluginEvent.event = upMsgs[mouseEvent->button];
+          pluginEvent.event = upMsgs[mouseEvent->mButton];
           break;
         }
         // For plugins which don't support high-resolution scroll, we should
@@ -2318,7 +2318,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           event.x_root = rootPoint.x;
           event.y_root = rootPoint.y;
           event.state = XInputEventState(mouseEvent);
-          switch (mouseEvent.button) {
+          switch (mouseEvent.mButton) {
             case WidgetMouseEvent::eMiddleButton:
               event.button = 2;
               break;

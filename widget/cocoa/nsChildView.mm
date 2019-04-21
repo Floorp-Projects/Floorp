@@ -4065,9 +4065,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.mClickCount = clickCount;
 
   if (modifierFlags & NSControlKeyMask)
-    geckoEvent.button = WidgetMouseEvent::eRightButton;
+    geckoEvent.mButton = WidgetMouseEvent::eRightButton;
   else
-    geckoEvent.button = WidgetMouseEvent::eLeftButton;
+    geckoEvent.mButton = WidgetMouseEvent::eLeftButton;
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   mBlockedLastMouseDown = NO;
@@ -4090,9 +4090,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
-    geckoEvent.button = WidgetMouseEvent::eRightButton;
+    geckoEvent.mButton = WidgetMouseEvent::eRightButton;
   else
-    geckoEvent.button = WidgetMouseEvent::eLeftButton;
+    geckoEvent.mButton = WidgetMouseEvent::eLeftButton;
 
   // Remember the event's position before calling DispatchInputEvent, because
   // that call can mutate it and convert it into a different coordinate space.
@@ -4192,7 +4192,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // The right mouse went down, fire off a right mouse down event to gecko
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = WidgetMouseEvent::eRightButton;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4216,7 +4216,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = WidgetMouseEvent::eRightButton;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -4249,7 +4249,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = WidgetMouseEvent::eRightButton;
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4272,7 +4272,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = WidgetMouseEvent::eMiddleButton;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4288,7 +4288,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = WidgetMouseEvent::eMiddleButton;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4302,7 +4302,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = WidgetMouseEvent::eMiddleButton;
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4547,7 +4547,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   WidgetMouseEvent geckoEvent(true, eContextMenu, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = WidgetMouseEvent::eRightButton;
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return nil;
 

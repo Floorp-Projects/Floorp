@@ -7969,7 +7969,7 @@ nsresult nsContentUtils::SendMouseEvent(
                                         : WidgetMouseEvent::eNormal);
   event.pointerId = aIdentifier;
   event.mModifiers = GetWidgetModifiers(aModifiers);
-  event.button = aButton;
+  event.mButton = aButton;
   event.mButtons = aButtons != nsIDOMWindowUtils::MOUSE_BUTTONS_NOT_SPECIFIED
                        ? aButtons
                        : msg == eMouseUp ? 0 : GetButtonsFlagForButton(aButton);

@@ -95,7 +95,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
 
  protected:
   WidgetMouseEventBase()
-      : button(0),
+      : mButton(0),
         mButtons(0),
         pressure(0),
         hitCluster(false)
@@ -107,7 +107,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   WidgetMouseEventBase(bool aIsTrusted, EventMessage aMessage,
                        nsIWidget* aWidget, EventClassID aEventClassID)
       : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
-        button(0),
+        mButton(0),
         mButtons(0),
         pressure(0),
         hitCluster(false)
@@ -131,7 +131,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   };
   // Pressed button ID of mousedown or mouseup event.
   // This is set only when pressing a button causes the event.
-  int16_t button;
+  int16_t mButton;
 
   enum buttonsFlag {
     eNoButtonFlag = 0x00,
@@ -147,7 +147,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   };
 
   // Flags of all pressed buttons at the event fired.
-  // This is set at any mouse event, don't be confused with |button|.
+  // This is set at any mouse event, don't be confused with |mButton|.
   int16_t mButtons;
 
   // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
@@ -173,7 +173,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
                                 bool aCopyTargets) {
     AssignInputEventData(aEvent, aCopyTargets);
 
-    button = aEvent.button;
+    mButton = aEvent.mButton;
     mButtons = aEvent.mButtons;
     pressure = aEvent.pressure;
     hitCluster = aEvent.hitCluster;
@@ -184,7 +184,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
    * Returns true if left click event.
    */
   bool IsLeftClickEvent() const {
-    return mMessage == eMouseClick && button == eLeftButton;
+    return mMessage == eMouseClick && mButton == eLeftButton;
   }
 };
 
@@ -241,7 +241,7 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {
     if (aMessage == eContextMenu) {
-      button = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
+      mButton = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
     }
   }
 
@@ -249,7 +249,7 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   virtual ~WidgetMouseEvent() {
     NS_WARNING_ASSERTION(
         mMessage != eContextMenu ||
-            button ==
+            mButton ==
                 ((mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton),
         "Wrong button set to eContextMenu event?");
   }

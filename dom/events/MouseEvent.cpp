@@ -60,7 +60,7 @@ void MouseEvent::InitMouseEvent(const nsAString& aType, bool aCanBubble,
     case eSimpleGestureEventClass: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
       mouseEventBase->mRelatedTarget = aRelatedTarget;
-      mouseEventBase->button = aButton;
+      mouseEventBase->mButton = aButton;
       mouseEventBase->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey,
                                          aMetaKey);
       mClientPoint.x = aClientX;
@@ -163,9 +163,9 @@ int16_t MouseEvent::Button() {
     case eDragEventClass:
     case ePointerEventClass:
     case eSimpleGestureEventClass:
-      return mEvent->AsMouseEventBase()->button;
+      return mEvent->AsMouseEventBase()->mButton;
     default:
-      NS_WARNING("Tried to get mouse button for non-mouse event!");
+      NS_WARNING("Tried to get mouse mButton for non-mouse event!");
       return WidgetMouseEvent::eLeftButton;
   }
 }
