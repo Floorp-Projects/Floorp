@@ -49,11 +49,8 @@ interface nsILoginManagerPrompter : nsISupports {
    *
    * @param aLogin
    *        The login to be saved.
-   * @param dismissed
-   *        A boolean value indicating whether the save logins doorhanger should
-   *        be dismissed automatically when shown.
    */
-  void promptToSavePassword(in nsILoginInfo aLogin, in boolean dismissed);
+  void promptToSavePassword(in nsILoginInfo aLogin);
 
   /**
    * Ask the user if they want to change a login's password or username.
@@ -63,13 +60,9 @@ interface nsILoginManagerPrompter : nsISupports {
    *        The existing login (with the old password).
    * @param aNewLogin
    *        The new login.
-   * @param dismissed
-   *        A boolean value indicating whether the save logins doorhanger should
-   *        be dismissed automatically when shown.
    */
   void promptToChangePassword(in nsILoginInfo aOldLogin,
-                              in nsILoginInfo aNewLogin,
-                              in boolean dismissed);
+                              in nsILoginInfo aNewLogin);
 
   /**
    * Ask the user if they want to change the password for one of
