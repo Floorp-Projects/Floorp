@@ -31,7 +31,7 @@ void CoalescedMouseData::Coalesce(const WidgetMouseEvent& aEvent,
     MOZ_ASSERT(mCoalescedInputEvent->mButtons == aEvent.mButtons);
     mCoalescedInputEvent->mTimeStamp = aEvent.mTimeStamp;
     mCoalescedInputEvent->mRefPoint = aEvent.mRefPoint;
-    mCoalescedInputEvent->pressure = aEvent.pressure;
+    mCoalescedInputEvent->mPressure = aEvent.mPressure;
     mCoalescedInputEvent->AssignPointerHelperData(aEvent);
   }
 

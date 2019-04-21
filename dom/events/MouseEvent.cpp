@@ -151,7 +151,7 @@ void MouseEvent::InitNSMouseEvent(const nsAString& aType, bool aCanBubble,
                              aRelatedTarget);
 
   WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
-  mouseEventBase->pressure = aPressure;
+  mouseEventBase->mPressure = aPressure;
   mouseEventBase->inputSource = aInputSource;
 }
 
@@ -289,7 +289,7 @@ bool MouseEvent::ShiftKey() { return mEvent->AsInputEvent()->IsShift(); }
 bool MouseEvent::MetaKey() { return mEvent->AsInputEvent()->IsMeta(); }
 
 float MouseEvent::MozPressure() const {
-  return mEvent->AsMouseEventBase()->pressure;
+  return mEvent->AsMouseEventBase()->mPressure;
 }
 
 bool MouseEvent::HitCluster() const {
