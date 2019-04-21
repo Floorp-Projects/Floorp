@@ -557,7 +557,7 @@ nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
   event.mRefPoint = LayoutDeviceIntPoint::Truncate(aRefPoint.x, aRefPoint.y);
   event.mTime = aTime;
   event.mButton = WidgetMouseEvent::eLeftButton;
-  event.inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   if (aMsg == eMouseLongTap) {
     event.mFlags.mOnlyChromeDispatch = true;
   }

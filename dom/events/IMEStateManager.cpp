@@ -788,7 +788,7 @@ void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   }
 
   InputContextAction::Cause cause =
-      aMouseEvent->inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH
+      aMouseEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH
           ? InputContextAction::CAUSE_TOUCH
           : InputContextAction::CAUSE_MOUSE;
 

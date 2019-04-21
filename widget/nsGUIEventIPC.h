@@ -135,7 +135,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
     WriteParam(aMsg, aParam.mButtons);
     WriteParam(aMsg, aParam.mPressure);
     WriteParam(aMsg, aParam.mHitCluster);
-    WriteParam(aMsg, aParam.inputSource);
+    WriteParam(aMsg, aParam.mInputSource);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -146,7 +146,7 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
            ReadParam(aMsg, aIter, &aResult->mButtons) &&
            ReadParam(aMsg, aIter, &aResult->mPressure) &&
            ReadParam(aMsg, aIter, &aResult->mHitCluster) &&
-           ReadParam(aMsg, aIter, &aResult->inputSource);
+           ReadParam(aMsg, aIter, &aResult->mInputSource);
   }
 };
 

@@ -2205,7 +2205,7 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
     clickCount = sourceMouseEvent->mClickCount;
     pressure = sourceMouseEvent->mPressure;
     pointerId = sourceMouseEvent->pointerId;
-    inputSource = sourceMouseEvent->inputSource;
+    inputSource = sourceMouseEvent->mInputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     event.mFlags.mIsPositionless = true;
     inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
@@ -2213,7 +2213,7 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
   event.mPressure = pressure;
   event.mClickCount = clickCount;
   event.pointerId = pointerId;
-  event.inputSource = inputSource;
+  event.mInputSource = inputSource;
   event.mModifiers = aSourceEvent->mModifiers;
   if (aExtraEventFlags) {
     // Be careful not to overwrite existing flags!

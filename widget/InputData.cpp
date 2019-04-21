@@ -223,7 +223,7 @@ WidgetMouseEvent MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
 
   event.mTime = mTime;
   event.mButton = WidgetMouseEvent::eLeftButton;
-  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
@@ -282,7 +282,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
                 aMouseEvent.mModifiers),
       mType(MOUSE_NONE),
       mButtonType(NONE),
-      mInputSource(aMouseEvent.inputSource),
+      mInputSource(aMouseEvent.mInputSource),
       mButtons(aMouseEvent.mButtons),
       mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ) {
   MOZ_ASSERT(NS_IsMainThread(),
@@ -420,7 +420,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
       mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   event.mClickCount = clickCount;
-  event.inputSource = mInputSource;
+  event.mInputSource = mInputSource;
   event.mIgnoreRootScrollFrame = true;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
 

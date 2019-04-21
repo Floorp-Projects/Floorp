@@ -30,7 +30,7 @@ MouseEvent::MouseEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mouseEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
+    mouseEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
 
   if (mouseEvent) {
@@ -152,7 +152,7 @@ void MouseEvent::InitNSMouseEvent(const nsAString& aType, bool aCanBubble,
 
   WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
   mouseEventBase->mPressure = aPressure;
-  mouseEventBase->inputSource = aInputSource;
+  mouseEventBase->mInputSource = aInputSource;
 }
 
 int16_t MouseEvent::Button() {
@@ -297,7 +297,7 @@ bool MouseEvent::HitCluster() const {
 }
 
 uint16_t MouseEvent::MozInputSource() const {
-  return mEvent->AsMouseEventBase()->inputSource;
+  return mEvent->AsMouseEventBase()->mInputSource;
 }
 
 }  // namespace dom
