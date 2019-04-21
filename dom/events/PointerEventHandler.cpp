@@ -446,7 +446,7 @@ void PointerEventHandler::InitPointerEventFromMouse(
   aPointerEvent->mInputSource = aMouseEvent->mInputSource;
   aPointerEvent->mMessage = aMessage;
   aPointerEvent->mButton = aMouseEvent->mMessage == eMouseMove
-                               ? WidgetMouseEvent::eNoButton
+                               ? MouseButton::eNotPressed
                                : aMouseEvent->mButton;
 
   aPointerEvent->mButtons = aMouseEvent->mButtons;
@@ -464,12 +464,12 @@ void PointerEventHandler::InitPointerEventFromTouch(
   MOZ_ASSERT(aTouchEvent);
 
   int16_t button = aTouchEvent->mMessage == eTouchMove
-                       ? WidgetMouseEvent::eNoButton
-                       : WidgetMouseEvent::eLeftButton;
+                       ? MouseButton::eNotPressed
+                       : MouseButton::eLeft;
 
   int16_t buttons = aTouchEvent->mMessage == eTouchEnd
-                        ? WidgetMouseEvent::eNoButtonFlag
-                        : WidgetMouseEvent::eLeftButtonFlag;
+                        ? MouseButtonsFlag::eNoButtons
+                        : MouseButtonsFlag::eLeftFlag;
 
   aPointerEvent->mIsPrimary = aIsPrimary;
   aPointerEvent->pointerId = aTouch->Identifier();
@@ -509,7 +509,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
     int16_t button = mouseEvent->mButton;
     switch (mouseEvent->mMessage) {
       case eMouseMove:
-        button = WidgetMouseEvent::eNoButton;
+        button = MouseButton::eNotPressed;
         pointerMessage = ePointerMove;
         break;
       case eMouseUp:

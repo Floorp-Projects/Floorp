@@ -127,28 +127,9 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
   float mPressure;
 
-  enum buttonType {
-    eNoButton = -1,
-    eLeftButton = 0,
-    eMiddleButton = 1,
-    eRightButton = 2
-  };
   // Pressed button ID of mousedown or mouseup event.
   // This is set only when pressing a button causes the event.
   int16_t mButton;
-
-  enum buttonsFlag {
-    eNoButtonFlag = 0x00,
-    eLeftButtonFlag = 0x01,
-    eRightButtonFlag = 0x02,
-    eMiddleButtonFlag = 0x04,
-    // typicall, "back" button being left side of 5-button
-    // mice, see "buttons" attribute document of DOM3 Events.
-    e4thButtonFlag = 0x08,
-    // typicall, "forward" button being right side of 5-button
-    // mice, see "buttons" attribute document of DOM3 Events.
-    e5thButtonFlag = 0x10
-  };
 
   // Flags of all pressed buttons at the event fired.
   // This is set at any mouse event, don't be confused with |mButton|.
@@ -160,13 +141,21 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   // Touch near a cluster of links (true)
   bool mHitCluster;
 
-  bool IsLeftButtonPressed() const { return !!(mButtons & eLeftButtonFlag); }
-  bool IsRightButtonPressed() const { return !!(mButtons & eRightButtonFlag); }
-  bool IsMiddleButtonPressed() const {
-    return !!(mButtons & eMiddleButtonFlag);
+  bool IsLeftButtonPressed() const {
+    return !!(mButtons & MouseButtonsFlag::eLeftFlag);
   }
-  bool Is4thButtonPressed() const { return !!(mButtons & e4thButtonFlag); }
-  bool Is5thButtonPressed() const { return !!(mButtons & e5thButtonFlag); }
+  bool IsRightButtonPressed() const {
+    return !!(mButtons & MouseButtonsFlag::eRightFlag);
+  }
+  bool IsMiddleButtonPressed() const {
+    return !!(mButtons & MouseButtonsFlag::eMiddleFlag);
+  }
+  bool Is4thButtonPressed() const {
+    return !!(mButtons & MouseButtonsFlag::e4thFlag);
+  }
+  bool Is5thButtonPressed() const {
+    return !!(mButtons & MouseButtonsFlag::e5thFlag);
+  }
 
   void AssignMouseEventBaseData(const WidgetMouseEventBase& aEvent,
                                 bool aCopyTargets) {
@@ -183,7 +172,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
    * Returns true if left click event.
    */
   bool IsLeftClickEvent() const {
-    return mMessage == eMouseClick && mButton == eLeftButton;
+    return mMessage == eMouseClick && mButton == MouseButton::eLeft;
   }
 };
 
@@ -240,7 +229,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mClickCount(0),
         mUseLegacyNonPrimaryDispatch(false) {
     if (aMessage == eContextMenu) {
-      mButton = (mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton;
+      mButton = (mContextMenuTrigger == eNormal) ? MouseButton::eRight
+                                                 : MouseButton::eLeft;
     }
   }
 
@@ -248,8 +238,8 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   virtual ~WidgetMouseEvent() {
     NS_WARNING_ASSERTION(
         mMessage != eContextMenu ||
-            mButton ==
-                ((mContextMenuTrigger == eNormal) ? eRightButton : eLeftButton),
+            mButton == ((mContextMenuTrigger == eNormal) ? MouseButton::eRight
+                                                         : MouseButton::eLeft),
         "Wrong button set to eContextMenu event?");
   }
 #endif

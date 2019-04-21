@@ -123,7 +123,7 @@ void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
   event.mRefPoint = LayoutDeviceIntPoint(aX, aY);
 
   event.mClickCount = 1;
-  event.mButton = WidgetMouseEvent::eLeftButton;
+  event.mButton = MouseButton::eLeft;
   event.mTime = PR_IntervalNow();
   event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 
