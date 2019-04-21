@@ -31,7 +31,7 @@ PointerEvent::PointerEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mouseEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
+    mouseEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
   // 5.2 Pointer Event types, for all pointer events, |detail| attribute SHOULD
   // be 0.
@@ -97,7 +97,7 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
   widgetEvent->tiltX = aParam.mTiltX;
   widgetEvent->tiltY = aParam.mTiltY;
   widgetEvent->twist = aParam.mTwist;
-  widgetEvent->inputSource = ConvertStringToPointerType(aParam.mPointerType);
+  widgetEvent->mInputSource = ConvertStringToPointerType(aParam.mPointerType);
   widgetEvent->mIsPrimary = aParam.mIsPrimary;
   widgetEvent->mButtons = aParam.mButtons;
 
@@ -140,7 +140,7 @@ void PointerEvent::GetPointerType(nsAString& aPointerType,
     return;
   }
 
-  ConvertPointerTypeToString(mEvent->AsPointerEvent()->inputSource,
+  ConvertPointerTypeToString(mEvent->AsPointerEvent()->mInputSource,
                              aPointerType);
 }
 
@@ -261,7 +261,7 @@ bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   //  dispatched to the system group.
   if (!mEvent->IsTrusted() || aCallerType == CallerType::System ||
       !nsContentUtils::ShouldResistFingerprinting() ||
-      mEvent->AsPointerEvent()->inputSource ==
+      mEvent->AsPointerEvent()->mInputSource ==
           MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
     return false;
   }

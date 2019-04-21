@@ -164,7 +164,7 @@ void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
 
-  event.inputSource =
+  event.mInputSource =
       static_cast<nsBaseDragService*>(mDragService)->GetInputSource();
 
   mWidget->DispatchEvent(&event, status);

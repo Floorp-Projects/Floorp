@@ -529,5 +529,5 @@ void nsResizerFrame::MouseClicked(WidgetMouseEvent* aEvent) {
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(
       mContent, false, nullptr, nullptr, aEvent->IsControl(), aEvent->IsAlt(),
-      aEvent->IsShift(), aEvent->IsMeta(), aEvent->inputSource);
+      aEvent->IsShift(), aEvent->IsMeta(), aEvent->mInputSource);
 }
