@@ -113,7 +113,7 @@ void MouseEvent::InitMouseEvent(const nsAString& aType, bool aCanBubble,
 void MouseEvent::InitializeExtraMouseEventDictionaryMembers(
     const MouseEventInit& aParam) {
   InitModifiers(aParam);
-  mEvent->AsMouseEventBase()->buttons = aParam.mButtons;
+  mEvent->AsMouseEventBase()->mButtons = aParam.mButtons;
   mMovementPoint.x = aParam.mMovementX;
   mMovementPoint.y = aParam.mMovementY;
 }
@@ -178,7 +178,7 @@ uint16_t MouseEvent::Buttons() {
     case eDragEventClass:
     case ePointerEventClass:
     case eSimpleGestureEventClass:
-      return mEvent->AsMouseEventBase()->buttons;
+      return mEvent->AsMouseEventBase()->mButtons;
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
   }

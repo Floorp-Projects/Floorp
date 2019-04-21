@@ -446,9 +446,9 @@ void PointerEventHandler::InitPointerEventFromMouse(
                               ? WidgetMouseEvent::eNoButton
                               : aMouseEvent->button;
 
-  aPointerEvent->buttons = aMouseEvent->buttons;
+  aPointerEvent->mButtons = aMouseEvent->mButtons;
   aPointerEvent->pressure =
-      aPointerEvent->buttons
+      aPointerEvent->mButtons
           ? aMouseEvent->pressure ? aMouseEvent->pressure : 0.5f
           : 0.0f;
 }
@@ -480,7 +480,7 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mTimeStamp = aTouchEvent->mTimeStamp;
   aPointerEvent->mFlags = aTouchEvent->mFlags;
   aPointerEvent->button = button;
-  aPointerEvent->buttons = buttons;
+  aPointerEvent->mButtons = buttons;
   aPointerEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 }
 
@@ -510,11 +510,11 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         pointerMessage = ePointerMove;
         break;
       case eMouseUp:
-        pointerMessage = mouseEvent->buttons ? ePointerMove : ePointerUp;
+        pointerMessage = mouseEvent->mButtons ? ePointerMove : ePointerUp;
         break;
       case eMouseDown:
         pointerMessage =
-            mouseEvent->buttons &
+            mouseEvent->mButtons &
                     ~nsContentUtils::GetButtonsFlagForButton(button)
                 ? ePointerMove
                 : ePointerDown;
