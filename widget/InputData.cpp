@@ -283,7 +283,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
       mType(MOUSE_NONE),
       mButtonType(NONE),
       mInputSource(aMouseEvent.inputSource),
-      mButtons(aMouseEvent.buttons),
+      mButtons(aMouseEvent.mButtons),
       mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
@@ -411,7 +411,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
       break;
   }
 
-  event.buttons = mButtons;
+  event.mButtons = mButtons;
   event.mModifiers = modifiers;
   event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
@@ -476,7 +476,7 @@ WidgetWheelEvent PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const {
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  wheelEvent.buttons = 0;
+  wheelEvent.mButtons = 0;
   wheelEvent.mDeltaMode = WheelEvent_Binding::DOM_DELTA_PIXEL;
   wheelEvent.mMayHaveMomentum = true;  // pan inputs may have momentum
   wheelEvent.mIsMomentum = IsMomentum();
@@ -690,7 +690,7 @@ WidgetWheelEvent ScrollWheelInput::ToWidgetWheelEvent(
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  wheelEvent.buttons = 0;
+  wheelEvent.mButtons = 0;
   wheelEvent.mDeltaMode = DeltaModeForDeltaType(mDeltaType);
   wheelEvent.mMayHaveMomentum = mMayHaveMomentum;
   wheelEvent.mIsMomentum = mIsMomentum;

@@ -4191,7 +4191,7 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
         break;  // ignore
       }
       if (aVisitor.mEvent->mMessage == eMouseDown) {
-        if (aVisitor.mEvent->AsMouseEvent()->buttons ==
+        if (aVisitor.mEvent->AsMouseEvent()->mButtons ==
             WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {

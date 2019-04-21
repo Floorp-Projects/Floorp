@@ -96,7 +96,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
  protected:
   WidgetMouseEventBase()
       : button(0),
-        buttons(0),
+        mButtons(0),
         pressure(0),
         hitCluster(false)
         // Including MouseEventBinding.h here leads to an include loop, so
@@ -108,7 +108,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
                        nsIWidget* aWidget, EventClassID aEventClassID)
       : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
         button(0),
-        buttons(0),
+        mButtons(0),
         pressure(0),
         hitCluster(false)
         // Including MouseEventBinding.h here leads to an include loop, so
@@ -148,7 +148,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
 
   // Flags of all pressed buttons at the event fired.
   // This is set at any mouse event, don't be confused with |button|.
-  int16_t buttons;
+  int16_t mButtons;
 
   // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
   float pressure;
@@ -161,18 +161,20 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   // ID of the canvas HitRegion
   nsString region;
 
-  bool IsLeftButtonPressed() const { return !!(buttons & eLeftButtonFlag); }
-  bool IsRightButtonPressed() const { return !!(buttons & eRightButtonFlag); }
-  bool IsMiddleButtonPressed() const { return !!(buttons & eMiddleButtonFlag); }
-  bool Is4thButtonPressed() const { return !!(buttons & e4thButtonFlag); }
-  bool Is5thButtonPressed() const { return !!(buttons & e5thButtonFlag); }
+  bool IsLeftButtonPressed() const { return !!(mButtons & eLeftButtonFlag); }
+  bool IsRightButtonPressed() const { return !!(mButtons & eRightButtonFlag); }
+  bool IsMiddleButtonPressed() const {
+    return !!(mButtons & eMiddleButtonFlag);
+  }
+  bool Is4thButtonPressed() const { return !!(mButtons & e4thButtonFlag); }
+  bool Is5thButtonPressed() const { return !!(mButtons & e5thButtonFlag); }
 
   void AssignMouseEventBaseData(const WidgetMouseEventBase& aEvent,
                                 bool aCopyTargets) {
     AssignInputEventData(aEvent, aCopyTargets);
 
     button = aEvent.button;
-    buttons = aEvent.buttons;
+    mButtons = aEvent.mButtons;
     pressure = aEvent.pressure;
     hitCluster = aEvent.hitCluster;
     inputSource = aEvent.inputSource;
