@@ -563,19 +563,19 @@ class nsWindow::NPZCSupport final
     int16_t result = 0;
 
     if (buttons & java::sdk::MotionEvent::BUTTON_PRIMARY) {
-      result |= WidgetMouseEventBase::eLeftButtonFlag;
+      result |= MouseButtonsFlag::eLeftFlag;
     }
     if (buttons & java::sdk::MotionEvent::BUTTON_SECONDARY) {
-      result |= WidgetMouseEventBase::eRightButtonFlag;
+      result |= MouseButtonsFlag::eRightFlag;
     }
     if (buttons & java::sdk::MotionEvent::BUTTON_TERTIARY) {
-      result |= WidgetMouseEventBase::eMiddleButtonFlag;
+      result |= MouseButtonsFlag::eMiddleFlag;
     }
     if (buttons & java::sdk::MotionEvent::BUTTON_BACK) {
-      result |= WidgetMouseEventBase::e4thButtonFlag;
+      result |= MouseButtonsFlag::e4thFlag;
     }
     if (buttons & java::sdk::MotionEvent::BUTTON_FORWARD) {
-      result |= WidgetMouseEventBase::e5thButtonFlag;
+      result |= MouseButtonsFlag::e5thFlag;
     }
 
     return result;

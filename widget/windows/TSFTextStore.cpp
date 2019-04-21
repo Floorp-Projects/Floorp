@@ -531,11 +531,11 @@ static nsCString GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE& aDispAttr) {
 
 static const char* GetMouseButtonName(int16_t aButton) {
   switch (aButton) {
-    case WidgetMouseEventBase::eLeftButton:
+    case MouseButton::eLeft:
       return "LeftButton";
-    case WidgetMouseEventBase::eMiddleButton:
+    case MouseButton::eMiddle:
       return "MiddleButton";
-    case WidgetMouseEventBase::eRightButton:
+    case MouseButton::eRight:
       return "RightButton";
     default:
       return "UnknownButton";
@@ -552,22 +552,22 @@ static nsCString GetMouseButtonsName(int16_t aButtons) {
     return NS_LITERAL_CSTRING("no buttons");
   }
   nsCString names;
-  if (aButtons & WidgetMouseEventBase::eLeftButtonFlag) {
+  if (aButtons & MouseButtonsFlag::eLeftFlag) {
     names = "LeftButton";
   }
-  if (aButtons & WidgetMouseEventBase::eRightButtonFlag) {
+  if (aButtons & MouseButtonsFlag::eRightFlag) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += "RightButton";
   }
-  if (aButtons & WidgetMouseEventBase::eMiddleButtonFlag) {
+  if (aButtons & MouseButtonsFlag::eMiddleFlag) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += "MiddleButton";
   }
-  if (aButtons & WidgetMouseEventBase::e4thButtonFlag) {
+  if (aButtons & MouseButtonsFlag::e4thFlag) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += "4thButton";
   }
-  if (aButtons & WidgetMouseEventBase::e5thButtonFlag) {
+  if (aButtons & MouseButtonsFlag::e5thFlag) {
     ADD_SEPARATOR_IF_NECESSARY(names);
     names += "5thButton";
   }
@@ -6440,13 +6440,13 @@ nsresult TSFTextStore::OnMouseButtonEventInternal(
       aIMENotification.mMouseButtonEventData.mEventMessage == eMouseUp;
   if (!isMouseUp) {
     switch (aIMENotification.mMouseButtonEventData.mButton) {
-      case WidgetMouseEventBase::eLeftButton:
+      case MouseButton::eLeft:
         buttonStatus = MK_LBUTTON;
         break;
-      case WidgetMouseEventBase::eMiddleButton:
+      case MouseButton::eMiddle:
         buttonStatus = MK_MBUTTON;
         break;
-      case WidgetMouseEventBase::eRightButton:
+      case MouseButton::eRight:
         buttonStatus = MK_RBUTTON;
         break;
     }

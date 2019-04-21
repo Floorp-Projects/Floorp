@@ -293,7 +293,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
       break;
     case eMouseEventClass:
       if (aEvent->IsTrusted()) {
-        if (aEvent->AsMouseEvent()->mButton == WidgetMouseEvent::eLeftButton) {
+        if (aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
           abuse = PopupBlocker::openBlocked;
           switch (aEvent->mMessage) {
             case eMouseUp:
@@ -350,7 +350,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
       break;
     case ePointerEventClass:
       if (aEvent->IsTrusted() &&
-          aEvent->AsPointerEvent()->mButton == WidgetMouseEvent::eLeftButton) {
+          aEvent->AsPointerEvent()->mButton == MouseButton::eLeft) {
         switch (aEvent->mMessage) {
           case ePointerUp:
             if (PopupAllowedForEvent("pointerup")) {
