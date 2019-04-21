@@ -135,7 +135,7 @@ class nsAutoRetainUIKitObject {
 
   event.mRefPoint = aPoint;
   event.mClickCount = 1;
-  event.button = WidgetMouseEvent::eLeftButton;
+  event.button = MouseButton::eLeft;
   event.mTime = PR_IntervalNow();
   event.inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 

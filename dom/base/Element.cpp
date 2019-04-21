@@ -3097,8 +3097,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown: {
-      if (aVisitor.mEvent->AsMouseEvent()->mButton ==
-          WidgetMouseEvent::eLeftButton) {
+      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler* handler = aVisitor.mPresContext->GetLinkHandler();
         Document* document = GetComposedDoc();

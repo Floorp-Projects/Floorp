@@ -1977,12 +1977,12 @@ interface nsIDOMWindowUtils : nsISupports {
   const long DEFAULT_PEN_POINTER_ID   = 1;
   const long DEFAULT_TOUCH_POINTER_ID = 2;
 
-  // Match WidgetMouseEventBase::buttonType.
+  // Match mozilla::MouseButton.
   const long MOUSE_BUTTON_LEFT_BUTTON   = 0;
   const long MOUSE_BUTTON_MIDDLE_BUTTON = 1;
   const long MOUSE_BUTTON_RIGHT_BUTTON  = 2;
 
-  // Match WidgetMouseEventBase::buttonsFlag.
+  // Match mozilla::MouseButtonsFlag.
   const long MOUSE_BUTTONS_NO_BUTTON = 0x00;
   const long MOUSE_BUTTONS_LEFT_BUTTON = 0x01;
   const long MOUSE_BUTTONS_RIGHT_BUTTON = 0x02;

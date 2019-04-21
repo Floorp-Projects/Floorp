@@ -1865,13 +1865,13 @@ static NPCocoaEvent TranslateToNPCocoaEvent(WidgetGUIEvent* anEvent,
       WidgetMouseEvent* mouseEvent = anEvent->AsMouseEvent();
       if (mouseEvent) {
         switch (mouseEvent->mButton) {
-          case WidgetMouseEvent::eLeftButton:
+          case MouseButton::eLeft:
             cocoaEvent.data.mouse.buttonNumber = 0;
             break;
-          case WidgetMouseEvent::eRightButton:
+          case MouseButton::eRight:
             cocoaEvent.data.mouse.buttonNumber = 1;
             break;
-          case WidgetMouseEvent::eMiddleButton:
+          case MouseButton::eMiddle:
             cocoaEvent.data.mouse.buttonNumber = 2;
             break;
           default:
@@ -2033,7 +2033,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
   bool handled = (response == kNPEventHandled || response == kNPEventStartIME);
   bool leftMouseButtonDown =
       (anEvent.mMessage == eMouseDown) &&
-      (anEvent.AsMouseEvent()->mButton == WidgetMouseEvent::eLeftButton);
+      (anEvent.AsMouseEvent()->mButton == MouseButton::eLeft);
   if (handled && !(leftMouseButtonDown && !mContentFocused)) {
     rv = nsEventStatus_eConsumeNoDefault;
   }
@@ -2319,13 +2319,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           event.y_root = rootPoint.y;
           event.state = XInputEventState(mouseEvent);
           switch (mouseEvent.mButton) {
-            case WidgetMouseEvent::eMiddleButton:
+            case MouseButton::eMiddle:
               event.button = 2;
               break;
-            case WidgetMouseEvent::eRightButton:
+            case MouseButton::eRight:
               event.button = 3;
               break;
-            default:  // WidgetMouseEvent::eLeftButton;
+            default:  // MouseButton::eLeft;
               event.button = 1;
               break;
           }
