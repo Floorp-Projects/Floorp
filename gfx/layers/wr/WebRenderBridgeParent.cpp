@@ -920,11 +920,22 @@ bool WebRenderBridgeParent::SetDisplayList(
             aRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
-      LayoutDeviceIntRect rect = RoundedToInt(aRect);
-      rect.SetWidth(
-          std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
-      rect.SetHeight(
-          std::max(0, std::min(widgetSize.height - rect.Y(), rect.Height())));
+      LayoutDeviceIntRect rect;
+      if (gfxPrefs::WebRenderSplitRenderRoots()) {
+        rect = RoundedToInt(aRect);
+        rect.SetWidth(
+            std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
+        rect.SetHeight(
+            std::max(0, std::min(widgetSize.height - rect.Y(), rect.Height())));
+      } else {
+        // XXX: If we can't have multiple documents, just use the
+        // pre-document- splitting behavior of directly applying the client
+        // size. This is a speculative and temporary attempt to address bug
+        // 1538540, as an incorrect rect supplied to SetDocumentView can cause
+        // us to not build a frame and potentially render with stale texture
+        // cache items.
+        rect = LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
+      }
       aTxn.SetDocumentView(rect, widgetSize);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
