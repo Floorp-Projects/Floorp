@@ -2203,14 +2203,14 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
   WidgetMouseEvent* sourceMouseEvent = aSourceEvent->AsMouseEvent();
   if (sourceMouseEvent) {
     clickCount = sourceMouseEvent->mClickCount;
-    pressure = sourceMouseEvent->pressure;
+    pressure = sourceMouseEvent->mPressure;
     pointerId = sourceMouseEvent->pointerId;
     inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     event.mFlags.mIsPositionless = true;
     inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   }
-  event.pressure = pressure;
+  event.mPressure = pressure;
   event.mClickCount = clickCount;
   event.pointerId = pointerId;
   event.inputSource = inputSource;

@@ -4637,8 +4637,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     return;
   }
   if ([aPointerEvent type] != NSMouseMoved) {
-    aOutGeckoEvent->pressure = [aPointerEvent pressure];
-    MOZ_ASSERT(aOutGeckoEvent->pressure >= 0.0 && aOutGeckoEvent->pressure <= 1.0);
+    aOutGeckoEvent->mPressure = [aPointerEvent pressure];
+    MOZ_ASSERT(aOutGeckoEvent->mPressure >= 0.0 && aOutGeckoEvent->mPressure <= 1.0);
   }
   aOutGeckoEvent->inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_PEN;
   aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);

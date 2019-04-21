@@ -4096,7 +4096,7 @@ static void CreateMouseOrPointerWidgetEvent(
   aNewEvent->mModifiers = aMouseEvent->mModifiers;
   aNewEvent->mButton = aMouseEvent->mButton;
   aNewEvent->mButtons = aMouseEvent->mButtons;
-  aNewEvent->pressure = aMouseEvent->pressure;
+  aNewEvent->mPressure = aMouseEvent->mPressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   aNewEvent->inputSource = aMouseEvent->inputSource;
   aNewEvent->pointerId = aMouseEvent->pointerId;
