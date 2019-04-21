@@ -9,8 +9,6 @@ interface nsIFile;
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
-[scriptable, uuid(5df81a93-25e6-4b45-a696-089479e15c7d)]
-
 /*
  * NOTE: This interface is intended to be implemented by modules
  *       providing storage mechanisms for the login manager.
@@ -18,6 +16,7 @@ interface nsIPropertyBag;
  *       (nsILoginManager), and should not call storage modules
  *       directly.
  */
+[scriptable, uuid(5df81a93-25e6-4b45-a696-089479e15c7d)]
 interface nsILoginManagerStorage : nsISupports {
   /**
    * Initialize the component.

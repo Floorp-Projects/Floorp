@@ -9,13 +9,12 @@
 interface nsIPrincipal;
 interface nsIURI;
 
-[scriptable, uuid(bb409a51-2371-4fea-9dc9-b7286a458b8c)]
 /**
  * This interface defines a "permission" object,
  * used to specify allowed/blocked objects from
  * user-specified sites (cookies, images etc).
  */
-
+[scriptable, uuid(bb409a51-2371-4fea-9dc9-b7286a458b8c)]
 interface nsIPermission : nsISupports
 {
     /**

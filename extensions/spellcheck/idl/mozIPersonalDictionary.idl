@@ -7,12 +7,10 @@
 
 interface nsIStringEnumerator;
 
-[scriptable, uuid(7EF52EAF-B7E1-462B-87E2-5D1DBACA9048)]
-
 /**
  * This interface represents a Personal Dictionary.
  */
-
+[scriptable, uuid(7EF52EAF-B7E1-462B-87E2-5D1DBACA9048)]
 interface mozIPersonalDictionary : nsISupports {
 
   /**

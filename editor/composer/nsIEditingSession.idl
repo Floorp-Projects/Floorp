@@ -17,7 +17,6 @@ class HTMLEditor;
 %}
 
 [scriptable, builtinclass, uuid(24f963d1-e6fc-43ea-a206-99ac5fcc5265)]
-
 interface nsIEditingSession : nsISupports
 {
   /**

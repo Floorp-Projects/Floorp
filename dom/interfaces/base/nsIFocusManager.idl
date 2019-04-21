@@ -10,7 +10,6 @@ interface mozIDOMWindowProxy;
 webidl Document;
 webidl Element;
 
-[scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -39,6 +38,7 @@ webidl Element;
  *
  * Blur and focus events do not bubble as per the W3C DOM Events spec.
  */
+[scriptable, uuid(86e1f1e1-365d-493b-b52a-a649f3f311dc)]
 interface nsIFocusManager : nsISupports
 {
   /**

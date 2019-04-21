@@ -7,7 +7,7 @@
 
 interface mozIDOMWindowProxy;
 
-[scriptable,uuid(0feba7f2-800d-4fe5-b28d-e3f17a7a7322)]
+[scriptable, uuid(0feba7f2-800d-4fe5-b28d-e3f17a7a7322)]
 interface nsITabSource : nsISupports
 {
   mozIDOMWindowProxy getTabToStream();

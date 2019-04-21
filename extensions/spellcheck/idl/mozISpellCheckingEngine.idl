@@ -9,12 +9,10 @@ interface nsIFile;
 interface nsIURI;
 interface mozIPersonalDictionary;
 
-[scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
-
 /**
  * This interface represents a SpellChecker.
  */
-
+[scriptable, uuid(8ba643a4-7ddc-4662-b976-7ec123843f10)]
 interface mozISpellCheckingEngine : nsISupports {
   /**
    * The name of the current dictionary. Is either a value from

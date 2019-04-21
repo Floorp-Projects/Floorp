@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(5d1acf82-223a-46fb-a8f3-a1b16e2ceb04)]
-
 interface nsISecurityUITelemetry : nsISupports {
 
 /*

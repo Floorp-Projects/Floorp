@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(a6c62ce5-3a95-41bb-b0f1-8cd4f4ca00e3)]
-
 interface IUrlClassifierUITelemetry : nsISupports {
 
 const uint32_t WARNING_MALWARE_PAGE_TOP = 1;

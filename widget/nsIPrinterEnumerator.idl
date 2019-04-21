@@ -9,7 +9,6 @@
 interface nsIStringEnumerator;
 
 [scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
-
 interface nsIPrinterEnumerator : nsISupports
 {
   /**
@@ -35,4 +34,3 @@ interface nsIPrinterEnumerator : nsISupports
    */
   readonly attribute nsIStringEnumerator printerNameList;
 };
-

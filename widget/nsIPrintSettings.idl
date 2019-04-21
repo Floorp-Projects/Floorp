@@ -14,16 +14,15 @@
 /**
  * Native types
  */
-  [ref] native nsNativeIntMarginRef(nsIntMargin);
-  [ref] native IntegerArray(nsTArray<int32_t>);
-  
+[ref] native nsNativeIntMarginRef(nsIntMargin);
+[ref] native IntegerArray(nsTArray<int32_t>);
+
 interface nsIPrintSession;
 
 /**
  * Simplified graphics interface for JS rendering.
  */
 [scriptable, uuid(ecc5cbad-57fc-4731-b0bd-09e865bd62ad)]
-
 interface nsIPrintSettings : nsISupports
 {
   /**
@@ -125,12 +124,12 @@ interface nsIPrintSettings : nsISupports
   const short kOutputFormatPDF    = 2;
 
   /**
-   * Set PrintOptions 
+   * Set PrintOptions
    */
   void SetPrintOptions(in int32_t aType, in boolean aTurnOnOff);
 
   /**
-   * Get PrintOptions 
+   * Get PrintOptions
    */
   boolean GetPrintOptions(in int32_t aType);
 
@@ -165,8 +164,8 @@ interface nsIPrintSettings : nsISupports
    */
   [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
 
-  attribute long    startPageRange;    
-  attribute long    endPageRange;    
+  attribute long    startPageRange;
+  attribute long    endPageRange;
 
   /**
    * The edge measurements define the positioning of the headers
@@ -200,7 +199,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean printBGColors; /* Print Background Colors */
   attribute boolean printBGImages; /* Print Background Images */
 
-  attribute short   printRange; 
+  attribute short   printRange;
 
   attribute AString title;
   attribute AString docURL;
@@ -218,8 +217,8 @@ interface nsIPrintSettings : nsISupports
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
   attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not  */
   attribute short   printFrameType;
-  attribute boolean printSilent;	     /* print without putting up the dialog */
-  attribute boolean shrinkToFit;	     /* shrinks content to fit on page      */
+  attribute boolean printSilent;         /* print without putting up the dialog */
+  attribute boolean shrinkToFit;         /* shrinks content to fit on page      */
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
@@ -248,17 +247,17 @@ interface nsIPrintSettings : nsISupports
 
   /* initialize helpers */
   /**
-   * This attribute tracks whether the PS has been initialized 
-   * from a printer specified by the "printerName" attr. 
-   * If a different name is set into the "printerName" 
+   * This attribute tracks whether the PS has been initialized
+   * from a printer specified by the "printerName" attr.
+   * If a different name is set into the "printerName"
    * attribute than the one it was initialized with the PS
    * will then get intialized from that printer.
    */
   attribute boolean isInitializedFromPrinter;
 
   /**
-   * This attribute tracks whether the PS has been initialized 
-   * from prefs. If a different name is set into the "printerName" 
+   * This attribute tracks whether the PS has been initialized
+   * from prefs. If a different name is set into the "printerName"
    * attribute than the one it was initialized with the PS
    * will then get intialized from prefs again.
    */
@@ -283,7 +282,7 @@ interface nsIPrintSettings : nsISupports
 
   /**
    * Sets/Gets the "unwriteable margin" for the page format.  This defines
-   * the boundary from which we'll measure the EdgeInTwips and MarginInTwips 
+   * the boundary from which we'll measure the EdgeInTwips and MarginInTwips
    * attributes, to place the headers and content, respectively.
    *
    * Note: Implementations of SetUnwriteableMarginInTwips should handle
@@ -292,12 +291,12 @@ interface nsIPrintSettings : nsISupports
    */
   [noscript] void SetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
   [noscript] void GetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
-  
+
   /**
-   * Get more accurate print ranges from the superior interval 
-   * (startPageRange, endPageRange). The aPages array is populated with a 
-   * list of pairs (start, end), where the endpoints are included. The print 
-   * ranges (start, end), must not overlap and must be in the 
+   * Get more accurate print ranges from the superior interval
+   * (startPageRange, endPageRange). The aPages array is populated with a
+   * list of pairs (start, end), where the endpoints are included. The print
+   * ranges (start, end), must not overlap and must be in the
    * (startPageRange, endPageRange) scope.
    *
    * If there are no print ranges the aPages array is cleared.

@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 [scriptable, builtinclass, uuid(4805e682-49b9-11d3-9ce4-ed60bd6cb5bc)]
-
 interface nsIEditorStyleSheets : nsISupports
 {
   /** Load and apply the override style sheet, specified by aURL, to the

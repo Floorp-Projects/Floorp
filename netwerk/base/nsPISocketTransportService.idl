@@ -11,7 +11,6 @@
  * It will never be frozen.  Do not use it in external code.
  */
 [builtinclass, scriptable, uuid(18f73bf1-b35b-4b7b-aa9a-11bcbdbc389c)]
-
 interface nsPISocketTransportService : nsIRoutedSocketTransportService
 {
   /**
