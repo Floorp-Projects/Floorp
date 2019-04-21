@@ -856,8 +856,7 @@ void nsBoxFrame::MarkIntrinsicISizesDirty() {
     mLayoutManager->IntrinsicISizesDirty(this, state);
   }
 
-  // Don't call base class method, since everything it does is within an
-  // IsXULBoxWrapped check.
+  nsContainerFrame::MarkIntrinsicISizesDirty();
 }
 
 void nsBoxFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {

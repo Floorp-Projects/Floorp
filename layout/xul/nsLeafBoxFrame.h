@@ -37,7 +37,6 @@ class nsLeafBoxFrame : public nsLeafFrame {
 
   // nsIHTMLReflow overrides
 
-  virtual void MarkIntrinsicISizesDirty() override;
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 

@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<style>
+  .container {
+      display: flex;
+      flex-direction: column;
+      outline: 1px solid black;
+  }
+  .item {
+      border: 0px solid pink;
+      box-sizing: content-box;
+  }
+  .withBorderTop {
+      border-top-width: 20px;
+  }
+</style>
+<body>
+  <div class="container">
+    <xul:toolbarpaletteitem
+      class="item withBorderTop">abc</xul:toolbarpaletteitem>
+    <xul:toolbarpaletteitem
+      class="item">def</xul:toolbarpaletteitem>
+    <xul:toolbarpaletteitem
+      class="item">ghi</xul:toolbarpaletteitem>
+  </div>
+</body>
+</html>
