@@ -475,7 +475,8 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
     Maybe<wr::FontInstancePlatformOptions>* aOutPlatformOptions,
     std::vector<FontVariation>* aOutVariations) {
   wr::FontInstanceOptions options;
-  options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
+  bool useSubpixel = !mParams || mParams->GetClearTypeLevel() != 0.0f;
+  options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode(), useSubpixel);
   options.flags = wr::FontInstanceFlags{0};
   if (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) {
     options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
