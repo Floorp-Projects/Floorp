@@ -159,7 +159,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   uint16_t mInputSource;
 
   // ID of the canvas HitRegion
-  nsString region;
+  nsString mRegion;
 
   bool IsLeftButtonPressed() const { return !!(mButtons & eLeftButtonFlag); }
   bool IsRightButtonPressed() const { return !!(mButtons & eRightButtonFlag); }
