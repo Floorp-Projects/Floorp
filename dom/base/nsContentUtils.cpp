@@ -7974,7 +7974,7 @@ nsresult nsContentUtils::SendMouseEvent(
                        ? aButtons
                        : msg == eMouseUp ? 0 : GetButtonsFlagForButton(aButton);
   event.mPressure = aPressure;
-  event.inputSource = aInputSourceArg;
+  event.mInputSource = aInputSourceArg;
   event.mClickCount = aClickCount;
   event.mTime = PR_IntervalNow();
   event.mFlags.mIsSynthesizedForTests = aIsDOMEventSynthesized;

@@ -102,7 +102,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
         // Including MouseEventBinding.h here leads to an include loop, so
         // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
         ,
-        inputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
+        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
 
   WidgetMouseEventBase(bool aIsTrusted, EventMessage aMessage,
                        nsIWidget* aWidget, EventClassID aEventClassID)
@@ -114,7 +114,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
         // Including MouseEventBinding.h here leads to an include loop, so
         // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
         ,
-        inputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
+        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
 
  public:
   virtual WidgetMouseEventBase* AsMouseEventBase() override { return this; }
@@ -156,7 +156,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   bool mHitCluster;
 
   // Possible values a in MouseEvent
-  uint16_t inputSource;
+  uint16_t mInputSource;
 
   // ID of the canvas HitRegion
   nsString region;
@@ -177,7 +177,7 @@ class WidgetMouseEventBase : public WidgetInputEvent {
     mButtons = aEvent.mButtons;
     mPressure = aEvent.mPressure;
     mHitCluster = aEvent.mHitCluster;
-    inputSource = aEvent.inputSource;
+    mInputSource = aEvent.mInputSource;
   }
 
   /**

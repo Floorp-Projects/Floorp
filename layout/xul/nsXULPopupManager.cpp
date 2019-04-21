@@ -1321,7 +1321,7 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     WidgetMouseEventBase* mouseEvent =
         aTriggerEvent->WidgetEventPtr()->AsMouseEventBase();
     if (mouseEvent) {
-      event.inputSource = mouseEvent->inputSource;
+      event.mInputSource = mouseEvent->mInputSource;
     }
   }
 

@@ -442,7 +442,7 @@ nsEventStatus AccessibleCaretEventHub::HandleMouseEvent(
       aEvent->mMessage == eMouseLongTap) {
     // Don't reset the source on mouse movement since that can
     // happen anytime, even randomly during a touch sequence.
-    mManager->SetLastInputSource(aEvent->inputSource);
+    mManager->SetLastInputSource(aEvent->mInputSource);
   }
 
   switch (aEvent->mMessage) {

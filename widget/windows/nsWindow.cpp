@@ -4091,7 +4091,7 @@ bool nsWindow::TouchEventShouldStartDrag(EventMessage aEventMessage,
                              WidgetMouseEvent::eReal);
     hittest.mRefPoint = aEventPoint;
     hittest.mIgnoreRootScrollFrame = true;
-    hittest.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+    hittest.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
     DispatchInputEvent(&hittest);
 
     EventTarget* target = hittest.GetDOMEventTarget();
@@ -4247,7 +4247,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   }
 
   event.mButton = aButton;
-  event.inputSource = aInputSource;
+  event.mInputSource = aInputSource;
   if (aPointerInfo) {
     // Mouse events from Windows WM_POINTER*. Fill more information in
     // WidgetMouseEvent.
@@ -6766,7 +6766,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
     wheelEvent.mButton = 0;
     wheelEvent.mTime = ::GetMessageTime();
     wheelEvent.mTimeStamp = GetMessageTimeStamp(wheelEvent.mTime);
-    wheelEvent.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+    wheelEvent.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 
     bool endFeedback = true;
 
@@ -6801,7 +6801,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
   event.mButton = 0;
   event.mTime = ::GetMessageTime();
   event.mTimeStamp = GetMessageTimeStamp(event.mTime);
-  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 
   nsEventStatus status;
   DispatchEvent(&event, status);

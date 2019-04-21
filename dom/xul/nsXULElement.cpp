@@ -1157,7 +1157,7 @@ void nsXULElement::ClickWithInputSource(uint16_t aInputSource,
                                WidgetMouseEvent::eReal);
       WidgetMouseEvent eventClick(aIsTrustedEvent, eMouseClick, nullptr,
                                   WidgetMouseEvent::eReal);
-      eventDown.inputSource = eventUp.inputSource = eventClick.inputSource =
+      eventDown.mInputSource = eventUp.mInputSource = eventClick.mInputSource =
           aInputSource;
 
       // send mouse down

@@ -608,7 +608,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case ePointerDown:
       if (aEvent->mMessage == ePointerDown) {
         PointerEventHandler::ImplicitlyCapturePointer(aTargetFrame, aEvent);
-        if (mouseEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+        if (mouseEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
           NotifyTargetUserActivation(aEvent, aTargetContent);
         }
       }
@@ -1813,9 +1813,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       startEvent.mDataTransfer = dataTransfer;
       if (aEvent->AsMouseEvent()) {
-        startEvent.inputSource = aEvent->AsMouseEvent()->inputSource;
+        startEvent.mInputSource = aEvent->AsMouseEvent()->mInputSource;
       } else if (aEvent->AsTouchEvent()) {
-        startEvent.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+        startEvent.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
       } else {
         MOZ_ASSERT(false);
       }
@@ -2306,7 +2306,7 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aDelta;
-  event.inputSource = aEvent->inputSource;
+  event.mInputSource = aEvent->mInputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
@@ -2342,7 +2342,7 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aPixelDelta;
-  event.inputSource = aEvent->inputSource;
+  event.mInputSource = aEvent->mInputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
@@ -3157,7 +3157,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             uint32_t flags =
                 nsIFocusManager::FLAG_BYMOUSE | nsIFocusManager::FLAG_NOSCROLL;
             // If this was a touch-generated event, pass that information:
-            if (mouseEvent->inputSource ==
+            if (mouseEvent->mInputSource ==
                 MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
               flags |= nsIFocusManager::FLAG_BYTOUCH;
             }
@@ -3229,7 +3229,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
 
       if (pointerEvent->mMessage == ePointerCancel ||
-          pointerEvent->inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+          pointerEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
         // After pointercancel, pointer becomes invalid so we can remove
         // relevant helper from table. Regarding pointerup with non-hoverable
         // device, the pointer also becomes invalid. Hoverable (mouse/pen)
@@ -4083,7 +4083,7 @@ static void CreateMouseOrPointerWidgetEvent(
     newPointerEvent->mIsPrimary = sourcePointer->mIsPrimary;
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
-    newPointerEvent->inputSource = sourcePointer->inputSource;
+    newPointerEvent->mInputSource = sourcePointer->mInputSource;
     newPointerEvent->mRelatedTarget = aRelatedContent;
     aNewEvent = newPointerEvent.forget();
   } else {
@@ -4098,7 +4098,7 @@ static void CreateMouseOrPointerWidgetEvent(
   aNewEvent->mButtons = aMouseEvent->mButtons;
   aNewEvent->mPressure = aMouseEvent->mPressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
-  aNewEvent->inputSource = aMouseEvent->inputSource;
+  aNewEvent->mInputSource = aMouseEvent->mInputSource;
   aNewEvent->pointerId = aMouseEvent->pointerId;
 }
 
@@ -4868,7 +4868,7 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
   event.mButton = aMouseUpEvent->mButton;
   event.pointerId = aMouseUpEvent->pointerId;
-  event.inputSource = aMouseUpEvent->inputSource;
+  event.mInputSource = aMouseUpEvent->mInputSource;
   nsIContent* target = aMouseUpContent;
   nsIFrame* targetFrame = aCurrentTarget;
   if (aOverrideClickTarget) {
