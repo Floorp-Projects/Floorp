@@ -95,26 +95,24 @@ class WidgetMouseEventBase : public WidgetInputEvent {
 
  protected:
   WidgetMouseEventBase()
-      : mButton(0),
+      : mPressure(0),
+        mButton(0),
         mButtons(0),
-        mPressure(0),
-        mHitCluster(false)
-        // Including MouseEventBinding.h here leads to an include loop, so
-        // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
-        ,
-        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
+        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1),
+        mHitCluster(false) {}
+  // Including MouseEventBinding.h here leads to an include loop, so
+  // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
 
   WidgetMouseEventBase(bool aIsTrusted, EventMessage aMessage,
                        nsIWidget* aWidget, EventClassID aEventClassID)
       : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID),
+        mPressure(0),
         mButton(0),
         mButtons(0),
-        mPressure(0),
-        mHitCluster(false)
-        // Including MouseEventBinding.h here leads to an include loop, so
-        // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
-        ,
-        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1) {}
+        mInputSource(/* MouseEvent_Binding::MOZ_SOURCE_MOUSE = */ 1),
+        mHitCluster(false) {}
+  // Including MouseEventBinding.h here leads to an include loop, so
+  // we have to hardcode MouseEvent_Binding::MOZ_SOURCE_MOUSE.
 
  public:
   virtual WidgetMouseEventBase* AsMouseEventBase() override { return this; }
@@ -122,6 +120,12 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   virtual WidgetEvent* Duplicate() const override {
     MOZ_CRASH("WidgetMouseEventBase must not be most-subclass");
   }
+
+  // ID of the canvas HitRegion
+  nsString mRegion;
+
+  // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
+  float mPressure;
 
   enum buttonType {
     eNoButton = -1,
@@ -150,16 +154,11 @@ class WidgetMouseEventBase : public WidgetInputEvent {
   // This is set at any mouse event, don't be confused with |mButton|.
   int16_t mButtons;
 
-  // Finger or touch pressure of event. It ranges between 0.0 and 1.0.
-  float mPressure;
-  // Touch near a cluster of links (true)
-  bool mHitCluster;
-
   // Possible values a in MouseEvent
   uint16_t mInputSource;
 
-  // ID of the canvas HitRegion
-  nsString mRegion;
+  // Touch near a cluster of links (true)
+  bool mHitCluster;
 
   bool IsLeftButtonPressed() const { return !!(mButtons & eLeftButtonFlag); }
   bool IsRightButtonPressed() const { return !!(mButtons & eRightButtonFlag); }
