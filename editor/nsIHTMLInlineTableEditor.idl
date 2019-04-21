@@ -7,7 +7,6 @@
 #include "domstubs.idl"
 
 [scriptable, builtinclass, uuid(eda2e65c-a758-451f-9b05-77cb8de74ed2)]
-
 interface nsIHTMLInlineTableEditor : nsISupports
 {
   /**

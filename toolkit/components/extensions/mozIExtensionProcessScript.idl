@@ -8,7 +8,7 @@ interface mozIDOMWindow;
 webidl Document;
 webidl WebExtensionContentScript;
 
-[scriptable,uuid(6b09dc51-6caa-4ca7-9d6d-30c87258a630)]
+[scriptable, uuid(6b09dc51-6caa-4ca7-9d6d-30c87258a630)]
 interface mozIExtensionProcessScript : nsISupports
 {
   void preloadContentScript(in nsISupports contentScript);
@@ -20,7 +20,7 @@ interface mozIExtensionProcessScript : nsISupports
                              in bool privileged);
 };
 
-[scriptable,uuid(9f2a6434-f0ef-4063-ae33-368d929805d2)]
+[scriptable, uuid(9f2a6434-f0ef-4063-ae33-368d929805d2)]
 interface mozIExtensionProcessScriptJSM : nsISupports
 {
   readonly attribute mozIExtensionProcessScript ExtensionProcessScript;

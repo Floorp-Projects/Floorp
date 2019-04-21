@@ -29,8 +29,6 @@ interface nsIOpenURIInFrameParams : nsISupports
   readonly attribute jsval openerOriginAttributes;
 };
 
-[scriptable, uuid(2a9bb880-5d73-40f3-8152-c60c8d137a14)]
-
 /**
  * The C++ source has access to the browser script source through
  * nsIBrowserDOMWindow. It is intended to be attached to the chrome DOMWindow
@@ -38,6 +36,7 @@ interface nsIOpenURIInFrameParams : nsISupports
  * happen to be a browser chrome window will simply have no access to any such
  * interface.
  */
+[scriptable, uuid(2a9bb880-5d73-40f3-8152-c60c8d137a14)]
 interface nsIBrowserDOMWindow : nsISupports
 {
   /**

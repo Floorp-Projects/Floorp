@@ -23,7 +23,6 @@ interface nsIWebBrowserChrome;
 interface mozIDOMWindowProxy;
 
 [scriptable, uuid(b6c44689-f97e-4f32-a723-29eeddfbdc53)]
-
 interface nsIWindowCreator2 : nsIWindowCreator {
 
   /** Create a new window. Gecko will/may call this method, if made

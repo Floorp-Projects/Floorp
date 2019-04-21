@@ -23,7 +23,7 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(caad4f1f-d047-46ac-ae9d-dc598e4fb91b)]
+[scriptable, uuid(caad4f1f-d047-46ac-ae9d-dc598e4fb91b)]
 interface nsIContentPolicy : nsISupports
 {
   /**

@@ -17,7 +17,6 @@
 interface nsIWebBrowserChrome;
 
 [scriptable, uuid(30465632-A777-44cc-90F9-8145475EF999)]
-
 interface nsIWindowCreator : nsISupports {
 
   /** Create a new window. Gecko will/may call this method, if made

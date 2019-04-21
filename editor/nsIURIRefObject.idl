@@ -16,7 +16,6 @@ webidl Node;
   */
 
 [scriptable, uuid(2226927e-1dd2-11b2-b57f-faab47288563)]
-
 interface nsIURIRefObject  : nsISupports
 {
   attribute Node node;

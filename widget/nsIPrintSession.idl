@@ -15,7 +15,7 @@
  * The creation of a component which implements this interface
  * will begin the session. Likewise, destruction of that object
  * will end the session.
- * 
+ *
  * @status
  */
 
@@ -30,7 +30,6 @@ class RemotePrintJobChild;
 [ptr] native RemotePrintJobChildPtr(mozilla::layout::RemotePrintJobChild);
 
 [uuid(424ae4bb-10ca-4f35-b84e-eab893322df4)]
-
 interface nsIPrintSession : nsISupports
 {
   /**
