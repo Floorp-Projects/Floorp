@@ -100,7 +100,6 @@ var LoginManagerParent = {
                            newPasswordField: data.newPasswordField,
                            oldPasswordField: data.oldPasswordField,
                            openerTopWindowID: data.openerTopWindowID,
-                           dismissedPrompt: data.dismissedPrompt,
                            target: msg.target});
         break;
       }
@@ -304,7 +303,7 @@ var LoginManagerParent = {
   onFormSubmit({hostname, formSubmitURL, autoFilledLoginGuid,
                 usernameField, newPasswordField,
                 oldPasswordField, openerTopWindowID,
-                dismissedPrompt, target}) {
+                target}) {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
@@ -388,7 +387,7 @@ var LoginManagerParent = {
         formLogin.username      = oldLogin.username;
         formLogin.usernameField = oldLogin.usernameField;
 
-        prompter.promptToChangePassword(oldLogin, formLogin, dismissedPrompt);
+        prompter.promptToChangePassword(oldLogin, formLogin);
       } else {
         // Note: It's possible that that we already have the correct u+p saved
         // but since we don't have the username, we don't know if the user is
@@ -446,11 +445,11 @@ var LoginManagerParent = {
       if (existingLogin.password != formLogin.password) {
         log("...passwords differ, prompting to change.");
         prompter = getPrompter();
-        prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
+        prompter.promptToChangePassword(existingLogin, formLogin);
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
         prompter = getPrompter();
-        prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
+        prompter.promptToChangePassword(existingLogin, formLogin);
       } else {
         recordLoginUse(existingLogin);
       }
@@ -458,9 +457,10 @@ var LoginManagerParent = {
       return;
     }
 
+
     // Prompt user to save login (via dialog or notification bar)
     prompter = getPrompter();
-    prompter.promptToSavePassword(formLogin, dismissedPrompt);
+    prompter.promptToSavePassword(formLogin);
   },
 
   /**
