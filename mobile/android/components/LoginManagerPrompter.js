@@ -107,8 +107,8 @@ LoginManagerPrompter.prototype = {
    * promptToSavePassword
    *
    */
-  promptToSavePassword: function(aLogin, dismissed) {
-    this._showSaveLoginNotification(aLogin, dismissed);
+  promptToSavePassword: function(aLogin) {
+    this._showSaveLoginNotification(aLogin);
       Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
     Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
   },
@@ -125,10 +125,8 @@ LoginManagerPrompter.prototype = {
    *        Username string used in creating a doorhanger action
    * @param aPassword
    *        Password string used in creating a doorhanger action
-   * @param dismissed
-   *        A boolean indicating if a prompt is dismissed by default.
    */
-  _showLoginNotification: function(aBody, aButtons, aUsername, aPassword, dismissed = false) {
+  _showLoginNotification: function(aBody, aButtons, aUsername, aPassword) {
     let actionText = {
       text: aUsername,
       type: "EDIT",
@@ -147,7 +145,6 @@ LoginManagerPrompter.prototype = {
       persistWhileVisible: true,
       timeout: Date.now() + 10000,
       actionText: actionText,
-      dismissed,
     };
 
     let win = (this._browser && this._browser.contentWindow) || this._window;
@@ -162,7 +159,7 @@ LoginManagerPrompter.prototype = {
    * their login, and only save a login which they know worked.
    *
    */
-  _showSaveLoginNotification: function(aLogin, dismissed) {
+  _showSaveLoginNotification: function(aLogin) {
     let brandShortName = this._strBundle.brand.GetStringFromName("brandShortName");
     let notificationText  = this._getLocalizedString("saveLogin", [brandShortName]);
 
@@ -194,7 +191,7 @@ LoginManagerPrompter.prototype = {
       },
     ];
 
-    this._showLoginNotification(notificationText, buttons, aLogin.username, aLogin.password, dismissed);
+    this._showLoginNotification(notificationText, buttons, aLogin.username, aLogin.password);
   },
 
   /*
@@ -205,7 +202,7 @@ LoginManagerPrompter.prototype = {
    * fields.
    *
    */
-  promptToChangePassword: function(aOldLogin, aNewLogin, dismissed) {
+  promptToChangePassword: function(aOldLogin, aNewLogin) {
     this._showChangeLoginNotification(aOldLogin, aNewLogin.password);
     Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
     let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
@@ -218,7 +215,7 @@ LoginManagerPrompter.prototype = {
    * Shows the Change Password notification doorhanger.
    *
    */
-  _showChangeLoginNotification: function(aOldLogin, aNewPassword, dismissed) {
+  _showChangeLoginNotification: function(aOldLogin, aNewPassword) {
     var notificationText;
     if (aOldLogin.username) {
       let displayUser = this._sanitizeUsername(aOldLogin.username);
@@ -250,7 +247,7 @@ LoginManagerPrompter.prototype = {
       },
     ];
 
-    this._showLoginNotification(notificationText, buttons, aOldLogin.username, aNewPassword, dismissed);
+    this._showLoginNotification(notificationText, buttons, aOldLogin.username, aNewPassword);
   },
 
   /*
