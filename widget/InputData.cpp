@@ -222,7 +222,7 @@ WidgetMouseEvent MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
   event.mRefPoint.y = firstTouch.mScreenPoint.y;
 
   event.mTime = mTime;
-  event.button = WidgetMouseEvent::eLeftButton;
+  event.mButton = WidgetMouseEvent::eLeftButton;
   event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
@@ -290,7 +290,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
 
   mButtonType = NONE;
 
-  switch (aMouseEvent.button) {
+  switch (aMouseEvent.mButton) {
     case WidgetMouseEventBase::eLeftButton:
       mButtonType = MouseInput::LEFT_BUTTON;
       break;
@@ -398,13 +398,13 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
 
   switch (mButtonType) {
     case MouseInput::LEFT_BUTTON:
-      event.button = WidgetMouseEventBase::eLeftButton;
+      event.mButton = WidgetMouseEventBase::eLeftButton;
       break;
     case MouseInput::MIDDLE_BUTTON:
-      event.button = WidgetMouseEventBase::eMiddleButton;
+      event.mButton = WidgetMouseEventBase::eMiddleButton;
       break;
     case MouseInput::RIGHT_BUTTON:
-      event.button = WidgetMouseEventBase::eRightButton;
+      event.mButton = WidgetMouseEventBase::eRightButton;
       break;
     case MouseInput::NONE:
     default:

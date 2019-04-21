@@ -1926,7 +1926,7 @@ nsresult nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent, int32_t aHorizontal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (aEvent->AsMouseEvent()->button != WidgetMouseEvent::eLeftButton) {
+  if (aEvent->AsMouseEvent()->mButton != WidgetMouseEvent::eLeftButton) {
     // you can only begin a resize drag with the left mouse button
     return NS_ERROR_INVALID_ARG;
   }
@@ -4246,7 +4246,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     event.mModifiers &= ~MODIFIER_SHIFT;
   }
 
-  event.button = aButton;
+  event.mButton = aButton;
   event.inputSource = aInputSource;
   if (aPointerInfo) {
     // Mouse events from Windows WM_POINTER*. Fill more information in
@@ -4290,7 +4290,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   switch (aEventMessage) {
     case eMouseDoubleClick:
       event.mMessage = eMouseDown;
-      event.button = aButton;
+      event.mButton = aButton;
       sLastClickCount = 2;
       sLastMouseDownTime = curMsgTime;
       break;
@@ -6763,7 +6763,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
     ModifierKeyState modifierKeyState;
     modifierKeyState.InitInputEvent(wheelEvent);
 
-    wheelEvent.button = 0;
+    wheelEvent.mButton = 0;
     wheelEvent.mTime = ::GetMessageTime();
     wheelEvent.mTimeStamp = GetMessageTimeStamp(wheelEvent.mTime);
     wheelEvent.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
@@ -6798,7 +6798,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
   // Polish up and send off the new event
   ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
-  event.button = 0;
+  event.mButton = 0;
   event.mTime = ::GetMessageTime();
   event.mTimeStamp = GetMessageTimeStamp(event.mTime);
   event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;

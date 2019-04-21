@@ -439,7 +439,7 @@ nsresult HeadlessWidget::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   WidgetMouseEvent event(true, msg, this, WidgetMouseEvent::eReal);
   event.mRefPoint = aPoint - WidgetToScreenOffset();
   if (msg == eMouseDown || msg == eMouseUp) {
-    event.button = WidgetMouseEvent::eLeftButton;
+    event.mButton = WidgetMouseEvent::eLeftButton;
   }
   if (msg == eMouseDown) {
     event.mClickCount = 1;
