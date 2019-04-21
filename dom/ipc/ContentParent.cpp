@@ -5744,6 +5744,17 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 
   child->Attach(/* aFromIPC */ true);
 
+  for (auto iter = child->Group()->ContentParentsIter(); !iter.Done();
+       iter.Next()) {
+    nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+    if (entry->GetKey() == this) {
+      continue;
+    }
+
+    Unused << entry->GetKey()->SendAttachBrowsingContext(
+      child->GetIPCInitializer());
+  }
+
   return IPC_OK();
 }
 
