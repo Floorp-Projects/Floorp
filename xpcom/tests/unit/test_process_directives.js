@@ -8,14 +8,14 @@ function run_test() {
   if (isChild) {
     Assert.equal(false, "@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1" in Cc);
   } else {
-    let svc = Cc["@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1"].createInstance(Ci.nsISupportsString);
-    Assert.equal(svc.data, "main process");
+    let svc = Cc["@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1"].createInstance(Ci.nsIProperty);
+    Assert.equal(svc.name, "main process");
   }
 
   if (!isChild) {
     Assert.equal(false, "@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1" in Cc);
   } else {
-    let svc = Cc["@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1"].createInstance(Ci.nsISupportsString);
-    Assert.equal(svc.data, "child process");
+    let svc = Cc["@mozilla.org/xpcom/tests/ChildProcessDirectiveTest;1"].createInstance(Ci.nsIProperty);
+    Assert.equal(svc.name, "child process");
   }
 }

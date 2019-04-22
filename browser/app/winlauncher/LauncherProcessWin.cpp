@@ -41,10 +41,9 @@
  *
  * @return Ok if browser startup should proceed
  */
-static mozilla::LauncherVoidResult PostCreationSetup(const wchar_t* aFullImagePath,
-                                                     HANDLE aChildProcess,
-                                                     HANDLE aChildMainThread,
-                                                     const bool aIsSafeMode) {
+static mozilla::LauncherVoidResult PostCreationSetup(
+    const wchar_t* aFullImagePath, HANDLE aChildProcess,
+    HANDLE aChildMainThread, const bool aIsSafeMode) {
   // The launcher process's DLL blocking code is incompatible with ASAN because
   // it is able to execute before ASAN itself has even initialized.
   // Also, the AArch64 build doesn't yet have a working interceptor.
@@ -332,9 +331,8 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   nsAutoHandle process(pi.hProcess);
   nsAutoHandle mainThread(pi.hThread);
 
-  LauncherVoidResult setupResult =
-      PostCreationSetup(argv[0], process.get(), mainThread.get(),
-                        isSafeMode.value());
+  LauncherVoidResult setupResult = PostCreationSetup(
+      argv[0], process.get(), mainThread.get(), isSafeMode.value());
   if (setupResult.isErr()) {
     HandleLauncherError(setupResult);
     ::TerminateProcess(process.get(), 1);

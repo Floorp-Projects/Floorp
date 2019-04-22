@@ -361,7 +361,9 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
       nsSVGDisplayableFrame *SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
-        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid, patternWithChildren) * tm;
+        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid,
+                                                       patternWithChildren) *
+             tm;
       }
 
       nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, aImgParams);
@@ -635,7 +637,7 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox &aViewBox,
   if (!aViewBox.IsExplicitlySet()) {
     return gfxMatrix(scaleX, 0.0, 0.0, scaleY, 0.0, 0.0);
   }
-  const SVGViewBox& viewBox = aViewBox.GetAnimValue();
+  const SVGViewBox &viewBox = aViewBox.GetAnimValue();
 
   if (viewBox.height <= 0.0f || viewBox.width <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular

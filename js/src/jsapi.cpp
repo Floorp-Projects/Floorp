@@ -5008,10 +5008,9 @@ JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx) {
   cx->clearPendingException();
 }
 
-JS_PUBLIC_API void
-JS::SetPendingExceptionAndStack(JSContext* cx, HandleValue value,
-                                HandleObject stack)
-{
+JS_PUBLIC_API void JS::SetPendingExceptionAndStack(JSContext* cx,
+                                                   HandleValue value,
+                                                   HandleObject stack) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(value);

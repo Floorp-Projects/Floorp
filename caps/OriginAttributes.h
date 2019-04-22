@@ -156,7 +156,8 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
     }
 
     if (mGeckoViewSessionContextId.WasPassed() &&
-        mGeckoViewSessionContextId.Value() != aAttrs.mGeckoViewSessionContextId) {
+        mGeckoViewSessionContextId.Value() !=
+            aAttrs.mGeckoViewSessionContextId) {
       return false;
     }
 
@@ -191,8 +192,10 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
       return false;
     }
 
-    if (mGeckoViewSessionContextId.WasPassed() && aOther.mGeckoViewSessionContextId.WasPassed() &&
-        mGeckoViewSessionContextId.Value() != aOther.mGeckoViewSessionContextId.Value()) {
+    if (mGeckoViewSessionContextId.WasPassed() &&
+        aOther.mGeckoViewSessionContextId.WasPassed() &&
+        mGeckoViewSessionContextId.Value() !=
+            aOther.mGeckoViewSessionContextId.Value()) {
       return false;
     }
 

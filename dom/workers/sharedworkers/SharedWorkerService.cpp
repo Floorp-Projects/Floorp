@@ -218,9 +218,8 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   MOZ_ASSERT(aBackgroundEventTarget);
   MOZ_ASSERT(aActor);
 
-  auto closeMessagePortIdentifier = MakeScopeExit([&] {
-    MessagePort::ForceClose(aPortIdentifier);
-  });
+  auto closeMessagePortIdentifier =
+      MakeScopeExit([&] { MessagePort::ForceClose(aPortIdentifier); });
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPrincipal> storagePrincipal =

@@ -374,7 +374,8 @@ void WebRenderAPI::SendTransactions(
     return;
   }
 
-  aApis[RenderRoot::Default]->UpdateDebugFlags(gfx::gfxVars::WebRenderDebugFlags());
+  aApis[RenderRoot::Default]->UpdateDebugFlags(
+      gfx::gfxVars::WebRenderDebugFlags());
   AutoTArray<DocumentHandle*, kRenderRootCount> documentHandles;
   AutoTArray<Transaction*, kRenderRootCount> txns;
   Maybe<bool> useSceneBuilderThread;

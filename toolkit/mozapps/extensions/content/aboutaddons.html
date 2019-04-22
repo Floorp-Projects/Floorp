@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
 
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
+    <link rel="localization" href="branding/brand.ftl">
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl">
 
-    <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"></script>
-    <script type="application/javascript" src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
+    <script src="chrome://global/content/contentAreaUtils.js"></script>
+    <script src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
     <div id="main">
@@ -16,9 +16,9 @@
 
     <template name="card">
       <div class="card addon">
-        <img class="card-heading-image"/>
+        <img class="card-heading-image">
         <div class="addon-card-collapsed">
-          <img class="card-heading-icon addon-icon"/>
+          <img class="card-heading-icon addon-icon">
           <div class="card-contents">
             <span class="addon-name"></span>
             <span class="addon-description"></span>
@@ -74,17 +74,17 @@
     </template>
 
     <template name="panel-list">
-      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-list.css"/>
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-list.css">
       <div class="arrow top"></div>
       <div class="list">
-        <slot/>
+        <slot></slot>
       </div>
       <div class="arrow bottom"></div>
     </template>
 
     <template name="panel-item">
-      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-item.css"/>
-      <button><slot/></button>
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-item.css">
+      <button><slot></slot></button>
     </template>
   </body>
 </html>

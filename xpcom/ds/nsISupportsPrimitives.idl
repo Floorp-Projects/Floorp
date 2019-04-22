@@ -14,7 +14,7 @@
  * using the nsIMemory. Be careful!
  */
 
-[scriptable, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
+[scriptable, builtinclass, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
 interface nsISupportsPrimitive : nsISupports
 {
     const unsigned short TYPE_ID                = 1;
@@ -42,7 +42,7 @@ interface nsISupportsPrimitive : nsISupports
  * Scriptable storage for nsID structures
  */
 
-[scriptable, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsID : nsISupportsPrimitive
 {
     attribute nsIDPtr data;
@@ -53,7 +53,7 @@ interface nsISupportsID : nsISupportsPrimitive
  * Scriptable storage for ASCII strings
  */
 
-[scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
 interface nsISupportsCString : nsISupportsPrimitive
 {
     attribute ACString data;
@@ -64,7 +64,7 @@ interface nsISupportsCString : nsISupportsPrimitive
  * Scriptable storage for Unicode strings
  */
 
-[scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
 interface nsISupportsString : nsISupportsPrimitive
 {
     attribute AString data;
@@ -73,13 +73,13 @@ interface nsISupportsString : nsISupportsPrimitive
 
 /**
  * The rest are truly primitive and are passed by value
- */ 
+ */
 
 /**
  * Scriptable storage for booleans
  */
 
-[scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRBool : nsISupportsPrimitive
 {
     attribute boolean data;
@@ -90,7 +90,7 @@ interface nsISupportsPRBool : nsISupportsPrimitive
  * Scriptable storage for 8-bit integers
  */
 
-[scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint8 : nsISupportsPrimitive
 {
     attribute uint8_t data;
@@ -101,7 +101,7 @@ interface nsISupportsPRUint8 : nsISupportsPrimitive
  * Scriptable storage for unsigned 16-bit integers
  */
 
-[scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint16 : nsISupportsPrimitive
 {
     attribute uint16_t data;
@@ -112,7 +112,7 @@ interface nsISupportsPRUint16 : nsISupportsPrimitive
  * Scriptable storage for unsigned 32-bit integers
  */
 
-[scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint32 : nsISupportsPrimitive
 {
     attribute uint32_t data;
@@ -123,7 +123,7 @@ interface nsISupportsPRUint32 : nsISupportsPrimitive
  * Scriptable storage for 64-bit integers
  */
 
-[scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRUint64 : nsISupportsPrimitive
 {
     attribute uint64_t data;
@@ -134,7 +134,7 @@ interface nsISupportsPRUint64 : nsISupportsPrimitive
  * Scriptable storage for NSPR date/time values
  */
 
-[scriptable, uuid(e2563630-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e2563630-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRTime : nsISupportsPrimitive
 {
     attribute PRTime data;
@@ -146,7 +146,7 @@ interface nsISupportsPRTime : nsISupportsPrimitive
  * (often used to store an ASCII character)
  */
 
-[scriptable, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
 interface nsISupportsChar : nsISupportsPrimitive
 {
     attribute char data;
@@ -157,7 +157,7 @@ interface nsISupportsChar : nsISupportsPrimitive
  * Scriptable storage for 16-bit integers
  */
 
-[scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt16 : nsISupportsPrimitive
 {
     attribute int16_t data;
@@ -168,7 +168,7 @@ interface nsISupportsPRInt16 : nsISupportsPrimitive
  * Scriptable storage for 32-bit integers
  */
 
-[scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt32 : nsISupportsPrimitive
 {
     attribute int32_t data;
@@ -179,7 +179,7 @@ interface nsISupportsPRInt32 : nsISupportsPrimitive
  * Scriptable storage for 64-bit integers
  */
 
-[scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
+[scriptable, builtinclass, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
 interface nsISupportsPRInt64 : nsISupportsPrimitive
 {
     attribute int64_t data;
@@ -190,7 +190,7 @@ interface nsISupportsPRInt64 : nsISupportsPrimitive
  * Scriptable storage for floating point numbers
  */
 
-[scriptable, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
+[scriptable, builtinclass, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
 interface nsISupportsFloat : nsISupportsPrimitive
 {
     attribute float data;
@@ -201,7 +201,7 @@ interface nsISupportsFloat : nsISupportsPrimitive
  * Scriptable storage for doubles
  */
 
-[scriptable, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
+[scriptable, builtinclass, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
 interface nsISupportsDouble : nsISupportsPrimitive
 {
     attribute double data;
@@ -212,7 +212,7 @@ interface nsISupportsDouble : nsISupportsPrimitive
  * Scriptable storage for other XPCOM objects
  */
 
-[scriptable, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
+[scriptable, builtinclass, uuid(995ea724-1dd1-11b2-9211-c21bdd3e7ed0)]
 interface nsISupportsInterfacePointer : nsISupportsPrimitive
 {
     attribute nsISupports data;
@@ -220,5 +220,3 @@ interface nsISupportsInterfacePointer : nsISupportsPrimitive
 
     string toString();
 };
-
-

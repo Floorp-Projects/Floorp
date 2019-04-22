@@ -276,7 +276,8 @@ void MacroAssembler::add64(Imm64 imm, Register64 dest) {
 CodeOffset MacroAssembler::sub32FromStackPtrWithPatch(Register dest) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch = temps.AcquireX();
-  AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 3);
+  AutoForbidPoolsAndNops afp(this,
+                             /* max number of instructions in scope = */ 3);
   CodeOffset offs = CodeOffset(currentOffset());
   movz(scratch, 0, 0);
   movk(scratch, 0, 16);
