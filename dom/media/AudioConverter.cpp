@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioConverter.h"
-#include <string.h>
 #include <speex/speex_resampler.h>
+#include <string.h>
 #include <cmath>
 
 /*
@@ -151,15 +151,16 @@ static void dumbUpDownMix(TYPE* aOut, int32_t aOutChannels, const TYPE* aIn,
 
 size_t AudioConverter::DownmixAudio(void* aOut, const void* aIn,
                                     size_t aFrames) const {
-  MOZ_ASSERT(mIn.Format() == AudioConfig::FORMAT_S16 ||
-             mIn.Format() == AudioConfig::FORMAT_FLT);
-  MOZ_ASSERT(mIn.Channels() >= mOut.Channels());
-  MOZ_ASSERT(mOut.Layout() == AudioConfig::ChannelLayout(2) ||
-             mOut.Layout() == AudioConfig::ChannelLayout(1));
+  MOZ_DIAGNOSTIC_ASSERT(mIn.Format() == AudioConfig::FORMAT_S16 ||
+                        mIn.Format() == AudioConfig::FORMAT_FLT);
+  MOZ_DIAGNOSTIC_ASSERT(mIn.Channels() >= mOut.Channels());
+  MOZ_DIAGNOSTIC_ASSERT(mOut.Layout() == AudioConfig::ChannelLayout(2) ||
+                        mOut.Layout() == AudioConfig::ChannelLayout(1));
 
-  uint32_t channels = mIn.Channels();
+  uint32_t inChannels = mIn.Channels();
+  uint32_t outChannels = mOut.Channels();
 
-  if (channels == 1 && mOut.Channels() == 1) {
+  if (inChannels == outChannels) {
     if (aOut != aIn) {
       memmove(aOut, aIn, FramesOutToBytes(aFrames));
     }
@@ -169,11 +170,11 @@ size_t AudioConverter::DownmixAudio(void* aOut, const void* aIn,
   if (!mIn.Layout().IsValid() || !mOut.Layout().IsValid()) {
     // Dumb copy dropping extra channels.
     if (mIn.Format() == AudioConfig::FORMAT_FLT) {
-      dumbUpDownMix(static_cast<float*>(aOut), mOut.Channels(),
-                    static_cast<const float*>(aIn), mIn.Channels(), aFrames);
+      dumbUpDownMix(static_cast<float*>(aOut), outChannels,
+                    static_cast<const float*>(aIn), inChannels, aFrames);
     } else if (mIn.Format() == AudioConfig::FORMAT_S16) {
-      dumbUpDownMix(static_cast<int16_t*>(aOut), mOut.Channels(),
-                    static_cast<const int16_t*>(aIn), mIn.Channels(), aFrames);
+      dumbUpDownMix(static_cast<int16_t*>(aOut), outChannels,
+                    static_cast<const int16_t*>(aIn), inChannels, aFrames);
     } else {
       MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
     }
@@ -183,7 +184,7 @@ size_t AudioConverter::DownmixAudio(void* aOut, const void* aIn,
   MOZ_ASSERT(
       mIn.Layout() == AudioConfig::ChannelLayout::SMPTEDefault(mIn.Layout()),
       "Can only downmix input data in SMPTE layout");
-  if (channels > 2) {
+  if (inChannels > 2) {
     if (mIn.Format() == AudioConfig::FORMAT_FLT) {
       // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows
       // 5-8.
@@ -228,14 +229,16 @@ size_t AudioConverter::DownmixAudio(void* aOut, const void* aIn,
       for (uint32_t i = 0; i < aFrames; i++) {
         float sampL = 0.0;
         float sampR = 0.0;
-        for (uint32_t j = 0; j < channels; j++) {
-          sampL +=
-              in[i * mIn.Channels() + j] * dmatrix[mIn.Channels() - 3][j][0];
-          sampR +=
-              in[i * mIn.Channels() + j] * dmatrix[mIn.Channels() - 3][j][1];
+        for (uint32_t j = 0; j < inChannels; j++) {
+          sampL += in[i * inChannels + j] * dmatrix[inChannels - 3][j][0];
+          sampR += in[i * inChannels + j] * dmatrix[inChannels - 3][j][1];
         }
-        *out++ = sampL;
-        *out++ = sampR;
+        if (outChannels == 2) {
+          *out++ = sampL;
+          *out++ = sampR;
+        } else {
+          *out++ = (sampL + sampR) * 0.5;
+        }
       }
     } else if (mIn.Format() == AudioConfig::FORMAT_S16) {
       // Downmix matrix. Per-row normalization 1 for rows 3,4 and 2 for rows
@@ -275,45 +278,46 @@ size_t AudioConverter::DownmixAudio(void* aOut, const void* aIn,
       for (uint32_t i = 0; i < aFrames; i++) {
         int32_t sampL = 0;
         int32_t sampR = 0;
-        for (uint32_t j = 0; j < channels; j++) {
-          sampL += in[i * channels + j] * dmatrix[channels - 3][j][0];
-          sampR += in[i * channels + j] * dmatrix[channels - 3][j][1];
+        for (uint32_t j = 0; j < inChannels; j++) {
+          sampL += in[i * inChannels + j] * dmatrix[inChannels - 3][j][0];
+          sampR += in[i * inChannels + j] * dmatrix[inChannels - 3][j][1];
         }
-        *out++ = clipTo15((sampL + 8192) >> 14);
-        *out++ = clipTo15((sampR + 8192) >> 14);
+        sampL = clipTo15((sampL + 8192) >> 14);
+        sampR = clipTo15((sampR + 8192) >> 14);
+        if (outChannels == 2) {
+          *out++ = sampL;
+          *out++ = sampR;
+        } else {
+          *out++ = (sampL + sampR) * 0.5;
+        }
       }
     } else {
       MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
     }
-
-    // If we are to continue downmixing to mono, start working on the output
-    // buffer.
-    aIn = aOut;
-    channels = 2;
+    return aFrames;
   }
 
-  if (mOut.Channels() == 1) {
-    if (mIn.Format() == AudioConfig::FORMAT_FLT) {
-      const float* in = static_cast<const float*>(aIn);
-      float* out = static_cast<float*>(aOut);
-      for (size_t fIdx = 0; fIdx < aFrames; ++fIdx) {
-        float sample = 0.0;
-        // The sample of the buffer would be interleaved.
-        sample = (in[fIdx * channels] + in[fIdx * channels + 1]) * 0.5;
-        *out++ = sample;
-      }
-    } else if (mIn.Format() == AudioConfig::FORMAT_S16) {
-      const int16_t* in = static_cast<const int16_t*>(aIn);
-      int16_t* out = static_cast<int16_t*>(aOut);
-      for (size_t fIdx = 0; fIdx < aFrames; ++fIdx) {
-        int32_t sample = 0.0;
-        // The sample of the buffer would be interleaved.
-        sample = (in[fIdx * channels] + in[fIdx * channels + 1]) * 0.5;
-        *out++ = sample;
-      }
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
+  MOZ_DIAGNOSTIC_ASSERT(inChannels == 2 && outChannels == 1);
+  if (mIn.Format() == AudioConfig::FORMAT_FLT) {
+    const float* in = static_cast<const float*>(aIn);
+    float* out = static_cast<float*>(aOut);
+    for (size_t fIdx = 0; fIdx < aFrames; ++fIdx) {
+      float sample = 0.0;
+      // The sample of the buffer would be interleaved.
+      sample = (in[fIdx * inChannels] + in[fIdx * inChannels + 1]) * 0.5;
+      *out++ = sample;
     }
+  } else if (mIn.Format() == AudioConfig::FORMAT_S16) {
+    const int16_t* in = static_cast<const int16_t*>(aIn);
+    int16_t* out = static_cast<int16_t*>(aOut);
+    for (size_t fIdx = 0; fIdx < aFrames; ++fIdx) {
+      int32_t sample = 0.0;
+      // The sample of the buffer would be interleaved.
+      sample = (in[fIdx * inChannels] + in[fIdx * inChannels + 1]) * 0.5;
+      *out++ = sample;
+    }
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Unsupported data type");
   }
   return aFrames;
 }
