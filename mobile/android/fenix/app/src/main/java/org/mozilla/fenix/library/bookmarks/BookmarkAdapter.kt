@@ -184,7 +184,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         private fun setColorsAndIcons(selected: Boolean, item: BookmarkNode) {
             val backgroundTint =
                 if (selected) {
-                    DefaultThemeManager.resolveAttribute(R.attr.accent, containerView!!.context)
+                    DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView!!.context)
                 } else {
                     DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView!!.context)
                 }
@@ -256,7 +256,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             setMenu(item, containerView!!)
 
             val backgroundTint = if (selected) {
-                DefaultThemeManager.resolveAttribute(R.attr.accent, containerView.context)
+                DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView.context)
             } else {
                 DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView.context)
             }

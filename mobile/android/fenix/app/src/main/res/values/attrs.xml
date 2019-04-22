@@ -6,6 +6,7 @@
     <!-- Color palette attributes -->
     <attr name="primaryText" format="reference" />
     <attr name="secondaryText" format="reference" />
+    <attr name="contrastText" format="reference" />
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />
     <attr name="accentHighContrast" format="reference" />
@@ -13,6 +14,7 @@
     <attr name="above" format="reference" />
     <attr name="inset" format="reference" />
     <attr name="neutral" format="reference" />
+    <attr name="neutralFaded" format="reference" />
     <attr name="shadow" format="reference" />
     <attr name="destructive" format="reference"/>
 

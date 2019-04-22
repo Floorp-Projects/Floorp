@@ -22,12 +22,12 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:clickable="false"
-        android:drawableTint="@color/foundation_light_theme"
+        android:drawableTint="?foundation"
         android:drawableStart="@drawable/ic_archive"
         android:drawablePadding="8dp"
         android:focusable="false"
         android:gravity="center"
         android:textStyle="bold"
         android:text="@string/save_tab_group"
-        android:textColor="@color/foundation_light_theme"/>
+        android:textColor="?contrastText"/>
 </FrameLayout>

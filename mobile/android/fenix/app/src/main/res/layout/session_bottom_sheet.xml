@@ -93,7 +93,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?neutral" />
+        android:background="?neutralFaded"/>
 
     <TextView
         android:id="@+id/archive_session_button"

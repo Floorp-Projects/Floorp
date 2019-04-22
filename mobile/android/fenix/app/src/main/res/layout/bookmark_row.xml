@@ -28,7 +28,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        android:foregroundTint="?primaryText"
         tools:src="@drawable/ic_folder_icon" />
 
     <TextView
@@ -40,7 +39,7 @@
         android:ellipsize="end"
         android:lines="1"
         android:textSize="16sp"
-        android:textColor="?secondaryText"
+        android:textColor="?primaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
         app:layout_constraintHorizontal_bias="0"
@@ -72,7 +71,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
-        android:background="?neutral"
+        android:background="?neutralFaded"
         android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
