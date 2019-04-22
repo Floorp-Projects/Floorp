@@ -292,9 +292,10 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
   } else {
     // Load the child executable as a datafile so that we can examine its
     // headers without doing a full load with dependencies and such.
-    moduleHandle.own(::LoadLibraryExW(aPath, nullptr, LOAD_LIBRARY_AS_DATAFILE));
+    moduleHandle.own(
+        ::LoadLibraryExW(aPath, nullptr, LOAD_LIBRARY_AS_DATAFILE));
     LauncherResult<HMODULE> procExeModule =
-      nt::GetProcessExeModule(targetInfo.hProcess);
+        nt::GetProcessExeModule(targetInfo.hProcess);
     if (procExeModule.isOk()) {
       realBase = procExeModule.unwrap();
     } else {
@@ -306,8 +307,8 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
   if (moduleHandle && realBase) {
     nt::PEHeaders exeImage(moduleHandle.get());
     if (!!exeImage) {
-      LauncherVoidResult importsRestored =
-        RestoreImportDirectory(aPath, exeImage, targetInfo.hProcess, realBase);
+      LauncherVoidResult importsRestored = RestoreImportDirectory(
+          aPath, exeImage, targetInfo.hProcess, realBase);
       if (importsRestored.isErr()) {
         LOG_E("Failed to restore import directory with HRESULT 0x%08lX",
               importsRestored.unwrapErr().AsHResult());

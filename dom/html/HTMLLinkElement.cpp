@@ -344,10 +344,9 @@ nsresult HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         UpdatePreload(aName, aValue, aOldValue);
       }
 
-      const bool forceUpdate = dropSheet || aName == nsGkAtoms::title ||
-                               aName == nsGkAtoms::media ||
-                               aName == nsGkAtoms::type ||
-                               aName == nsGkAtoms::disabled;
+      const bool forceUpdate =
+          dropSheet || aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
+          aName == nsGkAtoms::type || aName == nsGkAtoms::disabled;
 
       Unused << UpdateStyleSheetInternal(
           nullptr, nullptr, forceUpdate ? ForceUpdate::Yes : ForceUpdate::No);
