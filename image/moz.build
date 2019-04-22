@@ -68,7 +68,6 @@ UNIFIED_SOURCES += [
     'AnimationSurfaceProvider.cpp',
     'ClippedImage.cpp',
     'DecodedSurfaceProvider.cpp',
-    'DecodePool.cpp',
     'Decoder.cpp',
     'DecoderFactory.cpp',
     'DynamicImage.cpp',
@@ -101,6 +100,11 @@ UNIFIED_SOURCES += [
 ]
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [ 'Downscaler.cpp']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [ 'DecodePool.cpp']
+else:
+    UNIFIED_SOURCES += [ 'DecodePool.cpp']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
