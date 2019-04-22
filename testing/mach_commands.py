@@ -350,7 +350,7 @@ class Test(MachCommandBase):
             buckets.setdefault(key, []).append(test)
 
         for (flavor, subsuite), tests in sorted(buckets.items()):
-            m = get_suite_definition(flavor, subsuite)
+            _, m = get_suite_definition(flavor, subsuite)
             if 'mach_command' not in m:
                 substr = '-{}'.format(subsuite) if subsuite else ''
                 print(UNKNOWN_FLAVOR % (flavor, substr))

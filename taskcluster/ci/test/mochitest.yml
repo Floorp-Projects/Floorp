@@ -42,7 +42,7 @@ job-defaults:
 mochitest:
     description: "Mochitest plain run"
     suite:
-        name: plain-chunked
+        name: mochitest-plain-chunked
     treeherder-symbol: M()
     loopback-video: true
     tier:
@@ -83,7 +83,7 @@ mochitest:
         extra-options:
             by-test-platform:
                 android-em.*:
-                    - --test-suite=mochitest
+                    - --test-suite=mochitest-plain
                 default: []
         chunked:
             by-test-platform:
@@ -92,8 +92,6 @@ mochitest:
 
 mochitest-a11y:
     description: "Mochitest a11y run"
-    suite:
-        name: a11y
     treeherder-symbol: M(a11y)
     loopback-video: true
     tier:
@@ -108,7 +106,7 @@ mochitest-a11y:
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
     suite:
-        name: browser-chrome-chunked
+        name: mochitest-browser-chrome-chunked
     treeherder-symbol: M(bc)
     loopback-video: true
     tier:
@@ -139,7 +137,7 @@ mochitest-browser-chrome:
 browser-instrumentation:
     description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
     suite:
-        name: browser-chrome-instrumentation
+        name: mochitest-browser-chrome-instrumentation
     treeherder-symbol: M(inst)
     loopback-video: true
     tier: 3
@@ -155,7 +153,7 @@ browser-instrumentation:
 browser-screenshots:
     description: "Browser Screenshots"
     suite:
-        name: browser-chrome-screenshots
+        name: mochitest-browser-chrome-screenshots
     treeherder-symbol: M(ss)
     loopback-video: true
     run-on-projects:
@@ -173,8 +171,6 @@ browser-screenshots:
 
 mochitest-chrome:
     description: "Mochitest chrome run"
-    suite:
-        name: chrome
     treeherder-symbol: M(c)
     loopback-video: true
     tier:
@@ -234,7 +230,7 @@ mochitest-clipboard:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-clipboard
                 default:
-                    - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
+                    - --mochitest-suite=mochitest-plain-clipboard,mochitest-chrome-clipboard,mochitest-browser-chrome-clipboard
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -287,7 +283,7 @@ mochitest-devtools-webreplay:
 mochitest-gpu:
     description: "Mochitest GPU run"
     suite:
-        name: plain-gpu
+        name: mochitest-plain-gpu
     treeherder-symbol: M(gpu)
     loopback-video: true
     tier:
@@ -311,7 +307,7 @@ mochitest-gpu:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-gpu
                 default:
-                    - --mochitest-suite=plain-gpu,chrome-gpu,browser-chrome-gpu
+                    - --mochitest-suite=mochitest-plain-gpu,mochitest-chrome-gpu,mochitest-browser-chrome-gpu
 
 mochitest-media:
     description: "Mochitest media run"
@@ -364,7 +360,7 @@ mochitest-media:
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
     suite:
-        name: plain-chunked
+        name: mochitest-plain-chunked
     treeherder-symbol: M(h)
     loopback-video: true
     chunks:
@@ -387,7 +383,7 @@ mochitest-plain-headless:
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
     suite:
-        name: valgrind-plain
+        name: mochitest-valgrind-plain
     treeherder-symbol: M-V()
     run-on-projects: []
     tier: 3

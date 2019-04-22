@@ -58,7 +58,7 @@ config = {
     # "screenshot_times": [60, 120, 180, 240],
 
     "suite_definitions": {
-        "mochitest": {
+        "mochitest-plain": {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",
             "options": [
