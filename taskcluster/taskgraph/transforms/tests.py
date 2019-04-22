@@ -198,10 +198,11 @@ test_description_schema = Schema({
     # description of the suite, for the task metadata
     'description': basestring,
 
-    # test suite name, or <suite>/<flavor>
-    Required('suite'): optionally_keyed_by(
-        'test-platform',
-        basestring),
+    # test suite category and name
+    Optional('suite'): Any(
+        basestring,
+        {Optional('category'): basestring, Optional('name'): basestring},
+    ),
 
     # base work directory used to set up the task.
     Optional('workdir'): optionally_keyed_by(
@@ -482,8 +483,17 @@ test_description_schema = Schema({
 @transforms.add
 def handle_keyed_by_mozharness(config, tests):
     """Resolve a mozharness field if it is keyed by something"""
+    fields = [
+        'mozharness',
+        'mozharness.chunked',
+        'mozharness.config',
+        'mozharness.extra-options',
+        'mozharness.requires-signed-builds',
+        'mozharness.script',
+    ]
     for test in tests:
-        resolve_keyed_by(test, 'mozharness', item_name=test['test-name'])
+        for field in fields:
+            resolve_keyed_by(test, field, item_name=test['test-name'])
         yield test
 
 
@@ -557,6 +567,41 @@ def resolve_keys(config, tests):
                 'release-type': config.params['release_type'],
             }
         )
+        yield test
+
+
+@transforms.add
+def handle_suite_category(config, tests):
+    for test in tests:
+        test.setdefault('suite', {})
+
+        if isinstance(test['suite'], basestring):
+            test['suite'] = {'name': test['suite']}
+
+        suite = test['suite'].setdefault('name', test['test-name'])
+        category = test['suite'].setdefault('category', suite)
+
+        test.setdefault('attributes', {})
+        test['attributes']['unittest_suite'] = suite
+        test['attributes']['unittest_category'] = category
+
+        script = test['mozharness']['script']
+        category_arg = None
+        if suite.startswith('test-verify') or suite.startswith('test-coverage'):
+            pass
+        elif script in ('android_emulator_unittest.py', 'android_hardware_unittest.py'):
+            category_arg = '--test-suite'
+        elif script == 'desktop_unittest.py':
+            category_arg = '--{}-suite'.format(category)
+
+        if category_arg:
+            test['mozharness'].setdefault('extra-options', [])
+            extra = test['mozharness']['extra-options']
+            if not any(arg.startswith(category_arg) for arg in extra):
+                extra.append('{}={}'.format(category_arg, suite))
+
+        # From here on out we only use the suite name.
+        test['suite'] = suite
         yield test
 
 
@@ -797,11 +842,6 @@ def handle_keyed_by(config, tests):
         'run-on-projects',
         'os-groups',
         'run-as-administrator',
-        'mozharness.chunked',
-        'mozharness.config',
-        'mozharness.extra-options',
-        'mozharness.requires-signed-builds',
-        'mozharness.script',
         'workdir',
         'worker-type',
         'virtualization',
@@ -812,38 +852,6 @@ def handle_keyed_by(config, tests):
         for field in fields:
             resolve_keyed_by(test, field, item_name=test['test-name'],
                              project=config.params['project'])
-        yield test
-
-
-@transforms.add
-def handle_suite_category(config, tests):
-    for test in tests:
-        if '/' in test['suite']:
-            suite, flavor = test['suite'].split('/', 1)
-        else:
-            suite = flavor = test['suite']
-
-        test.setdefault('attributes', {})
-        test['attributes']['unittest_suite'] = suite
-        test['attributes']['unittest_flavor'] = flavor
-
-        script = test['mozharness']['script']
-        category_arg = None
-        if suite.startswith('test-verify') or suite.startswith('test-coverage'):
-            pass
-        elif script == 'android_emulator_unittest.py':
-            category_arg = '--test-suite'
-        elif script == 'android_hardware_unittest.py':
-            category_arg = '--test-suite'
-        elif script == 'desktop_unittest.py':
-            category_arg = '--{}-suite'.format(suite)
-
-        if category_arg:
-            test['mozharness'].setdefault('extra-options', [])
-            extra = test['mozharness']['extra-options']
-            if not any(arg.startswith(category_arg) for arg in extra):
-                extra.append('{}={}'.format(category_arg, flavor))
-
         yield test
 
 
@@ -1260,10 +1268,7 @@ def make_job_description(config, tests):
                 'current': test['this-chunk'],
                 'total': test['chunks'],
             },
-            'suite': {
-                'name': attributes['unittest_suite'],
-                'flavor': attributes['unittest_flavor'],
-            },
+            'suite': attributes['unittest_suite'],
         }
         jobdesc['treeherder'] = {
             'symbol': test['treeherder-symbol'],
@@ -1272,20 +1277,20 @@ def make_job_description(config, tests):
             'platform': test.get('treeherder-machine-platform', test['build-platform']),
         }
 
-        suite = test.get('schedules-component', attributes['unittest_suite'])
-        if suite in INCLUSIVE_COMPONENTS:
+        category = test.get('schedules-component', attributes['unittest_category'])
+        if category in INCLUSIVE_COMPONENTS:
             # if this is an "inclusive" test, then all files which might
             # cause it to run are annotated with SCHEDULES in moz.build,
             # so do not include the platform or any other components here
-            schedules = [suite]
+            schedules = [category]
         else:
-            schedules = [suite, platform_family(test['build-platform'])]
+            schedules = [category, platform_family(test['build-platform'])]
 
         if test.get('when'):
             jobdesc['when'] = test['when']
         elif 'optimization' in test:
             jobdesc['optimization'] = test['optimization']
-        elif not config.params.is_try() and suite not in INCLUSIVE_COMPONENTS:
+        elif not config.params.is_try() and category not in INCLUSIVE_COMPONENTS:
             # for non-try branches and non-inclusive suites, include SETA
             jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}
         else:
