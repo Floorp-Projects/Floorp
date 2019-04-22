@@ -1309,6 +1309,34 @@ bool nsChildView::PaintWindow(LayoutDeviceIntRegion aRegion) {
   return returnValue;
 }
 
+bool nsChildView::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
+                                          const LayoutDeviceIntRegion& aRegion,
+                                          const gfx::IntSize& aSurfaceSize) {
+  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(aDT);
+  MOZ_ASSERT(targetContext);
+
+  // Set up the clip region and clear existing contents in the backing surface.
+  targetContext->NewPath();
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const LayoutDeviceIntRect& r = iter.Get();
+    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+    aDT->ClearRect(gfx::Rect(r.ToUnknownRect()));
+  }
+  targetContext->Clip();
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(mView);
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext,
+                                                          BufferMode::BUFFER_NONE);
+    return PaintWindow(aRegion);
+  }
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
+    // We only need this so that we actually get DidPaintWindow fired
+    return PaintWindow(aRegion);
+  }
+  return false;
+}
+
 bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                                        gfx::IntSize aSurfaceSize) {
   if (!mBackingSurface || mBackingSurface->GetSize() != aSurfaceSize) {
@@ -1319,28 +1347,7 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
     }
   }
 
-  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(mBackingSurface);
-  MOZ_ASSERT(targetContext);  // already checked the draw target above
-
-  // Set up the clip region and clear existing contents in the backing surface.
-  targetContext->NewPath();
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    const LayoutDeviceIntRect& r = iter.Get();
-    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
-    mBackingSurface->ClearRect(gfx::Rect(r.ToUnknownRect()));
-  }
-  targetContext->Clip();
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(mView);
-  bool painted = false;
-  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext,
-                                                          BufferMode::BUFFER_NONE);
-    painted = PaintWindow(aRegion);
-  } else if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-    // We only need this so that we actually get DidPaintWindow fired
-    painted = PaintWindow(aRegion);
-  }
+  bool painted = PaintWindowInDrawTarget(mBackingSurface, aRegion, aSurfaceSize);
 
   uint8_t* data;
   gfx::IntSize size;
