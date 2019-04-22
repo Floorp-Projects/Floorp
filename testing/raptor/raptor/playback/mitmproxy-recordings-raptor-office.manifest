@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2340028,
+    "visibility": "public",
+    "digest": "3c08f87b661507ecd493ba7021e883fe5e68c1037eafde6a07d6998db712bc8449d4823814da179801d9573b2a4fb525f0506c79dc1abb6de30f24c174dae8f6",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6-office.zip",
+    "unpack": true
+}
+]
