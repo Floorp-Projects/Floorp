@@ -1717,7 +1717,7 @@ class nsDisplayMathMLCharForeground final : public nsDisplayItem {
  public:
   nsDisplayMathMLCharForeground(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, nsMathMLChar* aChar,
-                                uint32_t aIndex, bool aIsSelected)
+                                uint16_t aIndex, bool aIsSelected)
       : nsDisplayItem(aBuilder, aFrame),
         mChar(aChar),
         mIndex(aIndex),
@@ -1758,13 +1758,11 @@ class nsDisplayMathMLCharForeground final : public nsDisplayItem {
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
  private:
   nsMathMLChar* mChar;
-  uint32_t mIndex;
+  uint16_t mIndex;
   bool mIsSelected;
 };
 
