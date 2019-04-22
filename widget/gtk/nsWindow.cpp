@@ -2405,7 +2405,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent) {
   // Sometime gdk generate 0 pressure value between normal values
   // We have to ignore that and use last valid value
   if (pressure) mLastMotionPressure = pressure;
-  event.pressure = mLastMotionPressure;
+  event.mPressure = mLastMotionPressure;
 
   guint modifierState;
   if (synthEvent) {
@@ -2458,15 +2458,15 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent) {
       int16_t buttonType;
       switch (buttonMask) {
         case GDK_BUTTON1_MASK:
-          buttonType = WidgetMouseEvent::eLeftButton;
+          buttonType = MouseButton::eLeft;
           break;
         case GDK_BUTTON2_MASK:
-          buttonType = WidgetMouseEvent::eMiddleButton;
+          buttonType = MouseButton::eMiddle;
           break;
         default:
           NS_ASSERTION(buttonMask == GDK_BUTTON3_MASK,
                        "Unexpected button mask");
-          buttonType = WidgetMouseEvent::eRightButton;
+          buttonType = MouseButton::eRight;
       }
 
       LOG(("Synthesized button %u release on %p\n", guint(buttonType + 1),
@@ -2478,7 +2478,7 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing *aGdkEvent) {
       // position, widget, modifiers, or time/order.
       WidgetMouseEvent synthEvent(true, eMouseUp, this,
                                   WidgetMouseEvent::eSynthesized);
-      synthEvent.button = buttonType;
+      synthEvent.mButton = buttonType;
       DispatchInputEvent(&synthEvent);
     }
   }
@@ -2533,12 +2533,11 @@ static guint ButtonMaskFromGDKButton(guint button) {
 
 void nsWindow::DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                                       GdkEventButton *aEvent) {
-  if (domButton == WidgetMouseEvent::eRightButton &&
-      MOZ_LIKELY(!mIsDestroyed)) {
+  if (domButton == MouseButton::eRight && MOZ_LIKELY(!mIsDestroyed)) {
     WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
                                       WidgetMouseEvent::eReal);
     InitButtonEvent(contextMenuEvent, aEvent);
-    contextMenuEvent.pressure = mLastMotionPressure;
+    contextMenuEvent.mPressure = mLastMotionPressure;
     DispatchInputEvent(&contextMenuEvent);
   }
 }
@@ -2574,13 +2573,13 @@ void nsWindow::OnButtonPressEvent(GdkEventButton *aEvent) {
   uint16_t domButton;
   switch (aEvent->button) {
     case 1:
-      domButton = WidgetMouseEvent::eLeftButton;
+      domButton = MouseButton::eLeft;
       break;
     case 2:
-      domButton = WidgetMouseEvent::eMiddleButton;
+      domButton = MouseButton::eMiddle;
       break;
     case 3:
-      domButton = WidgetMouseEvent::eRightButton;
+      domButton = MouseButton::eRight;
       break;
     // These are mapped to horizontal scroll
     case 6:
@@ -2601,16 +2600,16 @@ void nsWindow::OnButtonPressEvent(GdkEventButton *aEvent) {
   gButtonState |= ButtonMaskFromGDKButton(aEvent->button);
 
   WidgetMouseEvent event(true, eMouseDown, this, WidgetMouseEvent::eReal);
-  event.button = domButton;
+  event.mButton = domButton;
   InitButtonEvent(event, aEvent);
-  event.pressure = mLastMotionPressure;
+  event.mPressure = mLastMotionPressure;
 
   nsEventStatus eventStatus = DispatchInputEvent(&event);
 
   LayoutDeviceIntPoint refPoint =
       GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   if (mDraggableRegion.Contains(refPoint.x, refPoint.y) &&
-      domButton == WidgetMouseEvent::eLeftButton &&
+      domButton == MouseButton::eLeft &&
       eventStatus != nsEventStatus_eConsumeNoDefault) {
     mWindowShouldStartDragging = true;
   }
@@ -2631,13 +2630,13 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   uint16_t domButton;
   switch (aEvent->button) {
     case 1:
-      domButton = WidgetMouseEvent::eLeftButton;
+      domButton = MouseButton::eLeft;
       break;
     case 2:
-      domButton = WidgetMouseEvent::eMiddleButton;
+      domButton = MouseButton::eMiddle;
       break;
     case 3:
-      domButton = WidgetMouseEvent::eRightButton;
+      domButton = MouseButton::eRight;
       break;
     default:
       return;
@@ -2646,11 +2645,11 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   gButtonState &= ~ButtonMaskFromGDKButton(aEvent->button);
 
   WidgetMouseEvent event(true, eMouseUp, this, WidgetMouseEvent::eReal);
-  event.button = domButton;
+  event.mButton = domButton;
   InitButtonEvent(event, aEvent);
   gdouble pressure = 0;
   gdk_event_get_axis((GdkEvent *)aEvent, GDK_AXIS_PRESSURE, &pressure);
-  event.pressure = pressure ? pressure : mLastMotionPressure;
+  event.mPressure = pressure ? pressure : mLastMotionPressure;
 
   // The mRefPoint is manipulated in DispatchInputEvent, we're saving it
   // to use it for the doubleclick position check.
@@ -2662,7 +2661,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent) {
   // Check if mouse position in titlebar and doubleclick happened to
   // trigger restore/maximize.
   if (!defaultPrevented && mDrawInTitlebar &&
-      event.button == WidgetMouseEvent::eLeftButton && event.mClickCount == 2 &&
+      event.mButton == MouseButton::eLeft && event.mClickCount == 2 &&
       mDraggableRegion.Contains(pos.x, pos.y)) {
     if (mSizeState == nsSizeMode_Maximized) {
       SetSizeMode(nsSizeMode_Normal);
@@ -5939,7 +5938,7 @@ void nsWindow::EndRemoteDrawingInRegion(DrawTarget *aDrawTarget,
 // Code shared begin BeginMoveDrag and BeginResizeDrag
 bool nsWindow::GetDragInfo(WidgetMouseEvent *aMouseEvent, GdkWindow **aWindow,
                            gint *aButton, gint *aRootX, gint *aRootY) {
-  if (aMouseEvent->button != WidgetMouseEvent::eLeftButton) {
+  if (aMouseEvent->mButton != MouseButton::eLeft) {
     // we can only begin a move drag with the left mouse button
     return false;
   }

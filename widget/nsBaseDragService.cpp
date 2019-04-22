@@ -479,7 +479,7 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
     if (presShell) {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetDragEvent event(true, aEventMessage, nullptr);
-      event.inputSource = mInputSource;
+      event.mInputSource = mInputSource;
       if (aEventMessage == eDragEnd) {
         event.mRefPoint = mEndDragPoint;
         event.mUserCancelled = mUserCancelled;

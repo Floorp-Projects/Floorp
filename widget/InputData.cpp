@@ -222,8 +222,8 @@ WidgetMouseEvent MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
   event.mRefPoint.y = firstTouch.mScreenPoint.y;
 
   event.mTime = mTime;
-  event.button = WidgetMouseEvent::eLeftButton;
-  event.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  event.mButton = MouseButton::eLeft;
+  event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
@@ -282,22 +282,22 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
                 aMouseEvent.mModifiers),
       mType(MOUSE_NONE),
       mButtonType(NONE),
-      mInputSource(aMouseEvent.inputSource),
-      mButtons(aMouseEvent.buttons),
+      mInputSource(aMouseEvent.mInputSource),
+      mButtons(aMouseEvent.mButtons),
       mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ) {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
 
   mButtonType = NONE;
 
-  switch (aMouseEvent.button) {
-    case WidgetMouseEventBase::eLeftButton:
+  switch (aMouseEvent.mButton) {
+    case MouseButton::eLeft:
       mButtonType = MouseInput::LEFT_BUTTON;
       break;
-    case WidgetMouseEventBase::eMiddleButton:
+    case MouseButton::eMiddle:
       mButtonType = MouseInput::MIDDLE_BUTTON;
       break;
-    case WidgetMouseEventBase::eRightButton:
+    case MouseButton::eRight:
       mButtonType = MouseInput::RIGHT_BUTTON;
       break;
   }
@@ -398,20 +398,20 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
 
   switch (mButtonType) {
     case MouseInput::LEFT_BUTTON:
-      event.button = WidgetMouseEventBase::eLeftButton;
+      event.mButton = MouseButton::eLeft;
       break;
     case MouseInput::MIDDLE_BUTTON:
-      event.button = WidgetMouseEventBase::eMiddleButton;
+      event.mButton = MouseButton::eMiddle;
       break;
     case MouseInput::RIGHT_BUTTON:
-      event.button = WidgetMouseEventBase::eRightButton;
+      event.mButton = MouseButton::eRight;
       break;
     case MouseInput::NONE:
     default:
       break;
   }
 
-  event.buttons = mButtons;
+  event.mButtons = mButtons;
   event.mModifiers = modifiers;
   event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
@@ -420,7 +420,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
       mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   event.mClickCount = clickCount;
-  event.inputSource = mInputSource;
+  event.mInputSource = mInputSource;
   event.mIgnoreRootScrollFrame = true;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
 
@@ -476,7 +476,7 @@ WidgetWheelEvent PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const {
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  wheelEvent.buttons = 0;
+  wheelEvent.mButtons = 0;
   wheelEvent.mDeltaMode = WheelEvent_Binding::DOM_DELTA_PIXEL;
   wheelEvent.mMayHaveMomentum = true;  // pan inputs may have momentum
   wheelEvent.mIsMomentum = IsMomentum();
@@ -690,7 +690,7 @@ WidgetWheelEvent ScrollWheelInput::ToWidgetWheelEvent(
   wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
       mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  wheelEvent.buttons = 0;
+  wheelEvent.mButtons = 0;
   wheelEvent.mDeltaMode = DeltaModeForDeltaType(mDeltaType);
   wheelEvent.mMayHaveMomentum = mMayHaveMomentum;
   wheelEvent.mIsMomentum = mIsMomentum;

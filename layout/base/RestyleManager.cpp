@@ -1984,7 +1984,7 @@ void RestyleManager::AnimationsWithDestroyedFrame ::
   StopAnimationsWithoutFrame(mContents, PseudoStyleType::NotPseudo);
   StopAnimationsWithoutFrame(mBeforeContents, PseudoStyleType::before);
   StopAnimationsWithoutFrame(mAfterContents, PseudoStyleType::after);
-  StopAnimationsWithoutFrame(mAfterContents, PseudoStyleType::marker);
+  StopAnimationsWithoutFrame(mMarkerContents, PseudoStyleType::marker);
 }
 
 void RestyleManager::AnimationsWithDestroyedFrame ::StopAnimationsWithoutFrame(

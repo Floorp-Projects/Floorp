@@ -13,7 +13,7 @@
 <script>
 <![CDATA[
 
-let XULStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+const {XULStore} = ChromeUtils.import("resource://gre/modules/XULStore.jsm");
 let URI = "chrome://mochitests/content/chrome/toolkit/components/xulstore/tests/chrome/window_persistence.xul";
 
 function opened()

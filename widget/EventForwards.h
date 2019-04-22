@@ -262,6 +262,21 @@ class TextRangeArray;
 // FontRange.h
 struct FontRange;
 
+enum MouseButton { eNotPressed = -1, eLeft = 0, eMiddle = 1, eRight = 2 };
+
+enum MouseButtonsFlag {
+  eNoButtons = 0x00,
+  eLeftFlag = 0x01,
+  eRightFlag = 0x02,
+  eMiddleFlag = 0x04,
+  // typicall, "back" button being left side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  e4thFlag = 0x08,
+  // typicall, "forward" button being right side of 5-button
+  // mice, see "buttons" attribute document of DOM3 Events.
+  e5thFlag = 0x10
+};
+
 }  // namespace mozilla
 
 #endif  // mozilla_EventForwards_h__
