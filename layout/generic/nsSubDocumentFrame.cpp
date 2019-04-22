@@ -1207,10 +1207,11 @@ void nsSubDocumentFrame::ClearDisplayItems() {
       displayRoot->GetProperty(RetainedDisplayListBuilder::Cached());
   MOZ_ASSERT(retainedBuilder);
 
-  for (nsDisplayItem* i : *items) {
+  for (nsDisplayItemBase* i : *items) {
     if (i->GetType() == DisplayItemType::TYPE_SUBDOCUMENT) {
-      i->GetChildren()->DeleteAll(retainedBuilder->Builder());
-      static_cast<nsDisplaySubDocument*>(i)->Disown();
+      auto* item = static_cast<nsDisplaySubDocument*>(i);
+      item->GetChildren()->DeleteAll(retainedBuilder->Builder());
+      item->Disown();
       break;
     }
   }

@@ -378,7 +378,15 @@ DisplayItemData::~DisplayItemData() {
 }
 
 void DisplayItemData::ClearAnimationCompositorState() {
-  DisplayItemType type = static_cast<DisplayItemType>(mDisplayItemKey);
+  if (mDisplayItemKey > static_cast<uint8_t>(DisplayItemType::TYPE_MAX)) {
+    // This is sort of a hack. The display item key has higher bits set, which
+    // means that it is not the only display item for the frame.
+    // This branch skips separator transforms.
+    return;
+  }
+
+  const DisplayItemType type = GetDisplayItemTypeFromKey(mDisplayItemKey);
+
   // FIXME: Bug 1530857: Add background_color.
   if (type != DisplayItemType::TYPE_TRANSFORM &&
       type != DisplayItemType::TYPE_OPACITY) {
