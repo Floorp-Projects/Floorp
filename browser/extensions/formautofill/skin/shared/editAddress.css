@@ -116,7 +116,7 @@
   font-size: 1rem;
   align-items: center;
   text-align: start;
-  color: #737373;
+  opacity: .5;
   padding-inline-start: 1em;
 }
 
