@@ -400,8 +400,4 @@
     <string name="tracking_protection_on">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
-
-    <!-- DEPRECATED -->
-    <string name="tabs_header_title">DEPRECATED</string>
-    <string name="session_save">DEPRECATED</string>
 </resources>

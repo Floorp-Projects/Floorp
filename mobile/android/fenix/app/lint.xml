@@ -9,5 +9,6 @@
         <ignore path="**/sentry*.jar" />
     </issue>
     <issue id="MissingTranslation" severity="ignore" />
+    <issue id="ExtraTranslation" severity="warning" />
 </lint>
 
