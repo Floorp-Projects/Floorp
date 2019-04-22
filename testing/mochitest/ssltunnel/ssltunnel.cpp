@@ -1088,7 +1088,8 @@ int processConfigLine(char* configLine) {
 
     if (server_info_t* existingServer = findServerInfo(port)) {
       if (!hostportstring) {
-        LOG_ERROR(("Null hostportstring specified for hostname %s\n", hostname));
+        LOG_ERROR(
+            ("Null hostportstring specified for hostname %s\n", hostname));
         return 1;
       }
       char* certnick_copy = new char[strlen(certnick) + 1];

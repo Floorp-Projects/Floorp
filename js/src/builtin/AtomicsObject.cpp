@@ -62,6 +62,7 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
+#include "js/Result.h"
 #include "vm/GlobalObject.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
@@ -116,68 +117,42 @@ static bool GetTypedArrayIndex(JSContext* cx, HandleValue v,
   return true;
 }
 
-static int32_t CompareExchange(Scalar::Type viewType, int32_t oldCandidate,
-                               int32_t newCandidate, SharedMem<void*> viewData,
-                               uint32_t offset, bool* badArrayType = nullptr) {
-  switch (viewType) {
-    case Scalar::Int8: {
-      int8_t oldval = (int8_t)oldCandidate;
-      int8_t newval = (int8_t)newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<int8_t*>() + offset, oldval, newval);
-      return oldval;
+template <typename T>
+struct ArrayOps {
+  static JS::Result<T> convertValue(JSContext* cx, HandleValue v) {
+    int32_t n;
+    if (!ToInt32(cx, v, &n)) {
+      return cx->alreadyReportedError();
     }
-    case Scalar::Uint8: {
-      uint8_t oldval = (uint8_t)oldCandidate;
-      uint8_t newval = (uint8_t)newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<uint8_t*>() + offset, oldval, newval);
-      return oldval;
-    }
-    case Scalar::Int16: {
-      int16_t oldval = (int16_t)oldCandidate;
-      int16_t newval = (int16_t)newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<int16_t*>() + offset, oldval, newval);
-      return oldval;
-    }
-    case Scalar::Uint16: {
-      uint16_t oldval = (uint16_t)oldCandidate;
-      uint16_t newval = (uint16_t)newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<uint16_t*>() + offset, oldval, newval);
-      return oldval;
-    }
-    case Scalar::Int32: {
-      int32_t oldval = oldCandidate;
-      int32_t newval = newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<int32_t*>() + offset, oldval, newval);
-      return oldval;
-    }
-    case Scalar::Uint32: {
-      uint32_t oldval = (uint32_t)oldCandidate;
-      uint32_t newval = (uint32_t)newCandidate;
-      oldval = jit::AtomicOperations::compareExchangeSeqCst(
-          viewData.cast<uint32_t*>() + offset, oldval, newval);
-      return (int32_t)oldval;
-    }
-    default:
-      if (badArrayType) {
-        *badArrayType = true;
-      }
-      return 0;
+    return (T)n;
   }
+
+  static JS::Result<T> convertValue(JSContext* cx, HandleValue v,
+                                    MutableHandleValue result) {
+    double d;
+    if (!ToInteger(cx, v, &d)) {
+      return cx->alreadyReportedError();
+    }
+    result.setNumber(d);
+    return (T)JS::ToInt32(d);
+  }
+
+  static JS::Result<> storeResult(JSContext* cx, T v,
+                                  MutableHandleValue result) {
+    result.setInt32(v);
+    return Ok();
+  }
+};
+
+template <>
+JS::Result<> ArrayOps<uint32_t>::storeResult(JSContext* cx, uint32_t v,
+                                             MutableHandleValue result) {
+  result.setNumber(v);
+  return Ok();
 }
 
-bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
-  HandleValue oldv = args.get(2);
-  HandleValue newv = args.get(3);
-  MutableHandleValue r = args.rval();
-
+template <template <typename> class F, typename... Args>
+bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
   Rooted<TypedArrayObject*> view(cx, nullptr);
   if (!GetSharedTypedArray(cx, objv, &view)) {
     return false;
@@ -186,242 +161,130 @@ bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
   if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
     return false;
   }
-  int32_t oldCandidate;
-  if (!ToInt32(cx, oldv, &oldCandidate)) {
-    return false;
-  }
-  int32_t newCandidate;
-  if (!ToInt32(cx, newv, &newCandidate)) {
-    return false;
-  }
-
-  bool badType = false;
-  int32_t result = CompareExchange(view->type(), oldCandidate, newCandidate,
-                                   view->dataPointerShared(), offset, &badType);
-
-  if (badType) {
-    return ReportBadArrayType(cx);
-  }
-
-  if (view->type() == Scalar::Uint32) {
-    r.setNumber((double)(uint32_t)result);
-  } else {
-    r.setInt32(result);
-  }
-  return true;
-}
-
-bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
-  MutableHandleValue r = args.rval();
-
-  Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
-    return false;
-  }
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
-    return false;
-  }
-
   SharedMem<void*> viewData = view->dataPointerShared();
   switch (view->type()) {
-    case Scalar::Uint8: {
-      uint8_t v =
-          jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
-      r.setInt32(v);
-      return true;
-    }
-    case Scalar::Int8: {
-      int8_t v =
-          jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
-      r.setInt32(v);
-      return true;
-    }
-    case Scalar::Int16: {
-      int16_t v =
-          jit::AtomicOperations::loadSeqCst(viewData.cast<int16_t*>() + offset);
-      r.setInt32(v);
-      return true;
-    }
-    case Scalar::Uint16: {
-      uint16_t v = jit::AtomicOperations::loadSeqCst(
-          viewData.cast<uint16_t*>() + offset);
-      r.setInt32(v);
-      return true;
-    }
-    case Scalar::Int32: {
-      int32_t v =
-          jit::AtomicOperations::loadSeqCst(viewData.cast<int32_t*>() + offset);
-      r.setInt32(v);
-      return true;
-    }
-    case Scalar::Uint32: {
-      uint32_t v = jit::AtomicOperations::loadSeqCst(
-          viewData.cast<uint32_t*>() + offset);
-      r.setNumber(v);
-      return true;
-    }
-    default:
+    case Scalar::Int8:
+      return F<int8_t>::run(cx, viewData.cast<int8_t*>() + offset, args...);
+    case Scalar::Uint8:
+      return F<uint8_t>::run(cx, viewData.cast<uint8_t*>() + offset, args...);
+    case Scalar::Int16:
+      return F<int16_t>::run(cx, viewData.cast<int16_t*>() + offset, args...);
+    case Scalar::Uint16:
+      return F<uint16_t>::run(cx, viewData.cast<uint16_t*>() + offset, args...);
+    case Scalar::Int32:
+      return F<int32_t>::run(cx, viewData.cast<int32_t*>() + offset, args...);
+    case Scalar::Uint32:
+      return F<uint32_t>::run(cx, viewData.cast<uint32_t*>() + offset, args...);
+    case Scalar::Float32:
+    case Scalar::Float64:
+    case Scalar::Uint8Clamped:
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
       return ReportBadArrayType(cx);
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+      break;
   }
-}
-
-enum XchgStoreOp { DoExchange, DoStore };
-
-template <XchgStoreOp op>
-static int32_t ExchangeOrStore(Scalar::Type viewType, int32_t numberValue,
-                               SharedMem<void*> viewData, uint32_t offset,
-                               bool* badArrayType = nullptr) {
-#define INT_OP(ptr, value)                                       \
-  JS_BEGIN_MACRO                                                 \
-    if (op == DoStore)                                           \
-      jit::AtomicOperations::storeSeqCst(ptr, value);            \
-    else                                                         \
-      value = jit::AtomicOperations::exchangeSeqCst(ptr, value); \
-  JS_END_MACRO
-
-  switch (viewType) {
-    case Scalar::Int8: {
-      int8_t value = (int8_t)numberValue;
-      INT_OP(viewData.cast<int8_t*>() + offset, value);
-      return value;
-    }
-    case Scalar::Uint8: {
-      uint8_t value = (uint8_t)numberValue;
-      INT_OP(viewData.cast<uint8_t*>() + offset, value);
-      return value;
-    }
-    case Scalar::Int16: {
-      int16_t value = (int16_t)numberValue;
-      INT_OP(viewData.cast<int16_t*>() + offset, value);
-      return value;
-    }
-    case Scalar::Uint16: {
-      uint16_t value = (uint16_t)numberValue;
-      INT_OP(viewData.cast<uint16_t*>() + offset, value);
-      return value;
-    }
-    case Scalar::Int32: {
-      int32_t value = numberValue;
-      INT_OP(viewData.cast<int32_t*>() + offset, value);
-      return value;
-    }
-    case Scalar::Uint32: {
-      uint32_t value = (uint32_t)numberValue;
-      INT_OP(viewData.cast<uint32_t*>() + offset, value);
-      return (int32_t)value;
-    }
-    default:
-      if (badArrayType) {
-        *badArrayType = true;
-      }
-      return 0;
-  }
-#undef INT_OP
-}
-
-template <XchgStoreOp op>
-static bool ExchangeOrStore(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue objv = args.get(0);
-  HandleValue idxv = args.get(1);
-  HandleValue valv = args.get(2);
-  MutableHandleValue r = args.rval();
-
-  Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
-    return false;
-  }
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
-    return false;
-  }
-  double integerValue;
-  if (!ToInteger(cx, valv, &integerValue)) {
-    return false;
-  }
-
-  bool badType = false;
-  int32_t result =
-      ExchangeOrStore<op>(view->type(), JS::ToInt32(integerValue),
-                          view->dataPointerShared(), offset, &badType);
-
-  if (badType) {
-    return ReportBadArrayType(cx);
-  }
-
-  if (op == DoStore) {
-    r.setNumber(integerValue);
-  } else if (view->type() == Scalar::Uint32) {
-    r.setNumber((double)(uint32_t)result);
-  } else {
-    r.setInt32(result);
-  }
-  return true;
-}
-
-bool js::atomics_store(JSContext* cx, unsigned argc, Value* vp) {
-  return ExchangeOrStore<DoStore>(cx, argc, vp);
-}
-
-bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
-  return ExchangeOrStore<DoExchange>(cx, argc, vp);
+  MOZ_CRASH("Unsupported TypedArray type");
 }
 
 template <typename T>
+struct DoCompareExchange {
+  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue oldv,
+                  HandleValue newv, MutableHandleValue result) {
+    using Ops = ArrayOps<T>;
+    T oldval;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, oldval, Ops::convertValue(cx, oldv));
+    T newval;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, newval, Ops::convertValue(cx, newv));
+
+    oldval = jit::AtomicOperations::compareExchangeSeqCst(addr, oldval, newval);
+
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, oldval, result));
+    return true;
+  }
+};
+
+bool js::atomics_compareExchange(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return perform<DoCompareExchange>(cx, args.get(0), args.get(1), args.get(2),
+                                    args.get(3), args.rval());
+}
+
+template <typename T>
+struct DoLoad {
+  static bool run(JSContext* cx, SharedMem<T*> addr,
+                  MutableHandleValue result) {
+    using Ops = ArrayOps<T>;
+    T v = jit::AtomicOperations::loadSeqCst(addr);
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, result));
+    return true;
+  }
+};
+
+bool js::atomics_load(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return perform<DoLoad>(cx, args.get(0), args.get(1), args.rval());
+}
+
+template <typename T>
+struct DoExchange {
+  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
+                  MutableHandleValue result) {
+    using Ops = ArrayOps<T>;
+    T value;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, value, Ops::convertValue(cx, valv));
+    value = jit::AtomicOperations::exchangeSeqCst(addr, value);
+    JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, value, result));
+    return true;
+  }
+};
+
+template <typename T>
+struct DoStore {
+  static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
+                  MutableHandleValue result) {
+    using Ops = ArrayOps<T>;
+    T value;
+    JS_TRY_VAR_OR_RETURN_FALSE(cx, value, Ops::convertValue(cx, valv, result));
+    jit::AtomicOperations::storeSeqCst(addr, value);
+    return true;
+  }
+};
+
+bool js::atomics_store(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return perform<DoStore>(cx, args.get(0), args.get(1), args.get(2),
+                          args.rval());
+}
+
+bool js::atomics_exchange(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return perform<DoExchange>(cx, args.get(0), args.get(1), args.get(2),
+                             args.rval());
+}
+
+template <typename Operate>
+struct DoBinopWithOperation {
+  template <typename T>
+  struct DoBinop {
+    static bool run(JSContext* cx, SharedMem<T*> addr, HandleValue valv,
+                    MutableHandleValue result) {
+      using Ops = ArrayOps<T>;
+      T v;
+      JS_TRY_VAR_OR_RETURN_FALSE(cx, v, Ops::convertValue(cx, valv));
+      v = Operate::operate(addr, v);
+      JS_TRY_OR_RETURN_FALSE(cx, Ops::storeResult(cx, v, result));
+      return true;
+    }
+  };
+};
+
+template <typename Operate>
 static bool AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv,
                          HandleValue valv, MutableHandleValue r) {
-  Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
-    return false;
-  }
-  uint32_t offset;
-  if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
-    return false;
-  }
-  int32_t numberValue;
-  if (!ToInt32(cx, valv, &numberValue)) {
-    return false;
-  }
-
-  SharedMem<void*> viewData = view->dataPointerShared();
-  switch (view->type()) {
-    case Scalar::Int8: {
-      int8_t v = (int8_t)numberValue;
-      r.setInt32(T::operate(viewData.cast<int8_t*>() + offset, v));
-      return true;
-    }
-    case Scalar::Uint8: {
-      uint8_t v = (uint8_t)numberValue;
-      r.setInt32(T::operate(viewData.cast<uint8_t*>() + offset, v));
-      return true;
-    }
-    case Scalar::Int16: {
-      int16_t v = (int16_t)numberValue;
-      r.setInt32(T::operate(viewData.cast<int16_t*>() + offset, v));
-      return true;
-    }
-    case Scalar::Uint16: {
-      uint16_t v = (uint16_t)numberValue;
-      r.setInt32(T::operate(viewData.cast<uint16_t*>() + offset, v));
-      return true;
-    }
-    case Scalar::Int32: {
-      int32_t v = numberValue;
-      r.setInt32(T::operate(viewData.cast<int32_t*>() + offset, v));
-      return true;
-    }
-    case Scalar::Uint32: {
-      uint32_t v = (uint32_t)numberValue;
-      r.setNumber((double)T::operate(viewData.cast<uint32_t*>() + offset, v));
-      return true;
-    }
-    default:
-      return ReportBadArrayType(cx);
-  }
+  return perform<DoBinopWithOperation<Operate>::template DoBinop>(
+      cx, objv, idxv, valv, r);
 }
 
 #define INTEGRAL_TYPES_FOR_EACH(NAME)                              \

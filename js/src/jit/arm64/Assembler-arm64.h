@@ -537,7 +537,8 @@ class AutoForbidNops {
 // Forbids pool generation during a specified interval. Not nestable.
 class AutoForbidPoolsAndNops : public AutoForbidNops {
  public:
-  AutoForbidPoolsAndNops(Assembler* asm_, size_t maxInst) : AutoForbidNops(asm_) {
+  AutoForbidPoolsAndNops(Assembler* asm_, size_t maxInst)
+      : AutoForbidNops(asm_) {
     asm_->enterNoPool(maxInst);
   }
   ~AutoForbidPoolsAndNops() { asm_->leaveNoPool(); }

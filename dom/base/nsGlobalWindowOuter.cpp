@@ -1464,8 +1464,13 @@ bool nsGlobalWindowOuter::IsBlackForCC(bool aTracingNeeded) {
     return false;
   }
 
+  // Unlike most wrappers, the outer window wrapper is not a wrapper for
+  // the outer window. Instead, the outer window wrapper holds the inner
+  // window binding object, which in turn holds the nsGlobalWindowInner, which
+  // has a strong reference to the nsGlobalWindowOuter. We're using the
+  // mInnerWindow pointer as a flag for that whole chain.
   return (nsCCUncollectableMarker::InGeneration(GetMarkedCCGeneration()) ||
-          HasKnownLiveWrapper()) &&
+          (mInnerWindow && HasKnownLiveWrapper())) &&
          (!aTracingNeeded || HasNothingToTrace(ToSupports(this)));
 }
 
@@ -2819,8 +2824,8 @@ void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      this, aShowAccelerators, aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
+                                                        aShowFocusRings);
 }
 
 Element* nsPIDOMWindowOuter::GetFrameElementInternal() const {
@@ -6277,9 +6282,7 @@ void nsGlobalWindowOuter::ReallyCloseWindow() {
         // XXXbz now that we have mHavePendingClose, is this needed?
         bool isTab;
         if (rootWin == this || !bwin ||
-            (NS_SUCCEEDED(
-                 bwin->IsTabContentWindow(this, &isTab)) &&
-             isTab)) {
+            (NS_SUCCEEDED(bwin->IsTabContentWindow(this, &isTab)) && isTab)) {
           treeOwnerAsWin->Destroy();
         }
       }
@@ -6844,8 +6847,8 @@ void nsGlobalWindowOuter::SetKeyboardIndicators(
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      this, aShowAccelerators, aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
+                                                        aShowFocusRings);
 
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&

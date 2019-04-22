@@ -1818,7 +1818,7 @@ class ADBDevice(ADBCommand):
             # External storage on Android is case-insensitive and permissionless
             # therefore even with the proper privileges it is not possible
             # to change modes.
-            self._logger.warning('Ignoring attempt to chmod external storage')
+            self._logger.debug('Ignoring attempt to chmod external storage')
             return
 
         # build up the command to be run based on capabilities.

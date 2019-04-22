@@ -133,6 +133,7 @@
       }
 
       connectedCallback() {
+        this.textContent = "";
         this.append(MozXULElement.parseXULToFragment(`<label />`));
         this.label = this.querySelector("label");
         this.initializeAttributeInheritance();
@@ -150,6 +151,10 @@
     customElements.define("inherited-element-derived", InheritsElementDerived);
 
     class InheritsElementShadowDOMDeclarative extends MozXULElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+      }
       static get inheritedAttributes() {
         return {
           "label": "text=label,foo,empty-string,bardo=bar",
@@ -158,7 +163,7 @@
       }
 
       connectedCallback() {
-        this.attachShadow({ mode: "open" });
+        this.shadowRoot.textContent = "";
         this.shadowRoot.append(MozXULElement.parseXULToFragment(`<label />`));
         this.label = this.shadowRoot.querySelector("label");
         this.initializeAttributeInheritance();
@@ -192,6 +197,10 @@
       }
 
       connectedCallback() {
+        // Typically `initializeAttributeInheritance` handles this for us:
+        this._inheritedElements = null;
+
+        this.textContent = "";
         this.append(MozXULElement.parseXULToFragment(`<label />`));
         this.label = this.querySelector("label");
         this.inherit();
@@ -202,8 +211,7 @@
     let imperativeEl = document.querySelector("inherited-element-imperative");
     ok(imperativeEl, "imperative inheritance element exists");
 
-    for (let el of [declarativeEl, shadowDOMDeclarativeEl, imperativeEl]) {
-      info(`Running checks for ${el.tagName}`);
+    function checkElement(el) {
       is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
       ok(el.label.hasAttribute("empty-string"), "predefined attribute @empty-string");
       ok(!el.label.hasAttribute("bardo"), "predefined attribute @bardo");
@@ -240,6 +248,18 @@
       el.setAttribute("bar", "changed-from-host-2");
       is(el.label.getAttribute("bardo"), "changed-from-host-2",
         "attribute inheritance: does apply when host attr has changed after being removed");
+
+      // Restore to the original state so this can be ran again with the same element:
+      el.removeAttribute("label");
+      el.removeAttribute("bar");
+    }
+
+    for (let el of [declarativeEl, shadowDOMDeclarativeEl, imperativeEl]) {
+      info(`Running checks for ${el.tagName}`);
+      checkElement(el);
+      info(`Remove and re-add ${el.tagName} to make sure attribute inheritance still works`);
+      el.replaceWith(el);
+      checkElement(el);
     }
 
     let derivedEl = document.querySelector("inherited-element-derived");

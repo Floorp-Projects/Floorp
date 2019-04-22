@@ -358,9 +358,9 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
     return;
   }
 #if defined(XP_WIN)
-  nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ,
-                              FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                              FILE_FLAG_SEQUENTIAL_SCAN, nullptr));
+  nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr,
+                              OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN,
+                              nullptr));
   if (!fd) {
     return;
   }
@@ -371,20 +371,20 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
     return;
   }
 
-  nsAutoHandle mapping(CreateFileMapping(fd, nullptr,
-                                         SEC_IMAGE | PAGE_READONLY,
-                                         0, 0, nullptr));
+  nsAutoHandle mapping(
+      CreateFileMapping(fd, nullptr, SEC_IMAGE | PAGE_READONLY, 0, 0, nullptr));
 
   if (!mapping) {
     return;
   }
 
-  PVOID data = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (size_t)fileSize.QuadPart);
+  PVOID data =
+      MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (size_t)fileSize.QuadPart);
   auto guard = MakeScopeExit([=]() { UnmapViewOfFile(data); });
 
   if (data && !MaybePrefetchMemory((uint8_t*)data, (size_t)fileSize.QuadPart)) {
     volatile uint8_t read = 0;
-    for(size_t i = 0; i < (size_t)fileSize.QuadPart; i += 4096) {
+    for (size_t i = 0; i < (size_t)fileSize.QuadPart; i += 4096) {
       read += ((uint8_t*)data)[i];
     }
   }

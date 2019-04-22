@@ -200,12 +200,14 @@ void WorkerErrorNote::AssignErrorNote(JSErrorNotes::Note* aNote) {
 }
 
 WorkerErrorReport::WorkerErrorReport(WorkerPrivate* aWorkerPrivate)
-  : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                          StructuredCloneScope::SameProcessDifferentThread),
-    mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {
+    : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
+                            StructuredCloneScope::SameProcessDifferentThread),
+      mFlags(0),
+      mExnType(JSEXN_ERR),
+      mMutedError(false) {
   if (aWorkerPrivate) {
-    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-        aWorkerPrivate, "WorkerErrorReport");
+    RefPtr<StrongWorkerRef> workerRef =
+        StrongWorkerRef::Create(aWorkerPrivate, "WorkerErrorReport");
     if (workerRef) {
       mWorkerRef = new ThreadSafeWorkerRef(workerRef);
     }

@@ -115,9 +115,9 @@ struct MapTypeToTraceKind {
 inline constexpr bool IsCCTraceKind(JS::TraceKind aKind) {
   switch (aKind) {
 #define JS_EXPAND_DEF(name, _1, _2, inCCGraph) \
-    case JS::TraceKind::name: \
-      return inCCGraph;
-      JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+  case JS::TraceKind::name:                    \
+    return inCCGraph;
+    JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
     default:
       return false;
@@ -222,7 +222,7 @@ struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 template <typename F, typename... Args>
 auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
   switch (traceKind) {
-#define JS_EXPAND_DEF(name, type, _, _1)                   \
+#define JS_EXPAND_DEF(name, type, _, _1)                  \
   case JS::TraceKind::name:                               \
     return f.JS_DEPENDENT_TEMPLATE_HINT operator()<type>( \
         std::forward<Args>(args)...);
@@ -241,7 +241,7 @@ template <typename F>
 auto MapGCThingTyped(void* thing, JS::TraceKind traceKind, F&& f) {
   switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _, _1) \
-  case JS::TraceKind::name:             \
+  case JS::TraceKind::name:              \
     return f(static_cast<type*>(thing));
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF

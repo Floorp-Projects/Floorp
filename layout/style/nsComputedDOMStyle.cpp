@@ -1831,9 +1831,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
 
     const nsStyleDisplay* displayData = StyleDisplay();
     if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
-        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
-        // An outer SVG frame should behave the same as eReplaced in this case
-        !mInnerFrame->IsSVGOuterSVGFrame()) {
+        !mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) {
       calcHeight = false;
     }
   }
@@ -1870,9 +1868,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
 
     const nsStyleDisplay* displayData = StyleDisplay();
     if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
-        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
-        // An outer SVG frame should behave the same as eReplaced in this case
-        !mInnerFrame->IsSVGOuterSVGFrame()) {
+        !mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) {
       calcWidth = false;
     }
   }

@@ -121,7 +121,7 @@ nsHttpConnection::nsHttpConnection()
                      ? k5Sec
                      : gHttpHandler->IdleTimeout();
 
- mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
+  mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
 nsHttpConnection::~nsHttpConnection() {
@@ -158,11 +158,12 @@ nsHttpConnection::~nsHttpConnection() {
 
   if (mThroughCaptivePortal) {
     if (mTotalBytesRead || mTotalBytesWritten) {
-      auto total = Clamp<uint32_t>(
-          (mTotalBytesRead >> 10) + (mTotalBytesWritten >> 10), 0,
-          std::numeric_limits<uint32_t>::max());
+      auto total =
+          Clamp<uint32_t>((mTotalBytesRead >> 10) + (mTotalBytesWritten >> 10),
+                          0, std::numeric_limits<uint32_t>::max());
       Telemetry::ScalarAdd(
-          Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_CAPTIVE_PORTAL, total);
+          Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_CAPTIVE_PORTAL,
+          total);
     }
 
     Telemetry::ScalarAdd(
