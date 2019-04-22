@@ -16,7 +16,7 @@ interface nsISimpleEnumerator;
  * nsICategoryManager
  */
 
-[scriptable, uuid(de021d54-57a3-4025-ae63-4c8eedbe74c0)]
+[scriptable, builtinclass, uuid(de021d54-57a3-4025-ae63-4c8eedbe74c0)]
 interface nsICategoryEntry : nsISupportsCString
 {
   readonly attribute ACString entry;
@@ -34,7 +34,7 @@ interface nsICategoryManager : nsISupports
      * @return The value.
      */
     ACString getCategoryEntry(in ACString aCategory, in ACString aEntry);
-    
+
     /**
      * Add an entry to a category.
      * @param aCategory The name of the category ("protocol")
@@ -135,4 +135,3 @@ interface nsICategoryManager : nsISupports
     }
     %}
 };
-
