@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test handling of too-short username values</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/AddTask.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="application/javascript">
+const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
+const { LoginManagerContent } = LMCBackstagePass;
+
+let readyPromise = registerRunTests();
+
+function add2logins() {
+  runInParent(function initLogins() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.logins.removeAllLogins();
+
+    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+    login1.init("https://example.com", "https://example.com", null, "u", "pass1", "", "");
+
+    let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+    login2.init("https://example.com", "https://example.com", null, "user2", "pass2", "", "");
+
+    Services.logins.addLogin(login1);
+    Services.logins.addLogin(login2);
+  });
+}
+
+function addSingleLogin() {
+  runInParent(function initWithSingleLogin() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services.logins.removeAllLogins();
+
+    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+    login1.init("https://example.com", "https://example.com", null, "u", "pass1", "", "");
+    Services.logins.addLogin(login1);
+  });
+}
+
+let loadPromise = new Promise(resolve => {
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginFrame").addEventListener("load", (evt) => {
+      resolve();
+    });
+  });
+});
+
+async function loadFormIntoIframe(origin, html) {
+  let loginFrame = document.getElementById("loginFrame");
+  let loadedPromise = new Promise((resolve) => {
+    loginFrame.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+  loginFrame.src = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+  await loadedPromise;
+  let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+  // eslint-disable-next-line no-unsanitized/property
+  frameDoc.documentElement.innerHTML = html;
+  // Wait for the form to be processed before trying to submit.
+  await promiseFormsProcessed();
+  return frameDoc;
+}
+
+add_task(async function setup() {
+  info("Waiting for setup and page and frame loads");
+  await readyPromise;
+  await loadPromise;
+});
+
+const DEFAULT_ORIGIN = "https://example.com";
+
+/**
+ * @return {Promise} resolving when form submission was processed.
+ */
+function getSubmitMessage() {
+  info("getSubmitMessage");
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
+      info("got formSubmissionProcessed");
+      PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
+      resolve(...args);
+    });
+  });
+}
+
+add_task(async function test_min_length() {
+// test that when a username <= minLength is submitted, we prompt w. an empty username field
+  let frameDoc = await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
+    <input  type="text"       name="uname" value="">
+    <input  type="password"   name="pword" value="thepassword">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>`);
+  is(frameDoc.querySelector("[name='uname']").value, "", "Checking username is initially empty");
+
+  frameDoc.querySelector("[name='uname']").setUserInput("u");
+  // Check data sent via PasswordManager:onFormSubmit
+  let processedPromise = getSubmitMessage();
+  let promisedPromptShown = promisePromptShown("passwordmgr-prompt-save");
+  frameDoc.getElementById("submitBtn").click();
+
+  let [submittedResult] = await Promise.all([processedPromise, promisedPromptShown]);
+  info("Got submittedResult: " + JSON.stringify(submittedResult));
+
+  is(submittedResult.usernameField, null, "Check usernameField was null");
+  is(submittedResult.newPasswordField.value, "thepassword",
+     "Check newPasswordField.value was expected password");
+});
+
+add_task(async function test_no_prompt_for_manual_match() {
+  // test that we do not prompt for a change if the value was manually given (not autofilled)
+  // run this test with 2 matching logins from this origin so we don't autofill
+  await add2logins();
+
+  let allLogins = await LoginManager.getAllLogins();
+  let matchingLogins = allLogins.filter(l => l.hostname == DEFAULT_ORIGIN);
+  is(matchingLogins.length, 2, "Expected number of matching logins");
+
+  let login = matchingLogins.find(l => l.username == "u");
+  ok(login, "Found the 'u' login");
+  let timesUsed = login.timesUsed;
+  let guid = login.guid;
+
+  let frameDoc = await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
+    <input  type="text"       name="uname" value="">
+    <input  type="password"   name="pword" value="">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>`);
+  is(frameDoc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
+  // we manually fill username/password as the same as the saved values
+  frameDoc.querySelector("[name='uname']").setUserInput("u");
+  frameDoc.querySelector("[name='pword']").setUserInput("pass1");
+
+  // we shouldn't get the save password doorhanger as nothing changed...
+  let promisedPromptShown = promiseNoUnexpectedPromptShown();
+
+  // Check data sent via PasswordManager:onFormSubmit
+  let processedPromise = getSubmitMessage();
+  frameDoc.getElementById("submitBtn").click();
+
+  let submittedResult = await processedPromise;
+  info("Got submittedResult: " + JSON.stringify(submittedResult));
+
+  is(submittedResult.usernameField, null, "Check usernameField");
+
+  let updatedLogins = await LoginManager.getAllLogins();
+  is(allLogins.length, updatedLogins.length, "The number of saved logins didnt change");
+  let updatedLogin = updatedLogins.find(l => l.guid == guid);
+  ok(updatedLogin, "Got the login via guid");
+  is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
+
+  await promisedPromptShown;
+});
+
+
+add_task(async function test_autofill_munged_username_matching_password() {
+  // test that when an auto-filled saved username <= minLength is used, we record its use
+
+  // only a single matching login so we autofill the username
+  await addSingleLogin();
+
+  let allLogins = await LoginManager.getAllLogins();
+  let matchingLogins = allLogins.filter(l => l.hostname == DEFAULT_ORIGIN);
+  is(matchingLogins.length, 1, "Expected number of matching logins");
+
+  info("matched login: " + matchingLogins[0].username);
+  let login = matchingLogins.find(l => l.username == "u");
+  ok(login, "Found the 'u' login");
+
+  let timesUsed = login.timesUsed;
+  let guid = login.guid;
+
+  let frameDoc = await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
+    <input  type="text"       name="uname" value="">
+    <input  type="password"   name="pword" value="">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>`);
+  is(frameDoc.querySelector("[name='uname']").value, "u", "Check username did get autofilled");
+  frameDoc.querySelector("[name='pword']").setUserInput("pass1");
+
+  // we shouldn't get the save/update password doorhanger as it didn't change
+  let promisedPromptShown = promiseNoUnexpectedPromptShown();
+
+  // Check data sent via PasswordManager:onFormSubmit
+  let processedPromise = getSubmitMessage();
+  frameDoc.getElementById("submitBtn").click();
+
+  let submittedResult = await processedPromise;
+  info("Got submittedResult: " + JSON.stringify(submittedResult));
+
+  is(submittedResult.usernameField, null, "Check usernameField");
+
+  let updatedLogins = await LoginManager.getAllLogins();
+  is(allLogins.length, updatedLogins.length, "The number of saved logins didnt change");
+  let updatedLogin = updatedLogins.find(l => l.guid == guid);
+  ok(updatedLogin, "Got the login via guid");
+  is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
+
+  await promisedPromptShown;
+});
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="loginFrame" src="https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/blank.html"></iframe>
+</div>
+<pre id="test"></pre>
+</body>
+</html>
