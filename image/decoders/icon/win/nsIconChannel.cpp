@@ -31,7 +31,6 @@
 #include "nsThreadUtils.h"
 
 #include "Decoder.h"
-#include "IDecodingTask.h"
 #include "DecodePool.h"
 
 // we need windows.h to read out registry information...
@@ -66,26 +65,22 @@ static SHSTOCKICONID GetStockIconIDForName(const nsACString& aStockName) {
   return aStockName.EqualsLiteral("uac-shield") ? SIID_SHIELD : SIID_INVALID;
 }
 
-class nsIconChannel::IconAsyncOpenTask final : public IDecodingTask {
+class nsIconChannel::IconAsyncOpenTask final : public Runnable {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IconAsyncOpenTask, override)
-
   IconAsyncOpenTask(nsIconChannel* aChannel, nsIEventTarget* aTarget,
                     nsCOMPtr<nsIFile>&& aLocalFile, nsAutoString& aPath,
                     UINT aInfoFlags)
-      : mChannel(aChannel),
+      : Runnable("IconAsyncOpenTask"),
+        mChannel(aChannel),
+
         mTarget(aTarget),
         mLocalFile(std::move(aLocalFile)),
         mPath(aPath),
         mInfoFlags(aInfoFlags) {}
 
-  void Run() override;
-  bool ShouldPreferSyncRun() const override { return false; }
-  TaskPriority Priority() const override { return TaskPriority::eLow; }
+  NS_IMETHOD Run() override;
 
  private:
-  ~IconAsyncOpenTask() override = default;
-
   RefPtr<nsIconChannel> mChannel;
   nsCOMPtr<nsIEventTarget> mTarget;
   nsCOMPtr<nsIFile> mLocalFile;
@@ -93,7 +88,7 @@ class nsIconChannel::IconAsyncOpenTask final : public IDecodingTask {
   UINT mInfoFlags;
 };
 
-void nsIconChannel::IconAsyncOpenTask::Run() {
+NS_IMETHODIMP nsIconChannel::IconAsyncOpenTask::Run() {
   HICON hIcon = nullptr;
   nsresult rv =
       mChannel->GetHIconFromFile(mLocalFile, mPath, mInfoFlags, &hIcon);
@@ -101,6 +96,7 @@ void nsIconChannel::IconAsyncOpenTask::Run() {
       "nsIconChannel::FinishAsyncOpen", mChannel,
       &nsIconChannel::FinishAsyncOpen, hIcon, rv);
   mTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+  return NS_OK;
 }
 
 // nsIconChannel methods
@@ -422,9 +418,10 @@ nsresult nsIconChannel::GetHIconFromFile(bool aNonBlocking, HICON* hIcon) {
   }
 
   if (aNonBlocking) {
+    RefPtr<nsIEventTarget> target = DecodePool::Singleton()->GetIOEventTarget();
     RefPtr<IconAsyncOpenTask> task = new IconAsyncOpenTask(
         this, mListenerTarget, std::move(localFile), filePath, infoFlags);
-    DecodePool::Singleton()->AsyncRun(task);
+    target->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
     return NS_OK;
   }
 
