@@ -5,6 +5,8 @@
 #![allow(non_snake_case)]
 
 #[macro_use]
+extern crate cstr;
+#[macro_use]
 extern crate xpcom;
 
 mod driver;
