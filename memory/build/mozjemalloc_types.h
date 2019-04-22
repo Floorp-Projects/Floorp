@@ -94,22 +94,22 @@ typedef struct {
 
 enum PtrInfoTag {
   // The pointer is not currently known to the allocator.
-  // 'addr', 'size', and 'arenaId' are always 0.
+  // 'addr' and 'size' are always 0.
   TagUnknown,
 
   // The pointer is within a live allocation.
-  // 'addr', 'size', and 'arenaId' describe the allocation.
+  // 'addr' and 'size' describe the allocation.
   TagLiveSmall,
   TagLiveLarge,
   TagLiveHuge,
 
   // The pointer is within a small freed allocation.
-  // 'addr', 'size', and 'arenaId' describe the allocation.
+  // 'addr' and 'size' describe the allocation.
   TagFreedSmall,
 
   // The pointer is within a freed page. Details about the original
   // allocation, including its size, are not available.
-  // 'addr', 'size', and 'arenaId' describe the page.
+  // 'addr' and 'size' describe the page.
   TagFreedPageDirty,
   TagFreedPageDecommitted,
   TagFreedPageMadvised,
@@ -121,29 +121,10 @@ enum PtrInfoTag {
 // - The number of fields is minimized.
 // - The 'tag' field unambiguously defines the meaning of the subsequent fields.
 // Helper functions are used to group together related categories of tags.
-typedef struct jemalloc_ptr_info_s {
+typedef struct {
   enum PtrInfoTag tag;
   void* addr;   // meaning depends on tag; see above
   size_t size;  // meaning depends on tag; see above
-
-#ifdef MOZ_DEBUG
-  arena_id_t arenaId;  // meaning depends on tag; see above
-#endif
-
-#ifdef __cplusplus
-  jemalloc_ptr_info_s() {}
-  jemalloc_ptr_info_s(enum PtrInfoTag tag, void* addr, size_t size,
-                      arena_id_t arenaId)
-      : tag(tag),
-        addr(addr),
-        size(size)
-#  ifdef MOZ_DEBUG
-        ,
-        arenaId(arenaId)
-#  endif
-  {
-  }
-#endif
 } jemalloc_ptr_info_t;
 
 static inline bool jemalloc_ptr_is_live(jemalloc_ptr_info_t* info) {
