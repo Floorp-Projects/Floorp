@@ -21,6 +21,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {CreditCard} = ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
@@ -1159,6 +1160,17 @@ var LoginManagerContent = {
       openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
     }
 
+    // Dismiss prompt if the username field is a credit card number AND
+    // if the password field is a three digit number. Also dismiss prompt if
+    // the password is a credit card number and the password field has attribute
+    // autocomplete="cc-number".
+    let dismissedPrompt = false;
+    let newPasswordFieldValue = newPasswordField.value;
+    if ((CreditCard.isValidNumber(usernameValue) && newPasswordFieldValue.trim().match(/^[0-9]{3}$/)) ||
+        (CreditCard.isValidNumber(newPasswordFieldValue) && newPasswordField.getAutocompleteInfo().fieldName == "cc-number")) {
+      dismissedPrompt = true;
+    }
+
     let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(form.rootElement);
     messageManager.sendAsyncMessage("PasswordManager:onFormSubmit",
                                     { hostname,
@@ -1168,6 +1180,7 @@ var LoginManagerContent = {
                                       newPasswordField: mockPassword,
                                       oldPasswordField: mockOldPassword,
                                       openerTopWindowID,
+                                      dismissedPrompt,
                                     });
   },
 
