@@ -280,7 +280,7 @@ let ins = wasmEvalText(
     `(module
       (table (export "t") 10 20 anyref)
       (func (export "grow") (param i32) (result i32)
-       (table.grow (local.get 0) (ref.null))))`);
+       (table.grow (ref.null) (local.get 0))))`);
 assertEq(ins.exports.grow(0), 10);
 assertEq(ins.exports.t.length, 10);
 assertEq(ins.exports.grow(1), 10);
@@ -308,7 +308,7 @@ assertEq(ins.exports.t.length, 20)
         `(module
           (table 10 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (local.get 0) (ref.null))))`);
+           (table.grow (ref.null) (local.get 0))))`);
     assertEq(ins.exports.grow(0), 10);
     assertEq(ins.exports.grow(1), 10);
     assertEq(ins.exports.grow(9), 11);
@@ -321,7 +321,7 @@ assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t 2 funcref)
       (func $f
-       (drop (table.grow (i32.const 1) (ref.null)))))`),
+       (drop (table.grow (ref.null) (i32.const 1)))))`),
                    WebAssembly.CompileError,
                    /table.grow only on tables of anyref/);
 
@@ -331,7 +331,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (table 10 anyref)
        (func (export "f") (param f64)
-        (table.grow (local.get 0) (ref.null))))`)),
+        (table.grow (ref.null) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -340,7 +340,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func (export "f") (param i32)
-        (table.grow (local.get 0) (ref.null))))`)),
+        (table.grow (ref.null) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 
@@ -354,7 +354,7 @@ for (let visibility of ['', '(export "t")', '(import "m" "t")']) {
         `(module
           (table ${visibility} 10 20 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (local.get 0) (ref.null)))
+           (table.grow (ref.null) (local.get 0)))
           (func (export "size") (result i32)
            (table.size)))`,
         exp);

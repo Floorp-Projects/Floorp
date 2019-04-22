@@ -12,7 +12,7 @@ for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
          (local $last i32)
          (local $iters i32)
          (local $tmp anyref)
-         (local.set $last (table.grow $tbl (i32.const 1) (ref.null)))
+         (local.set $last (table.grow $tbl (ref.null) (i32.const 1)))
          (table.set $tbl (local.get $last) (call $item))
          (loop $iter_continue
            (local.set $i (i32.const 0))
