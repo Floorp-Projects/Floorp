@@ -1,0 +1,27 @@
+{
+    "llvm_revision": "356365",
+    "stages": "3",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_800/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_800/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_800/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_800/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_800/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_800/final",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
+    "cc": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
+    "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "extra_targets": [
+      "aarch64-unknown-linux-gnu"
+    ],
+    "patches": [
+      "static-llvm-symbolizer.patch",
+      "find_symbolizer_linux.patch",
+      "rename_gcov_flush.patch",
+      "android-mangling-error.patch"
+    ]
+}
