@@ -559,7 +559,7 @@ void HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
       hitpoint.x = (ptInRoot.x - paddingRect.x) / AppUnitsPerCSSPixel();
       hitpoint.y = (ptInRoot.y - paddingRect.y) / AppUnitsPerCSSPixel();
 
-      evt->region = mCurrentContext->GetHitRegion(hitpoint);
+      evt->mRegion = mCurrentContext->GetHitRegion(hitpoint);
       aVisitor.mCanHandle = true;
     }
   }

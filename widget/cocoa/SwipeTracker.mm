@@ -183,7 +183,7 @@ void SwipeTracker::UnregisterFromRefreshDriver() {
   // XXX How about geckoEvent.mTime?
   geckoEvent.mTimeStamp = aTimeStamp;
   geckoEvent.mRefPoint = aPosition;
-  geckoEvent.buttons = 0;
+  geckoEvent.mButtons = 0;
   return geckoEvent;
 }
 

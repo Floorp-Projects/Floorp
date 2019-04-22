@@ -131,22 +131,22 @@ struct ParamTraits<mozilla::WidgetMouseEventBase> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
-    WriteParam(aMsg, aParam.button);
-    WriteParam(aMsg, aParam.buttons);
-    WriteParam(aMsg, aParam.pressure);
-    WriteParam(aMsg, aParam.hitCluster);
-    WriteParam(aMsg, aParam.inputSource);
+    WriteParam(aMsg, aParam.mButton);
+    WriteParam(aMsg, aParam.mButtons);
+    WriteParam(aMsg, aParam.mPressure);
+    WriteParam(aMsg, aParam.mHitCluster);
+    WriteParam(aMsg, aParam.mInputSource);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter,
                      static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
-           ReadParam(aMsg, aIter, &aResult->button) &&
-           ReadParam(aMsg, aIter, &aResult->buttons) &&
-           ReadParam(aMsg, aIter, &aResult->pressure) &&
-           ReadParam(aMsg, aIter, &aResult->hitCluster) &&
-           ReadParam(aMsg, aIter, &aResult->inputSource);
+           ReadParam(aMsg, aIter, &aResult->mButton) &&
+           ReadParam(aMsg, aIter, &aResult->mButtons) &&
+           ReadParam(aMsg, aIter, &aResult->mPressure) &&
+           ReadParam(aMsg, aIter, &aResult->mHitCluster) &&
+           ReadParam(aMsg, aIter, &aResult->mInputSource);
   }
 };
 

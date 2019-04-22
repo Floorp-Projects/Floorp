@@ -519,18 +519,18 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
       break;
     case eMouseDown: {
-      switch (mouseEvent->button) {
-        case WidgetMouseEvent::eLeftButton:
+      switch (mouseEvent->mButton) {
+        case MouseButton::eLeft:
           BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
           mLClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
           sNormalLMouseEventInProcess = true;
           break;
-        case WidgetMouseEvent::eMiddleButton:
+        case MouseButton::eMiddle:
           mMClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
           break;
-        case WidgetMouseEvent::eRightButton:
+        case MouseButton::eRight:
           mRClickCount = mouseEvent->mClickCount;
           SetClickCount(mouseEvent, aStatus);
           break;
@@ -539,8 +539,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       break;
     }
     case eMouseUp: {
-      switch (mouseEvent->button) {
-        case WidgetMouseEvent::eLeftButton:
+      switch (mouseEvent->mButton) {
+        case MouseButton::eLeft:
           if (Prefs::ClickHoldContextMenu()) {
             KillClickHoldTimer();
           }
@@ -549,8 +549,8 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           sNormalLMouseEventInProcess = false;
           // then fall through...
           MOZ_FALLTHROUGH;
-        case WidgetMouseEvent::eRightButton:
-        case WidgetMouseEvent::eMiddleButton:
+        case MouseButton::eRight:
+        case MouseButton::eMiddle:
           RefPtr<EventStateManager> esm =
               ESMFromContentOrThis(aOverrideClickTarget);
           esm->SetClickCount(mouseEvent, aStatus, aOverrideClickTarget);
@@ -608,7 +608,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     case ePointerDown:
       if (aEvent->mMessage == ePointerDown) {
         PointerEventHandler::ImplicitlyCapturePointer(aTargetFrame, aEvent);
-        if (mouseEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+        if (mouseEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
           NotifyTargetUserActivation(aEvent, aTargetContent);
         }
       }
@@ -1613,7 +1613,7 @@ void EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
     }
   }
   mGestureModifiers = inDownEvent->mModifiers;
-  mGestureDownButtons = inDownEvent->buttons;
+  mGestureDownButtons = inDownEvent->mButtons;
 
   if (inDownEvent->mMessage != eMouseTouchDrag &&
       Prefs::ClickHoldContextMenu()) {
@@ -1661,7 +1661,7 @@ void EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent) {
   aEvent->mRefPoint =
       mGestureDownPoint - aEvent->mWidget->WidgetToScreenOffset();
   aEvent->mModifiers = mGestureModifiers;
-  aEvent->buttons = mGestureDownButtons;
+  aEvent->mButtons = mGestureDownButtons;
 }
 
 void EventStateManager::MaybeFirePointerCancel(WidgetInputEvent* aEvent) {
@@ -1813,9 +1813,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       startEvent.mDataTransfer = dataTransfer;
       if (aEvent->AsMouseEvent()) {
-        startEvent.inputSource = aEvent->AsMouseEvent()->inputSource;
+        startEvent.mInputSource = aEvent->AsMouseEvent()->mInputSource;
       } else if (aEvent->AsTouchEvent()) {
-        startEvent.inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+        startEvent.mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
       } else {
         MOZ_ASSERT(false);
       }
@@ -2303,10 +2303,10 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
+  event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aDelta;
-  event.inputSource = aEvent->inputSource;
+  event.mInputSource = aEvent->mInputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
@@ -2339,10 +2339,10 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mTime = aEvent->mTime;
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mModifiers = aEvent->mModifiers;
-  event.buttons = aEvent->buttons;
+  event.mButtons = aEvent->mButtons;
   event.mIsHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
   event.mDelta = aPixelDelta;
-  event.inputSource = aEvent->inputSource;
+  event.mInputSource = aEvent->mInputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
@@ -3020,7 +3020,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   switch (aEvent->mMessage) {
     case eMouseDown: {
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
+      if (mouseEvent->mButton == MouseButton::eLeft &&
           !sNormalLMouseEventInProcess) {
         // We got a mouseup event while a mousedown event was being processed.
         // Make sure that the capturing content is cleared.
@@ -3157,7 +3157,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             uint32_t flags =
                 nsIFocusManager::FLAG_BYMOUSE | nsIFocusManager::FLAG_NOSCROLL;
             // If this was a touch-generated event, pass that information:
-            if (mouseEvent->inputSource ==
+            if (mouseEvent->mInputSource ==
                 MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
               flags |= nsIFocusManager::FLAG_BYTOUCH;
             }
@@ -3177,7 +3177,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
 
         // The rest is left button-specific.
-        if (mouseEvent->button != WidgetMouseEvent::eLeftButton) {
+        if (mouseEvent->mButton != MouseButton::eLeft) {
           break;
         }
 
@@ -3229,7 +3229,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
 
       if (pointerEvent->mMessage == ePointerCancel ||
-          pointerEvent->inputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+          pointerEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
         // After pointercancel, pointer becomes invalid so we can remove
         // relevant helper from table. Regarding pointerup with non-hoverable
         // device, the pointer also becomes invalid. Hoverable (mouse/pen)
@@ -4083,7 +4083,7 @@ static void CreateMouseOrPointerWidgetEvent(
     newPointerEvent->mIsPrimary = sourcePointer->mIsPrimary;
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
-    newPointerEvent->inputSource = sourcePointer->inputSource;
+    newPointerEvent->mInputSource = sourcePointer->mInputSource;
     newPointerEvent->mRelatedTarget = aRelatedContent;
     aNewEvent = newPointerEvent.forget();
   } else {
@@ -4094,11 +4094,11 @@ static void CreateMouseOrPointerWidgetEvent(
   }
   aNewEvent->mRefPoint = aMouseEvent->mRefPoint;
   aNewEvent->mModifiers = aMouseEvent->mModifiers;
-  aNewEvent->button = aMouseEvent->button;
-  aNewEvent->buttons = aMouseEvent->buttons;
-  aNewEvent->pressure = aMouseEvent->pressure;
+  aNewEvent->mButton = aMouseEvent->mButton;
+  aNewEvent->mButtons = aMouseEvent->mButtons;
+  aNewEvent->mPressure = aMouseEvent->mPressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
-  aNewEvent->inputSource = aMouseEvent->inputSource;
+  aNewEvent->mInputSource = aMouseEvent->mInputSource;
   aNewEvent->pointerId = aMouseEvent->pointerId;
 }
 
@@ -4768,8 +4768,8 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
     }
   }
 
-  switch (aEvent->button) {
-    case WidgetMouseEvent::eLeftButton:
+  switch (aEvent->mButton) {
+    case MouseButton::eLeft:
       if (aEvent->mMessage == eMouseDown) {
         mLastLeftMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
@@ -4786,7 +4786,7 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       }
       break;
 
-    case WidgetMouseEvent::eMiddleButton:
+    case MouseButton::eMiddle:
       if (aEvent->mMessage == eMouseDown) {
         mLastMiddleMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
@@ -4803,7 +4803,7 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
       }
       break;
 
-    case WidgetMouseEvent::eRightButton:
+    case MouseButton::eRight:
       if (aEvent->mMessage == eMouseDown) {
         mLastRightMouseDownContent = mouseContent;
       } else if (aEvent->mMessage == eMouseUp) {
@@ -4860,15 +4860,15 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   event.mRefPoint = aMouseUpEvent->mRefPoint;
   event.mClickCount = aMouseUpEvent->mClickCount;
   event.mModifiers = aMouseUpEvent->mModifiers;
-  event.buttons = aMouseUpEvent->buttons;
+  event.mButtons = aMouseUpEvent->mButtons;
   event.mTime = aMouseUpEvent->mTime;
   event.mTimeStamp = aMouseUpEvent->mTimeStamp;
   event.mFlags.mOnlyChromeDispatch =
       aNoContentDispatch && !aMouseUpEvent->mUseLegacyNonPrimaryDispatch;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
-  event.button = aMouseUpEvent->button;
+  event.mButton = aMouseUpEvent->mButton;
   event.pointerId = aMouseUpEvent->pointerId;
-  event.inputSource = aMouseUpEvent->inputSource;
+  event.mInputSource = aMouseUpEvent->mInputSource;
   nsIContent* target = aMouseUpContent;
   nsIFrame* targetFrame = aCurrentTarget;
   if (aOverrideClickTarget) {
@@ -4946,7 +4946,7 @@ nsresult EventStateManager::PostHandleMouseUp(
   }
 
   // Handle middle click paste if it's enabled and the mouse button is middle.
-  if (aMouseUpEvent->button != WidgetMouseEventBase::eMiddleButton ||
+  if (aMouseUpEvent->mButton != MouseButton::eMiddle ||
       !WidgetMouseEvent::IsMiddleClickPasteEnabled()) {
     return NS_OK;
   }
@@ -4979,8 +4979,8 @@ nsresult EventStateManager::DispatchClickEvents(
   MOZ_ASSERT(aClickTarget || aOverrideClickTarget);
 
   bool notDispatchToContents =
-      (aMouseUpEvent->button == WidgetMouseEvent::eMiddleButton ||
-       aMouseUpEvent->button == WidgetMouseEvent::eRightButton);
+      (aMouseUpEvent->mButton == MouseButton::eMiddle ||
+       aMouseUpEvent->mButton == MouseButton::eRight);
 
   bool fireAuxClick = notDispatchToContents;
 
@@ -5021,7 +5021,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMouseEvent);
   MOZ_ASSERT((aMouseEvent->mMessage == eMouseAuxClick &&
-              aMouseEvent->button == WidgetMouseEventBase::eMiddleButton) ||
+              aMouseEvent->mButton == MouseButton::eMiddle) ||
              EventCausesClickEvents(*aMouseEvent));
   MOZ_ASSERT(aStatus);
   MOZ_ASSERT(*aStatus != nsEventStatus_eConsumeNoDefault);
@@ -5474,7 +5474,7 @@ void EventStateManager::ContentRemoved(Document* aDocument,
 
 bool EventStateManager::EventStatusOK(WidgetGUIEvent* aEvent) {
   return !(aEvent->mMessage == eMouseDown &&
-           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
+           aEvent->AsMouseEvent()->mButton == MouseButton::eLeft &&
            !sNormalLMouseEventInProcess);
 }
 

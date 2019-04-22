@@ -18,11 +18,12 @@ use std::{
     marker::PhantomData,
     mem, ptr,
     sync::atomic::{AtomicBool, Ordering},
+    ffi::CStr,
 };
 use xpcom::{
     getter_addrefs,
     interfaces::{nsIEventTarget, nsIRunnable, nsISupports, nsIThread},
-    xpcom, xpcom_method, AtomicRefcnt, NulTerminatedCStr, RefCounted, RefPtr, XpCom,
+    xpcom, xpcom_method, AtomicRefcnt, RefCounted, RefPtr, XpCom,
 };
 
 extern "C" {
@@ -141,7 +142,7 @@ pub type ThreadPtrHandle<T> = RefPtr<ThreadPtrHolder<T>>;
 pub struct ThreadPtrHolder<T: XpCom + 'static> {
     ptr: *const T,
     marker: PhantomData<T>,
-    name: NulTerminatedCStr,
+    name: &'static CStr,
     owning_thread: RefPtr<nsIThread>,
     refcnt: AtomicRefcnt,
 }
@@ -184,7 +185,7 @@ unsafe impl<T: XpCom + 'static> RefCounted for ThreadPtrHolder<T> {
 impl<T: XpCom + 'static> ThreadPtrHolder<T> {
     /// Creates a new owning thread pointer holder. Returns an error if the
     /// thread manager has shut down. Panics if `name` isn't a valid C string.
-    pub fn new(name: NulTerminatedCStr, ptr: RefPtr<T>) -> Result<RefPtr<Self>, nsresult> {
+    pub fn new(name: &'static CStr, ptr: RefPtr<T>) -> Result<RefPtr<Self>, nsresult> {
         let owning_thread = get_current_thread()?;
         // Take ownership of the `RefPtr`. This does _not_ decrement its
         // refcount, which is what we want. Once we've released all references

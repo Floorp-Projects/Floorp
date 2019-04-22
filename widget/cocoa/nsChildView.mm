@@ -4065,9 +4065,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.mClickCount = clickCount;
 
   if (modifierFlags & NSControlKeyMask)
-    geckoEvent.button = WidgetMouseEvent::eRightButton;
+    geckoEvent.mButton = MouseButton::eRight;
   else
-    geckoEvent.button = WidgetMouseEvent::eLeftButton;
+    geckoEvent.mButton = MouseButton::eLeft;
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   mBlockedLastMouseDown = NO;
@@ -4090,9 +4090,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
-    geckoEvent.button = WidgetMouseEvent::eRightButton;
+    geckoEvent.mButton = MouseButton::eRight;
   else
-    geckoEvent.button = WidgetMouseEvent::eLeftButton;
+    geckoEvent.mButton = MouseButton::eLeft;
 
   // Remember the event's position before calling DispatchInputEvent, because
   // that call can mutate it and convert it into a different coordinate space.
@@ -4192,7 +4192,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // The right mouse went down, fire off a right mouse down event to gecko
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = MouseButton::eRight;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4216,7 +4216,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = MouseButton::eRight;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -4249,7 +4249,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = MouseButton::eRight;
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4272,7 +4272,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = MouseButton::eMiddle;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4288,7 +4288,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = MouseButton::eMiddle;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -4302,7 +4302,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eMiddleButton;
+  geckoEvent.mButton = MouseButton::eMiddle;
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4547,7 +4547,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   WidgetMouseEvent geckoEvent(true, eContextMenu, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = WidgetMouseEvent::eRightButton;
+  geckoEvent.mButton = MouseButton::eRight;
   mGeckoChild->DispatchInputEvent(&geckoEvent);
   if (!mGeckoChild) return nil;
 
@@ -4587,23 +4587,23 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   outGeckoEvent->mRefPoint = [self convertWindowCoordinates:locationInWindow];
 
   WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
-  mouseEvent->buttons = 0;
+  mouseEvent->mButtons = 0;
   NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 
   if (mouseButtons & 0x01) {
-    mouseEvent->buttons |= WidgetMouseEvent::eLeftButtonFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::eLeftFlag;
   }
   if (mouseButtons & 0x02) {
-    mouseEvent->buttons |= WidgetMouseEvent::eRightButtonFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::eRightFlag;
   }
   if (mouseButtons & 0x04) {
-    mouseEvent->buttons |= WidgetMouseEvent::eMiddleButtonFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::eMiddleFlag;
   }
   if (mouseButtons & 0x08) {
-    mouseEvent->buttons |= WidgetMouseEvent::e4thButtonFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::e4thFlag;
   }
   if (mouseButtons & 0x10) {
-    mouseEvent->buttons |= WidgetMouseEvent::e5thButtonFlag;
+    mouseEvent->mButtons |= MouseButtonsFlag::e5thFlag;
   }
 
   switch ([aMouseEvent type]) {
@@ -4637,10 +4637,10 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     return;
   }
   if ([aPointerEvent type] != NSMouseMoved) {
-    aOutGeckoEvent->pressure = [aPointerEvent pressure];
-    MOZ_ASSERT(aOutGeckoEvent->pressure >= 0.0 && aOutGeckoEvent->pressure <= 1.0);
+    aOutGeckoEvent->mPressure = [aPointerEvent pressure];
+    MOZ_ASSERT(aOutGeckoEvent->mPressure >= 0.0 && aOutGeckoEvent->mPressure <= 1.0);
   }
-  aOutGeckoEvent->inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_PEN;
+  aOutGeckoEvent->mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_PEN;
   aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);
   aOutGeckoEvent->tiltY = lround([aPointerEvent tilt].y * 90);
   aOutGeckoEvent->tangentialPressure = [aPointerEvent tangentialPressure];

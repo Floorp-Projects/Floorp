@@ -616,7 +616,7 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #ifdef MOZ_WIDGET_GTK
   else if (ShouldScrollForEvent(aEvent) && aEvent->mClass == eMouseEventClass &&
-           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) {
+           aEvent->AsMouseEvent()->mButton == MouseButton::eRight) {
     // HandlePress and HandleRelease are usually called via
     // nsFrame::HandleEvent, but only for the left mouse button.
     if (aEvent->mMessage == eMouseDown) {
@@ -1183,15 +1183,15 @@ bool nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent) {
       return true;
     case eMouseDown:
     case eMouseUp: {
-      uint16_t button = aEvent->AsMouseEvent()->button;
+      uint16_t button = aEvent->AsMouseEvent()->mButton;
 #ifdef MOZ_WIDGET_GTK
-      return (button == WidgetMouseEvent::eLeftButton) ||
-             (button == WidgetMouseEvent::eRightButton && GetScrollToClick()) ||
-             (button == WidgetMouseEvent::eMiddleButton && gMiddlePref &&
+      return (button == MouseButton::eLeft) ||
+             (button == MouseButton::eRight && GetScrollToClick()) ||
+             (button == MouseButton::eMiddle && gMiddlePref &&
               !GetScrollToClick());
 #else
-      return (button == WidgetMouseEvent::eLeftButton) ||
-             (button == WidgetMouseEvent::eMiddleButton && gMiddlePref);
+      return (button == MouseButton::eLeft) ||
+             (button == MouseButton::eMiddle && gMiddlePref);
 #endif
     }
     default:
@@ -1221,7 +1221,7 @@ bool nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent) {
   }
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-  if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
+  if (mouseEvent->mButton == MouseButton::eLeft) {
 #ifdef XP_MACOSX
     bool invertPref = mouseEvent->IsAlt();
 #else
@@ -1231,7 +1231,7 @@ bool nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent) {
   }
 
 #ifdef MOZ_WIDGET_GTK
-  if (mouseEvent->button == WidgetMouseEvent::eRightButton) {
+  if (mouseEvent->mButton == MouseButton::eRight) {
     return !GetScrollToClick();
   }
 #endif
