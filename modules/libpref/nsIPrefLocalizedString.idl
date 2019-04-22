@@ -16,7 +16,7 @@
  * @see nsIPrefBranch
  * @see nsISupportsString
  */
-[scriptable, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]
+[scriptable, builtinclass, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]
 interface nsIPrefLocalizedString : nsISupportsString {};
 
 %{C++

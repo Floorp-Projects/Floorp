@@ -184,7 +184,7 @@ bool CompositorVsyncScheduler::NotifyVsync(const VsyncEvent& aVsync) {
   }
 #else
   PostCompositeTask(aVsync.mId, aVsync.mTime);
-#endif    // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
   PostVRTask(aVsync.mTime);
   return true;

@@ -597,6 +597,25 @@ class GTestCommands(MachCommandBase):
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
 
+    @CommandArgument('--package',
+        default='org.mozilla.geckoview.test',
+        help='(Android only) Package name of test app.')
+    @CommandArgument('--adbpath',
+        dest='adb_path',
+        help='(Android only) Path to adb binary.')
+    @CommandArgument('--deviceSerial',
+        dest='device_serial',
+        help="(Android only) adb serial number of remote device. "
+             "Required when more than one device is connected to the host. "
+             "Use 'adb devices' to see connected devices.")
+    @CommandArgument('--remoteTestRoot',
+        dest='remote_test_root',
+        help='(Android only) Remote directory to use as test root '
+             '(eg. /mnt/sdcard/tests or /data/local/tests).')
+    @CommandArgument('--libxul',
+        dest='libxul_path',
+        help='(Android only) Path to gtest libxul.so.')
+
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
         help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
@@ -606,8 +625,9 @@ class GTestCommands(MachCommandBase):
         group='debugging',
         help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
 
-    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser, debug, debugger,
-              debugger_args):
+    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser,
+              package, adb_path, device_serial, remote_test_root, libxul_path,
+              debug, debugger, debugger_args):
 
         # We lazy build gtest because it's slow to link
         try:
@@ -631,6 +651,17 @@ class GTestCommands(MachCommandBase):
         if self.substs.get('MOZ_WIDGET_TOOLKIT') == 'cocoa':
             self._run_make(directory='browser/app', target='repackage',
                            ensure_exit_code=True)
+
+        if conditions.is_android(self):
+            if jobs != 1:
+                print("--jobs is not supported on Android and will be ignored")
+            if debug or debugger or debugger_args:
+                print("--debug options are not supported on Android and will be ignored")
+            return self.android_gtest(shuffle, gtest_filter,
+                                      package, adb_path, device_serial, remote_test_root, libxul_path)
+
+        if package or adb_path or device_serial or remote_test_root or libxul_path:
+            print("One or more Android-only options will be ignored")
 
         app_path = self.get_binary_path('app')
         args = [app_path, '-unittest', '--gtest_death_test_style=threadsafe'];
@@ -707,6 +738,36 @@ class GTestCommands(MachCommandBase):
             exit_code = 255
 
         return exit_code
+
+    def android_gtest(self, shuffle, gtest_filter,
+                      package, adb_path, device_serial, remote_test_root, libxul_path):
+        # setup logging for mozrunner
+        from mozlog.commandline import setup_logging
+        format_args = {'level': self._mach_context.settings['test']['level']}
+        default_format = self._mach_context.settings['test']['format']
+        log = setup_logging('mach-gtest', {}, {default_format: sys.stdout}, format_args)
+
+        # ensure that a device is available and test app is installed
+        from mozrunner.devices.android_device import (verify_android_device, get_adb_path)
+        verify_android_device(self, install=True, app=package, device_serial=device_serial)
+
+        if not adb_path:
+            adb_path = get_adb_path(self)
+        if not libxul_path:
+            libxul_path = os.path.join(self.topobjdir, "dist", "bin", "gtest", "libxul.so")
+
+        # run gtest via remotegtests.py
+        import imp
+        path = os.path.join('testing', 'gtest', 'remotegtests.py')
+        with open(path, 'r') as fh:
+            imp.load_module('remotegtests', fh, path,
+                            ('.py', 'r', imp.PY_SOURCE))
+        import remotegtests
+        tester = remotegtests.RemoteGTests()
+        tester.run_gtest(shuffle, gtest_filter, package, adb_path, device_serial,
+                         remote_test_root, libxul_path, None)
+
+        return 0
 
     def prepend_debugger_args(self, args, debugger, debugger_args):
         '''

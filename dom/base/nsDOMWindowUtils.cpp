@@ -1166,8 +1166,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
 
   AutoTArray<RefPtr<nsINode>, 8> nodes;
   doc->NodesFromRect(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize,
-                     aIgnoreRootScrollFrame, aFlushLayout, aOnlyVisible,
-                     nodes);
+                     aIgnoreRootScrollFrame, aFlushLayout, aOnlyVisible, nodes);
   list->SetCapacity(nodes.Length());
   for (auto& node : nodes) {
     list->AppendElement(node->AsContent());

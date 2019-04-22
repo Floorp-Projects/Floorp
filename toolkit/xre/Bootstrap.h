@@ -149,8 +149,7 @@ Bootstrap::UniquePtr GetBootstrap(
 extern "C" NS_EXPORT void NS_FROZENCALL
 XRE_GetBootstrap(Bootstrap::UniquePtr& b);
 
-inline Bootstrap::UniquePtr GetBootstrap(
-    const char* aXPCOMFile = nullptr) {
+inline Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile = nullptr) {
   Bootstrap::UniquePtr bootstrap;
   XRE_GetBootstrap(bootstrap);
   return bootstrap;

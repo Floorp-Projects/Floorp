@@ -9,7 +9,7 @@
 using mozilla::OriginAttributes;
 using mozilla::Preferences;
 
-static void TestSuffix(const OriginAttributes& attrs) {
+static void TestSuffix(const OriginAttributes &attrs) {
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 

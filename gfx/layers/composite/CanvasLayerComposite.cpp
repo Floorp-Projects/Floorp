@@ -40,9 +40,13 @@ CanvasLayerComposite::~CanvasLayerComposite() {
 
 bool CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
   switch (aHost->GetType()) {
-    case CompositableType::IMAGE:
+    case CompositableType::IMAGE: {
+      if (mCompositableHost && aHost != mCompositableHost) {
+        mCompositableHost->Detach(this);
+      }
       mCompositableHost = aHost;
       return true;
+    }
     default:
       return false;
   }

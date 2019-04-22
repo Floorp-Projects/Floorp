@@ -94,12 +94,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
                                    nsIContent* aContent,    \
                                    mozilla::EventStates aStateMask) override;
 
-#define NS_DECL_NSIDOCUMENTOBSERVER                 \
-  NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE           \
-  NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE             \
-  NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD             \
-  NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD               \
-  NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED   \
+#define NS_DECL_NSIDOCUMENTOBSERVER               \
+  NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE         \
+  NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE           \
+  NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD           \
+  NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD             \
+  NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED \
   NS_DECL_NSIMUTATIONOBSERVER
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)  \
@@ -111,9 +111,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
   void _class::BeginLoad(mozilla::dom::Document*) {}  \
   void _class::EndLoad(mozilla::dom::Document*) {}
 
-#define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                 \
-  void _class::ContentStateChanged(mozilla::dom::Document*,            \
-                                   nsIContent* aContent,               \
+#define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)      \
+  void _class::ContentStateChanged(mozilla::dom::Document*, \
+                                   nsIContent* aContent,    \
                                    mozilla::EventStates aStateMask) {}
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class) \

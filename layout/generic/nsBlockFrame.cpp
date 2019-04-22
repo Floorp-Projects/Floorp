@@ -1286,9 +1286,11 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       const auto baselineGroup = BaselineSharingGroup::eFirst;
       nscoord markerBaseline;
       if (MOZ_UNLIKELY(wm.IsOrthogonalTo(marker->GetWritingMode()) ||
-                       !marker->GetNaturalBaselineBOffset(wm, baselineGroup, &markerBaseline))) {
+                       !marker->GetNaturalBaselineBOffset(wm, baselineGroup,
+                                                          &markerBaseline))) {
         // ::marker has no baseline in this axis: align with its margin-box end.
-        markerBaseline = bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
+        markerBaseline =
+            bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
       }
       bbox.BStart(wm) = position.mBaseline - markerBaseline;
       marker->SetRect(wm, bbox, reflowOutput.PhysicalSize());

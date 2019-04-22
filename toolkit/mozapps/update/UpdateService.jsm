@@ -4008,7 +4008,8 @@ Downloader.prototype = {
           getService(Ci.nsIUpdateManager).saveUpdates();
         this._pendingRequest = null;
       }, error => {
-        if (error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_GET_BITS_JOB &&
+        if ((error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_GET_BITS_JOB ||
+            error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM) &&
             error.action == Ci.nsIBits.ERROR_ACTION_MONITOR_DOWNLOAD &&
             error.stage == Ci.nsIBits.ERROR_STAGE_BITS_CLIENT &&
             error.codeType == Ci.nsIBits.ERROR_CODE_TYPE_HRESULT &&

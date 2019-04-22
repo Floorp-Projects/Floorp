@@ -9411,7 +9411,7 @@ nsOverflowAreas nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame,
   nsRect& vis = result.VisualOverflow();
   vis.UnionRect(vis, boundingBox);
   UnionAdditionalOverflow(PresContext(), aBlockFrame, provider, &vis, true,
-      aIncludeShadows);
+                          aIncludeShadows);
   return result;
 }
 

@@ -94,6 +94,8 @@ pub enum StartJobFailure {
     ApplySettings(HResultMessage),
     #[fail(display = "Resume job: {}", _0)]
     Resume(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -124,6 +126,8 @@ pub enum MonitorJobFailure {
     NotFound,
     #[fail(display = "Get job: {}", _0)]
     GetJob(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -153,6 +157,8 @@ pub enum SuspendJobFailure {
     GetJob(HResultMessage),
     #[fail(display = "Suspend job: {}", _0)]
     SuspendJob(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -182,6 +188,8 @@ pub enum ResumeJobFailure {
     GetJob(HResultMessage),
     #[fail(display = "Resume job: {}", _0)]
     ResumeJob(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -212,6 +220,8 @@ pub enum SetJobPriorityFailure {
     GetJob(HResultMessage),
     #[fail(display = "Apply settings to job: {}", _0)]
     ApplySettings(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -269,6 +279,8 @@ pub enum CompleteJobFailure {
     CompleteJob(HResultMessage),
     #[fail(display = "Job only partially completed")]
     PartialComplete,
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
@@ -298,6 +310,8 @@ pub enum CancelJobFailure {
     GetJob(HResultMessage),
     #[fail(display = "Cancel job: {}", _0)]
     CancelJob(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
     #[fail(display = "BITS error: {}", _0)]
     OtherBITS(HResultMessage),
     #[fail(display = "Other failure: {}", _0)]
