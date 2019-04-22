@@ -1106,7 +1106,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-window-transform: translateY(70px);
 }
 
-#BMB_bookmarksPopup[side][animate="open"] {
+#BMB_bookmarksPopup[animate="open"] {
   -moz-window-opacity: 1.0;
   transition-duration: 0.18s, 0.18s;
   -moz-window-transform: none;
@@ -1137,7 +1137,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   transform: translateY(70px);
 }
 
-#BMB_bookmarksPopup[side][animate="open"] {
+#BMB_bookmarksPopup[animate="open"] {
   opacity: 1.0;
   transition-duration: 0.18s, 0.18s;
   transform: none;
