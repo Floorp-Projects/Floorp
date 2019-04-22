@@ -88,7 +88,6 @@ raptor-firefox:
     - raptor-tp6-6-firefox
     - raptor-tp6-7-firefox
     - raptor-tp6-8-firefox
-    - raptor-tp6-8-404-firefox
     - raptor-tp6-9-firefox
     - raptor-tp6-10-firefox
     - raptor-tp6-binast-1-firefox
@@ -128,7 +127,6 @@ raptor-chromium:
     - raptor-tp6-6-chromium
     - raptor-tp6-7-chromium
     - raptor-tp6-8-chromium
-    - raptor-tp6-8-404-chromium
     - raptor-tp6-9-chromium
     - raptor-tp6-10-chromium
     - raptor-speedometer-chromium
