@@ -90,7 +90,7 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((WebExtension, Throwable) -> Unit)
     ) {
-        val result = runtime.registerWebExtension(GeckoWebExtension(ext.url, ext.id))
+        val result = runtime.registerWebExtension(GeckoWebExtension(ext.url, ext.id, true))
         result.then({
             onSuccess(ext)
             GeckoResult<Void>()
