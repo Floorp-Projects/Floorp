@@ -13,6 +13,7 @@ import type { AstLocation, SymbolDeclarations } from "../workers/parser";
 
 import type { Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
+import type { Node, Grip, GripProperties } from "devtools-reps";
 
 type EmptyLinesType = number[];
 
@@ -28,17 +29,18 @@ export type SourceMetaDataType = {
 
 export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
 
-export type Preview =
-  | {| updating: true |}
-  | null
-  | {|
-      updating: false,
-      expression: string,
-      location: AstLocation,
-      cursorPos: any,
-      tokenPos: AstLocation,
-      result: Object
-    |};
+export type Preview = {| updating: true |} | null | PreviewValue;
+
+export type PreviewValue = {|
+  expression: string,
+  result: Grip,
+  root: Node,
+  properties: GripProperties,
+  location: AstLocation,
+  cursorPos: any,
+  tokenPos: AstLocation,
+  updating: false
+|};
 
 export type ASTState = {
   +symbols: SymbolsMap,

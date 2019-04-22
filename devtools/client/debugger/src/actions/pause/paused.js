@@ -30,7 +30,7 @@ import type { ThunkArgs } from "../types";
  */
 export function paused(pauseInfo: Pause) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
-    const { thread, frames, why, loadedObjects } = pauseInfo;
+    const { thread, frames, why } = pauseInfo;
     const topFrame = frames.length > 0 ? frames[0] : null;
 
     dispatch({
@@ -38,8 +38,7 @@ export function paused(pauseInfo: Pause) {
       thread,
       why,
       frames,
-      selectedFrameId: topFrame ? topFrame.id : undefined,
-      loadedObjects: loadedObjects || []
+      selectedFrameId: topFrame ? topFrame.id : undefined
     });
 
     // Get a context capturing the newly paused and selected thread.

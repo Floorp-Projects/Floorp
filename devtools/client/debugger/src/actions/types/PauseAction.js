@@ -63,13 +63,6 @@ export type PauseAction =
       +componentIndex: number
     |}
   | {|
-      +type: "SET_POPUP_OBJECT_PROPERTIES",
-      +cx: ThreadContext,
-      +thread: string,
-      +objectId: string,
-      +properties: Object
-    |}
-  | {|
       +type: "ADD_EXPRESSION",
       +cx: ThreadContext,
       +thread: string,

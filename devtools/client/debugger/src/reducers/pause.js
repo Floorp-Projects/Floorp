@@ -66,7 +66,6 @@ type ThreadPauseState = {
     }
   },
   selectedFrameId: ?string,
-  loadedObjects: Object,
   command: Command,
   lastCommand: Command,
   wasStepping: boolean,
@@ -113,7 +112,6 @@ const resumedPauseState = {
     mappings: {}
   },
   selectedFrameId: null,
-  loadedObjects: {},
   why: null
 };
 
@@ -172,13 +170,7 @@ function update(
     }
 
     case "PAUSED": {
-      const { thread, selectedFrameId, frames, loadedObjects, why } = action;
-
-      // turn this into an object keyed by object id
-      const objectMap = {};
-      loadedObjects.forEach(obj => {
-        objectMap[obj.value.objectId] = obj;
-      });
+      const { thread, selectedFrameId, frames, why } = action;
 
       state = {
         ...state,
@@ -194,7 +186,6 @@ function update(
         selectedFrameId,
         frames,
         frameScopes: { ...resumedPauseState.frameScopes },
-        loadedObjects: objectMap,
         why
       });
     }
@@ -255,19 +246,6 @@ function update(
 
     case "SELECT_FRAME":
       return updateThreadState({ selectedFrameId: action.frame.id });
-
-    case "SET_POPUP_OBJECT_PROPERTIES": {
-      if (!action.properties) {
-        return state;
-      }
-
-      return updateThreadState({
-        loadedObjects: {
-          ...threadState().loadedObjects,
-          [action.objectId]: action.properties
-        }
-      });
-    }
 
     case "CONNECT":
       return {
@@ -385,96 +363,69 @@ function getPauseLocation(state, action) {
 
 // Selectors
 
-// Unfortunately, it's really hard to make these functions accept just
-// the state that we care about and still type it with Flow. The
-// problem is that we want to re-export all selectors from a single
-// module for the UI, and all of those selectors should take the
-// top-level app state, so we'd have to "wrap" them to automatically
-// pick off the piece of state we're interested in. It's impossible
-// (right now) to type those wrapped functions.
-type OuterState = State;
-
-export function getContext(state: OuterState) {
+export function getContext(state: State) {
   return state.pause.cx;
 }
 
-export function getThreadContext(state: OuterState) {
+export function getThreadContext(state: State) {
   return state.pause.threadcx;
 }
 
-export function getAllPopupObjectProperties(
-  state: OuterState,
-  thread: ThreadId
-) {
-  return getThreadPauseState(state.pause, thread).loadedObjects;
-}
-
-export function getPauseReason(state: OuterState, thread: ThreadId): ?Why {
+export function getPauseReason(state: State, thread: ThreadId): ?Why {
   return getThreadPauseState(state.pause, thread).why;
 }
 
-export function getPauseCommand(state: OuterState, thread: ThreadId): Command {
+export function getPauseCommand(state: State, thread: ThreadId): Command {
   return getThreadPauseState(state.pause, thread).command;
 }
 
-export function wasStepping(state: OuterState, thread: ThreadId): boolean {
+export function wasStepping(state: State, thread: ThreadId): boolean {
   return getThreadPauseState(state.pause, thread).wasStepping;
 }
 
-export function isStepping(state: OuterState, thread: ThreadId) {
+export function isStepping(state: State, thread: ThreadId) {
   return ["stepIn", "stepOver", "stepOut"].includes(
     getPauseCommand(state, thread)
   );
 }
 
-export function getCurrentThread(state: OuterState) {
+export function getCurrentThread(state: State) {
   return getThreadContext(state).thread;
 }
 
-export function getIsPaused(state: OuterState, thread: ThreadId) {
+export function getIsPaused(state: State, thread: ThreadId) {
   return !!getThreadPauseState(state.pause, thread).frames;
 }
 
-export function getPreviousPauseFrameLocation(
-  state: OuterState,
-  thread: ThreadId
-) {
+export function getPreviousPauseFrameLocation(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).previousLocation;
 }
 
-export function isEvaluatingExpression(state: OuterState, thread: ThreadId) {
+export function isEvaluatingExpression(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).command === "expression";
 }
 
-export function getPopupObjectProperties(
-  state: OuterState,
-  thread: ThreadId,
-  objectId: string
-) {
-  return getAllPopupObjectProperties(state, thread)[objectId];
-}
-
-export function getIsWaitingOnBreak(state: OuterState, thread: ThreadId) {
+export function getIsWaitingOnBreak(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).isWaitingOnBreak;
 }
 
-export function getShouldPauseOnExceptions(state: OuterState) {
+export function getShouldPauseOnExceptions(state: State) {
   return state.pause.shouldPauseOnExceptions;
 }
 
-export function getShouldPauseOnCaughtExceptions(state: OuterState) {
+export function getShouldPauseOnCaughtExceptions(state: State) {
   return state.pause.shouldPauseOnCaughtExceptions;
 }
 
-export function getCanRewind(state: OuterState) {
+export function getCanRewind(state: State) {
   return state.pause.canRewind;
 }
 
-export function getFrames(state: OuterState, thread: ThreadId) {
+export function getFrames(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).frames;
 }
 
-export function getCurrentThreadFrames(state: OuterState) {
+export function getCurrentThreadFrames(state: State) {
   return getThreadPauseState(state.pause, getCurrentThread(state)).frames;
 }
 
@@ -487,7 +438,7 @@ function getGeneratedFrameId(frameId: string): string {
 }
 
 export function getGeneratedFrameScope(
-  state: OuterState,
+  state: State,
   thread: ThreadId,
   frameId: ?string
 ) {
@@ -499,7 +450,7 @@ export function getGeneratedFrameScope(
 }
 
 export function getOriginalFrameScope(
-  state: OuterState,
+  state: State,
   thread: ThreadId,
   sourceId: ?SourceId,
   frameId: ?string
@@ -523,11 +474,11 @@ export function getOriginalFrameScope(
   return null;
 }
 
-export function getFrameScopes(state: OuterState, thread: ThreadId) {
+export function getFrameScopes(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).frameScopes;
 }
 
-export function getSelectedFrameBindings(state: OuterState, thread: ThreadId) {
+export function getSelectedFrameBindings(state: State, thread: ThreadId) {
   const scopes = getFrameScopes(state, thread);
   const selectedFrameId = getSelectedFrameId(state, thread);
   if (!scopes || !selectedFrameId) {
@@ -559,7 +510,7 @@ export function getSelectedFrameBindings(state: OuterState, thread: ThreadId) {
 }
 
 export function getFrameScope(
-  state: OuterState,
+  state: State,
   thread: ThreadId,
   sourceId: ?SourceId,
   frameId: ?string
@@ -573,7 +524,7 @@ export function getFrameScope(
   );
 }
 
-export function getSelectedScope(state: OuterState, thread: ThreadId) {
+export function getSelectedScope(state: State, thread: ThreadId) {
   const sourceId = getSelectedSourceId(state);
   const frameId = getSelectedFrameId(state, thread);
 
@@ -585,19 +536,19 @@ export function getSelectedScope(state: OuterState, thread: ThreadId) {
   return frameScope.scope || null;
 }
 
-export function getSelectedOriginalScope(state: OuterState, thread: ThreadId) {
+export function getSelectedOriginalScope(state: State, thread: ThreadId) {
   const sourceId = getSelectedSourceId(state);
   const frameId = getSelectedFrameId(state, thread);
   return getOriginalFrameScope(state, thread, sourceId, frameId);
 }
 
-export function getSelectedGeneratedScope(state: OuterState, thread: ThreadId) {
+export function getSelectedGeneratedScope(state: State, thread: ThreadId) {
   const frameId = getSelectedFrameId(state, thread);
   return getGeneratedFrameScope(state, thread, frameId);
 }
 
 export function getSelectedScopeMappings(
-  state: OuterState,
+  state: State,
   thread: ThreadId
 ): {
   [string]: string | null
@@ -610,25 +561,25 @@ export function getSelectedScopeMappings(
   return getFrameScopes(state, thread).mappings[frameId];
 }
 
-export function getSelectedFrameId(state: OuterState, thread: ThreadId) {
+export function getSelectedFrameId(state: State, thread: ThreadId) {
   return getThreadPauseState(state.pause, thread).selectedFrameId;
 }
 
-export function getTopFrame(state: OuterState, thread: ThreadId) {
+export function getTopFrame(state: State, thread: ThreadId) {
   const frames = getFrames(state, thread);
   return frames && frames[0];
 }
 
-export function getSkipPausing(state: OuterState) {
+export function getSkipPausing(state: State) {
   return state.pause.skipPausing;
 }
 
-export function isMapScopesEnabled(state: OuterState) {
+export function isMapScopesEnabled(state: State) {
   return state.pause.mapScopes;
 }
 
 // NOTE: currently only used for chrome
-export function getChromeScopes(state: OuterState, thread: ThreadId) {
+export function getChromeScopes(state: State, thread: ThreadId) {
   const frame: ?ChromeFrame = (getSelectedFrame(state, thread): any);
   return frame ? frame.scopeChain : undefined;
 }
