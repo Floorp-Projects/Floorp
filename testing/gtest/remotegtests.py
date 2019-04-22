@@ -30,7 +30,7 @@ class RemoteGTests(object):
        A test harness to run gtest on Android.
     """
 
-    def build_environment(self, options, test_filter):
+    def build_environment(self, shuffle, test_filter):
         """
            Create and return a dictionary of all the appropriate env variables
            and values.
@@ -40,32 +40,35 @@ class RemoteGTests(object):
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["MOZ_CRASHREPORTER"] = "1"
         env["MOZ_RUN_GTEST"] = "1"
+        # custom output parser is mandatory on Android
         env["MOZ_TBPL_PARSER"] = "1"
         env["MOZ_GTEST_LOG_PATH"] = self.remote_log
         env["MOZ_GTEST_MINIDUMPS_PATH"] = self.remote_minidumps
         env["MOZ_IN_AUTOMATION"] = "1"
-        if options.shuffle:
+        if shuffle:
             env["GTEST_SHUFFLE"] = "True"
         if test_filter:
             env["GTEST_FILTER"] = test_filter
 
         return env
 
-    def run_gtest(self, options, test_filter):
+    def run_gtest(self, shuffle, test_filter, package, adb_path, device_serial,
+                  remote_test_root, libxul_path, symbols_path):
         """
            Launch the test app, run gtest, collect test results and wait for completion.
            Return False if a crash or other failure is detected, else True.
         """
-        self.device = mozdevice.ADBDevice(adb=options.adb_path,
-                                          device=options.device_serial,
-                                          test_root=options.test_root,
+        update_mozinfo()
+        self.device = mozdevice.ADBDevice(adb=adb_path,
+                                          device=device_serial,
+                                          test_root=remote_test_root,
                                           logger_name=LOGGER_NAME,
                                           verbose=True)
         root = self.device.test_root
         self.remote_profile = posixpath.join(root, 'gtest-profile')
         self.remote_minidumps = posixpath.join(root, 'gtest-minidumps')
         self.remote_log = posixpath.join(root, 'gtest.log')
-        self.package = options.package
+        self.package = package
         self.cleanup()
         self.device.mkdir(self.remote_profile, parents=True)
         self.device.mkdir(self.remote_minidumps, parents=True)
@@ -78,9 +81,9 @@ class RemoteGTests(object):
 
         # TODO -- consider packaging the gtest libxul.so in an apk
         remote = "/data/app/%s-1/lib/x86_64/" % self.package
-        self.device.push(options.libxul_path, remote)
+        self.device.push(libxul_path, remote)
 
-        env = self.build_environment(options, test_filter)
+        env = self.build_environment(shuffle, test_filter)
         args = ["-unittest", "--gtest_death_test_style=threadsafe",
                 "-profile %s" % self.remote_profile]
         if 'geckoview' in self.package:
@@ -93,7 +96,7 @@ class RemoteGTests(object):
         waiter = AppWaiter(self.device, self.remote_log)
         timed_out = waiter.wait(self.package)
         self.shutdown(use_kill=True if timed_out else False)
-        if self.check_for_crashes(options.symbols_path):
+        if self.check_for_crashes(symbols_path):
             return False
         return True
 
@@ -313,7 +316,7 @@ class remoteGtestOptions(OptionParser):
         self.add_option("--remoteTestRoot",
                         action="store",
                         type=str,
-                        dest="test_root",
+                        dest="remote_test_root",
                         help="Remote directory to use as test root "
                              "(eg. /mnt/sdcard/tests or /data/local/tests).")
         self.add_option("--libxul",
@@ -357,12 +360,14 @@ def main():
         parser.error("only one test_filter is allowed")
         sys.exit(1)
     test_filter = args[0] if args else None
-    update_mozinfo()
     tester = RemoteGTests()
     result = False
     try:
         device_exception = False
-        result = tester.run_gtest(options, test_filter)
+        result = tester.run_gtest(options.shuffle, test_filter, options.package,
+                                  options.adb_path, options.device_serial,
+                                  options.remote_test_root, options.libxul_path,
+                                  options.symbols_path)
     except KeyboardInterrupt:
         log.info("gtest | Received keyboard interrupt")
     except Exception as e:
