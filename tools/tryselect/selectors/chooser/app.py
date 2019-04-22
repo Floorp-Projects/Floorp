@@ -93,24 +93,14 @@ class Test(Section):
     name = 'test'
     kind = 'test'
     title = 'Test Suites'
-    attrs = ['unittest_suite', 'unittest_flavor']
+    attrs = ['unittest_suite']
 
     def labelfn(self, task):
         suite = task['unittest_suite'].replace(' ', '-')
-        flavor = task['unittest_flavor'].replace(' ', '-')
 
-        if flavor.endswith('chunked'):
-            flavor = flavor[:-len('chunked')]
+        if suite.endswith('-chunked'):
+            suite = suite[:-len('-chunked')]
 
-        if flavor.startswith(suite):
-            flavor = flavor[len(suite):]
-        flavor = flavor.strip('-')
-
-        if flavor in ('crashtest', 'jsreftest'):
-            return flavor
-
-        if flavor:
-            return '{}-{}'.format(suite, flavor)
         return suite
 
     def contains(self, task):
@@ -124,7 +114,7 @@ class Perf(Section):
     name = 'perf'
     kind = 'test'
     title = 'Performance'
-    attrs = ['unittest_suite', 'unittest_flavor', 'raptor_try_name', 'talos_try_name']
+    attrs = ['unittest_suite', 'raptor_try_name', 'talos_try_name']
 
     def labelfn(self, task):
         suite = task['unittest_suite']
