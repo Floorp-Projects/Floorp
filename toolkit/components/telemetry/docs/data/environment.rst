@@ -154,6 +154,7 @@ Structure:
         gfx: {
             D2DEnabled: <bool>, // null on failure
             DWriteEnabled: <bool>, // null on failure
+            Headless: <bool>, // null on failure
             //DWriteVersion: <string>, // temporarily removed, pending bug 1154500
             adapters: [
               {
