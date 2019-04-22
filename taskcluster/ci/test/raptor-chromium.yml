@@ -117,16 +117,6 @@ raptor-tp6-8-chromium:
             - --test=raptor-tp6-8
             - --app=chromium
 
-raptor-tp6-8-404-chromium:
-    description: "Raptor tp6-8-404 on Chromium"
-    try-name: raptor-tp6-8-404-chromium
-    treeherder-symbol: Rap-Cr(tp6-8-404)
-    tier: 3
-    mozharness:
-        extra-options:
-            - --test=raptor-tp6-8-404
-            - --app=chromium
-
 raptor-tp6-9-chromium:
     description: "Raptor tp6-9 on Chromium"
     try-name: raptor-tp6-9-chromium
