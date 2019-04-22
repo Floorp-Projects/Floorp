@@ -114,8 +114,7 @@ class ValidateVaryingLocationsTraverser : public TIntermTraverser
 
 ValidateVaryingLocationsTraverser::ValidateVaryingLocationsTraverser(GLenum shaderType)
     : TIntermTraverser(true, false, false), mShaderType(shaderType)
-{
-}
+{}
 
 bool ValidateVaryingLocationsTraverser::visitDeclaration(Visit visit, TIntermDeclaration *node)
 {

@@ -17,6 +17,6 @@ class TIntermNode;
 class TSymbolTable;
 
 void RewriteElseBlocks(TIntermNode *node, TSymbolTable *symbolTable);
-}
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEOPS_REWRITEELSEBLOCKS_H_

@@ -11,9 +11,7 @@
 namespace egl
 {
 
-AttributeMap::AttributeMap()
-{
-}
+AttributeMap::AttributeMap() {}
 
 AttributeMap::AttributeMap(const AttributeMap &other) = default;
 
@@ -107,4 +105,4 @@ AttributeMap AttributeMap::CreateFromAttribArray(const EGLAttrib *attributes)
     }
     return map;
 }
-}
+}  // namespace egl

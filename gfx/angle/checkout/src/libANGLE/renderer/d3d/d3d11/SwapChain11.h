@@ -119,7 +119,7 @@ class SwapChain11 final : public SwapChainD3D
     d3d11::SamplerState mPassThroughSampler;
     d3d11::InputLayout mPassThroughIL;
     d3d11::VertexShader mPassThroughVS;
-    d3d11::PixelShader mPassThroughPS;
+    d3d11::PixelShader mPassThroughOrResolvePS;
     d3d11::RasterizerState mPassThroughRS;
 
     SurfaceRenderTarget11 mColorRenderTarget;
@@ -130,4 +130,4 @@ class SwapChain11 final : public SwapChainD3D
 };
 
 }  // namespace rx
-#endif // LIBANGLE_RENDERER_D3D_D3D11_SWAPCHAIN11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_SWAPCHAIN11_H_

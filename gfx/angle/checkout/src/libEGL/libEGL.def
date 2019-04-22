@@ -69,6 +69,7 @@ EXPORTS
     eglDebugMessageControlKHR                   @75
     eglQueryDebugKHR                            @76
     eglLabelObjectKHR                           @77
+    eglSetBlobCacheFuncsANDROID                 @78
 
     ; 1.5 entry points
     eglCreateSync                               @38

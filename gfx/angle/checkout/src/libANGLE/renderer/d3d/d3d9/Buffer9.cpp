@@ -16,8 +16,7 @@ namespace rx
 
 Buffer9::Buffer9(const gl::BufferState &state, Renderer9 *renderer)
     : BufferD3D(state, renderer), mSize(0)
-{
-}
+{}
 
 Buffer9::~Buffer9()
 {
@@ -34,18 +33,15 @@ bool Buffer9::supportsDirectBinding() const
     return false;
 }
 
-gl::Error Buffer9::setData(const gl::Context *context,
-                           gl::BufferBinding /*target*/,
-                           const void *data,
-                           size_t size,
-                           gl::BufferUsage usage)
+angle::Result Buffer9::setData(const gl::Context *context,
+                               gl::BufferBinding target,
+                               const void *data,
+                               size_t size,
+                               gl::BufferUsage usage)
 {
     if (size > mMemory.size())
     {
-        if (!mMemory.resize(size))
-        {
-            return gl::OutOfMemory() << "Failed to resize internal buffer.";
-        }
+        ANGLE_CHECK_GL_ALLOC(GetImplAs<Context9>(context), mMemory.resize(size));
     }
 
     mSize = size;
@@ -58,27 +54,31 @@ gl::Error Buffer9::setData(const gl::Context *context,
 
     invalidateStaticData(context);
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 angle::Result Buffer9::getData(const gl::Context *context, const uint8_t **outData)
 {
-    *outData = mMemory.data();
-    return angle::Result::Continue();
+    if (mMemory.empty())
+    {
+        *outData = nullptr;
+    }
+    else
+    {
+        *outData = mMemory.data();
+    }
+    return angle::Result::Continue;
 }
 
-gl::Error Buffer9::setSubData(const gl::Context *context,
-                              gl::BufferBinding /*target*/,
-                              const void *data,
-                              size_t size,
-                              size_t offset)
+angle::Result Buffer9::setSubData(const gl::Context *context,
+                                  gl::BufferBinding target,
+                                  const void *data,
+                                  size_t size,
+                                  size_t offset)
 {
     if (offset + size > mMemory.size())
     {
-        if (!mMemory.resize(offset + size))
-        {
-            return gl::OutOfMemory() << "Failed to resize internal buffer.";
-        }
+        ANGLE_CHECK_GL_ALLOC(GetImplAs<Context9>(context), mMemory.resize(size + offset));
     }
 
     mSize = std::max(mSize, offset + size);
@@ -89,14 +89,14 @@ gl::Error Buffer9::setSubData(const gl::Context *context,
 
     invalidateStaticData(context);
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-gl::Error Buffer9::copySubData(const gl::Context *context,
-                               BufferImpl *source,
-                               GLintptr sourceOffset,
-                               GLintptr destOffset,
-                               GLsizeiptr size)
+angle::Result Buffer9::copySubData(const gl::Context *context,
+                                   BufferImpl *source,
+                                   GLintptr sourceOffset,
+                                   GLintptr destOffset,
+                                   GLsizeiptr size)
 {
     // Note: this method is currently unreachable
     Buffer9 *sourceBuffer = GetAs<Buffer9>(source);
@@ -106,36 +106,36 @@ gl::Error Buffer9::copySubData(const gl::Context *context,
 
     invalidateStaticData(context);
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 // We do not support buffer mapping in D3D9
-gl::Error Buffer9::map(const gl::Context *context, GLenum access, void **mapPtr)
+angle::Result Buffer9::map(const gl::Context *context, GLenum access, void **mapPtr)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop;
 }
 
-gl::Error Buffer9::mapRange(const gl::Context *context,
-                            size_t offset,
-                            size_t length,
-                            GLbitfield access,
-                            void **mapPtr)
+angle::Result Buffer9::mapRange(const gl::Context *context,
+                                size_t offset,
+                                size_t length,
+                                GLbitfield access,
+                                void **mapPtr)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop;
 }
 
-gl::Error Buffer9::unmap(const gl::Context *context, GLboolean *result)
+angle::Result Buffer9::unmap(const gl::Context *context, GLboolean *result)
 {
-    UNREACHABLE();
-    return gl::InternalError();
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
+    return angle::Result::Stop;
 }
 
 angle::Result Buffer9::markTransformFeedbackUsage(const gl::Context *context)
 {
     ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
-    return angle::Result::Stop();
+    return angle::Result::Stop;
 }
 
 }  // namespace rx

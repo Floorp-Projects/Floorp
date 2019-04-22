@@ -12,8 +12,7 @@ namespace angle
 {
 
 Mat4::Mat4() : Mat4(1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f)
-{
-}
+{}
 
 Mat4::Mat4(const Matrix<float> generalMatrix) : Matrix(std::vector<float>(16, 0), 4, 4)
 {
@@ -28,13 +27,9 @@ Mat4::Mat4(const Matrix<float> generalMatrix) : Matrix(std::vector<float>(16, 0)
     }
 }
 
-Mat4::Mat4(const std::vector<float> &elements) : Matrix(elements, 4)
-{
-}
+Mat4::Mat4(const std::vector<float> &elements) : Matrix(elements, 4) {}
 
-Mat4::Mat4(const float *elements) : Matrix(elements, 4)
-{
-}
+Mat4::Mat4(const float *elements) : Matrix(elements, 4) {}
 
 Mat4::Mat4(float m00,
            float m01,

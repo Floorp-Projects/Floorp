@@ -47,9 +47,7 @@ const uint32_t Kabylake[] = {0x5916, 0x5913, 0x5906, 0x5926, 0x5921, 0x5915, 0x5
 
 }  // anonymous namespace
 
-IntelDriverVersion::IntelDriverVersion(uint16_t lastPart) : mVersionPart(lastPart)
-{
-}
+IntelDriverVersion::IntelDriverVersion(uint16_t lastPart) : mVersionPart(lastPart) {}
 
 bool IntelDriverVersion::operator==(const IntelDriverVersion &version)
 {

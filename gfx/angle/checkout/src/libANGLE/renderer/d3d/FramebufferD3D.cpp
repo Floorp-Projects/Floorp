@@ -15,6 +15,7 @@
 #include "libANGLE/Surface.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/ContextImpl.h"
+#include "libANGLE/renderer/d3d/ContextD3D.h"
 #include "libANGLE/renderer/d3d/RenderTargetD3D.h"
 #include "libANGLE/renderer/d3d/RenderbufferD3D.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
@@ -85,7 +86,7 @@ ClearParameters GetClearParameters(const gl::State &state, GLbitfield mask)
 
     return clearParams;
 }
-}
+}  // namespace
 
 ClearParameters::ClearParameters() = default;
 
@@ -93,26 +94,23 @@ ClearParameters::ClearParameters(const ClearParameters &other) = default;
 
 FramebufferD3D::FramebufferD3D(const gl::FramebufferState &data, RendererD3D *renderer)
     : FramebufferImpl(data), mRenderer(renderer), mDummyAttachment()
-{
-}
+{}
 
-FramebufferD3D::~FramebufferD3D()
-{
-}
+FramebufferD3D::~FramebufferD3D() {}
 
-gl::Error FramebufferD3D::clear(const gl::Context *context, GLbitfield mask)
+angle::Result FramebufferD3D::clear(const gl::Context *context, GLbitfield mask)
 {
-    ClearParameters clearParams = GetClearParameters(context->getGLState(), mask);
+    ClearParameters clearParams = GetClearParameters(context->getState(), mask);
     return clearImpl(context, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferfv(const gl::Context *context,
-                                        GLenum buffer,
-                                        GLint drawbuffer,
-                                        const GLfloat *values)
+angle::Result FramebufferD3D::clearBufferfv(const gl::Context *context,
+                                            GLenum buffer,
+                                            GLint drawbuffer,
+                                            const GLfloat *values)
 {
     // glClearBufferfv can be called to clear the color buffer or depth buffer
-    ClearParameters clearParams = GetClearParameters(context->getGLState(), 0);
+    ClearParameters clearParams = GetClearParameters(context->getState(), 0);
 
     if (buffer == GL_COLOR)
     {
@@ -133,13 +131,13 @@ gl::Error FramebufferD3D::clearBufferfv(const gl::Context *context,
     return clearImpl(context, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferuiv(const gl::Context *context,
-                                         GLenum buffer,
-                                         GLint drawbuffer,
-                                         const GLuint *values)
+angle::Result FramebufferD3D::clearBufferuiv(const gl::Context *context,
+                                             GLenum buffer,
+                                             GLint drawbuffer,
+                                             const GLuint *values)
 {
     // glClearBufferuiv can only be called to clear a color buffer
-    ClearParameters clearParams = GetClearParameters(context->getGLState(), 0);
+    ClearParameters clearParams = GetClearParameters(context->getState(), 0);
     for (unsigned int i = 0; i < ArraySize(clearParams.clearColor); i++)
     {
         clearParams.clearColor[i] = (drawbuffer == static_cast<int>(i));
@@ -150,13 +148,13 @@ gl::Error FramebufferD3D::clearBufferuiv(const gl::Context *context,
     return clearImpl(context, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferiv(const gl::Context *context,
-                                        GLenum buffer,
-                                        GLint drawbuffer,
-                                        const GLint *values)
+angle::Result FramebufferD3D::clearBufferiv(const gl::Context *context,
+                                            GLenum buffer,
+                                            GLint drawbuffer,
+                                            const GLint *values)
 {
     // glClearBufferiv can be called to clear the color buffer or stencil buffer
-    ClearParameters clearParams = GetClearParameters(context->getGLState(), 0);
+    ClearParameters clearParams = GetClearParameters(context->getState(), 0);
 
     if (buffer == GL_COLOR)
     {
@@ -177,18 +175,18 @@ gl::Error FramebufferD3D::clearBufferiv(const gl::Context *context,
     return clearImpl(context, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferfi(const gl::Context *context,
-                                        GLenum buffer,
-                                        GLint drawbuffer,
-                                        GLfloat depth,
-                                        GLint stencil)
+angle::Result FramebufferD3D::clearBufferfi(const gl::Context *context,
+                                            GLenum buffer,
+                                            GLint drawbuffer,
+                                            GLfloat depth,
+                                            GLint stencil)
 {
     // glClearBufferfi can only be called to clear a depth stencil buffer
-    ClearParameters clearParams   = GetClearParameters(context->getGLState(), 0);
-    clearParams.clearDepth        = true;
-    clearParams.depthValue        = depth;
-    clearParams.clearStencil      = true;
-    clearParams.stencilValue      = stencil;
+    ClearParameters clearParams = GetClearParameters(context->getState(), 0);
+    clearParams.clearDepth      = true;
+    clearParams.depthValue      = depth;
+    clearParams.clearStencil    = true;
+    clearParams.stencilValue    = stencil;
 
     return clearImpl(context, clearParams);
 }
@@ -203,8 +201,8 @@ GLenum FramebufferD3D::getImplementationColorReadFormat(const gl::Context *conte
     }
 
     RenderTargetD3D *attachmentRenderTarget = nullptr;
-    gl::Error error = readAttachment->getRenderTarget(context, &attachmentRenderTarget);
-    if (error.isError())
+    angle::Result error = readAttachment->getRenderTarget(context, &attachmentRenderTarget);
+    if (error != angle::Result::Continue)
     {
         return GL_NONE;
     }
@@ -226,8 +224,8 @@ GLenum FramebufferD3D::getImplementationColorReadType(const gl::Context *context
     }
 
     RenderTargetD3D *attachmentRenderTarget = nullptr;
-    gl::Error error = readAttachment->getRenderTarget(context, &attachmentRenderTarget);
-    if (error.isError())
+    angle::Result error = readAttachment->getRenderTarget(context, &attachmentRenderTarget);
+    if (error != angle::Result::Continue)
     {
         return GL_NONE;
     }
@@ -239,54 +237,57 @@ GLenum FramebufferD3D::getImplementationColorReadType(const gl::Context *context
     return implementationFormatInfo.getReadPixelsType(context->getClientVersion());
 }
 
-gl::Error FramebufferD3D::readPixels(const gl::Context *context,
-                                     const gl::Rectangle &origArea,
-                                     GLenum format,
-                                     GLenum type,
-                                     void *pixels)
+angle::Result FramebufferD3D::readPixels(const gl::Context *context,
+                                         const gl::Rectangle &area,
+                                         GLenum format,
+                                         GLenum type,
+                                         void *pixels)
 {
     // Clip read area to framebuffer.
     const gl::Extents fbSize = getState().getReadAttachment()->getSize();
     const gl::Rectangle fbRect(0, 0, fbSize.width, fbSize.height);
-    gl::Rectangle area;
-    if (!ClipRectangle(origArea, fbRect, &area))
+    gl::Rectangle clippedArea;
+    if (!ClipRectangle(area, fbRect, &clippedArea))
     {
         // nothing to read
-        return gl::NoError();
+        return angle::Result::Continue;
     }
 
-    const gl::PixelPackState &packState = context->getGLState().getPackState();
+    const gl::PixelPackState &packState = context->getState().getPackState();
 
     const gl::InternalFormat &sizedFormatInfo = gl::GetInternalFormatInfo(format, type);
 
+    ContextD3D *contextD3D = GetImplAs<ContextD3D>(context);
+
     GLuint outputPitch = 0;
-    ANGLE_TRY_CHECKED_MATH(sizedFormatInfo.computeRowPitch(
-        type, origArea.width, packState.alignment, packState.rowLength, &outputPitch));
+    ANGLE_CHECK_GL_MATH(contextD3D,
+                        sizedFormatInfo.computeRowPitch(type, area.width, packState.alignment,
+                                                        packState.rowLength, &outputPitch));
 
     GLuint outputSkipBytes = 0;
-    ANGLE_TRY_CHECKED_MATH(
-        sizedFormatInfo.computeSkipBytes(type, outputPitch, 0, packState, false, &outputSkipBytes));
-    outputSkipBytes +=
-        (area.x - origArea.x) * sizedFormatInfo.pixelBytes + (area.y - origArea.y) * outputPitch;
+    ANGLE_CHECK_GL_MATH(contextD3D, sizedFormatInfo.computeSkipBytes(
+                                        type, outputPitch, 0, packState, false, &outputSkipBytes));
+    outputSkipBytes += (clippedArea.x - area.x) * sizedFormatInfo.pixelBytes +
+                       (clippedArea.y - area.y) * outputPitch;
 
-    return readPixelsImpl(context, area, format, type, outputPitch, packState,
+    return readPixelsImpl(context, clippedArea, format, type, outputPitch, packState,
                           static_cast<uint8_t *>(pixels) + outputSkipBytes);
 }
 
-gl::Error FramebufferD3D::blit(const gl::Context *context,
-                               const gl::Rectangle &sourceArea,
-                               const gl::Rectangle &destArea,
-                               GLbitfield mask,
-                               GLenum filter)
+angle::Result FramebufferD3D::blit(const gl::Context *context,
+                                   const gl::Rectangle &sourceArea,
+                                   const gl::Rectangle &destArea,
+                                   GLbitfield mask,
+                                   GLenum filter)
 {
-    const auto &glState                      = context->getGLState();
+    const auto &glState                      = context->getState();
     const gl::Framebuffer *sourceFramebuffer = glState.getReadFramebuffer();
     const gl::Rectangle *scissor = glState.isScissorTestEnabled() ? &glState.getScissor() : nullptr;
     ANGLE_TRY(blitImpl(context, sourceArea, destArea, scissor, (mask & GL_COLOR_BUFFER_BIT) != 0,
                        (mask & GL_DEPTH_BUFFER_BIT) != 0, (mask & GL_STENCIL_BUFFER_BIT) != 0,
                        filter, sourceFramebuffer));
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 bool FramebufferD3D::checkStatus(const gl::Context *context) const
@@ -300,7 +301,8 @@ bool FramebufferD3D::checkStatus(const gl::Context *context) const
 
     // D3D11 does not allow for overlapping RenderTargetViews.
     // If WebGL compatibility is enabled, this has already been checked at a higher level.
-    ASSERT(!context->getExtensions().webglCompatibility || mState.colorAttachmentsAreUniqueImages());
+    ASSERT(!context->getExtensions().webglCompatibility ||
+           mState.colorAttachmentsAreUniqueImages());
     if (!context->getExtensions().webglCompatibility)
     {
         if (!mState.colorAttachmentsAreUniqueImages())
@@ -318,12 +320,12 @@ bool FramebufferD3D::checkStatus(const gl::Context *context) const
     return true;
 }
 
-gl::Error FramebufferD3D::syncState(const gl::Context *context,
-                                    const gl::Framebuffer::DirtyBits &dirtyBits)
+angle::Result FramebufferD3D::syncState(const gl::Context *context,
+                                        const gl::Framebuffer::DirtyBits &dirtyBits)
 {
     if (!mColorAttachmentsForRender.valid())
     {
-        return gl::NoError();
+        return angle::Result::Continue;
     }
 
     for (auto dirtyBit : dirtyBits)
@@ -336,13 +338,13 @@ gl::Error FramebufferD3D::syncState(const gl::Context *context,
         }
     }
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl::Context *context)
 {
     gl::DrawBufferMask activeProgramOutputs =
-        context->getContextState().getState().getProgram()->getActiveOutputVariables();
+        context->getState().getProgram()->getActiveOutputVariables();
 
     if (mColorAttachmentsForRender.valid() && mCurrentActiveProgramOutputs == activeProgramOutputs)
     {
@@ -414,7 +416,7 @@ const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const gl:
         }
     }
 
-    mColorAttachmentsForRender = std::move(colorAttachmentsForRender);
+    mColorAttachmentsForRender   = std::move(colorAttachmentsForRender);
     mCurrentActiveProgramOutputs = activeProgramOutputs;
 
     return mColorAttachmentsForRender.value();

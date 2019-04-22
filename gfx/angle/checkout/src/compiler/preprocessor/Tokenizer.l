@@ -41,6 +41,8 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 #if defined(__clang__)
 // Flex uses `/*FALLTHROUGH*/` instead of dedicated statements.
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+// Flex isn't semi-colon clean.
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
 #endif
 
 // Workaround for flex using the register keyword, deprecated in C++11.

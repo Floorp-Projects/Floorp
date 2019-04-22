@@ -16,23 +16,15 @@
 namespace gl
 {
 
-Debug::Control::Control()
-{
-}
+Debug::Control::Control() {}
 
-Debug::Control::~Control()
-{
-}
+Debug::Control::~Control() {}
 
 Debug::Control::Control(const Control &other) = default;
 
-Debug::Group::Group()
-{
-}
+Debug::Group::Group() {}
 
-Debug::Group::~Group()
-{
-}
+Debug::Group::~Group() {}
 
 Debug::Group::Group(const Group &other) = default;
 
@@ -48,9 +40,7 @@ Debug::Debug(bool initialDebugState)
     pushDefaultGroup();
 }
 
-Debug::~Debug()
-{
-}
+Debug::~Debug() {}
 
 void Debug::setMaxLoggedMessages(GLuint maxLoggedMessages)
 {
@@ -340,9 +330,7 @@ angle::PackedEnumBitSet<MessageType> GetDefaultMessageTypeBits()
 }
 }  // anonymous namespace
 
-Debug::Debug() : mCallback(nullptr), mEnabledMessageTypes(GetDefaultMessageTypeBits())
-{
-}
+Debug::Debug() : mCallback(nullptr), mEnabledMessageTypes(GetDefaultMessageTypeBits()) {}
 
 void Debug::setCallback(EGLDEBUGPROCKHR callback, const AttributeMap &attribs)
 {

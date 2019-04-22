@@ -55,8 +55,7 @@ void RewriteAssignToSwizzledTraverser::rewrite(TIntermBlock *root)
 
 RewriteAssignToSwizzledTraverser::RewriteAssignToSwizzledTraverser()
     : TIntermTraverser(true, false, false), mDidRewrite(false)
-{
-}
+{}
 
 void RewriteAssignToSwizzledTraverser::nextIteration()
 {

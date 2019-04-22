@@ -61,4 +61,4 @@ class UniformStorage11 : public UniformStorageD3D
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_SHADEREXECUTABLE11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_SHADEREXECUTABLE11_H_
