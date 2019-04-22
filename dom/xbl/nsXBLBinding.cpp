@@ -210,14 +210,6 @@ void nsXBLBinding::SetBoundElement(Element* aElement) {
   if (mNextBinding) mNextBinding->SetBoundElement(aElement);
 }
 
-bool nsXBLBinding::HasStyleSheets() const {
-  // Find out if we need to re-resolve style.  We'll need to do this
-  // if we have additional stylesheets in our binding document.
-  if (mPrototypeBinding->HasStyleSheets()) return true;
-
-  return mNextBinding ? mNextBinding->HasStyleSheets() : false;
-}
-
 void nsXBLBinding::GenerateAnonymousContent() {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
@@ -689,24 +681,6 @@ void nsXBLBinding::ChangeDocument(Document* aOldDocument,
 
     ClearInsertionPoints();
   }
-}
-
-bool nsXBLBinding::InheritsStyle() const {
-  // XXX Will have to change if we ever allow multiple bindings to contribute
-  // anonymous content. Most derived binding with anonymous content determines
-  // style inheritance for now.
-
-  // XXX What about bindings with <content> but no kids, e.g., my treecell-text
-  // binding?
-  if (mContent) return mPrototypeBinding->InheritsStyle();
-
-  if (mNextBinding) return mNextBinding->InheritsStyle();
-
-  return true;
-}
-
-const RawServoAuthorStyles* nsXBLBinding::GetServoStyles() const {
-  return mPrototypeBinding->GetServoStyles();
 }
 
 // Internal helper methods /////////////////////////////////////////////////////
