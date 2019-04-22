@@ -15,22 +15,18 @@
 #include "mozilla/TypedEnumBits.h"
 #include "nsBoundingMetrics.h"
 #include "nsChangeHint.h"
-#include "nsFrameList.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsThreadUtils.h"
-#include "nsIPrincipal.h"
-#include "nsIWidget.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
 #include "mozilla/ToString.h"
 #include "mozilla/ReflowOutput.h"
-#include "ImageContainer.h"
+#include "ImageContainer.h" // for layers::Image
 #include "gfx2DGlue.h"
 #include "SVGImageContext.h"
 #include <limits>
@@ -39,8 +35,13 @@
 #include "nsClassHashtable.h"
 
 class gfxContext;
+class gfxFontEntry;
+class imgIContainer;
+class nsFrameList;
 class nsPresContext;
 class nsIContent;
+class nsIPrincipal;
+class nsIWidget;
 class nsAtom;
 class nsIScrollableFrame;
 class nsRegion;

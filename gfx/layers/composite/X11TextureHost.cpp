@@ -5,12 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "X11TextureHost.h"
+
 #include "mozilla/layers/BasicCompositor.h"
-#include "mozilla/layers/X11TextureSourceBasic.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/X11TextureSourceBasic.h"
 #include "mozilla/layers/X11TextureSourceOGL.h"
-#include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
+#include "gfxPlatform.h"
+#include "gfxXlibSurface.h"
 
 namespace mozilla {
 namespace layers {

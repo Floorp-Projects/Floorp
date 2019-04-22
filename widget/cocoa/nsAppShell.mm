@@ -13,6 +13,7 @@
 #include "CustomCocoaEvents.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShell.h"
+#include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
