@@ -1,8 +1,8 @@
 [
   {
-    "size": 6730120,
+    "size": 971729,
     "visibility": "public",
-    "digest": "c336c070497506cd13bfefd1c2fc8324c5a2f60e9088fc593a71bfd8f0d59743fcc8bd3dbb2df7ac219cd99b6b335c4cfc920404bc438d4470c264f360b5474d",
+    "digest": "75d4bdb1315de4aafe0412ece7cb8dc6766587a5aa8e1567b136d603d0dc41ad5bf9ced5a699a5f7e5149af66065fcf501c22cc60a84d8fedcdb0303b7147e73",
     "algorithm": "sha512",
     "filename": "google-search-restaurants-mobile.zip",
     "unpack": true
