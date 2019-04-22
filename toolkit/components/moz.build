@@ -80,7 +80,7 @@ DIRS += [
     'windowcreator',
     'windowwatcher',
     'workerloader',
-    'xulstore'
+    'xulstore',
 ]
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
