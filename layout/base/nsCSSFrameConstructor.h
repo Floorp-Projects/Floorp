@@ -770,22 +770,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // This is expected to just be used temporarily to aggregate the different
   // objects that LoadXBLBindingIfNeeded returns.
   struct MOZ_STACK_CLASS XBLBindingLoadInfo {
-    RefPtr<ComputedStyle> mStyle;
     mozilla::UniquePtr<PendingBinding> mPendingBinding;
-
-    // For the 'no binding loaded' case.
-    XBLBindingLoadInfo(nsIContent&, ComputedStyle&);
-
-    // For the case we actually load an XBL binding.
-    XBLBindingLoadInfo(already_AddRefed<ComputedStyle>&& aStyle,
-                       mozilla::UniquePtr<PendingBinding> aPendingBinding);
+    bool mSuccess = false;
 
     // For the error case.
     XBLBindingLoadInfo();
+    explicit XBLBindingLoadInfo(mozilla::UniquePtr<PendingBinding>);
   };
 
   // Returns null mStyle member to signal an error.
-  XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&, ComputedStyle&,
+  XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&, const ComputedStyle&,
                                             uint32_t aFlags);
 
   const FrameConstructionData* FindDataForContent(nsIContent&, ComputedStyle&,

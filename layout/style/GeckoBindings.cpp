@@ -1957,15 +1957,6 @@ const Element* Gecko_GetBindingParent(const Element* aElement) {
   return parent ? parent->AsElement() : nullptr;
 }
 
-const RawServoAuthorStyles* Gecko_XBLBinding_GetRawServoStyles(
-    const nsXBLBinding* aXBLBinding) {
-  return aXBLBinding->GetServoStyles();
-}
-
-bool Gecko_XBLBinding_InheritsStyle(const nsXBLBinding* aXBLBinding) {
-  return aXBLBinding->InheritsStyle();
-}
-
 static StaticRefPtr<UACacheReporter> gUACacheReporter;
 
 namespace mozilla {

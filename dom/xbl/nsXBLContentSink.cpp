@@ -255,9 +255,6 @@ nsXBLContentSink::HandleEndElement(const char16_t* aName) {
         } else if (localName == nsGkAtoms::handler)
           mSecondaryState = eXBL_None;
         return NS_OK;
-      } else if (mState == eXBL_InResources) {
-        if (localName == nsGkAtoms::resources) mState = eXBL_InBinding;
-        return NS_OK;
       } else if (mState == eXBL_InImplementation) {
         if (localName == nsGkAtoms::implementation)
           mState = eXBL_InBinding;
@@ -371,16 +368,6 @@ bool nsXBLContentSink::OnOpenContainer(const char16_t** aAtts,
     mSecondaryState = eXBL_InHandler;
     ConstructHandler(aAtts, aLineNumber);
     ret = false;
-  } else if (aTagName == nsGkAtoms::resources) {
-    ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
-    mState = eXBL_InResources;
-    // Note that this mState will cause us to return false, so no need
-    // to set ret to false.
-  } else if (aTagName == nsGkAtoms::stylesheet ||
-             aTagName == nsGkAtoms::image) {
-    ENSURE_XBL_STATE(mState == eXBL_InResources);
-    NS_ASSERTION(mBinding, "Must have binding here");
-    ConstructResource(aAtts, aTagName);
   } else if (aTagName == nsGkAtoms::implementation) {
     ENSURE_XBL_STATE(mState == eXBL_InBinding && mBinding);
     mState = eXBL_InImplementation;
@@ -462,7 +449,7 @@ bool nsXBLContentSink::OnOpenContainer(const char16_t** aAtts,
     mSecondaryState = eXBL_InBody;
   }
 
-  return ret && mState != eXBL_InResources && mState != eXBL_InImplementation;
+  return ret && mState != eXBL_InImplementation;
 }
 
 #undef ENSURE_XBL_STATE
@@ -602,16 +589,6 @@ void nsXBLContentSink::ConstructHandler(const char16_t** aAtts,
   // Adjust our mHandler pointer to point to the new last handler in the
   // chain.
   mHandler = newHandler;
-}
-
-void nsXBLContentSink::ConstructResource(const char16_t** aAtts,
-                                         nsAtom* aResourceType) {
-  if (!mBinding) return;
-
-  const char16_t* src = nullptr;
-  if (FindValue(aAtts, nsGkAtoms::src, &src)) {
-    mBinding->AddResource(aResourceType, nsDependentString(src));
-  }
 }
 
 void nsXBLContentSink::ConstructImplementation(const char16_t** aAtts) {
