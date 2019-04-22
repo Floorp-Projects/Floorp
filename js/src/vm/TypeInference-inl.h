@@ -998,8 +998,8 @@ struct TypeHashSet {
       return bool(reinterpret_cast<uintptr_t>(elem) & U::TypeHashSetMarkBit);
     };
     auto toggleMarkBit = [](U* elem) -> U* {
-      return reinterpret_cast<U*>(
-          reinterpret_cast<uintptr_t>(elem) ^ U::TypeHashSetMarkBit);
+      return reinterpret_cast<U*>(reinterpret_cast<uintptr_t>(elem) ^
+                                  U::TypeHashSetMarkBit);
     };
 
     // When we have a single element it is stored in-place of the function

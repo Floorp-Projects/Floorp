@@ -259,8 +259,7 @@ class MOZ_RAII PEHeaders final {
   explicit PEHeaders(void* aBaseAddress)
       : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress)) {}
 
-  explicit PEHeaders(HMODULE aModule)
-      : PEHeaders(HModuleToBaseAddr(aModule)) {}
+  explicit PEHeaders(HMODULE aModule) : PEHeaders(HModuleToBaseAddr(aModule)) {}
 
   explicit PEHeaders(PIMAGE_DOS_HEADER aMzHeader)
       : mMzHeader(aMzHeader), mPeHeader(nullptr), mImageLimit(nullptr) {
@@ -330,8 +329,7 @@ class MOZ_RAII PEHeaders final {
   }
 
   PIMAGE_DATA_DIRECTORY GetImageDirectoryEntryPtr(
-      const uint32_t aDirectoryIndex,
-      uint32_t* aOutRva = nullptr) const {
+      const uint32_t aDirectoryIndex, uint32_t* aOutRva = nullptr) const {
     if (aOutRva) {
       *aOutRva = 0;
     }
@@ -345,7 +343,7 @@ class MOZ_RAII PEHeaders final {
     }
 
     PIMAGE_DATA_DIRECTORY dirEntry =
-      &optionalHeader.DataDirectory[aDirectoryIndex];
+        &optionalHeader.DataDirectory[aDirectoryIndex];
     if (aOutRva) {
       *aOutRva = reinterpret_cast<char*>(dirEntry) -
                  reinterpret_cast<char*>(mMzHeader);
@@ -404,7 +402,7 @@ class MOZ_RAII PEHeaders final {
 
   struct IATThunks {
     IATThunks(PIMAGE_THUNK_DATA aFirstThunk, ptrdiff_t aNumThunks)
-      : mFirstThunk(aFirstThunk), mNumThunks(aNumThunks) {}
+        : mFirstThunk(aFirstThunk), mNumThunks(aNumThunks) {}
 
     size_t Length() const {
       return size_t(mNumThunks) * sizeof(IMAGE_THUNK_DATA);
@@ -611,12 +609,10 @@ inline LauncherResult<DWORD> GetParentProcessId() {
 }
 
 struct DataDirectoryEntry : public _IMAGE_DATA_DIRECTORY {
-  DataDirectoryEntry() : _IMAGE_DATA_DIRECTORY() {
-  }
+  DataDirectoryEntry() : _IMAGE_DATA_DIRECTORY() {}
 
   MOZ_IMPLICIT DataDirectoryEntry(const _IMAGE_DATA_DIRECTORY& aOther)
-    : _IMAGE_DATA_DIRECTORY(aOther) {
-  }
+      : _IMAGE_DATA_DIRECTORY(aOther) {}
 
   DataDirectoryEntry(const DataDirectoryEntry& aOther) = default;
 };
@@ -624,8 +620,8 @@ struct DataDirectoryEntry : public _IMAGE_DATA_DIRECTORY {
 inline LauncherResult<void*> GetProcessPebPtr(HANDLE aProcess) {
   ULONG returnLength;
   PROCESS_BASIC_INFORMATION pbi;
-  NTSTATUS status = ::NtQueryInformationProcess(aProcess,
-      ProcessBasicInformation, &pbi, sizeof(pbi), &returnLength);
+  NTSTATUS status = ::NtQueryInformationProcess(
+      aProcess, ProcessBasicInformation, &pbi, sizeof(pbi), &returnLength);
   if (!NT_SUCCESS(status)) {
     return LAUNCHER_ERROR_FROM_NTSTATUS(status);
   }
@@ -651,7 +647,8 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
 
 #if defined(MOZILLA_INTERNAL_API)
   if (!::ReadProcessMemory(aProcess, ppeb.unwrap(), &peb, sizeof(peb),
-                           &bytesRead) || bytesRead != sizeof(peb)) {
+                           &bytesRead) ||
+      bytesRead != sizeof(peb)) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
 #else
@@ -668,7 +665,8 @@ inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
   char mzMagic[2];
 #if defined(MOZILLA_INTERNAL_API)
   if (!::ReadProcessMemory(aProcess, baseAddress, mzMagic, sizeof(mzMagic),
-                           &bytesRead) || bytesRead != sizeof(mzMagic)) {
+                           &bytesRead) ||
+      bytesRead != sizeof(mzMagic)) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
 #else

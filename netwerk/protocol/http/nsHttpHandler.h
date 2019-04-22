@@ -418,6 +418,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   HttpTrafficAnalyzer *GetHttpTrafficAnalyzer();
 
   bool GetThroughCaptivePortal() { return mThroughCaptivePortal; }
+
  private:
   nsHttpHandler();
 

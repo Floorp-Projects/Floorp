@@ -209,8 +209,9 @@ class WebRenderAPI final {
       RefPtr<widget::CompositorWidget>&& aWidget,
       const wr::WrWindowId& aWindowId, LayoutDeviceIntSize aSize);
 
-  static void SendTransactions(const RenderRootArray<RefPtr<WebRenderAPI>>& aApis,
-                               RenderRootArray<TransactionBuilder*>& aTxns);
+  static void SendTransactions(
+      const RenderRootArray<RefPtr<WebRenderAPI>>& aApis,
+      RenderRootArray<TransactionBuilder*>& aTxns);
 
   already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize,
                                                 int8_t aLayerIndex,
