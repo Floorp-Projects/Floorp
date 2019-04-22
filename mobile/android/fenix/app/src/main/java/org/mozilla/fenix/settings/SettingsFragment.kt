@@ -128,16 +128,21 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 navigateToDataChoices()
             }
             resources.getString(pref_key_help) -> {
-                requireComponents.useCases.tabsUseCases.addTab
-                    .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP))
-                navigateToSettingsArticle()
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    SupportUtils.getSumoURLForTopic(
+                        context!!,
+                        SupportUtils.SumoTopic.HELP
+                    ), from = BrowserDirection.FromSettings
+                )
             }
             resources.getString(pref_key_rate) -> {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
             }
             resources.getString(pref_key_feedback) -> {
-                requireComponents.useCases.tabsUseCases.addTab.invoke(SupportUtils.FEEDBACK_URL)
-                navigateToSettingsArticle()
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    SupportUtils.FEEDBACK_URL,
+                    from = BrowserDirection.FromSettings
+                )
             }
             resources.getString(pref_key_about) -> {
                 navigateToAbout()
@@ -257,13 +262,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun navigateToDataChoices() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
         Navigation.findNavController(view!!).navigate(directions)
-    }
-
-    private fun navigateToSettingsArticle() {
-        val newSession = requireComponents.core.sessionManager.selectedSession?.id
-        view?.let {
-            (activity as HomeActivity).openToBrowser(newSession, BrowserDirection.FromSettings)
-        }
     }
 
     private fun navigateToAbout() {

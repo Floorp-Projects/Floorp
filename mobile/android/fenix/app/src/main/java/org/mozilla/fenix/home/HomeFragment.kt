@@ -234,13 +234,22 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun setupHomeMenu() {
         homeMenu = HomeMenu(requireContext()) {
-            val directions = when (it) {
-                HomeMenu.Item.Settings -> HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
-                HomeMenu.Item.Library -> HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
-                HomeMenu.Item.Help -> return@HomeMenu // Not implemented yetN
+            when (it) {
+                HomeMenu.Item.Settings -> Navigation.findNavController(homeLayout).navigate(
+                    HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
+                )
+                HomeMenu.Item.Library -> Navigation.findNavController(homeLayout).navigate(
+                    HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
+                )
+                HomeMenu.Item.Help -> {
+                    (activity as HomeActivity).openToBrowserAndLoad(
+                        SupportUtils.getSumoURLForTopic(
+                            context!!,
+                            SupportUtils.SumoTopic.HELP
+                        ), from = BrowserDirection.FromHome
+                    )
+                }
             }
-
-            Navigation.findNavController(homeLayout).navigate(directions)
         }
     }
 
