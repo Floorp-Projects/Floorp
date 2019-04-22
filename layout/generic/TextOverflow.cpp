@@ -153,7 +153,7 @@ class nsDisplayTextOverflowMarker final : public nsDisplayItem {
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
                               const nsStyleTextOverflowSide* aStyle,
-                              uint32_t aLineNumber, uint32_t aIndex)
+                              uint32_t aLineNumber, uint16_t aIndex)
       : nsDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mStyle(*aStyle),
@@ -189,9 +189,8 @@ class nsDisplayTextOverflowMarker final : public nsDisplayItem {
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  virtual uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
+
   void PaintTextToContext(gfxContext* aCtx, nsPoint aOffsetFromRect);
 
   virtual bool CreateWebRenderCommands(
@@ -206,7 +205,7 @@ class nsDisplayTextOverflowMarker final : public nsDisplayItem {
   nsRect mRect;  // in reference frame coordinates
   const nsStyleTextOverflowSide mStyle;
   nscoord mAscent;  // baseline for the marker text in mRect
-  uint32_t mIndex;
+  uint16_t mIndex;
 };
 
 static void PaintTextShadowCallback(gfxContext* aCtx, nsPoint aShadowOffset,
