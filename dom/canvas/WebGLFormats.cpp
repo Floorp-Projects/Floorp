@@ -818,11 +818,12 @@ UniquePtr<FormatUsageAuthority> FormatUsageAuthority::CreateForWebGL1(
   fnSet(EffectiveFormat::Luminance8, false, true);
   fnSet(EffectiveFormat::Alpha8, false, true);
 
-  fnSet(EffectiveFormat::DEPTH_COMPONENT16, true, false);
+  fnSet(EffectiveFormat::DEPTH_COMPONENT16, true, true);
+  fnSet(EffectiveFormat::DEPTH_COMPONENT24, true, true); // Requires WEBGL_depth_texture.
   fnSet(EffectiveFormat::STENCIL_INDEX8, true, false);
 
   // Added in WebGL 1.0 spec:
-  fnSet(EffectiveFormat::DEPTH24_STENCIL8, true, false);
+  fnSet(EffectiveFormat::DEPTH24_STENCIL8, true, true);
 
   ////////////////////////////////////
   // RB formats
@@ -1048,11 +1049,14 @@ UniquePtr<FormatUsageAuthority> FormatUsageAuthority::CreateForWebGL2(
   fnAllowES3TexFormat(FOO(RGBA32UI), true, false);
 
   // GLES 3.0.4, p133, table 3.14
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16), true, false);
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24), true, false);
-  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, false);
-  fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8), true, false);
-  fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8), true, false);
+  // p151:
+  //   Depth textures and the depth components of depth/stencil textures can be
+  //   treated as `RED` textures during texture filtering and application.
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT16), true, true);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT24), true, true);
+  fnAllowES3TexFormat(FOO(DEPTH_COMPONENT32F), true, true);
+  fnAllowES3TexFormat(FOO(DEPTH24_STENCIL8), true, true);
+  fnAllowES3TexFormat(FOO(DEPTH32F_STENCIL8), true, true);
 
 #undef FOO
 

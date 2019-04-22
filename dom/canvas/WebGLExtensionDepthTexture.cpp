@@ -11,35 +11,33 @@
 
 namespace mozilla {
 
-WebGLExtensionDepthTexture::WebGLExtensionDepthTexture(WebGLContext* webgl)
+WebGLExtensionDepthTexture::WebGLExtensionDepthTexture(
+    WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   auto& fua = webgl->mFormatUsage;
 
   const auto fnAdd = [&fua](webgl::EffectiveFormat effFormat,
                             GLenum unpackFormat, GLenum unpackType) {
     auto usage = fua->EditUsage(effFormat);
-    usage->isFilterable = true;
-    usage->SetRenderable();
+    MOZ_ASSERT(usage->isFilterable);
+    MOZ_ASSERT(usage->IsRenderable());
 
     const webgl::PackingInfo pi = {unpackFormat, unpackType};
     const webgl::DriverUnpackInfo dui = {unpackFormat, unpackFormat,
                                          unpackType};
     fua->AddTexUnpack(usage, pi, dui);
-
     fua->AllowUnsizedTexFormat(pi, usage);
   };
 
   fnAdd(webgl::EffectiveFormat::DEPTH_COMPONENT16, LOCAL_GL_DEPTH_COMPONENT,
         LOCAL_GL_UNSIGNED_SHORT);
-
   fnAdd(webgl::EffectiveFormat::DEPTH_COMPONENT24, LOCAL_GL_DEPTH_COMPONENT,
         LOCAL_GL_UNSIGNED_INT);
-
   fnAdd(webgl::EffectiveFormat::DEPTH24_STENCIL8, LOCAL_GL_DEPTH_STENCIL,
         LOCAL_GL_UNSIGNED_INT_24_8);
 }
 
-WebGLExtensionDepthTexture::~WebGLExtensionDepthTexture() {}
+WebGLExtensionDepthTexture::~WebGLExtensionDepthTexture() = default;
 
 bool WebGLExtensionDepthTexture::IsSupported(const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
