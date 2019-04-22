@@ -124,7 +124,7 @@ const SymbolicAddressSignature SASigElemDrop = {
 const SymbolicAddressSignature SASigTableGet = {
     SymbolicAddress::TableGet, _PTR, 3, {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
-    SymbolicAddress::TableGrow, _I32, 4, {_PTR, _I32, _RoN, _I32, _END}};
+    SymbolicAddress::TableGrow, _I32, 4, {_PTR, _RoN, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableInit = {
     SymbolicAddress::TableInit,
     _I32,

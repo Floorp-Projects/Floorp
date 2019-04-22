@@ -10360,13 +10360,13 @@ bool BaseCompiler::emitTableGrow() {
   Nothing delta;
   Nothing initValue;
   uint32_t tableIndex;
-  if (!iter_.readTableGrow(&tableIndex, &delta, &initValue)) {
+  if (!iter_.readTableGrow(&tableIndex, &initValue, &delta)) {
     return false;
   }
   if (deadCode_) {
     return true;
   }
-  // grow(delta:u32, initValue:anyref, table:u32) -> u32
+  // grow(initValue:anyref, delta:u32, table:u32) -> u32
   //
   // infallible.
   pushI32(tableIndex);

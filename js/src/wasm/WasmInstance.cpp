@@ -874,7 +874,7 @@ Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex) {
 }
 
 /* static */ uint32_t /* infallible */
-Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue,
+Instance::tableGrow(Instance* instance, void* initValue, uint32_t delta,
                     uint32_t tableIndex) {
   RootedAnyRef obj(TlsContext.get(), AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
