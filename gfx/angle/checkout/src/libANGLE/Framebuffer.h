@@ -28,27 +28,26 @@ class GLImplFactory;
 class FramebufferImpl;
 class RenderbufferImpl;
 class SurfaceImpl;
-}
+}  // namespace rx
 
 namespace egl
 {
 class Display;
 class Surface;
-}
+}  // namespace egl
 
 namespace gl
 {
+struct Caps;
 class Context;
-class ContextState;
+struct Extensions;
 class Framebuffer;
 class ImageIndex;
+struct Rectangle;
 class Renderbuffer;
 class State;
 class Texture;
 class TextureCapsMap;
-struct Caps;
-struct Extensions;
-struct Rectangle;
 
 class FramebufferState final : angle::NonCopyable
 {
@@ -87,17 +86,27 @@ class FramebufferState final : angle::NonCopyable
     const FramebufferAttachment *getDrawBuffer(size_t drawBufferIdx) const;
     size_t getDrawBufferCount() const;
 
-    GLint getDefaultWidth() const { return mDefaultWidth; };
-    GLint getDefaultHeight() const { return mDefaultHeight; };
-    GLint getDefaultSamples() const { return mDefaultSamples; };
-    bool getDefaultFixedSampleLocations() const { return mDefaultFixedSampleLocations; };
+    GLint getDefaultWidth() const { return mDefaultWidth; }
+    GLint getDefaultHeight() const { return mDefaultHeight; }
+    GLint getDefaultSamples() const { return mDefaultSamples; }
+    bool getDefaultFixedSampleLocations() const { return mDefaultFixedSampleLocations; }
     GLint getDefaultLayers() const { return mDefaultLayers; }
 
     bool hasDepth() const;
     bool hasStencil() const;
 
     GLenum getMultiviewLayout() const;
-    GLsizei getNumViews() const;
+
+    ANGLE_INLINE GLsizei getNumViews() const
+    {
+        const FramebufferAttachment *attachment = getFirstNonNullAttachment();
+        if (attachment == nullptr)
+        {
+            return FramebufferAttachment::kDefaultNumViews;
+        }
+        return attachment->getNumViews();
+    }
+
     const std::vector<Offset> *getViewportOffsets() const;
     GLint getBaseViewIndex() const;
 
@@ -154,7 +163,7 @@ class Framebuffer final : public angle::ObserverInterface,
     ~Framebuffer() override;
     void onDestroy(const Context *context);
 
-    void setLabel(const std::string &label) override;
+    void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
     rx::FramebufferImpl *getImplementation() const { return mImpl; }
@@ -208,7 +217,7 @@ class Framebuffer final : public angle::ObserverInterface,
     const std::vector<GLenum> &getDrawBufferStates() const;
     void setDrawBuffers(size_t count, const GLenum *buffers);
     const FramebufferAttachment *getDrawBuffer(size_t drawBuffer) const;
-    GLenum getDrawbufferWriteType(size_t drawBuffer) const;
+    ComponentType getDrawbufferWriteType(size_t drawBuffer) const;
     ComponentTypeMask getDrawBufferTypeMask() const;
     DrawBufferMask getDrawBufferMask() const;
     bool hasEnabledDrawBuffer() const;
@@ -225,7 +234,7 @@ class Framebuffer final : public angle::ObserverInterface,
     // This method calls checkStatus.
     int getSamples(const Context *context);
 
-    Error getSamplePosition(const Context *context, size_t index, GLfloat *xy) const;
+    angle::Result getSamplePosition(const Context *context, size_t index, GLfloat *xy) const;
 
     GLint getDefaultWidth() const;
     GLint getDefaultHeight() const;
@@ -240,7 +249,7 @@ class Framebuffer final : public angle::ObserverInterface,
 
     void invalidateCompletenessCache(const Context *context);
 
-    GLenum checkStatus(const Context *context)
+    ANGLE_INLINE GLenum checkStatus(const Context *context)
     {
         // The default framebuffer is always complete except when it is surfaceless in which
         // case it is always unsupported.
@@ -257,54 +266,54 @@ class Framebuffer final : public angle::ObserverInterface,
     int getCachedSamples(const Context *context);
 
     // Helper for checkStatus == GL_FRAMEBUFFER_COMPLETE.
-    bool isComplete(const Context *context)
+    ANGLE_INLINE bool isComplete(const Context *context)
     {
         return (checkStatus(context) == GL_FRAMEBUFFER_COMPLETE);
     }
 
     bool hasValidDepthStencil() const;
 
-    Error discard(const Context *context, size_t count, const GLenum *attachments);
-    Error invalidate(const Context *context, size_t count, const GLenum *attachments);
-    Error invalidateSub(const Context *context,
-                        size_t count,
-                        const GLenum *attachments,
-                        const Rectangle &area);
+    angle::Result discard(const Context *context, size_t count, const GLenum *attachments);
+    angle::Result invalidate(const Context *context, size_t count, const GLenum *attachments);
+    angle::Result invalidateSub(const Context *context,
+                                size_t count,
+                                const GLenum *attachments,
+                                const Rectangle &area);
 
-    Error clear(const Context *context, GLbitfield mask);
-    Error clearBufferfv(const Context *context,
-                        GLenum buffer,
-                        GLint drawbuffer,
-                        const GLfloat *values);
-    Error clearBufferuiv(const Context *context,
-                         GLenum buffer,
-                         GLint drawbuffer,
-                         const GLuint *values);
-    Error clearBufferiv(const Context *context,
-                        GLenum buffer,
-                        GLint drawbuffer,
-                        const GLint *values);
-    Error clearBufferfi(const Context *context,
-                        GLenum buffer,
-                        GLint drawbuffer,
-                        GLfloat depth,
-                        GLint stencil);
+    angle::Result clear(const Context *context, GLbitfield mask);
+    angle::Result clearBufferfv(const Context *context,
+                                GLenum buffer,
+                                GLint drawbuffer,
+                                const GLfloat *values);
+    angle::Result clearBufferuiv(const Context *context,
+                                 GLenum buffer,
+                                 GLint drawbuffer,
+                                 const GLuint *values);
+    angle::Result clearBufferiv(const Context *context,
+                                GLenum buffer,
+                                GLint drawbuffer,
+                                const GLint *values);
+    angle::Result clearBufferfi(const Context *context,
+                                GLenum buffer,
+                                GLint drawbuffer,
+                                GLfloat depth,
+                                GLint stencil);
 
     // These two methods call syncState() internally.
-    Error getImplementationColorReadFormat(const Context *context, GLenum *formatOut);
-    Error getImplementationColorReadType(const Context *context, GLenum *typeOut);
+    angle::Result getImplementationColorReadFormat(const Context *context, GLenum *formatOut);
+    angle::Result getImplementationColorReadType(const Context *context, GLenum *typeOut);
 
-    Error readPixels(const Context *context,
-                     const Rectangle &area,
-                     GLenum format,
-                     GLenum type,
-                     void *pixels);
+    angle::Result readPixels(const Context *context,
+                             const Rectangle &area,
+                             GLenum format,
+                             GLenum type,
+                             void *pixels);
 
-    Error blit(const Context *context,
-               const Rectangle &sourceArea,
-               const Rectangle &destArea,
-               GLbitfield mask,
-               GLenum filter);
+    angle::Result blit(const Context *context,
+                       const Rectangle &sourceArea,
+                       const Rectangle &destArea,
+                       GLbitfield mask,
+                       GLenum filter);
     bool isDefault() const;
 
     enum DirtyBitType : size_t
@@ -328,7 +337,14 @@ class Framebuffer final : public angle::ObserverInterface,
     using DirtyBits = angle::BitSet<DIRTY_BIT_MAX>;
     bool hasAnyDirtyBit() const { return mDirtyBits.any(); }
 
-    Error syncState(const Context *context);
+    bool hasActiveFloat32ColorAttachment() const
+    {
+        return (mFloat32ColorAttachmentBits & getDrawBufferMask()).any();
+    }
+
+    bool hasResourceThatNeedsInit() const { return mState.mResourceNeedsInit.any(); }
+
+    angle::Result syncState(const Context *context);
 
     // Observer implementation
     void onSubjectStateChange(const Context *context,
@@ -340,23 +356,20 @@ class Framebuffer final : public angle::ObserverInterface,
                                       GLint copyTextureLevel,
                                       GLint copyTextureLayer) const;
 
-    Error ensureClearAttachmentsInitialized(const Context *context, GLbitfield mask);
-    Error ensureClearBufferAttachmentsInitialized(const Context *context,
-                                                  GLenum buffer,
-                                                  GLint drawbuffer);
-    Error ensureDrawAttachmentsInitialized(const Context *context);
-    Error ensureReadAttachmentInitialized(const Context *context, GLbitfield blitMask);
+    angle::Result ensureClearAttachmentsInitialized(const Context *context, GLbitfield mask);
+    angle::Result ensureClearBufferAttachmentsInitialized(const Context *context,
+                                                          GLenum buffer,
+                                                          GLint drawbuffer);
+    angle::Result ensureDrawAttachmentsInitialized(const Context *context);
+    angle::Result ensureReadAttachmentInitialized(const Context *context, GLbitfield blitMask);
     Box getDimensions() const;
-
-    bool hasTextureAttachment(const Texture *texture) const;
 
   private:
     bool detachResourceById(const Context *context, GLenum resourceType, GLuint resourceId);
     bool detachMatchingAttachment(const Context *context,
                                   FramebufferAttachment *attachment,
                                   GLenum matchType,
-                                  GLuint matchId,
-                                  size_t dirtyBit);
+                                  GLuint matchId);
     GLenum checkStatusWithGLFrontEnd(const Context *context);
     GLenum checkStatusImpl(const Context *context);
     void setAttachment(const Context *context,
@@ -397,7 +410,9 @@ class Framebuffer final : public angle::ObserverInterface,
 
     void markDrawAttachmentsInitialized(bool color, bool depth, bool stencil);
     void markBufferInitialized(GLenum bufferType, GLint bufferIndex);
-    Error ensureBufferInitialized(const Context *context, GLenum bufferType, GLint bufferIndex);
+    angle::Result ensureBufferInitialized(const Context *context,
+                                          GLenum bufferType,
+                                          GLint bufferIndex);
 
     // Checks that we have a partially masked clear:
     // * some color channels are masked out
@@ -408,6 +423,12 @@ class Framebuffer final : public angle::ObserverInterface,
 
     FramebufferAttachment *getAttachmentFromSubjectIndex(angle::SubjectIndex index);
 
+    ANGLE_INLINE void updateFloat32ColorAttachmentBits(size_t index,
+                                                       const gl::InternalFormat *format)
+    {
+        mFloat32ColorAttachmentBits.set(index, format->type == GL_FLOAT);
+    }
+
     FramebufferState mState;
     rx::FramebufferImpl *mImpl;
 
@@ -417,16 +438,11 @@ class Framebuffer final : public angle::ObserverInterface,
     angle::ObserverBinding mDirtyStencilAttachmentBinding;
 
     DirtyBits mDirtyBits;
+    DrawBufferMask mFloat32ColorAttachmentBits;
 
     // The dirty bits guard is checked when we get a dependent state change message. We verify that
     // we don't set a dirty bit that isn't already set, when inside the dirty bits syncState.
     Optional<DirtyBits> mDirtyBitsGuard;
-
-    // A cache of attached textures for quick validation of feedback loops.
-    using FramebufferTextureAttachmentVector =
-        angle::FixedVector<const FramebufferAttachmentObject *,
-                           IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS>;
-    mutable Optional<FramebufferTextureAttachmentVector> mAttachedTextures;
 };
 
 }  // namespace gl

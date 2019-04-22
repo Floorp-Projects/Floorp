@@ -7,7 +7,7 @@
 //
 
 #if defined(_MSC_VER)
-#pragma warning(disable : 4718)
+#    pragma warning(disable : 4718)
 #endif
 
 #include "compiler/translator/Symbol.h"
@@ -25,6 +25,7 @@ constexpr const ImmutableString kMainName("main");
 constexpr const ImmutableString kImageLoadName("imageLoad");
 constexpr const ImmutableString kImageStoreName("imageStore");
 constexpr const ImmutableString kImageSizeName("imageSize");
+constexpr const ImmutableString kAtomicCounterName("atomicCounter");
 
 static const char kFunctionMangledNameSeparator = '(';
 
@@ -92,8 +93,7 @@ TStructure::TStructure(TSymbolTable *symbolTable,
                        const TFieldList *fields,
                        SymbolType symbolType)
     : TSymbol(symbolTable, name, symbolType, SymbolClass::Struct), TFieldListCollection(fields)
-{
-}
+{}
 
 TStructure::TStructure(const TSymbolUniqueId &id,
                        const ImmutableString &name,
@@ -101,8 +101,7 @@ TStructure::TStructure(const TSymbolUniqueId &id,
                        const TFieldList *fields)
     : TSymbol(id, name, SymbolType::BuiltIn, extension, SymbolClass::Struct),
       TFieldListCollection(fields)
-{
-}
+{}
 
 void TStructure::createSamplerSymbols(const char *namePrefix,
                                       const TString &apiNamePrefix,
@@ -129,7 +128,7 @@ void TStructure::createSamplerSymbols(const char *namePrefix,
 void TStructure::setName(const ImmutableString &name)
 {
     ImmutableString *mutableName = const_cast<ImmutableString *>(&mName);
-    *mutableName         = name;
+    *mutableName                 = name;
 }
 
 TInterfaceBlock::TInterfaceBlock(TSymbolTable *symbolTable,
@@ -154,8 +153,7 @@ TInterfaceBlock::TInterfaceBlock(const TSymbolUniqueId &id,
       TFieldListCollection(fields),
       mBlockStorage(EbsUnspecified),
       mBinding(0)
-{
-}
+{}
 
 TFunction::TFunction(TSymbolTable *symbolTable,
                      const ImmutableString &name,
@@ -217,6 +215,11 @@ bool TFunction::isImageFunction() const
 {
     return symbolType() == SymbolType::BuiltIn &&
            (name() == kImageSizeName || name() == kImageLoadName || name() == kImageStoreName);
+}
+
+bool TFunction::isAtomicCounterFunction() const
+{
+    return SymbolType() == SymbolType::BuiltIn && name().beginsWith(kAtomicCounterName);
 }
 
 bool TFunction::hasSamplerInStructParams() const

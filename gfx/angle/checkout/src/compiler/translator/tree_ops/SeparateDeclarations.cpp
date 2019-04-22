@@ -42,8 +42,7 @@ void SeparateDeclarationsTraverser::apply(TIntermNode *root)
 
 SeparateDeclarationsTraverser::SeparateDeclarationsTraverser()
     : TIntermTraverser(true, false, false)
-{
-}
+{}
 
 bool SeparateDeclarationsTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
 {

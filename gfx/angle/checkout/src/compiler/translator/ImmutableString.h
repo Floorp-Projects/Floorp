@@ -33,7 +33,7 @@ constexpr size_t constStrlen(const char *str)
     }
     return len;
 }
-}
+}  // namespace
 
 class ImmutableString
 {
@@ -44,15 +44,13 @@ class ImmutableString
     //  3. a null-terminated pool allocated char array. This can't be c_str() of a local TString,
     //     since when a TString goes out of scope it clears its first character.
     explicit constexpr ImmutableString(const char *data) : mData(data), mLength(constStrlen(data))
-    {
-    }
+    {}
 
     constexpr ImmutableString(const char *data, size_t length) : mData(data), mLength(length) {}
 
     ImmutableString(const std::string &str)
         : mData(AllocatePoolCharArray(str.c_str(), str.size())), mLength(str.size())
-    {
-    }
+    {}
 
     constexpr ImmutableString(const ImmutableString &) = default;
 

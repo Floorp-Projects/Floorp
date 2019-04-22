@@ -22,7 +22,7 @@ namespace rx
 VertexBuffer9::VertexBuffer9(Renderer9 *renderer) : mRenderer(renderer)
 {
     mVertexBuffer = nullptr;
-    mBufferSize = 0;
+    mBufferSize   = 0;
     mDynamicUsage = false;
 }
 
@@ -52,15 +52,15 @@ angle::Result VertexBuffer9::initialize(const gl::Context *context,
                      "Failed to allocate internal vertex buffer");
     }
 
-    mBufferSize = size;
+    mBufferSize   = size;
     mDynamicUsage = dynamicUsage;
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result VertexBuffer9::storeVertexAttributes(const gl::Context *context,
                                                    const gl::VertexAttribute &attrib,
                                                    const gl::VertexBinding &binding,
-                                                   GLenum currentValueType,
+                                                   gl::VertexAttribType currentValueType,
                                                    GLint start,
                                                    size_t count,
                                                    GLsizei instances,
@@ -80,7 +80,8 @@ angle::Result VertexBuffer9::storeVertexAttributes(const gl::Context *context,
     ANGLE_TRY(
         mRenderer->getVertexSpaceRequired(context, attrib, binding, count, instances, &mapSize));
 
-    HRESULT result = mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void**>(&mapPtr), lockFlags);
+    HRESULT result =
+        mVertexBuffer->Lock(offset, mapSize, reinterpret_cast<void **>(&mapPtr), lockFlags);
     ANGLE_TRY_HR(GetImplAs<Context9>(context), result, "Failed to lock internal vertex buffer");
 
     const uint8_t *input = sourceData;
@@ -90,8 +91,9 @@ angle::Result VertexBuffer9::storeVertexAttributes(const gl::Context *context,
         input += inputStride * start;
     }
 
-    gl::VertexFormatType vertexFormatType = gl::GetVertexFormatType(attrib, currentValueType);
-    const d3d9::VertexFormat &d3dVertexInfo = d3d9::GetVertexFormatInfo(mRenderer->getCapsDeclTypes(), vertexFormatType);
+    angle::FormatID vertexFormatID = gl::GetVertexFormatID(attrib, currentValueType);
+    const d3d9::VertexFormat &d3dVertexInfo =
+        d3d9::GetVertexFormatInfo(mRenderer->getCapsDeclTypes(), vertexFormatID);
     bool needsConversion = (d3dVertexInfo.conversionType & VERTEX_CONVERT_CPU) > 0;
 
     if (!needsConversion && inputStride == elementSize)
@@ -106,7 +108,7 @@ angle::Result VertexBuffer9::storeVertexAttributes(const gl::Context *context,
 
     mVertexBuffer->Unlock();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 unsigned int VertexBuffer9::getBufferSize() const
@@ -122,7 +124,7 @@ angle::Result VertexBuffer9::setBufferSize(const gl::Context *context, unsigned 
     }
     else
     {
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 }
 
@@ -141,10 +143,10 @@ angle::Result VertexBuffer9::discard(const gl::Context *context)
     result = mVertexBuffer->Unlock();
     ANGLE_TRY_HR(context9, result, "Failed to unlock internal vertex buffer for discarding");
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
-IDirect3DVertexBuffer9 * VertexBuffer9::getBuffer() const
+IDirect3DVertexBuffer9 *VertexBuffer9::getBuffer() const
 {
     return mVertexBuffer;
 }

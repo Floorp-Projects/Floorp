@@ -27,8 +27,7 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
           mDiagnostics(diagnostics),
           mCurrentFunction(nullptr),
           mCurrentIndex(0)
-    {
-    }
+    {}
 
     InitResult assignIndices()
     {
@@ -89,8 +88,7 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
     {
         CreatorFunctionData()
             : definitionNode(nullptr), name(""), index(0), indexAssigned(false), visiting(false)
-        {
-        }
+        {}
 
         std::set<CreatorFunctionData *> callees;
         TIntermFunctionDefinition *definitionNode;
@@ -260,13 +258,9 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
 
 // CallDAG
 
-CallDAG::CallDAG()
-{
-}
+CallDAG::CallDAG() {}
 
-CallDAG::~CallDAG()
-{
-}
+CallDAG::~CallDAG() {}
 
 const size_t CallDAG::InvalidIndex = std::numeric_limits<size_t>::max();
 

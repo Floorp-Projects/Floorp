@@ -11,7 +11,6 @@
 
 #include <array>
 
-#include "libANGLE/ContextState.h"
 #include "libANGLE/State.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
@@ -45,9 +44,14 @@ class ShaderConstants11 : angle::NonCopyable
                           const D3D11_VIEWPORT &dxViewport,
                           bool is9_3,
                           bool presentPathFast);
+    void onImageLayerChange(gl::ShaderType shaderType, unsigned int imageIndex, int layer);
     void onSamplerChange(gl::ShaderType shaderType,
                          unsigned int samplerIndex,
-                         const gl::Texture &texture);
+                         const gl::Texture &texture,
+                         const gl::SamplerState &samplerState);
+    void onImageChange(gl::ShaderType shaderType,
+                       unsigned int imageIndex,
+                       const gl::ImageUnit &imageUnit);
 
     angle::Result updateBuffer(const gl::Context *context,
                                Renderer11 *renderer,
@@ -65,8 +69,7 @@ class ShaderConstants11 : angle::NonCopyable
               viewScale{.0f},
               multiviewWriteToViewportIndex{.0f},
               padding{.0f}
-        {
-        }
+        {}
 
         float depthRange[4];
         float viewAdjust[4];
@@ -90,8 +93,7 @@ class ShaderConstants11 : angle::NonCopyable
               viewScale{.0f},
               multiviewWriteToViewportIndex(0),
               padding(0)
-        {
-        }
+        {}
 
         float depthRange[4];
         float viewCoords[4];
@@ -115,21 +117,39 @@ class ShaderConstants11 : angle::NonCopyable
 
     struct SamplerMetadata
     {
-        SamplerMetadata() : baseLevel(0), internalFormatBits(0), wrapModes(0), padding(0) {}
+        SamplerMetadata()
+            : baseLevel(0), internalFormatBits(0), wrapModes(0), padding(0), intBorderColor{0}
+        {}
 
         int baseLevel;
         int internalFormatBits;
         int wrapModes;
-        int padding;  // This just pads the struct to 16 bytes
+        int padding;  // This just pads the struct to 32 bytes
+        int intBorderColor[4];
     };
 
-    static_assert(sizeof(SamplerMetadata) == 16u,
-                  "Sampler metadata struct must be one 4-vec / 16 bytes.");
+    static_assert(sizeof(SamplerMetadata) == 32u,
+                  "Sampler metadata struct must be two 4-vec --> 32 bytes.");
+
+    struct ImageMetadata
+    {
+        ImageMetadata() : layer(0), padding{0} {}
+
+        int layer;
+        int padding[3];  // This just pads the struct to 16 bytes
+    };
+    static_assert(sizeof(ImageMetadata) == 16u,
+                  "Image metadata struct must be one 4-vec --> 16 bytes.");
 
     static size_t GetShaderConstantsStructSize(gl::ShaderType shaderType);
 
     // Return true if dirty.
-    bool updateSamplerMetadata(SamplerMetadata *data, const gl::Texture &texture);
+    bool updateSamplerMetadata(SamplerMetadata *data,
+                               const gl::Texture &texture,
+                               const gl::SamplerState &samplerState);
+
+    // Return true if dirty.
+    bool updateImageMetadata(ImageMetadata *data, const gl::ImageUnit &imageUnit);
 
     Vertex mVertex;
     Pixel mPixel;
@@ -138,6 +158,10 @@ class ShaderConstants11 : angle::NonCopyable
 
     gl::ShaderMap<std::vector<SamplerMetadata>> mShaderSamplerMetadata;
     gl::ShaderMap<int> mNumActiveShaderSamplers;
+    gl::ShaderMap<std::vector<ImageMetadata>> mShaderReadonlyImageMetadata;
+    gl::ShaderMap<int> mNumActiveShaderReadonlyImages;
+    gl::ShaderMap<std::vector<ImageMetadata>> mShaderImageMetadata;
+    gl::ShaderMap<int> mNumActiveShaderImages;
 };
 
 class StateManager11 final : angle::NonCopyable
@@ -204,7 +228,14 @@ class StateManager11 final : angle::NonCopyable
 
     void setSingleVertexBuffer(const d3d11::Buffer *buffer, UINT stride, UINT offset);
 
-    angle::Result updateState(const gl::Context *context, const gl::DrawCallParams &drawCallParams);
+    angle::Result updateState(const gl::Context *context,
+                              gl::PrimitiveMode mode,
+                              GLint firstVertex,
+                              GLsizei vertexOrIndexCount,
+                              gl::DrawElementsType indexTypeOrInvalid,
+                              const void *indices,
+                              GLsizei instanceCount,
+                              GLint baseVertex);
 
     void setShaderResourceShared(gl::ShaderType shaderType,
                                  UINT resourceSlot,
@@ -276,8 +307,7 @@ class StateManager11 final : angle::NonCopyable
 
     angle::Result syncDepthStencilState(const gl::Context *context);
 
-    angle::Result syncRasterizerState(const gl::Context *context,
-                                      const gl::DrawCallParams &drawCallParams);
+    angle::Result syncRasterizerState(const gl::Context *context, gl::PrimitiveMode mode);
 
     void syncScissorRectangle(const gl::Rectangle &scissor, bool enabled);
 
@@ -287,10 +317,11 @@ class StateManager11 final : angle::NonCopyable
 
     angle::Result syncFramebuffer(const gl::Context *context);
     angle::Result syncProgram(const gl::Context *context, gl::PrimitiveMode drawMode);
+    angle::Result syncProgramForCompute(const gl::Context *context);
 
     angle::Result syncTextures(const gl::Context *context);
-    angle::Result applyTexturesForSamplers(const gl::Context *context, gl::ShaderType shaderType);
-    angle::Result applyTexturesForImages(const gl::Context *context, gl::ShaderType shaderType);
+    angle::Result applyTexturesForSRVs(const gl::Context *context, gl::ShaderType shaderType);
+    angle::Result applyTexturesForUAVs(const gl::Context *context, gl::ShaderType shaderType);
     angle::Result syncTexturesForCompute(const gl::Context *context);
 
     angle::Result setSamplerState(const gl::Context *context,
@@ -303,6 +334,10 @@ class StateManager11 final : angle::NonCopyable
                                        int index,
                                        gl::Texture *texture,
                                        const gl::SamplerState &sampler);
+    angle::Result setImageState(const gl::Context *context,
+                                gl::ShaderType type,
+                                int index,
+                                const gl::ImageUnit &imageUnit);
     angle::Result setTextureForImage(const gl::Context *context,
                                      gl::ShaderType type,
                                      int index,
@@ -328,9 +363,16 @@ class StateManager11 final : angle::NonCopyable
     angle::Result applyUniforms(const gl::Context *context);
     angle::Result applyUniformsForShader(const gl::Context *context, gl::ShaderType shaderType);
 
+    angle::Result syncShaderStorageBuffersForShader(const gl::Context *context,
+                                                    gl::ShaderType shaderType);
+
     angle::Result syncUniformBuffers(const gl::Context *context);
     angle::Result syncUniformBuffersForShader(const gl::Context *context,
                                               gl::ShaderType shaderType);
+    angle::Result syncAtomicCounterBuffers(const gl::Context *context);
+    angle::Result syncAtomicCounterBuffersForShader(const gl::Context *context,
+                                                    gl::ShaderType shaderType);
+    angle::Result syncShaderStorageBuffers(const gl::Context *context);
     angle::Result syncTransformFeedbackBuffers(const gl::Context *context);
 
     // These are currently only called internally.
@@ -338,18 +380,26 @@ class StateManager11 final : angle::NonCopyable
     void invalidateDriverUniforms();
     void invalidateProgramUniforms();
     void invalidateConstantBuffer(unsigned int slot);
+    void invalidateProgramAtomicCounterBuffers();
+    void invalidateProgramShaderStorageBuffers();
 
     // Called by the Framebuffer11 directly.
     void processFramebufferInvalidation(const gl::Context *context);
 
     bool syncIndexBuffer(ID3D11Buffer *buffer, DXGI_FORMAT indexFormat, unsigned int offset);
     angle::Result syncVertexBuffersAndInputLayout(const gl::Context *context,
-                                                  const gl::DrawCallParams &vertexParams);
+                                                  gl::PrimitiveMode mode,
+                                                  GLint firstVertex,
+                                                  GLsizei vertexOrIndexCount,
+                                                  gl::DrawElementsType indexTypeOrInvalid,
+                                                  GLsizei instanceCount);
 
     bool setInputLayoutInternal(const d3d11::InputLayout *inputLayout);
 
     angle::Result applyVertexBuffers(const gl::Context *context,
-                                     const gl::DrawCallParams &drawCallParams);
+                                     gl::PrimitiveMode mode,
+                                     gl::DrawElementsType indexTypeOrInvalid,
+                                     GLint firstVertex);
     // TODO(jmadill): Migrate to d3d11::Buffer.
     bool queueVertexBufferChange(size_t bufferIndex,
                                  ID3D11Buffer *buffer,
@@ -361,7 +411,9 @@ class StateManager11 final : angle::NonCopyable
 
     // Not handled by an internal dirty bit because it isn't synced on drawArrays calls.
     angle::Result applyIndexBuffer(const gl::Context *context,
-                                   const gl::DrawCallParams &drawCallParams);
+                                   GLsizei indexCount,
+                                   gl::DrawElementsType indexType,
+                                   const void *indices);
 
     enum DirtyBitType
     {
@@ -371,11 +423,15 @@ class StateManager11 final : angle::NonCopyable
         DIRTY_BIT_RASTERIZER_STATE,
         DIRTY_BIT_BLEND_STATE,
         DIRTY_BIT_DEPTH_STENCIL_STATE,
+        // DIRTY_BIT_SHADERS and DIRTY_BIT_TEXTURE_AND_SAMPLER_STATE should be dealt before
+        // DIRTY_BIT_PROGRAM_UNIFORM_BUFFERS for update image layers.
+        DIRTY_BIT_SHADERS,
         DIRTY_BIT_TEXTURE_AND_SAMPLER_STATE,
         DIRTY_BIT_PROGRAM_UNIFORMS,
         DIRTY_BIT_DRIVER_UNIFORMS,
         DIRTY_BIT_PROGRAM_UNIFORM_BUFFERS,
-        DIRTY_BIT_SHADERS,
+        DIRTY_BIT_PROGRAM_ATOMIC_COUNTER_BUFFERS,
+        DIRTY_BIT_PROGRAM_SHADER_STORAGE_BUFFERS,
         DIRTY_BIT_CURRENT_VALUE_ATTRIBS,
         DIRTY_BIT_TRANSFORM_FEEDBACK,
         DIRTY_BIT_VERTEX_BUFFERS_AND_INPUT_LAYOUT,
@@ -390,6 +446,7 @@ class StateManager11 final : angle::NonCopyable
 
     // Internal dirty bits.
     DirtyBits mInternalDirtyBits;
+    DirtyBits mComputeDirtyBitsMask;
 
     // Blend State
     gl::BlendState mCurBlendState;
@@ -548,6 +605,14 @@ class StateManager11 final : angle::NonCopyable
     FragmentConstantBufferArray<ResourceSerial> mCurrentConstantBufferPS;
     FragmentConstantBufferArray<GLintptr> mCurrentConstantBufferPSOffset;
     FragmentConstantBufferArray<GLsizeiptr> mCurrentConstantBufferPSSize;
+
+    template <typename T>
+    using ComputeConstantBufferArray =
+        std::array<T, gl::IMPLEMENTATION_MAX_COMPUTE_SHADER_UNIFORM_BUFFERS>;
+
+    ComputeConstantBufferArray<ResourceSerial> mCurrentConstantBufferCS;
+    ComputeConstantBufferArray<GLintptr> mCurrentConstantBufferCSOffset;
+    ComputeConstantBufferArray<GLsizeiptr> mCurrentConstantBufferCSSize;
 
     // Currently applied transform feedback buffers
     Serial mAppliedTFSerial;

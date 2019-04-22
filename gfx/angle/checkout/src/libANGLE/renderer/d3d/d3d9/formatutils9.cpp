@@ -42,8 +42,7 @@ D3DFormat::D3DFormat()
       depthBits(0),
       stencilBits(0),
       formatID(angle::FormatID::NONE)
-{
-}
+{}
 
 D3DFormat::D3DFormat(GLuint bits,
                      GLuint blockWidth,
@@ -67,8 +66,7 @@ D3DFormat::D3DFormat(GLuint bits,
       depthBits(depthBits),
       stencilBits(stencilBits),
       formatID(formatID)
-{
-}
+{}
 
 const D3DFormat &GetD3DFormatInfo(D3DFORMAT format)
 {
@@ -255,8 +253,7 @@ TextureFormat::TextureFormat()
       renderFormat(D3DFMT_UNKNOWN),
       dataInitializerFunction(nullptr),
       loadFunction(UnreachableLoad)
-{
-}
+{}
 
 static inline void InsertD3D9FormatInfo(D3D9FormatMap *map,
                                         GLenum internalFormat,
@@ -426,8 +423,7 @@ struct TranslationDescription
 // GLToCType maps from GL type (as GLenum) to the C typedef.
 template <GLenum GLType>
 struct GLToCType
-{
-};
+{};
 
 template <>
 struct GLToCType<GL_BYTE>
@@ -474,8 +470,7 @@ enum D3DVertexType
 // D3DToCType maps from D3D vertex type (as enum D3DVertexType) to the corresponding C type.
 template <unsigned int D3DType>
 struct D3DToCType
-{
-};
+{};
 
 template <>
 struct D3DToCType<D3DVT_FLOAT>
@@ -512,40 +507,32 @@ struct D3DToCType<D3DVT_USHORT_NORM>
 // that will provide the appropriate final size.
 template <unsigned int type, int size>
 struct WidenRule
-{
-};
+{};
 
 template <int size>
 struct WidenRule<D3DVT_FLOAT, size> : NoWiden<size>
-{
-};
+{};
 template <int size>
 struct WidenRule<D3DVT_SHORT, size> : WidenToEven<size>
-{
-};
+{};
 template <int size>
 struct WidenRule<D3DVT_SHORT_NORM, size> : WidenToEven<size>
-{
-};
+{};
 template <int size>
 struct WidenRule<D3DVT_UBYTE, size> : WidenToFour<size>
-{
-};
+{};
 template <int size>
 struct WidenRule<D3DVT_UBYTE_NORM, size> : WidenToFour<size>
-{
-};
+{};
 template <int size>
 struct WidenRule<D3DVT_USHORT_NORM, size> : WidenToEven<size>
-{
-};
+{};
 
 // VertexTypeFlags encodes the D3DCAPS9::DeclType flag and vertex declaration flag for each D3D
 // vertex type & size combination.
 template <unsigned int d3dtype, int size>
 struct VertexTypeFlags
-{
-};
+{};
 
 template <unsigned int _capflag, unsigned int _declflag>
 struct VertexTypeFlagsHelper
@@ -562,64 +549,51 @@ struct VertexTypeFlagsHelper
 
 template <>
 struct VertexTypeFlags<D3DVT_FLOAT, 1> : VertexTypeFlagsHelper<0, D3DDECLTYPE_FLOAT1>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_FLOAT, 2> : VertexTypeFlagsHelper<0, D3DDECLTYPE_FLOAT2>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_FLOAT, 3> : VertexTypeFlagsHelper<0, D3DDECLTYPE_FLOAT3>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_FLOAT, 4> : VertexTypeFlagsHelper<0, D3DDECLTYPE_FLOAT4>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_SHORT, 2> : VertexTypeFlagsHelper<0, D3DDECLTYPE_SHORT2>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_SHORT, 4> : VertexTypeFlagsHelper<0, D3DDECLTYPE_SHORT4>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_SHORT_NORM, 2>
     : VertexTypeFlagsHelper<D3DDTCAPS_SHORT2N, D3DDECLTYPE_SHORT2N>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_SHORT_NORM, 4>
     : VertexTypeFlagsHelper<D3DDTCAPS_SHORT4N, D3DDECLTYPE_SHORT4N>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_UBYTE, 4> : VertexTypeFlagsHelper<D3DDTCAPS_UBYTE4, D3DDECLTYPE_UBYTE4>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_UBYTE_NORM, 4>
     : VertexTypeFlagsHelper<D3DDTCAPS_UBYTE4N, D3DDECLTYPE_UBYTE4N>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_USHORT_NORM, 2>
     : VertexTypeFlagsHelper<D3DDTCAPS_USHORT2N, D3DDECLTYPE_USHORT2N>
-{
-};
+{};
 template <>
 struct VertexTypeFlags<D3DVT_USHORT_NORM, 4>
     : VertexTypeFlagsHelper<D3DDTCAPS_USHORT4N, D3DDECLTYPE_USHORT4N>
-{
-};
+{};
 
 // VertexTypeMapping maps GL type & normalized flag to preferred and fallback D3D vertex types (as
 // D3DVertexType enums).
 template <GLenum GLtype, bool normalized>
 struct VertexTypeMapping
-{
-};
+{};
 
 template <D3DVertexType Preferred, D3DVertexType Fallback = Preferred>
 struct VertexTypeMappingBase
@@ -636,46 +610,36 @@ struct VertexTypeMappingBase
 
 template <>
 struct VertexTypeMapping<GL_BYTE, false> : VertexTypeMappingBase<D3DVT_SHORT>
-{
-};  // Cast
+{};  // Cast
 template <>
 struct VertexTypeMapping<GL_BYTE, true> : VertexTypeMappingBase<D3DVT_FLOAT>
-{
-};  // Normalize
+{};  // Normalize
 template <>
 struct VertexTypeMapping<GL_UNSIGNED_BYTE, false> : VertexTypeMappingBase<D3DVT_UBYTE, D3DVT_FLOAT>
-{
-};  // Identity, Cast
+{};  // Identity, Cast
 template <>
 struct VertexTypeMapping<GL_UNSIGNED_BYTE, true>
     : VertexTypeMappingBase<D3DVT_UBYTE_NORM, D3DVT_FLOAT>
-{
-};  // Identity, Normalize
+{};  // Identity, Normalize
 template <>
 struct VertexTypeMapping<GL_SHORT, false> : VertexTypeMappingBase<D3DVT_SHORT>
-{
-};  // Identity
+{};  // Identity
 template <>
 struct VertexTypeMapping<GL_SHORT, true> : VertexTypeMappingBase<D3DVT_SHORT_NORM, D3DVT_FLOAT>
-{
-};  // Cast, Normalize
+{};  // Cast, Normalize
 template <>
 struct VertexTypeMapping<GL_UNSIGNED_SHORT, false> : VertexTypeMappingBase<D3DVT_FLOAT>
-{
-};  // Cast
+{};  // Cast
 template <>
 struct VertexTypeMapping<GL_UNSIGNED_SHORT, true>
     : VertexTypeMappingBase<D3DVT_USHORT_NORM, D3DVT_FLOAT>
-{
-};  // Cast, Normalize
+{};  // Cast, Normalize
 template <bool normalized>
 struct VertexTypeMapping<GL_FIXED, normalized> : VertexTypeMappingBase<D3DVT_FLOAT>
-{
-};  // FixedToFloat
+{};  // FixedToFloat
 template <bool normalized>
 struct VertexTypeMapping<GL_FLOAT, normalized> : VertexTypeMappingBase<D3DVT_FLOAT>
-{
-};  // Identity
+{};  // Identity
 
 // Given a GL type & norm flag and a D3D type, ConversionRule provides the type conversion rule
 // (Cast, Normalize, Identity, FixedToFloat). The conversion rules themselves are defined in
@@ -685,51 +649,42 @@ struct VertexTypeMapping<GL_FLOAT, normalized> : VertexTypeMappingBase<D3DVT_FLO
 // knows it's an identity mapping).
 template <GLenum fromType, bool normalized, unsigned int toType>
 struct ConversionRule : Cast<typename GLToCType<fromType>::type, typename D3DToCType<toType>::type>
-{
-};
+{};
 
 // All conversions from normalized types to float use the Normalize operator.
 template <GLenum fromType>
 struct ConversionRule<fromType, true, D3DVT_FLOAT> : Normalize<typename GLToCType<fromType>::type>
-{
-};
+{};
 
 // Use a full specialization for this so that it preferentially matches ahead of the generic
 // normalize-to-float rules.
 template <>
 struct ConversionRule<GL_FIXED, true, D3DVT_FLOAT> : FixedToFloat<GLint, 16>
-{
-};
+{};
 template <>
 struct ConversionRule<GL_FIXED, false, D3DVT_FLOAT> : FixedToFloat<GLint, 16>
-{
-};
+{};
 
 // A 2-stage construction is used for DefaultVertexValues because float must use SimpleDefaultValues
 // (i.e. 0/1) whether it is normalized or not.
 template <class T, bool normalized>
 struct DefaultVertexValuesStage2
-{
-};
+{};
 
 template <class T>
 struct DefaultVertexValuesStage2<T, true> : NormalizedDefaultValues<T>
-{
-};
+{};
 template <class T>
 struct DefaultVertexValuesStage2<T, false> : SimpleDefaultValues<T>
-{
-};
+{};
 
 // Work out the default value rule for a D3D type (expressed as the C type) and
 template <class T, bool normalized>
 struct DefaultVertexValues : DefaultVertexValuesStage2<T, normalized>
-{
-};
+{};
 template <bool normalized>
 struct DefaultVertexValues<float, normalized> : SimpleDefaultValues<float>
-{
-};
+{};
 
 // Policy rules for use with Converter, to choose whether to use the preferred or fallback
 // conversion. The fallback conversion produces an output that all D3D9 devices must support.
@@ -793,8 +748,7 @@ VertexFormat::VertexFormat()
       copyFunction(nullptr),
       nativeFormat(D3DDECLTYPE_UNUSED),
       componentType(GL_NONE)
-{
-}
+{}
 
 // Initialize a TranslationInfo
 VertexFormat CreateVertexFormatInfo(bool identity,
@@ -872,8 +826,7 @@ static inline unsigned int ComputeTypeIndex(GLenum type)
     }
 }
 
-const VertexFormat &GetVertexFormatInfo(DWORD supportedDeclTypes,
-                                        gl::VertexFormatType vertexFormatType)
+const VertexFormat &GetVertexFormatInfo(DWORD supportedDeclTypes, angle::FormatID vertexFormatID)
 {
     static bool initialized           = false;
     static DWORD initializedDeclTypes = 0;
@@ -908,12 +861,12 @@ const VertexFormat &GetVertexFormatInfo(DWORD supportedDeclTypes,
         initializedDeclTypes = supportedDeclTypes;
     }
 
-    const gl::VertexFormat &vertexFormat = gl::GetVertexFormatFromType(vertexFormatType);
+    const gl::VertexFormat &vertexFormat = gl::GetVertexFormatFromID(vertexFormatID);
 
     // Pure integer attributes only supported in ES3.0
     ASSERT(!vertexFormat.pureInteger);
     return formatConverters[ComputeTypeIndex(vertexFormat.type)][vertexFormat.normalized]
                            [vertexFormat.components - 1];
 }
-}
-}
+}  // namespace d3d9
+}  // namespace rx

@@ -46,8 +46,7 @@ UnfoldShortCircuitTraverser::UnfoldShortCircuitTraverser(TSymbolTable *symbolTab
     : TIntermTraverser(true, false, true, symbolTable),
       mFoundShortCircuit(false),
       mPatternToUnfoldMatcher(IntermNodePatternMatcher::kUnfoldedShortCircuitExpression)
-{
-}
+{}
 
 bool UnfoldShortCircuitTraverser::visitBinary(Visit visit, TIntermBinary *node)
 {

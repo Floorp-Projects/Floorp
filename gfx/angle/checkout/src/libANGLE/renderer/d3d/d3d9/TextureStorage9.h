@@ -11,8 +11,8 @@
 #ifndef LIBANGLE_RENDERER_D3D_D3D9_TEXTURESTORAGE9_H_
 #define LIBANGLE_RENDERER_D3D_D3D9_TEXTURESTORAGE9_H_
 
-#include "libANGLE/renderer/d3d/TextureStorage.h"
 #include "common/debug.h"
+#include "libANGLE/renderer/d3d/TextureStorage.h"
 
 namespace rx
 {
@@ -75,7 +75,12 @@ class TextureStorage9_2D : public TextureStorage9
 {
   public:
     TextureStorage9_2D(Renderer9 *renderer, SwapChain9 *swapchain);
-    TextureStorage9_2D(Renderer9 *renderer, GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, int levels);
+    TextureStorage9_2D(Renderer9 *renderer,
+                       GLenum internalformat,
+                       bool renderTarget,
+                       GLsizei width,
+                       GLsizei height,
+                       int levels);
     ~TextureStorage9_2D() override;
 
     angle::Result getSurfaceLevel(const gl::Context *context,
@@ -126,7 +131,12 @@ class TextureStorage9_EGLImage final : public TextureStorage9
 class TextureStorage9_Cube : public TextureStorage9
 {
   public:
-    TextureStorage9_Cube(Renderer9 *renderer, GLenum internalformat, bool renderTarget, int size, int levels, bool hintLevelZeroOnly);
+    TextureStorage9_Cube(Renderer9 *renderer,
+                         GLenum internalformat,
+                         bool renderTarget,
+                         int size,
+                         int levels,
+                         bool hintLevelZeroOnly);
     ~TextureStorage9_Cube() override;
 
     angle::Result getSurfaceLevel(const gl::Context *context,
@@ -146,9 +156,9 @@ class TextureStorage9_Cube : public TextureStorage9
 
   private:
     IDirect3DCubeTexture9 *mTexture;
-    RenderTarget9 *mRenderTarget[gl::CUBE_FACE_COUNT];
+    RenderTarget9 *mRenderTarget[gl::kCubeFaceCount];
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D9_TEXTURESTORAGE9_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D9_TEXTURESTORAGE9_H_

@@ -24,20 +24,22 @@ class Framebuffer11 : public FramebufferD3D
     Framebuffer11(const gl::FramebufferState &data, Renderer11 *renderer);
     ~Framebuffer11() override;
 
-    gl::Error discard(const gl::Context *context, size_t count, const GLenum *attachments) override;
-    gl::Error invalidate(const gl::Context *context,
-                         size_t count,
-                         const GLenum *attachments) override;
-    gl::Error invalidateSub(const gl::Context *context,
-                            size_t count,
-                            const GLenum *attachments,
-                            const gl::Rectangle &area) override;
+    angle::Result discard(const gl::Context *context,
+                          size_t count,
+                          const GLenum *attachments) override;
+    angle::Result invalidate(const gl::Context *context,
+                             size_t count,
+                             const GLenum *attachments) override;
+    angle::Result invalidateSub(const gl::Context *context,
+                                size_t count,
+                                const GLenum *attachments,
+                                const gl::Rectangle &area) override;
 
     // Invalidate the cached swizzles of all bound texture attachments.
     angle::Result markAttachmentsDirty(const gl::Context *context) const;
 
-    gl::Error syncState(const gl::Context *context,
-                        const gl::Framebuffer::DirtyBits &dirtyBits) override;
+    angle::Result syncState(const gl::Context *context,
+                            const gl::Framebuffer::DirtyBits &dirtyBits) override;
 
     const gl::AttachmentArray<RenderTarget11 *> &getCachedColorRenderTargets() const
     {
@@ -50,9 +52,9 @@ class Framebuffer11 : public FramebufferD3D
 
     RenderTarget11 *getFirstRenderTarget() const;
 
-    gl::Error getSamplePosition(const gl::Context *context,
-                                size_t index,
-                                GLfloat *xy) const override;
+    angle::Result getSamplePosition(const gl::Context *context,
+                                    size_t index,
+                                    GLfloat *xy) const override;
 
   private:
     angle::Result clearImpl(const gl::Context *context,
@@ -91,4 +93,4 @@ class Framebuffer11 : public FramebufferD3D
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_FRAMBUFFER11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_FRAMBUFFER11_H_

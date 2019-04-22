@@ -54,8 +54,7 @@ ValidateOutputsTraverser::ValidateOutputsTraverser(const TExtensionBehavior &ext
       mAllowUnspecifiedOutputLocationResolution(
           IsExtensionEnabled(extBehavior, TExtension::EXT_blend_func_extended)),
       mUsesFragDepth(false)
-{
-}
+{}
 
 void ValidateOutputsTraverser::visitSymbol(TIntermSymbol *symbol)
 {
@@ -92,33 +91,42 @@ void ValidateOutputsTraverser::visitSymbol(TIntermSymbol *symbol)
 void ValidateOutputsTraverser::validate(TDiagnostics *diagnostics) const
 {
     ASSERT(diagnostics);
-    OutputVector validOutputs(mMaxDrawBuffers);
+    OutputVector validOutputs(mMaxDrawBuffers, nullptr);
+    OutputVector validSecondaryOutputs(mMaxDrawBuffers, nullptr);
 
     for (const auto &symbol : mOutputs)
     {
-        const TType &type         = symbol->getType();
+        const TType &type = symbol->getType();
         ASSERT(!type.isArrayOfArrays());  // Disallowed in GLSL ES 3.10 section 4.3.6.
         const size_t elementCount =
             static_cast<size_t>(type.isArray() ? type.getOutermostArraySize() : 1u);
-        const size_t location     = static_cast<size_t>(type.getLayoutQualifier().location);
+        const size_t location = static_cast<size_t>(type.getLayoutQualifier().location);
 
         ASSERT(type.getLayoutQualifier().location != -1);
 
-        if (location + elementCount <= validOutputs.size())
+        OutputVector *validOutputsToUse = &validOutputs;
+        // The default index is 0, so we only assign the output to secondary outputs in case the
+        // index is explicitly set to 1.
+        if (type.getLayoutQualifier().index == 1)
+        {
+            validOutputsToUse = &validSecondaryOutputs;
+        }
+
+        if (location + elementCount <= validOutputsToUse->size())
         {
             for (size_t elementIndex = 0; elementIndex < elementCount; elementIndex++)
             {
                 const size_t offsetLocation = location + elementIndex;
-                if (validOutputs[offsetLocation])
+                if ((*validOutputsToUse)[offsetLocation])
                 {
                     std::stringstream strstr;
                     strstr << "conflicting output locations with previously defined output '"
-                           << validOutputs[offsetLocation]->getName() << "'";
+                           << (*validOutputsToUse)[offsetLocation]->getName() << "'";
                     error(*symbol, strstr.str().c_str(), diagnostics);
                 }
                 else
                 {
-                    validOutputs[offsetLocation] = symbol;
+                    (*validOutputsToUse)[offsetLocation] = symbol;
                 }
             }
         }

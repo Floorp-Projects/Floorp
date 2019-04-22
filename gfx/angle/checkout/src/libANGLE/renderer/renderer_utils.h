@@ -37,6 +37,7 @@ class AttributeMap;
 
 namespace rx
 {
+class ContextImpl;
 
 class ResourceSerial
 {
@@ -153,7 +154,7 @@ struct PackPixelsParams
     PackPixelsParams(const gl::Rectangle &area,
                      const angle::Format &destFormat,
                      GLuint outputPitch,
-                     const gl::PixelPackState &pack,
+                     bool reverseRowOrderIn,
                      gl::Buffer *packBufferIn,
                      ptrdiff_t offset);
 
@@ -161,7 +162,7 @@ struct PackPixelsParams
     const angle::Format *destFormat;
     GLuint outputPitch;
     gl::Buffer *packBuffer;
-    gl::PixelPackState pack;
+    bool reverseRowOrder;
     ptrdiff_t offset;
 };
 
@@ -193,8 +194,7 @@ struct LoadImageFunctionInfo
     LoadImageFunctionInfo() : loadFunction(nullptr), requiresConversion(false) {}
     LoadImageFunctionInfo(LoadImageFunction loadFunction, bool requiresConversion)
         : loadFunction(loadFunction), requiresConversion(requiresConversion)
-    {
-    }
+    {}
 
     LoadImageFunction loadFunction;
     bool requiresConversion;
@@ -208,15 +208,18 @@ bool ShouldUseVirtualizedContexts(const egl::AttributeMap &attribs, bool default
 void CopyImageCHROMIUM(const uint8_t *sourceData,
                        size_t sourceRowPitch,
                        size_t sourcePixelBytes,
+                       size_t sourceDepthPitch,
                        PixelReadFunction pixelReadFunction,
                        uint8_t *destData,
                        size_t destRowPitch,
                        size_t destPixelBytes,
+                       size_t destDepthPitch,
                        PixelWriteFunction pixelWriteFunction,
                        GLenum destUnsizedFormat,
                        GLenum destComponentType,
                        size_t width,
                        size_t height,
+                       size_t depth,
                        bool unpackFlipY,
                        bool unpackPremultiplyAlpha,
                        bool unpackUnmultiplyAlpha);
@@ -232,8 +235,8 @@ class MultisampleTextureInitializer
 {
   public:
     virtual ~MultisampleTextureInitializer() {}
-    virtual gl::Error initializeMultisampleTextureToBlack(const gl::Context *context,
-                                                          gl::Texture *glTexture) = 0;
+    virtual angle::Result initializeMultisampleTextureToBlack(const gl::Context *context,
+                                                              gl::Texture *glTexture) = 0;
 };
 
 class IncompleteTextureSet final : angle::NonCopyable
@@ -244,10 +247,10 @@ class IncompleteTextureSet final : angle::NonCopyable
 
     void onDestroy(const gl::Context *context);
 
-    gl::Error getIncompleteTexture(const gl::Context *context,
-                                   gl::TextureType type,
-                                   MultisampleTextureInitializer *multisampleInitializer,
-                                   gl::Texture **textureOut);
+    angle::Result getIncompleteTexture(const gl::Context *context,
+                                       gl::TextureType type,
+                                       MultisampleTextureInitializer *multisampleInitializer,
+                                       gl::Texture **textureOut);
 
   private:
     gl::TextureMap mIncompleteTextures;
@@ -269,6 +272,20 @@ template <typename NonFloatT>
 void GetMatrixUniform(GLenum type, NonFloatT *dataOut, const NonFloatT *source, bool transpose);
 
 const angle::Format &GetFormatFromFormatType(GLenum format, GLenum type);
+
+angle::Result ComputeStartVertex(ContextImpl *contextImpl,
+                                 const gl::IndexRange &indexRange,
+                                 GLint baseVertex,
+                                 GLint *firstVertexOut);
+
+angle::Result GetVertexRangeInfo(const gl::Context *context,
+                                 GLint firstVertex,
+                                 GLsizei vertexOrIndexCount,
+                                 gl::DrawElementsType indexTypeOrInvalid,
+                                 const void *indices,
+                                 GLint baseVertex,
+                                 GLint *startVertexOut,
+                                 size_t *vertexCountOut);
 }  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_RENDERER_UTILS_H_

@@ -200,15 +200,18 @@ struct ETC2Block
     }
 
   private:
-    union {
+    union
+    {
         // Individual, differential, H and T modes
         struct
         {
-            union {
+            union
+            {
                 // Individual and differential modes
                 struct
                 {
-                    union {
+                    union
+                    {
                         struct  // Individual colors
                         {
                             unsigned char R2 : 4;
@@ -318,7 +321,8 @@ struct ETC2Block
         // Single channel block
         struct
         {
-            union {
+            union
+            {
                 unsigned char us;
                 signed char s;
             } base_codeword;
@@ -531,7 +535,9 @@ struct ETC2Block
         const int d            = distance[block.Tda << 1 | block.Tdb];
 
         const R8G8B8A8 paintColors[4] = {
-            createRGBA(r1, g1, b1), createRGBA(r2 + d, g2 + d, b2 + d), createRGBA(r2, g2, b2),
+            createRGBA(r1, g1, b1),
+            createRGBA(r2 + d, g2 + d, b2 + d),
+            createRGBA(r2, g2, b2),
             createRGBA(r2 - d, g2 - d, b2 - d),
         };
 
@@ -578,8 +584,10 @@ struct ETC2Block
         const int d = distance[(block.Hda << 2) | (block.Hdb << 1) | orderingTrickBit];
 
         const R8G8B8A8 paintColors[4] = {
-            createRGBA(r1 + d, g1 + d, b1 + d), createRGBA(r1 - d, g1 - d, b1 - d),
-            createRGBA(r2 + d, g2 + d, b2 + d), createRGBA(r2 - d, g2 - d, b2 - d),
+            createRGBA(r1 + d, g1 + d, b1 + d),
+            createRGBA(r1 - d, g1 - d, b1 - d),
+            createRGBA(r2 + d, g2 + d, b2 + d),
+            createRGBA(r2 - d, g2 - d, b2 - d),
         };
 
         uint8_t *curPixel = dest;
@@ -1193,7 +1201,8 @@ struct ETC2Block
         // In ETC opaque punch through formats, index == 2 means transparent pixel.
         // Thus we don't need to compute its color, just assign it as black.
         const R8G8B8A8 paintColors[kNumColors] = {
-            createRGBA(r1, g1, b1), createRGBA(r2 + d, g2 + d, b2 + d),
+            createRGBA(r1, g1, b1),
+            createRGBA(r2 + d, g2 + d, b2 + d),
             nonOpaquePunchThroughAlpha ? createRGBA(0, 0, 0, 0) : createRGBA(r2, g2, b2),
             createRGBA(r2 - d, g2 - d, b2 - d),
         };
@@ -1247,7 +1256,8 @@ struct ETC2Block
         // In ETC opaque punch through formats, index == 2 means transparent pixel.
         // Thus we don't need to compute its color, just assign it as black.
         const R8G8B8A8 paintColors[kNumColors] = {
-            createRGBA(r1 + d, g1 + d, b1 + d), createRGBA(r1 - d, g1 - d, b1 - d),
+            createRGBA(r1 + d, g1 + d, b1 + d),
+            createRGBA(r1 - d, g1 - d, b1 - d),
             nonOpaquePunchThroughAlpha ? createRGBA(0, 0, 0, 0)
                                        : createRGBA(r2 + d, g2 + d, b2 + d),
             createRGBA(r2 - d, g2 - d, b2 - d),
@@ -1290,7 +1300,7 @@ struct ETC2Block
         // Planar block doesn't have a color table, fill indices as full
         int pixelIndices[kNumPixelsInBlock] = {0, 1, 2,  3,  4,  5,  6,  7,
                                                8, 9, 10, 11, 12, 13, 14, 15};
-        int pixelIndexCounts[kNumColors] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        int pixelIndexCounts[kNumColors]    = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
         int minColorIndex, maxColorIndex;
         selectEndPointPCA(pixelIndexCounts, rgbaBlock, kNumColors, &minColorIndex, &maxColorIndex);

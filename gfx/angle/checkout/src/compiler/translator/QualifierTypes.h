@@ -34,13 +34,14 @@ enum TQualifierType
 class TQualifierWrapperBase : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TQualifierWrapperBase(const TSourceLoc &line) : mLine(line) {}
-    virtual ~TQualifierWrapperBase(){};
-    virtual TQualifierType getType() const     = 0;
+    virtual ~TQualifierWrapperBase() {}
+    virtual TQualifierType getType() const             = 0;
     virtual ImmutableString getQualifierString() const = 0;
-    virtual unsigned int getRank() const       = 0;
+    virtual unsigned int getRank() const               = 0;
     const TSourceLoc &getLine() const { return mLine; }
+
   private:
     TSourceLoc mLine;
 };
@@ -61,8 +62,7 @@ class TInterpolationQualifierWrapper final : public TQualifierWrapperBase
   public:
     TInterpolationQualifierWrapper(TQualifier interpolationQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mInterpolationQualifier(interpolationQualifier)
-    {
-    }
+    {}
     ~TInterpolationQualifierWrapper() {}
 
     TQualifierType getType() const override { return QtInterpolation; }
@@ -82,8 +82,7 @@ class TLayoutQualifierWrapper final : public TQualifierWrapperBase
   public:
     TLayoutQualifierWrapper(TLayoutQualifier layoutQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mLayoutQualifier(layoutQualifier)
-    {
-    }
+    {}
     ~TLayoutQualifierWrapper() {}
 
     TQualifierType getType() const override { return QtLayout; }
@@ -100,8 +99,7 @@ class TStorageQualifierWrapper final : public TQualifierWrapperBase
   public:
     TStorageQualifierWrapper(TQualifier storageQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mStorageQualifier(storageQualifier)
-    {
-    }
+    {}
     ~TStorageQualifierWrapper() {}
 
     TQualifierType getType() const override { return QtStorage; }
@@ -121,8 +119,7 @@ class TPrecisionQualifierWrapper final : public TQualifierWrapperBase
   public:
     TPrecisionQualifierWrapper(TPrecision precisionQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mPrecisionQualifier(precisionQualifier)
-    {
-    }
+    {}
     ~TPrecisionQualifierWrapper() {}
 
     TQualifierType getType() const override { return QtPrecision; }
@@ -142,8 +139,7 @@ class TMemoryQualifierWrapper final : public TQualifierWrapperBase
   public:
     TMemoryQualifierWrapper(TQualifier memoryQualifier, const TSourceLoc &line)
         : TQualifierWrapperBase(line), mMemoryQualifier(memoryQualifier)
-    {
-    }
+    {}
     ~TMemoryQualifierWrapper() {}
 
     TQualifierType getType() const override { return QtMemory; }
@@ -180,7 +176,7 @@ class TTypeQualifierBuilder : angle::NonCopyable
     using QualifierSequence = TVector<const TQualifierWrapperBase *>;
 
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TTypeQualifierBuilder(const TStorageQualifierWrapper *scope, int shaderVersion);
     // Adds the passed qualifier to the end of the sequence.
     void appendQualifier(const TQualifierWrapperBase *qualifier);

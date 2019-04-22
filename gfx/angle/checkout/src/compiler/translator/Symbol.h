@@ -24,7 +24,7 @@ class TSymbolTable;
 class TSymbol : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TSymbol(TSymbolTable *symbolTable,
             const ImmutableString &name,
             SymbolType symbolType,
@@ -44,6 +44,7 @@ class TSymbol : angle::NonCopyable
     bool isFunction() const { return mSymbolClass == SymbolClass::Function; }
     bool isVariable() const { return mSymbolClass == SymbolClass::Variable; }
     bool isStruct() const { return mSymbolClass == SymbolClass::Struct; }
+    bool isInterfaceBlock() const { return mSymbolClass == SymbolClass::InterfaceBlock; }
 
     const TSymbolUniqueId &uniqueId() const { return mUniqueId; }
     SymbolType symbolType() const { return mSymbolType; }
@@ -60,8 +61,7 @@ class TSymbol : angle::NonCopyable
           mSymbolType(symbolType),
           mExtension(extension),
           mSymbolClass(symbolClass)
-    {
-    }
+    {}
 
     const ImmutableString mName;
 
@@ -101,8 +101,7 @@ class TVariable : public TSymbol
         : TSymbol(id, name, symbolType, extension, SymbolClass::Variable),
           mType(type),
           unionArray(nullptr)
-    {
-    }
+    {}
 
   private:
     const TType *mType;
@@ -234,6 +233,7 @@ class TFunction : public TSymbol
 
     bool isMain() const;
     bool isImageFunction() const;
+    bool isAtomicCounterFunction() const;
     bool hasSamplerInStructParams() const;
 
     // Note: Only to be used for static built-in functions!
@@ -255,8 +255,7 @@ class TFunction : public TSymbol
           defined(false),
           mHasPrototypeDeclaration(false),
           mKnownToNotHaveSideEffects(knownToNotHaveSideEffects)
-    {
-    }
+    {}
 
   private:
     ImmutableString buildMangledName() const;

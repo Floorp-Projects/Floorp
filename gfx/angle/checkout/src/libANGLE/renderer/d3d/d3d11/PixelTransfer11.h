@@ -27,7 +27,7 @@ struct Box;
 struct Extents;
 struct PixelUnpackState;
 
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -54,7 +54,6 @@ class PixelTransfer11
                                       const gl::Box &destArea);
 
   private:
-
     struct CopyShaderParams
     {
         unsigned int FirstPixelOffset;
@@ -68,8 +67,12 @@ class PixelTransfer11
         unsigned int FirstSlice;
     };
 
-    static void setBufferToTextureCopyParams(const gl::Box &destArea, const gl::Extents &destSize, GLenum internalFormat,
-                                             const gl::PixelUnpackState &unpack, unsigned int offset, CopyShaderParams *parametersOut);
+    static void setBufferToTextureCopyParams(const gl::Box &destArea,
+                                             const gl::Extents &destSize,
+                                             GLenum internalFormat,
+                                             const gl::PixelUnpackState &unpack,
+                                             unsigned int offset,
+                                             CopyShaderParams *parametersOut);
 
     angle::Result loadResources(const gl::Context *context);
     angle::Result buildShaderMap(const gl::Context *context);
@@ -90,4 +93,4 @@ class PixelTransfer11
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_PIXELTRANSFER11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_PIXELTRANSFER11_H_
