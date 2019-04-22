@@ -3194,9 +3194,9 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
 static bool EmitTableGrow(FunctionCompiler& f) {
   uint32_t tableIndex;
-  MDefinition* delta;
   MDefinition* initValue;
-  if (!f.iter().readTableGrow(&tableIndex, &delta, &initValue)) {
+  MDefinition* delta;
+  if (!f.iter().readTableGrow(&tableIndex, &initValue, &delta)) {
     return false;
   }
 
@@ -3212,11 +3212,11 @@ static bool EmitTableGrow(FunctionCompiler& f) {
     return false;
   }
 
-  if (!f.passArg(delta, callee.argTypes[1], &args)) {
+  if (!f.passArg(initValue, callee.argTypes[1], &args)) {
     return false;
   }
 
-  if (!f.passArg(initValue, callee.argTypes[2], &args)) {
+  if (!f.passArg(delta, callee.argTypes[2], &args)) {
     return false;
   }
 
