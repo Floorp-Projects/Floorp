@@ -1,23 +1,29 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package mozilla.components.concept.engine.webextension
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.mock
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class WebExtensionTest {
 
     @Test
-    fun createWebExtension() {
-        val ext1 = WebExtension("1", "url1")
-        val ext2 = WebExtension("2", "url2")
+    fun `message handler has default methods`() {
+        val messageHandler = object : MessageHandler {}
 
-        assertNotEquals(ext1, ext2)
-        assertEquals(ext1, WebExtension("1", "url1"))
-        assertEquals("1", ext1.id)
-        assertEquals("url1", ext1.url)
+        messageHandler.onPortConnected(mock())
+        messageHandler.onPortDisconnected(mock())
+        messageHandler.onPortMessage(mock(), mock())
+        messageHandler.onMessage(mock(), mock())
+    }
+
+    @Test
+    fun `port holds engine session`() {
+        val engineSession: EngineSession = mock()
+        val port = object : Port(engineSession) {
+            override fun postMessage(message: Any) { }
+        }
+
+        assertSame(engineSession, port.engineSession)
     }
 }

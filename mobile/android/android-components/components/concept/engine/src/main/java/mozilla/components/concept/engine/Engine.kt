@@ -61,17 +61,24 @@ interface Engine {
     /**
      * Installs the provided extension in this engine.
      *
-     * @param ext the [WebExtension] to install.
-     * @param onSuccess (optional) callback invoked if the extension was installed successfully.
+     * @param id the unique ID of the extension.
+     * @param url the url pointing to a resources path for locating the extension
+     * within the APK file e.g. resource://android/assets/extensions/my_web_ext.
+     * @param allowContentMessaging whether or not the web extension is allowed
+     * to send messages from content scripts, defaults to true.
+     * @param onSuccess (optional) callback invoked if the extension was installed successfully,
+     * providing access to the [WebExtension] object for bi-directional messaging.
      * @param onError (optional) callback invoked if there was an error installing the extension.
      * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
      * have web extension support.
      */
     fun installWebExtension(
-        ext: WebExtension,
+        id: String,
+        url: String,
+        allowContentMessaging: Boolean = true,
         onSuccess: ((WebExtension) -> Unit) = { },
-        onError: ((WebExtension, Throwable) -> Unit) = { _, _ -> }
-    ): Unit = onError(ext, UnsupportedOperationException("Web extension support is not available in this engine"))
+        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+    ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
      * Provides access to the settings of this engine.

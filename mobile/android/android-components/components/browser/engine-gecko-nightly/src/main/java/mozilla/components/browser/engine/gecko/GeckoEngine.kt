@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
+import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -24,7 +25,6 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
-import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -86,18 +86,21 @@ class GeckoEngine(
      * See [Engine.installWebExtension].
      */
     override fun installWebExtension(
-        ext: WebExtension,
+        id: String,
+        url: String,
+        allowContentMessaging: Boolean,
         onSuccess: ((WebExtension) -> Unit),
-        onError: ((WebExtension, Throwable) -> Unit)
+        onError: ((String, Throwable) -> Unit)
     ) {
-        val result = runtime.registerWebExtension(GeckoWebExtension(ext.url, ext.id, true))
-        result.then({
-            onSuccess(ext)
-            GeckoResult<Void>()
-        }, {
-            throwable -> onError(ext, throwable)
-            GeckoResult<Void>()
-        })
+        GeckoWebExtension(id, url, allowContentMessaging).also { ext ->
+            runtime.registerWebExtension(ext.nativeExtension).then({
+                onSuccess(ext)
+                GeckoResult<Void>()
+            }, {
+                throwable -> onError(id, throwable)
+                GeckoResult<Void>()
+            })
+        }
     }
 
     override fun name(): String = "Gecko"

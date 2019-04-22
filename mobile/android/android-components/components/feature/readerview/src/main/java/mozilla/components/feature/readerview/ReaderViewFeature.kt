@@ -11,6 +11,9 @@ import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.MessageHandler
+import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.readerview.internal.ReaderViewControlsInteractor
 import mozilla.components.feature.readerview.internal.ReaderViewControlsPresenter
@@ -18,6 +21,9 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONObject
+import java.lang.IllegalStateException
+import java.util.WeakHashMap
 import kotlin.properties.Delegates
 
 typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
@@ -25,7 +31,7 @@ typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
 /**
  * Feature implementation that provides a reader view for the selected
  * session. This feature is implemented as a web extension and
- * needs to be installed prior to use see [ReaderViewFeature.install].
+ * needs to be installed prior to use (see [ReaderViewFeature.install]).
  *
  * @property context a reference to the context.
  * @property engine a reference to the application's browser engine.
@@ -46,8 +52,6 @@ class ReaderViewFeature(
     private val controlsPresenter = ReaderViewControlsPresenter(controlsView, config)
     private val controlsInteractor = ReaderViewControlsInteractor(controlsView, config)
 
-    // TODO this object will be manipulated by the ReaderViewAppearanceFragment:
-    // https://github.com/mozilla-mobile/android-components/issues/2623
     class Config(prefs: SharedPreferences) {
         enum class FontType { SANS_SERIF, SERIF }
         enum class ColorScheme { LIGHT, SEPIA, DARK }
@@ -81,11 +85,42 @@ class ReaderViewFeature(
     }
 
     override fun start() {
-        if (!ReaderViewFeature.installed) {
+        observeSelected()
+
+        registerContentMessageHandler(activeSession)
+
+        if (ReaderViewFeature.installedWebExt == null) {
             ReaderViewFeature.install(engine)
         }
-        observeSelected()
+
         controlsInteractor.start()
+    }
+
+    private fun registerContentMessageHandler(session: Session?) {
+        if (session == null) {
+            return
+        }
+
+        // TODO https://github.com/mozilla-mobile/android-components/issues/2624
+        val messageHandler = object : MessageHandler {
+            override fun onPortConnected(port: Port) {
+                ReaderViewFeature.ports[port.engineSession] = port
+            }
+
+            override fun onPortDisconnected(port: Port) {
+                ReaderViewFeature.ports.remove(port.engineSession)
+            }
+
+            override fun onPortMessage(message: Any, port: Port) {
+                Logger.info("Received message: $message")
+                val response = JSONObject().apply {
+                    put("response", "Message received! Hello from Android!")
+                }
+                ReaderViewFeature.sendMessage(response, port.engineSession!!)
+            }
+        }
+
+        ReaderViewFeature.registerMessageHandler(sessionManager.getOrCreateEngineSession(session), messageHandler)
     }
 
     override fun stop() {
@@ -98,21 +133,14 @@ class ReaderViewFeature(
         return true
     }
 
-    override fun onSessionAdded(session: Session) {
-        // TODO make sure we start listening to reader view web extension
-        // messages for this session: Here we will just hook things up
-        // using the readerViewWebExt WebExtension object which will
-        // provide the functionality for bi-directional messaging
-        // (bridge to GeckoView's setSessionMessageDelegate).
+    override fun onSessionSelected(session: Session) {
+        // TODO restore selected state of whether the controls are open or not
+        registerContentMessageHandler(activeSession)
+        super.onSessionSelected(session)
     }
 
     override fun onSessionRemoved(session: Session) {
-        // TODO stop listening to reader view web extension messages of this session
-    }
-
-    override fun onSessionSelected(session: Session) {
-        // TODO restore selected state of whether the controls are open or not
-        super.onSessionSelected(session)
+        ReaderViewFeature.ports.remove(sessionManager.getEngineSession(session))
     }
 
     fun showReaderView() {
@@ -137,19 +165,18 @@ class ReaderViewFeature(
         controlsPresenter.hide()
     }
 
-    // TODO observe messages delivered from the web extension to the selected session
-    // e.g. to know whether or not reader view is available for the current page.
-    // The session will be updated by the messaging delegate integration logic in our
-    // WebExtension object. So here we can just observe the message on the session.
-    // override fun onWebExtensionMessage() { }
-
     companion object {
-        @VisibleForTesting
-        internal val readerViewWebExt =
-                WebExtension("mozac-readerview", "resource://android/assets/extensions/readerview/")
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal const val READER_VIEW_EXTENSION_ID = "mozacReaderview"
+        internal const val READER_VIEW_EXTENSION_URL = "resource://android/assets/extensions/readerview/"
 
         @Volatile
-        internal var installed = false
+        internal var installedWebExt: WebExtension? = null
+
+        @Volatile
+        private var registerContentMessageHandler: (WebExtension) -> Unit? = { }
+
+        internal var ports = WeakHashMap<EngineSession, Port>()
 
         /**
          * Installs the readerview web extension in the provided engine.
@@ -157,17 +184,31 @@ class ReaderViewFeature(
          * @param engine a reference to the application's browser engine.
          */
         fun install(engine: Engine) {
-            engine.installWebExtension(readerViewWebExt,
+            engine.installWebExtension(READER_VIEW_EXTENSION_ID, READER_VIEW_EXTENSION_URL,
                 onSuccess = {
                     Logger.debug("Installed extension: ${it.id}")
+                    registerContentMessageHandler(it)
+                    installedWebExt = it
                 },
                 onError = { ext, throwable ->
-                    installed = false
-                    Logger.error("Failed to install extension: ${ext.id}", throwable)
+                    Logger.error("Failed to install extension: $ext", throwable)
                 }
             )
-            // TODO move install state to our WebExtension object.
-            installed = true
+        }
+
+        fun registerMessageHandler(session: EngineSession, messageHandler: MessageHandler) {
+            registerContentMessageHandler = {
+                if (!it.hasContentMessageHandler(session, READER_VIEW_EXTENSION_ID)) {
+                    it.registerContentMessageHandler(session, READER_VIEW_EXTENSION_ID, messageHandler)
+                }
+            }
+
+            installedWebExt?.let { registerContentMessageHandler(it) }
+        }
+
+        fun sendMessage(msg: Any, engineSession: EngineSession) {
+            val port = ports[engineSession]
+            port?.postMessage(msg) ?: throw IllegalStateException("No port connected for the provided session")
         }
     }
 }

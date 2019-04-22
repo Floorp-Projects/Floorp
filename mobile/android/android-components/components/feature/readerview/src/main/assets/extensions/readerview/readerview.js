@@ -261,6 +261,15 @@ class ReaderView {
    }
 }
 
+// TODO remove (for testing purposes only)
+let port = browser.runtime.connectNative("mozacReaderview");
+port.postMessage(`Hello from ReaderView on page ${location.hostname}`);
+
+port.onMessage.addListener((response) => {
+  console.log(`Received: ${JSON.stringify(response)} on page ${location.hostname}`);
+});
+
+
 // TODO remove hostname check (for testing purposes only)
 // e.g. https://blog.mozilla.org/firefox/reader-view
 if (ReaderView.isReaderable() && location.hostname.endsWith("blog.mozilla.org")) {

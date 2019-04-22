@@ -27,7 +27,6 @@ import mozilla.components.browser.icons.processor.IconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.utils.MemoryCache
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.res.pxToDp
@@ -103,10 +102,8 @@ class BrowserIcons(
      */
     fun install(engine: Engine) {
         engine.installWebExtension(
-            WebExtension(
-                id = "browser-icons",
-                url = "resource://android/assets/extensions/browser-icons/"
-            ),
+            id = "mozacBrowserIcons",
+            url = "resource://android/assets/extensions/browser-icons/",
             onSuccess = {
                 Logger.debug("Installed browser-icons extension")
             },

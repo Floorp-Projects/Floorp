@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -19,7 +20,6 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
-import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 /**
  * Gecko-based implementation of Engine interface.
@@ -79,18 +79,21 @@ class GeckoEngine(
      * See [Engine.installWebExtension].
      */
     override fun installWebExtension(
-        ext: WebExtension,
+        id: String,
+        url: String,
+        allowContentMessaging: Boolean,
         onSuccess: ((WebExtension) -> Unit),
-        onError: ((WebExtension, Throwable) -> Unit)
+        onError: ((String, Throwable) -> Unit)
     ) {
-        val result = runtime.registerWebExtension(GeckoWebExtension(ext.url, ext.id))
-        result.then({
-            onSuccess(ext)
-            GeckoResult<Void>()
-        }, {
-            throwable -> onError(ext, throwable)
-            GeckoResult<Void>()
-        })
+        GeckoWebExtension(id, url).also { ext ->
+            runtime.registerWebExtension(ext.nativeExtension).then({
+                onSuccess(ext)
+                GeckoResult<Void>()
+            }, {
+                throwable -> onError(id, throwable)
+                GeckoResult<Void>()
+            })
+        }
     }
 
     override fun name(): String = "Gecko"

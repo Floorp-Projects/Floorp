@@ -11,7 +11,6 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
-import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -199,7 +198,8 @@ class GeckoEngineTest {
 
         `when`(runtime.registerWebExtension(any())).thenReturn(result)
         engine.installWebExtension(
-                WebExtension("test-webext", "resource://android/assets/extensions/test"),
+                "test-webext",
+                "resource://android/assets/extensions/test",
                 onSuccess = { onSuccessCalled = true },
                 onError = { _, _ -> onErrorCalled = true }
         )
@@ -209,6 +209,34 @@ class GeckoEngineTest {
         verify(runtime).registerWebExtension(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
+        assertTrue(extCaptor.value.allowContentMessaging)
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `install web extension successfully but do not allow content messaging`() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        var result = GeckoResult<Void>()
+
+        `when`(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension(
+                "test-webext",
+                "resource://android/assets/extensions/test",
+                allowContentMessaging = false,
+                onSuccess = { onSuccessCalled = true },
+                onError = { _, _ -> onErrorCalled = true }
+        )
+        result.complete(null)
+
+        val extCaptor = argumentCaptor<GeckoWebExtension>()
+        verify(runtime).registerWebExtension(extCaptor.capture())
+        assertEquals("test-webext", extCaptor.value.id)
+        assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
+        assertFalse(extCaptor.value.allowContentMessaging)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
     }
@@ -223,7 +251,7 @@ class GeckoEngineTest {
 
         var throwable: Throwable? = null
         `when`(runtime.registerWebExtension(any())).thenReturn(result)
-        engine.installWebExtension(WebExtension("test-webext-error", "resource://android/assets/extensions/error")) { _, e ->
+        engine.installWebExtension("test-webext-error", "resource://android/assets/extensions/error") { _, e ->
             onErrorCalled = true
             throwable = e
         }

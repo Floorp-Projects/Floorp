@@ -6,7 +6,6 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
-import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -43,7 +42,7 @@ class EngineTest {
         }
 
         var exception: Throwable? = null
-        engine.installWebExtension(WebExtension("my-ext", "resource://path"), onError = { _, e -> exception = e })
+        engine.installWebExtension("my-ext", "resource://path", onError = { _, e -> exception = e })
         assertNotNull(exception)
         assertTrue(exception is UnsupportedOperationException)
     }

@@ -6,8 +6,12 @@ package mozilla.components.feature.readerview
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.MessageHandler
+import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.any
@@ -15,12 +19,14 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -36,7 +42,7 @@ class ReaderViewFeatureTest {
 
     @Before
     fun setup() {
-        ReaderViewFeature.installed = false
+        ReaderViewFeature.installedWebExt = null
     }
 
     @Test
@@ -45,19 +51,32 @@ class ReaderViewFeatureTest {
         val sessionManager = mock(SessionManager::class.java)
 
         val readerViewFeature = ReaderViewFeature(context, engine, sessionManager, mock())
-        assertFalse(ReaderViewFeature.installed)
+        assertNull(ReaderViewFeature.installedWebExt)
         readerViewFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((WebExtension, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(eq(ReaderViewFeature.readerViewWebExt), onSuccess.capture(), onError.capture())
-        onSuccess.value.invoke(ReaderViewFeature.readerViewWebExt)
-        assertTrue(ReaderViewFeature.installed)
+        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
+        verify(engine, times(1)).installWebExtension(
+                eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
+                eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
+                eq(true),
+                onSuccess.capture(),
+                onError.capture()
+        )
+
+        onSuccess.value.invoke(mock(WebExtension::class.java))
+        assertNotNull(ReaderViewFeature.installedWebExt)
 
         readerViewFeature.start()
-        verify(engine, times(1)).installWebExtension(eq(ReaderViewFeature.readerViewWebExt), onSuccess.capture(), onError.capture())
+        verify(engine, times(1)).installWebExtension(
+                eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
+                eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
+                eq(true),
+                onSuccess.capture(),
+                onError.capture()
+        )
 
-        onError.value.invoke(ReaderViewFeature.readerViewWebExt, RuntimeException())
+        onError.value.invoke(ReaderViewFeature.READER_VIEW_EXTENSION_ID, RuntimeException())
     }
 
     @Test
@@ -70,6 +89,39 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
 
         verify(readerViewFeature).observeSelected()
+    }
+
+    @Test
+    fun `start registers content message handler for selected session`() {
+        val engine = mock(Engine::class.java)
+        val sessionManager: SessionManager = mock()
+        val view: ReaderViewControlsView = mock()
+        val session: Session = mock()
+        val engineSession: EngineSession = mock()
+        val ext: WebExtension = mock()
+        val messageHandler = argumentCaptor<MessageHandler>()
+        val message: Any = mock()
+
+        ReaderViewFeature.installedWebExt = ext
+
+        `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        `when`(sessionManager.selectedSession).thenReturn(session)
+        val readerViewFeature = spy(ReaderViewFeature(context, engine, sessionManager, view))
+
+        readerViewFeature.start()
+        verify(ext).registerContentMessageHandler(eq(engineSession), eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID), messageHandler.capture())
+
+        val port: Port = mock()
+        `when`(port.engineSession).thenReturn(engineSession)
+
+        messageHandler.value.onPortConnected(port)
+        assertTrue(ReaderViewFeature.ports.containsValue(port))
+
+        messageHandler.value.onPortMessage(message, port)
+        verify(port).postMessage(any())
+
+        messageHandler.value.onPortDisconnected(port)
+        assertFalse(ReaderViewFeature.ports.containsValue(port))
     }
 
     @Test

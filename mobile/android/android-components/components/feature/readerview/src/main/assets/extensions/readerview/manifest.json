@@ -9,5 +9,9 @@
       "css": ["readerview.css"],
       "run_at": "document_end"
     }
+  ],
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging"
   ]
 }

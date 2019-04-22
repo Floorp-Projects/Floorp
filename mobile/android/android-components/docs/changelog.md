@@ -35,6 +35,42 @@ permalink: /changelog/
 
 * **browser-engine-gecko-nightly**
   * Implement `allowAutoplayMedia` in terms of `autoplayDefault`.
+  * ⚠️ **This is a breaking API change**
+  * Added API for bidirectional messaging between Android and installed web extensions:
+    ```kotlin
+       engine.installWebExtension(EXTENSION_ID, EXTENSION_URL,
+            onSuccess = { installedExt -> it }
+        )
+
+      val messageHandler = object : MessageHandler {
+          override fun onPortConnected(port: Port) {
+            // Called when a port was connected as a result of a
+            // browser.runtime.connectNative call in JavaScript.
+            // The port can be used to send messages to the web extension:
+            port.postMessage(jsonObject)
+          }
+
+          override fun onPortDisconnected(port: Port) {
+            // Called when the port was disconnected or the corresponding session closed.
+          }
+
+          override fun onPortMessage(message: Any, port: Port) {
+            // Called when a messsage was received on the provided port as a
+            // result of a call to port.postMessage in JavaScript.
+          }
+
+          override fun onMessage(message: Any, source: EngineSession?): Any {
+            // Called when a message was recieved as a result of a
+            // browser.runtime.sendNativeMessage call in JavaScript.
+          }
+      }
+
+      // To listen to message events from content scripts call:
+      installedExt.registerContentMessageHandler(session, EXTENSION_ID, messageHandler)
+
+      // To listen to message events from background scripts call:
+      installedExt.registerBackgroundMessageHandler(EXTENSION_ID, messageHandler)  
+    ```
 
 * **browser-icons**
   * Added an in-memory caching mechanism reducing disk/network loads.

@@ -6,7 +6,6 @@ package org.mozilla.samples.browser
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.base.log.Log
 
 /**
@@ -15,8 +14,8 @@ import mozilla.components.support.base.log.Log
 class Components(private val applicationContext: Context) : DefaultComponents(applicationContext) {
     override val engine: Engine by lazy {
         GeckoEngine(applicationContext, engineSettings).apply {
-            installWebExtension(WebExtension("mozac-borderify", "resource://android/assets/extensions/borderify/")) {
-                ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install ${ext.id}")
+            installWebExtension("mozacBorderify", "resource://android/assets/extensions/borderify/") {
+                ext, throwable -> Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
             }
 
             icons.install(this)
