@@ -95,6 +95,11 @@ describe("DiscoveryStreamFeed", () => {
 
   describe("#fetchFromEndpoint", () => {
     beforeEach(() => {
+      feed._prefCache = {
+        config: {
+          api_key_pref: "",
+        },
+      };
       fetchStub.resolves({
         json: () => Promise.resolve("hi"),
         ok: true,
@@ -134,6 +139,13 @@ describe("DiscoveryStreamFeed", () => {
       const response = await feed.fetchFromEndpoint(DUMMY_ENDPOINT);
 
       assert.equal(response, "hi");
+    });
+    it("should replace urls with $apiKey", async () => {
+      sandbox.stub(global.Services.prefs, "getCharPref").returns("replaced");
+
+      await feed.fetchFromEndpoint("https://getpocket.cdn.mozilla.net/dummy?consumer_key=$apiKey");
+
+      assert.calledWith(fetchStub, "https://getpocket.cdn.mozilla.net/dummy?consumer_key=replaced", {credentials: "omit"});
     });
   });
 
@@ -191,6 +203,15 @@ describe("DiscoveryStreamFeed", () => {
       await feed.loadLayout(feed.store.dispatch);
 
       assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "foo.com");
+    });
+    it("should use local layout with hardcoded_layout being true", async () => {
+      feed.config.hardcoded_layout = true;
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.notCalled(feed.fetchLayout);
+      assert.equal(feed.store.getState().DiscoveryStream.spocs.spocs_endpoint, "https://getpocket.cdn.mozilla.net/v3/firefox/unique-spocs?consumer_key=$apiKey");
     });
   });
 
@@ -306,6 +327,11 @@ describe("DiscoveryStreamFeed", () => {
       async () => {
         sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
         sandbox.spy(feed.store, "dispatch");
+        feed._prefCache = {
+          config: {
+            api_key_pref: "",
+          },
+        };
 
         await feed.loadComponentFeeds(feed.store.dispatch);
 
@@ -679,6 +705,7 @@ describe("DiscoveryStreamFeed", () => {
       fakeNewTabUtils.blockedLinks.isBlocked = site => (fakeNewTabUtils.blockedLinks.links[0].url === site.url);
 
       const result = feed.filterRecommendations({
+        lastUpdated: 4,
         data: {
           recommendations: [
             {url: "https://foo.com"},
@@ -687,6 +714,7 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
 
+      assert.equal(result.lastUpdated, 4);
       assert.lengthOf(result.data.recommendations, 1);
       assert.equal(result.data.recommendations[0].url, "test.com");
       assert.notInclude(result.data.recommendations, fakeNewTabUtils.blockedLinks.links[0]);
@@ -963,39 +991,43 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#onAction: DISCOVERY_STREAM_SPOC_IMPRESSION", () => {
+    beforeEach(() => {
+      const data = {
+        spocs: [
+          {
+            campaign_id: "seen",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+          {
+            campaign_id: "not-seen",
+            caps: {
+              lifetime: 3,
+              campaign: {
+                count: 1,
+                period: 1,
+              },
+            },
+          },
+        ],
+      };
+      sandbox.stub(feed.store, "getState").returns({
+        DiscoveryStream: {
+          spocs: {
+            data,
+            spocs_per_domain: 2,
+          },
+        },
+      });
+    });
+
     it("should call dispatch to ac.AlsoToPreloaded with filtered spoc data", async () => {
       Object.defineProperty(feed, "showSpocs", {get: () => true});
-      const fakeSpocs = {
-        lastUpdated: 1,
-        data: {
-          spocs: [
-            {
-              campaign_id: "seen",
-              min_score: 0.1,
-              item_score: 1,
-              caps: {
-                lifetime: 3,
-                campaign: {
-                  count: 1,
-                  period: 1,
-                },
-              },
-            },
-            {
-              campaign_id: "not-seen",
-              min_score: 0.1,
-              item_score: 1,
-              caps: {
-                lifetime: 3,
-                campaign: {
-                  count: 1,
-                  period: 1,
-                },
-              },
-            },
-          ],
-        },
-      };
       const fakeImpressions = {
         "seen": [Date.now() - 1],
       };
@@ -1003,9 +1035,6 @@ describe("DiscoveryStreamFeed", () => {
         spocs: [
           {
             campaign_id: "not-seen",
-            min_score: 0.1,
-            item_score: 1,
-            score: 1,
             caps: {
               lifetime: 3,
               campaign: {
@@ -1018,12 +1047,22 @@ describe("DiscoveryStreamFeed", () => {
       };
       sandbox.stub(feed, "recordCampaignImpression").returns();
       sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
-      sandbox.stub(feed.cache, "get").returns(Promise.resolve({spocs: fakeSpocs}));
       sandbox.spy(feed.store, "dispatch");
 
       await feed.onAction({type: at.DISCOVERY_STREAM_SPOC_IMPRESSION, data: {campaign_id: "seen"}});
 
       assert.deepEqual(feed.store.dispatch.secondCall.args[0].data.spocs, result);
+    });
+    it("should not call dispatch to ac.AlsoToPreloaded if spocs were not changed by frequency capping", async () => {
+      Object.defineProperty(feed, "showSpocs", {get: () => true});
+      const fakeImpressions = {};
+      sandbox.stub(feed, "recordCampaignImpression").returns();
+      sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.onAction({type: at.DISCOVERY_STREAM_SPOC_IMPRESSION, data: {campaign_id: "seen"}});
+
+      assert.notCalled(feed.store.dispatch);
     });
   });
 

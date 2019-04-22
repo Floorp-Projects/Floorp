@@ -713,7 +713,7 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 
   render() {
-    return (<div className="asrouter-admin">
+    return (<div className={`asrouter-admin ${this.props.collapsed ? "collapsed" : "expanded"}`}>
       <aside className="sidebar">
         <ul>
           <li><a href="#devtools">General</a></li>
@@ -740,5 +740,54 @@ export class ASRouterAdminInner extends React.PureComponent {
   }
 }
 
-export const _ASRouterAdmin = props => (<SimpleHashRouter><ASRouterAdminInner {...props} /></SimpleHashRouter>);
+export class CollapseToggle extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onCollapseToggle = this.onCollapseToggle.bind(this);
+    this.state = {collapsed: false};
+  }
+
+  get renderAdmin() {
+    const {props} = this;
+    return props.location.hash && (props.location.hash.startsWith("#asrouter") || props.location.hash.startsWith("#devtools"));
+  }
+
+  onCollapseToggle(e) {
+    e.preventDefault();
+    this.setState(state => ({collapsed: !state.collapsed}));
+  }
+
+  setBodyClass() {
+    if (this.renderAdmin && !this.state.collapsed) {
+      global.document.body.classList.add("no-scroll");
+    } else {
+      global.document.body.classList.remove("no-scroll");
+    }
+  }
+
+  componentDidMount() {
+    this.setBodyClass();
+  }
+
+  componentDidUpdate() {
+    this.setBodyClass();
+  }
+
+  componentWillUnmount() {
+    global.document.body.classList.remove("no-scroll");
+  }
+
+  render() {
+    const {props} = this;
+    const {renderAdmin} = this;
+    const action = (this.state.collapsed || !renderAdmin) ? "Expand" : "Collapse";
+    return (<React.Fragment>
+      <a href="#devtools" className="asrouter-toggle" onClick={this.renderAdmin ? this.onCollapseToggle : null}>{action} Devtools</a>
+      {renderAdmin ? <ASRouterAdminInner {...props} collapsed={this.state.collapsed} /> : null}
+    </React.Fragment>);
+  }
+}
+
+const _ASRouterAdmin = props => <SimpleHashRouter><CollapseToggle {...props} /></SimpleHashRouter>;
+
 export const ASRouterAdmin = connect(state => ({Sections: state.Sections, DiscoveryStream: state.DiscoveryStream, Prefs: state.Prefs}))(_ASRouterAdmin);

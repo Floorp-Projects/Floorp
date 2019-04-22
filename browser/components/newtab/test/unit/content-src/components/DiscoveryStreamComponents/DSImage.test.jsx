@@ -27,9 +27,10 @@ describe("Discovery Stream <DSImage>", () => {
     img.setState({
       isSeen: true,
       containerWidth: 640,
+      containerHeight: 480,
     });
 
-    assert.equal(img.find("img").prop("src"), "https://img-getpocket.cdn.mozilla.net/640x0/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480");
-    assert.equal(img.find("img").prop("srcSet"), "https://img-getpocket.cdn.mozilla.net/1280x0/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 2x");
+    assert.equal(img.find("img").prop("src"), "https://img-getpocket.cdn.mozilla.net/640x480/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480");
+    assert.equal(img.find("img").prop("srcSet"), "https://img-getpocket.cdn.mozilla.net/1280x960/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fplacekitten.com%2Fg%2F640%2F480 2x");
   });
 });

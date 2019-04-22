@@ -1065,4 +1065,8 @@ describe("Reducers", () => {
       assert.propertyVal(result, "foo", "bar");
     });
   });
+  it("should set initialized to true on AS_ROUTER_INITIALIZED", () => {
+    const nextState = ASRouter(undefined, {type: "AS_ROUTER_INITIALIZED"});
+    assert.propertyVal(nextState, "initialized", true);
+  });
 });
