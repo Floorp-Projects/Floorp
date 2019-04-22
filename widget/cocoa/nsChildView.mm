@@ -1239,11 +1239,6 @@ bool nsChildView::ShouldUseOffMainThreadCompositing() {
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();
 }
 
-inline uint16_t COLOR8TOCOLOR16(uint8_t color8) {
-  // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
-  return (color8 << 8) | color8; /* (color8 * 257) == (color8 * 0x0101) */
-}
-
 #pragma mark -
 
 nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations) {
