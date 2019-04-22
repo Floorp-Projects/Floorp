@@ -9,7 +9,9 @@
 #include "base/memory/ref_counted.h"
 #include "nsWindowsDllInterceptor.h"
 #include "sandbox/win/src/sandbox_factory.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/sandboxing/permissionsService.h"
+#include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {
 namespace sandboxing {
@@ -46,7 +48,26 @@ static BOOL WINAPI patched_DuplicateHandle(
                               dwDesiredAccess, bInheritHandle, dwOptions);
 }
 
+typedef BOOL (WINAPI* ApiSetQueryApiSetPresence_func)(PCUNICODE_STRING, PBOOLEAN);
+static WindowsDllInterceptor::FuncHookType<ApiSetQueryApiSetPresence_func> stub_ApiSetQueryApiSetPresence;
+
+static const WCHAR gApiSetNtUserWindowStation[] =
+  L"ext-ms-win-ntuser-windowstation-l1-1-0";
+
+static BOOL WINAPI patched_ApiSetQueryApiSetPresence(
+    PCUNICODE_STRING aNamespace, PBOOLEAN aPresent) {
+  if (aNamespace && aPresent && !wcsncmp(aNamespace->Buffer,
+                                         gApiSetNtUserWindowStation,
+                                         aNamespace->Length / sizeof(WCHAR))) {
+    *aPresent = FALSE;
+    return TRUE;
+  }
+
+  return stub_ApiSetQueryApiSetPresence(aNamespace, aPresent);
+}
+
 static WindowsDllInterceptor Kernel32Intercept;
+static WindowsDllInterceptor gApiQueryIntercept;
 
 static bool EnableHandleCloseMonitoring() {
   Kernel32Intercept.Init("kernel32.dll");
@@ -63,6 +84,26 @@ static bool EnableHandleCloseMonitoring() {
   }
 
   return true;
+}
+
+/**
+ * There is a bug in COM that causes its initialization to fail when user32.dll
+ * is loaded but Win32k lockdown is enabled. COM uses ApiSetQueryApiSetPresence
+ * to make this check. When we are under Win32k lockdown, we hook
+ * ApiSetQueryApiSetPresence and force it to tell the caller that the DLL of
+ * interest is not present.
+ */
+static void EnableApiQueryInterception() {
+  if (!IsWin32kLockedDown()) {
+    return;
+  }
+
+  gApiQueryIntercept.Init(L"Api-ms-win-core-apiquery-l1-1-0.dll");
+  DebugOnly<bool> hookSetOk =
+    stub_ApiSetQueryApiSetPresence.Set(gApiQueryIntercept,
+                                       "ApiSetQueryApiSetPresence",
+                                       &patched_ApiSetQueryApiSetPresence);
+  MOZ_ASSERT(hookSetOk);
 }
 
 static bool ShouldDisableHandleVerifier() {
@@ -87,6 +128,8 @@ static void InitializeHandleVerifier() {
 static sandbox::TargetServices* InitializeTargetServices() {
   // This might disable the verifier, so we want to do it before it is used.
   InitializeHandleVerifier();
+
+  EnableApiQueryInterception();
 
   sandbox::TargetServices* targetServices =
       sandbox::SandboxFactory::GetTargetServices();

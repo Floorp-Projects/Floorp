@@ -9,7 +9,9 @@
 #include <security.h>
 #include <wininet.h>
 #include <schnlsp.h>
+#include <winternl.h>
 
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
@@ -48,6 +50,8 @@ void CALLBACK ProcessCaretEvents(HWINEVENTHOOK, DWORD, HWND, LONG, LONG, DWORD,
                                  DWORD);
 void __fastcall BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
                                     void* aThreadParam);
+
+BOOL WINAPI ApiSetQueryApiSetPresence(PCUNICODE_STRING, PBOOLEAN);
 
 using namespace mozilla;
 
@@ -413,22 +417,16 @@ bool ShouldTestTipTsf() {
     return false;
   }
 
-  nsModuleHandle shell32(LoadLibraryW(L"shell32.dll"));
-  if (!shell32) {
-    return true;
-  }
-
-  auto pSHGetKnownFolderPath =
-      reinterpret_cast<decltype(&SHGetKnownFolderPath)>(
-          GetProcAddress(shell32, "SHGetKnownFolderPath"));
+  mozilla::DynamicallyLinkedFunctionPtr<decltype(&SHGetKnownFolderPath)>
+    pSHGetKnownFolderPath(L"shell32.dll", "SHGetKnownFolderPath");
   if (!pSHGetKnownFolderPath) {
-    return true;
+    return false;
   }
 
   PWSTR commonFilesPath = nullptr;
   if (FAILED(pSHGetKnownFolderPath(FOLDERID_ProgramFilesCommon, 0, nullptr,
                                    &commonFilesPath))) {
-    return true;
+    return false;
   }
 
   wchar_t fullPath[MAX_PATH + 1] = {};
@@ -441,6 +439,23 @@ bool ShouldTestTipTsf() {
   }
 
   // Leak the module so that it's loaded for the interceptor test
+  return true;
+}
+
+static const wchar_t gEmptyUnicodeStringLiteral[] = L"";
+static UNICODE_STRING gEmptyUnicodeString;
+static BOOLEAN gIsPresent;
+
+bool HasApiSetQueryApiSetPresence() {
+  mozilla::DynamicallyLinkedFunctionPtr<decltype(&ApiSetQueryApiSetPresence)>
+    func(L"Api-ms-win-core-apiquery-l1-1-0.dll", "ApiSetQueryApiSetPresence");
+  if (!func) {
+    return false;
+  }
+
+  // Prepare gEmptyUnicodeString for the test
+  ::RtlInitUnicodeString(&gEmptyUnicodeString, gEmptyUnicodeStringLiteral);
+
   return true;
 }
 
@@ -682,7 +697,9 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
 #endif
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()) {
+      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
+      MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(), Api-ms-win-core-apiquery-l1-1-0.dll, ApiSetQueryApiSetPresence, Equals, FALSE, &gEmptyUnicodeString, &gIsPresent) &&
+      TestTenByteDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;
