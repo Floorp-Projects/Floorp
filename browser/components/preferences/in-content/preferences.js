@@ -45,10 +45,8 @@ function register_module(categoryName, categoryObject) {
     async init() {
       let template = document.getElementById("template-" + categoryName);
       if (template) {
-        // Replace the template element with the nodes from the parsed comment
-        // string.
-        let frag = MozXULElement.parseXULToFragment(template.firstChild.data);
-
+        // Replace the template element with the nodes inside of it.
+        let frag = template.content;
         await document.l10n.translateFragment(frag);
 
         // Actually insert them into the DOM.

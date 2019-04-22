@@ -16,7 +16,7 @@
 
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
 
-<box id="template-paneGeneral" hidden="true"><![CDATA[
+<html:template id="template-paneGeneral">
 <hbox id="generalCategory"
       class="subcategory"
       hidden="true"
@@ -705,4 +705,4 @@
     </hbox>
   </hbox>
 </groupbox>
-]]></box>
+</html:template>
