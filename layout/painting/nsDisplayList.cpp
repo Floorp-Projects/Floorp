@@ -133,7 +133,7 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
   if (!items) {
     return;
   }
-  for (nsDisplayItem* i : *items) {
+  for (nsDisplayItemBase* i : *items) {
     if (i != aItem && !i->HasDeletedFrame() && i->Frame() == aItem->Frame() &&
         i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
       if (i->IsPreProcessedItem()) {
@@ -3161,7 +3161,29 @@ void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
   Sort<nsDisplayItem*>(ContentComparator(aCommonAncestor));
 }
 
-#ifndef DEBUG
+bool nsDisplayItemBase::HasModifiedFrame() const {
+  return mItemFlags.contains(ItemBaseFlag::ModifiedFrame);
+}
+
+void nsDisplayItemBase::SetModifiedFrame(bool aModified) {
+  if (aModified) {
+    mItemFlags += ItemBaseFlag::ModifiedFrame;
+  } else {
+    mItemFlags -= ItemBaseFlag::ModifiedFrame;
+  }
+}
+
+void nsDisplayItemBase::SetDeletedFrame() {
+  mItemFlags += ItemBaseFlag::DeletedFrame;
+}
+
+bool nsDisplayItemBase::HasDeletedFrame() const {
+  return mItemFlags.contains(ItemBaseFlag::DeletedFrame) ||
+         (GetType() == DisplayItemType::TYPE_REMOTE &&
+          !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
+}
+
+#if !defined(DEBUG) && !defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 static_assert(sizeof(nsDisplayItem) <= 176, "nsDisplayItem has grown");
 #endif
 
@@ -3170,14 +3192,11 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              const ActiveScrolledRoot* aActiveScrolledRoot)
-    : mFrame(aFrame),
-      mItemFlags(),
+    : nsDisplayItemBase(aBuilder, aFrame),
       mActiveScrolledRoot(aActiveScrolledRoot),
       mAnimatedGeometryRoot(nullptr) {
   MOZ_COUNT_CTOR(nsDisplayItem);
-  if (aBuilder->IsRetainingDisplayList()) {
-    mFrame->AddDisplayItem(this);
-  }
+
   mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
   // This can return the wrong result if the item override
   // ShouldFixToViewport(), the item needs to set it again in its constructor.
@@ -3218,24 +3237,6 @@ bool nsDisplayItem::ForceActiveLayers() {
   }
 
   return sForce;
-}
-
-bool nsDisplayItem::HasModifiedFrame() const {
-  return mItemFlags.contains(ItemFlag::ModifiedFrame);
-}
-
-void nsDisplayItem::SetModifiedFrame(bool aModified) {
-  if (aModified) {
-    mItemFlags += ItemFlag::ModifiedFrame;
-  } else {
-    mItemFlags -= ItemFlag::ModifiedFrame;
-  }
-}
-
-bool nsDisplayItem::HasDeletedFrame() const {
-  return mItemFlags.contains(ItemFlag::DeletedFrame) ||
-         (GetType() == DisplayItemType::TYPE_REMOTE &&
-          !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
 }
 
 int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex(); }
@@ -3312,8 +3313,6 @@ void nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
     mClip = nullptr;
   }
 }
-
-void nsDisplayItem::SetDeletedFrame() { mItemFlags += ItemFlag::DeletedFrame; }
 
 bool nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager,
                                            PrefFunc aFunc) const {

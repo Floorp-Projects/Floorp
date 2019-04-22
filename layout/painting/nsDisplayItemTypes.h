@@ -15,7 +15,7 @@
 #ifndef NSDISPLAYITEMTYPES_H_
 #define NSDISPLAYITEMTYPES_H_
 
-enum class DisplayItemType : uint32_t {
+enum class DisplayItemType : uint8_t {
   TYPE_ZERO = 0, /** Spacer so that the first item starts at 1 */
 
 #define DECLARE_DISPLAY_ITEM_TYPE(name, flags) TYPE_##name,
