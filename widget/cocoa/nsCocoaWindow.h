@@ -78,6 +78,15 @@ typedef struct _nsCocoaWindowList {
 - (BOOL)isBeingShown;
 - (BOOL)isVisibleOrBeingShown;
 
+// Returns an autoreleased NSArray containing the NSViews that we consider the
+// "contents" of this window. All views in the returned array are subviews of
+// this window's content view. However, the array may not include all of the
+// content view's subviews; concretely, the ToolbarWindow implementation will
+// exclude its TitlebarGradientView from the array that is returned here.
+// In the vast majority of cases, the array will only have a single element:
+// this window's mainChildView.
+- (NSArray<NSView*>*)contentViewContents;
+
 - (ChildView*)mainChildView;
 
 - (NSArray*)titlebarControls;
