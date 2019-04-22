@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
+// eslint-disable-next-line import/named
 import { objectInspector } from "devtools-reps";
 import { getBindingVariables } from "./getVariables";
 import { getFramePopVariables, getThisVariable } from "./utils";

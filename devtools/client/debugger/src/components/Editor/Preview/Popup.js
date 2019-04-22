@@ -17,40 +17,28 @@ const {
 const { ObjectInspector, utils } = objectInspector;
 
 const {
-  node: { createNode, getChildren, getValue, nodeIsPrimitive },
-  loadProperties: { loadItemProperties }
+  node: { nodeIsPrimitive, nodeIsFunction, nodeIsObject }
 } = utils;
 
 import actions from "../../../actions";
-import {
-  getAllPopupObjectProperties,
-  getCurrentThread,
-  getThreadContext
-} from "../../../selectors";
+import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
-import AccessibleImage from "../../shared/AccessibleImage";
 import { createObjectClient } from "../../../client/firefox";
 
 import "./Popup.css";
 
-import type { EditorRange } from "../../../utils/editor/types";
 import type { Coords } from "../../shared/Popover";
 import type { ThreadContext } from "../../../types";
+import type { PreviewValue } from "../../../reducers/types";
 
-type PopupValue = Object | null;
 type Props = {
   cx: ThreadContext,
-  popupObjectProperties: Object,
-  popoverPos: Object,
-  value: PopupValue,
-  expression: string,
+  preview: PreviewValue,
   onClose: () => void,
-  range: EditorRange,
   editor: any,
   editorRef: ?HTMLDivElement,
-  setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
   selectSourceURL: typeof actions.selectSourceURL,
   openLink: typeof actions.openLink,
@@ -93,30 +81,6 @@ export class Popup extends Component<Props, State> {
     };
   }
 
-  async componentWillMount() {
-    const {
-      cx,
-      value,
-      setPopupObjectProperties,
-      popupObjectProperties
-    } = this.props;
-
-    const root = this.getRoot();
-
-    if (
-      !nodeIsPrimitive(root) &&
-      value &&
-      value.actor &&
-      !popupObjectProperties[value.actor]
-    ) {
-      const onLoadItemProperties = loadItemProperties(root, createObjectClient);
-      if (onLoadItemProperties !== null) {
-        const properties = await onLoadItemProperties;
-        setPopupObjectProperties(cx, root.contents.value, properties);
-      }
-    }
-  }
-
   onMouseLeave = (e: SyntheticMouseEvent<HTMLDivElement>) => {
     const relatedTarget: Element = (e.relatedTarget: any);
 
@@ -135,47 +99,6 @@ export class Popup extends Component<Props, State> {
     }
   };
 
-  getRoot() {
-    const { expression, value } = this.props;
-
-    return createNode({
-      name: expression,
-      path: expression,
-      contents: { value }
-    });
-  }
-
-  getObjectProperties() {
-    const { popupObjectProperties } = this.props;
-    const root = this.getRoot();
-    const value = getValue(root);
-    if (!value) {
-      return null;
-    }
-
-    return popupObjectProperties[value.actor];
-  }
-
-  getChildren() {
-    const properties = this.getObjectProperties();
-    const root = this.getRoot();
-
-    if (!properties) {
-      return null;
-    }
-
-    const children = getChildren({
-      item: root,
-      loadedProperties: new Map([[root.path, properties]])
-    });
-
-    if (children.length > 0) {
-      return children;
-    }
-
-    return null;
-  }
-
   calculateMaxHeight = () => {
     const { editorRef } = this.props;
     if (!editorRef) {
@@ -185,73 +108,29 @@ export class Popup extends Component<Props, State> {
   };
 
   renderFunctionPreview() {
-    const { cx, selectSourceURL, value } = this.props;
+    const {
+      cx,
+      selectSourceURL,
+      preview: { result }
+    } = this.props;
 
-    if (!value) {
-      return null;
-    }
-
-    const { location } = value;
     return (
       <div
         className="preview-popup"
         onClick={() =>
-          selectSourceURL(cx, location.url, { line: location.line })
+          selectSourceURL(cx, result.location.url, {
+            line: result.location.line
+          })
         }
       >
-        <PreviewFunction func={value} />
-      </div>
-    );
-  }
-
-  renderReact(react: Object) {
-    const reactHeader = react.displayName || "React Component";
-
-    return (
-      <div className="header-container">
-        <AccessibleImage className="logo react" />
-        <h3>{reactHeader}</h3>
+        <PreviewFunction func={result} />
       </div>
     );
   }
 
   renderObjectPreview() {
-    const root = this.getRoot();
-
-    if (nodeIsPrimitive(root)) {
-      return null;
-    }
-
-    const roots = this.getChildren();
-    if (!Array.isArray(roots) || roots.length === 0) {
-      return null;
-    }
-
-    return (
-      <div
-        className="preview-popup"
-        style={{ maxHeight: this.calculateMaxHeight() }}
-      >
-        {this.renderObjectInspector(roots)}
-      </div>
-    );
-  }
-
-  renderSimplePreview(value: any) {
-    const { openLink } = this.props;
-    return (
-      <div className="preview-popup">
-        {Rep({
-          object: value,
-          mode: MODE.LONG,
-          openLink
-        })}
-      </div>
-    );
-  }
-
-  renderObjectInspector(roots: Array<Object>) {
     const {
+      preview: { properties },
       openLink,
       openElementInInspector,
       highlightDomElement,
@@ -259,18 +138,39 @@ export class Popup extends Component<Props, State> {
     } = this.props;
 
     return (
-      <ObjectInspector
-        roots={roots}
-        autoExpandDepth={0}
-        disableWrap={true}
-        focusable={false}
-        openLink={openLink}
-        createObjectClient={grip => createObjectClient(grip)}
-        onDOMNodeClick={grip => openElementInInspector(grip)}
-        onInspectIconClick={grip => openElementInInspector(grip)}
-        onDOMNodeMouseOver={grip => highlightDomElement(grip)}
-        onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
-      />
+      <div
+        className="preview-popup"
+        style={{ maxHeight: this.calculateMaxHeight() }}
+      >
+        <ObjectInspector
+          roots={properties}
+          autoExpandDepth={0}
+          disableWrap={true}
+          focusable={false}
+          openLink={openLink}
+          createObjectClient={grip => createObjectClient(grip)}
+          onDOMNodeClick={grip => openElementInInspector(grip)}
+          onInspectIconClick={grip => openElementInInspector(grip)}
+          onDOMNodeMouseOver={grip => highlightDomElement(grip)}
+          onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+        />
+      </div>
+    );
+  }
+
+  renderSimplePreview() {
+    const {
+      openLink,
+      preview: { result }
+    } = this.props;
+    return (
+      <div className="preview-popup">
+        {Rep({
+          object: result,
+          mode: MODE.LONG,
+          openLink
+        })}
+      </div>
     );
   }
 
@@ -279,29 +179,26 @@ export class Popup extends Component<Props, State> {
     // return on `false`, `""`, `0`, `undefined` etc,
     // these falsy simple typed value because we want to
     // do `renderSimplePreview` on these values below.
-    const { value } = this.props;
+    const {
+      preview: { root }
+    } = this.props;
 
-    if (value && value.class === "Function") {
+    if (nodeIsFunction(root)) {
       return this.renderFunctionPreview();
     }
 
-    if (value && value.type === "object") {
+    if (nodeIsObject(root)) {
       return <div>{this.renderObjectPreview()}</div>;
     }
 
-    return this.renderSimplePreview(value);
+    return this.renderSimplePreview();
   }
 
-  getPreviewType(value: any) {
-    if (
-      typeof value == "number" ||
-      typeof value == "boolean" ||
-      (typeof value == "string" && value.length < 10) ||
-      (typeof value == "number" && value.toString().length < 10) ||
-      value.type == "null" ||
-      value.type == "undefined" ||
-      value.class === "Function"
-    ) {
+  getPreviewType() {
+    const {
+      preview: { root }
+    } = this.props;
+    if (nodeIsPrimitive(root) || nodeIsFunction(root)) {
       return "tooltip";
     }
 
@@ -313,16 +210,19 @@ export class Popup extends Component<Props, State> {
   };
 
   render() {
-    const { popoverPos, value, editorRef } = this.props;
-    const type = this.getPreviewType(value);
+    const {
+      preview: { cursorPos, result },
+      editorRef
+    } = this.props;
+    const type = this.getPreviewType();
 
-    if (value && value.type === "object" && !this.getChildren()) {
+    if (typeof result == "undefined" || result.optimizedOut) {
       return null;
     }
 
     return (
       <Popover
-        targetPosition={popoverPos}
+        targetPosition={cursorPos}
         onMouseLeave={this.onMouseLeave}
         onKeyDown={this.onKeyDown}
         type={type}
@@ -336,17 +236,12 @@ export class Popup extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
-  popupObjectProperties: getAllPopupObjectProperties(
-    state,
-    getCurrentThread(state)
-  )
+  cx: getThreadContext(state)
 });
 
 const {
   addExpression,
   selectSourceURL,
-  setPopupObjectProperties,
   openLink,
   openElementInInspectorCommand,
   highlightDomElement,
@@ -356,7 +251,6 @@ const {
 const mapDispatchToProps = {
   addExpression,
   selectSourceURL,
-  setPopupObjectProperties,
   openLink,
   openElementInInspector: openElementInInspectorCommand,
   highlightDomElement,

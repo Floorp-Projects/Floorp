@@ -2,6 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// @flow
+
+export type Grip = {
+  actor: string,
+  class: string,
+  displayClass: string,
+  displayName?: string,
+  parameterNames?: string[],
+  userDisplayName?: string,
+  name: string,
+  extensible: boolean,
+  location: {
+    url: string,
+    line: number,
+    column: number
+  },
+  frozen: boolean,
+  ownPropertyLength: number,
+  preview: Object,
+  sealed: boolean,
+  optimizedOut: boolean,
+  type: string
+};
+
 export type GripProperties = {
   ownProperties?: Object,
   ownSymbols?: Array<Object>,
@@ -10,16 +34,8 @@ export type GripProperties = {
   fullText?: string
 };
 
-export type ObjectInspectorItemContentsValue =
-  | object
-  | number
-  | string
-  | boolean
-  | null
-  | undefined;
-
 export type NodeContents = {
-  value: ObjectInspectorItemContentsValue
+  value: Object | number | string | boolean | null | typeof undefined
 };
 
 export type NodeMeta = {
@@ -27,13 +43,13 @@ export type NodeMeta = {
   endIndex: number
 };
 
-export type Path = Symbol;
+export type Path = string;
 export type Node = {
   contents: Array<Node> | NodeContents,
   name: string,
   path: Path,
-  type: ?Symbol,
-  meta: ?NodeMeta
+  type?: Symbol,
+  meta?: NodeMeta
 };
 
 export type RdpGrip = {
@@ -116,7 +132,7 @@ export type Props = {
     item: Node,
     options: {
       depth: number,
-      event: SyntheticEvent,
+      event: MouseEvent,
       focused: boolean,
       expanded: boolean
     }
