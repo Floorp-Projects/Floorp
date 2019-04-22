@@ -40,12 +40,12 @@ class EGLImageD3D final : public ImageImpl
 
     egl::Error initialize(const egl::Display *display) override;
 
-    gl::Error orphan(const gl::Context *context, egl::ImageSibling *sibling) override;
+    angle::Result orphan(const gl::Context *context, egl::ImageSibling *sibling) override;
 
     angle::Result getRenderTarget(const gl::Context *context, RenderTargetD3D **outRT) const;
 
   private:
-    gl::Error copyToLocalRendertarget(const gl::Context *context);
+    angle::Result copyToLocalRendertarget(const gl::Context *context);
 
     RendererD3D *mRenderer;
     RenderTargetD3D *mRenderTarget;

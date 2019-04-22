@@ -32,6 +32,6 @@ class DeviceD3D : public DeviceImpl
     bool mIsInitialized;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_DEVICED3D_H_
+#endif  // LIBANGLE_RENDERER_D3D_DEVICED3D_H_

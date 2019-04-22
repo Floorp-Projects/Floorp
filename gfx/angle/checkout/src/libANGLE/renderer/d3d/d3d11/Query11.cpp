@@ -52,12 +52,9 @@ namespace rx
 
 Query11::QueryState::QueryState()
     : getDataAttemptCount(0), query(), beginTimestamp(), endTimestamp(), finished(false)
-{
-}
+{}
 
-Query11::QueryState::~QueryState()
-{
-}
+Query11::QueryState::~QueryState() {}
 
 Query11::Query11(Renderer11 *renderer, gl::QueryType type)
     : QueryImpl(type), mResult(0), mResultSum(0), mRenderer(renderer)
@@ -70,25 +67,25 @@ Query11::~Query11()
     mRenderer->getStateManager()->onDeleteQueryObject(this);
 }
 
-gl::Error Query11::begin(const gl::Context *context)
+angle::Result Query11::begin(const gl::Context *context)
 {
     mResultSum = 0;
     mRenderer->getStateManager()->onBeginQuery(this);
     return resume(GetImplAs<Context11>(context));
 }
 
-gl::Error Query11::end(const gl::Context *context)
+angle::Result Query11::end(const gl::Context *context)
 {
     return pause(GetImplAs<Context11>(context));
 }
 
-gl::Error Query11::queryCounter(const gl::Context *context)
+angle::Result Query11::queryCounter(const gl::Context *context)
 {
     // This doesn't do anything for D3D11 as we don't support timestamps
     ASSERT(getType() == gl::QueryType::Timestamp);
     mResultSum = 0;
     mPendingQueries.push_back(std::unique_ptr<QueryState>(new QueryState()));
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 template <typename T>
@@ -99,35 +96,35 @@ angle::Result Query11::getResultBase(Context11 *context11, T *params)
     ASSERT(mPendingQueries.empty());
     *params = static_cast<T>(mResultSum);
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
-gl::Error Query11::getResult(const gl::Context *context, GLint *params)
+angle::Result Query11::getResult(const gl::Context *context, GLint *params)
 {
     return getResultBase(GetImplAs<Context11>(context), params);
 }
 
-gl::Error Query11::getResult(const gl::Context *context, GLuint *params)
+angle::Result Query11::getResult(const gl::Context *context, GLuint *params)
 {
     return getResultBase(GetImplAs<Context11>(context), params);
 }
 
-gl::Error Query11::getResult(const gl::Context *context, GLint64 *params)
+angle::Result Query11::getResult(const gl::Context *context, GLint64 *params)
 {
     return getResultBase(GetImplAs<Context11>(context), params);
 }
 
-gl::Error Query11::getResult(const gl::Context *context, GLuint64 *params)
+angle::Result Query11::getResult(const gl::Context *context, GLuint64 *params)
 {
     return getResultBase(GetImplAs<Context11>(context), params);
 }
 
-gl::Error Query11::isResultAvailable(const gl::Context *context, bool *available)
+angle::Result Query11::isResultAvailable(const gl::Context *context, bool *available)
 {
     ANGLE_TRY(flush(GetImplAs<Context11>(context), false));
 
     *available = mPendingQueries.empty();
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 angle::Result Query11::pause(Context11 *context11)
@@ -135,7 +132,7 @@ angle::Result Query11::pause(Context11 *context11)
     if (mActiveQuery->query.valid())
     {
         ID3D11DeviceContext *context = mRenderer->getDeviceContext();
-        gl::QueryType type             = getType();
+        gl::QueryType type           = getType();
 
         // If we are doing time elapsed query the end timestamp
         if (type == gl::QueryType::TimeElapsed)
@@ -158,7 +155,7 @@ angle::Result Query11::resume(Context11 *context11)
     {
         ANGLE_TRY(flush(context11, false));
 
-        gl::QueryType type         = getType();
+        gl::QueryType type       = getType();
         D3D11_QUERY d3dQueryType = gl_d3d11::ConvertQueryType(type);
 
         D3D11_QUERY_DESC queryDesc;
@@ -192,7 +189,7 @@ angle::Result Query11::resume(Context11 *context11)
         }
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Query11::flush(Context11 *context11, bool force)
@@ -206,7 +203,7 @@ angle::Result Query11::flush(Context11 *context11, bool force)
             ANGLE_TRY(testQuery(context11, query));
             if (!query->finished && !force)
             {
-                return angle::Result::Continue();
+                return angle::Result::Continue;
             }
         } while (!query->finished);
 
@@ -214,7 +211,7 @@ angle::Result Query11::flush(Context11 *context11, bool force)
         mPendingQueries.pop_front();
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Query11::testQuery(Context11 *context11, QueryState *queryState)
@@ -354,7 +351,7 @@ angle::Result Query11::testQuery(Context11 *context11, QueryState *queryState)
         }
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 }  // namespace rx

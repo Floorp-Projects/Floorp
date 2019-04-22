@@ -19,7 +19,7 @@ namespace sh
 class TFunctionLookup : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
 
     static TFunctionLookup *CreateConstructor(const TType *type);
     static TFunctionLookup *CreateFunctionCall(const ImmutableString &name, const TSymbol *symbol);

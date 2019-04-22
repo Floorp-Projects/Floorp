@@ -14,8 +14,8 @@
 #include "common/Color.h"
 #include "common/MemoryBuffer.h"
 #include "common/debug.h"
-#include "libANGLE/ContextState.h"
 #include "libANGLE/Device.h"
+#include "libANGLE/State.h"
 #include "libANGLE/Version.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/formatutils.h"
@@ -31,11 +31,12 @@ class ConfigSet;
 
 namespace gl
 {
+class ErrorSet;
 class FramebufferState;
 class InfoLog;
 class Texture;
 struct LinkedVarying;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -81,42 +82,35 @@ class Context : angle::NonCopyable
     Context() {}
     virtual ~Context() {}
 
-    virtual void handleError(HRESULT hr,
-                             const char *message,
-                             const char *file,
-                             const char *function,
-                             unsigned int line) = 0;
+    virtual void handleResult(HRESULT hr,
+                              const char *message,
+                              const char *file,
+                              const char *function,
+                              unsigned int line) = 0;
 };
 }  // namespace d3d
 
 // ANGLE_TRY for HRESULT errors.
-#define ANGLE_TRY_HR(CONTEXT, EXPR, MESSAGE)                                                    \
-    \
-{                                                                                        \
-        auto ANGLE_LOCAL_VAR = (EXPR);                                                          \
-        if (ANGLE_UNLIKELY(FAILED(ANGLE_LOCAL_VAR)))                                            \
-        {                                                                                       \
-            CONTEXT->handleError(ANGLE_LOCAL_VAR, MESSAGE, __FILE__, ANGLE_FUNCTION, __LINE__); \
-            return angle::Result::Stop();                                                       \
-        }                                                                                       \
-    \
-}
+#define ANGLE_TRY_HR(CONTEXT, EXPR, MESSAGE)                                                     \
+    do                                                                                           \
+    {                                                                                            \
+        auto ANGLE_LOCAL_VAR = (EXPR);                                                           \
+        if (ANGLE_UNLIKELY(FAILED(ANGLE_LOCAL_VAR)))                                             \
+        {                                                                                        \
+            CONTEXT->handleResult(ANGLE_LOCAL_VAR, MESSAGE, __FILE__, ANGLE_FUNCTION, __LINE__); \
+            return angle::Result::Stop;                                                          \
+        }                                                                                        \
+    } while (0)
 
-#define ANGLE_CHECK_HR(CONTEXT, EXPR, MESSAGE, ERROR)                                 \
-                                                                                      \
-    {                                                                                 \
-        if (ANGLE_UNLIKELY(!(EXPR)))                                                  \
-        {                                                                             \
-            CONTEXT->handleError(ERROR, MESSAGE, __FILE__, ANGLE_FUNCTION, __LINE__); \
-            return angle::Result::Stop();                                             \
-        }                                                                             \
-    }
-
-#define ANGLE_CHECK_HR_ALLOC(context, result) \
-    ANGLE_CHECK_HR(context, result, "Failed to allocate host memory", E_OUTOFMEMORY)
-
-#define ANGLE_CHECK_HR_MATH(context, result) \
-    ANGLE_CHECK_HR(context, result, "Integer overflow.", E_FAIL)
+#define ANGLE_CHECK_HR(CONTEXT, EXPR, MESSAGE, ERROR)                                  \
+    do                                                                                 \
+    {                                                                                  \
+        if (ANGLE_UNLIKELY(!(EXPR)))                                                   \
+        {                                                                              \
+            CONTEXT->handleResult(ERROR, MESSAGE, __FILE__, ANGLE_FUNCTION, __LINE__); \
+            return angle::Result::Stop;                                                \
+        }                                                                              \
+    } while (0)
 
 #define ANGLE_HR_UNREACHABLE(context) \
     UNREACHABLE();                    \
@@ -136,9 +130,8 @@ class BufferFactoryD3D : angle::NonCopyable
     virtual IndexBuffer *createIndexBuffer()   = 0;
 
     // TODO(jmadill): add VertexFormatCaps
-    virtual VertexConversionType getVertexConversionType(
-        gl::VertexFormatType vertexFormatType) const                                   = 0;
-    virtual GLenum getVertexComponentType(gl::VertexFormatType vertexFormatType) const = 0;
+    virtual VertexConversionType getVertexConversionType(angle::FormatID vertexFormatID) const = 0;
+    virtual GLenum getVertexComponentType(angle::FormatID vertexFormatID) const                = 0;
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using this
     // function.
@@ -163,7 +156,7 @@ class RendererD3D : public BufferFactoryD3D
     virtual egl::ConfigSet generateConfigs()                                            = 0;
     virtual void generateDisplayExtensions(egl::DisplayExtensions *outExtensions) const = 0;
 
-    virtual ContextImpl *createContext(const gl::ContextState &state) = 0;
+    virtual ContextImpl *createContext(const gl::State &state, gl::ErrorSet *errorSet) = 0;
 
     std::string getVendorString() const;
 
@@ -232,7 +225,8 @@ class RendererD3D : public BufferFactoryD3D
     virtual angle::Result copyTexture(const gl::Context *context,
                                       const gl::Texture *source,
                                       GLint sourceLevel,
-                                      const gl::Rectangle &sourceRect,
+                                      gl::TextureTarget srcTarget,
+                                      const gl::Box &sourceBox,
                                       GLenum destFormat,
                                       GLenum destType,
                                       const gl::Offset &destOffset,
@@ -260,22 +254,22 @@ class RendererD3D : public BufferFactoryD3D
                                                  RenderTargetD3D **outRT) = 0;
 
     // Shader operations
-    virtual angle::Result loadExecutable(const gl::Context *context,
+    virtual angle::Result loadExecutable(d3d::Context *context,
                                          const uint8_t *function,
                                          size_t length,
                                          gl::ShaderType type,
                                          const std::vector<D3DVarying> &streamOutVaryings,
                                          bool separatedOutputBuffers,
-                                         ShaderExecutableD3D **outExecutable)       = 0;
-    virtual angle::Result compileToExecutable(const gl::Context *context,
+                                         ShaderExecutableD3D **outExecutable)      = 0;
+    virtual angle::Result compileToExecutable(d3d::Context *context,
                                               gl::InfoLog &infoLog,
                                               const std::string &shaderHLSL,
                                               gl::ShaderType type,
                                               const std::vector<D3DVarying> &streamOutVaryings,
                                               bool separatedOutputBuffers,
                                               const angle::CompilerWorkaroundsD3D &workarounds,
-                                              ShaderExecutableD3D **outExectuable)  = 0;
-    virtual angle::Result ensureHLSLCompilerInitialized(const gl::Context *context) = 0;
+                                              ShaderExecutableD3D **outExectuable) = 0;
+    virtual angle::Result ensureHLSLCompilerInitialized(d3d::Context *context)     = 0;
 
     virtual UniformStorageD3D *createUniformStorage(size_t storageSize) = 0;
 
@@ -290,7 +284,7 @@ class RendererD3D : public BufferFactoryD3D
     virtual angle::Result copyImage(const gl::Context *context,
                                     ImageD3D *dest,
                                     ImageD3D *source,
-                                    const gl::Rectangle &sourceRect,
+                                    const gl::Box &sourceBox,
                                     const gl::Offset &destOffset,
                                     bool unpackFlipY,
                                     bool unpackPremultiplyAlpha,
@@ -300,36 +294,43 @@ class RendererD3D : public BufferFactoryD3D
                                                          RenderTargetD3D *renderTargetD3D) = 0;
     virtual TextureStorage *createTextureStorageExternal(
         egl::Stream *stream,
-        const egl::Stream::GLTextureDescription &desc)                                   = 0;
+        const egl::Stream::GLTextureDescription &desc)                                        = 0;
     virtual TextureStorage *createTextureStorage2D(GLenum internalformat,
                                                    bool renderTarget,
                                                    GLsizei width,
                                                    GLsizei height,
                                                    int levels,
-                                                   bool hintLevelZeroOnly)               = 0;
+                                                   bool hintLevelZeroOnly)                    = 0;
     virtual TextureStorage *createTextureStorageCube(GLenum internalformat,
                                                      bool renderTarget,
                                                      int size,
                                                      int levels,
-                                                     bool hintLevelZeroOnly)             = 0;
+                                                     bool hintLevelZeroOnly)                  = 0;
     virtual TextureStorage *createTextureStorage3D(GLenum internalformat,
                                                    bool renderTarget,
                                                    GLsizei width,
                                                    GLsizei height,
                                                    GLsizei depth,
-                                                   int levels)                           = 0;
+                                                   int levels)                                = 0;
     virtual TextureStorage *createTextureStorage2DArray(GLenum internalformat,
                                                         bool renderTarget,
                                                         GLsizei width,
                                                         GLsizei height,
                                                         GLsizei depth,
-                                                        int levels)                      = 0;
+                                                        int levels)                           = 0;
     virtual TextureStorage *createTextureStorage2DMultisample(GLenum internalformat,
                                                               GLsizei width,
                                                               GLsizei height,
                                                               int levels,
                                                               int samples,
-                                                              bool fixedSampleLocations) = 0;
+                                                              bool fixedSampleLocations)      = 0;
+    virtual TextureStorage *createTextureStorage2DMultisampleArray(GLenum internalformat,
+                                                                   GLsizei width,
+                                                                   GLsizei height,
+                                                                   GLsizei depth,
+                                                                   int levels,
+                                                                   int samples,
+                                                                   bool fixedSampleLocations) = 0;
 
     // Buffer-to-texture and Texture-to-buffer copies
     virtual bool supportsFastCopyBufferToTexture(GLenum internalFormat) const = 0;

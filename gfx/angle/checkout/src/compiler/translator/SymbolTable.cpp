@@ -8,7 +8,7 @@
 //
 
 #if defined(_MSC_VER)
-#pragma warning(disable : 4718)
+#    pragma warning(disable : 4718)
 #endif
 
 #include "compiler/translator/SymbolTable.h"
@@ -69,8 +69,7 @@ TSymbolTable::TSymbolTable()
       mUniqueIdCounter(0),
       mShaderType(GL_FRAGMENT_SHADER),
       mGlInVariableWithArraySize(nullptr)
-{
-}
+{}
 
 TSymbolTable::~TSymbolTable() = default;
 
@@ -156,8 +155,9 @@ const TVariable *TSymbolTable::gl_SecondaryFragDataEXT() const
     return mVar_gl_SecondaryFragDataEXT;
 }
 
-TSymbolTable::VariableMetadata *TSymbolTable::getOrCreateVariableMetadata(const TVariable &variable) {
-    int id = variable.uniqueId().get();
+TSymbolTable::VariableMetadata *TSymbolTable::getOrCreateVariableMetadata(const TVariable &variable)
+{
+    int id    = variable.uniqueId().get();
     auto iter = mVariableMetadata.find(id);
     if (iter == mVariableMetadata.end())
     {
@@ -168,13 +168,13 @@ TSymbolTable::VariableMetadata *TSymbolTable::getOrCreateVariableMetadata(const 
 
 void TSymbolTable::markStaticWrite(const TVariable &variable)
 {
-    auto metadata = getOrCreateVariableMetadata(variable);
+    auto metadata         = getOrCreateVariableMetadata(variable);
     metadata->staticWrite = true;
 }
 
 void TSymbolTable::markStaticRead(const TVariable &variable)
 {
-    auto metadata = getOrCreateVariableMetadata(variable);
+    auto metadata        = getOrCreateVariableMetadata(variable);
     metadata->staticRead = true;
 }
 
@@ -189,7 +189,7 @@ bool TSymbolTable::isStaticallyUsed(const TVariable &variable) const
 void TSymbolTable::addInvariantVarying(const TVariable &variable)
 {
     ASSERT(atGlobalLevel());
-    auto metadata = getOrCreateVariableMetadata(variable);
+    auto metadata       = getOrCreateVariableMetadata(variable);
     metadata->invariant = true;
 }
 
@@ -200,7 +200,7 @@ bool TSymbolTable::isVaryingInvariant(const TVariable &variable) const
     {
         return true;
     }
-    int id = variable.uniqueId().get();
+    int id    = variable.uniqueId().get();
     auto iter = mVariableMetadata.find(id);
     return iter != mVariableMetadata.end() && iter->second.invariant;
 }
@@ -375,7 +375,7 @@ void TSymbolTable::initSamplerDefaultPrecision(TBasicType samplerType)
     setDefaultPrecision(samplerType, EbpLow);
 }
 
-TSymbolTable::VariableMetadata::VariableMetadata() : staticRead(false), staticWrite(false), invariant(false)
-{
-}
+TSymbolTable::VariableMetadata::VariableMetadata()
+    : staticRead(false), staticWrite(false), invariant(false)
+{}
 }  // namespace sh

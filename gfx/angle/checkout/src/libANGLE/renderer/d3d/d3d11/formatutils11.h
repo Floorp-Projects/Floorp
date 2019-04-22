@@ -54,7 +54,7 @@ struct VertexFormat : private angle::NonCopyable
     VertexCopyFunction copyFunction;
 };
 
-const VertexFormat &GetVertexFormatInfo(gl::VertexFormatType vertexFormatType,
+const VertexFormat &GetVertexFormatInfo(angle::FormatID vertexFormatID,
                                         D3D_FEATURE_LEVEL featureLevel);
 
 // Auto-generated in dxgi_format_map_autogen.cpp.
@@ -69,4 +69,4 @@ const angle::Format &GetFormat(DXGI_FORMAT dxgiFormat);
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_FORMATUTILS11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_FORMATUTILS11_H_

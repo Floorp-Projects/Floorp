@@ -86,18 +86,6 @@ TIntermTyped *CreateZeroNode(const TType &type)
         return node;
     }
 
-    if (type.getBasicType() == EbtVoid)
-    {
-        // Void array. This happens only on error condition, similarly to the case above. We don't
-        // have a constructor operator for void, so this needs special handling. We'll end up with a
-        // value without the array type, but that should not be a problem.
-        while (constType.isArray())
-        {
-            constType.toArrayElementType();
-        }
-        return CreateZeroNode(constType);
-    }
-
     TIntermSequence *arguments = new TIntermSequence();
 
     if (type.isArray())

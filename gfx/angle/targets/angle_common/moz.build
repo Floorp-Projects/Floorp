@@ -8,23 +8,19 @@ DEFINES['ANGLE_ENABLE_DEBUG_ANNOTATIONS'] = True
 #DEFINES['CHROMIUM_BUILD'] = True
 #DEFINES['COMPONENT_BUILD'] = True
 DEFINES['DYNAMIC_ANNOTATIONS_ENABLED'] = '1'
-DEFINES['EGL_EGLEXT_PROTOTYPES'] = True
-#DEFINES['FIELDTRIAL_TESTING_ENABLED'] = True
 #DEFINES['FULL_SAFE_BROWSING'] = True
-DEFINES['GL_GLEXT_PROTOTYPES'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = '0x0A000002'
-#DEFINES['PSAPI_VERSION'] = '1'
+DEFINES['NTDDI_VERSION'] = '0x0A000003'
+#DEFINES['PSAPI_VERSION'] = '2'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
 DEFINES['UNICODE'] = True
 #DEFINES['USE_AURA'] = '1'
-#DEFINES['V8_DEPRECATION_WARNINGS'] = True
 #DEFINES['WIN32'] = True
 #DEFINES['WIN32_LEAN_AND_MEAN'] = True
 #DEFINES['WINAPI_FAMILY'] = 'WINAPI_FAMILY_DESKTOP_APP'
-#DEFINES['WINVER'] = '0x0A00'
+DEFINES['WINVER'] = '0x0A00'
 #DEFINES['WTF_USE_DYNAMIC_ANNOTATIONS'] = '1'
 DEFINES['_ATL_NO_OPENGL'] = True
 DEFINES['_CRT_RAND_S'] = True
@@ -125,14 +121,21 @@ SOURCES += [
     '../../checkout/src/common/PackedEGLEnums_autogen.cpp',
     '../../checkout/src/common/PackedEnums.cpp',
     '../../checkout/src/common/PackedGLEnums_autogen.cpp',
+    '../../checkout/src/common/PoolAlloc.cpp',
     '../../checkout/src/common/string_utils.cpp',
     '../../checkout/src/common/system_utils.cpp',
     '../../checkout/src/common/third_party/base/anglebase/sha1.cc',
     '../../checkout/src/common/third_party/smhasher/src/PMurHash.cpp',
+    '../../checkout/src/common/third_party/xxhash/xxhash.c',
     '../../checkout/src/common/tls.cpp',
     '../../checkout/src/common/uniform_type_info_autogen.cpp',
     '../../checkout/src/common/utilities.cpp',
 ]
+
+if CONFIG['OS_ARCH'] != 'WINNT':
+    SOURCES += [
+        '../../checkout/src/common/system_utils_posix.cpp',
+    ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [

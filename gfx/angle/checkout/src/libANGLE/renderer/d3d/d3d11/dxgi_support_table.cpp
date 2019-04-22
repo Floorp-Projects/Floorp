@@ -3007,7 +3007,7 @@ const DXGISupport &GetDXGISupport_11_1(DXGI_FORMAT dxgiFormat)
     // clang-format on
 }
 
-}
+}  // namespace
 
 #undef F_2D
 #undef F_3D
@@ -3037,6 +3037,6 @@ const DXGISupport &GetDXGISupport(DXGI_FORMAT dxgiFormat, D3D_FEATURE_LEVEL feat
     }
 }
 
-} // namespace d3d11
+}  // namespace d3d11
 
-} // namespace rx
+}  // namespace rx

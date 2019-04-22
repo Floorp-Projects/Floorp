@@ -59,10 +59,13 @@ struct SystemInfo
     int primaryGPUIndex = -1;
     // Index of the currently active GPU in `gpus`, can be -1 if the active GPU could not be
     // detected.
-    int activeGPUIndex  = -1;
+    int activeGPUIndex = -1;
 
     bool isOptimus       = false;
     bool isAMDSwitchable = false;
+
+    // Only available on Android, when added by the feature support utility
+    std::string machineManufacturer;
 
     // Only available on macOS
     std::string machineModelName;

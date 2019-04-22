@@ -27,8 +27,7 @@ class FoldExpressionsTraverser : public TIntermTraverser
   public:
     FoldExpressionsTraverser(TDiagnostics *diagnostics)
         : TIntermTraverser(true, false, false), mDiagnostics(diagnostics), mDidReplace(false)
-    {
-    }
+    {}
 
     bool didReplace() { return mDidReplace; }
 

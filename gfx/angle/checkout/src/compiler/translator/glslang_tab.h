@@ -34,7 +34,7 @@
 #define YY_YY_GLSLANG_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-#define YYDEBUG 0
+#    define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -46,7 +46,7 @@ extern int yydebug;
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
-#define YYTOKENTYPE
+#    define YYTOKENTYPE
 enum yytokentype
 {
     INVARIANT                 = 258,
@@ -209,11 +209,13 @@ enum yytokentype
 /* Value type.  */
 #if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 
-union YYSTYPE {
+union YYSTYPE
+{
 
     struct
     {
-        union {
+        union
+        {
             const char *string;  // pool allocated.
             float f;
             int i;
@@ -225,7 +227,8 @@ union YYSTYPE {
     struct
     {
         TOperator op;
-        union {
+        union
+        {
             TIntermNode *intermNode;
             TIntermNodePair nodePair;
             TIntermTyped *intermTypedNode;
@@ -236,7 +239,8 @@ union YYSTYPE {
             TIntermSwitch *intermSwitch;
             TIntermCase *intermCase;
         };
-        union {
+        union
+        {
             TVector<unsigned int> *arraySizes;
             TTypeSpecifierNonArray typeSpecifierNonArray;
             TPublicType type;
@@ -256,8 +260,8 @@ union YYSTYPE {
 };
 
 typedef union YYSTYPE YYSTYPE;
-#define YYSTYPE_IS_TRIVIAL 1
-#define YYSTYPE_IS_DECLARED 1
+#    define YYSTYPE_IS_TRIVIAL 1
+#    define YYSTYPE_IS_DECLARED 1
 #endif
 
 /* Location type.  */
@@ -270,8 +274,8 @@ struct YYLTYPE
     int last_line;
     int last_column;
 };
-#define YYLTYPE_IS_DECLARED 1
-#define YYLTYPE_IS_TRIVIAL 1
+#    define YYLTYPE_IS_DECLARED 1
+#    define YYLTYPE_IS_TRIVIAL 1
 #endif
 
 int yyparse(TParseContext *context, void *scanner);

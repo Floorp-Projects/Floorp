@@ -45,8 +45,7 @@ class RecordConstantPrecisionTraverser : public TIntermTraverser
 
 RecordConstantPrecisionTraverser::RecordConstantPrecisionTraverser(TSymbolTable *symbolTable)
     : TIntermTraverser(true, false, true, symbolTable), mFoundHigherPrecisionConstant(false)
-{
-}
+{}
 
 bool RecordConstantPrecisionTraverser::operandAffectsParentOperationPrecision(TIntermTyped *operand)
 {

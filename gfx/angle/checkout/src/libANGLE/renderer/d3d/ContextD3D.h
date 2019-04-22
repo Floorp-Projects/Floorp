@@ -16,7 +16,7 @@ namespace rx
 class ContextD3D : public ContextImpl, public d3d::Context
 {
   public:
-    ContextD3D(const gl::ContextState &state) : ContextImpl(state) {}
+    ContextD3D(const gl::State &state, gl::ErrorSet *errorSet) : ContextImpl(state, errorSet) {}
     ~ContextD3D() override {}
 };
 }  // namespace rx

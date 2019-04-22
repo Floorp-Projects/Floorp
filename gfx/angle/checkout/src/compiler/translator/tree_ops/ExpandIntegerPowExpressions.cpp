@@ -49,8 +49,7 @@ void Traverser::Apply(TIntermNode *root, TSymbolTable *symbolTable)
 }
 
 Traverser::Traverser(TSymbolTable *symbolTable) : TIntermTraverser(true, false, false, symbolTable)
-{
-}
+{}
 
 void Traverser::nextIteration()
 {
