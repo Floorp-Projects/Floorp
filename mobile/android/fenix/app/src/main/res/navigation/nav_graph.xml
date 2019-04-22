@@ -227,6 +227,9 @@
             android:id="@+id/action_settingsFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment" />
         <action
+            android:id="@+id/action_settingsFragment_to_syncFragment"
+            app:destination="@id/syncFragment" />
+        <action
             android:id="@+id/action_settingsFragment_to_aboutFragment"
             app:destination="@id/aboutFragment" />
         <action
@@ -260,6 +263,16 @@
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.SearchEngineFragment"
         android:label="SearchEngineFragment" />
+
+    <fragment
+        android:id="@+id/syncFragment"
+        android:name="org.mozilla.fenix.settings.TurnOnSyncFragment"
+        android:label="SyncFragment">
+        <action
+            android:id="@+id/action_settingsFragment_to_browserFragment"
+            app:destination="@id/browserFragment"
+            app:popUpTo="@+id/settingsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/aboutFragment"

@@ -188,15 +188,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
         return OnPreferenceClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication()
-            // TODO The sign-in web content populates session history,
-            // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
-            // session history stack.
-            // We could auto-close this tab once we get to the end of the authentication process?
-            // Via an interceptor, perhaps.
-            view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromSettings)
-            }
+            val directions = SettingsFragmentDirections.actionSettingsFragmentToSyncFragment()
+            Navigation.findNavController(view!!).navigate(directions)
             true
         }
     }
