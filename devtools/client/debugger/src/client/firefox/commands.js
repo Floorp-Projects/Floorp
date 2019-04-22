@@ -8,6 +8,9 @@ import { prepareSourcePayload, createWorker } from "./create";
 import { supportsWorkers, updateWorkerClients } from "./workers";
 import { features } from "../../utils/prefs";
 
+import Reps from "devtools-reps";
+import type { Node } from "devtools-reps";
+
 import type {
   ActorId,
   BreakpointLocation,
@@ -66,6 +69,15 @@ function hasWasmSupport() {
 
 function createObjectClient(grip: Grip) {
   return debuggerClient.createObjectClient(grip);
+}
+
+async function loadObjectProperties(root: Node) {
+  const utils = Reps.objectInspector.utils;
+  const properties = await utils.loadProperties.loadItemProperties(
+    root,
+    createObjectClient
+  );
+  return utils.node.makeNodesForProperties(properties, root);
 }
 
 function releaseActor(actor: String) {
@@ -474,6 +486,7 @@ const clientCommands = {
   autocomplete,
   blackBox,
   createObjectClient,
+  loadObjectProperties,
   releaseActor,
   interrupt,
   pauseGrip,
