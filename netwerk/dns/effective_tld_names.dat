@@ -7940,9 +7940,6 @@ dodge
 // dog : 2014-12-04 Binky Moon, LLC
 dog
 
-// doha : 2014-09-18 Communications Regulatory Authority (CRA)
-doha
-
 // domains : 2013-10-17 Binky Moon, LLC
 domains
 
@@ -10842,6 +10839,10 @@ myfritz.net
 // backplane : https://www.backplane.io
 // Submitted by Anthony Voutas <anthony@backplane.io>
 backplaneapp.io
+
+// Banzai Cloud
+// Submitted by Gabor Kozma <info@banzaicloud.com>
+app.banzaicloud.io
 
 // BetaInABox
 // Submitted by Adrian <adrian@betainabox.com>
