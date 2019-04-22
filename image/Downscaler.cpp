@@ -286,7 +286,7 @@ void Downscaler::DownscaleInputLine() {
 
   // Shift the buffer. We're just moving pointers here, so this is cheap.
   mLinesInBuffer -= diff;
-  mLinesInBuffer = min(max(mLinesInBuffer, 0), mWindowCapacity);
+  mLinesInBuffer = std::min(std::max(mLinesInBuffer, 0), mWindowCapacity);
 
   // If we already have enough rows to satisfy the filter, there is no need
   // to swap as we won't be writing more before the next convolution.
