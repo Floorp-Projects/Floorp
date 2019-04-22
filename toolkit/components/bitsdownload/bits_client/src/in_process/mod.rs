@@ -21,7 +21,12 @@ use super::Error;
 // This is a macro in order to use the NotFound and GetJob variants from whatever enum is in scope.
 macro_rules! get_job {
     ($bcm:ident, $guid:expr, $name:expr) => {{
-        $bcm = BackgroundCopyManager::connect().map_err(|e| Other(e.to_string()))?;
+        $bcm = BackgroundCopyManager::connect().map_err(|e| {
+            ConnectBcm(HResultMessage {
+                hr: e.code(),
+                message: e.to_string(),
+            })
+        })?;
         $bcm.find_job_by_guid_and_name($guid, $name)
             .map_err(|e| GetJob($crate::in_process::format_error(&$bcm, e)))?
             .ok_or(NotFound)?
@@ -99,7 +104,12 @@ impl InProcessClient {
         // If the job is dropped before `AddFile` succeeds, I think it automatically gets
         // deleted from the queue. There is only one fallible call after that (`Resume`).
 
-        let bcm = BackgroundCopyManager::connect().map_err(|e| Other(e.to_string()))?;
+        let bcm = BackgroundCopyManager::connect().map_err(|e| {
+            ConnectBcm(HResultMessage {
+                hr: e.code(),
+                message: e.to_string(),
+            })
+        })?;
         let mut job = bcm
             .create_job(&self.job_name)
             .map_err(|e| Create(format_error(&bcm, e)))?;
