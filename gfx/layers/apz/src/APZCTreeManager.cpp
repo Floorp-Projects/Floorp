@@ -714,7 +714,8 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
           controller = aState.GetCompositorController();
         });
     if (controller) {
-      controller->ScheduleRenderOnCompositorThread(wr::RenderRootSet(aRenderRoot));
+      controller->ScheduleRenderOnCompositorThread(
+          wr::RenderRootSet(aRenderRoot));
     }
   }
 }

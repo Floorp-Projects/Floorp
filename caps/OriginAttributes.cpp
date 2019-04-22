@@ -268,7 +268,8 @@ class MOZ_STACK_CLASS PopulateFromSuffixIterator final
     }
 
     if (aName.EqualsLiteral("geckoViewUserContextId")) {
-      MOZ_RELEASE_ASSERT(mOriginAttributes->mGeckoViewSessionContextId.IsEmpty());
+      MOZ_RELEASE_ASSERT(
+          mOriginAttributes->mGeckoViewSessionContextId.IsEmpty());
       mOriginAttributes->mGeckoViewSessionContextId.Assign(aValue);
       return true;
     }

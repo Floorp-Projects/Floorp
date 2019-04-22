@@ -346,15 +346,14 @@ LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
 
   // As part of our mitigation of binary tampering, copy our import directory
   // from the original in our executable file.
-  LauncherVoidResult importDirRestored =
-    RestoreImportDirectory(aFullImagePath, ourExeImage, aChildProcess,
-                           ourModule);
+  LauncherVoidResult importDirRestored = RestoreImportDirectory(
+      aFullImagePath, ourExeImage, aChildProcess, ourModule);
   if (importDirRestored.isErr()) {
     return importDirRestored;
   }
 
   Maybe<nt::PEHeaders::IATThunks> ntdllThunks =
-    ourExeImage.GetIATThunksForModule("ntdll.dll");
+      ourExeImage.GetIATThunksForModule("ntdll.dll");
   if (!ntdllThunks) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
