@@ -60,13 +60,14 @@ class KeyValueService {
  *     await database.has("foo"); // false
  * ```
  *
- * You can also call putMany() to put multiple key/value pairs:
+ * You can also call writeMany() to put/delete multiple key/value pairs:
  *
  * ```
- *     await database.putMany({
+ *     await database.writeMany({
  *       key1: "value1",
  *       key2: "value2",
  *       key3: "value3",
+ *       key4: null, // delete
  *     });
  * ```
  *
@@ -83,22 +84,28 @@ class KeyValueDatabase {
   }
 
   /**
-   * Puts multiple key/value pairs to the database.
+   * Writes multiple key/value pairs to the database.
+   *
+   * Note:
+   *   * Each write could be either put or delete.
+   *   * Given multiple values with the same key, only the last value will be stored.
+   *   * If the same key gets put and deleted for multiple times, the final state
+   *     of that key is subject to the ordering of the put(s) and delete(s).
    *
    * @param pairs Pairs could be any of following types:
    *        * An Object, all its properties and the corresponding values will
-   *          be used as key value pairs.
-   *        * A Map.
-   *        * An Array or an iterable whose elements are key-values pairs, such
-   *          as [["key1", "value1"], ["key2", "value2"]]. Note: given multiple
-   *          values with the same key, only the last value will be stored.
-   *
+   *          be used as key value pairs. A property with null or undefined indicating
+   *          a deletion.
+   *        * An Array or an iterable whose elements are key-value pairs. such as
+   *          [["key1", "value1"], ["key2", "value2"]]. Use a pair with value null
+   *          to delete a key-value pair, e.g. ["delete-key", null].
+   *        * A Map. A key with null or undefined value indicating a deletion.
    * @return A promise that is fulfilled when all the key/value pairs are written
    *         to the database.
    */
-  putMany(pairs) {
+  writeMany(pairs) {
     if (!pairs) {
-      throw new Error("putMany(): unexpected argument.");
+      throw new Error("writeMany(): unexpected argument.");
     }
 
     let entries;
@@ -106,22 +113,22 @@ class KeyValueDatabase {
     if (pairs instanceof Map || pairs instanceof Array ||
         typeof(pairs[Symbol.iterator]) === "function") {
       try {
-        // Let Map constructor validate the argument. Although Map accepts a
-        // different set of key/value types than that of kvstore, we do not
-        // need to check that here since it will be done later.
+        // Let Map constructor validate the argument. Note that Map remembers
+        // the original insertion order of the keys, which satisfies the ordering
+        // premise of this function.
         const map = pairs instanceof Map ? pairs : new Map(pairs);
         entries = Array.from(map, ([key, value]) => ({key, value}));
       } catch (error) {
-        throw new Error("putMany(): unexpected argument.");
+        throw new Error("writeMany(): unexpected argument.");
       }
     } else if (typeof(pairs) === "object") {
       entries = Array.from(Object.entries(pairs), ([key, value]) => ({key, value}));
     } else {
-      throw new Error("putMany(): unexpected argument.");
+      throw new Error("writeMany(): unexpected argument.");
     }
 
     if (entries.length) {
-      return promisify(this.database.putMany, entries);
+      return promisify(this.database.writeMany, entries);
     }
     return Promise.resolve();
   }

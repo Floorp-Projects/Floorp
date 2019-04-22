@@ -155,12 +155,21 @@ add_task(async function clear() {
   Assert.strictEqual(await database.has("bool-key"), false);
 });
 
-add_task(async function putMany() {
-  const databaseDir = await makeDatabaseDir("putMany");
+add_task(async function writeManyFailureCases() {
+  const databaseDir = await makeDatabaseDir("writeManyFailureCases");
+  const database = await KeyValueService.getOrCreate(databaseDir, "db");
+
+  Assert.throws(() => database.writeMany(), /unexpected argument/);
+  Assert.throws(() => database.writeMany("foo"), /unexpected argument/);
+  Assert.throws(() => database.writeMany(["foo"]), /unexpected argument/);
+});
+
+add_task(async function writeManyPutOnly() {
+  const databaseDir = await makeDatabaseDir("writeMany");
   const database = await KeyValueService.getOrCreate(databaseDir, "db");
 
   async function test_helper(pairs) {
-    Assert.strictEqual(await database.putMany(pairs), undefined);
+    Assert.strictEqual(await database.writeMany(pairs), undefined);
     Assert.strictEqual(await database.get("int-key"), 1234);
     Assert.strictEqual(await database.get("double-key"), 56.78);
     Assert.strictEqual(await database.get("string-key"), "Héllo, wőrld!");
@@ -168,10 +177,10 @@ add_task(async function putMany() {
     await database.clear();
   }
 
-  // putMany with an empty object is OK
-  Assert.strictEqual(await database.putMany({}), undefined);
+  // writeMany with an empty object is OK
+  Assert.strictEqual(await database.writeMany({}), undefined);
 
-  // putMany with an object
+  // writeMany with an object
   const pairs = {
     "int-key": 1234,
     "double-key": 56.78,
@@ -180,7 +189,7 @@ add_task(async function putMany() {
   };
   await test_helper(pairs);
 
-  // putMany with an array of pairs
+  // writeMany with an array of pairs
   const arrayPairs = [
     ["int-key", 1234],
     ["double-key", 56.78],
@@ -189,7 +198,7 @@ add_task(async function putMany() {
   ];
   await test_helper(arrayPairs);
 
-  // putMany with a key/value generator
+  // writeMany with a key/value generator
   function* pairMaker() {
     yield ["int-key", 1234];
     yield ["double-key", 56.78];
@@ -198,22 +207,102 @@ add_task(async function putMany() {
   }
   await test_helper(pairMaker());
 
-  // putMany with a map
+  // writeMany with a map
   const mapPairs = new Map(arrayPairs);
   await test_helper(mapPairs);
 });
 
-add_task(async function putManyFailureCases() {
-  const databaseDir = await makeDatabaseDir("putManyFailureCases");
+add_task(async function writeManyDeleteOnly() {
+  const databaseDir = await makeDatabaseDir("writeManyDeletesOnly");
   const database = await KeyValueService.getOrCreate(databaseDir, "db");
 
-  Assert.throws(() => database.putMany(), /unexpected argument/);
-  Assert.throws(() => database.putMany("foo"), /unexpected argument/);
-  Assert.throws(() => database.putMany(["foo"]), /unexpected argument/);
+  // writeMany with an object
+  const pairs = {
+    "int-key": 1234,
+    "double-key": 56.78,
+    "string-key": "Héllo, wőrld!",
+    "bool-key": true,
+  };
 
-  const pairWithoutValue = {"key": undefined};
-  await Assert.rejects(database.putMany(pairWithoutValue), /NS_ERROR_UNEXPECTED/);
-  await Assert.rejects(database.putMany([["foo"]]), /NS_ERROR_UNEXPECTED/);
+  async function test_helper(deletes) {
+    Assert.strictEqual(await database.writeMany(pairs), undefined);
+    Assert.strictEqual(await database.writeMany(deletes), undefined);
+    Assert.strictEqual(await database.get("int-key"), null);
+    Assert.strictEqual(await database.get("double-key"), null);
+    Assert.strictEqual(await database.get("string-key"), null);
+    Assert.strictEqual(await database.get("bool-key"), null);
+  }
+
+  // writeMany with an empty object is OK
+  Assert.strictEqual(await database.writeMany({}), undefined);
+
+  // writeMany with an object
+  await test_helper({
+    "int-key": null,
+    "double-key": null,
+    "string-key": null,
+    "bool-key": null,
+  });
+
+  // writeMany with an array of pairs
+  const arrayPairs = [
+    ["int-key", null],
+    ["double-key", null],
+    ["string-key", null],
+    ["bool-key", null],
+  ];
+  await test_helper(arrayPairs);
+
+  // writeMany with a key/value generator
+  function* pairMaker() {
+    yield ["int-key", null];
+    yield ["double-key", null];
+    yield ["string-key", null];
+    yield ["bool-key", null];
+  }
+  await test_helper(pairMaker());
+
+  // writeMany with a map
+  const mapPairs = new Map(arrayPairs);
+  await test_helper(mapPairs);
+});
+
+add_task(async function writeManyPutDelete() {
+  const databaseDir = await makeDatabaseDir("writeManyPutDelete");
+  const database = await KeyValueService.getOrCreate(databaseDir, "db");
+
+  await database.writeMany([
+    ["key1", "val1"],
+    ["key3", "val3"],
+    ["key4", "val4"],
+    ["key5", "val5"],
+  ]);
+
+  await database.writeMany([
+    ["key2", "val2"],
+    ["key4", null],
+    ["key5", null],
+  ]);
+
+  Assert.strictEqual(await database.get("key1"), "val1");
+  Assert.strictEqual(await database.get("key2"), "val2");
+  Assert.strictEqual(await database.get("key3"), "val3");
+  Assert.strictEqual(await database.get("key4"), null);
+  Assert.strictEqual(await database.get("key5"), null);
+
+  await database.clear();
+
+  await database.writeMany([
+    ["key1", "val1"],
+    ["key1", null],
+    ["key1", "val11"],
+    ["key1", null],
+    ["key2", null],
+    ["key2", "val2"],
+  ]);
+
+  Assert.strictEqual(await database.get("key1"), null);
+  Assert.strictEqual(await database.get("key2"), "val2");
 });
 
 add_task(async function getOrCreateNamedDatabases() {
