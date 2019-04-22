@@ -440,6 +440,8 @@ class nsChildView final : public nsBaseWidget {
 
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);
+  bool PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT, const LayoutDeviceIntRegion& aRegion,
+                               const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
 
