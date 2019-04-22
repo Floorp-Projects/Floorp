@@ -1,4 +1,6 @@
 job-defaults:
+    suite:
+        category: firefox-ui
     max-run-time: 5400
     mozharness:
         script: firefox_ui_tests/functional.py
@@ -15,7 +17,6 @@ job-defaults:
 
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
-    suite: "firefox-ui/functional local"
     treeherder-symbol: Fxfn-l(en-US)
     mozharness:
         extra-options:
@@ -24,7 +25,6 @@ firefox-ui-functional-local:
 
 firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
-    suite: "firefox-ui/functional remote"
     treeherder-symbol: Fxfn-r(en-US)
     mozharness:
         extra-options:

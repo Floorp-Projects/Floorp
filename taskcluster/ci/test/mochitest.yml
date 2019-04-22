@@ -1,4 +1,6 @@
 job-defaults:
+    suite:
+        category: mochitest
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
@@ -39,7 +41,8 @@ job-defaults:
 
 mochitest:
     description: "Mochitest plain run"
-    suite: mochitest/plain-chunked
+    suite:
+        name: plain-chunked
     treeherder-symbol: M()
     loopback-video: true
     tier:
@@ -89,7 +92,8 @@ mochitest:
 
 mochitest-a11y:
     description: "Mochitest a11y run"
-    suite: mochitest/a11y
+    suite:
+        name: a11y
     treeherder-symbol: M(a11y)
     loopback-video: true
     tier:
@@ -103,7 +107,8 @@ mochitest-a11y:
 
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
-    suite: mochitest/browser-chrome-chunked
+    suite:
+        name: browser-chrome-chunked
     treeherder-symbol: M(bc)
     loopback-video: true
     tier:
@@ -133,7 +138,8 @@ mochitest-browser-chrome:
 
 browser-instrumentation:
     description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
-    suite: mochitest/browser-chrome-instrumentation
+    suite:
+        name: browser-chrome-instrumentation
     treeherder-symbol: M(inst)
     loopback-video: true
     tier: 3
@@ -148,7 +154,8 @@ browser-instrumentation:
 
 browser-screenshots:
     description: "Browser Screenshots"
-    suite: mochitest/browser-chrome-screenshots
+    suite:
+        name: browser-chrome-screenshots
     treeherder-symbol: M(ss)
     loopback-video: true
     run-on-projects:
@@ -166,7 +173,8 @@ browser-screenshots:
 
 mochitest-chrome:
     description: "Mochitest chrome run"
-    suite: mochitest/chrome
+    suite:
+        name: chrome
     treeherder-symbol: M(c)
     loopback-video: true
     tier:
@@ -202,7 +210,6 @@ mochitest-chrome:
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
-    suite: mochitest/clipboard
     treeherder-symbol: M(cl)
     loopback-video: true
     tier:
@@ -231,7 +238,8 @@ mochitest-clipboard:
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
-    suite: mochitest/mochitest-devtools-chrome-chunked
+    suite:
+        name: mochitest-devtools-chrome-chunked
     treeherder-symbol: M(dt)
     loopback-video: true
     tier:
@@ -263,7 +271,6 @@ mochitest-devtools-chrome:
 
 mochitest-devtools-webreplay:
     description: "Mochitest devtools-webreplay run"
-    suite: mochitest/mochitest-devtools-webreplay
     treeherder-symbol: M(dt-wr)
     loopback-video: true
     tier: 2
@@ -279,7 +286,8 @@ mochitest-devtools-webreplay:
 
 mochitest-gpu:
     description: "Mochitest GPU run"
-    suite: mochitest/gpu
+    suite:
+        name: plain-gpu
     treeherder-symbol: M(gpu)
     loopback-video: true
     tier:
@@ -307,7 +315,6 @@ mochitest-gpu:
 
 mochitest-media:
     description: "Mochitest media run"
-    suite: mochitest/mochitest-media
     treeherder-symbol: M(mda)
     max-run-time:
         by-test-platform:
@@ -356,7 +363,8 @@ mochitest-media:
 
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
-    suite: mochitest/plain-chunked
+    suite:
+        name: plain-chunked
     treeherder-symbol: M(h)
     loopback-video: true
     chunks:
@@ -378,7 +386,8 @@ mochitest-plain-headless:
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
-    suite: mochitest/valgrind-plain
+    suite:
+        name: valgrind-plain
     treeherder-symbol: M-V()
     run-on-projects: []
     tier: 3
@@ -396,7 +405,6 @@ mochitest-valgrind:
 
 mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
-    suite: mochitest/mochitest-webgl1-core
     treeherder-symbol: M(gl1c)
     run-on-projects:
         by-test-platform:
@@ -424,7 +432,6 @@ mochitest-webgl1-core:
 
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
-    suite: mochitest/mochitest-webgl1-ext
     treeherder-symbol: M(gl1e)
     run-on-projects:
         by-test-platform:
@@ -451,7 +458,6 @@ mochitest-webgl1-ext:
 
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
-    suite: mochitest/mochitest-webgl2-core
     treeherder-symbol: M(gl2c)
     run-on-projects:
         by-test-platform:
@@ -478,7 +484,6 @@ mochitest-webgl2-core:
 
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
-    suite: mochitest/mochitest-webgl2-ext
     treeherder-symbol: M(gl2e)
     run-on-projects:
         by-test-platform:
@@ -507,7 +512,6 @@ mochitest-webgl2-ext:
 
 mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
-    suite: mochitest/mochitest-webgl2-deqp
     treeherder-symbol: M(gl2d)
     run-on-projects: []  # Don't run this for now.
     virtualization: virtual-with-gpu

@@ -95,18 +95,17 @@ unittest_suite
 This is the unit test suite being run in a unit test task.  For example,
 ``mochitest`` or ``cppunittest``.
 
-unittest_flavor
-===============
+unittest_category
+=================
 
-If a unittest suite has subdivisions, those are represented as flavors.  Not
-all suites have flavors, in which case this attribute should be set to match
-the suite.  Examples: ``mochitest-devtools-chrome-chunked`` or ``a11y``.
+This is the high-level category of test the suite corresponds to. This is
+usually the test harness used to run the suite.
 
 unittest_try_name
 =================
 
 This is the name used to refer to a unit test via try syntax.  It
-may not match either of ``unittest_suite`` or ``unittest_flavor``.
+may not match ``unittest_suite``.
 
 unittest_variant
 ================

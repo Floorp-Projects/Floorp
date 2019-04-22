@@ -1,4 +1,6 @@
 job-defaults:
+    suite:
+        category: web-platform-tests
     instance-size: xlarge
     max-run-time: 5400
     variants:
@@ -94,7 +96,9 @@ web-platform-tests-headless:
 
 web-platform-tests-reftests:
     description: "Web platform reftest run"
-    suite: web-platform-tests-reftests
+    suite:
+        name: web-platform-tests-reftests
+    schedules-component: web-platform-tests-reftests
     treeherder-symbol: W(Wr)
     chunks:
         by-test-platform:
@@ -121,7 +125,9 @@ web-platform-tests-reftests:
 
 web-platform-tests-reftests-headless:
     description: "Web platform reftest headless run"
-    suite: web-platform-tests-reftests
+    suite:
+        name: web-platform-tests-reftests
+    schedules-component: web-platform-tests-reftests
     treeherder-symbol: W(WrH)
     chunks: 6
     e10s:
@@ -142,7 +148,9 @@ web-platform-tests-reftests-headless:
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
-    suite: web-platform-tests-wdspec
+    suite:
+        name: web-platform-tests-wdspec
+    schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(Wd)
     chunks:
         by-test-platform:
@@ -167,7 +175,9 @@ web-platform-tests-wdspec:
 
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
-    suite: web-platform-tests-wdspec
+    suite:
+        name: web-platform-tests-wdspec
+    schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(WdH)
     run-on-projects: []  # disabled pending releng approval
     mozharness:
@@ -184,7 +194,10 @@ web-platform-tests-wdspec-headless:
 
 test-verify-wpt:
     description: "Extra verification of web-platform tests modified on this push"
-    suite: test-verify
+    suite:
+        category: test-verify
+        name: test-verify-wpt
+    schedules-component: test-verify-wpt
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:
@@ -203,7 +216,10 @@ test-verify-wpt:
 
 test-coverage-wpt:
     description: "Per web-platform test coverage"
-    suite: test-coverage-wpt
+    suite:
+        category: test-coverage
+        name: test-coverage-wpt
+    schedules-component: test-coverage-wpt
     treeherder-symbol: TCw
     max-run-time: 10800
     run-on-projects:

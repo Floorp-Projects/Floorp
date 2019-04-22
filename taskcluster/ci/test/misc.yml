@@ -121,7 +121,10 @@ test-verify:
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
-    suite: test-verify
+    suite:
+        category: test-verify
+        name: test-verify-gpu
+    schedules-component: test-verify-gpu
     treeherder-symbol: TVg
     loopback-video: true
     virtualization: virtual-with-gpu
