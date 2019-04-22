@@ -48,10 +48,12 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'ImportDir.h',
         'NativeNt.h',
         'WindowsMapRemoteView.h',
+        'WindowsProcessMitigations.h',
     ]
     SOURCES += [
         'TimeStamp_windows.cpp',
         'WindowsMapRemoteView.cpp',
+        'WindowsProcessMitigations.cpp',
     ]
     OS_LIBS += ['dbghelp']
 elif CONFIG['HAVE_CLOCK_MONOTONIC']:

@@ -12,6 +12,7 @@
 #  include "mozilla/mscom/ActivationContext.h"
 #endif  // defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
 #include "mozilla/mscom/ApartmentRegion.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
@@ -43,10 +44,6 @@ class MOZ_NON_TEMPORARY_CLASS ProcessRuntime final {
  private:
   void InitInsideApartment();
   HRESULT InitializeSecurity();
-
-#if defined(MOZILLA_INTERNAL_API)
-  static bool IsWin32kLockedDown();
-#endif  // defined(MOZILLA_INTERNAL_API)
 
   HRESULT mInitResult;
   bool mIsParentProcess;
