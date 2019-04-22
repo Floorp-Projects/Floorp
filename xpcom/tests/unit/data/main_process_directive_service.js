@@ -7,15 +7,12 @@ function TestProcessDirective() {}
 TestProcessDirective.prototype = {
 
   /* Boilerplate */
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISupportsString]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIProperty]),
   contractID: "@mozilla.org/xpcom/tests/MainProcessDirectiveTest;1",
   classID: Components.ID("{9b6f4160-45be-11e4-916c-0800200c9a66}"),
 
-  type: Ci.nsISupportsString.TYPE_STRING,
-  data: "main process",
-  toString() {
-    return this.data;
-  },
+  name: "main process",
+  value: "some value",
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestProcessDirective]);
