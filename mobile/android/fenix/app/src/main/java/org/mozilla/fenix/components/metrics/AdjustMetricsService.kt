@@ -18,7 +18,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         if ((BuildConfig.ADJUST_TOKEN.isNullOrEmpty())) {
             Log.i(LOGTAG, "No adjust token defined")
 
-            if (!BuildConfig.DEBUG) {
+            if (BuildConfig.IS_RELEASED) {
                 throw IllegalStateException("No adjust token defined for release build")
             }
 

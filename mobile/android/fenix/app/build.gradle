@@ -30,24 +30,38 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
         manifestPlaceholders.isRaptorEnabled = "false"
+        buildConfigField "boolean", "IS_RELEASED", "false"
+    }
+
+    def releaseTemplate = {
+        shrinkResources true
+        minifyEnabled true
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        matchingFallbacks = ['release'] // Use on the "release" build type in dependencies (AARs)
     }
 
     buildTypes {
-        release {
-            shrinkResources true
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        releaseRaptor {
-            initWith release
-            manifestPlaceholders.isRaptorEnabled = "true"
-            matchingFallbacks = ['release']
-        }
         debug {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".debug"
             manifestPlaceholders.isRaptorEnabled = "true"
+        }
+        // "releaseRaptor" is only used for performance testing, and isn't a real "release" type
+        releaseRaptor releaseTemplate >> { // the ">>" concatenates the releaseRaptor-specific options with the template
+            manifestPlaceholders.isRaptorEnabled = "true"
+        }
+        nightly releaseTemplate >> {
+            buildConfigField "boolean", "IS_RELEASED", "true"
+        }
+        beta releaseTemplate >> {
+            buildConfigField "boolean", "IS_RELEASED", "true"
+        }
+    }
+
+    variantFilter { // There's a "release" build type that exists by default that we don't use (it's replaced by "nightly" and "beta")
+        if (buildType.name == 'release') {
+            setIgnore true
         }
     }
 
@@ -55,11 +69,9 @@ android {
         execution 'ANDROIDX_TEST_ORCHESTRATOR'
     }
 
-    flavorDimensions "abi", "channel"
+    flavorDimensions "abi"
 
     productFlavors {
-        // Processor architectures (abi dimension)
-
         arm {
             dimension "abi"
             ndk {
@@ -77,41 +89,6 @@ android {
             ndk {
                 abiFilter "arm64-v8a"
             }
-        }
-
-        // Product channels (channel dimension)
-
-        // "Greenfield" is our clean version of Fenix without any of the "Fennec transition" code.
-        greenfield {
-            dimension "channel"
-        }
-        firefoxNightly {
-            dimension "channel"
-
-            // Aurora was a channel between nightly builds and beta versions. Aurora builds were published on Google
-            // Play. When the Aurora channel was shutdown in April 2017 the decision was made to instead ship Nightly
-            // builds to Google Play using the existing application id. Previously Nightly builds were not available
-            // on Google Play. Since then our Nightly package name is "fennec_aurora" instead of "fennec_nightly".
-            applicationId "org.mozilla.fennec_aurora"
-        }
-        firefoxBeta {
-            dimension "channel"
-
-            applicationId "org.mozilla.firefox_beta"
-        }
-        firefoxRelease {
-            dimension "channel"
-
-            applicationId "org.mozilla.firefox"
-        }
-    }
-
-    variantFilter { variant ->
-        def flavors = variant.flavors*.name.toString().toLowerCase()
-
-        if (!flavors.contains("greenfield")) {
-            // For now everything that isn't a "greenfield" build isn't used. So let's ignore those variants.
-            setIgnore(true)
         }
     }
 
@@ -148,11 +125,12 @@ android.applicationVariants.all { variant ->
 // -------------------------------------------------------------------------------------------------
 
     def buildType = variant.buildType.name
+    def versionCode = null
 
     buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (buildType != "release").toString()
 
-    if (buildType == "release") {
-        def versionCode = generatedVersionCode
+    if (buildType == "nightly") {
+        versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
         // same version code. Therefore we need to have different version codes for our ARM and x86
@@ -168,15 +146,16 @@ android.applicationVariants.all { variant ->
             versionCode = versionCode + 1
         }// else variant.flavorName.contains("Arm")) use generated version code
 
-        variant.outputs.all { output ->
+        variant.outputs.all {
             setVersionCodeOverride(versionCode)
         }
     }
 
     println("----------------------------------------------")
-    println("Build type:   " + buildType)
+    println("Variant name: " + variant.name)
+    println("Build type:   " + variant.buildType.name)
     println("Flavor:       " + variant.flavorName)
-    println("Version code: " + variant.mergedFlavor.versionCode)
+    println("Version code: " + (versionCode ?: variant.mergedFlavor.versionCode))
 
 // -------------------------------------------------------------------------------------------------
 // BuildConfig: Set variables for Sentry, Crash Reporting, and Telemetry
@@ -215,7 +194,7 @@ android.applicationVariants.all { variant ->
 
     print("Adjust token: ")
 
-    if (variantName.contains("Release")) {
+    if (variant.buildType.buildConfigFields['IS_RELEASED']?.value) {
         try {
             def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'

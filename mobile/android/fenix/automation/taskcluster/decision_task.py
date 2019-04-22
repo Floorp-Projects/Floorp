@@ -13,7 +13,7 @@ import os
 import taskcluster
 
 from lib import build_variants
-from lib.tasks import TaskBuilder, schedule_task_graph, _get_architecture_and_build_type_and_product_from_variant
+from lib.tasks import TaskBuilder, schedule_task_graph, get_architecture_and_build_type_from_variant
 from lib.chain_of_trust import (
     populate_chain_of_trust_task_graph,
     populate_chain_of_trust_required_but_unused_files
@@ -57,7 +57,7 @@ def pr_or_push(is_master_push):
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
 
-        arch, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(variant)
+        arch, build_type = get_architecture_and_build_type_from_variant(variant)
         # autophone only supports arm and aarch64, so only sign/perftest those builds
         if (
             build_type == 'releaseRaptor' and
@@ -88,7 +88,7 @@ def nightly(track):
     push_tasks = {}
 
     build_task_id = taskcluster.slugId()
-    build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, is_staging)
+    build_tasks[build_task_id] = BUILDER.craft_assemble_nightly_task(architectures, is_staging)
 
     signing_task_id = taskcluster.slugId()
     signing_tasks[signing_task_id] = BUILDER.craft_nightly_signing_task(

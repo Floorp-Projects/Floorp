@@ -193,8 +193,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         preferenceMakeDefaultBrowser?.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
 
-        preferenceLeakCanary?.isVisible = BuildConfig.DEBUG
-        if (BuildConfig.DEBUG) {
+        preferenceLeakCanary?.isVisible = !BuildConfig.IS_RELEASED
+        if (!BuildConfig.IS_RELEASED) {
             preferenceLeakCanary?.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _, newValue ->
                     (context?.applicationContext as FenixApplication).toggleLeakCanary(newValue as Boolean)

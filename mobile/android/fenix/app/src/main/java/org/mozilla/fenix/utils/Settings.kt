@@ -44,7 +44,7 @@ class Settings private constructor(context: Context) {
 
     val isCrashReportingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_crash_reporter), true) &&
-                BuildConfig.CRASH_REPORTING && BuildConfig.BUILD_TYPE == "release"
+                BuildConfig.CRASH_REPORTING && BuildConfig.IS_RELEASED
 
     val isRemoteDebuggingEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_remote_debugging), false)

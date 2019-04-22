@@ -39,12 +39,12 @@ class TaskBuilder(object):
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
 
-    def craft_assemble_release_task(self, architectures, is_staging=False):
+    def craft_assemble_nightly_task(self, architectures, is_staging=False):
         artifacts = {
             'public/target.{}.apk'.format(arch): {
                 "type": 'file',
                 "path": '/opt/fenix/app/build/outputs/apk/'
-                        '{}Greenfield/release/app-{}-greenfield-release-unsigned.apk'.format(arch, arch),
+                        '{}/nightly/app-{}-nightly-unsigned.apk'.format(arch, arch),
                 "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
             }
             for arch in architectures
@@ -72,7 +72,7 @@ class TaskBuilder(object):
         )
 
         gradle_commands = (
-            './gradlew --no-daemon -PcrashReports=true -Ptelemetry=true clean test assembleRelease',
+            './gradlew --no-daemon -PcrashReports=true -Ptelemetry=true clean test assembleNightly',
         )
 
         command = ' && '.join(
@@ -172,8 +172,8 @@ class TaskBuilder(object):
     def craft_lint_task(self):
         return self._craft_clean_gradle_task(
             name='lint',
-            description='Running lint for arm64 release variant',
-            gradle_task='lintAarch64GreenfieldRelease',
+            description='Running lint for aarch64 release variant',
+            gradle_task='lintAarch64Release',
             treeherder={
                 'jobKind': 'test',
                 'machine': {
@@ -331,22 +331,20 @@ class TaskBuilder(object):
     def craft_master_commit_signing_task(
         self, assemble_task_id, variant
     ):
-        architecture, build_type, product = _get_architecture_and_build_type_and_product_from_variant(variant)
-        product = convert_camel_case_into_kebab_case(product)
-        postfix = convert_camel_case_into_kebab_case('{}-{}'.format(architecture, build_type))
+        architecture, build_type = get_architecture_and_build_type_from_variant(variant)
         routes = [
-            'index.project.mobile.fenix.branch.master.revision.{}.{}.{}'.format(
-                self.commit, product, postfix
+            'index.project.mobile.fenix.v2.branch.master.revision.{}.{}.{}'.format(
+                self.commit, build_type, architecture
             ),
-            'index.project.mobile.fenix.branch.master.latest.{}.{}'.format(
-                product, postfix
+            'index.project.mobile.fenix.v2.branch.master.latest.{}.{}.{}'.format(
+                product, build_type, architecture
             ),
-            'index.project.mobile.fenix.branch.master.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
+            'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
                 self.date.year, self.date.month, self.date.day, self.commit,
-                product, postfix
+                build_type, architecture
             ),
-            'index.project.mobile.fenix.branch.master.pushdate.{}.{}.{}.latest.{}.{}'.format(
-                self.date.year, self.date.month, self.date.day, product, postfix
+            'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.latest.{}.{}'.format(
+                self.date.year, self.date.month, self.date.day, build_type, architecture
             ),
         ]
 
@@ -439,15 +437,13 @@ class TaskBuilder(object):
 
 
 def _craft_treeherder_platform_from_variant(variant):
-    architecture, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(
-        variant
-    )
+    architecture, build_type = get_architecture_and_build_type_from_variant(variant)
     return 'android-{}-{}'.format(architecture, build_type)
 
 
 def _craft_treeherder_group_symbol_from_variant(variant):
-    _, __, product = _get_architecture_and_build_type_and_product_from_variant(variant)
-    return product
+    _, build_type = get_architecture_and_build_type_from_variant(variant)
+    return build_type
 
 
 def _craft_artifacts_from_variant(variant):
@@ -461,29 +457,19 @@ def _craft_artifacts_from_variant(variant):
 
 
 def _craft_apk_full_path_from_variant(variant):
-    architecture, build_type, product = _get_architecture_and_build_type_and_product_from_variant(
-        variant
-    )
-
-    short_variant = variant[:-len(build_type)]
+    architecture, build_type = get_architecture_and_build_type_from_variant(variant)
     postfix = '-unsigned' if build_type.startswith('release') else ''
-    product = lower_case_first_letter(product)
-
-    return '/opt/fenix/app/build/outputs/apk/{short_variant}/{build_type}/app-{architecture}-{product}-{build_type}{postfix}.apk'.format(     # noqa: E501
+    return '/opt/fenix/app/build/outputs/apk/{architecture}/{build_type}/app-{architecture}-{build_type}{postfix}.apk'.format(     # noqa: E501
         architecture=architecture,
         build_type=build_type,
-        product=product,
-        short_variant=short_variant,
         postfix=postfix
     )
 
 
 _SUPPORTED_ARCHITECTURES = ('aarch64', 'arm', 'x86')
-_SUPPORTED_BUILD_TYPES = ('Debug', 'Release', 'ReleaseRaptor')
-_SUPPORTED_PRODUCTS = ('FirefoxBeta', 'FirefoxNightly', 'FirefoxRelease', 'Greenfield')
 
 
-def _get_architecture_and_build_type_and_product_from_variant(variant):
+def get_architecture_and_build_type_from_variant(variant):
     for supported_architecture in _SUPPORTED_ARCHITECTURES:
         if variant.startswith(supported_architecture):
             architecture = supported_architecture
@@ -496,32 +482,8 @@ def _get_architecture_and_build_type_and_product_from_variant(variant):
             )
         )
 
-    for supported_build_type in _SUPPORTED_BUILD_TYPES:
-        if variant.endswith(supported_build_type):
-            build_type = lower_case_first_letter(supported_build_type)
-            break
-    else:
-        raise ValueError(
-            'Cannot identify build type in "{}". '
-            'Expected to find one of these supported ones: {}'.format(
-                variant, _SUPPORTED_BUILD_TYPES
-            )
-        )
-
-    remaining_variant_data = variant[len(architecture):len(variant) - len(build_type)]
-    for supported_product in _SUPPORTED_PRODUCTS:
-        if remaining_variant_data == supported_product:
-            product = supported_product
-            break
-    else:
-        raise ValueError(
-            'Cannot identify product in "{}" "{}". '
-            'Expected to find one of these supported ones: {}'.format(
-                remaining_variant_data, variant, _SUPPORTED_PRODUCTS
-            )
-        )
-
-    return architecture, build_type, product
+    build_type = variant[len(architecture):]
+    return architecture, build_type
 
 
 def schedule_task(queue, taskId, task):

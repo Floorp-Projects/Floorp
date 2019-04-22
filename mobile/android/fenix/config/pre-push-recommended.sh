@@ -17,4 +17,4 @@
 ./gradlew -q \
         ktlint \
         detekt \
-        app:assembleX86GreenfieldDebug
+        app:assembleX86Debug
