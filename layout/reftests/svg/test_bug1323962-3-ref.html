@@ -1,0 +1,18 @@
+<svg style="width: 400px; height: 400px; border: 1px solid red">
+  <defs>
+    <clipPath id="clipPath1">
+      <rect id="rec1" x="15px" y="15px" width="40px" height="40px" />
+      <rect id="rec2" width="20px" height="10px" />
+    </clipPath>
+    <clipPath id="clipPath2">
+      <rect id="rec3" x="100px" y="100px" width="40px" height="40px" />
+    </clipPath>
+    <clipPath id="clipPath3" transform="translate(100,100)">
+      <rect id="rec4" x="200px" y="200px" width="40px" height="40px" />
+    </clipPath>
+  </defs>
+
+  <circle cx="25px" cy="25px" r="20px" fill="skyblue" clip-path="url(#clipPath1)" />
+  <circle cx="125px" cy="125px" r="20px" fill="skyblue" clip-path="url(#clipPath2)" />
+  <circle cx="225px" cy="225px" r="20px" fill="skyblue" clip-path="url(#clipPath3)" />
+</svg>
