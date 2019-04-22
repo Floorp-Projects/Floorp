@@ -60,6 +60,7 @@ pub enum ErrorType {
     BitsStateTransientError,
     BitsStateCancelled,
     BitsStateUnexpected,
+    FailedToConnectToBcm,
 }
 
 impl ErrorType {
@@ -116,6 +117,7 @@ impl ErrorType {
             ErrorType::BitsStateTransientError => nsIBits::ERROR_TYPE_BITS_STATE_TRANSIENT_ERROR,
             ErrorType::BitsStateCancelled => nsIBits::ERROR_TYPE_BITS_STATE_CANCELLED,
             ErrorType::BitsStateUnexpected => nsIBits::ERROR_TYPE_BITS_STATE_UNEXPECTED,
+            ErrorType::FailedToConnectToBcm => nsIBits::ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM,
         };
         val as i32
     }
@@ -311,6 +313,12 @@ impl From<StartJobFailure> for BitsTaskError {
                 error_stage,
                 error_code: error_code.into(),
             },
+            StartJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
             StartJobFailure::OtherBITS(error_code) => BitsTaskError {
                 error_type: ErrorType::OtherBitsError,
                 error_action,
@@ -346,6 +354,12 @@ impl From<MonitorJobFailure> for BitsTaskError {
             },
             MonitorJobFailure::GetJob(error_code) => BitsTaskError {
                 error_type: ErrorType::FailedToGetBitsJob,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            MonitorJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
                 error_action,
                 error_stage,
                 error_code: error_code.into(),
@@ -389,6 +403,12 @@ impl From<SuspendJobFailure> for BitsTaskError {
                 error_stage,
                 error_code: error_code.into(),
             },
+            SuspendJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
             SuspendJobFailure::OtherBITS(error_code) => BitsTaskError {
                 error_type: ErrorType::OtherBitsError,
                 error_action,
@@ -428,6 +448,12 @@ impl From<ResumeJobFailure> for BitsTaskError {
                 error_stage,
                 error_code: error_code.into(),
             },
+            ResumeJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
             ResumeJobFailure::OtherBITS(error_code) => BitsTaskError {
                 error_type: ErrorType::OtherBitsError,
                 error_action,
@@ -463,6 +489,12 @@ impl From<SetJobPriorityFailure> for BitsTaskError {
             },
             SetJobPriorityFailure::ApplySettings(error_code) => BitsTaskError {
                 error_type: ErrorType::FailedToApplyBitsJobSettings,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            SetJobPriorityFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
                 error_action,
                 error_stage,
                 error_code: error_code.into(),
@@ -539,6 +571,12 @@ impl From<CompleteJobFailure> for BitsTaskError {
                 error_stage,
                 error_code: ErrorCode::None,
             },
+            CompleteJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
             CompleteJobFailure::OtherBITS(error_code) => BitsTaskError {
                 error_type: ErrorType::OtherBitsError,
                 error_action,
@@ -574,6 +612,12 @@ impl From<CancelJobFailure> for BitsTaskError {
             },
             CancelJobFailure::CancelJob(error_code) => BitsTaskError {
                 error_type: ErrorType::FailedToCancelBitsJob,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            CancelJobFailure::ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
                 error_action,
                 error_stage,
                 error_code: error_code.into(),
