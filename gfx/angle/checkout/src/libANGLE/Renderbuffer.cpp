@@ -11,6 +11,7 @@
 #include "libANGLE/Renderbuffer.h"
 
 #include "common/utilities.h"
+#include "libANGLE/Context.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/Image.h"
 #include "libANGLE/Renderbuffer.h"
@@ -24,12 +25,9 @@ namespace gl
 // RenderbufferState implementation.
 RenderbufferState::RenderbufferState()
     : mWidth(0), mHeight(0), mFormat(GL_RGBA4), mSamples(0), mInitState(InitState::MayNeedInit)
-{
-}
+{}
 
-RenderbufferState::~RenderbufferState()
-{
-}
+RenderbufferState::~RenderbufferState() {}
 
 GLsizei RenderbufferState::getWidth() const
 {
@@ -70,26 +68,21 @@ Renderbuffer::Renderbuffer(rx::GLImplFactory *implFactory, GLuint id)
       mState(),
       mImplementation(implFactory->createRenderbuffer(mState)),
       mLabel()
-{
-}
+{}
 
-Error Renderbuffer::onDestroy(const Context *context)
+void Renderbuffer::onDestroy(const Context *context)
 {
-    ANGLE_TRY(orphanImages(context));
+    (void)(orphanImages(context));
 
     if (mImplementation)
     {
-        ANGLE_TRY(mImplementation->onDestroy(context));
+        mImplementation->onDestroy(context);
     }
-
-    return NoError();
 }
 
-Renderbuffer::~Renderbuffer()
-{
-}
+Renderbuffer::~Renderbuffer() {}
 
-void Renderbuffer::setLabel(const std::string &label)
+void Renderbuffer::setLabel(const Context *context, const std::string &label)
 {
     mLabel = label;
 }
@@ -99,26 +92,26 @@ const std::string &Renderbuffer::getLabel() const
     return mLabel;
 }
 
-Error Renderbuffer::setStorage(const Context *context,
-                               GLenum internalformat,
-                               size_t width,
-                               size_t height)
+angle::Result Renderbuffer::setStorage(const Context *context,
+                                       GLenum internalformat,
+                                       size_t width,
+                                       size_t height)
 {
     ANGLE_TRY(orphanImages(context));
     ANGLE_TRY(mImplementation->setStorage(context, internalformat, width, height));
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   0, InitState::MayNeedInit);
-    onStorageChange(context);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
-    return NoError();
+    return angle::Result::Continue;
 }
 
-Error Renderbuffer::setStorageMultisample(const Context *context,
-                                          size_t samples,
-                                          GLenum internalformat,
-                                          size_t width,
-                                          size_t height)
+angle::Result Renderbuffer::setStorageMultisample(const Context *context,
+                                                  size_t samples,
+                                                  GLenum internalformat,
+                                                  size_t width,
+                                                  size_t height)
 {
     ANGLE_TRY(orphanImages(context));
     ANGLE_TRY(
@@ -126,12 +119,12 @@ Error Renderbuffer::setStorageMultisample(const Context *context,
 
     mState.update(static_cast<GLsizei>(width), static_cast<GLsizei>(height), Format(internalformat),
                   static_cast<GLsizei>(samples), InitState::MayNeedInit);
-    onStorageChange(context);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
-    return NoError();
+    return angle::Result::Continue;
 }
 
-Error Renderbuffer::setStorageEGLImageTarget(const Context *context, egl::Image *image)
+angle::Result Renderbuffer::setStorageEGLImageTarget(const Context *context, egl::Image *image)
 {
     ANGLE_TRY(orphanImages(context));
     ANGLE_TRY(mImplementation->setStorageEGLImageTarget(context, image));
@@ -140,9 +133,9 @@ Error Renderbuffer::setStorageEGLImageTarget(const Context *context, egl::Image 
 
     mState.update(static_cast<GLsizei>(image->getWidth()), static_cast<GLsizei>(image->getHeight()),
                   Format(image->getFormat()), 0, image->sourceInitState());
-    onStorageChange(context);
+    onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
 
-    return NoError();
+    return angle::Result::Continue;
 }
 
 rx::RenderbufferImpl *Renderbuffer::getImplementation() const
@@ -201,6 +194,23 @@ GLuint Renderbuffer::getStencilSize() const
     return mState.mFormat.info->stencilBits;
 }
 
+GLint Renderbuffer::getMemorySize() const
+{
+    GLint implSize = mImplementation->getMemorySize();
+    if (implSize > 0)
+    {
+        return implSize;
+    }
+
+    // Assume allocated size is around width * height * samples * pixelBytes
+    angle::CheckedNumeric<GLint> size = 1;
+    size *= mState.mFormat.info->pixelBytes;
+    size *= mState.mWidth;
+    size *= mState.mHeight;
+    size *= std::max(mState.mSamples, 1);
+    return size.ValueOrDefault(std::numeric_limits<GLint>::max());
+}
+
 void Renderbuffer::onAttach(const Context *context)
 {
     addRef();
@@ -229,6 +239,18 @@ Format Renderbuffer::getAttachmentFormat(GLenum /*binding*/,
 GLsizei Renderbuffer::getAttachmentSamples(const ImageIndex & /*imageIndex*/) const
 {
     return getSamples();
+}
+
+bool Renderbuffer::isRenderable(const Context *context,
+                                GLenum binding,
+                                const ImageIndex &imageIndex) const
+{
+    if (isEGLImageTarget())
+    {
+        return ImageSibling::isRenderable(context, binding, imageIndex);
+    }
+    return getFormat().info->renderbufferSupport(context->getClientVersion(),
+                                                 context->getExtensions());
 }
 
 InitState Renderbuffer::initState(const gl::ImageIndex & /*imageIndex*/) const

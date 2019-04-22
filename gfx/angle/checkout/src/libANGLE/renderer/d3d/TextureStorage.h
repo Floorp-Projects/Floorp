@@ -37,16 +37,16 @@ class ImageD3D;
 class TextureStorage : angle::NonCopyable
 {
   public:
-    TextureStorage() : mSubject(nullptr) {}
+    TextureStorage() {}
     virtual ~TextureStorage() {}
 
     virtual angle::Result onDestroy(const gl::Context *context);
 
-    virtual int getTopLevel() const = 0;
-    virtual bool isRenderTarget() const = 0;
-    virtual bool isManaged() const = 0;
+    virtual int getTopLevel() const                   = 0;
+    virtual bool isRenderTarget() const               = 0;
+    virtual bool isManaged() const                    = 0;
     virtual bool supportsNativeMipmapFunction() const = 0;
-    virtual int getLevelCount() const = 0;
+    virtual int getLevelCount() const                 = 0;
 
     virtual angle::Result getRenderTarget(const gl::Context *context,
                                           const gl::ImageIndex &index,
@@ -65,12 +65,10 @@ class TextureStorage : angle::NonCopyable
                                   const gl::PixelUnpackState &unpack,
                                   const uint8_t *pixelData)          = 0;
 
-    // This is a no-op for most implementations of TextureStorage. Some (e.g. TextureStorage11_2D) might override it.
+    // This is a no-op for most implementations of TextureStorage. Some (e.g. TextureStorage11_2D)
+    // might override it.
     virtual angle::Result useLevelZeroWorkaroundTexture(const gl::Context *context,
                                                         bool useLevelZeroTexture);
-
-    // Only used for D3D11.
-    void setSubject(const angle::Subject *subject);
 
   protected:
     const angle::Subject *mSubject;
@@ -78,22 +76,17 @@ class TextureStorage : angle::NonCopyable
 
 inline angle::Result TextureStorage::onDestroy(const gl::Context *context)
 {
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 inline angle::Result TextureStorage::useLevelZeroWorkaroundTexture(const gl::Context *context,
                                                                    bool useLevelZeroTexture)
 {
-    return angle::Result::Continue();
-}
-
-inline void TextureStorage::setSubject(const angle::Subject *subject)
-{
-    mSubject = subject;
+    return angle::Result::Continue;
 }
 
 using TexStoragePointer = angle::UniqueObjectPointer<TextureStorage, gl::Context>;
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_TEXTURESTORAGE_H_
+#endif  // LIBANGLE_RENDERER_D3D_TEXTURESTORAGE_H_

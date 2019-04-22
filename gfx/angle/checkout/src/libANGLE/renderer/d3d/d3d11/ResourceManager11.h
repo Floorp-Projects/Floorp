@@ -89,22 +89,25 @@ constexpr size_t ResourceTypeIndex(ResourceType resourceType)
 constexpr size_t NumResourceTypes = ResourceTypeIndex(ResourceType::Last);
 
 #define ANGLE_RESOURCE_TYPE_TO_D3D11(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
-    \
-template<> struct NAME<ResourceType::RESTYPE>                                          \
+                                                                                       \
+    template <>                                                                        \
+    struct NAME<ResourceType::RESTYPE>                                                 \
     {                                                                                  \
         using Value = D3D11TYPE;                                                       \
     };
 
 #define ANGLE_RESOURCE_TYPE_TO_DESC(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
-    \
-template<> struct NAME<ResourceType::RESTYPE>                                         \
+                                                                                      \
+    template <>                                                                       \
+    struct NAME<ResourceType::RESTYPE>                                                \
     {                                                                                 \
         using Value = DESCTYPE;                                                       \
     };
 
 #define ANGLE_RESOURCE_TYPE_TO_INIT_DATA(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
-    \
-template<> struct NAME<ResourceType::RESTYPE>                                              \
+                                                                                           \
+    template <>                                                                            \
+    struct NAME<ResourceType::RESTYPE>                                                     \
     {                                                                                      \
         using Value = INITDATATYPE;                                                        \
     };
@@ -113,12 +116,13 @@ template<> struct NAME<ResourceType::RESTYPE>                                   
     template <ResourceType Param>             \
     struct NAME;                              \
     ANGLE_RESOURCE_TYPE_OP(NAME, OP)          \
-    \
-template<ResourceType Param> struct NAME      \
-    {                                         \
-    };                                        \
-    \
-template<ResourceType Param> using Get##NAME = typename NAME<Param>::Value;
+                                              \
+    template <ResourceType Param>             \
+    struct NAME                               \
+    {};                                       \
+                                              \
+    template <ResourceType Param>             \
+    using Get##NAME = typename NAME<Param>::Value;
 
 ANGLE_RESOURCE_TYPE_TO_TYPE(D3D11Type, ANGLE_RESOURCE_TYPE_TO_D3D11)
 ANGLE_RESOURCE_TYPE_TO_TYPE(DescType, ANGLE_RESOURCE_TYPE_TO_DESC)
@@ -129,23 +133,25 @@ ANGLE_RESOURCE_TYPE_TO_TYPE(InitDataType, ANGLE_RESOURCE_TYPE_TO_INIT_DATA)
 #undef ANGLE_RESOURCE_TYPE_TO_INIT_DATA
 #undef ANGLE_RESOURCE_TYPE_TO_TYPE
 
-#define ANGLE_TYPE_TO_RESOURCE_TYPE(NAME, OP)               \
-    template <typename Param>                               \
-    struct NAME;                                            \
-    ANGLE_RESOURCE_TYPE_OP(NAME, OP)                        \
-    \
-template<typename Param> struct NAME                        \
-    {                                                       \
-    };                                                      \
-    \
-template<typename Param> constexpr ResourceType Get##NAME() \
-    {                                                       \
-        return NAME<Param>::Value;                          \
+#define ANGLE_TYPE_TO_RESOURCE_TYPE(NAME, OP) \
+    template <typename Param>                 \
+    struct NAME;                              \
+    ANGLE_RESOURCE_TYPE_OP(NAME, OP)          \
+                                              \
+    template <typename Param>                 \
+    struct NAME                               \
+    {};                                       \
+                                              \
+    template <typename Param>                 \
+    constexpr ResourceType Get##NAME()        \
+    {                                         \
+        return NAME<Param>::Value;            \
     }
 
 #define ANGLE_D3D11_TO_RESOURCE_TYPE(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
-    \
-template<> struct NAME<D3D11TYPE>                                                      \
+                                                                                       \
+    template <>                                                                        \
+    struct NAME<D3D11TYPE>                                                             \
     {                                                                                  \
         static constexpr ResourceType Value = ResourceType::RESTYPE;                   \
     };
@@ -237,8 +243,7 @@ class Resource11 : public Resource11Base<ResourceT, UniquePtr, TypedData<Resourc
     Resource11() {}
     Resource11(Resource11 &&other)
         : Resource11Base<ResourceT, UniquePtr, TypedData<ResourceT>>(std::move(other))
-    {
-    }
+    {}
     Resource11 &operator=(Resource11 &&other)
     {
         std::swap(this->mData, other.mData);
@@ -264,8 +269,7 @@ class SharedResource11 : public Resource11Base<T, std::shared_ptr, TypedData<T>>
     SharedResource11() {}
     SharedResource11(SharedResource11 &&movedObj)
         : Resource11Base<T, std::shared_ptr, TypedData<T>>(std::move(movedObj))
-    {
-    }
+    {}
 
     SharedResource11 &operator=(SharedResource11 &&other)
     {
@@ -316,7 +320,7 @@ class ResourceManager11 final : angle::NonCopyable
         Resource11<T> res;
         ANGLE_TRY(allocate(context, renderer, desc, initData, &res));
         *sharedRes = std::move(res);
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     template <typename T>

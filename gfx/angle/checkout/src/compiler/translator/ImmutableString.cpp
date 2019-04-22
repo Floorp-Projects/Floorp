@@ -15,7 +15,7 @@ std::ostream &operator<<(std::ostream &os, const sh::ImmutableString &str)
 }
 
 #if defined(_MSC_VER)
-#pragma warning(disable : 4309)  // truncation of constant value
+#    pragma warning(disable : 4309)  // truncation of constant value
 #endif
 
 namespace sh

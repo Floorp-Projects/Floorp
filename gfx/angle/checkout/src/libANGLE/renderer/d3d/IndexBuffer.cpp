@@ -22,9 +22,7 @@ IndexBuffer::IndexBuffer()
     updateSerial();
 }
 
-IndexBuffer::~IndexBuffer()
-{
-}
+IndexBuffer::~IndexBuffer() {}
 
 unsigned int IndexBuffer::getSerial() const
 {
@@ -36,12 +34,11 @@ void IndexBuffer::updateSerial()
     mSerial = mNextSerial++;
 }
 
-
 IndexBufferInterface::IndexBufferInterface(BufferFactoryD3D *factory, bool dynamic)
 {
     mIndexBuffer = factory->createIndexBuffer();
 
-    mDynamic = dynamic;
+    mDynamic       = dynamic;
     mWritePosition = 0;
 }
 
@@ -53,7 +50,7 @@ IndexBufferInterface::~IndexBufferInterface()
     }
 }
 
-GLenum IndexBufferInterface::getIndexType() const
+gl::DrawElementsType IndexBufferInterface::getIndexType() const
 {
     return mIndexBuffer->getIndexType();
 }
@@ -75,12 +72,12 @@ angle::Result IndexBufferInterface::mapBuffer(const gl::Context *context,
 {
     // Protect against integer overflow
     bool check = (mWritePosition + size < mWritePosition);
-    ANGLE_CHECK_HR(GetImplAs<ContextD3D>(context), !check,
-                   "Mapping of internal index buffer would cause an integer overflow.",
-                   E_OUTOFMEMORY);
+    ANGLE_CHECK(GetImplAs<ContextD3D>(context), !check,
+                "Mapping of internal index buffer would cause an integer overflow.",
+                GL_OUT_OF_MEMORY);
 
     angle::Result error = mIndexBuffer->mapBuffer(context, mWritePosition, size, outMappedMemory);
-    if (error == angle::Result::Stop())
+    if (error == angle::Result::Stop)
     {
         if (outMappedMemory)
         {
@@ -95,7 +92,7 @@ angle::Result IndexBufferInterface::mapBuffer(const gl::Context *context,
     }
 
     mWritePosition += size;
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result IndexBufferInterface::unmapBuffer(const gl::Context *context)
@@ -103,7 +100,7 @@ angle::Result IndexBufferInterface::unmapBuffer(const gl::Context *context)
     return mIndexBuffer->unmapBuffer(context);
 }
 
-IndexBuffer * IndexBufferInterface::getIndexBuffer() const
+IndexBuffer *IndexBufferInterface::getIndexBuffer() const
 {
     return mIndexBuffer;
 }
@@ -125,7 +122,7 @@ angle::Result IndexBufferInterface::discard(const gl::Context *context)
 
 angle::Result IndexBufferInterface::setBufferSize(const gl::Context *context,
                                                   unsigned int bufferSize,
-                                                  GLenum indexType)
+                                                  gl::DrawElementsType indexType)
 {
     if (mIndexBuffer->getBufferSize() == 0)
     {
@@ -139,19 +136,16 @@ angle::Result IndexBufferInterface::setBufferSize(const gl::Context *context,
 
 StreamingIndexBufferInterface::StreamingIndexBufferInterface(BufferFactoryD3D *factory)
     : IndexBufferInterface(factory, true)
-{
-}
+{}
 
-StreamingIndexBufferInterface::~StreamingIndexBufferInterface()
-{
-}
+StreamingIndexBufferInterface::~StreamingIndexBufferInterface() {}
 
 angle::Result StreamingIndexBufferInterface::reserveBufferSpace(const gl::Context *context,
                                                                 unsigned int size,
-                                                                GLenum indexType)
+                                                                gl::DrawElementsType indexType)
 {
     unsigned int curBufferSize = getBufferSize();
-    unsigned int writePos = getWritePosition();
+    unsigned int writePos      = getWritePosition();
     if (size > curBufferSize)
     {
         ANGLE_TRY(setBufferSize(context, std::max(size, 2 * curBufferSize), indexType));
@@ -163,22 +157,18 @@ angle::Result StreamingIndexBufferInterface::reserveBufferSpace(const gl::Contex
         setWritePosition(0);
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
-
 
 StaticIndexBufferInterface::StaticIndexBufferInterface(BufferFactoryD3D *factory)
     : IndexBufferInterface(factory, false)
-{
-}
+{}
 
-StaticIndexBufferInterface::~StaticIndexBufferInterface()
-{
-}
+StaticIndexBufferInterface::~StaticIndexBufferInterface() {}
 
 angle::Result StaticIndexBufferInterface::reserveBufferSpace(const gl::Context *context,
                                                              unsigned int size,
-                                                             GLenum indexType)
+                                                             gl::DrawElementsType indexType)
 {
     unsigned int curSize = getBufferSize();
     if (curSize == 0)
@@ -187,7 +177,7 @@ angle::Result StaticIndexBufferInterface::reserveBufferSpace(const gl::Context *
     }
 
     ASSERT(curSize >= size && indexType == getIndexType());
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 }  // namespace rx

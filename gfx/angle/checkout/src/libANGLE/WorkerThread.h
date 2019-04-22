@@ -68,6 +68,8 @@ class WorkerThreadPool : angle::NonCopyable
     virtual std::shared_ptr<WaitableEvent> postWorkerTask(std::shared_ptr<Closure> task) = 0;
 
     virtual void setMaxThreads(size_t maxThreads) = 0;
+
+    virtual bool isAsync() = 0;
 };
 
 }  // namespace angle

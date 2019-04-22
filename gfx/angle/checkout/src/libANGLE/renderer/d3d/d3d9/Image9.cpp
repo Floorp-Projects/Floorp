@@ -31,7 +31,7 @@ Image9::Image9(Renderer9 *renderer)
     mSurface  = nullptr;
     mRenderer = nullptr;
 
-    mD3DPool = D3DPOOL_SYSTEMMEM;
+    mD3DPool   = D3DPOOL_SYSTEMMEM;
     mD3DFormat = D3DFMT_UNKNOWN;
 
     mRenderer = renderer;
@@ -88,7 +88,7 @@ angle::Result Image9::GenerateMip(Context9 *context9,
     destSurface->UnlockRect();
     sourceSurface->UnlockRect();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 // static
@@ -104,7 +104,7 @@ angle::Result Image9::GenerateMipmap(Context9 *context9, Image9 *dest, Image9 *s
 
     dest->markDirty();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 // static
@@ -113,7 +113,7 @@ angle::Result Image9::CopyLockableSurfaces(Context9 *context9,
                                            IDirect3DSurface9 *source)
 {
     D3DLOCKED_RECT sourceLock = {0};
-    D3DLOCKED_RECT destLock = {0};
+    D3DLOCKED_RECT destLock   = {0};
 
     HRESULT result;
 
@@ -133,21 +133,22 @@ angle::Result Image9::CopyLockableSurfaces(Context9 *context9,
     source->GetDesc(&desc);
 
     const d3d9::D3DFormat &d3dFormatInfo = d3d9::GetD3DFormatInfo(desc.Format);
-    unsigned int rows = desc.Height / d3dFormatInfo.blockHeight;
+    unsigned int rows                    = desc.Height / d3dFormatInfo.blockHeight;
 
     unsigned int bytes = d3d9::ComputeBlockSize(desc.Format, desc.Width, d3dFormatInfo.blockHeight);
     ASSERT(bytes <= static_cast<unsigned int>(sourceLock.Pitch) &&
            bytes <= static_cast<unsigned int>(destLock.Pitch));
 
-    for(unsigned int i = 0; i < rows; i++)
+    for (unsigned int i = 0; i < rows; i++)
     {
-        memcpy((char*)destLock.pBits + destLock.Pitch * i, (char*)sourceLock.pBits + sourceLock.Pitch * i, bytes);
+        memcpy((char *)destLock.pBits + destLock.Pitch * i,
+               (char *)sourceLock.pBits + sourceLock.Pitch * i, bytes);
     }
 
     source->UnlockRect();
     dest->UnlockRect();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 // static
@@ -203,17 +204,17 @@ angle::Result Image9::CopyImage(const gl::Context *context,
                         destOffset.y * destLocked.Pitch;
     ASSERT(sourceData && destData);
 
-    CopyImageCHROMIUM(sourceData, sourceLocked.Pitch, sourceD3DFormatInfo.pixelBytes,
+    CopyImageCHROMIUM(sourceData, sourceLocked.Pitch, sourceD3DFormatInfo.pixelBytes, 0,
                       sourceD3DFormatInfo.info().pixelReadFunction, destData, destLocked.Pitch,
-                      destD3DFormatInfo.pixelBytes, destD3DFormatInfo.info().pixelWriteFunction,
+                      destD3DFormatInfo.pixelBytes, 0, destD3DFormatInfo.info().pixelWriteFunction,
                       gl::GetUnsizedFormat(dest->getInternalFormat()),
                       destD3DFormatInfo.info().componentType, sourceRect.width, sourceRect.height,
-                      unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
+                      1, unpackFlipY, unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
 
     destSurface->UnlockRect();
     sourceSurface->UnlockRect();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 bool Image9::redefine(gl::TextureType type,
@@ -227,22 +228,19 @@ bool Image9::redefine(gl::TextureType type,
     // Only 2D and cube texture are supported by the D3D9 backend.
     ASSERT(type == gl::TextureType::_2D || type == gl::TextureType::CubeMap);
 
-    if (mWidth != size.width ||
-        mHeight != size.height ||
-        mDepth != size.depth ||
-        mInternalFormat != internalformat ||
-        forceRelease)
+    if (mWidth != size.width || mHeight != size.height || mDepth != size.depth ||
+        mInternalFormat != internalformat || forceRelease)
     {
-        mWidth = size.width;
-        mHeight = size.height;
-        mDepth = size.depth;
+        mWidth          = size.width;
+        mHeight         = size.height;
+        mDepth          = size.depth;
         mType           = type;
         mInternalFormat = internalformat;
 
         // compute the d3d format that will be used
         const d3d9::TextureFormat &d3d9FormatInfo = d3d9::GetTextureFormatInfo(internalformat);
-        mD3DFormat = d3d9FormatInfo.texFormat;
-        mRenderable = (d3d9FormatInfo.renderFormat != D3DFMT_UNKNOWN);
+        mD3DFormat                                = d3d9FormatInfo.texFormat;
+        mRenderable                               = (d3d9FormatInfo.renderFormat != D3DFMT_UNKNOWN);
 
         SafeRelease(mSurface);
         mDirty = (d3d9FormatInfo.dataInitializerFunction != nullptr);
@@ -257,18 +255,18 @@ angle::Result Image9::createSurface(Context9 *context9)
 {
     if (mSurface)
     {
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     IDirect3DTexture9 *newTexture = nullptr;
     IDirect3DSurface9 *newSurface = nullptr;
-    const D3DPOOL poolToUse = D3DPOOL_SYSTEMMEM;
-    const D3DFORMAT d3dFormat = getD3DFormat();
+    const D3DPOOL poolToUse       = D3DPOOL_SYSTEMMEM;
+    const D3DFORMAT d3dFormat     = getD3DFormat();
 
     if (mWidth != 0 && mHeight != 0)
     {
-        int levelToFetch = 0;
-        GLsizei requestWidth = mWidth;
+        int levelToFetch      = 0;
+        GLsizei requestWidth  = mWidth;
         GLsizei requestHeight = mHeight;
         d3d9::MakeValidSize(true, d3dFormat, &requestWidth, &requestHeight, &levelToFetch);
 
@@ -286,9 +284,9 @@ angle::Result Image9::createSurface(Context9 *context9)
         if (d3dFormatInfo.dataInitializerFunction != nullptr)
         {
             RECT entireRect;
-            entireRect.left = 0;
-            entireRect.right = mWidth;
-            entireRect.top = 0;
+            entireRect.left   = 0;
+            entireRect.right  = mWidth;
+            entireRect.top    = 0;
             entireRect.bottom = mHeight;
 
             D3DLOCKED_RECT lockedRect;
@@ -306,10 +304,10 @@ angle::Result Image9::createSurface(Context9 *context9)
     }
 
     mSurface = newSurface;
-    mDirty = false;
+    mDirty   = false;
     mD3DPool = poolToUse;
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Image9::lock(Context9 *context9, D3DLOCKED_RECT *lockedRect, const RECT &rect)
@@ -324,7 +322,7 @@ angle::Result Image9::lock(Context9 *context9, D3DLOCKED_RECT *lockedRect, const
         mDirty = true;
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 void Image9::unlock()
@@ -347,8 +345,8 @@ D3DFORMAT Image9::getD3DFormat() const
 
 bool Image9::isDirty() const
 {
-    // Make sure to that this image is marked as dirty even if the staging texture hasn't been created yet
-    // if initialization is required before use.
+    // Make sure to that this image is marked as dirty even if the staging texture hasn't been
+    // created yet if initialization is required before use.
     return (mSurface ||
             d3d9::GetTextureFormatInfo(mInternalFormat).dataInitializerFunction != nullptr) &&
            mDirty;
@@ -358,7 +356,7 @@ angle::Result Image9::getSurface(Context9 *context9, IDirect3DSurface9 **outSurf
 {
     ANGLE_TRY(createSurface(context9));
     *outSurface = mSurface;
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Image9::setManagedSurface2D(const gl::Context *context,
@@ -377,7 +375,7 @@ angle::Result Image9::setManagedSurfaceCube(const gl::Context *context,
                                             int level)
 {
     IDirect3DSurface9 *surface = nullptr;
-    TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
+    TextureStorage9 *storage9  = GetAs<TextureStorage9>(storage);
     ANGLE_TRY(storage9->getSurfaceLevel(context, gl::CubeFaceIndexToTextureTarget(face), level,
                                         false, &surface));
     return setManagedSurface(GetImplAs<Context9>(context), surface);
@@ -402,7 +400,7 @@ angle::Result Image9::setManagedSurface(Context9 *context9, IDirect3DSurface9 *s
         mD3DPool = desc.Pool;
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Image9::copyToStorage(const gl::Context *context,
@@ -412,7 +410,7 @@ angle::Result Image9::copyToStorage(const gl::Context *context,
 {
     ANGLE_TRY(createSurface(GetImplAs<Context9>(context)));
 
-    TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
+    TextureStorage9 *storage9      = GetAs<TextureStorage9>(storage);
     IDirect3DSurface9 *destSurface = nullptr;
     ANGLE_TRY(storage9->getSurfaceLevel(context, index.getTarget(), index.getLevelIndex(), true,
                                         &destSurface));
@@ -435,9 +433,9 @@ angle::Result Image9::copyToSurface(Context9 *context9,
     ASSERT(sourceSurface && sourceSurface != destSurface);
 
     RECT rect;
-    rect.left = area.x;
-    rect.top = area.y;
-    rect.right = area.x + area.width;
+    rect.left   = area.x;
+    rect.top    = area.y;
+    rect.right  = area.x + area.width;
     rect.bottom = area.y + area.height;
 
     POINT point = {rect.left, rect.top};
@@ -455,7 +453,7 @@ angle::Result Image9::copyToSurface(Context9 *context9,
         ANGLE_TRY_HR(context9, result, "Internal CreateOffscreenPlainSurface call failed");
 
         auto err = CopyLockableSurfaces(context9, surf, sourceSurface);
-        result = device->UpdateSurface(surf, &rect, destSurface, &point);
+        result   = device->UpdateSurface(surf, &rect, destSurface, &point);
         SafeRelease(surf);
         ANGLE_TRY(err);
         ASSERT(SUCCEEDED(result));
@@ -469,11 +467,11 @@ angle::Result Image9::copyToSurface(Context9 *context9,
         ANGLE_TRY_HR(context9, result, "Internal UpdateSurface call failed");
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
-// Store the pixel rectangle designated by xoffset,yoffset,width,height with pixels stored as format/type at input
-// into the target pixel rectangle.
+// Store the pixel rectangle designated by xoffset,yoffset,width,height with pixels stored as
+// format/type at input into the target pixel rectangle.
 angle::Result Image9::loadData(const gl::Context *context,
                                const gl::Box &area,
                                const gl::PixelUnpackState &unpack,
@@ -488,7 +486,7 @@ angle::Result Image9::loadData(const gl::Context *context,
 
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLuint inputRowPitch                 = 0;
-    ANGLE_CHECK_HR_MATH(context9, formatInfo.computeRowPitch(type, area.width, unpack.alignment,
+    ANGLE_CHECK_GL_MATH(context9, formatInfo.computeRowPitch(type, area.width, unpack.alignment,
                                                              unpack.rowLength, &inputRowPitch));
     ASSERT(!applySkipImages);
     ASSERT(unpack.skipPixels == 0);
@@ -497,11 +495,7 @@ angle::Result Image9::loadData(const gl::Context *context,
     const d3d9::TextureFormat &d3dFormatInfo = d3d9::GetTextureFormatInfo(mInternalFormat);
     ASSERT(d3dFormatInfo.loadFunction != nullptr);
 
-    RECT lockRect =
-    {
-        area.x, area.y,
-        area.x + area.width, area.y + area.height
-    };
+    RECT lockRect = {area.x, area.y, area.x + area.width, area.y + area.height};
 
     D3DLOCKED_RECT locked;
     ANGLE_TRY(lock(GetImplAs<Context9>(context), &locked, lockRect));
@@ -512,7 +506,7 @@ angle::Result Image9::loadData(const gl::Context *context,
 
     unlock();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Image9::loadCompressedData(const gl::Context *context,
@@ -526,11 +520,11 @@ angle::Result Image9::loadCompressedData(const gl::Context *context,
 
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLuint inputRowPitch                 = 0;
-    ANGLE_CHECK_HR_MATH(
+    ANGLE_CHECK_GL_MATH(
         context9, formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0, &inputRowPitch));
 
     GLuint inputDepthPitch = 0;
-    ANGLE_CHECK_HR_MATH(
+    ANGLE_CHECK_GL_MATH(
         context9, formatInfo.computeDepthPitch(area.height, 0, inputRowPitch, &inputDepthPitch));
 
     const d3d9::TextureFormat &d3d9FormatInfo = d3d9::GetTextureFormatInfo(mInternalFormat);
@@ -540,11 +534,7 @@ angle::Result Image9::loadCompressedData(const gl::Context *context,
 
     ASSERT(d3d9FormatInfo.loadFunction != nullptr);
 
-    RECT lockRect =
-    {
-        area.x, area.y,
-        area.x + area.width, area.y + area.height
-    };
+    RECT lockRect = {area.x, area.y, area.x + area.width, area.y + area.height};
 
     D3DLOCKED_RECT locked;
     ANGLE_TRY(lock(GetImplAs<Context9>(context), &locked, lockRect));
@@ -555,10 +545,11 @@ angle::Result Image9::loadCompressedData(const gl::Context *context,
 
     unlock();
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
-// This implements glCopyTex[Sub]Image2D for non-renderable internal texture formats and incomplete textures
+// This implements glCopyTex[Sub]Image2D for non-renderable internal texture formats and incomplete
+// textures
 angle::Result Image9::copyFromRTInternal(Context9 *context9,
                                          const gl::Offset &destOffset,
                                          const gl::Rectangle &sourceArea,
@@ -590,11 +581,11 @@ angle::Result Image9::copyFromRTInternal(Context9 *context9,
 
     ANGLE_TRY_HR(context9, hr, "GetRenderTargetData unexpectedly failed");
 
-    int width = sourceArea.width;
+    int width  = sourceArea.width;
     int height = sourceArea.height;
 
-    RECT sourceRect = { sourceArea.x, sourceArea.y, sourceArea.x + width, sourceArea.y + height };
-    RECT destRect = { destOffset.x, destOffset.y, destOffset.x + width, destOffset.y + height };
+    RECT sourceRect = {sourceArea.x, sourceArea.y, sourceArea.x + width, sourceArea.y + height};
+    RECT destRect   = {destOffset.x, destOffset.y, destOffset.x + width, destOffset.y + height};
 
     D3DLOCKED_RECT sourceLock = {0};
     hr                        = renderTargetData->LockRect(&sourceLock, &sourceRect, 0);
@@ -603,7 +594,7 @@ angle::Result Image9::copyFromRTInternal(Context9 *context9,
 
     D3DLOCKED_RECT destLock = {0};
     angle::Result result    = lock(context9, &destLock, destRect);
-    if (result == angle::Result::Stop())
+    if (result == angle::Result::Stop)
     {
         renderTargetData->UnlockRect();
     }
@@ -611,166 +602,166 @@ angle::Result Image9::copyFromRTInternal(Context9 *context9,
 
     ASSERT(destLock.pBits && sourceLock.pBits);
 
-    unsigned char *sourcePixels = (unsigned char*)sourceLock.pBits;
-    unsigned char *destPixels = (unsigned char*)destLock.pBits;
+    unsigned char *sourcePixels = (unsigned char *)sourceLock.pBits;
+    unsigned char *destPixels   = (unsigned char *)destLock.pBits;
 
     switch (description.Format)
     {
-      case D3DFMT_X8R8G8B8:
-      case D3DFMT_A8R8G8B8:
-        switch (getD3DFormat())
-        {
-          case D3DFMT_X8R8G8B8:
-          case D3DFMT_A8R8G8B8:
-            for (int y = 0; y < height; y++)
+        case D3DFMT_X8R8G8B8:
+        case D3DFMT_A8R8G8B8:
+            switch (getD3DFormat())
             {
-                memcpy(destPixels, sourcePixels, 4 * width);
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
+                case D3DFMT_X8R8G8B8:
+                case D3DFMT_A8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        memcpy(destPixels, sourcePixels, 4 * width);
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            destPixels[x] = sourcePixels[x * 4 + 2];
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_A8L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            destPixels[x * 2 + 0] = sourcePixels[x * 4 + 2];
+                            destPixels[x * 2 + 1] = sourcePixels[x * 4 + 3];
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                default:
+                    UNREACHABLE();
             }
             break;
-          case D3DFMT_L8:
-            for (int y = 0; y < height; y++)
+        case D3DFMT_R5G6B5:
+            switch (getD3DFormat())
             {
-                for (int x = 0; x < width; x++)
-                {
-                    destPixels[x] = sourcePixels[x * 4 + 2];
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
+                case D3DFMT_X8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned short rgb  = ((unsigned short *)sourcePixels)[x];
+                            unsigned char red   = static_cast<unsigned char>((rgb & 0xF800) >> 8);
+                            unsigned char green = static_cast<unsigned char>((rgb & 0x07E0) >> 3);
+                            unsigned char blue  = static_cast<unsigned char>((rgb & 0x001F) << 3);
+                            destPixels[x + 0]   = blue | (blue >> 5);
+                            destPixels[x + 1]   = green | (green >> 6);
+                            destPixels[x + 2]   = red | (red >> 5);
+                            destPixels[x + 3]   = 0xFF;
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned char red = sourcePixels[x * 2 + 1] & 0xF8;
+                            destPixels[x]     = red | (red >> 5);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                default:
+                    UNREACHABLE();
             }
             break;
-          case D3DFMT_A8L8:
-            for (int y = 0; y < height; y++)
+        case D3DFMT_A1R5G5B5:
+            switch (getD3DFormat())
             {
-                for (int x = 0; x < width; x++)
-                {
-                    destPixels[x * 2 + 0] = sourcePixels[x * 4 + 2];
-                    destPixels[x * 2 + 1] = sourcePixels[x * 4 + 3];
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
+                case D3DFMT_X8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned short argb = ((unsigned short *)sourcePixels)[x];
+                            unsigned char red   = static_cast<unsigned char>((argb & 0x7C00) >> 7);
+                            unsigned char green = static_cast<unsigned char>((argb & 0x03E0) >> 2);
+                            unsigned char blue  = static_cast<unsigned char>((argb & 0x001F) << 3);
+                            destPixels[x + 0]   = blue | (blue >> 5);
+                            destPixels[x + 1]   = green | (green >> 5);
+                            destPixels[x + 2]   = red | (red >> 5);
+                            destPixels[x + 3]   = 0xFF;
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_A8R8G8B8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned short argb = ((unsigned short *)sourcePixels)[x];
+                            unsigned char red   = static_cast<unsigned char>((argb & 0x7C00) >> 7);
+                            unsigned char green = static_cast<unsigned char>((argb & 0x03E0) >> 2);
+                            unsigned char blue  = static_cast<unsigned char>((argb & 0x001F) << 3);
+                            unsigned char alpha = (signed short)argb >> 15;
+                            destPixels[x + 0]   = blue | (blue >> 5);
+                            destPixels[x + 1]   = green | (green >> 5);
+                            destPixels[x + 2]   = red | (red >> 5);
+                            destPixels[x + 3]   = alpha;
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned char red = sourcePixels[x * 2 + 1] & 0x7C;
+                            destPixels[x]     = (red << 1) | (red >> 4);
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                case D3DFMT_A8L8:
+                    for (int y = 0; y < height; y++)
+                    {
+                        for (int x = 0; x < width; x++)
+                        {
+                            unsigned char red     = sourcePixels[x * 2 + 1] & 0x7C;
+                            destPixels[x * 2 + 0] = (red << 1) | (red >> 4);
+                            destPixels[x * 2 + 1] = (signed char)sourcePixels[x * 2 + 1] >> 7;
+                        }
+                        sourcePixels += sourceLock.Pitch;
+                        destPixels += destLock.Pitch;
+                    }
+                    break;
+                default:
+                    UNREACHABLE();
             }
             break;
-          default:
+        default:
             UNREACHABLE();
-        }
-        break;
-      case D3DFMT_R5G6B5:
-        switch (getD3DFormat())
-        {
-          case D3DFMT_X8R8G8B8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned short rgb = ((unsigned short*)sourcePixels)[x];
-                    unsigned char red = static_cast<unsigned char>((rgb & 0xF800) >> 8);
-                    unsigned char green = static_cast<unsigned char>((rgb & 0x07E0) >> 3);
-                    unsigned char blue = static_cast<unsigned char>((rgb & 0x001F) << 3);
-                    destPixels[x + 0] = blue | (blue >> 5);
-                    destPixels[x + 1] = green | (green >> 6);
-                    destPixels[x + 2] = red | (red >> 5);
-                    destPixels[x + 3] = 0xFF;
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          case D3DFMT_L8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned char red = sourcePixels[x * 2 + 1] & 0xF8;
-                    destPixels[x] = red | (red >> 5);
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          default:
-            UNREACHABLE();
-        }
-        break;
-      case D3DFMT_A1R5G5B5:
-        switch (getD3DFormat())
-        {
-          case D3DFMT_X8R8G8B8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned short argb = ((unsigned short*)sourcePixels)[x];
-                    unsigned char red = static_cast<unsigned char>((argb & 0x7C00) >> 7);
-                    unsigned char green = static_cast<unsigned char>((argb & 0x03E0) >> 2);
-                    unsigned char blue = static_cast<unsigned char>((argb & 0x001F) << 3);
-                    destPixels[x + 0] = blue | (blue >> 5);
-                    destPixels[x + 1] = green | (green >> 5);
-                    destPixels[x + 2] = red | (red >> 5);
-                    destPixels[x + 3] = 0xFF;
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          case D3DFMT_A8R8G8B8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned short argb = ((unsigned short*)sourcePixels)[x];
-                    unsigned char red = static_cast<unsigned char>((argb & 0x7C00) >> 7);
-                    unsigned char green = static_cast<unsigned char>((argb & 0x03E0) >> 2);
-                    unsigned char blue = static_cast<unsigned char>((argb & 0x001F) << 3);
-                    unsigned char alpha = (signed short)argb >> 15;
-                    destPixels[x + 0] = blue | (blue >> 5);
-                    destPixels[x + 1] = green | (green >> 5);
-                    destPixels[x + 2] = red | (red >> 5);
-                    destPixels[x + 3] = alpha;
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          case D3DFMT_L8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned char red = sourcePixels[x * 2 + 1] & 0x7C;
-                    destPixels[x] = (red << 1) | (red >> 4);
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          case D3DFMT_A8L8:
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    unsigned char red = sourcePixels[x * 2 + 1] & 0x7C;
-                    destPixels[x * 2 + 0] = (red << 1) | (red >> 4);
-                    destPixels[x * 2 + 1] = (signed char)sourcePixels[x * 2 + 1] >> 7;
-                }
-                sourcePixels += sourceLock.Pitch;
-                destPixels += destLock.Pitch;
-            }
-            break;
-          default:
-            UNREACHABLE();
-        }
-        break;
-      default:
-        UNREACHABLE();
     }
 
     unlock();
     renderTargetData->UnlockRect();
 
     mDirty = true;
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result Image9::copyFromTexStorage(const gl::Context *context,
@@ -793,7 +784,7 @@ angle::Result Image9::copyFromFramebuffer(const gl::Context *context,
     ASSERT(srcAttachment);
 
     RenderTargetD3D *renderTarget = nullptr;
-    ANGLE_TRY_HANDLE(context, srcAttachment->getRenderTarget(context, &renderTarget));
+    ANGLE_TRY(srcAttachment->getRenderTarget(context, &renderTarget));
     ASSERT(renderTarget);
     return copyFromRTInternal(GetImplAs<Context9>(context), destOffset, sourceArea, renderTarget);
 }

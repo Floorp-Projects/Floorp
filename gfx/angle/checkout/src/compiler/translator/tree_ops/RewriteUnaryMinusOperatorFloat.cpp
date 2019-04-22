@@ -43,9 +43,7 @@ void Traverser::Apply(TIntermNode *root)
     } while (traverser.mFound);
 }
 
-Traverser::Traverser() : TIntermTraverser(true, false, false)
-{
-}
+Traverser::Traverser() : TIntermTraverser(true, false, false) {}
 
 void Traverser::nextIteration()
 {

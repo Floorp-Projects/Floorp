@@ -11,8 +11,8 @@
 #include "common/mathutil.h"
 #include "common/utilities.h"
 #include "libANGLE/renderer/d3d/IndexBuffer.h"
-#include "libANGLE/renderer/d3d/VertexBuffer.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
+#include "libANGLE/renderer/d3d/VertexBuffer.h"
 
 namespace rx
 {
@@ -174,18 +174,18 @@ void BufferD3D::promoteStaticUsage(const gl::Context *context, size_t dataSize)
     }
 }
 
-gl::Error BufferD3D::getIndexRange(const gl::Context *context,
-                                   GLenum type,
-                                   size_t offset,
-                                   size_t count,
-                                   bool primitiveRestartEnabled,
-                                   gl::IndexRange *outRange)
+angle::Result BufferD3D::getIndexRange(const gl::Context *context,
+                                       gl::DrawElementsType type,
+                                       size_t offset,
+                                       size_t count,
+                                       bool primitiveRestartEnabled,
+                                       gl::IndexRange *outRange)
 {
     const uint8_t *data = nullptr;
     ANGLE_TRY(getData(context, &data));
 
     *outRange = gl::ComputeIndexRange(type, data + offset, count, primitiveRestartEnabled);
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 }  // namespace rx

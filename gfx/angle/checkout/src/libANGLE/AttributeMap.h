@@ -61,6 +61,6 @@ class AttributeMap final
   private:
     std::map<EGLAttrib, EGLAttrib> mAttributes;
 };
-}
+}  // namespace egl
 
 #endif  // LIBANGLE_ATTRIBUTEMAP_H_

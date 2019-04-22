@@ -6087,6 +6087,3 @@ pref("dom.datatransfer.mozAtAPIs", true);
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.
 pref("dom.sidebar.enabled", true);
-
-// Turn on fission frameloader swapping
-pref("fission.rebuild_frameloaders_on_remoteness_change", true);

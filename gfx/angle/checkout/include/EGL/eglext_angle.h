@@ -125,17 +125,17 @@ EGLAPI EGLBoolean EGLAPIENTRY eglStreamPostD3DTextureANGLE(EGLDisplay dpy, EGLSt
 
 #ifndef EGL_ANGLE_create_context_webgl_compatibility
 #define EGL_ANGLE_create_context_webgl_compatibility 1
-#define EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE 0x3AAC
+#define EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE 0x33AC
 #endif /* EGL_ANGLE_create_context_webgl_compatibility */
 
 #ifndef EGL_ANGLE_display_texture_share_group
 #define EGL_ANGLE_display_texture_share_group 1
-#define EGL_DISPLAY_TEXTURE_SHARE_GROUP_ANGLE 0x3AAF
+#define EGL_DISPLAY_TEXTURE_SHARE_GROUP_ANGLE 0x33AF
 #endif /* EGL_ANGLE_display_texture_share_group */
 
 #ifndef EGL_CHROMIUM_create_context_bind_generates_resource
 #define EGL_CHROMIUM_create_context_bind_generates_resource 1
-#define EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM 0x3AAD
+#define EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM 0x33AD
 #endif /* EGL_CHROMIUM_create_context_bind_generates_resource */
 
 #ifndef EGL_ANGLE_create_context_client_arrays
@@ -162,7 +162,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglReleaseDeviceANGLE(EGLDeviceEXT device);
 #define EGL_CONTEXT_PROGRAM_BINARY_CACHE_ENABLED_ANGLE 0x3459
 typedef EGLint (EGLAPIENTRYP PFNEGLPROGRAMCACHEGETATTRIBANGLEPROC) (EGLDisplay dpy, EGLenum attrib);
 typedef void (EGLAPIENTRYP PFNEGLPROGRAMCACHEQUERYANGLEPROC) (EGLDisplay dpy, EGLint index, void *key, EGLint *keysize, void *binary, EGLint *binarysize);
-typedef void (EGLAPIENTRYP PFNEGPROGRAMCACHELPOPULATEANGLEPROC) (EGLDisplay dpy, const void *key, EGLint keysize, const void *binary, EGLint binarysize);
+typedef void (EGLAPIENTRYP PFNEGLPROGRAMCACHEPOPULATEANGLEPROC) (EGLDisplay dpy, const void *key, EGLint keysize, const void *binary, EGLint binarysize);
 typedef EGLint (EGLAPIENTRYP PFNEGLPROGRAMCACHERESIZEANGLEPROC) (EGLDisplay dpy, EGLint limit, EGLenum mode);
 #ifdef EGL_EGLEXT_PROTOTYPES
 EGLAPI EGLint EGLAPIENTRY eglProgramCacheGetAttribANGLE(EGLDisplay dpy, EGLenum attrib);
@@ -186,10 +186,21 @@ EGLAPI EGLint EGLAPIENTRY eglProgramCacheResizeANGLE(EGLDisplay dpy, EGLint limi
 #define EGL_EXTENSIONS_ENABLED_ANGLE 0x345F
 #endif /* EGL_ANGLE_create_context_extensions_enabled */
 
-#ifndef EGL_MOZ_create_context_provoking_vertex_dont_care
-#define EGL_MOZ_create_context_provoking_vertex_dont_care 1
-#define EGL_CONTEXT_PROVOKING_VERTEX_DONT_CARE_MOZ 0x6000
-#endif /* EGL_MOZ_create_context_provoking_vertex_dont_care */
+#ifndef EGL_CHROMIUM_get_sync_values
+#define EGL_CHROMIUM_get_sync_values 1
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLGETSYNCVALUESCHROMIUMPROC) (EGLDisplay dpy,
+                                                             EGLSurface surface,
+                                                             EGLuint64KHR *ust,
+                                                             EGLuint64KHR *msc,
+                                                             EGLuint64KHR *sbc);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
+                                                             EGLSurface surface,
+                                                             EGLuint64KHR *ust,
+                                                             EGLuint64KHR *msc,
+                                                             EGLuint64KHR *sbc);
+#endif
+#endif /* EGL_CHROMIUM_get_sync_values */
 
 // clang-format on
 

@@ -12,9 +12,7 @@ namespace angle
 namespace pp
 {
 
-Lexer::~Lexer()
-{
-}
+Lexer::~Lexer() {}
 
 }  // namespace pp
 

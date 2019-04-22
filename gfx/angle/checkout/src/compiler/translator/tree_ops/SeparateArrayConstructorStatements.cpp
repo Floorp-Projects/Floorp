@@ -49,8 +49,7 @@ class SeparateArrayConstructorStatementsTraverser : public TIntermTraverser
 
 SeparateArrayConstructorStatementsTraverser::SeparateArrayConstructorStatementsTraverser()
     : TIntermTraverser(true, false, false)
-{
-}
+{}
 
 bool SeparateArrayConstructorStatementsTraverser::visitAggregate(Visit visit,
                                                                  TIntermAggregate *node)

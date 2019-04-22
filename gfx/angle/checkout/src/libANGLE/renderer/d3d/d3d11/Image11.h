@@ -46,7 +46,7 @@ class Image11 : public ImageD3D
     static angle::Result CopyImage(const gl::Context *context,
                                    Image11 *dest,
                                    Image11 *source,
-                                   const gl::Rectangle &sourceRect,
+                                   const gl::Box &sourceBox,
                                    const gl::Offset &destOffset,
                                    bool unpackFlipY,
                                    bool unpackPremultiplyAlpha,
@@ -122,4 +122,4 @@ class Image11 : public ImageD3D
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_IMAGE11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_IMAGE11_H_

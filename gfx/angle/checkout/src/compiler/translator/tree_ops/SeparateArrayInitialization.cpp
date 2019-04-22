@@ -44,9 +44,7 @@ void SeparateArrayInitTraverser::apply(TIntermNode *root)
     separateInit.updateTree();
 }
 
-SeparateArrayInitTraverser::SeparateArrayInitTraverser() : TIntermTraverser(true, false, false)
-{
-}
+SeparateArrayInitTraverser::SeparateArrayInitTraverser() : TIntermTraverser(true, false, false) {}
 
 bool SeparateArrayInitTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
 {

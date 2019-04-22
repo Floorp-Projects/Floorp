@@ -10,101 +10,6 @@
 
 #include <cstdarg>
 
-namespace gl
-{
-
-Error::Error(GLenum errorCode)
-    : mCode(errorCode),
-      mID(errorCode)
-{
-}
-
-Error::Error(const Error &other)
-    : mCode(other.mCode),
-      mID(other.mID)
-{
-    if (other.mMessage)
-    {
-        createMessageString();
-        *mMessage = *(other.mMessage);
-    }
-}
-
-Error::Error(Error &&other)
-    : mCode(other.mCode),
-      mID(other.mID),
-      mMessage(std::move(other.mMessage))
-{
-}
-
-// automatic error type conversion
-Error::Error(egl::Error &&eglErr)
-    : mCode(GL_INVALID_OPERATION),
-      mID(0),
-      mMessage(std::move(eglErr.mMessage))
-{
-}
-
-Error::Error(egl::Error eglErr)
-    : mCode(GL_INVALID_OPERATION),
-      mID(0),
-      mMessage(std::move(eglErr.mMessage))
-{
-}
-
-Error &Error::operator=(const Error &other)
-{
-    mCode = other.mCode;
-    mID = other.mID;
-
-    if (other.mMessage)
-    {
-        createMessageString();
-        *mMessage = *(other.mMessage);
-    }
-    else
-    {
-        mMessage.release();
-    }
-
-    return *this;
-}
-
-Error &Error::operator=(Error &&other)
-{
-    if (this != &other)
-    {
-        mCode = other.mCode;
-        mID = other.mID;
-        mMessage = std::move(other.mMessage);
-    }
-
-    return *this;
-}
-
-GLenum Error::getCode() const
-{
-    return mCode;
-}
-
-GLuint Error::getID() const
-{
-    return mID;
-}
-
-bool Error::isError() const
-{
-    return (mCode != GL_NO_ERROR);
-}
-
-// static
-Error Error::NoError()
-{
-    return Error(GL_NO_ERROR);
-}
-
-}  // namespace gl
-
 namespace egl
 {
 
@@ -129,21 +34,6 @@ Error::Error(Error &&other)
     : mCode(other.mCode),
       mID(other.mID),
       mMessage(std::move(other.mMessage))
-{
-}
-
-// automatic error type conversion
-Error::Error(gl::Error &&glErr)
-    : mCode(EGL_BAD_ACCESS),
-      mID(0),
-      mMessage(std::move(glErr.mMessage))
-{
-}
-
-Error::Error(const gl::Error &glErr)
-    : mCode(EGL_BAD_ACCESS),
-      mID(0),
-      mMessage(glErr.mMessage.get())
 {
 }
 

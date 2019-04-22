@@ -20,7 +20,7 @@ class Framebuffer;
 class Texture;
 struct Extents;
 struct Offset;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -156,6 +156,6 @@ class Blit9 : angle::NonCopyable
     IDirect3DSurface9 *mSavedRenderTarget;
     IDirect3DSurface9 *mSavedDepthStencil;
 };
-}
+}  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_D3D_D3D9_BLIT9_H_

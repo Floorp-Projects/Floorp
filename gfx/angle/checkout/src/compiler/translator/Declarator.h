@@ -19,7 +19,7 @@ namespace sh
 class TDeclarator : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TDeclarator(const ImmutableString &name, const TSourceLoc &line);
 
     TDeclarator(const ImmutableString &name,

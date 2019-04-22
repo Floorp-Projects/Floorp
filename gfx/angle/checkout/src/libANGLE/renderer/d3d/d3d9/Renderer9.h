@@ -103,7 +103,7 @@ class Renderer9 : public RendererD3D
                                    HANDLE shareHandle,
                                    const egl::AttributeMap &attribs) const override;
 
-    ContextImpl *createContext(const gl::ContextState &state) override;
+    ContextImpl *createContext(const gl::State &state, gl::ErrorSet *errorSet) override;
 
     angle::Result allocateEventQuery(const gl::Context *context, IDirect3DQuery9 **outQuery);
     void freeEventQuery(IDirect3DQuery9 *query);
@@ -159,7 +159,7 @@ class Renderer9 : public RendererD3D
                                    const void *indices,
                                    GLsizei count,
                                    gl::PrimitiveMode mode,
-                                   GLenum type,
+                                   gl::DrawElementsType type,
                                    TranslatedIndexData *indexInfo);
 
     void clear(const ClearParameters &clearParams,
@@ -224,7 +224,8 @@ class Renderer9 : public RendererD3D
     angle::Result copyTexture(const gl::Context *context,
                               const gl::Texture *source,
                               GLint sourceLevel,
-                              const gl::Rectangle &sourceRect,
+                              gl::TextureTarget srcTarget,
+                              const gl::Box &sourceBox,
                               GLenum destFormat,
                               GLenum destType,
                               const gl::Offset &destOffset,
@@ -252,14 +253,14 @@ class Renderer9 : public RendererD3D
                                          RenderTargetD3D **outRT) override;
 
     // Shader operations
-    angle::Result loadExecutable(const gl::Context *context,
+    angle::Result loadExecutable(d3d::Context *context,
                                  const uint8_t *function,
                                  size_t length,
                                  gl::ShaderType type,
                                  const std::vector<D3DVarying> &streamOutVaryings,
                                  bool separatedOutputBuffers,
                                  ShaderExecutableD3D **outExecutable) override;
-    angle::Result compileToExecutable(const gl::Context *context,
+    angle::Result compileToExecutable(d3d::Context *context,
                                       gl::InfoLog &infoLog,
                                       const std::string &shaderHLSL,
                                       gl::ShaderType type,
@@ -267,7 +268,7 @@ class Renderer9 : public RendererD3D
                                       bool separatedOutputBuffers,
                                       const angle::CompilerWorkaroundsD3D &workarounds,
                                       ShaderExecutableD3D **outExectuable) override;
-    angle::Result ensureHLSLCompilerInitialized(const gl::Context *context) override;
+    angle::Result ensureHLSLCompilerInitialized(d3d::Context *context) override;
 
     UniformStorageD3D *createUniformStorage(size_t storageSize) override;
 
@@ -282,7 +283,7 @@ class Renderer9 : public RendererD3D
     angle::Result copyImage(const gl::Context *context,
                             ImageD3D *dest,
                             ImageD3D *source,
-                            const gl::Rectangle &sourceRect,
+                            const gl::Box &sourceBox,
                             const gl::Offset &destOffset,
                             bool unpackFlipY,
                             bool unpackPremultiplyAlpha,
@@ -323,6 +324,13 @@ class Renderer9 : public RendererD3D
                                                       int levels,
                                                       int samples,
                                                       bool fixedSampleLocations) override;
+    TextureStorage *createTextureStorage2DMultisampleArray(GLenum internalformat,
+                                                           GLsizei width,
+                                                           GLsizei height,
+                                                           GLsizei depth,
+                                                           int levels,
+                                                           int samples,
+                                                           bool fixedSampleLocations) override;
 
     // Buffer creation
     VertexBuffer *createVertexBuffer() override;
@@ -348,9 +356,8 @@ class Renderer9 : public RendererD3D
     D3DPOOL getTexturePool(DWORD usage) const;
 
     bool getLUID(LUID *adapterLuid) const override;
-    VertexConversionType getVertexConversionType(
-        gl::VertexFormatType vertexFormatType) const override;
-    GLenum getVertexComponentType(gl::VertexFormatType vertexFormatType) const override;
+    VertexConversionType getVertexConversionType(angle::FormatID vertexFormatID) const override;
+    GLenum getVertexComponentType(angle::FormatID vertexFormatID) const override;
 
     // Warning: you should ensure binding really matches attrib.bindingIndex before using this
     // function.
@@ -383,7 +390,7 @@ class Renderer9 : public RendererD3D
     angle::Result genericDrawElements(const gl::Context *context,
                                       gl::PrimitiveMode mode,
                                       GLsizei count,
-                                      GLenum type,
+                                      gl::DrawElementsType type,
                                       const void *indices,
                                       GLsizei instances);
 
@@ -417,7 +424,7 @@ class Renderer9 : public RendererD3D
     angle::Result drawElementsImpl(const gl::Context *context,
                                    gl::PrimitiveMode mode,
                                    GLsizei count,
-                                   GLenum type,
+                                   gl::DrawElementsType type,
                                    const void *indices,
                                    GLsizei instances);
 
@@ -443,13 +450,13 @@ class Renderer9 : public RendererD3D
 
     angle::Result drawLineLoop(const gl::Context *context,
                                GLsizei count,
-                               GLenum type,
+                               gl::DrawElementsType type,
                                const void *indices,
                                int minIndex,
                                gl::Buffer *elementArrayBuffer);
     angle::Result drawIndexedPoints(const gl::Context *context,
                                     GLsizei count,
-                                    GLenum type,
+                                    gl::DrawElementsType type,
                                     const void *indices,
                                     int minIndex,
                                     gl::Buffer *elementArrayBuffer);

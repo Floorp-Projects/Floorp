@@ -196,13 +196,9 @@ const d3d11::Format &GetSurfaceFormatSet(bool depth, SwapChain11 *swapChain, Ren
 
 }  // anonymous namespace
 
-RenderTarget11::RenderTarget11(const d3d11::Format &formatSet) : mFormatSet(formatSet)
-{
-}
+RenderTarget11::RenderTarget11(const d3d11::Format &formatSet) : mFormatSet(formatSet) {}
 
-RenderTarget11::~RenderTarget11()
-{
-}
+RenderTarget11::~RenderTarget11() {}
 
 TextureRenderTarget11::TextureRenderTarget11(d3d11::RenderTargetView &&rtv,
                                              const TextureHelper11 &resource,
@@ -263,9 +259,7 @@ TextureRenderTarget11::TextureRenderTarget11(d3d11::DepthStencilView &&dsv,
     ASSERT(mFormatSet.formatID != angle::FormatID::NONE || mWidth == 0 || mHeight == 0);
 }
 
-TextureRenderTarget11::~TextureRenderTarget11()
-{
-}
+TextureRenderTarget11::~TextureRenderTarget11() {}
 
 const TextureHelper11 &TextureRenderTarget11::getTexture() const
 {
@@ -334,9 +328,7 @@ SurfaceRenderTarget11::SurfaceRenderTarget11(SwapChain11 *swapChain,
     ASSERT(mSwapChain);
 }
 
-SurfaceRenderTarget11::~SurfaceRenderTarget11()
-{
-}
+SurfaceRenderTarget11::~SurfaceRenderTarget11() {}
 
 GLsizei SurfaceRenderTarget11::getWidth() const
 {

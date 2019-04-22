@@ -2,31 +2,34 @@
 
 include('../../moz.build.common')
 
+#DEFINES['ANGLE_EGL_LIBRARY_NAME'] = '"libEGL"'
 DEFINES['ANGLE_ENABLE_DEBUG_ANNOTATIONS'] = True
+DEFINES['ANGLE_GLESV2_LIBRARY_NAME'] = '"libGLESv2"'
 #DEFINES['ANGLE_IS_64_BIT_CPU'] = True
+DEFINES['ANGLE_USE_EGL_LOADER'] = True
 #DEFINES['CERT_CHAIN_PARA_HAS_EXTRA_FIELDS'] = True
 #DEFINES['CHROMIUM_BUILD'] = True
 #DEFINES['COMPONENT_BUILD'] = True
 DEFINES['DYNAMIC_ANNOTATIONS_ENABLED'] = '1'
 DEFINES['EGLAPI'] = ''
 DEFINES['EGL_EGLEXT_PROTOTYPES'] = True
-#DEFINES['FIELDTRIAL_TESTING_ENABLED'] = True
+DEFINES['EGL_EGL_PROTOTYPES'] = '1'
 #DEFINES['FULL_SAFE_BROWSING'] = True
+DEFINES['GL_GLES_PROTOTYPES'] = '1'
 DEFINES['GL_GLEXT_PROTOTYPES'] = True
 DEFINES['LIBEGL_IMPLEMENTATION'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = '0x0A000002'
-#DEFINES['PSAPI_VERSION'] = '1'
+DEFINES['NTDDI_VERSION'] = '0x0A000003'
+#DEFINES['PSAPI_VERSION'] = '2'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
 DEFINES['UNICODE'] = True
 #DEFINES['USE_AURA'] = '1'
-#DEFINES['V8_DEPRECATION_WARNINGS'] = True
 #DEFINES['WIN32'] = True
 #DEFINES['WIN32_LEAN_AND_MEAN'] = True
 #DEFINES['WINAPI_FAMILY'] = 'WINAPI_FAMILY_DESKTOP_APP'
-#DEFINES['WINVER'] = '0x0A00'
+DEFINES['WINVER'] = '0x0A00'
 #DEFINES['WTF_USE_DYNAMIC_ANNOTATIONS'] = '1'
 DEFINES['_ATL_NO_OPENGL'] = True
 DEFINES['_CRT_RAND_S'] = True
@@ -116,8 +119,15 @@ LOCAL_INCLUDES += [
 #]
 
 SOURCES += [
+    '../../checkout/src/common/system_utils.cpp',
+    '../../checkout/src/libEGL/egl_loader_autogen.cpp',
     '../../checkout/src/libEGL/libEGL.cpp',
 ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        '../../checkout/src/common/system_utils_win.cpp',
+    ]
 
 USE_LIBS += [
     'libGLESv2',
@@ -140,7 +150,6 @@ OS_LIBS += [
     'odbccp32',
     'ole32',
     'oleaut32',
-    'psapi',
     'shell32',
     'shlwapi',
     'user32',

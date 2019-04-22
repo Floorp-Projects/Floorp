@@ -23,8 +23,7 @@ class SymbolFinder : public TIntermTraverser
   public:
     SymbolFinder(const ImmutableString &symbolName)
         : TIntermTraverser(true, false, false), mSymbolName(symbolName), mNodeFound(nullptr)
-    {
-    }
+    {}
 
     void visitSymbol(TIntermSymbol *node)
     {

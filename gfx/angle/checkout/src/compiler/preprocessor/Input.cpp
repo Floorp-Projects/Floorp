@@ -17,13 +17,9 @@ namespace angle
 namespace pp
 {
 
-Input::Input() : mCount(0), mString(0)
-{
-}
+Input::Input() : mCount(0), mString(0) {}
 
-Input::~Input()
-{
-}
+Input::~Input() {}
 
 Input::Input(size_t count, const char *const string[], const int length[])
     : mCount(count), mString(string)

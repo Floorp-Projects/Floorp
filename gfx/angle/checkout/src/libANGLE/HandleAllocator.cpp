@@ -19,10 +19,7 @@ namespace gl
 
 struct HandleAllocator::HandleRangeComparator
 {
-    bool operator()(const HandleRange &range, GLuint handle) const
-    {
-        return (range.end < handle);
-    }
+    bool operator()(const HandleRange &range, GLuint handle) const { return (range.end < handle); }
 };
 
 HandleAllocator::HandleAllocator() : mBaseValue(1), mNextValue(1), mLoggingEnabled(false)
@@ -36,9 +33,7 @@ HandleAllocator::HandleAllocator(GLuint maximumHandleValue)
     mUnallocatedList.push_back(HandleRange(1, maximumHandleValue));
 }
 
-HandleAllocator::~HandleAllocator()
-{
-}
+HandleAllocator::~HandleAllocator() {}
 
 void HandleAllocator::setBaseHandle(GLuint value)
 {
@@ -121,12 +116,13 @@ void HandleAllocator::reserve(GLuint handle)
     }
 
     // Not in released list, reserve in the unallocated list.
-    auto boundIt = std::lower_bound(mUnallocatedList.begin(), mUnallocatedList.end(), handle, HandleRangeComparator());
+    auto boundIt = std::lower_bound(mUnallocatedList.begin(), mUnallocatedList.end(), handle,
+                                    HandleRangeComparator());
 
     ASSERT(boundIt != mUnallocatedList.end());
 
     GLuint begin = boundIt->begin;
-    GLuint end = boundIt->end;
+    GLuint end   = boundIt->end;
 
     if (handle == begin || handle == end)
     {

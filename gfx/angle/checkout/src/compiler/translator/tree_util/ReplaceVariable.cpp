@@ -24,8 +24,7 @@ class ReplaceVariableTraverser : public TIntermTraverser
         : TIntermTraverser(true, false, false),
           mToBeReplaced(toBeReplaced),
           mReplacement(replacement)
-    {
-    }
+    {}
 
     void visitSymbol(TIntermSymbol *node) override
     {

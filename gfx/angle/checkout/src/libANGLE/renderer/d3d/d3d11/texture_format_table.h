@@ -32,17 +32,17 @@ namespace d3d11
 // DSVs given a GL internal format.
 struct Format final : private angle::NonCopyable
 {
-    constexpr Format();
-    constexpr Format(GLenum internalFormat,
-                     angle::FormatID formatID,
-                     DXGI_FORMAT texFormat,
-                     DXGI_FORMAT srvFormat,
-                     DXGI_FORMAT uavFormat,
-                     DXGI_FORMAT rtvFormat,
-                     DXGI_FORMAT dsvFormat,
-                     DXGI_FORMAT blitSRVFormat,
-                     GLenum swizzleFormat,
-                     InitializeTextureDataFunction internalFormatInitializer);
+    inline constexpr Format();
+    inline constexpr Format(GLenum internalFormat,
+                            angle::FormatID formatID,
+                            DXGI_FORMAT texFormat,
+                            DXGI_FORMAT srvFormat,
+                            DXGI_FORMAT uavFormat,
+                            DXGI_FORMAT rtvFormat,
+                            DXGI_FORMAT dsvFormat,
+                            DXGI_FORMAT blitSRVFormat,
+                            GLenum swizzleFormat,
+                            InitializeTextureDataFunction internalFormatInitializer);
 
     static const Format &Get(GLenum internalFormat, const Renderer11DeviceCaps &deviceCaps);
 
@@ -77,8 +77,7 @@ constexpr Format::Format()
       blitSRVFormat(DXGI_FORMAT_UNKNOWN),
       swizzleFormat(GL_NONE),
       dataInitializerFunction(nullptr)
-{
-}
+{}
 
 constexpr Format::Format(GLenum internalFormat,
                          angle::FormatID formatID,
@@ -100,8 +99,7 @@ constexpr Format::Format(GLenum internalFormat,
       blitSRVFormat(blitSRVFormat),
       swizzleFormat(swizzleFormat),
       dataInitializerFunction(internalFormatInitializer)
-{
-}
+{}
 
 }  // namespace d3d11
 
