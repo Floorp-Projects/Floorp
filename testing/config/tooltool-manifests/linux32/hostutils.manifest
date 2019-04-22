@@ -2,9 +2,9 @@
   {
     "algorithm": "sha512",
     "visibility": "public",
-    "filename": "host-utils-67.0a1.en-US.linux-i686.tar.gz",
+    "filename": "host-utils-68.0a1.en-US.linux-i686.tar.gz",
     "unpack": true,
-    "digest": "02fc064414404cc5463a475eca61d6efd5347164507f3365a5b36c5c002134d96e4161f5338805e8330ab7b4cd66accb851c9185d834c1272f707e5310a3e1b4",
-    "size": 79357848
+    "digest": "96c4d1588a2f5aabeed219146f01a4c7da4a93a6b9a1a5e15387173bf92d9b5014a4a73f75e3925f4db7fe278a7f665268660d43354ffc1c09431a93122206b8",
+    "size": 78395774
   }
 ]
