@@ -337,6 +337,39 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mPreferredColorScheme.set(scheme);
             return this;
         }
+
+        /**
+         * Set whether auto-zoom to editable fields should be enabled.
+         *
+         * @param flag True if auto-zoom should be enabled, false otherwise.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder inputAutoZoomEnabled(final boolean flag) {
+            getSettings().mInputAutoZoom.set(flag);
+            return this;
+        }
+
+        /**
+         * Set whether double tap zooming should be enabled.
+         *
+         * @param flag True if double tap zooming should be enabled, false otherwise.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder doubleTapZoomingEnabled(final boolean flag) {
+            getSettings().mDoubleTapZooming.set(flag);
+            return this;
+        }
+
+        /**
+         * Sets the WebGL MSAA level.
+         *
+         * @param level number of MSAA samples, 0 if MSAA should be disabled.
+         * @return This GeckoRuntimeSettings instance.
+         */
+        public @NonNull Builder glMsaaLevel(final int level) {
+            getSettings().mGlMsaaLevel.set(level);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -367,6 +400,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "font.size.inflation.minTwips", 0);
     /* package */ final Pref<Integer> mPreferredColorScheme = new Pref<>(
         "ui.systemUsesDarkTheme", -1);
+    /* package */ final Pref<Boolean> mInputAutoZoom = new Pref<>(
+            "formhelper.autozoom", true);
+    /* package */ final Pref<Boolean> mDoubleTapZooming = new Pref<>(
+            "apz.allow_double_tap_zooming", true);
+    /* package */ final Pref<Integer> mGlMsaaLevel = new Pref<>(
+            "gl.msaa-level", 0);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -831,6 +870,66 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @NonNull GeckoRuntimeSettings setPreferredColorScheme(final @ColorScheme int scheme) {
         mPreferredColorScheme.commit(scheme);
+        return this;
+    }
+
+    /**
+     * Gets whether auto-zoom to editable fields is enabled.
+     *
+     * @return True if auto-zoom is enabled, false otherwise.
+     */
+    public boolean getInputAutoZoomEnabled() {
+        return mInputAutoZoom.get();
+    }
+
+    /**
+     * Set whether auto-zoom to editable fields should be enabled.
+     *
+     * @param flag True if auto-zoom should be enabled, false otherwise.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setInputAutoZoomEnabled(final boolean flag) {
+        mInputAutoZoom.commit(flag);
+        return this;
+    }
+
+    /**
+     * Gets whether double-tap zooming is enabled.
+     *
+     * @return True if double-tap zooming is enabled, false otherwise.
+     */
+    public boolean getDoubleTapZoomingEnabled() {
+        return mDoubleTapZooming.get();
+    }
+
+    /**
+     * Sets whether double tap zooming is enabled.
+     *
+     * @param flag true if double tap zooming should be enabled, false otherwise.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setDoubleTapZoomingEnabled(final boolean flag) {
+        mDoubleTapZooming.commit(flag);
+        return this;
+    }
+
+    /**
+     * Gets the current WebGL MSAA level.
+     *
+     * @return number of MSAA samples, 0 if MSAA is disabled.
+     */
+    public int getGlMsaaLevel() {
+        return mGlMsaaLevel.get();
+    }
+
+    /**
+     * Sets the WebGL MSAA level.
+     *
+     * @param level number of MSAA samples, 0 if MSAA should be disabled.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setGlMsaaLevel(final int level) {
+        mGlMsaaLevel.commit(level);
         return this;
     }
 
