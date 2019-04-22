@@ -75,7 +75,8 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     return nsSVGDisplayContainerFrame::IsFrameOfType(
-        aFlags & ~eSupportsContainLayoutAndPaint);
+        aFlags &
+        ~(eSupportsContainLayoutAndPaint | eReplaced | eReplacedSizing));
   }
 
 #ifdef DEBUG_FRAME_DUMP
