@@ -59,6 +59,15 @@ typedef struct _nsCocoaWindowList {
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
 - (BOOL)drawsContentsIntoWindowFrame;
 
+// Two methods akin to contentRectForFrameRect and frameRectForContentRect,
+// which convert between the window's frame rect and the rect that our Gecko
+// ChildView would occupy. This is different because we make the window's
+// content view always cover the entire window; when drawsContentsIntoWindowFrame
+// is NO, the content view is larger than the ChildView because it includes the
+// titlebar whereas the ChildView does not.
+- (NSRect)childViewRectForFrameRect:(NSRect)aFrameRect;
+- (NSRect)frameRectForChildViewRect:(NSRect)aChildViewRect;
+
 - (void)mouseEntered:(NSEvent*)aEvent;
 - (void)mouseExited:(NSEvent*)aEvent;
 - (void)mouseMoved:(NSEvent*)aEvent;
@@ -232,6 +241,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  NSRect GetClientCocoaRect();
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   void ReportMoveEvent();
