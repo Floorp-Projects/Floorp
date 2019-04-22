@@ -50,12 +50,6 @@ namespace mozilla {
 using Compression::LZ4;
 using dom::ipc::StructuredCloneData;
 
-#ifdef XP_WIN
-#  define READ_BINARYMODE "rb"
-#else
-#  define READ_BINARYMODE "r"
-#endif
-
 AddonManagerStartup& AddonManagerStartup::GetSingleton() {
   static RefPtr<AddonManagerStartup> singleton;
   if (!singleton) {
