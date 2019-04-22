@@ -23,10 +23,6 @@ job-defaults:
                 default:
                     - web_platform_tests/prod_config.py
                     - remove_executables.py
-    target:
-        by-test-platform:
-            android-em-7.0-x86_64/opt: geckoview-androidTest.apk
-            default: null
 
 web-platform-tests:
     description: "Web platform test run"
@@ -34,7 +30,7 @@ web-platform-tests:
     treeherder-symbol: W(wpt)
     chunks:
         by-test-platform:
-            android.*: 18
+            android.*: 36
             linux.*/debug: 18
             macosx64.*/opt: 8
             macosx64/debug: 16
@@ -59,7 +55,6 @@ web-platform-tests:
             default: built-projects
     tier:
         by-test-platform:
-            android-em-7.0-x86_64/opt: 3
             android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
@@ -101,7 +96,10 @@ web-platform-tests-reftests:
     description: "Web platform reftest run"
     suite: web-platform-tests-reftests
     treeherder-symbol: W(Wr)
-    chunks: 6
+    chunks:
+        by-test-platform:
+            android.*: 12
+            default: 6
     e10s:
         by-test-platform:
             linux32/debug: both
@@ -113,7 +111,6 @@ web-platform-tests-reftests:
             default: built-projects
     tier:
         by-test-platform:
-            android-em-7.0-x86_64/opt: 3
             android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
