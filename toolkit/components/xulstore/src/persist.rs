@@ -69,7 +69,7 @@ fn observe_xpcom_shutdown() {
         let observer = XpcomShutdownObserver::new();
         unsafe {
             obs_svc
-                .AddObserver(observer.coerce(), c_str!("xpcom-shutdown").as_ptr(), false)
+                .AddObserver(observer.coerce(), cstr!("xpcom-shutdown").as_ptr(), false)
                 .to_result()?
         };
         Ok(())

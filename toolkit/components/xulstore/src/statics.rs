@@ -79,7 +79,7 @@ fn get_profile_dir() -> XULStoreResult<PathBuf> {
     unsafe {
         dir_svc
             .Get(
-                c_str!("ProfD").as_ptr(),
+                cstr!("ProfD").as_ptr(),
                 &nsIFile::IID,
                 profile_dir.void_ptr(),
             )
@@ -87,7 +87,7 @@ fn get_profile_dir() -> XULStoreResult<PathBuf> {
             .or_else(|_| {
                 dir_svc
                     .Get(
-                        c_str!("ProfDS").as_ptr(),
+                        cstr!("ProfDS").as_ptr(),
                         &nsIFile::IID,
                         profile_dir.void_ptr(),
                     )
@@ -131,7 +131,7 @@ fn observe_profile_change() {
             obs_svc
                 .AddObserver(
                     observer.coerce(),
-                    c_str!("profile-after-change").as_ptr(),
+                    cstr!("profile-after-change").as_ptr(),
                     false,
                 )
                 .to_result()?

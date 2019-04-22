@@ -4,6 +4,8 @@
 
 extern crate crossbeam_utils;
 #[macro_use]
+extern crate cstr;
+#[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
