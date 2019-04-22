@@ -1395,7 +1395,8 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
         table = aContext->Parent();
 
       if (table) {
-        nsIContent* parentContent = aContent->GetParentOrHostNode()->AsContent();
+        nsIContent* parentContent =
+            aContent->GetParentOrHostNode()->AsContent();
         nsIFrame* parentFrame = nullptr;
         if (parentContent) {
           parentFrame = parentContent->GetPrimaryFrame();

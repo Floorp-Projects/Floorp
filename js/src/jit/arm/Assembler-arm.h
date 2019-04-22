@@ -2321,7 +2321,8 @@ class AutoForbidPoolsAndNops : public AutoForbidNops {
   //
   // Allocation of pool entries is not supported within this content so the
   // code can not use large integers or float constants etc.
-  AutoForbidPoolsAndNops(Assembler* masm, size_t maxInst) : AutoForbidNops(masm) {
+  AutoForbidPoolsAndNops(Assembler* masm, size_t maxInst)
+      : AutoForbidNops(masm) {
     masm_->enterNoPool(maxInst);
   }
 

@@ -78,7 +78,7 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "VRManager.h"
-#endif    // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 #ifdef MOZ_XUL
 #  include "nsXULPopupManager.h"
@@ -1763,7 +1763,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     RunFrameRequestCallbacks(aNowTime);
     return;
   }
-#endif    // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
 

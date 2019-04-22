@@ -2824,8 +2824,8 @@ void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      this, aShowAccelerators, aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
+                                                        aShowFocusRings);
 }
 
 Element* nsPIDOMWindowOuter::GetFrameElementInternal() const {
@@ -6282,9 +6282,7 @@ void nsGlobalWindowOuter::ReallyCloseWindow() {
         // XXXbz now that we have mHavePendingClose, is this needed?
         bool isTab;
         if (rootWin == this || !bwin ||
-            (NS_SUCCEEDED(
-                 bwin->IsTabContentWindow(this, &isTab)) &&
-             isTab)) {
+            (NS_SUCCEEDED(bwin->IsTabContentWindow(this, &isTab)) && isTab)) {
           treeOwnerAsWin->Destroy();
         }
       }
@@ -6849,8 +6847,8 @@ void nsGlobalWindowOuter::SetKeyboardIndicators(
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      this, aShowAccelerators, aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
+                                                        aShowFocusRings);
 
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&

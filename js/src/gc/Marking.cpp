@@ -925,10 +925,10 @@ namespace {
 
 template <typename T>
 struct TraceKindCanBeGray {};
-#define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1)  \
-  template <>                                         \
-  struct TraceKindCanBeGray<type> {                   \
-    static const bool value = canBeGray;              \
+#define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1) \
+  template <>                                        \
+  struct TraceKindCanBeGray<type> {                  \
+    static const bool value = canBeGray;             \
   };
 JS_FOR_EACH_TRACEKIND(EXPAND_TRACEKIND_DEF)
 #undef EXPAND_TRACEKIND_DEF
@@ -1260,9 +1260,7 @@ void WasmFunctionScope::Data::trace(JSTracer* trc) {
 void Scope::traceChildren(JSTracer* trc) {
   TraceNullableEdge(trc, &enclosing_, "scope enclosing");
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
-  applyScopeDataTyped([trc](auto data) {
-                        data->trace(trc);
-                      });
+  applyScopeDataTyped([trc](auto data) { data->trace(trc); });
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {
@@ -3325,7 +3323,8 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
   template bool IsMarkedBlackInternal(JSRuntime* rt, type* thing); \
   template bool IsAboutToBeFinalizedInternal(type* thingp);
 
-#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, \
+                                                              _3)           \
   INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)

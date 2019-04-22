@@ -4695,7 +4695,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     // Flush constant pools: offset must reflect the distance from the MOV
     // to the start of the table; as the address of the MOV is given by the
     // label, nothing must come between the bind() and the ma_mov().
-    AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 5);
+    AutoForbidPoolsAndNops afp(&masm,
+                               /* number of instructions in scope = */ 5);
 
     ScratchI32 scratch(*this);
 
@@ -4728,7 +4729,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     masm.branchToComputedAddress(BaseIndex(scratch, switchValue, ScalePointer));
 #elif defined(JS_CODEGEN_ARM64)
-    AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 4);
+    AutoForbidPoolsAndNops afp(&masm,
+                               /* number of instructions in scope = */ 4);
 
     ScratchI32 scratch(*this);
 
