@@ -27,7 +27,8 @@ EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-
 
 EMULATOR_AUTH_FILE = os.path.join(os.path.expanduser('~'), '.emulator_console_auth_token')
 
-TOOLTOOL_URL = 'https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py'
+TOOLTOOL_URL = ('https://raw.githubusercontent.com/mozilla/release-services/'
+                'master/src/tooltool/client/tooltool.py')
 
 TRY_URL = 'https://hg.mozilla.org/try/raw-file/default'
 
