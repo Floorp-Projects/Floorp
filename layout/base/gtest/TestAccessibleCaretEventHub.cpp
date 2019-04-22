@@ -107,7 +107,7 @@ class AccessibleCaretEventHubTester : public ::testing::Test {
     auto event = MakeUnique<WidgetMouseEvent>(true, aMessage, nullptr,
                                               WidgetMouseEvent::eReal);
 
-    event->button = WidgetMouseEvent::eLeftButton;
+    event->mButton = MouseButton::eLeft;
     event->mRefPoint = LayoutDeviceIntPoint(aX, aY);
 
     return std::move(event);

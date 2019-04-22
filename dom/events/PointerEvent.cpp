@@ -31,7 +31,7 @@ PointerEvent::PointerEvent(EventTarget* aOwner, nsPresContext* aPresContext,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mouseEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
+    mouseEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
   }
   // 5.2 Pointer Event types, for all pointer events, |detail| attribute SHOULD
   // be 0.
@@ -92,14 +92,14 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
   widgetEvent->pointerId = aParam.mPointerId;
   widgetEvent->mWidth = aParam.mWidth;
   widgetEvent->mHeight = aParam.mHeight;
-  widgetEvent->pressure = aParam.mPressure;
+  widgetEvent->mPressure = aParam.mPressure;
   widgetEvent->tangentialPressure = aParam.mTangentialPressure;
   widgetEvent->tiltX = aParam.mTiltX;
   widgetEvent->tiltY = aParam.mTiltY;
   widgetEvent->twist = aParam.mTwist;
-  widgetEvent->inputSource = ConvertStringToPointerType(aParam.mPointerType);
+  widgetEvent->mInputSource = ConvertStringToPointerType(aParam.mPointerType);
   widgetEvent->mIsPrimary = aParam.mIsPrimary;
-  widgetEvent->buttons = aParam.mButtons;
+  widgetEvent->mButtons = aParam.mButtons;
 
   if (!aParam.mCoalescedEvents.IsEmpty()) {
     e->mCoalescedEvents.AppendElements(aParam.mCoalescedEvents);
@@ -140,7 +140,7 @@ void PointerEvent::GetPointerType(nsAString& aPointerType,
     return;
   }
 
-  ConvertPointerTypeToString(mEvent->AsPointerEvent()->inputSource,
+  ConvertPointerTypeToString(mEvent->AsPointerEvent()->mInputSource,
                              aPointerType);
 }
 
@@ -165,7 +165,7 @@ int32_t PointerEvent::Height(CallerType aCallerType) {
 float PointerEvent::Pressure(CallerType aCallerType) {
   if (mEvent->mMessage == ePointerUp ||
       !ShouldResistFingerprinting(aCallerType)) {
-    return mEvent->AsPointerEvent()->pressure;
+    return mEvent->AsPointerEvent()->mPressure;
   }
 
   // According to [1], we should use 0.5 when it is in active buttons state and
@@ -174,7 +174,7 @@ float PointerEvent::Pressure(CallerType aCallerType) {
   //
   // [1] https://www.w3.org/TR/pointerevents/#dom-pointerevent-pressure
   float spoofedPressure = 0.0;
-  if (mEvent->AsPointerEvent()->buttons) {
+  if (mEvent->AsPointerEvent()->mButtons) {
     spoofedPressure = 0.5;
   }
 
@@ -261,7 +261,7 @@ bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   //  dispatched to the system group.
   if (!mEvent->IsTrusted() || aCallerType == CallerType::System ||
       !nsContentUtils::ShouldResistFingerprinting() ||
-      mEvent->AsPointerEvent()->inputSource ==
+      mEvent->AsPointerEvent()->mInputSource ==
           MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
     return false;
   }

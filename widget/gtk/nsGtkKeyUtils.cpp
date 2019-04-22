@@ -1050,29 +1050,28 @@ void KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
   }
 
   WidgetMouseEventBase& mouseEvent = *aInputEvent.AsMouseEventBase();
-  mouseEvent.buttons = 0;
+  mouseEvent.mButtons = 0;
   if (aModifierState & GDK_BUTTON1_MASK) {
-    mouseEvent.buttons |= WidgetMouseEvent::eLeftButtonFlag;
+    mouseEvent.mButtons |= MouseButtonsFlag::eLeftFlag;
   }
   if (aModifierState & GDK_BUTTON3_MASK) {
-    mouseEvent.buttons |= WidgetMouseEvent::eRightButtonFlag;
+    mouseEvent.mButtons |= MouseButtonsFlag::eRightFlag;
   }
   if (aModifierState & GDK_BUTTON2_MASK) {
-    mouseEvent.buttons |= WidgetMouseEvent::eMiddleButtonFlag;
+    mouseEvent.mButtons |= MouseButtonsFlag::eMiddleFlag;
   }
 
   if (doLog) {
-    MOZ_LOG(
-        gKeymapWrapperLog, LogLevel::Debug,
-        ("%p InitInputEvent, aInputEvent has buttons, "
-         "aInputEvent.buttons=0x%04X (Left: %s, Right: %s, Middle: %s, "
-         "4th (BACK): %s, 5th (FORWARD): %s)",
-         keymapWrapper, mouseEvent.buttons,
-         GetBoolName(mouseEvent.buttons & WidgetMouseEvent::eLeftButtonFlag),
-         GetBoolName(mouseEvent.buttons & WidgetMouseEvent::eRightButtonFlag),
-         GetBoolName(mouseEvent.buttons & WidgetMouseEvent::eMiddleButtonFlag),
-         GetBoolName(mouseEvent.buttons & WidgetMouseEvent::e4thButtonFlag),
-         GetBoolName(mouseEvent.buttons & WidgetMouseEvent::e5thButtonFlag)));
+    MOZ_LOG(gKeymapWrapperLog, LogLevel::Debug,
+            ("%p InitInputEvent, aInputEvent has mButtons, "
+             "aInputEvent.mButtons=0x%04X (Left: %s, Right: %s, Middle: %s, "
+             "4th (BACK): %s, 5th (FORWARD): %s)",
+             keymapWrapper, mouseEvent.mButtons,
+             GetBoolName(mouseEvent.mButtons & MouseButtonsFlag::eLeftFlag),
+             GetBoolName(mouseEvent.mButtons & MouseButtonsFlag::eRightFlag),
+             GetBoolName(mouseEvent.mButtons & MouseButtonsFlag::eMiddleFlag),
+             GetBoolName(mouseEvent.mButtons & MouseButtonsFlag::e4thFlag),
+             GetBoolName(mouseEvent.mButtons & MouseButtonsFlag::e5thFlag)));
   }
 }
 

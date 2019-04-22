@@ -123,9 +123,9 @@ void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
   event.mRefPoint = LayoutDeviceIntPoint(aX, aY);
 
   event.mClickCount = 1;
-  event.button = WidgetMouseEvent::eLeftButton;
+  event.mButton = MouseButton::eLeft;
   event.mTime = PR_IntervalNow();
-  event.inputSource = dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
+  event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   aPresShell->HandleEventWithTarget(&event, aFrame, aContent, &status);

@@ -4012,8 +4012,8 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           // cancel all of these events for buttons
           // XXXsmaug Why?
           WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-          if (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
-              mouseEvent->button == WidgetMouseEvent::eRightButton) {
+          if (mouseEvent->mButton == MouseButton::eMiddle ||
+              mouseEvent->mButton == MouseButton::eRight) {
             if (mType == NS_FORM_INPUT_BUTTON || mType == NS_FORM_INPUT_RESET ||
                 mType == NS_FORM_INPUT_SUBMIT) {
               if (aVisitor.mDOMEvent) {
@@ -4024,7 +4024,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             }
           }
           if (mType == NS_FORM_INPUT_NUMBER && aVisitor.mEvent->IsTrusted()) {
-            if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
+            if (mouseEvent->mButton == MouseButton::eLeft &&
                 !IgnoreInputEventWithModifier(mouseEvent, false)) {
               nsNumberControlFrame* numberControlFrame =
                   do_QueryFrame(GetPrimaryFrame());
@@ -4191,8 +4191,8 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
         break;  // ignore
       }
       if (aVisitor.mEvent->mMessage == eMouseDown) {
-        if (aVisitor.mEvent->AsMouseEvent()->buttons ==
-            WidgetMouseEvent::eLeftButtonFlag) {
+        if (aVisitor.mEvent->AsMouseEvent()->mButtons ==
+            MouseButtonsFlag::eLeftFlag) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();

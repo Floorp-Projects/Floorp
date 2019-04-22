@@ -1,0 +1,26 @@
+[package]
+name = "xulstore"
+version = "0.1.0"
+authors = ["nobody@mozilla.org"]
+license = "MPL-2.0"
+
+[dependencies]
+crossbeam-utils = "0.6.3"
+cstr = "0.1"
+lazy_static = "1.0"
+libc = "0.2"
+lmdb-rkv = "0.11.2"
+log = "0.4"
+moz_task = { path = "../../../xpcom/rust/moz_task" }
+nsstring = { path = "../../../xpcom/rust/nsstring" }
+nserror = { path = "../../../xpcom/rust/nserror" }
+rkv = "0.9.3"
+serde_json = "1"
+xpcom = { path = "../../../xpcom/rust/xpcom" }
+
+# Get rid of failure's dependency on backtrace. Eventually
+# backtrace will move into Rust core, but we don't need it here.
+[dependencies.failure]
+version = "0.1"
+default_features = false
+features = ["derive"]

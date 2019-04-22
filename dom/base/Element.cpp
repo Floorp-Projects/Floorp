@@ -2203,17 +2203,17 @@ nsresult Element::DispatchClickEvent(nsPresContext* aPresContext,
   WidgetMouseEvent* sourceMouseEvent = aSourceEvent->AsMouseEvent();
   if (sourceMouseEvent) {
     clickCount = sourceMouseEvent->mClickCount;
-    pressure = sourceMouseEvent->pressure;
+    pressure = sourceMouseEvent->mPressure;
     pointerId = sourceMouseEvent->pointerId;
-    inputSource = sourceMouseEvent->inputSource;
+    inputSource = sourceMouseEvent->mInputSource;
   } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     event.mFlags.mIsPositionless = true;
     inputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   }
-  event.pressure = pressure;
+  event.mPressure = pressure;
   event.mClickCount = clickCount;
   event.pointerId = pointerId;
-  event.inputSource = inputSource;
+  event.mInputSource = inputSource;
   event.mModifiers = aSourceEvent->mModifiers;
   if (aExtraEventFlags) {
     // Be careful not to overwrite existing flags!
@@ -3097,8 +3097,7 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown: {
-      if (aVisitor.mEvent->AsMouseEvent()->button ==
-          WidgetMouseEvent::eLeftButton) {
+      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler* handler = aVisitor.mPresContext->GetLinkHandler();
         Document* document = GetComposedDoc();

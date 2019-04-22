@@ -92,17 +92,19 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent) {
     case eMouseEnterIntoWidget:
       // In this case we have to know information about available mouse pointers
       sActivePointersIds->Put(
-          aEvent->pointerId, new PointerInfo(false, aEvent->inputSource, true));
+          aEvent->pointerId,
+          new PointerInfo(false, aEvent->mInputSource, true));
 
-      MaybeCacheSpoofedPointerID(aEvent->inputSource, aEvent->pointerId);
+      MaybeCacheSpoofedPointerID(aEvent->mInputSource, aEvent->pointerId);
       break;
     case ePointerDown:
       // In this case we switch pointer to active state
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
-        sActivePointersIds->Put(pointerEvent->pointerId,
-                                new PointerInfo(true, pointerEvent->inputSource,
-                                                pointerEvent->mIsPrimary));
-        MaybeCacheSpoofedPointerID(pointerEvent->inputSource,
+        sActivePointersIds->Put(
+            pointerEvent->pointerId,
+            new PointerInfo(true, pointerEvent->mInputSource,
+                            pointerEvent->mIsPrimary));
+        MaybeCacheSpoofedPointerID(pointerEvent->mInputSource,
                                    pointerEvent->pointerId);
       }
       break;
@@ -114,10 +116,11 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent) {
       // In this case we remove information about pointer or turn off active
       // state
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
-        if (pointerEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+        if (pointerEvent->mInputSource !=
+            MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
           sActivePointersIds->Put(
               pointerEvent->pointerId,
-              new PointerInfo(false, pointerEvent->inputSource,
+              new PointerInfo(false, pointerEvent->mInputSource,
                               pointerEvent->mIsPrimary));
         } else {
           sActivePointersIds->Remove(pointerEvent->pointerId);
@@ -311,7 +314,7 @@ void PointerEventHandler::ImplicitlyCapturePointer(nsIFrame* aFrame,
   WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
   NS_WARNING_ASSERTION(pointerEvent,
                        "Call ImplicitlyCapturePointer with non-pointer event");
-  if (pointerEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+  if (pointerEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
     // We only implicitly capture the pointer for touch device.
     return;
   }
@@ -440,16 +443,16 @@ void PointerEventHandler::InitPointerEventFromMouse(
   MOZ_ASSERT(aPointerEvent);
   MOZ_ASSERT(aMouseEvent);
   aPointerEvent->pointerId = aMouseEvent->pointerId;
-  aPointerEvent->inputSource = aMouseEvent->inputSource;
+  aPointerEvent->mInputSource = aMouseEvent->mInputSource;
   aPointerEvent->mMessage = aMessage;
-  aPointerEvent->button = aMouseEvent->mMessage == eMouseMove
-                              ? WidgetMouseEvent::eNoButton
-                              : aMouseEvent->button;
+  aPointerEvent->mButton = aMouseEvent->mMessage == eMouseMove
+                               ? MouseButton::eNotPressed
+                               : aMouseEvent->mButton;
 
-  aPointerEvent->buttons = aMouseEvent->buttons;
-  aPointerEvent->pressure =
-      aPointerEvent->buttons
-          ? aMouseEvent->pressure ? aMouseEvent->pressure : 0.5f
+  aPointerEvent->mButtons = aMouseEvent->mButtons;
+  aPointerEvent->mPressure =
+      aPointerEvent->mButtons
+          ? aMouseEvent->mPressure ? aMouseEvent->mPressure : 0.5f
           : 0.0f;
 }
 
@@ -461,12 +464,12 @@ void PointerEventHandler::InitPointerEventFromTouch(
   MOZ_ASSERT(aTouchEvent);
 
   int16_t button = aTouchEvent->mMessage == eTouchMove
-                       ? WidgetMouseEvent::eNoButton
-                       : WidgetMouseEvent::eLeftButton;
+                       ? MouseButton::eNotPressed
+                       : MouseButton::eLeft;
 
   int16_t buttons = aTouchEvent->mMessage == eTouchEnd
-                        ? WidgetMouseEvent::eNoButtonFlag
-                        : WidgetMouseEvent::eLeftButtonFlag;
+                        ? MouseButtonsFlag::eNoButtons
+                        : MouseButtonsFlag::eLeftFlag;
 
   aPointerEvent->mIsPrimary = aIsPrimary;
   aPointerEvent->pointerId = aTouch->Identifier();
@@ -479,9 +482,9 @@ void PointerEventHandler::InitPointerEventFromTouch(
   aPointerEvent->mTime = aTouchEvent->mTime;
   aPointerEvent->mTimeStamp = aTouchEvent->mTimeStamp;
   aPointerEvent->mFlags = aTouchEvent->mFlags;
-  aPointerEvent->button = button;
-  aPointerEvent->buttons = buttons;
-  aPointerEvent->inputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+  aPointerEvent->mButton = button;
+  aPointerEvent->mButtons = buttons;
+  aPointerEvent->mInputSource = MouseEvent_Binding::MOZ_SOURCE_TOUCH;
 }
 
 /* static */
@@ -503,18 +506,18 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         !aEvent->IsAllowedToDispatchDOMEvent()) {
       return;
     }
-    int16_t button = mouseEvent->button;
+    int16_t button = mouseEvent->mButton;
     switch (mouseEvent->mMessage) {
       case eMouseMove:
-        button = WidgetMouseEvent::eNoButton;
+        button = MouseButton::eNotPressed;
         pointerMessage = ePointerMove;
         break;
       case eMouseUp:
-        pointerMessage = mouseEvent->buttons ? ePointerMove : ePointerUp;
+        pointerMessage = mouseEvent->mButtons ? ePointerMove : ePointerUp;
         break;
       case eMouseDown:
         pointerMessage =
-            mouseEvent->buttons &
+            mouseEvent->mButtons &
                     ~nsContentUtils::GetButtonsFlagForButton(button)
                 ? ePointerMove
                 : ePointerDown;
@@ -639,7 +642,7 @@ void PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
     init.mPointerId = aPointerEvent->pointerId;
     init.mBubbles = true;
     init.mComposed = true;
-    ConvertPointerTypeToString(aPointerEvent->inputSource, init.mPointerType);
+    ConvertPointerTypeToString(aPointerEvent->mInputSource, init.mPointerType);
     init.mIsPrimary = aPointerEvent->mIsPrimary;
     RefPtr<PointerEvent> event;
     event = PointerEvent::Constructor(
