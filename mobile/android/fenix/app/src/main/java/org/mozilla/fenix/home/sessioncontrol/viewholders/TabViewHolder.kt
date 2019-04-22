@@ -56,7 +56,7 @@ class TabViewHolder(
         }
 
         close_tab_button?.run {
-            increaseTapArea(closeButtonIncreaseDps)
+            increaseTapArea(buttonIncreaseDps)
             setOnClickListener {
                 actionEmitter.onNext(TabAction.Close(tab?.sessionId!!))
             }
@@ -75,10 +75,13 @@ class TabViewHolder(
             }
         }
 
-        tab_overflow_button.setOnClickListener {
-            tabMenu.menuBuilder
-                .build(view.context)
-                .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+        tab_overflow_button.run {
+            increaseTapArea(buttonIncreaseDps)
+            setOnClickListener {
+                tabMenu.menuBuilder
+                    .build(view.context)
+                    .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+            }
         }
     }
 
@@ -106,7 +109,7 @@ class TabViewHolder(
 
     companion object {
         const val LAYOUT_ID = R.layout.tab_list_row
-        const val closeButtonIncreaseDps = 12
+        const val buttonIncreaseDps = 12
         const val favIconBorderRadiusInPx = 8
     }
 }
