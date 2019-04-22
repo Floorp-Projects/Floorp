@@ -43,4 +43,12 @@ public abstract class TokensAndKeysState extends State {
   public Action getNeededAction() {
     return Action.None;
   }
+
+  public byte[] getKSync() {
+    return kSync;
+  }
+
+  public String getKXCS() {
+    return kXCS;
+  }
 }
