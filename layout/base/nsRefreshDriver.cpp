@@ -1784,13 +1784,13 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // before stopping the timer.
     // On top level content pages keep the timer running initially so that we
     // paint the page soon enough.
-    if (!XRE_IsContentProcess() || !presShell || mTestControllingRefreshes ||
-        !mPresContext->Document()->IsTopLevelContentDocument() || mThrottled ||
-        gfxPlatform::IsInLayoutAsapMode()) {
-      StopTimer();
-    } else if (mPresContext->Document()->GetReadyStateEnum() <
-                   Document::READYSTATE_COMPLETE &&
-               !mPresContext->HadContentfulPaint()) {
+    if (presShell && !mThrottled && !mTestControllingRefreshes &&
+        XRE_IsContentProcess() &&
+        mPresContext->Document()->IsTopLevelContentDocument() &&
+        !gfxPlatform::IsInLayoutAsapMode() &&
+        !mPresContext->HadContentfulPaint() &&
+        mPresContext->Document()->GetReadyStateEnum() <
+            Document::READYSTATE_COMPLETE) {
       if (mInitialTimerRunningLimit.IsNull()) {
         mInitialTimerRunningLimit =
             TimeStamp::Now() + TimeDuration::FromSeconds(4.0f);
@@ -1798,6 +1798,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       } else if (mInitialTimerRunningLimit < TimeStamp::Now()) {
         StopTimer();
       }
+    } else {
+      StopTimer();
     }
     return;
   }
