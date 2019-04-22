@@ -164,8 +164,7 @@ open class FenixApplication : Application() {
         return try {
             val megazordClass = Class.forName("mozilla.appservices.FenixMegazord")
             val megazordInitMethod = megazordClass.getDeclaredMethod("init", Lazy::class.java)
-            // https://github.com/mozilla-mobile/android-components/issues/2715
-            val client: Lazy<Client> = lazy { HttpURLConnectionClient() }
+            val client: Lazy<Client> = lazy { components.core.client }
             megazordInitMethod.invoke(megazordClass, client)
             true
         } catch (e: ClassNotFoundException) {
