@@ -1,11 +1,10 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/create_collection_wrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/create_collection_background"
+    android:fitsSystemWindows="true"
     tools:context="org.mozilla.fenix.collections.CreateCollectionFragment">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
 </FrameLayout>
