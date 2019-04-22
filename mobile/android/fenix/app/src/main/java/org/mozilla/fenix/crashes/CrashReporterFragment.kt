@@ -33,7 +33,7 @@ class CrashReporterFragment : Fragment() {
         val crash = Crash.fromIntent(CrashReporterFragmentArgs.fromBundle(arguments!!).crashIntent)
 
         view.findViewById<TextView>(R.id.title).text =
-            getString(R.string.tab_crash_title, context!!.getString(R.string.app_name))
+            getString(R.string.tab_crash_title_2, context!!.getString(R.string.app_name))
 
         requireContext().components.analytics.metrics.track(Event.CrashReporterOpened)
 
@@ -75,7 +75,6 @@ class CrashReporterFragment : Fragment() {
     }
 
     private fun navigateHome(fromView: View) {
-        val directions = CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
-        Navigation.findNavController(fromView).navigate(directions)
+        Navigation.findNavController(fromView).popBackStack(R.id.browserFragment, true)
     }
 }
