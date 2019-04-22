@@ -19,7 +19,7 @@
 #include "libANGLE/renderer/DeviceImpl.h"
 
 #if defined(ANGLE_ENABLE_D3D11)
-#include "libANGLE/renderer/d3d/DeviceD3D.h"
+#    include "libANGLE/renderer/d3d/DeviceD3D.h"
 #endif
 
 namespace egl
@@ -128,4 +128,4 @@ const std::string &Device::getExtensionString() const
 {
     return mDeviceExtensionString;
 }
-}
+}  // namespace egl

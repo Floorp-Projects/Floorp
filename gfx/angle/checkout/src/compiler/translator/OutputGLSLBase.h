@@ -42,7 +42,7 @@ class TOutputGLSLBase : public TIntermTraverser
     void writeTriplet(Visit visit, const char *preStr, const char *inStr, const char *postStr);
     virtual void writeLayoutQualifier(TIntermTyped *variable);
     void writeInvariantQualifier(const TType &type);
-    void writeVariableType(const TType &type, const TSymbol *symbol);
+    virtual void writeVariableType(const TType &type, const TSymbol *symbol);
     virtual bool writeVariablePrecision(TPrecision precision) = 0;
     void writeFunctionParameters(const TFunction *func);
     const TConstantUnion *writeConstantUnion(const TType &type, const TConstantUnion *pConstUnion);
@@ -81,7 +81,6 @@ class TOutputGLSLBase : public TIntermTraverser
     bool structDeclared(const TStructure *structure) const;
 
   private:
-
     void declareInterfaceBlockLayout(const TInterfaceBlock *interfaceBlock);
     void declareInterfaceBlock(const TInterfaceBlock *interfaceBlock);
 

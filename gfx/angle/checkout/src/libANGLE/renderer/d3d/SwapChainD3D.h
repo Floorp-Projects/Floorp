@@ -10,16 +10,16 @@
 #ifndef LIBANGLE_RENDERER_D3D_SWAPCHAIND3D_H_
 #define LIBANGLE_RENDERER_D3D_SWAPCHAIND3D_H_
 
-#include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <GLES2/gl2.h>
 
 #include "common/angleutils.h"
 #include "common/platform.h"
 #include "libANGLE/Error.h"
 
 #if !defined(ANGLE_FORCE_VSYNC_OFF)
-#define ANGLE_FORCE_VSYNC_OFF 0
+#    define ANGLE_FORCE_VSYNC_OFF 0
 #endif
 
 namespace gl
@@ -58,9 +58,9 @@ class SwapChainD3D : angle::NonCopyable
                             EGLint y,
                             EGLint width,
                             EGLint height)       = 0;
-    virtual void recreate() = 0;
+    virtual void recreate()                      = 0;
 
-    virtual RenderTargetD3D *getColorRenderTarget() = 0;
+    virtual RenderTargetD3D *getColorRenderTarget()        = 0;
     virtual RenderTargetD3D *getDepthStencilRenderTarget() = 0;
 
     GLenum getRenderTargetInternalFormat() const { return mOffscreenRenderTargetFormat; }
@@ -80,4 +80,4 @@ class SwapChainD3D : angle::NonCopyable
 };
 
 }  // namespace rx
-#endif // LIBANGLE_RENDERER_D3D_SWAPCHAIND3D_H_
+#endif  // LIBANGLE_RENDERER_D3D_SWAPCHAIND3D_H_

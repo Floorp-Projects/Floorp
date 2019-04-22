@@ -133,6 +133,6 @@ void CastIndexedStateValues(Context *context,
                             GLuint index,
                             unsigned int numParams,
                             QueryT *outParams);
-}
+}  // namespace gl
 
 #endif  // LIBANGLE_QUERY_CONVERSIONS_H_

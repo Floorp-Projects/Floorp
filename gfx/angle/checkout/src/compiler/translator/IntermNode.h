@@ -68,7 +68,7 @@ class TVariable;
 class TIntermNode : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TIntermNode()
     {
         // TODO: Move this to TSourceLoc constructor
@@ -239,7 +239,7 @@ class TIntermBranch : public TIntermNode
 
   protected:
     TOperator mFlowOp;
-    TIntermTyped *mExpression;  // non-zero except for "return exp;" statements
+    TIntermTyped *mExpression;  // zero except for "return exp;" statements
 };
 
 // Nodes that correspond to variable symbols in the source code. These may be regular variables or
@@ -408,7 +408,7 @@ class TIntermSwizzle : public TIntermExpression
 
     TIntermTyped *deepCopy() const override { return new TIntermSwizzle(*this); }
 
-    TIntermSwizzle *getAsSwizzleNode() override { return this; };
+    TIntermSwizzle *getAsSwizzleNode() override { return this; }
     bool visit(Visit visit, TIntermTraverser *it) final;
 
     size_t getChildCount() const final;
@@ -419,6 +419,8 @@ class TIntermSwizzle : public TIntermExpression
 
     TIntermTyped *getOperand() { return mOperand; }
     void writeOffsetsAsXYZW(TInfoSinkBase *out) const;
+
+    const TVector<int> &getSwizzleOffsets() { return mSwizzleOffsets; }
 
     bool hasDuplicateOffsets() const;
     void setHasFoldedDuplicateOffsets(bool hasFoldedDuplicateOffsets);
@@ -456,7 +458,7 @@ class TIntermBinary : public TIntermOperator
     static TOperator GetMulOpBasedOnOperands(const TType &left, const TType &right);
     static TOperator GetMulAssignOpBasedOnOperands(const TType &left, const TType &right);
 
-    TIntermBinary *getAsBinaryNode() override { return this; };
+    TIntermBinary *getAsBinaryNode() override { return this; }
     void traverse(TIntermTraverser *it) final;
     bool visit(Visit visit, TIntermTraverser *it) final;
 
@@ -574,8 +576,7 @@ class TIntermAggregate : public TIntermOperator, public TIntermAggregateBase
     // This covers all built-in function calls - whether they are associated with an op or not.
     static TIntermAggregate *CreateBuiltInFunctionCall(const TFunction &func,
                                                        TIntermSequence *arguments);
-    static TIntermAggregate *CreateConstructor(const TType &type,
-                                               TIntermSequence *arguments);
+    static TIntermAggregate *CreateConstructor(const TType &type, TIntermSequence *arguments);
     ~TIntermAggregate() {}
 
     // Note: only supported for nodes that can be a part of an expression.
@@ -665,6 +666,7 @@ class TIntermBlock : public TIntermNode, public TIntermAggregateBase
 
     // Only intended for initially building the block.
     void appendStatement(TIntermNode *statement);
+    void insertStatement(size_t insertPosition, TIntermNode *statement);
 
     TIntermSequence *getSequence() override { return &mStatements; }
     const TIntermSequence *getSequence() const override { return &mStatements; }
@@ -759,6 +761,7 @@ class TIntermDeclaration : public TIntermNode, public TIntermAggregateBase
 
     TIntermSequence *getSequence() override { return &mDeclarators; }
     const TIntermSequence *getSequence() const override { return &mDeclarators; }
+
   protected:
     TIntermSequence mDeclarators;
 };

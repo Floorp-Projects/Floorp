@@ -19,7 +19,7 @@ class TSymbol;
 class TSymbolUniqueId
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     explicit TSymbolUniqueId(const TSymbol &symbol);
     constexpr TSymbolUniqueId(const TSymbolUniqueId &) = default;
     TSymbolUniqueId &operator                          =(const TSymbolUniqueId &);

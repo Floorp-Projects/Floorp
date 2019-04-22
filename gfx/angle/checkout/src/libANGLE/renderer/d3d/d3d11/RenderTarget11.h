@@ -26,9 +26,9 @@ class RenderTarget11 : public RenderTargetD3D
     RenderTarget11(const d3d11::Format &formatSet);
     ~RenderTarget11() override;
 
-    virtual const TextureHelper11 &getTexture() const                  = 0;
-    virtual const d3d11::RenderTargetView &getRenderTargetView() const = 0;
-    virtual const d3d11::DepthStencilView &getDepthStencilView() const = 0;
+    virtual const TextureHelper11 &getTexture() const                                           = 0;
+    virtual const d3d11::RenderTargetView &getRenderTargetView() const                          = 0;
+    virtual const d3d11::DepthStencilView &getDepthStencilView() const                          = 0;
     virtual const d3d11::SharedSRV &getShaderResourceView(const gl::Context *context) const     = 0;
     virtual const d3d11::SharedSRV &getBlitShaderResourceView(const gl::Context *context) const = 0;
 
@@ -124,4 +124,4 @@ class SurfaceRenderTarget11 : public RenderTarget11
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_RENDERTARGET11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_RENDERTARGET11_H_

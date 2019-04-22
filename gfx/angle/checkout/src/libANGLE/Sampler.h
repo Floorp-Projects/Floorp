@@ -10,28 +10,29 @@
 #ifndef LIBANGLE_SAMPLER_H_
 #define LIBANGLE_SAMPLER_H_
 
-#include "libANGLE/angletypes.h"
 #include "libANGLE/Debug.h"
+#include "libANGLE/Observer.h"
 #include "libANGLE/RefCountObject.h"
+#include "libANGLE/angletypes.h"
 
 namespace rx
 {
 class GLImplFactory;
 class SamplerImpl;
-}
+}  // namespace rx
 
 namespace gl
 {
 
-class Sampler final : public RefCountObject, public LabeledObject
+class Sampler final : public RefCountObject, public LabeledObject, public angle::Subject
 {
   public:
     Sampler(rx::GLImplFactory *factory, GLuint id);
     ~Sampler() override;
 
-    Error onDestroy(const Context *context) override;
+    void onDestroy(const Context *context) override;
 
-    void setLabel(const std::string &label) override;
+    void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
     void setMinFilter(GLenum minFilter);
@@ -67,6 +68,9 @@ class Sampler final : public RefCountObject, public LabeledObject
     void setSRGBDecode(GLenum sRGBDecode);
     GLenum getSRGBDecode() const;
 
+    void setBorderColor(const ColorGeneric &color);
+    const ColorGeneric &getBorderColor() const;
+
     const SamplerState &getSamplerState() const;
 
     rx::SamplerImpl *getImplementation() const;
@@ -82,4 +86,4 @@ class Sampler final : public RefCountObject, public LabeledObject
 
 }  // namespace gl
 
-#endif // LIBANGLE_SAMPLER_H_
+#endif  // LIBANGLE_SAMPLER_H_

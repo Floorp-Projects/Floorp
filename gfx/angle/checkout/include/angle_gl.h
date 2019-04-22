@@ -18,4 +18,4 @@
 #include "GLES3/gl31.h"
 #include "GLES3/gl32.h"
 
-#endif // ANGLEGL_H_
+#endif  // ANGLEGL_H_

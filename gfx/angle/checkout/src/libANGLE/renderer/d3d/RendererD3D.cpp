@@ -40,12 +40,9 @@ RendererD3D::RendererD3D(egl::Display *display)
       mWorkaroundsInitialized(false),
       mDisjoint(false),
       mDeviceLost(false)
-{
-}
+{}
 
-RendererD3D::~RendererD3D()
-{
-}
+RendererD3D::~RendererD3D() {}
 
 bool RendererD3D::skipDraw(const gl::State &glState, gl::PrimitiveMode drawMode)
 {

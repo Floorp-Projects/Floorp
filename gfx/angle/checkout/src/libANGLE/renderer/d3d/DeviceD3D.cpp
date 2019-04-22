@@ -19,8 +19,7 @@ namespace rx
 
 DeviceD3D::DeviceD3D(GLint deviceType, void *nativeDevice)
     : mDevice(nativeDevice), mDeviceType(deviceType), mIsInitialized(false)
-{
-}
+{}
 
 DeviceD3D::~DeviceD3D()
 {
@@ -80,4 +79,4 @@ void DeviceD3D::generateExtensions(egl::DeviceExtensions *outExtensions) const
     outExtensions->deviceD3D = true;
 }
 
-}
+}  // namespace rx

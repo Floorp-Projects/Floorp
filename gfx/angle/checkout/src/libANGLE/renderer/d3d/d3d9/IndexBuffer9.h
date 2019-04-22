@@ -23,7 +23,7 @@ class IndexBuffer9 : public IndexBuffer
 
     angle::Result initialize(const gl::Context *context,
                              unsigned int bufferSize,
-                             GLenum indexType,
+                             gl::DrawElementsType indexType,
                              bool dynamic) override;
 
     angle::Result mapBuffer(const gl::Context *context,
@@ -32,11 +32,11 @@ class IndexBuffer9 : public IndexBuffer
                             void **outMappedMemory) override;
     angle::Result unmapBuffer(const gl::Context *context) override;
 
-    GLenum getIndexType() const override;
+    gl::DrawElementsType getIndexType() const override;
     unsigned int getBufferSize() const override;
     angle::Result setSize(const gl::Context *context,
                           unsigned int bufferSize,
-                          GLenum indexType) override;
+                          gl::DrawElementsType indexType) override;
 
     angle::Result discard(const gl::Context *context) override;
 
@@ -48,10 +48,10 @@ class IndexBuffer9 : public IndexBuffer
 
     IDirect3DIndexBuffer9 *mIndexBuffer;
     unsigned int mBufferSize;
-    GLenum mIndexType;
+    gl::DrawElementsType mIndexType;
     bool mDynamic;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D9_INDEXBUFFER9_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D9_INDEXBUFFER9_H_

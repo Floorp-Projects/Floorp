@@ -19,7 +19,8 @@ namespace rx
 {
 class GLImplFactory;
 class TransformFeedbackImpl;
-}
+class TransformFeedbackGL;
+}  // namespace rx
 
 namespace gl
 {
@@ -36,6 +37,7 @@ class TransformFeedbackState final : angle::NonCopyable
 
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t idx) const;
     const std::vector<OffsetBindingPointer<Buffer>> &getIndexedBuffers() const;
+    const Program *getBoundProgram() const { return mProgram; }
 
   private:
     friend class TransformFeedback;
@@ -58,17 +60,18 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
   public:
     TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, const Caps &caps);
     ~TransformFeedback() override;
-    Error onDestroy(const Context *context) override;
+    void onDestroy(const Context *context) override;
 
-    void setLabel(const std::string &label) override;
+    void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
-    void begin(const Context *context, PrimitiveMode primitiveMode, Program *program);
-    void end(const Context *context);
-    void pause();
-    void resume();
+    angle::Result begin(const Context *context, PrimitiveMode primitiveMode, Program *program);
+    angle::Result end(const Context *context);
+    angle::Result pause(const Context *context);
+    angle::Result resume(const Context *context);
 
-    bool isActive() const;
+    bool isActive() const { return mState.mActive; }
+
     bool isPaused() const;
     PrimitiveMode getPrimitiveMode() const;
     // Validates that the vertices produced by a draw call will fit in the bound transform feedback
@@ -82,18 +85,18 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
 
     bool hasBoundProgram(GLuint program) const;
 
-    void bindIndexedBuffer(const Context *context,
-                           size_t index,
-                           Buffer *buffer,
-                           size_t offset,
-                           size_t size);
+    angle::Result bindIndexedBuffer(const Context *context,
+                                    size_t index,
+                                    Buffer *buffer,
+                                    size_t offset,
+                                    size_t size);
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t index) const;
     size_t getIndexedBufferCount() const;
 
     // Returns true if any buffer bound to this object is also bound to another target.
     bool buffersBoundForOtherUse() const;
 
-    void detachBuffer(const Context *context, GLuint bufferName);
+    angle::Result detachBuffer(const Context *context, GLuint bufferName);
 
     rx::TransformFeedbackImpl *getImplementation();
     const rx::TransformFeedbackImpl *getImplementation() const;

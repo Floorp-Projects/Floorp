@@ -82,8 +82,7 @@ void ArrayReturnValueToOutParameterTraverser::apply(TIntermNode *root, TSymbolTa
 ArrayReturnValueToOutParameterTraverser::ArrayReturnValueToOutParameterTraverser(
     TSymbolTable *symbolTable)
     : TIntermTraverser(true, false, true, symbolTable), mFunctionWithArrayReturnValue(nullptr)
-{
-}
+{}
 
 bool ArrayReturnValueToOutParameterTraverser::visitFunctionDefinition(
     Visit visit,

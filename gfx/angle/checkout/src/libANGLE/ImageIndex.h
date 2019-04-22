@@ -55,6 +55,8 @@ class ImageIndex
                                    GLint layerIndex = kEntireLevel,
                                    GLint layerCount = 1);
     static ImageIndex Make2DMultisample();
+    static ImageIndex Make2DMultisampleArray(GLint layerIndex = kEntireLevel);
+    static ImageIndex Make2DMultisampleArrayRange(GLint layerIndex, GLint layerCount);
 
     static constexpr GLint kEntireLevel = static_cast<GLint>(-1);
 
@@ -94,6 +96,7 @@ class ImageIndexIterator
     static ImageIndexIterator Make3D(GLint minMip, GLint maxMip, GLint minLayer, GLint maxLayer);
     static ImageIndexIterator Make2DArray(GLint minMip, GLint maxMip, const GLsizei *layerCounts);
     static ImageIndexIterator Make2DMultisample();
+    static ImageIndexIterator Make2DMultisampleArray(const GLsizei *layerCounts);
     static ImageIndexIterator MakeGeneric(TextureType type,
                                           GLint minMip,
                                           GLint maxMip,

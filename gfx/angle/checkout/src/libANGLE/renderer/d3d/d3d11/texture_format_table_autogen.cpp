@@ -504,6 +504,20 @@ const Format &Format::Get(GLenum internalFormat, const Renderer11DeviceCaps &dev
                                          nullptr);
             return info;
         }
+        case GL_COMPRESSED_RGBA_BPTC_UNORM_EXT:
+        {
+            static constexpr Format info(GL_COMPRESSED_RGBA_BPTC_UNORM_EXT,
+                                         angle::FormatID::BPTC_RGBA_UNORM_BLOCK,
+                                         DXGI_FORMAT_BC7_UNORM,
+                                         DXGI_FORMAT_BC7_UNORM,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_BC7_UNORM,
+                                         GL_RGBA8,
+                                         nullptr);
+            return info;
+        }
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
         {
             static constexpr Format info(GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,
@@ -543,6 +557,34 @@ const Format &Format::Get(GLenum internalFormat, const Renderer11DeviceCaps &dev
                                          DXGI_FORMAT_UNKNOWN,
                                          DXGI_FORMAT_BC3_UNORM,
                                          GL_RGBA8,
+                                         nullptr);
+            return info;
+        }
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT:
+        {
+            static constexpr Format info(GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT,
+                                         angle::FormatID::BPTC_RGB_SIGNED_FLOAT_BLOCK,
+                                         DXGI_FORMAT_BC6H_SF16,
+                                         DXGI_FORMAT_BC6H_SF16,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_BC6H_SF16,
+                                         GL_RGBA32F,
+                                         nullptr);
+            return info;
+        }
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT:
+        {
+            static constexpr Format info(GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT,
+                                         angle::FormatID::BPTC_RGB_UNSIGNED_FLOAT_BLOCK,
+                                         DXGI_FORMAT_BC6H_UF16,
+                                         DXGI_FORMAT_BC6H_UF16,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_BC6H_UF16,
+                                         GL_RGBA32F,
                                          nullptr);
             return info;
         }
@@ -851,6 +893,20 @@ const Format &Format::Get(GLenum internalFormat, const Renderer11DeviceCaps &dev
                                          DXGI_FORMAT_UNKNOWN,
                                          DXGI_FORMAT_BC1_UNORM_SRGB,
                                          GL_RGBA8,
+                                         nullptr);
+            return info;
+        }
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT:
+        {
+            static constexpr Format info(GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT,
+                                         angle::FormatID::BPTC_SRGB_ALPHA_UNORM_BLOCK,
+                                         DXGI_FORMAT_BC7_UNORM_SRGB,
+                                         DXGI_FORMAT_BC7_UNORM_SRGB,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_BC7_UNORM_SRGB,
+                                         GL_SRGB8_ALPHA8,
                                          nullptr);
             return info;
         }
@@ -1774,7 +1830,7 @@ const Format &Format::Get(GLenum internalFormat, const Renderer11DeviceCaps &dev
                                          angle::FormatID::R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
-                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_UNKNOWN,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
@@ -2001,7 +2057,7 @@ const Format &Format::Get(GLenum internalFormat, const Renderer11DeviceCaps &dev
                                          angle::FormatID::R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
-                                         DXGI_FORMAT_UNKNOWN,
+                                         DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_R8G8B8A8_SINT,
                                          DXGI_FORMAT_UNKNOWN,
                                          DXGI_FORMAT_R8G8B8A8_SINT,

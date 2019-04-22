@@ -43,12 +43,9 @@ TDirectiveHandler::TDirectiveHandler(TExtensionBehavior &extBehavior,
       mShaderVersion(shaderVersion),
       mShaderType(shaderType),
       mDebugShaderPrecisionSupported(debugShaderPrecisionSupported)
-{
-}
+{}
 
-TDirectiveHandler::~TDirectiveHandler()
-{
-}
+TDirectiveHandler::~TDirectiveHandler() {}
 
 void TDirectiveHandler::handleError(const angle::pp::SourceLocation &loc, const std::string &msg)
 {

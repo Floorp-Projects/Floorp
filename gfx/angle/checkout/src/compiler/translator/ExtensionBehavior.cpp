@@ -14,6 +14,7 @@
 
 #define LIST_EXTENSIONS(OP)                      \
     OP(ARB_texture_rectangle)                    \
+    OP(ANGLE_texture_multisample)                \
     OP(ARM_shader_framebuffer_fetch)             \
     OP(EXT_blend_func_extended)                  \
     OP(EXT_draw_buffers)                         \
@@ -28,7 +29,8 @@
     OP(OES_EGL_image_external_essl3)             \
     OP(OES_standard_derivatives)                 \
     OP(OES_texture_storage_multisample_2d_array) \
-    OP(OVR_multiview)
+    OP(OVR_multiview)                            \
+    OP(ANGLE_multi_draw)
 
 namespace sh
 {

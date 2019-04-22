@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.145';
-var pdfjsBuild = '8bbae798';
+var pdfjsVersion = '2.2.154';
+var pdfjsBuild = '762c58e0';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1303,7 +1303,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.145',
+    apiVersion: '2.2.154',
     source: {
       data: source.data,
       url: source.url,
@@ -1484,6 +1484,10 @@ class PDFDocumentProxy {
 
   getPageMode() {
     return this._transport.getPageMode();
+  }
+
+  getViewerPreferences() {
+    return this._transport.getViewerPreferences();
   }
 
   getOpenActionDestination() {
@@ -2532,6 +2536,7 @@ class WorkerTransport {
           break;
 
         case 'FontPath':
+        case 'FontType3Res':
           this.commonObjs.resolve(id, exportedData);
           break;
 
@@ -2778,8 +2783,12 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise('GetPageMode', null);
   }
 
+  getViewerPreferences() {
+    return this.messageHandler.sendWithPromise('GetViewerPreferences', null);
+  }
+
   getOpenActionDestination() {
-    return this.messageHandler.sendWithPromise('getOpenActionDestination', null);
+    return this.messageHandler.sendWithPromise('GetOpenActionDestination', null);
   }
 
   getAttachments() {
@@ -3088,9 +3097,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.145';
+const version = '2.2.154';
 exports.version = version;
-const build = '8bbae798';
+const build = '762c58e0';
 exports.build = build;
 
 /***/ }),
@@ -4530,12 +4539,8 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         if (fnId !== _util.OPS.dependency) {
           this[fnId].apply(this, argsArray[i]);
         } else {
-          var deps = argsArray[i];
-
-          for (var n = 0, nn = deps.length; n < nn; n++) {
-            var depObjId = deps[n];
-            var common = depObjId[0] === 'g' && depObjId[1] === '_';
-            var objsPool = common ? commonObjs : objs;
+          for (const depObjId of argsArray[i]) {
+            const objsPool = depObjId.startsWith('g_') ? commonObjs : objs;
 
             if (!objsPool.has(depObjId)) {
               objsPool.get(depObjId, continueCallback);
@@ -5543,7 +5548,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.restore();
     },
     paintJpegXObject: function CanvasGraphics_paintJpegXObject(objId, w, h) {
-      var domImage = this.objs.get(objId);
+      const domImage = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!domImage) {
         (0, _util.warn)('Dependent image isn\'t ready yet');
@@ -5652,7 +5657,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       }
     },
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
-      var imgData = this.objs.get(objId);
+      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)('Dependent image isn\'t ready yet');
@@ -5662,7 +5667,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.paintInlineImageXObject(imgData);
     },
     paintImageXObjectRepeat: function CanvasGraphics_paintImageXObjectRepeat(objId, scaleX, scaleY, positions) {
-      var imgData = this.objs.get(objId);
+      const imgData = this.processingType3 ? this.commonObjs.get(objId) : this.objs.get(objId);
 
       if (!imgData) {
         (0, _util.warn)('Dependent image isn\'t ready yet');
@@ -7403,24 +7408,23 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
     },
 
     _onProgress: function PDFDataTransportStream_onDataProgress(evt) {
-      if (evt.total === undefined && this._rangeReaders.length > 0) {
-        var firstReader = this._rangeReaders[0];
+      if (evt.total === undefined) {
+        let firstReader = this._rangeReaders[0];
 
-        if (firstReader.onProgress) {
+        if (firstReader && firstReader.onProgress) {
           firstReader.onProgress({
             loaded: evt.loaded
           });
-          return;
         }
-      }
+      } else {
+        let fullReader = this._fullRequestReader;
 
-      let fullReader = this._fullRequestReader;
-
-      if (fullReader && fullReader.onProgress) {
-        fullReader.onProgress({
-          loaded: evt.loaded,
-          total: evt.total
-        });
+        if (fullReader && fullReader.onProgress) {
+          fullReader.onProgress({
+            loaded: evt.loaded,
+            total: evt.total
+          });
+        }
       }
     },
 
