@@ -10,6 +10,7 @@
 #include "libANGLE/ResourceManager.h"
 
 #include "libANGLE/Buffer.h"
+#include "libANGLE/Context.h"
 #include "libANGLE/Fence.h"
 #include "libANGLE/Path.h"
 #include "libANGLE/Program.h"
@@ -18,7 +19,7 @@
 #include "libANGLE/Sampler.h"
 #include "libANGLE/Shader.h"
 #include "libANGLE/Texture.h"
-#include "libANGLE/renderer/GLImplFactory.h"
+#include "libANGLE/renderer/ContextImpl.h"
 
 namespace gl
 {
@@ -38,8 +39,7 @@ GLuint AllocateEmptyObject(HandleAllocator *handleAllocator, ResourceMap<Resourc
 
 template <typename HandleAllocatorType>
 ResourceManagerBase<HandleAllocatorType>::ResourceManagerBase() : mRefCount(1)
-{
-}
+{}
 
 template <typename HandleAllocatorType>
 void ResourceManagerBase<HandleAllocatorType>::addRef()
@@ -135,9 +135,7 @@ Buffer *BufferManager::getBuffer(GLuint handle) const
 
 // ShaderProgramManager Implementation.
 
-ShaderProgramManager::ShaderProgramManager()
-{
-}
+ShaderProgramManager::ShaderProgramManager() {}
 
 ShaderProgramManager::~ShaderProgramManager()
 {
@@ -164,7 +162,7 @@ GLuint ShaderProgramManager::createShader(rx::GLImplFactory *factory,
                                           ShaderType type)
 {
     ASSERT(type != ShaderType::InvalidEnum);
-    GLuint handle    = mHandleAllocator.allocate();
+    GLuint handle = mHandleAllocator.allocate();
     mShaders.assign(handle, new Shader(this, factory, rendererLimitations, type, handle));
     return handle;
 }
@@ -189,11 +187,6 @@ GLuint ShaderProgramManager::createProgram(rx::GLImplFactory *factory)
 void ShaderProgramManager::deleteProgram(const gl::Context *context, GLuint program)
 {
     deleteObject(context, &mPrograms, program);
-}
-
-Program *ShaderProgramManager::getProgram(GLuint handle) const
-{
-    return mPrograms.query(handle);
 }
 
 template <typename ObjectType>
@@ -242,12 +235,6 @@ GLuint TextureManager::createTexture()
     return AllocateEmptyObject(&mHandleAllocator, &mObjectMap);
 }
 
-Texture *TextureManager::getTexture(GLuint handle) const
-{
-    ASSERT(mObjectMap.query(0) == nullptr);
-    return mObjectMap.query(handle);
-}
-
 void TextureManager::signalAllTexturesDirty(const Context *context) const
 {
     for (const auto &texture : mObjectMap)
@@ -256,7 +243,7 @@ void TextureManager::signalAllTexturesDirty(const Context *context) const
         {
             // We don't know if the Texture needs init, but that's ok, since it will only force
             // a re-check, and will not initialize the pixels if it's not needed.
-            texture.second->signalDirty(context, InitState::MayNeedInit);
+            texture.second->signalDirtyStorage(context, InitState::MayNeedInit);
         }
     }
 }
@@ -347,31 +334,38 @@ Sync *SyncManager::getSync(GLuint handle) const
 
 // PathManager Implementation.
 
-PathManager::PathManager()
-{
-}
+PathManager::PathManager() = default;
 
-ErrorOrResult<GLuint> PathManager::createPaths(rx::GLImplFactory *factory, GLsizei range)
+angle::Result PathManager::createPaths(Context *context, GLsizei range, GLuint *createdOut)
 {
+    *createdOut = 0;
+
     // Allocate client side handles.
     const GLuint client = mHandleAllocator.allocateRange(static_cast<GLuint>(range));
     if (client == HandleRangeAllocator::kInvalidHandle)
-        return OutOfMemory() << "Failed to allocate path handle range.";
+    {
+        context->handleError(GL_OUT_OF_MEMORY, "Failed to allocate path handle range.", __FILE__,
+                             ANGLE_FUNCTION, __LINE__);
+        return angle::Result::Stop;
+    }
 
-    const auto &paths = factory->createPaths(range);
+    const auto &paths = context->getImplementation()->createPaths(range);
     if (paths.empty())
     {
         mHandleAllocator.releaseRange(client, range);
-        return OutOfMemory() << "Failed to allocate path objects.";
+        context->handleError(GL_OUT_OF_MEMORY, "Failed to allocate path objects.", __FILE__,
+                             ANGLE_FUNCTION, __LINE__);
+        return angle::Result::Stop;
     }
 
     for (GLsizei i = 0; i < range; ++i)
     {
         rx::PathImpl *impl = paths[static_cast<unsigned>(i)];
-        const auto id   = client + i;
+        const auto id      = client + i;
         mPaths.assign(id, new Path(impl));
     }
-    return client;
+    *createdOut = client;
+    return angle::Result::Continue;
 }
 
 void PathManager::deletePaths(GLuint first, GLsizei range)

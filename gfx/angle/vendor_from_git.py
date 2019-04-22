@@ -21,7 +21,8 @@ def print_now(*args):
 
 
 def run_checked(*args, **kwargs):
-    print_now(' ', args)
+    print(' ', args)
+    sys.stdout.flush()
     return subprocess.run(args, check=True, **kwargs)
 
 # --

@@ -35,7 +35,7 @@ class GLES1Renderer final : angle::NonCopyable
 
     void onDestroy(Context *context, State *state);
 
-    Error prepareForDraw(PrimitiveMode mode, Context *context, State *glState);
+    angle::Result prepareForDraw(PrimitiveMode mode, Context *context, State *glState);
 
     static int VertexArrayIndex(ClientVertexArrayType type, const GLES1State &gles1);
     static int TexCoordArrayIndex(unsigned int unit);
@@ -58,20 +58,24 @@ class GLES1Renderer final : angle::NonCopyable
     Shader *getShader(GLuint handle) const;
     Program *getProgram(GLuint handle) const;
 
-    Error compileShader(Context *context,
-                        ShaderType shaderType,
-                        const char *src,
-                        GLuint *shaderOut);
-    Error linkProgram(Context *context,
-                      State *glState,
-                      GLuint vshader,
-                      GLuint fshader,
-                      const std::unordered_map<GLint, std::string> &attribLocs,
-                      GLuint *programOut);
-    Error initializeRendererProgram(Context *context, State *glState);
+    angle::Result compileShader(Context *context,
+                                ShaderType shaderType,
+                                const char *src,
+                                GLuint *shaderOut);
+    angle::Result linkProgram(Context *context,
+                              State *glState,
+                              GLuint vshader,
+                              GLuint fshader,
+                              const std::unordered_map<GLint, std::string> &attribLocs,
+                              GLuint *programOut);
+    angle::Result initializeRendererProgram(Context *context, State *glState);
 
-    void setUniform1i(Program *programObject, GLint loc, GLint value);
-    void setUniform1iv(Program *programObject, GLint loc, GLint count, const GLint *value);
+    void setUniform1i(Context *context, Program *programObject, GLint loc, GLint value);
+    void setUniform1iv(Context *context,
+                       Program *programObject,
+                       GLint loc,
+                       GLint count,
+                       const GLint *value);
     void setUniformMatrix4fv(Program *programObject,
                              GLint loc,
                              GLint count,

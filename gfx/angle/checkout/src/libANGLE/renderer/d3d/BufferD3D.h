@@ -19,7 +19,7 @@ namespace gl
 {
 struct VertexAttribute;
 class VertexBinding;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -41,8 +41,8 @@ class BufferD3D : public BufferImpl
 
     unsigned int getSerial() const { return mSerial; }
 
-    virtual size_t getSize() const = 0;
-    virtual bool supportsDirectBinding() const = 0;
+    virtual size_t getSize() const                                                     = 0;
+    virtual bool supportsDirectBinding() const                                         = 0;
     virtual angle::Result markTransformFeedbackUsage(const gl::Context *context)       = 0;
     virtual angle::Result getData(const gl::Context *context, const uint8_t **outData) = 0;
 
@@ -57,12 +57,12 @@ class BufferD3D : public BufferImpl
 
     void promoteStaticUsage(const gl::Context *context, size_t dataSize);
 
-    gl::Error getIndexRange(const gl::Context *context,
-                            GLenum type,
-                            size_t offset,
-                            size_t count,
-                            bool primitiveRestartEnabled,
-                            gl::IndexRange *outRange) override;
+    angle::Result getIndexRange(const gl::Context *context,
+                                gl::DrawElementsType type,
+                                size_t offset,
+                                size_t count,
+                                bool primitiveRestartEnabled,
+                                gl::IndexRange *outRange) override;
 
     BufferFactoryD3D *getFactory() const { return mFactory; }
     D3DBufferUsage getUsage() const { return mUsage; }
@@ -84,6 +84,6 @@ class BufferD3D : public BufferImpl
     D3DBufferUsage mUsage;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_BUFFERD3D_H_
+#endif  // LIBANGLE_RENDERER_D3D_BUFFERD3D_H_

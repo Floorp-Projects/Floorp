@@ -14,10 +14,10 @@
 #include <set>
 
 #if defined(ANGLE_ENABLE_WINDOWS_STORE)
-#include <windows.applicationmodel.core.h>
-#include <windows.graphics.display.h>
-#include <wrl.h>
-#include <wrl/wrappers/corewrappers.h>
+#    include <windows.applicationmodel.core.h>
+#    include <windows.graphics.display.h>
+#    include <wrl.h>
+#    include <wrl/wrappers/corewrappers.h>
 #endif
 
 namespace
@@ -131,16 +131,19 @@ GLenum VariableComponentType(GLenum type)
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_EXTERNAL_OES:
         case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
         case GL_SAMPLER_CUBE_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
@@ -259,16 +262,19 @@ int VariableRowCount(GLenum type)
         case GL_SAMPLER_EXTERNAL_OES:
         case GL_SAMPLER_2D_RECT_ANGLE:
         case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
         case GL_SAMPLER_CUBE_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
@@ -320,11 +326,13 @@ int VariableColumnCount(GLenum type)
         case GL_SAMPLER_CUBE:
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_EXTERNAL_OES:
         case GL_SAMPLER_2D_RECT_ANGLE:
         case GL_UNSIGNED_INT_SAMPLER_2D:
@@ -332,6 +340,7 @@ int VariableColumnCount(GLenum type)
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
         case GL_SAMPLER_CUBE_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
@@ -390,17 +399,20 @@ bool IsSamplerType(GLenum type)
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_EXTERNAL_OES:
         case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_RECT_ANGLE:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
         case GL_SAMPLER_CUBE_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
@@ -429,6 +441,30 @@ bool IsImageType(GLenum type)
             return true;
     }
     return false;
+}
+
+bool IsImage2DType(GLenum type)
+{
+    switch (type)
+    {
+        case GL_IMAGE_2D:
+        case GL_INT_IMAGE_2D:
+        case GL_UNSIGNED_INT_IMAGE_2D:
+            return true;
+        case GL_IMAGE_3D:
+        case GL_INT_IMAGE_3D:
+        case GL_UNSIGNED_INT_IMAGE_3D:
+        case GL_IMAGE_2D_ARRAY:
+        case GL_INT_IMAGE_2D_ARRAY:
+        case GL_UNSIGNED_INT_IMAGE_2D_ARRAY:
+        case GL_IMAGE_CUBE:
+        case GL_INT_IMAGE_CUBE:
+        case GL_UNSIGNED_INT_IMAGE_CUBE:
+            return false;
+        default:
+            UNREACHABLE();
+            return false;
+    }
 }
 
 bool IsAtomicCounterType(GLenum type)
@@ -518,22 +554,22 @@ int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsig
     return -1;
 }
 
-IndexRange ComputeIndexRange(GLenum indexType,
+IndexRange ComputeIndexRange(DrawElementsType indexType,
                              const GLvoid *indices,
                              size_t count,
                              bool primitiveRestartEnabled)
 {
     switch (indexType)
     {
-        case GL_UNSIGNED_BYTE:
+        case DrawElementsType::UnsignedByte:
             return ComputeTypedIndexRange(static_cast<const GLubyte *>(indices), count,
                                           primitiveRestartEnabled,
                                           GetPrimitiveRestartIndex(indexType));
-        case GL_UNSIGNED_SHORT:
+        case DrawElementsType::UnsignedShort:
             return ComputeTypedIndexRange(static_cast<const GLushort *>(indices), count,
                                           primitiveRestartEnabled,
                                           GetPrimitiveRestartIndex(indexType));
-        case GL_UNSIGNED_INT:
+        case DrawElementsType::UnsignedInt:
             return ComputeTypedIndexRange(static_cast<const GLuint *>(indices), count,
                                           primitiveRestartEnabled,
                                           GetPrimitiveRestartIndex(indexType));
@@ -543,15 +579,15 @@ IndexRange ComputeIndexRange(GLenum indexType,
     }
 }
 
-GLuint GetPrimitiveRestartIndex(GLenum indexType)
+GLuint GetPrimitiveRestartIndex(DrawElementsType indexType)
 {
     switch (indexType)
     {
-        case GL_UNSIGNED_BYTE:
+        case DrawElementsType::UnsignedByte:
             return 0xFF;
-        case GL_UNSIGNED_SHORT:
+        case DrawElementsType::UnsignedShort:
             return 0xFFFF;
-        case GL_UNSIGNED_INT:
+        case DrawElementsType::UnsignedInt:
             return 0xFFFFFFFF;
         default:
             UNREACHABLE();
@@ -578,6 +614,15 @@ bool IsTriangleMode(PrimitiveMode drawMode)
 
     return false;
 }
+
+namespace priv
+{
+const angle::PackedEnumMap<PrimitiveMode, bool> gLineModes = {
+    {{PrimitiveMode::LineLoop, true},
+     {PrimitiveMode::LineStrip, true},
+     {PrimitiveMode::LineStripAdjacency, true},
+     {PrimitiveMode::Lines, true}}};
+}  // namespace priv
 
 bool IsIntegerFormat(GLenum unsizedFormat)
 {
@@ -652,17 +697,20 @@ int VariableSortOrder(GLenum type)
         case GL_SAMPLER_2D_RECT_ANGLE:
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_2D_MULTISAMPLE:
+        case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_3D:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+        case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
         case GL_SAMPLER_CUBE_SHADOW:
@@ -899,6 +947,18 @@ bool IsRenderbufferTarget(EGLenum target)
     return target == EGL_GL_RENDERBUFFER_KHR;
 }
 
+bool IsExternalImageTarget(EGLenum target)
+{
+    switch (target)
+    {
+        case EGL_NATIVE_BUFFER_ANDROID:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 const char *GetGenericErrorMessage(EGLint error)
 {
     switch (error)
@@ -981,7 +1041,7 @@ EGLClientBuffer GLObjectHandleToEGLClientBuffer(GLuint handle)
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
 std::string getTempPath()
 {
-#ifdef ANGLE_PLATFORM_WINDOWS
+#    ifdef ANGLE_PLATFORM_WINDOWS
     char path[MAX_PATH];
     DWORD pathLen = GetTempPathA(sizeof(path) / sizeof(path[0]), path);
     if (pathLen == 0)
@@ -998,10 +1058,10 @@ std::string getTempPath()
     }
 
     return path;
-#else
+#    else
     UNIMPLEMENTED();
     return "";
-#endif
+#    endif
 }
 
 void writeFile(const char *path, const void *content, size_t size)

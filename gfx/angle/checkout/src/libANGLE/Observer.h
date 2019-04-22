@@ -13,7 +13,7 @@
 #ifndef LIBANGLE_OBSERVER_H_
 #define LIBANGLE_OBSERVER_H_
 
-#include "common/FixedVector.h"
+#include "common/FastVector.h"
 #include "common/angleutils.h"
 
 namespace gl
@@ -23,6 +23,11 @@ class Context;
 
 namespace angle
 {
+template <typename HaystackT, typename NeedleT>
+bool IsInContainer(const HaystackT &haystack, const NeedleT &needle)
+{
+    return std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
+}
 
 using SubjectIndex = size_t;
 
@@ -46,7 +51,23 @@ class ObserverInterface
                                       SubjectMessage message) = 0;
 };
 
-class ObserverBinding;
+class ObserverBindingBase
+{
+  public:
+    ObserverBindingBase(ObserverInterface *observer, SubjectIndex subjectIndex)
+        : mObserver(observer), mIndex(subjectIndex)
+    {}
+    virtual ~ObserverBindingBase() {}
+
+    ObserverInterface *getObserver() const { return mObserver; }
+    SubjectIndex getSubjectIndex() const { return mIndex; }
+
+    virtual void onSubjectReset() {}
+
+  private:
+    ObserverInterface *mObserver;
+    SubjectIndex mIndex;
+};
 
 // Maintains a list of observer bindings. Sends update messages to the observer.
 class Subject : NonCopyable
@@ -59,39 +80,47 @@ class Subject : NonCopyable
     bool hasObservers() const;
     void resetObservers();
 
-  private:
-    // Only the ObserverBinding class should add or remove observers.
-    friend class ObserverBinding;
-    void addObserver(ObserverBinding *observer);
-    void removeObserver(ObserverBinding *observer);
+    ANGLE_INLINE void addObserver(ObserverBindingBase *observer)
+    {
+        ASSERT(!IsInContainer(mObservers, observer));
+        mObservers.push_back(observer);
+    }
 
+    ANGLE_INLINE void removeObserver(ObserverBindingBase *observer)
+    {
+        ASSERT(IsInContainer(mObservers, observer));
+        mObservers.remove_and_permute(observer);
+    }
+
+  private:
     // Keep a short list of observers so we can allocate/free them quickly. But since we support
     // unlimited bindings, have a spill-over list of that uses dynamic allocation.
     static constexpr size_t kMaxFixedObservers = 8;
-    angle::FixedVector<ObserverBinding *, kMaxFixedObservers> mFastObservers;
-    std::vector<ObserverBinding *> mSlowObservers;
+    angle::FastVector<ObserverBindingBase *, kMaxFixedObservers> mObservers;
 };
 
 // Keeps a binding between a Subject and Observer, with a specific subject index.
-class ObserverBinding final
+class ObserverBinding final : public ObserverBindingBase
 {
   public:
     ObserverBinding(ObserverInterface *observer, SubjectIndex index);
-    ~ObserverBinding();
+    ~ObserverBinding() override;
     ObserverBinding(const ObserverBinding &other);
     ObserverBinding &operator=(const ObserverBinding &other);
 
     void bind(Subject *subject);
-    void reset();
-    void onStateChange(const gl::Context *context, SubjectMessage message) const;
-    void onSubjectReset();
 
-    const Subject *getSubject() const;
+    ANGLE_INLINE void reset() { bind(nullptr); }
+
+    void onStateChange(const gl::Context *context, SubjectMessage message) const;
+    void onSubjectReset() override;
+
+    ANGLE_INLINE const Subject *getSubject() const { return mSubject; }
+
+    ANGLE_INLINE void assignSubject(Subject *subject) { mSubject = subject; }
 
   private:
     Subject *mSubject;
-    ObserverInterface *mObserver;
-    SubjectIndex mIndex;
 };
 
 }  // namespace angle

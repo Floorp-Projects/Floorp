@@ -20,8 +20,7 @@ class RegenerateStructNames : public TIntermTraverser
   public:
     RegenerateStructNames(TSymbolTable *symbolTable)
         : TIntermTraverser(true, false, false, symbolTable), mScopeDepth(0)
-    {
-    }
+    {}
 
   protected:
     void visitSymbol(TIntermSymbol *) override;

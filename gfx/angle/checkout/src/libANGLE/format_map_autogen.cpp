@@ -52,6 +52,16 @@ GLenum GetSizedFormatInternal(GLenum format, GLenum type)
             }
             break;
 
+        case GL_COMPRESSED_RGBA_BPTC_UNORM_EXT:
+            switch (type)
+            {
+                case GL_UNSIGNED_BYTE:
+                    return GL_COMPRESSED_RGBA_BPTC_UNORM_EXT;
+                default:
+                    break;
+            }
+            break;
+
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
             switch (type)
             {
@@ -82,11 +92,41 @@ GLenum GetSizedFormatInternal(GLenum format, GLenum type)
             }
             break;
 
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT:
+            switch (type)
+            {
+                case GL_UNSIGNED_BYTE:
+                    return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT;
+                default:
+                    break;
+            }
+            break;
+
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT:
+            switch (type)
+            {
+                case GL_UNSIGNED_BYTE:
+                    return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT;
+                default:
+                    break;
+            }
+            break;
+
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
             switch (type)
             {
                 case GL_UNSIGNED_BYTE:
                     return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+                default:
+                    break;
+            }
+            break;
+
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT:
+            switch (type)
+            {
+                case GL_UNSIGNED_BYTE:
+                    return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT;
                 default:
                     break;
             }

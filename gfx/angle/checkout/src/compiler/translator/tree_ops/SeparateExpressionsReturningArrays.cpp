@@ -45,8 +45,7 @@ SeparateExpressionsTraverser::SeparateExpressionsTraverser(TSymbolTable *symbolT
     : TIntermTraverser(true, false, false, symbolTable),
       mFoundArrayExpression(false),
       mPatternToSeparateMatcher(IntermNodePatternMatcher::kExpressionReturningArray)
-{
-}
+{}
 
 // Performs a shallow copy of an assignment node.
 // These shallow copies are useful when a node gets inserted into an aggregate node

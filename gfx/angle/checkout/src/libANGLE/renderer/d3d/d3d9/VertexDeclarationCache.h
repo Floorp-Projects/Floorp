@@ -16,7 +16,7 @@ namespace gl
 {
 class VertexDataManager;
 class Program;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -39,7 +39,10 @@ class VertexDeclarationCache
   private:
     UINT mMaxLru;
 
-    enum { NUM_VERTEX_DECL_CACHE_ENTRIES = 32 };
+    enum
+    {
+        NUM_VERTEX_DECL_CACHE_ENTRIES = 32
+    };
 
     struct VBData
     {
@@ -60,6 +63,6 @@ class VertexDeclarationCache
     } mVertexDeclCache[NUM_VERTEX_DECL_CACHE_ENTRIES];
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D9_VERTEXDECLARATIONCACHE_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D9_VERTEXDECLARATIONCACHE_H_

@@ -40,6 +40,8 @@ WHICH GENERATES THE GLSL ES LEXER (glslang_lex.cpp).
 #endif
 #if defined(__clang__)
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+// Flex isn't semi-colon clean.
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
 #endif
 }
 
@@ -86,6 +88,7 @@ static int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token)
 static int ES2_and_ES3_ident_ES3_1_keyword(TParseContext *context, int token);
 static int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extension, int token);
 static int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExtension extension, int token);
+static int ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(TParseContext *context, TExtension extension, int token);
 static int uint_constant(TParseContext *context);
 static int int_constant(TParseContext *context);
 static int float_constant(yyscan_t yyscanner);
@@ -189,17 +192,17 @@ O           [0-7]
 "sampler3DRect"        { return ES2_reserved_ES3_keyword(context, SAMPLER3DRECT); }
 "sampler2DRect"        { return SAMPLER2DRECT; }
 "sampler2DArray"       { return ES2_ident_ES3_keyword(context, SAMPLER2DARRAY); }
-"sampler2DMS"          { return ES2_ident_ES3_reserved_ES3_1_keyword(context, SAMPLER2DMS); }
+"sampler2DMS"          { return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, SAMPLER2DMS); }
 "isampler2D"           { return ES2_ident_ES3_keyword(context, ISAMPLER2D); }
 "isampler3D"           { return ES2_ident_ES3_keyword(context, ISAMPLER3D); }
 "isamplerCube"         { return ES2_ident_ES3_keyword(context, ISAMPLERCUBE); }
 "isampler2DArray"      { return ES2_ident_ES3_keyword(context, ISAMPLER2DARRAY); }
-"isampler2DMS"         { return ES2_ident_ES3_reserved_ES3_1_keyword(context, ISAMPLER2DMS); }
+"isampler2DMS"         { return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, ISAMPLER2DMS); }
 "usampler2D"           { return ES2_ident_ES3_keyword(context, USAMPLER2D); }
 "usampler3D"           { return ES2_ident_ES3_keyword(context, USAMPLER3D); }
 "usamplerCube"         { return ES2_ident_ES3_keyword(context, USAMPLERCUBE); }
 "usampler2DArray"      { return ES2_ident_ES3_keyword(context, USAMPLER2DARRAY); }
-"usampler2DMS"         { return ES2_ident_ES3_reserved_ES3_1_keyword(context, USAMPLER2DMS); }
+"usampler2DMS"         { return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, USAMPLER2DMS); }
 "sampler2DShadow"      { return ES2_reserved_ES3_keyword(context, SAMPLER2DSHADOW); }
 "samplerCubeShadow"    { return ES2_ident_ES3_keyword(context, SAMPLERCUBESHADOW); }
 "sampler2DArrayShadow" { return ES2_ident_ES3_keyword(context, SAMPLER2DARRAYSHADOW); }
@@ -595,6 +598,26 @@ int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExte
     }
 
     // Otherwise can be used as an identifier/type name
+    yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
+    return check_type(yyscanner);
+}
+
+int ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(TParseContext *context, TExtension extension, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // A keyword in GLSL ES 3.00 with enabled extension or in GLSL ES 3.10
+    if (context->getShaderVersion() >= 310 || (context->getShaderVersion() == 300 && context->isExtensionEnabled(extension)))
+    {
+        return token;
+    }
+
+    if(context->getShaderVersion() == 300)
+    {
+        return reserved_word(yyscanner);
+    }
+
     yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
     return check_type(yyscanner);
 }

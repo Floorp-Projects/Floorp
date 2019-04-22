@@ -28,7 +28,7 @@ namespace gl
 class Context;
 class Framebuffer;
 class Texture;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -40,13 +40,21 @@ namespace egl
 class Display;
 struct Config;
 
+using SupportedCompositorTiming = angle::PackedEnumBitSet<CompositorTiming>;
+using SupportedTimestamps       = angle::PackedEnumBitSet<Timestamp>;
+
 struct SurfaceState final : private angle::NonCopyable
 {
     SurfaceState(const egl::Config *configIn, const AttributeMap &attributesIn);
+    ~SurfaceState();
 
     EGLLabelKHR label;
     const egl::Config *config;
     AttributeMap attributes;
+
+    bool timestampsEnabled;
+    SupportedCompositorTiming supportedCompositorTimings;
+    SupportedTimestamps supportedTimestamps;
 };
 
 class Surface : public LabeledObject, public gl::FramebufferAttachmentObject
@@ -69,7 +77,7 @@ class Surface : public LabeledObject, public gl::FramebufferAttachmentObject
                         EGLint height);
     Error setPresentationTime(EGLnsecsANDROID time);
     Error querySurfacePointerANGLE(EGLint attribute, void **value);
-    Error bindTexImage(const gl::Context *context, gl::Texture *texture, EGLint buffer);
+    Error bindTexImage(gl::Context *context, gl::Texture *texture, EGLint buffer);
     Error releaseTexImage(const gl::Context *context, EGLint buffer);
 
     Error getSyncValues(EGLuint64KHR *ust, EGLuint64KHR *msc, EGLuint64KHR *sbc);
@@ -117,6 +125,9 @@ class Surface : public LabeledObject, public gl::FramebufferAttachmentObject
     gl::Extents getAttachmentSize(const gl::ImageIndex &imageIndex) const override;
     gl::Format getAttachmentFormat(GLenum binding, const gl::ImageIndex &imageIndex) const override;
     GLsizei getAttachmentSamples(const gl::ImageIndex &imageIndex) const override;
+    bool isRenderable(const gl::Context *context,
+                      GLenum binding,
+                      const gl::ImageIndex &imageIndex) const override;
 
     void onAttach(const gl::Context *context) override {}
     void onDetach(const gl::Context *context) override {}
@@ -136,6 +147,22 @@ class Surface : public LabeledObject, public gl::FramebufferAttachmentObject
     bool isRobustResourceInitEnabled() const { return mRobustResourceInitialization; }
 
     const gl::Format &getBindTexImageFormat() const { return mColorFormat; }
+
+    // EGL_ANDROID_get_frame_timestamps entry points
+    void setTimestampsEnabled(bool enabled);
+    bool isTimestampsEnabled() const;
+
+    const SupportedCompositorTiming &getSupportedCompositorTimings() const;
+    Error getCompositorTiming(EGLint numTimestamps,
+                              const EGLint *names,
+                              EGLnsecsANDROID *values) const;
+
+    Error getNextFrameId(EGLuint64KHR *frameId) const;
+    const SupportedTimestamps &getSupportedTimestamps() const;
+    Error getFrameTimestamps(EGLuint64KHR frameId,
+                             EGLint numTimestamps,
+                             const EGLint *timestamps,
+                             EGLnsecsANDROID *values) const;
 
   protected:
     Surface(EGLint surfaceType,

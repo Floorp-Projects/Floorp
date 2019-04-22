@@ -25,8 +25,7 @@ TFunctionLookup::TFunctionLookup(const ImmutableString &name,
                                  const TType *constructorType,
                                  const TSymbol *symbol)
     : mName(name), mConstructorType(constructorType), mThisNode(nullptr), mSymbol(symbol)
-{
-}
+{}
 
 // static
 TFunctionLookup *TFunctionLookup::CreateConstructor(const TType *type)

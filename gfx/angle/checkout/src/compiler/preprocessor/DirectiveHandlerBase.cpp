@@ -12,9 +12,7 @@ namespace angle
 namespace pp
 {
 
-DirectiveHandler::~DirectiveHandler()
-{
-}
+DirectiveHandler::~DirectiveHandler() {}
 
 }  // namespace pp
 

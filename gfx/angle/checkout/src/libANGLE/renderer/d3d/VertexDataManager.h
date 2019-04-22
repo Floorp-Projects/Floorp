@@ -22,7 +22,7 @@ class State;
 struct VertexAttribute;
 class VertexBinding;
 struct VertexAttribCurrentValueData;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -61,10 +61,10 @@ struct TranslatedAttribute
 
     const gl::VertexAttribute *attribute;
     const gl::VertexBinding *binding;
-    GLenum currentValueType;
+    gl::VertexAttribType currentValueType;
     unsigned int baseOffset;
     bool usesFirstVertexOffset;
-    unsigned int stride;   // 0 means not to advance the read pointer at all
+    unsigned int stride;  // 0 means not to advance the read pointer at all
 
     VertexBufferBinding vertexBuffer;
     BufferD3D *storage;
@@ -157,4 +157,4 @@ class VertexDataManager : angle::NonCopyable
 
 }  // namespace rx
 
-#endif   // LIBANGLE_RENDERER_D3D_VERTEXDATAMANAGER_H_
+#endif  // LIBANGLE_RENDERER_D3D_VERTEXDATAMANAGER_H_

@@ -129,12 +129,26 @@ inline void Copy32FixedTo32FVertexData(const uint8_t *input, size_t stride, size
 
     for (size_t i = 0; i < count; i++)
     {
-        const GLfixed* offsetInput = reinterpret_cast<const GLfixed*>(input + (stride * i));
-        float* offsetOutput = reinterpret_cast<float*>(output) + i * outputComponentCount;
+        const uint8_t *offsetInput = input + i * stride;
+        float *offsetOutput        = reinterpret_cast<float *>(output) + i * outputComponentCount;
 
-        for (size_t j = 0; j < inputComponentCount; j++)
+        // GLfixed access must be 4-byte aligned on arm32, input and stride sometimes are not
+        if (reinterpret_cast<uintptr_t>(offsetInput) % sizeof(GLfixed) == 0)
         {
-            offsetOutput[j] = static_cast<float>(offsetInput[j]) * divisor;
+            for (size_t j = 0; j < inputComponentCount; j++)
+            {
+                offsetOutput[j] =
+                    static_cast<float>(reinterpret_cast<const GLfixed *>(offsetInput)[j]) * divisor;
+            }
+        }
+        else
+        {
+            for (size_t j = 0; j < inputComponentCount; j++)
+            {
+                GLfixed alignedInput;
+                memcpy(&alignedInput, offsetInput + j * sizeof(GLfixed), sizeof(GLfixed));
+                offsetOutput[j] = static_cast<float>(alignedInput) * divisor;
+            }
         }
 
         // 4-component output formats would need special padding in the alpha channel.

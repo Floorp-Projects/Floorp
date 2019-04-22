@@ -9,7 +9,6 @@
 #ifndef LIBANGLE_RENDERER_D3D9_STATEMANAGER9_H_
 #define LIBANGLE_RENDERER_D3D9_STATEMANAGER9_H_
 
-#include "libANGLE/ContextState.h"
 #include "libANGLE/State.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"

@@ -120,4 +120,4 @@ class RenderStateCache : angle::NonCopyable
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_RENDERSTATECACHE_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_RENDERSTATECACHE_H_

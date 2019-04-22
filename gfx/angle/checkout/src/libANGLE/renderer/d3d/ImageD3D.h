@@ -26,7 +26,7 @@ struct Extents;
 struct Offset;
 struct Rectangle;
 struct PixelUnpackState;
-}
+}  // namespace gl
 
 namespace rx
 {
@@ -38,7 +38,7 @@ class ImageD3D : angle::NonCopyable
 {
   public:
     ImageD3D();
-    virtual ~ImageD3D(){};
+    virtual ~ImageD3D() {}
 
     GLsizei getWidth() const { return mWidth; }
     GLsizei getHeight() const { return mHeight; }
@@ -103,6 +103,6 @@ class ImageD3D : angle::NonCopyable
 
     bool mDirty;
 };
-}
+}  // namespace rx
 
 #endif  // LIBANGLE_RENDERER_D3D_IMAGED3D_H_

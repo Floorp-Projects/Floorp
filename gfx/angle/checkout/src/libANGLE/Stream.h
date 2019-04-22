@@ -28,7 +28,7 @@ namespace gl
 {
 class Context;
 class Texture;
-}
+}  // namespace gl
 
 namespace egl
 {
@@ -40,7 +40,7 @@ class Stream final : public LabeledObject, angle::NonCopyable
 {
   public:
     Stream(Display *display, const AttributeMap &attribs);
-    ~Stream();
+    ~Stream() override;
 
     void setLabel(EGLLabelKHR label) override;
     EGLLabelKHR getLabel() const override;

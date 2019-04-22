@@ -2966,6 +2966,7 @@ var startPlayingAndWaitForVideo = function(video, callback) {
 
   requestAnimFrame.call(window, timeWatcher);
   video.loop = true;
+  video.muted = true;
   video.play();
 };
 

@@ -17,8 +17,7 @@ namespace sh
 
 TranslatorESSL::TranslatorESSL(sh::GLenum type, ShShaderSpec spec)
     : TCompiler(type, spec, SH_ESSL_OUTPUT)
-{
-}
+{}
 
 void TranslatorESSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
                                                  ShCompileOptions compileOptions)
@@ -171,6 +170,12 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
                             "this if the extension is \"required\"\n";
                 }
                 sink << "#endif\n";
+            }
+            else if (iter->first == TExtension::ANGLE_multi_draw)
+            {
+                // Don't emit anything. This extension is emulated
+                ASSERT((compileOptions & SH_EMULATE_GL_DRAW_ID) != 0);
+                continue;
             }
             else
             {

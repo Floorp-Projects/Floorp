@@ -64,9 +64,7 @@ StateManager9::StateManager9(Renderer9 *renderer9)
     mScissorStateDirtyBits.set(DIRTY_BIT_SCISSOR_RECT);
 }
 
-StateManager9::~StateManager9()
-{
-}
+StateManager9::~StateManager9() {}
 
 void StateManager9::initialize()
 {

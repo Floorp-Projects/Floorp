@@ -57,6 +57,7 @@ class CommaSeparatedListItemPrefixGenerator
 {
   public:
     CommaSeparatedListItemPrefixGenerator() : mFirst(true) {}
+
   private:
     bool mFirst;
 
@@ -98,8 +99,7 @@ TOutputGLSLBase::TOutputGLSLBase(TInfoSinkBase &objSink,
       mShaderVersion(shaderVersion),
       mOutput(output),
       mCompileOptions(compileOptions)
-{
-}
+{}
 
 void TOutputGLSLBase::writeInvariantQualifier(const TType &type)
 {
@@ -188,6 +188,10 @@ void TOutputGLSLBase::writeLayoutQualifier(TIntermTyped *variable)
         if (layoutQualifier.location >= 0)
         {
             out << listItemPrefix << "location = " << layoutQualifier.location;
+        }
+        if (type.getQualifier() == EvqFragmentOut && layoutQualifier.index >= 0)
+        {
+            out << listItemPrefix << "index = " << layoutQualifier.index;
         }
     }
 
@@ -911,8 +915,8 @@ void TOutputGLSLBase::visitFunctionPrototype(TIntermFunctionPrototype *node)
 
 bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    bool visitChildren       = true;
-    TInfoSinkBase &out       = objSink();
+    bool visitChildren = true;
+    TInfoSinkBase &out = objSink();
     switch (node->getOp())
     {
         case EOpCallFunctionInAST:

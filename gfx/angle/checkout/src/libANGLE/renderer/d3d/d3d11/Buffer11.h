@@ -35,12 +35,12 @@ enum BufferUsage
     BUFFER_USAGE_STAGING,
     BUFFER_USAGE_VERTEX_OR_TRANSFORM_FEEDBACK,
     BUFFER_USAGE_INDEX,
-    // TODO: possibly share this buffer type with shader storage buffers.
     BUFFER_USAGE_INDIRECT,
     BUFFER_USAGE_PIXEL_UNPACK,
     BUFFER_USAGE_PIXEL_PACK,
     BUFFER_USAGE_UNIFORM,
     BUFFER_USAGE_EMULATED_INDEXED_VERTEX,
+    BUFFER_USAGE_RAW_UAV,
 
     BUFFER_USAGE_COUNT,
 };
@@ -70,6 +70,11 @@ class Buffer11 : public BufferD3D
     angle::Result getSRV(const gl::Context *context,
                          DXGI_FORMAT srvFormat,
                          const d3d11::ShaderResourceView **srvOut);
+    angle::Result getRawUAVRange(const gl::Context *context,
+                                 GLintptr offset,
+                                 GLsizeiptr size,
+                                 d3d11::UnorderedAccessView **uavOut);
+
     bool isMapped() const { return mMappedStorage != nullptr; }
     angle::Result packPixels(const gl::Context *context,
                              const gl::FramebufferAttachment &readAttachment,
@@ -84,28 +89,28 @@ class Buffer11 : public BufferD3D
     void invalidateStaticData(const gl::Context *context) override;
 
     // BufferImpl implementation
-    gl::Error setData(const gl::Context *context,
-                      gl::BufferBinding target,
-                      const void *data,
-                      size_t size,
-                      gl::BufferUsage usage) override;
-    gl::Error setSubData(const gl::Context *context,
-                         gl::BufferBinding target,
-                         const void *data,
-                         size_t size,
-                         size_t offset) override;
-    gl::Error copySubData(const gl::Context *context,
-                          BufferImpl *source,
-                          GLintptr sourceOffset,
-                          GLintptr destOffset,
-                          GLsizeiptr size) override;
-    gl::Error map(const gl::Context *context, GLenum access, void **mapPtr) override;
-    gl::Error mapRange(const gl::Context *context,
-                       size_t offset,
-                       size_t length,
-                       GLbitfield access,
-                       void **mapPtr) override;
-    gl::Error unmap(const gl::Context *context, GLboolean *result) override;
+    angle::Result setData(const gl::Context *context,
+                          gl::BufferBinding target,
+                          const void *data,
+                          size_t size,
+                          gl::BufferUsage usage) override;
+    angle::Result setSubData(const gl::Context *context,
+                             gl::BufferBinding target,
+                             const void *data,
+                             size_t size,
+                             size_t offset) override;
+    angle::Result copySubData(const gl::Context *context,
+                              BufferImpl *source,
+                              GLintptr sourceOffset,
+                              GLintptr destOffset,
+                              GLsizeiptr size) override;
+    angle::Result map(const gl::Context *context, GLenum access, void **mapPtr) override;
+    angle::Result mapRange(const gl::Context *context,
+                           size_t offset,
+                           size_t length,
+                           GLbitfield access,
+                           void **mapPtr) override;
+    angle::Result unmap(const gl::Context *context, GLboolean *result) override;
     angle::Result markTransformFeedbackUsage(const gl::Context *context) override;
 
   private:
@@ -130,6 +135,9 @@ class Buffer11 : public BufferD3D
                                       BufferStorage *storage,
                                       size_t sourceOffset,
                                       size_t storageSize);
+
+    angle::Result getNativeStorageForUAV(const gl::Context *context,
+                                         Buffer11::NativeStorage **storageOut);
 
     template <typename StorageOutT>
     angle::Result getBufferStorage(const gl::Context *context,

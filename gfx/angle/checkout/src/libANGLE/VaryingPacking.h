@@ -30,8 +30,7 @@ struct PackedVarying
 {
     PackedVarying(const sh::ShaderVariable &varyingIn, sh::InterpolationType interpolationIn)
         : PackedVarying(varyingIn, interpolationIn, "")
-    {
-    }
+    {}
     PackedVarying(const sh::ShaderVariable &varyingIn,
                   sh::InterpolationType interpolationIn,
                   const std::string &parentStructNameIn)
@@ -40,8 +39,7 @@ struct PackedVarying
           interpolation(interpolationIn),
           parentStructName(parentStructNameIn),
           arrayIndex(GL_INVALID_INDEX)
-    {
-    }
+    {}
 
     bool isStructField() const { return !parentStructName.empty(); }
 
@@ -85,8 +83,7 @@ struct PackedVaryingRegister final
           varyingRowIndex(0),
           registerRow(0),
           registerColumn(0)
-    {
-    }
+    {}
 
     PackedVaryingRegister(const PackedVaryingRegister &) = default;
     PackedVaryingRegister &operator=(const PackedVaryingRegister &) = default;
