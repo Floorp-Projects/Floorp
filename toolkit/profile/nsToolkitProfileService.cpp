@@ -588,9 +588,8 @@ nsresult nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
   return NS_OK;
 }
 
-bool
-IsFileOutdated(nsIFile* aFile, bool aExists, PRTime aLastModified,
-               int64_t aLastSize) {
+bool IsFileOutdated(nsIFile* aFile, bool aExists, PRTime aLastModified,
+                    int64_t aLastSize) {
   nsCOMPtr<nsIFile> file;
   nsresult rv = aFile->Clone(getter_AddRefs(file));
   if (NS_FAILED(rv)) {
@@ -622,9 +621,8 @@ IsFileOutdated(nsIFile* aFile, bool aExists, PRTime aLastModified,
   return false;
 }
 
-nsresult
-UpdateFileStats(nsIFile* aFile, bool* aExists, PRTime* aLastModified,
-                int64_t* aLastSize) {
+nsresult UpdateFileStats(nsIFile* aFile, bool* aExists, PRTime* aLastModified,
+                         int64_t* aLastSize) {
   nsCOMPtr<nsIFile> file;
   nsresult rv = aFile->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -648,7 +646,7 @@ UpdateFileStats(nsIFile* aFile, bool* aExists, PRTime* aLastModified,
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::GetIsListOutdated(bool *aResult) {
+nsToolkitProfileService::GetIsListOutdated(bool* aResult) {
   if (IsFileOutdated(mProfileDBFile, mProfileDBExists, mProfileDBModifiedTime,
                      mProfileDBFileSize)) {
     *aResult = true;
@@ -1872,7 +1870,7 @@ nsToolkitProfileService::Flush() {
       fclose(writeFile);
 
       rv = UpdateFileStats(mInstallDBFile, &mInstallDBExists,
-                          &mInstallDBModifiedTime, &mInstallDBFileSize);
+                           &mInstallDBModifiedTime, &mInstallDBFileSize);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       rv = mInstallDBFile->Remove(false);

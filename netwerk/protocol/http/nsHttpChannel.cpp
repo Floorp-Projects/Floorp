@@ -6147,10 +6147,9 @@ nsHttpChannel::Cancel(nsresult status) {
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 #ifdef DEBUG
   if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
-    MOZ_CRASH_UNSAFE_PRINTF(
-        "Blocking classifier error %" PRIx32
-        " need to be handled by CancelByURLClassifier()",
-        static_cast<uint32_t>(status));
+    MOZ_CRASH_UNSAFE_PRINTF("Blocking classifier error %" PRIx32
+                            " need to be handled by CancelByURLClassifier()",
+                            static_cast<uint32_t>(status));
   }
 #endif
 
@@ -6232,8 +6231,7 @@ void nsHttpChannel::ContinueCancellingByURLClassifier(nsresult aErrorCode) {
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 
-  LOG(("nsHttpChannel::ContinueCancellingByURLClassifier [this=%p]\n",
-       this));
+  LOG(("nsHttpChannel::ContinueCancellingByURLClassifier [this=%p]\n", this));
   if (mCanceled) {
     LOG(("  ignoring; already canceled\n"));
     return;

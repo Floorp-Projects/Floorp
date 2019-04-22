@@ -436,8 +436,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool ScheduleResumeOnCompositorThread();
   bool ScheduleResumeOnCompositorThread(int x, int y, int width, int height);
 
-  void ScheduleComposition(const wr::RenderRootSet& aRenderRoots =
-                               wr::RenderRootSet());
+  void ScheduleComposition(
+      const wr::RenderRootSet& aRenderRoots = wr::RenderRootSet());
 
   void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
                                    const FocusTarget& aFocusTarget,

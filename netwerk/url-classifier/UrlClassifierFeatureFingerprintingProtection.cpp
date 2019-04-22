@@ -174,8 +174,7 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   if (httpChannel) {
-    Unused << httpChannel->CancelByURLClassifier(
-        NS_ERROR_FINGERPRINTING_URI);
+    Unused << httpChannel->CancelByURLClassifier(NS_ERROR_FINGERPRINTING_URI);
   } else {
     Unused << aChannel->Cancel(NS_ERROR_FINGERPRINTING_URI);
   }
