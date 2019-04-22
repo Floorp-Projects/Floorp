@@ -19,6 +19,10 @@
 #  include "mozilla/gfx/MacIOSurface.h"
 #endif
 
+#if !defined(XP_WIN)
+#  include <sys/stat.h>  // for umask()
+#endif
+
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "binding/OpenVRKnucklesBinding.h"
@@ -53,13 +57,11 @@ namespace {
 
 // This is for controller action file writer.
 struct StringWriteFunc : public JSONWriteFunc {
-  nsAString& mBuffer;  // This struct must not outlive this buffer
+  nsACString& mBuffer;  // This struct must not outlive this buffer
 
-  explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
+  explicit StringWriteFunc(nsACString& buffer) : mBuffer(buffer) {}
 
-  void Write(const char* aStr) override {
-    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
-  }
+  void Write(const char* aStr) override { mBuffer.Append(aStr); }
 };
 
 class ControllerManifestFile {
@@ -72,7 +74,8 @@ class ControllerManifestFile {
   }
 
   bool IsExisting() {
-    if (mFileName.IsEmpty() || !std::ifstream(mFileName.BeginReading())) {
+    if (mFileName.IsEmpty() ||
+        !std::ifstream(mFileName.BeginReading()).good()) {
       return false;
     }
     return true;
@@ -172,13 +175,59 @@ void UpdateButton(VRControllerState& aState,
 }
 
 bool FileIsExisting(const nsCString& aPath) {
-  if (aPath.IsEmpty() || !std::ifstream(aPath.BeginReading())) {
+  if (aPath.IsEmpty() || !std::ifstream(aPath.BeginReading()).good()) {
     return false;
   }
   return true;
 }
 
 };  // anonymous namespace
+
+#if defined(XP_WIN)
+bool GenerateTempFileName(nsCString& aPath) {
+  TCHAR tempPathBuffer[MAX_PATH];
+  TCHAR tempFileName[MAX_PATH];
+
+  // Gets the temp path env string (no guarantee it's a valid path).
+  DWORD dwRetVal = GetTempPath(MAX_PATH, tempPathBuffer);
+  if (dwRetVal > MAX_PATH || (dwRetVal == 0)) {
+    NS_WARNING("OpenVR - Creating temp path failed.");
+    return false;
+  }
+
+  // Generates a temporary file name.
+  UINT uRetVal = GetTempFileName(tempPathBuffer,  // directory for tmp files
+                                 TEXT("mozvr"),   // temp file name prefix
+                                 0,               // create unique name
+                                 tempFileName);   // buffer for name
+  if (uRetVal == 0) {
+    NS_WARNING("OpenVR - Creating temp file failed.");
+    return false;
+  }
+
+  aPath.Assign(NS_ConvertUTF16toUTF8(tempFileName));
+  return true;
+}
+#else
+bool GenerateTempFileName(nsCString& aPath) {
+  const char tmp[] = "/tmp/mozvrXXXXXX";
+  char fileName[PATH_MAX];
+
+  strcpy(fileName, tmp);
+  const mode_t prevMask = umask(S_IXUSR | S_IRWXO | S_IRWXG);
+  const int fd = mkstemp(fileName);
+  umask(prevMask);
+  if (fd == -1) {
+    NS_WARNING(nsPrintfCString("OpenVR - Creating temp file failed: %s",
+                               strerror(errno)).get());
+    return false;
+  }
+  close(fd);
+
+  aPath.Assign(fileName);
+  return true;
+}
+#endif  // defined(XP_WIN)
 
 OpenVRSession::OpenVRSession()
     : VRSession(),
@@ -256,8 +305,8 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
 
-  if (gfxPrefs::VROpenVRActionInputEnabled()) {
-    SetupContollerActions();
+  if (gfxPrefs::VROpenVRActionInputEnabled() && !SetupContollerActions()) {
+    return false;
   }
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -267,7 +316,7 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
   return true;
 }
 
-void OpenVRSession::SetupContollerActions() {
+bool OpenVRSession::SetupContollerActions() {
   // Check if this device binding file has been created.
   // If it didn't exist yet, create a new temp file.
   nsCString controllerAction;
@@ -275,23 +324,23 @@ void OpenVRSession::SetupContollerActions() {
   nsCString WMRManifest;
   nsCString knucklesManifest;
 
+  // Getting / Generating manifest file paths.
   if (gfxPrefs::VRProcessEnabled()) {
     VRParent* vrParent = VRProcessChild::GetVRParent();
     nsCString output;
 
     if (vrParent->GetOpenVRControllerActionPath(&output)) {
       controllerAction = output;
-    } else {
-      controllerAction = std::tmpnam(nullptr);
     }
 
     if (vrParent->GetOpenVRControllerManifestPath(OpenVRControllerType::Vive,
                                                   &output)) {
       viveManifest = output;
-    } else {
-      viveManifest = std::tmpnam(nullptr);
     }
-    if (!FileIsExisting(viveManifest)) {
+    if (!viveManifest.Length() || !FileIsExisting(viveManifest)) {
+      if (!GenerateTempFileName(viveManifest)) {
+        return false;
+      }
       OpenVRViveBinding viveBinding;
       std::ofstream viveBindingFile(viveManifest.BeginReading());
       if (viveBindingFile.is_open()) {
@@ -304,10 +353,11 @@ void OpenVRSession::SetupContollerActions() {
     if (vrParent->GetOpenVRControllerManifestPath(OpenVRControllerType::WMR,
                                                   &output)) {
       WMRManifest = output;
-    } else {
-      WMRManifest = std::tmpnam(nullptr);
     }
-    if (!FileIsExisting(WMRManifest)) {
+    if (!WMRManifest.Length() || !FileIsExisting(WMRManifest)) {
+      if (!GenerateTempFileName(WMRManifest)) {
+        return false;
+      }
       OpenVRWMRBinding WMRBinding;
       std::ofstream WMRBindingFile(WMRManifest.BeginReading());
       if (WMRBindingFile.is_open()) {
@@ -320,10 +370,11 @@ void OpenVRSession::SetupContollerActions() {
     if (vrParent->GetOpenVRControllerManifestPath(
             OpenVRControllerType::Knuckles, &output)) {
       knucklesManifest = output;
-    } else {
-      knucklesManifest = std::tmpnam(nullptr);
     }
-    if (!FileIsExisting(knucklesManifest)) {
+    if (!knucklesManifest.Length() || !FileIsExisting(knucklesManifest)) {
+      if (!GenerateTempFileName(knucklesManifest)) {
+        return false;
+      }
       OpenVRKnucklesBinding knucklesBinding;
       std::ofstream knucklesBindingFile(knucklesManifest.BeginReading());
       if (knucklesBindingFile.is_open()) {
@@ -332,13 +383,12 @@ void OpenVRSession::SetupContollerActions() {
       }
     }
   } else {
+    // Without using VR process
     if (!sControllerActionFile) {
       sControllerActionFile = ControllerManifestFile::CreateManifest();
       NS_DispatchToMainThread(NS_NewRunnableFunction(
           "ClearOnShutdown ControllerManifestFile",
           []() { ClearOnShutdown(&sControllerActionFile); }));
-
-      sControllerActionFile->SetFileName(std::tmpnam(nullptr));
     }
     controllerAction = sControllerActionFile->GetFileName();
 
@@ -349,7 +399,11 @@ void OpenVRSession::SetupContollerActions() {
                                  []() { ClearOnShutdown(&sViveBindingFile); }));
     }
     if (!sViveBindingFile->IsExisting()) {
-      sViveBindingFile->SetFileName(std::tmpnam(nullptr));
+      nsCString viveBindingPath;
+      if (!GenerateTempFileName(viveBindingPath)) {
+        return false;
+      }
+      sViveBindingFile->SetFileName(viveBindingPath.BeginReading());
       OpenVRViveBinding viveBinding;
       std::ofstream viveBindingFile(sViveBindingFile->GetFileName());
       if (viveBindingFile.is_open()) {
@@ -366,7 +420,11 @@ void OpenVRSession::SetupContollerActions() {
           []() { ClearOnShutdown(&sKnucklesBindingFile); }));
     }
     if (!sKnucklesBindingFile->IsExisting()) {
-      sKnucklesBindingFile->SetFileName(std::tmpnam(nullptr));
+      nsCString knucklesBindingPath;
+      if (!GenerateTempFileName(knucklesBindingPath)) {
+        return false;
+      }
+      sKnucklesBindingFile->SetFileName(knucklesBindingPath.BeginReading());
       OpenVRKnucklesBinding knucklesBinding;
       std::ofstream knucklesBindingFile(sKnucklesBindingFile->GetFileName());
       if (knucklesBindingFile.is_open()) {
@@ -384,7 +442,11 @@ void OpenVRSession::SetupContollerActions() {
                                  []() { ClearOnShutdown(&sWMRBindingFile); }));
     }
     if (!sWMRBindingFile->IsExisting()) {
-      sWMRBindingFile->SetFileName(std::tmpnam(nullptr));
+      nsCString WMRBindingPath;
+      if (!GenerateTempFileName(WMRBindingPath)) {
+        return false;
+      }
+      sWMRBindingFile->SetFileName(WMRBindingPath.BeginReading());
       OpenVRWMRBinding WMRBinding;
       std::ofstream WMRBindingFile(sWMRBindingFile->GetFileName());
       if (WMRBindingFile.is_open()) {
@@ -395,7 +457,9 @@ void OpenVRSession::SetupContollerActions() {
     WMRManifest = sWMRBindingFile->GetFileName();
 #endif
   }
+  // End of Getting / Generating manifest file paths.
 
+  // Setup controller actions.
   ControllerInfo leftContollerInfo;
   leftContollerInfo.mActionPose =
       ControllerAction("/actions/firefox/in/LHand_pose", "pose");
@@ -495,8 +559,11 @@ void OpenVRSession::SetupContollerActions() {
   mControllerHand[OpenVRHand::Left] = leftContollerInfo;
   mControllerHand[OpenVRHand::Right] = rightContollerInfo;
 
-  if (!FileIsExisting(controllerAction)) {
-    nsAutoString actionData;
+  if (!controllerAction.Length() || !FileIsExisting(controllerAction)) {
+    if (!GenerateTempFileName(controllerAction)) {
+      return false;
+    }
+    nsCString actionData;
     JSONWriter actionWriter(MakeUnique<StringWriteFunc>(actionData));
     actionWriter.Start();
 
@@ -690,7 +757,7 @@ void OpenVRSession::SetupContollerActions() {
     actionWriter.End();
 
     std::ofstream actionfile(controllerAction.BeginReading());
-    nsCString actionResult(NS_ConvertUTF16toUTF8(actionData.get()));
+    nsCString actionResult(actionData.get());
     if (actionfile.is_open()) {
       actionfile << actionResult.get();
       actionfile.close();
@@ -698,6 +765,7 @@ void OpenVRSession::SetupContollerActions() {
   }
 
   vr::VRInput()->SetActionManifestPath(controllerAction.BeginReading());
+  // End of setup controller actions.
 
   // Notify the parent process these manifest files are already been recorded.
   if (gfxPrefs::VRProcessEnabled()) {
@@ -714,7 +782,11 @@ void OpenVRSession::SetupContollerActions() {
           Unused << vrParent->SendOpenVRControllerManifestPathToParent(
               OpenVRControllerType::Knuckles, knucklesManifest);
         }));
+  } else {
+    sControllerActionFile->SetFileName(controllerAction.BeginReading());
   }
+
+  return true;
 }
 
 #if defined(XP_WIN)
