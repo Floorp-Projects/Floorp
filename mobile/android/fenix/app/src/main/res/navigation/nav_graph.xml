@@ -32,6 +32,9 @@
         <action
             android:id="@+id/action_homeFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_createCollectionFragment"
+            app:destination="@id/createCollectionFragment" />
     </fragment>
 
     <fragment
@@ -284,4 +287,9 @@
         android:id="@+id/trackingProtectionFragment"
         android:name="org.mozilla.fenix.settings.TrackingProtectionFragment"
         android:label="TrackingProtectionFragment" />
+    <fragment
+        android:id="@+id/createCollectionFragment"
+        android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
+        android:label="fragment_create_collection"
+        tools:layout="@layout/fragment_create_collection" />
 </navigation>

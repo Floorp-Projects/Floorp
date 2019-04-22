@@ -176,7 +176,10 @@ class HomeFragment : Fragment(), CoroutineScope {
     @SuppressWarnings("ComplexMethod")
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
-            is TabAction.SaveTabGroup -> {}
+            is TabAction.SaveTabGroup -> {
+                val direction = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
+                Navigation.findNavController(view!!).navigate(direction)
+            }
             is TabAction.MenuTapped -> {
                 val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
                 val titles = requireComponents.core.sessionManager.sessions
