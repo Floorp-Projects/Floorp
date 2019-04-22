@@ -99,6 +99,10 @@ add_task(async function test_create_options() {
               create: {windowId: activeWindow},
               result: {windowId: activeWindow},
             },
+            {
+              create: {index: 9999},
+              result: {index: 2},
+            },
           ];
 
           async function nextTest() {
