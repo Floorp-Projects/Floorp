@@ -2405,6 +2405,10 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   NSWindow* window = [aNotification object];
   if (window) [WindowDelegate paintMenubarForWindow:window];
 
+  if ([window isKindOfClass:[ToolbarWindow class]]) {
+    [(ToolbarWindow*)window windowMainStateChanged];
+  }
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -2419,6 +2423,11 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   if (hiddenWindowMenuBar) {
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();
+  }
+
+  NSWindow* window = [aNotification object];
+  if ([window isKindOfClass:[ToolbarWindow class]]) {
+    [(ToolbarWindow*)window windowMainStateChanged];
   }
 }
 
@@ -2849,9 +2858,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   mDrawsIntoWindowFrame = aState;
   if (changed) {
     [self reflowTitlebarElements];
-    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
-      [self setTitlebarAppearsTransparent:mDrawsIntoWindowFrame];
-    }
   }
 }
 
@@ -3084,33 +3090,94 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 @end
 
-// This class allows us to exercise control over the window's title bar. This
-// allows for a "unified toolbar" look without having to extend the content
-// area into the title bar.
+@interface NSView (NSThemeFrame)
+- (void)_drawTitleStringInClip:(NSRect)aRect;
+- (void)_maskCorners:(NSUInteger)aFlags clipRect:(NSRect)aRect;
+@end
+
+@implementation TitlebarGradientView
+
+- (void)drawRect:(NSRect)aRect {
+  CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  ToolbarWindow* window = (ToolbarWindow*)[self window];
+  nsNativeThemeCocoa::DrawNativeTitlebar(ctx, NSRectToCGRect([self bounds]),
+                                         [window unifiedToolbarHeight], [window isMainWindow], NO);
+
+  // The following is only necessary because we're not using
+  // NSFullSizeContentViewWindowMask yet: We need to mask our drawing to the
+  // rounded top corners of the window, and we need to draw the title string
+  // on top. That's because the title string is drawn as part of the frame view
+  // and this view covers that drawing up.
+  // Once we use NSFullSizeContentViewWindowMask and remove our override of
+  // _wantsFloatingTitlebar, Cocoa will draw the title string as part of a
+  // separate view which sits on top of the window's content view, and we'll be
+  // able to remove the code below.
+
+  NSView* frameView = [[[self window] contentView] superview];
+  if (!frameView || ![frameView respondsToSelector:@selector(_maskCorners:clipRect:)] ||
+      ![frameView respondsToSelector:@selector(_drawTitleStringInClip:)]) {
+    return;
+  }
+
+  NSPoint offsetToFrameView = [self convertPoint:NSZeroPoint toView:frameView];
+  NSRect clipRect = {offsetToFrameView, [self bounds].size};
+
+  // Both this view and frameView return NO from isFlipped. Switch into
+  // frameView's coordinate system using a translation by the offset.
+  CGContextSaveGState(ctx);
+  CGContextTranslateCTM(ctx, -offsetToFrameView.x, -offsetToFrameView.y);
+
+  [frameView _maskCorners:2 clipRect:clipRect];
+  [frameView _drawTitleStringInClip:clipRect];
+
+  CGContextRestoreGState(ctx);
+}
+
+- (BOOL)isOpaque {
+  return YES;
+}
+
+- (BOOL)mouseDownCanMoveWindow {
+  return YES;
+}
+
+- (NSView*)hitTest:(NSPoint)aPoint {
+  return nil;
+}
+
+@end
+
+// This class allows us to exercise control over the window's title bar. It is
+// used for all windows with titlebars.
 //
-// Drawing the unified gradient in the titlebar and the toolbar works like this:
+// ToolbarWindow supports two modes:
+//  - drawsContentsIntoWindowFrame mode: In this mode, the Gecko ChildView is
+//    sized to cover the entire window frame and manages titlebar drawing.
+//  - separate titlebar mode, with support for unified toolbars: In this mode,
+//    the Gecko ChildView does not extend into the titlebar. However, this
+//    window's content view (which is the ChildView's superview) *does* extend
+//    into the titlebar. Moreover, in this mode, we place a TitlebarGradientView
+//    in the content view, as a sibling of the ChildView.
+//
+// The "separate titlebar mode" supports the "unified toolbar" look:
+// If there's a toolbar right below the titlebar, the two can "connect" and
+// form a single gradient without a separator line in between.
+//
+// The following mechanism communicates the height of the unified toolbar to
+// the ToolbarWindow:
+//
 // 1) In the style sheet we set the toolbar's -moz-appearance to toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
 //    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
 //    will contain an entry for the widget type StyleAppearance::Toolbar.
-// 3) nsChildView::UpdateThemeGeometries finds the toolbar frame's ToolbarWindow
-//    and passes the toolbar frame's height to setUnifiedToolbarHeight.
-// 4) If the toolbar height has changed, a titlebar redraw is triggered and the
-//    upper part of the unified gradient is drawn in the titlebar.
-// 5) The lower part of the unified gradient in the toolbar is drawn during
-//    normal window content painting in nsNativeThemeCocoa::DrawUnifiedToolbar.
+// 3) nsChildView::UpdateThemeGeometries passes the toolbar's height, plus the
+//    titlebar height, to -[ToolbarWindow setUnifiedToolbarHeight:].
 //
-// Whenever the unified gradient is drawn in the titlebar or the toolbar, both
-// titlebar height and toolbar height must be known in order to construct the
-// correct gradient. But you can only get from the toolbar frame
-// to the containing window - the other direction doesn't work. That's why the
-// toolbar height is cached in the ToolbarWindow but nsNativeThemeCocoa can simply
-// query the window for its titlebar height when drawing the toolbar.
-//
-// Note that in drawsContentsIntoWindowFrame mode, titlebar drawing works in a
-// completely different way: In that mode, the window's mainChildView will
-// cover the titlebar completely and nothing that happens in the window
-// background will reach the screen.
+// The actual drawing of the gradient happens in two parts: The titlebar part
+// (i.e. the top 22 pixels of the gradient) is drawn by the TitlebarGradientView,
+// which is a subview of the window's content view and a sibling of the ChildView.
+// The rest of the gradient is drawn by Gecko into the ChildView, as part of the
+// -moz-appearance rendering of the toolbar.
 @implementation ToolbarWindow
 
 - (id)initWithContentRect:(NSRect)aContentRect
@@ -3123,24 +3190,47 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
                                styleMask:aStyle
                                  backing:aBufferingType
                                    defer:aFlag])) {
+    mTitlebarGradientView = nil;
     mUnifiedToolbarHeight = 22.0f;
     mSheetAttachmentPosition = aContentRect.size.height;
     mWindowButtonsRect = NSZeroRect;
     mFullScreenButtonRect = NSZeroRect;
+
+    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
+      [self setTitlebarAppearsTransparent:YES];
+    }
+
+    [self updateTitlebarGradientViewPresence];
   }
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (void)dealloc {
+  [mTitlebarGradientView release];
+  [super dealloc];
+}
+
+- (void)updateTitlebarGradientViewPresence {
+  BOOL needTitlebarView = ![self drawsContentsIntoWindowFrame];
+  if (needTitlebarView && !mTitlebarGradientView) {
+    mTitlebarGradientView = [[TitlebarGradientView alloc] initWithFrame:[self titlebarRect]];
+    mTitlebarGradientView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+    [self.contentView addSubview:mTitlebarGradientView];
+  } else if (!needTitlebarView && mTitlebarGradientView) {
+    [mTitlebarGradientView removeFromSuperview];
+    [mTitlebarGradientView release];
+    mTitlebarGradientView = nil;
+  }
+}
+
+- (void)windowMainStateChanged {
+  [self setTitlebarNeedsDisplay];
+}
+
 - (void)setTitlebarNeedsDisplay {
-  NSRect rect = [self titlebarRect];
-  if (NSIsEmptyRect(rect)) return;
-
-  NSView* borderView = [[self contentView] superview];
-  if (!borderView) return;
-
-  [borderView setNeedsDisplayInRect:rect];
+  [mTitlebarGradientView setNeedsDisplay:YES];
 }
 
 - (NSRect)titlebarRect {
@@ -3199,6 +3289,8 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
   }
+
+  [self updateTitlebarGradientViewPresence];
 }
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle {
