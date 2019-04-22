@@ -322,7 +322,7 @@ struct StreamAndPromiseForOperation {
   dom::AudioContextOperationFlags mFlags;
 };
 
-enum class AsyncCubebOperation { INIT, START, STOP, SHUTDOWN  };
+enum class AsyncCubebOperation { INIT, START, STOP, SHUTDOWN };
 enum class AudioInputType { Unknown, Voice };
 
 /**

@@ -289,8 +289,8 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
 
 static StaticRefPtr<nsIPrincipal> sActiveWorkerPrincipal;
 
-nsJSPrincipals::AutoSetActiveWorkerPrincipal::AutoSetActiveWorkerPrincipal
-    (nsIPrincipal* aPrincipal) {
+nsJSPrincipals::AutoSetActiveWorkerPrincipal::AutoSetActiveWorkerPrincipal(
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!sActiveWorkerPrincipal);
   sActiveWorkerPrincipal = aPrincipal;

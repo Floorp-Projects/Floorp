@@ -11,9 +11,8 @@
 namespace mozilla {
 namespace detail {
 
-inline LauncherResult<nt::DataDirectoryEntry>
-GetImageDirectoryViaFileIo(const nsAutoHandle& aImageFile,
-                           const uint32_t aOurImportDirectoryRva) {
+inline LauncherResult<nt::DataDirectoryEntry> GetImageDirectoryViaFileIo(
+    const nsAutoHandle& aImageFile, const uint32_t aOurImportDirectoryRva) {
   OVERLAPPED ov = {};
   ov.Offset = aOurImportDirectoryRva;
 
@@ -51,21 +50,20 @@ GetImageDirectoryViaFileIo(const nsAutoHandle& aImageFile,
  *                        determine the base address of the binary within the
  *                        target process.
  */
-inline LauncherVoidResult
-RestoreImportDirectory(const wchar_t* aFullImagePath,
-                       const nt::PEHeaders& aLocalExeImage,
-                       HANDLE aTargetProcess, HMODULE aRemoteExeImage) {
+inline LauncherVoidResult RestoreImportDirectory(
+    const wchar_t* aFullImagePath, const nt::PEHeaders& aLocalExeImage,
+    HANDLE aTargetProcess, HMODULE aRemoteExeImage) {
   uint32_t importDirEntryRva;
   PIMAGE_DATA_DIRECTORY importDirEntry =
-    aLocalExeImage.GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT,
-                                             &importDirEntryRva);
+      aLocalExeImage.GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                               &importDirEntryRva);
   if (!importDirEntry) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
   }
 
-  nsAutoHandle file(::CreateFileW(aFullImagePath, GENERIC_READ,
-                                  FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL, nullptr));
+  nsAutoHandle file(::CreateFileW(aFullImagePath, GENERIC_READ, FILE_SHARE_READ,
+                                  nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                  nullptr));
   if (file.get() == INVALID_HANDLE_VALUE) {
     return LAUNCHER_ERROR_FROM_LAST();
   }
@@ -77,29 +75,27 @@ RestoreImportDirectory(const wchar_t* aFullImagePath,
   // flag, which may help to mitigate this, but we might as well just support
   // a single implementation that works everywhere.
   LauncherResult<nt::DataDirectoryEntry> realImportDirectory =
-    detail::GetImageDirectoryViaFileIo(file, importDirEntryRva);
+      detail::GetImageDirectoryViaFileIo(file, importDirEntryRva);
   if (realImportDirectory.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(realImportDirectory);
   }
 
   nt::DataDirectoryEntry toWrite = realImportDirectory.unwrap();
 
-  void* remoteAddress =
-    reinterpret_cast<char*>(nt::PEHeaders::HModuleToBaseAddr(aRemoteExeImage)) +
-    importDirEntryRva;
+  void* remoteAddress = reinterpret_cast<char*>(
+                            nt::PEHeaders::HModuleToBaseAddr(aRemoteExeImage)) +
+                        importDirEntryRva;
 
-  { // Scope for prot
-    AutoVirtualProtect prot(remoteAddress,
-                            sizeof(IMAGE_DATA_DIRECTORY),
+  {  // Scope for prot
+    AutoVirtualProtect prot(remoteAddress, sizeof(IMAGE_DATA_DIRECTORY),
                             PAGE_READWRITE, aTargetProcess);
     if (!prot) {
       return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
     SIZE_T bytesWritten;
-    if (!::WriteProcessMemory(aTargetProcess, remoteAddress,
-                              &toWrite, sizeof(IMAGE_DATA_DIRECTORY),
-                              &bytesWritten) ||
+    if (!::WriteProcessMemory(aTargetProcess, remoteAddress, &toWrite,
+                              sizeof(IMAGE_DATA_DIRECTORY), &bytesWritten) ||
         bytesWritten != sizeof(IMAGE_DATA_DIRECTORY)) {
       return LAUNCHER_ERROR_FROM_LAST();
     }

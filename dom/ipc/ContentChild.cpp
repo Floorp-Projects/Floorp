@@ -3694,11 +3694,11 @@ already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
 
       // If sameTabGroupAs is non-zero, then the new tab will be in the same
       // TabGroup as a previously created tab. Rather than try to find the
-      // previously created tab (whose constructor message may not even have been
-      // processed yet, in theory) and look up its event target, we just use the
-      // default event target. This means that runnables for this tab will not be
-      // labeled. However, this path is only taken for print preview and view
-      // source, which are not performance-sensitive.
+      // previously created tab (whose constructor message may not even have
+      // been processed yet, in theory) and look up its event target, we just
+      // use the default event target. This means that runnables for this tab
+      // will not be labeled. However, this path is only taken for print preview
+      // and view source, which are not performance-sensitive.
       if (sameTabGroupAs) {
         return nullptr;
       }
