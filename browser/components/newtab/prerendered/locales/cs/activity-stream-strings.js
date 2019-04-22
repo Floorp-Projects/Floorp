@@ -51,7 +51,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_visited_label": "Navštívené stránky",
   "prefs_highlights_options_download_label": "Nedávná stahování",
   "prefs_highlights_options_pocket_label": "Stránky uložené do služby Pocket",
-  "prefs_snippets_description": "Informace od Mozilly a o Firefoxu",
+  "prefs_snippets_description": "Aktuální informace od Mozilly a Firefoxu",
   "settings_pane_button_label": "Přizpůsobení stránky nového panelu",
   "settings_pane_topsites_header": "Top stránky",
   "settings_pane_highlights_header": "Vybrané",

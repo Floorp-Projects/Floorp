@@ -1,4 +1,3 @@
-import {cache} from "./cache";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -20,6 +19,7 @@ export class DSImage extends React.PureComponent {
         if (this.props.optimize) {
           this.setState({
             containerWidth: ReactDOM.findDOMNode(this).clientWidth,
+            containerHeight: ReactDOM.findDOMNode(this).clientHeight,
           });
         }
 
@@ -33,11 +33,11 @@ export class DSImage extends React.PureComponent {
     }
   }
 
-  reformatImageURL(url, width) {
+  reformatImageURL(url, width, height) {
     // Change the image URL to request a size tailored for the parent container width
     // Also: force JPEG, quality 60, no upscaling, no EXIF data
     // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
-    return `https://img-getpocket.cdn.mozilla.net/${width}x0/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
+    return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(url)}`;
   }
 
   componentDidMount() {
@@ -67,12 +67,14 @@ export class DSImage extends React.PureComponent {
 
           source = this.reformatImageURL(
             baseSource,
-            cache.query(baseSource, this.state.containerWidth, `1x`)
+            this.state.containerWidth,
+            this.state.containerHeight
           );
 
           source2x = this.reformatImageURL(
             baseSource,
-            cache.query(baseSource, this.state.containerWidth * 2, `2x`)
+            this.state.containerWidth * 2,
+            this.state.containerHeight * 2
           );
 
           img = (<img onError={this.onOptimizedImageError} src={source} srcSet={`${source2x} 2x`} />);

@@ -509,7 +509,7 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         ...prevState,
         spocs: {
           ...prevState.spocs,
-          frequency_caps: action.data,
+          frequency_caps: [...prevState.spocs.frequency_caps, ...action.data],
         },
       };
     case at.DISCOVERY_STREAM_SPOCS_ENDPOINT:

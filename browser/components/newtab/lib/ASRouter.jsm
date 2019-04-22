@@ -194,6 +194,7 @@ const MessageLoaderUtils = {
       dispatchToAS(ac.ASRouterUserEvent({
         action: "asrouter_undesired_event",
         event,
+        message_id: "n/a",
         value: providerId,
       }));
     }
