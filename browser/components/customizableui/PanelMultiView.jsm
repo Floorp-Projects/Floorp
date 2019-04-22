@@ -1499,7 +1499,7 @@ var PanelView = class extends AssociatedToNode {
         && walker.nextNode()) {
       this.selectedElement = walker.currentNode;
     }
-    this.focusSelectedElement();
+    this.focusSelectedElement(/* byKey */ true);
   }
 
   /**
@@ -1514,7 +1514,7 @@ var PanelView = class extends AssociatedToNode {
       this._arrowNavigableWalker : this._tabNavigableWalker;
     walker.currentNode = walker.root;
     this.selectedElement = walker.lastChild();
-    this.focusSelectedElement();
+    this.focusSelectedElement(/* byKey */ true);
   }
 
   /**
@@ -1607,7 +1607,7 @@ var PanelView = class extends AssociatedToNode {
         let isDown = (keyCode == "ArrowDown") ||
                      (keyCode == "Tab" && !event.shiftKey);
         let button = this.moveSelection(isDown, keyCode != "Tab");
-        button.focus();
+        Services.focus.setFocus(button, Services.focus.FLAG_BYKEY);
         break;
       }
       case "Home":
@@ -1670,11 +1670,15 @@ var PanelView = class extends AssociatedToNode {
 
   /**
    * Focus the last selected element in the view, if any.
+   *
+   * @param byKey {Boolean} whether focus was moved by the user pressing a key.
+   *                        Needed to ensure we show focus styles in the right cases.
    */
-  focusSelectedElement() {
+  focusSelectedElement(byKey = false) {
     let selected = this.selectedElement;
     if (selected) {
-      selected.focus();
+      let flag = byKey ? "FLAG_BYKEY" : "FLAG_BYELEMENTFOCUS";
+      Services.focus.setFocus(selected, Services.focus[flag]);
     }
   }
 
