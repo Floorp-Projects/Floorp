@@ -229,6 +229,15 @@ class SearchFragment : Fragment() {
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
+                it.onPermissionsResult(permissions, grantResults)
+            }
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
     companion object {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
