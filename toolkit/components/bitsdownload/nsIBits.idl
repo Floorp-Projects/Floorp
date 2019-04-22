@@ -88,6 +88,7 @@ interface nsIBits : nsISupports
   const long ERROR_TYPE_BITS_STATE_UNEXPECTED                             = 46;
   const long ERROR_TYPE_VERIFICATION_FAILURE                              = 47;
   const long ERROR_TYPE_ACCESS_DENIED_EXPECTED                            = 48;
+  const long ERROR_TYPE_FAILED_TO_CONNECT_TO_BCM                          = 49;
 
   /**
    * nsBitsErrorAction values
