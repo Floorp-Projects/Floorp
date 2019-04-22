@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.145';
-const pdfjsBuild = '8bbae798';
+const pdfjsVersion = '2.2.154';
+const pdfjsBuild = '762c58e0';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.145';
+    let workerVersion = '2.2.154';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -650,7 +650,10 @@ var WorkerMessageHandler = {
     handler.on('GetPageMode', function wphSetupGetPageMode(data) {
       return pdfManager.ensureCatalog('pageMode');
     });
-    handler.on('getOpenActionDestination', function (data) {
+    handler.on('GetViewerPreferences', function (data) {
+      return pdfManager.ensureCatalog('viewerPreferences');
+    });
+    handler.on('GetOpenActionDestination', function (data) {
       return pdfManager.ensureCatalog('openActionDestination');
     });
     handler.on('GetAttachments', function wphSetupGetAttachments(data) {
@@ -2714,13 +2717,16 @@ class Page {
     this.pdfFunctionFactory = pdfFunctionFactory;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
-    const uniquePrefix = `p${this.pageIndex}_`;
     const idCounters = {
       obj: 0
     };
     this.idFactory = {
       createObjId() {
-        return uniquePrefix + ++idCounters.obj;
+        return `p${pageIndex}_${++idCounters.obj}`;
+      },
+
+      getDocId() {
+        return `g_${pdfManager.docId}`;
       }
 
     };
@@ -2852,7 +2858,6 @@ class Page {
     const contentStreamPromise = this.pdfManager.ensure(this, 'getContentStream');
     const resourcesPromise = this.loadResources(['ExtGState', 'ColorSpace', 'Pattern', 'Shading', 'XObject', 'Font']);
     const partialEvaluator = new _evaluator.PartialEvaluator({
-      pdfManager: this.pdfManager,
       xref: this.xref,
       handler,
       pageIndex: this.pageIndex,
@@ -2919,7 +2924,6 @@ class Page {
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     return dataPromises.then(([contentStream]) => {
       const partialEvaluator = new _evaluator.PartialEvaluator({
-        pdfManager: this.pdfManager,
         xref: this.xref,
         handler,
         pageIndex: this.pageIndex,
@@ -3794,6 +3798,159 @@ class Catalog {
     }
 
     return (0, _util.shadow)(this, 'pageMode', pageMode);
+  }
+
+  get viewerPreferences() {
+    const ViewerPreferencesValidators = {
+      HideToolbar: _util.isBool,
+      HideMenubar: _util.isBool,
+      HideWindowUI: _util.isBool,
+      FitWindow: _util.isBool,
+      CenterWindow: _util.isBool,
+      DisplayDocTitle: _util.isBool,
+      NonFullScreenPageMode: _primitives.isName,
+      Direction: _primitives.isName,
+      ViewArea: _primitives.isName,
+      ViewClip: _primitives.isName,
+      PrintArea: _primitives.isName,
+      PrintClip: _primitives.isName,
+      PrintScaling: _primitives.isName,
+      Duplex: _primitives.isName,
+      PickTrayByPDFSize: _util.isBool,
+      PrintPageRange: Array.isArray,
+      NumCopies: Number.isInteger
+    };
+    const obj = this.catDict.get('ViewerPreferences');
+    const prefs = Object.create(null);
+
+    if ((0, _primitives.isDict)(obj)) {
+      for (const key in ViewerPreferencesValidators) {
+        if (!obj.has(key)) {
+          continue;
+        }
+
+        const value = obj.get(key);
+
+        if (!ViewerPreferencesValidators[key](value)) {
+          (0, _util.info)(`Bad value in ViewerPreferences for "${key}".`);
+          continue;
+        }
+
+        let prefValue;
+
+        switch (key) {
+          case 'NonFullScreenPageMode':
+            switch (value.name) {
+              case 'UseNone':
+              case 'UseOutlines':
+              case 'UseThumbs':
+              case 'UseOC':
+                prefValue = value.name;
+                break;
+
+              default:
+                prefValue = 'UseNone';
+            }
+
+            break;
+
+          case 'Direction':
+            switch (value.name) {
+              case 'L2R':
+              case 'R2L':
+                prefValue = value.name;
+                break;
+
+              default:
+                prefValue = 'L2R';
+            }
+
+            break;
+
+          case 'ViewArea':
+          case 'ViewClip':
+          case 'PrintArea':
+          case 'PrintClip':
+            switch (value.name) {
+              case 'MediaBox':
+              case 'CropBox':
+              case 'BleedBox':
+              case 'TrimBox':
+              case 'ArtBox':
+                prefValue = value.name;
+                break;
+
+              default:
+                prefValue = 'CropBox';
+            }
+
+            break;
+
+          case 'PrintScaling':
+            switch (value.name) {
+              case 'None':
+              case 'AppDefault':
+                prefValue = value.name;
+                break;
+
+              default:
+                prefValue = 'AppDefault';
+            }
+
+            break;
+
+          case 'Duplex':
+            switch (value.name) {
+              case 'Simplex':
+              case 'DuplexFlipShortEdge':
+              case 'DuplexFlipLongEdge':
+                prefValue = value.name;
+                break;
+
+              default:
+                prefValue = 'None';
+            }
+
+            break;
+
+          case 'PrintPageRange':
+            const length = value.length;
+
+            if (length % 2 !== 0) {
+              break;
+            }
+
+            const isValid = value.every((page, i, arr) => {
+              return Number.isInteger(page) && page > 0 && (i === 0 || page >= arr[i - 1]) && page <= this.numPages;
+            });
+
+            if (isValid) {
+              prefValue = value;
+            }
+
+            break;
+
+          case 'NumCopies':
+            if (value > 0) {
+              prefValue = value;
+            }
+
+            break;
+
+          default:
+            (0, _util.assert)(typeof value === 'boolean');
+            prefValue = value;
+        }
+
+        if (prefValue !== undefined) {
+          prefs[key] = prefValue;
+        } else {
+          (0, _util.info)(`Bad value in ViewerPreferences for "${key}".`);
+        }
+      }
+    }
+
+    return (0, _util.shadow)(this, 'viewerPreferences', prefs);
   }
 
   get openActionDestination() {
@@ -18041,7 +18198,7 @@ class AnnotationFactory {
       return;
     }
 
-    let id = (0, _primitives.isRef)(ref) ? ref.toString() : 'annot_' + idFactory.createObjId();
+    let id = (0, _primitives.isRef)(ref) ? ref.toString() : `annot_${idFactory.createObjId()}`;
     let subtype = dict.get('Subtype');
     subtype = (0, _primitives.isName)(subtype) ? subtype.name : null;
     let parameters = {
@@ -19659,7 +19816,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
   };
 
   function PartialEvaluator({
-    pdfManager,
     xref,
     handler,
     pageIndex,
@@ -19669,7 +19825,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     options = null,
     pdfFunctionFactory
   }) {
-    this.pdfManager = pdfManager;
     this.xref = xref;
     this.handler = handler;
     this.pageIndex = pageIndex;
@@ -19678,6 +19833,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     this.builtInCMapCache = builtInCMapCache;
     this.options = options || DefaultPartialEvaluatorOptions;
     this.pdfFunctionFactory = pdfFunctionFactory;
+    this.parsingType3Font = false;
 
     this.fetchBuiltInCMap = async name => {
       if (this.builtInCMapCache.has(name)) {
@@ -19924,7 +20080,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       });
     },
 
-    buildPaintImageXObject({
+    async buildPaintImageXObject({
       resources,
       image,
       isInline = false,
@@ -19939,14 +20095,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       if (!(w && (0, _util.isNum)(w)) || !(h && (0, _util.isNum)(h))) {
         (0, _util.warn)('Image dimensions are missing, or not numbers.');
-        return Promise.resolve();
+        return;
       }
 
       var maxImageSize = this.options.maxImageSize;
 
       if (maxImageSize !== -1 && w * h > maxImageSize) {
         (0, _util.warn)('Image exceeded maximum allowed size and was removed.');
-        return Promise.resolve();
+        return;
       }
 
       var imageMask = dict.get('ImageMask', 'IM') || false;
@@ -19976,7 +20132,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           };
         }
 
-        return Promise.resolve();
+        return;
       }
 
       var softMask = dict.get('SMask', 'SM') || false;
@@ -19993,11 +20149,16 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         });
         imgData = imageObj.createImageData(true);
         operatorList.addOp(_util.OPS.paintInlineImageXObject, [imgData]);
-        return Promise.resolve();
+        return;
       }
 
       const nativeImageDecoderSupport = forceDisableNativeImageDecoder ? _util.NativeImageDecoding.NONE : this.options.nativeImageDecoderSupport;
-      var objId = 'img_' + this.idFactory.createObjId();
+      let objId = `img_${this.idFactory.createObjId()}`;
+
+      if (this.parsingType3Font) {
+        (0, _util.assert)(nativeImageDecoderSupport === _util.NativeImageDecoding.NONE, 'Type3 image resources should be completely decoded in the worker.');
+        objId = `${this.idFactory.getDocId()}_type3res_${objId}`;
+      }
 
       if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && _image_utils.NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory)) {
         return this.handler.sendWithPromise('obj', [objId, this.pageIndex, 'JpegStream', image.getIR(this.options.forceDataSchema)]).then(function () {
@@ -20040,7 +20201,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       operatorList.addDependency(objId);
       args = [objId, w, h];
 
-      _image.PDFImage.buildImage({
+      const imgPromise = _image.PDFImage.buildImage({
         handler: this.handler,
         xref: this.xref,
         res: resources,
@@ -20050,11 +20211,25 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         pdfFunctionFactory: this.pdfFunctionFactory
       }).then(imageObj => {
         var imgData = imageObj.createImageData(false);
+
+        if (this.parsingType3Font) {
+          return this.handler.sendWithPromise('commonobj', [objId, 'FontType3Res', imgData], [imgData.data.buffer]);
+        }
+
         this.handler.send('obj', [objId, this.pageIndex, 'Image', imgData], [imgData.data.buffer]);
       }).catch(reason => {
         (0, _util.warn)('Unable to decode image: ' + reason);
+
+        if (this.parsingType3Font) {
+          return this.handler.sendWithPromise('commonobj', [objId, 'FontType3Res', null]);
+        }
+
         this.handler.send('obj', [objId, this.pageIndex, 'Image', null]);
       });
+
+      if (this.parsingType3Font) {
+        await imgPromise;
+      }
 
       operatorList.addOp(_util.OPS.paintImageXObject, args);
 
@@ -20064,8 +20239,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           args
         };
       }
-
-      return Promise.resolve();
     },
 
     handleSMask: function PartialEvaluator_handleSmask(smask, resources, operatorList, task, stateManager) {
@@ -20343,11 +20516,11 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           fontID = this.idFactory.createObjId();
         }
 
-        this.fontCache.put('id_' + fontID, fontCapability.promise);
+        this.fontCache.put(`id_${fontID}`, fontCapability.promise);
       }
 
       (0, _util.assert)(fontID, 'The "fontID" must be defined.');
-      font.loadedName = 'g_' + this.pdfManager.docId + '_f' + fontID;
+      font.loadedName = `${this.idFactory.getDocId()}_f${fontID}`;
       font.translated = fontCapability.promise;
       var translatedPromise;
 
@@ -22154,7 +22327,9 @@ var TranslatedFont = function TranslatedFontClosure() {
 
       var type3Options = Object.create(evaluator.options);
       type3Options.ignoreErrors = false;
+      type3Options.nativeImageDecoderSupport = _util.NativeImageDecoding.NONE;
       var type3Evaluator = evaluator.clone(type3Options);
+      type3Evaluator.parsingType3Font = true;
       var translatedFont = this.font;
       var loadCharProcsPromise = Promise.resolve();
       var charProcs = this.dict.get('CharProcs');
