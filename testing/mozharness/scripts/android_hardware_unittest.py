@@ -9,7 +9,6 @@ import copy
 import datetime
 import json
 import os
-import re
 import sys
 import subprocess
 
@@ -112,13 +111,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         self.test_suite = c.get('test_suite')
         self.this_chunk = c.get('this_chunk')
         self.total_chunks = c.get('total_chunks')
-        if self.test_suite and self.test_suite not in self.config["suite_definitions"]:
-            # accept old-style test suite name like "mochitest-3"
-            m = re.match("(.*)-(\d*)", self.test_suite)
-            if m:
-                self.test_suite = m.group(1)
-                if self.this_chunk is None:
-                    self.this_chunk = m.group(2)
         self.xre_path = None
         self.log_raw_level = c.get('log_raw_level')
         self.log_tbpl_level = c.get('log_tbpl_level')
@@ -266,10 +258,10 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         if self.test_suite:
             return [(self.test_suite, self.test_suite)]
         # per-test mode: determine test suites to run
-        all = [('mochitest', {'plain': 'mochitest',
-                              'chrome': 'mochitest-chrome',
-                              'plain-clipboard': 'mochitest-plain-clipboard',
-                              'plain-gpu': 'mochitest-plain-gpu'}),
+        all = [('mochitest', {'mochitest-plain': 'mochitest-plain',
+                              'mochitest-chrome': 'mochitest-chrome',
+                              'mochitest-plain-clipboard': 'mochitest-plain-clipboard',
+                              'mochitest-plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
         suites = []
