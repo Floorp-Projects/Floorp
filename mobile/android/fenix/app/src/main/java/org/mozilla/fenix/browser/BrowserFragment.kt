@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
@@ -123,12 +122,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         )
 
         toolbarComponent.uiView.view.apply {
-            setBackgroundColor(
-                ContextCompat.getColor(
-                    view.context,
-                    DefaultThemeManager.resolveAttribute(R.attr.foundation, context)
-                )
-            )
+            setBackgroundResource(R.drawable.toolbar_background)
 
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
                 gravity = getAppropriateLayoutGravity()

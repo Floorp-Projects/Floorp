@@ -26,15 +26,6 @@
         app:behavior_peekHeight="12dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior"/>
 
-    <View
-        android:focusable="false"
-        android:id="@+id/toolbarDivider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_gravity="bottom"
-        android:background="?neutral"
-        app:layout_behavior="org.mozilla.fenix.browser.BrowserToolbarDividerBehavior" />
-
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"
         android:layout_width="match_parent"
