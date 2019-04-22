@@ -106,6 +106,26 @@ linux64-clang-8-android-cross:
         - linux64-gcc-6
         - linux64-android-ndk-linux-repack
 
+linux64-clang-8-aarch64-cross:
+    description: "Clang 8 toolchain build with aarch64 runtime"
+    treeherder:
+        symbol: TL(clang8-aarch64)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 3600
+        docker-image: {in-tree: toolchain-arm64-build}
+    run:
+        using: toolchain-script
+        script: build-clang-8-linux-aarch64-cross.sh
+        resources:
+            - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-alias: linux64-aarch64-cross
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-binutils
+        - linux64-gcc-6
+
 linux64-clang-8-macosx-cross:
     description: "Clang 8 toolchain build with MacOS Compiler RT libs"
     treeherder:
