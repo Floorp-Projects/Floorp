@@ -5,9 +5,8 @@
 // @flow
 
 import { getSymbols } from "../getSymbols";
-import { setSource } from "../sources";
 
-import type { Source } from "../../../types";
+import type { SourceId } from "../../../types";
 
 function formatLocation(loc) {
   if (!loc) {
@@ -61,12 +60,10 @@ function formatKey(name: string, symbols: any) {
   return `${name}:\n${symbols[name].map(summarize).join("\n")}`;
 }
 
-export function formatSymbols(source: Source) {
-  setSource(source);
-  const symbols = getSymbols(source.id);
+export function formatSymbols(sourceId: SourceId) {
+  const symbols = getSymbols(sourceId);
 
   return Object.keys(symbols)
-
     .map(name => formatKey(name, symbols))
     .join("\n\n");
 }

@@ -28,7 +28,12 @@ cases(
   "ast.getAst",
   ({ name }) => {
     const source = createSource(name);
-    setSource(source);
+    setSource({
+      id: source.id,
+      text: source.text || "",
+      contentType: source.contentType,
+      isWasm: false
+    });
     const ast = getAst("foo");
     expect(ast && Object.keys(ast)).toEqual(astKeys);
   },
