@@ -21,26 +21,13 @@ const utcTimeZones = [
     "GMT+0", "GMT-0", "GMT0", "Greenwich",
 
     // Links to Etc/UTC. (tzdata/backward)
-    "UTC", "Universal", "Zulu",
+    "UTC", "Universal", "Zulu", "Etc/UCT", "UCT",
 ];
 
 for (let timeZone of utcTimeZones) {
     for (let map of tzMapper) {
         let dtf = new Intl.DateTimeFormat(undefined, {timeZone: map(timeZone)});
         assertEq(dtf.resolvedOptions().timeZone, "UTC");
-    }
-}
-
-
-// ECMA-402 doesn't normalize Etc/UCT to UTC.
-const uctTimeZones = [
-    "Etc/UCT", "UCT",
-];
-
-for (let timeZone of uctTimeZones) {
-    for (let map of tzMapper) {
-        let dtf = new Intl.DateTimeFormat(undefined, {timeZone: map(timeZone)});
-        assertEq(dtf.resolvedOptions().timeZone, "Etc/UCT");
     }
 }
 
