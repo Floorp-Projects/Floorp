@@ -21,7 +21,7 @@ interface nsIPrincipal;
  * Java client fetches content from a HTTP site that the user
  * has already logged into.
  */
-[scriptable, uuid(54f90444-c52b-4d2d-8916-c59a2bb25938)]
+[scriptable, builtinclass, uuid(54f90444-c52b-4d2d-8916-c59a2bb25938)]
 interface nsIHttpAuthManager : nsISupports
 {
     /**

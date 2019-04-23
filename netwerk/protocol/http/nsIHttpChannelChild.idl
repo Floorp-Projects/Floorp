@@ -11,7 +11,7 @@
 interface nsIPrincipal;
 interface nsIURI;
 
-[uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
+[builtinclass, uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
 interface nsIHttpChannelChild : nsISupports
 {
   [must_use] void addCookiesToRequest();
