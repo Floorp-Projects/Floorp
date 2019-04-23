@@ -306,7 +306,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             '-u',
             'mozharness\\scripts\\' + normpath(mozharness['script'])
         ]
-    if is_bitbar:
+    elif is_bitbar:
         mh_command = [
             bitbar_wrapper,
             'bash',
