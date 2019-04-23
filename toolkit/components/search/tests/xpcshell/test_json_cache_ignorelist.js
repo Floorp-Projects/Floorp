@@ -12,7 +12,9 @@ var cacheTemplate, appPluginsPath, profPlugins;
 /**
  * Test reading from search.json.mozlz4
  */
-function run_test() {
+add_task(async function setup() {
+  await setupRemoteSettings();
+
   let cacheTemplateFile = do_get_file("data/search_ignorelist.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
@@ -29,31 +31,29 @@ function run_test() {
   // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   cacheTemplate.visibleDefaultEngines = getDefaultEngineList(false);
 
-  run_next_test();
-}
-
-add_test(function prepare_test_data() {
-  promiseSaveCacheData(cacheTemplate).then(run_next_test);
+  await promiseSaveCacheData(cacheTemplate);
 });
 
 /**
  * Start the search service and confirm the cache was reset
  */
-add_test(function test_cache_rest() {
+add_task(async function test_cache_rest() {
   info("init search service");
 
-  Services.search.init().then(function initComplete(aResult) {
-    info("init'd search service");
-    Assert.ok(Components.isSuccessCode(aResult));
+  let updatePromise = SearchTestUtils.promiseSearchNotification("settings-update-complete");
 
-    Services.search.getEngines().then(engines => {
-      // Engine list will have been reset to the default,
-      // Not the one engine in the cache.
-      // It should have more than one engine.
-      Assert.ok(engines.length > 1);
+  let result = await Services.search.init();
 
-      removeCacheFile();
-      run_next_test();
-    });
-  });
+  Assert.ok(Components.isSuccessCode(result),
+    "Search service should be successfully initialized");
+  await updatePromise;
+
+  const engines = await Services.search.getEngines();
+
+  // Engine list will have been reset to the default,
+  // Not the one engine in the cache.
+  // It should have more than one engine.
+  Assert.greater(engines.length, 1, "Should have more than one engine in the list");
+
+  removeCacheFile();
 });
