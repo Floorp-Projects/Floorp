@@ -186,11 +186,11 @@ class MediaDecoderStateMachine
 
   void SetOutputStreamPrincipal(const nsCOMPtr<nsIPrincipal>& aPrincipal);
   void SetOutputStreamCORSMode(CORSMode aCORSMode);
-  // If an OutputStreamManager does not exist, one will be created and tracks
-  // matching aLoadedInfo will be created ahead of being created by the
-  // DecodedStream sink.
-  void EnsureOutputStreamManager(MediaStreamGraph* aGraph,
-                                 const Maybe<MediaInfo>& aLoadedInfo);
+  // If an OutputStreamManager does not exist, one will be created.
+  void EnsureOutputStreamManager(MediaStreamGraph* aGraph);
+  // If an OutputStreamManager exists, tracks matching aLoadedInfo will be
+  // created unless they already exist in the manager.
+  void EnsureOutputStreamManagerHasTracks(const MediaInfo& aLoadedInfo);
   // Add an output stream to the output stream manager. The manager must have
   // been created through EnsureOutputStreamManager() before this.
   void AddOutputStream(DOMMediaStream* aStream);
