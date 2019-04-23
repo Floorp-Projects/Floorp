@@ -6,6 +6,6 @@ package org.mozilla.fenix.collections
 
 import androidx.lifecycle.ViewModel
 
-class CreateCollectionViewModel: ViewModel() {
+class CreateCollectionViewModel : ViewModel() {
     var tabs = listOf<Tab>()
 }

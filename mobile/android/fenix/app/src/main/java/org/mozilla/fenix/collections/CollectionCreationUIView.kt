@@ -29,6 +29,7 @@ class CollectionCreationUIView(
         .inflate(R.layout.component_collection_creation, container, true)
 
     private val collectionCreationTabListAdapter = CollectionCreationTabListAdapter(actionEmitter)
+    private var selectedTabs: Set<Tab> = setOf()
 
     init {
         view.back_button.setOnClickListener {
@@ -46,6 +47,10 @@ class CollectionCreationUIView(
             }
         }
 
+        view.add_tabs_button.setOnClickListener {
+            actionEmitter.onNext(CollectionCreationAction.SaveTabsToCollection(selectedTabs.toList()))
+        }
+
         view.tab_list.run {
             adapter = collectionCreationTabListAdapter
             layoutManager = LinearLayoutManager(container.context, RecyclerView.VERTICAL, true)
@@ -53,6 +58,7 @@ class CollectionCreationUIView(
     }
 
     override fun updateView() = Consumer<CollectionCreationState> {
+        this.selectedTabs = it.selectedTabs
         collectionCreationTabListAdapter.updateData(it.tabs, it.selectedTabs)
 
         val buttonText = if (it.selectedTabs.isEmpty()) {
@@ -60,6 +66,9 @@ class CollectionCreationUIView(
         } else {
             view.context.getString(R.string.create_collection_save_to_collection_full, it.selectedTabs.size)
         }
+
+        val enableSaveButton = it.selectedTabs.isNotEmpty()
+        view.add_tabs_button.isClickable = enableSaveButton
 
         view.add_tabs_button.contentDescription = buttonText
         view.add_tabs_button_text.text = buttonText

@@ -21,7 +21,6 @@ class CollectionCreationTabListAdapter(
     val actionEmitter: Observer<CollectionCreationAction>
 ) : RecyclerView.Adapter<TabViewHolder>() {
 
-
     private var tabs: List<Tab> = listOf()
     private var selectedTabs: Set<Tab> = setOf()
     private lateinit var job: Job

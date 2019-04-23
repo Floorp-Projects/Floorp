@@ -116,7 +116,7 @@
         <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
         <item name="android:colorControlNormal">?accentHighContrast</item>
         <item name="android:colorControlActivated">?accentHighContrast</item>
-        <item name="android:colorControlHighlight">?accent</item>
+        <item name="android:colorControlHighlight">?accentBright</item>
 
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>

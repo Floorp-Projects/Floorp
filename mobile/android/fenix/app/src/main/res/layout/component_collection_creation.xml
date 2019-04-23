@@ -57,6 +57,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:clickable="true"
+        android:focusable="true"
         android:background="@drawable/add_tabs_to_collection_background"
         android:foreground="?android:attr/selectableItemBackgroundBorderless"
         android:clipToPadding="false"

@@ -15,6 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 class CreateCollectionFragment : DialogFragment() {
 
@@ -25,10 +26,7 @@ class CreateCollectionFragment : DialogFragment() {
         setStyle(DialogFragment.STYLE_NO_TITLE, R.style.CreateCollectionDialogStyle)
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
 
         collectionCreationComponent = CollectionCreationComponent(
@@ -50,6 +48,11 @@ class CreateCollectionFragment : DialogFragment() {
         getAutoDisposeObservable<CollectionCreationAction>().subscribe {
             when (it) {
                 is CollectionCreationAction.Close -> dismiss()
+                is CollectionCreationAction.SaveTabsToCollection -> {
+                    dismiss()
+                    ItsNotBrokenSnack(requireContext())
+                        .showSnackbar("1843")
+                }
                 is CollectionCreationAction.AddTabToSelection -> getManagedEmitter<CollectionCreationChange>()
                     .onNext(CollectionCreationChange.TabAdded(it.tab))
                 is CollectionCreationAction.RemoveTabFromSelection -> getManagedEmitter<CollectionCreationChange>()

@@ -33,6 +33,7 @@ sealed class CollectionCreationAction : Action {
     object SelectAllTapped : CollectionCreationAction()
     data class AddTabToSelection(val tab: Tab) : CollectionCreationAction()
     data class RemoveTabFromSelection(val tab: Tab) : CollectionCreationAction()
+    data class SaveTabsToCollection(val tabs: List<Tab>) : CollectionCreationAction()
 }
 
 class CollectionCreationComponent(
