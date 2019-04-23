@@ -15,12 +15,10 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-settings/remote-settings.js");
 ChromeUtils.defineModuleGetter(this, "jexlFilterFunc", "resource://services-settings/remote-settings.js");
 
-const PREF_SECURITY_SETTINGS_ONECRL_BUCKET     = "services.settings.security.onecrl.bucket";
-const PREF_SECURITY_SETTINGS_ONECRL_COLLECTION = "services.settings.security.onecrl.collection";
-const PREF_SECURITY_SETTINGS_ONECRL_SIGNER     = "services.settings.security.onecrl.signer";
-const PREF_SECURITY_SETTINGS_ONECRL_CHECKED    = "services.settings.security.onecrl.checked";
-
 const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
+const PREF_BLOCKLIST_ONECRL_COLLECTION       = "services.blocklist.onecrl.collection";
+const PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS  = "services.blocklist.onecrl.checked";
+const PREF_BLOCKLIST_ONECRL_SIGNER           = "services.blocklist.onecrl.signer";
 const PREF_BLOCKLIST_ADDONS_COLLECTION       = "services.blocklist.addons.collection";
 const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS  = "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_ADDONS_SIGNER           = "services.blocklist.addons.signer";
@@ -200,10 +198,10 @@ var PluginBlocklistClient;
 var RemoteSecuritySettingsClient;
 
 function initialize() {
-  OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_SECURITY_SETTINGS_ONECRL_COLLECTION), {
-    bucketNamePref: PREF_SECURITY_SETTINGS_ONECRL_BUCKET,
-    lastCheckTimePref: PREF_SECURITY_SETTINGS_ONECRL_CHECKED,
-    signerName: Services.prefs.getCharPref(PREF_SECURITY_SETTINGS_ONECRL_SIGNER),
+  OneCRLBlocklistClient = RemoteSettings(Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION), {
+    bucketNamePref: PREF_BLOCKLIST_BUCKET,
+    lastCheckTimePref: PREF_BLOCKLIST_ONECRL_CHECKED_SECONDS,
+    signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_SIGNER),
   });
   OneCRLBlocklistClient.on("sync", updateCertBlocklist);
 
