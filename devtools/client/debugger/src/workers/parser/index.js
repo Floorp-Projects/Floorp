@@ -46,9 +46,6 @@ export const getSymbols = async (
   sourceId: string
 ): Promise<SymbolDeclarations> => dispatcher.invoke("getSymbols", sourceId);
 
-export const hasSource = async (sourceId: SourceId): Promise<Source> =>
-  dispatcher.invoke("hasSource", sourceId);
-
 export const setSource = async (source: Source): Promise<void> =>
   dispatcher.invoke("setSource", source);
 
@@ -75,9 +72,6 @@ export const mapExpression = async (
     shouldMapBindings,
     shouldMapAwait
   );
-
-export const getFramework = async (sourceId: string): Promise<?string> =>
-  dispatcher.invoke("getFramework", sourceId);
 
 export type {
   SourceScope,
