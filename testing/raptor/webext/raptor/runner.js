@@ -120,11 +120,11 @@ function getTestSettings() {
           if (settings.gecko_profile === true) {
             geckoProfiling = true;
             results.extra_options = ["gecko_profile"];
-            if (settings.gecko_interval !== undefined) {
-              geckoInterval = settings.gecko_interval;
+            if (settings.gecko_profile_interval !== undefined) {
+              geckoInterval = settings.gecko_profile_interval;
             }
-            if (settings.gecko_entries !== undefined) {
-              geckoEntries = settings.gecko_entries;
+            if (settings.gecko_profile_entries !== undefined) {
+              geckoEntries = settings.gecko_profile_entries;
             }
             if (settings.webrender_enabled !== undefined) {
               webRenderEnabled = settings.webrender_enabled;
@@ -322,7 +322,7 @@ function onError(error) {
 async function startGeckoProfiling() {
   var _threads;
   if (webRenderEnabled) {
-    _threads = ["GeckoMain", "Compositor", "WR,Renderer"];
+    _threads = ["GeckoMain", "Compositor", "WR", "Renderer"];
   } else {
     _threads = ["GeckoMain", "Compositor"];
   }
