@@ -8,10 +8,6 @@ import type { Source, SourceId } from "../../types";
 
 let cachedSources = new Map();
 
-export function hasSource(sourceId: SourceId): boolean {
-  return cachedSources.has(sourceId);
-}
-
 export function setSource(source: Source) {
   cachedSources.set(source.id, source);
 }
