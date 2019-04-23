@@ -1,6 +1,17 @@
-
 Changes made to pristine libpng source by mozilla.org developers.
 Update the 'release' field in moz.yaml when you update this file.
+
+pnglibconf.h and moz.build are distributed under the Mozilla Public License,
+v. 2.0. If a copy of the MPL was not distributed with this file, You can
+obtain one at http://mozilla.org/MPL/2.0/.
+
+This modified version of libpng code adds animated PNG support and is
+released under the same license as the upstream library. The modifications
+are Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
+and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
+surrounding them in the modified libpng source files.
+
+2019/04/15  -- Synced with libpng-1.6.37 (bug #1513236)
 
 2018/09/14  -- Synced with libpng-1.6.35 (bug #1491467).
 
