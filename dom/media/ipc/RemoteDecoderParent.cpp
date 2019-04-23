@@ -138,18 +138,7 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvShutdown() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
-    RefPtr<RemoteDecoderParent> self = this;
-    mDecoder->Shutdown()->Then(
-        mManagerTaskQueue, __func__,
-        [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
-          if (aValue.IsResolve()) {
-            if (!self->mDestroyed) {
-              Unused << self->SendShutdownComplete();
-            }
-          } else {
-            self->Error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
-          }
-        });
+    mDecoder->Shutdown();
   }
   mDecoder = nullptr;
   return IPC_OK();
@@ -167,18 +156,7 @@ void RemoteDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
-    RefPtr<RemoteDecoderParent> self = this;
-    mDecoder->Shutdown()->Then(
-        mManagerTaskQueue, __func__,
-        [self](const ShutdownPromise::ResolveOrRejectValue& aValue) {
-          if (aValue.IsResolve()) {
-            if (!self->mDestroyed) {
-              Unused << self->SendShutdownComplete();
-            }
-          } else {
-            self->Error(NS_ERROR_DOM_MEDIA_DECODE_ERR);
-          }
-        });
+    mDecoder->Shutdown();
     mDecoder = nullptr;
   }
 }
