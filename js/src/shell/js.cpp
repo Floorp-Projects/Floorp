@@ -10663,12 +10663,12 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
 
   Rooted<SetIteratorObject*> iterObj(cx,
                                      &iter.toObject().as<SetIteratorObject>());
-  RootedArrayObject resultObj(
-      cx, &SetIteratorObject::createResult(cx)->as<ArrayObject>());
-  if (!resultObj) {
+  JSObject* obj = SetIteratorObject::createResult(cx);
+  if (!obj) {
     return false;
   }
 
+  RootedArrayObject resultObj(cx, &obj->as<ArrayObject>());
   while (true) {
     bool done = SetIteratorObject::next(iterObj, resultObj, cx);
     if (done) {
