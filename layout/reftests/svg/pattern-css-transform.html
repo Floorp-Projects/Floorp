@@ -1,0 +1,20 @@
+<style>
+#rec1 {
+  transform: scale(.6,.6);
+}
+#rec2 {
+  transform: translate(40px,40px) scale(.2,.2);
+}
+</style>
+<svg width="200" height="200">
+  <defs>
+    <pattern id="Pattern" x="0" y="0" width=".25" height=".25">
+      <rect id="rec1" x="0" y="0" width="50" height="50" fill="skyblue"/>
+      <g>
+        <rect id="rec2" x="0" y="0" width="50" height="50" fill="skyblue"/>
+      </g>
+    </pattern>
+  </defs>
+
+  <rect fill="url(#Pattern)" stroke="black" width="200" height="200"/>
+</svg>

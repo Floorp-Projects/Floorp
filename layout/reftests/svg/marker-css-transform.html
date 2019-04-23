@@ -1,0 +1,17 @@
+<style>
+#ap {
+  transform: scale(2,2);
+}
+</style>
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+      <path id="ap" d="M 0 0 L 5 2.5 L 0 5 z" />
+    </marker>
+  </defs>
+
+  <polyline points="10,30 90,30" fill="none" stroke="black"
+   marker-start="url(#arrow)" marker-end="url(#arrow)"  />
+</svg>

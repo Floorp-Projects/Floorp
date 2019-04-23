@@ -79,6 +79,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == clipPath-basic-06.svg pass.svg
 == clipPath-basic-07.svg pass.svg
 == clipPath-basic-08.svg pass.svg
+== clipPath-css-transform.html clipPath-css-transform-ref.html
 == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02-ref.html
@@ -144,9 +145,6 @@ fuzzy-if(d2d||skiaContent,0-1,0-10000) == dynamic-filter-contents-01b.svg dynami
 == dynamic-mask-01.svg pass.svg
 == dynamic-mask-contents-01.svg pass.svg
 == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox-ref.html
-== test_bug1323962.html test_bug1323962-ref.html
-== test_bug1323962-2.html test_bug1323962-2-ref.html
-== test_bug1323962-3.html test_bug1323962-3-ref.html
 == dynamic-opacity-property-01.svg pass.svg
 == dynamic-pattern-01.svg pass.svg
 == dynamic-pattern-02.svg pass.svg
@@ -163,7 +161,6 @@ fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-1200) == dynamic-rect-02.svg dynamic-re
 == dynamic-stroke-01.svg pass.svg
 == dynamic-stroke-opacity-01.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
-== test_bug1247218.html test_bug1247218-ref.html
 == dynamic-switch-01.svg pass.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-01.svg dynamic-text-01-ref.svg # bug 1392106
 fuzzy-if(d2d&&layersGPUAccelerated,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
@@ -268,6 +265,7 @@ fuzzy-if(cocoaWidget,0-15,0-19679) fuzzy-if(winWidget,0-1,0-8800) fuzzy-if(!coco
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 fuzzy-if(skiaContent,0-1,0-1) == marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
+== marker-css-transform.html marker-css-transform-ref.html
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-100) == marker-orientation-01.svg marker-orientation-01-ref.svg
@@ -287,6 +285,7 @@ fuzzy-if(skiaContent,0-1,0-10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-containing-masked-content-01.svg pass.svg
 == mask-contains-inner-svg-01.svg pass.svg
 == mask-contains-inner-svg-02.svg pass.svg
+== mask-css-transform.html mask-css-transform-ref.html
 == mask-empty-size.svg about:blank
 == mask-extref-dataURI-01.svg pass.svg
 fuzzy(0-128,0-141) == mask-img.html mask-img-ref.html
@@ -306,6 +305,8 @@ fuzzy-if(d2d||skiaContent,0-1,0-6400) == mask-type-04.svg mask-type-01-ref.svg
 
 != nested-mask-mode.svg about:blank
 == nested-viewBox-01.svg pass.svg
+== non-scaling-stroke-css-transform.html non-scaling-stroke-css-transform-ref.html
+
 fuzzy-if(skiaContent,0-3,0-448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),0-63,0-168) fuzzy-if(cocoaWidget,0-1,0-122) fuzzy-if(skiaContent,0-2,0-1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
@@ -361,6 +362,7 @@ fuzzy-if(skiaContent,0-1,0-400) == path-06.svg path-06-ref.svg
 
 == pattern-basic-01.svg pass.svg
 fuzzy(0-1,0-5) skip-if(Android) == pattern-big-image.html pattern-big-image-ref.html
+== pattern-css-transform.html pattern-css-transform-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-5) == pattern-live-01a.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-5) == pattern-live-01b.svg pattern-live-01-ref.svg
