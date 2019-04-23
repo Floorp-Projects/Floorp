@@ -1220,6 +1220,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         namespace_alloc_by_client: true,
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
+        start_debug_server: false,
         ..Default::default()
     };
 
