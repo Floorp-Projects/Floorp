@@ -12,6 +12,7 @@ const {
   ADB_ADDON_UNINSTALL_SUCCESS,
   ADB_ADDON_UNINSTALL_FAILURE,
   ADB_ADDON_STATUS_UPDATED,
+  ADB_READY_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   HIDE_PROFILER_DIALOG,
   NETWORK_LOCATIONS_UPDATED,
@@ -112,6 +113,10 @@ function updateAdbAddonStatus(adbAddonStatus) {
   return { type: ADB_ADDON_STATUS_UPDATED, adbAddonStatus };
 }
 
+function updateAdbReady(isAdbReady) {
+  return { type: ADB_READY_UPDATED, isAdbReady };
+}
+
 function updateNetworkLocations(locations) {
   return (dispatch, getState) => {
     dispatch(Actions.updateNetworkRuntimes(locations));
@@ -170,6 +175,7 @@ module.exports = {
   showProfilerDialog,
   uninstallAdbAddon,
   updateAdbAddonStatus,
+  updateAdbReady,
   updateDebugTargetCollapsibility,
   updateNetworkLocations,
 };

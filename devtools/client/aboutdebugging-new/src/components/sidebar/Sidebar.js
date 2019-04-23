@@ -31,6 +31,7 @@ class Sidebar extends PureComponent {
       adbAddonStatus: Types.adbAddonStatus,
       className: PropTypes.string,
       dispatch: PropTypes.func.isRequired,
+      isAdbReady: PropTypes.bool.isRequired,
       isScanningUsb: PropTypes.bool.isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: Types.page,
@@ -39,10 +40,11 @@ class Sidebar extends PureComponent {
     };
   }
 
-  renderAdbAddonStatus() {
-    const isAddonInstalled = this.props.adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
-    const localizationId = isAddonInstalled ? "about-debugging-sidebar-usb-enabled" :
-                                              "about-debugging-sidebar-usb-disabled";
+  renderAdbStatus() {
+    const isUsbEnabled = this.props.isAdbReady &&
+      this.props.adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
+    const localizationId = isUsbEnabled ? "about-debugging-sidebar-usb-enabled" :
+                                          "about-debugging-sidebar-usb-disabled";
     return Message(
       {
           level: MESSAGE_LEVEL.INFO,
@@ -208,7 +210,7 @@ class Sidebar extends PureComponent {
             className: "sidebar-item--overflow sidebar-item--full-width",
           },
           dom.hr({ className: "separator separator--breathe" }),
-          this.renderAdbAddonStatus(),
+          this.renderAdbStatus(),
         ),
         this.renderDevices(),
         SidebarItem(
