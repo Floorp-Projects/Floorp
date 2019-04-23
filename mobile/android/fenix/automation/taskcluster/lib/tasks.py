@@ -452,39 +452,7 @@ class TaskBuilder(object):
             },
         )
 
-    def craft_raptor_speedometer_task(self, signing_task_id, mozharness_task_id, variant, gecko_revision, force_run_on_64_bit_device=False):
-        return self._craft_raptor_task(
-            signing_task_id,
-            mozharness_task_id,
-            variant,
-            gecko_revision,
-            name_prefix='raptor speedometer',
-            description='Raptor Speedometer on Fenix',
-            test_name='raptor-speedometer',
-            job_symbol='sp',
-            force_run_on_64_bit_device=force_run_on_64_bit_device,
-        )
-
-    def craft_raptor_speedometer_power_task(self, signing_task_id, mozharness_task_id, variant, gecko_revision, force_run_on_64_bit_device=False):
-        return self._craft_raptor_task(
-            signing_task_id,
-            mozharness_task_id,
-            variant,
-            gecko_revision,
-            name_prefix='raptor speedometer power',
-            description='Raptor Speedometer power on Fenix',
-            test_name='raptor-speedometer',
-            job_symbol='sp',
-            group_symbol='Rap-P',
-            extra_test_args=[
-                "--power-test",
-                "--page-cycles 5",
-                "--host HOST_IP",
-            ],
-            force_run_on_64_bit_device=force_run_on_64_bit_device,
-        )
-
-    def craft_raptor_tp6m_task(self, for_suite):
+    def craft_raptor_tp6m_cold_task(self, for_suite):
 
         def craft_function(signing_task_id, mozharness_task_id, variant, gecko_revision, force_run_on_64_bit_device=False):
             return self._craft_raptor_task(
@@ -492,10 +460,10 @@ class TaskBuilder(object):
                 mozharness_task_id,
                 variant,
                 gecko_revision,
-                name_prefix='raptor tp6m-{}'.format(for_suite),
-                description='Raptor tp6m on the Fenix',
-                test_name='raptor-tp6m-{}'.format(for_suite),
-                job_symbol='tp6m-{}'.format(for_suite),
+                name_prefix='raptor tp6m-cold-{}'.format(for_suite),
+                description='Raptor tp6m cold on Fenix',
+                test_name='raptor-tp6m-cold-{}'.format(for_suite),
+                job_symbol='tp6m-c-{}'.format(for_suite),
                 force_run_on_64_bit_device=force_run_on_64_bit_device,
             )
         return craft_function
