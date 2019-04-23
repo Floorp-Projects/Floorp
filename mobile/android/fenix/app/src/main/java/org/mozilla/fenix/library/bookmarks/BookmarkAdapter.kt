@@ -171,7 +171,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                     orientation = BrowserMenu.Orientation.DOWN
                 )
             }
-            bookmark_title.text = item.title
+            bookmark_title.text = item.title ?: item.url
             updateUrl(item, mode, selected)
         }
 
