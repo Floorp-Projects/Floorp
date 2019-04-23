@@ -332,12 +332,13 @@ class TaskBuilder(object):
         self, assemble_task_id, variant
     ):
         architecture, build_type = get_architecture_and_build_type_from_variant(variant)
+        build_type = convert_camel_case_into_kebab_case(build_type)
         routes = [
             'index.project.mobile.fenix.v2.branch.master.revision.{}.{}.{}'.format(
                 self.commit, build_type, architecture
             ),
-            'index.project.mobile.fenix.v2.branch.master.latest.{}.{}.{}'.format(
-                product, build_type, architecture
+            'index.project.mobile.fenix.v2.branch.master.latest.{}.{}'.format(
+                build_type, architecture
             ),
             'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
                 self.date.year, self.date.month, self.date.day, self.commit,
@@ -483,6 +484,7 @@ def get_architecture_and_build_type_from_variant(variant):
         )
 
     build_type = variant[len(architecture):]
+    build_type = lower_case_first_letter(build_type)
     return architecture, build_type
 
 
