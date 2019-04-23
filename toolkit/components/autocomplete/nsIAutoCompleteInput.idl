@@ -27,7 +27,7 @@ interface nsIAutoCompleteInput : nsISupports
   /*
    * Indicates if the popup is currently open
    */
-  attribute boolean popupOpen;
+  [can_run_script] attribute boolean popupOpen;
 
   /*
    * Option to disable autocomplete functionality
