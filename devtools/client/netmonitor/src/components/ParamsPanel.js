@@ -7,6 +7,7 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const Services = require("Services");
 const { connect } = require("devtools/client/shared/redux/visibility-handler-connect");
 const { L10N } = require("../utils/l10n");
 const {
@@ -30,6 +31,7 @@ const PARAMS_FILTER_TEXT = L10N.getStr("paramsFilterText");
 const PARAMS_FORM_DATA = L10N.getStr("paramsFormData");
 const PARAMS_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
 const PARAMS_QUERY_STRING = L10N.getStr("paramsQueryString");
+const REQUEST_TRUNCATED = L10N.getStr("requestTruncated");
 const SECTION_NAMES = [
   JSON_SCOPE_NAME,
   PARAMS_FORM_DATA,
@@ -115,7 +117,7 @@ class ParamsPanel extends Component {
     }
 
     const object = {};
-    let json;
+    let json, error;
 
     // Query String section
     if (query) {
@@ -129,16 +131,27 @@ class ParamsPanel extends Component {
     }
 
     // Request payload section
+
+    const limit = Services.prefs.getIntPref("devtools.netmonitor.requestBodyLimit");
+    // Check if the request post data has been truncated, in which case no parse should
+    // be attempted.
+    if (postData && limit <= postData.length) {
+      error = REQUEST_TRUNCATED;
+    }
+
     if (formDataSections && formDataSections.length === 0 && postData) {
-      try {
-        json = JSON.parse(postData);
-      } catch (error) {
-        // Continue regardless of parsing error
+      if (!error) {
+        try {
+          json = JSON.parse(postData);
+        } catch (err) {
+          // Continue regardless of parsing error
+        }
+
+        if (json) {
+          object[JSON_SCOPE_NAME] = sortObjectKeys(json);
+        }
       }
 
-      if (json) {
-        object[JSON_SCOPE_NAME] = sortObjectKeys(json);
-      }
       object[PARAMS_POST_PAYLOAD] = {
         EDITOR_CONFIG: {
           text: postData,
@@ -151,6 +164,9 @@ class ParamsPanel extends Component {
 
     return (
       div({ className: "panel-container" },
+        error && div({ className: "request-error-header", title: error },
+          error
+        ),
         PropertiesView({
           object,
           filterPlaceHolder: PARAMS_FILTER_TEXT,

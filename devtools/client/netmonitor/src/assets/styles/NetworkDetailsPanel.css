@@ -327,6 +327,15 @@
     margin-left: 4px;
 }
 
+/* Params tabpanel */
+
+.network-monitor .request-error-header {
+  margin: 0;
+  padding: 3px 8px;
+  background-color: var(--theme-highlight-red);
+  color: var(--theme-selection-color);
+}
+
 /* Response tabpanel */
 
 .network-monitor .response-error-header {
