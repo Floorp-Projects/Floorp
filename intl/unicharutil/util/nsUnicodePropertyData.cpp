@@ -11,11 +11,11 @@
  */
 
 /*
- * Created on Thu Mar 28 14:15:26 2019 from UCD data files with version info:
+ * Created on Fri Apr 12 13:11:07 2019 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2019-03-01, 22:17:00 GMT [KW]
+# Date: 2019-03-05, 22:57:00 GMT [KW]
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
@@ -27,8 +27,8 @@
 #
 # The UAXes can be accessed at http://www.unicode.org/versions/Unicode12.0.0/
 
-This directory contains the final data files
-for the Unicode Character Database, for Version 12.0.0 of the Unicode Standard.
+This directory contains the preliminary data files under development
+for the Unicode Character Database, for Version 12.1.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
 # Date: 2019-01-30, 12:52:06 GMT
