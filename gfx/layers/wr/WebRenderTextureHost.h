@@ -82,6 +82,8 @@ class WebRenderTextureHost : public TextureHost {
 
   bool SupportsWrNativeTexture() override;
 
+  bool NeedsYFlip() const override;
+
  protected:
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc,
                                TextureHost* aTexture);

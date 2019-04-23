@@ -175,10 +175,6 @@ class nsDisplayCanvas final : public nsDisplayItem {
         scTransform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
                              destGFXRect.Height() / canvasSizeInPx.height,
                              1.0f);
-        if (data->NeedsYFlip()) {
-          scTransform = scTransform.PreTranslate(0, data->GetSize().height, 0)
-                            .PreScale(1, -1, 1);
-        }
 
         MaybeIntSize scaleToSize;
         LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());
