@@ -60,10 +60,10 @@ class BookmarkUIView(
         if (it.mode != mode) {
             mode = it.mode
             actionEmitter.onNext(BookmarkAction.ModeChanged)
-            when (val modeCopy = mode) {
-                is BookmarkState.Mode.Normal -> setUIForNormalMode(it.tree)
-                is BookmarkState.Mode.Selecting -> setUIForSelectingMode(modeCopy)
-            }
+        }
+        when (val modeCopy = mode) {
+            is BookmarkState.Mode.Normal -> setUIForNormalMode(it.tree)
+            is BookmarkState.Mode.Selecting -> setUIForSelectingMode(modeCopy)
         }
     }
 
@@ -93,7 +93,8 @@ class BookmarkUIView(
     private fun setUIForSelectingMode(
         mode: BookmarkState.Mode.Selecting
     ) {
-        activity?.title = context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
+        (activity as? AppCompatActivity)?.title =
+            context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
         setToolbarColors(
             R.color.white_color,
             R.attr.accentBright.getColorIntFromAttr(context!!)
@@ -101,17 +102,20 @@ class BookmarkUIView(
     }
 
     private fun setUIForNormalMode(root: BookmarkNode?) {
-        activity?.title =
+        setTitle(root)
+        setToolbarColors(
+            R.attr.primaryText.getColorIntFromAttr(context!!),
+            R.attr.foundation.getColorIntFromAttr(context)
+        )
+    }
+
+    private fun setTitle(root: BookmarkNode?) {
+        (activity as? AppCompatActivity)?.title =
             if (root?.title in setOf(
                     "root",
                     null
                 )
             ) context.getString(R.string.library_bookmarks) else root!!.title
-
-        setToolbarColors(
-            R.attr.primaryText.getColorIntFromAttr(context!!),
-            R.attr.foundation.getColorIntFromAttr(context)
-        )
     }
 
     private fun themeToolbar(
