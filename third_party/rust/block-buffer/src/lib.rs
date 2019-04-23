@@ -8,6 +8,7 @@ use byteorder::{ByteOrder, BE};
 use byte_tools::zero;
 use block_padding::{Padding, PadError};
 use generic_array::{GenericArray, ArrayLength};
+use core::slice;
 
 /// Buffer for block processing of data
 #[derive(Clone, Default)]
@@ -21,6 +22,8 @@ unsafe fn cast<N: ArrayLength<u8>>(block: &[u8]) -> &GenericArray<u8, N> {
     debug_assert_eq!(block.len(), N::to_usize());
     &*(block.as_ptr() as *const GenericArray<u8, N>)
 }
+
+
 
 impl<BlockSize: ArrayLength<u8>> BlockBuffer<BlockSize> {
     /// Process data in `input` in blocks of size `BlockSize` using function `f`.
@@ -51,6 +54,43 @@ impl<BlockSize: ArrayLength<u8>> BlockBuffer<BlockSize> {
         self.buffer[self.pos..self.pos+input.len()].copy_from_slice(input);
         self.pos += input.len();
     }
+
+    /*
+    /// Process data in `input` in blocks of size `BlockSize` using function `f`, which accepts
+    /// slice of blocks.
+    #[inline]
+    pub fn input2<F>(&mut self, mut input: &[u8], mut f: F)
+        where F: FnMut(&[GenericArray<u8, BlockSize>])
+    {
+        // If there is already data in the buffer, process it if we have
+        // enough to complete the chunk.
+        let rem = self.remaining();
+        if self.pos != 0 && input.len() >= rem {
+            let (l, r) = input.split_at(rem);
+            input = r;
+            self.buffer[self.pos..].copy_from_slice(l);
+            self.pos = 0;
+            f(slice::from_ref(&self.buffer));
+        }
+
+        // While we have at least a full buffer size chunks's worth of data,
+        // process it data without copying into the buffer
+        let n_blocks = input.len()/self.size();
+        let (left, right) = input.split_at(n_blocks*self.size());
+        // safe because we guarantee that `blocks` does not point outside of `input` 
+        let blocks = unsafe {
+            slice::from_raw_parts(
+                left.as_ptr() as *const GenericArray<u8, BlockSize>,
+                n_blocks,
+            )
+        };
+        f(blocks);
+
+        // Copy remaining data into the buffer.
+        self.buffer[self.pos..self.pos+right.len()].copy_from_slice(right);
+        self.pos += right.len();
+    }
+    */
 
     /// Variant that doesn't flush the buffer until there's additional
     /// data to be processed. Suitable for tweakable block ciphers
