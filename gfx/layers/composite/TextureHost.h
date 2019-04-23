@@ -677,6 +677,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   virtual bool SupportsWrNativeTexture() { return false; }
 
+  virtual bool NeedsYFlip() const;
+
  protected:
   virtual void ReadUnlock();
 
