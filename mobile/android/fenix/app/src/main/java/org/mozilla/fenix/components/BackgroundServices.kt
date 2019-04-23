@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
@@ -20,7 +21,8 @@ import mozilla.components.service.fxa.FxaAccountManager
  */
 class BackgroundServices(
     context: Context,
-    historyStorage: PlacesHistoryStorage
+    historyStorage: PlacesHistoryStorage,
+    bookmarkStorage: PlacesBookmarksStorage
 ) {
     companion object {
         const val CLIENT_ID = "a2270f727f45f648"
@@ -35,12 +37,14 @@ class BackgroundServices(
     private val config = Config.release(CLIENT_ID, REDIRECT_URL)
 
     init {
-        // Make the "history" store accessible to workers spawned by the sync manager.
+        // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore("history" to historyStorage)
+        GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarkStorage)
     }
 
     val syncManager = BackgroundSyncManager("https://identity.mozilla.com/apps/oldsync").also {
         it.addStore("history")
+        it.addStore("bookmarks")
     }
 
     val accountManager = FxaAccountManager(context, config, scopes, syncManager).also {
