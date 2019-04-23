@@ -30,7 +30,8 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
  public:
   static already_AddRefed<CompositorManagerParent> CreateSameProcess();
-  static bool Create(Endpoint<PCompositorManagerParent>&& aEndpoint);
+  static bool Create(Endpoint<PCompositorManagerParent>&& aEndpoint,
+                     bool aIsRoot);
   static void Shutdown();
 
   static already_AddRefed<CompositorBridgeParent>
@@ -50,7 +51,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
   mozilla::ipc::IPCResult RecvReportMemory(ReportMemoryResolver&&);
 
-  void BindComplete();
+  void BindComplete(bool aIsRoot);
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   bool DeallocPCompositorBridgeParent(PCompositorBridgeParent* aActor);
@@ -71,7 +72,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   CompositorManagerParent();
   virtual ~CompositorManagerParent();
 
-  void Bind(Endpoint<PCompositorManagerParent>&& aEndpoint);
+  void Bind(Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot);
 
   void DeallocPCompositorManagerParent() override;
 
