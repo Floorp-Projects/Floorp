@@ -56,8 +56,8 @@ const kintoChangesJSON = `{
       "host": "firefox.settings.services.mozilla.com",
       "id": "3ace9d8e-00b5-a353-7fd5-1f081ff482ba",
       "last_modified": 100000000000000000001,
-      "bucket": "security-state",
-      "collection": "onecrl"
+      "bucket": "blocklists",
+      "collection": "certificates"
     }
   ]
 }`;
@@ -147,9 +147,9 @@ testserver.registerPathHandler("/v1/",
                                serveResponse(kintoHelloViewJSON));
 testserver.registerPathHandler("/v1/buckets/monitor/collections/changes/records",
                                serveResponse(kintoChangesJSON));
-testserver.registerPathHandler("/v1/buckets/security-state/collections/onecrl",
+testserver.registerPathHandler("/v1/buckets/blocklists/collections/certificates",
                                serveResponse(certMetadataJSON));
-testserver.registerPathHandler("/v1/buckets/security-state/collections/onecrl/records",
+testserver.registerPathHandler("/v1/buckets/blocklists/collections/certificates/records",
                                serveResponse(certBlocklistJSON));
 
 // start the test server

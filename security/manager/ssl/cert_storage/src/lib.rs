@@ -389,7 +389,7 @@ impl SecurityState {
 
     pub fn is_blocklist_fresh(&self) -> Result<bool, SecurityStateError> {
         self.is_data_fresh(
-            "services.settings.security.onecrl.checked",
+            "services.blocklist.onecrl.checked",
             "security.onecrl.maximum_staleness_in_seconds",
         )
     }
@@ -661,7 +661,7 @@ struct InitCertStorage {
 impl CertStorage {
     unsafe fn setup_prefs(&self) -> Result<(), SecurityStateError> {
         let int_prefs = [
-            "services.settings.security.onecrl.checked",
+            "services.blocklist.onecrl.checked",
             "services.blocklist.intermediates.checked",
             "services.blocklist.crlite.checked",
             "security.onecrl.maximum_staleness_in_seconds",
