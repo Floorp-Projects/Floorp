@@ -115,6 +115,12 @@ mozilla::ipc::IPCResult VideoDecoderChild::RecvFlushComplete() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult VideoDecoderChild::RecvShutdownComplete() {
+  AssertOnManagerThread();
+  mShutdownPromise.ResolveIfExists(true, __func__);
+  return IPC_OK();
+}
+
 void VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
     // GPU process crashed, record the time and send back to MFR for telemetry.
@@ -276,13 +282,20 @@ RefPtr<MediaDataDecoder::DecodePromise> VideoDecoderChild::Drain() {
   return mDrainPromise.Ensure(__func__);
 }
 
-void VideoDecoderChild::Shutdown() {
+RefPtr<ShutdownPromise> VideoDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  if (mCanSend) {
-    SendShutdown();
+  if (mNeedNewDecoder) {
+    MediaResult error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+    error.SetGPUCrashTimeStamp(mGPUCrashTime);
+    return ShutdownPromise::CreateAndReject(false, __func__);
   }
+  if (!mCanSend) {
+    return ShutdownPromise::CreateAndReject(false, __func__);
+  }
+  SendShutdown();
   mInitialized = false;
+  return mShutdownPromise.Ensure(__func__);
 }
 
 bool VideoDecoderChild::IsHardwareAccelerated(
