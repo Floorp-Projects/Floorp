@@ -10,7 +10,7 @@
 
 use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
 #[cfg(feature = "debugger")]
-use api::{BuiltDisplayListIter, SpecificDisplayItem};
+use api::{BuiltDisplayListIter, DisplayItem};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
@@ -1525,7 +1525,7 @@ impl RenderBackend {
                 };
 
                 match *item.item() {
-                    display_item @ SpecificDisplayItem::PushStackingContext(..) => {
+                    display_item @ DisplayItem::PushStackingContext(..) => {
                         let mut subtraversal = item.sub_iter();
                         let mut child_node =
                             debug_server::TreeNode::new(&display_item.debug_name().to_string());
@@ -1533,7 +1533,7 @@ impl RenderBackend {
                         node.add_child(child_node);
                         Some(subtraversal)
                     }
-                    SpecificDisplayItem::PopStackingContext => {
+                    DisplayItem::PopStackingContext => {
                         return;
                     }
                     display_item => {
@@ -1774,7 +1774,7 @@ impl RenderBackend {
             let data_stores = CaptureConfig::deserialize::<DataStores, _>(root, &data_stores_name)
                 .expect(&format!("Unable to open {}.ron", data_stores_name));
 
-            let mut doc = Document {
+            let doc = Document {
                 id: id,
                 scene: scene.clone(),
                 removed_pipelines: Vec::new(),
