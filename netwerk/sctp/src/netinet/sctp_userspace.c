@@ -61,11 +61,38 @@ sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_ro
 		return GetLastError();
 	return 0;
 }
+
+int
+sctp_userspace_thread_id(userland_thread_id_t *thread)
+{
+	*thread = GetCurrentThreadId();
+	return 0;
+}
+
+int
+sctp_userspace_thread_equal(userland_thread_id_t t1, userland_thread_id_t t2)
+{
+	return (t1 == t2);
+}
+
 #else
 int
 sctp_userspace_thread_create(userland_thread_t *thread, start_routine_t start_routine)
 {
 	return pthread_create(thread, NULL, start_routine, NULL);
+}
+
+int
+sctp_userspace_thread_id(userland_thread_id_t *thread)
+{
+	*thread = pthread_self();
+	return 0;
+}
+
+int
+sctp_userspace_thread_equal(userland_thread_id_t t1, userland_thread_id_t t2)
+{
+	return pthread_equal(t1, t2);
 }
 #endif
 

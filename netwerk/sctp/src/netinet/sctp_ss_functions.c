@@ -30,7 +30,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_ss_functions.c 326180 2017-11-24 19:38:59Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_ss_functions.c 345505 2019-03-25 16:40:54Z tuexen $");
 #endif
 
 #include <netinet/sctp_pcb.h>
@@ -820,6 +820,8 @@ sctp_ss_fcfs_init_stream(struct sctp_tcb *stcb, struct sctp_stream_out *strq, st
 			stcb->asoc.ss_data.last_out_stream = strq;
 		}
 	}
+	strq->ss_params.fb.next_spoke.tqe_next = NULL;
+	strq->ss_params.fb.next_spoke.tqe_prev = NULL;
 	return;
 }
 
