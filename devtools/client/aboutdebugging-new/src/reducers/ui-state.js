@@ -6,6 +6,7 @@
 
 const {
   ADB_ADDON_STATUS_UPDATED,
+  ADB_READY_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   HIDE_PROFILER_DIALOG,
   NETWORK_LOCATIONS_UPDATED,
@@ -22,6 +23,7 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
+    isAdbReady: false,
     isScanningUsb: false,
     networkLocations: locations,
     selectedPage: null,
@@ -36,6 +38,11 @@ function uiReducer(state = UiState(), action) {
     case ADB_ADDON_STATUS_UPDATED: {
       const { adbAddonStatus } = action;
       return Object.assign({}, state, { adbAddonStatus });
+    }
+
+    case ADB_READY_UPDATED: {
+      const { isAdbReady } = action;
+      return Object.assign({}, state, { isAdbReady });
     }
 
     case DEBUG_TARGET_COLLAPSIBILITY_UPDATED: {

@@ -33,6 +33,7 @@ class App extends PureComponent {
       dispatch: PropTypes.func.isRequired,
       // getString prop is injected by the withLocalization wrapper
       getString: PropTypes.func.isRequired,
+      isAdbReady: PropTypes.bool.isRequired,
       isScanningUsb: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(Types.location).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
@@ -149,6 +150,7 @@ class App extends PureComponent {
     const {
       adbAddonStatus,
       dispatch,
+      isAdbReady,
       isScanningUsb,
       networkRuntimes,
       selectedPage,
@@ -164,6 +166,7 @@ class App extends PureComponent {
           adbAddonStatus,
           className: "app__sidebar",
           dispatch,
+          isAdbReady,
           isScanningUsb,
           networkRuntimes,
           selectedPage,
@@ -179,6 +182,7 @@ class App extends PureComponent {
 const mapStateToProps = state => {
   return {
     adbAddonStatus: state.ui.adbAddonStatus,
+    isAdbReady: state.ui.isAdbReady,
     isScanningUsb: state.ui.isScanningUsb,
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
