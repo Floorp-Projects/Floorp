@@ -1,8 +1,6 @@
 from tests.support.asserts import assert_error, assert_success
 from tests.support.inline import inline
 
-_input = inline("<input id=i1>")
-
 
 def get_element_property(session, element_id, prop):
     return session.transport.send(
@@ -18,35 +16,33 @@ def test_no_browsing_context(session, closed_window):
 
 
 def test_element_not_found(session):
-    # 13.3 Step 3
-    result = get_element_property(session, "foo", "id")
-    assert_error(result, "no such element")
+    response = get_element_property(session, "foo", "id")
+    assert_error(response, "no such element")
 
 
 def test_element_stale(session):
-    session.url = _input
+    session.url = inline("<input id=foobar>")
     element = session.find.css("input", all=False)
     session.refresh()
 
-    result = get_element_property(session, element.id, "id")
-    assert_error(result, "stale element reference")
+    response = get_element_property(session, element.id, "id")
+    assert_error(response, "stale element reference")
 
 
 def test_property_non_existent(session):
-    session.url = _input
+    session.url = inline("<input>")
     element = session.find.css("input", all=False)
 
-    result = get_element_property(session, element.id, "foo")
-    assert_success(result, None)
+    response = get_element_property(session, element.id, "foo")
+    assert_success(response, None)
+    assert session.execute_script("return arguments[0].foo", args=(element,)) is None
 
-    assert session.execute_script("return arguments[0].foo", args=[element]) is None
 
-
-def test_element(session):
+def test_mutated_element(session):
     session.url = inline("<input type=checkbox>")
     element = session.find.css("input", all=False)
     element.click()
     assert session.execute_script("return arguments[0].hasAttribute('checked')", args=(element,)) is False
 
-    result = get_element_property(session, element.id, "checked")
-    assert_success(result, True)
+    response = get_element_property(session, element.id, "checked")
+    assert_success(response, True)
