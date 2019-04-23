@@ -94,12 +94,12 @@ impl Example for App {
         _document_id: DocumentId,
     ) {
         let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
-        let info = LayoutPrimitiveInfo::new(bounds);
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            &info,
+            bounds.origin,
             space_and_clip.spatial_id,
+            true,
         );
 
         let yuv_chanel1 = api.generate_image_key();
@@ -155,26 +155,26 @@ impl Example for App {
             None,
         );
 
-        let info = LayoutPrimitiveInfo::with_clip_rect(
+        let info = CommonItemProperties::new(
             LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
-            bounds,
+            space_and_clip,
         );
         builder.push_yuv_image(
             &info,
-            &space_and_clip,
+            bounds,
             YuvData::NV12(yuv_chanel1, yuv_chanel2),
             ColorDepth::Color8,
             YuvColorSpace::Rec601,
             ImageRendering::Auto,
         );
 
-        let info = LayoutPrimitiveInfo::with_clip_rect(
+        let info = CommonItemProperties::new(
             LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
-            bounds,
+            space_and_clip,
         );
         builder.push_yuv_image(
             &info,
-            &space_and_clip,
+            bounds,
             YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
             ColorDepth::Color8,
             YuvColorSpace::Rec601,
