@@ -22,10 +22,6 @@ const {
   getSelectedLocation
 } = require("devtools/client/debugger/src/utils/source-maps");
 
-const sourceUtils = {
-  isLoaded: source => source.loadedState === "loaded"
-};
-
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
 }
@@ -231,7 +227,7 @@ function waitForSelectedLocation(dbg, line) {
 
 function waitForSelectedSource(dbg, url) {
   const {
-    getSelectedSource,
+    getSelectedSourceWithContent,
     hasSymbols,
     hasBreakpointPositions
   } = dbg.selectors;
@@ -239,9 +235,8 @@ function waitForSelectedSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const source = getSelectedSource();
-      const isLoaded = source && sourceUtils.isLoaded(source);
-      if (!isLoaded) {
+      const { source, content } = getSelectedSourceWithContent() || {};
+      if (!content) {
         return false;
       }
 
@@ -317,8 +312,8 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const source = dbg.selectors.getSelectedSource();
-  if (source && source.loadedState == "loading") {
+  const { source, content } = dbg.selectors.getSelectedSourceWithContent() || {};
+  if (source && !content) {
     const url = source.url;
     ok(
       false,
@@ -513,14 +508,13 @@ function isSelectedFrameSelected(dbg, state) {
   // Make sure the source text is completely loaded for the
   // source we are paused in.
   const sourceId = frame.location.sourceId;
-  const source = dbg.selectors.getSelectedSource();
+  const { source, content } = dbg.selectors.getSelectedSourceWithContent() || {};
 
   if (!source) {
     return false;
   }
 
-  const isLoaded = source.loadedState && sourceUtils.isLoaded(source);
-  if (!isLoaded) {
+  if (!content) {
     return false;
   }
 
@@ -616,6 +610,24 @@ function findSource(dbg, url, { silent } = { silent: false }) {
   return source;
 }
 
+function findSourceContent(dbg, url, opts) {
+  const source = findSource(dbg, url, opts);
+
+  if (!source) return null;
+
+  const content = dbg.selectors.getSourceContent(source.id);
+
+  if (!content) {
+    return null;
+  }
+
+  if (content.state !== "fulfilled") {
+    throw new Error("Expected loaded source, got" + content.value);
+  }
+
+  return content.value;
+}
+
 function sourceExists(dbg, url) {
   return !!findSource(dbg, url, { silent: true });
 }
@@ -623,7 +635,10 @@ function sourceExists(dbg, url) {
 function waitForLoadedSource(dbg, url) {
   return waitForState(
     dbg,
-    state => findSource(dbg, url, { silent: true }).loadedState == "loaded",
+    state => {
+      const source = findSource(dbg, url, { silent: true });
+      return source && dbg.selectors.getSourceContent(source.id);
+    },
     "loaded source"
   );
 }
@@ -633,7 +648,7 @@ function waitForLoadedSources(dbg) {
     dbg,
     state => {
       const sources = Object.values(dbg.selectors.getSources());
-      return !sources.some(source => source.loadedState == "loading");
+      return sources.every(source => !!dbg.selectors.getSourceContent(source.id));
     },
     "loaded source"
   );

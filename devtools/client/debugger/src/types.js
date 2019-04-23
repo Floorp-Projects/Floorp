@@ -4,6 +4,7 @@
 
 // @flow
 
+import type { SettledValue, FulfilledValue } from "./utils/async-value";
 import type { SourcePayload } from "./client/firefox/types";
 import type { SourceActorId, SourceActor } from "./reducers/source-actors";
 
@@ -354,6 +355,26 @@ export type Grip = {
   message?: string,
   name?: string
 };
+
+export type TextSourceContent = {|
+  type: "text",
+  value: string,
+  contentType: string | void
+|};
+export type WasmSourceContent = {|
+  type: "wasm",
+  value: {| binary: Object |}
+|};
+export type SourceContent = TextSourceContent | WasmSourceContent;
+
+export type SourceWithContent = {|
+  source: Source,
+  +content: SettledValue<SourceContent> | null
+|};
+export type SourceWithContentAndType<+Content: SourceContent> = {|
+  source: Source,
+  +content: FulfilledValue<Content>
+|};
 
 /**
  * BaseSource

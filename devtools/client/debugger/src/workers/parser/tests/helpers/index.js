@@ -7,9 +7,14 @@
 import fs from "fs";
 import path from "path";
 
-import type { Source } from "../../../../types";
-import { makeMockSource } from "../../../../utils/test-mockup";
+import type {
+  Source,
+  TextSourceContent,
+  SourceWithContent
+} from "../../../../types";
+import { makeMockSourceAndContent } from "../../../../utils/test-mockup";
 import { setSource } from "../../sources";
+import * as asyncValue from "../../../../utils/async-value";
 
 export function getFixture(name: string, type: string = "js") {
   return fs.readFileSync(
@@ -18,7 +23,10 @@ export function getFixture(name: string, type: string = "js") {
   );
 }
 
-export function getSource(name: string, type: string = "js"): Source {
+function getSourceContent(
+  name: string,
+  type: string = "js"
+): TextSourceContent {
   const text = getFixture(name, type);
   let contentType = "text/javascript";
   if (type === "html") {
@@ -31,32 +39,71 @@ export function getSource(name: string, type: string = "js"): Source {
     contentType = "text/typescript-jsx";
   }
 
-  return makeMockSource(undefined, name, contentType, text);
+  return {
+    type: "text",
+    value: text,
+    contentType
+  };
 }
 
-export function getOriginalSource(name: string, type: string = "js"): Source {
-  const source = getSource(name, type);
-  return ({ ...source, id: `${name}/originalSource-1` }: any);
+export function getSource(name: string, type?: string): Source {
+  return getSourceWithContent(name, type).source;
 }
 
-export function populateSource(name: string, type?: string): Source {
-  const source = getSource(name, type);
+export function getSourceWithContent(
+  name: string,
+  type?: string
+): { source: Source, content: TextSourceContent } {
+  const { value: text, contentType } = getSourceContent(name, type);
+
+  return makeMockSourceAndContent(undefined, name, contentType, text);
+}
+
+export function populateSource(name: string, type?: string): SourceWithContent {
+  const { source, content } = getSourceWithContent(name, type);
   setSource({
     id: source.id,
-    text: source.isWasm ? "" : source.text || "",
-    contentType: source.contentType,
+    text: content.value,
+    contentType: content.contentType,
     isWasm: false
   });
-  return source;
+  return {
+    source,
+    content: asyncValue.fulfilled(content)
+  };
 }
 
-export function populateOriginalSource(name: string, type?: string): Source {
-  const source = getOriginalSource(name, type);
+export function getOriginalSource(name: string, type?: string): Source {
+  return getOriginalSourceWithContent(name, type).source;
+}
+
+export function getOriginalSourceWithContent(
+  name: string,
+  type?: string
+): { source: Source, content: TextSourceContent } {
+  const { value: text, contentType } = getSourceContent(name, type);
+
+  return makeMockSourceAndContent(
+    undefined,
+    `${name}/originalSource-1`,
+    contentType,
+    text
+  );
+}
+
+export function populateOriginalSource(
+  name: string,
+  type?: string
+): SourceWithContent {
+  const { source, content } = getOriginalSourceWithContent(name, type);
   setSource({
     id: source.id,
-    text: source.isWasm ? "" : source.text || "",
-    contentType: source.contentType,
+    text: content.value,
+    contentType: content.contentType,
     isWasm: false
   });
-  return source;
+  return {
+    source,
+    content: asyncValue.fulfilled(content)
+  };
 }

@@ -74,10 +74,10 @@ add_task(async function() {
   await waitForSource(dbg, "inline-cache.html");
   await selectSource(dbg, "inline-cache.html");
   await waitForLoadedSource(dbg, "inline-cache.html");
-  let dbgValue = await findSource(dbg, "inline-cache.html");
-  info(`Debugger text: ${dbgValue.text}`);
+  let dbgValue = findSourceContent(dbg, "inline-cache.html");
+  info(`Debugger text: ${dbgValue.value}`);
   ok(
-    dbgValue.text.includes(pageValue),
+    dbgValue.value.includes(pageValue),
     "Debugger loads from cache, gets value 1 like page"
   );
 
@@ -90,10 +90,10 @@ add_task(async function() {
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 2;", "Content loads from network, has doc value 2");
   await waitForLoadedSource(dbg, "inline-cache.html");
-  dbgValue = await findSource(dbg, "inline-cache.html");
-  info(`Debugger text: ${dbgValue.text}`);
+  dbgValue = findSourceContent(dbg, "inline-cache.html");
+  info(`Debugger text: ${dbgValue.value}`);
   ok(
-    dbgValue.text.includes(pageValue),
+    dbgValue.value.includes(pageValue),
     "Debugger loads from network, gets value 2 like page"
   );
 
@@ -104,10 +104,10 @@ add_task(async function() {
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 3;", "Content loads from network, has doc value 3");
   await waitForLoadedSource(dbg, "inline-cache.html");
-  dbgValue = await findSource(dbg, "inline-cache.html");
-  info(`Debugger text: ${dbgValue.text}`);
+  dbgValue = findSourceContent(dbg, "inline-cache.html");
+  info(`Debugger text: ${dbgValue.value}`);
   ok(
-    dbgValue.text.includes(pageValue),
+    dbgValue.value.includes(pageValue),
     "Debugger loads from network, gets value 3 like page"
   );
 
@@ -124,10 +124,10 @@ add_task(async function() {
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 4;", "Content loads from network, has doc value 4");
   await waitForLoadedSource(dbg, "inline-cache.html");
-  dbgValue = await findSource(dbg, "inline-cache.html");
-  info(`Debugger text: ${dbgValue.text}`);
+  dbgValue = findSourceContent(dbg, "inline-cache.html");
+  info(`Debugger text: ${dbgValue.value}`);
   ok(
-    dbgValue.text.includes(pageValue),
+    dbgValue.value.includes(pageValue),
     "Debugger loads from cache, gets value 4 like page"
   );
 
@@ -138,10 +138,10 @@ add_task(async function() {
   pageValue = await getPageValue(tab);
   is(pageValue, "let x = 5;", "Content loads from network, has doc value 5");
   await waitForLoadedSource(dbg, "inline-cache.html");
-  dbgValue = await findSource(dbg, "inline-cache.html");
-  info(`Debugger text: ${dbgValue.text}`);
+  dbgValue = findSourceContent(dbg, "inline-cache.html");
+  info(`Debugger text: ${dbgValue.value}`);
   ok(
-    dbgValue.text.includes(pageValue),
+    dbgValue.value.includes(pageValue),
     "Debugger loads from cache, gets value 5 like page"
   );
 

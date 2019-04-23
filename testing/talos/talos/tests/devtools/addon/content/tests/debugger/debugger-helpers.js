@@ -184,9 +184,8 @@ function selectSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const source = dbg.selectors.getSelectedSource(state);
-      const isLoaded = source && source.loadedState === "loaded";
-      if (!isLoaded) {
+      const { source, content } = dbg.selectors.getSelectedSourceWithContent(state);
+      if (!content) {
         return false;
       }
 

@@ -8,11 +8,14 @@
 
 import getMatches from "./get-matches";
 
-import type { Source } from "../../types";
+import type { SourceId, TextSourceContent } from "../../types";
 
-export function findSourceMatches(source: Source, queryText: string): Object[] {
-  const { id, loadedState, text } = source;
-  if (loadedState != "loaded" || typeof text != "string" || queryText == "") {
+export function findSourceMatches(
+  sourceId: SourceId,
+  content: TextSourceContent,
+  queryText: string
+): Object[] {
+  if (queryText == "") {
     return [];
   }
 
@@ -22,12 +25,13 @@ export function findSourceMatches(source: Source, queryText: string): Object[] {
     wholeWord: false
   };
 
+  const text = content.value;
   const lines = text.split("\n");
 
   return getMatches(queryText, text, modifiers).map(({ line, ch }) => {
     const { value, matchIndex } = truncateLine(lines[line], ch);
     return {
-      sourceId: id,
+      sourceId,
       line: line + 1,
       column: ch,
       matchIndex,
@@ -47,7 +51,7 @@ const endRegex = new RegExp(
   ].join("")
 );
 
-function truncateLine(text, column) {
+function truncateLine(text: string, column: number) {
   if (text.length < 100) {
     return {
       matchIndex: column,

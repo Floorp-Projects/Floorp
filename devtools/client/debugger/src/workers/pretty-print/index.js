@@ -6,29 +6,20 @@
 
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
-import { isJavaScript } from "../../utils/source";
-import assert from "../../utils/assert";
-
-import type { Source } from "../../types";
 
 const dispatcher = new WorkerDispatcher();
 export const start = dispatcher.start.bind(dispatcher);
 export const stop = dispatcher.stop.bind(dispatcher);
-const _prettyPrint = dispatcher.task("prettyPrint");
 
 type PrettyPrintOpts = {
-  source: Source,
+  text: string,
   url: string
 };
 
-export async function prettyPrint({ source, url }: PrettyPrintOpts) {
-  const indent = 2;
-
-  assert(isJavaScript(source), "Can't prettify non-javascript files.");
-
-  return _prettyPrint({
+export async function prettyPrint({ text, url }: PrettyPrintOpts) {
+  return dispatcher.invoke("prettyPrint", {
     url,
-    indent,
-    sourceText: source.text
+    indent: 2,
+    sourceText: text
   });
 }

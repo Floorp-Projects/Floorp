@@ -18,7 +18,12 @@ import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 
 import type { AstLocation } from "../../workers/parser";
 import type { EditorPosition, EditorRange } from "../editor/types";
-import type { SearchModifiers, Source, SourceLocation } from "../../types";
+import type {
+  SearchModifiers,
+  Source,
+  SourceContent,
+  SourceLocation
+} from "../../types";
 type Editor = Object;
 
 let editor: ?Editor;
@@ -58,8 +63,8 @@ export function endOperation() {
   codeMirror.endOperation();
 }
 
-export function shouldShowPrettyPrint(source: Source) {
-  return shouldPrettyPrint(source);
+export function shouldShowPrettyPrint(source: Source, content: SourceContent) {
+  return shouldPrettyPrint(source, content);
 }
 
 export function traverseResults(

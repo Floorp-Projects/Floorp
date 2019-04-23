@@ -14,7 +14,7 @@ import { findFunctionText } from "../../utils/function";
 
 import actions from "../../actions";
 import {
-  getSelectedSource,
+  getSelectedSourceWithContent,
   getSymbols,
   getSelectedLocation,
   getContext
@@ -262,13 +262,15 @@ export class Outline extends Component<Props, State> {
 }
 
 const mapStateToProps = state => {
-  const selectedSource = getSelectedSource(state);
-  const symbols = selectedSource ? getSymbols(state, selectedSource) : null;
+  const selectedSource = getSelectedSourceWithContent(state);
+  const symbols = selectedSource
+    ? getSymbols(state, selectedSource.source)
+    : null;
 
   return {
     cx: getContext(state),
     symbols,
-    selectedSource,
+    selectedSource: selectedSource && selectedSource.source,
     selectedLocation: getSelectedLocation(state),
     getFunctionText: line => {
       if (selectedSource) {
