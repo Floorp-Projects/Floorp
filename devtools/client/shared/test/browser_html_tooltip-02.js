@@ -144,12 +144,22 @@ async function testClickInInnerIframe(doc) {
   const iframe = doc.createElementNS(HTML_NS, "iframe");
   iframe.style.width = "100px";
   iframe.style.height = "50px";
+
   tooltip.panel.appendChild(iframe);
+
+  const onFrameLoad = new Promise(r => {
+    iframe.addEventListener("load", r, true);
+  });
+  iframe.src = "data:text/html,<div id=test style='height:50px;'></div>";
+  await onFrameLoad;
+
   tooltip.setContentSize({width: 100, height: 50});
   await showTooltip(tooltip, doc.getElementById("box1"));
 
-  const onTooltipContainerClick = once(tooltip.container, "click");
-  EventUtils.synthesizeMouseAtCenter(tooltip.container, {}, doc.defaultView);
+  const target = iframe.contentWindow.document.documentElement;
+  const onTooltipContainerClick = once(target, "click");
+
+  EventUtils.synthesizeMouseAtCenter(target, {}, target.ownerDocument.defaultView);
   await onTooltipContainerClick;
 
   is(tooltip.isVisible(), true, "Tooltip is still visible");
