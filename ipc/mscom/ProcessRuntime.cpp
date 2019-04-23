@@ -32,12 +32,6 @@
 // This API from oleaut32.dll is not declared in Windows SDK headers
 extern "C" void __cdecl SetOaNoCache(void);
 
-#if (_WIN32_WINNT < 0x0602)
-BOOL WINAPI GetProcessMitigationPolicy(
-    HANDLE hProcess, PROCESS_MITIGATION_POLICY MitigationPolicy, PVOID lpBuffer,
-    SIZE_T dwLength);
-#endif  // (_WIN32_WINNT < 0x0602)
-
 namespace mozilla {
 namespace mscom {
 
@@ -265,30 +259,6 @@ ProcessRuntime::InitializeSecurity() {
       &sd, -1, nullptr, nullptr, RPC_C_AUTHN_LEVEL_DEFAULT,
       RPC_C_IMP_LEVEL_IDENTIFY, nullptr, EOAC_NONE, nullptr);
 }
-
-#if defined(MOZILLA_INTERNAL_API)
-
-/* static */
-bool ProcessRuntime::IsWin32kLockedDown() {
-  static const DynamicallyLinkedFunctionPtr<decltype(
-      &::GetProcessMitigationPolicy)>
-      pGetProcessMitigationPolicy(L"kernel32.dll",
-                                  "GetProcessMitigationPolicy");
-  if (!pGetProcessMitigationPolicy) {
-    return false;
-  }
-
-  PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY polInfo;
-  if (!pGetProcessMitigationPolicy(::GetCurrentProcess(),
-                                   ProcessSystemCallDisablePolicy, &polInfo,
-                                   sizeof(polInfo))) {
-    return false;
-  }
-
-  return polInfo.DisallowWin32kSystemCalls;
-}
-
-#endif  // defined(MOZILLA_INTERNAL_API)
 
 }  // namespace mscom
 }  // namespace mozilla

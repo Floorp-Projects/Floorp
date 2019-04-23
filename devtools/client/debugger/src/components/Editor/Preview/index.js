@@ -9,15 +9,10 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import {
-  getPreview,
-  getSelectedSource,
-  getThreadContext
-} from "../../../selectors";
+import { getPreview, getThreadContext } from "../../../selectors";
 import actions from "../../../actions";
-import { toEditorRange } from "../../../utils/editor";
 
-import type { Source, ThreadContext } from "../../../types";
+import type { ThreadContext } from "../../../types";
 
 import type { Preview as PreviewType } from "../../../reducers/ast";
 
@@ -25,10 +20,8 @@ type Props = {
   cx: ThreadContext,
   editor: any,
   editorRef: ?HTMLDivElement,
-  selectedSource: Source,
   preview: PreviewType,
   clearPreview: typeof actions.clearPreview,
-  setPopupObjectProperties: typeof actions.setPopupObjectProperties,
   addExpression: typeof actions.addExpression,
   updatePreview: typeof actions.updatePreview
 };
@@ -151,31 +144,16 @@ class Preview extends PureComponent<Props, State> {
   };
 
   render() {
-    const { selectedSource, preview } = this.props;
-    if (!this.props.editor || !selectedSource || this.state.selecting) {
+    const { preview } = this.props;
+    if (!preview || preview.updating || this.state.selecting) {
       return null;
     }
-
-    if (!preview || preview.updating) {
-      return null;
-    }
-
-    const { result, expression, location, cursorPos } = preview;
-    const value = result;
-    if (typeof value == "undefined" || value.optimizedOut) {
-      return null;
-    }
-
-    const editorRange = toEditorRange(selectedSource.id, location);
 
     return (
       <Popup
-        value={value}
+        preview={preview}
         editor={this.props.editor}
         editorRef={this.props.editorRef}
-        range={editorRange}
-        expression={expression}
-        popoverPos={cursorPos}
         onClose={this.onClose}
       />
     );
@@ -184,15 +162,13 @@ class Preview extends PureComponent<Props, State> {
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
-  preview: getPreview(state),
-  selectedSource: getSelectedSource(state)
+  preview: getPreview(state)
 });
 
 export default connect(
   mapStateToProps,
   {
     clearPreview: actions.clearPreview,
-    setPopupObjectProperties: actions.setPopupObjectProperties,
     addExpression: actions.addExpression,
     updatePreview: actions.updatePreview
   }

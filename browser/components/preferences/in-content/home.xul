@@ -6,7 +6,7 @@
 
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/home.js"/>
-<box id="template-paneHome" hidden="true"><![CDATA[
+<html:template id="template-paneHome">
 <hbox id="firefoxHomeCategory"
       class="subcategory"
       hidden="true"
@@ -98,4 +98,4 @@
             data-l10n-id="disable-extension" />
   </hbox>
 </groupbox>
-]]></box>
+</html:template>

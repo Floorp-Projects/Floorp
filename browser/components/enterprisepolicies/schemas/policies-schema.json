@@ -656,7 +656,33 @@
     },
 
     "SanitizeOnShutdown": {
-      "type": "boolean"
+      "type": ["boolean", "object"],
+      "properties": {
+        "Cache": {
+          "type": "boolean"
+        },
+        "Cookies": {
+          "type": "boolean"
+        },
+        "Downloads": {
+          "type": "boolean"
+        },
+        "FormData": {
+          "type": "boolean"
+        },
+        "History": {
+          "type": "boolean"
+        },
+        "Sessions": {
+          "type": "boolean"
+        },
+        "SiteSettings": {
+          "type": "boolean"
+        },
+        "OfflineApps": {
+          "type": "boolean"
+        }
+      }
     },
 
     "SearchBar": {

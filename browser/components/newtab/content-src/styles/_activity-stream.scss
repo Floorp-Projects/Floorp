@@ -20,6 +20,10 @@ body {
   overflow-y: scroll;
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 h1,
 h2 {
   font-weight: normal;

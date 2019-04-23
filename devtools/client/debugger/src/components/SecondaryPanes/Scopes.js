@@ -20,6 +20,7 @@ import {
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
 
+// eslint-disable-next-line import/named
 import { objectInspector } from "devtools-reps";
 
 import type { Why } from "../../types";

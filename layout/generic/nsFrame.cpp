@@ -930,7 +930,7 @@ static void AddAndRemoveImageAssociations(
   });
 }
 
-void nsIFrame::AddDisplayItem(nsDisplayItem* aItem) {
+void nsIFrame::AddDisplayItem(nsDisplayItemBase* aItem) {
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (!items) {
     items = new DisplayItemArray();
@@ -940,7 +940,7 @@ void nsIFrame::AddDisplayItem(nsDisplayItem* aItem) {
   items->AppendElement(aItem);
 }
 
-bool nsIFrame::RemoveDisplayItem(nsDisplayItem* aItem) {
+bool nsIFrame::RemoveDisplayItem(nsDisplayItemBase* aItem) {
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (!items) {
     return false;
@@ -957,7 +957,7 @@ bool nsIFrame::HasDisplayItems() {
   return items != nullptr;
 }
 
-bool nsIFrame::HasDisplayItem(nsDisplayItem* aItem) {
+bool nsIFrame::HasDisplayItem(nsDisplayItemBase* aItem) {
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (!items) {
     return false;
@@ -971,7 +971,7 @@ bool nsIFrame::HasDisplayItem(uint32_t aKey) {
     return false;
   }
 
-  for (nsDisplayItem* i : *items) {
+  for (nsDisplayItemBase* i : *items) {
     if (i->GetPerFrameKey() == aKey) {
       return true;
     }
@@ -985,7 +985,7 @@ void nsIFrame::DiscardOldItems() {
     return;
   }
 
-  for (nsDisplayItem* i : *items) {
+  for (nsDisplayItemBase* i : *items) {
     i->DiscardIfOldItem();
   }
 }
@@ -1012,7 +1012,7 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
 
   DisplayItemArray* items = RemoveProperty(DisplayItems());
   if (items) {
-    for (nsDisplayItem* i : *items) {
+    for (nsDisplayItemBase* i : *items) {
       if (i->GetDependentFrame() == this && !i->HasDeletedFrame()) {
         i->Frame()->MarkNeedsDisplayItemRebuild();
       }
@@ -1101,7 +1101,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
   // the presence of dependencies to speed it up.
   DisplayItemArray* items = GetProperty(DisplayItems());
   if (items) {
-    for (nsDisplayItem* i : *items) {
+    for (nsDisplayItemBase* i : *items) {
       if (i->HasDeletedFrame() || i->Frame() == this) {
         // Ignore the items with deleted frames, and the items with |this| as
         // the primary frame.

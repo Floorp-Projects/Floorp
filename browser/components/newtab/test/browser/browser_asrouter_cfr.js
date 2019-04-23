@@ -399,3 +399,14 @@ add_task(async function test_matchPattern() {
 
   Assert.equal(count, 2, "www.example.com is a different host that also matches the pattern.");
 });
+
+add_task(async function test_providerNames() {
+  const providersBranch = "browser.newtabpage.activity-stream.asrouter.providers.";
+  const cfrProviderPrefs = Services.prefs.getChildList(providersBranch);
+  for (const prefName of cfrProviderPrefs) {
+    const prefValue = JSON.parse(Services.prefs.getStringPref(prefName));
+    if (prefValue.id) { // Snippets are disabled in tests and value is set to []
+      Assert.equal(prefValue.id, prefName.slice(providersBranch.length), "Provider id and pref name do not match");
+    }
+  }
+});

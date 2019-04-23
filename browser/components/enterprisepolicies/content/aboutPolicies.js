@@ -230,6 +230,7 @@ function generateDocumentation() {
   let string_mapping = {
     "DisableSetDesktopBackground": "DisableSetAsDesktopBackground",
     "Certificates": "CertificatesDescription",
+    "SanitizeOnShutdown": "SanitizeOnShutdown2",
   };
 
   for (let policyName in schema.properties) {

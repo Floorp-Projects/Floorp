@@ -245,6 +245,9 @@ body {
   font-size: 16px;
   overflow-y: scroll; }
 
+.no-scroll {
+  overflow: hidden; }
+
 h1,
 h2 {
   font-weight: normal; }
@@ -1540,6 +1543,7 @@ main {
         align-self: center;
         display: block;
         fill: var(--newtab-icon-secondary-color);
+        flex-shrink: 0;
         margin-inline-end: 6px; } }
 
 .manual-migration-actions {
@@ -1647,12 +1651,32 @@ main {
     .collapsible-section[data-section-id='topstories'] .card-outer:first-child {
       display: none; } }
 
+.asrouter-toggle {
+  background: #FFE900;
+  color: #000;
+  position: fixed;
+  top: 0;
+  left: 43px;
+  padding: 5px 10px;
+  border-radius: 0 0 3px 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 0;
+  z-index: 3000; }
+
 .asrouter-admin {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--newtab-background-color);
+  height: 100%;
+  overflow-y: scroll;
   margin: 0 auto;
   font-size: 14px;
   padding-left: 240px;
-  display: flex;
   color: var(--newtab-text-primary-color); }
+  .asrouter-admin.collapsed {
+    display: none; }
   .asrouter-admin .sidebar {
     inset-inline-start: 0;
     position: fixed;
@@ -1733,9 +1757,8 @@ main {
   .asrouter-admin .helpLink {
     padding: 10px;
     display: flex;
-    background: #FFE900;
-    border-radius: 3px;
-    color: #0C0C0D; }
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px; }
     .asrouter-admin .helpLink a {
       text-decoration: underline; }
   .asrouter-admin .dsEnabled {
@@ -1892,7 +1915,7 @@ main {
       outline: none; }
       [lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder):hover {
         box-shadow: 0 0 0 5px #4A4A4F; }
-    .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img {
+    .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
       border-radius: 4px 4px 0 0; }
   .ds-card-grid.ds-card-grid-no-border .ds-card {
     background: none; }

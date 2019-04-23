@@ -6,7 +6,7 @@
 
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/sync.js"/>
-<box id="template-paneSync" hidden="true"><![CDATA[
+<html:template id="template-paneSync">
 <hbox id="firefoxAccountCategory"
       class="subcategory"
       hidden="true"
@@ -196,4 +196,4 @@
     </vbox>
   </vbox>
 </deck>
-]]></box>
+</html:template>

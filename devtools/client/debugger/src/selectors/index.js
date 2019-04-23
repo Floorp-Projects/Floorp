@@ -51,6 +51,7 @@ export {
   getVisibleSelectedFrame
 } from "./pause";
 
+// eslint-disable-next-line import/named
 import { objectInspector } from "devtools-reps";
 
 const { reducer } = objectInspector;

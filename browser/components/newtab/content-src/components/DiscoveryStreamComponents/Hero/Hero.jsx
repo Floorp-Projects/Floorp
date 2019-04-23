@@ -42,6 +42,7 @@ export class Hero extends React.PureComponent {
         campaignId={rec.campaign_id}
         key={`dscard-${index}`}
         image_src={rec.image_src}
+        raw_image_src={rec.raw_image_src}
         title={rec.title}
         url={rec.url}
         id={rec.id}

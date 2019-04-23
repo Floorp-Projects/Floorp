@@ -37,25 +37,11 @@ You should now see pings show up as you view/interact with ASR messages/template
 
 ## Snippets debugging
 
-### How to test legacy snippets
-
-To make sure the legacy snippets system is still running properly, do the following:
-
-- Load test data for legacy snippets. In about:config, set `browser.aboutHomeSnippets.updateUrl` to `https://snippets.allizom.org/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/`
-- Disable ASR snippets
-  - set up your ASR devtools (see steps above)
-  - visit `about:newtab#asrouter`
-  - Uncheck the checkbox next to snippets
-- Check `about:newtab` to make sure legacy snippets are loading
-  - visit `about:newtab`
-  - Type gSnippetsMap.clear() into the devtools console and refresh the page
-  - Open the devtools again
-  - Ensure you see the message “Legacy snippets: Successfully added snippets.”
-  - Ensure you visually see snippets on the page
-
 ### How to view preview URLs
 
-Follow these steps to view preview URLs (e.g. `about:newtab?endpoint=https://gist.githubusercontent.com/piatra/d193ca7e0f513cc19fc6a1d396c214f7/raw/8bcaf9548212e4c613577e839198cc14e7317630/newsletter_snippet.json`)
+Follow these steps to view preview URLs (e.g. `about:newtab?endpoint=https://gist.githubusercontent.com/piatra/d193ca7e0f513cc19fc6a1d396c214f7/raw/8bcaf9548212e4c613577e839198cc14e7317630/newsletter_snippet.json&theme=dark`)
+
+You can preview in the two different themes (light and dark) by adding `&theme=dark` or `&theme=light` at the end of the url.
 
 #### IMPORTANT NOTES
 - Links to URLs starting with `about:newtab` cannot be clicked on directly. They must be copy and pasted into the address bar.

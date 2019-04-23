@@ -177,17 +177,19 @@ var Settings = {
 
     let elements = document.getElementsByClassName("change-data-choices-link");
     for (let el of elements) {
-      el.addEventListener("click", function() {
-        if (AppConstants.platform == "android") {
-          var {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-          EventDispatcher.instance.sendRequest({
-            type: "Settings:Show",
-            resource: "preferences_privacy",
-          });
-        } else {
-          // Show the data choices preferences on desktop.
-          let mainWindow = getMainWindowWithPreferencesPane();
-          mainWindow.openPreferences("privacy-reports");
+      el.parentElement.addEventListener("click", function(event) {
+        if (event.target.localName === "a") {
+          if (AppConstants.platform == "android") {
+            var {EventDispatcher} = ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+            EventDispatcher.instance.sendRequest({
+              type: "Settings:Show",
+              resource: "preferences_privacy",
+            });
+          } else {
+            // Show the data choices preferences on desktop.
+            let mainWindow = getMainWindowWithPreferencesPane();
+            mainWindow.openPreferences("privacy-reports");
+          }
         }
       });
     }
@@ -212,14 +214,6 @@ var Settings = {
     document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {datacase, uploadcase});
 
     this.attachObservers();
-  },
-
-  convertStringToLink(string) {
-    let link = document.createElement("a");
-    link.setAttribute("href", "#");
-    link.setAttribute("class", "change-data-choices-link");
-    link.textContent = string;
-    return link;
   },
 };
 

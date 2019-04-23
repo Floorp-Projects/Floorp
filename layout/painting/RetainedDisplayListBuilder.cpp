@@ -478,7 +478,7 @@ class MergeState {
     // Look for an item that matches aItem's frame and per-frame-key, but isn't
     // the same item.
     uint32_t outerKey = mOuterItem ? mOuterItem->GetPerFrameKey() : 0;
-    for (nsDisplayItem* i : *items) {
+    for (nsDisplayItemBase* i : *items) {
       if (i != aItem && i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
         if (i->GetOldListIndex(mOldList, outerKey, aOutIndex)) {
@@ -509,7 +509,7 @@ class MergeState {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     nsIFrame::DisplayItemArray* items =
         aItem->Frame()->GetProperty(nsIFrame::DisplayItems());
-    for (nsDisplayItem* i : *items) {
+    for (nsDisplayItemBase* i : *items) {
       if (i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
         MOZ_DIAGNOSTIC_ASSERT(!i->IsMergedItem());
@@ -797,9 +797,9 @@ static nsDisplayItem* GetFirstDisplayItemWithChildren(nsIFrame* aFrame) {
     return nullptr;
   }
 
-  for (nsDisplayItem* i : *items) {
-    if (i->GetChildren()) {
-      return i;
+  for (nsDisplayItemBase* i : *items) {
+    if (i->HasChildren()) {
+      return static_cast<nsDisplayItem*>(i);
     }
   }
   return nullptr;
