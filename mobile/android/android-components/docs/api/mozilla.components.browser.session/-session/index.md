@@ -45,7 +45,7 @@ Value type that represents the state of a browser session. Changes can be observ
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [progress](progress.md) | `var progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The progress loading the current URL. |
 | [promptRequest](prompt-request.md) | `var promptRequest: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`PromptRequest`](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md)`>`<br>[Consumable](../../mozilla.components.support.base.observer/-consumable/index.md) State for a prompt request from web content. |
-| [searchTerms](search-terms.md) | `var searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The currently / last used search terms. |
+| [searchTerms](search-terms.md) | `var searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The currently / last used search terms (or an empty string). |
 | [securityInfo](security-info.md) | `var securityInfo: `[`SecurityInfo`](-security-info/index.md)<br>Security information indicating whether or not the current session is for a secure URL, as well as the host and SSL certificate authority, if applicable. |
 | [source](source.md) | `val source: `[`Source`](-source/index.md) |
 | [thumbnail](thumbnail.md) | `var thumbnail: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>The target of the latest thumbnail. |

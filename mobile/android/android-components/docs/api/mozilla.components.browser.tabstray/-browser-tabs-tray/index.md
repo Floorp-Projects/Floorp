@@ -12,6 +12,12 @@ A customizable tabs tray for browsers.
 |---|---|
 | [&lt;init&gt;](-init-.md) | `BrowserTabsTray(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, attrs: `[`AttributeSet`](https://developer.android.com/reference/android/util/AttributeSet.html)`? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter())`<br>A customizable tabs tray for browsers. |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [tabsAdapter](tabs-adapter.md) | `val tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md) |
+
 ### Functions
 
 | Name | Summary |

@@ -439,6 +439,8 @@
 | [mozilla.components.browser.engine.system.window.SystemWindowRequest](../mozilla.components.browser.engine.system.window/-system-window-request/index.md) | WebView-based implementation of [WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md). |
 | [mozilla.components.ui.tabcounter.TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md) |  |
 | [mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton](../mozilla.components.feature.tabs.toolbar/-tab-counter-toolbar-button/index.md) | A [Toolbar.Action](../mozilla.components.concept.toolbar/-toolbar/-action/index.md) implementation that shows a [TabCounter](../mozilla.components.ui.tabcounter/-tab-counter/index.md). |
+| [mozilla.components.browser.tabstray.thumbnail.TabThumbnailView](../mozilla.components.browser.tabstray.thumbnail/-tab-thumbnail-view/index.md) |  |
+| [mozilla.components.browser.tabstray.TabTouchCallback](../mozilla.components.browser.tabstray/-tab-touch-callback/index.md) | An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray. |
 | [mozilla.components.browser.tabstray.TabViewHolder](../mozilla.components.browser.tabstray/-tab-view-holder/index.md) | A RecyclerView ViewHolder implementation for "tab" items. |
 | [mozilla.components.browser.tabstray.TabsAdapter](../mozilla.components.browser.tabstray/-tabs-adapter/index.md) | RecyclerView adapter implementation to display a list/grid of tabs. |
 | [mozilla.components.feature.tabs.tabstray.TabsFeature](../mozilla.components.feature.tabs.tabstray/-tabs-feature/index.md) | Feature implementation for connecting a tabs tray implementation with the session module. |

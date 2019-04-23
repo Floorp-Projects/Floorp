@@ -6,5 +6,5 @@
 
 Overrides [ReaderViewControlsView.showControls](../-reader-view-controls-view/show-controls.md)
 
-Requests visibility and focus of the UI controls.
+Updates visibility to [View.VISIBLE](https://developer.android.com/reference/android/view/View.html#VISIBLE) and requests focus for the UI controls.
 
