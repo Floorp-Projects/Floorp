@@ -12,31 +12,47 @@ const kSearchEngineURL3 = "http://example.com/?search={searchTerms}";
 const kExtensionID = "searchignore@mozilla.com";
 
 add_task(async function test_ignoreList() {
-  await setupRemoteSettings();
-
   Assert.ok(!Services.search.isInitialized,
     "Search service should not be initialized to begin with.");
 
   let updatePromise = SearchTestUtils.promiseSearchNotification("settings-update-complete");
-
   await Services.search.addEngineWithDetails(kSearchEngineID1, "", "", "", "get", kSearchEngineURL1);
-
-  await updatePromise;
-
-  // An ignored engine shouldn't be available at all
-  let engine = Services.search.getEngineByName(kSearchEngineID1);
-  Assert.equal(engine, null, "Engine with ignored search params should not exist");
-
   await Services.search.addEngineWithDetails(kSearchEngineID2, "", "", "", "get", kSearchEngineURL2);
-
-  // An ignored engine shouldn't be available at all
-  engine = Services.search.getEngineByName(kSearchEngineID2);
-  Assert.equal(engine, null, "Engine with ignored search params of a different case should not exist");
-
   await Services.search.addEngineWithDetails(kSearchEngineID3, "", "", "", "get",
                                              kSearchEngineURL3, kExtensionID);
 
-  // An ignored engine shouldn't be available at all
-  engine = Services.search.getEngineByName(kSearchEngineID3);
-  Assert.equal(engine, null, "Engine with ignored extension id should not exist");
+  // Ensure that the initial remote settings update from default values is
+  // complete. The defaults do not include the special inclusions inserted below.
+  await updatePromise;
+
+  for (let engineName of [kSearchEngineID1, kSearchEngineID2, kSearchEngineID3]) {
+    Assert.ok(await Services.search.getEngineByName(engineName),
+      `Engine ${engineName} should be present`);
+  }
+
+  // Simulate an ignore list update.
+  await RemoteSettings("hijack-blocklists").emit("sync", {
+    data: {
+      current: [{
+        "id": "load-paths",
+        "schema": 1553857697843,
+        "last_modified": 1553859483588,
+        "matches": [
+          "[other]addEngineWithDetails:searchignore@mozilla.com",
+        ],
+      }, {
+        "id": "submission-urls",
+        "schema": 1553857697843,
+        "last_modified": 1553859435500,
+        "matches": [
+          "ignore=true",
+        ],
+      }],
+    },
+  });
+
+  for (let engineName of [kSearchEngineID1, kSearchEngineID2, kSearchEngineID3]) {
+    Assert.equal(await Services.search.getEngineByName(engineName), null,
+      `Engine ${engineName} should not be present`);
+  }
 });
