@@ -96,7 +96,7 @@ class BrowserToolbarBottomBehavior(
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: BrowserToolbar, dependency: View): Boolean {
         if (dependency is Snackbar.SnackbarLayout) {
-            positionSnackbar(child, dependency)
+            positionSnackbar(dependency)
         }
 
         return super.layoutDependsOn(parent, child, dependency)
@@ -109,7 +109,7 @@ class BrowserToolbarBottomBehavior(
     }
 
     @Suppress("MagicNumber")
-    private fun positionSnackbar(child: View, view: View) {
+    private fun positionSnackbar(view: View) {
         val params = view.layoutParams as CoordinatorLayout.LayoutParams
 
         // Position the snackbar above the toolbar so that it doesn't overlay the toolbar.
