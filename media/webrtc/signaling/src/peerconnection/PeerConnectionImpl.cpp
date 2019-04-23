@@ -2936,6 +2936,10 @@ void PeerConnectionImpl::startCallTelem() {
 
 nsresult PeerConnectionImpl::DTMFState::Notify(nsITimer* timer) {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mTransceiver->IsSending()) {
+    mSendTimer->Cancel();
+    return NS_OK;
+  }
 
   nsString eventTone;
   if (!mTones.IsEmpty()) {
