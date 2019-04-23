@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that capturing a media element, then reloading and capturing again, works</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<video id="v"></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+let v = document.getElementById('v');
+
+function dumpEvent(event) {
+  let v = event.target;
+  info(v.name + " GOT EVENT " + event.type +
+       " currentTime=" + v.currentTime +
+       " paused=" + v.paused +
+       " ended=" + v.ended +
+       " readyState=" + v.readyState);
+}
+
+let events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
+for (let i = 0; i < events.length; ++i) {
+  v.addEventListener(events[i], dumpEvent);
+}
+
+async function startTest(src) {
+  v.preload = "metadata";
+  v.src = src;
+  await new Promise(r => v.onloadedmetadata = r);
+  let s1 = v.mozCaptureStream();
+  is(s1.getTracks().length, 2, "Expected total tracks, s1, capture 1");
+  is(s1.getAudioTracks().length, 1, "Expected audio tracks, s1, capture 1");
+  is(s1.getVideoTracks().length, 1, "Expected video tracks, s1, capture 1");
+  is(s1.getAudioTracks()[0].readyState, "live", "Live audio, s1, capture 1");
+  is(s1.getVideoTracks()[0].readyState, "live", "Live video, s1, capture 1");
+
+  v.src = null;
+
+  v.src = src;
+  await new Promise(r => v.onloadedmetadata = r);
+  is(s1.getTracks().length, 4, "Expected total tracks, s1, metadata 2");
+  is(s1.getAudioTracks().length, 2, "Expected audio tracks, s1, metadata 2");
+  is(s1.getVideoTracks().length, 2, "Expected video tracks, s1, metadata 2");
+  is(s1.getAudioTracks()[0].readyState, "ended", "Ended audio, s1, metadata 2");
+  is(s1.getAudioTracks()[1].readyState, "live", "Live audio, s1, metadata 2");
+  is(s1.getVideoTracks()[0].readyState, "ended", "Ended video, s1, metadata 2");
+  is(s1.getVideoTracks()[1].readyState, "live", "Live video, s1, metadata 2");
+
+  let s2 = v.mozCaptureStream();
+  is(s1.getTracks().length, 4, "Expected total tracks remains, s1, capture 2");
+  is(s2.getTracks().length, 2, "Expected total tracks, s2, capture 2");
+  is(s2.getAudioTracks().length, 1, "Expected audio tracks, s2, capture 2");
+  is(s2.getVideoTracks().length, 1, "Expected video tracks, s2, capture 2");
+  is(s2.getAudioTracks()[0].readyState, "live", "Live audio, s2, capture 2");
+  is(s2.getVideoTracks()[0].readyState, "live", "Live video, s2, capture 2");
+}
+
+(async function() {
+  try {
+    await startTest("short-video.ogv");
+  } catch(e) {
+    ok(false, `Caught error: ${e}${e.stack ? '\n' + e.stack : ''}`);
+  } finally {
+    SimpleTest.finish();
+  }
+})();
+</script>
+</pre>
+</body>
+</html>
