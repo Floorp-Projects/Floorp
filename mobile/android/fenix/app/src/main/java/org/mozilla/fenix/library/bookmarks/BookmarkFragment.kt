@@ -184,15 +184,23 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     }
                     is BookmarkAction.OpenInNewTab -> {
                         it.item.url?.let { url ->
-                            requireComponents.useCases.tabsUseCases.addTab.invoke(url)
-                            (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                            (activity as HomeActivity).browsingModeManager.mode =
+                                BrowsingModeManager.Mode.Normal
+                            (activity as HomeActivity).openToBrowserAndLoad(
+                                text = url,
+                                from = BrowserDirection.FromBookmarks
+                            )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInNewTab)
                         }
                     }
                     is BookmarkAction.OpenInPrivateTab -> {
                         it.item.url?.let { url ->
-                            requireComponents.useCases.tabsUseCases.addPrivateTab.invoke(url)
-                            (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                            (activity as HomeActivity).browsingModeManager.mode =
+                                BrowsingModeManager.Mode.Private
+                            (activity as HomeActivity).openToBrowserAndLoad(
+                                text = url,
+                                from = BrowserDirection.FromBookmarks
+                            )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInPrivateTab)
                         }
                     }
