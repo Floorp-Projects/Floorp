@@ -767,6 +767,7 @@ image.update-throbber {
   position: absolute;
   padding: 0 10px;
   background-color: #ffe900;
+  color: #000;
   border: 1px solid #d7b600;
   bottom: 36px;
   opacity: .85;
