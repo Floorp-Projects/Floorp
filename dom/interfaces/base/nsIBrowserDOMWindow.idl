@@ -106,14 +106,12 @@ interface nsIBrowserDOMWindow : nsISupports
    *               aWhere == OPEN_DEFAULTWINDOW.
    * @param aTriggeringPrincipal the principal that would trigger the potential
    *        load of aURI.
-   * @param aCsp the CSP to use (if any) for the new window.
    * @return the window into which the URI would have been opened.
   */
   mozIDOMWindowProxy
   createContentWindow(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
                       in short aWhere, in long aFlags,
-                      in nsIPrincipal aTriggeringPrincipal,
-                      [optional] in nsIContentSecurityPolicy aCsp);
+                      in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * As above, but return the nsFrameLoaderOwner for the new window. Value is
@@ -141,13 +139,11 @@ interface nsIBrowserDOMWindow : nsISupports
    *               OPEN_EXTERNAL/OPEN_NEW flag is only used when
    *               aWhere == OPEN_DEFAULTWINDOW.
    * @param aTriggeringPrincipal the principal that triggered the load of aURI.
-   * @param aCsp the CSP to be applied to the new load.
    * @return the window into which the URI was opened.
   */
   mozIDOMWindowProxy
   openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
-          in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal,
-          [optional] in nsIContentSecurityPolicy aCsp);
+          in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * As above, but return the nsFrameLoaderOwner for the new window. Value is
