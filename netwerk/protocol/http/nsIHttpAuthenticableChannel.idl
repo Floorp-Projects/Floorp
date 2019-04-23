@@ -10,7 +10,7 @@ interface nsILoadGroup;
 interface nsIURI;
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(701093ac-5c7f-429c-99e3-423b041fccb4)]
+[builtinclass, uuid(701093ac-5c7f-429c-99e3-423b041fccb4)]
 interface nsIHttpAuthenticableChannel : nsIProxiedChannel
 {
     /**
