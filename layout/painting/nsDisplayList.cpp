@@ -5107,8 +5107,7 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
 
   const wr::LayoutRect rect = wr::ToRoundedLayoutRect(devRect);
 
-  aBuilder.PushRect(rect, rect, !BackfaceIsHidden(),
-                    wr::ToColorF(gfx::Color()));
+  aBuilder.PushHitTest(rect, rect, !BackfaceIsHidden());
   aBuilder.ClearHitTestInfo();
 
   return true;

@@ -39,23 +39,22 @@ impl Example for App {
         );
 
         let bounds = (0, 0).to(512, 512);
-        let info = LayoutPrimitiveInfo::new(bounds);
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            &info,
+            bounds.origin,
             space_and_clip.spatial_id,
+            true,
         );
 
         let image_size = LayoutSize::new(100.0, 100.0);
 
-        let info = LayoutPrimitiveInfo::with_clip_rect(
-            LayoutRect::new(LayoutPoint::new(100.0, 100.0), image_size),
-            bounds,
-        );
         builder.push_image(
-            &info,
-            &space_and_clip,
+            &CommonItemProperties::new(
+                LayoutRect::new(LayoutPoint::new(100.0, 100.0), image_size),
+                space_and_clip,
+            ),
+            bounds,
             image_size,
             LayoutSize::zero(),
             ImageRendering::Auto,
@@ -64,13 +63,12 @@ impl Example for App {
             ColorF::WHITE,
         );
 
-        let info = LayoutPrimitiveInfo::with_clip_rect(
-            LayoutRect::new(LayoutPoint::new(250.0, 100.0), image_size),
-            bounds,
-        );
         builder.push_image(
-            &info,
-            &space_and_clip,
+            &CommonItemProperties::new(
+                LayoutRect::new(LayoutPoint::new(250.0, 100.0), image_size),
+                space_and_clip,
+            ),
+            bounds,
             image_size,
             LayoutSize::zero(),
             ImageRendering::Pixelated,

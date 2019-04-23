@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayoutPrimitiveInfo, NormalBorder, PremultipliedColorF, Shadow};
+use api::{NormalBorder, PremultipliedColorF, Shadow};
 use api::units::*;
 use border::create_border_segments;
 use border::NormalBorderAu;
@@ -10,6 +10,7 @@ use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
 use gpu_cache::GpuDataRequest;
 use intern;
+use internal_types::LayoutPrimitiveInfo;
 use prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
@@ -358,7 +359,7 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<NormalBorderPrim>(), 84, "NormalBorderPrim size changed");
     assert_eq!(mem::size_of::<NormalBorderTemplate>(), 208, "NormalBorderTemplate size changed");
     assert_eq!(mem::size_of::<NormalBorderKey>(), 96, "NormalBorderKey size changed");
-    assert_eq!(mem::size_of::<ImageBorder>(), 92, "ImageBorder size changed");
+    assert_eq!(mem::size_of::<ImageBorder>(), 84, "ImageBorder size changed");
     assert_eq!(mem::size_of::<ImageBorderTemplate>(), 72, "ImageBorderTemplate size changed");
-    assert_eq!(mem::size_of::<ImageBorderKey>(), 104, "ImageBorderKey size changed");
+    assert_eq!(mem::size_of::<ImageBorderKey>(), 96, "ImageBorderKey size changed");
 }
