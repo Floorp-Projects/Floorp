@@ -10,6 +10,7 @@ extern crate app_units;
 extern crate gleam;
 extern crate nsstring;
 extern crate rayon;
+extern crate num_cpus;
 extern crate thread_profiler;
 extern crate bincode;
 extern crate uuid;
