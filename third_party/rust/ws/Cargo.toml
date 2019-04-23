@@ -1,0 +1,44 @@
+[package]
+authors = ["Jason Housley <HousleyJK@gmail.com>"]
+description = "Lightweight, event-driven WebSockets for Rust."
+documentation = "https://ws-rs.org/docs"
+keywords = ["websocket", "mio", "event-driven", "io", "web"]
+license = "MIT"
+name = "ws"
+readme = "README.md"
+repository = "https://github.com/housleyjk/ws-rs"
+version = "0.7.3"
+
+[dependencies]
+httparse = "1.0"
+log = "0.3.1"
+mio = "0.6"
+rand = "0.3.10"
+sha1 = "0.2"
+url = "1.0"
+slab = "0.3"
+bytes = "0.4"
+byteorder = "1.0"
+
+[dev-dependencies]
+clap = "2.0"
+env_logger = "0.4"
+term = "0.4"
+time = "0.1.25"
+
+[dependencies.libc]
+optional = true
+version = "0.2.20"
+
+[dependencies.libz-sys]
+optional = true
+version = "1.0.13"
+
+[dependencies.openssl]
+optional = true
+version = "0.9"
+
+[features]
+default = []
+permessage-deflate = ["libz-sys", "libc"]
+ssl = ["openssl"]
