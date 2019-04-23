@@ -1,7 +1,5 @@
 . "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
 
-ac_add_options --enable-verify-mar
-
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"

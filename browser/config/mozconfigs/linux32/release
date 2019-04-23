@@ -6,7 +6,6 @@ export MOZ_PGO=1
 . "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
 
 ac_add_options --enable-official-branding
-ac_add_options --enable-verify-mar
 
 # safeguard against someone forgetting to re-set EARLY_BETA_OR_EARLIER in
 # defines.sh during the beta cycle
