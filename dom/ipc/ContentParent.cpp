@@ -4849,7 +4849,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     nsCOMPtr<mozIDOMWindowProxy> win;
     aResult = newBrowserDOMWin->OpenURI(
         aURIToLoad, openerWindow, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
-        nsIBrowserDOMWindow::OPEN_NEW, aTriggeringPrincipal,
+        nsIBrowserDOMWindow::OPEN_NEW, aTriggeringPrincipal, aCsp,
         getter_AddRefs(win));
   }
 

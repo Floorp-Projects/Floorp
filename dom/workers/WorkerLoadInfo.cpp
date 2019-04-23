@@ -105,8 +105,12 @@ nsresult WorkerLoadInfo::SetPrincipalsOnMainThread(
   nsresult rv = aPrincipal->GetCsp(getter_AddRefs(mCSP));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mCSPInfos.Clear();
+
   if (mCSP) {
     mCSP->GetAllowsEval(&mReportCSPViolations, &mEvalAllowed);
+    rv = PopulateContentSecurityPolicies(mCSP, mCSPInfos);
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     mEvalAllowed = true;
     mReportCSPViolations = false;
