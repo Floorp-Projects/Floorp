@@ -319,7 +319,7 @@ Result<Ok, nsresult> URLPreloader::ReadCache(
 void URLPreloader::BackgroundReadFiles() {
   auto cleanup = MakeScopeExit([&]() {
     NS_DispatchToMainThread(NewRunnableMethod(
-        "nsIThread::Shutdown", mReaderThread, &nsIThread::Shutdown));
+        "nsIThread::AsyncShutdown", mReaderThread, &nsIThread::AsyncShutdown));
     mReaderThread = nullptr;
   });
 

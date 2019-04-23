@@ -330,7 +330,7 @@ DataChannelConnection::~DataChannelConnection() {
       // Avoid spinning the event thread from here (which if we're mainthread
       // is in the event loop already)
       nsCOMPtr<nsIRunnable> r = WrapRunnable(
-          nsCOMPtr<nsIThread>(mInternalIOThread), &nsIThread::Shutdown);
+          nsCOMPtr<nsIThread>(mInternalIOThread), &nsIThread::AsyncShutdown);
       Dispatch(r.forget());
     }
   } else {
