@@ -30,29 +30,31 @@ UNIFIED_SOURCES += [
     'pngwutil.c'
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm':
+if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     DEFINES['MOZ_PNG_USE_ARM_NEON'] = True
     UNIFIED_SOURCES += [
         'arm/arm_init.c',
-        'arm/filter_neon_intrinsics.c'
+        'arm/filter_neon_intrinsics.c',
+        'arm/palette_neon_intrinsics.c'
     ]
 
-    SOURCES += [
-        'arm/filter_neon.S'
-    ]
-
-if CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    DEFINES['MOZ_PNG_USE_ARM_NEON'] = True
-    UNIFIED_SOURCES += [
-        'arm/arm_init.c',
-        'arm/filter_neon_intrinsics.c'
-    ]
+    if CONFIG['CPU_ARCH'] == 'arm':
+        SOURCES += [
+            'arm/filter_neon.S'
+        ]
 
 if CONFIG['INTEL_ARCHITECTURE']:
     DEFINES['MOZ_PNG_USE_INTEL_SSE'] = True
     UNIFIED_SOURCES += [
         'intel/filter_sse2_intrinsics.c',
         'intel/intel_init.c'
+    ]
+
+if CONFIG['CPU_ARCH'] == 'mips':
+    DEFINES['MOZ_PNG_USE_MIPS_MSA'] = True
+    UNIFIED_SOURCES += [
+        'mips/filter_msa_intrinsics.c',
+        'mips/mips_init.c'
     ]
 
 if CONFIG['HAVE_ALTIVEC']:

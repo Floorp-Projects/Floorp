@@ -1,85 +1,7 @@
-diff --git a/LICENSE b/LICENSE
---- a/LICENSE
-+++ b/LICENSE
-@@ -7,8 +7,14 @@ COPYRIGHT NOTICE, DISCLAIMER, and LICENS
- 
- If you modify libpng you may insert additional notices immediately following
- this sentence.
- 
-+This modified version of libpng code adds animated PNG support and is
-+released under the libpng license described below. The modifications are
-+Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
-+and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
-+surrounding them in the modified libpng source files.
-+
- This code is released under the libpng license.
- 
- libpng versions 1.0.7, July 1, 2000 through 1.6.35, July 15, 2018 are
- Copyright (c) 2000-2002, 2004, 2006-2018 Glenn Randers-Pehrson, are
-diff --git a/png.c b/png.c
---- a/png.c
-+++ b/png.c
-@@ -815,19 +815,23 @@ png_get_copyright(png_const_structrp png
-    return PNG_STRING_COPYRIGHT
- #else
- #  ifdef __STDC__
-    return PNG_STRING_NEWLINE \
--      "libpng version 1.6.35 - July 15, 2018" PNG_STRING_NEWLINE \
-+      "libpng version 1.6.35+apng - July 15, 2018" PNG_STRING_NEWLINE \
-       "Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson" \
-       PNG_STRING_NEWLINE \
-       "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
-       "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
--      PNG_STRING_NEWLINE;
-+      PNG_STRING_NEWLINE \
-+      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
-+      "Portions Copyright (c) 2008-2018 Max Stepin" PNG_STRING_NEWLINE ;
- #  else
--   return "libpng version 1.6.35 - July 15, 2018\
-+   return "libpng version 1.6.35+apng - July 15, 2018\
-       Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson\
-       Copyright (c) 1996-1997 Andreas Dilger\
--      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
-+      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
-+      Portions Copyright (c) 2006-2007 Andrew Smith\
-+      Portions Copyright (c) 2008-2018 Max Stepin";
- #  endif
- #endif
- }
- 
 diff --git a/png.h b/png.h
 --- a/png.h
 +++ b/png.h
-@@ -22,8 +22,14 @@
-  *
-  * If you modify libpng you may insert additional notices immediately following
-  * this sentence.
-  *
-+ * This modified version of libpng code adds animated PNG support and is
-+ * released under the libpng license described below. The modifications are
-+ * Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
-+ * and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
-+ * surrounding them in the modified libpng source files.
-+ *
-  * This code is released under the libpng license.
-  *
-  * libpng versions 1.0.7, July 1, 2000 through 1.6.35, July 15, 2018 are
-  * Copyright (c) 2000-2002, 2004, 2006-2018 Glenn Randers-Pehrson, are
-@@ -308,10 +314,11 @@
-  * skip to the end of this file and read the section entitled 'simplified API'.
-  */
- 
- /* Version information for png.h - this should match the version in png.c */
--#define PNG_LIBPNG_VER_STRING "1.6.35"
--#define PNG_HEADER_VERSION_STRING " libpng version 1.6.35 - July 15, 2018\n"
-+#define PNG_LIBPNG_VER_STRING "1.6.35+apng"
-+#define PNG_HEADER_VERSION_STRING \
-+     " libpng version 1.6.35+apng - July 15, 2018\n"
- 
- #define PNG_LIBPNG_VER_SONUM   16
- #define PNG_LIBPNG_VER_DLLNUM  16
- 
-@@ -360,8 +367,12 @@
+@@ -329,8 +329,12 @@
   */
  #   include "pnglibconf.h"
  #endif
@@ -92,7 +14,7 @@ diff --git a/png.h b/png.h
  /* Machine specific configuration. */
  #  include "pngconf.h"
  #endif
-@@ -455,8 +466,19 @@ extern "C" {
+@@ -424,8 +428,19 @@ extern "C" {
   * constants.
   * See pngconf.h for base types that vary by machine/system
   */
@@ -111,8 +33,8 @@ diff --git a/png.h b/png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
- typedef char* png_libpng_version_1_6_35;
-@@ -776,8 +798,12 @@ typedef png_unknown_chunk * * png_unknow
+ typedef char* png_libpng_version_1_6_37;
+@@ -745,8 +760,12 @@ typedef png_unknown_chunk * * png_unknow
  #define PNG_INFO_sPLT 0x2000U  /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000U  /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000U  /* ESR, 1.0.6 */
@@ -125,7 +47,7 @@ diff --git a/png.h b/png.h
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
   * the routines for other purposes.
-@@ -813,8 +839,12 @@ typedef PNG_CALLBACK(void, *png_write_st
+@@ -782,8 +801,12 @@ typedef PNG_CALLBACK(void, *png_write_st
  
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
@@ -138,7 +60,7 @@ diff --git a/png.h b/png.h
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
   * row number is the row number within the sub-image of the interlace pass, so
-@@ -3257,17 +3287,90 @@ PNG_EXPORT(244, int, png_set_option, (pn
+@@ -3226,17 +3249,90 @@ PNG_EXPORT(244, int, png_set_option, (pn
  /*******************************************************************************
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
@@ -671,7 +593,7 @@ diff --git a/pngpread.c b/pngpread.c
 diff --git a/pngpriv.h b/pngpriv.h
 --- a/pngpriv.h
 +++ b/pngpriv.h
-@@ -633,8 +633,12 @@
+@@ -636,8 +636,12 @@
  #define PNG_HAVE_PNG_SIGNATURE    0x1000U
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000U /* Have another chunk after IDAT */
                     /*             0x4000U (unused) */
@@ -684,7 +606,7 @@ diff --git a/pngpriv.h b/pngpriv.h
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001U
  #define PNG_INTERLACE           0x0002U
-@@ -869,8 +873,18 @@
+@@ -872,8 +876,18 @@
  #define png_tIME PNG_U32(116,  73,  77,  69)
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
@@ -703,7 +625,7 @@ diff --git a/pngpriv.h b/pngpriv.h
   * macro will fail on top-bit-set values because of the sign extension.
   */
  #define PNG_CHUNK_FROM_STRING(s)\
-@@ -1620,8 +1634,51 @@ PNG_INTERNAL_FUNCTION(void,png_push_read
+@@ -1623,8 +1637,51 @@ PNG_INTERNAL_FUNCTION(void,png_push_read
  #  endif
  
  #endif /* PROGRESSIVE_READ */
@@ -880,7 +802,7 @@ diff --git a/pngrutil.c b/pngrutil.c
     png_ptr->width = width;
     png_ptr->height = height;
     png_ptr->bit_depth = (png_byte)bit_depth;
-@@ -2857,8 +2862,182 @@ png_handle_iTXt(png_structrp png_ptr, pn
+@@ -2856,8 +2861,182 @@ png_handle_iTXt(png_structrp png_ptr, pn
        png_chunk_benign_error(png_ptr, errmsg);
  }
  #endif
@@ -1063,7 +985,7 @@ diff --git a/pngrutil.c b/pngrutil.c
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
  png_cache_unknown_chunk(png_structrp png_ptr, png_uint_32 length)
-@@ -3162,9 +3341,13 @@ png_check_chunk_length(png_const_structr
+@@ -3161,9 +3340,13 @@ png_check_chunk_length(png_const_structr
  # elif PNG_USER_CHUNK_MALLOC_MAX > 0
     if (PNG_USER_CHUNK_MALLOC_MAX < limit)
        limit = PNG_USER_CHUNK_MALLOC_MAX;
@@ -1077,7 +999,7 @@ diff --git a/pngrutil.c b/pngrutil.c
        png_alloc_size_t idat_limit = PNG_UINT_31_MAX;
        size_t row_factor =
           (size_t)png_ptr->width
-@@ -4166,8 +4349,40 @@ png_read_IDAT_data(png_structrp png_ptr,
+@@ -4165,8 +4348,40 @@ png_read_IDAT_data(png_structrp png_ptr,
        {
           uInt avail_in;
           png_bytep buffer;
@@ -1118,7 +1040,7 @@ diff --git a/pngrutil.c b/pngrutil.c
           {
              png_crc_finish(png_ptr, 0);
  
-@@ -4177,8 +4392,9 @@ png_read_IDAT_data(png_structrp png_ptr,
+@@ -4176,8 +4391,9 @@ png_read_IDAT_data(png_structrp png_ptr,
               */
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
@@ -1128,7 +1050,7 @@ diff --git a/pngrutil.c b/pngrutil.c
           avail_in = png_ptr->IDAT_read_size;
  
           if (avail_in > png_ptr->idat_size)
-@@ -4240,8 +4456,11 @@ png_read_IDAT_data(png_structrp png_ptr,
+@@ -4239,8 +4455,11 @@ png_read_IDAT_data(png_structrp png_ptr,
           png_ptr->zstream.next_out = NULL;
  
           png_ptr->mode |= PNG_AFTER_IDAT;
@@ -1140,7 +1062,7 @@ diff --git a/pngrutil.c b/pngrutil.c
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
           break;
-@@ -4678,5 +4897,81 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED
+@@ -4677,5 +4896,81 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED
        png_error(png_ptr, png_ptr->zstream.msg);
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
@@ -1391,7 +1313,7 @@ diff --git a/pngset.c b/pngset.c
 diff --git a/pngstruct.h b/pngstruct.h
 --- a/pngstruct.h
 +++ b/pngstruct.h
-@@ -402,8 +402,29 @@ struct png_struct_def
+@@ -408,8 +408,29 @@ struct png_struct_def
  #ifdef PNG_MNG_FEATURES_SUPPORTED
     png_byte filter_type;
  #endif
