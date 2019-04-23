@@ -548,7 +548,9 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   RefPtr<MobileViewportManager> strongThis(this);
 
   // Kick off a reflow.
-  mContext->Reflow(viewport, oldSize);
+  mContext->Reflow(viewport, oldSize,
+                   mIsFirstPaint ? MVMContext::ResizeEventFlag::Suppress
+                                 : MVMContext::ResizeEventFlag::IfNecessary);
 
   // We are going to fit the content to the display width if the initial-scale
   // is not specied and if the content is still wider than the display width.
