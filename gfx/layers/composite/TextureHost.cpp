@@ -648,6 +648,10 @@ void TextureHost::ReadUnlock() {
   }
 }
 
+bool TextureHost::NeedsYFlip() const {
+  return bool(mFlags & TextureFlags::ORIGIN_BOTTOM_LEFT);
+}
+
 bool BufferTextureHost::EnsureWrappingTextureSource() {
   MOZ_ASSERT(!mHasIntermediateBuffer);
 
