@@ -1053,12 +1053,18 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
-    ctor public WebExtension(@NonNull String, @NonNull String, boolean);
+    ctor public WebExtension(@NonNull String, @NonNull String, long);
     ctor public WebExtension(@NonNull String);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
-    field public final boolean allowContentMessaging;
+    field public final long flags;
     field @NonNull public final String id;
     field @NonNull public final String location;
+  }
+
+  public static class WebExtension.Flags {
+    ctor protected Flags();
+    field public static final long ALLOW_CONTENT_MESSAGING = 1L;
+    field public static final long NONE = 0L;
   }
 
   @UiThread public static interface WebExtension.MessageDelegate {
