@@ -17,7 +17,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
-use webrender::api::{ColorF, SpaceAndClipInfo};
+use webrender::api::{ColorF, CommonItemProperties, SpaceAndClipInfo};
 use webrender::api::units::*;
 use webrender::euclid::size2;
 
@@ -220,17 +220,18 @@ impl Example for App {
             None,
         );
 
-        let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            &api::LayoutPrimitiveInfo::new(bounds),
+            LayoutPoint::zero(),
             space_and_clip.spatial_id,
+            true,
         );
 
+        let bounds = (30, 30).by(500, 500);
         builder.push_image(
-            &api::LayoutPrimitiveInfo::new((30, 30).by(500, 500)),
-            &space_and_clip,
+            &CommonItemProperties::new(bounds, space_and_clip),
+            bounds,
             LayoutSize::new(500.0, 500.0),
             LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
@@ -239,9 +240,10 @@ impl Example for App {
             ColorF::WHITE,
         );
 
+        let bounds = (600, 600).by(200, 200);
         builder.push_image(
-            &api::LayoutPrimitiveInfo::new((600, 600).by(200, 200)),
-            &space_and_clip,
+            &CommonItemProperties::new(bounds, space_and_clip),
+            bounds,
             LayoutSize::new(200.0, 200.0),
             LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,

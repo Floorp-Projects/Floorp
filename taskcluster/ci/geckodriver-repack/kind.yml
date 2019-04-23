@@ -9,6 +9,7 @@ kind-dependencies:
     - fetch
 
 transforms:
+    - taskgraph.transforms.build_attrs:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -24,11 +25,12 @@ job-defaults:
     worker:
         max-run-time: 1200
         docker-image: {in-tree: debian9-amd64-build}
+        chain-of-trust: true
     run:
         using: run-task
 
 jobs:
-    linux/opt:
+    linux-nightly/opt:
         treeherder:
             platform: linux32/opt
         dependencies:
@@ -47,7 +49,7 @@ jobs:
                 tar -cvzf geckodriver.tar.gz geckodriver &&
                 cp geckodriver.tar.gz /builds/worker
 
-    linux64/opt:
+    linux64-nightly/opt:
         treeherder:
             platform: linux64/opt
         dependencies:
@@ -66,7 +68,7 @@ jobs:
                 tar -cvzf geckodriver.tar.gz geckodriver &&
                 cp geckodriver.tar.gz /builds/worker
 
-    macosx64/opt:
+    macosx64-nightly/opt:
         treeherder:
             platform: osx-cross/opt
         dependencies:
@@ -85,7 +87,7 @@ jobs:
                 tar -cvzf geckodriver.tar.gz geckodriver &&
                 cp geckodriver.tar.gz /builds/worker
 
-    win32/opt:
+    win32-nightly/opt:
         treeherder:
             platform: windows2012-32/opt
         dependencies:
@@ -104,7 +106,7 @@ jobs:
                 zip -r geckodriver.zip geckodriver.exe &&
                 cp geckodriver.zip /builds/worker
 
-    win64/opt:
+    win64-nightly/opt:
         treeherder:
             platform: windows2012-64/opt
         dependencies:

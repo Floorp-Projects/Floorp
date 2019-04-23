@@ -96,13 +96,15 @@ class PresShell final : public nsIPresShell,
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   nsresult Initialize() override;
-  MOZ_CAN_RUN_SCRIPT nsresult ResizeReflow(
-      nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
-      nscoord aOldHeight = 0,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
+               nscoord aOldHeight = 0,
+               mozilla::ResizeReflowOptions aOptions =
+                   mozilla::ResizeReflowOptions::eNoOption) override;
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) override;
 
   MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(FlushType aType) override;
@@ -360,6 +362,64 @@ class PresShell final : public nsIPresShell,
                                            nsIContent* aContent);
   static PresShell* GetShellForTouchEvent(WidgetGUIEvent* aEvent);
 
+  /**
+   * Informs the pres shell that the document is now at the anchor with
+   * the given name.  If |aScroll| is true, scrolls the view of the
+   * document so that the anchor with the specified name is displayed at
+   * the top of the window.  If |aAnchorName| is empty, then this informs
+   * the pres shell that there is no current target, and |aScroll| must
+   * be false.  If |aAdditionalScrollFlags| is nsIPresShell::SCROLL_SMOOTH_AUTO
+   * and |aScroll| is true, the scrolling may be performed with an animation.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                      uint32_t aAdditionalScrollFlags = 0);
+
+  /**
+   * Tells the presshell to scroll again to the last anchor scrolled to by
+   * GoToAnchor, if any. This scroll only happens if the scroll
+   * position has not changed since the last GoToAnchor. This is called
+   * by nsDocumentViewer::LoadComplete. This clears the last anchor
+   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
+   * removed from the DOM), so don't call this more than once.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult ScrollToAnchor();
+
+  /**
+   * Scrolls the view of the document so that the primary frame of the content
+   * is displayed in the window. Layout is flushed before scrolling.
+   *
+   * @param aContent  The content object of which primary frame should be
+   *                  scrolled into view.
+   * @param aVertical How to align the frame vertically and when to do so.
+   *                  This is a ScrollAxis of Where and When.
+   * @param aHorizontal How to align the frame horizontally and when to do so.
+   *                  This is a ScrollAxis of Where and When.
+   * @param aFlags    If SCROLL_FIRST_ANCESTOR_ONLY is set, only the nearest
+   *                  scrollable ancestor is scrolled, otherwise all
+   *                  scrollable ancestors may be scrolled if necessary.
+   *                  If SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a
+   *                  direction even if overflow:hidden is specified in that
+   *                  direction; otherwise we will not scroll in that direction
+   *                  when overflow:hidden is set for that direction.
+   *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   *                  nodes in this document, not in any parent documents which
+   *                  contain this document in a iframe or the like.
+   *                  If SCROLL_SMOOTH is set and CSSOM-VIEW scroll-behavior
+   *                  is enabled, we will scroll smoothly using
+   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
+   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
+   *                  If SCROLL_SMOOTH_AUTO is set, the CSSOM-View
+   *                  scroll-behavior attribute is set to 'smooth' on the
+   *                  scroll frame, and CSSOM-VIEW scroll-behavior is enabled,
+   *                  we will scroll smoothly using
+   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
+   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
+                                 ScrollAxis aHorizontal, uint32_t aFlags);
+
  private:
   ~PresShell();
 
@@ -377,6 +437,11 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT void DidDoReflow(bool aInterruptible);
 
   MOZ_CAN_RUN_SCRIPT void HandlePostedReflowCallbacks(bool aInterruptible);
+
+  /**
+   * Helper for ScrollContentIntoView()
+   */
+  MOZ_CAN_RUN_SCRIPT void DoScrollContentIntoView();
 
   /**
    * Initialize cached font inflation preference values and do an initial
@@ -1176,8 +1241,10 @@ class PresShell final : public nsIPresShell,
      * Returns true if the context menu event should fire and false if it should
      * not.
      */
+    MOZ_CAN_RUN_SCRIPT
     bool AdjustContextMenuKeyEvent(WidgetMouseEvent* aMouseEvent);
 
+    MOZ_CAN_RUN_SCRIPT
     bool PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                    LayoutDeviceIntPoint& aTargetPt);
 
@@ -1185,6 +1252,7 @@ class PresShell final : public nsIPresShell,
      * Get the selected item and coordinates in device pixels relative to root
      * document's root view for element, first ensuring the element is onscreen.
      */
+    MOZ_CAN_RUN_SCRIPT
     void GetCurrentItemAndPositionForElement(dom::Element* aFocusedElement,
                                              nsIContent** aTargetToUse,
                                              LayoutDeviceIntPoint& aTargetPt,
@@ -1389,12 +1457,23 @@ class PresShell final : public nsIPresShell,
   // when target of pointer event was deleted during executing user handlers.
   nsCOMPtr<nsIContent> mPointerEventTarget;
 
-  int32_t mActiveSuppressDisplayport;
+  nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
+
+  // Information needed to properly handle scrolling content into view if the
+  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is non-null
+  // between the initial scroll attempt and the first time we finish processing
+  // all our dirty roots.  mContentToScrollTo has a content property storing the
+  // details for the scroll operation, see ScrollIntoViewData above.
+  nsCOMPtr<nsIContent> mContentToScrollTo;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
   // The focus information needed for async keyboard scrolling
   FocusTarget mAPZFocusTarget;
+
+  nscoord mLastAnchorScrollPositionY = 0;
+
+  int32_t mActiveSuppressDisplayport;
 
   bool mDocumentLoading : 1;
   bool mNoDelayedMouseEvents : 1;

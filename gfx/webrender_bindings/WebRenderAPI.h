@@ -423,7 +423,8 @@ class DisplayListBuilder final {
   void PushRoundedRect(const wr::LayoutRect& aBounds,
                        const wr::LayoutRect& aClip, bool aIsBackfaceVisible,
                        const wr::ColorF& aColor);
-
+  void PushHitTest(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
+                   bool aIsBackfaceVisible);
   void PushClearRect(const wr::LayoutRect& aBounds);
   void PushClearRectWithComplexRegion(const wr::LayoutRect& aBounds,
                                       const wr::ComplexClipRegion& aRegion);

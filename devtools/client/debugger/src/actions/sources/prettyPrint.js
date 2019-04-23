@@ -11,7 +11,11 @@ import { remapBreakpoints } from "../breakpoints";
 
 import { setSymbols } from "./symbols";
 import { prettyPrint } from "../../workers/pretty-print";
-import { getPrettySourceURL, isLoaded, isGenerated } from "../../utils/source";
+import {
+  getPrettySourceURL,
+  isGenerated,
+  isJavaScript
+} from "../../utils/source";
 import { loadSourceText } from "./loadSourceText";
 import { mapFrames } from "../pause";
 import { selectSpecificLocation } from "../sources";
@@ -26,17 +30,27 @@ import {
 
 import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type { JsSource, Source, SourceActor, Context } from "../../types";
+import type {
+  JsSource,
+  Source,
+  SourceContent,
+  SourceActor,
+  Context
+} from "../../types";
 
 export async function prettyPrintSource(
   sourceMaps: typeof SourceMaps,
-  prettySource: Source,
   generatedSource: Source,
+  content: SourceContent,
   actors: Array<SourceActor>
 ) {
+  if (!isJavaScript(generatedSource, content) || content.type !== "text") {
+    throw new Error("Can't prettify non-javascript files.");
+  }
+
   const url = getPrettySourceURL(generatedSource.url);
   const { code, mappings } = await prettyPrint({
-    source: generatedSource,
+    text: content.value,
     url: url
   });
   await sourceMaps.applySourceMap(generatedSource.id, url, code, mappings);
@@ -47,7 +61,6 @@ export async function prettyPrintSource(
     await sourceMaps.applySourceMap(actor, url, code, mappings);
   }
   return {
-    id: prettySource.id,
     text: code,
     contentType: "text/javascript"
   };
@@ -60,14 +73,12 @@ export function createPrettySource(cx: Context, sourceId: string) {
     const id = generatedToOriginalId(sourceId, url);
 
     const prettySource: JsSource = {
+      id,
       url,
       relativeUrl: url,
-      id,
       isBlackBoxed: false,
       isPrettyPrinted: true,
       isWasm: false,
-      contentType: "text/javascript",
-      loadedState: "loading",
       introductionUrl: null,
       introductionType: undefined,
       isExtension: false
@@ -118,9 +129,7 @@ export function togglePrettyPrint(cx: Context, sourceId: string) {
       recordEvent("pretty_print");
     }
 
-    if (!isLoaded(source)) {
-      await dispatch(loadSourceText({ cx, source }));
-    }
+    await dispatch(loadSourceText({ cx, source }));
 
     assert(
       isGenerated(source),

@@ -105,7 +105,7 @@ def filter_tasks_by_paths(tasks, paths):
 
     task_regexes = set()
     for flavor, subsuite in flavors:
-        suite = get_suite_definition(flavor, subsuite, strict=True)
+        _, suite = get_suite_definition(flavor, subsuite, strict=True)
         if 'task_regex' not in suite:
             print("warning: no tasks could be resolved from flavor '{}'{}".format(
                     flavor, " and subsuite '{}'".format(subsuite) if subsuite else ""))
@@ -125,17 +125,7 @@ def resolve_tests_by_suite(paths):
 
     suite_to_tests = defaultdict(list)
     for test in run_tests:
-        suite = get_suite_definition(test['flavor'], test.get('subsuite'), strict=True)
-
-        if 'mozharness_name' in suite:
-            key = suite['mozharness_name']
-        else:
-            key = test['flavor']
-            subsuite = test.get('subsuite')
-
-            if subsuite:
-                key += '-' + subsuite
-
+        key, _ = get_suite_definition(test['flavor'], test.get('subsuite'), strict=True)
         suite_to_tests[key].append(test['srcdir_relpath'])
 
     return suite_to_tests

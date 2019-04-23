@@ -6,17 +6,17 @@
 // @flow
 
 import { formatSymbols } from "../utils/formatSymbols";
-import { getSource, getOriginalSource } from "./helpers";
+import { populateSource, populateOriginalSource } from "./helpers";
 import cases from "jest-in-case";
 
 cases(
   "Parser.getSymbols",
   ({ name, file, original, type }) => {
-    const source = original
-      ? getOriginalSource(file, type)
-      : getSource(file, type);
+    const { source } = original
+      ? populateOriginalSource(file, type)
+      : populateSource(file, type);
 
-    expect(formatSymbols(source)).toMatchSnapshot();
+    expect(formatSymbols(source.id)).toMatchSnapshot();
   },
   [
     { name: "es6", file: "es6", original: true },

@@ -49,7 +49,7 @@ void CompositorManagerChild::InitSameProcess(uint32_t aNamespace,
     return;
   }
 
-  parent->BindComplete();
+  parent->BindComplete(/* aIsRoot */ true);
   sInstance = child.forget();
 }
 

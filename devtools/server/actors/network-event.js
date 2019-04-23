@@ -356,7 +356,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
     // protocol.js performance issue
     this.manage(postData.text);
-    const dataSize = postData.text.str.length;
+    const dataSize = postData.size;
     postData.text = postData.text.form();
 
     this.emit("network-event-update:post-data", "requestPostData", {

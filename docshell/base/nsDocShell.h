@@ -398,6 +398,7 @@ class nsDocShell final : public nsDocLoader,
    * information on information used. aDocShell and aRequest come from
    * onLinkClickSync, which is triggered during form submission.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);
 
@@ -562,6 +563,7 @@ class nsDocShell final : public nsDocLoader,
                                   nsIURILoader* aURILoader,
                                   uint32_t aOpenFlags);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
                           nsACString& aNewHash, uint32_t aLoadType);
 
@@ -921,6 +923,7 @@ class nsDocShell final : public nsDocLoader,
   // Check to see if we're loading a prior history entry in the same document.
   // If so, handle the scrolling or other action required instead of continuing
   // with new document navigation.
+  MOZ_CAN_RUN_SCRIPT
   nsresult MaybeHandleSameDocumentNavigation(nsDocShellLoadState* aLoadState,
                                              bool* aWasSameDocument);
 

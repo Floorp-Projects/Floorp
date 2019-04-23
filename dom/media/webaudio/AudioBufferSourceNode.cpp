@@ -588,13 +588,12 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
     : AudioScheduledSourceNode(aContext, 2, ChannelCountMode::Max,
                                ChannelInterpretation::Speakers),
       mLoopStart(0.0),
-      mLoopEnd(0.0)
+      mLoopEnd(0.0),
       // mOffset and mDuration are initialized in Start().
-      ,
-      mPlaybackRate(new AudioParam(this, PLAYBACKRATE, "playbackRate", 1.0f)),
-      mDetune(new AudioParam(this, DETUNE, "detune", 0.0f)),
       mLoop(false),
       mStartCalled(false) {
+  CreateAudioParam(mPlaybackRate, PLAYBACKRATE, "playbackRate", 1.0f);
+  CreateAudioParam(mDetune, DETUNE, "detune", 0.0f);
   AudioBufferSourceNodeEngine* engine =
       new AudioBufferSourceNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,

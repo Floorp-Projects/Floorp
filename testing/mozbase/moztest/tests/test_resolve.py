@@ -372,10 +372,10 @@ class TestTestResolver(Base):
         r = self._get_resolver()
 
         suites, tests = r.resolve_metadata(['bc'])
-        assert suites == {'mochitest-browser'}
+        assert suites == {'mochitest-browser-chrome'}
         assert tests == []
 
-        suites, tests = r.resolve_metadata(['mochitest-a11y', 'browser', 'xpcshell'])
+        suites, tests = r.resolve_metadata(['mochitest-a11y', '/browser', 'xpcshell'])
         assert suites == {'mochitest-a11y', 'xpcshell'}
         assert sorted(t['file_relpath'] for t in tests) == [
             'devtools/client/markupview/test/browser_markupview_copy_image_data.js',
@@ -387,14 +387,14 @@ class TestTestResolver(Base):
         """Test the task_regexes defined in TEST_SUITES."""
 
         test_cases = {
-            'mochitest-browser': [
+            'mochitest-browser-chrome': [
                 'test-linux64/opt-mochitest-browser-chrome',
                 'test-linux64/opt-mochitest-browser-chrome-e10s',
             ],
             'mochitest-chrome': [
                 'test-linux64/opt-mochitest-chrome',
             ],
-            'mochitest-devtools': [
+            'mochitest-devtools-chrome': [
                 'test-linux64/opt-mochitest-devtools-chrome',
             ],
             'mochitest-media': [
@@ -410,7 +410,7 @@ class TestTestResolver(Base):
                 'test-linux64/opt-mochitest-gpu',
                 'test-linux64/opt-mochitest-gpu-e10s',
             ],
-            'mochitest-screenshots': [
+            'mochitest-browser-chrome-screenshots': [
                 'test-linux64/opt-browser-screenshots-1',
                 'test-linux64/opt-browser-screenshots-e10s-1',
             ],

@@ -260,7 +260,6 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
       isPrettyPrinted: false,
       isWasm: false,
       isBlackBoxed: false,
-      loadedState: "unloaded",
       introductionUrl: null,
       introductionType: undefined,
       isExtension: false
@@ -307,7 +306,6 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
             introductionUrl: source.introductionUrl,
             introductionType: source.introductionType,
             isBlackBoxed: false,
-            loadedState: "unloaded",
             isWasm: !!supportsWasm && source.introductionType === "wasm",
             isExtension: (source.url && isUrlExtension(source.url)) || false
           }: any)

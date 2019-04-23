@@ -10,6 +10,7 @@
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/PMediaTransportChild.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace net {
@@ -47,10 +48,26 @@ SocketProcessBridgeChild::GetSingleton() {
   return child.forget();
 }
 
+static bool SocketProcessEnabled() {
+  static bool sInited = false;
+  static bool sSocketProcessEnabled = false;
+  if (!sInited) {
+    sSocketProcessEnabled = Preferences::GetBool("network.process.enabled");
+    sInited = true;
+  }
+
+  return sSocketProcessEnabled;
+}
+
 // static
 RefPtr<SocketProcessBridgeChild::GetPromise>
 SocketProcessBridgeChild::GetSocketProcessBridge() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!SocketProcessEnabled()) {
+    return GetPromise::CreateAndReject(nsCString("Socket process disabled!"),
+                                       __func__);
+  }
 
   if (!gNeckoChild) {
     return GetPromise::CreateAndReject(nsCString("No NeckoChild!"), __func__);

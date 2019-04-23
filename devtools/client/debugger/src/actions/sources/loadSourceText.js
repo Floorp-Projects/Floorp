@@ -8,6 +8,8 @@ import { PROMISE } from "../utils/middleware/promise";
 import {
   getSource,
   getSourceFromId,
+  getSourceWithContent,
+  getSourceContent,
   getGeneratedSource,
   getSourcesEpoch,
   getBreakpointsForSource,
@@ -16,9 +18,10 @@ import {
 import { setBreakpointPositions, addBreakpoint } from "../breakpoints";
 
 import { prettyPrintSource } from "./prettyPrint";
+import { isFulfilled } from "../../utils/async-value";
 
 import * as parser from "../../workers/parser";
-import { isLoaded, isOriginal, isPretty } from "../../utils/source";
+import { isOriginal, isPretty } from "../../utils/source";
 import {
   memoizeableAction,
   type MemoizedAction
@@ -27,7 +30,6 @@ import {
 import { Telemetry } from "devtools-modules";
 
 import type { ThunkArgs } from "../types";
-
 import type { Source, Context } from "../../types";
 
 // Measures the time it takes for a source to load
@@ -47,11 +49,15 @@ async function loadSource(
     if (!generatedSource) {
       throw new Error("Unable to find minified original.");
     }
+    const content = getSourceContent(state, generatedSource.id);
+    if (!content || !isFulfilled(content)) {
+      throw new Error("Cannot pretty-print a file that has not loaded");
+    }
 
     return prettyPrintSource(
       sourceMaps,
-      source,
       generatedSource,
+      content.value,
       getSourceActorsForSource(state, generatedSource.id)
     );
   }
@@ -101,9 +107,15 @@ async function loadSourceTextPromise(
   if (!newSource) {
     return;
   }
+  const content = getSourceContent(getState(), newSource.id);
 
-  if (!newSource.isWasm && isLoaded(newSource)) {
-    parser.setSource(newSource);
+  if (!newSource.isWasm && content) {
+    parser.setSource(
+      newSource.id,
+      isFulfilled(content)
+        ? content.value
+        : { type: "text", value: "", contentType: undefined }
+    );
     dispatch(setBreakpointPositions({ cx, sourceId: newSource.id }));
 
     // Update the text in any breakpoints for this source by re-adding them.
@@ -128,7 +140,12 @@ export const loadSourceText: MemoizedAction<
   ?Source
 > = memoizeableAction("loadSourceText", {
   exitEarly: ({ source }) => !source,
-  hasValue: ({ source }, { getState }) => isLoaded(source),
+  hasValue: ({ source }, { getState }) => {
+    return !!(
+      getSource(getState(), source.id) &&
+      getSourceWithContent(getState(), source.id).content
+    );
+  },
   getValue: ({ source }, { getState }) => getSource(getState(), source.id),
   createKey: ({ source }, { getState }) => {
     const epoch = getSourcesEpoch(getState());

@@ -43,7 +43,7 @@ class SocketData : public nsISupports {
   uint64_t mTotalSent;
   uint64_t mTotalRecv;
   nsTArray<SocketInfo> mData;
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
 
  private:
@@ -63,7 +63,7 @@ class HttpData : public nsISupports {
   HttpData() { mEventTarget = nullptr; }
 
   nsTArray<HttpRetParams> mData;
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
 };
 
@@ -77,7 +77,7 @@ class WebSocketRequest : public nsISupports {
 
   WebSocketRequest() { mEventTarget = nullptr; }
 
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
 };
 
@@ -92,7 +92,7 @@ class DnsData : public nsISupports {
   DnsData() { mEventTarget = nullptr; }
 
   nsTArray<DNSCacheEntries> mData;
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
 };
 
@@ -129,7 +129,7 @@ class ConnectionData : public nsITransportEventSink,
   nsCOMPtr<nsISocketTransport> mSocket;
   nsCOMPtr<nsIInputStream> mStreamIn;
   nsCOMPtr<nsITimer> mTimer;
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
   Dashboard *mDashboard;
 
@@ -152,7 +152,7 @@ class RcwnData : public nsISupports {
 
   RcwnData() { mEventTarget = nullptr; }
 
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
 };
 
@@ -246,7 +246,7 @@ class LookupHelper final : public nsIDNSListener {
 
  public:
   nsCOMPtr<nsICancelable> mCancel;
-  nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
+  nsMainThreadPtrHandle<nsINetDashboardCallback> mCallback;
   nsIEventTarget *mEventTarget;
   nsresult mStatus;
 };
@@ -320,10 +320,10 @@ NS_IMPL_ISUPPORTS(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
 Dashboard::Dashboard() { mEnableLogging = false; }
 
 NS_IMETHODIMP
-Dashboard::RequestSockets(NetDashboardCallback *aCallback) {
+Dashboard::RequestSockets(nsINetDashboardCallback *aCallback) {
   RefPtr<SocketData> socketData = new SocketData();
-  socketData->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  socketData->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
   socketData->mEventTarget = GetCurrentThreadEventTarget();
   gSocketTransportService->Dispatch(
       NewRunnableMethod<RefPtr<SocketData>>(
@@ -386,10 +386,10 @@ nsresult Dashboard::GetSockets(SocketData *aSocketData) {
 }
 
 NS_IMETHODIMP
-Dashboard::RequestHttpConnections(NetDashboardCallback *aCallback) {
+Dashboard::RequestHttpConnections(nsINetDashboardCallback *aCallback) {
   RefPtr<HttpData> httpData = new HttpData();
-  httpData->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  httpData->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
   httpData->mEventTarget = GetCurrentThreadEventTarget();
 
   gSocketTransportService->Dispatch(NewRunnableMethod<RefPtr<HttpData>>(
@@ -551,10 +551,10 @@ Dashboard::NewMsgReceived(const nsACString &aHost, uint32_t aSerial,
 }
 
 NS_IMETHODIMP
-Dashboard::RequestWebsocketConnections(NetDashboardCallback *aCallback) {
+Dashboard::RequestWebsocketConnections(nsINetDashboardCallback *aCallback) {
   RefPtr<WebSocketRequest> wsRequest = new WebSocketRequest();
-  wsRequest->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  wsRequest->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
   wsRequest->mEventTarget = GetCurrentThreadEventTarget();
 
   wsRequest->mEventTarget->Dispatch(
@@ -601,10 +601,10 @@ nsresult Dashboard::GetWebSocketConnections(WebSocketRequest *aWsRequest) {
 }
 
 NS_IMETHODIMP
-Dashboard::RequestDNSInfo(NetDashboardCallback *aCallback) {
+Dashboard::RequestDNSInfo(nsINetDashboardCallback *aCallback) {
   RefPtr<DnsData> dnsData = new DnsData();
-  dnsData->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  dnsData->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
 
   nsresult rv;
   dnsData->mData.Clear();
@@ -692,7 +692,7 @@ nsresult Dashboard::GetDNSCacheEntries(DnsData *dnsData) {
 
 NS_IMETHODIMP
 Dashboard::RequestDNSLookup(const nsACString &aHost,
-                            NetDashboardCallback *aCallback) {
+                            nsINetDashboardCallback *aCallback) {
   nsresult rv;
 
   if (!mDnsService) {
@@ -703,8 +703,8 @@ Dashboard::RequestDNSLookup(const nsACString &aHost,
   }
 
   RefPtr<LookupHelper> helper = new LookupHelper();
-  helper->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  helper->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
   helper->mEventTarget = GetCurrentThreadEventTarget();
   OriginAttributes attrs;
   rv = mDnsService->AsyncResolveNative(aHost, 0, helper.get(),
@@ -714,11 +714,11 @@ Dashboard::RequestDNSLookup(const nsACString &aHost,
 }
 
 NS_IMETHODIMP
-Dashboard::RequestRcwnStats(NetDashboardCallback *aCallback) {
+Dashboard::RequestRcwnStats(nsINetDashboardCallback *aCallback) {
   RefPtr<RcwnData> rcwnData = new RcwnData();
   rcwnData->mEventTarget = GetCurrentThreadEventTarget();
-  rcwnData->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  rcwnData->mCallback = new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+      "nsINetDashboardCallback", aCallback, true);
 
   return rcwnData->mEventTarget->Dispatch(
       NewRunnableMethod<RefPtr<RcwnData>>("net::Dashboard::GetRcwnData", this,
@@ -803,7 +803,7 @@ Dashboard::GetLogPath(nsACString &aLogPath) {
 NS_IMETHODIMP
 Dashboard::RequestConnection(const nsACString &aHost, uint32_t aPort,
                              const char *aProtocol, uint32_t aTimeout,
-                             NetDashboardCallback *aCallback) {
+                             nsINetDashboardCallback *aCallback) {
   nsresult rv;
   RefPtr<ConnectionData> connectionData = new ConnectionData(this);
   connectionData->mHost = aHost;
@@ -811,8 +811,9 @@ Dashboard::RequestConnection(const nsACString &aHost, uint32_t aPort,
   connectionData->mProtocol = aProtocol;
   connectionData->mTimeout = aTimeout;
 
-  connectionData->mCallback = new nsMainThreadPtrHolder<NetDashboardCallback>(
-      "NetDashboardCallback", aCallback, true);
+  connectionData->mCallback =
+      new nsMainThreadPtrHolder<nsINetDashboardCallback>(
+          "nsINetDashboardCallback", aCallback, true);
   connectionData->mEventTarget = GetCurrentThreadEventTarget();
 
   rv = TestNewConnection(connectionData);

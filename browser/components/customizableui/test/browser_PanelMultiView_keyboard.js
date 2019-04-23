@@ -211,7 +211,7 @@ add_task(async function testArrowsMenulist() {
 add_task(async function testSpaceTextbox() {
   await openPopup();
   gMainTextbox.focus();
-  EventUtils.synthesizeKey("KEY_Home");
+  gMainTextbox.selectionStart = gMainTextbox.selectionEnd = 0;
   EventUtils.synthesizeKey(" ");
   is(gMainTextbox.value, " value", "Space typed into textbox");
   gMainTextbox.value = "value";
@@ -252,5 +252,21 @@ add_task(async function testDynamicButton() {
   await expectFocusAfterKey("ArrowDown", gMainButton3);
   gMainButton2.disabled = false;
   await expectFocusAfterKey("ArrowUp", gMainButton2);
+  await hidePopup();
+});
+
+add_task(async function testActivation() {
+  function checkActivated(elem, activationFn, reason) {
+    let activated = false;
+    elem.onclick = function() { activated = true; };
+    activationFn();
+    ok(activated, "Should have activated button after " + reason);
+    elem.onclick = null;
+  }
+  await openPopup();
+  await expectFocusAfterKey("ArrowDown", gMainButton1);
+  checkActivated(gMainButton1, () => EventUtils.synthesizeKey("KEY_Enter"), "pressing enter");
+  checkActivated(gMainButton1, () => EventUtils.synthesizeKey(" "), "pressing space");
+  checkActivated(gMainButton1, () => EventUtils.synthesizeKey("KEY_Enter", {code: "NumpadEnter"}), "pressing numpad enter");
   await hidePopup();
 });

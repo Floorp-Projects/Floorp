@@ -213,6 +213,7 @@ browser.engagement:
   active_ticks:
     bug_numbers:
       - 1376942
+      - 1545172
     description: >
       The count of the number of five-second intervals ('ticks') the user
       was considered 'active' in a subsession. Session activity involves keyboard or mouse
@@ -222,9 +223,13 @@ browser.engagement:
     kind: uint
     notification_emails:
       - bcolloran@mozilla.com
+      - loines@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
+    record_into_store:
+      - 'main'
+      - 'pre-account'
 
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:

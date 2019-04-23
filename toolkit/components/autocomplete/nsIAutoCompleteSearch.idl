@@ -39,7 +39,8 @@ interface nsIAutoCompleteObserver : nsISupports
    * @param search - The search object that processed this search
    * @param result - The search result object
    */
-  void onSearchResult(in nsIAutoCompleteSearch search, in nsIAutoCompleteResult result);
+  [can_run_script] void onSearchResult(in nsIAutoCompleteSearch search,
+                                       in nsIAutoCompleteResult result);
 };
 
 [scriptable, uuid(4c3e7462-fbfb-4310-8f4b-239238392b75)]

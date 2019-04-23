@@ -20,11 +20,11 @@
 /*
  * Layout of the message
  *
- *  +--------+-----------------+
- *  | Icon   | Message content |
- *  |        | (several lines) |
- *  |        | (     ...     ) |
- *  +--------+-----------------+
+ *  +--------+-----------------+----------+
+ *  | Icon   | Message content | closing  |
+ *  |        | (several lines) | button   |
+ *  |        | (     ...     ) |(optional)|
+ *  +--------+-----------------+----------+
  */
 .message {
   background-color: var(--message-background-color);
@@ -33,7 +33,9 @@
   display: grid;
   fill: var(--message-color);
   grid-column-gap: var(--base-unit);
-  grid-template-columns: calc(var(--base-unit) * 6) 1fr;
+  grid-template-columns: calc(var(--base-unit) * 6) 1fr auto;  
+  grid-template-areas:
+    "icon body button";
   margin: calc(var(--base-unit) * 2) 0;
   padding: var(--base-unit);
   -moz-context-properties: fill;
@@ -41,9 +43,35 @@
 
 .message__icon {
   margin: var(--base-unit);
+  grid-area: icon;
 }
 
 .message__body {
   font-size: var(--message-font-size);
   font-weight: 400;
+  grid-area: body;
+}
+
+.message__button {
+  grid-area: button;
+}
+
+.message__button--warning:hover {
+  background-color: var(--yellow-60);
+}
+
+.message__button--warning:active {
+  background-color: var(--yellow-70);
+}
+
+.message__button--error {
+  fill: white;
+}
+
+.message__button--error:hover {
+  background-color: var(--red-70);
+}
+
+.message__button--error:active {
+  background-color: var(--red-80);
 }

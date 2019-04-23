@@ -314,6 +314,7 @@ You can set this by specifying --test-url URL
             'robocop': 'mochitest',
             'mochitest-chrome': 'mochitest',
             'mochitest-media': 'mochitest',
+            'mochitest-plain': 'mochitest',
             'mochitest-plain-clipboard': 'mochitest',
             'mochitest-plain-gpu': 'mochitest',
             'mochitest-webgl1-core': 'mochitest',

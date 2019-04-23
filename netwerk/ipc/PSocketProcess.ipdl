@@ -3,9 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include MemoryReportTypes;
 include protocol PSocketProcessBridge;
 include protocol PProfiler;
+include protocol PWebrtcProxyChannel;
+
+include MemoryReportTypes;
+include PBrowserOrId;
 include PrefsTypes;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -22,6 +25,8 @@ namespace net {
 
 protocol PSocketProcess
 {
+  manages PWebrtcProxyChannel;
+
 parent:
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
   async AddMemoryReport(MemoryReport aReport);
@@ -33,6 +38,8 @@ parent:
   async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
   async RecordChildEvents(ChildEventData[] events);
   async RecordDiscardedData(DiscardedData data);
+
+  async PWebrtcProxyChannel(PBrowserOrId browser);
 
 child:
   async PreferenceUpdate(Pref pref);

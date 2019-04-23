@@ -7,11 +7,10 @@
 import { getSymbols, clearSymbols } from "./getSymbols";
 import { clearASTs } from "./utils/ast";
 import getScopes, { clearScopes } from "./getScopes";
-import { hasSource, setSource, clearSources } from "./sources";
+import { setSource, clearSources } from "./sources";
 import findOutOfScopeLocations from "./findOutOfScopeLocations";
 import { getNextStep } from "./steps";
 import { hasSyntaxError } from "./validate";
-import { getFramework } from "./frameworks";
 import mapExpression from "./mapExpression";
 
 import { workerUtils } from "devtools-utils";
@@ -24,11 +23,9 @@ self.onmessage = workerHandler({
   clearSymbols,
   clearScopes,
   clearASTs,
-  hasSource,
   setSource,
   clearSources,
   getNextStep,
   hasSyntaxError,
-  getFramework,
   mapExpression
 });

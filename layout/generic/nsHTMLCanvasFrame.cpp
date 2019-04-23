@@ -175,10 +175,6 @@ class nsDisplayCanvas final : public nsDisplayItem {
         scTransform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
                              destGFXRect.Height() / canvasSizeInPx.height,
                              1.0f);
-        if (data->NeedsYFlip()) {
-          scTransform = scTransform.PreTranslate(0, data->GetSize().height, 0)
-                            .PreScale(1, -1, 1);
-        }
 
         MaybeIntSize scaleToSize;
         LayoutDeviceRect scBounds(LayoutDevicePoint(0, 0), bounds.Size());
@@ -303,15 +299,10 @@ LogicalSize nsHTMLCanvasFrame::ComputeSize(
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
-  nsIntSize size = GetCanvasSize();
+  nsIntSize canvasSizeInPx = GetCanvasSize();
 
-  IntrinsicSize intrinsicSize;
-  intrinsicSize.width.SetCoordValue(
-      nsPresContext::CSSPixelsToAppUnits(size.width));
-  intrinsicSize.height.SetCoordValue(
-      nsPresContext::CSSPixelsToAppUnits(size.height));
-
-  nsSize intrinsicRatio = GetIntrinsicRatio();  // won't actually be used
+  IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+  nsSize intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
 
   return ComputeSizeWithIntrinsicDimensions(
       aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize, aMargin,

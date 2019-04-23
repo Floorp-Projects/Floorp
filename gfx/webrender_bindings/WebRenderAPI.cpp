@@ -937,6 +937,16 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
                                    &spaceAndClip, aColor);
 }
 
+void DisplayListBuilder::PushHitTest(const wr::LayoutRect& aBounds,
+                                     const wr::LayoutRect& aClip,
+                                     bool aIsBackfaceVisible) {
+  wr::LayoutRect clip = MergeClipLeaf(aClip);
+  WRDL_LOG("PushHitTest b=%s cl=%s\n", mWrState, Stringify(aBounds).c_str(),
+           Stringify(clip).c_str());
+  wr_dp_push_hit_test(mWrState, aBounds, clip, aIsBackfaceVisible,
+                      &mCurrentSpaceAndClipChain);
+}
+
 void DisplayListBuilder::PushClearRect(const wr::LayoutRect& aBounds) {
   wr::LayoutRect clip = MergeClipLeaf(aBounds);
   WRDL_LOG("PushClearRect b=%s c=%s\n", mWrState, Stringify(aBounds).c_str(),

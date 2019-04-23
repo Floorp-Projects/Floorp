@@ -15,42 +15,26 @@ const text = `
 describe("project search", () => {
   const emptyResults = [];
 
-  it("throws on lack of source", () => {
-    const needle = "test";
-    const source: any = null;
-    const matches = () => findSourceMatches(source, needle);
-    expect(matches).toThrow(TypeError);
-  });
-
-  it("handles empty source object", () => {
-    const needle = "test";
-    const source: any = {};
-    const matches = findSourceMatches(source, needle);
-    expect(matches).toEqual(emptyResults);
-  });
-
   it("finds matches", () => {
     const needle = "foo";
-    const source: any = {
-      text,
-      loadedState: "loaded",
-      id: "bar.js",
-      url: "http://example.com/foo/bar.js"
+    const content = {
+      type: "text",
+      value: text,
+      contentType: undefined
     };
 
-    const matches = findSourceMatches(source, needle);
+    const matches = findSourceMatches("bar.js", content, needle);
     expect(matches).toMatchSnapshot();
   });
 
   it("finds no matches in source", () => {
     const needle = "test";
-    const source: any = {
-      text,
-      loadedState: "loaded",
-      id: "bar.js",
-      url: "http://example.com/foo/bar.js"
+    const content = {
+      type: "text",
+      value: text,
+      contentType: undefined
     };
-    const matches = findSourceMatches(source, needle);
+    const matches = findSourceMatches("bar.js", content, needle);
     expect(matches).toEqual(emptyResults);
   });
 });

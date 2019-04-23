@@ -198,6 +198,11 @@ function BrowserTabList(connection) {
 
 BrowserTabList.prototype.constructor = BrowserTabList;
 
+BrowserTabList.prototype.destroy = function() {
+  this._actorByBrowser.clear();
+  this.onListChanged = null;
+};
+
 /**
  * Get the selected browser for the given navigator:browser window.
  * @private

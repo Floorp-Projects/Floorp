@@ -936,20 +936,20 @@ class AstTableGet : public AstExpr {
 
 class AstTableGrow : public AstExpr {
   AstRef targetTable_;
-  AstExpr* delta_;
   AstExpr* initValue_;
+  AstExpr* delta_;
 
  public:
   static const AstExprKind Kind = AstExprKind::TableGrow;
-  AstTableGrow(AstRef targetTable, AstExpr* delta, AstExpr* initValue)
+  AstTableGrow(AstRef targetTable, AstExpr* initValue, AstExpr* delta)
       : AstExpr(Kind, ExprType::I32),
         targetTable_(targetTable),
-        delta_(delta),
-        initValue_(initValue) {}
+        initValue_(initValue),
+        delta_(delta) {}
 
   AstRef& targetTable() { return targetTable_; }
-  AstExpr& delta() const { return *delta_; }
   AstExpr& initValue() const { return *initValue_; }
+  AstExpr& delta() const { return *delta_; }
 };
 
 class AstTableSet : public AstExpr {

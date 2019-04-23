@@ -5,26 +5,23 @@
 // @flow
 
 import { getNextStep } from "../steps";
-import { getSource } from "./helpers";
-import { setSource } from "../sources";
+import { populateSource } from "./helpers";
 
 describe("getNextStep", () => {
   describe("await", () => {
     it("first await call", () => {
-      const source = getSource("async");
-      setSource(source);
-      const pausePosition = { line: 8, column: 2, sourceId: "async" };
-      expect(getNextStep("async", pausePosition)).toEqual({
+      const { source } = populateSource("async");
+      const pausePosition = { line: 8, column: 2, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
         line: 9
       });
     });
 
     it("first await call expression", () => {
-      const source = getSource("async");
-      setSource(source);
-      const pausePosition = { line: 8, column: 9, sourceId: "async" };
-      expect(getNextStep("async", pausePosition)).toEqual({
+      const { source } = populateSource("async");
+      const pausePosition = { line: 8, column: 9, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
         line: 9,
         column: 2
@@ -32,36 +29,32 @@ describe("getNextStep", () => {
     });
 
     it("second await call", () => {
-      const source = getSource("async");
-      setSource(source);
-      const pausePosition = { line: 9, column: 2, sourceId: "async" };
-      expect(getNextStep("async", pausePosition)).toEqual(null);
+      const { source } = populateSource("async");
+      const pausePosition = { line: 9, column: 2, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });
 
     it("second call expression", () => {
-      const source = getSource("async");
-      setSource(source);
-      const pausePosition = { line: 9, column: 9, sourceId: "async" };
-      expect(getNextStep("async", pausePosition)).toEqual(null);
+      const { source } = populateSource("async");
+      const pausePosition = { line: 9, column: 9, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });
   });
 
   describe("yield", () => {
     it("first yield call", () => {
-      const source = getSource("generators");
-      setSource(source);
-      const pausePosition = { line: 2, column: 2, sourceId: "generators" };
-      expect(getNextStep("generators", pausePosition)).toEqual({
+      const { source } = populateSource("generators");
+      const pausePosition = { line: 2, column: 2, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
         line: 3
       });
     });
 
     it("second yield call", () => {
-      const source = getSource("generators");
-      setSource(source);
-      const pausePosition = { line: 3, column: 2, sourceId: "generators" };
-      expect(getNextStep("generators", pausePosition)).toEqual(null);
+      const { source } = populateSource("generators");
+      const pausePosition = { line: 3, column: 2, sourceId: source.id };
+      expect(getNextStep(source.id, pausePosition)).toEqual(null);
     });
   });
 });

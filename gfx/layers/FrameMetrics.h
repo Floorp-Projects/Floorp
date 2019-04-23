@@ -787,7 +787,7 @@ struct ScrollSnapInfo {
   // position is still larger than the snapport size.
   // See https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
   //
-  // Note: This range doesn't contain scroll-margin values.
+  // Note: This range contains scroll-margin values.
   nsTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
   nsTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
 

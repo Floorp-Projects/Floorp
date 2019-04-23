@@ -6,9 +6,9 @@
 
 const { Cc, Ci } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { getFileForBinary } = require("./adb-binary");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
-const { Services } = require("resource://gre/modules/Services.jsm");
 
 loader.lazyRequireGetter(this, "runCommand", "devtools/shared/adb/commands/index", true);
 loader.lazyRequireGetter(this, "check", "devtools/shared/adb/adb-running-checker", true);
@@ -29,8 +29,10 @@ async function waitUntil(predicate, retry = 20) {
 }
 
 // Class representing the ADB process.
-class AdbProcess {
+class AdbProcess extends EventEmitter {
   constructor() {
+    super();
+
     this._ready = false;
     this._didRunInitially = false;
   }
@@ -69,8 +71,8 @@ class AdbProcess {
   async start() {
     return new Promise(async (resolve, reject) => {
       const onSuccessfulStart = () => {
-        Services.obs.notifyObservers(null, "adb-ready");
         this._ready = true;
+        this.emit("adb-ready");
         resolve();
       };
 

@@ -8222,9 +8222,10 @@
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["adw@mozilla.com"],
-    "bug_numbers": [1089670, 1475571, 1482158, 1499193],
-    "description": "Records search counts for search access points and in content searches. For search access points in general and for the urlbar when an internal @engine shorcut is not used, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]"
+    "alert_emails": ["adw@mozilla.com", "loines@mozilla.com"],
+    "bug_numbers": [1089670, 1475571, 1482158, 1499193, 1545172],
+    "description": "Records search counts for search access points and in content searches. For search access points in general and for the urlbar when an internal @engine shorcut is not used, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]",
+    "record_into_store": ["main", "pre-account"]
   },
   "SEARCH_SERVICE_INIT_MS": {
     "record_in_processes": ["main"],
@@ -11962,18 +11963,20 @@
     "n_buckets" : 10,
     "description": "The number of sites for which the user has explicitly rejected saving logins",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_FORM_AUTOFILL_RESULT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1340021],
+    "alert_emails": ["seceng-telemetry@mozilla.com","loines@mozilla.com"],
+    "bug_numbers": [1340021, 1545172],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values" : 20,
-    "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions."
+    "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions.",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_LOGIN_LAST_USED_DAYS": {
     "record_in_processes": ["main"],
@@ -11983,18 +11986,20 @@
     "n_buckets" : 40,
     "description": "Time in days each saved login was last used",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_LOGIN_PAGE_SAFETY": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1340021],
+    "alert_emails": ["seceng-telemetry@mozilla.com","loines@mozilla.com"],
+    "bug_numbers": [1340021, 1545172],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
-    "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)"
+    "description": "The safety of a page where we see a password field. (0: safe page & safe submit; 1: safe page & unsafe submit; 2: safe page & unknown submit; 3: unsafe page & safe submit; 4: unsafe page & unsafe submit; 5: unsafe page & unknown submit)",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_MANAGE_COPIED_PASSWORD": {
     "record_in_processes": ["main", "content"],
@@ -12002,8 +12007,9 @@
     "kind": "count",
     "description": "Count of passwords copied from the password management interface",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_MANAGE_COPIED_USERNAME": {
     "record_in_processes": ["main", "content"],
@@ -12011,8 +12017,9 @@
     "kind": "count",
     "description": "Count of usernames copied from the password management interface",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_MANAGE_DELETED": {
     "record_in_processes": ["main", "content"],
@@ -12020,8 +12027,9 @@
     "kind": "count",
     "description": "Count of passwords deleted from the password management interface (including via Remove All)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_MANAGE_DELETED_ALL": {
     "record_in_processes": ["main", "content"],
@@ -12036,8 +12044,9 @@
     "n_values" : 5,
     "description": "Accumulates how the password management interface was opened. (0=Preferences, 1=Page Info)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_MANAGE_SORTED": {
     "record_in_processes": ["main", "content"],
@@ -12052,8 +12061,9 @@
     "kind": "boolean",
     "description": "Whether the visibility of passwords was toggled (0=Hide, 1=Show)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "record_in_processes": ["main"],
@@ -12063,8 +12073,9 @@
     "n_buckets" : 20,
     "description": "The number of passwords per hostname",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_NUM_SAVED_PASSWORDS": {
     "record_in_processes": ["main"],
@@ -12074,8 +12085,9 @@
     "n_buckets" : 50,
     "description": "Total number of saved logins, including those that cannot be decrypted",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_NUM_HTTPAUTH_PASSWORDS": {
     "record_in_processes": ["main", "content"],
@@ -12098,8 +12110,9 @@
     "n_values": 5,
     "description": "Action taken by user through prompt for creating a login. (0=Prompt displayed [always recorded], 1=Add login, 2=Don't save now, 3=Never save)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_PROMPT_UPDATE_ACTION" : {
     "record_in_processes": ["main"],
@@ -12108,8 +12121,9 @@
     "n_values": 5,
     "description": "Action taken by user through prompt for modifying a login. (0=Prompt displayed [always recorded], 1=Update login)",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_SAVING_ENABLED": {
     "record_in_processes": ["main"],
@@ -12117,8 +12131,9 @@
     "kind": "boolean",
     "description": "Number of users who have password saving on globally",
     "alert_emails": ["loines@mozilla.com"],
-    "bug_numbers": [1454733],
-    "releaseChannelCollection": "opt-out"
+    "bug_numbers": [1454733, 1545172],
+    "releaseChannelCollection": "opt-out",
+    "record_into_store": ["main", "pre-account"]
   },
   "PWMGR_USERNAME_PRESENT": {
     "record_in_processes": ["main", "content"],
@@ -14325,6 +14340,16 @@
     "releaseChannelCollection": "opt-out",
     "labels": ["FullStandards", "AlmostStandards", "NavQuirks"],
     "description": "HTML document compat mode (quirks mode)"
+  },
+  "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["mozilla-telemetry@upsuper.org", "botond@mozilla.com"],
+    "bug_numbers": [1423013, 1423017, 1513089],
+    "expires_in_version": "70",
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
+    "description": "How common are different types of out-of-reach viewport overflow?"
   },
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],

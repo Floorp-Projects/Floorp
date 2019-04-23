@@ -12,6 +12,11 @@ interface JSWindowActor {
   void sendAsyncMessage(DOMString messageName,
                         optional any obj,
                         optional any transfers);
+
+  [Throws]
+  Promise<any> sendQuery(DOMString messageName,
+                         optional any obj,
+                         optional any transfers);
 };
 
 [ChromeOnly, ChromeConstructor]
