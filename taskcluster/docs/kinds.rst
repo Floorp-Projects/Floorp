@@ -573,3 +573,7 @@ geckodriver-repack
 ------------------
 Tasks to repackage the geckodriver binary from a build tasks's common
 test archive into it's own archive.
+
+geckodriver-signing
+-------------------
+Signing for geckodriver binary.
