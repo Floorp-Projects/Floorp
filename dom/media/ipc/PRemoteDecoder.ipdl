@@ -65,6 +65,7 @@ child:
   async InitFailed(nsresult reason);
 
   async FlushComplete();
+  async ShutdownComplete();
 
   async Output(DecodedOutputIPDL data);
   async InputExhausted();
