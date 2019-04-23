@@ -4626,7 +4626,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [_ParamTraits.checkedRead(p.ipdltype,
                                         ExprAddrOf(ExprVar(p.var().name + 'Copy')),
                                         msgexpr, ExprAddrOf(itervar),
-                                        errfn, p.bareType(side).name,
+                                        errfn, p.ipdltype.name(),
                                         sentinelKey=p.name,
                                         errfnSentinel=errfnSentinel(),
                                         actor=ExprVar.THIS)
@@ -4685,7 +4685,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [Whitespace.NL]
             + reads + [_ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                                 msgexpr, ExprAddrOf(itervar),
-                                                errfn, "'%s'" % p.bareType(side).name,
+                                                errfn, "'%s'" % p.ipdltype.name(),
                                                 sentinelKey=p.name, errfnSentinel=errfnSent,
                                                 actor=ExprVar.THIS)
                        for p in md.params[start:]]
@@ -4747,7 +4747,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [Whitespace.NL]
             + reads + [_ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                                 msgexpr, ExprAddrOf(itervar),
-                                                errfn, "'%s'" % p.bareType(side).name,
+                                                errfn, "'%s'" % p.ipdltype.name(),
                                                 sentinelKey=p.name, errfnSentinel=errfnSent,
                                                 actor=ExprVar.THIS)
                        for p in md.returns[start:]]
@@ -4776,7 +4776,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [_ParamTraits.checkedRead(r.ipdltype, r.var(),
                                         ExprAddrOf(self.replyvar),
                                         ExprAddrOf(self.itervar),
-                                        errfn, "'%s'" % r.bareType(side).name,
+                                        errfn, "'%s'" % r.ipdltype.name(),
                                         sentinelKey=r.name, errfnSentinel=errfnSentinel,
                                         actor=ExprVar.THIS)
                 for r in md.returns]
