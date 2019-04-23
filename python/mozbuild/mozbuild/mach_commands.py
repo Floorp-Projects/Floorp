@@ -1846,6 +1846,9 @@ class StaticAnalysis(MachCommandBase):
                     total = total + 1
 
         if not total:
+            self.log(logging.INFO, 'static-analysis', {},
+                "There are no files eligible for analysis. Please note that 'header' files "
+                "cannot be used for analysis since they do not consist compilation units.")
             return 0
 
         cwd = self.topobjdir
