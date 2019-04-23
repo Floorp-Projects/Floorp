@@ -385,6 +385,41 @@ class PresShell final : public nsIPresShell,
    */
   MOZ_CAN_RUN_SCRIPT nsresult ScrollToAnchor();
 
+  /**
+   * Scrolls the view of the document so that the primary frame of the content
+   * is displayed in the window. Layout is flushed before scrolling.
+   *
+   * @param aContent  The content object of which primary frame should be
+   *                  scrolled into view.
+   * @param aVertical How to align the frame vertically and when to do so.
+   *                  This is a ScrollAxis of Where and When.
+   * @param aHorizontal How to align the frame horizontally and when to do so.
+   *                  This is a ScrollAxis of Where and When.
+   * @param aFlags    If SCROLL_FIRST_ANCESTOR_ONLY is set, only the nearest
+   *                  scrollable ancestor is scrolled, otherwise all
+   *                  scrollable ancestors may be scrolled if necessary.
+   *                  If SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a
+   *                  direction even if overflow:hidden is specified in that
+   *                  direction; otherwise we will not scroll in that direction
+   *                  when overflow:hidden is set for that direction.
+   *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   *                  nodes in this document, not in any parent documents which
+   *                  contain this document in a iframe or the like.
+   *                  If SCROLL_SMOOTH is set and CSSOM-VIEW scroll-behavior
+   *                  is enabled, we will scroll smoothly using
+   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
+   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
+   *                  If SCROLL_SMOOTH_AUTO is set, the CSSOM-View
+   *                  scroll-behavior attribute is set to 'smooth' on the
+   *                  scroll frame, and CSSOM-VIEW scroll-behavior is enabled,
+   *                  we will scroll smoothly using
+   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
+   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
+                                 ScrollAxis aHorizontal, uint32_t aFlags);
+
  private:
   ~PresShell();
 
@@ -1201,8 +1236,10 @@ class PresShell final : public nsIPresShell,
      * Returns true if the context menu event should fire and false if it should
      * not.
      */
+    MOZ_CAN_RUN_SCRIPT
     bool AdjustContextMenuKeyEvent(WidgetMouseEvent* aMouseEvent);
 
+    MOZ_CAN_RUN_SCRIPT
     bool PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                    LayoutDeviceIntPoint& aTargetPt);
 
@@ -1210,6 +1247,7 @@ class PresShell final : public nsIPresShell,
      * Get the selected item and coordinates in device pixels relative to root
      * document's root view for element, first ensuring the element is onscreen.
      */
+    MOZ_CAN_RUN_SCRIPT
     void GetCurrentItemAndPositionForElement(dom::Element* aFocusedElement,
                                              nsIContent** aTargetToUse,
                                              LayoutDeviceIntPoint& aTargetPt,

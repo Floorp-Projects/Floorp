@@ -1437,7 +1437,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Ask APZ to pan and zoom to the focused input element.
    */
-  void zoomToFocusedInput();
+  [can_run_script] void zoomToFocusedInput();
 
   /**
    * Method for testing StyleAnimationValue::ComputeDistance.
