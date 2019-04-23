@@ -11097,8 +11097,8 @@ void ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo) {
   // This should clean up the thread with the profiler.
   MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-      NewRunnableMethod("nsIThread::Shutdown", thread, &nsIThread::Shutdown)));
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NewRunnableMethod(
+      "nsIThread::AsyncShutdown", thread, &nsIThread::AsyncShutdown)));
 
   mTotalThreadCount--;
 }
