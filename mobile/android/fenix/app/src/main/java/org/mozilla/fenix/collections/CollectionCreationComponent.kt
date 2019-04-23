@@ -19,16 +19,18 @@ data class Tab(
     val title: String
 )
 
-data class CollectionCreationState(val tabs: List<Tab> = listOf(), val selectedTabs: List<Tab> = listOf()) : ViewState
+data class CollectionCreationState(val tabs: List<Tab> = listOf(), val selectedTabs: Set<Tab> = setOf()) : ViewState
 
 sealed class CollectionCreationChange : Change {
     data class TabListChange(val tabs: List<Tab>) : CollectionCreationChange()
+    object AddAllTabs : CollectionCreationChange()
     data class TabAdded(val tab: Tab) : CollectionCreationChange()
     data class TabRemoved(val tab: Tab) : CollectionCreationChange()
 }
 
 sealed class CollectionCreationAction : Action {
     object Close : CollectionCreationAction()
+    object SelectAllTapped : CollectionCreationAction()
     data class AddTabToSelection(val tab: Tab) : CollectionCreationAction()
     data class RemoveTabFromSelection(val tab: Tab) : CollectionCreationAction()
 }
@@ -43,13 +45,14 @@ class CollectionCreationComponent(
 ) {
     override val reducer: Reducer<CollectionCreationState, CollectionCreationChange> = { state, change ->
         when (change) {
+            is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
             is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
             is CollectionCreationChange.TabAdded -> {
-                val selectedTabs = listOf(change.tab) + state.selectedTabs
+                val selectedTabs = state.selectedTabs + setOf(change.tab)
                 state.copy(selectedTabs = selectedTabs)
             }
             is CollectionCreationChange.TabRemoved -> {
-                val selectedTabs = state.selectedTabs.filter { it.sessionId != change.tab.sessionId }
+                val selectedTabs = state.selectedTabs - setOf(change.tab)
                 state.copy(selectedTabs = selectedTabs)
             }
         }

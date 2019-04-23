@@ -23,7 +23,7 @@ class CollectionCreationTabListAdapter(
 
 
     private var tabs: List<Tab> = listOf()
-    private var selectedTabs: List<Tab> = listOf()
+    private var selectedTabs: Set<Tab> = setOf()
     private lateinit var job: Job
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
@@ -50,8 +50,8 @@ class CollectionCreationTabListAdapter(
         job.cancel()
     }
 
-    fun updateData(tabs: List<Tab>, selectedTabs: List<Tab>) {
-        val diffUtil = DiffUtil.calculateDiff(TabDiffUtil(this.tabs, tabs))
+    fun updateData(tabs: List<Tab>, selectedTabs: Set<Tab>) {
+        val diffUtil = DiffUtil.calculateDiff(TabDiffUtil(this.tabs, tabs, this.selectedTabs, selectedTabs))
 
         this.tabs = tabs
         this.selectedTabs = selectedTabs
@@ -60,12 +60,20 @@ class CollectionCreationTabListAdapter(
     }
 }
 
-private class TabDiffUtil(val old: List<Tab>, val new: List<Tab>) : DiffUtil.Callback() {
+private class TabDiffUtil(
+    val old: List<Tab>,
+    val new: List<Tab>,
+    val oldSelected: Set<Tab>,
+    val newSelected: Set<Tab>
+) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
         old[oldItemPosition].sessionId == new[newItemPosition].sessionId
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-        old[oldItemPosition].url == new[newItemPosition].url
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val isSameTab = old[oldItemPosition].url == new[newItemPosition].url
+        val sameSelectedState = oldSelected.contains(old[oldItemPosition]) == newSelected.contains(new[newItemPosition])
+        return isSameTab && sameSelectedState
+    }
 
     override fun getOldListSize(): Int = old.size
     override fun getNewListSize(): Int = new.size

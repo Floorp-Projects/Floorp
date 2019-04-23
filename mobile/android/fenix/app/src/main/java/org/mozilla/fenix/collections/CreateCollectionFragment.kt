@@ -54,6 +54,8 @@ class CreateCollectionFragment : DialogFragment() {
                     .onNext(CollectionCreationChange.TabAdded(it.tab))
                 is CollectionCreationAction.RemoveTabFromSelection -> getManagedEmitter<CollectionCreationChange>()
                     .onNext(CollectionCreationChange.TabRemoved(it.tab))
+                is CollectionCreationAction.SelectAllTapped -> getManagedEmitter<CollectionCreationChange>()
+                    .onNext(CollectionCreationChange.AddAllTabs)
             }
         }
     }

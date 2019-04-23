@@ -36,7 +36,7 @@ class CollectionCreationUIView(
         }
 
         view.select_all_button.setOnClickListener {
-            Log.e("Collection Creation", "Select All Tapped!")
+            actionEmitter.onNext(CollectionCreationAction.SelectAllTapped)
         }
 
         view.tab_list.run {
