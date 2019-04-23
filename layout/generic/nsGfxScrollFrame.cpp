@@ -6797,8 +6797,8 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
-    const Maybe<nsPoint>& aDestination) const {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeOldScrollSnapInfo() const {
+  MOZ_ASSERT(!StaticPrefs::layout_css_scroll_snap_v1_enabled());
   ScrollSnapInfo result;
 
   ScrollStyles styles = GetScrollStylesFromFrame();
@@ -6829,42 +6829,61 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
             scrollPortSize.height));
   }
 
-  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    nsRect snapport = GetScrollPortRect();
-    nsMargin scrollPadding = GetScrollPadding();
-
-    Maybe<nsRect> snapportOnDestination;
-    if (aDestination) {
-      if (IsPhysicalLTR()) {
-        snapport.MoveTo(aDestination.value());
-      } else {
-        snapport.MoveTo(
-            nsPoint(aDestination->x - snapport.Size().width, aDestination->y));
-      }
-      snapport.Deflate(scrollPadding);
-      snapportOnDestination.emplace(snapport);
-    } else {
-      snapport.Deflate(scrollPadding);
-    }
-
-    WritingMode writingMode = GetFrameForDir()->GetWritingMode();
-    result.mSnapportSize = snapport.Size();
-    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                  GetScrolledRect(), scrollPadding,
-                                  snapportOnDestination, writingMode, result);
-    return result;
-  }
-
   CollectScrollSnapCoordinates(mScrolledFrame, mScrolledFrame,
                                result.mScrollSnapCoordinates);
 
   return result;
 }
 
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
+    const Maybe<nsPoint>& aDestination) const {
+  MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
+
+  ScrollSnapInfo result;
+  ScrollStyles styles = GetScrollStylesFromFrame();
+
+  if (styles.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
+      styles.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
+    // We won't be snapping, short-circuit the computation.
+    return result;
+  }
+
+  result.mScrollSnapTypeX = styles.mScrollSnapTypeX;
+  result.mScrollSnapTypeY = styles.mScrollSnapTypeY;
+
+  nsRect snapport = GetScrollPortRect();
+  nsMargin scrollPadding = GetScrollPadding();
+
+  Maybe<nsRect> snapportOnDestination;
+  if (aDestination) {
+    if (IsPhysicalLTR()) {
+      snapport.MoveTo(aDestination.value());
+    } else {
+      snapport.MoveTo(
+          nsPoint(aDestination->x - snapport.Size().width, aDestination->y));
+    }
+    snapport.Deflate(scrollPadding);
+    snapportOnDestination.emplace(snapport);
+  } else {
+    snapport.Deflate(scrollPadding);
+  }
+
+  WritingMode writingMode = GetFrameForDir()->GetWritingMode();
+  result.mSnapportSize = snapport.Size();
+  CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
+                                GetScrolledRect(), scrollPadding,
+                                snapportOnDestination, writingMode, result);
+  return result;
+}
+
 layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
     const Maybe<nsPoint>& aDestination) const {
   // TODO(botond): Should we cache it?
-  return ComputeScrollSnapInfo(aDestination);
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    return ComputeScrollSnapInfo(aDestination);
+  }
+
+  return ComputeOldScrollSnapInfo();
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(

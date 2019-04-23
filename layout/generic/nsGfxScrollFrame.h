@@ -414,6 +414,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
                                             // scroll-snap-type and
                                             // scroll-padding we use
 
+  // This is the for the old unspecced scroll snap implementation.
+  ScrollSnapInfo ComputeOldScrollSnapInfo() const;
+  // This is the for the scroll snap v1 implementation.
   ScrollSnapInfo ComputeScrollSnapInfo(
       const Maybe<nsPoint>& aDestination) const;
 
