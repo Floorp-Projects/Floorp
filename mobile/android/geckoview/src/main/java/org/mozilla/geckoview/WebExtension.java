@@ -11,8 +11,6 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,9 +39,9 @@ public class WebExtension {
      */
     public final @NonNull String id;
     /**
-     * {@link Flags} for this WebExtension.
+     * Whether content scripts can send messages to the browser or not.
      */
-    public final @WebExtensionFlags long flags;
+    public final boolean allowContentMessaging;
     /**
      * Delegates that handle messaging between this WebExtension and the app.
      */
@@ -51,27 +49,6 @@ public class WebExtension {
 
     private final static String LOGTAG = "WebExtension";
 
-    public static class Flags {
-        /*
-         * Default flags for this WebExtension.
-         */
-        public static final long NONE = 0;
-        /**
-         * Set this flag if you want to enable content scripts messaging.
-         * To listen to such messages you can use
-         * {@link WebExtension#setMessageDelegate}.
-         */
-        public static final long ALLOW_CONTENT_MESSAGING = 1 << 0;
-
-        // Do not instantiate this class.
-        protected Flags() {}
-    }
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef(flag = true,
-            value = { Flags.NONE, Flags.ALLOW_CONTENT_MESSAGING })
-    /* package */ @interface WebExtensionFlags {}
-
     /**
      * Builds a WebExtension instance that can be loaded in GeckoView using
      * {@link GeckoRuntime#registerWebExtension}
@@ -118,13 +95,15 @@ public class WebExtension {
      *                  WebExtensions/WebExtensions_and_the_Add-on_ID
      *               </a>
      *           </ul>
-     * @param flags {@link Flags} for this WebExtension.
+     * @param allowContentMessaging Whether content scripts are allowed to send
+     *      messages to the browser or not.  To listen to such messages you can
+     *      use {@link #setMessageDelegate(MessageDelegate, String)}.
      */
     public WebExtension(final @NonNull String location, final @NonNull String id,
-                        final @WebExtensionFlags long flags) {
+                        final boolean allowContentMessaging) {
         this.location = location;
         this.id = id;
-        this.flags = flags;
+        this.allowContentMessaging = allowContentMessaging;
         this.messageDelegates = new HashMap<>();
     }
 
@@ -141,7 +120,7 @@ public class WebExtension {
      *                 a <code>file:</code> URL to a <code>.xpi</code> file.
      */
     public WebExtension(final @NonNull String location) {
-        this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE);
+        this(location, "{" + UUID.randomUUID().toString() + "}", false);
     }
 
     /**

@@ -1473,7 +1473,7 @@ import android.view.inputmethod.EditorInfo;
         }
     }
 
-    private void icRestartInput(@GeckoSession.RestartReason final int reason,
+    private void icRestartInput(@GeckoSession.TextInputDelegate.RestartReason final int reason,
                                 final boolean toggleSoftInput) {
         if (DEBUG) {
             assertOnIcThread();

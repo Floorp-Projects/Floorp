@@ -340,8 +340,7 @@ public final class GeckoRuntime implements Parcelable {
         final GeckoBundle bundle = new GeckoBundle(3);
         bundle.putString("locationUri", webExtension.location);
         bundle.putString("id", webExtension.id);
-        bundle.putBoolean("allowContentMessaging",
-                (webExtension.flags & WebExtension.Flags.ALLOW_CONTENT_MESSAGING) > 0);
+        bundle.putBoolean("allowContentMessaging", webExtension.allowContentMessaging);
 
         mWebExtensionDispatcher.registerWebExtension(webExtension);
 

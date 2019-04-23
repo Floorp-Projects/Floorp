@@ -85,7 +85,7 @@ class WebExecutorTest {
         return fetch(request, GeckoWebExecutor.FETCH_FLAGS_NONE)
     }
 
-    private fun fetch(request: WebRequest, flags: Int): WebResponse {
+    private fun fetch(request: WebRequest, @GeckoWebExecutor.FetchFlags flags: Int): WebResponse {
         return executor.fetch(request, flags).poll(env.defaultTimeoutMillis)!!
     }
 
