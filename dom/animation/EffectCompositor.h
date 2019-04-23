@@ -23,7 +23,7 @@ class nsCSSPropertyIDSet;
 class nsAtom;
 class nsIFrame;
 class nsPresContext;
-enum class DisplayItemType : uint32_t;
+enum class DisplayItemType : uint8_t;
 struct RawServoAnimationValueMap;
 
 namespace mozilla {

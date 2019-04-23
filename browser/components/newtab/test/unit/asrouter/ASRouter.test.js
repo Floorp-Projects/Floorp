@@ -348,7 +348,7 @@ describe("ASRouter", () => {
       sandbox.stub(MessageLoaderUtils, "_getRemoteSettingsMessages").rejects("fake error");
       await createRouterAndInit();
       assert.calledWith(Router.dispatchToAS, {
-        data: {action: "asrouter_undesired_event", event: "ASR_RS_ERROR", value: "remotey-settingsy"},
+        data: {action: "asrouter_undesired_event", event: "ASR_RS_ERROR", value: "remotey-settingsy", message_id: "n/a"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
         type: "AS_ROUTER_TELEMETRY_USER_EVENT",
       });
@@ -357,7 +357,7 @@ describe("ASRouter", () => {
       sandbox.stub(MessageLoaderUtils, "_getRemoteSettingsMessages").resolves([]);
       await createRouterAndInit();
       assert.calledWith(Router.dispatchToAS, {
-        data: {action: "asrouter_undesired_event", event: "ASR_RS_NO_MESSAGES", value: "remotey-settingsy"},
+        data: {action: "asrouter_undesired_event", event: "ASR_RS_NO_MESSAGES", value: "remotey-settingsy", message_id: "n/a"},
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
         type: "AS_ROUTER_TELEMETRY_USER_EVENT",
       });

@@ -5130,7 +5130,7 @@ cglobal idct_32x32_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
     ret
 
 
-cglobal inv_txfm_add_identity_identity_32x32, 4, 6, 8, 16*4, dst, stride, coeff, eob, tx2
+cglobal inv_txfm_add_identity_identity_32x32, 4, 6, 8, 16*5, dst, stride, coeff, eob, tx2
     %undef cmp
 
     mov                     r4, 2

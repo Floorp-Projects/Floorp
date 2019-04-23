@@ -39,7 +39,7 @@ use std::{
 };
 use task::{
     ClearTask, DeleteTask, EnumerateTask, GetOrCreateTask, GetTask, HasTask,
-    PutTask, PutManyTask,
+    PutTask, WriteManyTask,
 };
 use thin_vec::ThinVec;
 use xpcom::{
@@ -186,13 +186,13 @@ impl KeyValueDatabase {
     }
 
     xpcom_method!(
-        put_many => PutMany(
+        write_many => WriteMany(
             callback: *const nsIKeyValueVoidCallback,
             pairs: *const ThinVec<RefPtr<nsIKeyValuePair>>
         )
     );
 
-    fn put_many(
+    fn write_many(
         &self,
         callback: &nsIKeyValueVoidCallback,
         pairs: &ThinVec<RefPtr<nsIKeyValuePair>>
@@ -210,12 +210,11 @@ impl KeyValueDatabase {
 
             let val: RefPtr<nsIVariant> =
                 getter_addrefs(|p| unsafe { pair.GetValue(p) })?;
-            let value = variant_to_owned(&val)?
-                .ok_or(KeyValueError::UnexpectedValue)?;
+            let value = variant_to_owned(&val)?;
             entries.push((key, value));
         }
 
-        let task = Box::new(PutManyTask::new(
+        let task = Box::new(WriteManyTask::new(
             RefPtr::new(callback),
             Arc::clone(&self.rkv),
             self.store,
@@ -224,7 +223,7 @@ impl KeyValueDatabase {
 
         let thread = self.thread.get_ref().ok_or(NS_ERROR_FAILURE)?;
 
-        TaskRunnable::new("KVDatabase::PutMany", task)?.dispatch(thread)
+        TaskRunnable::new("KVDatabase::WriteMany", task)?.dispatch(thread)
     }
 
     xpcom_method!(

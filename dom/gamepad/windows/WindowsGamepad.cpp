@@ -123,7 +123,8 @@ class Gamepad {
     double value;
     bool active;
 
-    axisValue() = default;
+    axisValue()
+        : value(0.0f), active(false) {}
     explicit axisValue(const HIDP_VALUE_CAPS& aCaps)
         : caps(aCaps), value(0.0f), active(true) {}
   };

@@ -1,6 +1,6 @@
     <script type="application/javascript"
             src="chrome://browser/content/preferences/in-content/search.js"/>
-    <box id="template-paneSearch" hidden="true"><![CDATA[
+    <html:template id="template-paneSearch">
     <hbox id="searchCategory"
           class="subcategory"
           hidden="true"
@@ -81,4 +81,4 @@
         <label id="addEngines" data-l10n-id="search-find-more-link" is="text-link"></label>
       </hbox>
     </groupbox>
-    ]]></box>
+    </html:template>

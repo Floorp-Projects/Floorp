@@ -46,10 +46,6 @@
 #include "gfx2DGlue.h"
 #include "GeckoProfiler.h"
 
-namespace android {
-class GraphicBuffer;
-}  // namespace android
-
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;

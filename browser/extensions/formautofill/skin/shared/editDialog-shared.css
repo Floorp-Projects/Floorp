@@ -41,7 +41,7 @@ form div {
 
 form :-moz-any(label, div) .label-text {
   position: absolute;
-  color: GrayText;
+  opacity: .5;
   pointer-events: none;
   left: 10px;
   top: .2em;
@@ -57,6 +57,7 @@ form :-moz-any(label, div) .label-text[field-populated] {
 
 form :-moz-any(input, select, textarea):focus ~ .label-text {
   color: var(--in-content-item-selected);
+  opacity: 1;
 }
 
 /* Focused error fields should get a darker text but not the blue one since it

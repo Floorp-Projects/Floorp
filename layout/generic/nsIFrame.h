@@ -103,7 +103,7 @@ class nsISelectionController;
 class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
-class nsDisplayItem;
+class nsDisplayItemBase;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
@@ -1154,7 +1154,7 @@ class nsIFrame : public nsQueryFrame {
 
   nsPoint GetPositionIgnoringScrolling() const;
 
-  typedef AutoTArray<nsDisplayItem*, 4> DisplayItemArray;
+  typedef AutoTArray<nsDisplayItemBase*, 4> DisplayItemArray;
 
 #define NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(prop, type, dtor)              \
   static const mozilla::FramePropertyDescriptor<type>* prop() {            \
@@ -4149,11 +4149,11 @@ class nsIFrame : public nsQueryFrame {
     return mDisplayItemData;
   }
 
-  void AddDisplayItem(nsDisplayItem* aItem);
-  bool RemoveDisplayItem(nsDisplayItem* aItem);
+  void AddDisplayItem(nsDisplayItemBase* aItem);
+  bool RemoveDisplayItem(nsDisplayItemBase* aItem);
   void RemoveDisplayItemDataForDeletion();
   bool HasDisplayItems();
-  bool HasDisplayItem(nsDisplayItem* aItem);
+  bool HasDisplayItem(nsDisplayItemBase* aItem);
   bool HasDisplayItem(uint32_t aKey);
   void DiscardOldItems();
 

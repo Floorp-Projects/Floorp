@@ -3,7 +3,11 @@
 <PROJECT_ROOT>/firefox/.*
 .*flow-coverage-report/.*
 .*custom_format_broken.json
-.*packages/devtools-reps/src/object-inspector/.*
+.*packages/devtools-reps/src/object-inspector/components
+.*packages/devtools-reps/src/object-inspector/utils
+.*packages/devtools-reps/src/object-inspector/tests
+.*packages/devtools-reps/src/object-inspector/reducer.js
+.*packages/devtools-reps/src/object-inspector/actions.js
 <PROJECT_ROOT>/webpack-stats/.*
 
 [include]
