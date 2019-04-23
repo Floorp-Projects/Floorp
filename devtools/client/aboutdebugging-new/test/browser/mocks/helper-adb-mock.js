@@ -86,3 +86,33 @@ function addObserverMock(adbMock) {
   return observerMock;
 }
 /* exported addObserverMock */
+
+function createAdbProcessMock() {
+  const EventEmitter = require("devtools/shared/event-emitter");
+
+  const mock = {};
+  EventEmitter.decorate(mock);
+
+  mock.ready = false;
+
+  mock.start = async () => {
+    console.log("MOCKED METHOD start");
+    mock.ready = true;
+    mock.emit("adb-ready");
+  };
+
+  return { adbProcess: mock };
+}
+/* exported createAdbProcessMock */
+
+function enableAdbProcessMock(mock) {
+  const { setMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  setMockedModule(mock, "devtools/shared/adb/adb-process");
+}
+/* exported enableAdbProcessMock */
+
+function disableAdbProcessMock() {
+  const { removeMockedModule } = require("devtools/client/shared/browser-loader-mocks");
+  removeMockedModule("devtools/shared/adb/adb-process");
+}
+/* exported disableAdbProcessMock */

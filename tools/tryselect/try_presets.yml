@@ -33,6 +33,16 @@ perf:
         - "^test- !android-hw 'raptor | 'talos"
     rebuild: 5
 
+perf-chrome:
+    description: >-
+        Runs the talos tests most likely to change when making a change to
+        the browser chrome. This skips a number of talos jobs that are unlikely
+        to be affected in order to conserve resources.
+    query:
+        - "opt-talos- 'chrome | 'svg | 'session | 'tabswitch"
+    rebuild: 6
+    selector: fuzzy
+
 sample-suites:
     selector: fuzzy
     description: >-

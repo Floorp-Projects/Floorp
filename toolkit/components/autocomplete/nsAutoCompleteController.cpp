@@ -26,8 +26,9 @@ using namespace mozilla;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsAutoCompleteController)
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAutoCompleteController)
-  tmp->SetInput(nullptr);
+  MOZ_KnownLive(tmp)->SetInput(nullptr);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAutoCompleteController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInput)
@@ -835,6 +836,7 @@ nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch,
 ////////////////////////////////////////////////////////////////////////
 //// nsITimerCallback
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 nsAutoCompleteController::Notify(nsITimer *timer) {
   mTimer = nullptr;
@@ -867,7 +869,8 @@ nsresult nsAutoCompleteController::OpenPopup() {
   mInput->GetMinResultsForPopup(&minResults);
 
   if (mMatchCount >= minResults) {
-    return mInput->SetPopupOpen(true);
+    nsCOMPtr<nsIAutoCompleteInput> input = mInput;
+    return input->SetPopupOpen(true);
   }
 
   return NS_OK;

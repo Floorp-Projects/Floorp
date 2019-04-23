@@ -629,7 +629,7 @@ class SSLTunnel:
                     "%s:%s:%s:%s\n" %
                     (option, loc.host, loc.port, self.sslPort))
 
-    def buildConfig(self, locations):
+    def buildConfig(self, locations, public=None):
         """Create the ssltunnel configuration file"""
         configFd, self.configFile = tempfile.mkstemp(
             prefix="ssltunnel", suffix=".cfg")
@@ -640,7 +640,17 @@ class SSLTunnel:
             config.write(
                 "websocketserver:%s:%s\n" %
                 (self.webServer, self.webSocketPort))
-            config.write("listen:*:%s:pgoserver\n" % self.sslPort)
+            # Use "*" to tell ssltunnel to listen on the public ip
+            # address instead of the loopback address 127.0.0.1. This
+            # may have the side-effect of causing firewall warnings on
+            # macOS and Windows. Use "127.0.0.1" to listen on the
+            # loopback address.  Remote tests using physical or
+            # emulated Android devices must use the public ip address
+            # in order for the sslproxy to work but Desktop tests
+            # which run on the same host as ssltunnel may use the
+            # loopback address.
+            listen_address = "*" if public else "127.0.0.1"
+            config.write("listen:%s:%s:pgoserver\n" % (listen_address, self.sslPort))
 
             for loc in locations:
                 if loc.scheme == "https" and "nocert" not in loc.options:
@@ -1163,7 +1173,7 @@ class MochitestDesktop(object):
             self.log.error("runtests.py | Timed out while waiting for "
                            "websocket/process bridge startup.")
 
-    def startServers(self, options, debuggerInfo):
+    def startServers(self, options, debuggerInfo, public=None):
         # start servers and set ports
         # TODO: pass these values, don't set on `self`
         self.webServer = options.webServer
@@ -1188,7 +1198,7 @@ class MochitestDesktop(object):
         self.sslTunnel = SSLTunnel(
             options,
             logger=self.log)
-        self.sslTunnel.buildConfig(self.locations)
+        self.sslTunnel.buildConfig(self.locations, public=public)
         self.sslTunnel.start()
 
         # If we're lucky, the server has fully started by now, and all paths are

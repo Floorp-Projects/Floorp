@@ -30,7 +30,6 @@ def WebglSuite(name):
         'kwargs': {'flavor': 'plain', 'subsuite': name, 'test_paths': None},
         'task_regex': ['mochitest-' + name + '($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'mochitest-' + name
     }
 
 
@@ -39,7 +38,6 @@ TEST_SUITES = {
         'aliases': ('cpp',),
         'mach_command': 'cppunittest',
         'kwargs': {'test_file': None},
-        'mozharness_name': 'cppunittest',
     },
     'crashtest': {
         'aliases': ('c', 'rc'),
@@ -47,7 +45,6 @@ TEST_SUITES = {
         'kwargs': {'test_file': None},
         'task_regex': ['crashtest($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'crashtest',
     },
     'firefox-ui-functional': {
         'aliases': ('fxfn',),
@@ -82,23 +79,26 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'a11y', 'test_paths': None},
         'task_regex': ['mochitest-a11y($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'a11y',
     },
-    'mochitest-browser': {
-        'aliases': ('bc', 'browser-chrome'),
+    'mochitest-browser-chrome': {
+        'aliases': ('bc', 'browser'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
         'task_regex': ['mochitest-browser-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'browser-chrome',
     },
-    'mochitest-browser-clipboard': {
+    'mochitest-browser-chrome-clipboard': {
         'aliases': ('cl', 'clipboard',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'clipboard', 'test_paths': None},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'browser-chrome-clipboard',
+    },
+    'mochitest-browser-chrome-screenshots': {
+        'aliases': ('ss', 'screenshots-chrome'),
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'screenshots', 'test_paths': None},
+        'task_regex': ['browser-screenshots($|.*(-1|[^0-9])$)'],
     },
     'mochitest-chrome': {
         'aliases': ('mc',),
@@ -106,7 +106,6 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'chrome', 'test_paths': None},
         'task_regex': ['mochitest-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'chrome',
     },
     'mochitest-chrome-clipboard': {
         'aliases': ('cl', 'clipboard',),
@@ -114,7 +113,6 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'chrome', 'subsuite': 'clipboard', 'test_paths': None},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'chrome-clipboard',
     },
     'mochitest-chrome-gpu': {
         'aliases': ('gpu',),
@@ -122,15 +120,13 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'chrome', 'subsuite': 'gpu', 'test_paths': None},
         'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'chrome-gpu',
     },
-    'mochitest-devtools': {
-        'aliases': ('dt', 'devtools-chrome'),
+    'mochitest-devtools-chrome': {
+        'aliases': ('dt', 'devtools'),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'devtools', 'test_paths': None},
         'task_regex': ['mochitest-devtools-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'mochitest-devtools-chrome',
     },
     'mochitest-media': {
         'aliases': ('mpm', 'plain-media'),
@@ -138,7 +134,6 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'plain', 'subsuite': 'media', 'test_paths': None},
         'task_regex': ['mochitest-media($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'mochitest-media',
     },
     'mochitest-plain': {
         'aliases': ('mp', 'plain',),
@@ -146,7 +141,6 @@ TEST_SUITES = {
         'kwargs': {'flavor': 'plain', 'test_paths': None},
         'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-clip|-devtools|-gpu|-harness|-media|-screen|-webgl)($|.*(-1|[^0-9])$)',  # noqa
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'plain',
     },
     'mochitest-plain-clipboard': {
         'aliases': ('cl', 'clipboard',),
@@ -154,7 +148,6 @@ TEST_SUITES = {
         'kwargs': {'subsuite': 'clipboard', 'test_paths': None},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'plain-clipboard',
     },
     'mochitest-plain-gpu': {
         'aliases': ('gpu',),
@@ -162,14 +155,6 @@ TEST_SUITES = {
         'kwargs': {'subsuite': 'gpu', 'test_paths': None},
         'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'plain-gpu',
-    },
-    'mochitest-screenshots': {
-        'aliases': ('ss', 'screenshots-chrome'),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'screenshots', 'test_paths': None},
-        'task_regex': ['browser-screenshots($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'browser-chrome-screenshots',
     },
     'mochitest-webgl1-core': WebglSuite('webgl1-core'),
     'mochitest-webgl1-ext': WebglSuite('webgl1-ext'),
@@ -186,7 +171,6 @@ TEST_SUITES = {
         'kwargs': {'tests': None},
         'task_regex': ['(opt|debug)-reftest($|.*(-1|[^0-9])$)',
                        'test-verify-gpu($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'reftest',
     },
     'robocop': {
         'mach_command': 'robocop',
@@ -232,7 +216,6 @@ TEST_SUITES = {
         'kwargs': {'test_file': 'all'},
         'task_regex': ['xpcshell($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
-        'mozharness_name': 'xpcshell',
     },
 }
 
@@ -252,7 +235,7 @@ for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
 
 _test_flavors = {
     'a11y': 'mochitest-a11y',
-    'browser-chrome': 'mochitest-browser',
+    'browser-chrome': 'mochitest-browser-chrome',
     'chrome': 'mochitest-chrome',
     'crashtest': 'crashtest',
     'firefox-ui-functional': 'firefox-ui-functional',
@@ -267,10 +250,10 @@ _test_flavors = {
 }
 
 _test_subsuites = {
-    ('browser-chrome', 'clipboard'): 'mochitest-browser-clipboard',
-    ('browser-chrome', 'devtools'): 'mochitest-devtools',
-    ('browser-chrome', 'gpu'): 'mochitest-browser-gpu',
-    ('browser-chrome', 'screenshots'): 'mochitest-screenshots',
+    ('browser-chrome', 'clipboard'): 'mochitest-browser-chrome-clipboard',
+    ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
+    ('browser-chrome', 'gpu'): 'mochitest-browser-chrome-gpu',
+    ('browser-chrome', 'screenshots'): 'mochitest-browser-chrome-screenshots',
     ('chrome', 'clipboard'): 'mochitest-chrome-clipboard',
     ('chrome', 'gpu'): 'mochitest-chrome-gpu',
     ('mochitest', 'clipboard'): 'mochitest-plain-clipboard',
@@ -300,20 +283,20 @@ def get_suite_definition(flavor, subsuite=None, strict=False):
     """
     if not subsuite:
         suite_name = _test_flavors.get(flavor)
-        return TEST_SUITES.get(suite_name, {}).copy()
+        return suite_name, TEST_SUITES.get(suite_name, {}).copy()
 
     suite_name = _test_subsuites.get((flavor, subsuite))
     if suite_name or strict:
-        return TEST_SUITES.get(suite_name, {}).copy()
+        return suite_name, TEST_SUITES.get(suite_name, {}).copy()
 
     suite_name = _test_flavors.get(flavor)
     if suite_name not in TEST_SUITES:
-        return {}
+        return suite_name, {}
 
     suite = TEST_SUITES[suite_name].copy()
     suite.setdefault('kwargs', {})
     suite['kwargs']['subsuite'] = subsuite
-    return suite
+    return suite_name, suite
 
 
 def rewrite_test_base(test, new_base, honor_install_to_subdir=False):

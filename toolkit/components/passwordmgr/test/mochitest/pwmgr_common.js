@@ -273,6 +273,41 @@ function promisePromptShown(expectedTopic) {
   });
 }
 
+async function promiseNoUnexpectedPromptShown() {
+  // listen for either -change or -save notifications
+  // and fail if we get either within a second
+  let timer;
+  let promptObserved;
+  let task = {};
+
+  function onPromptShown({ topic, data }) {
+    info("onPromptShown got topic: " + topic);
+    promptObserved = true;
+    task.reject(new Error("Unexpected prompt shown with topic: " + topic));
+  }
+
+  let promptShownPromise = new Promise((resolve, reject) => {
+    task.resolve = resolve;
+    task.reject = reject;
+    PWMGR_COMMON_PARENT.addMessageListener("promptShown", onPromptShown);
+  }).finally(() => {
+    clearTimeout(timer);
+    PWMGR_COMMON_PARENT.removeMessageListener("promptShown", onPromptShown);
+  });
+
+  let timeoutPromise = new Promise((resolve, reject) => {
+    SimpleTest.requestFlakyTimeout("Giving a chance for an unexpected passwordmgr-prompt-* to occur");
+    timer = setTimeout(resolve, 1000);
+  });
+
+  try {
+    await Promise.race([promptShownPromise, timeoutPromise]);
+    ok(!promptObserved, "Check no prompts observed before timer expired");
+  } catch (ex) {
+    ok(false, "Prompts observed before timer expired: " + ex.message);
+  }
+}
+
 /**
  * Run a function synchronously in the parent process and destroy it in the test cleanup function.
  * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run

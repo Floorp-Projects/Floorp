@@ -17,10 +17,17 @@ class TestChild extends JSWindowActorChild {
         aMessage.data.toChild = true;
         this.sendAsyncMessage("toParent", aMessage.data);
         break;
+      case "asyncAdd":
+        let {a, b} = aMessage.data;
+        return new Promise(resolve => {
+          resolve({ result: a + b });
+        });
       case "done":
         this.done(aMessage.data);
         break;
     }
+
+    return undefined;
   }
 
   handleEvent(aEvent) {

@@ -20,7 +20,7 @@ config = {
     "archive_prefix": "https://ftp.stage.mozaws.net/pub",
     "previous_archive_prefix": "https://archive.mozilla.org/pub",
     "download_domain": "download.mozilla.org",
-    "balrog_url": "https://aus4.stage.mozaws.net/",
+    "balrog_url": "https://stage.balrog.nonprod.cloudops.mozgcp.net/",
     "balrog_username": "balrog-stage-ffxbld",
     "update_channels": {
         "aurora": {

@@ -13,6 +13,7 @@ import actions from "../../actions";
 import {
   getActiveSearch,
   getSelectedSource,
+  getSourceContent,
   getSelectedLocation,
   getFileSearchQuery,
   getFileSearchModifiers,
@@ -59,6 +60,7 @@ type Props = {
   cx: Context,
   editor: SourceEditor,
   selectedSource?: Source,
+  selectedContentLoaded: boolean,
   searchOn: boolean,
   searchResults: SearchResults,
   modifiers: Modifiers,
@@ -171,8 +173,8 @@ class SearchBar extends Component<Props, State> {
   };
 
   doSearch = (query: string) => {
-    const { cx, selectedSource } = this.props;
-    if (!selectedSource || !selectedSource.text) {
+    const { cx, selectedSource, selectedContentLoaded } = this.props;
+    if (!selectedSource || !selectedContentLoaded) {
       return;
     }
 
@@ -358,16 +360,23 @@ SearchBar.contextTypes = {
   shortcuts: PropTypes.object
 };
 
-const mapStateToProps = state => ({
-  cx: getContext(state),
-  searchOn: getActiveSearch(state) === "file",
-  selectedSource: getSelectedSource(state),
-  selectedLocation: getSelectedLocation(state),
-  query: getFileSearchQuery(state),
-  modifiers: getFileSearchModifiers(state),
-  highlightedLineRange: getHighlightedLineRange(state),
-  searchResults: getFileSearchResults(state)
-});
+const mapStateToProps = state => {
+  const selectedSource = getSelectedSource(state);
+
+  return {
+    cx: getContext(state),
+    searchOn: getActiveSearch(state) === "file",
+    selectedSource,
+    selectedContentLoaded: selectedSource
+      ? !!getSourceContent(state, selectedSource.id)
+      : null,
+    selectedLocation: getSelectedLocation(state),
+    query: getFileSearchQuery(state),
+    modifiers: getFileSearchModifiers(state),
+    highlightedLineRange: getHighlightedLineRange(state),
+    searchResults: getFileSearchResults(state)
+  };
+};
 
 export default connect(
   mapStateToProps,

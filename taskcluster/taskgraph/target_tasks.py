@@ -236,8 +236,7 @@ def target_tasks_valgrind(full_task_graph, parameters, graph_config):
         if platform not in ['linux64']:
             return False
 
-        if task.attributes.get('unittest_suite', '').startswith('mochitest') and \
-           task.attributes.get('unittest_flavor', '').startswith('valgrind-plain'):
+        if task.attributes.get('unittest_suite', '').startswith('mochitest-valgrind-plain'):
             return True
         return False
 

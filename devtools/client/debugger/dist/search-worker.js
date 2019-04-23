@@ -929,9 +929,8 @@ var _getMatches2 = _interopRequireDefault(_getMatches);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function findSourceMatches(source, queryText) {
-  const { id, loadedState, text } = source;
-  if (loadedState != "loaded" || typeof text != "string" || queryText == "") {
+function findSourceMatches(sourceId, content, queryText) {
+  if (queryText == "") {
     return [];
   }
 
@@ -941,12 +940,13 @@ function findSourceMatches(source, queryText) {
     wholeWord: false
   };
 
+  const text = content.value;
   const lines = text.split("\n");
 
   return (0, _getMatches2.default)(queryText, text, modifiers).map(({ line, ch }) => {
     const { value, matchIndex } = truncateLine(lines[line], ch);
     return {
-      sourceId: id,
+      sourceId,
       line: line + 1,
       column: ch,
       matchIndex,

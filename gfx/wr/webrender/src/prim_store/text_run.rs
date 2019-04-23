@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, GlyphInstance, LayoutPrimitiveInfo, RasterSpace, Shadow};
+use api::{ColorF, GlyphInstance, RasterSpace, Shadow};
 use api::units::{DevicePixelScale, LayoutToWorldTransform, LayoutVector2D};
 use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
 use intern;
+use internal_types::LayoutPrimitiveInfo;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
 use render_task::{RenderTaskTree};

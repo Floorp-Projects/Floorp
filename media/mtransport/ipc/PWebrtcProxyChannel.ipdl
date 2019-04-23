@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PSocketProcess;
 
 include NeckoChannelParams;
 
@@ -14,7 +15,7 @@ namespace net {
 
 async protocol PWebrtcProxyChannel
 {
-  manager PNecko;
+  manager PNecko or PSocketProcess;
 
 parent:
   async AsyncOpen(nsCString aHost,

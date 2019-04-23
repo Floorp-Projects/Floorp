@@ -824,8 +824,8 @@ nsIPresShell::nsIPresShell()
 PresShell::PresShell()
     : mCaretEnabled(false),
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-      mActiveSuppressDisplayport(0),
       mAPZFocusSequenceNumber(0),
+      mActiveSuppressDisplayport(0),
       mDocumentLoading(false),
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
@@ -1874,7 +1874,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
-  const bool shrinkToFit = aOptions == ResizeReflowOptions::eBSizeLimit;
+  const bool shrinkToFit = !!(aOptions & ResizeReflowOptions::eBSizeLimit);
   MOZ_ASSERT(shrinkToFit ||
                  (wm.IsVertical() ? aWidth : aHeight) != NS_UNCONSTRAINEDSIZE,
              "unconstrained bsize only usable with eBSizeLimit");
@@ -1994,7 +1994,8 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     }
   }
 
-  if (!mIsDestroying && !mResizeEventPending) {
+  if (!mIsDestroying && !mResizeEventPending &&
+      !(aOptions & ResizeReflowOptions::eSuppressResizeEvent)) {
     mResizeEventPending = true;
     if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
       mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
@@ -2997,8 +2998,8 @@ already_AddRefed<gfxContext> nsIPresShell::CreateReferenceRenderingContext() {
   return rc ? rc.forget() : nullptr;
 }
 
-nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                                  uint32_t aAdditionalScrollFlags) {
+nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                               uint32_t aAdditionalScrollFlags) {
   if (!mDocument) {
     return NS_ERROR_FAILURE;
   }
@@ -3163,7 +3164,7 @@ nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   return rv;
 }
 
-nsresult nsIPresShell::ScrollToAnchor() {
+nsresult PresShell::ScrollToAnchor() {
   if (!mLastAnchorScrolledTo) {
     return NS_OK;
   }
@@ -3174,7 +3175,8 @@ nsresult nsIPresShell::ScrollToAnchor() {
       mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y) {
     return NS_OK;
   }
-  nsresult rv = ScrollContentIntoView(mLastAnchorScrolledTo,
+  nsCOMPtr<nsIContent> lastAnchorScrollTo = mLastAnchorScrolledTo;
+  nsresult rv = ScrollContentIntoView(lastAnchorScrollTo,
                                       ScrollAxis(SCROLL_TOP, SCROLL_ALWAYS),
                                       ScrollAxis(), ANCHOR_SCROLL_FLAGS);
   mLastAnchorScrolledTo = nullptr;
@@ -3394,9 +3396,10 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   }
 }
 
-nsresult nsIPresShell::ScrollContentIntoView(
-    nsIContent* aContent, nsIPresShell::ScrollAxis aVertical,
-    nsIPresShell::ScrollAxis aHorizontal, uint32_t aFlags) {
+nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
+                                          nsIPresShell::ScrollAxis aVertical,
+                                          nsIPresShell::ScrollAxis aHorizontal,
+                                          uint32_t aFlags) {
   NS_ENSURE_TRUE(aContent, NS_ERROR_NULL_POINTER);
   RefPtr<Document> composedDoc = aContent->GetComposedDoc();
   NS_ENSURE_STATE(composedDoc);
@@ -3437,7 +3440,7 @@ nsresult nsIPresShell::ScrollContentIntoView(
   return NS_OK;
 }
 
-void nsIPresShell::DoScrollContentIntoView() {
+void PresShell::DoScrollContentIntoView() {
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
 
   nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame();
@@ -8414,7 +8417,8 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
   LayoutDeviceIntPoint caretPoint;
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  if (PrepareToUseCaretPosition(aMouseEvent->mWidget, caretPoint)) {
+  if (PrepareToUseCaretPosition(MOZ_KnownLive(aMouseEvent->mWidget),
+                                caretPoint)) {
     // caret position is good
     aMouseEvent->mRefPoint = caretPoint;
     return true;
@@ -8434,7 +8438,7 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
     nsCOMPtr<nsIContent> currentPointElement;
     GetCurrentItemAndPositionForElement(
         currentFocus, getter_AddRefs(currentPointElement),
-        aMouseEvent->mRefPoint, aMouseEvent->mWidget);
+        aMouseEvent->mRefPoint, MOZ_KnownLive(aMouseEvent->mWidget));
     if (currentPointElement) {
       mPresShell->mCurrentEventContent = currentPointElement;
       mPresShell->mCurrentEventFrame = nullptr;
@@ -8498,14 +8502,15 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
     // problem. The only difference in the result is that if your cursor is in
     // an edit box below the current view, you'll get the edit box aligned with
     // the top of the window. This is arguably better behavior anyway.
-    rv = mPresShell->ScrollContentIntoView(
-        content,
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+    rv = MOZ_KnownLive(mPresShell)
+             ->ScrollContentIntoView(
+                 content,
+                 nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
+                                          nsIPresShell::SCROLL_IF_NOT_VISIBLE),
+                 nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
+                                          nsIPresShell::SCROLL_IF_NOT_VISIBLE),
+                 nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+                     nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
@@ -8563,10 +8568,11 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     Element* aFocusedElement, nsIContent** aTargetToUse,
     LayoutDeviceIntPoint& aTargetPt, nsIWidget* aRootWidget) {
   nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
-  mPresShell->ScrollContentIntoView(
-      focusedContent, ScrollAxis(), ScrollAxis(),
-      nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-          nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+  MOZ_KnownLive(mPresShell)
+      ->ScrollContentIntoView(
+          focusedContent, ScrollAxis(), ScrollAxis(),
+          nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+              nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
 
   nsPresContext* presContext = GetPresContext();
 

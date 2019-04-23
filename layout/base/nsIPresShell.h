@@ -172,6 +172,21 @@ enum nsRectVisibility {
   nsRectVisibility_kRightOfViewport
 };
 
+namespace mozilla {
+enum class ResizeReflowOptions : uint32_t {
+  eNoOption = 0,
+  // the resulting BSize can be less than the given one, producing
+  // shrink-to-fit sizing in the block dimension
+  eBSizeLimit = 1 << 0,
+  // suppress resize events even if the content size is changed due to the
+  // reflow.  This flag is used for mobile since on mobile we need to do an
+  // additional reflow to zoom the content by the initial-scale or auto scaling
+  // and we don't want any resize events during the initial paint.
+  eSuppressResizeEvent = 1 << 1,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)
+}  // namespace mozilla
+
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
@@ -331,13 +346,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual nsresult Initialize() = 0;
 
-  enum class ResizeReflowOptions : uint32_t {
-    // the resulting BSize should be exactly as given
-    eBSizeExact,
-    // the resulting BSize can be less than the given one, producing
-    // shrink-to-fit sizing in the block dimension
-    eBSizeLimit
-  };
   /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
@@ -345,14 +353,16 @@ class nsIPresShell : public nsStubDocumentObserver {
   MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflow(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
       nscoord aOldHeight = 0,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) = 0;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) = 0;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) = 0;
 
   /**
    * Returns true if the platform/pref or docshell require a meta viewport.
@@ -661,28 +671,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   already_AddRefed<gfxContext> CreateReferenceRenderingContext();
 
-  /**
-   * Informs the pres shell that the document is now at the anchor with
-   * the given name.  If |aScroll| is true, scrolls the view of the
-   * document so that the anchor with the specified name is displayed at
-   * the top of the window.  If |aAnchorName| is empty, then this informs
-   * the pres shell that there is no current target, and |aScroll| must
-   * be false.  If |aAdditionalScrollFlags| is nsIPresShell::SCROLL_SMOOTH_AUTO
-   * and |aScroll| is true, the scrolling may be performed with an animation.
-   */
-  nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                      uint32_t aAdditionalScrollFlags = 0);
-
-  /**
-   * Tells the presshell to scroll again to the last anchor scrolled to by
-   * GoToAnchor, if any. This scroll only happens if the scroll
-   * position has not changed since the last GoToAnchor. This is called
-   * by nsDocumentViewer::LoadComplete. This clears the last anchor
-   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
-   * removed from the DOM), so don't call this more than once.
-   */
-  nsresult ScrollToAnchor();
-
   enum {
     SCROLL_TOP = 0,
     SCROLL_BOTTOM = 100,
@@ -742,39 +730,6 @@ class nsIPresShell : public nsStubDocumentObserver {
           mOnlyIfPerceivedScrollableDirection(
               aOnlyIfPerceivedScrollableDirection) {}
   } ScrollAxis;
-  /**
-   * Scrolls the view of the document so that the primary frame of the content
-   * is displayed in the window. Layout is flushed before scrolling.
-   *
-   * @param aContent  The content object of which primary frame should be
-   *                  scrolled into view.
-   * @param aVertical How to align the frame vertically and when to do so.
-   *                  This is a ScrollAxis of Where and When.
-   * @param aHorizontal How to align the frame horizontally and when to do so.
-   *                  This is a ScrollAxis of Where and When.
-   * @param aFlags    If SCROLL_FIRST_ANCESTOR_ONLY is set, only the nearest
-   *                  scrollable ancestor is scrolled, otherwise all
-   *                  scrollable ancestors may be scrolled if necessary.
-   *                  If SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a
-   *                  direction even if overflow:hidden is specified in that
-   *                  direction; otherwise we will not scroll in that direction
-   *                  when overflow:hidden is set for that direction.
-   *                  If SCROLL_NO_PARENT_FRAMES is set then we only scroll
-   *                  nodes in this document, not in any parent documents which
-   *                  contain this document in a iframe or the like.
-   *                  If SCROLL_SMOOTH is set and CSSOM-VIEW scroll-behavior
-   *                  is enabled, we will scroll smoothly using
-   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
-   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
-   *                  If SCROLL_SMOOTH_AUTO is set, the CSSOM-View
-   *                  scroll-behavior attribute is set to 'smooth' on the
-   *                  scroll frame, and CSSOM-VIEW scroll-behavior is enabled,
-   *                  we will scroll smoothly using
-   *                  nsIScrollableFrame::ScrollMode::SMOOTH_MSD; otherwise,
-   *                  nsIScrollableFrame::ScrollMode::INSTANT will be used.
-   */
-  nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
-                                 ScrollAxis aHorizontal, uint32_t aFlags);
 
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
@@ -1784,9 +1739,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   mozilla::UniquePtr<ReflowCountMgr> mReflowCountMgr;
 #endif
 
-  // Helper for ScrollContentIntoView
-  void DoScrollContentIntoView();
-
   /**
    * Methods to handle changes to user and UA sheet lists that we get
    * notified about.
@@ -1872,15 +1824,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // missing/double frees.
   nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
 #endif
-
-  nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
-  // Information needed to properly handle scrolling content into view if the
-  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is non-null
-  // between the initial scroll attempt and the first time we finish processing
-  // all our dirty roots.  mContentToScrollTo has a content property storing the
-  // details for the scroll operation, see ScrollIntoViewData above.
-  nsCOMPtr<nsIContent> mContentToScrollTo;
-  nscoord mLastAnchorScrollPositionY = 0;
 
   // Count of the number of times this presshell has been painted to a window.
   uint64_t mPaintCount;

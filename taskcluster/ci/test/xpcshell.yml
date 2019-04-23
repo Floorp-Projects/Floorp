@@ -1,4 +1,5 @@
 job-defaults:
+    suite: xpcshell
     variants:
         by-test-platform:
             linux64/debug: ['serviceworker']
@@ -28,7 +29,6 @@ job-defaults:
 
 xpcshell:
     description: "xpcshell test run"
-    suite: xpcshell
     treeherder-symbol: X(X)
     run-on-projects:
         by-test-platform:

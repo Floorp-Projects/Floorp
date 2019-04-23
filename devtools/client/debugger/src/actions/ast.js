@@ -4,13 +4,11 @@
 
 // @flow
 
-import { getSourceFromId, getSelectedLocation } from "../selectors";
+import { getSourceWithContent, getSelectedLocation } from "../selectors";
 
 import { setInScopeLines } from "./ast/setInScopeLines";
 
 import * as parser from "../workers/parser";
-
-import { isLoaded } from "../utils/source";
 
 import type { Context } from "../types";
 import type { ThunkArgs, Action } from "./types";
@@ -22,9 +20,12 @@ export function setOutOfScopeLocations(cx: Context) {
       return;
     }
 
-    const source = getSourceFromId(getState(), location.sourceId);
+    const { source, content } = getSourceWithContent(
+      getState(),
+      location.sourceId
+    );
 
-    if (!isLoaded(source)) {
+    if (!content) {
       return;
     }
 

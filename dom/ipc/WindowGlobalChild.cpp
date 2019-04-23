@@ -7,7 +7,9 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
@@ -15,6 +17,8 @@
 #include "mozilla/ipc/InProcessChild.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
+#include "nsFrameLoaderOwner.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
@@ -217,47 +221,30 @@ IPCResult WindowGlobalChild::RecvChangeFrameRemoteness(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalChild::RecvAsyncMessage(const nsString& aActorName,
-                                              const nsString& aMessageName,
-                                              const ClonedMessageData& aData) {
+IPCResult WindowGlobalChild::RecvRawMessage(
+    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForChild(aData);
-  HandleAsyncMessage(aActorName, aMessageName, data);
+  ReceiveRawMessage(aMeta, std::move(data));
   return IPC_OK();
 }
 
-void WindowGlobalChild::HandleAsyncMessage(const nsString& aActorName,
-                                           const nsString& aMessageName,
-                                           StructuredCloneData& aData) {
-  if (NS_WARN_IF(mIPCClosed)) {
-    return;
+void WindowGlobalChild::ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
+                                          StructuredCloneData&& aData) {
+  RefPtr<JSWindowActorChild> actor =
+      GetActor(aMeta.actorName(), IgnoreErrors());
+  if (actor) {
+    actor->ReceiveRawMessage(aMeta, std::move(aData));
   }
-
-  // Force creation of the actor if it hasn't been created yet.
-  IgnoredErrorResult rv;
-  RefPtr<JSWindowActorChild> actor = GetActor(aActorName, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return;
-  }
-
-  // Get the JSObject for the named actor.
-  JS::RootedObject obj(RootingCx(), actor->GetWrapper());
-  if (NS_WARN_IF(!obj)) {
-    // If we don't have a preserved wrapper, there won't be any receiver
-    // method to call.
-    return;
-  }
-
-  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
-  if (NS_WARN_IF(!actorSvc)) {
-    return;
-  }
-
-  actorSvc->ReceiveMessage(actor, obj, aMessageName, aData);
 }
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
     const nsAString& aName, ErrorResult& aRv) {
+  if (mIPCClosed) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   // Check if this actor has already been created, and return it if it has.
   if (mWindowActors.Contains(aName)) {
     return do_AddRef(mWindowActors.GetWeak(aName));
@@ -301,6 +288,13 @@ already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(
 void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCClosed = true;
   gWindowGlobalChildById->Remove(mInnerWindowId);
+
+  // Destroy our JSWindowActors, and reject any pending queries.
+  nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> windowActors;
+  mWindowActors.SwapElements(windowActors);
+  for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+  }
 }
 
 WindowGlobalChild::~WindowGlobalChild() {

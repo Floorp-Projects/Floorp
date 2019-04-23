@@ -11,8 +11,6 @@ const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
 const OLD = do_get_file("data/test_overrideblocklist/old.xml");
 const NEW = do_get_file("data/test_overrideblocklist/new.xml");
 const ANCIENT = do_get_file("data/test_overrideblocklist/ancient.xml");
-const OLD_TSTAMP = 1296046918000;
-const NEW_TSTAMP = 1396046918000;
 
 const gAppDir = FileUtils.getFile(KEY_APPDIR, []);
 
@@ -57,12 +55,9 @@ function copyToApp(file) {
   file.clone().copyTo(gAppDir, FILE_BLOCKLIST);
 }
 
-function copyToProfile(file, tstamp) {
+function copyToProfile(file) {
   file = file.clone();
   file.copyTo(gProfD, FILE_BLOCKLIST);
-  file = gProfD.clone();
-  file.append(FILE_BLOCKLIST);
-  file.lastModifiedTime = tstamp;
 }
 
 function run_test() {
@@ -113,7 +108,7 @@ add_test(async function test_copy() {
 add_test(async function test_ancient() {
   clearBlocklists();
   copyToApp(ANCIENT);
-  copyToProfile(OLD, OLD_TSTAMP);
+  copyToProfile(OLD);
 
   incrementAppVersion();
   await promiseStartupManager();
@@ -134,7 +129,7 @@ add_test(async function test_ancient() {
 add_test(async function test_override() {
   clearBlocklists();
   copyToApp(NEW);
-  copyToProfile(OLD, OLD_TSTAMP);
+  copyToProfile(OLD);
 
   incrementAppVersion();
   await promiseStartupManager();
@@ -155,7 +150,7 @@ add_test(async function test_override() {
 add_test(async function test_retain() {
   clearBlocklists();
   copyToApp(OLD);
-  copyToProfile(NEW, NEW_TSTAMP);
+  copyToProfile(NEW);
 
   incrementAppVersion();
   await promiseStartupManager();
@@ -176,7 +171,7 @@ add_test(async function test_retain() {
 add_test(async function test_missing() {
   clearBlocklists();
   copyToApp(OLD);
-  copyToProfile(NEW, NEW_TSTAMP);
+  copyToProfile(NEW);
 
   incrementAppVersion();
   await promiseStartupManager();

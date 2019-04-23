@@ -583,6 +583,10 @@ void WebRenderLayerManager::DidComposite(
 }
 
 void WebRenderLayerManager::ClearCachedResources(Layer* aSubtree) {
+  if (!WrBridge()->IPCOpen()) {
+    gfxCriticalNote << "IPC Channel is already torn down unexpectedly\n";
+    return;
+  }
   WrBridge()->BeginClearCachedResources();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();

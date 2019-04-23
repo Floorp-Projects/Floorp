@@ -761,10 +761,11 @@ class RaptorAndroid(Raptor):
                 # now additional browser cycles we want to create a new one each time
                 self.create_browser_profile()
 
-                # get cert db from previous cycle profile and copy into new clean profile
-                # this saves us from having to start playback again / recreate cert db etc.
-                self.log.info("copying existing ssl cert db into new browser profile")
-                self.copy_cert_db(local_cert_db_dir, self.config['local_profile_dir'])
+                if test.get('playback') is not None:
+                    # get cert db from previous cycle profile and copy into new clean profile
+                    # this saves us from having to start playback again / recreate cert db etc.
+                    self.log.info("copying existing ssl cert db into new browser profile")
+                    self.copy_cert_db(local_cert_db_dir, self.config['local_profile_dir'])
 
                 self.run_test_setup(test)
 

@@ -25,6 +25,7 @@ class Mocks {
   constructor() {
     // Setup the adb mock to rely on internal arrays.
     this.adbMock = createAdbMock();
+    this.adbProcessMock = createAdbProcessMock();
     this._usbRuntimes = [];
     this._usbDevices = [];
     this.adbMock.adb.getRuntimes = () => {
@@ -72,11 +73,13 @@ class Mocks {
 
   enableMocks() {
     enableAdbMock(this.adbMock);
+    enableAdbProcessMock(this.adbProcessMock);
     enableRuntimeClientFactoryMock(this.runtimeClientFactoryMock);
   }
 
   disableMocks() {
     disableAdbMock();
+    disableAdbProcessMock();
     disableRuntimeClientFactoryMock();
 
     for (const host of Object.keys(this._clients[RUNTIMES.NETWORK])) {

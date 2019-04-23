@@ -12,7 +12,6 @@ import { loadSourceText } from "./loadSourceText";
 
 import * as parser from "../../workers/parser";
 
-import { isLoaded } from "../../utils/source";
 import {
   memoizeableAction,
   type MemoizedAction
@@ -24,9 +23,7 @@ import type { Symbols } from "../../reducers/types";
 async function doSetSymbols(cx, source, { dispatch, getState }) {
   const sourceId = source.id;
 
-  if (!isLoaded(source)) {
-    await dispatch(loadSourceText({ cx, source }));
-  }
+  await dispatch(loadSourceText({ cx, source }));
 
   await dispatch({
     type: "SET_SYMBOLS",

@@ -129,6 +129,8 @@ var gLoggingEnabled = null;
 var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
 
+class BlocklistError extends Error {}
+
 /**
  * @class nsIBlocklistPrompt
  *
@@ -340,6 +342,12 @@ var Blocklist = {
   _addonEntries: null,
   _gfxEntries: null,
   _pluginEntries: null,
+
+  get profileBlocklistPath() {
+    let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
+    Object.defineProperty(this, "profileBlocklistPath", {value: path});
+    return path;
+  },
 
   shutdown() {
     Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -729,7 +737,7 @@ var Blocklist = {
     this._blocklistUpdated(oldAddonEntries, oldPluginEntries);
 
     try {
-      let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_BLOCKLIST);
+      let path = this.profileBlocklistPath;
       await OS.File.writeAtomic(path, request.responseText, {tmpPath: path + ".tmp"});
     } catch (e) {
       LOG("Blocklist::onXMLLoad: " + e);
@@ -786,21 +794,76 @@ var Blocklist = {
   },
 
   async _loadBlocklistAsyncInternal() {
+    if (this.isLoaded) {
+      return;
+    }
+
+    if (!gBlocklistEnabled) {
+      LOG("Blocklist::loadBlocklist: blocklist is disabled");
+      return;
+    }
+
+    let xmlDoc;
     try {
       // Get the path inside the try...catch because there's no profileDir in e.g. xpcshell tests.
       let profFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-      await this._loadFileInternal(profFile);
-      return;
+      xmlDoc = await this._loadFile(profFile);
     } catch (e) {
       LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
     }
 
-    var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
-    try {
-      await this._loadFileInternal(appFile);
+    // If there's no blocklist.xml in the profile, read it from the
+    // application.  Even if blocklist.xml exists in the profile, if this
+    // is the first run of a new application version, read the application
+    // version anyway and check if it is newer.
+    if (!xmlDoc || AddonManagerPrivate.browserUpdated) {
+      var appFile = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
+      let appDoc;
+      try {
+        appDoc = await this._loadFile(appFile);
+      } catch (e) {
+        LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
+      }
+
+      if (xmlDoc && appDoc) {
+        // If we have a new blocklist.xml in the application directory,
+        // delete the older one from the profile so we'll fall back to
+        // the app version on subsequent startups.
+        let clearProfile = false;
+        if (!xmlDoc.documentElement.hasAttribute("lastupdate")) {
+          clearProfile = true;
+        } else {
+          let profileTS = parseInt(xmlDoc.documentElement.getAttribute("lastupdate"), 10);
+          let appTS = parseInt(appDoc.documentElement.getAttribute("lastupdate"), 10);
+          if (appTS > profileTS) {
+            clearProfile = true;
+          }
+        }
+
+        if (clearProfile) {
+          await OS.File.remove(this.profileBlocklistPath);
+          xmlDoc = null;
+        }
+      }
+
+      if (!xmlDoc) {
+        // If we get here, either there was not a blocklist.xml in the
+        // profile, or it was deleted for being too old.  Fall back to
+        // the version from the application instead.
+        xmlDoc = appDoc;
+      }
+    }
+
+    if (xmlDoc) {
+      await new Promise(resolve => {
+        ChromeUtils.idleDispatch(async () => {
+          if (!this.isLoaded) {
+            await this._loadBlocklistFromXML(xmlDoc);
+          }
+          resolve();
+        });
+      });
       return;
-    } catch (e) {
-      LOG("Blocklist::loadBlocklistAsync: Failed to load XML file " + e);
     }
 
     LOG("Blocklist::loadBlocklistAsync: no XML File found");
@@ -811,17 +874,10 @@ var Blocklist = {
     this._pluginEntries = [];
   },
 
-  async _loadFileInternal(file) {
-    if (this.isLoaded) {
-      return;
-    }
-
-    if (!gBlocklistEnabled) {
-      LOG("Blocklist::_loadFileInternal: blocklist is disabled");
-      return;
-    }
-
-    let xmlDoc = await new Promise((resolve, reject) => {
+  // Loads the given file as xml, resolving with an XMLDocument.
+  // Rejects if the file cannot be loaded or if it cannot be parsed as xml.
+  _loadFile(file) {
+    return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest();
       request.open("GET", Services.io.newFileURI(file).spec, true);
       request.overrideMimeType("text/xml");
@@ -829,30 +885,21 @@ var Blocklist = {
       request.addEventListener("load", function() {
         let {status} = request;
         if (status != 200 && status != 0) {
-          LOG("_loadFileInternal: there was an error during load, got status: " + status);
-          reject(new Error("Couldn't load blocklist file"));
+          LOG("_loadFile: there was an error during load, got status: " + status);
+          reject(new BlocklistError("Couldn't load blocklist file"));
           return;
         }
         let doc = request.responseXML;
         if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-          LOG("Blocklist::_loadBlocklistFromString: aborting due to incorrect " +
-              "XML Namespace.\nExpected: " + XMLURI_BLOCKLIST + "\n" +
-              "Received: " + doc.documentElement.namespaceURI);
-          reject(new Error("Local blocklist file has the wrong namespace!"));
+          LOG("_loadFile: aborting due to incorrect XML Namespace.\n" +
+              `Expected: ${XMLURI_BLOCKLIST}\n` +
+              `Received: ${doc.documentElement.namespaceURI}`);
+          reject(new BlocklistError("Local blocklist file has the wrong namespace!"));
           return;
         }
         resolve(doc);
       });
       request.send(null);
-    });
-
-    await new Promise(resolve => {
-      ChromeUtils.idleDispatch(async () => {
-        if (!this.isLoaded) {
-          await this._loadBlocklistFromXML(xmlDoc);
-        }
-        resolve();
-      });
     });
   },
 

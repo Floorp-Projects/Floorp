@@ -4,7 +4,8 @@
 
 // @flow
 
-import type { Source } from "../types";
+import type { SourceWithContent } from "../types";
+import { isFulfilled } from "./async-value";
 
 // Used to detect minification for automatic pretty printing
 const SAMPLE_SIZE = 50;
@@ -12,19 +13,16 @@ const INDENT_COUNT_THRESHOLD = 5;
 const CHARACTER_LIMIT = 250;
 const _minifiedCache = new Map();
 
-export function isMinified(source: Source) {
+export function isMinified({ source, content }: SourceWithContent) {
   if (_minifiedCache.has(source.id)) {
     return _minifiedCache.get(source.id);
   }
 
-  if (source.isWasm) {
+  if (!content || !isFulfilled(content) || content.value.type !== "text") {
     return false;
   }
 
-  let text = source.text;
-  if (!text) {
-    return false;
-  }
+  let text = content.value.value;
 
   let lineEndIndex = 0;
   let lineStartIndex = 0;

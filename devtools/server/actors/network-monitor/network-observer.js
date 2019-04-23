@@ -395,7 +395,15 @@ NetworkObserver.prototype = {
       case gActivityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT:
         this._onRequestBodySent(httpActivity);
         if (httpActivity.sentBody !== null) {
-          httpActivity.owner.addRequestPostData({ text: httpActivity.sentBody });
+          const limit = Services.prefs.getIntPref("devtools.netmonitor.requestBodyLimit");
+          const size = httpActivity.sentBody.length;
+          if (size > limit && limit > 0) {
+            httpActivity.sentBody = httpActivity.sentBody.substr(0, limit);
+          }
+          httpActivity.owner.addRequestPostData({
+            text: httpActivity.sentBody,
+            size: size,
+          });
           httpActivity.sentBody = null;
         }
         break;

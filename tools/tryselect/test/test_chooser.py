@@ -22,9 +22,8 @@ TASKS = [
         'kind': 'test',
         'label': 'test-windows-mochitest-e10s',
         'attributes': {
-            'unittest_suite': 'mochitest',
-            'unittest_flavor': 'browser-chrome',
-            'mochitest_try_name': 'mochitest',
+            'unittest_suite': 'mochitest-browser-chrome',
+            'mochitest_try_name': 'mochitest-browser-chrome',
         },
     },
 ]
@@ -50,7 +49,7 @@ def test_try_chooser(app):
     expected_output = [
         """<title>Try Chooser Enhanced</title>""",
         """<input class="filter" type="checkbox" id=windows name="build" value='{"build_platform": ["windows"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
-        """<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test" value='{"unittest_flavor": ["browser-chrome"], "unittest_suite": ["mochitest"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
+        """<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test" value='{"unittest_suite": ["mochitest-browser-chrome"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
     ]
 
     for expected in expected_output:

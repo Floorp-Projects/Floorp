@@ -235,7 +235,7 @@ describe("sources", () => {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
         getOriginalLocations: async items => items,
         getGeneratedLocation: async location => ({ ...location, line: 12 }),
-        getOriginalSourceText: async () => ({ source: "" }),
+        getOriginalSourceText: async () => ({ text: "" }),
         getGeneratedRangesForOriginal: async () => []
       }
     );
@@ -269,7 +269,7 @@ describe("sources", () => {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
         getOriginalLocations: async items => items,
         getGeneratedRangesForOriginal: async () => [],
-        getOriginalSourceText: async () => ({ source: "" })
+        getOriginalSourceText: async () => ({ text: "" })
       }
     );
 

@@ -58,8 +58,8 @@ async function testLinkNavigation({
 }) {
   const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url);
 
-  ContentTask.spawn(browser, [urlText || url, clickLabel], (args) => {
-    const [expectedURL, shouldClickLabel] = args;
+  ContentTask.spawn(browser, [urlText || url, url, clickLabel], (args) => {
+    const [expectedURLText, expectedURL, shouldClickLabel] = args;
     const {document} = content;
 
     if (shouldClickLabel === true) {
@@ -67,7 +67,9 @@ async function testLinkNavigation({
     }
 
     const link = document.querySelector(".jsonPanelBox .treeTable .treeValueCell a");
-    is(link.textContent, expectedURL, "The expected URL is displayed.");
+    is(link.textContent, expectedURLText, "The expected URL is displayed.");
+    is(link.href, expectedURL, "The URL was linkified.");
+
     link.click();
   });
 

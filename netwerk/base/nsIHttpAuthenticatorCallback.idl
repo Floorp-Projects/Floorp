@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d989cb03-e446-4086-b9e6-46842cb97bd5)]
+[builtinclass, uuid(d989cb03-e446-4086-b9e6-46842cb97bd5)]
 interface nsIHttpAuthenticatorCallback : nsISupports
 {
   /**

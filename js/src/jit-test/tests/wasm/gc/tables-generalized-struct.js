@@ -41,7 +41,7 @@
           (type $S (struct (field i32) (field f64)))
           (table (export "t") 2 anyref)
           (func (export "f") (result i32)
-           (table.grow (i32.const 1) (struct.new $S (i32.const 0) (f64.const 3.14)))))`);
+           (table.grow (struct.new $S (i32.const 0) (f64.const 3.14)) (i32.const 1))))`);
     assertEq(ins.exports.t.length, 2);
     assertEq(ins.exports.f(), 2);
     assertEq(ins.exports.t.length, 3);

@@ -7,6 +7,7 @@
 
 import {
   getSource,
+  getSourceContent,
   getTopFrame,
   getSelectedFrame,
   getThreadContext
@@ -20,8 +21,14 @@ import { fetchScopes } from "./fetchScopes";
 import { features } from "../../utils/prefs";
 import { recordEvent } from "../../utils/telemetry";
 import assert from "../../utils/assert";
+import { isFulfilled, type AsyncValue } from "../../utils/async-value";
 
-import type { Source, ThreadId, Context, ThreadContext } from "../../types";
+import type {
+  SourceContent,
+  ThreadId,
+  Context,
+  ThreadContext
+} from "../../types";
 import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
 
@@ -182,13 +189,13 @@ export function reverseStepOut(cx: ThreadContext) {
  * This avoids potentially expensive parser calls when we are likely
  * not at an async expression.
  */
-function hasAwait(source: Source, pauseLocation) {
+function hasAwait(content: AsyncValue<SourceContent> | null, pauseLocation) {
   const { line, column } = pauseLocation;
-  if (source.isWasm || !source.text) {
+  if (!content || !isFulfilled(content) || content.value.type !== "text") {
     return false;
   }
 
-  const lineText = source.text.split("\n")[line - 1];
+  const lineText = content.value.value.split("\n")[line - 1];
 
   if (!lineText) {
     return false;
@@ -215,8 +222,9 @@ export function astCommand(cx: ThreadContext, stepType: Command) {
       // This type definition is ambiguous:
       const frame: any = getTopFrame(getState(), cx.thread);
       const source = getSource(getState(), frame.location.sourceId);
+      const content = source ? getSourceContent(getState(), source.id) : null;
 
-      if (source && hasAwait(source, frame.location)) {
+      if (source && hasAwait(content, frame.location)) {
         const nextLocation = await getNextStep(source.id, frame.location);
         if (nextLocation) {
           await dispatch(addHiddenBreakpoint(cx, nextLocation));

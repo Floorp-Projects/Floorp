@@ -27,6 +27,7 @@ class nsIDocShellTreeItem;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Element;
 struct FocusOptions;
@@ -218,6 +219,7 @@ class nsFocusManager final : public nsIFocusManager,
    * All actual focus changes must use this method to do so. (as opposed
    * to those that update the focus in an inactive window for instance).
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetFocusInner(mozilla::dom::Element* aNewContent, int32_t aFlags,
                      bool aFocusChanged, bool aAdjustWidget);
 
@@ -327,6 +329,7 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * If aAdjustWidget is false, don't change the widget focus state.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Focus(nsPIDOMWindowOuter* aWindow, mozilla::dom::Element* aContent,
              uint32_t aFlags, bool aIsNewDocument, bool aFocusChanged,
              bool aWindowRaised, bool aAdjustWidget,
@@ -386,7 +389,8 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Scrolls aContent into view unless the FLAG_NOSCROLL flag is set.
    */
-  void ScrollIntoView(nsIPresShell* aPresShell, nsIContent* aContent,
+  MOZ_CAN_RUN_SCRIPT
+  void ScrollIntoView(mozilla::PresShell* aPresShell, nsIContent* aContent,
                       uint32_t aFlags);
 
   /**

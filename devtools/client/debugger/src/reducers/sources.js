@@ -20,6 +20,8 @@ import {
   getPlainUrl
 } from "../utils/source";
 
+import * as asyncValue from "../utils/async-value";
+import type { AsyncValue, SettledValue } from "../utils/async-value";
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
@@ -36,6 +38,8 @@ import type {
   SourceId,
   SourceActor,
   SourceLocation,
+  SourceContent,
+  SourceWithContent,
   ThreadId
 } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
@@ -44,6 +48,7 @@ import type { LoadSourceAction } from "../actions/types/SourceAction";
 import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
+type SourcesContentMap = { [SourceId]: SettledValue<SourceContent> | null };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 
@@ -56,6 +61,8 @@ export type SourcesState = {
 
   // All known sources.
   sources: SourcesMap,
+
+  content: SourcesContentMap,
 
   // A link between each source object and the source actor they wrap over.
   actors: SourceActorMap,
@@ -90,6 +97,7 @@ const emptySources = {
 export function initialSourcesState(): SourcesState {
   return {
     ...emptySources,
+    content: {},
     actors: {},
     epoch: 1,
     selectedLocation: undefined,
@@ -110,10 +118,6 @@ export function createSource(state: SourcesState, source: Object): Source {
     isPrettyPrinted: false,
     isWasm: false,
     isExtension: (source.url && isUrlExtension(source.url)) || false,
-    text: undefined,
-    contentType: "",
-    error: undefined,
-    loadedState: "unloaded",
     relativeUrl: getRelativeUrl(source, root),
     ...source
   };
@@ -252,6 +256,7 @@ function updateAllSources(state: SourcesState, callback: any) {
 function addSources(state: SourcesState, sources: Source[]): SourcesState {
   state = {
     ...state,
+    content: { ...state.content },
     sources: { ...state.sources },
     displayed: new Set(state.displayed),
     urls: { ...state.urls },
@@ -261,6 +266,7 @@ function addSources(state: SourcesState, sources: Source[]): SourcesState {
   for (const source of sources) {
     // 1. Add the source to the sources map
     state.sources[source.id] = state.sources[source.id] || source;
+    state.content[source.id] = state.content[source.id] || null;
 
     // 2. Update the source url map
     const existing = state.urls[source.url] || [];
@@ -342,36 +348,45 @@ function updateProjectDirectoryRoot(state: SourcesState, root: string) {
 }
 
 /*
- * Update a source's loaded state fields
- * i.e. loadedState, text, error
+ * Update a source's loaded text content.
  */
 function updateLoadedState(
   state: SourcesState,
   action: LoadSourceAction
 ): SourcesState {
   const { sourceId } = action;
-  let source;
 
   // If there was a navigation between the time the action was started and
   // completed, we don't want to update the store.
-  if (action.epoch !== state.epoch) {
+  if (action.epoch !== state.epoch || !(sourceId in state.content)) {
     return state;
   }
 
+  let content;
   if (action.status === "start") {
-    source = { id: sourceId, loadedState: "loading" };
+    content = null;
   } else if (action.status === "error") {
-    source = { id: sourceId, error: action.error, loadedState: "loaded" };
+    content = asyncValue.rejected(action.error);
+  } else if (typeof action.value.text === "string") {
+    content = asyncValue.fulfilled({
+      type: "text",
+      value: action.value.text,
+      contentType: action.value.contentType
+    });
   } else {
-    source = {
-      id: sourceId,
-      text: action.value.text,
-      contentType: action.value.contentType,
-      loadedState: "loaded"
-    };
+    content = asyncValue.fulfilled({
+      type: "wasm",
+      value: action.value.text
+    });
   }
 
-  return updateSource(state, source);
+  return {
+    ...state,
+    content: {
+      ...state.content,
+      [sourceId]: content
+    }
+  };
 }
 
 function updateBlackBoxList(url, isBlackBoxed) {
@@ -614,6 +629,68 @@ export const getSelectedSource: Selector<?Source> = createSelector(
     return sources[selectedLocation.sourceId];
   }
 );
+
+type GSSWC = Selector<?SourceWithContent>;
+export const getSelectedSourceWithContent: GSSWC = createSelector(
+  getSelectedLocation,
+  getSources,
+  state => state.sources.content,
+  (
+    selectedLocation: ?SourceLocation,
+    sources: SourcesMap,
+    content: SourcesContentMap
+  ): SourceWithContent | null => {
+    const source = selectedLocation && sources[selectedLocation.sourceId];
+    return source
+      ? getSourceWithContentInner(sources, content, source.id)
+      : null;
+  }
+);
+export function getSourceWithContent(
+  state: OuterState,
+  id: SourceId
+): SourceWithContent {
+  return getSourceWithContentInner(
+    state.sources.sources,
+    state.sources.content,
+    id
+  );
+}
+export function getSourceContent(
+  state: OuterState,
+  id: SourceId
+): AsyncValue<SourceContent> | null {
+  const source = state.sources.sources[id];
+  if (!source) {
+    throw new Error("Unknown Source ID");
+  }
+
+  return state.sources.content[id] || null;
+}
+
+const contentLookup: WeakMap<Source, SourceWithContent> = new WeakMap();
+function getSourceWithContentInner(
+  sources: SourcesMap,
+  content: SourcesContentMap,
+  id: SourceId
+): SourceWithContent {
+  const source = sources[id];
+  if (!source) {
+    throw new Error("Unknown Source ID");
+  }
+  const contentValue = content[source.id];
+
+  let result = contentLookup.get(source);
+  if (!result || result.content !== contentValue) {
+    result = {
+      source,
+      content: contentValue
+    };
+    contentLookup.set(source, result);
+  }
+
+  return result;
+}
 
 export function getSelectedSourceId(state: OuterState) {
   const source = getSelectedSource((state: any));

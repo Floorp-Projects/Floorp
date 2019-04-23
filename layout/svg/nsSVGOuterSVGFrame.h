@@ -191,6 +191,11 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
 
   bool mViewportInitialized;
   bool mIsRootContent;
+
+ private:
+  template <typename... Args>
+  bool IsContainingWindowElementOfType(nsIFrame** aContainingWindowFrame,
+                                       Args... aArgs) const;
 };
 
 ////////////////////////////////////////////////////////////////////////

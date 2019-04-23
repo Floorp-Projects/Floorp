@@ -3806,23 +3806,23 @@ static AstTableGet* ParseTableGet(WasmParseContext& c, bool inParens) {
 }
 
 static AstTableGrow* ParseTableGrow(WasmParseContext& c, bool inParens) {
-  // (table.grow table delta)
-  // (table.grow delta)
+  // (table.grow table initValue delta)
+  // (table.grow initValue delta)
 
   AstRef targetTable = AstRef(0);
   c.ts.getIfRef(&targetTable);
-
-  AstExpr* delta = ParseExpr(c, inParens);
-  if (!delta) {
-    return nullptr;
-  }
 
   AstExpr* initValue = ParseExpr(c, inParens);
   if (!initValue) {
     return nullptr;
   }
 
-  return new (c.lifo) AstTableGrow(targetTable, delta, initValue);
+  AstExpr* delta = ParseExpr(c, inParens);
+  if (!delta) {
+    return nullptr;
+  }
+
+  return new (c.lifo) AstTableGrow(targetTable, initValue, delta);
 }
 
 static AstTableSet* ParseTableSet(WasmParseContext& c, bool inParens) {
@@ -6439,7 +6439,7 @@ static bool EncodeTableGet(Encoder& e, AstTableGet& s) {
 }
 
 static bool EncodeTableGrow(Encoder& e, AstTableGrow& s) {
-  return EncodeExpr(e, s.delta()) && EncodeExpr(e, s.initValue()) &&
+  return EncodeExpr(e, s.initValue()) && EncodeExpr(e, s.delta()) &&
          e.writeOp(MiscOp::TableGrow) && e.writeVarU32(s.targetTable().index());
 }
 

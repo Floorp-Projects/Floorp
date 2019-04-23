@@ -3,14 +3,15 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
+import { isFulfilled } from "./async-value";
 import { findClosestFunction } from "./ast";
 import { correctIndentation } from "./indentation";
-import type { Source } from "../types";
+import type { SourceWithContent } from "../types";
 import type { Symbols } from "../reducers/ast";
 
 export function findFunctionText(
   line: number,
-  source: Source,
+  { source, content }: SourceWithContent,
   symbols: ?Symbols
 ): ?string {
   const func = findClosestFunction(symbols, {
@@ -19,14 +20,20 @@ export function findFunctionText(
     column: Infinity
   });
 
-  if (source.isWasm || !func || !source.text) {
+  if (
+    source.isWasm ||
+    !func ||
+    !content ||
+    !isFulfilled(content) ||
+    content.value.type !== "text"
+  ) {
     return null;
   }
 
   const {
     location: { start, end }
   } = func;
-  const lines = source.text.split("\n");
+  const lines = content.value.value.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);
   const lastLine = lines[end.line - 1].slice(0, end.column);
   const middle = lines.slice(start.line, end.line - 1);
