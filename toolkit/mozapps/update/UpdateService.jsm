@@ -33,6 +33,7 @@ const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
 const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_BITS_ENABLED         = "app.update.BITS.enabled";
+const PREF_APP_UPDATE_BITS_INTRIALGROUP    = "app.update.BITS.inTrialGroup";
 const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
 const PREF_APP_UPDATE_CANCELATIONS_OSX     = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_CANCELATIONS_OSX_MAX = "app.update.cancelations.osx.max";
@@ -581,6 +582,20 @@ function getCanUseBits() {
     LOG("getCanUseBits - Not using BITS because the feature is disabled");
     return "NoBits_FeatureOff";
   }
+
+  // By default, enable BITS for 50% of the eligible population (Bug 1542100)
+  let inTrialGroup;
+  if (Services.prefs.getPrefType(PREF_APP_UPDATE_BITS_INTRIALGROUP) ==
+      Services.prefs.PREF_INVALID) {
+    inTrialGroup = (Math.floor(Math.random() * 2) == 1);
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_BITS_INTRIALGROUP, inTrialGroup);
+  } else {
+    inTrialGroup = Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_INTRIALGROUP,
+                                              false);
+  }
+  let defaultPrefs = Services.prefs.getDefaultBranch("");
+  defaultPrefs.setBoolPref(PREF_APP_UPDATE_BITS_ENABLED, inTrialGroup);
+
   if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED, true)) {
     LOG("getCanUseBits - Not using BITS. Disabled by pref.");
     return "NoBits_Pref";
