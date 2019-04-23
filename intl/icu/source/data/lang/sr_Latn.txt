@@ -850,7 +850,7 @@ sr_Latn{
         TARASK{"Taraskijevička ortografija"}
         VALENCIA{"Valencijska"}
     }
-    Version{"2.1.48.77"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — sve"}
         category-list{"{0}: {1}"}

@@ -8,7 +8,7 @@ el{
                 "[normalization on]"
                 "[reorder Grek]"
             }
-            Version{"35"}
+            Version{"35.1"}
         }
     }
 }

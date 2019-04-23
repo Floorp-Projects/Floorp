@@ -1,10 +1,10 @@
 ﻿# UCA_Rules_SHORT.txt
-# Date: 2019-02-14, 21:26:41 GMT
+# Date: 2019-04-01, 20:17:28 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
-# UCA Version: 12.0.0
-# UCD Version: 12.0.0
+# UCA Version: 12.1.0
+# UCD Version: 12.1.0
 # For a description of the format and usage, see
 # http://www.unicode.org/reports/tr35/tr35-collation.html#Root_Data_Files
 
@@ -331,15 +331,15 @@
     =	 𑍲
     =	 𑍳
     =	 𑍴
-    =	 𓐰
-    =	 𓐱
-    =	 𓐲
-    =	 𓐳
-    =	 𓐴
-    =	 𓐵
-    =	 𓐶
-    =	 𓐷
-    =	 𓐸
+    =	 '\U00013430'
+    =	 '\U00013431'
+    =	 '\U00013432'
+    =	 '\U00013433'
+    =	 '\U00013434'
+    =	 '\U00013435'
+    =	 '\U00013436'
+    =	 '\U00013437'
+    =	 '\U00013438'
     =	 '\U0001BCA0'
     =	 '\U0001BCA1'
     =	 '\U0001BCA2'
@@ -29294,6 +29294,8 @@
    <<<	 ㆟
 & 亻
    <<<	 ⺅
+& 令
+ <	 ㋿ / 和
 & 企
    <<<	 ㊭
 & 休

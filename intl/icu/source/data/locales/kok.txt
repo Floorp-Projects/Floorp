@@ -188,7 +188,7 @@ kok{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.48.4"}
+    Version{"2.1.49.82"}
     calendar{
         generic{
             DateTimePatterns{

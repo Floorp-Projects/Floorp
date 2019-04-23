@@ -12,7 +12,7 @@
 # and reformatted into syntax for the gennorm2 Normalizer2 data generator tool.
 # Use this file as the third gennorm2 input file after nfc.txt and nfkc.txt.
 
-* Unicode 12.0.0
+* Unicode 12.1.0
 
 0041>0061
 0042>0062
@@ -2082,6 +2082,7 @@
 32FC>30F0
 32FD>30F1
 32FE>30F2
+32FF>4EE4 548C
 3300>30A2 30D1 30FC 30C8
 3301>30A2 30EB 30D5 30A1
 3302>30A2 30F3 30DA 30A2

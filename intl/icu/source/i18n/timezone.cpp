@@ -284,7 +284,7 @@ static UResourceBundle* openOlsonResource(const UnicodeString& id,
                                           UResourceBundle& res,
                                           UErrorCode& ec)
 {
-#if U_DEBUG_TZ
+#ifdef U_DEBUG_TZ
     char buf[128];
     id.extract(0, sizeof(buf)-1, buf, sizeof(buf), "");
 #endif

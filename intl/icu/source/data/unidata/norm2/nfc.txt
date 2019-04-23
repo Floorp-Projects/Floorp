@@ -9,7 +9,7 @@
 #
 # Complete data for Unicode NFC normalization.
 
-* Unicode 12.0.0
+* Unicode 12.1.0
 
 # Canonical_Combining_Class (ccc) values
 0300..0314:230

@@ -183,7 +183,7 @@ fr{
         MF{"Saint-Martin"}
         MG{"Madagascar"}
         MH{"Îles Marshall"}
-        MK{"Macédoine"}
+        MK{"Macédoine du Nord"}
         ML{"Mali"}
         MM{"Myanmar (Birmanie)"}
         MN{"Mongolie"}
@@ -311,9 +311,8 @@ fr{
         CI{"​​République de Côte d’Ivoire"}
         CZ{"République tchèque"}
         FK{"Îles Falkland"}
-        MK{"Macédoine (ARYM)"}
         SZ{"Swaziland"}
         TL{"Timor-Oriental"}
     }
-    Version{"2.1.48.43"}
+    Version{"2.1.49.82"}
 }

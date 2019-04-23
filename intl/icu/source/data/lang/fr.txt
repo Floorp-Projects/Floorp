@@ -977,7 +977,7 @@ fr{
         VALENCIA{"valencien"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.48.43"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — tout"}
         category-list{"{0} : {1}"}

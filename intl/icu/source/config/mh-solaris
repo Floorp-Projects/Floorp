@@ -56,7 +56,7 @@ LD_RPATH_PRE=   -R
 #LIBRARY_PATH_PREFIX=/usr/lib/lwp:
 
 ## Compiler switch to embed a library name
-LD_SONAME = -h $(notdir $(MIDDLE_SO_TARGET))
+LD_SONAME = -h $(notdir $(MIDDLE_SO_TARGET)) $(PKGDATA_TRAILING_SPACE)
 
 ## Shared object suffix
 SO=		so

@@ -257,7 +257,7 @@ pt_PT{
         MONOTON{"monotónico"}
         POLYTON{"politónico"}
     }
-    Version{"2.1.47.89"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} – tudo"}
         compatibility{"{0} – compatibilidade"}

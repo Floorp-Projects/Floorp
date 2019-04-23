@@ -183,7 +183,7 @@ bs{
         MF{"Sveti Martin"}
         MG{"Madagaskar"}
         MH{"Maršalova ostrva"}
-        MK{"Makedonija"}
+        MK{"Sjeverna Makedonija"}
         ML{"Mali"}
         MM{"Mjanmar"}
         MN{"Mongolija"}
@@ -309,9 +309,8 @@ bs{
         CI{"Obala Bjelokosti"}
         CZ{"Češka Republika"}
         FK{"Folklandska (Malvinska) ostrva"}
-        MK{"Makedonija (BJR)"}
         SZ{"Svazi"}
         TL{"TL"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

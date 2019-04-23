@@ -183,7 +183,7 @@ da{
         MF{"Saint Martin"}
         MG{"Madagaskar"}
         MH{"Marshalløerne"}
-        MK{"Makedonien"}
+        MK{"Nordmakedonien"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongoliet"}
@@ -308,9 +308,8 @@ da{
         CG{"Republikken Congo"}
         CZ{"Den Tjekkiske Republik"}
         FK{"Falklandsøerne (Islas Malvinas)"}
-        MK{"Den tidligere jugoslaviske republik Makedonien"}
         SZ{"Swaziland"}
         TL{"Østtimor"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }
