@@ -10,5 +10,5 @@ DIRS += [
     'pdfjs',
     'screenshots',
     'webcompat',
-    'webcompat-reporter'
+    'report-site-issue'
 ]
