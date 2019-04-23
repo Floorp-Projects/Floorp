@@ -521,8 +521,8 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
     // otherwise the caret will end up moving to the focus position. This
     // would be a problem because the caret would move to the beginning of the
     // focused link making it impossible to navigate the caret over a link.
-    SetFocusInner(newFocus->AsElement(), aFlags, aType != MOVEFOCUS_CARET,
-                  true);
+    SetFocusInner(MOZ_KnownLive(newFocus->AsElement()), aFlags,
+                  aType != MOVEFOCUS_CARET, true);
     *aElement = do_AddRef(newFocus->AsElement()).take();
   } else if (aType == MOVEFOCUS_ROOT || aType == MOVEFOCUS_CARET) {
     // no content was found, so clear the focus for these two types.
@@ -1316,8 +1316,9 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
       nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
 
       RefPtr<PresShell> presShell = docShell->GetPresShell();
-      if (presShell && presShell->DidInitialize())
+      if (presShell && presShell->DidInitialize()) {
         ScrollIntoView(presShell, elementToFocus, aFlags);
+      }
     }
 
     // update the commands even when inactive so that the attributes for that
@@ -2120,8 +2121,8 @@ void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
   }
 }
 
-void nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
-                                    nsIContent* aContent, uint32_t aFlags) {
+void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
+                                    uint32_t aFlags) {
   // if the noscroll flag isn't set, scroll the newly focused element into view
   if (!(aFlags & FLAG_NOSCROLL)) {
     uint32_t scrollFlags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;

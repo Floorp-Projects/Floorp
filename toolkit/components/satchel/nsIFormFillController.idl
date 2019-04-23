@@ -39,7 +39,9 @@ interface nsIFormFillController : nsISupports
    * @param docShell - The docShell to attach to
    * @param popup - The popup to show when autocomplete results are available
    */
+  [can_run_script]
   void attachToBrowser(in nsIDocShell docShell, in nsIAutoCompletePopup popup);
+  [can_run_script]
   void attachPopupElementToBrowser(in nsIDocShell docShell, in Element popup);
 
   /*
@@ -47,7 +49,7 @@ interface nsIFormFillController : nsISupports
    *
    * @param docShell - The docShell to detach from
    */
-  void detachFromBrowser(in nsIDocShell docShell);
+  [can_run_script] void detachFromBrowser(in nsIDocShell docShell);
 
   /*
    * Mark the specified <input> element as being managed by password manager.
@@ -56,7 +58,7 @@ interface nsIFormFillController : nsISupports
    *
    * @param aInput - The HTML <input> element to tag
    */
-  void markAsLoginManagerField(in HTMLInputElement aInput);
+  [can_run_script] void markAsLoginManagerField(in HTMLInputElement aInput);
 
   /*
    * Mark the specified <input> element as being managed by a form autofill component.
@@ -64,10 +66,10 @@ interface nsIFormFillController : nsISupports
    *
    * @param aInput - The HTML <input> element to mark
    */
-  void markAsAutofillField(in HTMLInputElement aInput);
+  [can_run_script] void markAsAutofillField(in HTMLInputElement aInput);
 
   /*
    * Open the autocomplete popup, if possible.
    */
-  void showPopup();
+  [can_run_script] void showPopup();
 };
