@@ -17,4 +17,6 @@
     <color name="neutral_faded_normal_theme">@color/neutral_faded_dark_theme</color>
     <color name="shadow_normal_theme">@color/shadow_dark_theme</color>
     <color name="destructive_normal_theme">@color/destructive_dark_theme</color>
+    <color name="scrimStart_normal_theme">@color/scrimStart_dark_theme</color>
+    <color name="scrimEnd_normal_theme">@color/scrimStart_dark_theme</color>
 </resources>

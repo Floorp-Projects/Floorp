@@ -28,6 +28,8 @@
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="shadow">@color/shadow_normal_theme</item>
         <item name="destructive">@color/destructive_normal_theme</item>
+        <item name="scrimStart">@color/scrimStart_normal_theme</item>
+        <item name="scrimEnd">@color/scrimStart_normal_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
@@ -62,6 +64,8 @@
         <item name="neutralFaded">@color/neutral_faded_private_theme</item>
         <item name="shadow">@color/shadow_private_theme</item>
         <item name="destructive">@color/destructive_private_theme</item>
+        <item name="scrimStart">@color/scrimStart_private_theme</item>
+        <item name="scrimEnd">@color/scrimStart_private_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
@@ -108,12 +112,11 @@
         <item name="android:paddingEnd">24dp</item>
     </style>
 
-
-    <style name="CreateCollectionDialogStyle" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:colorControlNormal">?accentBright</item>
-        <item name="android:colorControlActivated">?accentBright</item>
-        <item name="android:colorControlHighlight">?accent</item>
+    <style name="CreateCollectionDialogStyle" parent="NormalTheme">
         <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+        <item name="android:colorControlNormal">?accentHighContrast</item>
+        <item name="android:colorControlActivated">?accentHighContrast</item>
+        <item name="android:colorControlHighlight">?accent</item>
 
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>

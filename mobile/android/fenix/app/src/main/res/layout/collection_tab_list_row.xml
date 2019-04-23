@@ -61,7 +61,7 @@
             android:textColor="?primaryText"
             android:textSize="15sp"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
-            app:layout_constraintEnd_toEndOf="@id/hostname"
+            app:layout_constraintEnd_toStartOf="@id/tab_selected_checkbox"
             app:layout_constraintTop_toBottomOf="@id/hostname"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
