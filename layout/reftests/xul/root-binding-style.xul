@@ -1,3 +1,0 @@
-<?xml version="1.0"?>
-<test xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" style="-moz-binding: url(xbl_bindings.xml#root_binding_style)">
-</test>

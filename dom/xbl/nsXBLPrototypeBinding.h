@@ -17,10 +17,8 @@
 #include "nsXBLProtoImpl.h"
 #include "nsXBLProtoImplMethod.h"
 #include "nsXBLPrototypeHandler.h"
-#include "nsXBLPrototypeResources.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/StyleSheet.h"
 
 class nsAtom;
 class nsIContent;
@@ -56,14 +54,6 @@ class nsXBLPrototypeBinding final
 
   nsresult BindingAttached(nsIContent* aBoundElement);
   nsresult BindingDetached(nsIContent* aBoundElement);
-
-  // aBoundElement is passed in here because we need to get owner document
-  // and PresContext in nsXBLResourceLoader::LoadResources().
-  bool LoadResources(nsIContent* aBoundElement);
-  nsresult AddResource(nsAtom* aResourceType, const nsAString& aSrc);
-
-  bool InheritsStyle() const { return mInheritStyle; }
-  void SetInheritsStyle(bool aInheritStyle) { mInheritStyle = aInheritStyle; }
 
   nsXBLPrototypeHandler* GetPrototypeHandlers() { return mPrototypeHandler; }
   void SetPrototypeHandlers(nsXBLPrototypeHandler* aHandler) {
@@ -122,41 +112,10 @@ class nsXBLPrototypeBinding final
   void SetInitialAttributes(mozilla::dom::Element* aBoundElement,
                             nsIContent* aAnonymousContent);
 
-  void AppendStyleSheet(mozilla::StyleSheet* aSheet);
-  void RemoveStyleSheet(mozilla::StyleSheet* aSheet);
-  void InsertStyleSheetAt(size_t aIndex, mozilla::StyleSheet* aSheet);
-  mozilla::StyleSheet* StyleSheetAt(size_t aIndex) const;
-  size_t SheetCount() const;
-  bool HasStyleSheets() const;
-  void AppendStyleSheetsTo(nsTArray<mozilla::StyleSheet*>& aResult) const;
-
-  const RawServoAuthorStyles* GetServoStyles() const {
-    return mResources ? mResources->GetServoStyles() : nullptr;
-  }
-
-  void SyncServoStyles() {
-    MOZ_ASSERT(mResources);
-    mResources->SyncServoStyles();
-  }
-
-  RawServoAuthorStyles* GetServoStyles() {
-    return mResources
-               ? const_cast<RawServoAuthorStyles*>(mResources->GetServoStyles())
-               : nullptr;
-  }
-
-  mozilla::ServoStyleRuleMap* GetServoStyleRuleMap() {
-    return mResources ? mResources->GetServoStyleRuleMap() : nullptr;
-  }
-
-  nsresult FlushSkinSheets();
-
   nsAtom* GetBaseTag(int32_t* aNamespaceID);
   void SetBaseTag(int32_t aNamespaceID, nsAtom* aTag);
 
   bool ImplementsInterface(REFNSIID aIID) const;
-
-  nsresult AddResourceListener(nsIContent* aBoundElement);
 
   void Initialize();
 
@@ -288,9 +247,6 @@ class nsXBLPrototypeBinding final
   void ConstructAttributeTable(mozilla::dom::Element* aElement);
   void CreateKeyHandlers();
 
- private:
-  void EnsureResources();
-
   // MEMBER VARIABLES
  protected:
   nsCOMPtr<nsIURI> mBindingURI;
@@ -311,8 +267,6 @@ class nsXBLPrototypeBinding final
 
   // Weak.  The docinfo will own our base binding.
   mozilla::WeakPtr<nsXBLPrototypeBinding> mBaseBinding;
-  // FIXME(emilio): This is dead code now.
-  bool mInheritStyle;
   bool mCheckedBaseProto;
   bool mKeyHandlersRegistered;
   // FIXME(emilio): This is dead code now.
@@ -321,9 +275,6 @@ class nsXBLPrototypeBinding final
   // chain for parent elements and go directly to the document.
   // FIXME(emilio): This is dead code now.
   bool mSimpleScopeChain;
-
-  nsAutoPtr<nsXBLPrototypeResources>
-      mResources;  // If we have any resources, this will be non-null.
 
   nsXBLDocumentInfo* mXBLDocInfoWeak;  // A pointer back to our doc info.  Weak,
                                        // since it owns us.
