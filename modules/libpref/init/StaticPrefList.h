@@ -528,12 +528,18 @@ VARCACHE_PREF(
 )
 
 // For area and anchor elements with target=_blank and no rel set to
-// opener/noopener, this pref sets noopener by default.
+// opener/noopener.
+#ifdef EARLY_BETA_OR_EARLIER
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "dom.targetBlankNoOpener.enabled",
    dom_targetBlankNoOpener_enabled,
-  bool, true
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   "dom.disable_open_during_load",
