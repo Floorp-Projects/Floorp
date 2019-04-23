@@ -6,6 +6,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -536,3 +537,37 @@ function checkCountryResultTelemetry(aExpectedValue) {
     deepEqual(snapshot.values, {});
   }
 }
+
+/**
+ * Provides a basic set of remote settings for use in tests.
+ */
+async function setupRemoteSettings() {
+  const collection = await RemoteSettings("hijack-blocklists").openCollection();
+  await collection.clear();
+  await collection.create({
+    "id": "submission-urls",
+    "matches": [
+      "ignore=true",
+    ],
+  }, { synced: true });
+  await collection.create({
+    "id": "load-paths",
+    "matches": [
+      "[other]addEngineWithDetails:searchignore@mozilla.com",
+    ],
+  }, { synced: true });
+  await collection.db.saveLastModified(42);
+}
+
+/**
+ * Some tests might trigger initialisation which will trigger the search settings
+ * update. We need to make sure we wait for that to finish before we exit, otherwise
+ * it may cause shutdown issues.
+ */
+let updatePromise = SearchTestUtils.promiseSearchNotification("settings-update-complete");
+
+registerCleanupFunction(async () => {
+  if (!isChild && Services.search.isInitialized) {
+    await updatePromise;
+  }
+});
