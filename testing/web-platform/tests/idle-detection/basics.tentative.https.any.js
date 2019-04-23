@@ -3,92 +3,70 @@
 'use strict';
 
 promise_test(async t => {
-  let status = new IdleDetector();
+  let promise = navigator.idle.query();
+  assert_equals(promise.constructor, Promise,
+                'query() returns a promise');
 
-  let watcher = new EventWatcher(t, status, ["change"]);
-
-  await status.start();
-
-  await watcher.wait_for("change");
+  let status = await promise;
+  assert_true(status instanceof IdleStatus,
+              'query() promise resolves to an IdleStatus');
 
   assert_true(['active', 'idle'].includes(status.state.user),
                 'status has a valid user state');
   assert_true(['locked', 'unlocked'].includes(status.state.screen),
                 'status has a valid screen state');
 
-}, 'start() basics');
+}, 'query() basics');
 
 promise_test(async t => {
   let used = false;
 
-  new IdleDetector({
+  await navigator.idle.query({
     get threshold() {
       used = true;
-      return 60;
+      return 1;
     }
   });
 
-  assert_true(used, 'constructor options "threshold" member was used');
-}, 'constructor uses threshold property');
+  assert_true(used, 'query() options "threshold" member was used');
+}, 'query() uses threshold property');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: 0});
-    assert_unreached('Threshold under 60 should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with invalid threshold (0)');
+  return promise_rejects(
+    t,
+    new TypeError,
+    navigator.idle.query({threshold: 0}),
+    'Threshold of 0 should reject');
+}, 'query() throws with invalid threshold (0)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: 59});
-    assert_unreached('Threshold under 60 should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with threshold below minimum (59)');
+  return promise_rejects(
+    t,
+    new TypeError,
+    navigator.idle.query({threshold: null}),
+    'Threshold of null should reject');
+}, 'query() throws with invalid threshold (null)');
 
 promise_test(async t => {
-  new IdleDetector({threshold: 60});
-}, 'constructor allows threshold (60)');
+  return promise_rejects(
+    t,
+    new TypeError,
+    navigator.idle.query({threshold: -1}),
+    'Threshold of negative numbers should reject');
+}, 'query() throws with invalid threshold (-1)');
 
 promise_test(async t => {
-  new IdleDetector({threshold: 61});
-}, 'constructor allows threshold (61)');
+  return promise_rejects(
+    t,
+    new TypeError,
+    navigator.idle.query({threshold: NaN}),
+    'Threshold of NaN should reject');
+}, 'query() throws with invalid threshold (NaN)');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: null});
-    assert_unreached('Threshold of null should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with invalid threshold (null)');
+  return navigator.idle.query();
+}, 'query() uses a default value for the threshold when none is passed');
 
 promise_test(async t => {
-  try {
-    new IdleDetector({threshold: -1});
-    assert_unreached('Threshold of negative numbers should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with invalid threshold (-1)');
-
-promise_test(async t => {
-  try {
-    new IdleDetector({threshold: NaN});
-    assert_unreached('Threshold of NaN should reject');
-  } catch (error) {
-    assert_equals(error.name, 'TypeError');
-  }
-}, 'constructor throws with invalid threshold (NaN)');
-
-promise_test(async t => {
-  new IdleDetector();
-}, 'constructor uses a default value for the threshold when none is passed');
-
-promise_test(async t => {
-  new IdleDetector({threshold: undefined});
-}, 'constructor uses a default value for the threshold');
-
+  return navigator.idle.query({threshold: undefined});
+}, 'query() uses a default value for the threshold');

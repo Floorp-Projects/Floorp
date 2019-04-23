@@ -266,7 +266,7 @@ class Chrome(BrowserSetup):
 
                 if install:
                     logger.info("Downloading chromedriver")
-                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path, browser_binary=kwargs["binary"])
+                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
             else:
                 logger.info("Using webdriver binary %s" % webdriver_binary)
 
@@ -283,9 +283,6 @@ class Chrome(BrowserSetup):
 
         # Allow WebRTC tests to call getUserMedia.
         kwargs["binary_args"] += ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
-
-        # Shorten delay for Reporting <https://w3c.github.io/reporting/>.
-        kwargs["binary_args"].append("--short-reporting-delay")
 
 
 class ChromeAndroid(BrowserSetup):
@@ -568,12 +565,8 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
     if not venv.skip_virtualenv_setup:
         venv.install_requirements(os.path.join(wptrunner_path, "requirements.txt"))
 
-    # Only update browser_version if it was not given as a command line
-    # argument, so that it can be overridden on the command line.
-    if not kwargs["browser_version"]:
-        kwargs["browser_version"] = setup_cls.browser.version(binary=kwargs.get("binary"),
-                                                              webdriver_binary=kwargs.get("webdriver_binary"))
-
+    kwargs['browser_version'] = setup_cls.browser.version(binary=kwargs.get("binary"),
+                                                          webdriver_binary=kwargs.get("webdriver_binary"))
     return kwargs
 
 
