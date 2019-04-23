@@ -49,7 +49,7 @@ p {
 
 .features {
   max-width: 980px;
-  border-top: 1px solid var(--grey-30);
+  border-top: 1px solid var(--in-content-border-color);
 }
 
 .features-list {
@@ -83,13 +83,6 @@ p {
 .feature-link {
   display: block;
   margin-top: 10px;
-}
-
-.external,
-.external:hover,
-.external:visited,
-.external:hover:active {
-  color: var(--blue-60);
 }
 
 .external::after {
