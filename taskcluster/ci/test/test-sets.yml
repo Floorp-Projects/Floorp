@@ -387,7 +387,6 @@ desktop-instrumentation:
     - browser-instrumentation
 
 android-common-tests:
-    - cppunit
     - crashtest
     - geckoview-junit
     - jsreftest
@@ -413,6 +412,7 @@ android-x86_64-opt-tests:
 
 android-x86_64-tests:
     - gtest
+    - cppunit
     - jsreftest
     - marionette
     - mochitest-clipboard
