@@ -5326,6 +5326,20 @@ nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
   return frame;
 }
 
+nsIFrame* ScrollFrameHelper::GetFrameForScrollSnap() const {
+  nsIFrame* styleFrame = nullptr;
+  if (mIsRoot) {
+    if (const Element* rootElement =
+            mOuter->PresContext()->Document()->GetRootElement()) {
+      styleFrame = rootElement->GetPrimaryFrame();
+    }
+  } else {
+    styleFrame = mOuter;
+  }
+
+  return styleFrame;
+}
+
 bool ScrollFrameHelper::IsScrollbarOnRight() const {
   nsPresContext* presContext = mOuter->PresContext();
 
@@ -6772,16 +6786,7 @@ static nsMargin ResolveScrollPaddingStyle(
 }
 
 nsMargin ScrollFrameHelper::GetScrollPadding() const {
-  nsIFrame* styleFrame = nullptr;
-  if (mIsRoot) {
-    if (const Element* rootElement =
-            mOuter->PresContext()->Document()->GetRootElement()) {
-      styleFrame = rootElement->GetPrimaryFrame();
-    }
-  } else {
-    styleFrame = mOuter;
-  }
-
+  nsIFrame* styleFrame = GetFrameForScrollSnap();
   if (!styleFrame) {
     return nsMargin();
   }
