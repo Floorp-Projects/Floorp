@@ -685,14 +685,6 @@ class WorkerPrivate : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
-  // The CSPInfo returned is the same CSP as stored inside the Principal
-  // returned from GetPrincipalInfo. Please note that after Bug 965637
-  // we do not have a a CSP stored inside the Principal anymore which
-  // allows us to clean that part up.
-  const nsTArray<mozilla::ipc::ContentSecurityPolicy>& GetCSPInfos() const {
-    return mLoadInfo.mCSPInfos;
-  }
-
   const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const {
     return *mLoadInfo.mStoragePrincipalInfo;
   }

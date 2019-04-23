@@ -806,8 +806,8 @@ nsContentTreeOwner::ProvideWindow(
     // ourselves.
     RefPtr<NullPrincipal> nullPrincipal =
         NullPrincipal::CreateWithoutOriginAttributes();
-    return browserDOMWin->CreateContentWindow(
-        aURI, aParent, openLocation, flags, nullPrincipal, nullptr, aReturn);
+    return browserDOMWin->CreateContentWindow(aURI, aParent, openLocation,
+                                              flags, nullPrincipal, aReturn);
   }
 }
 
