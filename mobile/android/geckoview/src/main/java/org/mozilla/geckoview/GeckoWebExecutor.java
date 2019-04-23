@@ -55,7 +55,7 @@ public class GeckoWebExecutor {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS})
-    public @interface FetchFlags {};
+    /* package */ @interface FetchFlags {};
 
     /**
      * No special treatment.

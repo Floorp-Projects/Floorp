@@ -26,7 +26,7 @@ public class WebRequestError extends Exception {
             ERROR_CATEGORY_NETWORK, ERROR_CATEGORY_CONTENT,
             ERROR_CATEGORY_URI, ERROR_CATEGORY_PROXY,
             ERROR_CATEGORY_SAFEBROWSING})
-    public @interface ErrorCategory {}
+    /* package */ @interface ErrorCategory {}
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ERROR_UNKNOWN, ERROR_SECURITY_SSL, ERROR_SECURITY_BAD_CERT,
@@ -41,7 +41,7 @@ public class WebRequestError extends Exception {
             ERROR_PROXY_CONNECTION_REFUSED, ERROR_FILE_NOT_FOUND,
             ERROR_FILE_ACCESS_DENIED, ERROR_INVALID_CONTENT_ENCODING,
             ERROR_UNSAFE_CONTENT_TYPE, ERROR_CORRUPTED_CONTENT})
-    public @interface Error {}
+    /* package */ @interface Error {}
 
     /**
      * This is normally used for error codes that don't
