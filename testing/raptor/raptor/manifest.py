@@ -167,17 +167,23 @@ def write_test_settings_json(args, test_details, oskey):
     if test_details.get("screen_capture", None) is not None:
         test_settings['raptor-options']['screen_capture'] = test_details.get("screen_capture")
 
-    # if gecko profiling is enabled, write profiling settings for webext
+    # if Gecko profiling is enabled, write profiling settings for webext
     if test_details.get("gecko_profile", False):
-        test_settings['raptor-options']['gecko_profile'] = True
-        # when profiling, if webRender is enabled we need to set that, so
-        # the runner can add the web render threads to gecko profiling
-        test_settings['raptor-options']['gecko_profile_interval'] = \
-            float(test_details.get("gecko_profile_interval", 0))
-        test_settings['raptor-options']['gecko_profile_entries'] = \
-            float(test_details.get("gecko_profile_entries", 0))
-        if str(os.getenv('MOZ_WEBRENDER')) == '1':
-            test_settings['raptor-options']['webrender_enabled'] = True
+        threads = 'GeckoMain,Compositor'
+
+        # With WebRender enabled profile some extra threads
+        if os.getenv('MOZ_WEBRENDER') == '1':
+            threads = '{},Renderer,WR'.format(threads)
+
+        if test_details.get('gecko_profile_threads'):
+            threads = '{0},{1}'.format(threads, test_details.get('gecko_profile_threads'))
+
+        test_settings['raptor-options'].update({
+            'gecko_profile': True,
+            'gecko_profile_entries': int(test_details.get('gecko_profile_entries')),
+            'gecko_profile_interval': int(test_details.get('gecko_profile_interval')),
+            'gecko_profile_threads': threads,
+        })
 
     if test_details.get("newtab_per_cycle", None) is not None:
         test_settings['raptor-options']['newtab_per_cycle'] = \
