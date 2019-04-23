@@ -291,5 +291,6 @@
         android:id="@+id/createCollectionFragment"
         android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
         android:label="fragment_create_collection"
-        tools:layout="@layout/fragment_create_collection" />
+        tools:layout="@layout/fragment_create_collection" >
+    </fragment>
 </navigation>

@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -32,6 +33,8 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.collections.CreateCollectionViewModel
+import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
@@ -177,6 +180,13 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
+                val tabs = requireComponents.core.sessionManager.sessions
+                    .map { Tab(it.id, it.url, it.url.urlToHost(), it.title) }
+
+                activity?.run {
+                    ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+                }!!.tabs = tabs
+
                 val direction = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
                 Navigation.findNavController(view!!).navigate(direction)
             }
