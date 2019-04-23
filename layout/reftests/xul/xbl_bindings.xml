@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<bindings xmlns="http://www.mozilla.org/xbl">
-  <binding id="root_binding_style">
-    <resources>
-      <stylesheet src="root-binding-style-xbl.css"/>
-    </resources>
-  </binding>
-</bindings>

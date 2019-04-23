@@ -35,7 +35,6 @@
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
-#include "nsXBLPrototypeBinding.h"
 #include "gfxUserFontSet.h"
 #include "nsBindingManager.h"
 #include "nsWindowSizes.h"
@@ -141,7 +140,7 @@ void ServoStyleSet::ShellDetachedFromDocument() {
 void ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
   // TODO(emilio): We could keep track of the actual shadow roots that need
   // their styles recomputed.
-  SetStylistXBLStyleSheetsDirty();
+  SetStylistShadowDOMStyleSheetsDirty();
 
   // FIXME(emilio): This should be done using stylesheet invalidation instead.
   if (nsPresContext* pc = GetPresContext()) {
@@ -166,9 +165,8 @@ void ServoStyleSet::InvalidateStyleForDocumentStateChanges(
   }
 
   // TODO(emilio): It may be nicer to just invalidate stuff in a given subtree
-  // for XBL sheets / Shadow DOM. Consider just enumerating bound content
-  // instead and run invalidation individually, passing mRawSet for the UA /
-  // User sheets.
+  // for Shadow DOM. Consider just enumerating shadow roots instead and run
+  // invalidation individually, passing mRawSet for the UA / User sheets.
   AutoTArray<const RawServoAuthorStyles*, 20> nonDocumentStyles;
 
   EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
@@ -176,14 +174,6 @@ void ServoStyleSet::InvalidateStyleForDocumentStateChanges(
       nonDocumentStyles.AppendElement(authorStyles);
     }
   });
-
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-      [&](nsXBLPrototypeBinding* aProto) {
-        if (auto* authorStyles = aProto->GetServoStyles()) {
-          nonDocumentStyles.AppendElement(authorStyles);
-        }
-        return true;
-      });
 
   Servo_InvalidateStyleForDocStateChanges(
       root, mRawSet.get(), &nonDocumentStyles, aStatesChanged.ServoValue());
@@ -208,15 +198,6 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
     }
   });
 
-  // FIXME(emilio): This is broken for XBL. See bug 1406875.
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-      [&](nsXBLPrototypeBinding* aProto) {
-        if (auto* authorStyles = aProto->GetServoStyles()) {
-          nonDocumentStyles.AppendElement(authorStyles);
-        }
-        return true;
-      });
-
   bool mayAffectDefaultStyle =
       bool(aReason & kMediaFeaturesAffectingDefaultStyle);
 
@@ -232,7 +213,7 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
   }
 
   if (result.mAffectsNonDocumentRules) {
-    SetStylistXBLStyleSheetsDirty();
+    SetStylistShadowDOMStyleSheetsDirty();
   }
 
   if (rulesChanged) {
@@ -662,14 +643,11 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
 
 void ServoStyleSet::AppendAllNonDocumentAuthorSheets(
     nsTArray<StyleSheet*>& aArray) const {
-  if (mDocument) {
-    mDocument->BindingManager()->AppendAllSheets(aArray);
-    EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
-      for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
-        aArray.AppendElement(aShadowRoot.SheetAt(index));
-      }
-    });
-  }
+  EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
+    for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
+      aArray.AppendElement(aShadowRoot.SheetAt(index));
+    }
+  });
 }
 
 void ServoStyleSet::AddDocStyleSheet(StyleSheet* aSheet) {
@@ -893,8 +871,8 @@ void ServoStyleSet::SetStylistStyleSheetsDirty() {
   }
 }
 
-void ServoStyleSet::SetStylistXBLStyleSheetsDirty() {
-  mStylistState |= StylistState::XBLStyleSheetsDirty;
+void ServoStyleSet::SetStylistShadowDOMStyleSheetsDirty() {
+  mStylistState |= StylistState::ShadowDOMStyleSheetsDirty;
   if (nsPresContext* presContext = GetPresContext()) {
     presContext->RestyleManager()->IncrementUndisplayedRestyleGeneration();
   }
@@ -1004,8 +982,7 @@ already_AddRefed<RawServoAnimationValue> ServoStyleSet::ComputeAnimationValue(
 }
 
 bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
-  using SheetOwner =
-      Variant<ServoStyleSet*, nsXBLPrototypeBinding*, ShadowRoot*>;
+  using SheetOwner = Variant<ServoStyleSet*, ShadowRoot*>;
 
   AutoTArray<Pair<StyleSheet*, SheetOwner>, 32> queue;
   EnumerateStyleSheets([&](StyleSheet& aSheet) {
@@ -1019,16 +996,6 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
     }
   });
 
-  mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-      [&](nsXBLPrototypeBinding* aProto) {
-        AutoTArray<StyleSheet*, 3> sheets;
-        aProto->AppendStyleSheetsTo(sheets);
-        for (auto* sheet : sheets) {
-          queue.AppendElement(MakePair(sheet, SheetOwner{aProto}));
-        }
-        return true;
-      });
-
   bool anyNonDocStyleChanged = false;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
@@ -1036,13 +1003,9 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
     SheetOwner owner = queue[idx].second();
     queue.RemoveElementAt(idx);
 
-    if (!sheet->HasUniqueInner()) {
-      RawServoAuthorStyles* authorStyles = nullptr;
-      if (owner.is<ShadowRoot*>()) {
-        authorStyles = owner.as<ShadowRoot*>()->GetServoStyles();
-      } else if (owner.is<nsXBLPrototypeBinding*>()) {
-        authorStyles = owner.as<nsXBLPrototypeBinding*>()->GetServoStyles();
-      }
+    if (!sheet->HasUniqueInner() && owner.is<ShadowRoot*>()) {
+      RawServoAuthorStyles* authorStyles =
+          owner.as<ShadowRoot*>()->GetServoStyles();
 
       if (authorStyles) {
         Servo_AuthorStyles_ForceDirty(authorStyles);
@@ -1070,7 +1033,7 @@ bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
   }
 
   if (anyNonDocStyleChanged) {
-    SetStylistXBLStyleSheetsDirty();
+    SetStylistShadowDOMStyleSheetsDirty();
   }
 
   if (mNeedsRestyleAfterEnsureUniqueInner) {
@@ -1100,7 +1063,7 @@ void ServoStyleSet::CompatibilityModeChanged() {
     }
   });
   if (anyShadow) {
-    SetStylistXBLStyleSheetsDirty();
+    SetStylistShadowDOMStyleSheetsDirty();
   }
 }
 
@@ -1190,9 +1153,6 @@ void ServoStyleSet::UpdateStylist() {
   MOZ_ASSERT(StylistNeedsUpdate());
 
   if (mStylistState & StylistState::StyleSheetsDirty) {
-    // There's no need to compute invalidations and such for an XBL styleset,
-    // since they are loaded and unloaded synchronously, and they don't have to
-    // deal with dynamic content changes.
     Element* root = mDocument->GetRootElement();
     const ServoElementSnapshotTable* snapshots = nullptr;
     if (nsPresContext* pc = GetPresContext()) {
@@ -1201,20 +1161,12 @@ void ServoStyleSet::UpdateStylist() {
     Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root, snapshots);
   }
 
-  if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
+  if (MOZ_UNLIKELY(mStylistState & StylistState::ShadowDOMStyleSheetsDirty)) {
     EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
       if (auto* authorStyles = aShadowRoot.GetServoStyles()) {
         Servo_AuthorStyles_Flush(authorStyles, mRawSet.get());
       }
     });
-
-    mDocument->BindingManager()->EnumerateBoundContentProtoBindings(
-        [&](nsXBLPrototypeBinding* aProto) {
-          if (auto* authorStyles = aProto->GetServoStyles()) {
-            Servo_AuthorStyles_Flush(authorStyles, mRawSet.get());
-          }
-          return true;
-        });
   }
 
   mStylistState = StylistState::NotDirty;
