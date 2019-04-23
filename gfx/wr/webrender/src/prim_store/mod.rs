@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, ColorF};
 use api::{FilterOp, ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
 use api::{BoxShadowClipMode, LineStyle, LineOrientation};
-use api::PrimitiveKeyKind;
+use api::{LayoutPrimitiveInfo, PrimitiveKeyKind};
 use api::units::*;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
@@ -52,7 +52,6 @@ use texture_cache::TEXTURE_REGION_DIMENSIONS;
 use util::{ScaleOffset, MatrixHelpers, MaxRect, Recycler, TransformedRectKind};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use util::{scale_factors, clamp_to_scale_factor};
-use internal_types::LayoutPrimitiveInfo;
 use smallvec::SmallVec;
 
 pub mod borders;

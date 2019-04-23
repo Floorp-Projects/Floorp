@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, HitTestFlags, HitTestItem, HitTestResult, ItemTag};
-use api::PipelineId;
+use api::{LayoutPrimitiveInfo, PipelineId};
 use api::units::*;
 use clip::{ClipChainId, ClipDataStore, ClipNode, ClipItem, ClipStore};
 use clip::{rounded_rectangle_contains_point};
 use clip_scroll_tree::{SpatialNodeIndex, ClipScrollTree};
-use internal_types::{FastHashMap, LayoutPrimitiveInfo};
+use internal_types::FastHashMap;
 use std::{ops, u32};
 use std::sync::Arc;
 use util::{LayoutToWorldFastTransform, WorldToLayoutFastTransform};
