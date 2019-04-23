@@ -77,7 +77,6 @@ class NewRenderer : public RendererEvent {
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions,
             gfxPrefs::WebRenderPictureCaching() && supportPictureCaching,
-            gfxPrefs::WebRenderStartDebugServer(),
             compositor->gl(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
