@@ -6403,6 +6403,11 @@ bool BinaryArithIRGenerator::tryAttachStub() {
     return true;
   }
 
+  // String + Boolean
+  if (tryAttachStringBooleanConcat()) {
+    return true;
+  }
+
   trackAttached(IRGenerator::NotAttached);
   return false;
 }
@@ -6618,6 +6623,39 @@ bool BinaryArithIRGenerator::tryAttachStringNumberConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringNumberConcat");
+  return true;
+}
+
+bool BinaryArithIRGenerator::tryAttachStringBooleanConcat() {
+  // Only Addition
+  if (op_ != JSOP_ADD) {
+    return false;
+  }
+
+  if ((!lhs_.isString() || !rhs_.isBoolean()) &&
+      (!lhs_.isBoolean() || !rhs_.isString())) {
+    return false;
+  }
+
+  ValOperandId lhsId(writer.setInputOperandId(0));
+  ValOperandId rhsId(writer.setInputOperandId(1));
+
+  auto guardToString = [&](ValOperandId id, HandleValue v) {
+    if (v.isString()) {
+      return writer.guardIsString(id);
+    }
+    MOZ_ASSERT(v.isBoolean());
+    writer.guardIsBoolean(id);
+    return writer.callBooleanToString(id);
+  };
+
+  StringOperandId lhsStrId = guardToString(lhsId, lhs_);
+  StringOperandId rhsStrId = guardToString(rhsId, rhs_);
+
+  writer.callStringConcatResult(lhsStrId, rhsStrId);
+
+  writer.returnFromIC();
+  trackAttached("BinaryArith.StringBooleanConcat");
   return true;
 }
 
