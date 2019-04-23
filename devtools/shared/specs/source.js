@@ -22,6 +22,7 @@ const sourceSpec = generateActorSpec({
   typeName: "source",
 
   methods: {
+    getExecutableLines: { response: { lines: RetVal("json") } },
     getBreakpointPositions: {
       request: {
         query: Arg(0, "nullable:breakpointquery"),
