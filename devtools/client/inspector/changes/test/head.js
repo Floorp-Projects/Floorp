@@ -65,3 +65,26 @@ function getAddedDeclarations(panelDoc, containerNode) {
 function getRemovedDeclarations(panelDoc, containerNode) {
   return getDeclarations(panelDoc, ".diff-remove", containerNode);
 }
+
+/**
+ * Get an array of DOM elements for the CSS selectors rendered in the Changes panel.
+ *
+ * @param  {Document} panelDoc
+ *         Host document of the Changes panel.
+ * @param  {String} selector
+ *         Optional selector to filter rendered selector DOM elements.
+ *         One of ".diff-remove" or ".diff-add".
+ *         If omitted, all selectors will be returned.
+ * @return {Array}
+ */
+function getSelectors(panelDoc, selector = "") {
+  return panelDoc.querySelectorAll(`.changes__selector${selector}`);
+}
+
+function getAddedSelectors(panelDoc) {
+  return getSelectors(panelDoc, ".diff-add");
+}
+
+function getRemovedSelectors(panelDoc) {
+  return getSelectors(panelDoc, ".diff-remove");
+}
