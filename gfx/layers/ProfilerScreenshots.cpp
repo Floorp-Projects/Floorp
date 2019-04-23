@@ -30,7 +30,7 @@ ProfilerScreenshots::~ProfilerScreenshots() {
     SystemGroup::Dispatch(
         TaskCategory::Other,
         NewRunnableMethod("ProfilerScreenshots::~ProfilerScreenshots", mThread,
-                          &nsIThread::Shutdown));
+                          &nsIThread::AsyncShutdown));
     mThread = nullptr;
   }
 }

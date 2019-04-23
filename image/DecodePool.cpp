@@ -85,9 +85,10 @@ class DecodePoolImpl {
 
     // Threads have to be shut down from another thread, so we'll ask the
     // main thread to do it for us.
-    SystemGroup::Dispatch(TaskCategory::Other,
-                          NewRunnableMethod("DecodePoolImpl::ShutdownThread",
-                                            aThisThread, &nsIThread::Shutdown));
+    SystemGroup::Dispatch(
+        TaskCategory::Other,
+        NewRunnableMethod("DecodePoolImpl::ShutdownThread", aThisThread,
+                          &nsIThread::AsyncShutdown));
   }
 
   /**
