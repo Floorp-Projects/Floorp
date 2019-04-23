@@ -42,6 +42,7 @@ import type {
   Frame,
   Scope,
   Source,
+  SourceContent,
   BindingContents,
   ScopeBindings
 } from "../../../types";
@@ -50,6 +51,7 @@ export type OriginalScope = RenderableScope;
 
 export async function buildMappedScopes(
   source: Source,
+  content: SourceContent,
   frame: Frame,
   scopes: Scope,
   sourceMaps: any,
@@ -89,6 +91,7 @@ export async function buildMappedScopes(
     expressionLookup
   } = await mapOriginalBindingsToGenerated(
     source,
+    content,
     originalRanges,
     originalAstScopes,
     generatedAstBindings,
@@ -108,6 +111,7 @@ export async function buildMappedScopes(
 
 async function mapOriginalBindingsToGenerated(
   source: Source,
+  content: SourceContent,
   originalRanges: Array<MappedOriginalRange>,
   originalAstScopes,
   generatedAstBindings,
@@ -133,6 +137,7 @@ async function mapOriginalBindingsToGenerated(
         cachedSourceMaps,
         client,
         source,
+        content,
         name,
         binding,
         originalRanges,
@@ -342,6 +347,7 @@ async function findGeneratedBinding(
   sourceMaps: any,
   client: any,
   source: Source,
+  content: SourceContent,
   name: string,
   originalBinding: BindingData,
   originalRanges: Array<MappedOriginalRange>,
@@ -409,8 +415,8 @@ async function findGeneratedBinding(
 
     if (
       (pos.type === "class-decl" || pos.type === "class-inner") &&
-      source.contentType &&
-      source.contentType.match(/\/typescript/)
+      content.contentType &&
+      content.contentType.match(/\/typescript/)
     ) {
       const declRange = findMatchingRange(originalRanges, pos.declaration);
       if (declRange && declRange.type !== "multiple") {

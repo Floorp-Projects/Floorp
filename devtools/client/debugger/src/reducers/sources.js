@@ -20,6 +20,8 @@ import {
   getPlainUrl
 } from "../utils/source";
 
+import * as asyncValue from "../utils/async-value";
+import type { AsyncValue, SettledValue } from "../utils/async-value";
 import { originalToGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 
@@ -36,6 +38,8 @@ import type {
   SourceId,
   SourceActor,
   SourceLocation,
+  SourceContent,
+  SourceWithContent,
   ThreadId
 } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
@@ -342,8 +346,7 @@ function updateProjectDirectoryRoot(state: SourcesState, root: string) {
 }
 
 /*
- * Update a source's loaded state fields
- * i.e. loadedState, text, error
+ * Update a source's loaded text content.
  */
 function updateLoadedState(
   state: SourcesState,
@@ -614,6 +617,74 @@ export const getSelectedSource: Selector<?Source> = createSelector(
     return sources[selectedLocation.sourceId];
   }
 );
+
+type GSSWC = Selector<?SourceWithContent>;
+export const getSelectedSourceWithContent: GSSWC = createSelector(
+  getSelectedLocation,
+  getSources,
+  (
+    selectedLocation: ?SourceLocation,
+    sources: SourcesMap
+  ): SourceWithContent | null => {
+    const source = selectedLocation && sources[selectedLocation.sourceId];
+    return source ? getSourceWithContentInner(sources, source.id) : null;
+  }
+);
+export function getSourceWithContent(
+  state: OuterState,
+  id: SourceId
+): SourceWithContent {
+  return getSourceWithContentInner(state.sources.sources, id);
+}
+export function getSourceContent(
+  state: OuterState,
+  id: SourceId
+): AsyncValue<SourceContent> | null {
+  return getSourceWithContentInner(state.sources.sources, id).content;
+}
+
+const contentLookup: WeakMap<Source, SourceWithContent> = new WeakMap();
+function getSourceWithContentInner(
+  sources: SourcesMap,
+  id: SourceId
+): SourceWithContent {
+  const source = sources[id];
+  if (!source) {
+    throw new Error("Unknown Source ID");
+  }
+
+  let result = contentLookup.get(source);
+  if (!result) {
+    let content = null;
+    if (source.loadedState === "loaded") {
+      if (source.error) {
+        content = asyncValue.rejected(source.error);
+      } else if (source.isWasm) {
+        if (typeof source.text !== "object") {
+          throw new Error("Expected WASM value.");
+        }
+        content = asyncValue.fulfilled({
+          type: "wasm",
+          value: source.text
+        });
+      } else {
+        content = asyncValue.fulfilled({
+          type: "text",
+          value: source.text || "",
+          contentType: source.contentType || undefined
+        });
+      }
+    }
+
+    result = {
+      source,
+      content
+    };
+    contentLookup.set(source, result);
+  }
+
+  return result;
+}
 
 export function getSelectedSourceId(state: OuterState) {
   const source = getSelectedSource((state: any));

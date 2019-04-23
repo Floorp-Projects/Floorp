@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Source } from "../types";
+import type { SourceContent } from "../types";
 
 /**
  * Utils for utils, by utils
@@ -55,12 +55,12 @@ export function waitForMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function downloadFile(source: Source, fileName: string) {
-  if (source.isWasm) {
+export function downloadFile(content: SourceContent, fileName: string) {
+  if (content.type !== "text") {
     return;
   }
 
-  const data = source.text;
+  const data = content.value;
   const { body } = document;
   if (!body) {
     return;

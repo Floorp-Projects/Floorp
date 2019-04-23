@@ -248,7 +248,8 @@ describe("QuickOpenModal", () => {
           },
           // symbol searching relies on a source being selected.
           // So we dummy out the source and the API.
-          selectedSource: { id: "foo", text: "yo" }
+          selectedSource: { id: "foo", text: "yo" },
+          selectedContentLoaded: true
         },
         "mount"
       );
@@ -274,7 +275,8 @@ describe("QuickOpenModal", () => {
           },
           // symbol searching relies on a source being selected.
           // So we dummy out the source and the API.
-          selectedSource: null
+          selectedSource: null,
+          selectedContentLoaded: false
         },
         "mount"
       );
@@ -330,7 +332,8 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: ":34:12",
           searchType: "goto",
-          selectedSource: { id: sourceId }
+          selectedSource: { id: sourceId },
+          selectedContentLoaded: true
         },
         "shallow"
       );
@@ -586,6 +589,7 @@ describe("QuickOpenModal", () => {
           query: "test",
           searchType: "functions",
           selectedSource: { id: sourceId },
+          selectedContentLoaded: true,
           symbols: {
             functions: [],
             variables: {}
@@ -651,6 +655,7 @@ describe("QuickOpenModal", () => {
           query: "test",
           searchType: "functions",
           selectedSource: { id: sourceId },
+          selectedContentLoaded: true,
           symbols: {
             functions: [],
             variables: {}
@@ -684,6 +689,7 @@ describe("QuickOpenModal", () => {
             query: "test",
             searchType: "variables",
             selectedSource: null,
+            selectedContentLoaded: true,
             symbols: {
               functions: [],
               variables: {}
@@ -723,6 +729,7 @@ describe("QuickOpenModal", () => {
             query: "test",
             searchType: "other",
             selectedSource: { id: sourceId },
+            selectedContentLoaded: true,
             symbols: {
               functions: [],
               variables: {}
