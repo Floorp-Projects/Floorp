@@ -50,6 +50,11 @@ body.dark .narrate-word-highlight {
 
 .narrate-dropdown {
   --border-color: #e5e5e5;
+  --current-voice: #7f7f7f;
+}
+.dark .narrate-dropdown {
+  --border-color: #65646a;
+  --current-voice: #a09eac;
 }
 
 .narrate-toggle {
@@ -67,7 +72,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-dropdown > .dropdown-popup button:hover:not(:disabled) {
-  background-color: #eaeaea;
+  background-color: var(--toolbar-hover);
 }
 
 .narrate-row {
@@ -134,6 +139,8 @@ body.dark .narrate-word-highlight {
   background-position: center;
   background-repeat: no-repeat;
   background-size: 24px auto;
+  -moz-context-properties: fill;
+  fill: var(--icon-fill);
 }
 
 .narrate-rate::before {
@@ -148,9 +155,12 @@ body.dark .narrate-word-highlight {
   margin: 0 1px;
   flex-grow: 1;
 }
+.narrate-rate-input {
+  background-color: var(--popup-bgcolor);
+}
 
 .narrate-rate-input::-moz-range-track {
-  background-color: #979797;
+  background-color: var(--icon-fill);
   height: 2px;
 }
 
@@ -160,7 +170,7 @@ body.dark .narrate-word-highlight {
 }
 
 .narrate-rate-input::-moz-range-thumb {
-  background-color: #808080;
+  background-color: var(--icon-fill);
   height: 16px;
   width: 16px;
   border-radius: 8px;
@@ -213,6 +223,10 @@ body.dark .narrate-word-highlight {
   background-color: #eaeaea;
 }
 
+body.dark .voiceselect > .options:not(.hovering) > button.option:focus {
+  background-color: var(--toolbar-hover);
+}
+
 .voiceselect > .options:not(.hovering) > button.option:hover:not(:focus) {
   background-color: transparent;
 }
@@ -232,7 +246,7 @@ body.dark .narrate-word-highlight {
 }
 
 .current-voice {
-  color: #7f7f7f;
+  color: var(--current-voice);
 }
 
 .voiceselect:not(.open) > button,

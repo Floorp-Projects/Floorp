@@ -1,3 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 12 12">
-  <path d="M6 9L1 4l1-1 4 4 4-4 1 1z" fill="#4C4C4C"/>
+  <path fill="context-fill" d="M6 9L1 4l1-1 4 4 4-4 1 1z"/>
 </svg>
