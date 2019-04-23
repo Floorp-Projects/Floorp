@@ -5,8 +5,8 @@
 random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
 random-if(Android) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
-# accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
+# accesskeys are not normally displayed on Mac, so set a pref to enable them
+pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xul accesskey-ref.xul
 pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",0-1,0-11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
 skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == chrome://reftest/content/xul/mac-tab-toolbar.xul chrome://reftest/content/xul/mac-tab-toolbar-ref.xul
 pref(layout.css.xul-tree-pseudos.content.enabled,true) != tree-row-outline-1.xul tree-row-outline-1-notref.xul

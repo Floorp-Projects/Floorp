@@ -16,12 +16,10 @@
     SimpleTest.waitForExplicitFinish();
 
     addLoadEvent(() => {
-      is(Object.getPrototypeOf(document.createElementNS(XUL_NS, "label")),
-         XULTextElement.prototype,
+      ok(document.createElementNS(XUL_NS, "label") instanceof XULTextElement,
         `<label> should be of XULTextElement type`);
 
-      is(Object.getPrototypeOf(document.createElementNS(XUL_NS, "description")),
-         XULTextElement.prototype,
+      ok(document.createElementNS(XUL_NS, "description") instanceof XULTextElement,
         `<description> should be of XULTextElement type`);
 
       SimpleTest.finish();
