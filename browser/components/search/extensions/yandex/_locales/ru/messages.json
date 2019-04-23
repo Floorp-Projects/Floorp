@@ -33,6 +33,6 @@
     "message": "2186620"
   },
   "extensionIcon": {
-    "message": "resource://search-plugins/images/yandex-ru.ico"
+    "message": "yandex-ru.ico"
   }
 }
