@@ -416,4 +416,7 @@
     <!-- Text to prompt users to select how many tabs they have
     selected in the "select tabs" stepof the collection creator -->
     <string name="create_collection_save_to_collection_full">%d tabs selected</string>
+
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Close</string>
 </resources>

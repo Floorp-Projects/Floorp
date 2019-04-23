@@ -58,15 +58,18 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:background="@drawable/add_tabs_to_collection_background"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless"
         android:clipToPadding="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
-        <ImageView
+        <ImageButton
             android:id="@+id/close_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/mozac_ic_close"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="@string/create_collection_close"
+            android:src="@drawable/mozac_ic_close"
             android:layout_margin="16dp"
             android:tint="?neutral"
             app:layout_constraintTop_toTopOf="parent"
@@ -75,6 +78,7 @@
 
         <TextView
             android:id="@+id/add_tabs_button_text"
+            android:importantForAccessibility="no"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -90,6 +94,7 @@
 
         <ImageView
             android:id="@+id/save_icon"
+            android:importantForAccessibility="no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
