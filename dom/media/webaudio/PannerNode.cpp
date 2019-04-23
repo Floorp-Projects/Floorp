@@ -296,24 +296,21 @@ PannerNode::PannerNode(AudioContext* aContext)
       ,
       mPanningModel(PanningModelType::Equalpower),
       mDistanceModel(DistanceModelType::Inverse),
-      mPositionX(
-          new AudioParam(this, PannerNode::POSITIONX, this->NodeType(), 0.f)),
-      mPositionY(
-          new AudioParam(this, PannerNode::POSITIONY, this->NodeType(), 0.f)),
-      mPositionZ(
-          new AudioParam(this, PannerNode::POSITIONZ, this->NodeType(), 0.f)),
-      mOrientationX(new AudioParam(this, PannerNode::ORIENTATIONX,
-                                   this->NodeType(), 1.0f)),
-      mOrientationY(new AudioParam(this, PannerNode::ORIENTATIONY,
-                                   this->NodeType(), 0.f)),
-      mOrientationZ(new AudioParam(this, PannerNode::ORIENTATIONZ,
-                                   this->NodeType(), 0.f)),
       mRefDistance(1.),
       mMaxDistance(10000.),
       mRolloffFactor(1.),
       mConeInnerAngle(360.),
       mConeOuterAngle(360.),
       mConeOuterGain(0.) {
+  CreateAudioParam(mPositionX, PannerNode::POSITIONX, this->NodeType(), 0.f);
+  CreateAudioParam(mPositionY, PannerNode::POSITIONY, this->NodeType(), 0.f);
+  CreateAudioParam(mPositionZ, PannerNode::POSITIONZ, this->NodeType(), 0.f);
+  CreateAudioParam(mOrientationX, PannerNode::ORIENTATIONX, this->NodeType(),
+                   1.0f);
+  CreateAudioParam(mOrientationY, PannerNode::ORIENTATIONY, this->NodeType(),
+                   0.f);
+  CreateAudioParam(mOrientationZ, PannerNode::ORIENTATIONZ, this->NodeType(),
+                   0.f);
   mStream = AudioNodeStream::Create(
       aContext,
       new PannerNodeEngine(this, aContext->Destination(),

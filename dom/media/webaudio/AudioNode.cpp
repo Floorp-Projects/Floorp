@@ -26,12 +26,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, DOMEventTargetHelper)
     tmp->mContext->UnregisterNode(tmp);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParams)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputNodes)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParams)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputNodes)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -590,6 +592,14 @@ void AudioNode::SetPassThrough(bool aPassThrough) {
   if (mStream) {
     mStream->SetPassThrough(mPassThrough);
   }
+}
+
+void AudioNode::CreateAudioParam(RefPtr<AudioParam>& aParam, uint32_t aIndex,
+                                 const char* aName, float aDefaultValue,
+                                 float aMinValue, float aMaxValue) {
+  aParam =
+      new AudioParam(this, aIndex, aName, aDefaultValue, aMinValue, aMaxValue);
+  mParams.AppendElement(aParam);
 }
 
 }  // namespace dom
