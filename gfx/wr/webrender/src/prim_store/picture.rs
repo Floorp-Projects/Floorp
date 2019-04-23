@@ -3,14 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorU, FilterOp, MixBlendMode,
+    ColorU, FilterOp, LayoutPrimitiveInfo, MixBlendMode,
     PropertyBinding, PropertyBindingId,
 };
 use api::units::{Au, LayoutSize, LayoutVector2D};
 use intern::ItemUid;
 use display_list_flattener::IsVisible;
 use intern::{Internable, InternDebug, Handle as InternHandle};
-use internal_types::LayoutPrimitiveInfo;
 use picture::PictureCompositeMode;
 use prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,

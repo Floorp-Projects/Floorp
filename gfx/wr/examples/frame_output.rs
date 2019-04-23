@@ -113,6 +113,7 @@ impl App {
             None,
         );
 
+        let info = LayoutPrimitiveInfo::new(document.content_rect);
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
         let mut builder = DisplayListBuilder::new(
             document.pipeline_id,
@@ -120,15 +121,11 @@ impl App {
         );
 
         builder.push_simple_stacking_context(
-            document.content_rect.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
 
-        builder.push_rect(
-            &CommonItemProperties::new(document.content_rect, space_and_clip),
-            ColorF::new(1.0, 1.0, 0.0, 1.0)
-        );
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 0.0, 1.0));
         builder.pop_stacking_context();
 
         txn.set_root_pipeline(pipeline_id);
@@ -161,19 +158,18 @@ impl Example for App {
             self.init_output_document(api, FramebufferIntSize::new(200, 200), device_pixel_ratio);
         }
 
-        let bounds = (100, 100).to(200, 200);
+        let info = LayoutPrimitiveInfo::new((100, 100).to(200, 200));
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            bounds.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
 
         builder.push_image(
-            &CommonItemProperties::new(bounds, space_and_clip),
-            bounds,
-            bounds.size,
+            &info,
+            &space_and_clip,
+            info.rect.size,
             LayoutSize::zero(),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,

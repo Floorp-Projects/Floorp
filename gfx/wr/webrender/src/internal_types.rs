@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{DebugCommand, DocumentId, ExternalImageData, ExternalImageId};
-use api::{ImageFormat, ItemTag, NotificationRequest};
+use api::{ImageFormat, NotificationRequest};
 use api::units::*;
 use device::TextureFilter;
 use renderer::PipelineInfo;
@@ -320,28 +320,6 @@ impl ResourceCacheError {
     pub fn new(description: String) -> ResourceCacheError {
         ResourceCacheError {
             description,
-        }
-    }
-}
-
-/// Primitive metadata we pass around in a bunch of places
-#[derive(Copy, Clone, Debug)]
-pub struct LayoutPrimitiveInfo {
-    /// NOTE: this is *ideally* redundant with the clip_rect
-    /// but that's an ongoing project, so for now it exists and is used :(
-    pub rect: LayoutRect,
-    pub clip_rect: LayoutRect,
-    pub is_backface_visible: bool,
-    pub hit_info: Option<ItemTag>,
-}
-
-impl LayoutPrimitiveInfo {
-    pub fn with_clip_rect(rect: LayoutRect, clip_rect: LayoutRect) -> Self {
-        Self {
-            rect,
-            clip_rect,
-            is_backface_visible: true,
-            hit_info: None,
         }
     }
 }

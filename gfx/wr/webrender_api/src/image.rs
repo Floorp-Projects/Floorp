@@ -74,7 +74,7 @@ pub enum TextureTarget {
 }
 
 /// Storage format identifier for externally-managed images.
-#[repr(u8)]
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
     /// The image is texture-backed.
@@ -97,7 +97,7 @@ pub struct ExternalImageData {
 }
 
 /// Specifies the format of a series of pixels, in driver terms.
-#[repr(u8)]
+#[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageFormat {
     /// One-channel, byte storage. The "red" doesn't map to the color

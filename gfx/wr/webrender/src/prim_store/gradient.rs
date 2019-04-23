@@ -4,7 +4,7 @@
 
 use api::{
     ColorF, ColorU, ExtendMode, GradientStop,
-    PremultipliedColorF, LineOrientation,
+    LayoutPrimitiveInfo, PremultipliedColorF, LineOrientation,
 };
 use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
 use display_list_flattener::IsVisible;
@@ -12,7 +12,6 @@ use euclid::approxeq::ApproxEq;
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use intern::{Internable, InternDebug, Handle as InternHandle};
-use internal_types::LayoutPrimitiveInfo;
 use prim_store::{BrushSegment, GradientTileRange, VectorKey};
 use prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};

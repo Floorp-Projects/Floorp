@@ -58,7 +58,7 @@ impl App {
         };
 
         let spatial_id = builder.push_reference_frame(
-            bounds.origin,
+            &LayoutRect::new(bounds.origin, LayoutSize::zero()),
             SpatialId::root_scroll_node(pipeline_id),
             TransformStyle::Flat,
             PropertyBinding::Binding(property_key, LayoutTransform::identity()),
@@ -66,9 +66,8 @@ impl App {
         );
 
         builder.push_simple_stacking_context_with_filters(
-            LayoutPoint::zero(),
+            &LayoutPrimitiveInfo::new(LayoutRect::zero()),
             spatial_id,
-            true,
             &filters,
             &[],
         );
@@ -87,13 +86,11 @@ impl App {
 
         // Fill it with a white rect
         builder.push_rect(
-            &CommonItemProperties::new(
-                LayoutRect::new(LayoutPoint::zero(), bounds.size),
-                SpaceAndClipInfo {
-                    spatial_id,
-                    clip_id,
-                }
-            ),
+            &LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), bounds.size)),
+            &SpaceAndClipInfo {
+                spatial_id,
+                clip_id,
+            },
             color,
         );
 

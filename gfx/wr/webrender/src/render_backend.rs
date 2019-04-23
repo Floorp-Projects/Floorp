@@ -10,7 +10,7 @@
 
 use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand, DebugFlags};
 #[cfg(feature = "debugger")]
-use api::{BuiltDisplayListIter, DisplayItem};
+use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
@@ -1299,7 +1299,7 @@ impl RenderBackend {
                     frame_counter,
                     profile_counters,
                     false
-                );
+                );                
             }
 
             self.resource_cache.after_frames();
@@ -1525,19 +1525,19 @@ impl RenderBackend {
                 };
 
                 match *item.item() {
-                    display_item @ DisplayItem::PushStackingContext(..) => {
+                    display_item @ SpecificDisplayItem::PushStackingContext(..) => {
                         let mut subtraversal = item.sub_iter();
                         let mut child_node =
-                            debug_server::TreeNode::new(&display_item.debug_name().to_string());
+                            debug_server::TreeNode::new(&display_item.debug_string());
                         self.traverse_items(&mut subtraversal, &mut child_node);
                         node.add_child(child_node);
                         Some(subtraversal)
                     }
-                    DisplayItem::PopStackingContext => {
+                    SpecificDisplayItem::PopStackingContext => {
                         return;
                     }
                     display_item => {
-                        node.add_item(&display_item.debug_name().to_string());
+                        node.add_item(&display_item.debug_string());
                         None
                     }
                 }
@@ -1631,6 +1631,46 @@ fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<BlobImageKey> {
     }
 
     requests
+}
+
+
+#[cfg(feature = "debugger")]
+trait ToDebugString {
+    fn debug_string(&self) -> String;
+}
+
+#[cfg(feature = "debugger")]
+impl ToDebugString for SpecificDisplayItem {
+    fn debug_string(&self) -> String {
+        match *self {
+            SpecificDisplayItem::Border(..) => String::from("border"),
+            SpecificDisplayItem::BoxShadow(..) => String::from("box_shadow"),
+            SpecificDisplayItem::ClearRectangle => String::from("clear_rectangle"),
+            SpecificDisplayItem::Clip(..) => String::from("clip"),
+            SpecificDisplayItem::ClipChain(..) => String::from("clip_chain"),
+            SpecificDisplayItem::Gradient(..) => String::from("gradient"),
+            SpecificDisplayItem::Iframe(..) => String::from("iframe"),
+            SpecificDisplayItem::Image(..) => String::from("image"),
+            SpecificDisplayItem::Line(..) => String::from("line"),
+            SpecificDisplayItem::PopAllShadows => String::from("pop_all_shadows"),
+            SpecificDisplayItem::PopReferenceFrame => String::from("pop_reference_frame"),
+            SpecificDisplayItem::PopStackingContext => String::from("pop_stacking_context"),
+            SpecificDisplayItem::PushShadow(..) => String::from("push_shadow"),
+            SpecificDisplayItem::PushReferenceFrame(..) => String::from("push_reference_frame"),
+            SpecificDisplayItem::PushStackingContext(..) => String::from("push_stacking_context"),
+            SpecificDisplayItem::SetFilterOps => String::from("set_filter_ops"),
+            SpecificDisplayItem::SetFilterData => String::from("set_filter_data"),
+            SpecificDisplayItem::RadialGradient(..) => String::from("radial_gradient"),
+            SpecificDisplayItem::Rectangle(..) => String::from("rectangle"),
+            SpecificDisplayItem::ScrollFrame(..) => String::from("scroll_frame"),
+            SpecificDisplayItem::SetGradientStops => String::from("set_gradient_stops"),
+            SpecificDisplayItem::StickyFrame(..) => String::from("sticky_frame"),
+            SpecificDisplayItem::Text(..) => String::from("text"),
+            SpecificDisplayItem::YuvImage(..) => String::from("yuv_image"),
+            SpecificDisplayItem::PushCacheMarker(..) => String::from("push_cache_marker"),
+            SpecificDisplayItem::PopCacheMarker => String::from("pop_cache_marker"),
+        }
+    }
 }
 
 impl RenderBackend {
@@ -1774,7 +1814,7 @@ impl RenderBackend {
             let data_stores = CaptureConfig::deserialize::<DataStores, _>(root, &data_stores_name)
                 .expect(&format!("Unable to open {}.ron", data_stores_name));
 
-            let doc = Document {
+            let mut doc = Document {
                 id: id,
                 scene: scene.clone(),
                 removed_pipelines: Vec::new(),

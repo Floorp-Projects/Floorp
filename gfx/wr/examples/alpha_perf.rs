@@ -32,19 +32,16 @@ impl Example for App {
         _document_id: DocumentId,
     ) {
         let bounds = (0, 0).to(1920, 1080);
+        let info = LayoutPrimitiveInfo::new(bounds);
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
-            bounds.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
 
         for _ in 0 .. self.rect_count {
-            builder.push_rect(
-                &CommonItemProperties::new(bounds, space_and_clip),
-                ColorF::new(1.0, 1.0, 1.0, 0.05)
-            );
+            builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 1.0, 0.05));
         }
 
         builder.pop_stacking_context();

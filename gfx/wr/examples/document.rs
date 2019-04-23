@@ -116,12 +116,12 @@ impl Example for App {
             );
 
             builder.push_simple_stacking_context(
-                doc.content_rect.origin,
+                &LayoutPrimitiveInfo::new(doc.content_rect),
                 space_and_clip.spatial_id,
-                true,
             );
             builder.push_rect(
-                &CommonItemProperties::new(local_rect, space_and_clip),
+                &LayoutPrimitiveInfo::new(local_rect),
+                &space_and_clip,
                 doc.color,
             );
             builder.pop_stacking_context();
