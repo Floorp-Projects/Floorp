@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.util.TypedValue
-import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
@@ -33,7 +32,6 @@ class TabCounterToolbarButton(
                     it.private == isPrivate
                 })
             setOnClickListener {
-                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 showTabs.invoke()
             }
             contentDescription =
