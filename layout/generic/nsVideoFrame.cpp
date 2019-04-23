@@ -359,10 +359,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         nsContentUtils::AddScriptRunner(event);
       }
     } else {
-      MOZ_ASSERT_UNREACHABLE(
-          "Extra child frame found in nsVideoFrame. "
-          "Possibly from stray whitespace around the videocontrols container "
-          "element.");
+      NS_ERROR("Unexpected extra child frame in nsVideoFrame; skipping");
     }
   }
 
