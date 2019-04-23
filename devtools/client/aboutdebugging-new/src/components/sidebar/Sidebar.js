@@ -46,6 +46,7 @@ class Sidebar extends PureComponent {
     return Message(
       {
           level: MESSAGE_LEVEL.INFO,
+          isCloseable: true,
       },
         Localized(
           {

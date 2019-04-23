@@ -3,15 +3,18 @@
   "license": "MPL-2.0",
   "version": "0.0.1",
   "engines": {
-    "node": ">=8.9.4"
+    "node": ">=10.0.0"
   },
   "scripts": {
     "test": "jest"
   },
   "dependencies": {
-    "jest": "^23.0.0",
-    "react-test-renderer": "16.4.1",
+    "jest": "^24.6",
     "react": "16.4.1",
-    "react-dom": "16.4.1"
+    "react-dom": "16.4.1",
+    "react-test-renderer": "16.4.1"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-generator-functions": "^6.24.1"
   }
 }

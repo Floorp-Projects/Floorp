@@ -45,6 +45,7 @@ class ExtensionDetail extends PureComponent {
         return Message(
           {
             level: MESSAGE_LEVEL.WARNING,
+            isCloseable: true,
             key: `warning-${index}`,
           },
           dom.p(
