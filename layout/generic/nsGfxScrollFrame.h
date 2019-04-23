@@ -410,6 +410,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
  private:
   nsIFrame* GetFrameForDir() const;  // helper for Is{Physical,Bidi}LTR to find
                                      // the frame whose directionality we use
+  nsIFrame* GetFrameForScrollSnap() const;  // helper to find the frame whose
+                                            // scroll-snap-type and
+                                            // scroll-padding we use
 
   ScrollSnapInfo ComputeScrollSnapInfo(
       const Maybe<nsPoint>& aDestination) const;
