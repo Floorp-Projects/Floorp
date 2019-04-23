@@ -224,14 +224,13 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
     : AudioNode(aContext, 2, ChannelCountMode::Max,
                 ChannelInterpretation::Speakers),
-      mType(BiquadFilterType::Lowpass),
-      mFrequency(new AudioParam(
-          this, BiquadFilterNodeEngine::FREQUENCY, "frequency", 350.f,
-          -(aContext->SampleRate() / 2), aContext->SampleRate() / 2)),
-      mDetune(
-          new AudioParam(this, BiquadFilterNodeEngine::DETUNE, "detune", 0.f)),
-      mQ(new AudioParam(this, BiquadFilterNodeEngine::Q, "Q", 1.f)),
-      mGain(new AudioParam(this, BiquadFilterNodeEngine::GAIN, "gain", 0.f)) {
+      mType(BiquadFilterType::Lowpass) {
+  CreateAudioParam(mFrequency, BiquadFilterNodeEngine::FREQUENCY, "frequency",
+                   350.f, -(aContext->SampleRate() / 2),
+                   aContext->SampleRate() / 2);
+  CreateAudioParam(mDetune, BiquadFilterNodeEngine::DETUNE, "detune", 0.f);
+  CreateAudioParam(mQ, BiquadFilterNodeEngine::Q, "Q", 1.f);
+  CreateAudioParam(mGain, BiquadFilterNodeEngine::GAIN, "gain", 0.f);
   uint64_t windowID = aContext->GetParentObject()->WindowID();
   BiquadFilterNodeEngine* engine =
       new BiquadFilterNodeEngine(this, aContext->Destination(), windowID);
