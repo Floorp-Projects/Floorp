@@ -594,7 +594,7 @@ function getCanUseBits() {
   // standard system proxy.
   let defaultProxy = Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM;
   if (Services.prefs.getIntPref(PREF_NETWORK_PROXY_TYPE, defaultProxy) !=
-      defaultProxy) {
+      defaultProxy && !Cu.isInAutomation) {
     LOG("getCanUseBits - Not using BITS because of proxy usage");
     return "NoBits_Proxy";
   }
