@@ -2,90 +2,101 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/quick_action_sheet"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?foundation"
-    android:orientation="vertical">
-
-    <View
-        android:focusable="false"
-        android:background="?attr/neutral"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"/>
-
-    <ImageButton
-        android:paddingTop="7dp"
-        android:id="@+id/quick_action_sheet_handle"
-        android:layout_width="match_parent"
-        android:layout_height="12dp"
-        android:background="@null"
-        android:contentDescription="@string/quick_action_sheet_handle"
-        android:src="@drawable/ic_drawer_pull_tab" />
+    android:layout_height="wrap_content">
 
     <LinearLayout
-        android:id="@+id/quick_action_buttons_layout"
-        android:layout_marginBottom="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@null"
-        android:orientation="horizontal">
+        android:background="?foundation"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/quick_action_share"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?selectableItemBackgroundBorderless"
-            android:drawableTop="@drawable/quick_action_icon_share"
-            android:drawablePadding="5dp"
-            android:text="@string/quick_action_share"
-            android:textAllCaps="false"
-            android:textColor="?primaryText"
-            android:textSize="12sp" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/neutral"
+            android:focusable="false" />
 
-        <Button
-            android:id="@+id/quick_action_downloads"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?selectableItemBackgroundBorderless"
-            android:drawableTop="@drawable/library_icon_downloads_circle_background"
-            android:drawablePadding="5dp"
-            android:text="@string/quick_action_download"
-            android:textAllCaps="false"
-            android:textColor="?primaryText"
-            android:textSize="12sp"
-            android:visibility="gone" />
+        <ImageButton
+            android:id="@+id/quick_action_sheet_handle"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:background="@null"
+            android:contentDescription="@string/quick_action_sheet_handle"
+            android:paddingTop="7dp"
+            android:src="@drawable/ic_drawer_pull_tab" />
 
-        <Button
-            android:id="@+id/quick_action_bookmark"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/quick_action_buttons_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?selectableItemBackgroundBorderless"
-            android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
-            android:drawablePadding="5dp"
-            android:text="@string/quick_action_bookmark"
-            android:textAllCaps="false"
-            android:textColor="?primaryText"
-            android:textSize="12sp" />
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="12dp"
+            android:background="@null"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/quick_action_read"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?selectableItemBackgroundBorderless"
-            android:drawableTop="@drawable/quick_action_icon_read"
-            android:drawablePadding="5dp"
-            android:text="@string/quick_action_read"
-            android:textAllCaps="false"
-            android:textColor="?primaryText"
-            android:textSize="12sp"
-            android:visibility="gone" />
+            <Button
+                android:id="@+id/quick_action_share"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawableTop="@drawable/quick_action_icon_share"
+                android:drawablePadding="5dp"
+                android:text="@string/quick_action_share"
+                android:textAllCaps="false"
+                android:textColor="?primaryText"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/quick_action_downloads"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawableTop="@drawable/library_icon_downloads_circle_background"
+                android:drawablePadding="5dp"
+                android:text="@string/quick_action_download"
+                android:textAllCaps="false"
+                android:textColor="?primaryText"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/quick_action_bookmark"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
+                android:drawablePadding="5dp"
+                android:text="@string/quick_action_bookmark"
+                android:textAllCaps="false"
+                android:textColor="?primaryText"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/quick_action_read"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:drawableTop="@drawable/quick_action_icon_read"
+                android:drawablePadding="5dp"
+                android:text="@string/quick_action_read"
+                android:textAllCaps="false"
+                android:textColor="?primaryText"
+                android:textSize="12sp"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="1.0"
+        android:background="?foundation" />
+</FrameLayout>

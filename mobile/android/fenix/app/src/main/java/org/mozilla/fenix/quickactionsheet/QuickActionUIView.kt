@@ -14,6 +14,7 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.fragment_browser.*
+import kotlinx.android.synthetic.main.layout_quick_action_sheet.*
 import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -45,7 +46,8 @@ class QuickActionUIView(
                 }
             }
 
-            override fun onSlide(p0: View, p1: Float) {
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                animateOverlay(slideOffset)
             }
         })
 
@@ -67,6 +69,13 @@ class QuickActionUIView(
             actionEmitter.onNext(QuickActionAction.ReadPressed)
             quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         }
+    }
+
+    /**
+     * Changes alpha of overlay based on new offset of this sheet within [-1,1] range.
+     */
+    private fun animateOverlay(offset: Float) {
+        overlay.alpha = (1 - offset)
     }
 
     private fun updateImportantForAccessibility(state: Int) {
