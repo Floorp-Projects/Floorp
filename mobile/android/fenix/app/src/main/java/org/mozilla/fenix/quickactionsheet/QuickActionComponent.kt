@@ -16,7 +16,10 @@ import org.mozilla.fenix.mvi.ViewState
 class QuickActionComponent(
     private val container: ViewGroup,
     bus: ActionBusFactory,
-    override var initialState: QuickActionState = QuickActionState(false)
+    override var initialState: QuickActionState = QuickActionState(
+        readable = false,
+        bookmarked = false
+    )
 ) : UIComponent<QuickActionState, QuickActionAction, QuickActionChange>(
     bus.getManagedEmitter(QuickActionAction::class.java),
     bus.getSafeManagedObservable(QuickActionChange::class.java)
@@ -24,6 +27,9 @@ class QuickActionComponent(
 
     override val reducer: Reducer<QuickActionState, QuickActionChange> = { state, change ->
         when (change) {
+            is QuickActionChange.BookmarkedStateChange -> {
+                state.copy(bookmarked = change.bookmarked)
+            }
             is QuickActionChange.ReadableStateChange -> {
                 state.copy(readable = change.readable)
             }
@@ -38,7 +44,7 @@ class QuickActionComponent(
     }
 }
 
-data class QuickActionState(val readable: Boolean) : ViewState
+data class QuickActionState(val readable: Boolean, val bookmarked: Boolean) : ViewState
 
 sealed class QuickActionAction : Action {
     object Opened : QuickActionAction()
@@ -50,5 +56,6 @@ sealed class QuickActionAction : Action {
 }
 
 sealed class QuickActionChange : Change {
+    data class BookmarkedStateChange(val bookmarked: Boolean) : QuickActionChange()
     data class ReadableStateChange(val readable: Boolean) : QuickActionChange()
 }

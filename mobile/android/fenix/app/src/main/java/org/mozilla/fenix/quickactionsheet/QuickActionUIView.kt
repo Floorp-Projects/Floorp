@@ -97,5 +97,6 @@ class QuickActionUIView(
 
     override fun updateView() = Consumer<QuickActionState> {
         view.quick_action_read.visibility = if (it.readable) View.VISIBLE else View.GONE
+        view.quick_action_bookmark.isSelected = it.bookmarked
     }
 }

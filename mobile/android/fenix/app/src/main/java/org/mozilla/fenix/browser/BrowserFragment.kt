@@ -70,7 +70,9 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
+import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.quickactionsheet.QuickActionAction
+import org.mozilla.fenix.quickactionsheet.QuickActionChange
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
@@ -148,7 +150,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     }
 
     private fun getAppropriateLayoutGravity(): Int {
-        if (getSessionById()?.isCustomTabSession() == true) { return Gravity.TOP }
+        if (getSessionById()?.isCustomTabSession() == true) {
+            return Gravity.TOP
+        }
 
         return Gravity.BOTTOM
     }
@@ -264,7 +268,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         )
 
         thumbnailsFeature.set(
-            feature = ThumbnailsFeature(requireContext(), view.engineView, requireComponents.core.sessionManager),
+            feature = ThumbnailsFeature(
+                requireContext(),
+                view.engineView,
+                requireComponents.core.sessionManager
+            ),
             owner = this,
             view = view
         )
@@ -362,8 +370,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                         getSessionById()?.let { session ->
                             CoroutineScope(IO).launch {
                                 val guid = requireComponents.core.bookmarksStorage
-                                    .addItem(BookmarkRoot.Mobile.id, session.url, session.title, null)
+                                    .addItem(
+                                        BookmarkRoot.Mobile.id,
+                                        session.url,
+                                        session.title,
+                                        null
+                                    )
                                 launch(Main) {
+                                    getManagedEmitter<QuickActionChange>()
+                                        .onNext(QuickActionChange.BookmarkedStateChange(true))
                                     requireComponents.analytics.metrics.track(Event.AddBookmark)
                                     view?.let {
                                         FenixSnackbar.make(
@@ -371,7 +386,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                                             Snackbar.LENGTH_LONG
                                         )
                                             .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                                Navigation.findNavController(requireActivity(), R.id.container)
+                                                Navigation.findNavController(
+                                                    requireActivity(),
+                                                    R.id.container
+                                                )
                                                     .navigate(
                                                         BrowserFragmentDirections
                                                             .actionBrowserFragmentToBookmarkEditFragment(
@@ -411,7 +429,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
@@ -473,14 +495,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             ToolbarMenu.Item.Share -> getSessionById()?.let { session ->
-                session.url.apply { requireContext().share(this)
+                session.url.apply {
+                    requireContext().share(this)
                 }
             }
             ToolbarMenu.Item.NewPrivateTab -> {
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                (activity as HomeActivity).browsingModeManager.mode =
+                    BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
                 FindInPageIntegration.launch?.invoke()
@@ -500,7 +524,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                (activity as HomeActivity).browsingModeManager.mode =
+                    BrowsingModeManager.Mode.Normal
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 val intent = Intent(context, IntentReceiverActivity::class.java)
@@ -547,7 +572,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
     private fun getSessionById(): Session? {
         return if (externalSessionId != null) {
-            requireNotNull(requireContext().components.core.sessionManager.findSessionById(externalSessionId!!))
+            requireNotNull(
+                requireContext().components.core.sessionManager.findSessionById(
+                    externalSessionId!!
+                )
+            )
         } else {
             requireComponents.core.sessionManager.selectedSession
         }
@@ -562,6 +591,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         val observer = object : Session.Observer {
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 super.onLoadingStateChanged(session, loading)
+                if (!loading) {
+                    searchBookmarks(session)
+                }
                 setToolbarBehavior(loading)
             }
         }
@@ -579,8 +611,21 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         }
     }
 
+    private fun searchBookmarks(session: Session) {
+        launch {
+            val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(session.url)
+            val found = list.isNotEmpty() && list[0].url == session.url
+            launch(Main) {
+                getManagedEmitter<QuickActionChange>()
+                    .onNext(QuickActionChange.BookmarkedStateChange(found))
+            }
+        }
+    }
+
     private fun setToolbarBehavior(loading: Boolean) {
-        if (getSessionById()?.isCustomTabSession() == true) { return }
+        if (getSessionById()?.isCustomTabSession() == true) {
+            return
+        }
 
         val toolbarView = toolbarComponent.uiView.view
         (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
@@ -592,7 +637,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                     behavior = BrowserToolbarBottomBehavior(context, null)
                 } else {
                     (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
-                    null
+                    behavior = null
                 }
             }
         }
@@ -603,6 +648,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
         private const val TOOLBAR_HEIGHT = 56f
-        const val REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
+        const val REPORT_SITE_ISSUE_URL =
+            "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
 }

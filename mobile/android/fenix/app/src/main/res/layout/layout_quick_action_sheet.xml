@@ -70,7 +70,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="?selectableItemBackgroundBorderless"
-                android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
+                android:drawableTop="@drawable/bookmark_two_state"
                 android:drawablePadding="5dp"
                 android:text="@string/quick_action_bookmark"
                 android:textAllCaps="false"

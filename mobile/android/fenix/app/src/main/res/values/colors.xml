@@ -91,8 +91,10 @@
     <color name="library_downloads_icon_background">#D4C1FA</color>
     <color name="library_downloads_icon">#2E2060</color>
 
-    <color name="library_bookmarks_icon_background">#F4B8D9</color>
-    <color name="library_bookmarks_icon">#491949</color>
+    <color name="bookmarks_icon_background_filled">#C60084</color>
+    <color name="bookmarks_icon_filled">#FFB4DB</color>
+    <color name="bookmarks_icon_background_outline">#FFB4DB</color>
+    <color name="bookmarks_icon_outline">#50134B</color>
 
     <color name="library_history_icon_background">#F5C0C6</color>
     <color name="library_history_icon">#3E0909</color>
