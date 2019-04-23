@@ -398,10 +398,6 @@ export function isLoaded(source: Source) {
   return source.loadedState === "loaded";
 }
 
-export function isLoading(source: Source) {
-  return source.loadedState === "loading";
-}
-
 export function isInlineScript(source: Source): boolean {
   return source.introductionType === "scriptElement";
 }
