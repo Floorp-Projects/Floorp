@@ -260,6 +260,25 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       });
   },
 
+  /**
+   * Get all executable lines from the current source
+   * @return Array - Executable lines of the current script
+   */
+  getExecutableLines: async function() {
+    const offsetsLines = new Set();
+    for (const s of this._findDebuggeeScripts()) {
+      for (const offset of s.getPossibleBreakpoints()) {
+        offsetsLines.add(offset.lineNumber);
+      }
+    }
+
+    const lines = [...offsetsLines];
+    lines.sort((a, b) => {
+      return a - b;
+    });
+    return lines;
+  },
+
   getBreakpointPositions(query) {
     const {
       start: {
