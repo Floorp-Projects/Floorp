@@ -32,7 +32,27 @@ def symlink(source, link_name):
 
 def check_run(args):
     print >> sys.stderr, ' '.join(args)
-    r = subprocess.call(args)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # CMake `message(STATUS)` messages, as appearing in failed source code
+    # compiles, appear on stdout, so we only capture that.
+    (out, _) = p.communicate()
+    r = p.returncode
+    if r != 0:
+        cmake_output_re = re.compile("See also \"(.*/CMakeOutput.log)\"")
+        cmake_error_re = re.compile("See also \"(.*/CMakeError.log)\"")
+        output_match = cmake_output_re.search(out)
+        error_match = cmake_error_re.search(out)
+
+        print >> sys.stderr, out
+
+        def dump_file(log):
+            with open(log, 'rb') as f:
+                print >> sys.stderr, "\nContents of", log, "follow\n"
+                print >> sys.stderr, f.read()
+        if output_match:
+            dump_file(output_match.group(1))
+        if error_match:
+            dump_file(error_match.group(1))
     assert r == 0
 
 
