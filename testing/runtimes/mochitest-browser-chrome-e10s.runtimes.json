@@ -784,7 +784,7 @@
     "browser/extensions/shield-recipe-client/test/browser/browser_AddonStudies.js": 5032,
     "browser/extensions/shield-recipe-client/test/browser/browser_Heartbeat.js": 4712,
     "browser/extensions/shield-recipe-client/test/browser/browser_about_studies.js": 7504,
-    "browser/extensions/webcompat-reporter/test/browser/browser_button_state.js": 5240,
+    "browser/extensions/report-site-issue/test/browser/browser_button_state.js": 5240,
     "browser/modules/test/browser/browser_BrowserUITelemetry_buckets.js": 4386,
     "browser/modules/test/browser/browser_ContentSearch.js": 5429,
     "browser/modules/test/browser/browser_PageActions.js": 8479,
