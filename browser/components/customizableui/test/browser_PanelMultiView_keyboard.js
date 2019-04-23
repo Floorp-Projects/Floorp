@@ -211,7 +211,7 @@ add_task(async function testArrowsMenulist() {
 add_task(async function testSpaceTextbox() {
   await openPopup();
   gMainTextbox.focus();
-  EventUtils.synthesizeKey("KEY_Home");
+  gMainTextbox.selectionStart = gMainTextbox.selectionEnd = 0;
   EventUtils.synthesizeKey(" ");
   is(gMainTextbox.value, " value", "Space typed into textbox");
   gMainTextbox.value = "value";

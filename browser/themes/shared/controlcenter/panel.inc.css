@@ -370,6 +370,7 @@ description#identity-popup-content-verifier,
 .identity-popup-content-blocking-category:hover {
   border-radius: 2px;
   background-color: var(--arrowpanel-dimmed);
+  outline: none;
 }
 
 .identity-popup-content-blocking-category:hover:active {
