@@ -1505,6 +1505,7 @@ inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r) {
   return os;
 }
 
+// Old draft-04
 // sc-attr     = "a=simulcast:" 1*2( WSP sc-str-list ) [WSP sc-pause-list]
 // sc-str-list = sc-dir WSP sc-id-type "=" sc-alt-list *( ";" sc-alt-list )
 // sc-pause-list = "paused=" sc-alt-list
@@ -1515,6 +1516,18 @@ inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r) {
 // ; WSP defined in [RFC5234]
 // ; fmt, token defined in [RFC4566]
 // ; rid-identifier defined in [I-D.pthatcher-mmusic-rid]
+//
+// New draft 14, need to parse this for now, will eventually emit it
+// sc-value     = ( sc-send [SP sc-recv] ) / ( sc-recv [SP sc-send] )
+// sc-send      = %s"send" SP sc-str-list
+// sc-recv      = %s"recv" SP sc-str-list
+// sc-str-list  = sc-alt-list *( ";" sc-alt-list )
+// sc-alt-list  = sc-id *( "," sc-id )
+// sc-id-paused = "~"
+// sc-id        = [sc-id-paused] rid-id
+// ; SP defined in [RFC5234]
+// ; rid-id defined in [I-D.ietf-mmusic-rid]
+
 class SdpSimulcastAttribute : public SdpAttribute {
  public:
   SdpSimulcastAttribute() : SdpAttribute(kSimulcastAttribute) {}
