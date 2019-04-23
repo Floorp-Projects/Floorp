@@ -19,7 +19,6 @@ import {
   isLoaded,
   getFilename,
   isOriginal,
-  isLoading,
   shouldBlackbox
 } from "../../utils/source";
 import { getGeneratedSource } from "../../reducers/sources";
@@ -91,7 +90,7 @@ class SourceFooter extends PureComponent<Props, State> {
       return;
     }
 
-    if (isLoading(selectedSource) && selectedSource.isPrettyPrinted) {
+    if (!isLoaded(selectedSource) && selectedSource.isPrettyPrinted) {
       return (
         <div className="loader" key="pretty-loader">
           <AccessibleImage className="loader" />
