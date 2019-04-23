@@ -110,7 +110,7 @@ class DefaultToolbarMenu(
             },
 
             BrowserMenuImageText(
-                context.getString(R.string.browser_menu_library),
+                context.getString(R.string.browser_menu_your_library),
                 R.drawable.ic_library,
                 DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {

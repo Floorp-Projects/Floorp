@@ -44,6 +44,8 @@
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">Settings</string>
     <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Your Library</string>
+    <!-- Deprecated: Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Library</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop site</string>

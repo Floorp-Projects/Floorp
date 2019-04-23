@@ -34,7 +34,7 @@ class LibraryListItem @JvmOverloads constructor(
                     libraryItemTitle?.text = resources.getString(
                         getResourceId(
                             R.styleable.LibraryListItem_listItemTitle,
-                            R.string.browser_menu_library
+                            R.string.browser_menu_your_library
                         )
                     )
                 } finally {
