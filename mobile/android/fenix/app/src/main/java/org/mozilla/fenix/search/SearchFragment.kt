@@ -138,11 +138,10 @@ class SearchFragment : Fragment() {
                             val event = if (it.url.isUrl()) {
                                 Event.EnteredUrl(false)
                             } else {
-                                if (it.engine == null) {
-                                    return@subscribe
-                                }
+                                val engine = it.engine ?: requireComponents
+                                    .search.searchEngineManager.getDefaultSearchEngine(requireContext())
 
-                                createSearchEvent(it.engine, false)
+                                createSearchEvent(engine, false)
                             }
 
                             requireComponents.analytics.metrics.track(event)
@@ -172,10 +171,10 @@ class SearchFragment : Fragment() {
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
 
-                        if (it.engine == null) {
-                            return@subscribe
-                        }
-                        val event = createSearchEvent(it.engine, true)
+                        val engine = it.engine ?: requireComponents
+                            .search.searchEngineManager.getDefaultSearchEngine(requireContext())
+
+                        val event = createSearchEvent(engine, true)
 
                         requireComponents.analytics.metrics.track(event)
                     }
