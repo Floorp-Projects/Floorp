@@ -93,6 +93,7 @@ class ChangesApp extends PureComponent {
   }
 
   renderRule(ruleId, rule, level = 0) {
+    const diffClass = rule.isNew ? "diff-add" : "";
     return dom.div(
       {
         key: ruleId,
@@ -102,7 +103,7 @@ class ChangesApp extends PureComponent {
           "--diff-level": level,
         },
       },
-      this.renderSelectors(rule.selectors),
+      this.renderSelectors(rule.selectors, rule.isNew),
       this.renderCopyButton(ruleId),
       // Render any nested child rules if they exist.
       rule.children.map(childRule => {
@@ -110,7 +111,8 @@ class ChangesApp extends PureComponent {
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
-      dom.div({ className: `level` }, "}")
+      // Render the closing bracket with a diff marker if necessary.
+      dom.div({ className: `level ${diffClass}` }, getDiffMarker(diffClass), "}")
     );
   }
 
@@ -119,16 +121,19 @@ class ChangesApp extends PureComponent {
    *
    * @param  {Array} selectors
    *         List of strings as versions of this rule's selector over time.
+   * @param  {Boolean} isNewRule
+   *         Whether the rule was created at runtime.
    * @return {Array}
    */
-  renderSelectors(selectors) {
+  renderSelectors(selectors, isNewRule) {
     const selectorDiffClassMap = new Map();
 
     // The selectors array has just one item if it hasn't changed. Render it as-is.
+    // If the rule was created at runtime, mark the single selector as added.
     // If it has two or more items, the first item was the original selector (mark as
     // removed) and the last item is the current selector (mark as added).
     if (selectors.length === 1) {
-      selectorDiffClassMap.set(selectors[0], "");
+      selectorDiffClassMap.set(selectors[0], isNewRule ? "diff-add" : "");
     } else if (selectors.length >= 2) {
       selectorDiffClassMap.set(selectors[0], "diff-remove");
       selectorDiffClassMap.set(selectors[selectors.length - 1], "diff-add");

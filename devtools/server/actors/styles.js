@@ -983,7 +983,18 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     authoredText += "\n" + selector + " {\n" + "}";
     await sheetActor.update(authoredText, false);
 
-    return this.getNewAppliedProps(node, sheet.cssRules.item(index));
+    const cssRule = sheet.cssRules.item(index);
+    const ruleActor = this._styleRef(cssRule);
+
+    TrackChangeEmitter.trackChange({
+      ...ruleActor.metadata,
+      type: "rule-add",
+      add: null,
+      remove: null,
+      selector,
+    });
+
+    return this.getNewAppliedProps(node, cssRule);
   },
 });
 exports.PageStyleActor = PageStyleActor;
