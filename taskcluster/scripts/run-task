@@ -540,8 +540,12 @@ def resolve_checkout_url(base_repo, head_repo):
 
         # Use public hg service if region not yet supported
         if region not in hgmointernal_config:
-            print_line(b'vcs', b'region %s not yet supported; using public '
-                               b'hg.mozilla.org service\n' % region.encode('utf-8'))
+            if region:
+                print_line(b'vcs', b'region %s not yet supported; using public '
+                                   b'hg.mozilla.org service\n' % region.encode('utf-8'))
+            else:
+                print_line(b'vcs', b'unspecified region; using public '
+                                   b'hg.mozilla.org service\n')
             return base_repo, head_repo
 
         # Only send a percentage of traffic to the internal mirror
