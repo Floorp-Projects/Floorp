@@ -2,7 +2,6 @@
 
 exports[`sources - pretty print returns a pretty source for a minified file 1`] = `
 Object {
-  "contentType": "text/javascript",
   "id": "base.js/originalSource-36c718d4bde9a75edb388ff7733efe7f",
   "introductionType": undefined,
   "introductionUrl": null,
@@ -10,12 +9,7 @@ Object {
   "isExtension": false,
   "isPrettyPrinted": true,
   "isWasm": false,
-  "loadedState": "loaded",
   "relativeUrl": "http://localhost:8000/examples/base.js:formatted",
-  "text": "function base() {
-  return base
-}
-",
   "url": "http://localhost:8000/examples/base.js:formatted",
 }
 `;

@@ -43,10 +43,7 @@ function makeMockSource(
     introductionUrl: null,
     introductionType: undefined,
     isWasm: false,
-    isExtension: false,
-    loadedState: "unloaded",
-    contentType: "text/javascript",
-    text: ""
+    isExtension: false
   };
 }
 
@@ -57,11 +54,6 @@ function makeMockSourceWithContent(
   text?: string = ""
 ): SourceWithContent {
   const source = makeMockSource(url, id);
-  source.contentType = contentType;
-  source.text = text;
-  if (text) {
-    source.loadedState = "loaded";
-  }
 
   return {
     source,
@@ -82,11 +74,6 @@ function makeMockSourceAndContent(
   text: string = ""
 ): { source: Source, content: TextSourceContent } {
   const source = makeMockSource(url, id);
-  source.contentType = contentType;
-  source.text = text;
-  if (text) {
-    source.loadedState = "loaded";
-  }
 
   return {
     source,
@@ -104,13 +91,11 @@ function makeMockWasmSource(): WasmSource {
     url: "url",
     isBlackBoxed: false,
     isPrettyPrinted: false,
-    loadedState: "unloaded",
     relativeUrl: "url",
     introductionUrl: null,
     introductionType: undefined,
     isWasm: true,
-    isExtension: false,
-    text: undefined
+    isExtension: false
   };
 }
 
@@ -118,8 +103,6 @@ function makeMockWasmSourceWithContent(text: {|
   binary: Object
 |}): SourceWithContentAndType<WasmSourceContent> {
   const source = makeMockWasmSource();
-  source.text = text;
-  source.loadedState = "loaded";
 
   return {
     source,

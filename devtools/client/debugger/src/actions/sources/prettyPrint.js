@@ -79,8 +79,6 @@ export function createPrettySource(cx: Context, sourceId: string) {
       isBlackBoxed: false,
       isPrettyPrinted: true,
       isWasm: false,
-      contentType: "text/javascript",
-      loadedState: "loading",
       introductionUrl: null,
       introductionType: undefined,
       isExtension: false

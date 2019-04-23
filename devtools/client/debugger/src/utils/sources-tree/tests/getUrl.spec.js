@@ -18,11 +18,7 @@ function createMockSource(props): Source {
         sourceMapURL: "",
         isBlackBoxed: false,
         isPrettyPrinted: false,
-        isWasm: false,
-        text: "",
-        contentType: "",
-        error: "",
-        loadedState: "unloaded"
+        isWasm: false
       },
       props
     )

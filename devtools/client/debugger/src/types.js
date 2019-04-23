@@ -389,9 +389,6 @@ type BaseSource = {|
   +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
-  +contentType?: string,
-  +error?: string,
-  +loadedState: "unloaded" | "loading" | "loaded",
   +relativeUrl: string,
   +introductionUrl: ?string,
   +introductionType: ?string,
@@ -407,8 +404,7 @@ type BaseSource = {|
 
 export type JsSource = {|
   ...BaseSource,
-  +isWasm: false,
-  +text?: string
+  +isWasm: false
 |};
 
 /**
@@ -420,8 +416,7 @@ export type JsSource = {|
 
 export type WasmSource = {|
   ...BaseSource,
-  +isWasm: true,
-  +text?: {| binary: Object |}
+  +isWasm: true
 |};
 
 export type Source = JsSource | WasmSource;
