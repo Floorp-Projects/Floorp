@@ -362,6 +362,29 @@ class PresShell final : public nsIPresShell,
                                            nsIContent* aContent);
   static PresShell* GetShellForTouchEvent(WidgetGUIEvent* aEvent);
 
+  /**
+   * Informs the pres shell that the document is now at the anchor with
+   * the given name.  If |aScroll| is true, scrolls the view of the
+   * document so that the anchor with the specified name is displayed at
+   * the top of the window.  If |aAnchorName| is empty, then this informs
+   * the pres shell that there is no current target, and |aScroll| must
+   * be false.  If |aAdditionalScrollFlags| is nsIPresShell::SCROLL_SMOOTH_AUTO
+   * and |aScroll| is true, the scrolling may be performed with an animation.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                      uint32_t aAdditionalScrollFlags = 0);
+
+  /**
+   * Tells the presshell to scroll again to the last anchor scrolled to by
+   * GoToAnchor, if any. This scroll only happens if the scroll
+   * position has not changed since the last GoToAnchor. This is called
+   * by nsDocumentViewer::LoadComplete. This clears the last anchor
+   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
+   * removed from the DOM), so don't call this more than once.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult ScrollToAnchor();
+
  private:
   ~PresShell();
 
@@ -1391,12 +1414,16 @@ class PresShell final : public nsIPresShell,
   // when target of pointer event was deleted during executing user handlers.
   nsCOMPtr<nsIContent> mPointerEventTarget;
 
-  int32_t mActiveSuppressDisplayport;
+  nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
   // The focus information needed for async keyboard scrolling
   FocusTarget mAPZFocusTarget;
+
+  nscoord mLastAnchorScrollPositionY = 0;
+
+  int32_t mActiveSuppressDisplayport;
 
   bool mDocumentLoading : 1;
   bool mNoDelayedMouseEvents : 1;

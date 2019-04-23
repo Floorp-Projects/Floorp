@@ -349,6 +349,7 @@ class nsDocumentViewer final : public nsIContentViewer,
    * @param aDoInitialReflow set to true if you want to kick off the initial
    * reflow
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult InitPresentationStuff(bool aDoInitialReflow);
 
   already_AddRefed<nsINode> GetPopupNode();
@@ -824,7 +825,8 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
   }
 
   if (aDoInitialReflow && mDocument) {
-    mDocument->ScrollToRef();
+    nsCOMPtr<Document> document = mDocument;
+    document->ScrollToRef();
   }
 
   return NS_OK;
@@ -1136,7 +1138,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
 
   if (!mStopped) {
     if (mDocument) {
-      mDocument->ScrollToRef();
+      nsCOMPtr<Document> document = mDocument;
+      document->ScrollToRef();
     }
 
     // Now that the document has loaded, we can tell the presshell
