@@ -189,6 +189,19 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         !self.context.func.dfg.signatures.is_empty()
     }
 
+    #[cfg(feature = "cranelift_x86")]
+    fn platform_specific_ignores_metadata(opcode: ir::Opcode) -> bool {
+        match opcode {
+            ir::Opcode::X86Sdivmodx | ir::Opcode::X86Udivmodx => true,
+            _ => false,
+        }
+    }
+
+    #[cfg(not(feature = "cranelift_x86"))]
+    fn platform_specific_ignores_metadata(_opcode: ir::Opcode) -> bool {
+        false
+    }
+
     /// Emit metadata by scanning the compiled function before `emit_to_memory`.
     ///
     /// - All call sites need metadata: direct, indirect, symbolic.
@@ -235,24 +248,23 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
                     // Instructions that are not going to trap in our use, even though their opcode
                     // says they can.
-                    ir::Opcode::Spill
-                    | ir::Opcode::Fill
-                    | ir::Opcode::X86Sdivmodx
-                    | ir::Opcode::X86Udivmodx => {}
+                    ir::Opcode::Spill | ir::Opcode::Fill => {}
+
+                    _ if BatchCompiler::platform_specific_ignores_metadata(opcode) => {}
 
                     _ => {
-                        assert!(!opcode.is_call(), "Missed call opcode");
-                        assert!(
+                        debug_assert!(!opcode.is_call(), "Missed call opcode");
+                        debug_assert!(
                             !opcode.can_trap(),
                             "Missed trap: {}",
                             func.dfg.display_inst(inst, Some(self.isa.as_ref()))
                         );
-                        assert!(
+                        debug_assert!(
                             !opcode.can_load(),
                             "Missed load: {}",
                             func.dfg.display_inst(inst, Some(self.isa.as_ref()))
                         );
-                        assert!(
+                        debug_assert!(
                             !opcode.can_store(),
                             "Missed store: {}",
                             func.dfg.display_inst(inst, Some(self.isa.as_ref()))
