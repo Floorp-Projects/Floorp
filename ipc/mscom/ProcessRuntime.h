@@ -46,7 +46,7 @@ class MOZ_NON_TEMPORARY_CLASS ProcessRuntime final {
   HRESULT InitializeSecurity();
 
   HRESULT mInitResult;
-  bool mIsParentProcess;
+  const bool mIsParentProcess;
 #if defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
   ActivationContextRegion mActCtxRgn;
 #endif  // defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
