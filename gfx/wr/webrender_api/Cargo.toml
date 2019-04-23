@@ -11,6 +11,7 @@ nightly = ["euclid/unstable", "serde/unstable"]
 ipc = ["ipc-channel"]
 serialize = []
 deserialize = []
+display_list_stats = []
 
 [dependencies]
 app_units = "0.7"
