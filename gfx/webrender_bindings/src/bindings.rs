@@ -1129,7 +1129,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_height: i32,
                                 support_low_priority_transactions: bool,
                                 enable_picture_caching: bool,
-                                start_debug_server: bool,
                                 gl_context: *mut c_void,
                                 program_cache: Option<&mut WrProgramCache>,
                                 shaders: Option<&mut WrShaders>,
@@ -1221,7 +1220,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         namespace_alloc_by_client: true,
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
-        start_debug_server,
         ..Default::default()
     };
 

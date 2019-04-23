@@ -34,7 +34,7 @@
 //! up the scissor, are accepting already transformed coordinates, which we can get by
 //! calling `DrawTarget::to_framebuffer_rect`
 
-use api::{ApiMsg, BlobImageHandler, ColorF, ColorU};
+use api::{BlobImageHandler, ColorF, ColorU};
 use api::{DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{ImageRendering, Checkpoint, NotificationRequest};
@@ -43,7 +43,7 @@ use api::{RenderApiSender, RenderNotifier, TextureTarget};
 use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
-use api::channel::{MsgSender, PayloadReceiverHelperMethods};
+use api::channel::PayloadReceiverHelperMethods;
 use batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -113,7 +113,10 @@ use time::precise_time_ns;
 cfg_if! {
     if #[cfg(feature = "debugger")] {
         use serde_json;
-        use debug_server;
+        use debug_server::{self, DebugServer};
+    } else {
+        use api::ApiMsg;
+        use api::channel::MsgSender;
     }
 }
 
@@ -1848,7 +1851,7 @@ impl AsyncScreenshotGrabber {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
-    debug_server: Box<DebugServer>,
+    debug_server: DebugServer,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
@@ -2005,7 +2008,7 @@ impl Renderer {
         let (result_tx, result_rx) = channel();
         let gl_type = gl.get_type();
 
-        let debug_server = new_debug_server(options.start_debug_server, api_tx.clone());
+        let debug_server = DebugServer::new(api_tx.clone());
 
         let mut device = Device::new(
             gl,
@@ -3745,19 +3748,6 @@ impl Renderer {
             }
         }
 
-        fn should_skip_batch(kind: &BatchKind, flags: &DebugFlags) -> bool {
-            match kind {
-                BatchKind::TextRun(_) => {
-                    flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
-                }
-                BatchKind::Brush(BrushBatchKind::RadialGradient) |
-                BatchKind::Brush(BrushBatchKind::LinearGradient) => {
-                    flags.contains(DebugFlags::DISABLE_GRADIENT_PRIMS)
-                }
-                _ => false,
-            }
-        }
-
         for alpha_batch_container in &target.alpha_batch_containers {
             let uses_scissor = alpha_batch_container.task_scissor_rect.is_some() ||
                                !alpha_batch_container.regions.is_empty();
@@ -3771,8 +3761,7 @@ impl Renderer {
                 self.device.set_scissor_rect(scissor_rect)
             }
 
-            if !alpha_batch_container.opaque_batches.is_empty()
-                    && !self.debug_flags.contains(DebugFlags::DISABLE_OPAQUE_PASS) {
+            if !alpha_batch_container.opaque_batches.is_empty() {
                 let _gl = self.gpu_profile.start_marker("opaque batches");
                 let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
                 self.set_blend(false, framebuffer_kind);
@@ -3788,10 +3777,6 @@ impl Renderer {
                     .iter()
                     .rev()
                 {
-                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
-                        continue;
-                    }
-
                     self.shaders.borrow_mut()
                         .get(&batch.key, self.debug_flags)
                         .bind(
@@ -3826,8 +3811,7 @@ impl Renderer {
                 self.gpu_profile.finish_sampler(opaque_sampler);
             }
 
-            if !alpha_batch_container.alpha_batches.is_empty()
-                    && !self.debug_flags.contains(DebugFlags::DISABLE_ALPHA_PASS) {
+            if !alpha_batch_container.alpha_batches.is_empty() {
                 let _gl = self.gpu_profile.start_marker("alpha batches");
                 let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
                 self.set_blend(true, framebuffer_kind);
@@ -3851,10 +3835,6 @@ impl Renderer {
                 }
 
                 for batch in &alpha_batch_container.alpha_batches {
-                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
-                        continue;
-                    }
-
                     self.shaders.borrow_mut()
                         .get(&batch.key, self.debug_flags)
                         .bind(
@@ -4059,10 +4039,6 @@ impl Renderer {
         projection: &Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
-        if self.debug_flags.contains(DebugFlags::DISABLE_CLIP_MASKS) {
-            return;
-        }
-
         // draw rounded cornered rectangles
         if !list.slow_rectangles.is_empty() {
             let _gm2 = self.gpu_profile.start_marker("slow clip rectangles");
@@ -5631,8 +5607,6 @@ pub struct RendererOptions {
     /// and not complete. This option will probably be removed once support is
     /// complete, and WR can implicitly choose whether to make use of PLS.
     pub allow_pixel_local_storage_support: bool,
-    /// Start the debug server for this renderer.
-    pub start_debug_server: bool,
 }
 
 impl Default for RendererOptions {
@@ -5673,43 +5647,20 @@ impl Default for RendererOptions {
             testing: false,
             gpu_supports_fast_clears: false,
             allow_pixel_local_storage_support: false,
-            // For backwards compatibility we set this to true by default, so
-            // that if the debugger feature is enabled, the debug server will
-            // be started automatically. Users can explicitly disable this as
-            // needed.
-            start_debug_server: true,
         }
     }
 }
 
-pub trait DebugServer {
-    fn send(&mut self, _message: String);
-}
-
-struct NoopDebugServer;
-
-impl NoopDebugServer {
-    fn new(_: MsgSender<ApiMsg>) -> Self {
-        NoopDebugServer
-    }
-}
-
-impl DebugServer for NoopDebugServer {
-    fn send(&mut self, _: String) {}
-}
-
-#[cfg(feature = "debugger")]
-fn new_debug_server(enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
-    if enable {
-        Box::new(debug_server::DebugServerImpl::new(api_tx))
-    } else {
-        Box::new(NoopDebugServer::new(api_tx))
-    }
-}
+#[cfg(not(feature = "debugger"))]
+pub struct DebugServer;
 
 #[cfg(not(feature = "debugger"))]
-fn new_debug_server(_enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
-    Box::new(NoopDebugServer::new(api_tx))
+impl DebugServer {
+    pub fn new(_: MsgSender<ApiMsg>) -> Self {
+        DebugServer
+    }
+
+    pub fn send(&mut self, _: String) {}
 }
 
 /// Some basic statistics about the rendered scene, used in Gecko, as
