@@ -52,19 +52,17 @@ class SearchFragment : Fragment() {
     ): View? {
         sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
         isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+
+        val session = sessionId?.let { requireComponents.core.sessionManager.findSessionById(it) }
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        val url = sessionId?.let {
-            requireComponents.core.sessionManager.findSessionById(it)?.let { session ->
-                session.url
-            }
-        } ?: ""
+        val url = session?.url ?: ""
 
         toolbarComponent = ToolbarComponent(
             view.toolbar_component_wrapper,
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
-            SearchState(url, isEditing = true),
+            SearchState(url, session?.searchTerms ?: "", isEditing = true),
             view.search_engine_icon
         )
 

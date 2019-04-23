@@ -117,7 +117,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             view.browserLayout,
             ActionBusFactory.get(this), sessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
-            SearchState("", isEditing = false),
+            SearchState("", getSessionByIdOrUseSelectedSession().searchTerms, isEditing = false),
             search_engine_icon
         )
 

@@ -24,7 +24,7 @@ class ToolbarComponent(
     bus: ActionBusFactory,
     private val sessionId: String?,
     private val isPrivate: Boolean,
-    override var initialState: SearchState = SearchState("", false),
+    override var initialState: SearchState = SearchState("", "", false),
     private val engineIconView: ImageView? = null
 ) :
     UIComponent<SearchState, SearchAction, SearchChange>(
@@ -73,6 +73,7 @@ class ToolbarComponent(
 
 data class SearchState(
     val query: String,
+    val searchTerm: String,
     val isEditing: Boolean,
     val engine: SearchEngine? = null
 ) : ViewState
