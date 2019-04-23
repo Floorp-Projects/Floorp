@@ -30,17 +30,13 @@
 #include "ucln_cmn.h"
 #include "cmemory.h"
 #include "cstring.h"
+#include "localsvc.h"
 #include "rbbidata.h"
 #include "rbbi_cache.h"
 #include "rbbirb.h"
 #include "uassert.h"
 #include "umutex.h"
 #include "uvectr32.h"
-
-// if U_LOCAL_SERVICE_HOOK is defined, then localsvc.cpp is expected to be included.
-#if U_LOCAL_SERVICE_HOOK
-#include "localsvc.h"
-#endif
 
 #ifdef RBBI_DEBUG
 static UBool gTrace = FALSE;

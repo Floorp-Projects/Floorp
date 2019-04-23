@@ -922,7 +922,7 @@ ko{
         VAIDIKA{"바이디카"}
         VALLADER{"발라더"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — 전체"}
         category-list{"{0}: {1}"}

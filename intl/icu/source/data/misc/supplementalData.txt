@@ -1263,7 +1263,6 @@ supplementalData:table(nofallback){
                     }
                 }
                 236{
-                    named{"false"}
                     start:intvector{
                         2019,
                         5,
@@ -2105,7 +2104,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"35"}
+    cldrVersion{"35.1"}
     codeMappings{
         {
             "AA",

@@ -5,7 +5,7 @@ am{
     collations{
         standard{
             Sequence{"[reorder Ethi]"}
-            Version{"35"}
+            Version{"35.1"}
         }
     }
 }

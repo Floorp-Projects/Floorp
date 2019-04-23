@@ -1,12 +1,14 @@
 # Original file:
-# IdnaMappingTable-12.0.0.txt
-# Date: 2019-03-02, 13:45:26 GMT
+# IdnaMappingTable.txt
+# Date: 2019-04-01, 09:17:25 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
-# Unicode IDNA Compatible Preprocessing (UTS #46)
-# For documentation, see http://www.unicode.org/reports/tr46/
+# Unicode IDNA Compatible Preprocessing for UTS #46
+# Version: 12.1.0
+#
+# For documentation and usage, see http://www.unicode.org/reports/tr46
 
 # ================================================
 # This file has been reformatted into syntax for the
@@ -23,7 +25,7 @@
 #
 # Use this file as the second gennorm2 input file after nfc.txt.
 # ================================================
-
+#
 # 0000..002C  disallowed_STD3_valid     # 1.1  <control-0000>..COMMA
 # 002D..002E  valid                     # 1.1  HYPHEN-MINUS..FULL STOP
 # 002F        disallowed_STD3_valid     # 1.1  SOLIDUS
@@ -3664,7 +3666,7 @@
 32FC          >30F0                     # 1.1  CIRCLED KATAKANA WI
 32FD          >30F1                     # 1.1  CIRCLED KATAKANA WE
 32FE          >30F2                     # 1.1  CIRCLED KATAKANA WO
-32FF          >FFFD                     # NA   <reserved-32FF>
+32FF          >4EE4 548C                # 12.1 SQUARE ERA NAME REIWA
 3300          >30A2 30D1 30FC 30C8      #1.1 SQUARE APAATO
 3301          >30A2 30EB 30D5 30A1      #1.1 SQUARE ARUHUA
 3302          >30A2 30F3 30DA 30A2      #1.1 SQUARE ANPEA

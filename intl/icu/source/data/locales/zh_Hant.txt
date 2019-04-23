@@ -787,7 +787,7 @@ zh_Hant{
             }
         }
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -4989,7 +4989,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
-                    "Qqqq",
+                    "令和",
                 }
                 narrow{
                     "大化",
@@ -5228,7 +5228,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
-                    "Q",
+                    "令和",
                 }
                 wide{
                     "大化",
@@ -5467,7 +5467,7 @@ zh_Hant{
                     "大正",
                     "昭和",
                     "平成",
-                    "Qqqq",
+                    "令和",
                 }
             }
             intervalFormats{

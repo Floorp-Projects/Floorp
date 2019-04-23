@@ -183,7 +183,7 @@ tk{
         MF{"Sen-Marten"}
         MG{"Madagaskar"}
         MH{"Marşall adalary"}
-        MK{"Makedoniýa"}
+        MK{"Demirgazyk Makedoniýa"}
         ML{"Mali"}
         MM{"Mýanma (Burma)"}
         MN{"Mongoliýa"}
@@ -310,8 +310,7 @@ tk{
         CI{"Şirmaýy kenar"}
         CZ{"Çeh Respublikasy"}
         FK{"Folklend (Malwina) adalary"}
-        MK{"Makedoniýa (ÖÝR)"}
         TL{"Gündogar Timor"}
     }
-    Version{"2.1.48.86"}
+    Version{"2.1.49.82"}
 }

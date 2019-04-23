@@ -314,5 +314,5 @@ sr_Latn{
         FK{"Foklandska (Malvinska) ostrva"}
         TL{"Istočni Timor"}
     }
-    Version{"2.1.48.77"}
+    Version{"2.1.49.82"}
 }
