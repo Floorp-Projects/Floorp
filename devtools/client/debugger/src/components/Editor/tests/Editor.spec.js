@@ -77,10 +77,6 @@ function createMockSourceWithContent(
   const source: JsSource = ({
     id: "foo",
     url: "foo",
-    text,
-    loadedState,
-    contentType,
-    error,
     ...otherOverrides
   }: any);
   let content = null;
