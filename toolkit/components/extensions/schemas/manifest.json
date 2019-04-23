@@ -410,7 +410,8 @@
         "id": "ExtensionFileUrl",
         "type": "string",
         "format": "strictRelativeUrl",
-        "pattern": "\\S"
+        "pattern": "\\S",
+        "preprocess": "localize"
       },
       {
         "id": "ImageDataOrExtensionURL",
