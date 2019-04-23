@@ -62,6 +62,8 @@ fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaConte
 == object-position-png-001.xul object-position-png-001-ref.html
 == object-position-png-002.xul object-position-png-002-ref.html
 
+== root-binding-style.xul green-ref.xul
+
 == stack-sizing-1.xul stack-sizing-1-ref.xul
 == stack-sizing-2.xul stack-sizing-2-ref.xul
 

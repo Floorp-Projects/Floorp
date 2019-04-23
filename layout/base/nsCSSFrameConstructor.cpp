@@ -2252,6 +2252,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   if (display->mBinding) {
     // Get the XBL loader.
     nsresult rv;
+    bool resolveStyle;
 
     nsXBLService* xblService = nsXBLService::GetInstance();
     if (!xblService) {
@@ -2261,7 +2262,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     RefPtr<nsXBLBinding> binding;
     rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
                                   display->mBinding->ExtraData()->Principal(),
-                                  getter_AddRefs(binding));
+                                  getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED) {
       // Binding will load asynchronously.
       return nullptr;
@@ -2272,6 +2273,11 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
       // after all of its kids' constructors.  So tell the binding
       // manager about it right now.
       mDocument->BindingManager()->AddToAttachedQueue(binding);
+    }
+
+    if (resolveStyle) {
+      computedStyle = mPresShell->StyleSet()->ResolveServoStyle(*aDocElement);
+      display = computedStyle->StyleDisplay();
     }
   }
 
@@ -5298,21 +5304,28 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
 }
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+    already_AddRefed<ComputedStyle>&& aStyle,
     UniquePtr<PendingBinding> aPendingBinding)
-    : mPendingBinding(std::move(aPendingBinding)), mSuccess(true) {}
+    : mStyle(std::move(aStyle)), mPendingBinding(std::move(aPendingBinding)) {
+  MOZ_ASSERT(mStyle);
+}
+
+nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
+    nsIContent& aContent, ComputedStyle& aStyle)
+    : mStyle(&aStyle), mPendingBinding(nullptr) {}
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
 
 nsCSSFrameConstructor::XBLBindingLoadInfo
 nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
-                                              const ComputedStyle& aStyle,
+                                              ComputedStyle& aStyle,
                                               uint32_t aFlags) {
   if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
-    return XBLBindingLoadInfo(nullptr);
+    return {aContent, aStyle};
   }
   css::URLValue* binding = aStyle.StyleDisplay()->mBinding;
   if (!binding) {
-    return XBLBindingLoadInfo(nullptr);
+    return {aContent, aStyle};
   }
 
   nsXBLService* xblService = nsXBLService::GetInstance();
@@ -5322,18 +5335,24 @@ nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
 
   auto newPendingBinding = MakeUnique<PendingBinding>();
 
-  nsresult rv =
-      xblService->LoadBindings(aContent.AsElement(), binding->GetURI(),
-                               binding->ExtraData()->Principal(),
-                               getter_AddRefs(newPendingBinding->mBinding));
+  bool resolveStyle;
+  nsresult rv = xblService->LoadBindings(
+      aContent.AsElement(), binding->GetURI(),
+      binding->ExtraData()->Principal(),
+      getter_AddRefs(newPendingBinding->mBinding), &resolveStyle);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_XBL_BLOCKED) {
-      return XBLBindingLoadInfo(nullptr);
+      return {aContent, aStyle};
     }
     return {};
   }
 
-  return XBLBindingLoadInfo(std::move(newPendingBinding));
+  RefPtr<ComputedStyle> style =
+      resolveStyle
+          ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
+          : do_AddRef(&aStyle);
+
+  return {style.forget(), std::move(newPendingBinding)};
 }
 
 void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
@@ -5348,10 +5367,11 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
              aContent->NodeInfo()->NameAtom() == nsGkAtoms::area);
 
   PendingBinding* pendingBinding = nullptr;
+  RefPtr<ComputedStyle> style;
   {
     XBLBindingLoadInfo xblInfo =
         LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
-    if (!xblInfo.mSuccess) {
+    if (!xblInfo.mStyle) {
       return;
     }
 
@@ -5359,10 +5379,13 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       pendingBinding = xblInfo.mPendingBinding.get();
       aState.AddPendingBinding(std::move(xblInfo.mPendingBinding));
     }
+
+    style = xblInfo.mStyle.forget();
+    aComputedStyle = style.get();
   }
 
   const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);
-  MOZ_ASSERT(!isGeneratedContent || aComputedStyle->IsPseudoElement(),
+  MOZ_ASSERT(!isGeneratedContent || style->IsPseudoElement(),
              "Generated content should be a pseudo-element");
 
   FrameConstructionItem* item = nullptr;
@@ -5375,7 +5398,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     }
   });
 
-  const nsStyleDisplay& display = *aComputedStyle->StyleDisplay();
+  const nsStyleDisplay& display = *style->StyleDisplay();
 
   // Pre-check for display "none" - if we find that, don't create
   // any frame at all
@@ -5385,8 +5408,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
 
   if (display.mDisplay == StyleDisplay::Contents) {
     CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                               *aComputedStyle, PseudoStyleType::before,
-                               aItems);
+                               *style, PseudoStyleType::before, aItems);
 
     FlattenedChildIterator iter(aContent);
     InsertionPoint insertion(aParentFrame, aContent);
@@ -5398,7 +5420,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
     CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                               *aComputedStyle, PseudoStyleType::after, aItems);
+                               *style, PseudoStyleType::after, aItems);
     return;
   }
 
@@ -5418,7 +5440,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   }
 
   const FrameConstructionData* data =
-      FindDataForContent(*aContent, *aComputedStyle, aParentFrame, aFlags);
+      FindDataForContent(*aContent, *style, aParentFrame, aFlags);
   if (!data || data->mBits & FCDATA_SUPPRESS_FRAME) {
     return;
   }
@@ -5460,16 +5482,15 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
-      item = aItems.PrependItem(this, data, aContent, pendingBinding,
-                                do_AddRef(aComputedStyle),
-                                aSuppressWhiteSpaceOptimizations);
+      item =
+          aItems.PrependItem(this, data, aContent, pendingBinding,
+                             style.forget(), aSuppressWhiteSpaceOptimizations);
     }
   }
 
   if (!item) {
     item = aItems.AppendItem(this, data, aContent, pendingBinding,
-                             do_AddRef(aComputedStyle),
-                             aSuppressWhiteSpaceOptimizations);
+                             style.forget(), aSuppressWhiteSpaceOptimizations);
   }
   item->mIsText = !aContent->IsElement();
   item->mIsGeneratedContent = isGeneratedContent;

@@ -399,8 +399,11 @@ class MOZ_RAII AutoEnsureSubtreeStyled {
 // RAII class to restyle the XBL bound element when it shuffles the flat tree.
 class MOZ_RAII AutoStyleElement {
  public:
-  explicit AutoStyleElement(Element* aElement)
-      : mElement(aElement), mHadData(aElement->HasServoData()) {
+  AutoStyleElement(Element* aElement, bool* aResolveStyle)
+      : mElement(aElement),
+        mHadData(aElement->HasServoData()),
+        mResolveStyle(aResolveStyle) {
+    MOZ_ASSERT(mResolveStyle);
     if (mHadData) {
       RestyleManager::ClearServoDataFromSubtree(
           mElement, RestyleManager::IncludeRoot::No);
@@ -412,11 +415,19 @@ class MOZ_RAII AutoStyleElement {
     if (!mHadData || !presShell || !presShell->DidInitialize()) {
       return;
     }
+
+    if (*mResolveStyle) {
+      mElement->ClearServoData();
+
+      ServoStyleSet* servoSet = presShell->StyleSet();
+      servoSet->StyleNewSubtree(mElement);
+    }
   }
 
  private:
   Element* mElement;
   bool mHadData;
+  bool* mResolveStyle;
 };
 
 static bool IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal) {
@@ -436,10 +447,12 @@ static bool IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal) {
 // onto the element.
 nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
                                     nsIPrincipal* aOriginPrincipal,
-                                    nsXBLBinding** aBinding) {
+                                    nsXBLBinding** aBinding,
+                                    bool* aResolveStyle) {
   MOZ_ASSERT(aOriginPrincipal, "Must have an origin principal");
 
   *aBinding = nullptr;
+  *aResolveStyle = false;
 
   AutoEnsureSubtreeStyled subtreeStyled(aElement);
 
@@ -483,7 +496,7 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
     return rv;
   }
 
-  AutoStyleElement styleElement(aElement);
+  AutoStyleElement styleElement(aElement, aResolveStyle);
 
   if (binding) {
     FlushStyleBindings(aElement);
@@ -533,6 +546,9 @@ nsresult nsXBLService::LoadBindings(Element* aElement, nsIURI* aURL,
     // Set up our properties
     rv = newBinding->InstallImplementation();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Figure out if we have any scoped sheets.  If so, we do a second resolve.
+    *aResolveStyle = newBinding->HasStyleSheets();
 
     newBinding.forget(aBinding);
   }
@@ -753,6 +769,15 @@ nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   nsCOMPtr<nsIURI> altBindingURI = protoBinding->AlternateBindingURI();
   if (altBindingURI) {
     aDontExtendURIs.AppendElement(altBindingURI);
+  }
+
+  // Our prototype binding must have all its resources loaded.
+  bool ready = protoBinding->LoadResources(aBoundElement);
+  if (!ready) {
+    // Add our bound element to the protos list of elts that should
+    // be notified when the stylesheets and scripts finish loading.
+    protoBinding->AddResourceListener(aBoundElement);
+    return NS_ERROR_FAILURE;  // The binding isn't ready yet.
   }
 
   rv = protoBinding->ResolveBaseBinding();
