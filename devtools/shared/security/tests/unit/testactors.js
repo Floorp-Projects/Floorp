@@ -44,6 +44,7 @@ function TestTabList(connection) {
 
 TestTabList.prototype = {
   constructor: TestTabList,
+  destroy() {},
   getList: function() {
     return promise.resolve([...this._targetActors]);
   },
