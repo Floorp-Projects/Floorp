@@ -1,0 +1,27 @@
+<!doctype html>
+<title>Custom Elements don't lose their reflectors</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<!-- First tests upgrading with an existing reflector, second without -->
+<custom-element></custom-element>
+<custom-element></custom-element>
+<script>
+  (function() {
+    // Ensure we create a reflector for the first element before-hand.
+    let firstElement = document.querySelector("custom-element");
+  }());
+
+  customElements.define("custom-element", class MyCustomElement extends HTMLElement {
+    myFunction() {
+      // Do nothing
+    }
+  });
+
+  ok(!!document.querySelector("custom-element").myFunction, "Has the right prototype before GC");;
+  ok(!!document.querySelectorAll("custom-element")[1].myFunction, "Has the right prototype before GC");;
+
+  SpecialPowers.forceCC();
+  SpecialPowers.forceGC();
+
+  ok(!!document.querySelector("custom-element").myFunction, "Has the right prototype after GC");;
+  ok(!!document.querySelectorAll("custom-element")[1].myFunction, "Has the right prototype before GC");;
+</script>
