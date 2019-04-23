@@ -31,6 +31,7 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 
 namespace ipc {
+class ContentSecurityPolicy;
 class PrincipalInfo;
 }  // namespace ipc
 
@@ -95,6 +96,8 @@ struct WorkerLoadInfoData {
   nsAutoPtr<mozilla::ipc::PrincipalInfo> mStoragePrincipalInfo;
   nsCString mDomain;
   nsString mOrigin;  // Derived from mPrincipal; can be used on worker thread.
+
+  nsTArray<mozilla::ipc::ContentSecurityPolicy> mCSPInfos;
 
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
