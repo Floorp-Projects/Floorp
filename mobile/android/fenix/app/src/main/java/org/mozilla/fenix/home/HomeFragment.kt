@@ -212,7 +212,7 @@ class HomeFragment : Fragment(), CoroutineScope {
             }
             is TabAction.PrivateBrowsingLearnMore -> {
                 requireComponents.useCases.tabsUseCases.addPrivateTab
-                    .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
+                    .invoke(SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
                 (activity as HomeActivity).openToBrowser(
                     requireComponents.core.sessionManager.selectedSession?.id,
                     BrowserDirection.FromHome

@@ -20,7 +20,7 @@ object SupportUtils {
         internal val topicStr: String
     ) {
         HELP("firefox-android-help"),
-        PRIVATE_BROWSING_MYTHS("private-browsing-myths")
+        PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {
@@ -29,6 +29,13 @@ object SupportUtils {
         val osTarget = "Android"
         val langTag = getLanguageTag(Locale.getDefault())
         return "https://support.mozilla.org/1/mobile/$appVersion/$osTarget/$langTag/$escapedTopic"
+    }
+
+    // Used when the app version and os are not part of the URL
+    fun getGenericSumoURLForTopic(topic: SumoTopic): String {
+        val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
+        val langTag = getLanguageTag(Locale.getDefault())
+        return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
     private fun getEncodedTopicUTF8(topic: String): String {
