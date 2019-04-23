@@ -93,6 +93,7 @@ function createRule(ruleData, rules) {
       if (!rules[ruleId]) {
         rules[ruleId] = {
           ruleId,
+          isNew: false,
           selectors,
           add: [],
           remove: [],
@@ -146,11 +147,12 @@ function removeRule(ruleId, rules) {
  *      rules: {
  *        <ruleId>: {
  *          ruleId:      // {String} <ruleId> of this rule
+ *          isNew:       // {Boolean} Whether the tracked rule was created at runtime,
+ *                       //           meaning it didn't originally exist in the source.
  *          selectors:   // {Array} of CSS selectors or CSS at-rule text.
  *                       //         The array has just one item if the selector is never
  *                       //         changed. When the rule's selector is changed, the new
  *                       //         selector is pushed onto this array.
- *          changeType:  // {String} Optional; one of: "rule-add" or "rule-remove"
  *          children: [] // {Array} of <ruleId> for child rules of this rule
  *          parent:      // {String} <ruleId> of the parent rule
  *          add: [       // {Array} of objects with CSS declarations
@@ -209,7 +211,7 @@ const reducers = {
     change = { ...defaults, ...change };
     state = cloneState(state);
 
-    const { selector, ancestors, ruleIndex, type: changeType } = change;
+    const { selector, ancestors, ruleIndex } = change;
     // Bug 1525326: remove getSourceHash() and getRuleHash() in Firefox 70 after we no
     // longer support old servers which do not implement the id for the rule and source.
     const sourceId = change.source.id || getSourceHash(change.source);
@@ -225,13 +227,20 @@ const reducers = {
       ? rules[ruleId]
       : createRule({id: change.id, selectors: [selector], ancestors, ruleIndex}, rules);
 
+    // Mark the rule if it was created at runtime as a result of an "Add Rule" action.
+    if (change.type === "rule-add") {
+      rule.isNew = true;
+    }
+
     // If the first selector tracked for this rule is identical to the incoming selector,
     // reduce the selectors array to a single one. This handles the case for renaming a
     // selector back to its original name. It has no side effects for other changes which
     // preserve the selector.
+    // If the rule was created at runtime, always reduce the selectors array to one item.
+    // Changes to the new rule's selector always overwrite the original selector.
     // If the selectors are different, push the incoming one to the end of the array to
     // signify that the rule has changed selector. The last item is the current selector.
-    if (rule.selectors[0] === selector) {
+    if (rule.selectors[0] === selector || rule.isNew) {
       rule.selectors = [selector];
     } else {
       rule.selectors.push(selector);
@@ -271,7 +280,7 @@ const reducers = {
 
         // Update the indexes of previously tracked declarations which follow this removed
         // one so future tracking continues to point to the right declarations.
-        if (changeType === "declaration-remove") {
+        if (change.type === "declaration-remove") {
           rule.add = rule.add.map((addDecl => {
             if (addDecl.index > decl.index) {
               addDecl.index--;
@@ -323,9 +332,10 @@ const reducers = {
 
     // Remove the rule if none of its declarations or selector have changed,
     // but skip cleanup if the selector is in process of being renamed (there are two
-    // changes happening in quick succession: selector-remove + selector-add).
+    // changes happening in quick succession: selector-remove + selector-add) or if the
+    // rule was created at runtime (allow empty new rules to persist).
     if (!rule.add.length && !rule.remove.length && rule.selectors.length === 1 &&
-        !changeType.startsWith("selector-")) {
+        !change.type.startsWith("selector-") && !rule.isNew) {
       removeRule(ruleId, rules);
       source.rules = { ...rules };
     } else {
