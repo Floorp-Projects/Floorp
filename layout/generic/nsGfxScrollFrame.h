@@ -420,6 +420,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   ScrollSnapInfo ComputeScrollSnapInfo(
       const Maybe<nsPoint>& aDestination) const;
 
+  bool NeedsScrollSnap() const;
+
  public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;

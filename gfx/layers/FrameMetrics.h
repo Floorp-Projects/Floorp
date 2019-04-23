@@ -25,6 +25,11 @@
 #include "nsStyleCoord.h"  // for nsStyleCoord
 #include "PLDHashTable.h"  // for PLDHashNumber
 
+struct nsStyleDisplay;
+namespace mozilla {
+class WritingMode;
+}  // namespace mozilla
+
 namespace IPC {
 template <typename T>
 struct ParamTraits;
@@ -731,6 +736,9 @@ struct ScrollSnapInfo {
     return mScrollSnapTypeY != mozilla::StyleScrollSnapStrictness::None ||
            mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None;
   }
+
+  void InitializeScrollSnapType(WritingMode aWritingMode,
+                                const nsStyleDisplay* aDisplay);
 
   // The scroll frame's scroll-snap-type.
   mozilla::StyleScrollSnapStrictness mScrollSnapTypeX =
