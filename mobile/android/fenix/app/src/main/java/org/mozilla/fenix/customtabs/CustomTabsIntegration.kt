@@ -22,11 +22,9 @@ class CustomTabsIntegration(
     onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : LifecycleAwareFeature, BackHandler {
 
-    private val session = sessionManager.findSessionById(sessionId)
-
     private val customTabToolbarMenu by lazy {
-        CustomTabToolbarMenu(context,
-            requestDesktopStateProvider = { session?.desktopMode ?: false },
+        CustomTabToolbarMenu(
+            context,
             onItemTapped = onItemTapped
         )
     }

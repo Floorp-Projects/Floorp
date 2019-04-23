@@ -9,7 +9,6 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
@@ -18,7 +17,6 @@ import org.mozilla.fenix.ext.components
 
 class CustomTabToolbarMenu(
     private val context: Context,
-    private val requestDesktopStateProvider: () -> Boolean = { false },
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -116,19 +114,6 @@ class CustomTabToolbarMenu(
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
             },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_find_in_page),
-                R.drawable.mozac_ic_search,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
-            },
-
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
-                requestDesktopStateProvider, { checked ->
-                    onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
-                }),
 
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),

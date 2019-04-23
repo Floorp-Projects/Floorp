@@ -89,7 +89,6 @@ class ToolbarUIView(
 
             val menuToolbar = if (isCustom) {
                 CustomTabToolbarMenu(this,
-                    requestDesktopStateProvider = { session?.desktopMode ?: false },
                     onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
                 )
             } else {
