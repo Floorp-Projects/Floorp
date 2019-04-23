@@ -37,7 +37,6 @@ mozilla::ipc::IPCResult RemoteDecoderChild::RecvError(const nsresult& aError) {
   mDecodePromise.RejectIfExists(aError, __func__);
   mDrainPromise.RejectIfExists(aError, __func__);
   mFlushPromise.RejectIfExists(aError, __func__);
-  mShutdownPromise.RejectIfExists(false, __func__);
   return IPC_OK();
 }
 
@@ -62,12 +61,6 @@ mozilla::ipc::IPCResult RemoteDecoderChild::RecvInitFailed(
 mozilla::ipc::IPCResult RemoteDecoderChild::RecvFlushComplete() {
   AssertOnManagerThread();
   mFlushPromise.ResolveIfExists(true, __func__);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult RemoteDecoderChild::RecvShutdownComplete() {
-  AssertOnManagerThread();
-  mShutdownPromise.ResolveIfExists(true, __func__);
   return IPC_OK();
 }
 
@@ -149,15 +142,13 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Drain() {
   return mDrainPromise.Ensure(__func__);
 }
 
-RefPtr<ShutdownPromise> RemoteDecoderChild::Shutdown() {
+void RemoteDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-  if (!mCanSend) {
-    return ShutdownPromise::CreateAndReject(false, __func__);
+  if (mCanSend) {
+    SendShutdown();
   }
-  SendShutdown();
   mInitialized = false;
-  return mShutdownPromise.Ensure(__func__);
 }
 
 bool RemoteDecoderChild::IsHardwareAccelerated(
