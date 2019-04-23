@@ -4,10 +4,7 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,7 +49,11 @@ class CreateCollectionFragment : DialogFragment() {
 
         getAutoDisposeObservable<CollectionCreationAction>().subscribe {
             when (it) {
-                is CollectionCreationAction.Close -> dismissAllowingStateLoss()
+                is CollectionCreationAction.Close -> dismiss()
+                is CollectionCreationAction.AddTabToSelection -> getManagedEmitter<CollectionCreationChange>()
+                    .onNext(CollectionCreationChange.TabAdded(it.tab))
+                is CollectionCreationAction.RemoveTabFromSelection -> getManagedEmitter<CollectionCreationChange>()
+                    .onNext(CollectionCreationChange.TabRemoved(it.tab))
             }
         }
     }

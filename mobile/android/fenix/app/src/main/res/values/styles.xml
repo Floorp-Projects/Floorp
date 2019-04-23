@@ -110,6 +110,11 @@
 
 
     <style name="CreateCollectionDialogStyle" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:colorControlNormal">?accentBright</item>
+        <item name="android:colorControlActivated">?accentBright</item>
+        <item name="android:colorControlHighlight">?accent</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
         <item name="windowNoTitle">true</item>

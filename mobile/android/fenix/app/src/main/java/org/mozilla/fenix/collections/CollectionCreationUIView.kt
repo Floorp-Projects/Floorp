@@ -46,6 +46,6 @@ class CollectionCreationUIView(
     }
 
     override fun updateView() = Consumer<CollectionCreationState> {
-        collectionCreationTabListAdapter.updateData(it.tabs)
+        collectionCreationTabListAdapter.updateData(it.tabs, it.selectedTabs)
     }
 }

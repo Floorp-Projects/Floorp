@@ -3,10 +3,11 @@ package org.mozilla.fenix.collections
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.collection_tab_list_row.view.*
-import kotlinx.android.synthetic.main.tab_list_row.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,7 +22,8 @@ class CollectionCreationTabListAdapter(
 ) : RecyclerView.Adapter<TabViewHolder>() {
 
 
-    private var data: List<Tab> = listOf()
+    private var tabs: List<Tab> = listOf()
+    private var selectedTabs: List<Tab> = listOf()
     private lateinit var job: Job
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
@@ -31,10 +33,12 @@ class CollectionCreationTabListAdapter(
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
-        holder.bind(data[position])
+        val tab = tabs[position]
+        val isSelected = selectedTabs.contains(tab)
+        holder.bind(tab, isSelected)
     }
 
-    override fun getItemCount(): Int = data.size
+    override fun getItemCount(): Int = tabs.size
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -46,10 +50,25 @@ class CollectionCreationTabListAdapter(
         job.cancel()
     }
 
-    fun updateData(tabs: List<Tab>) {
-        data = tabs
-        notifyDataSetChanged()
+    fun updateData(tabs: List<Tab>, selectedTabs: List<Tab>) {
+        val diffUtil = DiffUtil.calculateDiff(TabDiffUtil(this.tabs, tabs))
+
+        this.tabs = tabs
+        this.selectedTabs = selectedTabs
+
+        diffUtil.dispatchUpdatesTo(this)
     }
+}
+
+private class TabDiffUtil(val old: List<Tab>, val new: List<Tab>) : DiffUtil.Callback() {
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+        old[oldItemPosition].sessionId == new[newItemPosition].sessionId
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+        old[oldItemPosition].url == new[newItemPosition].url
+
+    override fun getOldListSize(): Int = old.size
+    override fun getNewListSize(): Int = new.size
 }
 
 class TabViewHolder(
@@ -62,15 +81,34 @@ class TabViewHolder(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
 
-    var tab: Tab? = null
+    private var tab: Tab? = null
+    private val checkbox = view.tab_selected_checkbox!!
+    private val checkboxListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        tab?.apply {
+            val action = if (isChecked) CollectionCreationAction.AddTabToSelection(this)
+            else CollectionCreationAction.RemoveTabFromSelection(this)
 
-    init { }
+            actionEmitter.onNext(action)
+        }
+    }
 
-    fun bind(tab: Tab) {
+    init {
+        view.collection_item_tab.setOnClickListener {
+            checkbox.isChecked = !checkbox.isChecked
+        }
+    }
+
+    fun bind(tab: Tab, isSelected: Boolean) {
         this.tab = tab
 
         view.hostname.text = tab.hostname
         view.tab_title.text = tab.title
+        checkbox.setOnCheckedChangeListener(null)
+        if (checkbox.isChecked != isSelected) {
+            checkbox.isChecked = isSelected
+        }
+        checkbox.setOnCheckedChangeListener(checkboxListener)
+
         launch(Dispatchers.IO) {
             val bitmap = view.favicon_image.context.components.utils.icons
                 .loadIcon(IconRequest(tab.url)).await().bitmap

@@ -106,7 +106,7 @@ class HistoryListItemViewHolder(
             // This prevent us from cutting off the animation
             val shouldCheck = mode.selectedItems.contains(item)
             if (checkbox.isChecked != shouldCheck) {
-                checkbox.isChecked = mode.selectedItems.contains(item)
+                checkbox.isChecked = shouldCheck
             }
             checkbox.setOnCheckedChangeListener(checkListener)
         }
