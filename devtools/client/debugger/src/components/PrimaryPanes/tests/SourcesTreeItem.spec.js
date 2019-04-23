@@ -87,7 +87,7 @@ describe("SourceTreeItem", () => {
         {
           accesskey: "B",
           click: expect.any(Function),
-          disabled: true,
+          disabled: false,
           id: "node-menu-blackbox",
           label: "Blackbox source"
         }
@@ -126,7 +126,7 @@ describe("SourceTreeItem", () => {
         {
           accesskey: "B",
           click: expect.any(Function),
-          disabled: true,
+          disabled: false,
           id: "node-menu-blackbox",
           label: "Blackbox source"
         }
