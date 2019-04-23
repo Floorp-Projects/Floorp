@@ -7,7 +7,7 @@
 
 idl_test(
   ['CSP'],
-  ['dom', 'reporting'],
+  ['dom'],
   idl_array => {
     idl_array.add_objects({
       SecurityPolicyViolationEvent: [

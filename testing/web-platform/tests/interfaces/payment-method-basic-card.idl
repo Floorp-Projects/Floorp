@@ -4,20 +4,20 @@
 // Source: Payment Method: Basic Card (https://w3c.github.io/payment-method-basic-card/)
 
 dictionary BasicCardRequest {
-  sequence<DOMString> supportedNetworks = [];
+  sequence<DOMString> supportedNetworks;
 };
 
 dictionary BasicCardChangeDetails {
-  PaymentAddress? billingAddress = null;
+  PaymentAddress? billingAddress;
 };
 
 dictionary BasicCardResponse {
   required DOMString cardNumber;
-  DOMString cardholderName = "";
-  DOMString cardSecurityCode = "";
-  DOMString expiryMonth = "";
-  DOMString expiryYear = "";
-  PaymentAddress? billingAddress = null;
+  DOMString cardholderName;
+  DOMString cardSecurityCode;
+  DOMString expiryMonth;
+  DOMString expiryYear;
+  PaymentAddress? billingAddress;
 };
 
 dictionary BasicCardErrors {

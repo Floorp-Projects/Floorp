@@ -37,7 +37,7 @@ partial interface CSSStyleRule {
     [SameObject] readonly attribute StylePropertyMap styleMap;
 };
 
-partial interface mixin ElementCSSInlineStyle {
+partial interface ElementCSSInlineStyle {
     [SameObject] readonly attribute StylePropertyMap attributeStyleMap;
 };
 

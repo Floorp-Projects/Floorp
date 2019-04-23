@@ -7,7 +7,7 @@
 // https://wicg.github.io/ResizeObserver/
 
 idl_test(
-  ['resize-observer'],
+  ['ResizeObserver'],
   ['dom', 'geometry'],
   async idl_array => {
     idl_array.add_objects({

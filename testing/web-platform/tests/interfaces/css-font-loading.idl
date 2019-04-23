@@ -81,9 +81,11 @@ interface FontFaceSet : EventTarget {
   readonly attribute FontFaceSetLoadStatus status;
 };
 
-interface mixin FontFaceSource {
+[Exposed=(Window,Worker),
+ NoInterfaceObject]
+interface FontFaceSource {
   readonly attribute FontFaceSet fonts;
 };
 
-Document includes FontFaceSource;
-WorkerGlobalScope includes FontFaceSource;
+Document implements FontFaceSource;
+WorkerGlobalScope implements FontFaceSource;

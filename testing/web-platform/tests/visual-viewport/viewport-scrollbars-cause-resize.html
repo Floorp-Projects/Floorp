@@ -15,8 +15,6 @@
         scrollbars will cause a resize event to be fired at window.visualViewport.
     </h4>
     <script>
-      setup({ explicit_done: true });
-
       function runTest() {
         var scrollbarThickness = calculateScrollbarThickness();
 
@@ -61,13 +59,7 @@
 
       // Run the test after load to make sure any resize from a previous test
       // doesn't interfere.
-      window.onload = function() {
-        try {
-          runTest();
-        } finally {
-          done();
-        }
-      };
+      window.onload = runTest;
     </script>
     <div id="log"></div>
     </body>
