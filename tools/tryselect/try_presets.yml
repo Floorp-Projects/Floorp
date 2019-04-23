@@ -21,6 +21,16 @@ debugger-tests:
         - "!asan !shippable 'linux64/ 'xpcshell"
         - "!qr !macosx !shippable 'damp"
 
+devtools:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to the Firefox Devtools
+    query:
+        - "'debugger | 'node-devtools"
+        - "'mozlint-eslint"
+        - "'mochitest-devtools | 'mochitest-chrome | 'mochitest-clipboard 'linux64 | 'mac | 'windows10 !asan !shippable !-sw !qr"
+        - "'xpcshell 'linux64/ !asan !shippable"
+
 perf:
     selector: fuzzy
     description: >-
