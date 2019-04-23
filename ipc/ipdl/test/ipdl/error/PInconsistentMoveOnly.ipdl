@@ -1,0 +1,9 @@
+//error: inconsistent moveonly status of type `mozilla::ipc::SomeMoveonlyType`
+
+using moveonly class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
+using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
+
+protocol PInconsistentMoveOnly {
+child:
+  async SomeMessage();
+};
