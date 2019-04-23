@@ -4,7 +4,7 @@ debugger-tests:
     treeherder:
         symbol: node(debugger)
         kind: test
-        tier: 1
+        tier: 3
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
@@ -30,7 +30,7 @@ devtools-tests:
     treeherder:
         symbol: node(devtools)
         kind: test
-        tier: 1
+        tier: 3
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
