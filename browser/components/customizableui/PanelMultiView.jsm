@@ -1644,6 +1644,7 @@ var PanelView = class extends AssociatedToNode {
         // Fall-through...
       }
       case "Space":
+      case "NumpadEnter":
       case "Enter": {
         if (tabOnly()) {
           break;
