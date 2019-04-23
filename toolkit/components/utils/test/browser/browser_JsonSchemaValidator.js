@@ -147,6 +147,32 @@ add_task(async function test_origin_values() {
   ok(!JsonSchemaValidator.validateAndParseParameters({}, schema)[0], "Invalid value");
 });
 
+add_task(async function test_origin_file_values() {
+  // File URLs can also be origins
+  let schema = {
+    type: "origin",
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters("file:///foo/bar", schema);
+  ok(valid, "Origin is valid");
+  ok(parsed instanceof URL, "parsed is a nsIURI");
+  is(parsed.href, "file:///foo/bar", "Should get what we passed in");
+});
+
+add_task(async function test_origin_file_values() {
+  // File URLs can also be origins
+  let schema = {
+    type: "origin",
+  };
+
+  let valid, parsed;
+  [valid, parsed] = JsonSchemaValidator.validateAndParseParameters("file:///foo/bar/foobar.html", schema);
+  ok(valid, "Origin is valid");
+  ok(parsed instanceof URL, "parsed is a nsIURI");
+  is(parsed.href, "file:///foo/bar/foobar.html", "Should get what we passed in");
+});
+
 add_task(async function test_array_values() {
   // The types inside an array object must all be the same
   let schema = {

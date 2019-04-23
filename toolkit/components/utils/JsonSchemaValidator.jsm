@@ -210,13 +210,21 @@ function validateAndParseSimpleParam(param, type) {
       try {
         parsedParam = new URL(param);
 
-        let pathQueryRef = parsedParam.pathname + parsedParam.hash;
-        // Make sure that "origin" types won't accept full URLs.
-        if (pathQueryRef != "/" && pathQueryRef != "") {
-          log.error(`Ignoring parameter "${param}" - origin was expected but received full URL.`);
-          valid = false;
-        } else {
+        if (parsedParam.protocol == "file:") {
+          // Treat the entire file URL as an origin.
+          // Note this is stricter than the current Firefox policy,
+          // but consistent with Chrome.
+          // See https://bugzilla.mozilla.org/show_bug.cgi?id=803143
           valid = true;
+        } else {
+          let pathQueryRef = parsedParam.pathname + parsedParam.hash;
+          // Make sure that "origin" types won't accept full URLs.
+          if (pathQueryRef != "/" && pathQueryRef != "") {
+            log.error(`Ignoring parameter "${param}" - origin was expected but received full URL.`);
+            valid = false;
+          } else {
+            valid = true;
+          }
         }
       } catch (ex) {
         valid = false;
