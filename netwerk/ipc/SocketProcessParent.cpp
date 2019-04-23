@@ -9,6 +9,11 @@
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
+#ifdef MOZ_WEBRTC
+#  include "mozilla/dom/ContentProcessManager.h"
+#  include "mozilla/dom/TabParent.h"
+#  include "mozilla/net/WebrtcProxyChannelParent.h"
+#endif
 
 namespace mozilla {
 namespace net {
@@ -125,6 +130,41 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvRecordDiscardedData(
   TelemetryIPC::RecordDiscardedData(Telemetry::ProcessID::Socket,
                                     aDiscardedData);
   return IPC_OK();
+}
+
+PWebrtcProxyChannelParent* SocketProcessParent::AllocPWebrtcProxyChannelParent(
+    const PBrowserOrId& aBrowser) {
+#ifdef MOZ_WEBRTC
+  if (aBrowser.type() != PBrowserOrId::TTabId) {
+    MOZ_ASSERT(false, "We only allow TabId here.");
+    return nullptr;
+  }
+
+  dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
+  dom::TabId tabId = aBrowser.get_TabId();
+  dom::ContentParentId cpId = cpm->GetTabProcessId(tabId);
+  RefPtr<dom::TabParent> tab = cpm->GetTabParentByProcessAndTabId(cpId, tabId);
+  if (!tab) {
+    MOZ_ASSERT(false, "Cannot find the TabParent!");
+    return nullptr;
+  }
+
+  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(tab);
+  parent->AddRef();
+  return parent;
+#else
+  return nullptr;
+#endif
+}
+
+bool SocketProcessParent::DeallocPWebrtcProxyChannelParent(
+    PWebrtcProxyChannelParent* aActor) {
+#ifdef MOZ_WEBRTC
+  WebrtcProxyChannelParent* parent =
+      static_cast<WebrtcProxyChannelParent*>(aActor);
+  parent->Release();
+#endif
+  return true;
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.
