@@ -3054,7 +3054,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   // Alternatively, if the allocator is not initialized yet, the pointer
   // can't be known.
   if (!chunk || !malloc_initialized) {
-    *aInfo = {TagUnknown, nullptr, 0};
+    *aInfo = {TagUnknown, nullptr, 0, 0};
     return;
   }
 
@@ -3071,14 +3071,14 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
             &huge)
             ->Search(&key);
     if (node) {
-      *aInfo = {TagLiveHuge, node->mAddr, node->mSize};
+      *aInfo = {TagLiveHuge, node->mAddr, node->mSize, node->mArena->mId};
       return;
     }
   }
 
   // It's not a huge allocation. Check if we have a known chunk.
   if (!gChunkRTree.Get(chunk)) {
-    *aInfo = {TagUnknown, nullptr, 0};
+    *aInfo = {TagUnknown, nullptr, 0, 0};
     return;
   }
 
@@ -3088,7 +3088,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   size_t pageind = (((uintptr_t)aPtr - (uintptr_t)chunk) >> gPageSize2Pow);
   if (pageind < gChunkHeaderNumPages) {
     // Within the chunk header.
-    *aInfo = {TagUnknown, nullptr, 0};
+    *aInfo = {TagUnknown, nullptr, 0, 0};
     return;
   }
 
@@ -3109,7 +3109,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
     }
 
     void* pageaddr = (void*)(uintptr_t(aPtr) & ~gPageSizeMask);
-    *aInfo = {tag, pageaddr, gPageSize};
+    *aInfo = {tag, pageaddr, gPageSize, chunk->arena->mId};
     return;
   }
 
@@ -3129,20 +3129,20 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
       pageind--;
       MOZ_DIAGNOSTIC_ASSERT(pageind >= gChunkHeaderNumPages);
       if (pageind < gChunkHeaderNumPages) {
-        *aInfo = {TagUnknown, nullptr, 0};
+        *aInfo = {TagUnknown, nullptr, 0, 0};
         return;
       }
 
       mapbits = chunk->map[pageind].bits;
       MOZ_DIAGNOSTIC_ASSERT(mapbits & CHUNK_MAP_LARGE);
       if (!(mapbits & CHUNK_MAP_LARGE)) {
-        *aInfo = {TagUnknown, nullptr, 0};
+        *aInfo = {TagUnknown, nullptr, 0, 0};
         return;
       }
     }
 
     void* addr = ((char*)chunk) + (pageind << gPageSize2Pow);
-    *aInfo = {TagLiveLarge, addr, size};
+    *aInfo = {TagLiveLarge, addr, size, chunk->arena->mId};
     return;
   }
 
@@ -3157,7 +3157,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   uintptr_t reg0_addr = (uintptr_t)run + run->mBin->mRunFirstRegionOffset;
   if (aPtr < (void*)reg0_addr) {
     // In the run header.
-    *aInfo = {TagUnknown, nullptr, 0};
+    *aInfo = {TagUnknown, nullptr, 0, 0};
     return;
   }
 
@@ -3173,7 +3173,7 @@ inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
   PtrInfoTag tag =
       ((run->mRegionsMask[elm] & (1U << bit))) ? TagFreedSmall : TagLiveSmall;
 
-  *aInfo = {tag, addr, size};
+  *aInfo = {tag, addr, size, chunk->arena->mId};
 }
 
 namespace Debug {
