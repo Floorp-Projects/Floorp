@@ -13,7 +13,9 @@ import { getSymbols } from "../../../workers/parser/getSymbols";
 import cases from "jest-in-case";
 
 async function setup({ file, location, functionName, original }) {
-  const source = original ? populateOriginalSource(file) : populateSource(file);
+  const { source } = original
+    ? populateOriginalSource(file)
+    : populateSource(file);
 
   const symbols = getSymbols(source.id);
 

@@ -12,6 +12,7 @@ import {
 } from "../../../utils/test-head";
 import { createPrettySource } from "../prettyPrint";
 import { sourceThreadClient } from "../../tests/helpers/threadClient.js";
+import { isFulfilled } from "../../../utils/async-value";
 
 describe("sources - pretty print", () => {
   it("returns a pretty source for a minified file", async () => {
@@ -19,13 +20,25 @@ describe("sources - pretty print", () => {
 
     const url = "base.js";
     const source = await dispatch(actions.newGeneratedSource(makeSource(url)));
+    await dispatch(actions.loadSourceText({ cx, source }));
+
     await dispatch(createPrettySource(cx, source.id));
 
     const prettyURL = `${source.url}:formatted`;
     const pretty = selectors.getSourceByURL(getState(), prettyURL);
-    expect(pretty && pretty.contentType).toEqual("text/javascript");
+    const content = pretty
+      ? selectors.getSourceContent(getState(), pretty.id)
+      : null;
     expect(pretty && pretty.url.includes(prettyURL)).toEqual(true);
     expect(pretty).toMatchSnapshot();
+
+    expect(
+      content &&
+        isFulfilled(content) &&
+        content.value.type === "text" &&
+        content.value.contentType
+    ).toEqual("text/javascript");
+    expect(content).toMatchSnapshot();
   });
 
   it("should create a source when first toggling pretty print", async () => {

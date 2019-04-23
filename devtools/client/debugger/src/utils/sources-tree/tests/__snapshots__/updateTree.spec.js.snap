@@ -20,12 +20,12 @@ exports[`calls updateTree.js adds one source 1`] = `
             \\"url\\": \\"https://davidwalsh.name/\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         },
@@ -38,12 +38,12 @@ exports[`calls updateTree.js adds one source 1`] = `
             \\"url\\": \\"https://davidwalsh.name/source1.js\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         }
@@ -73,12 +73,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
             \\"url\\": \\"https://davidwalsh.name/\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         },
@@ -91,12 +91,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
             \\"url\\": \\"https://davidwalsh.name/source1.js\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         },
@@ -109,12 +109,12 @@ exports[`calls updateTree.js adds two sources 1`] = `
             \\"url\\": \\"https://davidwalsh.name/source2.js\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/source2.js\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         }
@@ -144,12 +144,12 @@ exports[`calls updateTree.js shows all the sources 1`] = `
             \\"url\\": \\"https://davidwalsh.name/\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         },
@@ -162,12 +162,12 @@ exports[`calls updateTree.js shows all the sources 1`] = `
             \\"url\\": \\"https://davidwalsh.name/source1.js\\",
             \\"isBlackBoxed\\": false,
             \\"isPrettyPrinted\\": false,
-            \\"loadedState\\": \\"unloaded\\",
             \\"relativeUrl\\": \\"https://davidwalsh.name/source1.js\\",
             \\"introductionUrl\\": null,
             \\"isWasm\\": false,
-            \\"contentType\\": \\"text/javascript\\",
             \\"isExtension\\": false,
+            \\"loadedState\\": \\"unloaded\\",
+            \\"contentType\\": \\"text/javascript\\",
             \\"text\\": \\"\\"
           }
         }

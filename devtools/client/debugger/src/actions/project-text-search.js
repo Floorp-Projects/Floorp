@@ -9,8 +9,14 @@
  * @module actions/search
  */
 
+import { isFulfilled } from "../utils/async-value";
 import { findSourceMatches } from "../workers/search";
-import { getSource, hasPrettySource, getSourceList } from "../selectors";
+import {
+  getSource,
+  hasPrettySource,
+  getSourceList,
+  getSourceContent
+} from "../selectors";
 import { isThirdParty } from "../utils/source";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
@@ -114,7 +120,11 @@ export function searchSource(cx: Context, sourceId: string, query: string) {
       return;
     }
 
-    const matches = await findSourceMatches(source, query);
+    const content = getSourceContent(getState(), source.id);
+    let matches = [];
+    if (content && isFulfilled(content) && content.value.type === "text") {
+      matches = await findSourceMatches(source.id, content.value, query);
+    }
     if (!matches.length) {
       return;
     }

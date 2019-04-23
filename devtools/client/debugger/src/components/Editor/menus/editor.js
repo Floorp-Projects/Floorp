@@ -17,11 +17,14 @@ import {
 
 import { downloadFile } from "../../../utils/utils";
 
+import { isFulfilled } from "../../../utils/async-value";
 import actions from "../../../actions";
 
 import type {
   Source,
   SourceLocation,
+  SourceContent,
+  SourceWithContent,
   Context,
   ThreadContext
 } from "../../../types";
@@ -46,7 +49,7 @@ export const continueToHereItem = (
 // menu items
 
 const copyToClipboardItem = (
-  selectedSource: Source,
+  selectedContent: SourceContent,
   editorActions: EditorItemActions
 ) => {
   return {
@@ -55,9 +58,8 @@ const copyToClipboardItem = (
     accesskey: L10N.getStr("copyToClipboard.accesskey"),
     disabled: false,
     click: () =>
-      !selectedSource.isWasm &&
-      typeof selectedSource.text == "string" &&
-      copyToTheClipboard(selectedSource.text)
+      selectedContent.type === "text" &&
+      copyToTheClipboard(selectedContent.value)
   };
 };
 
@@ -160,20 +162,21 @@ const evaluateInConsoleItem = (
 
 const downloadFileItem = (
   selectedSource: Source,
+  selectedContent: SourceContent,
   editorActions: EditorItemActions
 ) => {
   return {
     id: "node-menu-download-file",
     label: L10N.getStr("downloadFile.label"),
     accesskey: L10N.getStr("downloadFile.accesskey"),
-    click: () => downloadFile(selectedSource, getFilename(selectedSource))
+    click: () => downloadFile(selectedContent, getFilename(selectedSource))
   };
 };
 
 export function editorMenuItems({
   cx,
   editorActions,
-  selectedSource,
+  selectedSourceWithContent,
   location,
   selectionText,
   hasPrettySource,
@@ -182,7 +185,7 @@ export function editorMenuItems({
 }: {
   cx: ThreadContext,
   editorActions: EditorItemActions,
-  selectedSource: Source,
+  selectedSourceWithContent: SourceWithContent,
   location: SourceLocation,
   selectionText: string,
   hasPrettySource: boolean,
@@ -190,6 +193,7 @@ export function editorMenuItems({
   isPaused: boolean
 }) {
   const items = [];
+  const { source: selectedSource, content } = selectedSourceWithContent;
 
   items.push(
     jumpToMappedLocationItem(
@@ -201,10 +205,14 @@ export function editorMenuItems({
     ),
     continueToHereItem(cx, location, isPaused, editorActions),
     { type: "separator" },
-    copyToClipboardItem(selectedSource, editorActions),
+    ...(content && isFulfilled(content)
+      ? [copyToClipboardItem(content.value, editorActions)]
+      : []),
     copySourceItem(selectedSource, selectionText, editorActions),
     copySourceUri2Item(selectedSource, editorActions),
-    downloadFileItem(selectedSource, editorActions),
+    ...(content && isFulfilled(content)
+      ? [downloadFileItem(selectedSource, content.value, editorActions)]
+      : []),
     { type: "separator" },
     showSourceMenuItem(cx, selectedSource, editorActions),
     blackBoxMenuItem(cx, selectedSource, editorActions)

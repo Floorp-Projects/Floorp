@@ -32,6 +32,7 @@ function generateDefaults() {
     selectedSource: {
       text: " text text query text"
     },
+    selectedContentLoaded: true,
     setFileSearchQuery: msg => msg,
     symbolSearchResults: [],
     modifiers: {

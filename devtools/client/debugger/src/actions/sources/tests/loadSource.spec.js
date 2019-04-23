@@ -17,6 +17,7 @@ import {
   sourceThreadClient
 } from "../../tests/helpers/threadClient.js";
 import { getBreakpointsList } from "../../../selectors";
+import { isFulfilled, isRejected } from "../../../utils/async-value";
 
 describe("loadSourceText", () => {
   it("should load source text", async () => {
@@ -27,23 +28,29 @@ describe("loadSourceText", () => {
       actions.newGeneratedSource(makeSource("foo1"))
     );
     await dispatch(actions.loadSourceText({ cx, source: foo1Source }));
-    const fooSource = selectors.getSource(getState(), "foo1");
 
-    if (!fooSource || typeof fooSource.text != "string") {
-      throw new Error("bad fooSource");
-    }
-    expect(fooSource.text.indexOf("return foo1")).not.toBe(-1);
+    const foo1Content = selectors.getSourceContent(getState(), foo1Source.id);
+    expect(
+      foo1Content &&
+      isFulfilled(foo1Content) &&
+      foo1Content.value.type === "text"
+        ? foo1Content.value.value.indexOf("return foo1")
+        : -1
+    ).not.toBe(-1);
 
-    const baseFoo2Source = await dispatch(
+    const foo2Source = await dispatch(
       actions.newGeneratedSource(makeSource("foo2"))
     );
-    await dispatch(actions.loadSourceText({ cx, source: baseFoo2Source }));
-    const foo2Source = selectors.getSource(getState(), "foo2");
+    await dispatch(actions.loadSourceText({ cx, source: foo2Source }));
 
-    if (!foo2Source || typeof foo2Source.text != "string") {
-      throw new Error("bad fooSource");
-    }
-    expect(foo2Source.text.indexOf("return foo2")).not.toBe(-1);
+    const foo2Content = selectors.getSourceContent(getState(), foo2Source.id);
+    expect(
+      foo2Content &&
+      isFulfilled(foo2Content) &&
+      foo2Content.value.type === "text"
+        ? foo2Content.value.value.indexOf("return foo2")
+        : -1
+    ).not.toBe(-1);
   });
 
   it("should update breakpoint text when a source loads", async () => {
@@ -152,9 +159,7 @@ describe("loadSourceText", () => {
     });
     const id = "foo";
 
-    await dispatch(
-      actions.newGeneratedSource(makeSource(id, { loadedState: "unloaded" }))
-    );
+    await dispatch(actions.newGeneratedSource(makeSource(id)));
 
     let source = selectors.getSourceFromId(getState(), id);
     dispatch(actions.loadSourceText({ cx, source }));
@@ -169,8 +174,13 @@ describe("loadSourceText", () => {
     await loading;
     expect(count).toEqual(1);
 
-    source = selectors.getSource(getState(), id);
-    expect(source && source.text).toEqual("yay");
+    const content = selectors.getSourceContent(getState(), id);
+    expect(
+      content &&
+        isFulfilled(content) &&
+        content.value.type === "text" &&
+        content.value.value
+    ).toEqual("yay");
   });
 
   it("doesn't re-load loaded sources", async () => {
@@ -186,9 +196,7 @@ describe("loadSourceText", () => {
     });
     const id = "foo";
 
-    await dispatch(
-      actions.newGeneratedSource(makeSource(id, { loadedState: "unloaded" }))
-    );
+    await dispatch(actions.newGeneratedSource(makeSource(id)));
     let source = selectors.getSourceFromId(getState(), id);
     const loading = dispatch(actions.loadSourceText({ cx, source }));
 
@@ -202,8 +210,13 @@ describe("loadSourceText", () => {
     await dispatch(actions.loadSourceText({ cx, source }));
     expect(count).toEqual(1);
 
-    source = selectors.getSource(getState(), id);
-    expect(source && source.text).toEqual("yay");
+    const content = selectors.getSourceContent(getState(), id);
+    expect(
+      content &&
+        isFulfilled(content) &&
+        content.value.type === "text" &&
+        content.value.value
+    ).toEqual("yay");
   });
 
   it("should cache subsequent source text loads", async () => {
@@ -230,8 +243,7 @@ describe("loadSourceText", () => {
     );
 
     const wasLoading = watchForState(store, state => {
-      const fooSource = selectors.getSource(state, "foo2");
-      return fooSource && fooSource.loadedState === "loading";
+      return !selectors.getSourceContent(state, "foo2");
     });
 
     await dispatch(actions.loadSourceText({ cx, source }));
@@ -248,9 +260,13 @@ describe("loadSourceText", () => {
     await dispatch(actions.loadSourceText({ cx, source }));
     const badSource = selectors.getSource(getState(), "bad-id");
 
-    if (!badSource || !badSource.error) {
-      throw new Error("bad badSource");
-    }
-    expect(badSource.error.indexOf("unknown source")).not.toBe(-1);
+    const content = badSource
+      ? selectors.getSourceContent(getState(), badSource.id)
+      : null;
+    expect(
+      content && isRejected(content) && typeof content.value === "string"
+        ? content.value.indexOf("unknown source")
+        : -1
+    ).not.toBe(-1);
   });
 });

@@ -14,6 +14,7 @@ DIRS += [
 CompiledModules(
     'assert.js',
     'ast.js',
+    'async-value.js',
     'asyncStoreHelper.js',
     'bootstrap.js',
     'breakable-lines.js',

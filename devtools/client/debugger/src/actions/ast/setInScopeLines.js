@@ -4,10 +4,14 @@
 
 // @flow
 
-import { getOutOfScopeLocations, getSelectedSource } from "../../selectors";
+import {
+  getOutOfScopeLocations,
+  getSelectedSourceWithContent
+} from "../../selectors";
 import { getSourceLineCount } from "../../utils/source";
 
 import { range, flatMap, uniq, without } from "lodash";
+import { isFulfilled } from "../../utils/async-value";
 
 import type { AstLocation } from "../../workers/parser";
 import type { ThunkArgs } from "../types";
@@ -27,16 +31,19 @@ function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
 
 export function setInScopeLines(cx: Context) {
   return ({ dispatch, getState }: ThunkArgs) => {
-    const source = getSelectedSource(getState());
+    const sourceWithContent = getSelectedSourceWithContent(getState());
     const outOfScopeLocations = getOutOfScopeLocations(getState());
 
-    if (!source || !source.text) {
+    if (!sourceWithContent || !sourceWithContent.content) {
       return;
     }
+    const content = sourceWithContent.content;
 
     const linesOutOfScope = getOutOfScopeLines(outOfScopeLocations);
 
-    const sourceNumLines = getSourceLineCount(source);
+    const sourceNumLines = isFulfilled(content)
+      ? getSourceLineCount(content.value)
+      : 0;
     const sourceLines = range(1, sourceNumLines + 1);
 
     const inScopeLines = !linesOutOfScope

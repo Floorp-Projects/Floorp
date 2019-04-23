@@ -8,11 +8,7 @@ import { getAst } from "../ast";
 import { setSource } from "../../sources";
 import cases from "jest-in-case";
 
-import { makeMockSource } from "../../../../utils/test-mockup";
-
-function createSource(contentType) {
-  return makeMockSource(undefined, "foo", contentType, "2");
-}
+import { makeMockSourceAndContent } from "../../../../utils/test-mockup";
 
 const astKeys = [
   "type",
@@ -27,11 +23,16 @@ const astKeys = [
 cases(
   "ast.getAst",
   ({ name }) => {
-    const source = createSource(name);
+    const { source, content } = makeMockSourceAndContent(
+      undefined,
+      "foo",
+      name,
+      "2"
+    );
     setSource({
       id: source.id,
-      text: source.text || "",
-      contentType: source.contentType,
+      text: content.value || "",
+      contentType: content.contentType,
       isWasm: false
     });
     const ast = getAst("foo");

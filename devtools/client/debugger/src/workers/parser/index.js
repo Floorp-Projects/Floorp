@@ -8,7 +8,7 @@ import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
 import type { AstSource, AstLocation, AstPosition } from "./types";
-import type { SourceLocation, Source, SourceId } from "../../types";
+import type { SourceLocation, SourceId, SourceContent } from "../../types";
 import type { SourceScope } from "./getScopes/visitor";
 import type { SymbolDeclarations } from "./getSymbols";
 
@@ -46,12 +46,15 @@ export const getSymbols = async (
   sourceId: string
 ): Promise<SymbolDeclarations> => dispatcher.invoke("getSymbols", sourceId);
 
-export const setSource = async (source: Source): Promise<void> => {
+export const setSource = async (
+  sourceId: SourceId,
+  content: SourceContent
+): Promise<void> => {
   const astSource: AstSource = {
-    id: source.id,
-    text: source.isWasm ? "" : source.text || "",
-    contentType: source.contentType || null,
-    isWasm: source.isWasm
+    id: sourceId,
+    text: content.type === "wasm" ? "" : content.value,
+    contentType: content.contentType || null,
+    isWasm: content.type === "wasm"
   };
 
   await dispatcher.invoke("setSource", astSource);

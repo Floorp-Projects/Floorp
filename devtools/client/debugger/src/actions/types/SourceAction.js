@@ -14,7 +14,10 @@ export type LoadSourceAction = PromiseAction<
     +sourceId: string,
     +epoch: number
   |},
-  Source
+  {
+    text: string | {| binary: Object |},
+    contentType: string | void
+  }
 >;
 export type SourceAction =
   | LoadSourceAction
