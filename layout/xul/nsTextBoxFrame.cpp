@@ -778,7 +778,7 @@ void nsTextBoxFrame::UpdateAccessTitle() {
    * Note that if you change appending access key label spec,
    * you need to maintain same logic in following methods. See bug 324159.
    * toolkit/components/prompts/src/CommonDialog.jsm (setLabelForNode)
-   * toolkit/content/widgets/text.xml (formatAccessKey)
+   * toolkit/content/widgets/text.js (formatAccessKey)
    */
   int32_t menuAccessKey;
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
