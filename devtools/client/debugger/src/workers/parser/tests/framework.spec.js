@@ -5,15 +5,13 @@
 // @flow
 
 import { getSymbols } from "../getSymbols";
-import { getOriginalSource } from "./helpers";
-import { setSource } from "../sources";
+import { populateOriginalSource } from "./helpers";
 import cases from "jest-in-case";
 
 cases(
   "Parser.getFramework",
   ({ name, file, value }) => {
-    const source = getOriginalSource("frameworks/plainJavascript");
-    setSource(source);
+    const source = populateOriginalSource("frameworks/plainJavascript");
     const symbols = getSymbols(source.id);
     expect(symbols.framework).toBeUndefined();
   },
