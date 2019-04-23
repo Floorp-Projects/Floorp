@@ -402,5 +402,18 @@
     <string name="tracking_protection_on">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
+
+
+    <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Select Tabs</string>
+
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Select All</string>
+
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" stepof the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Select tabs to save</string>
+
+    <!-- Text to prompt users to select how many tabs they have
+    selected in the "select tabs" stepof the collection creator -->
+    <string name="create_collection_save_to_collection_full">%d tabs selected</string>
 </resources>

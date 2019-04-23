@@ -6,6 +6,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipToPadding="false"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Button
@@ -30,7 +31,7 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:textSize="16sp"
-        android:text="Select All"
+        android:text="@string/create_collection_select_all"
         android:textAllCaps="false"
         android:textColor="@color/neutral_text"
         android:layout_margin="16dp"
@@ -41,9 +42,61 @@
         android:id="@+id/tab_list"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="30dp"
         app:layout_constraintTop_toBottomOf="@id/back_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/add_tabs_button" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/add_tabs_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="@drawable/add_tabs_to_collection_background"
+        android:clipToPadding="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <ImageView
+            android:id="@+id/close_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/mozac_ic_close"
+            android:layout_margin="16dp"
+            android:tint="?neutral"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <TextView
+            android:id="@+id/add_tabs_button_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:singleLine="true"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="?neutral"
+            android:text="@string/create_collection_save_to_collection_empty"
+            app:layout_constraintStart_toEndOf="@id/close_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageView
+            android:id="@+id/save_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:tint="?neutral"
+            app:srcCompat="@drawable/ic_archive" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

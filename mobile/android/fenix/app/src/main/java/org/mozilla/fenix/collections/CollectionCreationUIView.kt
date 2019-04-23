@@ -4,7 +4,6 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -47,5 +46,13 @@ class CollectionCreationUIView(
 
     override fun updateView() = Consumer<CollectionCreationState> {
         collectionCreationTabListAdapter.updateData(it.tabs, it.selectedTabs)
+
+        val buttonText = if (it.selectedTabs.isEmpty()) {
+            view.context.getString(R.string.create_collection_save_to_collection_empty)
+        } else {
+            view.context.getString(R.string.create_collection_save_to_collection_full, it.selectedTabs.size)
+        }
+
+        view.add_tabs_button_text.text = buttonText
     }
 }
