@@ -20,7 +20,6 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.kotlin.toUri
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.settings.PhoneFeature
@@ -103,10 +102,6 @@ class QuickSettingsUIView(
         val drawableId =
             if (isTrackingProtectionOn) R.drawable.ic_tracking_protection else
                 R.drawable.ic_tracking_protection_disabled
-        val drawableTint = if (isTrackingProtectionOn) DefaultThemeManager.resolveAttribute(
-            R.attr.primaryText,
-            context
-        ) else DefaultThemeManager.resolveAttribute(R.attr.neutral, context)
         val icon = AppCompatResources.getDrawable(context, drawableId)
         trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
         trackingProtectionSwitch.isChecked = isTrackingProtectionOn
