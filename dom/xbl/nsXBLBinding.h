@@ -92,8 +92,6 @@ class nsXBLBinding final {
   void MarkForDeath();
   bool MarkedForDeath() const { return mMarkedForDeath; }
 
-  bool HasStyleSheets() const;
-  bool InheritsStyle() const;
   bool ImplementsInterface(REFNSIID aIID) const;
 
   void GenerateAnonymousContent();

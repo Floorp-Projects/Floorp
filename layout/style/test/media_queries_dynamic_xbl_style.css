@@ -1,6 +1,0 @@
-@media (orientation: portrait) {
-  div { color: purple; }
-}
-@media (orientation: landscape) {
-  div { color: blue; }
-}
