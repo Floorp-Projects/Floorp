@@ -83,8 +83,7 @@ class SessionControlAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is TabViewHolder -> holder.bindSession(
-                (items[position] as AdapterItem.TabItem).tab,
-                position
+                (items[position] as AdapterItem.TabItem).tab
             )
         }
     }

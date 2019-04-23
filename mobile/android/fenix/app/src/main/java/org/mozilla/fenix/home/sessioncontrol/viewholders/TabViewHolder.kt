@@ -85,7 +85,7 @@ class TabViewHolder(
         }
     }
 
-    fun bindSession(tab: Tab, position: Int) {
+    fun bindSession(tab: Tab) {
         this.tab = tab
         updateText(tab)
         updateSelected(tab.selected)
