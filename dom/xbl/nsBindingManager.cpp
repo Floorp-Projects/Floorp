@@ -585,6 +585,40 @@ nsresult nsBindingManager::GetBindingImplementation(nsIContent* aContent,
   return NS_NOINTERFACE;
 }
 
+bool nsBindingManager::EnumerateBoundContentProtoBindings(
+    const BoundContentProtoBindingCallback& aCallback) const {
+  if (!mBoundContentSet) {
+    return true;
+  }
+
+  nsTHashtable<nsPtrHashKey<nsXBLPrototypeBinding>> bindings;
+  for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
+    nsIContent* boundContent = iter.Get()->GetKey();
+    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
+         binding = binding->GetBaseBinding()) {
+      nsXBLPrototypeBinding* proto = binding->PrototypeBinding();
+      // If we have already invoked the callback with a binding, we
+      // should have also invoked it for all its base bindings, so we
+      // don't need to continue this loop anymore.
+      if (!bindings.EnsureInserted(proto)) {
+        break;
+      }
+      if (!aCallback(proto)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+void nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray) {
+  EnumerateBoundContentProtoBindings([&aArray](nsXBLPrototypeBinding* aProto) {
+    aProto->AppendStyleSheetsTo(aArray);
+    return true;
+  });
+}
+
 static void InsertAppendedContent(XBLChildrenElement* aPoint,
                                   nsIContent* aFirstNewContent) {
   int32_t insertionIndex;

@@ -24,7 +24,6 @@ class nsIPrincipal;
 namespace mozilla {
 namespace dom {
 class Document;
-class Element;
 class EventTarget;
 }  // namespace dom
 }  // namespace mozilla
@@ -45,8 +44,8 @@ class nsXBLService final : public nsSupportsWeakReference {
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.  aOriginPrincipal must not be null here.
   nsresult LoadBindings(mozilla::dom::Element* aElement, nsIURI* aURL,
-                        nsIPrincipal* aOriginPrincipal,
-                        nsXBLBinding** aBinding);
+                        nsIPrincipal* aOriginPrincipal, nsXBLBinding** aBinding,
+                        bool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.
   nsresult BindingReady(nsIContent* aBoundElement, nsIURI* aURI,

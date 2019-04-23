@@ -695,6 +695,10 @@ mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 const mozilla::dom::Element* Gecko_GetBindingParent(
     const mozilla::dom::Element*);
 
+const RawServoAuthorStyles* Gecko_XBLBinding_GetRawServoStyles(
+    const nsXBLBinding*);
+bool Gecko_XBLBinding_InheritsStyle(const nsXBLBinding* aXBLBinding);
+
 struct GeckoFontMetrics {
   nscoord mChSize;  // -1.0 indicates not found
   nscoord mXSize;

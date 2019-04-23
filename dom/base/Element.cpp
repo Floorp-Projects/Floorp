@@ -609,6 +609,8 @@ JSObject* Element::WrapObject(JSContext* aCx,
       nsCOMPtr<nsIPrincipal> principal = bindingURL->ExtraData()->Principal();
 
       // We have a binding that must be installed.
+      bool dummy;
+
       nsXBLService* xblService = nsXBLService::GetInstance();
       if (!xblService) {
         dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
@@ -616,7 +618,8 @@ JSObject* Element::WrapObject(JSContext* aCx,
       }
 
       RefPtr<nsXBLBinding> binding;
-      xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
+      xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding),
+                               &dummy);
 
       if (binding) {
         if (nsContentUtils::IsSafeToRunScript()) {

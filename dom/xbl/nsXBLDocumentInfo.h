@@ -40,6 +40,8 @@ class nsXBLDocumentInfo final : public nsSupportsWeakReference {
 
   void SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
 
+  void FlushSkinStylesheets();
+
   bool IsChrome() { return mIsChrome; }
 
   void MarkInCCGeneration(uint32_t aGeneration);
