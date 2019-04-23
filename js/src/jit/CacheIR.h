@@ -294,6 +294,7 @@ extern const uint32_t ArgLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
+  _(BooleanToString, Id, Id)                                                   \
   _(CallScriptedFunction, Id, Id, Byte)                                        \
   _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
   _(CallClassHook, Id, Id, Byte, Field)                                        \
@@ -1294,6 +1295,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   StringOperandId callNumberToString(ValOperandId id) {
     StringOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::CallNumberToString, id);
+    writeOperandId(res);
+    return res;
+  }
+  StringOperandId callBooleanToString(ValOperandId id) {
+    StringOperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::BooleanToString, id);
     writeOperandId(res);
     return res;
   }
@@ -2440,6 +2447,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   bool tryAttachStringConcat();
   bool tryAttachStringObjectConcat();
   bool tryAttachStringNumberConcat();
+  bool tryAttachStringBooleanConcat();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
