@@ -59,6 +59,9 @@ class QuickActionSheet @JvmOverloads constructor(
         quickActionSheetBehavior: QuickActionSheetBehavior,
         duration: Long = bounceAnimationLength
     ) {
+        val overlay = findViewById<View>(R.id.overlay)
+        overlay.alpha = 0F
+
         val normalPeekHeight = quickActionSheetBehavior.peekHeight
 
         val peakHeightMultiplier = if (duration == demoBounceAnimationLength)

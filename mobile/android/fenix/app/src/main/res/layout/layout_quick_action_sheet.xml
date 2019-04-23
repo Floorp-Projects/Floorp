@@ -2,31 +2,31 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/quick_action_sheet"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="?foundation"
+    android:orientation="vertical">
 
-    <LinearLayout
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?foundation"
-        android:orientation="vertical">
+        android:layout_height="1dp"
+        android:background="?attr/neutral"
+        android:focusable="false" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?attr/neutral"
-            android:focusable="false" />
+    <ImageButton
+        android:id="@+id/quick_action_sheet_handle"
+        android:layout_width="match_parent"
+        android:layout_height="12dp"
+        android:background="@null"
+        android:contentDescription="@string/quick_action_sheet_handle"
+        android:paddingTop="7dp"
+        android:src="@drawable/ic_drawer_pull_tab" />
 
-        <ImageButton
-            android:id="@+id/quick_action_sheet_handle"
-            android:layout_width="match_parent"
-            android:layout_height="12dp"
-            android:background="@null"
-            android:contentDescription="@string/quick_action_sheet_handle"
-            android:paddingTop="7dp"
-            android:src="@drawable/ic_drawer_pull_tab" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <LinearLayout
             android:id="@+id/quick_action_buttons_layout"
@@ -91,12 +91,12 @@
                 android:textSize="12sp"
                 android:visibility="gone" />
         </LinearLayout>
-    </LinearLayout>
 
-    <View
-        android:id="@+id/overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="1.0"
-        android:background="?foundation" />
-</FrameLayout>
+        <View
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="1.0"
+            android:background="?foundation" />
+    </FrameLayout>
+</LinearLayout>
