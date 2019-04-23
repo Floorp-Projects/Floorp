@@ -278,6 +278,7 @@ talos-perf-reftest:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
