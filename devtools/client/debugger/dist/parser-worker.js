@@ -16990,7 +16990,6 @@ module.exports = isEmpty;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.hasSource = hasSource;
 exports.setSource = setSource;
 exports.getSource = getSource;
 exports.clearSources = clearSources;
@@ -16999,10 +16998,6 @@ exports.clearSources = clearSources;
 let cachedSources = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
                                 * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function hasSource(sourceId) {
-  return cachedSources.has(sourceId);
-}
 
 function setSource(source) {
   cachedSources.set(source.id, source);
@@ -17990,8 +17985,6 @@ var _steps = __webpack_require__(372);
 
 var _validate = __webpack_require__(374);
 
-var _frameworks = __webpack_require__(159);
-
 var _mapExpression = __webpack_require__(375);
 
 var _mapExpression2 = _interopRequireDefault(_mapExpression);
@@ -18000,11 +17993,9 @@ var _devtoolsUtils = __webpack_require__(7);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const { workerHandler } = _devtoolsUtils.workerUtils;
+const { workerHandler } = _devtoolsUtils.workerUtils; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                       * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 self.onmessage = workerHandler({
   findOutOfScopeLocations: _findOutOfScopeLocations2.default,
@@ -18013,12 +18004,10 @@ self.onmessage = workerHandler({
   clearSymbols: _getSymbols.clearSymbols,
   clearScopes: _getScopes.clearScopes,
   clearASTs: _ast.clearASTs,
-  hasSource: _sources.hasSource,
   setSource: _sources.setSource,
   clearSources: _sources.clearSources,
   getNextStep: _steps.getNextStep,
   hasSyntaxError: _validate.hasSyntaxError,
-  getFramework: _frameworks.getFramework,
   mapExpression: _mapExpression2.default
 });
 
