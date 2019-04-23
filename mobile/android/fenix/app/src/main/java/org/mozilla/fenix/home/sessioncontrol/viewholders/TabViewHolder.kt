@@ -42,7 +42,7 @@ class TabViewHolder(
         get() = Dispatchers.IO + job
 
     var tab: Tab? = null
-    private lateinit var tabMenu: TabItemMenu
+    private var tabMenu: TabItemMenu
 
     init {
         tabMenu = TabItemMenu(view.context) {
