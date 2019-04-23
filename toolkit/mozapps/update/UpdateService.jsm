@@ -3807,7 +3807,7 @@ Downloader.prototype = {
       selectedPatch.QueryInterface(Ci.nsIWritablePropertyBag);
       if (selectedPatch.getProperty("bitsResult") != null &&
           selectedPatch.getProperty("internalResult") == null &&
-          selectedPatch.getProperty("stagingFailed") != null) {
+          selectedPatch.getProperty("stagingFailed") == null) {
         LOG("Downloader:_selectPatch - Falling back to non-BITS download " +
             "mechanism due to existing BITS result: " +
             selectedPatch.getProperty("bitsResult"));
