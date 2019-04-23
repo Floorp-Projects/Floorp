@@ -51,7 +51,7 @@ CompositorManagerParent::CreateSameProcess() {
 
 /* static */
 bool CompositorManagerParent::Create(
-    Endpoint<PCompositorManagerParent>&& aEndpoint) {
+    Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We are creating a manager for the another process, inside the GPU process
@@ -65,9 +65,9 @@ bool CompositorManagerParent::Create(
   RefPtr<CompositorManagerParent> bridge = new CompositorManagerParent();
 
   RefPtr<Runnable> runnable =
-      NewRunnableMethod<Endpoint<PCompositorManagerParent>&&>(
+      NewRunnableMethod<Endpoint<PCompositorManagerParent>&&, bool>(
           "CompositorManagerParent::Bind", bridge,
-          &CompositorManagerParent::Bind, std::move(aEndpoint));
+          &CompositorManagerParent::Bind, std::move(aEndpoint), aIsRoot);
   CompositorThreadHolder::Loop()->PostTask(runnable.forget());
   return true;
 }
@@ -119,16 +119,16 @@ CompositorManagerParent::CompositorManagerParent()
 CompositorManagerParent::~CompositorManagerParent() {}
 
 void CompositorManagerParent::Bind(
-    Endpoint<PCompositorManagerParent>&& aEndpoint) {
+    Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (NS_WARN_IF(!aEndpoint.Bind(this))) {
     return;
   }
 
-  BindComplete();
+  BindComplete(aIsRoot);
 }
 
-void CompositorManagerParent::BindComplete() {
+void CompositorManagerParent::BindComplete(bool aIsRoot) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() ||
              NS_IsMainThread());
 
@@ -137,7 +137,7 @@ void CompositorManagerParent::BindComplete() {
   AddRef();
 
   StaticMutexAutoLock lock(sMutex);
-  if (OtherPid() == base::GetCurrentProcId()) {
+  if (aIsRoot) {
     sInstance = this;
   }
 

@@ -266,7 +266,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
 
 mozilla::ipc::IPCResult GPUParent::RecvInitCompositorManager(
     Endpoint<PCompositorManagerParent>&& aEndpoint) {
-  CompositorManagerParent::Create(std::move(aEndpoint));
+  CompositorManagerParent::Create(std::move(aEndpoint), /* aIsRoot */ true);
   return IPC_OK();
 }
 
@@ -377,7 +377,7 @@ mozilla::ipc::IPCResult GPUParent::RecvSimulateDeviceReset(
 
 mozilla::ipc::IPCResult GPUParent::RecvNewContentCompositorManager(
     Endpoint<PCompositorManagerParent>&& aEndpoint) {
-  CompositorManagerParent::Create(std::move(aEndpoint));
+  CompositorManagerParent::Create(std::move(aEndpoint), /* aIsRoot */ false);
   return IPC_OK();
 }
 
