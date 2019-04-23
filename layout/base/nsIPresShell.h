@@ -1739,9 +1739,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   mozilla::UniquePtr<ReflowCountMgr> mReflowCountMgr;
 #endif
 
-  // Helper for ScrollContentIntoView
-  void DoScrollContentIntoView();
-
   /**
    * Methods to handle changes to user and UA sheet lists that we get
    * notified about.
@@ -1827,13 +1824,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // missing/double frees.
   nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
 #endif
-
-  // Information needed to properly handle scrolling content into view if the
-  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is non-null
-  // between the initial scroll attempt and the first time we finish processing
-  // all our dirty roots.  mContentToScrollTo has a content property storing the
-  // details for the scroll operation, see ScrollIntoViewData above.
-  nsCOMPtr<nsIContent> mContentToScrollTo;
 
   // Count of the number of times this presshell has been painted to a window.
   uint64_t mPaintCount;

@@ -439,6 +439,11 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT void HandlePostedReflowCallbacks(bool aInterruptible);
 
   /**
+   * Helper for ScrollContentIntoView()
+   */
+  MOZ_CAN_RUN_SCRIPT void DoScrollContentIntoView();
+
+  /**
    * Initialize cached font inflation preference values and do an initial
    * computation to determine if font inflation is enabled.
    *
@@ -1453,6 +1458,13 @@ class PresShell final : public nsIPresShell,
   nsCOMPtr<nsIContent> mPointerEventTarget;
 
   nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
+
+  // Information needed to properly handle scrolling content into view if the
+  // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is non-null
+  // between the initial scroll attempt and the first time we finish processing
+  // all our dirty roots.  mContentToScrollTo has a content property storing the
+  // details for the scroll operation, see ScrollIntoViewData above.
+  nsCOMPtr<nsIContent> mContentToScrollTo;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
