@@ -2143,7 +2143,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
             },
         };
         wr_spatial_id = state.frame_builder.dl_builder.push_reference_frame(
-            &bounds,
+            bounds.origin,
             wr_spatial_id,
             params.transform_style,
             transform_binding,
@@ -2155,16 +2155,11 @@ pub extern "C" fn wr_dp_push_stacking_context(
         assert_ne!(wr_spatial_id.0, 0);
     }
 
-    let prim_info = LayoutPrimitiveInfo {
-        is_backface_visible: params.is_backface_visible,
-        tag: state.current_tag,
-        .. LayoutPrimitiveInfo::new(bounds)
-    };
-
     state.frame_builder
          .dl_builder
-         .push_stacking_context(&prim_info,
+         .push_stacking_context(bounds.origin,
                                 wr_spatial_id,
+                                params.is_backface_visible,
                                 wr_clip_id,
                                 params.transform_style,
                                 params.mix_blend_mode,
@@ -2319,17 +2314,15 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
                                     clip: LayoutRect,
-                                    is_backface_visible: bool,
+                                    _is_backface_visible: bool,
                                     parent: &WrSpaceAndClipChain,
                                     pipeline_id: WrPipelineId,
                                     ignore_missing_pipeline: bool) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_iframe(
-        &prim_info,
+        rect,
+        clip,
         &parent.to_webrender(state.pipeline_id),
         pipeline_id,
         ignore_missing_pipeline,
@@ -2345,12 +2338,22 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   color: ColorF) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+    let clip_rect = clip.intersection(&rect);
+
+    let prim_info = CommonItemProperties {
+        // NB: the damp-e10s talos-test will frequently crash on startup if we
+        // early-return here for empty rects. I couldn't figure out why, but
+        // it's pretty harmless to feed these through, so, uh, we do?
+        clip_rect: clip_rect.unwrap_or(LayoutRect::zero()),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_rect(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
         color,
     );
 }
@@ -2366,12 +2369,21 @@ pub extern "C" fn wr_dp_push_rect_with_parent_clip(
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let clip_rect = clip.intersection(&rect);
+    if clip_rect.is_none() { return; }
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip_rect.unwrap(),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_rect(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
         color,
     );
 }
@@ -2383,10 +2395,47 @@ pub extern "C" fn wr_dp_push_clear_rect(state: &mut WrState,
                                         parent: &WrSpaceAndClipChain) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let clip_rect = clip.intersection(&rect);
+    if clip_rect.is_none() { return; }
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip_rect.unwrap(),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible: true,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_clear_rect(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_hit_test(state: &mut WrState,
+                                      rect: LayoutRect,
+                                      clip: LayoutRect,
+                                      is_backface_visible: bool,
+                                      parent: &WrSpaceAndClipChain) {
+    debug_assert!(unsafe { !is_in_render_thread() });
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let clip_rect = clip.intersection(&rect);
+    if clip_rect.is_none() { return; }
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip_rect.unwrap(),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
+    state.frame_builder.dl_builder.push_hit_test(
+        &prim_info,
     );
 }
 
@@ -2399,10 +2448,21 @@ pub extern "C" fn wr_dp_push_clear_rect_with_parent_clip(
 ) {
     debug_assert!(unsafe { !is_in_render_thread() });
 
-    let prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let clip_rect = clip.intersection(&rect);
+    if clip_rect.is_none() { return; }
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip_rect.unwrap(),
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible: true,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_clear_rect(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
     );
 }
 
@@ -2420,18 +2480,26 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    color: ColorF) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     let alpha_type = if premultiplied_alpha {
         AlphaType::PremultipliedAlpha
     } else {
         AlphaType::Alpha
     };
+
     state.frame_builder
          .dl_builder
          .push_image(&prim_info,
-                     &parent.to_webrender(state.pipeline_id),
+                     bounds,
                      stretch_size,
                      tile_spacing,
                      image_rendering,
@@ -2455,13 +2523,20 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
-                         &parent.to_webrender(state.pipeline_id),
+                         bounds,
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
                          color_depth,
                          color_space,
@@ -2482,13 +2557,20 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
-                         &parent.to_webrender(state.pipeline_id),
+                         bounds,
                          YuvData::NV12(image_key_0, image_key_1),
                          color_depth,
                          color_space,
@@ -2508,13 +2590,20 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_yuv_image(&prim_info,
-                         &parent.to_webrender(state.pipeline_id),
+                         bounds,
                          YuvData::InterleavedYCbCr(image_key_0),
                          color_depth,
                          color_space,
@@ -2536,13 +2625,20 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
     let glyph_slice = unsafe { make_slice(glyphs, glyph_count as usize) };
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        spatial_id: space_and_clip.spatial_id,
+        clip_id: space_and_clip.clip_id,
+        is_backface_visible,
+        hit_info: state.current_tag
+    };
+
     state.frame_builder
          .dl_builder
          .push_text(&prim_info,
-                    &parent.to_webrender(state.pipeline_id),
+                    bounds,
                     &glyph_slice,
                     font_key,
                     color,
@@ -2551,18 +2647,14 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_shadow(state: &mut WrState,
-                                    bounds: LayoutRect,
-                                    clip: LayoutRect,
-                                    is_backface_visible: bool,
+                                    _bounds: LayoutRect,
+                                    _clip: LayoutRect,
+                                    _is_backface_visible: bool,
                                     parent: &WrSpaceAndClipChain,
                                     shadow: Shadow) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
     state.frame_builder.dl_builder.push_shadow(
-        &prim_info,
         &parent.to_webrender(state.pipeline_id),
         shadow.into(),
     );
@@ -2587,13 +2679,20 @@ pub extern "C" fn wr_dp_push_line(state: &mut WrState,
                                   style: LineStyle) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(*bounds, (*clip).into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: *clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_line(&prim_info,
-                    &parent.to_webrender(state.pipeline_id),
+                    bounds,
                     wavy_line_thickness,
                     orientation,
                     color,
@@ -2625,13 +2724,20 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
         do_aa: do_aa == AntialiasBorder::Yes,
     });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_border(&prim_info,
-                      &parent.to_webrender(state.pipeline_id),
+                      rect,
                       widths,
                       border_details);
 }
@@ -2661,12 +2767,19 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
         repeat_horizontal: repeat_horizontal.into(),
         repeat_vertical: repeat_vertical.into(),
     });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_border(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+        rect,
         widths.into(),
         border_details,
     );
@@ -2711,12 +2824,19 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
         repeat_vertical: RepeatMode::Stretch,
     });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_border(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+        rect,
         widths.into(),
         border_details,
     );
@@ -2764,12 +2884,20 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
         repeat_horizontal: RepeatMode::Stretch,
         repeat_vertical: RepeatMode::Stretch,
     });
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_border(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+        rect,
         widths.into(),
         border_details,
     );
@@ -2799,12 +2927,20 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                          end_point.into(),
                                          stops_vector,
                                          extend_mode.into());
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_gradient(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+        rect,
         gradient,
         tile_size.into(),
         tile_spacing.into(),
@@ -2835,12 +2971,20 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                 radius.into(),
                                                 stops_vector,
                                                 extend_mode.into());
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder.dl_builder.push_radial_gradient(
         &prim_info,
-        &parent.to_webrender(state.pipeline_id),
+        rect,
         gradient,
         tile_size,
         tile_spacing);
@@ -2848,7 +2992,7 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
-                                        rect: LayoutRect,
+                                        _rect: LayoutRect,
                                         clip: LayoutRect,
                                         is_backface_visible: bool,
                                         parent: &WrSpaceAndClipChain,
@@ -2861,13 +3005,19 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         clip_mode: BoxShadowClipMode) {
     debug_assert!(unsafe { is_in_main_thread() });
 
-    let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(rect, clip.into());
-    prim_info.is_backface_visible = is_backface_visible;
-    prim_info.tag = state.current_tag;
+    let space_and_clip = parent.to_webrender(state.pipeline_id);
+
+    let prim_info = CommonItemProperties {
+        clip_rect: clip,
+        clip_id: space_and_clip.clip_id,
+        spatial_id: space_and_clip.spatial_id,
+        is_backface_visible,
+        hit_info: state.current_tag,
+    };
+
     state.frame_builder
          .dl_builder
          .push_box_shadow(&prim_info,
-                          &parent.to_webrender(state.pipeline_id),
                           box_bounds,
                           offset,
                           color,
