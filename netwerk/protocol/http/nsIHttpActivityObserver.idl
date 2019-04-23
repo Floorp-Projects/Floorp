@@ -120,7 +120,7 @@ interface nsIHttpActivityObserver : nsISupports
  * This interface provides a way to register and unregister observers to the
  * http activities.
  */
-[scriptable, uuid(7C512CB8-582A-4625-B5B6-8639755271B5)]
+[scriptable, builtinclass, uuid(7C512CB8-582A-4625-B5B6-8639755271B5)]
 interface nsIHttpActivityDistributor : nsIHttpActivityObserver
 {
     void addObserver(in nsIHttpActivityObserver aObserver);

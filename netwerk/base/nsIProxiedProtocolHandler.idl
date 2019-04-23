@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIProxyInfo;
 interface nsILoadInfo;
 
-[scriptable, uuid(3756047a-fa2b-4b45-9948-3b5f8fc375e7)]
+[scriptable, builtinclass, uuid(3756047a-fa2b-4b45-9948-3b5f8fc375e7)]
 interface nsIProxiedProtocolHandler : nsIProtocolHandler
 {
     /** Create a new channel with the given proxyInfo
