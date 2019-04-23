@@ -6,8 +6,6 @@
 
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 
-const noop = () => {};
-
 /**
  * A SourceClient provides a way to access the source text of a script.
  *
@@ -61,21 +59,6 @@ SourceClient.prototype = {
       telemetry: "UNBLACKBOX",
     },
   ),
-
-  /**
-   * Get Executable Lines from a source
-   */
-  getExecutableLines: function(cb = noop) {
-    const packet = {
-      to: this._form.actor,
-      type: "getExecutableLines",
-    };
-
-    return this._client.request(packet).then(res => {
-      cb(res.lines);
-      return res.lines;
-    });
-  },
 
   getBreakpointPositions: function(query) {
     const packet = {
