@@ -229,6 +229,13 @@ void nsXULPrototypeCache::FlushSkinFiles() {
       iter.Remove();
     }
   }
+
+  // Iterate over all the remaining XBL and make sure cached
+  // scoped skin stylesheets are flushed and refetched by the
+  // prototype bindings.
+  for (auto iter = mXBLDocTable.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->FlushSkinStylesheets();
+  }
 }
 
 void nsXULPrototypeCache::FlushScripts() { mScriptTable.Clear(); }

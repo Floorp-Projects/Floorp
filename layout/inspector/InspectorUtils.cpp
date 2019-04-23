@@ -184,6 +184,22 @@ void InspectorUtils::GetCSSStyleRules(
     maps.AppendElement(map);
   }
 
+  // Collect style rule maps for bindings.
+  for (nsIContent* bindingContent = &aElement; bindingContent;
+       bindingContent = bindingContent->GetBindingParent()) {
+    for (nsXBLBinding* binding = bindingContent->GetXBLBinding(); binding;
+         binding = binding->GetBaseBinding()) {
+      if (auto* map = binding->PrototypeBinding()->GetServoStyleRuleMap()) {
+        maps.AppendElement(map);
+      }
+    }
+    // Note that we intentionally don't cut off here, unlike when we
+    // do styling, because even if style rules from parent binding
+    // do not apply to the element directly in those cases, their
+    // rules may still show up in the list we get above due to the
+    // inheritance in cascading.
+  }
+
   // Now shadow DOM stuff...
   if (auto* shadow = aElement.GetShadowRoot()) {
     maps.AppendElement(&shadow->ServoStyleRuleMap());

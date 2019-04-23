@@ -33,6 +33,8 @@ UNIFIED_SOURCES += [
     'nsXBLProtoImplProperty.cpp',
     'nsXBLPrototypeBinding.cpp',
     'nsXBLPrototypeHandler.cpp',
+    'nsXBLPrototypeResources.cpp',
+    'nsXBLResourceLoader.cpp',
     'nsXBLSerialize.cpp',
     'nsXBLService.cpp',
     'nsXBLWindowKeyHandler.cpp',

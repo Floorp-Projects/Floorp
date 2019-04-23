@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/EventStates.h"
 
 struct ElementDependentRuleProcessorData;
@@ -116,6 +117,8 @@ class nsBindingManager final : public nsStubMutationObserver {
   nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
                                     void** aResult);
 
+  void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
+
   void Traverse(nsIContent* aContent, nsCycleCollectionTraversalCallback& cb);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
@@ -144,6 +147,14 @@ class nsBindingManager final : public nsStubMutationObserver {
                                              bool* aMulti);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  // Enumerate each bound content's bindings (including its base bindings)
+  // in mBoundContentSet. Return false from the callback to stop enumeration.
+  using BoundContentProtoBindingCallback =
+      std::function<bool(nsXBLPrototypeBinding*)>;
+
+  bool EnumerateBoundContentProtoBindings(
+      const BoundContentProtoBindingCallback&) const;
 
  protected:
   nsIXPConnectWrappedJS* GetWrappedJS(nsIContent* aContent);

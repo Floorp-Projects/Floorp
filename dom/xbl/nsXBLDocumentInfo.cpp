@@ -285,6 +285,14 @@ void nsXBLDocumentInfo::SetFirstPrototypeBinding(
   mFirstBinding = aBinding;
 }
 
+void nsXBLDocumentInfo::FlushSkinStylesheets() {
+  if (mBindingTable) {
+    for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->FlushSkinSheets();
+    }
+  }
+}
+
 #ifdef DEBUG
 void AssertInCompilationScope() {
   AutoJSContext cx;
