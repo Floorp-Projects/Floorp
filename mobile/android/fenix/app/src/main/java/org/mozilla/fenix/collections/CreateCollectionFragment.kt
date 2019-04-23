@@ -4,20 +4,28 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getManagedEmitter
 
-class CreateCollectionFragment : Fragment() {
+class CreateCollectionFragment : DialogFragment() {
 
     private lateinit var collectionCreationComponent: CollectionCreationComponent
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.CreateCollectionDialogStyle)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,5 +48,9 @@ class CreateCollectionFragment : Fragment() {
         }!!.tabs
 
         getManagedEmitter<CollectionCreationChange>().onNext(CollectionCreationChange.TabListChange(tabs))
+    }
+
+    companion object {
+        const val createCollectionTag = "createCollection"
     }
 }

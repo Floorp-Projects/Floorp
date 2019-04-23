@@ -33,6 +33,7 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.collections.CreateCollectionFragment
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.Tab
 import org.mozilla.fenix.components.metrics.Event
@@ -187,8 +188,8 @@ class HomeFragment : Fragment(), CoroutineScope {
                     ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
                 }!!.tabs = tabs
 
-                val direction = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
-                Navigation.findNavController(view!!).navigate(direction)
+                CreateCollectionFragment()
+                    .show(requireActivity().supportFragmentManager, CreateCollectionFragment.createCollectionTag)
             }
             is TabAction.MenuTapped -> {
                 val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
