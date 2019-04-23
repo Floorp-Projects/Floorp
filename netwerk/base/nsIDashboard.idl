@@ -8,7 +8,7 @@
  * The returned JSON contains arrays with data
  */
 [scriptable, function, uuid(19d7f24f-a95a-4fd9-87e2-d96e9e4b1f6d)]
-interface NetDashboardCallback : nsISupports
+interface nsINetDashboardCallback : nsISupports
 {
     void onDashboardDataAvailable(in jsval data);
 };
@@ -22,17 +22,17 @@ interface nsIDashboard : nsISupports
 {
     /* Arrays: host, port, tcp, active, socksent, sockreceived
      * Values: sent, received  */
-    void requestSockets(in NetDashboardCallback cb);
+    void requestSockets(in nsINetDashboardCallback cb);
 
     /* Arrays: host, port, spdy, ssl
      * Array of arrays: active, idle */
-    void requestHttpConnections(in NetDashboardCallback cb);
+    void requestHttpConnections(in nsINetDashboardCallback cb);
 
     /* Arrays: hostport, encrypted, msgsent, msgreceived, sentsize, receivedsize */
-    void requestWebsocketConnections(in NetDashboardCallback cb);
+    void requestWebsocketConnections(in nsINetDashboardCallback cb);
 
     /* Arrays: hostname, family, hostaddr, expiration */
-    void requestDNSInfo(in NetDashboardCallback cb);
+    void requestDNSInfo(in nsINetDashboardCallback cb);
 
     /* aProtocol: a transport layer protocol:
      *      ex: "ssl", "tcp", default is "tcp".
@@ -41,19 +41,19 @@ interface nsIDashboard : nsISupports
      * aTimeout: the timespan before the connection will be timed out */
     void requestConnection(in ACString aHost, in unsigned long aPort,
                            in string aProtocol, in unsigned long aTimeout,
-                           in NetDashboardCallback cb);
+                           in nsINetDashboardCallback cb);
 
     /* When true, the service will log websocket events */
     attribute boolean enableLogging;
 
     /* DNS resolver for host name
      * aHost: host name */
-    void requestDNSLookup(in ACString aHost, in NetDashboardCallback cb);
+    void requestDNSLookup(in ACString aHost, in nsINetDashboardCallback cb);
 
     /**
      * Asyncly returns stats regarding the "Race Cache With Network" feature.
      */
-    void requestRcwnStats(in NetDashboardCallback cb);
+    void requestRcwnStats(in nsINetDashboardCallback cb);
 
     AUTF8String getLogPath();
 };
