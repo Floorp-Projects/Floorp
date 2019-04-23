@@ -22,7 +22,12 @@ FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['assets'] += [
 FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged'] += [
   'privileged/api.js',
   'privileged/FirefoxMonitor.css',
+  'privileged/FirefoxMonitor.jsm',
   'privileged/schema.json'
+]
+
+FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged']['subscripts'] += [
+  'privileged/subscripts/Globals.jsm'
 ]
 
 with Files('**'):
