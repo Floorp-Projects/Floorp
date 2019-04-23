@@ -16995,24 +16995,25 @@ exports.getSource = getSource;
 exports.clearSources = clearSources;
 
 
-let cachedSources = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const cachedSources = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function setSource(source) {
   cachedSources.set(source.id, source);
 }
 
 function getSource(sourceId) {
-  if (!cachedSources.has(sourceId)) {
+  const source = cachedSources.get(sourceId);
+  if (!source) {
     throw new Error(`Parser: source ${sourceId} was not provided.`);
   }
 
-  return cachedSources.get(sourceId);
+  return source;
 }
 
 function clearSources() {
-  cachedSources = new Map();
+  cachedSources.clear();
 }
 
 /***/ }),

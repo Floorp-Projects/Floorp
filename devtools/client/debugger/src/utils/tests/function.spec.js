@@ -7,22 +7,19 @@
 import { findFunctionText } from "../function";
 
 import { getSymbols } from "../../workers/parser/getSymbols";
-import { getOriginalSource } from "../../workers/parser/tests/helpers";
-import { setSource } from "../../workers/parser/sources";
+import { populateOriginalSource } from "../../workers/parser/tests/helpers";
 
 describe("function", () => {
   describe("findFunctionText", () => {
     it("finds function", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
       const text = findFunctionText(14, source, symbols);
       expect(text).toMatchSnapshot();
     });
 
     it("finds function signature", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
       const text = findFunctionText(13, source, symbols);
@@ -30,8 +27,7 @@ describe("function", () => {
     });
 
     it("misses function closing brace", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
       const text = findFunctionText(15, source, symbols);
@@ -41,8 +37,7 @@ describe("function", () => {
     });
 
     it("finds property function", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
       const text = findFunctionText(29, source, symbols);
@@ -50,8 +45,7 @@ describe("function", () => {
     });
 
     it("finds class function", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
       const text = findFunctionText(33, source, symbols);
@@ -59,8 +53,7 @@ describe("function", () => {
     });
 
     it("cant find function", () => {
-      const source = getOriginalSource("func");
-      setSource(source);
+      const source = populateOriginalSource("func");
       const symbols = getSymbols(source.id);
 
       const text = findFunctionText(20, source, symbols);

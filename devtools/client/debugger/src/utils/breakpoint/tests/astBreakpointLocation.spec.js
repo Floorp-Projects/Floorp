@@ -6,17 +6,15 @@
 
 import { getASTLocation } from "../astBreakpointLocation.js";
 import {
-  getSource,
-  getOriginalSource
+  populateSource,
+  populateOriginalSource
 } from "../../../workers/parser/tests/helpers";
-import { setSource } from "../../../workers/parser/sources";
 import { getSymbols } from "../../../workers/parser/getSymbols";
 import cases from "jest-in-case";
 
 async function setup({ file, location, functionName, original }) {
-  const source = original ? getOriginalSource(file) : getSource(file);
+  const source = original ? populateOriginalSource(file) : populateSource(file);
 
-  setSource(source);
   const symbols = getSymbols(source.id);
 
   const astLocation = getASTLocation(source, symbols, location);

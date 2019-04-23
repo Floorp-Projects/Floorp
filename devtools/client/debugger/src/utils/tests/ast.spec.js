@@ -7,13 +7,11 @@
 import { findBestMatchExpression } from "../ast";
 
 import { getSymbols } from "../../workers/parser/getSymbols";
-import { getSource } from "../../workers/parser/tests/helpers";
-import { setSource } from "../../workers/parser/sources";
+import { populateSource } from "../../workers/parser/tests/helpers";
 
 describe("find the best expression for the token", () => {
-  const source = getSource("computed-props");
-  setSource(source);
-  const symbols = getSymbols("computed-props");
+  const source = populateSource("computed-props");
+  const symbols = getSymbols(source.id);
 
   it("should find the identifier", () => {
     const expression = findBestMatchExpression(symbols, {
