@@ -150,6 +150,9 @@ add_task(async function testReportBreakage() {
   await BrowserTestUtils.withNewTab(url, async function() {
     await openIdentityPopup();
 
+    let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
+    is(comments.value, "", "Comments textarea should initially be empty");
+
     let reportBreakageButton = document.getElementById("identity-popup-content-blocking-report-breakage");
     ok(BrowserTestUtils.is_visible(reportBreakageButton), "report breakage button is visible");
     let reportBreakageView = document.getElementById("identity-popup-breakageReportView");
@@ -210,7 +213,6 @@ add_task(async function testReportBreakage() {
         resolve();
       });
 
-      let comments = document.getElementById("identity-popup-breakageReportView-collection-comments");
       comments.value = "This is a comment";
       submitButton.click();
     });

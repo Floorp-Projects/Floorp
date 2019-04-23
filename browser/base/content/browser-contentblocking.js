@@ -1004,6 +1004,9 @@ var ContentBlocking = {
     }).then(function(response) {
       if (!response.ok) {
         Cu.reportError(`Content Blocking report to ${reportEndpoint} failed with status ${response.status}`);
+      } else {
+        // Clear the textarea value when the report is submitted
+        comments.value = "";
       }
     }).catch(Cu.reportError);
   },
