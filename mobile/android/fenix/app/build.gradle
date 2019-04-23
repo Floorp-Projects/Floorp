@@ -255,8 +255,6 @@ dependencies {
 
     implementation Deps.leanplum
 
-    implementation Deps.mozilla_places
-
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_storage
     implementation Deps.mozilla_concept_toolbar
