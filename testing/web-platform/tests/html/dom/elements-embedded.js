@@ -99,8 +99,7 @@ var embeddedElements = {
 
     width: "unsigned long",
     height: "unsigned long",
-    poster: "url",
-    playsInline: "boolean",
+    poster: "url"
   },
   audio: {
     // HTMLMediaElement

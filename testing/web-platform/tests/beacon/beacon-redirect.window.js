@@ -1,4 +1,3 @@
-// META: timeout=long
 // META: script=/common/utils.js
 // META: script=beacon-common.sub.js
 

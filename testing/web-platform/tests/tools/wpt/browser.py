@@ -29,7 +29,7 @@ class Browser(object):
         return NotImplemented
 
     @abstractmethod
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         """Install the WebDriver implementation for this browser."""
         return NotImplemented
 
@@ -166,11 +166,11 @@ class Firefox(Browser):
         os.remove(installer_path)
         return self.find_binary_path(dest)
 
-    def find_binary_path(self, path=None, channel="nightly"):
+    def find_binary_path(self,path=None, channel="nightly"):
         """Looks for the firefox binary in the virtual environment"""
 
         if path is None:
-            # os.getcwd() doesn't include the venv path
+            #os.getcwd() doesn't include the venv path
             path = os.path.join(os.getcwd(), "_venv", "browsers", channel)
 
         binary = None
@@ -315,7 +315,7 @@ class Firefox(Browser):
         assert latest_release != 0
         return "v%s.%s.%s" % tuple(str(item) for item in latest_release)
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         """Install latest Geckodriver."""
         if dest is None:
             dest = os.getcwd()
@@ -392,7 +392,7 @@ class Fennec(Browser):
     def find_webdriver(self, channel=None):
         raise NotImplementedError
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -440,66 +440,24 @@ class Chrome(Browser):
 
         return "%s%s" % (platform, bits)
 
-    def chromium_platform_string(self):
-        platform = {
-            "Linux": "Linux",
-            "Windows": "Win",
-            "Darwin": "Mac"
-        }.get(uname[0])
-
-        if platform is None:
-            raise ValueError("Unable to construct a valid Chromium package name for current platform")
-
-        if (platform == "Linux" or platform == "Win") and uname[4] == "x86_64":
-            platform += "_x64"
-
-        return platform
-
     def find_binary(self, venv_path=None, channel=None):
         raise NotImplementedError
 
     def find_webdriver(self, channel=None):
         return find_executable("chromedriver")
 
-    def _latest_chromedriver_url(self, browser_binary=None):
-        latest = None
-        chrome_version = self.version(browser_binary)
-        if chrome_version is not None:
-            parts = chrome_version.split(".")
-            if len(parts) == 4:
-                latest_url = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_%s.%s.%s" % (
-                    parts[0], parts[1], parts[2])
-                try:
-                    latest = get(latest_url).text.strip()
-                except requests.RequestException:
-                    latest_url = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_%s" % parts[0]
-                    try:
-                        latest = get(latest_url).text.strip()
-                    except requests.RequestException:
-                        pass
-        if latest is None:
-            # Fall back to the tip-of-tree *Chromium* build.
-            latest_url = "https://storage.googleapis.com/chromium-browser-snapshots/%s/LAST_CHANGE" % (
-                self.chromium_platform_string())
-            latest = get(latest_url).text.strip()
-            url = "https://storage.googleapis.com/chromium-browser-snapshots/%s/%s/chromedriver_%s.zip" % (
-                self.chromium_platform_string(), latest, self.platform_string())
-        else:
-            url = "https://chromedriver.storage.googleapis.com/%s/chromedriver_%s.zip" % (
-                latest, self.platform_string())
-        return url
-
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         if dest is None:
             dest = os.pwd
-        url = self._latest_chromedriver_url(browser_binary)
-        self.logger.info("Downloading ChromeDriver from %s" % url)
+        latest = get("http://chromedriver.storage.googleapis.com/LATEST_RELEASE").text.strip()
+        url = "http://chromedriver.storage.googleapis.com/%s/chromedriver_%s.zip" % (latest,
+                                                                                     self.platform_string())
         unzip(get(url).raw, dest)
-        chromedriver_dir = os.path.join(dest, 'chromedriver_%s' % self.platform_string())
-        if os.path.isfile(os.path.join(chromedriver_dir, "chromedriver")):
-            shutil.move(os.path.join(chromedriver_dir, "chromedriver"), dest)
-            shutil.rmtree(chromedriver_dir)
-        return find_executable("chromedriver", dest)
+
+        path = find_executable("chromedriver", dest)
+        st = os.stat(path)
+        os.chmod(path, st.st_mode | stat.S_IEXEC)
+        return path
 
     def version(self, binary=None, webdriver_binary=None):
         binary = binary or self.binary
@@ -507,11 +465,11 @@ class Chrome(Browser):
             try:
                 version_string = call(binary, "--version").strip()
             except subprocess.CalledProcessError:
-                self.logger.warning("Failed to call %s" % binary)
+                self.logger.warning("Failed to call %s", binary)
                 return None
-            m = re.match(r"(?:Google Chrome|Chromium) (.*)", version_string)
+            m = re.match(r"Google Chrome (.*)", version_string)
             if not m:
-                self.logger.warning("Failed to extract version from: %s" % version_string)
+                self.logger.warning("Failed to extract version from: %s", version_string)
                 return None
             return m.group(1)
         self.logger.warning("Unable to extract version from binary on Windows.")
@@ -536,7 +494,7 @@ class ChromeAndroid(Browser):
     def find_webdriver(self, channel=None):
         return find_executable("chromedriver")
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         chrome = Chrome()
         return chrome.install_webdriver(dest, channel)
 
@@ -589,7 +547,7 @@ class Opera(Browser):
     def find_webdriver(self, channel=None):
         return find_executable("operadriver")
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         if dest is None:
             dest = os.pwd
         latest = get("https://api.github.com/repos/operasoftware/operachromiumdriver/releases/latest").json()["tag_name"]
@@ -612,7 +570,7 @@ class Opera(Browser):
         try:
             output = call(binary, "--version")
         except subprocess.CalledProcessError:
-            self.logger.warning("Failed to call %s" % binary)
+            self.logger.warning("Failed to call %s", binary)
             return None
         m = re.search(r"[0-9\.]+( [a-z]+)?$", output.strip())
         if m:
@@ -634,7 +592,7 @@ class Edge(Browser):
     def find_webdriver(self, channel=None):
         return find_executable("MicrosoftWebDriver")
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -642,9 +600,8 @@ class Edge(Browser):
         try:
             return call("powershell.exe", command).strip()
         except (subprocess.CalledProcessError, OSError):
-            self.logger.warning("Failed to call %s in PowerShell" % command)
+            self.logger.warning("Failed to call %s in PowerShell", command)
             return None
-
 
 class EdgeWebDriver(Edge):
     product = "edge_webdriver"
@@ -665,7 +622,7 @@ class InternetExplorer(Browser):
     def find_webdriver(self, channel=None):
         return find_executable("IEDriverServer.exe")
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -693,7 +650,7 @@ class Safari(Browser):
             path = "/Applications/Safari Technology Preview.app/Contents/MacOS"
         return find_executable("safaridriver", path)
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -707,11 +664,11 @@ class Safari(Browser):
         try:
             version_string = call(webdriver_binary, "--version").strip()
         except subprocess.CalledProcessError:
-            self.logger.warning("Failed to call %s --version" % webdriver_binary)
+            self.logger.warning("Failed to call %s --version", webdriver_binary)
             return None
         m = re.match(r"Included with Safari (.*)", version_string)
         if not m:
-            self.logger.warning("Failed to extract version from: %s" % version_string)
+            self.logger.warning("Failed to extract version from: %s", version_string)
             return None
         return m.group(1)
 
@@ -765,7 +722,7 @@ class Servo(Browser):
     def find_webdriver(self, channel=None):
         return None
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -795,7 +752,7 @@ class Sauce(Browser):
     def find_webdriver(self, channel=None):
         raise NotImplementedError
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -817,7 +774,7 @@ class WebKit(Browser):
     def find_webdriver(self, channel=None):
         return None
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):
@@ -839,7 +796,7 @@ class Epiphany(Browser):
     def find_webdriver(self, channel=None):
         return find_executable("WebKitWebDriver")
 
-    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
+    def install_webdriver(self, dest=None, channel=None):
         raise NotImplementedError
 
     def version(self, binary=None, webdriver_binary=None):

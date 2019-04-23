@@ -95,7 +95,7 @@ jobs:
     displayName: 'Publish results'
     inputs:
       artifactName: 'infrastructure'
-    condition: always()
+    condition: succeededOrFailed()
 
 - job: tools_unittest_macOS
   displayName: 'tools/ unittests (macOS)'
@@ -154,23 +154,20 @@ jobs:
   - template: tools/ci/azure/install_certs.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: python ./wpt run --yes --no-manifest-update --install-fonts --manifest MANIFEST.json --metadata infrastructure/metadata/ --webdriver-arg=--verbose --log-tbpl $(Build.ArtifactStagingDirectory)/edge.tbpl.log --log-tbpl-level info edge_webdriver infrastructure/
+  - script: python ./wpt run --yes --no-manifest-update --install-fonts --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-tbpl $(Build.ArtifactStagingDirectory)/edge.tbpl.log --log-tbpl-level info edge_webdriver infrastructure/
     displayName: 'Run tests (Edge)'
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
     inputs:
       artifactName: 'infrastructure'
-    condition: always()
+    condition: succeededOrFailed()
   - template: tools/ci/azure/cleanup_win10.yml
 
-# All `./wpt run` tests are run from epochs/* branches on a schedule. See
-# documentation at the top of this file for required setup.
 - job: results_edge
   displayName: 'all tests (Edge)'
-  condition: |
-    or(eq(variables['Build.Reason'], 'Schedule'),
-       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge']))
-  # There are 12 agents in the pool, but use more jobs so that each takes <1h.
+  # This job is only triggered manually until it has been shown to be robust.
+  condition: and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge'])
+  # There are 5 agents in the pool, but use more jobs so that each takes <1h.
   strategy:
     parallel: 20
   timeoutInMinutes: 360
@@ -186,7 +183,7 @@ jobs:
   - template: tools/ci/azure/install_certs.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: python ./wpt run --no-manifest-update --no-fail-on-unexpected --install-fonts --webdriver-arg=--verbose --test-types reftest testharness --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-tbpl - --log-tbpl-level info --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt edge_webdriver
+  - script: python ./wpt run --no-manifest-update --no-fail-on-unexpected --install-fonts --test-types reftest testharness --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-tbpl - --log-tbpl-level info --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json edge_webdriver
     displayName: 'Run tests'
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
@@ -198,40 +195,8 @@ jobs:
     dependsOn: results_edge
     artifactName: edge-results
 
-- job: results_safari
-  displayName: 'all tests (Safari)'
-  condition: eq(variables['Build.Reason'], 'Schedule')
-  strategy:
-    parallel: 4 # chosen to make runtime ~2h
-  timeoutInMinutes: 360
-  pool:
-    vmImage: 'macOS-10.13'
-  steps:
-  - template: tools/ci/azure/checkout.yml
-  - template: tools/ci/azure/pip_install.yml
-    parameters:
-      packages: virtualenv
-  - template: tools/ci/azure/install_fonts.yml
-  - template: tools/ci/azure/install_certs.yml
-  - template: tools/ci/azure/install_safari.yml
-    parameters:
-      channel: stable
-  - template: tools/ci/azure/update_hosts.yml
-  - template: tools/ci/azure/update_manifest.yml
-  - script: |
-      # TODO: drop this when `safaridriver --version` is supported.
-      SAFARI_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' /Applications/Safari.app/Contents/Info.plist) ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' /Applications/Safari.app/Contents/Info.plist))"
-      no_proxy='*' ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --browser-version "$SAFARI_VERSION" safari
-    displayName: 'Run tests'
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish results'
-    inputs:
-      artifactName: 'safari-results'
-- template: tools/ci/azure/fyi_hook.yml
-  parameters:
-    dependsOn: results_safari
-    artifactName: safari-results
-
+# All `./wpt run` tests are run from epochs/* branches on a schedule. See
+# documentation at the top of this file for required setup.
 - job: results_safari_preview
   displayName: 'all tests (Safari Technology Preview)'
   condition: |
@@ -252,7 +217,7 @@ jobs:
   - template: tools/ci/azure/install_safari.yml
   - template: tools/ci/azure/update_hosts.yml
   - template: tools/ci/azure/update_manifest.yml
-  - script: no_proxy='*' ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --channel preview safari
+  - script: no_proxy='*' ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --channel preview safari
     displayName: 'Run tests'
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'

@@ -25,9 +25,11 @@ interface NamedFlow : EventTarget {
   sequence<Region> getRegionsByContent(Node node);
 };
 
-interface mixin Region {
+[Exposed=Window,
+ NoInterfaceObject]
+interface Region {
   readonly attribute CSSOMString regionOverset;
   sequence<Range>? getRegionFlowRanges();
 };
 
-Element includes Region;
+Element implements Region;

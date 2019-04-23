@@ -529,8 +529,7 @@ class FileSource:
   def data(self):
     """Return file contents as a byte string."""
     if (self._data is None):
-      with open(self.sourcepath, 'r') as f:
-        self._data = f.read()
+      self._data = open(self.sourcepath, 'r').read()
     if (self._data.startswith(codecs.BOM_UTF8)):
       self.encoding = 'utf-8-sig' # XXX look for other unicode BOMs
     return self._data
@@ -585,8 +584,8 @@ class FileSource:
   def write(self, format):
     """Writes FileSource.data() out to `self.relpath` through Format `format`."""
     data = self.data()
-    with open(format.dest(self.relpath), 'w') as f:
-      f.write(data)
+    f = open(format.dest(self.relpath), 'w')
+    f.write(data)
     if (self.metaSource):
       self.metaSource.write(format) # XXX need to get output path from format, but not let it choose actual format
 
@@ -823,8 +822,7 @@ class ConfigSource(FileSource):
     """Merge contents of all config files represented by this source."""
     data = ''
     for src in self.sourcepath:
-      with open(src) as f:
-        data += f.read()
+      data += open(src).read()
       data += '\n'
     return data
 
@@ -874,36 +872,35 @@ class ReftestManifest(ConfigSource):
     for src in self.sourcepath:
       relbase = basepath(self.relpath)
       srcbase = basepath(src)
-      with open(src) as f:
-        for line in f:
-          strip = self.baseRE.search(line)
-          if strip:
-            striplist.append(strip.group(1))
-          line = self.stripRE.sub('', line)
-          m = self.parseRE.search(line)
-          if m:
-            record = ((join(srcbase, m.group(2)), join(srcbase, m.group(3))), \
-                      (join(relbase, m.group(2)), join(relbase, m.group(3))), \
-                      m.group(1))
-  #          for strip in striplist:
-              # strip relrecord
-            if not exists(record[0][0]):
-              raise ReftestFilepathError("Manifest Error in %s: "
-                                         "Reftest test file %s does not exist." \
-                                          % (src, record[0][0]))
-            elif not exists(record[0][1]):
-              raise ReftestFilepathError("Manifest Error in %s: "
-                                         "Reftest reference file %s does not exist." \
-                                         % (src, record[0][1]))
-            elif not isPathInsideBase(record[1][0]):
-              raise ReftestFilepathError("Manifest Error in %s: "
-                                         "Reftest test replath %s not within relpath root." \
-                                         % (src, record[1][0]))
-            elif not isPathInsideBase(record[1][1]):
-              raise ReftestFilepathError("Manifest Error in %s: "
-                                         "Reftest test replath %s not within relpath root." \
-                                         % (src, record[1][1]))
-            yield record
+      for line in open(src):
+        strip = self.baseRE.search(line)
+        if strip:
+          striplist.append(strip.group(1))
+        line = self.stripRE.sub('', line)
+        m = self.parseRE.search(line)
+        if m:
+          record = ((join(srcbase, m.group(2)), join(srcbase, m.group(3))), \
+                    (join(relbase, m.group(2)), join(relbase, m.group(3))), \
+                    m.group(1))
+#          for strip in striplist:
+            # strip relrecord
+          if not exists(record[0][0]):
+            raise ReftestFilepathError("Manifest Error in %s: "
+                                       "Reftest test file %s does not exist." \
+                                        % (src, record[0][0]))
+          elif not exists(record[0][1]):
+            raise ReftestFilepathError("Manifest Error in %s: "
+                                       "Reftest reference file %s does not exist." \
+                                       % (src, record[0][1]))
+          elif not isPathInsideBase(record[1][0]):
+            raise ReftestFilepathError("Manifest Error in %s: "
+                                       "Reftest test replath %s not within relpath root." \
+                                       % (src, record[1][0]))
+          elif not isPathInsideBase(record[1][1]):
+            raise ReftestFilepathError("Manifest Error in %s: "
+                                       "Reftest test replath %s not within relpath root." \
+                                       % (src, record[1][1]))
+          yield record
 
 import Utils # set up XML catalog
 xhtmlns = '{http://www.w3.org/1999/xhtml}'
@@ -1033,8 +1030,9 @@ class XMLSource(FileSource):
       output = self.unicode()
 
     # write
-    with open(format.dest(self.relpath), 'w') as f:
-      f.write(output.encode(self.encoding, 'xmlcharrefreplace'))
+    f = open(format.dest(self.relpath), 'w')
+    f.write(output.encode(self.encoding, 'xmlcharrefreplace'))
+    f.close()
 
   def compact(self):
     self.tree = None

@@ -3,10 +3,6 @@
 // (https://github.com/tidoust/reffy-reports)
 // Source: Wake Lock API (https://w3c.github.io/wake-lock/)
 
-dictionary WakeLockPermissionDescriptor : PermissionDescriptor {
-  WakeLockType type;
-};
-
 enum WakeLockType { "screen", "system" };
 
 [Constructor(WakeLockType type), SecureContext, Exposed=(DedicatedWorker,Window)]

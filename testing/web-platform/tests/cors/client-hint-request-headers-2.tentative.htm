@@ -9,7 +9,6 @@
 <h1>Request headers</h1>
 <div id=log></div>
 <script>
-
 test(function() {
     var client = new XMLHttpRequest()
     client.open('GET', CROSSDOMAIN + 'resources/cors-makeheader.py?headers=x-print,', false)
@@ -24,7 +23,6 @@ test(function() {
     client.setRequestHeader('width', '35')
     client.setRequestHeader('viewport-width', '42')
     client.send(null)
-
     const res = JSON.parse(client.response)
     assert_equals(res['x-print'], 'unicorn')
     assert_equals(res['content-type'], 'text/plain')
@@ -37,5 +35,4 @@ test(function() {
     assert_equals(res['width'], '35')
     assert_equals(res['viewport-width'], '42')
 }, 'Client hint headers are simple headers')
-
 </script>

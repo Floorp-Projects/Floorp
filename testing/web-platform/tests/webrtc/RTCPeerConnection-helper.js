@@ -217,10 +217,10 @@ function listenToIceConnected(pc) {
       resolve();
       return;
     }
-    pc.addEventListener('iceconnectionstatechange', () => {
+    pc.oniceconnectionstatechange = () => {
       if (isConnected(pc))
         resolve();
-    });
+    };
   });
 }
 
@@ -261,93 +261,51 @@ function listenForSSRCs(t, receiver) {
 // end points to open.
 function createDataChannelPair(
   pc1=new RTCPeerConnection(),
-  pc2=new RTCPeerConnection(),
-  options={})
+  pc2=new RTCPeerConnection())
 {
-  options = Object.assign({}, {
-    channelLabel: '',
-    channelOptions: undefined,
-    doSignaling: true
-  }, options);
+  const channel1 = pc1.createDataChannel('');
 
-  let channel1Options;
-  let channel2Options = null;
-  if (options.channelOptions instanceof Array) {
-    [channel1Options, channel2Options] = options.channelOptions;
-  } else {
-    channel1Options = options.channelOptions;
-  }
-
-  const channel1 = pc1.createDataChannel(options.channelLabel, channel1Options);
+  exchangeIceCandidates(pc1, pc2);
 
   return new Promise((resolve, reject) => {
     let channel2;
     let opened1 = false;
     let opened2 = false;
 
-    function cleanup() {
-      channel1.removeEventListener('open', onOpen1);
-      channel2.removeEventListener('open', onOpen2);
-      channel1.removeEventListener('error', onError);
-      channel2.removeEventListener('error', onError);
-    }
-
     function onBothOpened() {
-      cleanup();
       resolve([channel1, channel2]);
-    }
-
-    function onError(...args) {
-      cleanup();
-      reject(...args);
     }
 
     function onOpen1() {
       opened1 = true;
-      if (opened2) {
-        onBothOpened();
-      }
+      if(opened2) onBothOpened();
     }
 
     function onOpen2() {
       opened2 = true;
-      if (opened1) {
-        onBothOpened();
-      }
-    }
-
-    function onDataChannelPairFound() {
-      channel2.addEventListener('error', onError, { once: true });
-      const { readyState } = channel2;
-
-      if (readyState === 'open') {
-        onOpen2();
-      } else if (readyState === 'connecting') {
-        channel2.addEventListener('open', onOpen2, { once: true });
-      } else {
-        onError(new Error(`Unexpected ready state ${readyState}`));
-      }
+      if(opened1) onBothOpened();
     }
 
     function onDataChannel(event) {
       channel2 = event.channel;
-      onDataChannelPairFound();
+      channel2.addEventListener('error', reject);
+      const { readyState } = channel2;
+
+      if(readyState === 'open') {
+        onOpen2();
+      } else if(readyState === 'connecting') {
+        channel2.addEventListener('open', onOpen2);
+      } else {
+        reject(new Error(`Unexpected ready state ${readyState}`));
+      }
     }
 
-    channel1.addEventListener('open', onOpen1, { once: true });
-    channel1.addEventListener('error', onError, { once: true });
+    channel1.addEventListener('open', onOpen1);
+    channel1.addEventListener('error', reject);
 
-    if (channel2Options !== null) {
-      channel2 = pc2.createDataChannel(options.channelLabel, channel2Options);
-      onDataChannelPairFound();
-    } else {
-      pc2.addEventListener('datachannel', onDataChannel);
-    }
+    pc2.addEventListener('datachannel', onDataChannel);
 
-    if (options.doSignaling) {
-      exchangeIceCandidates(pc1, pc2);
-      doSignalingHandshake(pc1, pc2, options);
-    }
+    doSignalingHandshake(pc1, pc2);
   });
 }
 
