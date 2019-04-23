@@ -6,6 +6,7 @@ license = "MPL-2.0"
 
 [dependencies]
 rayon = "1"
+num_cpus = "1.7.0"
 thread_profiler = "0.1.1"
 euclid = { version = "0.19.4", features = ["serde"] }
 app_units = "0.7"
