@@ -40,6 +40,10 @@ repositories {
 
 Snapshots are build daily from the `master` branch and published on [snapshots.maven.mozilla.org](https://snapshots.maven.mozilla.org).
 
+# API Reference
+
+The API reference docs are available at [mozac.org/api/](https://mozac.org/api/).
+
 # Components
 
 * 🔴 **In Development** - Not ready to be used in shipping products.
