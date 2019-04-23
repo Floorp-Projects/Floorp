@@ -671,28 +671,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   already_AddRefed<gfxContext> CreateReferenceRenderingContext();
 
-  /**
-   * Informs the pres shell that the document is now at the anchor with
-   * the given name.  If |aScroll| is true, scrolls the view of the
-   * document so that the anchor with the specified name is displayed at
-   * the top of the window.  If |aAnchorName| is empty, then this informs
-   * the pres shell that there is no current target, and |aScroll| must
-   * be false.  If |aAdditionalScrollFlags| is nsIPresShell::SCROLL_SMOOTH_AUTO
-   * and |aScroll| is true, the scrolling may be performed with an animation.
-   */
-  nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                      uint32_t aAdditionalScrollFlags = 0);
-
-  /**
-   * Tells the presshell to scroll again to the last anchor scrolled to by
-   * GoToAnchor, if any. This scroll only happens if the scroll
-   * position has not changed since the last GoToAnchor. This is called
-   * by nsDocumentViewer::LoadComplete. This clears the last anchor
-   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
-   * removed from the DOM), so don't call this more than once.
-   */
-  nsresult ScrollToAnchor();
-
   enum {
     SCROLL_TOP = 0,
     SCROLL_BOTTOM = 100,
@@ -1883,14 +1861,12 @@ class nsIPresShell : public nsStubDocumentObserver {
   nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
 #endif
 
-  nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is non-null
   // between the initial scroll attempt and the first time we finish processing
   // all our dirty roots.  mContentToScrollTo has a content property storing the
   // details for the scroll operation, see ScrollIntoViewData above.
   nsCOMPtr<nsIContent> mContentToScrollTo;
-  nscoord mLastAnchorScrollPositionY = 0;
 
   // Count of the number of times this presshell has been painted to a window.
   uint64_t mPaintCount;

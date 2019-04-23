@@ -2944,7 +2944,7 @@ class Document : public nsINode,
   void TriggerAutoFocus();
 
   void SetScrollToRef(nsIURI* aDocumentURI);
-  void ScrollToRef();
+  MOZ_CAN_RUN_SCRIPT void ScrollToRef();
   void ResetScrolledToRefAlready() { mScrolledToRefAlready = false; }
 
   void SetChangeScrollPosWhenScrollingToRef(bool aValue) {

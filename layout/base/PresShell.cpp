@@ -824,8 +824,8 @@ nsIPresShell::nsIPresShell()
 PresShell::PresShell()
     : mCaretEnabled(false),
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-      mActiveSuppressDisplayport(0),
       mAPZFocusSequenceNumber(0),
+      mActiveSuppressDisplayport(0),
       mDocumentLoading(false),
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
@@ -2998,8 +2998,8 @@ already_AddRefed<gfxContext> nsIPresShell::CreateReferenceRenderingContext() {
   return rc ? rc.forget() : nullptr;
 }
 
-nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                                  uint32_t aAdditionalScrollFlags) {
+nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                               uint32_t aAdditionalScrollFlags) {
   if (!mDocument) {
     return NS_ERROR_FAILURE;
   }
@@ -3164,7 +3164,7 @@ nsresult nsIPresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
   return rv;
 }
 
-nsresult nsIPresShell::ScrollToAnchor() {
+nsresult PresShell::ScrollToAnchor() {
   if (!mLastAnchorScrolledTo) {
     return NS_OK;
   }
