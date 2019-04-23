@@ -22,6 +22,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowWatcher.h"
 
+#include "mozilla/dom/nsCSPContext.h"
+
 #ifdef MOZ_WIDGET_ANDROID
 #  include "FennecJNIWrappers.h"
 #endif
@@ -169,6 +171,32 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs,
       PrincipalInfoToPrincipal(aArgs.principalInfo());
   MOZ_DIAGNOSTIC_ASSERT(principal);
 
+  // XXXckerschb: After Bug 965637 we have the CSP stored in the client which
+  // allows to clean that part up.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  if (!aArgs.cspInfos().IsEmpty()) {
+    csp = new nsCSPContext();
+    csp->SetRequestContext(nullptr, principal);
+    for (const mozilla::ipc::ContentSecurityPolicy& policy : aArgs.cspInfos()) {
+      nsresult rv = csp->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
+                                      policy.deliveredViaMetaTagFlag());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+
+#ifdef DEBUG
+  if (principal && !principal->GetIsNullPrincipal()) {
+    // We do not serialize CSP for NullPricnipals as of now, for all others
+    // we make sure the CSP within the Principal and the explicit CSP are
+    // identical. After Bug 965637 we can remove that assertion anyway.
+    nsCOMPtr<nsIContentSecurityPolicy> principalCSP;
+    principal->GetCsp(getter_AddRefs(principalCSP));
+    MOZ_ASSERT(nsCSPContext::Equals(csp, principalCSP));
+  }
+#endif
+
   // [[6.1 Open Window]]
   if (XRE_IsContentProcess()) {
     // Let's create a sandbox in order to have a valid JSContext and correctly
@@ -247,7 +275,7 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs,
 
   nsCOMPtr<mozIDOMWindowProxy> win;
   rv = bwin->OpenURI(uri, nullptr, nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
-                     nsIBrowserDOMWindow::OPEN_NEW, principal,
+                     nsIBrowserDOMWindow::OPEN_NEW, principal, csp,
                      getter_AddRefs(win));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
