@@ -4272,7 +4272,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 }
 
 bool js::wasm::IonCanCompile() {
-#if !defined(JS_CODEGEN_NONE) && !defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||    \
+    defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
+    defined(JS_CODEGEN_MIPS64)
   return true;
 #else
   return false;
