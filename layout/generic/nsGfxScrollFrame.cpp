@@ -4212,10 +4212,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
                                           aDelta.y * deltaMultiplier.height);
 
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-    ScrollStyles styles = GetScrollStylesFromFrame();
-
-    if (styles.mScrollSnapTypeY != StyleScrollSnapStrictness::None ||
-        styles.mScrollSnapTypeX != StyleScrollSnapStrictness::None) {
+    if (NeedsScrollSnap()) {
       nscoord appUnitsPerDevPixel =
           mOuter->PresContext()->AppUnitsPerDevPixel();
       deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
@@ -5338,6 +5335,21 @@ nsIFrame* ScrollFrameHelper::GetFrameForScrollSnap() const {
   }
 
   return styleFrame;
+}
+
+bool ScrollFrameHelper::NeedsScrollSnap() const {
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    nsIFrame* scrollSnapFrame = GetFrameForScrollSnap();
+    if (!scrollSnapFrame) {
+      return false;
+    }
+    return scrollSnapFrame->StyleDisplay()->mScrollSnapType.strictness !=
+           StyleScrollSnapStrictness::None;
+  }
+
+  ScrollStyles styles = GetScrollStylesFromFrame();
+  return styles.mScrollSnapTypeY != StyleScrollSnapStrictness::None ||
+         styles.mScrollSnapTypeX != StyleScrollSnapStrictness::None;
 }
 
 bool ScrollFrameHelper::IsScrollbarOnRight() const {
@@ -6840,16 +6852,20 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
 
   ScrollSnapInfo result;
-  ScrollStyles styles = GetScrollStylesFromFrame();
 
-  if (styles.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
-      styles.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
+  nsIFrame* scrollSnapFrame = GetFrameForScrollSnap();
+  if (!scrollSnapFrame) {
+    return result;
+  }
+
+  const nsStyleDisplay* disp = scrollSnapFrame->StyleDisplay();
+  if (disp->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
     // We won't be snapping, short-circuit the computation.
     return result;
   }
 
-  result.mScrollSnapTypeX = styles.mScrollSnapTypeX;
-  result.mScrollSnapTypeY = styles.mScrollSnapTypeY;
+  WritingMode writingMode = GetFrameForDir()->GetWritingMode();
+  result.InitializeScrollSnapType(writingMode, disp);
 
   nsRect snapport = GetScrollPortRect();
   nsMargin scrollPadding = GetScrollPadding();
@@ -6868,7 +6884,6 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
     snapport.Deflate(scrollPadding);
   }
 
-  WritingMode writingMode = GetFrameForDir()->GetWritingMode();
   result.mSnapportSize = snapport.Size();
   CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
                                 GetScrolledRect(), scrollPadding,
