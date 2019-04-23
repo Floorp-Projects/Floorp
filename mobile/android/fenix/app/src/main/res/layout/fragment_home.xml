@@ -39,10 +39,11 @@
         <ImageView
             android:id="@+id/wordmark"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_height="80dp"
             android:layout_marginTop="42dp"
+            android:layout_marginStart="16dp"
             android:src="?fenixLogo"
+            android:adjustViewBounds="true"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
