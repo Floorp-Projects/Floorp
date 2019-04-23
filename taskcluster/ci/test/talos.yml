@@ -72,6 +72,7 @@ talos-damp:
             linux64-ccov/.*: ['try']  # Bug 1407593
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['try']  # Bug 1544360
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
