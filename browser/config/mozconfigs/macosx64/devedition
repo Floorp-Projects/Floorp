@@ -4,7 +4,6 @@
 MOZ_REQUIRE_SIGNING=0
 
 ac_add_options --disable-install-strip
-ac_add_options --enable-verify-mar
 
 export MOZ_LTO=1
 
