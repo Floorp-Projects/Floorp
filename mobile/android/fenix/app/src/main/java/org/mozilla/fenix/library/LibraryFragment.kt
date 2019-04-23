@@ -12,11 +12,13 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_library.*
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentArgs
 
 class LibraryFragment : Fragment() {
@@ -36,6 +38,8 @@ class LibraryFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+
+        setToolbarColor()
         (activity as AppCompatActivity).title = getString(R.string.library_title)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
@@ -68,5 +72,11 @@ class LibraryFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun setToolbarColor() {
+        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+        toolbar.setBackgroundColor(R.attr.foundation.getColorFromAttr(context!!))
+        toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
     }
 }
