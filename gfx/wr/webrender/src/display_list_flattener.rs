@@ -612,8 +612,8 @@ impl<'a> DisplayListFlattener<'a> {
                 };
 
                 match item.item() {
-                    SpecificDisplayItem::PopReferenceFrame |
-                    SpecificDisplayItem::PopStackingContext => return,
+                    DisplayItem::PopReferenceFrame |
+                    DisplayItem::PopStackingContext => return,
                     _ => (),
                 }
 
@@ -626,9 +626,26 @@ impl<'a> DisplayListFlattener<'a> {
 
             // If flatten_item created a sub-traversal, we need `traversal` to have the
             // same state as the completed subtraversal, so we reinitialize it here.
-            if let Some(subtraversal) = subtraversal {
+            if let Some(mut subtraversal) = subtraversal {
+                subtraversal.merge_debug_stats_from(traversal);
                 *traversal = subtraversal;
             }
+        }
+
+        // TODO: factor this out to be part of capture
+        if cfg!(feature = "display_list_stats") {
+            let stats = traversal.debug_stats();
+            let total_bytes: usize = stats.iter().map(|(_, stats)| stats.num_bytes).sum();
+            println!("item, total count, total bytes, % of DL bytes, bytes per item");
+            for (label, stats) in stats {
+                println!("{}, {}, {}kb, {}%, {}",
+                    label,
+                    stats.total_count,
+                    stats.num_bytes / 1000,
+                    ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
+                    stats.num_bytes / stats.total_count.max(1));
+            }
+            println!("");
         }
     }
 
@@ -1056,7 +1073,7 @@ impl<'a> DisplayListFlattener<'a> {
                 // refer to another user defined clip-chain. If none is specified,
                 // the parent is the root clip-chain for the given pipeline. This
                 // is used to provide a root clip chain for iframes.
-                let mut parent_clip_chain_id = match info.parent {
+                let parent_clip_chain_id = match info.parent {
                     Some(id) => {
                         self.id_to_index_mapper.get_clip_chain_id(ClipId::ClipChain(id))
                     }
@@ -1150,10 +1167,6 @@ impl<'a> DisplayListFlattener<'a> {
             }
             SpecificDisplayItem::PopAllShadows => {
                 self.pop_all_shadows();
-            }
-            SpecificDisplayItem::PushCacheMarker(_marker) => {
-            }
-            SpecificDisplayItem::PopCacheMarker => {
             }
         }
 

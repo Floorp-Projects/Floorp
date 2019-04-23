@@ -100,7 +100,7 @@ impl SpaceAndClipInfo {
     }
 }
 
-#[repr(u64)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum SpecificDisplayItem {
     Clip(ClipDisplayItem),
@@ -125,8 +125,6 @@ pub enum SpecificDisplayItem {
     SetGradientStops,
     PushShadow(Shadow),
     PopAllShadows,
-    PushCacheMarker(CacheMarkerDisplayItem),
-    PopCacheMarker,
     SetFilterOps,
     SetFilterData,
 }
@@ -160,8 +158,6 @@ pub enum CompletelySpecificDisplayItem {
     SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
-    PushCacheMarker(CacheMarkerDisplayItem),
-    PopCacheMarker,
     SetFilterOps(Vec<FilterOp>),
     SetFilterData(FilterData),
 }
@@ -337,7 +333,7 @@ impl NormalBorder {
     }
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum RepeatMode {
     Stretch,
@@ -447,7 +443,7 @@ impl BorderStyle {
     }
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
 pub enum BoxShadowClipMode {
     Outset = 0,
@@ -529,12 +525,6 @@ pub struct ReferenceFrameDisplayListItem {
     pub reference_frame: ReferenceFrame,
 }
 
-/// Provides a hint to WR that it should try to cache the items
-/// within a cache marker context in an off-screen surface.
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct CacheMarkerDisplayItem {
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum ReferenceFrameKind {
     Transform,
@@ -568,7 +558,7 @@ pub struct StackingContext {
     pub cache_tiles: bool,
 } // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum TransformStyle {
     Flat = 0,
@@ -582,7 +572,7 @@ pub enum TransformStyle {
 /// important. Note that this is a performance hint only,
 /// which WR may choose to ignore.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-#[repr(u32)]
+#[repr(u8)]
 pub enum RasterSpace {
     // Rasterize in local-space, applying supplied scale to primitives.
     // Best performance, but lower quality.
@@ -604,7 +594,7 @@ impl RasterSpace {
     }
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum MixBlendMode {
     Normal = 0,
@@ -778,7 +768,7 @@ pub struct ImageDisplayItem {
     pub color: ColorF,
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
 pub enum ImageRendering {
     Auto = 0,
@@ -800,7 +790,7 @@ pub struct YuvImageDisplayItem {
     pub image_rendering: ImageRendering,
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize)]
 pub enum YuvColorSpace {
     Rec601 = 0,
@@ -1068,5 +1058,36 @@ impl ExternalScrollId {
 
     pub fn is_root(&self) -> bool {
         self.0 == 0
+    }
+}
+
+impl SpecificDisplayItem {
+    pub fn debug_name(&self) -> &'static str {
+        match *self {
+            SpecificDisplayItem::Border(..) => "border",
+            SpecificDisplayItem::BoxShadow(..) => "box_shadow",
+            SpecificDisplayItem::ClearRectangle => "clear_rectangle",
+            SpecificDisplayItem::Clip(..) => "clip",
+            SpecificDisplayItem::ClipChain(..) => "clip_chain",
+            SpecificDisplayItem::Gradient(..) => "gradient",
+            SpecificDisplayItem::Iframe(..) => "iframe",
+            SpecificDisplayItem::Image(..) => "image",
+            SpecificDisplayItem::Line(..) => "line",
+            SpecificDisplayItem::PopAllShadows => "pop_all_shadows",
+            SpecificDisplayItem::PopReferenceFrame => "pop_reference_frame",
+            SpecificDisplayItem::PopStackingContext => "pop_stacking_context",
+            SpecificDisplayItem::PushShadow(..) => "push_shadow",
+            SpecificDisplayItem::PushReferenceFrame(..) => "push_reference_frame",
+            SpecificDisplayItem::PushStackingContext(..) => "push_stacking_context",
+            SpecificDisplayItem::SetFilterOps => "set_filter_ops",
+            SpecificDisplayItem::SetFilterData => "set_filter_data",
+            SpecificDisplayItem::RadialGradient(..) => "radial_gradient",
+            SpecificDisplayItem::Rectangle(..) => "rectangle",
+            SpecificDisplayItem::ScrollFrame(..) => "scroll_frame",
+            SpecificDisplayItem::SetGradientStops => "set_gradient_stops",
+            SpecificDisplayItem::StickyFrame(..) => "sticky_frame",
+            SpecificDisplayItem::Text(..) => "text",
+            SpecificDisplayItem::YuvImage(..) => "yuv_image",
+        }
     }
 }
