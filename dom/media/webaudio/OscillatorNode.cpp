@@ -371,12 +371,11 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
     : AudioScheduledSourceNode(aContext, 2, ChannelCountMode::Max,
                                ChannelInterpretation::Speakers),
       mType(OscillatorType::Sine),
-      mFrequency(new AudioParam(
-          this, OscillatorNodeEngine::FREQUENCY, "frequency", 440.0f,
-          -(aContext->SampleRate() / 2), aContext->SampleRate() / 2)),
-      mDetune(
-          new AudioParam(this, OscillatorNodeEngine::DETUNE, "detune", 0.0f)),
       mStartCalled(false) {
+  CreateAudioParam(mFrequency, OscillatorNodeEngine::FREQUENCY, "frequency",
+                   440.0f, -(aContext->SampleRate() / 2),
+                   aContext->SampleRate() / 2);
+  CreateAudioParam(mDetune, OscillatorNodeEngine::DETUNE, "detune", 0.0f);
   OscillatorNodeEngine* engine =
       new OscillatorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
