@@ -6563,35 +6563,39 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          ScrollSnapInfo& aSnapInfo) {
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
+
+  // The snap area contains scroll-margin values.
+  // https://drafts.csswg.org/css-scroll-snap-1/#scroll-snap-area
+  nsMargin scrollMargin = aFrame->StyleMargin()->GetScrollMargin();
+  nsRect snapArea =
+      InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
+
   // Ignore elements outside of the snapport when we scroll to the given
   // destination.
   // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
-  if (aSnapport && !aSnapport->Intersects(targetRect)) {
+  if (aSnapport && !aSnapport->Intersects(snapArea)) {
     return;
   }
 
   // These snap range shouldn't be involved with scroll-margin since we just
   // need the visible range of the target element.
-  if (targetRect.width > aSnapInfo.mSnapportSize.width) {
+  if (snapArea.width > aSnapInfo.mSnapportSize.width) {
     aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(targetRect.X(), targetRect.XMost()));
+        ScrollSnapInfo::ScrollSnapRange(snapArea.X(), snapArea.XMost()));
   }
-  if (targetRect.height > aSnapInfo.mSnapportSize.height) {
+  if (snapArea.height > aSnapInfo.mSnapportSize.height) {
     aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(targetRect.Y(), targetRect.YMost()));
+        ScrollSnapInfo::ScrollSnapRange(snapArea.Y(), snapArea.YMost()));
   }
-
-  nsMargin scrollMargin = aFrame->StyleMargin()->GetScrollMargin();
-  targetRect = InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
 
   // Shift target rect position by the scroll padding to get the padded
   // position thus we don't need to take account scroll-padding values in
   // ScrollSnapUtils::GetSnapPointForDestination() when it gets called from
   // the compositor thread.
-  targetRect.y -= aScrollPadding.top;
-  targetRect.x -= aScrollPadding.left;
+  snapArea.y -= aScrollPadding.top;
+  snapArea.x -= aScrollPadding.left;
 
-  LogicalRect logicalTargetRect(aWritingModeOnScroller, targetRect,
+  LogicalRect logicalTargetRect(aWritingModeOnScroller, snapArea,
                                 aSnapInfo.mSnapportSize);
   LogicalSize logicalSnapportRect(aWritingModeOnScroller,
                                   aSnapInfo.mSnapportSize);
