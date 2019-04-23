@@ -14,7 +14,7 @@ let server;
 // xpcshell tests under /services/common
 add_task(async function test_something() {
   const configPath = "/v1/";
-  const recordsPath = "/v1/buckets/blocklists/collections/certificates/records";
+  const recordsPath = "/v1/buckets/security-state/collections/onecrl/records";
 
   const dummyServerURL = `http://localhost:${server.identity.primaryPort}/v1`;
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
@@ -48,8 +48,8 @@ add_task(async function test_something() {
   server.registerPathHandler(configPath, handleResponse);
   server.registerPathHandler(recordsPath, handleResponse);
 
-  // Test an empty db populates
-  await OneCRLBlocklistClient.maybeSync(2000);
+  // Test an empty db populates from JSON dump.
+  await OneCRLBlocklistClient.maybeSync(42);
 
   // Open the collection, verify it's been populated:
   const list = await OneCRLBlocklistClient.get();
@@ -59,7 +59,7 @@ add_task(async function test_something() {
 
   // No sync will be intented if maybeSync() is up-to-date.
   Services.prefs.clearUserPref("services.settings.server");
-  Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
+  Services.prefs.setIntPref("services.settings.security.onecrl.checked", 0);
   // Use any last_modified older than highest shipped in JSON dump.
   await OneCRLBlocklistClient.maybeSync(123456);
 
@@ -154,18 +154,7 @@ function getSampleResponse(req, port) {
         "hello": "kinto",
       }),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_sort=-last_modified": {
-      "sampleHeaders": [
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
-        "Content-Type: application/json; charset=UTF-8",
-        "Server: waitress",
-        "Etag: \"1000\"",
-      ],
-      "status": {status: 200, statusText: "OK"},
-      "responseBody": JSON.stringify({"data": [{}]}),
-    },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=2000&_sort=-last_modified&_since=1000": {
+    "GET:/v1/buckets/security-state/collections/onecrl/records?_expected=2000&_sort=-last_modified&_since=1000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -181,7 +170,7 @@ function getSampleResponse(req, port) {
         "last_modified": 3000,
       }]}),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=4000&_sort=-last_modified&_since=3000": {
+    "GET:/v1/buckets/security-state/collections/onecrl/records?_expected=4000&_sort=-last_modified&_since=3000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -202,7 +191,7 @@ function getSampleResponse(req, port) {
         "last_modified": 4000,
       }]}),
     },
-    "GET:/v1/buckets/blocklists/collections/certificates/records?_expected=5000&_sort=-last_modified&_since=4000": {
+    "GET:/v1/buckets/security-state/collections/onecrl/records?_expected=5000&_sort=-last_modified&_since=4000": {
       "sampleHeaders": [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
