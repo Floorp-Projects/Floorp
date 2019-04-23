@@ -38,17 +38,14 @@ impl Example for App {
         let mut sub_builder = DisplayListBuilder::new(sub_pipeline_id, sub_bounds.size);
         let mut space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
+        let info = LayoutPrimitiveInfo::new(sub_bounds);
         sub_builder.push_simple_stacking_context(
-            sub_bounds.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
 
         // green rect visible == success
-        sub_builder.push_rect(
-            &CommonItemProperties::new(sub_bounds, space_and_clip),
-            ColorF::new(0.0, 1.0, 0.0, 1.0)
-        );
+        sub_builder.push_rect(&info, &space_and_clip, ColorF::new(0.0, 1.0, 0.0, 1.0));
         sub_builder.pop_stacking_context();
 
         let mut txn = Transaction::new();
@@ -62,7 +59,7 @@ impl Example for App {
         api.send_transaction(document_id, txn);
 
         space_and_clip.spatial_id = builder.push_reference_frame(
-            sub_bounds.origin,
+            &sub_bounds,
             space_and_clip.spatial_id,
             TransformStyle::Flat,
             PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity()),
@@ -70,18 +67,14 @@ impl Example for App {
         );
 
         // And this is for the root pipeline
+        let info = LayoutPrimitiveInfo::new(sub_bounds);
         builder.push_simple_stacking_context(
-            sub_bounds.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
-
         // red rect under the iframe: if this is visible, things have gone wrong
-        builder.push_rect(
-            &CommonItemProperties::new(sub_bounds, space_and_clip),
-            ColorF::new(1.0, 0.0, 0.0, 1.0)
-        );
-        builder.push_iframe(sub_bounds, sub_bounds, &space_and_clip, sub_pipeline_id, false);
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 0.0, 0.0, 1.0));
+        builder.push_iframe(&info, &space_and_clip, sub_pipeline_id, false);
         builder.pop_stacking_context();
         builder.pop_reference_frame();
     }

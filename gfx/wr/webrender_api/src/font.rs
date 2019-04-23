@@ -96,7 +96,7 @@ pub enum FontTemplate {
     Native(NativeFontHandle),
 }
 
-#[repr(u8)]
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, Eq, MallocSizeOf, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum FontRenderMode {
     Mono = 0,

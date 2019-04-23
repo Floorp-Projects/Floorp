@@ -189,21 +189,17 @@ impl Window {
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
 
         let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
+        let info = LayoutPrimitiveInfo::new(bounds);
         builder.push_simple_stacking_context(
-            bounds.origin,
+            &info,
             space_and_clip.spatial_id,
-            true,
         );
 
-        builder.push_rect(
-            &CommonItemProperties::new(
-                LayoutRect::new(
-                    LayoutPoint::new(100.0, 200.0),
-                    LayoutSize::new(100.0, 200.0),
-                ),
-                space_and_clip,
-            ),
-            ColorF::new(0.0, 1.0, 0.0, 1.0));
+        let info = LayoutPrimitiveInfo::new(LayoutRect::new(
+            LayoutPoint::new(100.0, 100.0),
+            LayoutSize::new(100.0, 200.0)
+        ));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
         let text_bounds = LayoutRect::new(
             LayoutPoint::new(100.0, 50.0),
@@ -260,12 +256,10 @@ impl Window {
             },
         ];
 
+        let info = LayoutPrimitiveInfo::new(text_bounds);
         builder.push_text(
-            &CommonItemProperties::new(
-                text_bounds,
-                space_and_clip,
-            ),
-            text_bounds,
+            &info,
+            &space_and_clip,
             &glyphs,
             self.font_instance_key,
             ColorF::new(1.0, 1.0, 0.0, 1.0),

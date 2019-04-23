@@ -78,32 +78,6 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
     }
 
-    fn make_common_properties(&self, clip_rect: LayoutRect) -> CommonItemProperties {
-        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        CommonItemProperties {
-            clip_rect,
-            clip_id: space_and_clip.clip_id,
-            spatial_id: space_and_clip.spatial_id,
-            is_backface_visible: true,
-            hit_info: None,
-        }
-    }
-
-    fn make_common_properties_with_clip_and_spatial(
-        &self,
-        clip_rect: LayoutRect,
-        clip_id: ClipId,
-        spatial_id: SpatialId
-    ) -> CommonItemProperties {
-        CommonItemProperties {
-            clip_rect,
-            clip_id,
-            spatial_id,
-            is_backface_visible: true,
-            hit_info: None,
-        }
-    }
-
     fn test_resize_image(&mut self) {
         println!("\tresize image...");
         // This test changes the size of an image to make it go switch back and forth
@@ -124,11 +98,11 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 0.0, 64.0, 64.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 64.0, 64.0));
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size2(64.0, 64.0),
             size2(64.0, 64.0),
             ImageRendering::Auto,
@@ -153,11 +127,11 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 1024.0, 1024.0));
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size2(1024.0, 1024.0),
             size2(1024.0, 1024.0),
             ImageRendering::Auto,
@@ -179,11 +153,11 @@ impl<'a> RawtestHarness<'a> {
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 0.0, 1024.0, 1024.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 1024.0, 1024.0));
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size2(1024.0, 1024.0),
             size2(1024.0, 1024.0),
             ImageRendering::Auto,
@@ -217,12 +191,12 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-        let info = self.make_common_properties(rect(448.899994, 74.0, 151.000031, 56.));
+        let info = LayoutPrimitiveInfo::new(rect(448.899994, 74.0, 151.000031, 56.));
 
         // setup some malicious image size parameters
         builder.push_image(
             &info,
-            info.clip_rect,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size2(151., 56.0),
             size2(151.0, 56.0),
             ImageRendering::Auto,
@@ -280,6 +254,8 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
+        let info = LayoutPrimitiveInfo::new(rect(0., -9600.0, 1510.000031, 111256.));
+
         let image_size = size2(1510., 111256.);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
@@ -290,18 +266,10 @@ impl<'a> RawtestHarness<'a> {
             None,
         );
 
-        let info = CommonItemProperties {
-            clip_rect: rect(0., -9600.0, 1510.000031, 111256.),
-            clip_id,
-            spatial_id: root_space_and_clip.spatial_id,
-            is_backface_visible: true,
-            hit_info: None,
-        };
-
         // setup some malicious image size parameters
         builder.push_image(
             &info,
-            info.clip_rect,
+            &SpaceAndClipInfo { clip_id, spatial_id: root_space_and_clip.spatial_id },
             image_size * 2.,
             image_size,
             ImageRendering::Auto,
@@ -384,7 +352,8 @@ impl<'a> RawtestHarness<'a> {
         );
         let layout_size = LayoutSize::new(800.0, 800.0);
         let image_size = size2(800.0, 800.0);
-        let info = self.make_common_properties(rect(0.0, 0.0, 800.0, 800.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 0.0, 800.0, 800.0));
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let mut txn = Transaction::new();
@@ -405,7 +374,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -442,7 +411,7 @@ impl<'a> RawtestHarness<'a> {
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -474,6 +443,7 @@ impl<'a> RawtestHarness<'a> {
             point2(0, window_size.height - test_size.height),
             test_size,
         );
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         // This exposes a crash in tile decomposition
         let mut txn = Transaction::new();
@@ -489,14 +459,14 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.));
+        let info = LayoutPrimitiveInfo::new(rect(0., 0.0, 1510., 1510.));
 
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -515,14 +485,14 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-        let info = self.make_common_properties(rect(-10000., 0.0, 1510., 1510.));
+        let info = LayoutPrimitiveInfo::new(rect(-10000., 0.0, 1510., 1510.));
 
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -546,14 +516,14 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-        let info = self.make_common_properties(rect(0., 0.0, 1510., 1510.));
+        let info = LayoutPrimitiveInfo::new(rect(0., 0.0, 1510., 1510.));
 
         let image_size = size2(1510., 1510.);
 
         // setup some malicious image size parameters
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             image_size,
             image_size,
             ImageRendering::Auto,
@@ -588,6 +558,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut txn = Transaction::new();
         {
@@ -611,11 +582,11 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blob the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             size2(200.0, 200.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -636,10 +607,10 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(1.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(1.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             size2(200.0, 200.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -678,6 +649,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut txn = Transaction::new();
         let (blob_img, blob_img2) = {
@@ -720,12 +692,12 @@ impl<'a> RawtestHarness<'a> {
 
         // create two blob images and draw them
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
-        let info2 = self.make_common_properties(rect(200.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
+        let info2 = LayoutPrimitiveInfo::new(rect(200.0, 60.0, 200.0, 200.0));
         let push_images = |builder: &mut DisplayListBuilder| {
             builder.push_image(
                 &info,
-                info.clip_rect,
+                &space_and_clip,
                 size2(200.0, 200.0),
                 size2(0.0, 0.0),
                 ImageRendering::Auto,
@@ -735,7 +707,7 @@ impl<'a> RawtestHarness<'a> {
             );
             builder.push_image(
                 &info2,
-                info2.clip_rect,
+                &space_and_clip,
                 size2(200.0, 200.0),
                 size2(0.0, 0.0),
                 ImageRendering::Auto,
@@ -807,6 +779,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
         let mut txn = Transaction::new();
 
         let blob_img = {
@@ -822,11 +795,11 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blobs the first time
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
 
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             size2(200.0, 200.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -851,10 +824,10 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             size2(200.0, 200.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -877,10 +850,10 @@ impl<'a> RawtestHarness<'a> {
 
         // make a new display list that refers to the first image
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(rect(0.0, 60.0, 200.0, 200.0));
+        let info = LayoutPrimitiveInfo::new(rect(0.0, 60.0, 200.0, 200.0));
         builder.push_image(
             &info,
-            info.clip_rect,
+            &space_and_clip,
             size2(200.0, 200.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -919,10 +892,8 @@ impl<'a> RawtestHarness<'a> {
                 None
             );
             builder.push_rect(
-                &self.make_common_properties_with_clip_and_spatial(
-                    rect(100., 100., 100., 100.),
-                    clip_id,
-                    spatial_id),
+                &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                &SpaceAndClipInfo { spatial_id, clip_id },
                 ColorF::new(0.0, 0.0, 1.0, 1.0),
             );
 
@@ -939,13 +910,12 @@ impl<'a> RawtestHarness<'a> {
                     clip_id
                 };
                 builder.push_rect(
-                    &self.make_common_properties_with_clip_and_spatial(
-                        rect(110., 110., 50., 50.),
-                        clip_id,
-                        spatial_id),
+                    &PrimitiveInfo::new(rect(110., 110., 50., 50.)),
+                    &space_and_clip,
                     ColorF::new(0.0, 1.0, 0.0, 1.0),
                 );
                 builder.push_shadow(
+                    &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
                     &space_and_clip,
                     Shadow {
                         offset: LayoutVector2D::new(1.0, 1.0),
@@ -954,16 +924,9 @@ impl<'a> RawtestHarness<'a> {
                         should_inflate: true,
                     },
                 );
-                let info = CommonItemProperties {
-                    clip_rect: rect(110., 110., 50., 2.),
-                    clip_id,
-                    spatial_id,
-                    is_backface_visible: true,
-                    hit_info: None,
-                };
                 builder.push_line(
-                    &info,
-                    &info.clip_rect,
+                    &PrimitiveInfo::new(rect(110., 110., 50., 2.)),
+                    &space_and_clip,
                     0.0, LineOrientation::Horizontal,
                     &ColorF::new(0.0, 0.0, 0.0, 1.0),
                     LineStyle::Solid,
@@ -980,10 +943,8 @@ impl<'a> RawtestHarness<'a> {
                     None
                 );
                 builder.push_rect(
-                    &self.make_common_properties_with_clip_and_spatial(
-                        rect(150., 150., 100., 100.),
-                        clip_id,
-                        spatial_id),
+                    &PrimitiveInfo::new(rect(150., 150., 100., 100.)),
+                    &SpaceAndClipInfo { spatial_id, clip_id },
                     ColorF::new(0.0, 0.0, 1.0, 1.0),
                 );
                 builder.clear_save();
@@ -1014,6 +975,7 @@ impl<'a> RawtestHarness<'a> {
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
 
         let mut do_test = |shadow_is_red| {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
@@ -1024,7 +986,8 @@ impl<'a> RawtestHarness<'a> {
             };
 
             builder.push_shadow(
-                &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
+                &PrimitiveInfo::new(rect(100., 100., 100., 100.)),
+                &space_and_clip,
                 Shadow {
                     offset: LayoutVector2D::new(1.0, 1.0),
                     blur_radius: 1.0,
@@ -1032,10 +995,9 @@ impl<'a> RawtestHarness<'a> {
                     should_inflate: true,
                 },
             );
-            let info = self.make_common_properties(rect(110., 110., 50., 2.));
             builder.push_line(
-                &info,
-                &info.clip_rect,
+                &PrimitiveInfo::new(rect(110., 110., 50., 2.)),
+                &space_and_clip,
                 0.0, LineOrientation::Horizontal,
                 &ColorF::new(0.0, 0.0, 0.0, 1.0),
                 LineStyle::Solid,
@@ -1077,10 +1039,9 @@ impl<'a> RawtestHarness<'a> {
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
-        let info = self.make_common_properties(rect(300.0, 70.0, 150.0, 50.0));
         builder.push_image(
-            &info,
-            info.clip_rect,
+            &LayoutPrimitiveInfo::new(rect(300.0, 70.0, 150.0, 50.0)),
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             size2(150.0, 50.0),
             size2(0.0, 0.0),
             ImageRendering::Auto,
@@ -1147,10 +1108,11 @@ impl<'a> RawtestHarness<'a> {
         let doc_id = self.wrench.api.add_document(window_size, 1);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
-        let info = self.make_common_properties(LayoutRect::new(LayoutPoint::zero(),
+        let info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(),
                                                             LayoutSize::new(100.0, 100.0)));
         builder.push_rect(
             &info,
+            &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
             ColorF::new(0.0, 1.0, 0.0, 1.0),
         );
 
@@ -1178,20 +1140,20 @@ impl<'a> RawtestHarness<'a> {
         let layout_size = LayoutSize::new(400., 400.);
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
+        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+
         // Add a rectangle that covers the entire scene.
-        let mut info = self.make_common_properties(LayoutRect::new(LayoutPoint::zero(), layout_size));
-        info.hit_info = Some((0, 1));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), layout_size));
+        info.tag = Some((0, 1));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
         // Add a simple 100x100 rectangle at 100,0.
-        let mut info = self.make_common_properties(LayoutRect::new(
+        let mut info = LayoutPrimitiveInfo::new(LayoutRect::new(
             LayoutPoint::new(100., 0.),
             LayoutSize::new(100., 100.)
         ));
-        info.hit_info = Some((0, 2));
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
-
-        let space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
+        info.tag = Some((0, 2));
+        builder.push_rect(&info, &space_and_clip, ColorF::new(1.0, 1.0, 1.0, 1.0));
 
         let make_rounded_complex_clip = |rect: &LayoutRect, radius: f32| -> ComplexClipRegion {
             ComplexClipRegion::new(
@@ -1210,12 +1172,13 @@ impl<'a> RawtestHarness<'a> {
             None,
         );
         builder.push_rect(
-            &CommonItemProperties {
-                hit_info: Some((0, 4)),
-                clip_rect: rect,
+            &LayoutPrimitiveInfo {
+                tag: Some((0, 4)),
+                .. LayoutPrimitiveInfo::new(rect)
+            },
+            &SpaceAndClipInfo {
                 clip_id: temp_clip_id,
                 spatial_id: space_and_clip.spatial_id,
-                is_backface_visible: true,
             },
             ColorF::new(1.0, 1.0, 1.0, 1.0),
         );
@@ -1230,12 +1193,13 @@ impl<'a> RawtestHarness<'a> {
         );
         let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
         builder.push_rect(
-            &CommonItemProperties {
-                hit_info: Some((0, 5)),
-                clip_rect: rect,
+            &LayoutPrimitiveInfo {
+                tag: Some((0, 5)),
+                .. LayoutPrimitiveInfo::new(rect)
+            },
+            &SpaceAndClipInfo {
                 clip_id: ClipId::ClipChain(clip_chain_id),
                 spatial_id: space_and_clip.spatial_id,
-                is_backface_visible: true,
             },
             ColorF::new(1.0, 1.0, 1.0, 1.0),
         );

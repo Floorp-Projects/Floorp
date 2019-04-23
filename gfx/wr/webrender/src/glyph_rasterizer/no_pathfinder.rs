@@ -58,7 +58,7 @@ impl GlyphRasterizer {
         // select glyphs that have not been requested yet.
         for key in glyph_keys {
             match glyph_key_cache.entry(key.clone()) {
-                Entry::Occupied(entry) => {
+                Entry::Occupied(mut entry) => {
                     let value = entry.into_mut();
                     match *value {
                         GlyphCacheEntry::Cached(ref glyph) => {

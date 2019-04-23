@@ -13,7 +13,6 @@ use std::io::{Read, stdout, Write};
 use std::marker::PhantomData;
 use std::ops::Range;
 use std::{io, mem, ptr, slice};
-use std::collections::HashMap;
 use time::precise_time_ns;
 // local imports
 use display_item as di;
@@ -69,7 +68,6 @@ impl<T> ItemRange<T> {
     }
 }
 
-#[derive(Copy, Clone)]
 pub struct TempFilterData {
     pub func_types: ItemRange<di::ComponentTransferFuncType>,
     pub r_values: ItemRange<f32>,
@@ -116,25 +114,6 @@ pub struct BuiltDisplayListIter<'a> {
     cur_clip_chain_items: ItemRange<di::ClipId>,
     cur_complex_clip: (ItemRange<di::ComplexClipRegion>, usize),
     peeking: Peek,
-    /// Should just be initialized but never populated in release builds
-    debug_stats: DebugStats,
-}
-
-/// Internal info used for more detailed analysis of serialized display lists
-#[allow(dead_code)]
-struct DebugStats {
-    /// Last address in the buffer we pointed to, for computing serialized sizes
-    last_addr: usize,
-    stats: HashMap<&'static str, ItemStats>,
-}
-
-/// Stats for an individual item
-#[derive(Copy, Clone, Debug, Default)]
-pub struct ItemStats {
-    /// How many instances of this kind of item we deserialized
-    pub total_count: usize,
-    /// How many bytes we processed for this kind of item
-    pub num_bytes: usize,
 }
 
 pub struct DisplayItemRef<'a: 'b, 'b> {
@@ -243,7 +222,12 @@ impl<'a> BuiltDisplayListIter<'a> {
         BuiltDisplayListIter {
             list,
             data,
-            cur_item: di::DisplayItem::PopStackingContext,
+            cur_item: di::DisplayItem {
+                // Dummy data, will be overwritten by `next`
+                item: di::SpecificDisplayItem::PopStackingContext,
+                layout: di::LayoutPrimitiveInfo::new(LayoutRect::zero()),
+                space_and_clip: di::SpaceAndClipInfo::root_scroll(PipelineId::dummy())
+            },
             cur_stops: ItemRange::default(),
             cur_glyphs: ItemRange::default(),
             cur_filters: ItemRange::default(),
@@ -251,10 +235,6 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_clip_chain_items: ItemRange::default(),
             cur_complex_clip: (ItemRange::default(), 0),
             peeking: Peek::NotPeeking,
-            debug_stats: DebugStats {
-                last_addr: data.as_ptr() as usize,
-                stats: HashMap::default(),
-            }
         }
     }
 
@@ -263,7 +243,7 @@ impl<'a> BuiltDisplayListIter<'a> {
     }
 
     pub fn next<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
-        use DisplayItem::*;
+        use SpecificDisplayItem::*;
 
         match self.peeking {
             Peek::IsPeeking => {
@@ -283,17 +263,20 @@ impl<'a> BuiltDisplayListIter<'a> {
 
         loop {
             self.next_raw()?;
-            match self.cur_item {
-                SetGradientStops |
-                SetFilterOps |
-                SetFilterData => {
-                    // These are marker items for populating other display items, don't yield them.
-                    continue;
-                }
-                _ => {
-                    break;
-                }
+            if let SetGradientStops = self.cur_item.item {
+                // SetGradientStops is a dummy item that most consumers should ignore
+                continue;
             }
+            if let SetFilterOps = self.cur_item.item {
+                // SetFilterOps is a dummy item that most consumers should ignore
+                continue;
+            }
+            if let SetFilterData = self.cur_item.item {
+                // SetFilterData is a dummy item that most consumers should ignore
+                continue;
+            }
+
+            break;
         }
 
         Some(self.as_ref())
@@ -303,7 +286,7 @@ impl<'a> BuiltDisplayListIter<'a> {
     /// and may leave irrelevant ranges live (so a Clip may have GradientStops if
     /// for some reason you ask).
     pub fn next_raw<'b>(&'b mut self) -> Option<DisplayItemRef<'a, 'b>> {
-        use DisplayItem::*;
+        use SpecificDisplayItem::*;
 
         if self.data.is_empty() {
             return None;
@@ -315,18 +298,12 @@ impl<'a> BuiltDisplayListIter<'a> {
                 .expect("MEH: malicious process?");
         }
 
-        self.log_item_stats();
-
-        match self.cur_item {
+        match self.cur_item.item {
             SetGradientStops => {
                 self.cur_stops = skip_slice::<di::GradientStop>(self.list, &mut self.data).0;
-                let temp = self.cur_stops;
-                self.log_slice_stats("set_gradient_stops.stops", temp);
             }
             SetFilterOps => {
                 self.cur_filters = skip_slice::<di::FilterOp>(self.list, &mut self.data).0;
-                let temp = self.cur_filters;
-                self.log_slice_stats("set_filter_ops.ops", temp);
             }
             SetFilterData => {
                 self.cur_filter_data.push(TempFilterData {
@@ -336,35 +313,14 @@ impl<'a> BuiltDisplayListIter<'a> {
                     b_values: skip_slice::<f32>(self.list, &mut self.data).0,
                     a_values: skip_slice::<f32>(self.list, &mut self.data).0,
                 });
-
-                let data = *self.cur_filter_data.last().unwrap();
-                self.log_slice_stats("set_filter_data.func_types", data.func_types);
-                self.log_slice_stats("set_filter_data.r_values", data.r_values);
-                self.log_slice_stats("set_filter_data.g_values", data.g_values);
-                self.log_slice_stats("set_filter_data.b_values", data.b_values);
-                self.log_slice_stats("set_filter_data.a_values", data.a_values);
             }
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(self.list, &mut self.data).0;
-                let temp = self.cur_clip_chain_items;
-                self.log_slice_stats("clip_chain.clip_ids", temp);
             }
             Clip(_) | ScrollFrame(_) => {
-                self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>();
-
-                let name = if let Clip(_) = self.cur_item {
-                    "clip.complex_clips"
-                } else {
-                    "scroll_frame.complex_clips"
-                };
-                let temp = self.cur_complex_clip.0;
-                self.log_slice_stats(name, temp);
+                self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>()
             }
-            Text(_) => {
-                self.cur_glyphs = self.skip_slice::<GlyphInstance>().0;
-                let temp = self.cur_glyphs;
-                self.log_slice_stats("text.glyphs", temp);
-            }
+            Text(_) => self.cur_glyphs = self.skip_slice::<GlyphInstance>().0,
             _ => { /* do nothing */ }
         }
 
@@ -379,13 +335,26 @@ impl<'a> BuiltDisplayListIter<'a> {
         DisplayItemRef { iter: self }
     }
 
+    pub fn starting_stacking_context(
+        &mut self,
+    ) -> Option<(di::StackingContext, LayoutRect, ItemRange<di::FilterOp>)> {
+        self.next().and_then(|item| match *item.item() {
+            di::SpecificDisplayItem::PushStackingContext(ref specific_item) => Some((
+                specific_item.stacking_context,
+                item.rect(),
+                item.filters(),
+            )),
+            _ => None,
+        })
+    }
+
     pub fn skip_current_stacking_context(&mut self) {
         let mut depth = 0;
         while let Some(item) = self.next() {
             match *item.item() {
-                di::DisplayItem::PushStackingContext(..) => depth += 1,
-                di::DisplayItem::PopStackingContext if depth == 0 => return,
-                di::DisplayItem::PopStackingContext => depth -= 1,
+                di::SpecificDisplayItem::PushStackingContext(..) => depth += 1,
+                di::SpecificDisplayItem::PopStackingContext if depth == 0 => return,
+                di::SpecificDisplayItem::PopStackingContext => depth -= 1,
                 _ => {}
             }
             debug_assert!(depth >= 0);
@@ -394,7 +363,7 @@ impl<'a> BuiltDisplayListIter<'a> {
 
     pub fn current_stacking_context_empty(&mut self) -> bool {
         match self.peek() {
-            Some(item) => *item.item() == di::DisplayItem::PopStackingContext,
+            Some(item) => *item.item() == di::SpecificDisplayItem::PopStackingContext,
             None => true,
         }
     }
@@ -407,74 +376,38 @@ impl<'a> BuiltDisplayListIter<'a> {
             Some(self.as_ref())
         }
     }
-
-    /// Get the debug stats for what this iterator has deserialized.
-    /// Should always be empty in release builds.
-    pub fn debug_stats(&mut self) -> Vec<(&'static str, ItemStats)> {
-        let mut result = self.debug_stats.stats.drain().collect::<Vec<_>>();
-        result.sort_by_key(|stats| stats.0);
-        result
-    }
-
-    /// Adds the debug stats from another to our own, assuming we are a sub-iter of the other
-    /// (so we can ignore where they were in the traversal).
-    pub fn merge_debug_stats_from(&mut self, other: &mut Self) {
-        for (key, other_entry) in other.debug_stats.stats.iter() {
-            let entry = self.debug_stats.stats.entry(key).or_default();
-
-            entry.total_count += other_entry.total_count;
-            entry.num_bytes += other_entry.num_bytes;
-        }
-    }
-
-    /// Logs stats for the last deserialized display item
-    #[cfg(feature = "display_list_stats")]
-    fn log_item_stats(&mut self) {
-        let num_bytes = self.debug_num_bytes();
-
-        let item_name = self.cur_item.debug_name();
-        let entry = self.debug_stats.stats.entry(item_name).or_default();
-
-        entry.total_count += 1;
-        entry.num_bytes += num_bytes;
-    }
-
-    /// Logs the stats for the given serialized slice
-    #[cfg(feature = "display_list_stats")]
-    fn log_slice_stats<T: for<'de> Deserialize<'de>>(&mut self, slice_name: &'static str, range: ItemRange<T>) {
-        // Run this so log_item_stats is accurate, but ignore its result
-        // because log_slice_stats may be called after multiple slices have been
-        // processed, and the `range` has everything we need.
-        self.debug_num_bytes();
-
-        let entry = self.debug_stats.stats.entry(slice_name).or_default();
-
-        entry.total_count += self.list.get(range).size_hint().0;
-        entry.num_bytes += range.length;
-    }
-
-    /// Computes the number of bytes we've processed since we last called
-    /// this method, so we can compute the serialized size of a display item.
-    #[cfg(feature = "display_list_stats")]
-    fn debug_num_bytes(&mut self) -> usize {
-        let old_addr = self.debug_stats.last_addr;
-        let new_addr = self.data.as_ptr() as usize;
-        let delta = new_addr - old_addr;
-        self.debug_stats.last_addr = new_addr;
-
-        delta
-    }
-
-    #[cfg(not(feature = "display_list_stats"))]
-    fn log_item_stats(&mut self) { /* no-op */ }
-    #[cfg(not(feature = "display_list_stats"))]
-    fn log_slice_stats<T>(&mut self, _slice_name: &str, _range: ItemRange<T>) { /* no-op */ }
 }
 
 // Some of these might just become ItemRanges
 impl<'a, 'b> DisplayItemRef<'a, 'b> {
-    pub fn item(&self) -> &di::DisplayItem {
+    pub fn display_item(&self) -> &di::DisplayItem {
         &self.iter.cur_item
+    }
+
+    pub fn rect(&self) -> LayoutRect {
+        self.iter.cur_item.layout.rect
+    }
+
+    pub fn get_layout_primitive_info(&self, offset: &LayoutVector2D) -> di::LayoutPrimitiveInfo {
+        let layout = self.iter.cur_item.layout;
+        di::LayoutPrimitiveInfo {
+            rect: layout.rect.translate(offset),
+            clip_rect: layout.clip_rect.translate(offset),
+            is_backface_visible: layout.is_backface_visible,
+            tag: layout.tag,
+        }
+    }
+
+    pub fn clip_rect(&self) -> &LayoutRect {
+        &self.iter.cur_item.layout.clip_rect
+    }
+
+    pub fn space_and_clip_info(&self) -> &di::SpaceAndClipInfo {
+        &self.iter.cur_item.space_and_clip
+    }
+
+    pub fn item(&self) -> &di::SpecificDisplayItem {
+        &self.iter.cur_item.item
     }
 
     pub fn complex_clip(&self) -> (ItemRange<di::ComplexClipRegion>, usize) {
@@ -503,6 +436,10 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
     pub fn display_list(&self) -> &BuiltDisplayList {
         self.iter.display_list()
+    }
+
+    pub fn is_backface_visible(&self) -> bool {
+        self.iter.cur_item.layout.is_backface_visible
     }
 
     // Creates a new iterator where this element's iterator is, to hack around borrowck.
@@ -553,72 +490,77 @@ impl<'a, T: for<'de> Deserialize<'de>> ::std::iter::ExactSizeIterator for AuxIte
 #[cfg(feature = "serialize")]
 impl Serialize for BuiltDisplayList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use display_item::DisplayItem as Real;
-        use display_item::DebugDisplayItem as Debug;
+        use display_item::CompletelySpecificDisplayItem::*;
+        use display_item::GenericDisplayItem;
 
         let mut seq = serializer.serialize_seq(None)?;
         let mut traversal = self.iter();
         while let Some(item) = traversal.next_raw() {
-            let serial_di = match *item.item() {
-                Real::Clip(v) => Debug::Clip(
-                    v,
-                    item.iter.list.get(item.iter.cur_complex_clip.0).collect()
-                ),
-                Real::ClipChain(v) => Debug::ClipChain(
-                    v,
-                    item.iter.list.get(item.iter.cur_clip_chain_items).collect(),
-                ),
-                Real::ScrollFrame(v) => Debug::ScrollFrame(
-                    v,
-                    item.iter.list.get(item.iter.cur_complex_clip.0).collect()
-                ),
-                Real::Text(v) => Debug::Text(
-                    v,
-                    item.iter.list.get(item.iter.cur_glyphs).collect()
-                ),
-                Real::SetFilterOps => Debug::SetFilterOps(
-                    item.iter.list.get(item.iter.cur_filters).collect()
-                ),
-                Real::SetFilterData => {
-                    debug_assert!(!item.iter.cur_filter_data.is_empty());
-                    let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
+            let display_item = item.display_item();
+            let serial_di = GenericDisplayItem {
+                item: match display_item.item {
+                    di::SpecificDisplayItem::Clip(v) => Clip(
+                        v,
+                        item.iter.list.get(item.iter.cur_complex_clip.0).collect()
+                    ),
+                    di::SpecificDisplayItem::ClipChain(v) => ClipChain(
+                        v,
+                        item.iter.list.get(item.iter.cur_clip_chain_items).collect(),
+                    ),
+                    di::SpecificDisplayItem::ScrollFrame(v) => ScrollFrame(
+                        v,
+                        item.iter.list.get(item.iter.cur_complex_clip.0).collect()
+                    ),
+                    di::SpecificDisplayItem::StickyFrame(v) => StickyFrame(v),
+                    di::SpecificDisplayItem::Rectangle(v) => Rectangle(v),
+                    di::SpecificDisplayItem::ClearRectangle => ClearRectangle,
+                    di::SpecificDisplayItem::Line(v) => Line(v),
+                    di::SpecificDisplayItem::Text(v) => Text(
+                        v,
+                        item.iter.list.get(item.iter.cur_glyphs).collect()
+                    ),
+                    di::SpecificDisplayItem::Image(v) => Image(v),
+                    di::SpecificDisplayItem::YuvImage(v) => YuvImage(v),
+                    di::SpecificDisplayItem::Border(v) => Border(v),
+                    di::SpecificDisplayItem::BoxShadow(v) => BoxShadow(v),
+                    di::SpecificDisplayItem::Gradient(v) => Gradient(v),
+                    di::SpecificDisplayItem::RadialGradient(v) => RadialGradient(v),
+                    di::SpecificDisplayItem::Iframe(v) => Iframe(v),
+                    di::SpecificDisplayItem::PushReferenceFrame(v) => PushReferenceFrame(v),
+                    di::SpecificDisplayItem::PopReferenceFrame => PopReferenceFrame,
+                    di::SpecificDisplayItem::PushStackingContext(v) => PushStackingContext(v),
+                    di::SpecificDisplayItem::PopStackingContext => PopStackingContext,
+                    di::SpecificDisplayItem::SetFilterOps => SetFilterOps(
+                        item.iter.list.get(item.iter.cur_filters).collect()
+                    ),
+                    di::SpecificDisplayItem::SetFilterData => {
+                        debug_assert!(!item.iter.cur_filter_data.is_empty());
+                        let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
 
-                    let func_types: Vec<di::ComponentTransferFuncType> =
-                        item.iter.list.get(temp_filter_data.func_types).collect();
-                    debug_assert!(func_types.len() == 4);
-                    Debug::SetFilterData(di::FilterData {
-                        func_r_type: func_types[0],
-                        r_values: item.iter.list.get(temp_filter_data.r_values).collect(),
-                        func_g_type: func_types[1],
-                        g_values: item.iter.list.get(temp_filter_data.g_values).collect(),
-                        func_b_type: func_types[2],
-                        b_values: item.iter.list.get(temp_filter_data.b_values).collect(),
-                        func_a_type: func_types[3],
-                        a_values: item.iter.list.get(temp_filter_data.a_values).collect(),
-                    })
+                        let func_types: Vec<di::ComponentTransferFuncType> =
+                            item.iter.list.get(temp_filter_data.func_types).collect();
+                        debug_assert!(func_types.len() == 4);
+                        SetFilterData(di::FilterData {
+                            func_r_type: func_types[0],
+                            r_values: item.iter.list.get(temp_filter_data.r_values).collect(),
+                            func_g_type: func_types[1],
+                            g_values: item.iter.list.get(temp_filter_data.g_values).collect(),
+                            func_b_type: func_types[2],
+                            b_values: item.iter.list.get(temp_filter_data.b_values).collect(),
+                            func_a_type: func_types[3],
+                            a_values: item.iter.list.get(temp_filter_data.a_values).collect(),
+                        })
+                    },
+                    di::SpecificDisplayItem::SetGradientStops => SetGradientStops(
+                        item.iter.list.get(item.iter.cur_stops).collect()
+                    ),
+                    di::SpecificDisplayItem::PushShadow(v) => PushShadow(v),
+                    di::SpecificDisplayItem::PopAllShadows => PopAllShadows,
+                    di::SpecificDisplayItem::PushCacheMarker(m) => PushCacheMarker(m),
+                    di::SpecificDisplayItem::PopCacheMarker => PopCacheMarker,
                 },
-                Real::SetGradientStops => Debug::SetGradientStops(
-                    item.iter.list.get(item.iter.cur_stops).collect()
-                ),
-                Real::StickyFrame(v) => Debug::StickyFrame(v),
-                Real::Rectangle(v) => Debug::Rectangle(v),
-                Real::ClearRectangle(v) => Debug::ClearRectangle(v),
-                Real::HitTest(v) => Debug::HitTest(v),
-                Real::Line(v) => Debug::Line(v),
-                Real::Image(v) => Debug::Image(v),
-                Real::YuvImage(v) => Debug::YuvImage(v),
-                Real::Border(v) => Debug::Border(v),
-                Real::BoxShadow(v) => Debug::BoxShadow(v),
-                Real::Gradient(v) => Debug::Gradient(v),
-                Real::RadialGradient(v) => Debug::RadialGradient(v),
-                Real::Iframe(v) => Debug::Iframe(v),
-                Real::PushReferenceFrame(v) => Debug::PushReferenceFrame(v),
-                Real::PushStackingContext(v) => Debug::PushStackingContext(v),
-                Real::PushShadow(v) => Debug::PushShadow(v),
-
-                Real::PopReferenceFrame => Debug::PopReferenceFrame,
-                Real::PopStackingContext => Debug::PopStackingContext,
-                Real::PopAllShadows => Debug::PopAllShadows,
+                layout: display_item.layout,
+                space_and_clip: display_item.space_and_clip,
             };
             seq.serialize_element(&serial_di)?
         }
@@ -636,86 +578,93 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
     where
         D: Deserializer<'de>,
     {
-        use display_item::DisplayItem as Real;
-        use display_item::DebugDisplayItem as Debug;
+        use display_item::CompletelySpecificDisplayItem::*;
+        use display_item::{CompletelySpecificDisplayItem, GenericDisplayItem};
 
-        let list = Vec::<Debug>::deserialize(deserializer)?;
+        let list = Vec::<GenericDisplayItem<CompletelySpecificDisplayItem>>
+            ::deserialize(deserializer)?;
 
         let mut data = Vec::new();
         let mut temp = Vec::new();
         let mut total_clip_nodes = FIRST_CLIP_NODE_INDEX;
         let mut total_spatial_nodes = FIRST_SPATIAL_NODE_INDEX;
         for complete in list {
-            let item = match complete {
-                Debug::Clip(v, complex_clips) => {
-                    total_clip_nodes += 1;
-                    DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
-                    Real::Clip(v)
+            let item = di::DisplayItem {
+                item: match complete.item {
+                    Clip(specific_item, complex_clips) => {
+                        total_clip_nodes += 1;
+                        DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
+                        di::SpecificDisplayItem::Clip(specific_item)
+                    },
+                    ClipChain(specific_item, clip_chain_ids) => {
+                        DisplayListBuilder::push_iter_impl(&mut temp, clip_chain_ids);
+                        di::SpecificDisplayItem::ClipChain(specific_item)
+                    }
+                    ScrollFrame(specific_item, complex_clips) => {
+                        total_spatial_nodes += 1;
+                        total_clip_nodes += 1;
+                        DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
+                        di::SpecificDisplayItem::ScrollFrame(specific_item)
+                    }
+                    StickyFrame(specific_item) => {
+                        total_spatial_nodes += 1;
+                        di::SpecificDisplayItem::StickyFrame(specific_item)
+                    }
+                    Rectangle(specific_item) => di::SpecificDisplayItem::Rectangle(specific_item),
+                    ClearRectangle => di::SpecificDisplayItem::ClearRectangle,
+                    Line(specific_item) => di::SpecificDisplayItem::Line(specific_item),
+                    Text(specific_item, glyphs) => {
+                        DisplayListBuilder::push_iter_impl(&mut temp, glyphs);
+                        di::SpecificDisplayItem::Text(specific_item)
+                    },
+                    Image(specific_item) => di::SpecificDisplayItem::Image(specific_item),
+                    YuvImage(specific_item) => di::SpecificDisplayItem::YuvImage(specific_item),
+                    Border(specific_item) => di::SpecificDisplayItem::Border(specific_item),
+                    BoxShadow(specific_item) => di::SpecificDisplayItem::BoxShadow(specific_item),
+                    Gradient(specific_item) => di::SpecificDisplayItem::Gradient(specific_item),
+                    RadialGradient(specific_item) =>
+                        di::SpecificDisplayItem::RadialGradient(specific_item),
+                    Iframe(specific_item) => {
+                        total_clip_nodes += 1;
+                        di::SpecificDisplayItem::Iframe(specific_item)
+                    }
+                    PushReferenceFrame(v) => {
+                        total_spatial_nodes += 1;
+                        di::SpecificDisplayItem::PushReferenceFrame(v)
+                    }
+                    PopReferenceFrame => di::SpecificDisplayItem::PopReferenceFrame,
+                    PushStackingContext(specific_item) => {
+                        di::SpecificDisplayItem::PushStackingContext(specific_item)
+                    },
+                    SetFilterOps(filters) => {
+                        DisplayListBuilder::push_iter_impl(&mut temp, filters);
+                        di::SpecificDisplayItem::SetFilterOps
+                    },
+                    SetFilterData(filter_data) => {
+                        let func_types: Vec<di::ComponentTransferFuncType> =
+                            [filter_data.func_r_type,
+                             filter_data.func_g_type,
+                             filter_data.func_b_type,
+                             filter_data.func_a_type].to_vec();
+                        DisplayListBuilder::push_iter_impl(&mut temp, func_types);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.r_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.g_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.b_values);
+                        DisplayListBuilder::push_iter_impl(&mut temp, filter_data.a_values);
+                        di::SpecificDisplayItem::SetFilterData
+                    },
+                    PopStackingContext => di::SpecificDisplayItem::PopStackingContext,
+                    SetGradientStops(stops) => {
+                        DisplayListBuilder::push_iter_impl(&mut temp, stops);
+                        di::SpecificDisplayItem::SetGradientStops
+                    },
+                    PushShadow(specific_item) => di::SpecificDisplayItem::PushShadow(specific_item),
+                    PopAllShadows => di::SpecificDisplayItem::PopAllShadows,
+                    PushCacheMarker(marker) => di::SpecificDisplayItem::PushCacheMarker(marker),
+                    PopCacheMarker => di::SpecificDisplayItem::PopCacheMarker,
                 },
-                Debug::ClipChain(v, clip_chain_ids) => {
-                    DisplayListBuilder::push_iter_impl(&mut temp, clip_chain_ids);
-                    Real::ClipChain(v)
-                }
-                Debug::ScrollFrame(v, complex_clips) => {
-                    total_spatial_nodes += 1;
-                    total_clip_nodes += 1;
-                    DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
-                    Real::ScrollFrame(v)
-                }
-                Debug::StickyFrame(v) => {
-                    total_spatial_nodes += 1;
-                    Real::StickyFrame(v)
-                }
-                Debug::Text(v, glyphs) => {
-                    DisplayListBuilder::push_iter_impl(&mut temp, glyphs);
-                    Real::Text(v)
-                },
-                Debug::Iframe(v) => {
-                    total_clip_nodes += 1;
-                    Real::Iframe(v)
-                }
-                Debug::PushReferenceFrame(v) => {
-                    total_spatial_nodes += 1;
-                    Real::PushReferenceFrame(v)
-                }
-                Debug::SetFilterOps(filters) => {
-                    DisplayListBuilder::push_iter_impl(&mut temp, filters);
-                    Real::SetFilterOps
-                },
-                Debug::SetFilterData(filter_data) => {
-                    let func_types: Vec<di::ComponentTransferFuncType> =
-                        [filter_data.func_r_type,
-                         filter_data.func_g_type,
-                         filter_data.func_b_type,
-                         filter_data.func_a_type].to_vec();
-                    DisplayListBuilder::push_iter_impl(&mut temp, func_types);
-                    DisplayListBuilder::push_iter_impl(&mut temp, filter_data.r_values);
-                    DisplayListBuilder::push_iter_impl(&mut temp, filter_data.g_values);
-                    DisplayListBuilder::push_iter_impl(&mut temp, filter_data.b_values);
-                    DisplayListBuilder::push_iter_impl(&mut temp, filter_data.a_values);
-                    Real::SetFilterData
-                },
-                Debug::SetGradientStops(stops) => {
-                    DisplayListBuilder::push_iter_impl(&mut temp, stops);
-                    Real::SetGradientStops
-                },
-
-                Debug::Rectangle(v) => Real::Rectangle(v),
-                Debug::ClearRectangle(v) => Real::ClearRectangle(v),
-                Debug::HitTest(v) => Real::HitTest(v),
-                Debug::Line(v) => Real::Line(v),
-                Debug::Image(v) => Real::Image(v),
-                Debug::YuvImage(v) => Real::YuvImage(v),
-                Debug::Border(v) => Real::Border(v),
-                Debug::BoxShadow(v) => Real::BoxShadow(v),
-                Debug::Gradient(v) => Real::Gradient(v),
-                Debug::RadialGradient(v) => Real::RadialGradient(v),
-                Debug::PushStackingContext(v) => Real::PushStackingContext(v),
-                Debug::PushShadow(v) => Real::PushShadow(v),
-
-                Debug::PopStackingContext => Real::PopStackingContext,
-                Debug::PopReferenceFrame => Real::PopReferenceFrame,
-                Debug::PopAllShadows => Real::PopAllShadows,
+                layout: complete.layout,
+                space_and_clip: complete.space_and_clip,
             };
             serialize_fast(&mut data, &item);
             // the aux data is serialized after the item, hence the temporary
@@ -1068,7 +1017,7 @@ impl DisplayListBuilder {
             let mut iter = BuiltDisplayListIter::new(&temp);
             while let Some(item) = iter.next_raw() {
                 if index >= range.start.unwrap_or(0) && range.end.map_or(true, |e| index < e) {
-                    writeln!(sink, "{}{:?}", "  ".repeat(indent), item.item()).unwrap();
+                    writeln!(sink, "{}{:?}", "  ".repeat(indent), item.display_item()).unwrap();
                 }
                 index += 1;
             }
@@ -1084,8 +1033,30 @@ impl DisplayListBuilder {
     /// display items. Pushing unexpected or invalid items here may
     /// result in WebRender panicking or behaving in unexpected ways.
     #[inline]
-    pub fn push_item(&mut self, item: &di::DisplayItem) {
-        serialize_fast(&mut self.data, item);
+    pub fn push_item(
+        &mut self,
+        item: &di::SpecificDisplayItem,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
+    ) {
+        serialize_fast(
+            &mut self.data,
+            di::SerializedDisplayItem {
+                item,
+                layout,
+                space_and_clip,
+            },
+        )
+    }
+
+    #[inline]
+    fn push_new_empty_item(&mut self, item: &di::SpecificDisplayItem) {
+        let pipeline_id = self.pipeline_id;
+        self.push_item(
+            item,
+            &di::LayoutPrimitiveInfo::new(LayoutRect::zero()),
+            &di::SpaceAndClipInfo::root_scroll(pipeline_id),
+        )
     }
 
     fn push_iter_impl<I>(data: &mut Vec<u8>, iter_source: I)
@@ -1135,61 +1106,45 @@ impl DisplayListBuilder {
 
     pub fn push_rect(
         &mut self,
-        common: &di::CommonItemProperties,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         color: ColorF,
     ) {
-        let item = di::DisplayItem::Rectangle(di::RectangleDisplayItem {
-            common: *common,
-            color
-        });
-        self.push_item(&item);
+        let item = di::SpecificDisplayItem::Rectangle(di::RectangleDisplayItem { color });
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_clear_rect(
         &mut self,
-        common: &di::CommonItemProperties,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
     ) {
-        let item = di::DisplayItem::ClearRectangle(di::ClearRectangleDisplayItem {
-            common: *common,
-        });
-        self.push_item(&item);
-    }
-
-    pub fn push_hit_test(
-        &mut self,
-        common: &di::CommonItemProperties,
-    ) {
-        let item = di::DisplayItem::HitTest(di::HitTestDisplayItem {
-            common: *common,
-        });
-        self.push_item(&item);
+        self.push_item(&di::SpecificDisplayItem::ClearRectangle, layout, space_and_clip);
     }
 
     pub fn push_line(
         &mut self,
-        common: &di::CommonItemProperties,
-        area: &LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         wavy_line_thickness: f32,
         orientation: di::LineOrientation,
         color: &ColorF,
         style: di::LineStyle,
     ) {
-        let item = di::DisplayItem::Line(di::LineDisplayItem {
-            common: *common,
-            area: *area,
+        let item = di::SpecificDisplayItem::Line(di::LineDisplayItem {
             wavy_line_thickness,
             orientation,
             color: *color,
             style,
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_image(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
         image_rendering: di::ImageRendering,
@@ -1197,9 +1152,7 @@ impl DisplayListBuilder {
         key: ImageKey,
         color: ColorF,
     ) {
-        let item = di::DisplayItem::Image(di::ImageDisplayItem {
-            common: *common,
-            bounds,
+        let item = di::SpecificDisplayItem::Image(di::ImageDisplayItem {
             image_key: key,
             stretch_size,
             tile_spacing,
@@ -1208,49 +1161,45 @@ impl DisplayListBuilder {
             color,
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Push a yuv image. All planar data in yuv image should use the same buffer type.
     pub fn push_yuv_image(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         yuv_data: di::YuvData,
         color_depth: ColorDepth,
         color_space: di::YuvColorSpace,
         image_rendering: di::ImageRendering,
     ) {
-        let item = di::DisplayItem::YuvImage(di::YuvImageDisplayItem {
-            common: *common,
-            bounds,
+        let item = di::SpecificDisplayItem::YuvImage(di::YuvImageDisplayItem {
             yuv_data,
             color_depth,
             color_space,
             image_rendering,
         });
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_text(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         glyphs: &[GlyphInstance],
         font_key: FontInstanceKey,
         color: ColorF,
         glyph_options: Option<GlyphOptions>,
     ) {
-        let item = di::DisplayItem::Text(di::TextDisplayItem {
-            common: *common,
-            bounds: bounds,
+        let item = di::SpecificDisplayItem::Text(di::TextDisplayItem {
             color,
             font_key,
             glyph_options,
         });
 
         for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-            self.push_item(&item);
+            self.push_item(&item, layout, space_and_clip);
             self.push_iter(split_glyphs);
         }
     }
@@ -1287,24 +1236,20 @@ impl DisplayListBuilder {
 
     pub fn push_border(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         widths: LayoutSideOffsets,
         details: di::BorderDetails,
     ) {
-        let item = di::DisplayItem::Border(di::BorderDisplayItem {
-            common: *common,
-            bounds,
-            details,
-            widths,
-        });
+        let item = di::SpecificDisplayItem::Border(di::BorderDisplayItem { details, widths });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_box_shadow(
         &mut self,
-        common: &di::CommonItemProperties,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         box_bounds: LayoutRect,
         offset: LayoutVector2D,
         color: ColorF,
@@ -1313,8 +1258,7 @@ impl DisplayListBuilder {
         border_radius: di::BorderRadius,
         clip_mode: di::BoxShadowClipMode,
     ) {
-        let item = di::DisplayItem::BoxShadow(di::BoxShadowDisplayItem {
-            common: *common,
+        let item = di::SpecificDisplayItem::BoxShadow(di::BoxShadowDisplayItem {
             box_bounds,
             offset,
             color,
@@ -1324,7 +1268,7 @@ impl DisplayListBuilder {
             clip_mode,
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Pushes a linear gradient to be displayed.
@@ -1343,21 +1287,19 @@ impl DisplayListBuilder {
     /// The gradient is only visible within the local clip.
     pub fn push_gradient(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         gradient: di::Gradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
-        let item = di::DisplayItem::Gradient(di::GradientDisplayItem {
-            common: *common,
-            bounds,
+        let item = di::SpecificDisplayItem::Gradient(di::GradientDisplayItem {
             gradient,
             tile_size,
             tile_spacing,
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     /// Pushes a radial gradient to be displayed.
@@ -1365,36 +1307,32 @@ impl DisplayListBuilder {
     /// See [`push_gradient`](#method.push_gradient) for explanation.
     pub fn push_radial_gradient(
         &mut self,
-        common: &di::CommonItemProperties,
-        bounds: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
+        space_and_clip: &di::SpaceAndClipInfo,
         gradient: di::RadialGradient,
         tile_size: LayoutSize,
         tile_spacing: LayoutSize,
     ) {
-        let item = di::DisplayItem::RadialGradient(di::RadialGradientDisplayItem {
-            common: *common,
-            bounds,
+        let item = di::SpecificDisplayItem::RadialGradient(di::RadialGradientDisplayItem {
             gradient,
             tile_size,
             tile_spacing,
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_reference_frame(
         &mut self,
-        origin: LayoutPoint,
-        parent_spatial_id: di::SpatialId,
+        rect: &LayoutRect,
+        parent: di::SpatialId,
         transform_style: di::TransformStyle,
         transform: PropertyBinding<LayoutTransform>,
         kind: di::ReferenceFrameKind,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
 
-        let item = di::DisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
-            parent_spatial_id,
-            origin,
+        let item = di::SpecificDisplayItem::PushReferenceFrame(di::ReferenceFrameDisplayListItem {
             reference_frame: di::ReferenceFrame {
                 transform_style,
                 transform,
@@ -1403,19 +1341,35 @@ impl DisplayListBuilder {
             },
         });
 
-        self.push_item(&item);
+        let layout = di::LayoutPrimitiveInfo::new(*rect);
+        self.push_item(&item, &layout, &di::SpaceAndClipInfo {
+            spatial_id: parent,
+            clip_id: di::ClipId::invalid(),
+        });
         id
     }
 
+    pub fn push_cache_marker(&mut self) {
+        self.push_new_empty_item(&di::SpecificDisplayItem::PushCacheMarker(di::CacheMarkerDisplayItem {
+            // The display item itself is empty for now while we experiment with
+            // the API. In future it may contain extra information, such as details
+            // on whether the surface is known to be opaque and/or a background color
+            // hint that WR should clear the surface to.
+        }));
+    }
+
+    pub fn pop_cache_marker(&mut self) {
+        self.push_new_empty_item(&di::SpecificDisplayItem::PopCacheMarker);
+    }
+
     pub fn pop_reference_frame(&mut self) {
-        self.push_item(&di::DisplayItem::PopReferenceFrame);
+        self.push_new_empty_item(&di::SpecificDisplayItem::PopReferenceFrame);
     }
 
     pub fn push_stacking_context(
         &mut self,
-        origin: LayoutPoint,
+        layout: &di::LayoutPrimitiveInfo,
         spatial_id: di::SpatialId,
-        is_backface_visible: bool,
         clip_id: Option<di::ClipId>,
         transform_style: di::TransformStyle,
         mix_blend_mode: di::MixBlendMode,
@@ -1424,16 +1378,14 @@ impl DisplayListBuilder {
         raster_space: di::RasterSpace,
         cache_tiles: bool,
     ) {
-        if filters.len() > 0 {
-            self.push_item(&di::DisplayItem::SetFilterOps);
-            self.push_iter(filters);
-        }
+        self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterOps);
+        self.push_iter(filters);
 
         for filter_data in filter_datas {
             let func_types = [
                 filter_data.func_r_type, filter_data.func_g_type,
                 filter_data.func_b_type, filter_data.func_a_type];
-            self.push_item(&di::DisplayItem::SetFilterData);
+            self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterData);
             self.push_iter(&func_types);
             self.push_iter(&filter_data.r_values);
             self.push_iter(&filter_data.g_values);
@@ -1441,10 +1393,7 @@ impl DisplayListBuilder {
             self.push_iter(&filter_data.a_values);
         }
 
-        let item = di::DisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
-            origin,
-            spatial_id,
-            is_backface_visible,
+        let item = di::SpecificDisplayItem::PushStackingContext(di::PushStackingContextDisplayItem {
             stacking_context: di::StackingContext {
                 transform_style,
                 mix_blend_mode,
@@ -1454,32 +1403,32 @@ impl DisplayListBuilder {
             },
         });
 
-        self.push_item(&item);
+        self.push_item(&item, layout, &di::SpaceAndClipInfo {
+            spatial_id,
+            clip_id: di::ClipId::invalid(),
+        });
     }
 
     /// Helper for examples/ code.
     pub fn push_simple_stacking_context(
         &mut self,
-        origin: LayoutPoint,
+        layout: &di::LayoutPrimitiveInfo,
         spatial_id: di::SpatialId,
-        is_backface_visible: bool,
     ) {
-        self.push_simple_stacking_context_with_filters(origin, spatial_id, is_backface_visible, &[], &[]);
+        self.push_simple_stacking_context_with_filters(layout, spatial_id, &[], &[]);
     }
 
     /// Helper for examples/ code.
     pub fn push_simple_stacking_context_with_filters(
         &mut self,
-        origin: LayoutPoint,
+        layout: &di::LayoutPrimitiveInfo,
         spatial_id: di::SpatialId,
-        is_backface_visible: bool,
         filters: &[di::FilterOp],
         filter_datas: &[di::FilterData],
     ) {
         self.push_stacking_context(
-            origin,
+            layout,
             spatial_id,
-            is_backface_visible,
             None,
             di::TransformStyle::Flat,
             di::MixBlendMode::Normal,
@@ -1491,14 +1440,14 @@ impl DisplayListBuilder {
     }
 
     pub fn pop_stacking_context(&mut self) {
-        self.push_item(&di::DisplayItem::PopStackingContext);
+        self.push_new_empty_item(&di::SpecificDisplayItem::PopStackingContext);
     }
 
     pub fn push_stops(&mut self, stops: &[di::GradientStop]) {
         if stops.is_empty() {
             return;
         }
-        self.push_item(&di::DisplayItem::SetGradientStops);
+        self.push_new_empty_item(&di::SpecificDisplayItem::SetGradientStops);
         self.push_iter(stops);
     }
 
@@ -1534,10 +1483,7 @@ impl DisplayListBuilder {
     {
         let clip_id = self.generate_clip_index();
         let scroll_frame_id = self.generate_spatial_index();
-        let item = di::DisplayItem::ScrollFrame(di::ScrollFrameDisplayItem {
-            content_rect,
-            clip_rect,
-            parent_space_and_clip: *parent_space_and_clip,
+        let item = di::SpecificDisplayItem::ScrollFrame(di::ScrollFrameDisplayItem {
             clip_id,
             scroll_frame_id,
             external_id,
@@ -1546,7 +1492,11 @@ impl DisplayListBuilder {
             external_scroll_offset,
         });
 
-        self.push_item(&item);
+        self.push_item(
+            &item,
+            &di::LayoutPrimitiveInfo::with_clip_rect(content_rect, clip_rect),
+            parent_space_and_clip,
+        );
         self.push_iter(complex_clips);
 
         di::SpaceAndClipInfo {
@@ -1565,7 +1515,7 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator + Clone,
     {
         let id = self.generate_clip_chain_id();
-        self.push_item(&di::DisplayItem::ClipChain(di::ClipChainItem { id, parent }));
+        self.push_new_empty_item(&di::SpecificDisplayItem::ClipChain(di::ClipChainItem { id, parent }));
         self.push_iter(clips);
         id
     }
@@ -1582,14 +1532,16 @@ impl DisplayListBuilder {
         I::IntoIter: ExactSizeIterator + Clone,
     {
         let id = self.generate_clip_index();
-        let item = di::DisplayItem::Clip(di::ClipDisplayItem {
+        let item = di::SpecificDisplayItem::Clip(di::ClipDisplayItem {
             id,
-            parent_space_and_clip: *parent_space_and_clip,
-            clip_rect,
             image_mask,
         });
 
-        self.push_item(&item);
+        self.push_item(
+            &item,
+            &di::LayoutPrimitiveInfo::new(clip_rect),
+            parent_space_and_clip,
+        );
         self.push_iter(complex_clips);
         id
     }
@@ -1604,52 +1556,50 @@ impl DisplayListBuilder {
         previously_applied_offset: LayoutVector2D,
     ) -> di::SpatialId {
         let id = self.generate_spatial_index();
-        let item = di::DisplayItem::StickyFrame(di::StickyFrameDisplayItem {
-            parent_spatial_id,
+        let item = di::SpecificDisplayItem::StickyFrame(di::StickyFrameDisplayItem {
             id,
-            bounds: frame_rect,
             margins,
             vertical_offset_bounds,
             horizontal_offset_bounds,
             previously_applied_offset,
         });
 
-        self.push_item(&item);
+        self.push_item(
+            &item,
+            &di::LayoutPrimitiveInfo::new(frame_rect),
+            &di::SpaceAndClipInfo {
+                spatial_id: parent_spatial_id,
+                clip_id: di::ClipId::invalid(),
+            },
+        );
         id
     }
 
     pub fn push_iframe(
         &mut self,
-        bounds: LayoutRect,
-        clip_rect: LayoutRect,
+        layout: &di::LayoutPrimitiveInfo,
         space_and_clip: &di::SpaceAndClipInfo,
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
-        let item = di::DisplayItem::Iframe(di::IframeDisplayItem {
-            bounds,
-            clip_rect,
-            space_and_clip: *space_and_clip,
+        let item = di::SpecificDisplayItem::Iframe(di::IframeDisplayItem {
             pipeline_id,
             ignore_missing_pipeline,
         });
-        self.push_item(&item);
+        self.push_item(&item, layout, space_and_clip);
     }
 
     pub fn push_shadow(
         &mut self,
+        layout: &di::LayoutPrimitiveInfo,
         space_and_clip: &di::SpaceAndClipInfo,
         shadow: di::Shadow,
     ) {
-        let item = di::DisplayItem::PushShadow(di::PushShadowDisplayItem {
-            space_and_clip: *space_and_clip,
-            shadow,
-        });
-        self.push_item(&item);
+        self.push_item(&di::SpecificDisplayItem::PushShadow(shadow), layout, space_and_clip);
     }
 
     pub fn pop_all_shadows(&mut self) {
-        self.push_item(&di::DisplayItem::PopAllShadows);
+        self.push_new_empty_item(&di::SpecificDisplayItem::PopAllShadows);
     }
 
     pub fn finalize(self) -> (PipelineId, LayoutSize, BuiltDisplayList) {

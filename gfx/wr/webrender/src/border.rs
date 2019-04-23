@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU};
-use api::{NormalBorder as ApiNormalBorder, RepeatMode};
+use api::{LayoutPrimitiveInfo, NormalBorder as ApiNormalBorder, RepeatMode};
 use api::units::*;
 use ellipse::Ellipse;
 use euclid::vec2;
@@ -13,7 +13,6 @@ use prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
 use prim_store::{EdgeAaSegmentMask, ScrollNodeAndClipChain};
 use prim_store::borders::{NormalBorderPrim, NormalBorderData};
 use util::{lerp, RectHelpers};
-use internal_types::LayoutPrimitiveInfo;
 
 // Using 2048 as the maximum radius in device space before which we
 // start stretching is up for debate.

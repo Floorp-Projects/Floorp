@@ -2123,7 +2123,7 @@ impl Renderer {
                 21,
             ];
 
-            let texture = device.create_texture(
+            let mut texture = device.create_texture(
                 TextureTarget::Default,
                 ImageFormat::R8,
                 8,
@@ -2477,7 +2477,7 @@ impl Renderer {
                 }
                 ResultMsg::PublishDocument(
                     document_id,
-                    doc,
+                    mut doc,
                     texture_update_list,
                     profile_counters,
                 ) => {
