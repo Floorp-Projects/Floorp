@@ -43,16 +43,13 @@ add_task(async function() {
   const rules = panel.querySelectorAll(".changes__rule");
   is(rules.length, 1, "One rule was tracked as changed");
 
-  const selectors = rules.item(0).querySelectorAll(".changes__selector");
-  is(selectors.length, 2, "Two selectors were tracked as changed");
-
-  const firstSelector = selectors.item(0);
-  is(firstSelector.title, "div", "Old selector name was tracked.");
-  ok(firstSelector.classList.contains("diff-remove"), "Old selector was removed.");
-
-  const secondSelector = selectors.item(1);
-  is(secondSelector.title, ".test", "New selector name was tracked.");
-  ok(secondSelector.classList.contains("diff-add"), "New selector was added.");
+  info("Expect old selector to be removed and new selector to be added");
+  const addedSelectors = getAddedSelectors(panel);
+  const removedSelectors = getRemovedSelectors(panel);
+  is(addedSelectors.length, 1, "One new selector was tracked as added");
+  is(addedSelectors.item(0).title, ".test", "New selector is correct");
+  is(removedSelectors.length, 1, "One old selector was tracked as removed");
+  is(removedSelectors.item(0).title, "div", "Old selector is correct");
 
   info("Expect no declarations to have been added or removed during selector change");
   const removeDecl = getRemovedDeclarations(doc, rules.item(0));
