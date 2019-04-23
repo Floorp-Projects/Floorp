@@ -127,8 +127,8 @@ class AwesomeBarUIView(
                 )
 
             if (Settings.getInstance(container.context).showSearchSuggestions()) {
-                val draw = getDrawable(R.drawable.ic_search)
-                draw?.setColorFilter(
+                val searchDrawable = getDrawable(R.drawable.ic_search)
+                searchDrawable?.setColorFilter(
                     ContextCompat.getColor(
                         this,
                         DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
@@ -143,7 +143,7 @@ class AwesomeBarUIView(
                         fetchClient = components.core.client,
                         mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                         limit = 3,
-                        icon = draw?.toBitmap()
+                        icon = searchDrawable?.toBitmap()
                     )
             }
 
