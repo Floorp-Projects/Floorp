@@ -486,7 +486,7 @@ ps{
             latn{"لويديځ عددونه"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} - ټول"}
         category-list{"{0}: {1}"}

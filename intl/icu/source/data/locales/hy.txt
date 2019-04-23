@@ -210,7 +210,7 @@ hy{
         minimumGroupingDigits{"1"}
         traditional{"armn"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     calendar{
         generic{
             DateTimePatterns{

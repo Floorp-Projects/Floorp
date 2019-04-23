@@ -5,11 +5,11 @@ nn{
     collations{
         search{
             Sequence{"[import nb-u-co-search]"}
-            Version{"35"}
+            Version{"35.1"}
         }
         standard{
             Sequence{"[import nb-u-co-standard]"}
-            Version{"35"}
+            Version{"35.1"}
         }
     }
 }

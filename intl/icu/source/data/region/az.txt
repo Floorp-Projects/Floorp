@@ -183,7 +183,7 @@ az{
         MF{"Sent Martin"}
         MG{"Madaqaskar"}
         MH{"Marşal adaları"}
-        MK{"Makedoniya"}
+        MK{"Şimali Makedoniya"}
         ML{"Mali"}
         MM{"Myanma"}
         MN{"Monqolustan"}
@@ -311,9 +311,8 @@ az{
         CI{"Fil Dişi Sahili"}
         CZ{"Çex Respublikası"}
         FK{"Folklend adaları (Malvin adaları)"}
-        MK{"Makedoniya (KYRM)"}
         SZ{"Svazilend"}
         TL{"Doğu Timor"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

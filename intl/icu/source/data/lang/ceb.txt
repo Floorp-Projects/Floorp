@@ -57,7 +57,7 @@ ceb{
             latn{"Kasadpanhong mga Digit"}
         }
     }
-    Version{"2.1.49.33"}
+    Version{"2.1.49.82"}
     codePatterns{
         language{"Pinulongan: {0}"}
         script{"Alpabeto {0}"}

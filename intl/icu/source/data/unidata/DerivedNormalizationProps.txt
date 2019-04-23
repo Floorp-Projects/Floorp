@@ -1,5 +1,5 @@
-# DerivedNormalizationProps-12.0.0.txt
-# Date: 2019-01-22, 08:18:29 GMT
+# DerivedNormalizationProps-12.1.0.txt
+# Date: 2019-04-01, 09:10:23 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
@@ -1464,8 +1464,7 @@ FB46..FB4E    ; NFC_QC; N
 3280..3289    ; NFKD_QC; N
 328A..32B0    ; NFKD_QC; N
 32B1..32BF    ; NFKD_QC; N
-32C0..32FE    ; NFKD_QC; N
-3300..33FF    ; NFKD_QC; N
+32C0..33FF    ; NFKD_QC; N
 A69C..A69D    ; NFKD_QC; N
 A770          ; NFKD_QC; N
 A7F8..A7F9    ; NFKD_QC; N
@@ -1686,7 +1685,7 @@ FFED..FFEE    ; NFKD_QC; N
 1F250..1F251  ; NFKD_QC; N
 2F800..2FA1D  ; NFKD_QC; N
 
-# Total code points: 16895
+# Total code points: 16896
 
 # ================================================
 
@@ -1876,8 +1875,7 @@ FFED..FFEE    ; NFKD_QC; N
 3280..3289    ; NFKC_QC; N
 328A..32B0    ; NFKC_QC; N
 32B1..32BF    ; NFKC_QC; N
-32C0..32FE    ; NFKC_QC; N
-3300..33FF    ; NFKC_QC; N
+32C0..33FF    ; NFKC_QC; N
 A69C..A69D    ; NFKC_QC; N
 A770          ; NFKC_QC; N
 A7F8..A7F9    ; NFKC_QC; N
@@ -2089,7 +2087,7 @@ FFED..FFEE    ; NFKC_QC; N
 1F250..1F251  ; NFKC_QC; N
 2F800..2FA1D  ; NFKC_QC; N
 
-# Total code points: 4795
+# Total code points: 4796
 
 # ================================================
 
@@ -2683,7 +2681,7 @@ FB46..FB4E    ; Expands_On_NFC
 326E..327E    ; Expands_On_NFKD
 32B1..32BF    ; Expands_On_NFKD
 32C0..32CF    ; Expands_On_NFKD
-3300..33FF    ; Expands_On_NFKD
+32FF..33FF    ; Expands_On_NFKD
 AC00..D7A3    ; Expands_On_NFKD
 FB00..FB06    ; Expands_On_NFKD
 FB13..FB17    ; Expands_On_NFKD
@@ -2733,7 +2731,7 @@ FFE3          ; Expands_On_NFKD
 1F213         ; Expands_On_NFKD
 1F240..1F248  ; Expands_On_NFKD
 
-# Total code points: 13388
+# Total code points: 13389
 
 # ================================================
 
@@ -2834,7 +2832,7 @@ FFE3          ; Expands_On_NFKD
 327C..327D    ; Expands_On_NFKC
 32B1..32BF    ; Expands_On_NFKC
 32C0..32CF    ; Expands_On_NFKC
-3300..33FF    ; Expands_On_NFKC
+32FF..33FF    ; Expands_On_NFKC
 FB00..FB06    ; Expands_On_NFKC
 FB13..FB17    ; Expands_On_NFKC
 FB1D          ; Expands_On_NFKC
@@ -2871,7 +2869,7 @@ FFE3          ; Expands_On_NFKC
 1F200..1F201  ; Expands_On_NFKC
 1F240..1F248  ; Expands_On_NFKC
 
-# Total code points: 1236
+# Total code points: 1237
 
 # ================================================
 
@@ -4959,6 +4957,7 @@ FFE3          ; Expands_On_NFKC
 32FC          ; NFKC_CF; 30F0
 32FD          ; NFKC_CF; 30F1
 32FE          ; NFKC_CF; 30F2
+32FF          ; NFKC_CF; 4EE4 548C
 3300          ; NFKC_CF; 30A2 30D1 30FC 30C8
 3301          ; NFKC_CF; 30A2 30EB 30D5 30A1
 3302          ; NFKC_CF; 30A2 30F3 30DA 30A2
@@ -8803,7 +8802,7 @@ E0080..E00FF  ; NFKC_CF;
 E0100..E01EF  ; NFKC_CF;
 E01F0..E0FFF  ; NFKC_CF;
 
-# Total code points: 10314
+# Total code points: 10315
 
 # ================================================
 
@@ -9461,8 +9460,7 @@ E01F0..E0FFF  ; NFKC_CF;
 3280..3289    ; Changes_When_NFKC_Casefolded
 328A..32B0    ; Changes_When_NFKC_Casefolded
 32B1..32BF    ; Changes_When_NFKC_Casefolded
-32C0..32FE    ; Changes_When_NFKC_Casefolded
-3300..33FF    ; Changes_When_NFKC_Casefolded
+32C0..33FF    ; Changes_When_NFKC_Casefolded
 A640          ; Changes_When_NFKC_Casefolded
 A642          ; Changes_When_NFKC_Casefolded
 A644          ; Changes_When_NFKC_Casefolded
@@ -9798,6 +9796,6 @@ E0080..E00FF  ; Changes_When_NFKC_Casefolded
 E0100..E01EF  ; Changes_When_NFKC_Casefolded
 E01F0..E0FFF  ; Changes_When_NFKC_Casefolded
 
-# Total code points: 10314
+# Total code points: 10315
 
 # EOF

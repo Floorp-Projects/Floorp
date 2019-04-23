@@ -243,7 +243,7 @@ sr_Latn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.48.77"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             eras{
@@ -1338,7 +1338,7 @@ sr_Latn{
                     "Taišo",
                     "Šova",
                     "Haisei",
-                    "Qqqq",
+                    "Reiva",
                 }
             }
         }
