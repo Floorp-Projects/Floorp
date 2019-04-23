@@ -123,7 +123,8 @@ class RobocopTestRunner(MochitestDesktop):
         self.buildProfile()
         self.startServers(
             self.options,
-            debuggerInfo=None)
+            debuggerInfo=None,
+            public=True)
         self.log.debug("Servers started")
 
     def cleanup(self):
