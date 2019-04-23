@@ -45,6 +45,10 @@ class SocketProcessChild final : public PSocketProcessChild {
       Endpoint<mozilla::PProfilerChild>&& aEndpoint);
   mozilla::ipc::IPCResult RecvSocketProcessTelemetryPing();
 
+  PWebrtcProxyChannelChild* AllocPWebrtcProxyChannelChild(
+      const PBrowserOrId& browser);
+  bool DeallocPWebrtcProxyChannelChild(PWebrtcProxyChannelChild* aActor);
+
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
 
