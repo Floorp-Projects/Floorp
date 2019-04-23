@@ -13,6 +13,7 @@ use std::io::{Read, stdout, Write};
 use std::marker::PhantomData;
 use std::ops::Range;
 use std::{io, mem, ptr, slice};
+use std::collections::HashMap;
 use time::precise_time_ns;
 // local imports
 use display_item as di;
@@ -68,6 +69,7 @@ impl<T> ItemRange<T> {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct TempFilterData {
     pub func_types: ItemRange<di::ComponentTransferFuncType>,
     pub r_values: ItemRange<f32>,
@@ -114,6 +116,24 @@ pub struct BuiltDisplayListIter<'a> {
     cur_clip_chain_items: ItemRange<di::ClipId>,
     cur_complex_clip: (ItemRange<di::ComplexClipRegion>, usize),
     peeking: Peek,
+    /// Should just be initialized but never populated in release builds
+    debug_stats: DebugStats,
+}
+
+/// Internal info used for more detailed analysis of serialized display lists
+struct DebugStats {
+    /// Last address in the buffer we pointed to, for computing serialized sizes
+    last_addr: usize,
+    stats: HashMap<&'static str, ItemStats>,
+}
+
+/// Stats for an individual item
+#[derive(Copy, Clone, Debug, Default)]
+pub struct ItemStats {
+    /// How many instances of this kind of item we deserialized
+    pub total_count: usize,
+    /// How many bytes we processed for this kind of item
+    pub num_bytes: usize,
 }
 
 pub struct DisplayItemRef<'a: 'b, 'b> {
@@ -235,6 +255,10 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_clip_chain_items: ItemRange::default(),
             cur_complex_clip: (ItemRange::default(), 0),
             peeking: Peek::NotPeeking,
+            debug_stats: DebugStats {
+                last_addr: data.as_ptr() as usize,
+                stats: HashMap::default(),
+            }
         }
     }
 
@@ -298,12 +322,18 @@ impl<'a> BuiltDisplayListIter<'a> {
                 .expect("MEH: malicious process?");
         }
 
+        self.log_item_stats();
+
         match self.cur_item.item {
             SetGradientStops => {
                 self.cur_stops = skip_slice::<di::GradientStop>(self.list, &mut self.data).0;
+                let temp = self.cur_stops;
+                self.log_slice_stats("set_gradient_stops.stops", temp);
             }
             SetFilterOps => {
                 self.cur_filters = skip_slice::<di::FilterOp>(self.list, &mut self.data).0;
+                let temp = self.cur_filters;
+                self.log_slice_stats("set_filter_ops.ops", temp);
             }
             SetFilterData => {
                 self.cur_filter_data.push(TempFilterData {
@@ -313,14 +343,35 @@ impl<'a> BuiltDisplayListIter<'a> {
                     b_values: skip_slice::<f32>(self.list, &mut self.data).0,
                     a_values: skip_slice::<f32>(self.list, &mut self.data).0,
                 });
+
+                let data = *self.cur_filter_data.last().unwrap();
+                self.log_slice_stats("set_filter_data.func_types", data.func_types);
+                self.log_slice_stats("set_filter_data.r_values", data.r_values);
+                self.log_slice_stats("set_filter_data.g_values", data.g_values);
+                self.log_slice_stats("set_filter_data.b_values", data.b_values);
+                self.log_slice_stats("set_filter_data.a_values", data.a_values);
             }
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(self.list, &mut self.data).0;
+                let temp = self.cur_clip_chain_items;
+                self.log_slice_stats("clip_chain.clip_ids", temp);
             }
             Clip(_) | ScrollFrame(_) => {
-                self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>()
+                self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>();
+
+                let name = if let Clip(_) = self.cur_item.item {
+                    "clip.complex_clips"
+                } else {
+                    "scroll_frame.complex_clips"
+                };
+                let temp = self.cur_complex_clip.0;
+                self.log_slice_stats(name, temp);
             }
-            Text(_) => self.cur_glyphs = self.skip_slice::<GlyphInstance>().0,
+            Text(_) => {
+                self.cur_glyphs = self.skip_slice::<GlyphInstance>().0;
+                let temp = self.cur_glyphs;
+                self.log_slice_stats("text.glyphs", temp);
+            }
             _ => { /* do nothing */ }
         }
 
@@ -333,19 +384,6 @@ impl<'a> BuiltDisplayListIter<'a> {
 
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
         DisplayItemRef { iter: self }
-    }
-
-    pub fn starting_stacking_context(
-        &mut self,
-    ) -> Option<(di::StackingContext, LayoutRect, ItemRange<di::FilterOp>)> {
-        self.next().and_then(|item| match *item.item() {
-            di::SpecificDisplayItem::PushStackingContext(ref specific_item) => Some((
-                specific_item.stacking_context,
-                item.rect(),
-                item.filters(),
-            )),
-            _ => None,
-        })
     }
 
     pub fn skip_current_stacking_context(&mut self) {
@@ -376,6 +414,68 @@ impl<'a> BuiltDisplayListIter<'a> {
             Some(self.as_ref())
         }
     }
+
+    /// Get the debug stats for what this iterator has deserialized.
+    /// Should always be empty in release builds.
+    pub fn debug_stats(&mut self) -> Vec<(&'static str, ItemStats)> {
+        let mut result = self.debug_stats.stats.drain().collect::<Vec<_>>();
+        result.sort_by_key(|stats| stats.0);
+        result
+    }
+
+    /// Adds the debug stats from another to our own, assuming we are a sub-iter of the other
+    /// (so we can ignore where they were in the traversal).
+    pub fn merge_debug_stats_from(&mut self, other: &mut Self) {
+        for (key, other_entry) in other.debug_stats.stats.iter() {
+            let entry = self.debug_stats.stats.entry(key).or_default();
+
+            entry.total_count += other_entry.total_count;
+            entry.num_bytes += other_entry.num_bytes;
+        }
+    }
+
+    /// Logs stats for the last deserialized display item
+    #[cfg(feature = "display_list_stats")]
+    fn log_item_stats(&mut self) {
+        let num_bytes = self.debug_num_bytes();
+
+        let item_name = self.cur_item.item.debug_name();
+        let entry = self.debug_stats.stats.entry(item_name).or_default();
+
+        entry.total_count += 1;
+        entry.num_bytes += num_bytes;
+    }
+
+    /// Logs the stats for the given serialized slice
+    #[cfg(feature = "display_list_stats")]
+    fn log_slice_stats<T: for<'de> Deserialize<'de>>(&mut self, slice_name: &'static str, range: ItemRange<T>) {
+        // Run this so log_item_stats is accurate, but ignore its result
+        // because log_slice_stats may be called after multiple slices have been
+        // processed, and the `range` has everything we need.
+        self.debug_num_bytes();
+
+        let entry = self.debug_stats.stats.entry(slice_name).or_default();
+
+        entry.total_count += self.list.get(range).size_hint().0;
+        entry.num_bytes += range.length;
+    }
+
+    /// Computes the number of bytes we've processed since we last called
+    /// this method, so we can compute the serialized size of a display item.
+    #[cfg(feature = "display_list_stats")]
+    fn debug_num_bytes(&mut self) -> usize {
+        let old_addr = self.debug_stats.last_addr;
+        let new_addr = self.data.as_ptr() as usize;
+        let delta = new_addr - old_addr;
+        self.debug_stats.last_addr = new_addr;
+
+        delta
+    }
+
+    #[cfg(not(feature = "display_list_stats"))]
+    fn log_item_stats(&mut self) { /* no-op */ }
+    #[cfg(not(feature = "display_list_stats"))]
+    fn log_slice_stats<T>(&mut self, _slice_name: &str, _range: ItemRange<T>) { /* no-op */ }
 }
 
 // Some of these might just become ItemRanges
@@ -556,8 +656,6 @@ impl Serialize for BuiltDisplayList {
                     ),
                     di::SpecificDisplayItem::PushShadow(v) => PushShadow(v),
                     di::SpecificDisplayItem::PopAllShadows => PopAllShadows,
-                    di::SpecificDisplayItem::PushCacheMarker(m) => PushCacheMarker(m),
-                    di::SpecificDisplayItem::PopCacheMarker => PopCacheMarker,
                 },
                 layout: display_item.layout,
                 space_and_clip: display_item.space_and_clip,
@@ -660,8 +758,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     },
                     PushShadow(specific_item) => di::SpecificDisplayItem::PushShadow(specific_item),
                     PopAllShadows => di::SpecificDisplayItem::PopAllShadows,
-                    PushCacheMarker(marker) => di::SpecificDisplayItem::PushCacheMarker(marker),
-                    PopCacheMarker => di::SpecificDisplayItem::PopCacheMarker,
                 },
                 layout: complete.layout,
                 space_and_clip: complete.space_and_clip,
@@ -1349,19 +1445,6 @@ impl DisplayListBuilder {
         id
     }
 
-    pub fn push_cache_marker(&mut self) {
-        self.push_new_empty_item(&di::SpecificDisplayItem::PushCacheMarker(di::CacheMarkerDisplayItem {
-            // The display item itself is empty for now while we experiment with
-            // the API. In future it may contain extra information, such as details
-            // on whether the surface is known to be opaque and/or a background color
-            // hint that WR should clear the surface to.
-        }));
-    }
-
-    pub fn pop_cache_marker(&mut self) {
-        self.push_new_empty_item(&di::SpecificDisplayItem::PopCacheMarker);
-    }
-
     pub fn pop_reference_frame(&mut self) {
         self.push_new_empty_item(&di::SpecificDisplayItem::PopReferenceFrame);
     }
@@ -1378,8 +1461,11 @@ impl DisplayListBuilder {
         raster_space: di::RasterSpace,
         cache_tiles: bool,
     ) {
-        self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterOps);
-        self.push_iter(filters);
+
+        if filters.len() > 0 {
+            self.push_new_empty_item(&di::SpecificDisplayItem::SetFilterOps);
+            self.push_iter(filters);
+        }
 
         for filter_data in filter_datas {
             let func_types = [
