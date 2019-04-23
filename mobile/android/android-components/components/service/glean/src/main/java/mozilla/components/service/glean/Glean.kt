@@ -335,13 +335,14 @@ open class GleanInternalAPI internal constructor () {
     /**
      * Send a list of pings.
      *
-     * While the collection of metrics into pings happens synchronously, the
-     * ping queuing and ping uploading happens asyncronously.
-     * There are no guarantees that this will happen immediately.
+     * The ping content is assembled as soon as possible, but upload is not
+     * guaranteed to happen immediately, as that depends on the upload
+     * policies.
      *
      * If the ping currently contains no content, it will not be sent.
      *
      * @param pings List of pings to send.
+     * @return The async Job performing the work of assembling the ping
      */
     internal fun sendPings(pings: List<PingType>) = Dispatchers.API.launch {
         if (!isInitialized()) {
@@ -377,14 +378,14 @@ open class GleanInternalAPI internal constructor () {
      * Each ping will be looked up in the known instances of [PingType]. If the
      * ping isn't known, an error is logged and the ping isn't queued for uploading.
      *
-     * While the collection of metrics into pings happens synchronously, the
-     * ping queuing and ping uploading happens asyncronously.
-     * There are no guarantees that this will happen immediately.
+     * The ping content is assembled as soon as possible, but upload is not
+     * guaranteed to happen immediately, as that depends on the upload
+     * policies.
      *
      * If the ping currently contains no content, it will not be sent.
      *
      * @param pingNames List of ping names to send.
-     * @return true if any pings had content and were queued for uploading
+     * @return The async Job performing the work of assembling the ping
      */
     internal fun sendPingsByName(pingNames: List<String>): Job? {
         val pings = pingNames.mapNotNull { pingName ->

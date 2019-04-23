@@ -14,7 +14,8 @@ Each ping has the following parameters:
 - `include_client_id` (required): A boolean indicating whether to include the
   `client_id` in the [`client_info` section](pings.md#The-client_info-section)).
 
-For example, to define a custom ping specifically for search information:
+For example, to define a custom ping called `search` specifically for search
+information:
 
 ```YAML
 search:
@@ -29,7 +30,9 @@ To send a metric on a custom ping, you add the custom ping's name to
 the `send_in_pings` parameter in the `metrics.yaml` file.
 
 For example, to define a new metric to record the default search engine, which
-is sent in a custom ping called `search`:
+is sent in a custom ping called `search`, put `search` in the `send_in_pings`
+parameter.  Note that it is an error to specify a ping in `send_in_pings` that
+does not also have an entry
 
 ```YAML
 search.default:
