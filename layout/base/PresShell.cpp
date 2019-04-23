@@ -1874,7 +1874,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
-  const bool shrinkToFit = aOptions == ResizeReflowOptions::eBSizeLimit;
+  const bool shrinkToFit = !!(aOptions & ResizeReflowOptions::eBSizeLimit);
   MOZ_ASSERT(shrinkToFit ||
                  (wm.IsVertical() ? aWidth : aHeight) != NS_UNCONSTRAINEDSIZE,
              "unconstrained bsize only usable with eBSizeLimit");
@@ -1994,7 +1994,8 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     }
   }
 
-  if (!mIsDestroying && !mResizeEventPending) {
+  if (!mIsDestroying && !mResizeEventPending &&
+      !(aOptions & ResizeReflowOptions::eSuppressResizeEvent)) {
     mResizeEventPending = true;
     if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
       mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);

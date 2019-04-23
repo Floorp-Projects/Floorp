@@ -96,13 +96,15 @@ class PresShell final : public nsIPresShell,
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   nsresult Initialize() override;
-  MOZ_CAN_RUN_SCRIPT nsresult ResizeReflow(
-      nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
-      nscoord aOldHeight = 0,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
+               nscoord aOldHeight = 0,
+               mozilla::ResizeReflowOptions aOptions =
+                   mozilla::ResizeReflowOptions::eNoOption) override;
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) override;
 
   MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(FlushType aType) override;

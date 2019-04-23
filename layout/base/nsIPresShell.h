@@ -172,6 +172,21 @@ enum nsRectVisibility {
   nsRectVisibility_kRightOfViewport
 };
 
+namespace mozilla {
+enum class ResizeReflowOptions : uint32_t {
+  eNoOption = 0,
+  // the resulting BSize can be less than the given one, producing
+  // shrink-to-fit sizing in the block dimension
+  eBSizeLimit = 1 << 0,
+  // suppress resize events even if the content size is changed due to the
+  // reflow.  This flag is used for mobile since on mobile we need to do an
+  // additional reflow to zoom the content by the initial-scale or auto scaling
+  // and we don't want any resize events during the initial paint.
+  eSuppressResizeEvent = 1 << 1,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)
+}  // namespace mozilla
+
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
@@ -331,13 +346,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual nsresult Initialize() = 0;
 
-  enum class ResizeReflowOptions : uint32_t {
-    // the resulting BSize should be exactly as given
-    eBSizeExact,
-    // the resulting BSize can be less than the given one, producing
-    // shrink-to-fit sizing in the block dimension
-    eBSizeLimit
-  };
   /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
@@ -345,14 +353,16 @@ class nsIPresShell : public nsStubDocumentObserver {
   MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflow(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
       nscoord aOldHeight = 0,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) = 0;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) = 0;
+      mozilla::ResizeReflowOptions aOptions =
+          mozilla::ResizeReflowOptions::eNoOption) = 0;
 
   /**
    * Returns true if the platform/pref or docshell require a meta viewport.
