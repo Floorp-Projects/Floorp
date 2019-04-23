@@ -211,6 +211,7 @@ windows10-aarch64/opt:
         - marionette-gpu-tests
         - raptor-firefox
         - windows-aarch64-tests
+        - windows-talos
 
 windows10-64-ux/opt:
     build-platform: win64-shippable/opt
