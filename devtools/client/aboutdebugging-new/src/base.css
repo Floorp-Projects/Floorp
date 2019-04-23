@@ -42,7 +42,11 @@
   --grey-90-a30: rgba(12, 12, 13, 0.3);
   --grey-90-a60: rgba(12, 12, 13, 0.6);
   --grey-90-a80: rgba(12, 12, 13, 0.8);
+  --red-70: #a4000f; /* for ui, no special semantic */
+  --red-80: #5a0002; /* for ui, no special semantic */
   --white-100: #fff; /* for ui, no special semantic */
+  --yellow-60: #d7b600; /* for ui, no special semantic */
+  --yellow-70: #a47f00; /* for ui, no special semantic */
 
   /* Typography from Photon */
   /* See https://firefox-dev.tools/photon/visuals/typography.html */
@@ -333,12 +337,13 @@ Form controls
 
 /* Photon ghost button. Icon button with no background */
 .ghost-button {
+  background: transparent;
   border: none;
   border-radius: calc(var(--base-unit) / 2);
   fill: var(--grey-90-a80);
-  height: calc(var(--base-unit) * 8);
-  padding: calc(var(--base-unit) * 2);
-  width: calc(var(--base-unit) * 8);
+  height: calc(var(--base-unit) * 6);
+  padding: calc(var(--base-unit));
+  width: calc(var(--base-unit) * 6);
 
   -moz-context-properties: fill;
 }
@@ -379,9 +384,9 @@ Form controls
 * NOTE: styles borrowed from Photon's micro buttons (there aren't badges)
 */
 .badge {
-  font-size: var(--micro-font-size);
   background: var(--grey-30);
   border-radius: calc(var(--base-unit) / 2);
+  font-size: var(--micro-font-size);
   padding: var(--base-unit) calc(2 * var(--base-unit));
 }
 

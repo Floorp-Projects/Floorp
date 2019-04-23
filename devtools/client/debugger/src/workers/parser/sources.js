@@ -4,26 +4,23 @@
 
 // @flow
 
-import type { Source, SourceId } from "../../types";
+import type { SourceId, AstSource } from "./types";
 
-let cachedSources = new Map();
+const cachedSources: Map<SourceId, AstSource> = new Map();
 
-export function hasSource(sourceId: SourceId): boolean {
-  return cachedSources.has(sourceId);
-}
-
-export function setSource(source: Source) {
+export function setSource(source: AstSource) {
   cachedSources.set(source.id, source);
 }
 
-export function getSource(sourceId: SourceId): Source {
-  if (!cachedSources.has(sourceId)) {
+export function getSource(sourceId: SourceId): AstSource {
+  const source = cachedSources.get(sourceId);
+  if (!source) {
     throw new Error(`Parser: source ${sourceId} was not provided.`);
   }
 
-  return ((cachedSources.get(sourceId): any): Source);
+  return source;
 }
 
 export function clearSources() {
-  cachedSources = new Map();
+  cachedSources.clear();
 }

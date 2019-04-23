@@ -36,6 +36,7 @@ const {
 } = require("./src/modules/usb-runtimes");
 
 loader.lazyRequireGetter(this, "adbAddon", "devtools/shared/adb/adb-addon", true);
+loader.lazyRequireGetter(this, "adbProcess", "devtools/shared/adb/adb-process", true);
 
 const Router = createFactory(require("devtools/client/shared/vendor/react-router-dom").HashRouter);
 const App = createFactory(require("./src/components/App"));
@@ -49,6 +50,7 @@ const AboutDebugging = {
     }
 
     this.onAdbAddonUpdated = this.onAdbAddonUpdated.bind(this);
+    this.onAdbProcessReady = this.onAdbProcessReady.bind(this);
     this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);
     this.onUSBRuntimesUpdated = this.onUSBRuntimesUpdated.bind(this);
 
@@ -89,6 +91,9 @@ const AboutDebugging = {
 
     adbAddon.on("update", this.onAdbAddonUpdated);
     this.onAdbAddonUpdated();
+    adbProcess.on("adb-ready", this.onAdbProcessReady);
+    // get the initial status of adb process, in case it's already started
+    this.onAdbProcessReady();
 
     // Remove deprecated remote debugging extensions.
     await adbAddon.uninstallUnsupportedExtensions();
@@ -96,6 +101,10 @@ const AboutDebugging = {
 
   onAdbAddonUpdated() {
     this.actions.updateAdbAddonStatus(adbAddon.status);
+  },
+
+  onAdbProcessReady() {
+    this.actions.updateAdbReady(adbProcess.ready);
   },
 
   onNetworkLocationsUpdated() {
@@ -123,6 +132,7 @@ const AboutDebugging = {
     removeNetworkLocationsObserver(this.onNetworkLocationsUpdated);
     removeUSBRuntimesObserver(this.onUSBRuntimesUpdated);
     adbAddon.off("update", this.onAdbAddonUpdated);
+    adbProcess.off("adb-ready", this.onAdbProcessReady);
     setDebugTargetCollapsibilities(state.ui.debugTargetCollapsibilities);
     unmountComponentAtNode(this.mount);
   },

@@ -16,6 +16,7 @@ import {
   getFirstBreakpointPosition,
   getSymbols,
   getSource,
+  getSourceContent,
   getBreakpointsList,
   getPendingBreakpointList
 } from "../../selectors";
@@ -130,8 +131,19 @@ export function addBreakpoint(
     const symbols = getSymbols(getState(), source);
     const astLocation = getASTLocation(source, symbols, location);
 
-    const originalText = getTextAtPosition(source, location);
-    const text = getTextAtPosition(generatedSource, generatedLocation);
+    const originalContent = getSourceContent(getState(), source.id);
+    const originalText = getTextAtPosition(
+      source.id,
+      originalContent,
+      location
+    );
+
+    const content = getSourceContent(getState(), generatedSource.id);
+    const text = getTextAtPosition(
+      generatedSource.id,
+      content,
+      generatedLocation
+    );
 
     const id = makeBreakpointId(location);
     const breakpoint = {

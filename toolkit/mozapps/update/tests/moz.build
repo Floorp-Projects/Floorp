@@ -9,7 +9,9 @@ HAS_MISC_RULE = True
 FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests/data'
 
 if not CONFIG['MOZ_SUITE']:
-  BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+    BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        BROWSER_CHROME_MANIFESTS += ['browser/browser.bits.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 

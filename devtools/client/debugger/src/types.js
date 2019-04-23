@@ -4,6 +4,7 @@
 
 // @flow
 
+import type { SettledValue, FulfilledValue } from "./utils/async-value";
 import type { SourcePayload } from "./client/firefox/types";
 import type { SourceActorId, SourceActor } from "./reducers/source-actors";
 
@@ -355,6 +356,26 @@ export type Grip = {
   name?: string
 };
 
+export type TextSourceContent = {|
+  type: "text",
+  value: string,
+  contentType: string | void
+|};
+export type WasmSourceContent = {|
+  type: "wasm",
+  value: {| binary: Object |}
+|};
+export type SourceContent = TextSourceContent | WasmSourceContent;
+
+export type SourceWithContent = {|
+  source: Source,
+  +content: SettledValue<SourceContent> | null
+|};
+export type SourceWithContentAndType<+Content: SourceContent> = {|
+  source: Source,
+  +content: FulfilledValue<Content>
+|};
+
 /**
  * BaseSource
  *
@@ -368,9 +389,6 @@ type BaseSource = {|
   +sourceMapURL?: string,
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
-  +contentType?: string,
-  +error?: string,
-  +loadedState: "unloaded" | "loading" | "loaded",
   +relativeUrl: string,
   +introductionUrl: ?string,
   +introductionType: ?string,
@@ -386,8 +404,7 @@ type BaseSource = {|
 
 export type JsSource = {|
   ...BaseSource,
-  +isWasm: false,
-  +text?: string
+  +isWasm: false
 |};
 
 /**
@@ -399,8 +416,7 @@ export type JsSource = {|
 
 export type WasmSource = {|
   ...BaseSource,
-  +isWasm: true,
-  +text?: {| binary: Object |}
+  +isWasm: true
 |};
 
 export type Source = JsSource | WasmSource;

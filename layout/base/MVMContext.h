@@ -54,7 +54,13 @@ class MVMContext {
   virtual void SetResolutionAndScaleTo(float aResolution) = 0;
   virtual void SetVisualViewportSize(const CSSSize& aSize) = 0;
   virtual void UpdateDisplayPortMargins() = 0;
-  virtual void Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize) = 0;
+
+  enum class ResizeEventFlag {
+    IfNecessary,  // resize events will be fired if necessary.
+    Suppress,     // resize events will never be fired.
+  };
+  virtual void Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
+                      ResizeEventFlag aResizeEventFlag) = 0;
 };
 
 }  // namespace mozilla

@@ -108,6 +108,7 @@ struct ClientGetInfoAndStateArgs
 struct ClientOpenWindowArgs
 {
   PrincipalInfo principalInfo;
+  ContentSecurityPolicy[] cspInfos;
   nsCString url;
   nsCString baseURL;
 };

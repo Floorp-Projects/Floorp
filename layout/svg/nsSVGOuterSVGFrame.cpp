@@ -308,8 +308,11 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
     NS_ASSERTION(aCBSize.ISize(aWM) != NS_AUTOHEIGHT &&
                      aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
                  "root should not have auto-width/height containing block");
-    cbSize.ISize(aWM) *= PresContext()->GetFullZoom();
-    cbSize.BSize(aWM) *= PresContext()->GetFullZoom();
+
+    if (!IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
+      cbSize.ISize(aWM) *= PresContext()->GetFullZoom();
+      cbSize.BSize(aWM) *= PresContext()->GetFullZoom();
+    }
 
     // We also need to honour the width and height attributes' default values
     // of 100% when we're the root of a browsing context.  (GetIntrinsicSize()
@@ -427,7 +430,8 @@ void nsSVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
     changeBits |= COORD_CONTEXT_CHANGED;
     svgElem->SetViewportSize(newViewportSize);
   }
-  if (mFullZoom != PresContext()->GetFullZoom()) {
+  if (mFullZoom != PresContext()->GetFullZoom() &&
+      !IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
     changeBits |= FULL_ZOOM_CHANGED;
     mFullZoom = PresContext()->GetFullZoom();
   }
@@ -873,8 +877,9 @@ gfxMatrix nsSVGOuterSVGFrame::GetCanvasTM() {
 //----------------------------------------------------------------------
 // Implementation helpers
 
-bool nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(
-    nsIFrame** aEmbeddingFrame) {
+template <typename... Args>
+bool nsSVGOuterSVGFrame::IsContainingWindowElementOfType(
+    nsIFrame** aContainingWindowFrame, Args... aArgs) const {
   if (!mContent->GetParent()) {
     // Our content is the document element
     nsCOMPtr<nsIDocShell> docShell = PresContext()->GetDocShell();
@@ -885,22 +890,25 @@ bool nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(
 
     if (window) {
       RefPtr<Element> frameElement = window->GetFrameElement();
-      if (frameElement &&
-          frameElement->IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed,
-                                            nsGkAtoms::iframe)) {
-        // Our document is inside an HTML 'object', 'embed' or 'iframe' element
-        if (aEmbeddingFrame) {
-          *aEmbeddingFrame = frameElement->GetPrimaryFrame();
-          NS_ASSERTION(*aEmbeddingFrame, "Yikes, no embedding frame!");
+      if (frameElement && frameElement->IsAnyOfHTMLElements(aArgs...)) {
+        if (aContainingWindowFrame) {
+          *aContainingWindowFrame = frameElement->GetPrimaryFrame();
+          NS_ASSERTION(*aContainingWindowFrame, "Yikes, no frame!");
         }
         return true;
       }
     }
   }
-  if (aEmbeddingFrame) {
-    *aEmbeddingFrame = nullptr;
+  if (aContainingWindowFrame) {
+    *aContainingWindowFrame = nullptr;
   }
   return false;
+}
+
+bool nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(
+    nsIFrame** aEmbeddingFrame) {
+  return IsContainingWindowElementOfType(aEmbeddingFrame, nsGkAtoms::object,
+                                         nsGkAtoms::embed);
 }
 
 bool nsSVGOuterSVGFrame::IsRootOfImage() {

@@ -89,6 +89,21 @@ add_task(async function test_asyncMessage() {
     });
 });
 
+add_task(async function test_query() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
+    async function(browser) {
+      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+      let parent = browser.browsingContext.currentWindowGlobal;
+      let actorParent = parent.getActor("Test");
+      ok(actorParent, "JSWindowActorParent should have value.");
+
+      let {result} = await actorParent.sendQuery("asyncAdd", {a: 10, b: 20});
+      is(result, 30);
+
+      ChromeUtils.unregisterWindowActor("Test");
+    });
+});
+
 add_task(async function test_asyncMessage_without_both_side_actor() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL},
     async function(browser) {

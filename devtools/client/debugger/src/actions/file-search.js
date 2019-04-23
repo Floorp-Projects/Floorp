@@ -12,13 +12,13 @@ import {
   removeOverlay,
   searchSourceForHighlight
 } from "../utils/editor";
-import { isWasm, renderWasmText } from "../utils/wasm";
+import { renderWasmText } from "../utils/wasm";
 import { getMatches } from "../workers/search";
 import type { Action, FileTextSearchModifier, ThunkArgs } from "./types";
-import type { WasmSource, Context } from "../types";
+import type { Context } from "../types";
 
 import {
-  getSelectedSource,
+  getSelectedSourceWithContent,
   getFileSearchModifiers,
   getFileSearchQuery,
   getFileSearchResults
@@ -29,13 +29,14 @@ import {
   clearHighlightLineRange,
   setActiveSearch
 } from "./ui";
+import { isFulfilled } from "../utils/async-value";
 type Editor = Object;
 type Match = Object;
 
 export function doSearch(cx: Context, query: string, editor: Editor) {
   return ({ getState, dispatch }: ThunkArgs) => {
-    const selectedSource = getSelectedSource(getState());
-    if (!selectedSource || !selectedSource.text) {
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
+    if (!selectedSourceWithContent || !selectedSourceWithContent.content) {
       return;
     }
 
@@ -51,8 +52,8 @@ export function doSearchForHighlight(
   ch: number
 ) {
   return async ({ getState, dispatch }: ThunkArgs) => {
-    const selectedSource = getSelectedSource(getState());
-    if (!selectedSource || !selectedSource.text) {
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
+    if (!selectedSourceWithContent || !selectedSourceWithContent.content) {
       return;
     }
     dispatch(searchContentsForHighlight(query, editor, line, ch));
@@ -99,11 +100,19 @@ export function updateSearchResults(
 export function searchContents(cx: Context, query: string, editor: Object) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const modifiers = getFileSearchModifiers(getState());
-    const selectedSource = getSelectedSource(getState());
+    const selectedSourceWithContent = getSelectedSourceWithContent(getState());
 
-    if (!editor || !selectedSource || !selectedSource.text || !modifiers) {
+    if (
+      !editor ||
+      !selectedSourceWithContent ||
+      !selectedSourceWithContent.content ||
+      !isFulfilled(selectedSourceWithContent.content) ||
+      !modifiers
+    ) {
       return;
     }
+    const selectedSource = selectedSourceWithContent.source;
+    const selectedContent = selectedSourceWithContent.content.value;
 
     const ctx = { ed: editor, cm: editor.codeMirror };
 
@@ -113,10 +122,11 @@ export function searchContents(cx: Context, query: string, editor: Object) {
     }
 
     const _modifiers = modifiers.toJS();
-    let text = selectedSource.text;
-
-    if (isWasm(selectedSource.id)) {
-      text = renderWasmText(((selectedSource: any): WasmSource)).join("\n");
+    let text;
+    if (selectedContent.type === "wasm") {
+      text = renderWasmText(selectedSource.id, selectedContent).join("\n");
+    } else {
+      text = selectedContent.value;
     }
 
     const matches = await getMatches(query, text, _modifiers);
@@ -140,13 +150,13 @@ export function searchContentsForHighlight(
 ) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const modifiers = getFileSearchModifiers(getState());
-    const selectedSource = getSelectedSource(getState());
+    const selectedSource = getSelectedSourceWithContent(getState());
 
     if (
       !query ||
       !editor ||
       !selectedSource ||
-      !selectedSource.text ||
+      !selectedSource.content ||
       !modifiers
     ) {
       return;

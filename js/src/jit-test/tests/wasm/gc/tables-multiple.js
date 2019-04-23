@@ -112,7 +112,7 @@ var ins = wasmEvalText(
       (table $t0 (import "m" "t0") 2 anyref)
       (table $t1 (import "m" "t1") 3 anyref)
       (func (export "f") (result i32)
-       (table.grow $t1 (i32.const 5) (ref.null)))
+       (table.grow $t1 (ref.null) (i32.const 5)))
       (func (export "size0") (result i32)
        (table.size $t0))
       (func (export "size1") (result i32)
@@ -223,9 +223,9 @@ var ins = wasmEvalText(
       (import $t1 "m" "t1" (table 1 anyref))
       (table $t2 (export "t2") 1 funcref)
       (func (export "f") (result i32)
-       (table.grow $t0 (i32.const 1) (ref.null)))
+       (table.grow $t0 (ref.null) (i32.const 1)))
       (func (export "g") (result i32)
-       (table.grow $t1 (i32.const 1) (ref.null)))
+       (table.grow $t1 (ref.null) (i32.const 1)))
       (func (export "size") (result i32)
        (table.size $t2)))`,
     exp);
@@ -369,7 +369,7 @@ assertErrorMessage(() => wasmEvalText(
       (table $t0 2 anyref)
       (table $t1 2 anyref)
       (func $f (result i32)
-       (table.grow 2 (i32.const 1) (ref.null))))`),
+       (table.grow 2 (ref.null) (i32.const 1))))`),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 
@@ -448,7 +448,7 @@ wasmEvalText(
 wasmEvalText(
     `(module
        (table (export "t") 10 anyref)
-       (func (param i32) (param anyref)
+       (func (param i32) (param i32)
          (return)
          (table.grow (get_local 1))
          (drop)

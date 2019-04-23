@@ -35,7 +35,6 @@ Array [
       },
     ],
     "source": Object {
-      "contentType": "text/javascript",
       "id": "a",
       "introductionType": null,
       "introductionUrl": null,
@@ -43,12 +42,8 @@ Array [
       "isExtension": false,
       "isPrettyPrinted": false,
       "isWasm": false,
-      "loadedState": "loaded",
       "relativeUrl": "http://localhost:8000/examples/a",
       "sourceMapURL": null,
-      "text": "function a() {
-  return a 
-}",
       "url": "http://localhost:8000/examples/a",
     },
   },
@@ -122,7 +117,6 @@ Array [
       },
     ],
     "source": Object {
-      "contentType": "text/javascript",
       "id": "a",
       "introductionType": null,
       "introductionUrl": null,
@@ -130,12 +124,8 @@ Array [
       "isExtension": false,
       "isPrettyPrinted": false,
       "isWasm": false,
-      "loadedState": "loaded",
       "relativeUrl": "http://localhost:8000/examples/a",
       "sourceMapURL": null,
-      "text": "function a() {
-  return a 
-}",
       "url": "http://localhost:8000/examples/a",
     },
   },

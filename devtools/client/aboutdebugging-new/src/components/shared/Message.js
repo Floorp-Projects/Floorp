@@ -4,9 +4,12 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const FluentReact = require("devtools/client/shared/vendor/fluent-react");
+const Localized = createFactory(FluentReact.Localized);
 
 const { MESSAGE_LEVEL } = require("../../constants");
 
@@ -16,6 +19,7 @@ const ICONS = {
   [MESSAGE_LEVEL.INFO]: "chrome://devtools/skin/images/aboutdebugging-information.svg",
   [MESSAGE_LEVEL.WARNING]: "chrome://global/skin/icons/warning.svg",
 };
+const CLOSE_ICON_SRC = "chrome://devtools/skin/images/close.svg";
 
 /**
  * This component is designed to display a photon-style message bar. The component is
@@ -27,23 +31,61 @@ class Message extends PureComponent {
     return {
       children: PropTypes.node.isRequired,
       className: PropTypes.string,
+      isCloseable: PropTypes.bool,
       level: PropTypes.oneOf(Object.values(MESSAGE_LEVEL)).isRequired,
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      isClosed: false,
+    };
+  }
+
+  closeMessage() {
+    this.setState({ isClosed: true });
+  }
+
+  renderButton(level) {
+    return dom.button({
+            className: `ghost-button message__button message__button--${level}`,
+    },
+        Localized(
+          {
+            id: "about-debugging-message-close-icon",
+            attrs: {
+              alt: true,
+            },
+          },
+          dom.img(
+            {
+              className: "qa-message-button-close",
+              src: CLOSE_ICON_SRC,
+              onClick: () => this.closeMessage(),
+            },
+          ),
+        ),
+      );
+  }
+
   render() {
-    const { children, className, level } = this.props;
-    const iconSrc = ICONS[level];
+    const { children, className, level, isCloseable } = this.props;
+    const { isClosed } = this.state;
+
+    if (isClosed) {
+      return null;
+    }
 
     return dom.aside(
       {
-        className: `message message--level-${level} js-message` +
+        className: `message message--level-${level}  js-message` +
                    (className ? ` ${ className }` : ""),
       },
       dom.img(
         {
           className: "message__icon",
-          src: iconSrc,
+          src: ICONS[level],
         }
       ),
       dom.div(
@@ -52,6 +94,10 @@ class Message extends PureComponent {
         },
         children
       ),
+      // if the message is closeable, render a closing button
+      isCloseable
+        ? this.renderButton(level)
+        : null,
     );
   }
 }

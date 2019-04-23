@@ -211,13 +211,14 @@ class MochiRemote(MochitestDesktop):
 
         return fixup
 
-    def startServers(self, options, debuggerInfo):
+    def startServers(self, options, debuggerInfo, public=None):
         """ Create the servers on the host and start them up """
         restoreRemotePaths = self.switchToLocalPaths(options)
         MochitestDesktop.startServers(
             self,
             options,
-            debuggerInfo)
+            debuggerInfo,
+            public=True)
         restoreRemotePaths()
 
     def buildProfile(self, options):

@@ -467,8 +467,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                        uint32_t* dstTableIndex, Value* dst,
                                        Value* src, Value* len);
   MOZ_MUST_USE bool readTableGet(uint32_t* tableIndex, Value* index);
-  MOZ_MUST_USE bool readTableGrow(uint32_t* tableIndex, Value* delta,
-                                  Value* initValue);
+  MOZ_MUST_USE bool readTableGrow(uint32_t* tableIndex, Value* initValue,
+                                  Value* delta);
   MOZ_MUST_USE bool readTableSet(uint32_t* tableIndex, Value* index,
                                  Value* value);
   MOZ_MUST_USE bool readTableSize(uint32_t* tableIndex);
@@ -1998,14 +1998,14 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* delta,
-                                          Value* initValue) {
+inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* initValue,
+                                          Value* delta) {
   MOZ_ASSERT(Classify(op_) == OpKind::TableGrow);
 
-  if (!popWithType(ValType::AnyRef, initValue)) {
+  if (!popWithType(ValType::I32, delta)) {
     return false;
   }
-  if (!popWithType(ValType::I32, delta)) {
+  if (!popWithType(ValType::AnyRef, initValue)) {
     return false;
   }
 

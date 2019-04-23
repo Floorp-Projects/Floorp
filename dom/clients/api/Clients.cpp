@@ -14,6 +14,7 @@
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIGlobalObject.h"
 #include "nsString.h"
@@ -217,9 +218,12 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
   }
 
   const PrincipalInfo& principalInfo = workerPrivate->GetPrincipalInfo();
+  const nsTArray<mozilla::ipc::ContentSecurityPolicy>& cspInfos =
+      workerPrivate->GetCSPInfos();
   nsCString baseURL = workerPrivate->GetLocationInfo().mHref;
-  ClientOpenWindowArgs args(principalInfo, NS_ConvertUTF16toUTF8(aURL),
-                            baseURL);
+
+  ClientOpenWindowArgs args(principalInfo, cspInfos,
+                            NS_ConvertUTF16toUTF8(aURL), baseURL);
 
   nsCOMPtr<nsIGlobalObject> global = mGlobal;
 

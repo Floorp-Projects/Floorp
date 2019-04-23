@@ -6,15 +6,13 @@
 // @flow
 
 import getScopes from "../getScopes";
-import { setSource } from "../sources";
-import { getOriginalSource } from "./helpers";
+import { populateOriginalSource } from "./helpers";
 import cases from "jest-in-case";
 
 cases(
   "Parser.getScopes",
   ({ name, file, type, locations }) => {
-    const source = getOriginalSource(file, type);
-    setSource(source);
+    const { source } = populateOriginalSource(file, type);
 
     locations.forEach(([line, column]) => {
       const scopes = getScopes({

@@ -1,67 +1,71 @@
 {
-  "vendors": {
-    "gmp-gmpopenh264": {
-      "platforms": {
-        "WINNT_x86-msvc-x64": {
-          "alias": "WINNT_x86-msvc"
-        },
-        "Android_x86-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-x86-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "8ce4d4318aa6ae9ac1376500d5fceecb3df38727aa920efd9f7829c139face4a069cab683d3902e7cdb89daad2a7e928ffba120812ae343f052a833812dad387",
-          "filesize": 1640053
-        },
-        "WINNT_x86-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "991e01c3b95fa13fac52e0512e1936f1edae42ecbbbcc55447a36915eb3ca8f836546cc780343751691e0188872e5bc56fe3ad5f23f3243e90b96a637561b89e",
-          "filesize": 356940
-        },
-        "WINNT_x86-msvc-x86": {
-          "alias": "WINNT_x86-msvc"
-        },
-        "Linux_x86_64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "e1086ee6e4fb60a1aa11b5626594b97695533a8e269d776877cebd5cf29088619e2c164e7bd1eba5486f772c943f2efec723f69cc48478ec84a11d7b61ca1865",
-          "filesize": 515722
-        },
-        "Darwin_x86-gcc3-u-i386-x86_64": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx32-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "64b0e13e6319b7a31ed35a46bea5abcfe6af04ba59a277db07677236cfb685813763731ff6b44b85e03e1489f3b15f8df0128a299a36720531b9f4ba6e1c1f58",
-          "filesize": 382435
-        },
-        "Darwin_x86_64-gcc3": {
-          "alias": "Darwin_x86_64-gcc3-u-i386-x86_64"
-        },
-        "Linux_x86-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "19084f0230218c584715861f4723e072b1af02e26995762f368105f670f60ecb4082531bc4e33065a4675dd1296f6872a6cb101547ef2d19ef3e25e2e16d4dc0",
-          "filesize": 515857
-        },
-        "Darwin_x86_64-gcc3-u-i386-x86_64": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "3b52343070a2f75e91b7b0d3bb33935352237c7e1d2fdc6a467d039ffbbda6a72087f9e0a369fe95e6c4c789ff3052f0c134af721d7273db9ba66d077d85b327",
-          "filesize": 390308
-        },
-        "Android_arm-eabi-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-arm-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "7a15245c781f32df310ebb88cb8a783512eab934b38ffd889d6420473d40eddbe8a89c17cc60d4e7647c156b04d20030e1ae0081e3f90a0d8f94626ec5f4d817",
-          "filesize": 1515895
-        },
-        "Darwin_x86-gcc3": {
-          "alias": "Darwin_x86-gcc3-u-i386-x86_64"
-        },
-        "WINNT_x86_64-msvc-x64": {
-          "alias": "WINNT_x86_64-msvc"
-        },
-        "WINNT_x86_64-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-0410d336bb748149a4f560eb6108090f078254b1.zip",
-          "hashValue": "5030b47065e817db5c40bca9c62ac27292bbf636e24698f45dc67f03fa6420b97bd2f792c1cb39df65776c1e7597c70122ac7abf36fb2ad0603734e9e8ec4ef3",
-          "filesize": 404355
+    "vendors": {
+        "gmp-gmpopenh264": {
+            "platforms": {
+                "Android_aarch64-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-android-aarch64-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
+                    "filesize": 557884,
+                    "hashValue": "307d188876f3612a9168c0b4ed191db2132f2e3193bdd3024ce50adcb9c1e085ab43008531a25e93d570a377283336cda9bcd7609ee6b702c5292f12d20b616b"
+                },
+                "Android_arm-eabi-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-android-arm-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
+                    "filesize": 539311,
+                    "hashValue": "f4f0bfe333b7e0cd0453e787dc3c15bebe9cc771cb3e57540d53f0ac9a37eee4ea8559a45a51824ee4d706ee0b3d80b2d331468a0aa533cd958081f23ee0aaae"
+                },
+                "Android_x86-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-android-x86-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
+                    "filesize": 589947,
+                    "hashValue": "eb7a1c9c2d29a2fd12dfe82d0f575f1d855478640816a7fb9402ce82c65878ffc5aa3d5f8bb46cd01231005c37d86984d7a631cfe45c7d56a6d4dabc427b15a0"
+                },
+                "Darwin_x86_64-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 466258,
+                    "hashValue": "fc1ddb4b7cff2f27a0f10d033850211d9186ae7576194e1387974e8f7a8c350ef50e12238694003f16ed5917ffcd22ae0d54cfb738b9724440d65f8afdf7a49f"
+                },
+                "Linux_x86-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 527704,
+                    "hashValue": "903aecd631624db3047fc477363ac076794517bbc72b33a88a73627066b5997d9c1194975729ef2acbabba19e93574333b54e32763a5a834b8d9431b99181fd1"
+                },
+                "Linux_x86_64-gcc3": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 511815,
+                    "hashValue": "94531e267314de661b2205c606283fb066d781e5c11027578f2a3c3aa353437c2289544074a28101b6b6f0179f0fe6bd890a0ae2bb6e1cf9053650472576366c"
+                },
+                "WINNT_aarch64-msvc-aarch64": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 558607,
+                    "hashValue": "8d936bca08dcf3538c5c118c0f468d672c556ac2ac828a4b9d1fcbb4339885d17ebcc748a918457abbea87d21c5cab2c007ca5b4ef87f04a52d44f42ee5fdbb9"
+                },
+                "WINNT_x86-msvc": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 491261,
+                    "hashValue": "9ed5b4c27c2c159b83a1b887a1215d0472171cff422d2bc1962312f90e62d1b212955fe68bc88f826d613c9fb58b86f6fa16ebc1533e863f6a5648dcb1319bcb"
+                },
+                "WINNT_x86-msvc-x64": {
+                    "alias": "WINNT_x86-msvc"
+                },
+                "WINNT_x86-msvc-x86": {
+                    "alias": "WINNT_x86-msvc"
+                },
+                "WINNT_x86_64-msvc": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
+                    "filesize": 453023,
+                    "hashValue": "06511f1f6c6d44d076b3c593528c26a602348d9c41689dbf5ff716b671c3ca5756b12cb2e5869f836dedce27b1a5cfe79b93c707fd01f8e84b620923bb61b5f1"
+                },
+                "WINNT_x86_64-msvc-x64": {
+                    "alias": "WINNT_x86_64-msvc"
+                },
+                "android-x86_64": {
+                    "fileUrl": "http://ciscobinary.openh264.org/openh264-android-x86_64-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
+                    "filesize": 539311,
+                    "hashValue": "2c80df83c84841477cf5489e4109a0913cf3ca801063d788e100a511c9226d46059e4d28ea76496c3208c046cc44c5ce0b5263b1bfda5b731f8461ce8ce7d1b7"
+                }
+            },
+            "version": "1.8.1"
         }
-      },
-      "version": "1.6"
-    }
-  },
-  "hashFunction": "sha512",
-  "name": "OpenH264-1.6",
-  "schema_version": 1000
+    },
+    "hashFunction": "sha512",
+    "name": "OpenH264-1.8.1",
+    "schema_version": 1000
 }

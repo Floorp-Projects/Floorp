@@ -37,7 +37,6 @@ add_task(async function() {
 });
 
 async function runTests(doc) {
-  await addTab("about:blank");
   const tooltip = new HTMLTooltip(doc, {useXulWrapper});
 
   info("Set tooltip content");
@@ -53,7 +52,6 @@ async function runTests(doc) {
 
   const onShown = tooltip.once("shown");
   tooltip.show(doc.getElementById("box1"));
-
   await onShown;
   is(shown, 1, "Event shown was fired once");
 

@@ -11,12 +11,12 @@
 
 import { isOriginalId } from "devtools-source-map";
 
-import { getSourceFromId } from "../../reducers/sources";
+import { getSourceFromId, getSourceWithContent } from "../../reducers/sources";
 import { getSourcesForTabs } from "../../reducers/tabs";
 import { setOutOfScopeLocations } from "../ast";
 import { setSymbols } from "./symbols";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
-
+import { isFulfilled } from "../../utils/async-value";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
@@ -168,13 +168,21 @@ export function selectLocation(
       // If there was a navigation while we were loading the loadedSource
       return;
     }
+    const sourceWithContent = getSourceWithContent(getState(), source.id);
+    const sourceContent =
+      sourceWithContent.content && isFulfilled(sourceWithContent.content)
+        ? sourceWithContent.content.value
+        : null;
 
     if (
       keepContext &&
       prefs.autoPrettyPrint &&
       !getPrettySource(getState(), loadedSource.id) &&
-      shouldPrettyPrint(loadedSource) &&
-      isMinified(loadedSource)
+      shouldPrettyPrint(
+        loadedSource,
+        sourceContent || { type: "text", value: "", contentType: undefined }
+      ) &&
+      isMinified(sourceWithContent)
     ) {
       await dispatch(togglePrettyPrint(cx, loadedSource.id));
       dispatch(closeTab(cx, loadedSource));

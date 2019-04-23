@@ -259,7 +259,7 @@ describe("pause", () => {
         getOriginalLocation: () => Promise.resolve(originalLocation),
         getOriginalLocations: async items => items,
         getOriginalSourceText: async () => ({
-          source: "\n\nfunction fooOriginal() {\n  return -5;\n}",
+          text: "\n\nfunction fooOriginal() {\n  return -5;\n}",
           contentType: "text/javascript"
         }),
         getGeneratedLocation: async location => location
@@ -320,7 +320,7 @@ describe("pause", () => {
         getOriginalLocation: () => Promise.resolve(originalLocation),
         getOriginalLocations: async items => items,
         getOriginalSourceText: async () => ({
-          source: "fn fooBar() {}\nfn barZoo() { fooBar() }",
+          text: "fn fooBar() {}\nfn barZoo() { fooBar() }",
           contentType: "text/rust"
         }),
         getGeneratedRangesForOriginal: async () => []

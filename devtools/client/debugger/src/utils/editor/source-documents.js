@@ -10,7 +10,12 @@ import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
 import SourceEditor from "./source-editor";
 
-import type { Source, SourceDocuments } from "../../types";
+import type {
+  SourceId,
+  Source,
+  SourceContent,
+  SourceDocuments
+} from "../../types";
 import type { SymbolDeclarations } from "../../workers/parser";
 
 let sourceDocs: SourceDocuments = {};
@@ -101,19 +106,23 @@ export function showErrorMessage(editor: Object, msg: string) {
   resetLineNumberFormat(editor);
 }
 
-function setEditorText(editor: Object, source: Source) {
-  if (source.isWasm) {
-    const wasmLines = renderWasmText(source);
+function setEditorText(
+  editor: Object,
+  sourceId: SourceId,
+  content: SourceContent
+) {
+  if (content.type === "wasm") {
+    const wasmLines = renderWasmText(sourceId, content);
     // cm will try to split into lines anyway, saving memory
     const wasmText = { split: () => wasmLines, match: () => false };
     editor.setText(wasmText);
   } else {
-    editor.setText(source.text);
+    editor.setText(content.value);
   }
 }
 
-function setMode(editor, source, symbols) {
-  const mode = getMode(source, symbols);
+function setMode(editor, source: Source, content: SourceContent, symbols) {
+  const mode = getMode(source, content, symbols);
   const currentMode = editor.codeMirror.getOption("mode");
   if (!currentMode || currentMode.name != mode.name) {
     editor.setMode(mode);
@@ -127,22 +136,19 @@ function setMode(editor, source, symbols) {
 export function showSourceText(
   editor: Object,
   source: Source,
+  content: SourceContent,
   symbols?: SymbolDeclarations
 ) {
-  if (!source) {
-    return;
-  }
-
   if (hasDocument(source.id)) {
     const doc = getDocument(source.id);
     if (editor.codeMirror.doc === doc) {
-      setMode(editor, source, symbols);
+      setMode(editor, source, content, symbols);
       return;
     }
 
     editor.replaceDocument(doc);
     updateLineNumberFormat(editor, source.id);
-    setMode(editor, source, symbols);
+    setMode(editor, source, content, symbols);
     return doc;
   }
 
@@ -150,7 +156,7 @@ export function showSourceText(
   setDocument(source.id, doc);
   editor.replaceDocument(doc);
 
-  setEditorText(editor, source);
-  setMode(editor, source, symbols);
+  setEditorText(editor, source.id, content);
+  setMode(editor, source, content, symbols);
   updateLineNumberFormat(editor, source.id);
 }

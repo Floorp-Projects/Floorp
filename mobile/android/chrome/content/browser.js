@@ -3393,7 +3393,7 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
-  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     let isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
@@ -3463,7 +3463,8 @@ nsBrowserAccess.prototype = {
                                                                       selected: true,
                                                                       isPrivate: isPrivate,
                                                                       pinned: pinned,
-                                                                      triggeringPrincipal: aTriggeringPrincipal});
+                                                                      triggeringPrincipal: aTriggeringPrincipal,
+                                                                      csp: aCsp });
 
       return tab.browser;
     }
@@ -3482,20 +3483,20 @@ nsBrowserAccess.prototype = {
   },
 
   openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags,
-                                    aTriggeringPrincipal) {
+                                    aTriggeringPrincipal, aCsp) {
     if (!aURI) {
       throw "Can't open an empty uri";
     }
     let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags,
-                                   aTriggeringPrincipal);
+                                   aTriggeringPrincipal, aCsp);
     return browser && browser.contentWindow;
   },
 
   createContentWindow: function browser_createContentWindow(
                                 aURI, aOpener, aWhere, aFlags,
-                                aTriggeringPrincipal) {
+                                aTriggeringPrincipal, aCsp) {
     let browser = this._getBrowser(null, aOpener, aWhere, aFlags,
-                                   aTriggeringPrincipal);
+                                   aTriggeringPrincipal, aCsp);
     return browser && browser.contentWindow;
   },
 

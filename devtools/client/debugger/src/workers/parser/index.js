@@ -7,8 +7,8 @@
 import { workerUtils } from "devtools-utils";
 const { WorkerDispatcher } = workerUtils;
 
-import type { AstLocation, AstPosition } from "./types";
-import type { SourceLocation, Source, SourceId } from "../../types";
+import type { AstSource, AstLocation, AstPosition } from "./types";
+import type { SourceLocation, SourceId, SourceContent } from "../../types";
 import type { SourceScope } from "./getScopes/visitor";
 import type { SymbolDeclarations } from "./getSymbols";
 
@@ -46,11 +46,19 @@ export const getSymbols = async (
   sourceId: string
 ): Promise<SymbolDeclarations> => dispatcher.invoke("getSymbols", sourceId);
 
-export const hasSource = async (sourceId: SourceId): Promise<Source> =>
-  dispatcher.invoke("hasSource", sourceId);
+export const setSource = async (
+  sourceId: SourceId,
+  content: SourceContent
+): Promise<void> => {
+  const astSource: AstSource = {
+    id: sourceId,
+    text: content.type === "wasm" ? "" : content.value,
+    contentType: content.contentType || null,
+    isWasm: content.type === "wasm"
+  };
 
-export const setSource = async (source: Source): Promise<void> =>
-  dispatcher.invoke("setSource", source);
+  await dispatcher.invoke("setSource", astSource);
+};
 
 export const clearSources = async (): Promise<void> =>
   dispatcher.invoke("clearSources");
@@ -75,9 +83,6 @@ export const mapExpression = async (
     shouldMapBindings,
     shouldMapAwait
   );
-
-export const getFramework = async (sourceId: string): Promise<?string> =>
-  dispatcher.invoke("getFramework", sourceId);
 
 export type {
   SourceScope,

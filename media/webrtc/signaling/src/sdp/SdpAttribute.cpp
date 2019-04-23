@@ -1129,9 +1129,13 @@ void SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const {
 
 bool SdpSimulcastAttribute::Versions::Parse(std::istream& is,
                                             std::string* error) {
+  int startPos = is.tellg();
   std::string rawType = ParseKey(is, error);
   if (rawType.empty()) {
-    return false;
+    // New simulcast format does not have pt= or rid=, it is always rid
+    rawType = "rid";
+    is.clear();
+    is.seekg(startPos);
   }
 
   if (rawType == "pt") {

@@ -1020,6 +1020,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   maybePauseOnExceptions: function() {
     if (this._options.pauseOnExceptions) {
       this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+    } else {
+      this.dbg.onExceptionUnwind = undefined;
     }
   },
 

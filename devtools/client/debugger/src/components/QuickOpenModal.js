@@ -15,6 +15,7 @@ import {
   getQuickOpenQuery,
   getQuickOpenType,
   getSelectedSource,
+  getSourceContent,
   getSymbols,
   getTabs,
   isSymbolsLoading,
@@ -47,6 +48,7 @@ type Props = {
   enabled: boolean,
   sources: Array<Object>,
   selectedSource?: Source,
+  selectedContentLoaded?: boolean,
   query: string,
   searchType: QuickOpenType,
   symbols: FormattedSymbolDeclarations,
@@ -267,9 +269,13 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   onChange = (e: SyntheticInputEvent<HTMLInputElement>) => {
-    const { selectedSource, setQuickOpenQuery } = this.props;
+    const {
+      selectedSource,
+      selectedContentLoaded,
+      setQuickOpenQuery
+    } = this.props;
     setQuickOpenQuery(e.target.value);
-    const noSource = !selectedSource || !selectedSource.text;
+    const noSource = !selectedSource || !selectedContentLoaded;
     if ((this.isSymbolSearch() && noSource) || this.isGotoQuery()) {
       return;
     }
@@ -430,6 +436,9 @@ function mapStateToProps(state) {
     enabled: getQuickOpenEnabled(state),
     sources: formatSources(getDisplayedSourcesList(state), getTabs(state)),
     selectedSource,
+    selectedContentLoaded: selectedSource
+      ? !!getSourceContent(state, selectedSource.id)
+      : undefined,
     symbols: formatSymbols(getSymbols(state, selectedSource)),
     symbolsLoading: isSymbolsLoading(state, selectedSource),
     query: getQuickOpenQuery(state),

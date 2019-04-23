@@ -39,7 +39,7 @@ job-defaults:
             production: null
       aus-server:
          by-release-level:
-            staging: "https://aus4.stage.mozaws.net"
+            staging: "https://stage.balrog.nonprod.cloudops.mozgcp.net"
             production: "https://aus5.mozilla.org"
       override-certs:
          by-release-level:

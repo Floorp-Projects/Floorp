@@ -202,7 +202,7 @@ RootActor.prototype = {
   destroy: function() {
     /* Tell the live lists we aren't watching any more. */
     if (this._parameters.tabList) {
-      this._parameters.tabList.onListChanged = null;
+      this._parameters.tabList.destroy();
     }
     if (this._parameters.addonList) {
       this._parameters.addonList.onListChanged = null;

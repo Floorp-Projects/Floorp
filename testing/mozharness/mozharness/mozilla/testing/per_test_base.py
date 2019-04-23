@@ -44,11 +44,11 @@ class SingleTestMixin(FetchesMixin):
 
     def _find_misc_tests(self, dirs, changed_files, gpu=False):
         manifests = [
-            (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'plain'),
-            (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'chrome'),
+            (os.path.join(dirs['abs_mochitest_dir'], 'tests', 'mochitest.ini'), 'mochitest-plain'),
+            (os.path.join(dirs['abs_mochitest_dir'], 'chrome', 'chrome.ini'), 'mochitest-chrome'),
             (os.path.join(dirs['abs_mochitest_dir'], 'browser',
-                          'browser-chrome.ini'), 'browser-chrome'),
-            (os.path.join(dirs['abs_mochitest_dir'], 'a11y', 'a11y.ini'), 'a11y'),
+                          'browser-chrome.ini'), 'mochitest-browser-chrome'),
+            (os.path.join(dirs['abs_mochitest_dir'], 'a11y', 'a11y.ini'), 'mochitest-a11y'),
             (os.path.join(dirs['abs_xpcshell_dir'], 'tests', 'xpcshell.ini'), 'xpcshell'),
         ]
         tests_by_path = {}
@@ -139,20 +139,20 @@ class SingleTestMixin(FetchesMixin):
                 #   <suite> is associated with a manifest, explicitly in code above
                 #   <subsuite> comes from "subsuite" tags in some manifest entries
                 #   <full-suite> is a unique id for the suite, matching desktop mozharness configs
-                ('browser-chrome', 'clipboard'): 'browser-chrome-clipboard',
-                ('chrome', 'clipboard'): 'chrome-clipboard',
-                ('plain', 'clipboard'): 'plain-clipboard',
-                ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
-                ('browser-chrome', 'screenshots'): 'browser-chrome-screenshots',
-                ('plain', 'media'): 'mochitest-media',
+                ('mochitest-browser-chrome', 'clipboard'): 'mochitest-browser-chrome-clipboard',
+                ('mochitest-chrome', 'clipboard'): 'mochitest-chrome-clipboard',
+                ('mochitest-plain', 'clipboard'): 'mochitest-plain-clipboard',
+                ('mochitest-browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
+                ('mochitest-browser-chrome', 'screenshots'): 'mochitest-browser-chrome-screenshots',  # noqa
+                ('mochitest-plain', 'media'): 'mochitest-media',
                 # below should be on test-verify-gpu job
-                ('chrome', 'gpu'): 'chrome-gpu',
-                ('plain', 'gpu'): 'plain-gpu',
-                ('plain', 'webgl1-core'): 'mochitest-webgl1-core',
-                ('plain', 'webgl1-ext'): 'mochitest-webgl1-ext',
-                ('plain', 'webgl2-core'): 'mochitest-webgl2-core',
-                ('plain', 'webgl2-ext'): 'mochitest-webgl2-ext',
-                ('plain', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
+                ('mochitest-chrome', 'gpu'): 'mochitest-chrome-gpu',
+                ('mochitest-plain', 'gpu'): 'mochitest-plain-gpu',
+                ('mochitest-plain', 'webgl1-core'): 'mochitest-webgl1-core',
+                ('mochitest-plain', 'webgl1-ext'): 'mochitest-webgl1-ext',
+                ('mochitest-plain', 'webgl2-core'): 'mochitest-webgl2-core',
+                ('mochitest-plain', 'webgl2-ext'): 'mochitest-webgl2-ext',
+                ('mochitest-plain', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
             }
             if entry in subsuite_mapping:
                 suite = subsuite_mapping[entry]

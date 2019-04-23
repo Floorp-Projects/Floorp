@@ -160,7 +160,8 @@ already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create(
     nsISerialEventTarget* aCallbackThread) {
   RefPtr<MediaTransportHandler> result;
   if (XRE_IsContentProcess() &&
-      Preferences::GetBool("media.peerconnection.mtransport_process")) {
+      Preferences::GetBool("media.peerconnection.mtransport_process") &&
+      Preferences::GetBool("network.process.enabled")) {
     result = new MediaTransportHandlerIPC(aCallbackThread);
   } else {
     result = new MediaTransportHandlerSTS(aCallbackThread);

@@ -89,27 +89,17 @@ function createSourceObject(
     sourceMapURL?: string,
     introductionType?: string,
     introductionUrl?: string,
-    isBlackBoxed?: boolean,
-    loadedState?: "unloaded" | "loading" | "loaded",
-    text?: string
+    isBlackBoxed?: boolean
   } = {}
 ): Source {
   return ({
     id: filename,
     url: makeSourceURL(filename),
-    loadedState: props.loadedState || "unloaded",
     isBlackBoxed: !!props.isBlackBoxed,
     isPrettyPrinted: false,
     introductionUrl: props.introductionUrl || null,
     introductionType: props.introductionType || null,
-    isExtension: false,
-    ...(typeof props.text === "string"
-      ? {
-          text: props.text || "",
-          contentType: "application/javascript",
-          loadedState: "loaded"
-        }
-      : {})
+    isExtension: false
   }: any);
 }
 

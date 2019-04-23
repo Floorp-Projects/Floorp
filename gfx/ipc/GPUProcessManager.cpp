@@ -804,7 +804,8 @@ bool GPUProcessManager::CreateContentCompositorManager(
 
   if (mGPUChild) {
     mGPUChild->SendNewContentCompositorManager(std::move(parentPipe));
-  } else if (!CompositorManagerParent::Create(std::move(parentPipe))) {
+  } else if (!CompositorManagerParent::Create(std::move(parentPipe),
+                                              /* aIsRoot */ false)) {
     return false;
   }
 

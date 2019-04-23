@@ -3,6 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 24">
-  <polygon points="16.58 0.01 16.57 0 4.58 12 16.57 24 16.58 23.98 16.58 0.01" fill="#b5b5b5"/>
-  <polyline points="16.63 1.51 6.08 12.01 16.63 22.5" fill="#fbfbfb"/>
+  <polygon points="16.58 0.01 16.57 0 4.58 12 16.57 24 16.58 23.98 16.58 0.01" fill="context-fill" stroke="context-stroke"/>
+  <polyline points="16.63 1.51 6.08 12.01 16.63 22.5" fill="context-fill" stroke="context-stroke"/>
 </svg>

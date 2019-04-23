@@ -230,6 +230,7 @@ function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
             // exists (so we can preventDefault) or if the reps will be
             // displayed in content page (e.g. in the JSONViewer).
             href: openLink || isInContentPage ? useUrl : null,
+            target: "_blank",
             onClick: openLink
               ? e => {
                   e.preventDefault();

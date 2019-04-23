@@ -39,5 +39,5 @@ interface nsIFormAutoCompleteObserver : nsISupports
    *
    * @param result - The search result object
    */
-  void onSearchCompletion(in nsIAutoCompleteResult result);
+  [can_run_script] void onSearchCompletion(in nsIAutoCompleteResult result);
 };

@@ -217,7 +217,7 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 
   // nsIBrowserDOMWindow.
-  createContentWindow(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+  createContentWindow(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     debug `createContentWindow: uri=${aUri && aUri.spec}
                                 where=${aWhere} flags=${aFlags}`;
 
@@ -262,7 +262,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     return browser;
   }
 
-  handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal,
+  handleOpenUri(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal, aCsp,
                 aNextTabParentId) {
     debug `handleOpenUri: uri=${aUri && aUri.spec}
                           where=${aWhere} flags=${aFlags}`;
@@ -285,21 +285,21 @@ class GeckoViewNavigation extends GeckoViewModule {
       // Should we throw?
       return null;
     }
-    browser.loadURI(aUri.spec, null, null, null, null, aTriggeringPrincipal);
+    browser.loadURI(aUri.spec, null, null, null, null, aTriggeringPrincipal, aCsp);
     return browser;
   }
 
   // nsIBrowserDOMWindow.
-  openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+  openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     const browser = this.handleOpenUri(aUri, aOpener, aWhere, aFlags,
-                                       aTriggeringPrincipal, null);
+                                       aTriggeringPrincipal, aCsp, null);
     return browser && browser.contentWindow;
   }
 
   // nsIBrowserDOMWindow.
   openURIInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId, aName) {
     const browser = this.handleOpenUri(aUri, null, aWhere, aFlags,
-                                       aParams.triggeringPrincipal,
+                                       aParams.triggeringPrincipal, aParams.csp,
                                        aNextTabParentId);
     return browser;
   }

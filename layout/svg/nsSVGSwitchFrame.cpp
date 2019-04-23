@@ -103,8 +103,7 @@ void nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
   if (kid) {
     gfxMatrix tm = aTransform;
     if (kid->GetContent()->IsSVGElement()) {
-      tm = static_cast<SVGElement*>(kid->GetContent())
-               ->PrependLocalTransformsTo(tm, eUserSpaceToParent);
+      tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) * tm;
     }
     nsSVGUtils::PaintFrameWithEffects(kid, aContext, tm, aImgParams,
                                       aDirtyRect);
@@ -255,7 +254,9 @@ SVGBBox nsSVGSwitchFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
     gfxMatrix transform = ThebesMatrix(aToBBoxUserspace);
     if (content->IsSVGElement()) {
       transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
-          transform);
+                      {}, eChildToUserSpace) *
+                  nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) *
+                  transform;
     }
     return svgKid->GetBBoxContribution(ToMatrix(transform), aFlags);
   }

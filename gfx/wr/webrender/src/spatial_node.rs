@@ -86,7 +86,10 @@ fn compute_offset_from(
                 if info.external_id == Some(external_id) {
                     break;
                 }
-                offset += info.offset;
+
+                // External scroll offsets are not propagated across
+                // reference frame boundaries, so undo them here.
+                offset += info.offset + info.external_scroll_offset;
             },
             SpatialNodeType::StickyFrame(ref info) => {
                 offset += info.current_offset;
@@ -769,4 +772,77 @@ impl StickyFrameInfo {
             current_offset: LayoutVector2D::zero(),
         }
     }
+}
+
+#[test]
+fn test_cst_perspective_relative_scroll() {
+    // Verify that when computing the offset from a perspective transform
+    // to a relative scroll node that any external scroll offset is
+    // ignored. This is because external scroll offsets are not
+    // propagated across reference frame boundaries.
+
+    // It's not currently possible to verify this with a wrench reftest,
+    // since wrench doesn't understand external scroll ids. When wrench
+    // supports this, we could also verify with a reftest.
+
+    use clip_scroll_tree::ClipScrollTree;
+    use euclid::approxeq::ApproxEq;
+
+    let mut cst = ClipScrollTree::new();
+    let pipeline_id = PipelineId::dummy();
+    let ext_scroll_id = ExternalScrollId(1, pipeline_id);
+    let transform = LayoutTransform::create_perspective(100.0);
+
+    let root = cst.add_reference_frame(
+        None,
+        TransformStyle::Flat,
+        PropertyBinding::Value(LayoutTransform::identity()),
+        ReferenceFrameKind::Transform,
+        LayoutVector2D::zero(),
+        pipeline_id,
+    );
+
+    let scroll_frame_1 = cst.add_scroll_frame(
+        root,
+        Some(ext_scroll_id),
+        pipeline_id,
+        &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
+        &LayoutSize::new(100.0, 500.0),
+        ScrollSensitivity::Script,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::zero(),
+    );
+
+    let scroll_frame_2 = cst.add_scroll_frame(
+        scroll_frame_1,
+        None,
+        pipeline_id,
+        &LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)),
+        &LayoutSize::new(100.0, 500.0),
+        ScrollSensitivity::Script,
+        ScrollFrameKind::Explicit,
+        LayoutVector2D::new(0.0, 50.0),
+    );
+
+    let ref_frame = cst.add_reference_frame(
+        Some(scroll_frame_2),
+        TransformStyle::Preserve3D,
+        PropertyBinding::Value(transform),
+        ReferenceFrameKind::Perspective {
+            scrolling_relative_to: Some(ext_scroll_id),
+        },
+        LayoutVector2D::zero(),
+        pipeline_id,
+    );
+
+    cst.update_tree(WorldPoint::zero(), &SceneProperties::new(), None);
+
+    let scroll_offset = compute_offset_from(
+        cst.spatial_nodes[ref_frame.0 as usize].parent,
+        ext_scroll_id,
+        &cst.spatial_nodes,
+    );
+
+    assert!(scroll_offset.x.approx_eq(&0.0));
+    assert!(scroll_offset.y.approx_eq(&0.0));
 }

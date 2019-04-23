@@ -151,11 +151,13 @@ impl Rectangle {
         );
 
         builder.push_rect(
-            &api::PrimitiveInfo::new(rect),
-            &api::SpaceAndClipInfo {
-                spatial_id: api::SpatialId::root_scroll_node(pipeline_id),
-                clip_id,
-            },
+            &api::CommonItemProperties::new(
+                rect,
+                api::SpaceAndClipInfo {
+                    spatial_id: api::SpatialId::root_scroll_node(pipeline_id),
+                    clip_id,
+                },
+            ),
             self.color,
         );
 

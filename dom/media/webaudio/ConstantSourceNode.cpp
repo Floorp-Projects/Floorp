@@ -156,9 +156,8 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
 ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
     : AudioScheduledSourceNode(aContext, 2, ChannelCountMode::Max,
                                ChannelInterpretation::Speakers),
-      mOffset(new AudioParam(this, ConstantSourceNodeEngine::OFFSET, "offset",
-                             1.0f)),
       mStartCalled(false) {
+  CreateAudioParam(mOffset, ConstantSourceNodeEngine::OFFSET, "offset", 1.0f);
   ConstantSourceNodeEngine* engine =
       new ConstantSourceNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,

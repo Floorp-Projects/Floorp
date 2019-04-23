@@ -6,6 +6,7 @@
 
 import {
   getSource,
+  getSourceContent,
   isMapScopesEnabled,
   getSelectedFrame,
   getSelectedGeneratedScope,
@@ -23,6 +24,7 @@ import type { Frame, Scope, ThreadContext } from "../../types";
 import type { ThunkArgs } from "../types";
 
 import { buildMappedScopes } from "../../utils/pause/mapScopes";
+import { isFulfilled } from "../../utils/async-value";
 
 export function toggleMapScopes() {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
@@ -86,8 +88,15 @@ export function mapScopes(
         }
 
         try {
+          const content =
+            getSource(getState(), source.id) &&
+            getSourceContent(getState(), source.id);
+
           return await buildMappedScopes(
             source,
+            content && isFulfilled(content)
+              ? content.value
+              : { type: "text", value: "", contentType: undefined },
             frame,
             await scopes,
             sourceMaps,

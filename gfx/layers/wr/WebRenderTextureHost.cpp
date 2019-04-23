@@ -169,5 +169,18 @@ bool WebRenderTextureHost::SupportsWrNativeTexture() {
   return mWrappedTextureHost->SupportsWrNativeTexture();
 }
 
+bool WebRenderTextureHost::NeedsYFlip() const {
+  bool yFlip = TextureHost::NeedsYFlip();
+  if (mWrappedTextureHost->AsSurfaceTextureHost()) {
+    MOZ_ASSERT(yFlip);
+    // With WebRender, SurfaceTextureHost always requests y-flip.
+    // But y-flip should not be handled, since
+    // SurfaceTexture.getTransformMatrix() is not handled yet.
+    // See Bug 1507076.
+    yFlip = false;
+  }
+  return yFlip;
+}
+
 }  // namespace layers
 }  // namespace mozilla

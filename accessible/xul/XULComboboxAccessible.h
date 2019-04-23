@@ -33,7 +33,7 @@ class XULComboboxAccessible : public AccessibleWrap {
 
   // Widgets
   virtual bool IsActiveWidget() const override;
-  virtual bool AreItemsOperable() const override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool AreItemsOperable() const override;
 };
 
 }  // namespace a11y
