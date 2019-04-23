@@ -1641,8 +1641,7 @@ void nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext) {
   if (frame->GetContent()->IsSVGElement()) {
     // PaintSVG() expects the passed transform to be the transform to its own
     // SVG user space, so we need to account for any 'transform' attribute:
-    m = static_cast<SVGElement*>(frame->GetContent())
-            ->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
+    m = nsSVGUtils::GetTransformMatrixInUserSpace(frame, frame->GetParent());
   }
 
   // SVG-in-OpenType is not allowed to paint external resources, so we can
