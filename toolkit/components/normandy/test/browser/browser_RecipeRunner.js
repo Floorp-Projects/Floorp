@@ -6,7 +6,6 @@ ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
-ChromeUtils.import("resource://normandy/lib/ActionSandboxManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
@@ -128,39 +127,15 @@ decorate_task(
   }
 );
 
-/**
- * Mocks RecipeRunner.loadActionSandboxManagers for testing run.
- */
-async function withMockActionSandboxManagers(actions, testFunction) {
-  const managers = {};
-  for (const action of actions) {
-    const manager = new ActionSandboxManager("");
-    manager.addHold("testing");
-    managers[action.name] = manager;
-    sinon.stub(managers[action.name], "runAsyncCallback");
-  }
-
-  await testFunction(managers);
-
-  for (const manager of Object.values(managers)) {
-    manager.removeHold("testing");
-    await manager.isNuked();
-  }
-}
-
 decorate_task(
   withStub(Uptake, "reportRunner"),
   withStub(NormandyApi, "fetchRecipes"),
-  withStub(ActionsManager.prototype, "fetchRemoteActions"),
-  withStub(ActionsManager.prototype, "preExecution"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
   async function testRun(
     reportRunnerStub,
     fetchRecipesStub,
-    fetchRemoteActionsStub,
-    preExecutionStub,
     runRecipeStub,
     finalizeStub,
     reportRecipeStub,
@@ -176,8 +151,6 @@ decorate_task(
 
     await RecipeRunner.run();
 
-    ok(fetchRemoteActionsStub.calledOnce, "remote actions should be fetched");
-    ok(preExecutionStub.calledOnce, "pre-execution hooks should be run");
     Assert.deepEqual(
       runRecipeStub.args,
       [[matchRecipe], [missingRecipe]],
@@ -207,13 +180,11 @@ decorate_task(
   }),
   withStub(NormandyApi, "verifyObjectSignature"),
   withStub(ActionsManager.prototype, "runRecipe"),
-  withStub(ActionsManager.prototype, "fetchRemoteActions"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
   async function testReadFromRemoteSettings(
     verifyObjectSignatureStub,
     runRecipeStub,
-    fetchRemoteActionsStub,
     finalizeStub,
     reportRecipeStub,
   ) {
@@ -290,31 +261,24 @@ decorate_task(
   withMockNormandyApi,
   async function testRunFetchFail(mockApi) {
     const reportRunner = sinon.stub(Uptake, "reportRunner");
-
-    const action = {name: "action"};
-    mockApi.actions = [action];
     mockApi.fetchRecipes.rejects(new Error("Signature not valid"));
 
-    await withMockActionSandboxManagers(mockApi.actions, async managers => {
-      const manager = managers.action;
-      await RecipeRunner.run();
+    await RecipeRunner.run();
 
-      // If the recipe fetch failed, do not run anything.
-      sinon.assert.notCalled(manager.runAsyncCallback);
-      sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SERVER_ERROR);
+    // If the recipe fetch failed, report a server error
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SERVER_ERROR);
 
-      // Test that network errors report a specific uptake error
-      reportRunner.reset();
-      mockApi.fetchRecipes.rejects(new Error("NetworkError: The system was down"));
-      await RecipeRunner.run();
-      sinon.assert.calledWith(reportRunner, Uptake.RUNNER_NETWORK_ERROR);
+    // Test that network errors report a specific uptake error
+    reportRunner.reset();
+    mockApi.fetchRecipes.rejects(new Error("NetworkError: The system was down"));
+    await RecipeRunner.run();
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_NETWORK_ERROR);
 
-      // Test that signature issues report a specific uptake error
-      reportRunner.reset();
-      mockApi.fetchRecipes.rejects(new NormandyApi.InvalidSignatureError("Signature fail"));
-      await RecipeRunner.run();
-      sinon.assert.calledWith(reportRunner, Uptake.RUNNER_INVALID_SIGNATURE);
-    });
+    // Test that signature issues report a specific uptake error
+    reportRunner.reset();
+    mockApi.fetchRecipes.rejects(new NormandyApi.InvalidSignatureError("Signature fail"));
+    await RecipeRunner.run();
+    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_INVALID_SIGNATURE);
 
     reportRunner.restore();
   }
