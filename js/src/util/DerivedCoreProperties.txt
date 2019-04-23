@@ -1,5 +1,5 @@
-# DerivedCoreProperties-12.0.0.txt
-# Date: 2019-01-22, 08:18:27 GMT
+# DerivedCoreProperties-12.1.0.txt
+# Date: 2019-03-10, 10:53:06 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
@@ -11071,8 +11071,7 @@ E0100..E01EF  ; Grapheme_Extend # Mn [240] VARIATION SELECTOR-17..VARIATION SELE
 3280..3289    ; Grapheme_Base # No  [10] CIRCLED IDEOGRAPH ONE..CIRCLED IDEOGRAPH TEN
 328A..32B0    ; Grapheme_Base # So  [39] CIRCLED IDEOGRAPH MOON..CIRCLED IDEOGRAPH NIGHT
 32B1..32BF    ; Grapheme_Base # No  [15] CIRCLED NUMBER THIRTY SIX..CIRCLED NUMBER FIFTY
-32C0..32FE    ; Grapheme_Base # So  [63] IDEOGRAPHIC TELEGRAPH SYMBOL FOR JANUARY..CIRCLED KATAKANA WO
-3300..33FF    ; Grapheme_Base # So [256] SQUARE APAATO..SQUARE GAL
+32C0..33FF    ; Grapheme_Base # So [320] IDEOGRAPHIC TELEGRAPH SYMBOL FOR JANUARY..SQUARE GAL
 3400..4DB5    ; Grapheme_Base # Lo [6582] CJK UNIFIED IDEOGRAPH-3400..CJK UNIFIED IDEOGRAPH-4DB5
 4DC0..4DFF    ; Grapheme_Base # So  [64] HEXAGRAM FOR THE CREATIVE HEAVEN..HEXAGRAM FOR BEFORE COMPLETION
 4E00..9FEF    ; Grapheme_Base # Lo [20976] CJK UNIFIED IDEOGRAPH-4E00..CJK UNIFIED IDEOGRAPH-9FEF
@@ -11819,7 +11818,7 @@ FFFC..FFFD    ; Grapheme_Base # So   [2] OBJECT REPLACEMENT CHARACTER..REPLACEME
 2CEB0..2EBE0  ; Grapheme_Base # Lo [7473] CJK UNIFIED IDEOGRAPH-2CEB0..CJK UNIFIED IDEOGRAPH-2EBE0
 2F800..2FA1D  ; Grapheme_Base # Lo [542] CJK COMPATIBILITY IDEOGRAPH-2F800..CJK COMPATIBILITY IDEOGRAPH-2FA1D
 
-# Total code points: 135897
+# Total code points: 135898
 
 # ================================================
 
