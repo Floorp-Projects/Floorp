@@ -317,32 +317,14 @@ DecodedStreamData::DecodedStreamData(
       mOutputStreamManager(aOutputStreamManager),
       mAbstractMainThread(aMainThread) {
   MOZ_ASSERT(NS_IsMainThread());
-  // Initialize tracks on main thread and in the MediaStreamGraph.
-  // Tracks on main thread may have been created early in OutputStreamManager
-  // by the state machine, since creating them here is async from the js call.
-  // If they were pre-created in OutputStreamManager and the MediaInfo has
-  // changed since then, we end them and create new tracks.
-  if (!mOutputStreamManager->HasTracks(aInit.mAudioTrackID,
-                                       aInit.mVideoTrackID)) {
-    // Because these tracks were pre-allocated, we also have to increment the
-    // internal track allocator by the same number of tracks, so we don't risk
-    // a TrackID collision.
-    for (size_t i = 0; i < mOutputStreamManager->NumberOfTracks(); ++i) {
-      Unused << mOutputStreamManager->AllocateNextTrackID();
-    }
-    mOutputStreamManager->RemoveTracks();
-  }
+  MOZ_DIAGNOSTIC_ASSERT(
+      mOutputStreamManager->HasTracks(aInit.mAudioTrackID, aInit.mVideoTrackID),
+      "Tracks must be pre-created on main thread");
   if (IsTrackIDExplicit(aInit.mAudioTrackID)) {
-    if (!mOutputStreamManager->HasTrack(aInit.mAudioTrackID)) {
-      mOutputStreamManager->AddTrack(aInit.mAudioTrackID, MediaSegment::AUDIO);
-    }
     mStream->AddAudioTrack(aInit.mAudioTrackID, aInit.mInfo.mAudio.mRate,
                            new AudioSegment());
   }
   if (IsTrackIDExplicit(aInit.mVideoTrackID)) {
-    if (!mOutputStreamManager->HasTrack(aInit.mVideoTrackID)) {
-      mOutputStreamManager->AddTrack(aInit.mVideoTrackID, MediaSegment::VIDEO);
-    }
     mStream->AddTrack(aInit.mVideoTrackID, new VideoSegment());
   }
 }
@@ -457,12 +439,18 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
         mVideoEndedPromise.Resolve(true, __func__);
         return NS_OK;
       }
-      mInit.mAudioTrackID = mInit.mInfo.HasAudio()
-                                ? mOutputStreamManager->AllocateNextTrackID()
-                                : TRACK_NONE;
-      mInit.mVideoTrackID = mInit.mInfo.HasVideo()
-                                ? mOutputStreamManager->AllocateNextTrackID()
-                                : TRACK_NONE;
+      if (mInit.mInfo.HasAudio() &&
+          !mOutputStreamManager->HasTrackType(MediaSegment::AUDIO)) {
+        mOutputStreamManager->AddTrack(MediaSegment::AUDIO);
+      }
+      if (mInit.mInfo.HasVideo() &&
+          !mOutputStreamManager->HasTrackType(MediaSegment::VIDEO)) {
+        mOutputStreamManager->AddTrack(MediaSegment::VIDEO);
+      }
+      mInit.mAudioTrackID =
+          mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::AUDIO);
+      mInit.mVideoTrackID =
+          mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::VIDEO);
       mData = MakeUnique<DecodedStreamData>(
           mOutputStreamManager, std::move(mInit), std::move(mAudioEndedPromise),
           std::move(mVideoEndedPromise), mAbstractMainThread);
@@ -542,9 +530,12 @@ void DecodedStream::DestroyData(UniquePtr<DecodedStreamData>&& aData) {
 
   mOutputListener.Disconnect();
 
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("DecodedStream::DestroyData",
-                             [data = std::move(aData)]() { data->Forget(); }));
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "DecodedStream::DestroyData",
+      [data = std::move(aData), manager = mOutputStreamManager]() {
+        data->Forget();
+        manager->RemoveTracks();
+      }));
 }
 
 void DecodedStream::SetPlaying(bool aPlaying) {

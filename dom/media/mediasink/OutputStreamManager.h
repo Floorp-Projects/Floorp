@@ -76,18 +76,16 @@ class OutputStreamManager {
   void Add(DOMMediaStream* aDOMStream);
   // Remove the output stream from the collection.
   void Remove(DOMMediaStream* aDOMStream);
-  // Returns true if aTrackID has been added to all output streams.
-  bool HasTrack(TrackID aTrackID);
+  // Returns true if there's a live track of the given type.
+  bool HasTrackType(MediaSegment::Type aType);
   // Returns true if the given tracks and no others are currently live.
   // Use a non-explicit TrackID to make it ignored for that type.
   bool HasTracks(TrackID aAudioTrack, TrackID aVideoTrack);
   // Returns the number of live tracks.
   size_t NumberOfTracks();
-  // Add aTrackID to all output streams.
-  void AddTrack(TrackID aTrackID, MediaSegment::Type aType);
-  // Remove aTrackID from all output streams.
-  void RemoveTrack(TrackID aTrackID);
-  // Remove all added tracks from all output streams.
+  // Add a track to all output streams.
+  void AddTrack(MediaSegment::Type aType);
+  // Remove all currently live tracks from all output streams.
   void RemoveTracks();
   // Disconnect mSourceStream from all output streams.
   void Disconnect();
@@ -100,11 +98,11 @@ class OutputStreamManager {
   // Called when the CORSMode for the media element owning the decoder has
   // changed.
   void SetCORSMode(CORSMode aCORSMode);
-  // Returns the track id that would be used the next time a track is allocated.
+  // Returns the track id that would be used the next time a track is added.
   TrackID NextTrackID() const;
-  // Like NextTrackID() but advances internal state, so the next call returns a
-  // new unique TrackID.
-  TrackID AllocateNextTrackID();
+  // Returns the TrackID for the currently live track of the given type, or
+  // TRACK_NONE otherwise.
+  TrackID GetLiveTrackIDFor(MediaSegment::Type aType) const;
   // Called by DecodedStream when its playing state changes. While not playing
   // we suspend mSourceStream.
   void SetPlaying(bool aPlaying);
@@ -135,11 +133,21 @@ class OutputStreamManager {
   };
   struct TrackTypeComparator {
     static bool Equals(const Pair<TrackID, MediaSegment::Type>& aLiveTrack,
+                       MediaSegment::Type aType) {
+      return aLiveTrack.second() == aType;
+    }
+  };
+  struct TrackComparator {
+    static bool Equals(const Pair<TrackID, MediaSegment::Type>& aLiveTrack,
                        const Pair<TrackID, MediaSegment::Type>& aOther) {
       return aLiveTrack.first() == aOther.first() &&
              aLiveTrack.second() == aOther.second();
     }
   };
+
+  // Remove aTrackID from all output streams.
+  void RemoveTrack(TrackID aTrackID);
+
   nsTArray<UniquePtr<OutputStreamData>> mStreams;
   nsTArray<Pair<TrackID, MediaSegment::Type>> mLiveTracks;
   Canonical<PrincipalHandle> mPrincipalHandle;

@@ -3338,8 +3338,8 @@ void MediaDecoderStateMachine::FinishDecodeFirstFrame() {
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::BeginShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
-    mNextOutputStreamTrackID = mOutputStreamManager->NextTrackID();
     mOutputStreamManager->Disconnect();
+    mNextOutputStreamTrackID = mOutputStreamManager->NextTrackID();
   }
   return InvokeAsync(OwnerThread(), this, __func__,
                      &MediaDecoderStateMachine::Shutdown);
@@ -3790,28 +3790,39 @@ void MediaDecoderStateMachine::RemoveOutputStream(DOMMediaStream* aStream) {
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManager(
-    MediaStreamGraph* aGraph, const Maybe<MediaInfo>& aLoadedInfo) {
+    MediaStreamGraph* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
     return;
   }
-  LOG("Starting output track allocations at id %d", mNextOutputStreamTrackID);
   mOutputStreamManager = new OutputStreamManager(
       aGraph->CreateSourceStream(), mNextOutputStreamTrackID,
       mOutputStreamPrincipal, mOutputStreamCORSMode, mAbstractMainThread);
-  if (!aLoadedInfo) {
+}
+
+void MediaDecoderStateMachine::EnsureOutputStreamManagerHasTracks(
+    const MediaInfo& aLoadedInfo) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mOutputStreamManager) {
     return;
   }
-  TrackID mirroredTrackIDAllocation = mNextOutputStreamTrackID;
-  if (aLoadedInfo->HasAudio()) {
-    mOutputStreamManager->AddTrack(mirroredTrackIDAllocation++,
-                                   MediaSegment::AUDIO);
-    LOG("Pre-created audio track with id %d", mirroredTrackIDAllocation - 1);
+  if ((!aLoadedInfo.HasAudio() ||
+       mOutputStreamManager->HasTrackType(MediaSegment::AUDIO)) &&
+      (!aLoadedInfo.HasVideo() ||
+       mOutputStreamManager->HasTrackType(MediaSegment::VIDEO))) {
+    return;
   }
-  if (aLoadedInfo->HasVideo()) {
-    mOutputStreamManager->AddTrack(mirroredTrackIDAllocation++,
-                                   MediaSegment::VIDEO);
-    LOG("Pre-created video track with id %d", mirroredTrackIDAllocation - 1);
+  if (aLoadedInfo.HasAudio()) {
+    MOZ_ASSERT(!mOutputStreamManager->HasTrackType(MediaSegment::AUDIO));
+    mOutputStreamManager->AddTrack(MediaSegment::AUDIO);
+    LOG("Pre-created audio track with id %d",
+        mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::AUDIO));
+  }
+  if (aLoadedInfo.HasVideo()) {
+    MOZ_ASSERT(!mOutputStreamManager->HasTrackType(MediaSegment::VIDEO));
+    mOutputStreamManager->AddTrack(MediaSegment::VIDEO);
+    LOG("Pre-created video track with id %d",
+        mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::VIDEO));
   }
 }
 
