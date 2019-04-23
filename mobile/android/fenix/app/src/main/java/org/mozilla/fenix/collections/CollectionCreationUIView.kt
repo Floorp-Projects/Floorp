@@ -32,7 +32,7 @@ class CollectionCreationUIView(
 
     init {
         view.back_button.setOnClickListener {
-            Log.e("Collection Creation", "Back button tapped")
+            actionEmitter.onNext(CollectionCreationAction.Close)
         }
 
         view.select_all_button.setOnClickListener {

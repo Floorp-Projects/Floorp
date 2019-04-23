@@ -26,7 +26,7 @@ sealed class CollectionCreationChange : Change {
 }
 
 sealed class CollectionCreationAction : Action {
-
+    object Close : CollectionCreationAction()
 }
 
 class CollectionCreationComponent(

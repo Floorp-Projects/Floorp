@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.fragment_create_collection.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 
 class CreateCollectionFragment : DialogFragment() {
@@ -48,6 +49,12 @@ class CreateCollectionFragment : DialogFragment() {
         }!!.tabs
 
         getManagedEmitter<CollectionCreationChange>().onNext(CollectionCreationChange.TabListChange(tabs))
+
+        getAutoDisposeObservable<CollectionCreationAction>().subscribe {
+            when (it) {
+                is CollectionCreationAction.Close -> dismissAllowingStateLoss()
+            }
+        }
     }
 
     companion object {
