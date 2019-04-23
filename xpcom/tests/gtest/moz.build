@@ -53,7 +53,6 @@ UNIFIED_SOURCES += [
     'TestThreadMetrics.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
-    'TestThreadUtils.cpp',
     'TestThrottledEventQueue.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
@@ -67,8 +66,20 @@ if CONFIG['OS_TARGET'] != 'Android':
         'TestPipes.cpp',
         'TestStrings.cpp',
         'TestThreads.cpp',
-        'TestTimers.cpp',
     ]
+
+# skip the test on windows10-aarch64 due to perma-fail, bug 1422219
+if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
+    UNIFIED_SOURCES += [
+        'TestThreadUtils.cpp'
+    ]
+
+# skip the test on windows10-aarch64 and Android, aarch64 due to bug 1545670
+if CONFIG['OS_TARGET'] != 'Android' and not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
+    UNIFIED_SOURCES += [
+        'TestTimers.cpp'
+    ]
+
 
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TARGET'] != 'Android':
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
