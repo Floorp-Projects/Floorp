@@ -26,6 +26,7 @@
       align-self: center;
       display: block;
       fill: var(--newtab-icon-secondary-color);
+      flex-shrink: 0;
       margin-inline-end: 6px;
     }
   }

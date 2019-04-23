@@ -1,3 +1,4 @@
+
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -174,6 +175,144 @@ const POLICIES_TESTS = [
     },
   },
 
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "Cache": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": true,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "Cookies": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": true,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "Downloads": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": true,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "FormData": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": true,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "History": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": true,
+      "privacy.clearOnShutdown.sessions": false,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "Sessions": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": true,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "SiteSettings": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown.siteSettings": true,
+    },
+  },
+
+  {
+    policies: {
+      "SanitizeOnShutdown": {
+        "OfflineApps": true,
+      },
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": false,
+      "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown.downloads": false,
+      "privacy.clearOnShutdown.formdata": false,
+      "privacy.clearOnShutdown.history": false,
+      "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown.offlineApps": true,
+    },
+  },
+
   // POLICY: DNSOverHTTPS Locked
   {
     policies: {
@@ -290,7 +429,7 @@ const POLICIES_TESTS = [
   },
 ];
 
-add_task(async function test_policy_remember_passwords() {
+add_task(async function test_policy_simple_prefs() {
   for (let test of POLICIES_TESTS) {
     await setupPolicyEngineWithJson({
       "policies": test.policies,

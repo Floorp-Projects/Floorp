@@ -39,6 +39,10 @@ async function openTwoTabsAndOpenTabMenu(onTabMenuClicked) {
   await extension.startup();
   await extension.awaitMessage("ready");
 
+  // Focus a selected tab to to make tabbrowser.js to load localization files,
+  // and thereby initialize document.l10n property.
+  gBrowser.selectedTab.focus();
+
   // The .tabbrowser-tab selector matches the first tab (tab1).
   let menu = await openChromeContextMenu("tabContextMenu", ".tabbrowser-tab", window);
   let menuItem = menu.getElementsByAttribute("label", "menu item on tab")[0];

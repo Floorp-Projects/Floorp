@@ -10,6 +10,7 @@
 #include "GLContext.h"
 #include "GLLibraryEGL.h"
 
+class gfxASurface;
 namespace mozilla {
 namespace widget {
 class CompositorWidget;

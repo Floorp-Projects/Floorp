@@ -8,7 +8,7 @@
         src="chrome://browser/content/preferences/in-content/privacy.js"/>
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
-<box id="template-panePrivacy" hidden="true"><![CDATA[
+<html:template id="template-panePrivacy">
 <hbox id="browserPrivacyCategory"
       class="subcategory"
       hidden="true"
@@ -936,4 +936,4 @@
     </vbox>
   </hbox>
 </groupbox>
-]]></box>
+</html:template>

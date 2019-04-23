@@ -90,8 +90,6 @@ class RenderFrame final {
  * nsFrameLoader) into its parent frame's layer tree.
  */
 class nsDisplayRemote final : public nsDisplayItem {
-  friend class nsDisplayItem;
-
   typedef mozilla::dom::TabId TabId;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
@@ -128,6 +126,7 @@ class nsDisplayRemote final : public nsDisplayItem {
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 
  private:
+  friend class nsDisplayItemBase;
   nsFrameLoader* GetFrameLoader() const;
 
   TabId mTabId;

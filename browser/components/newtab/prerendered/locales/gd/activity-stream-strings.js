@@ -40,7 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ceart, tha mi agaibh",
   "prefs_home_header": "Susbaint sgrìn mhòr Firefox",
   "prefs_home_description": "Tagh an t-susbaint a bu mhath leat fhaicinn air sgrìn mhòr Firefox",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
+  "prefs_content_discovery_description": "Bheir fidreadh susbaint ann am Firefox Home cothrom dhut sàr-artaigealan iomchaidh o fheadh an lìn a lorg.",
   "prefs_section_rows_option": "{num} ràgh;{num} ràgh;{num} ràghan;{num} ràgh",
   "prefs_search_header": "Lorg air an lìon",
   "prefs_topsites_description": "Na làraichean air an tadhail thu as trice",

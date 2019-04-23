@@ -133,21 +133,6 @@ class Selection;
  * reference frame for their frame subtrees.
  */
 
-// All types are defined in nsDisplayItemTypes.h
-#define NS_DISPLAY_DECL_NAME(n, e)                                        \
-  const char* Name() const override { return n; }                         \
-  DisplayItemType GetType() const override { return DisplayItemType::e; } \
-                                                                          \
- private:                                                                 \
-  void* operator new(size_t aSize, nsDisplayListBuilder* aBuilder) {      \
-    return aBuilder->Allocate(aSize, DisplayItemType::e);                 \
-  }                                                                       \
-  template <typename T, typename... Args>                                 \
-  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder,             \
-                              Args&&... aArgs);                           \
-                                                                          \
- public:
-
 /**
  * Represents a frame that is considered to have (or will have) "animated
  * geometry" for itself and descendant frames.
@@ -2008,25 +1993,26 @@ class nsDisplayListBuilder {
 };
 
 class nsDisplayItem;
+class nsDisplayItemBase;
+class nsDisplayWrapList;
 class nsDisplayList;
 class RetainedDisplayList;
-/**
- * nsDisplayItems are put in singly-linked lists rooted in an nsDisplayList.
- * nsDisplayItemLink holds the link. The lists are linked from lowest to
- * highest in z-order.
- */
-class nsDisplayItemLink {
-  // This is never instantiated directly, so no need to count constructors and
-  // destructors.
- protected:
-  nsDisplayItemLink() : mAbove(nullptr) {}
-  nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
-  nsDisplayItem* mAbove;
 
-  friend class nsDisplayList;
-};
-
-class nsDisplayWrapList;
+// All types are defined in nsDisplayItemTypes.h
+#define NS_DISPLAY_DECL_NAME(n, e)                                           \
+  const char* Name() const override { return n; }                            \
+  constexpr static DisplayItemType ItemType() { return DisplayItemType::e; } \
+                                                                             \
+ private:                                                                    \
+  void* operator new(size_t aSize, nsDisplayListBuilder* aBuilder) {         \
+    return aBuilder->Allocate(aSize, DisplayItemType::e);                    \
+  }                                                                          \
+                                                                             \
+  template <typename T, typename... Args>                                    \
+  friend T* ::MakeDisplayItem(nsDisplayListBuilder* aBuilder,                \
+                              Args&&... aArgs);                              \
+                                                                             \
+ public:
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem);
@@ -2036,6 +2022,12 @@ template <typename T, typename... Args>
 MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder,
                                      Args&&... aArgs) {
   T* item = new (aBuilder) T(aBuilder, std::forward<Args>(aArgs)...);
+
+  if (T::ItemType() != DisplayItemType::TYPE_GENERIC) {
+    item->SetType(T::ItemType());
+  }
+
+  item->SetPerFrameKey(item->CalculatePerFrameKey());
 
   // TODO: Ideally we'd determine this before constructing the item,
   // but we'd need a template specialization for every type that has
@@ -2083,21 +2075,281 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItem(nsDisplayListBuilder* aBuilder,
 }
 
 /**
- * This is the unit of rendering and event testing. Each instance of this
- * class represents an entity that can be drawn on the screen, e.g., a
- * frame's CSS background, or a frame's text string.
+ * nsDisplayItems are put in singly-linked lists rooted in an nsDisplayList.
+ * nsDisplayItemLink holds the link. The lists are linked from lowest to
+ * highest in z-order.
+ */
+class nsDisplayItemLink {
+  // This is never instantiated directly, so no need to count constructors and
+  // destructors.
+ protected:
+  nsDisplayItemLink() : mAbove(nullptr) {}
+  nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
+  nsDisplayItem* mAbove;
+
+  friend class nsDisplayList;
+};
+
+/*
+ * nsDisplayItemBase is a base-class for all display items. It is mainly
+ * responsible for handling the frame-display item 1:n relationship, as well as
+ * storing the state needed for display list merging.
  *
- * nsDisplayItems can be containers --- i.e., they can perform hit testing
+ * Display items are arena-allocated during display list construction.
+ *
+ * Display items can be containers --- i.e., they can perform hit testing
  * and painting by recursively traversing a list of child items.
- *
- * These are arena-allocated during display list construction. A typical
- * subclass would just have a frame pointer, so its object would be just three
- * pointers (vtable, next-item, frame).
  *
  * Display items belong to a list at all times (except temporarily as they
  * move from one list to another).
  */
-class nsDisplayItem : public nsDisplayItemLink {
+class nsDisplayItemBase : public nsDisplayItemLink {
+ public:
+  nsDisplayItemBase() = delete;
+
+  /**
+   * Frees the memory allocated for this display item.
+   * The given display list builder must have allocated this display item.
+   */
+  virtual void Destroy(nsDisplayListBuilder* aBuilder) {
+    const DisplayItemType type = GetType();
+    this->~nsDisplayItemBase();
+    aBuilder->Destroy(type, this);
+  }
+
+  /**
+   * Returns the frame that this display item was created for.
+   * Never returns null.
+   */
+  inline nsIFrame* Frame() const {
+    MOZ_ASSERT(mFrame, "Trying to use display item after deletion!");
+    return mFrame;
+  }
+
+  /**
+   * Called when the display item is prepared for deletion. The display item
+   * should not be used after calling this function.
+   */
+  virtual void RemoveFrame(nsIFrame* aFrame) {
+    MOZ_ASSERT(aFrame);
+
+    if (mFrame && aFrame == mFrame) {
+      MOZ_ASSERT(!mFrame->HasDisplayItem(this));
+      mFrame = nullptr;
+      SetDeletedFrame();
+    }
+  }
+
+  /**
+   * A display item can depend on multiple different frames for invalidation.
+   */
+  virtual nsIFrame* GetDependentFrame() { return nullptr; }
+
+  /**
+   * Returns the frame that provides the style data, and should
+   * be checked when deciding if this display item can be reused.
+   */
+  virtual nsIFrame* FrameForInvalidation() const { return Frame(); }
+
+  /**
+   * Returns the printable name of this display item.
+   */
+  virtual const char* Name() const = 0;
+
+  /**
+   * Some consecutive items should be rendered together as a unit, e.g.,
+   * outlines for the same element. For this, we need a way for items to
+   * identify their type. We use the type for other purposes too.
+   */
+  DisplayItemType GetType() const { return mType; }
+  void SetType(const DisplayItemType aType) { mType = aType; }
+
+  /**
+   * Pairing this with the Frame() pointer gives a key that
+   * uniquely identifies this display item in the display item tree.
+   */
+  uint32_t GetPerFrameKey() const {
+    // The top 8 bits are currently unused.
+    // The middle 16 bits of the per frame key uniquely identify the display
+    // item when there are more than one item of the same type for a frame.
+    // The low 8 bits are the display item type.
+    return (static_cast<uint32_t>(mKey) << TYPE_BITS) |
+           static_cast<uint32_t>(mType);
+  }
+
+  /**
+   * Returns the initial per frame key for this display item.
+   */
+  virtual uint16_t CalculatePerFrameKey() const { return 0; }
+
+  /**
+   * Returns true if this item was reused during display list merging.
+   */
+  bool IsReused() const {
+    return mItemFlags.contains(ItemBaseFlag::ReusedItem);
+  }
+
+  void SetReused(bool aReused) {
+    if (aReused) {
+      mItemFlags += ItemBaseFlag::ReusedItem;
+    } else {
+      mItemFlags -= ItemBaseFlag::ReusedItem;
+    }
+  }
+
+  /**
+   * Returns true if this item can be reused during display list merging.
+   */
+  bool CanBeReused() const {
+    return !mItemFlags.contains(ItemBaseFlag::CantBeReused);
+  }
+
+  void SetCantBeReused() { mItemFlags += ItemBaseFlag::CantBeReused; }
+
+  void DiscardIfOldItem() {
+    if (mOldList) {
+      SetCantBeReused();
+    }
+  }
+
+  /**
+   * Returns true if the frame of this display item is in a modified subtree.
+   */
+  bool HasModifiedFrame() const;
+  void SetModifiedFrame(bool aModified);
+  bool HasDeletedFrame() const;
+
+  /**
+   * Set the nsDisplayList that this item belongs to, and what index it is
+   * within that list.
+   * Temporary state for merging used by RetainedDisplayListBuilder.
+   */
+  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex,
+                       uint32_t aListKey, uint32_t aNestingDepth) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    mOldListKey = aListKey;
+    mOldNestingDepth = aNestingDepth;
+#endif
+    mOldList = reinterpret_cast<uintptr_t>(aList);
+    mOldListIndex = aIndex;
+  }
+
+  bool GetOldListIndex(nsDisplayList* aList, uint32_t aListKey,
+                       OldListIndex* aOutIndex) {
+    if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Item found was in the wrong list! type %d "
+          "(outer type was %d at depth %d, now is %d)",
+          GetPerFrameKey(), mOldListKey, mOldNestingDepth, aListKey);
+#endif
+      return false;
+    }
+    *aOutIndex = mOldListIndex;
+    return true;
+  }
+
+  /**
+   * Returns the display list containing the children of this display item.
+   * The children may be in a different coordinate system than this item.
+   */
+  virtual RetainedDisplayList* GetChildren() const { return nullptr; }
+  bool HasChildren() const { return GetChildren(); }
+
+  /**
+   * Display items with children may return true here. This causes the
+   * display list iterator to descend into the child display list.
+   */
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
+    return false;
+  }
+
+ protected:
+  nsDisplayItemBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+      : mFrame(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayItemBase);
+    MOZ_ASSERT(mFrame);
+
+    if (aBuilder->IsRetainingDisplayList()) {
+      mFrame->AddDisplayItem(this);
+    }
+  }
+
+  nsDisplayItemBase(nsDisplayListBuilder* aBuilder,
+                    const nsDisplayItemBase& aOther)
+      : mFrame(aOther.mFrame),
+        mItemFlags(aOther.mItemFlags),
+        mType(aOther.mType),
+        mKey(aOther.mKey) {
+    MOZ_COUNT_CTOR(nsDisplayItemBase);
+  }
+
+  virtual ~nsDisplayItemBase() {
+    MOZ_COUNT_DTOR(nsDisplayItemBase);
+    if (mFrame) {
+      mFrame->RemoveDisplayItem(this);
+    }
+  }
+
+  void SetPerFrameKey(const uint16_t aKey) { mKey = aKey; }
+
+  void SetDeletedFrame();
+
+  nsIFrame* mFrame;  // 8
+
+ private:
+  enum class ItemBaseFlag : uint8_t {
+    CantBeReused,
+    DeletedFrame,
+    ModifiedFrame,
+    ReusedItem,
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MergedItem,
+    PreProcessedItem,
+#endif
+  };
+
+  mozilla::EnumSet<ItemBaseFlag, uint8_t> mItemFlags;  // 1
+  DisplayItemType mType;                               // 1
+  uint16_t mKey;                                       // 2
+  OldListIndex mOldListIndex;                          // 4
+  uintptr_t mOldList = 0;                              // 8
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+ public:
+  bool IsMergedItem() const {
+    return mItemFlags.contains(ItemBaseFlag::MergedItem);
+  }
+
+  bool IsPreProcessedItem() const {
+    return mItemFlags.contains(ItemBaseFlag::PreProcessedItem);
+  }
+
+  void SetMergedPreProcessed(bool aMerged, bool aPreProcessed) {
+    if (aMerged) {
+      mItemFlags += ItemBaseFlag::MergedItem;
+    } else {
+      mItemFlags -= ItemBaseFlag::MergedItem;
+    }
+
+    if (aPreProcessed) {
+      mItemFlags += ItemBaseFlag::PreProcessedItem;
+    } else {
+      mItemFlags -= ItemBaseFlag::PreProcessedItem;
+    }
+  }
+
+  uint32_t mOldListKey = 0;
+  uint32_t mOldNestingDepth = 0;
+#endif
+};
+
+/**
+ * This is the unit of rendering and event testing. Each instance of this
+ * class represents an entity that can be drawn on the screen, e.g., a
+ * frame's CSS background, or a frame's text string.
+ */
+class nsDisplayItem : public nsDisplayItemBase {
  public:
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::DisplayItemClip DisplayItemClip;
@@ -2117,43 +2369,25 @@ class nsDisplayItem : public nsDisplayItemLink {
   typedef class mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::CompositorHitTestInfo CompositorHitTestInfo;
 
+ protected:
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 const ActiveScrolledRoot* aActiveScrolledRoot);
 
-  nsDisplayItem() = delete;
-
- protected:
   virtual ~nsDisplayItem() {
     MOZ_COUNT_DTOR(nsDisplayItem);
     SetDisplayItemData(nullptr, nullptr);
-    if (mFrame) {
-      mFrame->RemoveDisplayItem(this);
-    }
   }
 
  public:
-  virtual void Destroy(nsDisplayListBuilder* aBuilder) {
-    DisplayItemType type = GetType();
-    this->~nsDisplayItem();
-    aBuilder->Destroy(type, this);
-  }
+  nsDisplayItem() = delete;
 
   virtual void RestoreState() {
     mClipChain = mState.mClipChain;
     mClip = mState.mClip;
     mItemFlags -= ItemFlag::DisableSubpixelAA;
-  }
-
-  virtual void RemoveFrame(nsIFrame* aFrame) {
-    if (mFrame && aFrame == mFrame) {
-      MOZ_ASSERT(!mFrame->HasDisplayItem(this));
-      mFrame = nullptr;
-      SetDeletedFrame();
-      SetDisplayItemData(nullptr, nullptr);
-    }
   }
 
   /**
@@ -2176,8 +2410,7 @@ class nsDisplayItem : public nsDisplayItemLink {
    * This is currently only used when creating temporary items for merging.
    */
   nsDisplayItem(nsDisplayListBuilder* aBuilder, const nsDisplayItem& aOther)
-      : mFrame(aOther.mFrame),
-        mItemFlags(),
+      : nsDisplayItemBase(aBuilder, aOther),
         mClipChain(aOther.mClipChain),
         mClip(aOther.mClip),
         mActiveScrolledRoot(aOther.mActiveScrolledRoot),
@@ -2215,19 +2448,6 @@ class nsDisplayItem : public nsDisplayItemLink {
     AutoTArray<nsDisplayItem*, 100> mItemBuffer;
   };
 
-  /**
-   * Some consecutive items should be rendered together as a unit, e.g.,
-   * outlines for the same element. For this, we need a way for items to
-   * identify their type. We use the type for other purposes too.
-   */
-  virtual DisplayItemType GetType() const = 0;
-  /**
-   * Pairing this with the GetUnderlyingFrame() pointer gives a key that
-   * uniquely identifies this display item in the display item tree.
-   * XXX check nsOptionEventGrabberWrapper/nsXULEventRedirectorWrapper
-   */
-  virtual uint32_t GetPerFrameKey() const { return uint32_t(GetType()); }
-
   uint8_t GetFlags() const { return GetDisplayItemFlagsForType(GetType()); }
 
   virtual bool IsContentful() const { return GetFlags() & TYPE_IS_CONTENTFUL; }
@@ -2247,26 +2467,6 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) {}
-  /**
-   * @return the frame that this display item is based on. This is used to sort
-   * items by z-index and content order and for some other uses. Never
-   * returns null.
-   */
-  inline nsIFrame* Frame() const {
-    MOZ_ASSERT(mFrame, "Trying to use display item after deletion!");
-    return mFrame;
-  }
-
-  /**
-   * @return the nsIFrame that provides the style data, and should
-   * be checked when deciding if this display item can be reused.
-   */
-  virtual nsIFrame* FrameForInvalidation() const { return mFrame; }
-
-  bool HasModifiedFrame() const;
-  void SetModifiedFrame(bool aModified);
-
-  bool HasDeletedFrame() const;
 
   virtual nsIFrame* StyleFrame() const { return mFrame; }
 
@@ -2631,16 +2831,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   virtual bool HasMergedFrames() const { return false; }
 
   /**
-   * During the visibility computation and after TryMerge, display lists may
-   * return true here to flatten themselves away, removing them. This
-   * flattening is distinctly different from FlattenTo, which occurs before
-   * items are merged together.
-   */
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-    return false;
-  }
-
-  /**
    * Returns true if this item needs to have its geometry updated, despite
    * returning empty invalidation region.
    */
@@ -2678,12 +2868,6 @@ class nsDisplayItem : public nsDisplayItemLink {
    * the same 3d rendering context.
    */
   virtual void DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) {}
-
-  /**
-   * If this has a child list, return it, even if the children are in
-   * a different coordinate system to this item.
-   */
-  virtual RetainedDisplayList* GetChildren() const { return nullptr; }
 
   /**
    * Returns the building rectangle used by nsDisplayListBuilder when
@@ -2736,11 +2920,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   bool ForceNotVisible() const {
     return mItemFlags.contains(ItemFlag::ForceNotVisible);
   }
-
-  /**
-   * For debugging and stuff
-   */
-  virtual const char* Name() const = 0;
 
   virtual void WriteDebugInfo(std::stringstream& aStream) {}
 
@@ -2867,27 +3046,7 @@ class nsDisplayItem : public nsDisplayItemLink {
     return mFrame->GetContent() == aOther->Frame()->GetContent();
   }
 
-  bool IsReused() const { return mItemFlags.contains(ItemFlag::ReusedItem); }
-  void SetReused(bool aReused) {
-    if (aReused) {
-      mItemFlags += ItemFlag::ReusedItem;
-    } else {
-      mItemFlags -= ItemFlag::ReusedItem;
-    }
-  }
-
-  bool CanBeReused() const {
-    return !mItemFlags.contains(ItemFlag::CantBeReused);
-  }
-  void SetCantBeReused() { mItemFlags += ItemFlag::CantBeReused; }
-  void DiscardIfOldItem() {
-    if (mOldList) {
-      SetCantBeReused();
-    }
-  }
   virtual void NotifyUsed(nsDisplayListBuilder* aBuilder) {}
-
-  virtual nsIFrame* GetDependentFrame() { return nullptr; }
 
   virtual mozilla::Maybe<nsRect> GetClipWithRespectToASR(
       nsDisplayListBuilder* aBuilder, const ActiveScrolledRoot* aASR) const;
@@ -2914,33 +3073,6 @@ class nsDisplayItem : public nsDisplayItemLink {
     return mDisplayItemDataLayerManager;
   }
 
-  // Set the nsDisplayList that this item belongs to, and what
-  // index it is within that list. Temporary state for merging
-  // used by RetainedDisplayListBuilder.
-  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex,
-                       uint32_t aListKey, uint32_t aNestingDepth) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    mOldListKey = aListKey;
-    mOldNestingDepth = aNestingDepth;
-#endif
-    mOldList = reinterpret_cast<uintptr_t>(aList);
-    mOldListIndex = aIndex;
-  }
-  bool GetOldListIndex(nsDisplayList* aList, uint32_t aListKey,
-                       OldListIndex* aOutIndex) {
-    if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Item found was in the wrong list! type %d "
-          "(outer type was %d at depth %d, now is %d)",
-          GetPerFrameKey(), mOldListKey, mOldNestingDepth, aListKey);
-#endif
-      return false;
-    }
-    *aOutIndex = mOldListIndex;
-    return true;
-  }
-
   const nsRect& GetPaintRect() const { return mPaintRect; }
 
   virtual const nsRect& GetUntransformedPaintRect() const {
@@ -2954,44 +3086,26 @@ class nsDisplayItem : public nsDisplayItemLink {
 #endif
 
  protected:
-  void SetDeletedFrame();
-
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
 
-  enum class ItemFlag {
-    ModifiedFrame,
-    DeletedFrame,
-    ForceNotVisible,
-    DisableSubpixelAA,
-    CantBeReused,
-    ReusedItem,
-    BackfaceHidden,
-    Combines3DTransformWithAncestors,
-    PaintRectValid,
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    MergedItem,
-    PreProcessedItem,
-#endif
-#ifdef MOZ_DUMP_PAINTING
-    // True if this frame has been painted.
-    Painted,
-#endif
-  };
-
-  nsIFrame* mFrame;
-  mozilla::EnumSet<ItemFlag, uint16_t> mItemFlags;
   RefPtr<const DisplayItemClipChain> mClipChain;
   const DisplayItemClip* mClip;
   RefPtr<const ActiveScrolledRoot> mActiveScrolledRoot;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
   RefPtr<struct AnimatedGeometryRoot> mAnimatedGeometryRoot;
-  // Result of ToReferenceFrame(mFrame), if mFrame is non-null
-  nsPoint mToReferenceFrame;
   mozilla::DisplayItemData* mDisplayItemData = nullptr;
   mozilla::layers::LayerManager* mDisplayItemDataLayerManager = nullptr;
+
+  struct {
+    RefPtr<const DisplayItemClipChain> mClipChain;
+    const DisplayItemClip* mClip;
+  } mState;
+
+  // Result of ToReferenceFrame(mFrame), if mFrame is non-null
+  nsPoint mToReferenceFrame;
 
  private:
   // This is the rectangle that nsDisplayListBuilder was using as the visible
@@ -3004,42 +3118,19 @@ class nsDisplayItem : public nsDisplayItemLink {
   // Guaranteed to be contained in GetBounds().
   nsRect mPaintRect;
 
-  OldListIndex mOldListIndex;
-  uintptr_t mOldList = 0;
-
- protected:
-  struct {
-    RefPtr<const DisplayItemClipChain> mClipChain;
-    const DisplayItemClip* mClip;
-  } mState;
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
- public:
-  bool IsMergedItem() const {
-    return mItemFlags.contains(ItemFlag::MergedItem);
-  }
-  bool IsPreProcessedItem() const {
-    return mItemFlags.contains(ItemFlag::PreProcessedItem);
-  }
-  void SetMergedPreProcessed(bool aMerged, bool aPreProcessed) {
-    if (aMerged) {
-      mItemFlags += ItemFlag::MergedItem;
-    } else {
-      mItemFlags -= ItemFlag::MergedItem;
-    }
-
-    if (aPreProcessed) {
-      mItemFlags += ItemFlag::PreProcessedItem;
-    } else {
-      mItemFlags -= ItemFlag::PreProcessedItem;
-    }
-  }
-
-  uint32_t mOldListKey = 0;
-  uint32_t mOldNestingDepth = 0;
-
- protected:
+  enum class ItemFlag : uint8_t {
+    BackfaceHidden,
+    Combines3DTransformWithAncestors,
+    DisableSubpixelAA,
+    ForceNotVisible,
+    PaintRectValid,
+#ifdef MOZ_DUMP_PAINTING
+    // True if this frame has been painted.
+    Painted,
 #endif
+  };
+
+  mozilla::EnumSet<ItemFlag, uint8_t> mItemFlags;
 };
 
 /**
@@ -3854,9 +3945,9 @@ class nsDisplayGeneric : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame),
         mPaint(aPaint),
         mOldPaint(nullptr),
-        mName(aName),
-        mType(aType) {
+        mName(aName) {
     MOZ_COUNT_CTOR(nsDisplayGeneric);
+    SetType(aType);
   }
 
   // XXX: should be removed eventually
@@ -3866,9 +3957,13 @@ class nsDisplayGeneric : public nsDisplayItem {
       : nsDisplayItem(aBuilder, aFrame),
         mPaint(nullptr),
         mOldPaint(aOldPaint),
-        mName(aName),
-        mType(aType) {
+        mName(aName) {
     MOZ_COUNT_CTOR(nsDisplayGeneric);
+    SetType(aType);
+  }
+
+  constexpr static DisplayItemType ItemType() {
+    return DisplayItemType::TYPE_GENERIC;
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -3885,7 +3980,6 @@ class nsDisplayGeneric : public nsDisplayItem {
   }
 
   const char* Name() const override { return mName; }
-  DisplayItemType GetType() const override { return mType; }
 
   // This override is needed because GetType() for nsDisplayGeneric subclasses
   // does not match TYPE_GENERIC that was used to allocate the object.
@@ -3904,7 +3998,6 @@ class nsDisplayGeneric : public nsDisplayItem {
   PaintCallback mPaint;
   OldPaintCallback mOldPaint;  // XXX: should be removed eventually
   const char* mName;
-  DisplayItemType mType;
 };
 
 #if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
@@ -4306,7 +4399,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
    * aBackgroundRect is relative to aFrame.
    */
   static InitData GetInitData(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              uint32_t aLayer, const nsRect& aBackgroundRect,
+                              uint16_t aLayer, const nsRect& aBackgroundRect,
                               mozilla::ComputedStyle* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
@@ -4357,9 +4450,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  uint32_t GetPerFrameKey() const override {
-    return (mLayer << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  uint16_t CalculatePerFrameKey() const override { return mLayer; }
 
   /**
    * Return the background positioning area.
@@ -4454,7 +4545,7 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
   nsRect mDestRect;
   /* Bounds of this display item */
   nsRect mBounds;
-  uint32_t mLayer;
+  uint16_t mLayer;
   bool mIsRasterImage;
   /* Whether the image should be treated as fixed to the viewport. */
   bool mShouldFixToViewport;
@@ -4479,6 +4570,14 @@ static_assert(static_cast<uint8_t>(TableType::TABLE_TYPE_MAX) <
               "TableType cannot fit with TableTypeBits::COUNT");
 TableType GetTableTypeFromFrame(nsIFrame* aFrame);
 
+static uint16_t CalculateTablePerFrameKey(const uint16_t aIndex,
+                                          const TableType aType) {
+  const uint32_t key = (aIndex << static_cast<uint8_t>(TableTypeBits::COUNT)) |
+                       static_cast<uint8_t>(aType);
+
+  return static_cast<uint16_t>(key);
+}
+
 /**
  * A display item to paint background image for table. For table parts, such
  * as row, row group, col, col group, when drawing its background, we'll
@@ -4501,11 +4600,8 @@ class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 
   NS_DISPLAY_DECL_NAME("TableBackgroundImage", TYPE_TABLE_BACKGROUND_IMAGE)
 
-  uint32_t GetPerFrameKey() const override {
-    return (mLayer << (TYPE_BITS +
-                       static_cast<uint8_t>(TableTypeBits::COUNT))) |
-           (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return CalculateTablePerFrameKey(mLayer, mTableType);
   }
 
   bool IsInvalid(nsRect& aRect) const override;
@@ -4633,9 +4729,8 @@ class nsDisplayTableThemedBackground : public nsDisplayThemedBackground {
   NS_DISPLAY_DECL_NAME("TableThemedBackground",
                        TYPE_TABLE_THEMED_BACKGROUND_IMAGE)
 
-  uint32_t GetPerFrameKey() const override {
-    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return static_cast<uint8_t>(mTableType);
   }
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
@@ -4825,9 +4920,8 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
     nsDisplayBackgroundColor::RemoveFrame(aFrame);
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return static_cast<uint8_t>(mTableType);
   }
 
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override {
@@ -5073,7 +5167,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
   nsDisplayCompositorHitTestInfo(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags,
-      uint32_t aIndex = 0,
+      uint16_t aIndex = 0,
       const mozilla::Maybe<nsRect>& aArea = mozilla::Nothing());
 
   nsDisplayCompositorHitTestInfo(
@@ -5096,7 +5190,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
-  uint32_t GetPerFrameKey() const override;
+  uint16_t CalculatePerFrameKey() const override;
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
@@ -5118,7 +5212,7 @@ class nsDisplayCompositorHitTestInfo : public nsDisplayHitTestInfoItem {
 
  private:
   mozilla::Maybe<mozilla::layers::ScrollableLayerGuid::ViewID> mScrollTarget;
-  uint32_t mIndex;
+  uint16_t mIndex;
   mozilla::Maybe<int32_t> mOverrideZIndex;
   int32_t mAppUnitsPerDevPixel;
 };
@@ -5151,7 +5245,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayList* aList,
                     const ActiveScrolledRoot* aActiveScrolledRoot,
-                    bool aClearClipChain = false, uint32_t aIndex = 0);
+                    bool aClearClipChain = false, uint16_t aIndex = 0);
 
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsDisplayHitTestInfoItem(aBuilder, aFrame),
@@ -5255,9 +5349,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                          nsRegion* aVisibleRegion) override;
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   bool CanMerge(const nsDisplayItem* aItem) const override { return false; }
 
@@ -5363,7 +5455,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
   // Our mBuildingRect may include the visible areas of children.
   nsRect mBaseBuildingRect;
   int32_t mOverrideZIndex;
-  uint32_t mIndex;
+  uint16_t mIndex;
   bool mHasZIndexOverride;
   bool mClearingClipChain = false;
 };
@@ -5538,7 +5630,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
   nsDisplayBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, uint8_t aBlendMode,
                      const ActiveScrolledRoot* aActiveScrolledRoot,
-                     uint32_t aIndex = 0);
+                     uint16_t aIndex = 0);
   nsDisplayBlendMode(nsDisplayListBuilder* aBuilder,
                      const nsDisplayBlendMode& aOther)
       : nsDisplayWrapList(aBuilder, aOther),
@@ -5568,9 +5660,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
     // LayerTreeInvalidation
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
@@ -5594,7 +5684,7 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
 
  protected:
   uint8_t mBlendMode;
-  uint32_t mIndex;
+  uint16_t mIndex;
 };
 
 class nsDisplayTableBlendMode : public nsDisplayBlendMode {
@@ -5602,7 +5692,7 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
   nsDisplayTableBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                           nsDisplayList* aList, uint8_t aBlendMode,
                           const ActiveScrolledRoot* aActiveScrolledRoot,
-                          uint32_t aIndex, nsIFrame* aAncestorFrame)
+                          uint16_t aIndex, nsIFrame* aAncestorFrame)
       : nsDisplayBlendMode(aBuilder, aFrame, aList, aBlendMode,
                            aActiveScrolledRoot, aIndex),
         mAncestorFrame(aAncestorFrame),
@@ -5644,11 +5734,8 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
     nsDisplayBlendMode::RemoveFrame(aFrame);
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << (TYPE_BITS +
-                       static_cast<uint8_t>(TableTypeBits::COUNT))) |
-           (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return CalculateTablePerFrameKey(mIndex, mTableType);
   }
 
  protected:
@@ -5706,9 +5793,8 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
     return false;
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIsForBackground ? 1 << TYPE_BITS : 0) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return mIsForBackground ? 1 : 0;
   }
 
  protected:
@@ -5748,9 +5834,8 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
     nsDisplayBlendContainer::RemoveFrame(aFrame);
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return static_cast<uint8_t>(mTableType);
   }
 
  protected:
@@ -6070,15 +6155,15 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
       : nsDisplayOwnLayer(aBuilder, aOther),
         mAnimatedGeometryRootForScrollMetadata(
             aOther.mAnimatedGeometryRootForScrollMetadata),
+        mContainerASR(aOther.mContainerASR),
         mIndex(aOther.mIndex),
-        mIsFixedBackground(aOther.mIsFixedBackground),
-        mContainerASR(aOther.mContainerASR) {
+        mIsFixedBackground(aOther.mIsFixedBackground) {
     MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   }
 
   static nsDisplayFixedPosition* CreateForFixedBackground(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      nsDisplayBackgroundImage* aImage, uint32_t aIndex);
+      nsDisplayBackgroundImage* aImage, uint16_t aIndex);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayFixedPosition() override { MOZ_COUNT_DTOR(nsDisplayFixedPosition); }
@@ -6104,9 +6189,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
     return mIsFixedBackground;
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
     return mAnimatedGeometryRootForScrollMetadata;
@@ -6126,21 +6209,21 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
  protected:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList, uint32_t aIndex);
+                         nsDisplayList* aList, uint16_t aIndex);
   void Init(nsDisplayListBuilder* aBuilder);
   ViewID GetScrollTargetId();
 
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
-  uint32_t mIndex;
-  bool mIsFixedBackground;
   RefPtr<const ActiveScrolledRoot> mContainerASR;
+  uint16_t mIndex;
+  bool mIsFixedBackground;
 };
 
 class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
  public:
   static nsDisplayTableFixedPosition* CreateForFixedBackground(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-      nsDisplayBackgroundImage* aImage, uint32_t aIndex,
+      nsDisplayBackgroundImage* aImage, uint16_t aIndex,
       nsIFrame* aAncestorFrame);
 
   NS_DISPLAY_DECL_NAME("TableFixedPosition", TYPE_TABLE_FIXED_POSITION)
@@ -6159,16 +6242,13 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
     nsDisplayFixedPosition::RemoveFrame(aFrame);
   }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << (TYPE_BITS +
-                       static_cast<uint8_t>(TableTypeBits::COUNT))) |
-           (static_cast<uint8_t>(mTableType) << TYPE_BITS) |
-           nsDisplayItem::GetPerFrameKey();
+  uint16_t CalculatePerFrameKey() const override {
+    return CalculateTablePerFrameKey(mIndex, mTableType);
   }
 
  protected:
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              nsDisplayList* aList, uint32_t aIndex,
+                              nsDisplayList* aList, uint16_t aIndex,
                               nsIFrame* aAncestorFrame);
 
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder,
@@ -6311,10 +6391,11 @@ class nsDisplayAsyncZoom : public nsDisplayOwnLayer {
   virtual ~nsDisplayAsyncZoom();
 #endif
 
+  NS_DISPLAY_DECL_NAME("AsyncZoom", TYPE_ASYNC_ZOOM)
+
   virtual already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aContainerParameters) override;
-  NS_DISPLAY_DECL_NAME("AsyncZoom", TYPE_ASYNC_ZOOM)
   virtual LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
@@ -6608,15 +6689,15 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint32_t aIndex);
+                     uint16_t aIndex);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint32_t aIndex, bool aAllowAsyncAnimation);
+                     uint16_t aIndex, bool aAllowAsyncAnimation);
 
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint32_t aIndex,
+                     uint16_t aIndex,
                      ComputeTransformFunction aTransformGetter);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -6683,9 +6764,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
 
   bool CanMerge(const nsDisplayItem* aItem) const override { return false; }
 
-  uint32_t GetPerFrameKey() const override {
-    return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   nsDisplayItemGeometry* AllocateGeometry(
       nsDisplayListBuilder* aBuilder) override {
@@ -6931,8 +7010,9 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForChildren;
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenBuildingRect;
-  uint32_t mIndex;
   mutable RetainedDisplayList mChildren;
+  uint16_t mIndex;
+
   // The untransformed bounds of |mChildren|.
   nsRect mChildBounds;
   // The transformed bounds of this display item.
@@ -7044,6 +7124,8 @@ class nsDisplayText final : public nsDisplayItem {
   virtual ~nsDisplayText() { MOZ_COUNT_DTOR(nsDisplayText); }
 #endif
 
+  NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
+
   void RestoreState() final {
     mIsFrameSelected.reset();
     mOpacity = 1.0f;
@@ -7070,7 +7152,6 @@ class nsDisplayText final : public nsDisplayItem {
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) final;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) final;
-  NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
   nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const final {
     if (gfxPlatform::GetPlatform()->RespectsFontStyleSmoothing()) {
@@ -7192,13 +7273,14 @@ class nsDisplaySVGWrapper : public nsDisplayWrapList {
  */
 class nsDisplayForeignObject : public nsDisplayWrapList {
  public:
-  NS_DISPLAY_DECL_NAME("ForeignObject", TYPE_FOREIGN_OBJECT)
-
   nsDisplayForeignObject(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayForeignObject();
 #endif
+
+  NS_DISPLAY_DECL_NAME("ForeignObject", TYPE_FOREIGN_OBJECT)
+
   virtual already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aContainerParameters) override;

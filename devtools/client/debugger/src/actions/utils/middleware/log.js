@@ -9,7 +9,6 @@ import { isTesting } from "devtools-environment";
 import type { ThunkArgs } from "../../types";
 
 const blacklist = [
-  "SET_POPUP_OBJECT_PROPERTIES",
   "ADD_BREAKPOINT_POSITIONS",
   "SET_SYMBOLS",
   "OUT_OF_SCOPE_LOCATIONS",

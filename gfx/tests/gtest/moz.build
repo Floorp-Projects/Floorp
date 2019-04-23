@@ -26,7 +26,7 @@ UNIFIED_SOURCES += [
     'TestTreeTraversal.cpp',
 ]
 
-# skip the test on windows10-aarch64
+# skip the test on windows10-aarch64 due to perma-crash - bug 1544961
 if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
     UNIFIED_SOURCES += [
         'TestVsync.cpp',

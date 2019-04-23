@@ -20,7 +20,7 @@ export class SimpleHashRouter extends React.PureComponent {
   }
 
   render() {
-    const [, ...routes] = this.state.hash.replace("#asrouter", "").split("-");
+    const [, ...routes] = this.state.hash.split("-");
     return React.cloneElement(this.props.children, {
       location: {
         hash: this.state.hash,

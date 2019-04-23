@@ -129,7 +129,7 @@ class OpenVRSession : public VRSession {
   void UpdateControllerButtons(VRSystemState& aState);
   void UpdateControllerButtonsObsolete(VRSystemState& aState);
   void UpdateTelemetry(VRSystemState& aSystemState);
-  void SetupContollerActions();
+  bool SetupContollerActions();
 
   bool SubmitFrame(const VRLayerTextureHandle& aTextureHandle,
                    ::vr::ETextureType aTextureType,

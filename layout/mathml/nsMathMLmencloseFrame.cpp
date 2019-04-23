@@ -716,9 +716,7 @@ class nsDisplayNotation final : public nsDisplayItem {
   virtual ~nsDisplayNotation() { MOZ_COUNT_DTOR(nsDisplayNotation); }
 #endif
 
-  virtual uint32_t GetPerFrameKey() const override {
-    return (mType << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
-  }
+  virtual uint16_t CalculatePerFrameKey() const override { return mType; }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLMencloseNotation", TYPE_MATHML_MENCLOSE_NOTATION)

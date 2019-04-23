@@ -332,6 +332,13 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.partnerbookmarks"
                   android:exported="false"/>
 
+        <!-- FxA state access provider. NB: this provider performs its own strict caller verification,
+        and so we export it without requiring any read or write permissions. -->
+        <provider tools:ignore="ExportedContentProvider"
+                  android:name="org.mozilla.gecko.fxa.AuthStateProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.fxa.auth"
+                  android:exported="true" />
+
         <!-- Share overlay activity
 
              Setting launchMode="singleTop" ensures onNewIntent is called when the Activity is

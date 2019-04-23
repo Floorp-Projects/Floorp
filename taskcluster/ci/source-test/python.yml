@@ -247,4 +247,6 @@ tryselect:
         subsuite: try
     when:
         files-changed:
+            - 'taskcluster/ci/test/**'
+            - 'taskcluster/taskgraph/transforms/**'
             - 'tools/tryselect/**'

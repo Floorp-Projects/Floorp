@@ -1,4 +1,5 @@
 import {_Base as Base, BaseContent} from "content-src/components/Base/Base";
+import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
 import React from "react";
 import {Search} from "content-src/components/Search/Search";
@@ -23,6 +24,16 @@ describe("<Base>", () => {
 
     assert.equal(
       wrapper.find(ErrorBoundary).first().prop("className"), "base-content-fallback");
+  });
+
+  it("should render an ASRouterAdmin if the devtools pref is true", () => {
+    const wrapper = shallow(<Base {...DEFAULT_PROPS} Prefs={{values: {"asrouter.devtoolsEnabled": true}}} />);
+    assert.lengthOf(wrapper.find(ASRouterAdmin), 1);
+  });
+
+  it("should not render an ASRouterAdmin if the devtools pref is false", () => {
+    const wrapper = shallow(<Base {...DEFAULT_PROPS} Prefs={{values: {"asrouter.devtoolsEnabled": false}}} />);
+    assert.lengthOf(wrapper.find(ASRouterAdmin), 0);
   });
 });
 

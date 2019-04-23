@@ -7,6 +7,7 @@
 import type { SymbolDeclarations, AstLocation } from "../../workers/parser";
 import type { PromiseAction } from "../utils/middleware/promise";
 import type { Context } from "../../types";
+import type { PreviewValue } from "../../reducers/types";
 
 export type ASTAction =
   | PromiseAction<
@@ -32,13 +33,7 @@ export type ASTAction =
         +type: "SET_PREVIEW",
         +cx: Context
       |},
-      {
-        expression: string,
-        result: any,
-        location: AstLocation,
-        tokenPos: any,
-        cursorPos: any
-      }
+      PreviewValue
     >
   | {|
       +type: "CLEAR_SELECTION",

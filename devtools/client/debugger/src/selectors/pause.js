@@ -14,11 +14,11 @@ import type { Frame, SourceLocation, ThreadId } from "../types";
 import type { Selector, State } from "../reducers/types";
 
 export const getSelectedFrames: Selector<{ [string]: ?Frame }> = createSelector(
-  state => state.pause,
-  pauseState => {
+  state => state.pause.threads,
+  threadPauseState => {
     const selectedFrames = {};
-    for (const thread in pauseState.threads) {
-      const pausedThread = pauseState.threads[thread];
+    for (const thread in threadPauseState) {
+      const pausedThread = threadPauseState[thread];
       const { selectedFrameId, frames } = pausedThread;
       if (frames) {
         selectedFrames[thread] = frames.find(

@@ -7,10 +7,10 @@
 #ifndef GFX_2D_GLUE_H
 #define GFX_2D_GLUE_H
 
-#include "gfxPlatform.h"
-#include "gfxRect.h"
 #include "gfxMatrix.h"
-#include "gfxContext.h"
+#include "gfxPoint.h"
+#include "gfxRect.h"
+#include "gfxTypes.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
