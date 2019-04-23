@@ -2204,10 +2204,6 @@ var _lodashMove = __webpack_require__(449);
 
 var _lodashMove2 = _interopRequireDefault(_lodashMove);
 
-var _Svg = __webpack_require__(450);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -2217,6 +2213,22 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 
+// $FlowIgnore
+const vendored = exports.vendored = {
+  classnames: _classnames2.default,
+  "devtools-components": devtoolsComponents,
+  "devtools-config": devtoolsConfig,
+  "devtools-contextmenu": devtoolsContextmenu,
+  "devtools-environment": devtoolsEnvironment,
+  "devtools-modules": devtoolsModules,
+  "devtools-splitter": _devtoolsSplitter2.default,
+  "devtools-utils": devtoolsUtils,
+  "fuzzaldrin-plus": fuzzaldrinPlus,
+  "lodash-move": _lodashMove2.default,
+  "react-aria-components/src/tabs": reactAriaComponentsTabs,
+  "react-transition-group/Transition": transition,
+  reselect
+};
 
 // Modules imported without destructuring
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -2236,25 +2248,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  */
 
 // Modules imported with destructuring
-const vendored = exports.vendored = {
-  classnames: _classnames2.default,
-  "devtools-components": devtoolsComponents,
-  "devtools-config": devtoolsConfig,
-  "devtools-contextmenu": devtoolsContextmenu,
-  "devtools-environment": devtoolsEnvironment,
-  "devtools-modules": devtoolsModules,
-  "devtools-splitter": _devtoolsSplitter2.default,
-  "devtools-utils": devtoolsUtils,
-  "fuzzaldrin-plus": fuzzaldrinPlus,
-  "lodash-move": _lodashMove2.default,
-  "react-aria-components/src/tabs": reactAriaComponentsTabs,
-  "react-transition-group/Transition": transition,
-  reselect,
-  // Svg is required via relative paths, so the key is not imported path.
-  // See .babel/transform-mc.js
-  Svg: _Svg2.default
-};
-// $FlowIgnore
 
 /***/ }),
 
@@ -6454,253 +6447,6 @@ function move(array, moveIndex, toIndex) {
   }
   return array;
 }
-
-/***/ }),
-
-/***/ 450:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _Svg = __webpack_require__(451);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _Svg2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/**
- * This file maps the SVG React Components in the images directory.
- */
-
-/***/ }),
-
-/***/ 451:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _svgInlineReact = __webpack_require__(452);
-
-var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const React = __webpack_require__(6);
-
-
-const svg = {
-  breakpoint: __webpack_require__(454),
-  "column-marker": __webpack_require__(455)
-};
-
-function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
-  if (!svg[name]) {
-    const error = `Unknown SVG: ${name}`;
-    console.warn(error);
-    return null;
-  }
-
-  const props = {
-    className: `${name} ${className || ""}`,
-    onClick,
-    "aria-label": ariaLabel,
-    src: svg[name]
-  };
-
-  return React.createElement(_svgInlineReact2.default, props);
-}
-
-Svg.displayName = "Svg";
-
-module.exports = Svg;
-
-/***/ }),
-
-/***/ 452:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(0);
-
-var _util = __webpack_require__(453);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-
-/***/ 453:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (key == "class") {
-            prop = "className";
-        } else if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        } else {
-            prop = key;
-        }
-
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove ? svg.remove() : svgContainer.removeChild(svg); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
-
-/***/ 454:
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 60 15\" stroke=\"currentColor\"><path d=\"M53.07.5H1.5c-.54 0-1 .46-1 1v12c0 .54.46 1 1 1h51.57c.58 0 1.15-.26 1.53-.7l4.7-6.3-4.7-6.3c-.38-.44-.95-.7-1.53-.7z\"></path></svg>"
-
-/***/ }),
-
-/***/ 455:
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 11 13\"><path d=\"M5.07.5H1.5c-.54 0-1 .46-1 1v10c0 .54.46 1 1 1h3.57c.58 0 1.15-.26 1.53-.7l3.7-5.3-3.7-5.3C6.22.76 5.65.5 5.07.5z\"></path></svg>"
 
 /***/ }),
 
