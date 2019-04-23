@@ -6198,6 +6198,39 @@ class LWasmSelectI64
   const LAllocation* condExpr() { return getOperand(CondIndex); }
 };
 
+class LWasmCompareAndSelect : public LWasmSelectBase<1, 4> {
+  MCompare::CompareType compareType_;
+  JSOp jsop_;
+
+ public:
+  LIR_HEADER(WasmCompareAndSelect);
+
+  static const size_t LeftExprIndex = 0;
+  static const size_t RightExprIndex = 1;
+  static const size_t IfTrueExprIndex = 2;
+  static const size_t IfFalseExprIndex = 3;
+
+  LWasmCompareAndSelect(const LAllocation& leftExpr,
+                        const LAllocation& rightExpr,
+                        MCompare::CompareType compareType, JSOp jsop,
+                        const LAllocation& ifTrueExpr,
+                        const LAllocation& ifFalseExpr)
+      : LWasmSelectBase(classOpcode), compareType_(compareType), jsop_(jsop) {
+    setOperand(LeftExprIndex, leftExpr);
+    setOperand(RightExprIndex, rightExpr);
+    setOperand(IfTrueExprIndex, ifTrueExpr);
+    setOperand(IfFalseExprIndex, ifFalseExpr);
+  }
+
+  const LAllocation* leftExpr() { return getOperand(LeftExprIndex); }
+  const LAllocation* rightExpr() { return getOperand(RightExprIndex); }
+  const LAllocation* ifTrueExpr() { return getOperand(IfTrueExprIndex); }
+  const LAllocation* ifFalseExpr() { return getOperand(IfFalseExprIndex); }
+
+  MCompare::CompareType compareType() { return compareType_; }
+  JSOp jsop() { return jsop_; }
+};
+
 class LWasmAddOffset : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(WasmAddOffset);

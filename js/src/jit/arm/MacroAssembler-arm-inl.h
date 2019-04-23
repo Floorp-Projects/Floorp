@@ -1899,6 +1899,20 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
   cmp32Move32(cond, lhs, scratch, src, dest);
 }
 
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
+                                 const Address& rhs, const Address& src,
+                                 Register dest) {
+  // This is never used, but must be present to facilitate linking on arm.
+  MOZ_CRASH("No known use cases");
+}
+
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
+                                 Register rhs, const Address& src,
+                                 Register dest) {
+  // This is never used, but must be present to facilitate linking on arm.
+  MOZ_CRASH("No known use cases");
+}
+
 void MacroAssembler::test32LoadPtr(Condition cond, const Address& addr,
                                    Imm32 mask, const Address& src,
                                    Register dest) {
