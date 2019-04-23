@@ -276,7 +276,7 @@ public final class SessionTextInput {
 
         @Override
         public void notifyAutoFill(@NonNull final GeckoSession session,
-                                   @AutoFillNotification final int notification,
+                                   @GeckoSession.AutoFillNotification final int notification,
                                    final int virtualId) {
             ThreadUtils.assertOnUiThread();
             final View view = session.getTextInput().getView();

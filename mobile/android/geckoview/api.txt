@@ -50,7 +50,6 @@ import java.lang.RuntimeException;
 import java.lang.String;
 import java.lang.Throwable;
 import java.lang.Void;
-import java.lang.annotation.Annotation;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.AbstractSequentialList;
@@ -515,9 +514,6 @@ package org.mozilla.geckoview {
     method @AnyThread default public int getCurrentIndex();
   }
 
-  public static interface GeckoSession.HistoryDelegate.VisitFlags implements Annotation {
-  }
-
   public static interface GeckoSession.MediaDelegate {
     method @UiThread default public void onMediaAdd(@NonNull GeckoSession, @NonNull MediaElement);
     method @UiThread default public void onMediaRemove(@NonNull GeckoSession, @NonNull MediaElement);
@@ -542,9 +538,6 @@ package org.mozilla.geckoview {
     field public final int target;
     field @Nullable public final String triggerUri;
     field @NonNull public final String uri;
-  }
-
-  public static interface GeckoSession.NavigationDelegate.TargetWindow implements Annotation {
   }
 
   public static interface GeckoSession.PermissionDelegate {
@@ -583,9 +576,6 @@ package org.mozilla.geckoview {
     field @NonNull public final String rawId;
     field public final int source;
     field public final int type;
-  }
-
-  public static interface GeckoSession.PermissionDelegate.Permission implements Annotation {
   }
 
   public static interface GeckoSession.ProgressDelegate {
@@ -694,15 +684,9 @@ package org.mozilla.geckoview {
     method @UiThread default public void confirm(@Nullable GeckoSession.PromptDelegate.Choice[]);
   }
 
-  public static interface GeckoSession.PromptDelegate.DatetimeType implements Annotation {
-  }
-
   public static interface GeckoSession.PromptDelegate.FileCallback implements GeckoSession.PromptDelegate.AlertCallback {
     method @UiThread default public void confirm(@Nullable Context, @Nullable Uri);
     method @UiThread default public void confirm(@Nullable Context, @Nullable Uri[]);
-  }
-
-  public static interface GeckoSession.PromptDelegate.FileType implements Annotation {
   }
 
   public static interface GeckoSession.PromptDelegate.TextCallback implements GeckoSession.PromptDelegate.AlertCallback {
@@ -732,15 +716,6 @@ package org.mozilla.geckoview {
     field public static final int HIDE_REASON_ACTIVE_SELECTION = 2;
     field public static final int HIDE_REASON_INVISIBLE_SELECTION = 1;
     field public static final int HIDE_REASON_NO_SELECTION = 0;
-  }
-
-  public static interface GeckoSession.SelectionActionDelegate.Action implements Annotation {
-  }
-
-  public static interface GeckoSession.SelectionActionDelegate.Flag implements Annotation {
-  }
-
-  public static interface GeckoSession.SelectionActionDelegate.HideReason implements Annotation {
   }
 
   public static class GeckoSession.SelectionActionDelegate.Selection {
@@ -776,12 +751,6 @@ package org.mozilla.geckoview {
     field public static final int RESTART_REASON_BLUR = 1;
     field public static final int RESTART_REASON_CONTENT_CHANGE = 2;
     field public static final int RESTART_REASON_FOCUS = 0;
-  }
-
-  public static interface GeckoSession.TextInputDelegate.AutoFillNotification implements Annotation {
-  }
-
-  public static interface GeckoSession.TextInputDelegate.RestartReason implements Annotation {
   }
 
   @AnyThread public static class GeckoSession.WebResponseInfo {
@@ -882,9 +851,6 @@ package org.mozilla.geckoview {
     field public static final int FETCH_FLAGS_ANONYMOUS = 1;
     field public static final int FETCH_FLAGS_NONE = 0;
     field public static final int FETCH_FLAGS_NO_REDIRECTS = 2;
-  }
-
-  public static interface GeckoWebExecutor.FetchFlags implements Annotation {
   }
 
   @AnyThread public class MediaElement {
@@ -1132,9 +1098,6 @@ package org.mozilla.geckoview {
     method @NonNull public WebRequest.Builder referrer(@Nullable String);
   }
 
-  public static interface WebRequest.CacheMode implements Annotation {
-  }
-
   @AnyThread public class WebRequestError extends Exception {
     ctor public WebRequestError(int, int);
     field public static final int ERROR_CATEGORY_CONTENT = 4;
@@ -1172,12 +1135,6 @@ package org.mozilla.geckoview {
     field public static final int ERROR_UNSAFE_CONTENT_TYPE = 36;
     field public final int category;
     field public final int code;
-  }
-
-  public static interface WebRequestError.Error implements Annotation {
-  }
-
-  public static interface WebRequestError.ErrorCategory implements Annotation {
   }
 
   @AnyThread public class WebResponse extends WebMessage {

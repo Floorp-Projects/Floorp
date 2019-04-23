@@ -53,7 +53,7 @@ public class WebRequest extends WebMessage {
     @IntDef({CACHE_MODE_DEFAULT, CACHE_MODE_NO_STORE,
             CACHE_MODE_RELOAD, CACHE_MODE_NO_CACHE,
             CACHE_MODE_FORCE_CACHE, CACHE_MODE_ONLY_IF_CACHED})
-    public @interface CacheMode {};
+    /* package */ @interface CacheMode {};
 
     /**
      * Default cache mode. Normal caching rules apply.
