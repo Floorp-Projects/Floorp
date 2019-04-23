@@ -15,7 +15,7 @@
     <p>POST raw test</p>
 
     <script type="text/javascript">
-      /* exported performRequests */
+      /* exported performRequests performLargePostDataRequest */
       "use strict";
 
       function post(address, message, callback) {
@@ -33,6 +33,14 @@
 
       function performRequests() {
         post("sjs_simple-test-server.sjs", JSON.stringify({a: 1}), function() {
+          // Done.
+        });
+      }
+
+      function performLargePostDataRequest() {
+        const limit = 1048576;
+        const data = "x".repeat(2 * limit);
+        post("sjs_simple-test-server.sjs", JSON.stringify(data), function() {
           // Done.
         });
       }
