@@ -12,8 +12,13 @@ import argparse
 import os
 import taskcluster
 
-from lib import build_variants
-from lib.tasks import TaskBuilder, schedule_task_graph, get_architecture_and_build_type_from_variant
+from lib.gradle import get_build_variants, get_geckoview_versions
+from lib.tasks import (
+    fetch_mozharness_task_id,
+    get_architecture_and_build_type_from_variant,
+    schedule_task_graph,
+    TaskBuilder,
+)
 from lib.chain_of_trust import (
     populate_chain_of_trust_task_graph,
     populate_chain_of_trust_required_but_unused_files
@@ -22,6 +27,7 @@ from lib.chain_of_trust import (
 REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
 PR_TITLE = os.environ.get('GITHUB_PULL_TITLE', '')
+SHORT_HEAD_BRANCH = os.environ.get('SHORT_HEAD_BRANCH')
 
 # If we see this text inside a pull request title then we will not execute any tasks for this PR.
 SKIP_TASKS_TRIGGER = '[ci skip]'
@@ -31,7 +37,7 @@ BUILDER = TaskBuilder(
     task_id=os.environ.get('TASK_ID'),
     repo_url=REPO_URL,
     git_ref=os.environ.get('MOBILE_HEAD_BRANCH'),
-    short_head_branch=os.environ.get('SHORT_HEAD_BRANCH'),
+    short_head_branch=SHORT_HEAD_BRANCH,
     commit=COMMIT,
     owner="fenix-eng-notifications@mozilla.com",
     source='{}/raw/{}/.taskcluster.yml'.format(REPO_URL, COMMIT),
@@ -42,30 +48,51 @@ BUILDER = TaskBuilder(
 )
 
 
-def pr_or_push(is_master_push):
-    if not is_master_push and SKIP_TASKS_TRIGGER in PR_TITLE:
+def pr_or_push(is_push):
+    if not is_push and SKIP_TASKS_TRIGGER in PR_TITLE:
         print("Pull request title contains", SKIP_TASKS_TRIGGER)
         print("Exit")
         return {}
+
+    variants = get_build_variants()
+    geckoview_nightly_version = get_geckoview_versions()['nightly']
+    mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
+    gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
     build_tasks = {}
     signing_tasks = {}
     other_tasks = {}
 
-    for variant in build_variants.from_gradle():
+    for variant in variants:
         assemble_task_id = taskcluster.slugId()
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
 
-        arch, build_type = get_architecture_and_build_type_from_variant(variant)
+        architecture, build_type = get_architecture_and_build_type_from_variant(variant)
         # autophone only supports arm and aarch64, so only sign/perftest those builds
         if (
+            is_push and
             build_type == 'releaseRaptor' and
-            arch in ('arm', 'aarch64') and
-            is_master_push
+            architecture in ('arm', 'aarch64') and
+            SHORT_HEAD_BRANCH == 'master'
         ):
-            signing_tasks[taskcluster.slugId()] = BUILDER.craft_master_commit_signing_task(assemble_task_id, variant)
-            # raptor task will be added in follow-up
+            signing_task_id = taskcluster.slugId()
+            signing_tasks[signing_task_id] = BUILDER.craft_master_commit_signing_task(assemble_task_id, variant)
+
+            ALL_RAPTOR_CRAFT_FUNCTIONS = [
+                BUILDER.craft_raptor_tp6m_task(for_suite=i)
+                for i in range(1, 11)
+            ] + [
+                BUILDER.craft_raptor_speedometer_task,
+                BUILDER.craft_raptor_speedometer_power_task,
+            ]
+
+            for craft_function in ALL_RAPTOR_CRAFT_FUNCTIONS:
+                args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
+                other_tasks[taskcluster.slugId()] = craft_function(*args)
+                # we also want the arm APK to be tested on 64-bit-devices
+                if architecture == 'arm':
+                    other_tasks[taskcluster.slugId()] = craft_function(*args, force_run_on_64_bit_device=True)
 
     for craft_function in (
         BUILDER.craft_detekt_task,
