@@ -59,7 +59,7 @@ export function shouldBlackbox(source: ?Source) {
     return false;
   }
 
-  if (!isLoaded(source) || !source.url) {
+  if (!source.url) {
     return false;
   }
 
