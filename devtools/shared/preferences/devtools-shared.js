@@ -38,11 +38,12 @@ pref("devtools.debugger.remote-websocket", false);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
 
-// Limit for intercepted response bodies (1 MB)
+// Limit for intercepted request and response bodies (1 MB)
 // Possible values:
 // 0 => the response body has no limit
 // n => represents max number of bytes stored
 pref("devtools.netmonitor.responseBodyLimit", 1048576);
+pref("devtools.netmonitor.requestBodyLimit", 1048576);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
