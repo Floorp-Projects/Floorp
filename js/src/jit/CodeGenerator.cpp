@@ -6216,7 +6216,7 @@ bool CodeGenerator::generateBody() {
       }
 
 #ifdef JS_JITSPEW
-      JitSpewStart(JitSpew_Codegen, "instruction %s", iter->opName());
+      JitSpewStart(JitSpew_Codegen, "# instruction %s", iter->opName());
       if (const char* extra = iter->getExtraName()) {
         JitSpewCont(JitSpew_Codegen, ":%s", extra);
       }
@@ -14008,6 +14008,45 @@ void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
 void CodeGenerator::visitIsNullPointer(LIsNullPointer* lir) {
   masm.cmpPtrSet(Assembler::Equal, ToRegister(lir->value()), ImmWord(0),
                  ToRegister(lir->output()));
+}
+
+void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
+  bool cmpIs32bit = ins->compareType() == MCompare::Compare_Int32 ||
+                    ins->compareType() == MCompare::Compare_UInt32;
+  bool selIs32bit = ins->mir()->type() == MIRType::Int32;
+
+  if (cmpIs32bit && selIs32bit) {
+    Register out = ToRegister(ins->output());
+    MOZ_ASSERT(ToRegister(ins->ifTrueExpr()) == out,
+               "true expr input is reused for output");
+
+    Assembler::Condition cond = Assembler::InvertCondition(JSOpToCondition(
+                                    ins->compareType(), ins->jsop()));
+    const LAllocation* rhs = ins->rightExpr();
+    const LAllocation* falseExpr = ins->ifFalseExpr();
+    Register lhs = ToRegister(ins->leftExpr());
+
+    if (rhs->isRegister()) {
+      if (falseExpr->isRegister()) {
+        // On arm32, this is the only one of the four cases that can actually
+        // happen, since |rhs| and |falseExpr| are marked useAny() by
+        // LIRGenerator::visitWasmSelect, and useAny() means "register only"
+        // on arm32.
+        masm.cmp32Move32(cond, lhs, ToRegister(rhs), ToRegister(falseExpr), out);
+      } else {
+        masm.cmp32Load32(cond, lhs, ToRegister(rhs), ToAddress(falseExpr), out);
+      }
+    } else {
+      if (falseExpr->isRegister()) {
+        masm.cmp32Move32(cond, lhs, ToAddress(rhs), ToRegister(falseExpr), out);
+      } else {
+        masm.cmp32Load32(cond, lhs, ToAddress(rhs), ToAddress(falseExpr), out);
+      }
+    }
+    return;
+  }
+
+  MOZ_CRASH("in CodeGenerator::visitWasmCompareAndSelect: unexpected types");
 }
 
 static_assert(!std::is_polymorphic<CodeGenerator>::value,
