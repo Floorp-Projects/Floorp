@@ -244,7 +244,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 sessionId
             ) {
                 if (it) {
-                    Snackbar.make(view.rootView, getString(R.string.full_screen_notification), Snackbar.LENGTH_LONG)
+                    FenixSnackbar.make(view.rootView, Snackbar.LENGTH_LONG)
+                        .setText(getString(R.string.full_screen_notification))
                         .show()
                     activity?.enterToImmersiveMode()
                     toolbar.visibility = View.GONE
