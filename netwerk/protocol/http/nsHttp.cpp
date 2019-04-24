@@ -303,7 +303,12 @@ bool ValidationRequired(bool isForcedValid,
                         bool isImmutable, bool customConditionalRequest,
                         nsHttpRequestHead &requestHead, nsICacheEntry *entry,
                         CacheControlParser &cacheControlRequest,
-                        bool fromPreviousSession) {
+                        bool fromPreviousSession,
+                        bool *performBackgroundRevalidation) {
+  if (performBackgroundRevalidation) {
+    *performBackgroundRevalidation = false;
+  }
+
   // Check isForcedValid to see if it is possible to skip validation.
   // Don't skip validation if we have serious reason to believe that this
   // content is invalid (it's expired).
@@ -411,6 +416,12 @@ bool ValidationRequired(bool isForcedValid,
     LOG(("  not validating, expire time not in the past"));
   } else if (cachedResponseHead->MustValidateIfExpired()) {
     doValidation = true;
+  } else if (cachedResponseHead->StaleWhileRevalidate(now, expiration)) {
+    LOG(("  not validating, in the stall-while-revalidate window"));
+    doValidation = false;
+    if (performBackgroundRevalidation) {
+      *performBackgroundRevalidation = true;
+    }
   } else if (loadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
     // If the cached response does not include expiration infor-
     // mation, then we must validate the response, despite whether

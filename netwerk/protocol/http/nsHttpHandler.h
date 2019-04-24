@@ -359,6 +359,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     NotifyObservers(chan, NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC);
   }
 
+  // Called by the channel once it made background cache revalidation
+  void OnBackgroundRevalidation(nsIHttpChannel *chan) {
+    NotifyObservers(chan, NS_HTTP_ON_BACKGROUND_REVALIDATION);
+  }
+
   // Called by channels before a redirect happens. This notifies both the
   // channel's and the global redirect observers.
   MOZ_MUST_USE nsresult AsyncOnChannelRedirect(

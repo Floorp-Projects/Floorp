@@ -753,6 +753,36 @@ bool nsHttpResponseHead::MustValidateIfExpired() {
   return HasHeaderValue(nsHttp::Cache_Control, "must-revalidate");
 }
 
+bool nsHttpResponseHead::StaleWhileRevalidate(uint32_t now,
+                                              uint32_t expiration) {
+  nsresult rv;
+
+  if (expiration <= 0) {
+    return false;
+  }
+
+  uint32_t revalidateWindow;
+  rv = GetStaleWhileRevalidateValue(&revalidateWindow);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  // 'expiration' is the expiration time (an absolute unit), the swr window
+  // extends the expiration time.
+  CheckedInt<uint32_t> stallValidUntil = expiration;
+  stallValidUntil += revalidateWindow;
+  if (!stallValidUntil.isValid()) {
+    // overflow means an indefinite stale window
+    return true;
+  }
+
+  if (now > stallValidUntil.value()) {
+    return false;
+  }
+
+  return true;
+}
+
 bool nsHttpResponseHead::IsResumable() {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   // even though some HTTP/1.0 servers may support byte range requests, we're
@@ -899,6 +929,45 @@ nsresult nsHttpResponseHead::GetMaxAgeValue_locked(uint32_t *result) const {
   int maxAgeValue = atoi(p);
   if (maxAgeValue < 0) maxAgeValue = 0;
   *result = static_cast<uint32_t>(maxAgeValue);
+  return NS_OK;
+}
+
+// Get the stale-while-revalidate directive value, if present
+nsresult nsHttpResponseHead::GetStaleWhileRevalidateValue(uint32_t *result) {
+  RecursiveMutexAutoLock monitor(mRecursiveMutex);
+  return GetStaleWhileRevalidateValue_locked(result);
+}
+
+nsresult nsHttpResponseHead::GetStaleWhileRevalidateValue_locked(
+    uint32_t *result) const {
+  const char *val = mHeaders.PeekHeader(nsHttp::Cache_Control);
+  if (!val) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Rewrite (best all FindToken users) to mozilla::Tokenizer, bug 1542293.
+  const char *p = nsHttp::FindToken(val, "stale-while-revalidate",
+                                    HTTP_HEADER_VALUE_SEPS "=");
+  if (!p) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  p += 22;
+  while (*p == ' ' || *p == '\t') {
+    ++p;
+  }
+  if (*p != '=') {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  ++p;
+  while (*p == ' ' || *p == '\t') {
+    ++p;
+  }
+
+  int revalidateWindow = atoi(p);
+  if (revalidateWindow < 0) {
+    revalidateWindow = 0;
+  }
+  *result = static_cast<uint32_t>(revalidateWindow);
   return NS_OK;
 }
 

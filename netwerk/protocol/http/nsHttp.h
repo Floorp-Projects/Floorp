@@ -220,7 +220,8 @@ bool ValidationRequired(bool isForcedValid,
                         bool isImmutable, bool customConditionalRequest,
                         nsHttpRequestHead &requestHead, nsICacheEntry *entry,
                         CacheControlParser &cacheControlRequest,
-                        bool fromPreviousSession);
+                        bool fromPreviousSession,
+                        bool *performBackgroundRevalidation = nullptr);
 
 nsresult GetHttpResponseHeadFromCacheEntry(
     nsICacheEntry *entry, nsHttpResponseHead *cachedResponseHead);
