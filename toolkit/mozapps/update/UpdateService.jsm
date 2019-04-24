@@ -626,7 +626,9 @@ function getCanUseBits() {
 function LOG(string) {
   if (gLogEnabled) {
     dump("*** AUS:SVC " + string + "\n");
-    Services.console.logStringMessage("AUS:SVC " + string);
+    if (!Cu.isInAutomation) {
+      Services.console.logStringMessage("AUS:SVC " + string);
+    }
 
     if (gLogfileEnabled) {
       if (!gLogfileWritePromise) {

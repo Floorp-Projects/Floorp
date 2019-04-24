@@ -27,6 +27,8 @@ Services.scriptloader.loadSubScript(DATA_URI_SPEC + "testConstants.js", this);
 var gURLData = URL_HOST + "/" + REL_PATH_DATA;
 const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 
+const gBadSizeResult = Cr.NS_ERROR_UNEXPECTED.toString();
+
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
@@ -603,6 +605,26 @@ function waitForAboutDialog() {
 }
 
 /**
+ * Return the first UpdatePatch with the given type.
+ *
+ * @param   type
+ *          The type of the patch ("complete" or "partial")
+ * @return  A nsIUpdatePatch object matching the type specified
+ */
+function getPatchOfType(type) {
+  let update = gUpdateManager.activeUpdate;
+  if (update) {
+    for (let i = 0; i < update.patchCount; ++i) {
+      let patch = update.getPatchAt(i);
+      if (patch && patch.type == type) {
+        return patch;
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Runs an About Dialog update test. This will set various common prefs for
  * updating and runs the provided list of steps.
  *
@@ -626,13 +648,13 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
       return step();
     }
 
-    const {panelId, checkActiveUpdate, continueFile} = step;
+    const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
     return (async function() {
       let updateDeck = aboutDialog.document.getElementById("updateDeck");
       await BrowserTestUtils.waitForCondition(() =>
         (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
         "Waiting for expected panel ID - got: \"" +
-        updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"",
+        updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
         undefined, 200);
       let selectedPanel = updateDeck.selectedPanel;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
@@ -646,7 +668,29 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
            "There should not be an active update");
       }
 
-      if (continueFile) {
+      if (panelId == "downloading") {
+        for (let i = 0; i < downloadInfo.length; ++i) {
+          let info = downloadInfo[i];
+          // The About Dialog tests always specify a continue file.
+          await continueFileHandler(continueFile);
+          let patch = getPatchOfType(info.patchType);
+          // The update is removed early when the last download fails so check
+          // that there is a patch before proceeding.
+          let isLastPatch = (i == downloadInfo.length - 1);
+          if (!isLastPatch || patch) {
+            let resultName = info.bitsResult ? "bitsResult" : "internalResult";
+            patch.QueryInterface(Ci.nsIWritablePropertyBag);
+            await BrowserTestUtils.waitForCondition(() =>
+              (patch.getProperty(resultName) == info[resultName]),
+              "Waiting for expected patch property " + resultName + " value " +
+              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
+              info[resultName] + "\"", undefined, 200);
+            is(patch.getProperty(resultName), info[resultName],
+               "The patch property " + resultName + " value should equal " +
+               info[resultName]);
+          }
+        }
+      } else if (continueFile) {
         await continueFileHandler(continueFile);
       }
 
@@ -739,7 +783,7 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
       return step();
     }
 
-    const {panelId, checkActiveUpdate, continueFile} = step;
+    const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
     return (async function() {
       await ContentTask.spawn(tab.linkedBrowser, {panelId},
                               async ({panelId}) => {
@@ -747,7 +791,7 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
         await ContentTaskUtils.waitForCondition(() =>
           (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
           "Waiting for expected panel ID - got: \"" +
-          updateDeck.selectedPanel.id + "\", expected \"" + panelId + "\"",
+          updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
           undefined, 200);
         is(updateDeck.selectedPanel.id, panelId,
            "The panel ID should equal " + panelId);
@@ -762,7 +806,29 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
            "There should not be an active update");
       }
 
-      if (continueFile) {
+      if (panelId == "downloading") {
+        for (let i = 0; i < downloadInfo.length; ++i) {
+          let info = downloadInfo[i];
+          // The About Dialog tests always specify a continue file.
+          await continueFileHandler(continueFile);
+          let patch = getPatchOfType(info.patchType);
+          // The update is removed early when the last download fails so check
+          // that there is a patch before proceeding.
+          let isLastPatch = (i == downloadInfo.length - 1);
+          if (!isLastPatch || patch) {
+            let resultName = info.bitsResult ? "bitsResult" : "internalResult";
+            patch.QueryInterface(Ci.nsIWritablePropertyBag);
+            await BrowserTestUtils.waitForCondition(() =>
+              (patch.getProperty(resultName) == info[resultName]),
+              "Waiting for expected patch property " + resultName + " value " +
+              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
+              info[resultName] + "\"", undefined, 200);
+            is(patch.getProperty(resultName), info[resultName],
+               "The patch property " + resultName + " value should equal " +
+               info[resultName]);
+          }
+        }
+      } else if (continueFile) {
         await continueFileHandler(continueFile);
       }
 
