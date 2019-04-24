@@ -10,6 +10,7 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
     - [Integrating with the build system](#integrating-with-the-build-system)
     - [Initializing glean](#initializing-glean)
     - [Adding new metrics](#adding-new-metrics)
+    - [Adding custom pings](#adding-custom-pings)
     - [Providing UI to enable / disable metrics](#providing-ui-to-enable--disable-metrics)
 - [Debugging products using glean](#debugging-products-using-glean)
 - [Contact](#contact)
@@ -32,20 +33,6 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 
 ```Groovy
 implementation "org.mozilla.components:service-glean:{latest-version}"
-```
-
-### Setting up the proguard rule
-
-Applications that use Glean need to set up a proguard rule to prevent it from
-removing some of the objects created for your application by the Glean code
-generator.
-
-Add the following rule to your `proguard-rules.pro` file, replacing
-`APP_PACKAGE_NAME` with your application's package name:
-
-```
-# Keep code generated from Glean Metrics
--keep APP_PACKAGE_NAME.GleanMetrics. ** {  *; }
 ```
 
 ### Integrating with the build system
@@ -125,6 +112,13 @@ To learn more, see [adding new metrics](docs/metrics/adding-new-metrics.md).
 **Important**: as stated [here](#before-using-the-library), any new data collection requires
 documentation and data-review. This is also required for any new metric automatically collected
 by glean.
+
+### Adding custom pings
+
+Please refer to the custom pings documentation living [here](docs/pings/custom.md).
+
+**Important**: as stated [here](#before-using-the-library), any new data collection, including
+new custom pings, requires documentation and data-review. This is also required for any new ping automatically collected by glean.
 
 ### Testing metrics
 

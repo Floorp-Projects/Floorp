@@ -18,6 +18,9 @@ For example, to define a custom ping called `search` specifically for search
 information:
 
 ```YAML
+# Required to indicate this is a `pings.yaml` file
+$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+
 search:
   description: >
     A ping to record search data.
