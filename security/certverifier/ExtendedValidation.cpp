@@ -905,6 +905,18 @@ static const struct EVInfo kEVInfos[] = {
     "IEV4dGVuZGVkIFZhbGlkYXRpb24gUm9vdA==",
     "T9Irj/VkyDOeTzRYZiNwYA==",
   },
+  {
+    // CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK
+    "2.23.140.1.1",
+    "CA/Browser Forum EV OID",
+    { 0x5A, 0x2F, 0xC0, 0x3F, 0x0C, 0x83, 0xB0, 0x90, 0xBB, 0xFA, 0x40,
+      0x60, 0x4B, 0x09, 0x88, 0x44, 0x6C, 0x76, 0x36, 0x18, 0x3D, 0xF9,
+      0x84, 0x6E, 0x17, 0x10, 0x1A, 0x44, 0x7F, 0xB8, 0xEF, 0xD6 },
+    "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhv"
+    "bmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tv"
+    "bmcgUG9zdCBSb290IENBIDM=",
+    "CBZfikyl7ADJk0DfxMauI7gcWqQ=",
+  },
     // clang-format on
 };
 
