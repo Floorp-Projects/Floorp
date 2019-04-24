@@ -1846,7 +1846,6 @@ MediaStream::MediaStream()
       mSuspendedCount(0),
       mFinished(false),
       mNotifiedFinished(false),
-      mHasCurrentData(false),
       mMainThreadCurrentTime(0),
       mMainThreadFinished(false),
       mFinishedNotificationSent(false),
@@ -2654,10 +2653,6 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
       mTracks.FindTrack(data->mID)->SetEnded();
       mUpdateTracks.RemoveElementAt(i);
     }
-  }
-
-  if (mTracks.GetEarliestTrackEnd() > 0) {
-    mHasCurrentData = true;
   }
 
   if (finished) {
