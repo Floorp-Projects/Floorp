@@ -15,6 +15,7 @@
 | [LabeledMetricType](-labeled-metric-type/index.md) | `data class LabeledMetricType<T> : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for labeled metrics. |
 | [Lifetime](-lifetime/index.md) | `enum class Lifetime`<br>Enumeration of different metric lifetimes. |
 | [NoExtraKeys](-no-extra-keys/index.md) | `enum class NoExtraKeys`<br>An enum with no values for convenient use as the default set of extra keys that an [EventMetricType](-event-metric-type/index.md) can accept. |
+| [PingType](-ping-type/index.md) | `data class PingType`<br>This implements the developer facing API for custom pings. |
 | [StringListMetricType](-string-list-metric-type/index.md) | `data class StringListMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording string list metrics. |
 | [StringMetricType](-string-metric-type/index.md) | `data class StringMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording string metrics. |
 | [TimeUnit](-time-unit/index.md) | `enum class TimeUnit`<br>Enumeration of different resolutions supported by the Timespan and TimingDistribution metric types. |

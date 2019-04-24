@@ -19,4 +19,4 @@ An interface which provides generic operations for storing browser data like his
 |---|---|
 | [BookmarksStorage](../-bookmarks-storage/index.md) | `interface BookmarksStorage : `[`Storage`](./index.md)<br>An interface which defines read/write operations for bookmarks data. |
 | [HistoryStorage](../-history-storage/index.md) | `interface HistoryStorage : `[`Storage`](./index.md)<br>An interface which defines read/write methods for history data. |
-| [PlacesStorage](../../mozilla.components.browser.storage.sync/-places-storage/index.md) | `open class PlacesStorage : `[`Storage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)<br>A base class for concrete implementations of PlacesStorages |
+| [PlacesStorage](../../mozilla.components.browser.storage.sync/-places-storage/index.md) | `abstract class PlacesStorage : `[`Storage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)<br>A base class for concrete implementations of PlacesStorages |
