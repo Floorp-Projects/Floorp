@@ -12,7 +12,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&PropertiesViewWindowTitle;">
 
-  <script type="application/javascript"
-          src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <vbox id="variables" flex="1"/>
 </window>

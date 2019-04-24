@@ -25,18 +25,12 @@
       onunload="PlacesUIUtils.setMouseoverURL('', window);"
       aria-label="&bookmarksButton.label;">
 
-  <script type="application/javascript"
-          src="chrome://browser/content/places/bookmarksSidebar.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/contentTheme.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/places/places-tree.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://browser/content/places/bookmarksSidebar.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://browser/content/contentTheme.js"/>
+  <script src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
 #include placesCommands.inc.xul
 #include placesContextMenu.inc.xul

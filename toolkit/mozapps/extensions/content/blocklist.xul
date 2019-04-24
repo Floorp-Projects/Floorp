@@ -21,8 +21,8 @@
         buttonlabelaccept="&blocklist.accept.label;"
         buttonaccesskeyaccept="&blocklist.accept.accesskey;">
 
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://mozapps/content/extensions/blocklist.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://mozapps/content/extensions/blocklist.js"/>
 
   <hbox align="stretch" flex="1">
     <vbox pack="start">

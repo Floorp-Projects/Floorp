@@ -24,8 +24,7 @@
     <html:link rel="localization" href="toolkit/updates/history.ftl"/>
   </linkset>
 
-  <script type="application/javascript"
-          src="chrome://mozapps/content/update/history.js"/>
+  <script src="chrome://mozapps/content/update/history.js"/>
 
   <label data-l10n-id="history-intro"></label>
   <separator class="thin"/>

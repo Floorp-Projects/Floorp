@@ -80,7 +80,7 @@
 # that they can be shared with macWindow.inc.xul.
 #include global-scripts.inc
 
-<script type="application/javascript">
+<script>
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-contentblocking.js", this);

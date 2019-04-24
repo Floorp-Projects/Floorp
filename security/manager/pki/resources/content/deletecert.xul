@@ -19,8 +19,8 @@
     <html:link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="pippki.js" />
-  <script type="application/javascript" src="chrome://pippki/content/deletecert.js"/>
+  <script src="pippki.js" />
+  <script src="chrome://pippki/content/deletecert.js"/>
 
   <description id="confirm" style="width: 400px;"/>
   <richlistbox id="certlist" class="box-padded" flex="1"

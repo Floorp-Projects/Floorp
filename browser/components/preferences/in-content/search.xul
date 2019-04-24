@@ -1,5 +1,4 @@
-    <script type="application/javascript"
-            src="chrome://browser/content/preferences/in-content/search.js"/>
+    <script src="chrome://browser/content/preferences/in-content/search.js"/>
     <html:template id="template-paneSearch">
     <hbox id="searchCategory"
           class="subcategory"
