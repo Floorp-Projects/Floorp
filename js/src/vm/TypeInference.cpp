@@ -3284,6 +3284,9 @@ bool js::AddClearDefiniteGetterSetterForPrototypeChain(JSContext* cx,
    */
   RootedObject proto(cx, group->proto().toObjectOrNull());
   while (proto) {
+    if (!proto->hasStaticPrototype()) {
+      return false;
+    }
     ObjectGroup* protoGroup = JSObject::getGroup(cx, proto);
     if (!protoGroup) {
       cx->recoverFromOutOfMemory();
