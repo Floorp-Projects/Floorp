@@ -7,4 +7,21 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
+EXPORTS.mozilla.dom.l10n += [
+    'DOMOverlays.h',
+]
+
+UNIFIED_SOURCES += [
+    'DOMOverlays.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+FINAL_LIBRARY = 'xul'
+
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['tests/gtest']
