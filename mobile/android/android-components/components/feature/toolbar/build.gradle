@@ -28,6 +28,7 @@ dependencies {
     implementation project(':concept-toolbar')
     implementation project(':concept-storage')
     implementation project(':lib-publicsuffixlist')
+    implementation project(':support-utils')
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib

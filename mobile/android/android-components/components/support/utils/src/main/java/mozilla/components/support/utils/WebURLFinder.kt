@@ -291,6 +291,19 @@ class WebURLFinder {
                 WORD_BOUNDARY +
                 ")")
 
+        private const val WILDCARD_PROTOCOL = "(?i:[a-z]+)(://|:)"
+
+        private const val UNSUPPORTED_URL_WITH_PROTOCOL = ("(" +
+            WORD_BOUNDARY +
+            "(?:" +
+            "(?:" + WILDCARD_PROTOCOL + "(?:" + USER_INFO + ")?" + ")" +
+            "(?:" + RELAXED_DOMAIN_NAME + ")" +
+            "(?:" + PORT_NUMBER + ")?" +
+            ")" +
+            "(?:" + PATH_AND_QUERY + ")?" +
+            WORD_BOUNDARY +
+            ")")
+
         /**
          * Regular expression pattern to match IRIs. If a string starts with http(s):// the expression
          * tries to match the URL structure with a relaxed rule for TLDs. If the string does not start
@@ -299,6 +312,22 @@ class WebURLFinder {
         private val autolinkWebUrl = Pattern.compile(
             "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)"
         )
+
+        internal val fuzzyUrlRegex = (
+                "^" +
+                "\\s*" +
+                "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)" +
+                "\\s*" +
+                "$"
+            ).toRegex(RegexOption.IGNORE_CASE)
+
+        internal val fuzzyUrlNonWebRegex = (
+            "^" +
+                "\\s*" +
+                "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL|$UNSUPPORTED_URL_WITH_PROTOCOL)" +
+                "\\s*" +
+                "$"
+            ).toRegex(RegexOption.IGNORE_CASE)
 
         /**
          * Check if string is a Web URL.
@@ -310,7 +339,7 @@ class WebURLFinder {
          * @param string to check.
          * @return `true` if `string` is a Web URL.
          */
-        private fun isWebURL(string: String): Boolean {
+        fun isWebURL(string: String): Boolean {
             try {
                 URI(string)
             } catch (e: Exception) {

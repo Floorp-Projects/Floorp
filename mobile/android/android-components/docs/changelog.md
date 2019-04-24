@@ -89,6 +89,14 @@ permalink: /changelog/
 * **browser-storage-sync**
   * `PlacesBookmarksStorage` now supports synchronization!
 
+* **support-utils**
+  * Add `URLStringUtils` to unify parsing of strings that may be URLs.
+
+* **support-ktx**
+  * ⚠️ **This is a breaking API change**:
+    - **Removed**: `String.isUrl()` and `String.toNormalizedUrl()`
+    - use `URLStringUtils` `isURLLike()` and `toNormalizedURL()` instead.
+
 # 0.50.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...v0.50.0)
