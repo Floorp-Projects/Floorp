@@ -16,8 +16,8 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
@@ -352,7 +352,7 @@ nsresult nsContentPermissionUtils::AskPermission(
 
     MOZ_ASSERT(NS_IsMainThread());  // IPC can only be execute on main thread.
 
-    TabChild* child = TabChild::GetFrom(aWindow->GetDocShell());
+    BrowserChild* child = BrowserChild::GetFrom(aWindow->GetDocShell());
     NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIArray> typeArray;

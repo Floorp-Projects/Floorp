@@ -24,7 +24,7 @@
 // reference.  Normal deletion occurs when the XPCOM object is being
 // destroyed or after an InitFailure is received and handled.
 //
-// See also: TabParent::StartPersistence.
+// See also: BrowserParent::StartPersistence.
 
 namespace mozilla {
 

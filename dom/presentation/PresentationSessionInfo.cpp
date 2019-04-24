@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
@@ -1501,15 +1501,15 @@ void PresentationPresentingInfo::ResolvedCallback(
     return;
   }
 
-  RefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
-  if (tabParent) {
+  RefPtr<BrowserParent> browserParent = BrowserParent::GetFrom(frameLoader);
+  if (browserParent) {
     // OOP frame
     // Notify the content process that a receiver page has launched, so it can
     // start monitoring the loading progress.
-    mContentParent = tabParent->Manager();
-    Unused << NS_WARN_IF(
-        !static_cast<ContentParent*>(mContentParent.get())
-             ->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
+    mContentParent = browserParent->Manager();
+    Unused << NS_WARN_IF(!static_cast<ContentParent*>(mContentParent.get())
+                              ->SendNotifyPresentationReceiverLaunched(
+                                  browserParent, mSessionId));
   } else {
     // In-process frame
     IgnoredErrorResult error;

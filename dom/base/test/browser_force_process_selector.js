@@ -8,7 +8,7 @@ async function spawnNewAndTest(recur, pids) {
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
                                     async function(browser) {
       // Make sure our new browser is in its own process.
-      let newPid = browser.frameLoader.tabParent.osPid;
+      let newPid = browser.frameLoader.remoteTab.osPid;
       ok(!pids.has(newPid), "new tab is in its own process: " + recur);
       pids.add(newPid);
 
@@ -31,7 +31,7 @@ async function spawnNewAndTest(recur, pids) {
 }
 
 add_task(async function test() {
-  let curPid = gBrowser.selectedBrowser.frameLoader.tabParent.osPid;
+  let curPid = gBrowser.selectedBrowser.frameLoader.remoteTab.osPid;
   let maxCount = Services.prefs.getIntPref("dom.ipc.processCount");
 
   // Use at least one more tab than max processes or at least 5 to make this

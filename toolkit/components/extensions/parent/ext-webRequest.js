@@ -9,7 +9,7 @@ ChromeUtils.defineModuleGetter(this, "WebRequest",
 
 // The guts of a WebRequest event handler.  Takes care of converting
 // |details| parameter when invoking listeners.
-function registerEvent(extension, eventName, fire, filter, info, tabParent = null) {
+function registerEvent(extension, eventName, fire, filter, info, remoteTab = null) {
   let listener = async data => {
     let browserData = {tabId: -1, windowId: -1};
     if (data.browser) {
@@ -33,7 +33,7 @@ function registerEvent(extension, eventName, fire, filter, info, tabParent = nul
       if (fire.wakeup) {
         await fire.wakeup();
       }
-      data.registerTraceableChannel(extension.policy, tabParent);
+      data.registerTraceableChannel(extension.policy, remoteTab);
     }
 
     return fire.sync(event);
@@ -91,7 +91,7 @@ function registerEvent(extension, eventName, fire, filter, info, tabParent = nul
     unregister: () => { WebRequest[eventName].removeListener(listener); },
     convert(_fire, context) {
       fire = _fire;
-      tabParent = context.xulBrowser.frameLoader.tabParent;
+      remoteTab = context.xulBrowser.frameLoader.remoteTab;
     },
   };
 }
@@ -106,7 +106,7 @@ function makeWebRequestEvent(context, name) {
     },
     register: (fire, filter, info) => {
       return registerEvent(context.extension, name, fire, filter, info,
-                           context.xulBrowser.frameLoader.tabParent).unregister;
+                           context.xulBrowser.frameLoader.remoteTab).unregister;
     },
   }).api();
 }
@@ -132,7 +132,7 @@ this.webRequest = class extends ExtensionAPI {
           return WebRequest.getSecurityInfo({
             id: requestId,
             extension: context.extension.policy,
-            tabParent: context.xulBrowser.frameLoader.tabParent,
+            remoteTab: context.xulBrowser.frameLoader.remoteTab,
             options,
           });
         },

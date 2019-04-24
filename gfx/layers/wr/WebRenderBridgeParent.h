@@ -463,7 +463,7 @@ class WebRenderBridgeParent final
   // These fields keep track of the latest layer observer epoch values in the
   // child and the parent. mChildLayersObserverEpoch is the latest epoch value
   // received from the child. mParentLayersObserverEpoch is the latest epoch
-  // value that we have told TabParent about (via ObserveLayerUpdate).
+  // value that we have told BrowserParent about (via ObserveLayerUpdate).
   LayersObserverEpoch mChildLayersObserverEpoch;
   LayersObserverEpoch mParentLayersObserverEpoch;
 

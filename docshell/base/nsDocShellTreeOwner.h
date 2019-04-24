@@ -107,7 +107,7 @@ class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
 
   nsCOMPtr<nsIPrompt> mPrompter;
   nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
-  nsCOMPtr<nsITabParent> mPrimaryTabParent;
+  nsCOMPtr<nsIRemoteTab> mPrimaryRemoteTab;
 };
 
 // The class that listens to the chrome events and tells the embedding chrome to

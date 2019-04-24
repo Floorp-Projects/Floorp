@@ -15,7 +15,7 @@
 
 namespace mozilla {
 namespace dom {
-class TabChild;
+class BrowserChild;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -110,10 +110,10 @@ inline bool UsingNeckoIPCSecurity() {
   return !NeckoCommonInternal::gSecurityDisabled;
 }
 
-inline bool MissingRequiredTabChild(mozilla::dom::TabChild* tabChild,
-                                    const char* context) {
+inline bool MissingRequiredBrowserChild(
+    mozilla::dom::BrowserChild* browserChild, const char* context) {
   if (UsingNeckoIPCSecurity()) {
-    if (!tabChild) {
+    if (!browserChild) {
       printf_stderr(
           "WARNING: child tried to open %s IPDL channel w/o "
           "security info\n",

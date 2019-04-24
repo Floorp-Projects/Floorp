@@ -18,7 +18,7 @@ var {ActorManagerChild} = ChromeUtils.import("resource://gre/modules/ActorManage
 
 ActorManagerChild.attach(this, "browsers");
 
-// TabChildGlobal
+// BrowserChildGlobal
 var global = this;
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
@@ -56,7 +56,7 @@ var WebBrowserChrome = {
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
   let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsITabChild);
+                         .getInterface(Ci.nsIBrowserChild);
   tabchild.webBrowserChrome = WebBrowserChrome;
 }
 

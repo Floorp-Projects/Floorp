@@ -20,8 +20,8 @@ add_task(async function() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  let pid1 = browser1.frameLoader.tabParent.osPid;
-  let pid2 = browser2.frameLoader.tabParent.osPid;
+  let pid1 = browser1.frameLoader.remoteTab.osPid;
+  let pid2 = browser2.frameLoader.remoteTab.osPid;
 
   // Note, this might not be true once fission is implemented (Bug 1451850)
   ok(pid1 != pid2, "We should have different processes here.");

@@ -9,7 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -63,7 +63,7 @@ class WindowGlobalParent final : public nsISupports,
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
-  already_AddRefed<TabParent> GetTabParent();
+  already_AddRefed<BrowserParent> GetRemoteTab();
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData);
@@ -78,8 +78,8 @@ class WindowGlobalParent final : public nsISupports,
 
   // Get the root nsFrameLoader object for the tree of BrowsingContext nodes
   // which this WindowGlobal is a part of. This will be the nsFrameLoader
-  // holding the TabParent for remote tabs, and the root content frameloader for
-  // non-remote tabs.
+  // holding the BrowserParent for remote tabs, and the root content frameloader
+  // for non-remote tabs.
   nsFrameLoader* GetRootFrameLoader() { return mFrameLoader; }
 
   // The current URI which loaded in the document.

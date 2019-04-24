@@ -20,6 +20,7 @@
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
 #include "js/CharacterEncoding.h"
+#include "js/Date.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "vm/DateTime.h"

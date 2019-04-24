@@ -10,7 +10,7 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 using mozilla::Unused;
 using namespace mozilla::dom;
@@ -45,7 +45,7 @@ bool ColorPickerParent::CreateColorPicker() {
     return false;
   }
 
-  Element* ownerElement = TabParent::GetFrom(Manager())->GetOwnerElement();
+  Element* ownerElement = BrowserParent::GetFrom(Manager())->GetOwnerElement();
   if (!ownerElement) {
     return false;
   }

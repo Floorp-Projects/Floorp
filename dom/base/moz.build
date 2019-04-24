@@ -299,7 +299,7 @@ UNIFIED_SOURCES += [
     'IDTracker.cpp',
     'ImageEncoder.cpp',
     'ImageTracker.cpp',
-    'InProcessTabChildMessageManager.cpp',
+    'InProcessBrowserChildMessageManager.cpp',
     'IntlUtils.cpp',
     'Link.cpp',
     'Location.cpp',

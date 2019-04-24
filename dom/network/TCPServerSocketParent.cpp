@@ -10,7 +10,7 @@
 #include "nsJSUtils.h"
 #include "TCPSocketParent.h"
 #include "mozilla/Unused.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace dom {

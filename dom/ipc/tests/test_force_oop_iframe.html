@@ -42,10 +42,10 @@ add_task(async function() {
   iframe.setAttribute("src", "file_dummy.html");
   document.body.appendChild(iframe);
 
-  // Check that this isn't loaded in-process, or using a nested tabParent object.
+  // Check that this isn't loaded in-process, or using a nested remoteTab object.
   let frameLoader = SpecialPowers.wrap(iframe).frameLoader;
   is(frameLoader.docShell, null);
-  is(frameLoader.tabParent, null);
+  is(frameLoader.remoteTab, null);
   let browsingContext = frameLoader.browsingContext;
   isnot(browsingContext, null);
   is(browsingContext.docShell, null);

@@ -17,9 +17,9 @@ add_task(async function() {
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
   await once(Services.ppmm, "RecordingFinished");
 
-  const tabParent = recordingTab.linkedBrowser.frameLoader.tabParent;
-  ok(tabParent, "Found recording tab parent");
-  ok(tabParent.saveRecording(recordingFile), "Saved recording");
+  const remoteTab = recordingTab.linkedBrowser.frameLoader.remoteTab;
+  ok(remoteTab, "Found recording remote tab");
+  ok(remoteTab.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
   const replayingTab = BrowserTestUtils.addTab(gBrowser, null,

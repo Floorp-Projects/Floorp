@@ -197,7 +197,7 @@ nsAppShellService::DestroyHiddenWindow() {
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(
     nsIXULWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
-    int32_t aInitialWidth, int32_t aInitialHeight, nsITabParent* aOpeningTab,
+    int32_t aInitialWidth, int32_t aInitialHeight, nsIRemoteTab* aOpeningTab,
     mozIDOMWindowProxy* aOpenerWindow, nsIXULWindow** aResult)
 
 {
@@ -587,7 +587,7 @@ static bool CheckForFullscreenWindow() {
 nsresult nsAppShellService::JustCreateTopWindow(
     nsIXULWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, bool aIsHiddenWindow,
-    nsITabParent* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
+    nsIRemoteTab* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
     nsWebShellWindow** aResult) {
   *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);

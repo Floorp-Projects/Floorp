@@ -22,10 +22,10 @@ function runTest() {
   // to parent coordinate space by first calling
   // iframe.getBoundingClientRect();
   // to refresh offsets and then calling
-  // var tabParent = SpecialPowers.wrap(iframe)
-  //                .frameLoader.tabParent;
-  // and calling tabParent.getChildProcessOffset(offsetX, offsetY) if
-  // tabParent was not null, but tabParent was always null.
+  // var remoteTab = SpecialPowers.wrap(iframe)
+  //                .frameLoader.remoteTab;
+  // and calling remoteTab.getChildProcessOffset(offsetX, offsetY) if
+  // remoteTab was not null, but remoteTab was always null.
 
   let sendCtrlClick = () => {
     let nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;

@@ -23,7 +23,7 @@ async_test(function(t) {
   for (let shallow of [true, false]) {
     const clone = link.cloneNode(shallow);
     clone.onload = t.step_func(function() {
-      assert_false(link.disabled);
+      assert_false(clone.disabled);
       // Even though it's not disabled, it still doesn't apply, since it's an alternate.
       assert_applies(false);
       if (++clonesLoaded == 2) {

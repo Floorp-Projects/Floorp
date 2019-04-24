@@ -10,7 +10,7 @@
 #include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -602,16 +602,16 @@ void WebRenderLayerManager::WrUpdated() {
   DiscardLocalImages();
 
   if (mWidget) {
-    if (dom::TabChild* tabChild = mWidget->GetOwningTabChild()) {
-      tabChild->SchedulePaint();
+    if (dom::BrowserChild* browserChild = mWidget->GetOwningBrowserChild()) {
+      browserChild->SchedulePaint();
     }
   }
 }
 
 dom::TabGroup* WebRenderLayerManager::GetTabGroup() {
   if (mWidget) {
-    if (dom::TabChild* tabChild = mWidget->GetOwningTabChild()) {
-      return tabChild->TabGroup();
+    if (dom::BrowserChild* browserChild = mWidget->GetOwningBrowserChild()) {
+      return browserChild->TabGroup();
     }
   }
   return nullptr;

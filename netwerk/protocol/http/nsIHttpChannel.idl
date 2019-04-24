@@ -449,7 +449,7 @@ interface nsIHttpChannel : nsIChannel
      * this can only be used on channels that have not yet called their
      * listener's OnStartRequest().
      *
-     * @param aTabPromise   a promise which resolves to a nsITabParent object
+     * @param aTabPromise   a promise which resolves to a nsIRemotTab object
      *                      which the load will proceed in.
      * @param aIdentifier   a 64-bit ID which will be provided to the
      *                      ChildProcessChannelListener.

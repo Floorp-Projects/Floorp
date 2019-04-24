@@ -7,7 +7,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PPresentation.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsGlobalWindow.h"
@@ -65,7 +65,7 @@ PresentationIPCService::StartSession(
 
   nsPIDOMWindowInner* window =
       nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
-  TabId tabId = TabParent::GetTabIdFrom(window->GetDocShell());
+  TabId tabId = BrowserParent::GetTabIdFrom(window->GetDocShell());
 
   return SendRequest(
       aCallback,

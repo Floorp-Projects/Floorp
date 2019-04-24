@@ -20,7 +20,7 @@ namespace layers {
 //
 // There are two types of information bits propagated using this class. One
 // type is propagated "downwards" (from a process entry point like nsBaseWidget
-// or TabChild) into deeper code that is run during complicated operations
+// or BrowserChild) into deeper code that is run during complicated operations
 // like event dispatch. The other type is information that is propagated
 // "upwards", from the deeper code back to the entry point.
 class MOZ_STACK_CLASS InputAPZContext {

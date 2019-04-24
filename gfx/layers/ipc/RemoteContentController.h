@@ -13,7 +13,7 @@
 namespace mozilla {
 
 namespace dom {
-class TabParent;
+class BrowserParent;
 }
 
 namespace layers {

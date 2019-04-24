@@ -65,7 +65,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"
@@ -958,7 +958,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   // process, apply that APZC's callback-transform before dispatching the
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
-  // the event there (see e.g. TabChild::RecvRealTouchEvent()).
+  // the event there (see e.g. BrowserChild::RecvRealTouchEvent()).
   if (aGuid.mLayersId == mCompositorSession->RootLayerTreeId()) {
     APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
                                                GetDefaultScale());
@@ -1383,8 +1383,9 @@ LayerManager* nsBaseWidget::GetLayerManager(
     }
     // Try to use an async compositor first, if possible
     if (ShouldUseOffMainThreadCompositing()) {
-      // e10s uses the parameter to pass in the shadow manager from the TabChild
-      // so we don't expect to see it there since this doesn't support e10s.
+      // e10s uses the parameter to pass in the shadow manager from the
+      // BrowserChild so we don't expect to see it there since this doesn't
+      // support e10s.
       NS_ASSERTION(aShadowManager == nullptr,
                    "Async Compositor not supported with e10s");
       CreateCompositor();
@@ -2025,7 +2026,7 @@ void nsBaseWidget::NotifyLiveResizeStarted() {
   NotifyLiveResizeStopped();
   MOZ_ASSERT(mLiveResizeListeners.IsEmpty());
 
-  // If we can get the active tab parent for the current widget, suppress
+  // If we can get the active remote tab for the current widget, suppress
   // the displayport on it during the live resize.
   if (!mWidgetListener) {
     return;

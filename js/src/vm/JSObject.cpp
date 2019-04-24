@@ -47,6 +47,7 @@
 #include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/DateObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"

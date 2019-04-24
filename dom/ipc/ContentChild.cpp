@@ -11,7 +11,7 @@
 #include "ContentChild.h"
 
 #include "GeckoProfiler.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 #include "HandlerServiceChild.h"
 
 #include "mozilla/Attributes.h"
@@ -839,7 +839,7 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
 }
 
 nsresult ContentChild::ProvideWindowCommon(
-    TabChild* aTabOpener, mozIDOMWindowProxy* aParent, bool aIframeMoz,
+    BrowserChild* aTabOpener, mozIDOMWindowProxy* aParent, bool aIframeMoz,
     uint32_t aChromeFlags, bool aCalledFromJS, bool aPositionSpecified,
     bool aSizeSpecified, nsIURI* aURI, const nsAString& aName,
     const nsACString& aFeatures, bool aForceNoOpener,
@@ -921,7 +921,7 @@ nsresult ContentChild::ProvideWindowCommon(
     context.isMozBrowserElement() = aTabOpener->IsMozBrowserElement();
     ipcContext = new IPCTabContext(context);
   } else {
-    // It's possible to not have a TabChild opener in the case
+    // It's possible to not have a BrowserChild opener in the case
     // of ServiceWorker::OpenWindow.
     UnsafeIPCTabContext unsafeTabContext;
     ipcContext = new IPCTabContext(unsafeTabContext);
@@ -948,8 +948,8 @@ nsresult ContentChild::ProvideWindowCommon(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<TabChild> newChild = new TabChild(this, tabId, tabGroup, newTabContext,
-                                           browsingContext, aChromeFlags);
+  RefPtr<BrowserChild> newChild = new BrowserChild(
+      this, tabId, tabGroup, newTabContext, browsingContext, aChromeFlags);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -1027,7 +1027,7 @@ nsresult ContentChild::ProvideWindowCommon(
       return;
     }
 
-    // If the TabChild has been torn down, we don't need to do this anymore.
+    // If the BrowserChild has been torn down, we don't need to do this anymore.
     if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
       rv = NS_ERROR_ABORT;
       return;
@@ -1498,12 +1498,12 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRendering(
     Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
     nsTArray<uint32_t>&& namespaces) {
   MOZ_ASSERT(namespaces.Length() == 3);
-  nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
+  nsTArray<RefPtr<BrowserChild>> tabs = BrowserChild::GetAll();
 
   // Zap all the old layer managers we have lying around.
-  for (const auto& tabChild : tabs) {
-    if (tabChild->GetLayersId().IsValid()) {
-      tabChild->InvalidateLayers();
+  for (const auto& browserChild : tabs) {
+    if (browserChild->GetLayersId().IsValid()) {
+      browserChild->InvalidateLayers();
     }
   }
 
@@ -1524,9 +1524,9 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRendering(
   gfxPlatform::GetPlatform()->CompositorUpdated();
 
   // Establish new PLayerTransactions.
-  for (const auto& tabChild : tabs) {
-    if (tabChild->GetLayersId().IsValid()) {
-      tabChild->ReinitRendering();
+  for (const auto& browserChild : tabs) {
+    if (browserChild->GetLayersId().IsValid()) {
+      browserChild->ReinitRendering();
     }
   }
 
@@ -1544,10 +1544,10 @@ mozilla::ipc::IPCResult ContentChild::RecvAudioDefaultDeviceChange() {
 mozilla::ipc::IPCResult ContentChild::RecvReinitRenderingForDeviceReset() {
   gfxPlatform::GetPlatform()->CompositorUpdated();
 
-  nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
-  for (const auto& tabChild : tabs) {
-    if (tabChild->GetLayersId().IsValid()) {
-      tabChild->ReinitRenderingForDeviceReset();
+  nsTArray<RefPtr<BrowserChild>> tabs = BrowserChild::GetAll();
+  for (const auto& browserChild : tabs) {
+    if (browserChild->GetLayersId().IsValid()) {
+      browserChild->ReinitRenderingForDeviceReset();
     }
   }
   return IPC_OK();
@@ -1807,37 +1807,37 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<TabChild> tabChild =
-      TabChild::Create(this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
-                       aBrowsingContext, aChromeFlags);
+  RefPtr<BrowserChild> browserChild =
+      BrowserChild::Create(this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
+                           aBrowsingContext, aChromeFlags);
 
-  // Bind the created TabChild to IPC to actually link the actor. The ref here
-  // is released in DeallocPBrowserChild.
+  // Bind the created BrowserChild to IPC to actually link the actor. The ref
+  // here is released in DeallocPBrowserChild.
   if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
-                                       do_AddRef(tabChild).take()))) {
+                                       do_AddRef(browserChild).take()))) {
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 
-  if (!tabChild->mTabGroup) {
-    tabChild->mTabGroup = TabGroup::GetFromActor(tabChild);
+  if (!browserChild->mTabGroup) {
+    browserChild->mTabGroup = TabGroup::GetFromActor(browserChild);
 
-    if (!tabChild->mTabGroup) {
-      tabChild->mTabGroup = new TabGroup();
+    if (!browserChild->mTabGroup) {
+      browserChild->mTabGroup = new TabGroup();
       MOZ_DIAGNOSTIC_ASSERT(aSameTabGroupAs != 0);
     }
   }
 
-  if (NS_WARN_IF(NS_FAILED(tabChild->Init(/* aOpener */ nullptr)))) {
-    return IPC_FAIL(tabChild, "TabChild::Init failed");
+  if (NS_WARN_IF(NS_FAILED(browserChild->Init(/* aOpener */ nullptr)))) {
+    return IPC_FAIL(browserChild, "BrowserChild::Init failed");
   }
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(static_cast<nsITabChild*>(tabChild),
+    os->NotifyObservers(static_cast<nsIBrowserChild*>(browserChild),
                         "tab-child-created", nullptr);
   }
   // Notify parent that we are ready to handle input events.
-  tabChild->SendRemoteIsReadyToHandleInputEvents();
+  browserChild->SendRemoteIsReadyToHandleInputEvents();
   return IPC_OK();
 }
 
@@ -1867,7 +1867,7 @@ bool ContentChild::DeallocPFileDescriptorSetChild(
 }
 
 bool ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe) {
-  TabChild* child = static_cast<TabChild*>(aIframe);
+  BrowserChild* child = static_cast<BrowserChild*>(aIframe);
   NS_RELEASE(child);
   return true;
 }
@@ -1916,7 +1916,7 @@ bool ContentChild::DeallocPPresentationChild(PPresentationChild* aActor) {
 mozilla::ipc::IPCResult ContentChild::RecvNotifyPresentationReceiverLaunched(
     PBrowserChild* aIframe, const nsString& aSessionId) {
   nsCOMPtr<nsIDocShell> docShell =
-      do_GetInterface(static_cast<TabChild*>(aIframe)->WebNavigation());
+      do_GetInterface(static_cast<BrowserChild*>(aIframe)->WebNavigation());
   NS_WARNING_ASSERTION(docShell, "WebNavigation failed");
 
   nsCOMPtr<nsIPresentationService> service =
@@ -2986,11 +2986,11 @@ void ContentChild::ShutdownInternal() {
            : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
 }
 
-PBrowserOrId ContentChild::GetBrowserOrId(TabChild* aTabChild) {
-  if (!aTabChild || this == aTabChild->Manager()) {
-    return PBrowserOrId(aTabChild);
+PBrowserOrId ContentChild::GetBrowserOrId(BrowserChild* aBrowserChild) {
+  if (!aBrowserChild || this == aBrowserChild->Manager()) {
+    return PBrowserOrId(aBrowserChild);
   }
-  return PBrowserOrId(aTabChild->GetTabId());
+  return PBrowserOrId(aBrowserChild->GetTabId());
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(
@@ -3048,7 +3048,7 @@ mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<Document> rootDoc =
-      static_cast<TabChild*>(aBrowser)->GetTopLevelDocument();
+      static_cast<BrowserChild*>(aBrowser)->GetTopLevelDocument();
   nsCOMPtr<Document> foundDoc;
   if (aOuterWindowID) {
     foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc,
@@ -3434,12 +3434,12 @@ mozilla::ipc::IPCResult ContentChild::RecvFileCreationResponse(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvActivate(PBrowserChild* aTab) {
-  TabChild* tab = static_cast<TabChild*>(aTab);
+  BrowserChild* tab = static_cast<BrowserChild*>(aTab);
   return tab->RecvActivate();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDeactivate(PBrowserChild* aTab) {
-  TabChild* tab = static_cast<TabChild*>(aTab);
+  BrowserChild* tab = static_cast<BrowserChild*>(aTab);
   return tab->RecvDeactivate();
 }
 
@@ -3493,8 +3493,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRefreshScreens(
 }
 
 already_AddRefed<nsIEventTarget> ContentChild::GetEventTargetFor(
-    TabChild* aTabChild) {
-  return IToplevelProtocol::GetActorEventTarget(aTabChild);
+    BrowserChild* aBrowserChild) {
+  return IToplevelProtocol::GetActorEventTarget(aBrowserChild);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetPluginList(
@@ -3707,8 +3707,9 @@ already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
         return nullptr;
       }
 
-      // If the request for a new TabChild is coming from the parent process,
-      // then there is no opener. Therefore, we create a fresh TabGroup.
+      // If the request for a new BrowserChild is coming from the parent
+      // process, then there is no opener. Therefore, we create a fresh
+      // TabGroup.
       RefPtr<TabGroup> tabGroup = new TabGroup();
       nsCOMPtr<nsIEventTarget> target =
           tabGroup->EventTargetFor(TaskCategory::Other);

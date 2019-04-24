@@ -22,7 +22,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsIContentPolicy.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -140,9 +140,9 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
 
 already_AddRefed<ChannelWrapper> ChannelWrapper::GetRegisteredChannel(
     const GlobalObject& global, uint64_t aChannelId,
-    const WebExtensionPolicy& aAddon, nsITabParent* aTabParent) {
+    const WebExtensionPolicy& aAddon, nsIRemoteTab* aBrowserParent) {
   ContentParent* contentParent = nullptr;
-  if (TabParent* parent = static_cast<TabParent*>(aTabParent)) {
+  if (BrowserParent* parent = static_cast<BrowserParent*>(aBrowserParent)) {
     contentParent = parent->Manager();
   }
 
@@ -662,14 +662,14 @@ nsresult ChannelWrapper::GetFrameAncestors(
  *****************************************************************************/
 
 void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
-                                              nsITabParent* aTabParent) {
+                                              nsIRemoteTab* aBrowserParent) {
   // We can't attach new listeners after the response has started, so don't
   // bother registering anything.
   if (mResponseStarted || !CanModify()) {
     return;
   }
 
-  mAddonEntries.Put(aAddon.Id(), aTabParent);
+  mAddonEntries.Put(aAddon.Id(), aBrowserParent);
   if (!mChannelEntry) {
     mChannelEntry = WebRequestService::GetSingleton().RegisterChannel(this);
     CheckEventListeners();
@@ -678,11 +678,12 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
 
 already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
     nsAtom* aAddonId, dom::ContentParent* aContentParent) const {
-  nsCOMPtr<nsITabParent> tabParent;
-  if (mAddonEntries.Get(aAddonId, getter_AddRefs(tabParent))) {
+  nsCOMPtr<nsIRemoteTab> browserParent;
+  if (mAddonEntries.Get(aAddonId, getter_AddRefs(browserParent))) {
     ContentParent* contentParent = nullptr;
-    if (tabParent) {
-      contentParent = static_cast<TabParent*>(tabParent.get())->Manager();
+    if (browserParent) {
+      contentParent =
+          static_cast<BrowserParent*>(browserParent.get())->Manager();
     }
 
     if (contentParent == aContentParent) {

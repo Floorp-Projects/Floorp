@@ -10,7 +10,7 @@ interface nsIWindowlessBrowser;
 interface nsIURI;
 interface mozIDOMWindowProxy;
 interface nsIAppShell;
-interface nsITabParent;
+interface nsIRemoteTab;
 
 [ptr] native JSContext(JSContext);
 
@@ -36,7 +36,7 @@ interface nsIAppShellService : nsISupports
    *                      tag in the XUL.  Set to NS_SIZETOCONTENT to force
    *                      the window to wrap to its contents.
    * @param aInitialHeight like aInitialWidth, but subtly different.
-   * @param aOpeningTab The TabParent that requested that this window be opened.
+   * @param aOpeningTab The RemoteTab that requested that this window be opened.
    *                    Can be left null.
    * @param aOpenerWindow The Window Proxy which requested that this window be opened.
    *                      Can be left null.
@@ -47,7 +47,7 @@ interface nsIAppShellService : nsISupports
                                     in uint32_t aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight,
-                                    in nsITabParent aOpeningTab,
+                                    in nsIRemoteTab aOpeningTab,
                                     in mozIDOMWindowProxy aOpenerWindow);
 
   /**

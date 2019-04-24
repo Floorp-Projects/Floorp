@@ -371,21 +371,21 @@ async function prepareSubframes(browser, options) {
 }
 
 /**
- * Ensures that a browser's nsITabParent hasBeforeUnload attribute
+ * Ensures that a browser's nsIRemoteTab hasBeforeUnload attribute
  * is set to the expected value.
  *
  * @param {<xul:browser>} browser
- *        The browser whose nsITabParent we will check.
+ *        The browser whose nsIRemoteTab we will check.
  * @param {bool} expected
  *        True if hasBeforeUnload is expected to be true.
  */
 function assertHasBeforeUnload(browser, expected) {
-  Assert.equal(browser.frameLoader.tabParent.hasBeforeUnload,
+  Assert.equal(browser.frameLoader.remoteTab.hasBeforeUnload,
                expected);
 }
 
 /**
- * Tests that the nsITabParent hasBeforeUnload attribute works under
+ * Tests that the nsIRemoteTab hasBeforeUnload attribute works under
  * a number of different scenarios on inner windows. At a high-level,
  * we test that hasBeforeUnload works properly during page / iframe
  * navigation, or when an <iframe> with a beforeunload listener on its
@@ -565,7 +565,7 @@ add_task(async function test_inner_window_scenarios() {
 });
 
 /**
- * Tests that the nsITabParent hasBeforeUnload attribute works under
+ * Tests that the nsIRemoteTab hasBeforeUnload attribute works under
  * a number of different scenarios on outer windows. Very similar to
  * the above set of tests, except that we add the beforeunload listeners
  * to the iframe DOM nodes instead of the inner windows.

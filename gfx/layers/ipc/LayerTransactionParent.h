@@ -187,8 +187,8 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 
   // These fields keep track of the latest epoch values in the child and the
   // parent. mChildEpoch is the latest epoch value received from the child.
-  // mParentEpoch is the latest epoch value that we have told TabParent about
-  // (via ObserveLayerUpdate).
+  // mParentEpoch is the latest epoch value that we have told BrowserParent
+  // about (via ObserveLayerUpdate).
   LayersObserverEpoch mChildEpoch;
   LayersObserverEpoch mParentEpoch;
 

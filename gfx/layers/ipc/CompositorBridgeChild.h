@@ -28,7 +28,7 @@
 namespace mozilla {
 
 namespace dom {
-class TabChild;
+class BrowserChild;
 }  // namespace dom
 
 namespace widget {
@@ -37,7 +37,7 @@ class CompositorWidget;
 
 namespace layers {
 
-using mozilla::dom::TabChild;
+using mozilla::dom::BrowserChild;
 
 class IAPZCTreeManager;
 class APZCTreeManagerChild;
@@ -124,13 +124,13 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   /**
    * Request that the parent tell us when graphics are ready on GPU.
-   * When we get that message, we bounce it to the TabParent via
-   * the TabChild
-   * @param tabChild The object to bounce the note to.  Non-NULL.
+   * When we get that message, we bounce it to the BrowserParent via
+   * the BrowserChild
+   * @param browserChild The object to bounce the note to.  Non-NULL.
    */
-  void RequestNotifyAfterRemotePaint(TabChild* aTabChild);
+  void RequestNotifyAfterRemotePaint(BrowserChild* aBrowserChild);
 
-  void CancelNotifyAfterRemotePaint(TabChild* aTabChild);
+  void CancelNotifyAfterRemotePaint(BrowserChild* aBrowserChild);
 
   // Beware that these methods don't override their super-class equivalent
   // (which are not virtual), they just overload them. All of these Send*
@@ -327,9 +327,9 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // While this should be safe to use since the ViewID is unique
   nsClassHashtable<nsUint64HashKey, SharedFrameMetricsData> mFrameMetricsTable;
 
-  // Weakly hold the TabChild that made a request to be alerted when
+  // Weakly hold the BrowserChild that made a request to be alerted when
   // the transaction has been received.
-  nsWeakPtr mWeakTabChild;  // type is TabChild
+  nsWeakPtr mWeakBrowserChild;  // type is BrowserChild
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeChild);
 

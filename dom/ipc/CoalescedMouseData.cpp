@@ -6,7 +6,7 @@
 #include "base/basictypes.h"
 
 #include "CoalescedMouseData.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 
 #include "mozilla/PresShell.h"
 
@@ -68,8 +68,8 @@ bool CoalescedMouseData::CanCoalesce(const WidgetMouseEvent& aEvent,
 
 void CoalescedMouseMoveFlusher::WillRefresh(mozilla::TimeStamp aTime) {
   MOZ_ASSERT(mRefreshDriver);
-  mTabChild->FlushAllCoalescedMouseData();
-  mTabChild->ProcessPendingCoalescedMouseDataAndDispatchEvents();
+  mBrowserChild->FlushAllCoalescedMouseData();
+  mBrowserChild->ProcessPendingCoalescedMouseDataAndDispatchEvents();
 }
 
 void CoalescedMouseMoveFlusher::StartObserver() {
@@ -94,7 +94,7 @@ void CoalescedMouseMoveFlusher::RemoveObserver() {
 }
 
 nsRefreshDriver* CoalescedMouseMoveFlusher::GetRefreshDriver() {
-  PresShell* presShell = mTabChild->GetTopLevelPresShell();
+  PresShell* presShell = mBrowserChild->GetTopLevelPresShell();
   if (!presShell || !presShell->GetPresContext() ||
       !presShell->GetPresContext()->RefreshDriver()) {
     return nullptr;

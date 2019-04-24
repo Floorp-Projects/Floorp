@@ -6,7 +6,7 @@
 
 #include "ExternalHelperAppChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "nsIDivertableChannel.h"
 #include "nsIInputStream.h"
 #include "nsIFTPChannel.h"
@@ -65,19 +65,19 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   // Calling OnStartRequest could cause mHandler to close the window it was
-  // loaded for. In that case, the TabParent in the parent context might then
-  // point to the wrong window. Re-send the window context along with either
-  // DivertToParent or SendOnStartRequest just in case.
+  // loaded for. In that case, the BrowserParent in the parent context might
+  // then point to the wrong window. Re-send the window context along with
+  // either DivertToParent or SendOnStartRequest just in case.
   nsCOMPtr<nsPIDOMWindowOuter> window =
       do_GetInterface(mHandler->GetDialogParent());
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
 
-  TabChild *tabChild = mozilla::dom::TabChild::GetFrom(window);
-  NS_ENSURE_TRUE(tabChild, NS_ERROR_NOT_AVAILABLE);
+  BrowserChild *browserChild = mozilla::dom::BrowserChild::GetFrom(window);
+  NS_ENSURE_TRUE(browserChild, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
   if (divertable) {
-    return DivertToParent(divertable, request, tabChild);
+    return DivertToParent(divertable, request, browserChild);
   }
 
   nsCString entityID;
@@ -85,7 +85,7 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
   if (resumable) {
     resumable->GetEntityID(entityID);
   }
-  SendOnStartRequest(entityID, tabChild);
+  SendOnStartRequest(entityID, browserChild);
   return NS_OK;
 }
 
@@ -102,7 +102,8 @@ ExternalHelperAppChild::OnStopRequest(nsIRequest *request, nsresult status) {
 }
 
 nsresult ExternalHelperAppChild::DivertToParent(
-    nsIDivertableChannel *divertable, nsIRequest *request, TabChild *tabChild) {
+    nsIDivertableChannel *divertable, nsIRequest *request,
+    BrowserChild *browserChild) {
   // nsIDivertable must know about content conversions before being diverted.
   MOZ_ASSERT(mHandler);
   mHandler->MaybeApplyDecodingForExtension(request);
@@ -114,7 +115,7 @@ nsresult ExternalHelperAppChild::DivertToParent(
   }
   MOZ_ASSERT(diverter);
 
-  if (SendDivertToParentUsing(diverter, tabChild)) {
+  if (SendDivertToParentUsing(diverter, browserChild)) {
     mHandler->DidDivertRequest(request);
     mHandler = nullptr;
     return NS_OK;

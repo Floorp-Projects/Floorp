@@ -59,15 +59,15 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                            tabContext.AsIPCTabContext(),
                            constructorSender->ChildID());
 
-  // Construct the TabParent object for our subframe.
-  RefPtr<TabParent> tabParent(new TabParent(constructorSender, tabId,
-                                            tabContext, aBrowsingContext,
-                                            aChromeFlags, this));
+  // Construct the BrowserParent object for our subframe.
+  RefPtr<BrowserParent> browserParent(
+      new BrowserParent(constructorSender, tabId, tabContext, aBrowsingContext,
+                        aChromeFlags, this));
 
   // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
   // releases the ref taken.
   ManagedEndpoint<PBrowserChild> childEp =
-      constructorSender->OpenPBrowserEndpoint(do_AddRef(tabParent).take());
+      constructorSender->OpenPBrowserEndpoint(do_AddRef(browserParent).take());
   if (NS_WARN_IF(!childEp.IsValid())) {
     MOZ_ASSERT(false, "Browser Open Endpoint Failed");
     return NS_ERROR_FAILURE;
@@ -83,12 +83,12 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
     return NS_ERROR_FAILURE;
   }
 
-  // Set our TabParent object to the newly created browser.
-  mTabParent = tabParent.forget();
-  mTabParent->SetOwnerElement(Manager()->GetOwnerElement());
-  mTabParent->InitRendering();
+  // Set our BrowserParent object to the newly created browser.
+  mBrowserParent = browserParent.forget();
+  mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
+  mBrowserParent->InitRendering();
 
-  RenderFrame* rf = mTabParent->GetRenderFrame();
+  RenderFrame* rf = mBrowserParent->GetRenderFrame();
   if (NS_WARN_IF(!rf)) {
     MOZ_ASSERT(false, "No RenderFrame");
     return NS_ERROR_FAILURE;
@@ -100,61 +100,61 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 }
 
 void BrowserBridgeParent::Destroy() {
-  if (mTabParent) {
-    mTabParent->Destroy();
-    mTabParent = nullptr;
+  if (mBrowserParent) {
+    mBrowserParent->Destroy();
+    mBrowserParent = nullptr;
   }
 }
 
 IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
                                         const bool& aParentIsActive,
                                         const nsSizeMode& aSizeMode) {
-  RenderFrame* rf = mTabParent->GetRenderFrame();
+  RenderFrame* rf = mBrowserParent->GetRenderFrame();
   if (!rf->AttachLayerManager()) {
     MOZ_CRASH();
   }
 
-  Unused << mTabParent->SendShow(aSize, mTabParent->GetShowInfo(),
-                                 aParentIsActive, aSizeMode);
+  Unused << mBrowserParent->SendShow(aSize, mBrowserParent->GetShowInfo(),
+                                     aParentIsActive, aSizeMode);
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl) {
-  Unused << mTabParent->SendLoadURL(aUrl, mTabParent->GetShowInfo());
+  Unused << mBrowserParent->SendLoadURL(aUrl, mBrowserParent->GetShowInfo());
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvResumeLoad(uint64_t aPendingSwitchID) {
-  mTabParent->ResumeLoad(aPendingSwitchID);
+  mBrowserParent->ResumeLoad(aPendingSwitchID);
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvUpdateDimensions(
     const DimensionInfo& aDimensions) {
-  Unused << mTabParent->SendUpdateDimensions(aDimensions);
+  Unused << mBrowserParent->SendUpdateDimensions(aDimensions);
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvRenderLayers(
     const bool& aEnabled, const bool& aForceRepaint,
     const layers::LayersObserverEpoch& aEpoch) {
-  Unused << mTabParent->SendRenderLayers(aEnabled, aForceRepaint, aEpoch);
+  Unused << mBrowserParent->SendRenderLayers(aEnabled, aForceRepaint, aEpoch);
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvNavigateByKey(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  Unused << mTabParent->SendNavigateByKey(aForward, aForDocumentNavigation);
+  Unused << mBrowserParent->SendNavigateByKey(aForward, aForDocumentNavigation);
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvActivate() {
-  mTabParent->Activate();
+  mBrowserParent->Activate();
   return IPC_OK();
 }
 
 IPCResult BrowserBridgeParent::RecvDeactivate() {
-  mTabParent->Deactivate();
+  mBrowserParent->Deactivate();
   return IPC_OK();
 }
 

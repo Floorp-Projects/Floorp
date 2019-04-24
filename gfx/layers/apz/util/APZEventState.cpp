@@ -12,7 +12,7 @@
 #include "LayersLogging.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
@@ -197,10 +197,11 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 
   APZES_LOG("Scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = NS_NewTimer();
-  dom::TabChild* tabChild = widget->GetOwningTabChild();
+  dom::BrowserChild* browserChild = widget->GetOwningBrowserChild();
 
-  if (tabChild && XRE_IsContentProcess()) {
-    timer->SetTarget(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+  if (browserChild && XRE_IsContentProcess()) {
+    timer->SetTarget(
+        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
   }
   RefPtr<DelayedFireSingleTapEvent> callback = new DelayedFireSingleTapEvent(
       mWidget, ldPoint, aModifiers, aClickCount, timer, touchRollup);
