@@ -431,12 +431,7 @@ void InputQueue::MaybeRequestContentResponse(
   } else {
     waitForMainThread = true;
   }
-  if (aBlock->AsTouchBlock() && gfxPrefs::TouchActionEnabled()) {
-    // waitForMainThread is set to true unconditionally here, but if the APZCTM
-    // has the touch-action behaviours for this block, it will set it
-    // immediately after we unwind out of this ReceiveInputEvent call. So even
-    // though we are scheduling the main-thread timeout, we might end up not
-    // waiting.
+  if (aBlock->AsTouchBlock() && !aBlock->AsTouchBlock()->HasAllowedTouchBehaviors()) {
     INPQ_LOG("waiting for main thread touch-action info on block %p\n", aBlock);
     waitForMainThread = true;
   }
