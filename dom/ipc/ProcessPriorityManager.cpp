@@ -8,7 +8,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
@@ -140,7 +140,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
       ParticularProcessPriorityManager* aParticularManager,
       hal::ProcessPriority aOldPriority);
 
-  void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
+  void TabActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
  private:
   static bool sPrefsEnabled;
@@ -234,7 +234,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   const nsAutoCString& NameWithComma();
 
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
-  void OnTabParentDestroyed(nsISupports* aSubject);
+  void OnBrowserParentDestroyed(nsISupports* aSubject);
 
   ProcessPriority CurrentPriority();
   ProcessPriority ComputePriority();
@@ -249,7 +249,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   void ResetPriorityNow();
   void SetPriorityNow(ProcessPriority aPriority);
 
-  void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
+  void TabActivityChanged(BrowserParent* aBrowserParent, bool aIsActive);
 
   void ShutDown();
 
@@ -286,7 +286,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   nsCOMPtr<nsITimer> mResetPriorityTimer;
 
   // This hashtable contains the list of active TabId for this process.
-  nsTHashtable<nsUint64HashKey> mActiveTabParents;
+  nsTHashtable<nsUint64HashKey> mActiveBrowserParents;
 };
 
 /* static */
@@ -486,10 +486,10 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   }
 }
 
-void ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
-                                                    bool aIsActive) {
+void ProcessPriorityManagerImpl::TabActivityChanged(
+    BrowserParent* aBrowserParent, bool aIsActive) {
   RefPtr<ParticularProcessPriorityManager> pppm =
-      GetParticularProcessPriorityManager(aTabParent->Manager());
+      GetParticularProcessPriorityManager(aBrowserParent->Manager());
   if (!pppm) {
     return;
   }
@@ -497,7 +497,7 @@ void ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
   Telemetry::ScalarAdd(
       Telemetry::ScalarID::DOM_CONTENTPROCESS_OS_PRIORITY_CHANGE_CONSIDERED, 1);
 
-  pppm->TabActivityChanged(aTabParent, aIsActive);
+  pppm->TabActivityChanged(aBrowserParent, aIsActive);
 }
 
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager, nsIObserver,
@@ -620,7 +620,7 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
   if (topic.EqualsLiteral("remote-browser-shown")) {
     OnRemoteBrowserFrameShown(aSubject);
   } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
-    OnTabParentDestroyed(aSubject);
+    OnBrowserParentDestroyed(aSubject);
   } else {
     MOZ_ASSERT(false);
   }
@@ -662,7 +662,7 @@ void ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(
   RefPtr<nsFrameLoader> fl = do_QueryObject(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
 
-  TabParent* tp = TabParent::GetFrom(fl);
+  BrowserParent* tp = BrowserParent::GetFrom(fl);
   NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -681,13 +681,13 @@ void ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(
   }
 }
 
-void ParticularProcessPriorityManager::OnTabParentDestroyed(
+void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
     nsISupports* aSubject) {
-  nsCOMPtr<nsITabParent> tp = do_QueryInterface(aSubject);
+  nsCOMPtr<nsIRemoteTab> tp = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (TabParent::GetFrom(tp)->Manager() != mContentParent) {
+  if (BrowserParent::GetFrom(tp)->Manager() != mContentParent) {
     return;
   }
 
@@ -696,7 +696,7 @@ void ParticularProcessPriorityManager::OnTabParentDestroyed(
     return;
   }
 
-  mActiveTabParents.RemoveEntry(tabId);
+  mActiveBrowserParents.RemoveEntry(tabId);
 
   ResetPriority();
 }
@@ -762,7 +762,7 @@ ProcessPriority ParticularProcessPriorityManager::CurrentPriority() {
 }
 
 ProcessPriority ParticularProcessPriorityManager::ComputePriority() {
-  if (!mActiveTabParents.IsEmpty() ||
+  if (!mActiveBrowserParents.IsEmpty() ||
       mContentParent->GetRemoteType().EqualsLiteral(EXTENSION_REMOTE_TYPE) ||
       mHoldsPlayingAudioWakeLock) {
     return PROCESS_PRIORITY_FOREGROUND;
@@ -824,14 +824,14 @@ void ParticularProcessPriorityManager::SetPriorityNow(
                                    ProcessPriorityToString(mPriority));
 }
 
-void ParticularProcessPriorityManager::TabActivityChanged(TabParent* aTabParent,
-                                                          bool aIsActive) {
-  MOZ_ASSERT(aTabParent);
+void ParticularProcessPriorityManager::TabActivityChanged(
+    BrowserParent* aBrowserParent, bool aIsActive) {
+  MOZ_ASSERT(aBrowserParent);
 
   if (!aIsActive) {
-    mActiveTabParents.RemoveEntry(aTabParent->GetTabId());
+    mActiveBrowserParents.RemoveEntry(aBrowserParent->GetTabId());
   } else {
-    mActiveTabParents.PutEntry(aTabParent->GetTabId());
+    mActiveBrowserParents.PutEntry(aBrowserParent->GetTabId());
   }
 
   ResetPriority();
@@ -989,9 +989,9 @@ bool ProcessPriorityManager::CurrentProcessIsForeground() {
 }
 
 /* static */
-void ProcessPriorityManager::TabActivityChanged(TabParent* aTabParent,
+void ProcessPriorityManager::TabActivityChanged(BrowserParent* aBrowserParent,
                                                 bool aIsActive) {
-  MOZ_ASSERT(aTabParent);
+  MOZ_ASSERT(aBrowserParent);
 
   ProcessPriorityManagerImpl* singleton =
       ProcessPriorityManagerImpl::GetSingleton();
@@ -999,7 +999,7 @@ void ProcessPriorityManager::TabActivityChanged(TabParent* aTabParent,
     return;
   }
 
-  singleton->TabActivityChanged(aTabParent, aIsActive);
+  singleton->TabActivityChanged(aBrowserParent, aIsActive);
 }
 
 }  // namespace mozilla

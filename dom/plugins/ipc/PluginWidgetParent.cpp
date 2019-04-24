@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PluginWidgetParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetsCID.h"
@@ -53,8 +53,8 @@ PluginWidgetParent::~PluginWidgetParent() {
   KillWidget();
 }
 
-mozilla::dom::TabParent* PluginWidgetParent::GetTabParent() {
-  return static_cast<mozilla::dom::TabParent*>(Manager());
+mozilla::dom::BrowserParent* PluginWidgetParent::GetBrowserParent() {
+  return static_cast<mozilla::dom::BrowserParent*>(Manager());
 }
 
 void PluginWidgetParent::SetParent(nsIWidget* aParent) {
@@ -83,7 +83,7 @@ mozilla::ipc::IPCResult PluginWidgetParent::RecvCreate(
   *aResult = mWidget ? NS_OK : NS_ERROR_FAILURE;
 
   // This returns the top level window widget
-  nsCOMPtr<nsIWidget> parentWidget = GetTabParent()->GetWidget();
+  nsCOMPtr<nsIWidget> parentWidget = GetBrowserParent()->GetWidget();
   // If this fails, bail.
   if (!parentWidget) {
     *aResult = NS_ERROR_NOT_AVAILABLE;
@@ -131,7 +131,7 @@ void PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy) {
   KillWidget();
 }
 
-// Called by TabParent's Destroy() in response to an early tear down (Early
+// Called by BrowserParent's Destroy() in response to an early tear down (Early
 // in that this is happening before layout in the child has had a chance
 // to destroy the child widget.) when the tab is closing.
 void PluginWidgetParent::ParentDestroy() {

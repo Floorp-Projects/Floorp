@@ -434,7 +434,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
 function openRemotePrompt(domWin, args, tabPrompt) {
     let docShell = domWin.docShell;
     let messageManager = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsITabChild)
+                                 .getInterface(Ci.nsIBrowserChild)
                                  .messageManager;
 
     let inPermitUnload = docShell.contentViewer && docShell.contentViewer.inPermitUnload;

@@ -20,8 +20,8 @@ class IPCTabContext;
 /**
  * TabContext encapsulates information about an iframe that may be a mozbrowser.
  *
- * TabParent and TabChild both inherit from TabContext, and you can also have
- * standalone TabContext objects.
+ * BrowserParent and BrowserChild both inherit from TabContext, and you can also
+ * have standalone TabContext objects.
  *
  * This class is immutable except by calling one of the protected
  * SetTabContext*() methods (and those methods can only be called once).  See

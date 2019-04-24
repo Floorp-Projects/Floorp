@@ -687,7 +687,7 @@ STATIC_ATOMS = [
     Atom("never", "never"),
     Atom("_new", "new"),
     Atom("newline", "newline"),
-    Atom("nextTabParentId", "nextTabParentId"),
+    Atom("nextRemoteTabId", "nextRemoteTabId"),
     Atom("no", "no"),
     Atom("noautofocus", "noautofocus"),
     Atom("noautohide", "noautohide"),

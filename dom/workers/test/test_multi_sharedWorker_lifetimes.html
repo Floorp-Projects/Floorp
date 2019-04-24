@@ -102,7 +102,7 @@
             yield undefined;
 
             // It seems using SpecialPowers.executeSoon() would make the
-            // entryGlobal being the TabChildGlobal (and that would make the
+            // entryGlobal being the BrowserChildGlobal (and that would make the
             // baseURI in the location assignment below being incorrect);
             // setTimeout on the otherhand ensures the entryGlobal is this
             // window.

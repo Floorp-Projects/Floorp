@@ -45,7 +45,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
-#include "TabParent.h"
+#include "BrowserParent.h"
 
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -562,7 +562,8 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
   if (flo) {
     RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
-      auto* tp = static_cast<mozilla::dom::TabParent*>(fl->GetRemoteBrowser());
+      auto* tp =
+          static_cast<mozilla::dom::BrowserParent*>(fl->GetRemoteBrowser());
       if (tp && tp->TakeDragVisualization(*aSurface, aScreenDragRect)) {
         if (mImage) {
           // Just clear the surface if chrome has overridden it with an image.

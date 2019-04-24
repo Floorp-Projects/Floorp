@@ -959,10 +959,11 @@ nsViewSourceChannel::RedirectTo(nsIURI *uri) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SwitchProcessTo(mozilla::dom::Promise *aTabParent,
+nsViewSourceChannel::SwitchProcessTo(mozilla::dom::Promise *aBrowserParent,
                                      uint64_t aIdentifier) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->SwitchProcessTo(aTabParent, aIdentifier);
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->SwitchProcessTo(aBrowserParent, aIdentifier);
 }
 
 NS_IMETHODIMP

@@ -23,6 +23,7 @@
 #include "jsnum.h"
 
 #include "builtin/Eval.h"
+#include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"

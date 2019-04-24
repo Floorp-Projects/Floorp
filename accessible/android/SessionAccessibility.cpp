@@ -16,7 +16,7 @@
 #include "nsIPersistentProperties2.h"
 
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 
@@ -120,7 +120,8 @@ void SessionAccessibility::Click(int32_t aID) {
 
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     ProxyAccessible* aAccessible) {
-  auto tab = static_cast<dom::TabParent*>(aAccessible->Document()->Manager());
+  auto tab =
+      static_cast<dom::BrowserParent*>(aAccessible->Document()->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   MOZ_ASSERT(frame);
   if (!frame) {

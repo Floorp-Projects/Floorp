@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 #include "nsFocusManager.h"
 
@@ -38,7 +38,7 @@
 #include "nsIObjectFrame.h"
 #include "nsBindingManager.h"
 #include "nsStyleCoord.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 #include "nsFrameLoader.h"
 #include "nsNumberControlFrame.h"
 #include "nsNetUtil.h"
@@ -837,8 +837,8 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
   }
 
   if (nsIDocShell* docShell = window->GetDocShell()) {
-    if (nsCOMPtr<nsITabChild> child = docShell->GetTabChild()) {
-      bool active = static_cast<TabChild*>(child.get())->ParentIsActive();
+    if (nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild()) {
+      bool active = static_cast<BrowserChild*>(child.get())->ParentIsActive();
       ActivateOrDeactivate(window, active);
     }
   }
@@ -1089,7 +1089,7 @@ void nsFocusManager::EnsureCurrentWidgetFocused() {
   }
 }
 
-bool ActivateOrDeactivateChild(TabParent* aParent, void* aArg) {
+bool ActivateOrDeactivateChild(BrowserParent* aParent, void* aArg) {
   bool active = static_cast<bool>(aArg);
   Unused << aParent->SendParentActivated(active);
   return false;
@@ -1614,9 +1614,9 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       if (aAdjustWidgets && objectFrame && !sTestMode) {
         if (XRE_IsContentProcess()) {
           // set focus to the top level window via the chrome process.
-          nsCOMPtr<nsITabChild> tabChild = docShell->GetTabChild();
-          if (tabChild) {
-            static_cast<TabChild*>(tabChild.get())
+          nsCOMPtr<nsIBrowserChild> browserChild = docShell->GetBrowserChild();
+          if (browserChild) {
+            static_cast<BrowserChild*>(browserChild.get())
                 ->SendDispatchFocusToTopLevelWindow();
           }
         } else {
@@ -1637,7 +1637,7 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
 
     // if the object being blurred is a remote browser, deactivate remote
     // content
-    if (TabParent* remote = TabParent::GetFrom(element)) {
+    if (BrowserParent* remote = BrowserParent::GetFrom(element)) {
       remote->Deactivate();
       LOGFOCUS(("Remote browser deactivated %p", remote));
     }
@@ -1862,7 +1862,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
 
         // if the object being focused is a remote browser, activate remote
         // content
-        if (TabParent* remote = TabParent::GetFrom(aElement)) {
+        if (BrowserParent* remote = BrowserParent::GetFrom(aElement)) {
           remote->Activate();
           LOGFOCUS(("Remote browser activated %p", remote));
         }
@@ -3492,7 +3492,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
           // code to have the caller return early. If the child ends up not
           // being focusable in some way, the child process will call back
           // into document navigation again by calling MoveFocus.
-          TabParent* remote = TabParent::GetFrom(currentContent);
+          BrowserParent* remote = BrowserParent::GetFrom(currentContent);
           if (remote) {
             remote->NavigateByKey(aForward, aForDocumentNavigation);
             return NS_SUCCESS_DOM_NO_OPERATION;

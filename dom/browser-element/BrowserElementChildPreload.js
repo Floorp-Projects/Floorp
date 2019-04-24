@@ -133,7 +133,7 @@ BrowserElementChild.prototype = {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     if (!webNavigation.sessionHistory) {
       // XXX(nika): I don't think this code should ever be hit? We should run
-      // TabChild::Init before we run this code which will perform this setup
+      // BrowserChild::Init before we run this code which will perform this setup
       // for us.
       docShell.initSessionHistory();
     }
@@ -173,7 +173,7 @@ BrowserElementChild.prototype = {
 
   /**
    * Shut down the frame's side of the browser API.  This is called when:
-   *   - our TabChildGlobal starts to die
+   *   - our BrowserChildGlobal starts to die
    *   - the content is moved to frame without the browser API
    * This is not called when the page inside |content| unloads.
    */
@@ -782,7 +782,7 @@ BrowserElementChild.prototype = {
     //
     // We call preventDefault() on our contextmenu event if the embedder called
     // preventDefault() on /its/ contextmenu event.  This way, if the embedder
-    // ignored the contextmenu event, TabChild will fire a click.
+    // ignored the contextmenu event, BrowserChild will fire a click.
     if (sendSyncMsg("contextmenu", menuData)[0]) {
       e.preventDefault();
     } else {

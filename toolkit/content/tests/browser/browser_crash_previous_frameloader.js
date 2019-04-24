@@ -61,7 +61,7 @@ add_task(async function test_crash_in_previous_frameloader() {
               "work properly.");
 
     // We will wait for the oop-browser-crashed event to have
-    // a chance to appear. That event is fired when TabParents
+    // a chance to appear. That event is fired when RemoteTabs
     // are destroyed, and that occurs _before_ ContentParents
     // are destroyed, so we'll wait on the ipc:content-shutdown
     // observer notification, which is fired when a ContentParent

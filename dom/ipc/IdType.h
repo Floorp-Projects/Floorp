@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 class BrowsingContext;
 class ContentParent;
-class TabParent;
+class BrowserParent;
 
 template <typename T>
 class IdType {
@@ -41,7 +41,7 @@ class IdType {
   uint64_t mId;
 };
 
-typedef IdType<TabParent> TabId;
+typedef IdType<BrowserParent> TabId;
 typedef IdType<ContentParent> ContentParentId;
 typedef IdType<BrowsingContext> BrowsingContextId;
 }  // namespace dom

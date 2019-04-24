@@ -989,7 +989,7 @@ nsresult TextInputProcessor::PrepareKeyboardEventToDispatch(
 
   // When this emulates real input only in content process, we need to
   // initialize edit commands with the main process's widget via PuppetWidget
-  // because they are initialized by TabParent before content process treats
+  // because they are initialized by BrowserParent before content process treats
   // them.
   if (aKeyboardEvent.mIsSynthesizedByTIP && !XRE_IsParentProcess()) {
     // Note that retrieving edit commands from content process is expensive.

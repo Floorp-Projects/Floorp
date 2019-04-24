@@ -7,7 +7,7 @@
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/GeckoContentController.h"
 
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 
 #include "InputData.h"  // for InputData

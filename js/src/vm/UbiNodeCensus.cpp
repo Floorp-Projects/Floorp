@@ -6,6 +6,7 @@
 
 #include "js/UbiNodeCensus.h"
 
+#include "builtin/MapObject.h"
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "util/Text.h"

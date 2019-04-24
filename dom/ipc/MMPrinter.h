@@ -7,6 +7,9 @@
 #ifndef MMPrinter_h
 #define MMPrinter_h
 
+#include "mozilla/dom/DOMTypes.h"
+#include "nsString.h"
+
 namespace mozilla {
 namespace dom {
 

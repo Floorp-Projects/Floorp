@@ -33,7 +33,7 @@
 #include "nsIWebProgress.h"
 #include "nsCoreUtils.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

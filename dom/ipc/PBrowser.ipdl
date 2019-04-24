@@ -570,7 +570,7 @@ parent:
 
     /**
      * Child informs the parent that the content is ready to handle input
-     * events. This is sent when the TabChild is created.
+     * events. This is sent when the BrowserChild is created.
      */
     async RemoteIsReadyToHandleInputEvents();
 
@@ -598,7 +598,7 @@ parent:
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
     // this is sync so we can ensure that messages to the window compositor
-    // arrive before the TabChild attempts to use its cross-process compositor
+    // arrive before the BrowserChild attempts to use its cross-process compositor
     // bridge.
     sync EnsureLayersConnected() returns (CompositorOptions compositorOptions);
 
@@ -900,24 +900,24 @@ child:
     async UpdateNativeWindowHandle(uintptr_t aNewHandle);
 
     /**
-     * Tell the TabChild that it should expect a Large-Allocation load to occur.
+     * Tell the BrowserChild that it should expect a Large-Allocation load to occur.
      * Loads which occur until this flag is cleared will not leave the process.
      */
     async AwaitLargeAlloc();
 
     /**
-     * Tell the TabChild to set the name of its toplevel docshell to the given name.
+     * Tell the BrowserChild to set the name of its toplevel docshell to the given name.
      */
     async SetWindowName(nsString aName);
 
     /**
-     * Tell the TabChild to allow scripts in the docshell to close the window.
+     * Tell the BrowserChild to allow scripts in the docshell to close the window.
      */
     async AllowScriptsToClose();
 
     /**
-     * Tell the TabChild what OriginAttributes it should inherit from. This must
-     * be called before the first non-blank document is loaded in the TabChild.
+     * Tell the BrowserChild what OriginAttributes it should inherit from. This must
+     * be called before the first non-blank document is loaded in the BrowserChild.
      */
     async SetOriginAttributes(OriginAttributes aOriginAttributes);
 

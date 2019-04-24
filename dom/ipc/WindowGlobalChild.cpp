@@ -7,15 +7,19 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/ipc/InProcessChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/InProcessChild.h"
 #include "nsDocShell.h"
+#include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowInner.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsQueryObject.h"
@@ -85,12 +89,12 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     // Note: ref is released in DeallocPWindowGlobalChild
     ipc->SendPWindowGlobalConstructor(do_AddRef(wgc).take(), init);
   } else {
-    RefPtr<TabChild> tabChild =
-        TabChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
-    MOZ_ASSERT(tabChild);
+    RefPtr<BrowserChild> browserChild =
+        BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
+    MOZ_ASSERT(browserChild);
 
     // Note: ref is released in DeallocPWindowGlobalChild
-    tabChild->SendPWindowGlobalConstructor(do_AddRef(wgc).take(), init);
+    browserChild->SendPWindowGlobalConstructor(do_AddRef(wgc).take(), init);
   }
   wgc->mIPCClosed = false;
 
@@ -127,18 +131,19 @@ already_AddRefed<WindowGlobalParent> WindowGlobalChild::GetParentActor() {
   return do_AddRef(static_cast<WindowGlobalParent*>(otherSide));
 }
 
-already_AddRefed<TabChild> WindowGlobalChild::GetTabChild() {
+already_AddRefed<BrowserChild> WindowGlobalChild::GetBrowserChild() {
   if (IsInProcess() || mIPCClosed) {
     return nullptr;
   }
-  return do_AddRef(static_cast<TabChild*>(Manager()));
+  return do_AddRef(static_cast<BrowserChild*>(Manager()));
 }
 
 void WindowGlobalChild::Destroy() {
-  // Perform async IPC shutdown unless we're not in-process, and our TabChild is
-  // in the process of being destroyed, which will destroy us as well.
-  RefPtr<TabChild> tabChild = GetTabChild();
-  if (!tabChild || !tabChild->IsDestroyed()) {
+  // Perform async IPC shutdown unless we're not in-process, and our
+  // BrowserChild is in the process of being destroyed, which will destroy us as
+  // well.
+  RefPtr<BrowserChild> browserChild = GetBrowserChild();
+  if (!browserChild || !browserChild->IsDestroyed()) {
     SendDestroy();
   }
 
