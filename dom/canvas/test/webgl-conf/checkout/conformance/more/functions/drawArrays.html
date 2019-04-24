@@ -89,16 +89,12 @@ Tests.testDrawArraysVBOMulti = function(gl, prog, v,n,t) {
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 6);});
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 1, 5);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo.vbos[1]);
   gl.vertexAttribPointer(n, 3, gl.FLOAT, false, 0, 0);
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 5, 1);});
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 2);});
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 0, 6);});
   assertOk(function(){gl.drawArrays(gl.TRIANGLES, 1, 5);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 1, 6);});
-  assertFail(function(){gl.drawArrays(gl.TRIANGLES, 6, 1);});
   vbo.destroy();
   assert(0 == checkError(gl, "vbo.destroy"));
 }

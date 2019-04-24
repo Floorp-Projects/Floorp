@@ -111,11 +111,9 @@ function runTest() {
 
   finishTest();
 }
-
-loadImageAndStart(runTest);
 </script>
 </head>
-<body>
+<body onload="loadImageAndStart(runTest)">
 <div id="description"></div>
 <div id="console"></div>
 <canvas id="canvas" width="40" height="40"></canvas>

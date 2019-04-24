@@ -71,6 +71,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
             debug("");
             debug("testing: " + info.type);
             video = document.createElement("video");
+            video.muted = true;
             var canPlay = true;
             if (!video.canPlayType) {
                 testFailed("video.canPlayType required method missing");

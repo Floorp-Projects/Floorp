@@ -1,7 +1,1276 @@
+commit 6f0b34abee8dba611c253738d955c59f703c147a
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Tue Apr 23 17:40:58 2019 -0700
 
-Cherries picked
-================================================================================
-Merge base from: ups/master
+    Empty glsl fragment shader fixes (#2856)
+    
+    * drawBuffers(gl.NONE]) for empty es 300 fragment shader
+    
+    * let es100 shader writes something
+    
+    * capture error to avoid it gets capture by next glErrorShouldBe
+    
+    * add a dummy output in fs for deqp test emptyFragmentSource
+
+commit eb0be146e63e743a2c587c9b6d9dbbd73078075e
+Author: Kagami Sascha Rosylight <saschanaz@outlook.com>
+Date:   Wed Apr 24 09:39:46 2019 +0900
+
+    Split conflicting overloads as WebGLXRenderingContextOverloads (#2859)
+    
+    * split conflicting overloads as WebGLXRenderingContextOverloads
+    
+    * lint fix
+    
+    * defer python changes as requested
+
+commit 233a529f2c414e81902cb3f3b2bdceb1b94cb87a
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Apr 22 17:22:05 2019 -0700
+
+    Fix markup in OVR_multiview2. (#2868)
+    
+    Follow-on to #2867.
+
+commit 2aef04eaf84f3ac089f3bd74e6df07082ebbadfe
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Apr 22 17:14:15 2019 -0700
+
+    Add rationale for baseViewIndex matching requirement. (#2867)
+    
+    Also wrap this super long line.
+
+commit 80f6908ac1c086d3577d6eacae802d010e462794
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Apr 22 10:53:51 2019 -0700
+
+    In WEBGL_depth_texture test, check filtering results. (#2864)
+
+commit 90c832eee80b6357ec7f54e88f0416527d808a1c
+Author: Yunchao He <yunchao.he@intel.com>
+Date:   Tue Apr 16 22:31:37 2019 +0800
+
+    Fix a typo in Copyright for WebGL 2 compute (#2861)
+
+commit 4a170b886d6768e78da2254e7b778e6a3699ff20
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Mon Apr 15 13:05:31 2019 -0700
+
+    Add gl_PointSize = 1.0; in vertex-id.html (#2858)
+
+commit 3998a13a8817ec6a1390bd30ff6bd44691875d11
+Author: Hao Yunfei <yunfei.hao@intel.com>
+Date:   Tue Apr 16 04:04:00 2019 +0800
+
+    Up particle number to 64K (#2860)
+
+commit 11be14a4d63bd3c4d7b7d2b8d35c6466bf337e0a
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Fri Apr 12 00:34:24 2019 -0700
+
+    tex-mipmap-levels.html: more descriptive print messages (#2857)
+
+commit 3f6583d3fee4ab71866ade794504a20eb6f63f88
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Wed Apr 10 13:20:42 2019 -0700
+
+    Fix context-attribute-preserve-drawing-buffer.html (#2854)
+    
+    There's no way to guarantee the compositor finished preparing the frame.
+    
+    So we are gonna change the test to the following behavior:
+    
+    Do an infinite for loop for `await nextFrame()` and keep doing readpixels and checking within the loop until we reach some time limit (say 0.5s). For testing `preserveDrawingBuffer: false` we could early terminate if the pixel data matches. And when testing `preserveDrawingBuffer: true` we could assert failure once the pixel doesn't match the expected ones.
+
+commit 034ba2123a3f423ca30565ee43b9708e57c3043b
+Author: Yunchao He <yunchao.he@intel.com>
+Date:   Wed Apr 10 12:54:04 2019 +0800
+
+    Remove Program Pipeline from WebGL 2.0 compute (#2853)
+    
+    Program Pipeline is not a core feature for compute shader, it is
+    not very important. Furthermore, program pipeline is not very
+    useful. We didn't find that some demos or applications rely on it
+    and state that it is a must-to-have feature. In addition, we didn't
+    see a simple way to implement this feature on Direct3D 11. So we tend
+    to remove this feature from WebGL 2.0 compute.
+
+commit 975c77ba724b9c4f3469dd748371cfd089b633b2
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Tue Apr 9 15:26:40 2019 -0700
+
+    depth and depth stencil texture completeness parameter setting (#2852)
+
+commit 4e04d185a09deac86e0e276e0f1c79ebe9ba8038
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Mon Apr 8 12:29:17 2019 -0700
+
+    Fix rendering-sampling-feedback-loop test for old drivers (#2850)
+    
+    * fix rendering-sampling-feedback-loop test for driver without WEBGL_draw_buffers
+
+commit de364b2b2ef56fdd40f06e7e48793bfe74654572
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Thu Apr 4 19:35:18 2019 -0700
+
+    update depth stencil feedbackloop test behavior (#2849)
+
+commit f56580965dd5ff4057c9e6fc2abc3391e1e69762
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Thu Apr 4 17:16:47 2019 -0700
+
+    Remove OffscreenCanvas commit() requirement (#2848)
+    
+    The commit() method of OffscreenCanvas contexts was controversial and
+    has not been shipped by any browser. Rewrite the OffscreenCanvas tests
+    to not require it.
+    
+    For background, see:
+    https://github.com/w3ctag/design-reviews/issues/288
+    https://groups.google.com/a/chromium.org/d/topic/blink-dev/hRZ_P2o-aEk/discussion
+
+commit 34c1b95d7e594a9c385b9a60740328f6b2fc1fcd
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Apr 4 16:01:35 2019 -0700
+
+    Add conformance/rendering/blending.html. (#2846)
+    
+    Also:
+    * Add wtu.destroyContext and wtu.destroyAllContexts to facilitate
+    cleanup.
+    * Add maxArrayDiff and expectArray.
+
+commit efd473349e273e8eef6334b94f280db741311c23
+Author: Hao Yunfei <yunfei.hao@intel.com>
+Date:   Fri Apr 5 06:32:04 2019 +0800
+
+    Add Fluid example (#2844)
+    
+    This example is ported from
+    https://github.com/walbourn/directx-sdk-samples/tree/master/FluidCS11.
+    
+    Try this example using latest chrome canary with below commands:
+    Chrome.exe --use-cmd-decoder=passthrough --enable-webgl2-compute-context --use-gl=angle
+
+commit ebe94601020f9903d99d8ad3eb0dabf27a3d49e2
+Author: Rijubrata Bhaumik <rijubrata.bhaumik@intel.com>
+Date:   Fri Apr 5 00:20:15 2019 +0300
+
+    Expose extension for EXT_texture_norm16. (#2837)
+    
+    * Expose extension for EXT_texture_norm16.
+    
+    As suggested by @jdashg, that even with incomplete support on mobile,
+    this is still probably nice to expose.
+    
+    @lexaknyazev succinctly summarized the rationale
+    in https://github.com/KhronosGroup/WebGL/issues/2810#issuecomment-466387837
+    
+    1. Integer formats do not support filtering.
+    2. Floating point formats with comparable memory consumption provide less precision.
+       float16 can represent only about 15K distinct values in 0.0 .. 1.0 range.
+       float11 and float10 - fewer than 1K and 500 respectively.
+    3. DOM image sources (e.g. PNG) with 16 bits per channel could be copied to GPU
+       without intermediate floating point processing
+    
+    Fixes #2180
+
+commit 31c2f2e5c75471cde4ccdef8dd489989c64e12c3
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Sat Mar 30 13:50:25 2019 -0700
+
+    Replace dispatchTask with awaitable dispatchPromise. (#2840)
+    
+    Makes it really easy to write code like:
+    ```
+    async function Test() {
+      for (const x of TEST_ARGS) {
+        await wtu.dispatchPromise(() => {
+          TestOnce(x);
+        });
+      }
+      finishTest();
+    }
+    Test();
+    ```
+
+commit ca07c9628d207b5cc560ee6eac32ceeb1c39a2ed
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Sat Mar 30 13:37:33 2019 -0700
+
+    Add LICENSE.txt. (#2839)
+    
+    Copyright blocks can now be abbreviated to:
+    ```
+    Copyright (c) [year] The Khronos Group Inc.
+    Use of this source code is governed by an MIT-style license that can be
+    found in the LICENSE.txt file.
+    ```
+
+commit 291335b884b946118892647041b35ff6c0617217
+Author: y-novikov <ynovikov@chromium.org>
+Date:   Fri Mar 29 23:04:14 2019 -0400
+
+    Test that vertex attribute is preserved across context switches (#2843)
+    
+    See http://crbug.com/920033 for rationale for this test.
+
+commit 7e8ca9f9f60f42ef38685c67d1e8cbbcf45f7eb8
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Fri Mar 29 12:52:36 2019 -0700
+
+    use highp for vertex id (#2841)
+
+commit 321fb82973fbb39d6760c49465a040ffb9d86543
+Author: Vladimír Vondruš <mosra@centrum.cz>
+Date:   Tue Mar 26 23:39:15 2019 +0100
+
+    Test compressed texture upload from (a subrange of) a PBO. (#2831)
+
+commit c5d223c457b617ff88ba36d6e67657405f851272
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Mar 25 17:06:03 2019 -0700
+
+    Add "desynchronized" flag to WebGLContextAttributes. (#2753)
+    
+    Developers of stylus-based drawing applications (e.g. Google Keep)
+    have found this hint to be critical in order to be competitive with
+    native applications. It has been prototyped in Chromium and yields
+    significant latency improvements there.
+    
+    This is the WebGL analogue of https://github.com/whatwg/html/pull/4360
+    and partially addresses https://github.com/whatwg/html/issues/4087 .
+    
+    Principally authored by @yellowdoge, Miguel Casas-Sanchez <mcasas@chromium.org>
+
+commit 688fbfe33779392aa210d67d4aa12cb012f112c2
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Mon Mar 25 15:29:40 2019 -0700
+
+    fix conformance2/extensions/00_test_list.txt (#2836)
+
+commit 9ba538dbf5d55576c541ccd3118ef58bf7a1487e
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Fri Mar 22 14:02:29 2019 -0700
+
+    fix test to sync up with spec update #2780 (#2835)
+
+commit cba6ff57169c0a38d2823e93d1ce352ce29377bc
+Author: Greggman <github@greggman.com>
+Date:   Fri Mar 22 14:01:25 2019 -0700
+
+    experimental-webgl to webgl (#2834)
+
+commit 001bacd966136341c1f3b583150aa93da7071c2c
+Author: mingyuhu <mihu@microsoft.com>
+Date:   Mon Mar 18 18:08:55 2019 -0700
+
+    multiview rename spec and testfile changes (#2832)
+
+commit bbb96dc57ab5da5c486588675016967c0edee2be
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Mar 18 16:27:57 2019 -0700
+
+    Fix XML for EXT_float_blend extension. (#2833)
+    
+    Prevented building of the extension registry. Follow-up to #2830.
+
+commit fae1d54fe7d749cb49f4c215c1908e810b650d5f
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Mar 18 15:30:49 2019 -0700
+
+    Implicitly enable EXT_float_blend and promote it to Community Approved. (#2830)
+    
+    Update tests to require implicit activation accordingly.
+
+commit 2895add3e3388160a39460b3a0ff13b208af8fa0
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Fri Mar 15 17:34:49 2019 -0700
+
+    get-buffer-sub-data-validity.html: regression test for crbug.com/941930
+
+commit ea45aae7d0a2680e6784bc9b7bcaec439195dcb5
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Fri Mar 15 11:59:21 2019 -0700
+
+    get-buffer-sub-data-validity.html: asyncify
+
+commit c4222426da0d8d4a5eaa7125dd2e8f9965436377
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Thu Mar 14 16:43:02 2019 -0700
+
+    Test that sampler objects override texture state (#2823)
+    
+    A sampler object can override a texture object's TEXTURE_COMPARE_MODE
+    state. Chrome was not correctly accounting for this when validating
+    texture/sampler compatibility.
+
+commit 3e26ae228bbe7705a292757aebd8d7bb900b7d3f
+Author: mbrodesser <48510213+mbrodesser@users.noreply.github.com>
+Date:   Wed Mar 13 18:47:10 2019 +0100
+
+    Remove temp_externs/html5.js's references to 'mozHidden' and 'mozVisibilityState' (#2826)
+
+commit 7e1ff7282a418cc4861b547ec1dc08bda65b2acf
+Author: Aaron Krajeski <krajeski@gmail.com>
+Date:   Mon Mar 11 16:54:51 2019 -0400
+
+    Test webgl canvases as well in projlod test (#2824)
+    
+    * Test webgl canvases as well in projlod test
+
+commit f9e736fab5eaec878bf81b374143fed112187300
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Fri Mar 8 06:12:01 2019 +0400
+
+    Set gl_PointSize in the vertex shader (#2819)
+
+commit 502339ef1874b9d36b137c456311b207db08d6d2
+Author: Greggman <github@greggman.com>
+Date:   Thu Mar 7 18:09:52 2019 -0800
+
+    remove unused parts of more tests (#2820)
+
+commit f76c52cb219e57efa91b9611c9caddd403897a8b
+Author: Yunchao He <yunchao.he@intel.com>
+Date:   Fri Mar 8 10:04:33 2019 +0800
+
+    Add specification for WebGL 2.0 compute (#2769)
+    
+    * Add specification for WebGL 2.0 compute
+    
+    * addressed feedback from Jiajie
+    
+    * Add a few sub-section to clarify undefined behaviors
+    
+    * Declared draft status and implementations may not shipped
+    
+    * Move spec status and copyright from W3C to Khronos
+    
+    * Addressed feedback from Alexey Knyazev
+    
+    * Addressed one more comment from Alexey Knyazev
+
+commit f6ede11da440afe4f0fa8bdfb420c26f8c2c9593
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Mar 4 17:04:19 2019 -0800
+
+    Update conformance submission readme with new PR process. (#2817)
+
+commit 90f4899357a4537202c8bfda1f53849dbcc39f78
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Mar 4 15:55:13 2019 -0800
+
+    Require each draw buffer with an attachment has a matching frag output type. (#2780)
+
+commit c2419a295f3e4299eb9ade4c845344f8636b0edd
+Author: ShrekShao <shrekshao@gmail.com>
+Date:   Thu Feb 28 18:07:07 2019 -0800
+
+    add more ext-float-blend tests (#2815)
+    
+    * add more ext-float-blend tests
+    
+    * mediump
+    
+    * style
+
+commit 2ace8df9e4240c14f324abf807401c9893dc1395
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Tue Feb 26 03:55:42 2019 +0400
+
+    Specify DOM image conversion (#2805)
+    
+    * Specify DOM image conversion
+    
+    * Address feedback
+
+commit 4c80306d4c044b1a5c6c983d3eb65b89d5d76edb
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Feb 15 16:41:50 2019 -0800
+
+    Add test for gl_VertexID. (#2807)
+    
+    In response to #2770, tests drawArrays, drawElements, and drawArrays+transform-feedback.
+
+commit 4e2352d99d927bba090b7e744700efc786bceb43
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Feb 15 14:42:33 2019 -0800
+
+    chmod +x server_localhost.py. (no PR)
+
+commit 9b5457dc025b3219e3b1e75f55bac8275e5a59f9
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 14 15:40:28 2019 -0800
+
+    Add default transform feedback object test (#2802)
+    
+    * Test for using the default transform feedback object.
+    
+    Note: 2 lines are marked as FIXME and should be removed when/if
+    impls and the spec are updated to make `gl.bindBuffer` less
+    strict.
+    
+    * Update to match modern TF behavior.
+    
+    Also move copyright block to the bottom of the file.
+
+commit ecdb40de223aad8307ee421ce1013c505421265a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 14 15:40:15 2019 -0800
+
+    Add serve_localhost.py for more robust local test runs. (#2808)
+    
+    This invokes a modified basic http.server that adds anti-caching
+    headers. Otherwise, browsers cache test files, making testing and
+    debugging less reliable.
+
+commit 8a96bff0a360f65b53357a7b47773d4768e866f4
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Feb 13 22:55:38 2019 -0800
+
+    Add quick mode support to more tests. (#2804)
+    
+    * Add quick mode support to more tests.
+    
+    Also spew time elapsed when finishTest() is called from deqp if not in
+    quiet mode.
+    
+    * Forward-port to ToT.
+
+commit f21a352ab16391f866de24cd5611bfdfb897e7fb
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Wed Feb 13 18:08:35 2019 -0800
+
+    Add correctness tests to tex-unpack-params-imagedata.html (#2649)
+    
+    * Add correctness tests to tex-unpack-params-imagedata.html
+    
+    Follow-up to https://github.com/KhronosGroup/WebGL/pull/2646
+    
+    * var->const/let
+
+commit 7fd63b943aa7af1943de5adc0527fb5ff085a317
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Feb 13 17:49:53 2019 -0800
+
+    Backport #2661 (wtu.dispatchTask) to snapshots (#2803)
+    
+    * Backport #2661 (wtu.dispatchTask) to 2.0.0.
+    
+    This should improve run times.
+    
+    * Also backport wtu.dispatchTask to 1.0.3.
+
+commit effc32f0a0a5e06d389e107c84ed27463c06fb8a
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Tue Feb 12 16:41:24 2019 -0800
+
+    integer-cubemap-specification-order-bug.html: add more test cases (#2806)
+    
+    Makes this test more likely to catch the intended driver bug in the presence of attempted workarounds. (This caught that a few of my attempts at workarounds were not good enough. The eventual fix is (probably) to just preallocate POSITIVE_X, level 0 before everything else.)
+    
+    These tests were generated by shuffling the initialization order
+    thousands of times and picking specifically the cases that failed
+    on the affected driver.
+    
+    crbug.com/905003
+
+commit a0f51b2e123f39c9ff12e621b0b47dd28dd64424
+Author: Austin Eng <2154796+austinEng@users.noreply.github.com>
+Date:   Thu Feb 7 17:28:00 2019 -0800
+
+    Promote WEBGL_multi_draw and WEBGL_multi_draw_instanced to draft (again) (#2798)
+
+commit 94a5a696a655a192f8b1e1d64aa364b5d41568c4
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Feb 7 13:56:37 2019 -0800
+
+    Add &quick=1 option for deqp/functional/gles3/fbocolorbuffer. (#2792)
+    
+    * Add QUICK_TEST option for deqp/functional/gles3/fbocolorbuffer.
+    * Add &quick=1 option to pages.
+    * Add checkbox for toggling on webgl-conformance-tests.html.
+
+commit a94a3ec951c9923bb076490ff6f49027bcf9093e
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Feb 5 18:02:46 2019 -0800
+
+    drawElements with a zero-byte buffer should call with count=0. (#2793)
+    
+    If validating args, only the arg being validated should have an invalid
+    value. Thus, don't call drawElements(mode=-1, count=1) with a zero-byte
+    buffer, or you can get either error.
+
+commit f85396bae84af5b701661e68739b8960cb647454
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Tue Feb 5 14:30:39 2019 -0800
+
+    Disable incorrect builtinprecision tests (#2797)
+    
+    The builtinprecision tests are not correct. Errors were introduced when
+    porting the tests from C++ to JavaScript. Tests that fail here pass in
+    the C++ version of dEQP ported to WASM. This change disables the tests
+    until they can be fixed.
+
+commit dcbb9e5d9e37857d57a9fc711577cf2489ca6197
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Feb 4 19:57:33 2019 -0800
+
+    Backport COMPARE_MODE fix to 2.0.0/deqp/functional/gles3/shadertexturefunction/texturesize.html from #2758. (#2794)
+
+commit ec594f52bc6d5718959b513494d5df4df5b2bb42
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Mon Feb 4 19:57:17 2019 -0800
+
+    Remove skipCorner logic from texImage *_integer-unsigned_byte tests (#2796)
+    
+    Seems to no longer be necessary to skip these cases/checks!
+    Tested on 10.13.6 (Chrome, Firefox) and 10.12.6 (Chrome).
+
+commit 19cc31b495f0bb742b4d1dd6f6e890a9e964d661
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Mon Feb 4 17:56:58 2019 -0800
+
+    Skip deqp derivate.dfdy highp tests on 2.0 ToT (#2795)
+    
+    (These suppressions were already in 2.0.0, this just adds them to
+    top-of-tree 2.0 as well.)
+
+commit 1054b8711dfd58b8bd51fc6a32d4c7c40ca1eb0a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Feb 1 16:32:19 2019 -0800
+
+    Repair 2.0.0 snapshot. (#2790)
+    
+    conformance-suites/2.0.0/conformance/misc/webgl-specific.html
+    conformance-suites/2.0.0/conformance2/rendering/element-index-uint.html
+    conformance-suites/2.0.0/conformance/more/conformance/constants.html
+
+commit c4e43f30afb5e9b88b36717f1304ee2af2ea4b60
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Feb 1 12:50:51 2019 -0800
+
+    Add basic test for EXT_float_blend. (#2779)
+    
+    * Add basic test for EXT_float_blend.
+    
+    Also test that float32 blending is forbidden without EXT_float_blend.
+    
+    * Backport EXT_float_blend to WebGL 1.
+
+commit 899ea6fbf1e429be63ff881d396adb170070c732
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Feb 1 12:48:16 2019 -0800
+
+    Allow arbitrary enums for readPixels via IMPLEMENTATION_COLOR_READ_*. (#2776)
+    
+    * Allow arbitrary enums for readPixels via IMPLEMENTATION_COLOR_READ_*.
+    
+    This would allow, for example, BGRA readPixels, even though BGRA would
+    normally be an INVALID_ENUM for webgl.
+    
+    * Allow INVALID_OPERATION for potential IMPLEMENTATION_COLOR_READ_*.
+    
+    * DEPTH_STENCIL and UNSIGNED_INT_24_8 are never valid for ReadPixels.
+
+commit b28d4ee6610dd766d5d554195005a968b1b2353f
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jan 31 22:44:05 2019 -0800
+
+    Test for A8-on-R8 swizzle being applied to the wrong tex unit. (#2778)
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1503813
+
+commit 5ddec66b9433726f42efb2a095ab254edfd9dcb4
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jan 31 22:42:03 2019 -0800
+
+    Stencil mismatch is only an error if there are active stencil bits. (#2781)
+    
+    The 1.0.3 version of webgl-specific.html should request stencil:true, and enable(STENCIL_TEST).
+    
+    Follow-on to #2583.
+
+commit 21f95aa41c58bb21baab4208e562257bad8baaa0
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Thu Jan 31 21:58:43 2019 +0400
+
+    Revision 2 (#2786)
+
+commit 028ad45e934d0bcdeac8f2e34497a4d771503f93
+Author: Jie Chen <jie.a.chen@intel.com>
+Date:   Thu Jan 31 02:44:42 2019 +0800
+
+    Remove maxShaderCompilerThreadsKHR (#2772) (#2787)
+
+commit 05ee65bb4f9af60614973e20881dacdd4ac62cee
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Wed Jan 30 00:00:37 2019 +0400
+
+    Fix uri in href (#2785)
+
+commit 5ffba0300bc1ad6b8274b764187cbf0e3b855244
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Mon Jan 28 23:51:46 2019 +0400
+
+    Fix XML (#2783)
+
+commit 488af984b533b7cdb07f34b59f959039e16b3b48
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Jan 28 11:51:16 2019 -0800
+
+    Test blitting RGBA8 non-1.0 alpha to a singlesampled RGB backbuffer. (#2782)
+
+commit 91adeb715ae16588b42f7656a3bf0170455b0552
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Mon Jan 28 21:53:03 2019 +0400
+
+    Fix typo in WEBGL_blend_equation_advanced_coherent (#2784)
+
+commit 1a331cc99ea77cbf09b18c067aaf1f3aad3a47f0
+Author: Alexey Knyazev <lexa.knyazev@gmail.com>
+Date:   Sat Jan 26 01:02:36 2019 +0400
+
+    First draft of EXT_draw_buffers_indexed (#2777)
+
+commit db52df17f0d012983dc281e4864c71485a86bd0e
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Tue Jan 22 15:24:23 2019 -0500
+
+    Support robust buffer access for drawArrays. (#2771)
+    
+    Currently out-of-bounds drawArrays is tested to verify that the implementation
+    returns INVALID_OPERATION. The WebGL spec also allows for robust buffer access
+    when accessing array buffers out-of-bounds. WebGL already supports robust
+    access behaviour for drawElements. Because there are some significant perf
+    advantages to robust buffer access for drawArrays as wel this is worth
+    supporting.
+    
+    See https://www.khronos.org/registry/webgl/specs/latest/1.0/#4.5
+    Also see http://anglebug.com/3000
+    
+    A few WebGL 1.0 test changes are neccessary:
+    
+     * rendering/out-of-bounds-array-buffers: test added.
+       * Verifies new behaviour much in the same way as the indexed test.
+       * Mirrors out-of-bounds-index-buffers test for drawElements.
+     * js/tests/out-of-bounds-test: accept NO_ERROR.
+       * Fixes potential TDR with huge size and accepts NO_ERROR.
+       * Mirrors f51f2b7120c for drawElements support.
+     * more/functions/drawArraysOutOfBounds: test removed.
+       * Not relevant when robust access is accepted.
+       * Mirrors 714ccda0287 removal of drawElements test.
+     * more/functions/drawArrays: removed out of bounds error checks.
+       * Not relevant when robust access is accepted.
+     * rendering/out-of-bounds-index-buffers: updated message.
+    
+    Existing implementations shouldn't need any changes to pass the updated tests.
+
+commit 708092d7e7ffb6213c7ba98275d79e83f0c95d41
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Tue Jan 22 11:46:24 2019 -0800
+
+    Skip texture_functions.texturelodoffset.sampler3d_float_vertex (#2774)
+    
+    It is skipped in native dEQP. See:
+    https://android.googlesource.com/platform/external/deqp/+/40ff528%5E%21/
+    https://bugs.chromium.org/p/angleproject/issues/detail?id=3094
+
+commit b329259eab7eda0b9c1a0919d1dc162db28c450c
+Author: Austin Eng <2154796+austinEng@users.noreply.github.com>
+Date:   Tue Jan 22 11:45:12 2019 -0800
+
+    Promote WEBGL_multi_draw and WEBGL_multi_draw_instanced to draft (#2773)
+
+commit 55795a7eadbdd58d8d76f2d5c97ecf029f6a2eab
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Tue Jan 22 11:35:24 2019 -0800
+
+    Runner: semi-optimize layout for smaller screens (#2763)
+
+commit b4b0d6f0d59364bd05125572702552d107d5abbb
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Jan 18 09:46:50 2019 -0800
+
+    Fix webgl2 support for oes-texture-float-linear test. (#2768)
+
+commit b4dc13cac080f7109bfc143b6f2fcefef754411b
+Merge: e93e6410 6dd142c5
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jan 17 16:48:52 2019 -0800
+
+    Merge pull request #2767 from natashalee/master
+    
+    Use glEnumToString helper for format and type names
+
+commit 6dd142c59f91853b7a8ca45eca6eb18e9e23d6c5
+Author: Natasha Lee <natlee@microsoft.com>
+Date:   Thu Jan 17 14:56:01 2019 -0800
+
+    Use glEnumToString helper for format and type names
+
+commit e93e6410202b2c3424afe593a8af7d0d835c2149
+Merge: 37f9e10f e1571399
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Jan 17 12:14:37 2019 -0800
+
+    Merge pull request #2766 from natashalee/master
+    
+    Add framebuffer tests to oes-texture-float
+
+commit e1571399c25a22348ccc908d3eca01a533f702ee
+Author: Natasha Lee <natlee@microsoft.com>
+Date:   Thu Jan 17 11:05:00 2019 -0800
+
+    Remove trailing white spaces
+
+commit 75c3bba3d838334d45c09942868f6f8eccb6c7e5
+Author: Natasha Lee <natlee@microsoft.com>
+Date:   Wed Jan 16 15:37:41 2019 -0800
+
+    Add framebuffer tests to oes-texture-float
+
+commit 37f9e10fd7e2061cd900dead152a2116c3d71e22
+Merge: f22b9ad8 cbf9db27
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Jan 9 18:01:27 2019 -0800
+
+    Merge pull request #2765 from kenrussell/reset-vertex-attrib-binding
+    
+    Allow vertexAttribPointer to reset binding points' state.
+
+commit cbf9db2787b12d3a8bef9956953b607376899d0c
+Author: Kenneth Russell <kbr@chromium.org>
+Date:   Tue Jan 8 16:23:00 2019 -0800
+
+    Allow vertexAttribPointer to reset binding points' state.
+    
+    This was previously done in #2228 but a couple of places were missed.
+    
+    The specified behavior is already tested by the conformance suite.
+
+commit f22b9ad8d75bf99652dfc3b1db40e73d9fdd3840
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Jan 7 17:53:08 2019 -0800
+
+    Add deleted object test; strengthen transform feedback test. (#2764)
+    
+    * Add deleted object test; strengthen transform feedback test.
+    
+    Framebuffers and programs are the primary container objects in the
+    WebGL 1.0 specification. Test deleting attachments of both bound and
+    unbound framebuffers. Deleting programs and shaders is well tested
+    elsewhere.
+    
+    Strengthen the WebGL 2.0-specific transform feedback test to cover
+    deleting output buffers, as well as active transform feedback objects.
+    
+    Vertex Array Objects (VAOs), the last container type, are already well
+    tested by conformance/extensions/oes-vertex-array-object.html and
+    conformance2/vertex_arrays/vertex-array-object.html .
+    
+    Regression test for http://crbug.com/739604 .
+
+commit a2b35635aaef3e9301d69f77f9a0a3fd99291b08
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Tue Dec 18 13:45:02 2018 -0800
+
+    Typo: gl.clear(gl.COLOR_BUFFER) -> gl.clear(gl.COLOR_BUFFER_BIT) (#2760)
+
+commit d0276441b5bf335fef312bfc999fd78868498935
+Merge: b59c749a 254388e9
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Dec 18 16:24:40 2018 -0500
+
+    Merge pull request #2759 from kenrussell/change-context-creation-attribs-to-boolean
+    
+    Change WebGLContextAttributes to boolean from GLboolean.
+
+commit 254388e94568465b75d091f0ab719c0fb89f0fee
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Dec 18 01:56:06 2018 +0000
+
+    Change WebGLContextAttributes to boolean from GLboolean.
+    
+    Based on review feedback from #2753.
+
+commit b59c749ad949319074d06ead5c678346e2cb7a22
+Merge: 283cbc3a 7c957ce3
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Dec 14 17:34:53 2018 -0800
+
+    Merge pull request #2758 from jdarpinian/master
+    
+    COMPARE_MODE is required to use shadow samplers
+
+commit 7c957ce31901581fcf9d66c3744e0895d57417a3
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Fri Dec 14 17:30:27 2018 -0800
+
+    COMPARE_MODE is required to use shadow samplers
+    
+    This test uses shadow samplers, so it is required to set
+    TEXTURE_COMPARE_MODE to avoid INVALID_OPERATION. We can set it
+    unconditionally because it is ignored for non-depth textures.
+
+commit 283cbc3aa76713462f00b10b6f53bfb7b4782c10
+Merge: 1576a5be a0dedc3a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Dec 14 17:13:09 2018 -0800
+
+    Merge pull request #2757 from kenrussell/rerun-idl-generator
+    
+    Re-run IDL generator after OffscreenCanvas changes.
+
+commit a0dedc3a98b170a82ca4c6196da33f3a568ecebc
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Dec 14 16:51:32 2018 -0800
+
+    Re-run IDL generator after OffscreenCanvas changes.
+    
+    Neglected to do this in #2699.
+
+commit 1576a5bed57437bab4c5bd4a74ba7a3c69a259bf
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Thu Dec 13 23:26:12 2018 -0800
+
+    Test uploading texture from animating transparent WebM (#2755)
+    
+    Regression test for https://crbug.com/912842
+
+commit 6ff0ec6f39d9d67f0a3d6c16662e8f5dffd815b8
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Dec 13 16:53:13 2018 -0800
+
+    Add more variants of implicit-clear test. (#2756)
+    
+    Test against all variants of antialias and premultipliedAlpha.
+    
+    Follow-on to #2751. Addresses additional scenarios from
+    http://crbug.com/913033 .
+
+commit 9017b1b69940dfb6e2c3b426743685c0a90233ed
+Author: zhenyao <zmo@chromium.org>
+Date:   Tue Dec 11 18:01:26 2018 -0800
+
+    Add a regression test for crbug.com/913301 (#2754)
+    
+    On MacOSX, if we set a large TEXTURE_BASE_LEVEL on an immutable texture, then
+    call GenerateMipmap() on it will trigger a driver crash.
+
+commit ab0136705cf603cc0d2aab5686e643220d63fb97
+Merge: f35b2483 0c1173e5
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Dec 10 13:54:59 2018 -0800
+
+    Merge pull request #2750 from jdarpinian/texture-type
+    
+    Test shadow samplers and TEXTURE_COMPARE_MODE
+
+commit f35b24831e318d3477f10c28b77b9a4314351292
+Merge: ce08b9be eff1352e
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Dec 10 11:38:35 2018 -0800
+
+    Merge pull request #2752 from null77/amend-multiview-xfb-test
+    
+    Update multiview transform feedback validation.
+
+commit ce08b9bede2de2f3cad9ef2603078d86bdbaf71e
+Merge: 5f234540 4e3fac2a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Dec 10 11:37:33 2018 -0800
+
+    Merge pull request #2748 from jchen10/parallel_benchmark
+    
+    Add KHR_parallel_shader_compile benchmark
+
+commit eff1352eccf4883776ff63c08002cef43c1be25f
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Sun Dec 9 10:16:42 2018 -0500
+
+    Update multiview transform feedback validation.
+    
+    This updates the CTS to be in line with the recent extension wording
+    change. It allows multiview rendering when Transform Feedback is bound
+    and paused.
+    
+    See http://anglebug.com/3012
+
+commit 5f234540c41911b1b4e85d53195032efe9060512
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Dec 6 18:59:35 2018 -0800
+
+    Color mask must be preserved during implicit clears. (#2751)
+    
+    * Color mask must be preserved during implicit clears.
+    
+    Catches a bug that manifested on Chrome on macOS, but could have
+    affected any other platform. This new test already passes on Firefox.
+    
+    Regression test for http://crbug.com/911918 .
+
+commit 0c1173e509ccbc3a1135f86ea6f3b3e4757bb96c
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Wed Dec 5 17:52:19 2018 -0800
+
+    Test shadow samplers and TEXTURE_COMPARE_MODE
+    
+    Setting TEXTURE_COMPARE_MODE should cause an error when depth textures
+    are used with float samplers. Shadow samplers should accept only depth
+    textures and only when TEXTURE_COMPARE_MODE is set.
+
+commit 4e3fac2ad2887ef1b563ae9b0e463d16a6a84383
+Author: jchen10 <jie.a.chen@intel.com>
+Date:   Thu Nov 29 16:12:17 2018 +0800
+
+    Add KHR_parallel_shader_compile benchmark
+    
+    Chromium bug: http://crbug.com/849576
+
+commit 620ae9dbdff6320f7f10a8bbd62c086ec3765e73
+Merge: 5b6cbd78 c9fd3485
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Nov 29 13:46:39 2018 -0800
+
+    Merge pull request #2746 from null77/multiview-xfb-paused
+    
+    Amend ANGLE_multiview to allow for paused XFB.
+
+commit c9fd34859b72939c68a8ccba7a049911f108c855
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Thu Nov 29 16:10:00 2018 -0500
+
+    Amend ANGLE_multiview to allow for paused XFB.
+    
+    Rationale: a paused XFB object is essentially invisible to the
+    rendering engine. The base ES spec says: "When transform feedback
+    is paused, no vertices are recorded." Moreover, many operations
+    that fail when an XFB is active are allowed when it is also paused.
+    This change makes the multiview behaviour consistent with the rest
+    of the spec.
+
+commit 5b6cbd789b9b91b4e46dde883c9f2ecb31eddade
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Nov 15 15:20:15 2018 -0800
+
+    Run canvas-teximage-after-multiple-drawimages test in onload handler. (#2744)
+    
+    The JavaScript execution was racing with document parsing, causing the
+    test to fail intermittently. Follow-on to #2706.
+    
+    Chromium bug: http://crbug.com/905682 .
+
+commit 5e45a4931159424e818fce4a5fd662967f9589ab
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Nov 13 23:51:13 2018 -0800
+
+    Cleanup in framebuffer-texture-changing-base-level. (#2738)
+    
+    Also check that each level in turn is actually cleared to green.
+    Overall failure is still present in all browsers.
+
+commit 61846ed93959110eabf31151862efc4b3ec56b97
+Merge: 25bf3474 23ee3cc9
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Nov 12 19:28:28 2018 -0800
+
+    Merge pull request #2735 from austinEng/master
+    
+    Replace proposal EXT_multi_draw_arrays with WEBGL_multi_draw and WEBGL_multi_draw_instanced (#2717)
+
+commit 25bf347425439e422b1355f9d7ed0bc8f20313ee
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Nov 9 17:37:47 2018 -0800
+
+    Clear background of 2D canvas as originally intended. (#2743)
+    
+    * Clear background of 2D canvas as originally intended.
+    
+    Another small follow-on to #2741 .
+
+commit b01245d5b14402b7e768fa5ae96bf5636e1c495a
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Nov 9 16:42:34 2018 -0800
+
+    Clean up unused variable. (#2742)
+    
+    Small follow-up to #2741.
+
+commit da239df8decc27d4b61f49efe51906a585b22b5b
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Nov 9 12:00:53 2018 -0800
+
+    Test repeated rendering of WebGL canvas to 2D canvas. (#2741)
+    
+    Each draw should show only the most recently rendered content from the
+    WebGL canvas. This was not the case when rendering via SwiftShader.
+    
+    Regression test for http://crbug.com/894021 .
+
+commit 23ee3cc9b4189e60dd4ace7624e1144db3cef150
+Author: Austin Eng <austineng.inr@gmail.com>
+Date:   Fri Nov 9 10:11:53 2018 -0800
+
+    Add tests for WEBGL_multi_draw and WEBGL_multi_draw_instanced
+    
+    These tests share much of the same functionality. They are
+    tested in the same file.
+
+commit a86bbf69e08e0c45d35972b8dd95f17f9c176fc0
+Author: Austin Eng <austineng.inr@gmail.com>
+Date:   Fri Nov 9 10:11:38 2018 -0800
+
+    Add proposals WEBGL_multi_draw and WEBGL_multi_draw_instanced (#2717)
+    
+    Based on previous proposal EXT_multi_draw_arrays.
+    Add additional entry points for Instanced draw call variants.
+    Add additional builtin gl_DrawID.
+
+commit 8dbc733322a4e75e6246a82bd2930f296fb53c36
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Nov 7 20:18:48 2018 -0800
+
+    Promote BPTC and RGTC to Community Approved. (#2739)
+
+commit 07072d2b78157c011d00656820128f624435b1fd
+Merge: c987f075 f0f73e24
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Nov 6 23:13:48 2018 -0800
+
+    Merge pull request #2740 from KhronosGroup/kainino0x-patch-1
+    
+    Deduplicate getDefault3DContextVersion logic
+
+commit f0f73e244ebb3c74b32716800fc115031753e8bd
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Tue Nov 6 15:08:37 2018 -0800
+
+    Deduplicate getDefault3DContextVersion logic
+
+commit c987f075bfdca44119175c41f547d849c08983a3
+Author: He Yunchao <yunchao.he@intel.com>
+Date:   Fri Nov 2 03:09:54 2018 +0800
+
+    Don't skip deqp tests in WebGL 2.0.1 if the corresponding tests (#2307)
+    
+    are not driver/hw bugs in c++ deqp
+
+commit f43cafe974d84690e53e03cf43e62aa2a16bcdc2
+Author: Ilia Mirkin <imirkin@alum.mit.edu>
+Date:   Fri Oct 26 21:28:35 2018 -0400
+
+    Clarify texStorage*D initialization for compressed formats (#2737)
+    
+    The reference is made to ES 3.0 section 3.8.4 pseudocode, which in
+    turn is prefaced with
+    
+      If internalformat is a compressed texture format, then references to
+      TexImage* should be replaced by CompressedTexImage*, with format, type
+      and data replaced by any valid imageSize and data.
+    
+    Include a clarification to this effect directly in the WebGL spec to
+    avoid requiring the reader to dig through to see if online compression
+    of a "zero" color is implied.
+    
+    This is a copy of commit d0612c40c67 for the latest file.
+
+commit bb64ef4e3c11b945e649d903113e3bdc9e25331d
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Oct 24 14:10:50 2018 -0700
+
+    Follow up fixes for lifetime changes from 2731. (#2736)
+    
+    Test that isBuffer always returns false after deletion.
+
+commit 22174ac6ee372bd5834bf35bc2172f43bd24980c
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 23 15:28:47 2018 -0700
+
+    Changes to conformance2/textures/misc/copy-texture-image.html (#2226)
+    
+    * Sized formats can still drop components. (e.g. RGBA->RGB)
+    * *_SNORM formats are INVALID_ENUM for CopyTex*Image*.
+    * Depth formats may generate INVALID_OP in addition to INVALID_ENUM.
+
+commit 0d55c887e92b645f6effe753528323ab2ffd94c2
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Oct 22 18:06:51 2018 -0700
+
+    Split up shaderoperator/common_functions.html. (#2733)
+    
+    This test suite was taking close to the maximum timeout in Chromium's
+    CI system.
+    
+    Addresses http://crbug.com/820225 .
+
+commit 9d1b42e87d22ac323c49f525f5ae409d3c5227b2
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Fri Oct 19 16:15:34 2018 -0700
+
+    Mute all videos so they don't get caught by autoplay blocking. (#2732)
+
+commit cfdbb91e930e130829dd6d3e7395e8e3ab68813d
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Oct 19 14:14:15 2018 -0700
+
+    *TexSubImage on an undefined texture image is INVALID_OPERATION. (#2730)
+    
+    Since this can happen before we check all our enums, this subtest
+    should accept either error.
+    
+    (Regression from #1320)
+
+commit abce2ab39eafdb0a39466117a0e111a6a9effde5
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Oct 17 15:39:46 2018 -0700
+
+    Add EXT_multi_draw_arrays extension proposal. (#2717)
+    
+    * Add EXT_multi_draw_arrays extension proposal.
+    
+    Upon request from multiple CAD customers.
+
+commit 83dee100808acef87189fe65c69ef0ea6c5130be
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Oct 17 15:23:02 2018 -0700
+
+    DEQP lifetimes test should detach (not delete) buffer from VAO. (#2731)
+    
+    The spec used to forbid detaching using vertexAttribPointer.
+    Also remove keep-alive requirement in
+    conformance/extensions/oes-vertex-array-object.html.
+
+commit da3ffa69c24132648de4f1b13bef1007a0065422
+Author: Tarek Sherif <tareksherif@protonmail.com>
+Date:   Tue Oct 16 21:23:28 2018 -0400
+
+    Dirty flag tests (#2600)
+    
+    * WebGL 1 Disabled vertex attribute update test
+    
+    * Add to test list
+    
+    * Vertex buffer update after draw test
+    
+    * WebGL 2 versions of dirty flag tests
+    
+    * VAO disabled attributes test
+    
+    * Linted
+    
+    * Remove rendundant WebGL 2 ports
+    
+    * Fix comments
+
+commit 7ea36c1f110392d4bfb59007eb943d10fd30ea30
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Tue Oct 16 17:23:16 2018 -0700
+
+    Test readPixels from multisampled framebuffers. (#2729)
+    
+    The readPixels tests were all being run with {antialias: false}. There's
+    a bug in Qualcomm's Adreno drivers (http://crbug.com/890002) that only
+    manifests with {antialias: true}. This change tests both configurations.
+
+commit 5454f9aaeedc833de525135bad36d899ca0dd240
+Merge: 9e95241e 286cb63c
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 16 15:01:20 2018 -0700
+
+    Merge pull request #1320 from jdashg/integrate-webplat
+    
+    Integrate tests from web-platform-tests.
+
+commit 286cb63c5d1944d568f5c4c4a3f97bd6e7d59790
+Author: jdashg <jdashg@gmail.com>
+Date:   Thu Nov 19 16:50:22 2015 -0800
+
+    Integrate tests from web-platform-tests.
+
+commit 9e95241ef80215d2770d907156c243f335fbbdba
+Merge: 1da2c306 ec309215
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 16 13:55:50 2018 -0700
+
+    Merge pull request #2726 from imirkin/master
+    
+    ASTC all-zeroes data decodes as error color
+
+commit 1da2c306a632b8f09022b19c16d1b4d10a05d4e7
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 16 13:54:14 2018 -0700
+
+    DrawBuffers has no effect on sampling feedback. (#2727)
+    
+    * DrawBuffers has no effect on sampling feedback.
+    
+    Incomplete textures should be ignored by feedback detection also.
+    
+    * Combine webgl 1 and 2 tests for rendering/sampling feedback loops.
+    
+    * Review fixes.
+
+commit 96b30d21d102e4b2dd60e05ec56b9c0612857838
+Merge: 26fe7d28 09f8f330
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 16 13:47:07 2018 -0700
+
+    Merge pull request #2724 from jdashg/zero-depth-resources
+    
+    Clarify that all depth resources are cleared to 1.0 by default.
+
+commit 26fe7d28db303981be59786bfab9fd294e273dfe
+Merge: ac1664bb bfbe124a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Oct 16 13:46:38 2018 -0700
+
+    Merge pull request #2728 from jdashg/no-zero-gen-mipmap
+    
+    Forbid GenerateMipmap from operating on zero-size textures.
+
+commit bfbe124a7bb92eed34ea7cc18694167ed66b1030
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Oct 10 17:53:07 2018 -0700
+
+    Forbid GenerateMipmap from operating on zero-size textures.
+
+commit ac1664bb9cb4a2191f5d01fe4f47c8f00d5b8952
+Author: Khronos Group Webmaster <webmaster@khronos.org>
+Date:   Wed Oct 10 15:43:50 2018 -0400
+
+    Create CODE_OF_CONDUCT.md
+
+commit ec3092155258c9c1b9f6596d3d3b58eba7d30c3a
+Author: Ilia Mirkin <imirkin@alum.mit.edu>
+Date:   Sun Oct 7 19:25:48 2018 -0400
+
+    Expect error color after texStorage2D initialization of an ASTC texture
+    
+    A block with all zeroes is invalid, so sampling from it will generate
+    the magenta error color. As per the GL_KHR_texture_compression_astc_*
+    specification, the block mode, which is the first 10 bits, is marked as
+    reserved when the low nibble is zero. (See Table C.2.8.)
+    
+    Fixes #2725.
+
+commit d0612c40c67ab86bc6d6b0e7cc0d89c871d441b0
+Author: Ilia Mirkin <imirkin@alum.mit.edu>
+Date:   Sun Oct 7 19:16:26 2018 -0400
+
+    Clarify texStorage*D initialization for compressed formats
+    
+    The reference is made to ES 3.0 section 3.8.4 pseudocode, which in
+    turn is prefaced with
+    
+      If internalformat is a compressed texture format, then references to
+      TexImage* should be replaced by CompressedTexImage*, with format, type
+      and data replaced by any valid imageSize and data.
+    
+    Include a clarification to this effect directly in the WebGL spec to
+    avoid requiring the reader to dig through to see if online compression
+    of a "zero" color is implied.
 
 commit 78e2fa62ac3f061bfcc7feeec98dad4ad103ca59
 Merge: 816dbcc8 2bb8be26
@@ -12,6 +1281,26 @@ Date:   Thu Oct 4 13:53:33 2018 -0700
     
     Rename BPTC and RGTC extensions to EXT_.
 
+commit 816dbcc84a68946e0bd4680490c4526862d5add2
+Author: Jiawei Shao <jiawei.shao@intel.com>
+Date:   Thu Oct 4 08:47:16 2018 +0800
+
+    Add test to expose an alpha blending issue on Intel macOS drivers (#2716)
+    
+    * Add test to expose an alpha blending issue on Intel macOS drivers
+    
+    This patch intends to add a conformance test to expose an alpha
+    blending issue on Chromium on Intel macOS drivers. The test is
+    based on the case provided in https://crbug.com/886970.
+
+commit 09f8f3302013a518b35f3d46e7628a21ac3d404e
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Wed Oct 3 16:43:01 2018 -0700
+
+    Clarify that all depth resources are cleared to 1.0 by default.
+    
+    Not just renderbuffers.
+
 commit 2bb8be266c718add7e2ccb262c4733fe00ad19f2
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Fri Sep 28 12:59:21 2018 -0700
@@ -20,3 +1309,1881 @@ Date:   Fri Sep 28 12:59:21 2018 -0700
     
     Also retarget BPTC from the ARB_ ext to the EXT_ one, since EXT_ is the
     ES version.
+
+commit c560071cac9aef0b26f089c4ead84b5b9e39c368
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Sep 27 03:29:23 2018 +0300
+
+    Fix WEBGL_compressed_texture_bptc extension number (#2719)
+
+commit 42c423dc6fcda34394439caf55f860aae97bc7a3
+Merge: f894e92c 2d6bddbe
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Sep 26 10:15:15 2018 -0700
+
+    Merge pull request #2720 from Oletus/ext-rgtc
+    
+    Add a draft RGTC compressed texture extension
+
+commit 2d6bddbeaca9d22492940ab3f8a96c060ef65c81
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Thu Sep 13 20:54:01 2018 +0300
+
+    Add a draft RGTC compressed texture extension
+    
+    The extension simply exposes the native compressed texture extension
+    EXT_compressed_texture_rgtc. The extension contains red and red-green
+    compressed texture formats.
+    
+    The extension should be supportable on both OpenGL and D3D11. In D3D11
+    the compressed texture formats exposed here are called BC4 and BC5.
+    D3D11 also has signed and unsigned variants of these formats.
+    
+    The red-green formats from this extension are particularly suited for
+    storing normal maps.
+    
+    The native extension requires OpenGL ES 3.0, but the WebGL extension
+    is intended to be exposed starting from WebGL 1.0. The native
+    extension does specify sampling from the missing channels and
+    explicitly mentions that it doesn't add uncompressed red-green
+    formats, so it's reasonably straightforward to interpret against the
+    OpenGL ES 2.0 / WebGL 1.0 spec.
+    
+    The included test verifies that the enum values are correct and that
+    the size restrictions are respected, but does not cover decoding yet.
+
+commit f894e92ce3056919ea525ede2c7978d016098c1f
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Mon Sep 24 08:50:10 2018 +0300
+
+    Add a test for instanced rendering with large divisors (#2715)
+    
+    This test covers a recently fixed ANGLE bug http://anglebug.com/2832
+    that was present on the D3D11 backend.
+
+commit c797a4f79589ed3cddd5f06fa0ea553d369ab292
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Sep 21 20:09:38 2018 +0300
+
+    Add a test for WEBGL_compressed_texture_bptc (#2714)
+    
+    The test is not very thorough yet, as it's not testing for correct
+    decoding of the compressed data. However, more complete tests will be
+    easier to develop once there is a prototype implementation available.
+    
+    The extension is moved to draft so that prototyping can proceed.
+
+commit 105938fa0ad3caa2a34502e4e3e724aea2e322e2
+Author: Ashley (Scirra) <ashley@scirra.com>
+Date:   Thu Sep 20 19:07:15 2018 +0100
+
+    Delete WebGL_blend_equation_advanced proposal (#2713)
+    
+    Delete WebGL_blend_equation_advanced in favour of the new WEBGL_blend_equation_advanced_coherent proposal.
+
+commit 8061947f20c994a605dc18cf16a640fb97986be6
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Sep 20 21:06:09 2018 +0300
+
+    Improve compressed texture tests (#2712)
+    
+    * Improve compressed texture tests
+    
+    A new test utility collection for compressed texture tests is added in
+    sdk/tests/js/tests/compressed-texture-utils.js. It can validate common
+    functionality in compressed texture extensions, such as enumerating
+    formats and size restrictions on data that is passed in to texture
+    uploads.
+    
+    This also removes duplicate testing of querying
+    COMPRESSED_TEXTURE_FORMATS when no texture compression extensions are
+    enabled. This is tested in textures/misc/compressed-tex-image.html so
+    it doesn't need to be tested in individual compressed texture
+    extension tests. compressed-tex-image.html is now enabled also for
+    WebGL 2.0.
+    
+    New coverage is added for trying to use all the different compressed
+    texture formats when the extensions are disabled.
+    
+    Coverage is added also for trying to use more varied incorrect
+    dimensions for ASTC textures.
+    
+    * Add a conformance test for WEBGL_compressed_texture_etc1
+    
+    This extension is enabled in some WebGL implementations but has not
+    had proper conformance tests until now. Add a simple conformance test
+    with some enum tests and negative tests to have at least some
+    coverage.
+
+commit be85b36242a47a49820b193c233e6a6cdaba00ac
+Author: Ashley (Scirra) <ashley@scirra.com>
+Date:   Fri Sep 14 19:05:28 2018 +0100
+
+    Propose WEBGL_blend_equation_advanced_coherent (#2709)
+    
+    Proposal to expose KHR_blend_equation_advanced_coherent to WebGL. Forked from the previous proposal for KHR_blend_equation_advanced according to #2704.
+
+commit a50f779ed49d33f4d10c2868105565162b7133ba
+Author: Jie Chen <jie.a.chen@intel.com>
+Date:   Sat Sep 15 02:03:41 2018 +0800
+
+    Promote KHR_parallel_shader_compile to draft. (#2690) (#2711)
+
+commit 324f1e21f1c07525c8bf069a2bc76a43464d6787
+Author: Jiajia Qin <jiajia.qin@intel.com>
+Date:   Sat Sep 15 01:52:04 2018 +0800
+
+    Add ComputeBoids example (#2707)
+    
+    This example is ported from
+    https://github.com/google/nxt-standalone/blob/master/examples/ComputeBoids.cpp.
+    
+    Try this example using latest chrome canary with below commands:
+    Chrome.exe --use-cmd-decoder=passthrough --enable-webgl2-compute-context
+               --use-angle=gl  --use-gl=angle
+    
+    Currently, it still can't get correct result on d3d backend since SSBO
+    for d3d is still under development in ANGLE.
+
+commit f88e25f549a4b764674f6aeb415772fb912ea66a
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Sep 14 15:01:07 2018 +0300
+
+    Add a proposal for a BPTC compressed texture extension (#2710)
+    
+    The proposed extension simply exposes the native compressed texture
+    extension ARB_texture_compression_bptc.
+    
+    The extension should be supportable on both OpenGL and D3D11. In D3D11
+    the compressed texture formats exposed here are called BC7 and BC6H.
+    D3D11 also has signed and unsigned variants of the float format and
+    linear and SRGB variants of the fixed point format.
+    
+    The extension is possible to support on both WebGL 1.0 and 2.0.
+
+commit 6d2f3f4cb8bac1f7c4a945c73d07a33df74f22f9
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Sep 13 13:46:00 2018 -0700
+
+    Add canvas-teximage-after-multiple-drawimages.html test. (#2706)
+    
+    * Add test case uploading a 2D-rendered canvas which has had a series of
+    drawImage operations (from both images and other 2D-rendered canvases)
+    applied to it.
+    
+    Regression test for http://crbug.com/878545 .
+
+commit a24c704e2f2e0056acdaa057b18359f6151c46cd
+Merge: 05c20036 3298307b
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Sep 11 17:34:13 2018 -0700
+
+    Merge pull request #2708 from nox/named-getter
+    
+    Avoid using window's named getter on a couple of tests
+
+commit 3298307b35efbde78beb9832cf0a00c22fb0f190
+Author: Anthony Ramine <n.oxyde@gmail.com>
+Date:   Wed Sep 12 01:14:39 2018 +0200
+
+    Avoid using window's named getter on a couple of tests
+    
+    Servo doesn't implement the named getter yet and thus those tests fail for
+    reasons unrelated to our WebGL support.
+
+commit 05c200369ee11b96f6794cff556b488d7c23113e
+Merge: 3aa718b8 4c4bcdef
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Aug 31 13:09:00 2018 -0700
+
+    Merge pull request #2703 from kenrussell/better-specify-vertexattrib-v
+    
+    Better specify errors for vertexAttrib*v entry points.
+
+commit 3aa718b8aad395d84b8954e35ca453fbc6dc6c8e
+Author: Anthony Ramine <n.oxyde@gmail.com>
+Date:   Fri Aug 31 21:52:39 2018 +0200
+
+    Make some tests fail more gracefully and cooperatively. (#2702)
+    
+    Those tests time out when run in Servo because of missing support for a
+    bunch of features, such as preserving the drawing buffer or loading SVG
+    images. Instead, make the tests fail, and finish the tests so that the
+    next ones are started.
+
+commit 4c4bcdef3b0d53ba1c449e6280e4cdcfeb2f4390
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Aug 31 11:56:53 2018 -0700
+
+    Better specify errors for vertexAttrib*v entry points.
+    
+    This behavior is already tested by gl-vertex-attrib.html.
+    
+    Fixes #2700.
+
+commit 9a64910fc61fa3c71e6d055416a489bd35a6ea18
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Aug 30 15:31:46 2018 -0700
+
+    Add references to OffscreenCanvas. (#2699)
+    
+    OffscreenCanvas is documented in the WHATWG's current specifications,
+    and browsers are beginning to ship support for fetching WebGL contexts
+    against them, as well as use them as texture sources. Document this
+    properly in the WebGL specification.
+    
+    In Chromium, this work was tracked under issue http://crbug.com/563816
+    and many dependent bugs.
+
+commit fba3728a1bd6cbe027f7f7a5be3a40ed1bb69727
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Aug 30 14:45:52 2018 -0700
+
+    Test webgl2 vs. webgl canvas context modes. (#2701)
+    
+    This test covers the following HTML spec pull request:
+    https://github.com/whatwg/html/pull/3971
+
+commit 296a72447f297df4a75a0cb9b59d4f3f931e271e
+Author: Ashley (Scirra) <ashley@scirra.com>
+Date:   Thu Aug 30 02:35:57 2018 +0100
+
+    Propose WEBGL_blend_equation_advanced (#2697)
+    
+    * Propose WEBGL_blend_equation_advanced
+    
+    Proposal to expose KHR_blend_equation_advanced to WebGL.
+
+commit 40e4ce679cde38632341404e39d2471dd011c216
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Aug 22 09:59:25 2018 -0700
+
+    Fix href of rejected WEBGL_get_buffer_sub_data_async extension. (#2698)
+    
+    This was causing the extension registry to fail to rebuild
+    successfully.
+
+commit 5fed0610cd7c5212f9646bf5dea211c5f5fd8baa
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Tue Aug 14 10:40:59 2018 -0700
+
+    Document non-blocking getBufferSubData (#2696)
+
+commit 1fae933adbaf340636c3bdec8a074bbd9341e9ca
+Author: Jie Chen <jie.a.chen@intel.com>
+Date:   Fri Aug 10 08:18:26 2018 +0800
+
+    Expose KHR_parallel_shader_compile. (#2690) (#2691)
+    
+    Add the extension proposal.
+
+commit 9d810e5f222d29e388e97020d1616ecced53c992
+Merge: 7ca87fb1 8bc2c423
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Aug 9 14:17:05 2018 -0700
+
+    Merge pull request #2695 from Oletus/more-webgl-multiview-tests
+    
+    Add WEBGL_multiview tests for depth buffer and transform feedback
+
+commit 8bc2c423dfec6de53da1254a71a05cb777c6d5be
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Thu Aug 9 14:10:34 2018 +0300
+
+    Add a WEBGL_multiview test for interaction with transform feedback
+    
+    The test passes on the latest prototype implementation in Chromium.
+
+commit 9f0e3c6a75a4ed4e591dab97347be954599e2f8a
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Thu Aug 9 12:07:18 2018 +0300
+
+    Add a WEBGL_multiview test that uses a depth buffer
+    
+    The test passes on the latest prototype implementation in Chromium.
+
+commit 7ca87fb1d3da3b3d2060886e8c58e726d74c8219
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Aug 9 10:49:28 2018 +0300
+
+    Add a test for passing a struct from a const array (#2693)
+    
+    This covers bug http://crbug.com/871434 . The root cause seems to be
+    in the NVIDIA OpenGL driver.
+
+commit 6c8c70151a2c4d2d171fb82532c767b643cc821c
+Merge: a3a59b1d ba0e8e2c
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Aug 8 16:13:44 2018 -0700
+
+    Merge pull request #2694 from kainino0x/texture-from-camera
+    
+    Add stress test for camera-to-texture upload
+
+commit ba0e8e2cfd724f91cefbc8327821f0691bddd35b
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Wed Aug 8 11:54:57 2018 -0700
+
+    Add stress test for camera-to-texture upload
+
+commit a3a59b1d1f22d2fdb9afb34b9e58342f0092d0c6
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Aug 3 10:23:11 2018 -0700
+
+    Update Chrome troubleshooting URL. (#2687)
+    
+    Make it point to the top-level help for Chrome. The previous URL has
+    been redirected to a "tips and tricks" page which is not very useful.
+    
+    Thanks to webmaster James Riordon for raising the issue.
+
+commit 216296b89ea62f6fc840602d0315512bc3fe6dac
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Aug 1 13:39:32 2018 -0700
+
+    Regenerate WebGL 1.0 IDL. (#2686)
+    
+    Follow-on to #2685. Forgot to regenerate the IDL after backing off
+    from my first change.
+    
+    Related to #2683.
+
+commit 2125fb72c727a9b5df09928762aa63c87b88d126
+Merge: beddcab1 e58ea0f7
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Aug 1 11:23:00 2018 -0700
+
+    Merge pull request #2685 from kenrussell/expose-canvas-member-only-to-window
+    
+    Expose "canvas" attribute only to Window context.
+
+commit e58ea0f7808b2ff56e0e1eb0db19ebd64d1673d8
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Aug 1 10:14:04 2018 -0700
+
+    Expose "canvas" attribute only to Window context.
+    
+    HTMLCanvasElement doesn't exist on workers.
+    
+    Fixes #2683.
+
+commit beddcab16e9a4abd8a9ba29336a98458e94643f1
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Wed Aug 1 19:51:18 2018 +0300
+
+    Test WEBGL_multiview when the extension is disabled (#2684)
+    
+    The added tests make sure that none of the WEBGL_multiview
+    functionality is enabled if the extension is disabled.
+
+commit f32b09c7ede24b31cfc9866592c326fe4f18a159
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Wed Aug 1 10:58:59 2018 +0300
+
+    Add WEBGL_multiview tests for single view operations (#2682)
+    
+    This adds two test files. One concentrates on drawing to multiview
+    framebuffers with shaders that don't contain a GL_OVR_multiview
+    extension directive. The other one does different operations on
+    multiview framebuffers containing just a single view.
+    
+    All of the added tests pass with the latest version of ANGLE, however
+    latest Chromium still needs to integrate the latest ANGLE changes with
+    fixes to multiview read functionality.
+
+commit 4c2bd94357af70a829e3165b6503c1a48fd689f2
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Jul 31 15:08:18 2018 -0700
+
+    Explicitly set image's src in tex-video-using-tex-unit-non-zero.html . (#2680)
+    
+    It's not clear whether there's any guarantee that an img tag whose
+    source is a data: URL will be fully loaded before inline scripts below
+    it execute. Instead, set an onload handler for the image and set its
+    src in script.
+    
+    Intended to address intermittent failures in this test per
+    http://crbug.com/830901 .
+
+commit ba80f238630a3cf6ec8114342f016d0d96a3d178
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Jul 31 15:06:34 2018 -0700
+
+    Simplify WebGLTestUtils.startPlayingAndWaitForVideo. (#2681)
+    
+    Chrome's media team points out that their own internal tests only
+    watch for video.currentTime > 0, and those tests are reliable. Use the
+    same structure in WebGLTestUtils. This change should work across all
+    web browsers.
+    
+    Addresses feedback given in http://crbug.com/834933 . Attempting to
+    eliminate test flakiness observed in http://crbug.com/830901 .
+
+commit 7be5f9b10ff71d49ebee0a2be7a55738c6a4ec36
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Jul 31 11:12:00 2018 +0300
+
+    Add a test for draw framebuffer completeness (#2671)
+    
+    The test checks that the draw framebuffer can still be rendered to
+    even if the read framebuffer is incomplete.
+    
+    The new test exposes a bug in Chrome 67. It seems to be specific to
+    ANGLE's D3D11 backend. Bug link: http://anglebug.com/2737
+    
+    The latest stable version of Firefox is not affected by the bug.
+
+commit 21bf7a8843da78e6cdf066f3165c1b8f7905d04b
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Jul 31 11:09:47 2018 +0300
+
+    Add more WEBGL_multiview tests (#2679)
+    
+    Add more WEBGL_multiview tests
+    
+    This adds tests for different features that interact with
+    WEBGL_multiview:
+    
+    1. Multiple draw buffers.
+    2. Using a flat varying in a multiview shader (this covers a bug that
+       was recently worked around in ANGLE).
+    3. Instanced draw calls. Multiview can be implemented by leveraging
+       instancing together with some other GL / D3D11 features, so it's
+       important to test this.
+    
+    All of these tests pass when run against Chrome Canary with WebGL
+    draft extensions enabled.
+
+commit bf125f823ef41098b0c72e049f1fc9bae196170b
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Jul 31 00:27:32 2018 +0300
+
+    Add WEBGL_multiview support to workload simulator (#2678)
+    
+    This demonstrates the performance benefits from using WEBGL_multiview.
+
+commit 81b864a3b73a10a6e9c1540105a0409cf24b2484
+Author: Justin Novosad <justin.novosad@gmail.com>
+Date:   Mon Jul 30 17:22:55 2018 -0400
+
+    Add OffscreenCanvas cases to texImage tests (#2496)
+
+commit 95e34c25cb5b65f5d86fa6ca3b7d3359cb956ba7
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Mon Jul 30 12:26:31 2018 +0300
+
+    Add a basic WEBGL_multiview test for WebGL 2 (#2669)
+    
+    Add a basic WEBGL_multiview test for WebGL 2
+    
+    The test tests multiview framebuffers based on 2D array textures.
+    
+    The test covers framebuffer queries as well as rendering into a
+    multiview framebuffer. The test has been tested against a prototype
+    implementation for Chromium.
+    
+    There's a separate test file for testing WEBGL_multiview interaction
+    with EXT_disjoint_timer_query_webgl2.
+    
+    Also fixes an off-by-one error in the WEBGL_multiview spec. The same
+    issue was fixed in the OVR_multiview spec and WebGL should follow
+    suit.
+    
+    Separate tests could still be added for:
+    
+    1. drawing into a multiview framebuffer with a non-multiview shader
+    (with num_views both 1 and > 1).
+    2. Instanced draw to a multiview framebuffer.
+    3. Multiple color render targets in a multiview framebuffer.
+
+commit 945c872fd6c90173c125bff4048de06167ee156e
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Jul 26 15:16:04 2018 -0700
+
+    Add [Exposed] Web IDL attribute to all WebGL interfaces. (#2673)
+    
+    * Add [Exposed] Web IDL attribute to all WebGL interfaces.
+    
+    This extended attribute has been required by Web IDL since
+    heycam/webidl#423 . In order for WebGL to be accessible by web workers
+    using OffscreenCanvas, the attribute being added to all WebGL
+    interfaces is:
+    [Exposed=(Window,Worker)]
+    
+    Fixes #2571 .
+    
+    * Address review feedback from jgilbert
+
+commit 677a0e8fef00c34f02232c5f08a6ceeb3147a209
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Jul 20 17:51:35 2018 -0700
+
+    Add license to webgl.idl and webgl2.idl. (#2674)
+    
+    Use the same MIT license that's used throughout the WebGL SDK, as it
+    seems a better choice than Khronos' specification license.
+    
+    Remove obsolete comments referring to Khronos' typed array spec; it
+    was folded into the ECMAScript specification some time ago.
+    
+    Fixes #2668 .
+
+commit e6b8f7a0d64edbadb1c8025d9216b3f4d6122afe
+Author: Jeff Leger <jleger@qti.qualcomm.com>
+Date:   Fri Jul 20 16:16:22 2018 -0400
+
+    Fix the ERROR_EPSILON for GL struct tests (#2676)
+    
+    Affects the ogles/struct/struct_049_to_56.html tests.  The ERROR_EPSILON
+    value of 0.1 was too strict for FP16 implementation of medium precision.
+    This change relaxes the epsilon to 0.125.
+
+commit 21dbf06b5aa6c7dc8cf56314d4a3f96f57956c53
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Jul 19 13:50:58 2018 -0700
+
+    Improve logging for tex-video-using-tex-unit-non-zero.html . (#2672)
+    
+    Use WebGLTestUtils.comparePixels, and include failing video type in
+    error messages.
+    
+    Intended to diagnose intermittent failures of this test in
+    http://crbug.com/830901 .
+
+commit 6a1722fa0ed15b52563da09989115c729dca21c9
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Jul 17 13:57:33 2018 +0300
+
+    Specify binding one buffer to two transform feedback outputs (#2658)
+    
+    This case used to be underspecified, so behavior varies between
+    platforms. Particularly on D3D having two stream outputs written to
+    the same buffer is disallowed, and on OpenGL ES there's some undefined
+    behavior. Prohibit having the same buffer bound to two transform
+    feedback outputs when calling BeginTransformFeeback to avoid
+    non-portable behaviors from now on.
+    
+    Currently the test doesn't yet generate the expected error on any of
+    the platforms tested. On Chromium or Firefox running on ANGLE's D3D
+    backend, the buffer is not touched by transform feedback.
+    On Chromium's GL backend, only one of the outputs is written to the
+    buffer by transform feedback.
+    
+    The behavior is the same on recent HW/drivers from both NVIDIA and
+    Intel.
+
+commit c00e3f947a8c1a12861413c9637c7f464d4dc78c
+Merge: eb12d5d1 b3f6a419
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Jul 11 12:24:47 2018 -0700
+
+    Merge pull request #2662 from Oletus/fix-instancing-spec
+    
+    Fix WebGL 2.0 spec about non-zero divisor requirement
+
+commit eb12d5d19790fe91d7ee0514459295ad42b636eb
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Jul 9 17:27:25 2018 -0700
+
+    Added test cases for structs as out and inout parameters. (#2663)
+    
+    The highp variant of these tests fails on certain GPUs.
+    
+    Regression tests for the Chromium bugs http://crbug.com/851870 and
+    http://crbug.com/851873.
+    
+    Test cases originally from
+    https://github.com/mrdoob/three.js/issues/14137 .
+
+commit b3f6a419edca22865feebc51867eaa0c374a7e98
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Mon Jul 9 17:45:42 2018 +0300
+
+    Remove ENABLED_ATTRIBUTE section entirely and add test
+    
+    Add a test to verify that rendering works even if there's no enabled
+    attribute arrays.
+
+commit 10b0ae8b64e47daae420e751fd9024481e1d0bca
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Wed Jun 27 10:58:39 2018 +0300
+
+    Fix WebGL 2.0 spec about non-zero divisor requirement
+    
+    The conformance tests were previously fixed to remove the requirement
+    that there's at least one non-zero divisor, as it is not needed in
+    D3D11-backed implementations of WebGL. This change brings the spec in
+    line with the tests.
+    
+    The test is also expanded a bit to cover drawArrays and drawElements,
+    not just their instanced variants.
+    
+    Currently Chromium passes the test, but Firefox follows the old 2.0.0
+    spec rather than the newer version of the test.
+
+commit 1a20624ad90ae0c6f7d27dbfea6443ec4fd84c5a
+Author: zhenyao <zmo@chromium.org>
+Date:   Wed Jul 4 18:09:29 2018 -0700
+
+    Add a regression test for crbug.com/859400 (#2665)
+
+commit a5c263cc63ffc2cc189b5214074c8792067c1853
+Merge: cd43e6b0 8f5bf236
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Jun 26 16:17:09 2018 -0700
+
+    Merge pull request #2659 from jdarpinian/tf-generic-binding
+    
+    Transform feedback generic binding point should not block buffer usage
+
+commit cd43e6b0ea4e4cbe16c31d24eacb84420f1e79e0
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Jun 25 18:46:40 2018 -0700
+
+    Add wtu.dispatchTask for use instead of waitForComposite. (#2661)
+    
+    Texture upload tests in particular take a long time because they run a max of
+    60 tests per second, because they rely on waitForComposite to yield execution.
+    waitForComposite should only be used when necessary. Use dispatchTask if we
+    want to yield to the event loop.
+    
+    Before:
+    all/conformance/textures/canvas (Passed: 3880/3880 in 48.68 seconds)
+    conformance/textures/canvas/tex-2d-rgb-rgb-unsigned_byte.html (Passed: 1122/1122 in 14113.0 ms)
+    
+    After:
+    all/conformance/textures/canvas (Passed: 3880/3880 in 8.90 seconds)
+    conformance/textures/canvas/tex-2d-rgb-rgb-unsigned_byte.html (Passed: 1122/1122 in 2097.0 ms)
+
+commit 963ec081162e4738fc6273cca797eb13ec88ce16
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Jun 25 18:32:49 2018 -0700
+
+    Fix bug where comparison contradicts comment. (#2660)
+
+commit 8f5bf23661eee2c0bb3042d03094f8b4581a4818
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Fri Jun 22 18:07:49 2018 -0700
+
+    Transform feedback generic binding point should not block buffer usage
+    
+    The transform feedback generic binding point is not part of the
+    transform feedback object and is not used for transform feedback. Only
+    the indexed binding points are used. A buffer that is bound to the
+    generic binding point should be usable for either transform feedback or
+    non-transform-feedback purposes.
+
+commit c39d3f7b6b88bc62a9851d6b81e309c320d26f83
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Jun 21 06:15:37 2018 +0300
+
+    Test constructing a struct with a single member (#2657)
+    
+    This is a regression test for a Swiftshader bug.
+
+commit e3ee0b7b66d076ccca0617d28c8993292ddece80
+Merge: fb97619b bd6c4b1b
+Author: Dean Jackson <dino@grorg.org>
+Date:   Fri Jun 8 07:42:15 2018 +1000
+
+    Merge pull request #2656 from JusSn/webkit-raf-update
+    
+    WebKit (now) supports requestAnimationFrame
+
+commit bd6c4b1b248cd1a510d29e41d20cbea87f78ad1a
+Author: Justin Fan <justin_fan@apple.com>
+Date:   Thu Jun 7 12:20:46 2018 -0700
+
+    WebKit actually supports requestAnimationFrame
+
+commit fb97619baa91b3ae2322fccfa838efb419efde58
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Jun 6 11:55:20 2018 -0700
+
+    Clarify errors when objects from different contexts are passed in. (#2654)
+    
+    This situation uniformly generates INVALID_OPERATION except for the
+    is* queries, but this was not well specified or tested.
+    
+    Cover all API entry points accepting WebGLObject arguments in
+    incorrect-context-object-behaviour test. Add WebGL 2.0 version of this
+    test. Remove now-redundant resource-sharing-test.
+
+commit 5e83981c2c44f24109b96b555d6865d481e0c609
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Tue Jun 5 08:36:18 2018 -0700
+
+    Remove getBufferSubDataAsync tests from 00_test_list.txt (#2655)
+    
+    See #2653
+
+commit 25a501c8ade78e334b108212fd18fc75595f8517
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Tue May 15 17:25:56 2018 -0700
+
+    Add tests for getBufferSubData correctness and performance
+    
+    With the new "nonblocking getBufferSubData" optimizations,
+    getbufferSubData needs these additional tests to make sure it doesn't
+    return data that is too old or too new.
+
+commit 19fe51d80f8decb662e218d0433e5220edd165b1
+Author: Kai Ninomiya <kainino@chromium.org>
+Date:   Fri May 4 23:01:34 2018 -0400
+
+    Remove WEBGL_get_buffer_sub_data_async
+
+commit 8ea92581353d18f50d25159489897ae634eb23b1
+Merge: 602e0d14 d7cad2af
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu May 31 17:38:44 2018 -0700
+
+    Merge pull request #2607 from jdashg/oob-fetch
+    
+    Spec drawElements behavior with null ELEMENT_ARRAY_BUFFER binding.
+
+commit 602e0d14156817b7a7702b526bbd4b6adf02480e
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Wed May 30 18:09:07 2018 -0700
+
+    Add WebGL workload simulator (#2652)
+    
+    A tool that provides a UI to select various kinds of WebGL work to
+    perform each frame. Useful to test the effect of various different
+    workloads on performance.
+
+commit 198d637dd3e21d837fac6b3186cc6bc72e2f7219
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed May 16 19:21:43 2018 -0700
+
+    Test texStorage[2,3]D with non-square sizes. (#2651)
+    
+    Regression test from Firefox where e.g. level=9, width=512, height=1
+    fails.
+
+commit 8a323892ef16706d3913ce61a3cc1513bd9deffe
+Merge: e87fa9ff 3dc6e321
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed May 16 17:13:35 2018 -0700
+
+    Merge pull request #2650 from Richard-Yunchao/blittingAreaOverflow
+    
+    Add tests for blitting to cover width/height overflow.
+
+commit 3dc6e3217a52041343c9bdbafb13367e6731afdd
+Author: Yunchao He <yunchao.he@intel.com>
+Date:   Wed May 16 16:55:46 2018 +0800
+
+    Add tests for blitting to cover width/height overflow.
+    
+    The range of an integer is [-0x7fffffff - 1, 0x7fffffff].
+    We restrict the width/height to the max value that can be
+    store in an integer in latest WebGL 2 spec. If we
+    reverse the data order for blitting, an invalid value like
+    0x7fffffff + 1 would become a valid value for an integer:
+    -0x7fffffff - 1. But it is invalid for blitting.
+    
+    The new added tests cover this corner case to make it clear.
+
+commit e87fa9ffca05dc5cdeb7563711eeed6c52be12f1
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue May 15 18:28:59 2018 -0700
+
+    Revert "Test texStorage[2,3]D with non-square sizes. (#2647)" (#2648)
+    
+    This reverts commit 5a9f360fd5becea418f04920dbe6f6de342bc3e2.
+
+commit 5a9f360fd5becea418f04920dbe6f6de342bc3e2
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue May 15 16:58:25 2018 -0700
+
+    Test texStorage[2,3]D with non-square sizes. (#2647)
+    
+    Regression test from Firefox where e.g. level=9, width=512, height=1
+    fails.
+
+commit 2e7b0deac9bfdc41677396eac3f496dcbf74e136
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Thu May 10 22:57:09 2018 -0400
+
+    Add a test for texImage3D from ImageData with unpack params (#2646)
+    
+    Regression test for https://crbug.com/804123
+
+commit 24d8b3821cdca60e8f0892d20d1d3b0e3bf02313
+Merge: b003a35a 94feeacc
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu May 10 12:03:55 2018 -0700
+
+    Merge pull request #2642 from kenrussell/reject-webgl-shared-resources
+    
+    Reject WEBGL_shared_resources.
+
+commit b003a35a6996fd57d0e7918fe6a7090145844ce1
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Wed May 9 12:11:01 2018 +0300
+
+    Add a test for declaring both gl_FragColor and gl_FragData invariant (#2643)
+    
+    Declaring a variable invariant doesn't access it, so it should not
+    really count as using the variable. Earlier versions of ANGLE would
+    treat declaring both gl_FragColor and gl_FragData invariant an error,
+    but recent versions have been fixed to allow this usage.
+
+commit 94feeacc3985cd33f21ec0caa8445ced9e8937d6
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu May 3 14:19:00 2018 -0700
+
+    Discussed alternatives on recommendation from kainino
+
+commit 9c49f1700ac43db8fc011e4a2b2ae5ed6235985a
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed May 2 20:20:41 2018 -0700
+
+    Reject WEBGL_shared_resources.
+    
+    At this point in the WebGL API's development it is not profitable to
+    invest the time to implement this extension. There are other higher
+    priorities, and all browsers are committed to making it possible to
+    draw WebGL-rendered canvases into other canvases quickly, which
+    essentially solves this problem.
+    
+    Provides a bit more description than #826.
+    
+    Removes test case added in #300.
+
+commit bdb3165df40e27beaa1d2ad5615ce98cda04beb2
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Apr 26 16:08:41 2018 -0400
+
+    Reject WEBGL_compressed_texture_atc and remove associated tests. (#2641)
+    
+    Addresses #2310.
+    Also per discussion on public_webgl:
+    https://www.khronos.org/webgl/public-mailing-list/public_webgl/1702/msg00054.php
+
+commit 8ba2a913b9616fc3b9ff4ef0ddf071e463a45487
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Apr 20 20:56:34 2018 +0300
+
+    Limit blitFramebuffer source and destination rectangle size (#2639)
+    
+    * Limit blitFramebuffer source and destination rectangle size
+    
+    BlitFramebuffer bugs that trigger when using large rectangle
+    dimensions seem to be widespread on all desktop OpenGL drivers. They
+    have been seen on at least:
+    
+    AMD Windows OpenGL
+    Intel Windows OpenGL
+    Intel Linux OpenGL
+    NVIDIA OpenGL (all platforms)
+    
+    In addition there are some issues with handling large dimensions in
+    existing blitFramebuffer workarounds inside ANGLE.
+    
+    In some cases these issues can be worked around by clipping the
+    blitFramebuffer rectangles so that their width and height fit a signed
+    32-bit integer. However, this approach doesn't work in case
+    blitFramebuffer is used to scale the framebuffer and the greatest
+    common divisor of the source and destination dimensions is 1.
+    
+    Since these issues likely don't have any impact on real-world
+    applications, it's reasonable to limit the dimensions in the spec so
+    that rectangles taller or wider than the maximum GLint value are not
+    allowed.
+    
+    * Add more coverage for valid blitFramebuffer calls with large size
+
+commit 8f662c6551a58ee53597f01ec873bfa8c11c4f63
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Thu Apr 12 15:46:49 2018 -0700
+
+    Test transform feedback buffers bound to disabled vertex attribs and unbound VAOs
+    
+    This makes the tests for http://crbug.com/696345 a little more complete.
+
+commit 7b676e3d3380aeda31255c0efd1924d075d0ea69
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Apr 13 15:20:25 2018 -0700
+
+    Add test verifying minimal quality of rendered lines. (#2637)
+    
+    Regression test for http://crbug.com/820461 and
+    http://crbug.com/swiftshader/99 .
+
+commit 0f89b74f839de2693bd09585207bb4a56ec2a366
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Thu Apr 12 19:12:47 2018 -0700
+
+    Add more stencil validation tests (testing validation caching) (#2635)
+    
+    Add new tests testing
+    - various transitions from valid to invalid states (in order to test
+      invalidation of the cached validation in Chrome)
+    - drawing to the default framebuffer
+    
+    Also modifies dummySetProgramAndDrawNothing to keep one WebGLProgram
+    _per WebGL context_.
+    
+    https://crbug.com/806557
+
+commit 7c0541da63f571512c49758cbc0767117997a270
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Apr 10 15:54:15 2018 -0700
+
+    Fix IDL of WEBGL_shared_resources draft extension. (#2633)
+    
+    Checked with https://www.w3.org/2009/07/webidl-check (plugging in some
+    needed definitions above this extension's IDL).
+    
+    Fixes #2596.
+
+commit 5c6e631e4a8a6306d74e49d4c6c51425f5a33a21
+Merge: 3d0a94e4 17fc5257
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Apr 7 15:09:51 2018 -0700
+
+    Merge branch 'zhenyao-copyTex'
+
+commit 17fc5257d8dd505e8680d4fa57a5e2496df6aef3
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Apr 7 15:09:22 2018 -0700
+
+    Fixed line endings and whitespace error
+
+commit 3d7cc71804009149c9261191792127a633cd0fa0
+Merge: 3d0a94e4 a6dcc8d6
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Apr 7 15:08:07 2018 -0700
+
+    Merge branch 'copyTex' of https://github.com/zhenyao/WebGL into zhenyao-copyTex
+
+commit 3d0a94e483d54f4c57470867a0da09abdd80c8ee
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Sat Apr 7 09:55:00 2018 -0700
+
+    wtu.loadShader's gl.shaderSource should be treated as infallible. (#2631)
+
+commit 07a5275d89cadce1c18d5497846c3b11857f4fad
+Author: Jeff <26851121+etisdew@users.noreply.github.com>
+Date:   Sat Apr 7 09:48:18 2018 -0700
+
+    Consistent use of HTTPS (#2632)
+    
+    This is a very light PR amending http to https to the readme.
+
+commit fefa32a950127f6e01a5cdd1536d639a949cd82b
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Apr 6 20:00:43 2018 +0300
+
+    Add a test for having a case statement inside a block (#2630)
+    
+    This was not being validated correctly by ANGLE until recently, though
+    this would not cause issues if the native drivers were working
+    correctly.
+
+commit ae6e95459340f198e6fc5350de494b71ac1e7bb6
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Apr 6 19:44:31 2018 +0300
+
+    Add a test for using non-constant texture offset (#2629)
+    
+    The existing texture offset tests did not seem to cover this invalid
+    usage of the texture offset functions yet.
+
+commit 51813339bb17da50881369cfdcf4062ebf4e2ce2
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Apr 5 16:07:18 2018 -0700
+
+    Use fixed number of iterations in sync-webgl-specific. (#2627)
+    
+    * Use fixed number of iterations in sync-webgl-specific.
+    
+    Like the conformance2/query/occlusion-query test, use a fixed number
+    of iterations, as on slow automated test machines, a fixed duration
+    based on Date.now() leads to test flakiness.
+    
+    Improve the synchronization with the GL server by using readPixels
+    instead of flush or finish.
+
+commit fcbee0da70ba81b80d922e0534bfbd24f47d31af
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Apr 5 15:36:29 2018 -0700
+
+    Test combinations of clearBuffer*(), clear() and draws. (#2628)
+    
+    With the preserveDrawingBuffer:false context creation option, Chromium
+    was incorrectly tracking the effects of clearBuffer on the default
+    back buffer.
+    
+    Modified various quad setup functions in webgl-test-utils to allow the
+    quad to be more easily scaled.
+    
+    Regression test for http://crbug.com/828262 .
+
+commit 2e8a4bf2581aa48d6976421fac67144359184889
+Author: Deyi Li <deyi.li2015@gmail.com>
+Date:   Wed Apr 4 17:35:00 2018 -0700
+
+    Test queueing multiple context restored event after context is lost (#2611)
+    
+    When calling restoreContext() multiple times after context is lost,
+    all queued context restored events should be merged before an event is fired.
+    Therefore, calling restoreContext() multiple times should not cause error or crash.
+
+commit c012dc26b0e7ef5c7c2f5cc1cbc3ad19f8f5e71b
+Author: Patrick To <patrto@microsoft.com>
+Date:   Wed Apr 4 17:22:57 2018 -0700
+
+    Add test to verify DYNAMIC_DRAW bufferData functionality (#2610)
+    
+    * Add buffer-data-dynamic-delay.thml test to verify DYNAMIC_DRAW functionality for buffers
+    * Change shaders and draw to use vec2 and TRIANGLE_STRIPS
+
+commit aef0b3a79983db6f553f35f6ccd7b9303a72d2fa
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Wed Apr 4 16:59:53 2018 -0700
+
+    Change dummySetProgramAndDrawNothing to draw >0 elements (#2626)
+    
+    * the program now sets gl_Position and gl_FragColor to vec4(0.0)
+    * drawArrays now draws one triangle instead of 0
+      (but that triangle is of zero size)
+    
+    This is necessary to make sure the draw call doesn't early out before it
+    does validation.
+
+commit 221bb2dcdc712c7bc0a4daa8db997c2dfd57bd27
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Wed Apr 4 15:13:36 2018 +0300
+
+    Clarify WebGL 2 spec for attribute aliasing (#2616)
+    
+    GLSL ES 3.00.6 already has strict rules when it comes to attribute
+    aliasing, so WebGL 2.0 can simply refer to those rather than spell out
+    its own.
+    
+    A new test is added to fully cover the attribute aliasing rules of
+    GLSL ES 3.00.6. It shares some code with the older attribute aliasing
+    test for WebGL 1.0.
+
+commit ca7b24622038f002da5a203c1399983d48cc1658
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Tue Apr 3 15:36:17 2018 -0700
+
+    Fix usage of glEnumToString in webgl-specific-stencil-settings (#2625)
+    
+    and add a safeguard against future glEnumToString usage mistakes
+
+commit f8324ad7fd8faa60a9201fbf7e02df1e379ea39c
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Mon Apr 2 19:19:42 2018 -0700
+
+    Report skipped tests as both skipped and failed rather than just failed. (#2624)
+    
+    Skipped tests also show as gray instead of red.
+
+commit 25b0cd6380bd406a1c4cddee91168a82b59b5009
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Apr 2 18:11:33 2018 -0700
+
+    Revamp text results, include json block for result details. (#2617)
+
+commit e899c531173da8ba956df8de6dd74fb7d9b1fa9c
+Author: Patrick To <patrto@microsoft.com>
+Date:   Fri Mar 30 13:18:38 2018 -0700
+
+    Add unpack flip y test for depth textures (#2609)
+
+commit aa27baddb0f5662987164c34b79150786f2118e6
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Mar 30 13:16:51 2018 -0700
+
+    Replaced invalid "enum" with "GLenum" in disjoint timer query extensions. (#2623)
+    
+    Verified that these are the only places in the extensions' IDL which
+    have this mistake.
+    
+    Fixes #2596.
+
+commit 6b68a24befc2b537f6c905299a6f1db521351a5e
+Author: Jiajia Qin <jiajia.qin@intel.com>
+Date:   Sat Mar 31 01:15:49 2018 +0800
+
+    Add a test case in for loop condition (#2620)
+    
+    The test in for loop expression can't expose an Intel driver bug. We
+    add another test in for loop condition to conver it.
+
+commit d7cad2afebc236c647e52e393f990a624590a90e
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Mar 8 17:00:57 2018 -0800
+
+    Spec drawElements behavior with null ELEMENT_ARRAY_BUFFER binding.
+    
+    Issue #2500.
+
+commit da5abe6e9bae583e4ae73aa553547fcaa637d099
+Merge: ca2d5236 ae936c9f
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Mar 28 16:04:15 2018 -0700
+
+    Merge pull request #2621 from jdarpinian/master
+    
+    Explanatory comment for transform feedback buffer ownership change.
+
+commit ae936c9fba7d70c208833fd0890fdce61840cea4
+Author: James Darpinian <jdarpinian@google.com>
+Date:   Wed Mar 28 14:54:34 2018 -0700
+
+    Explanatory comment for transform feedback buffer ownership change.
+
+commit ca2d523604bcd6d4e4210f5f7a5f3b481f214a41
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Mon Mar 26 20:01:11 2018 +0300
+
+    Explicitly specify uniform and attribute name collisions (#2615)
+    
+    WebGL has long enforced behavior that goes against GLSL ES 3.00.6
+    section 12.47. WebGL requires that uniform and attribute names don't
+    collide, whereas GLSL ES specifies that there's no collision in this
+    case. The WebGL test that enforces this is:
+    
+    conformance\glsl\misc\shaders-with-name-conflicts.html
+    
+    The test refers to discussion in OpenGL ES working group, but it seems
+    that the results of the discussion were not put into writing outside
+    of the test case.
+    
+    Explicitly specify the WebGL behavior to clear confusion around this.
+
+commit 55905c6f5fc0b8677b2e46cdf6c11571d47f6612
+Author: zhenyao <zmo@chromium.org>
+Date:   Fri Mar 23 09:43:40 2018 -0700
+
+    Add a regression test for Chrome's DeleteBuffers behavior. (#2614)
+
+commit b06d0845682f15896a1043100a039d1dca03f6e3
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Thu Mar 15 13:35:21 2018 -0700
+
+    Test that transform feedback calculations don't overflow. (#2613)
+    
+    * Test that transform feedback calculations don't overflow.
+    
+    * Note that the buffer is too small.
+
+commit a29b472481c45c1135a149942b4cf590f6f29581
+Author: Patrick To <patrto@microsoft.com>
+Date:   Wed Mar 14 13:39:41 2018 -0700
+
+    Change GLSLConformanceTester.runTests() to be synchronous instead of using setTimeout (#2612)
+
+commit 63cf94f8801d617e5068e6b86a9fed7a6b86b4e5
+Author: Patrick To <patrto@microsoft.com>
+Date:   Tue Mar 13 13:00:43 2018 -0700
+
+    Remove premature finishTest from constant-precision-qualifier.html (#2608)
+
+commit dba66c45745a6508d8f311ac57d7ba0e90845f94
+Merge: f51f2b71 14dc1854
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Mar 9 16:50:02 2018 -0800
+
+    Merge pull request #2583 from jdashg/stencil-masking
+    
+    Only complain on stencil writemask/value_mask/ref front/back mismatch…
+
+commit 14dc185472c2679ceba016521d2275a0b149ed10
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Dec 18 19:23:43 2017 -0800
+
+    Only complain on stencil writemask/value_mask/ref front/back mismatch for the `s` stencil bits of the draw framebuffer.
+    
+    - WRITEMASK and VALUE_MASK mask, whereas REF clamps
+    - Add and use drawNothing call
+
+commit f51f2b7120c320383a86c0529c6b8c16b5ef6f1d
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Mar 8 23:48:33 2018 -0800
+
+    Support robust_buffer_access_behavior implementations. (#2606)
+    
+    In particular, don't try to draw $LARGE numbers of triangles. An RBAB
+    implementation will not reject these 'invalid' draws, and will try to draw
+    all the triangles, which, for N=0x7fffffff trips the TDR and incurs context
+    loss.
+
+commit 3faeace7755a8e9327c82919b71ef35bf6e6714d
+Merge: bfeae430 5e584a9a
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Tue Mar 6 15:54:23 2018 -0800
+
+    Merge pull request #2604 from jdarpinian/too-small-buffers
+    
+    Test transform feedback into too small buffers.
+
+commit 5e584a9a1428c6bf38a103ee43c5907b18eccc08
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Tue Mar 6 12:49:32 2018 -0800
+
+    Use constant sizeOfFloat instead of 4.
+
+commit f1369ed1a7242f0f614d1d61aac5997130ae896b
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Mon Mar 5 17:38:47 2018 -0800
+
+    Make valid output nonzero to distinguish from default zeroed state
+
+commit 4fc5d5f8fcd0bef02f336a9a1dbcd8571ef972c4
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Mon Mar 5 15:42:22 2018 -0800
+
+    fix copy/paste error
+
+commit bfeae430a584553eff6553fb694025e448bb3d09
+Merge: 3c1cb020 fffff31f
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Sat Mar 3 00:25:45 2018 -0800
+
+    Merge pull request #2602 from jdarpinian/transform_feedback
+    
+    Expanded transform feedback tests
+
+commit fffff31fbba0f4fadd9730253609b64620a5ed8f
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Fri Mar 2 18:27:14 2018 -0800
+
+    Also test draw*Instanced and drawRangeElements.
+
+commit 8b76f94ad47aaf0ccea96a888bfae0dfec9820ba
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Fri Mar 2 18:09:14 2018 -0800
+
+    Remove unused helper functions
+
+commit 35c0c2875304c2353ba6d4b70319dc007975f48e
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Fri Mar 2 18:05:49 2018 -0800
+
+    Test transform feedback into too small buffers.
+
+commit 3c1cb0203b6cfc10389e85a350b2ea6ca29d01ce
+Author: vikas soni <36902690+vikaschromie@users.noreply.github.com>
+Date:   Fri Mar 2 12:50:33 2018 -0800
+
+    Include file path fix. (#2603)
+    
+    This test was passing when using python SimpleHTTPServer even if the include
+    paths were incorrect. This is because python smartly searched for these include
+    files in other folders. The test failed when command line was used to run test
+    by bots or when running test directly on chrome without using the simplehttpserver.
+
+commit 8755324177728b95abf6f4d41604ddde5030d1c1
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Thu Mar 1 19:17:17 2018 -0800
+
+    update title
+
+commit 94d5fb4e2ca805663ece4c237225cce68306ae75
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Thu Mar 1 19:00:41 2018 -0800
+
+    Rename states-and-errors test to switching-objects
+
+commit b3b94b28982ab8cd814cf9ee305e5156ee728926
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Thu Mar 1 18:51:20 2018 -0800
+
+    Uncomment code
+
+commit 3ed07c5817e76f7de836ba5d4b454d56d35e23c7
+Author: James Darpinian <jdarpinian@chromium.org>
+Date:   Thu Mar 1 18:47:39 2018 -0800
+
+    remove commented code
+
+commit 3b1a79834b02fc5bef0d7bf482f11ca4d4c8229d
+Author: James Darpinian <jdarpinian@google.com>
+Date:   Mon Dec 11 18:42:05 2017 -0800
+
+    Test the effects of switching transform feedback objects
+
+commit 79e283f383b33950fcb02a5e3974c8bab24c9704
+Author: vikas soni <36902690+vikaschromie@users.noreply.github.com>
+Date:   Thu Mar 1 14:19:47 2018 -0800
+
+    Multiple WebGL2 Context sharing texture2darray/texture3d data bug test. (#2601)
+    
+    * Multiple WebGL2 Context sharing texture2darray/texture3d data bug test.
+    
+    This test verifies that 2 different contexts both using 2d array texture
+    or 3d texture does not share/leak the texture data among them due to context
+    save/restore bug.
+    
+    * Fixed trailing whitespaces, copyright date. Added link to original bug
+    in test description.
+
+commit 5edec046d84d2c7227c4b98ab7f7c5fc594781d8
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Wed Feb 7 18:35:38 2018 -0800
+
+    Define that sync objects do not become signaled until control returns... (#2598)
+    
+    to the event loop.
+    
+    Follow the same semantics for sync objects as were previously used for
+    queries. Add a test for the new behavior.
+
+commit a182a9ad3078aca566d8355eabf2d9f56f70ee82
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Feb 6 19:37:52 2018 +0200
+
+    Assign attribute locations explicitly in luma texture copy test (#2597)
+    
+    The test is not querying attribute locations, so use the test
+    utilities to bind the attributes to locations 0 and 1. This ensures
+    that the test runs consistently.
+    
+    This change is backported also to conformance suite version 2.0.0.
+
+commit 98a3d3b4355644bb1187a858fdd2aff6b2bc84ec
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Feb 1 21:07:55 2018 +0200
+
+    Reset vertex attrib divisors between instancing tests (#2595)
+    
+    The newest version of the ANGLE_instanced_arrays test runs different
+    subtests with different shaders, which may have overlapping attrib
+    locations. Make sure that the different subtests don't interfere with
+    each other by resetting vertex attrib divisors after each subtest.
+    
+    Previously the test could pass if attrib locations were automatically
+    assigned in a certain way, but changes to attribute location
+    assignment in the WebGL implementation could make it fail when it
+    should have passed.
+    
+    This change does not need to be backported to earlier conformance suite
+    versions nor the WebGL 2 test for instancing, as they only use one
+    shader and always bind vertex attrib locations explicitly, so the
+    locations can only be set one way.
+
+commit 2b36e6230fff116a7480e4ada1039556be8d8125
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Jan 30 21:26:11 2018 +0200
+
+    Add a test for a HLSL bug with if, return and else if (#2594)
+    
+    An if statement containing a return together with an else if produces
+    wrong output on Chrome and Firefox on Windows.
+    
+    This is a minimal test case for this bug: http://anglebug.com/2325
+
+commit a6dcc8d6388d95c9086fcd4b87a0bb58cd4d2ed5
+Author: Zhenyao Mo <zmo@chromium.org>
+Date:   Mon Jan 29 17:11:13 2018 -0800
+
+    Add a regression test for crbug.com/804118
+
+commit 1f55c35cf302f0575584c83a32d041dd79952e5c
+Author: James Riordon <jriordon@outofcontrol.ca>
+Date:   Mon Jan 29 10:16:32 2018 -0500
+
+    Expand page with additional links
+
+commit db4649010bb7d3a8b17003139626056701b9dcc6
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Fri Jan 26 20:54:42 2018 -0800
+
+    Probe for max texture level for each format separately. (#2579)
+    
+    * Probe for max texture level for each format separately.
+    
+    * Remove now-undefined references, pass null for texImage data.
+
+commit a6440561426d6779e4eefa3bcef3d51ff33657d4
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Thu Jan 25 11:22:48 2018 -0800
+
+    Increase tolerance to 3. (#2586)
+    
+    Variances of 2 have now been seen on MacBook Pros with AMD GPUs:
+    https://ci.chromium.org/buildbot/chromium.gpu/Mac%20Retina%20Release%20%28AMD%29/22175
+    
+    Fixes http://crbug.com/804887 .
+
+commit 68301bc35c9162ae6680294f47a4c308b747f48a
+Author: Greggman <github@greggman.com>
+Date:   Fri Jan 26 02:23:03 2018 +0900
+
+    add test for incompatible texture types for samplers (#2587)
+    
+    note: shadow sampler types are not tested here.
+    they probably need a separate test as they have
+    more requirements related to texture parameters
+
+commit 4181ad31b5ce4f40dee512eb764b61d7bb6131ae
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Jan 19 11:48:07 2018 -0800
+
+    Update new test harness's use of Telemetry API. (#2584)
+    
+    It seems this WebDriver based harness also uses the Chrome-specific
+    Telemetry API when running on ChromeOS.
+    
+    Fixes http://crbug.com/803843 . Thanks to nednguyen@ for the patch.
+
+commit 2c59b0382d65c6778a4328ce542cfe11475e2eb2
+Author: He Yunchao <yunchao.he@intel.com>
+Date:   Wed Jan 17 06:08:32 2018 +0800
+
+    Remove unnecessary GLenums about coverage (#2581)
+
+commit 075a5110d2e8857c0007e2e1501c321b55cb51ba
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Fri Jan 12 22:28:17 2018 -0800
+
+    Add GLSL 3.00 test for forward declarations of functions. (#2580)
+    
+    Fails on Pixel C with Chrome because of flattening of precision
+    qualifiers into variables' types, and because of a bug in the GLSL
+    compiler on this device.
+    
+    Thanks to Robert Muth of art.muth.org for reporting.
+
+commit efdb969820ea7e2bd73f6a00da5f983a7357cc09
+Author: zhenyao <zmo@chromium.org>
+Date:   Mon Jan 8 22:31:12 2018 -0800
+
+    Add a test case for CopyTexImage2D behavior when source/target images (#2576)
+    
+    * Add a test case for CopyTexImage2D behavior when source/target images
+    are from the same texture. Includes pixel verification.
+    
+    This is a regression test for crbug.com/797235
+
+commit a6f99093cbc1e22112b0d36ae368438d268f2376
+Author: Jinho Bang <zino@chromium.org>
+Date:   Fri Jan 5 08:23:47 2018 +0900
+
+    Fix misuse of mixin syntax (#2575)
+    
+    Introduced `interface mixin` syntax in #2566 but it's incorrect.
+    A `interface mixin` SHOULD NOT includes another mixin.
+    
+    This fixes #2566.
+
+commit 41f508c9bef01b280b6e139db2946c1ea372fcd3
+Author: Tarek Sherif <tsherif@gmail.com>
+Date:   Thu Jan 4 17:48:55 2018 -0500
+
+    Regression tests for ANGLE UBO dirty bit bugs (#2573)
+
+commit 2df151be79b1a44d41464b149d6044fbf6bbf2f7
+Author: Jinho Bang <zino@chromium.org>
+Date:   Thu Jan 4 13:34:46 2018 +0900
+
+    Use Web IDL's new-ish interface mixins concept (#2566)
+    
+    WebIDL recently introduced dedicated syntax for mixins [1]. This
+    replaces the existing [NoInterfaceObject] and "implements" syntax with
+    "interface mixin" and "includes" in the appropriate places.
+    
+    This fixes #2538, #2539 issues.
+    
+    [1] https://github.com/heycam/webidl/commit/45e8173d40ddff8dcf81697326e094bcf8b92920
+
+commit 57590ed441d09dad8050def51162e3177334d884
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Wed Jan 3 13:09:05 2018 -0800
+
+    Promote WEBGL_multiview to draft. (#2572)
+
+commit deee02713ef79e0dd9b409fdaea75c19d0ff0730
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Wed Jan 3 21:51:08 2018 +0200
+
+    Add a test for assigning twice to a swizzled vec inside a function (#2570)
+    
+    This reproduces a crash at least in Chromium running on recent NVIDIA
+    OpenGL drivers.
+    
+    Chrome bug report that this test case is based on is here:
+    http://crbug.com/798117
+
+commit 8a5a77beb5bf9f213ab04ea36f0c55adce3af39e
+Merge: 47b400b6 678861db
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Sat Dec 30 17:53:08 2017 -0800
+
+    Merge pull request #2569 from kenrussell/fix-jdashg-review-comments-from-2523
+    
+    Fix review comments from @jdashg on #2523.
+
+commit 678861dbd7ef1583ea6cbf95fbfef8681d1dc207
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Dec 30 15:42:22 2017 -0700
+
+    Fix review comments from @jdashg on #2523.
+
+commit 47b400b67281698c537263e9f00d1394550201a2
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Dec 28 23:17:02 2017 +0200
+
+    Add a test for framebuffer tex attachment with changing base level. (#2568)
+    
+    This exposes a bug in ANGLE's D3D backend.
+    
+    http://anglebug.com/2291
+
+commit 45bca00d00c9638c8fa71ba28f37a717657b3748
+Author: James Darpinian <jdarpinian@gmail.com>
+Date:   Fri Dec 22 13:55:13 2017 -0800
+
+     Relax restrictions on transform feedback buffer use (#2560)
+    
+    * Relax restrictions on transform feedback buffer use. #2346
+    
+    * Add minimized conformance test for transform feedbacks' buffer state.
+    
+    Regression test for http://crbug.com/696345 .
+    
+    Thanks to @greggman for the test.
+    
+    * Test for having the same read and write buffer using a transform feedback
+    
+    note: there are 2 lines marked as "FIXME" that I believe should be removed
+    assuming the spec changes so that `gl.bindBuffer` is less strict
+    
+    * Test for using the defaul transform feedback object
+    
+    Note: 2 lines are marked as FIXME and should be removed when/if
+    impls and the spec are updated to make `gl.bindBuffer` less
+    strict.
+    
+    * Update tests for new transform feedback binding behavior
+    
+    * Remove trailing whitespace
+    
+    * More [copy]buffer[Sub]Data tests.
+    
+    * Revert "Test for using the defaul transform feedback object"
+    
+    This reverts commit d96d44b45ed78e7d99d6c5a008a387067c7d3fe3.
+    
+    * Also update conformance suite for new feedback rules
+    
+    * add --min-version 2.0.1 to new tests
+    
+    * Match Firefox's behavior.
+    
+    * Clarify that unbound TF objects don't count
+
+commit 09447f610c62c6b92a1ec75ecb20cdb5ab95c046
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Tue Dec 19 14:25:12 2017 -0800
+
+    Propose WEBGL_texture_multisample. (#2562)
+
+commit e98f0d0ae8d7dfb6703432bd7d0b6bc5eccf86ee
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Dec 19 19:23:09 2017 +0200
+
+    Add a test for weird name conflict on NVIDIA GL driver (#2565)
+    
+    Some recent versions of NVIDIA GL drivers have an issue with a
+    function in parameter being passed as an inout argument while there is
+    a global variable with the same name.
+    
+    The issue will be fixed in a future NVIDIA driver update.
+    
+    http://crbug.com/792210
+
+commit d458ada06171a85af00367251a4ed55db7fe2018
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Dec 18 15:53:56 2017 -0800
+
+    Fix possible race condition in image-bitmap-from-blob tests. (#2561)
+    
+    Possible cause of http://crbug.com/795945 .
+
+commit 1a8ed15c9c25f2b1ccd97149c94ea245ab982252
+Author: zhenyao <zmo@chromium.org>
+Date:   Fri Dec 8 13:10:35 2017 -0800
+
+    Add a regression test for ANGLE bug (crbug.com/793307). (#2559)
+
+commit c74600c018560088c9172b9c6022a910f2fbf89c
+Author: Deyi Li <deyi.li2015@gmail.com>
+Date:   Thu Dec 7 11:08:50 2017 -0800
+
+    Tests should accept multiple valid error conditions (#2552)
+    
+    * Additional tests change for texSubImage2d when format/type differs
+    
+    These tests should also accept INVALID_OPERATION for the same reason we discussed in https://github.com/KhronosGroup/WebGL/pull/2550
+    
+    * change conformance-suites test results
+
+commit 47422e0de87baf65fb84bd3c167658ff2b9be2f3
+Author: zhenyao <zmo@chromium.org>
+Date:   Wed Dec 6 09:53:04 2017 -0800
+
+    Add a test for FLIP_Y and PREMULTIPLY_ALPHA behaviors in WebGL2. (#2555)
+    
+    * Add a test for FLIP_Y and PREMULTIPLY_ALPHA behaviors in WebGL2.
+    
+    Also update the 2.0 spec.
+    
+    * Relax pixel comparison to allow premultiply_alpha error.
+    
+    * Per kbr comment
+    
+    * Add a regression test for Chrome specific bug
+    
+    * Fix
+
+commit b7c786a9a8db12cea2faa3402c522ef6df430465
+Author: Jie Chen <jie.a.chen@intel.com>
+Date:   Wed Dec 6 14:35:32 2017 +0800
+
+    Fix a bug in tcuFuzzyImageCompare.bilinearSample (#2557)
+    
+    This is a typo compared with the native dEQP source code.
+
+commit 0a541bf404fc944edefcad82e456b248a428966d
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Mon Dec 4 11:19:57 2017 -0800
+
+    More depth/stencil renderbuffer initialization tests (#2540)
+    
+    * More depth/stencil renderbuffer initialization tests
+    
+    Both multisampled for WebGL 2.0 and non-multisampled for WebGL 1.0.
+    
+    * revise
+
+commit 17c2ce535da33093717cdb8612a1f4b50ff7583a
+Author: Kai Ninomiya <kainino1@gmail.com>
+Date:   Fri Dec 1 17:15:24 2017 -0800
+
+    clarify "clip z" in multisampled-depth-renderbuffer-initialization.html (#2553)
+
+commit b3fb9805bd5e3c920452a7f8fc51eacf2836b4f8
+Author: gofr <32750931+gofr@users.noreply.github.com>
+Date:   Sat Dec 2 01:40:23 2017 +0100
+
+    Make test harness result reporter log success message to console (#2533)
+    
+    The wrapped logging function it uses only takes one argument.
+    Concatenate the message to the success state string rather
+    than passing it as an unused second argument.
+
+commit 05591bbeae6592fd924caec8e728a4ea86cbb8c9
+Author: JiangYizhou <yizhou.jiang@intel.com>
+Date:   Fri Dec 1 07:44:02 2017 +0800
+
+    Reproduce Intel driver bug on windows when rendering large viewport (#2551)
+    
+    On Intel windows platforms, rendering large viewport and stencil buffer
+    enabled will lead to memory leak on d3d11 driver.
+    
+    Test for help reproduce bug http://crbug.com/782317
+
+commit a2639880f84609fb6330bd2f7d1bd1c1016bd3c3
+Author: Deyi Li <deyi.li2015@gmail.com>
+Date:   Wed Nov 22 15:50:23 2017 -0800
+
+    Accept INVALID_OPERATION for texSubImage2D when format/type differs (#2550)
+    
+    * Accept INVALID_OPERATION for texSubImage2D when format/type differs
+    
+    INVALID_OPERATION should also be an acceptable result because texSubImage2d could be called with format and type that differ from format and type that was set previously by texImage2D.
+    
+    * Update Tests Results in conformance-suites
+
+commit 54f8b13411e86f4f5f3d115eb6a6cb26605694b7
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Nov 20 12:04:13 2017 -0800
+
+    Simplify render-after-resize-test. Draw single unit quad. (#2549)
+    
+    Exposes the issue more simply. Follow-on to #2546.
+    
+    Still passes in Firefox, fails in Chrome and Safari, on macOS 10.13 on
+    MacBook Pro with NVIDIA GPU.
+
+commit e4919fa03c74bd561dcabf3e61668fa3c7e54353
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Nov 14 12:09:45 2017 -0800
+
+    Fix fencepost errors covered up by wtu.checkCanvasRect. (#2546)
+    
+    Follow-on to #2544 and #2543.
+
+commit aca2944238a652220a2ecab56de93597822cdf22
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Nov 14 19:37:53 2017 +0200
+
+    Add test that initializes an array inside a loop (#2545)
+    
+    This attempts to reproduce a driver bug seen on Adreno 418.
+
+commit 97f84e72990ad16eeef6e5e757e7946d11748d67
+Merge: b34beaf6 f9c0cbb6
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Mon Nov 13 20:28:06 2017 -0800
+
+    Merge pull request #2534 from Oletus/webgl-multiview-clarification
+    
+    Clarify WEBGL_multiview spec
+
+commit b34beaf60f12a0023dd3c5ec91deb5403aa438d1
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Mon Nov 13 11:38:08 2017 -0800
+
+    Simplify test: eliminate 2D canvas, draw triangles instead of point. (#2544)
+    
+    Fix latent bug in wtu.setupSimpleColorProgram. Fix copyright date.
+    
+    Follow-on to #2543.
+    
+    Acts as regression test for http://crbug.com/775202 .
+
+commit e968ed426a18a309a104f2fe1bea307dc1f6da2c
+Author: Greggman <github@greggman.com>
+Date:   Tue Nov 14 01:28:36 2017 +0700
+
+    Adds a test for rendering directly after resizing the canvas (#2543)
+
+commit 4894e573dd5e106decfd50c105307e8cb7db4605
+Merge: 12192b94 317361c3
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Sun Nov 12 12:49:19 2017 -0800
+
+    Merge pull request #2542 from kenrussell/scissor-state-management-bug
+    
+    Add test for scissor rectangle maintenance bug during implicit clears.
+
+commit 317361c35ba3a9af6a1a635acddbaf170736bce3
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Nov 11 17:31:06 2017 -0800
+
+    Fixed tabs
+
+commit dc79339399dba03e20a985da04bd0e57257dff19
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Sat Nov 11 17:24:49 2017 -0800
+
+    Add test for scissor rectangle maintenance bug during implicit clears.
+    
+    Regression test for http://crbug.com/778770 .
+
+commit 12192b948daa2d83269ab46cbf03d65e9f2a48a3
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Nov 7 19:47:45 2017 +0200
+
+    Add a test for varying struct with an inline definition (#2541)
+    
+    This test exposes a bug that was recently fixed in ANGLE.
+
+commit e0fd88e26a7531752733647c331f76ec59106a6f
+Author: Brandon Jones <tojiro@gmail.com>
+Date:   Fri Oct 27 15:04:35 2017 -0700
+
+    Added a test to ensure preserveDrawingBuffer isn't leaking resources
+    
+    * Added a test to ensure preserveDrawingBuffer isn't leaking resources
+    
+    * Update 00_test_list.txt
+    
+    This test provokes a crash on Samsung Galaxy S6 devices running Android 6.0.1. Other devices seem to handle it fine.
+
+commit c9c9c573432be33b983ed7218717df70fda94fdf
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Fri Oct 27 19:15:48 2017 +0300
+
+    Add tests for switch/case validation corner cases (#2535)
+    
+    These tests expose bugs in ANGLE, most of which have been already
+    fixed in ANGLE TOT.
+
+commit f9c0cbb6c6fe09de443548cf43b9b90d1f6875f3
+Author: Olli Etuaho <oetuaho@nvidia.com>
+Date:   Tue Aug 22 17:51:47 2017 +0300
+
+    Clarify WEBGL_multiview spec
+    
+    The multiview spec is now written against the latest revision of the
+    native OVR_multiview spec. The native OVR_multiview spec has been
+    tightened to specify more error conditions, so some of the addendums
+    in the WebGL spec are not necessary anymore.
+    
+    Formatting and examples are also improved.
+    
+    This doesn't introduce any major functional changes.
+
+commit 5d2cb3399b93abee71f9a4bb139399b512ad7b0a
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Oct 17 18:33:48 2017 +0300
+
+    Add more tests for vector/scalar arithmetic inside a loop (#2531)
+    
+    Add more variations of shaders that reproduce the same bug. This adds
+    better coverage for a workaround under development for ANGLE.
+    
+    Some more complex variations are put to a separate test file - the
+    workaround in ANGLE will not be sophisticated enough to handle them,
+    but they should be fixed by a future driver update.
+
+commit e7fe9be6f15d19430994be25ae6f52afc2a87d0a
+Author: Kirill Dmitrenko <kdmitrenko@gmail.com>
+Date:   Mon Oct 16 19:27:10 2017 +0300
+
+    WEBGL_texture_source_iframe: some rewording about promises (#2530)
+
+commit ac794b3b5cc5c264f9a8b5128dbfaac9d1b50ed9
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Thu Oct 12 17:27:17 2017 +0300
+
+    Add test for vector/scalar arithmetic inside a for loop (#2529)
+    
+    This exposes a bug in the NVIDIA GL driver.
+
+commit d88d5742579f59a999037221b36435abfb84c055
+Author: Olli Etuaho <olli.etuaho@gmail.com>
+Date:   Tue Oct 10 19:23:53 2017 +0300
+
+    Add a test for switch/case corner cases (#2528)
+    
+    This test case covers some bugs in ANGLE's HLSL translation.
+
+commit 9536e757bd06f1e8401a5c93c332f81c7d143f99
+Author: Yang Gu <yang.gu@intel.com>
+Date:   Sun Oct 8 05:47:02 2017 +0800
+
+    Add conformance test script (#2361)
+    
+    This script is to run any version of Khronos WebGL conformance test on
+    various OSes (like Android, ChromeOS, Linux, MacOS and Windows) with
+    various browsers (like Chrome, Edge, FireFox, Safari, etc.). Results
+    will be compared with expectations and a final report will be generated.
+
+commit 5eb2d21bf9747e9d18092691dd2be40815d9c93a
+Author: Jeff Gilbert <jdashg@gmail.com>
+Date:   Thu Sep 28 15:00:14 2017 -0700
+
+    Update EXT_sRGB test to forbid GenerateMipmap as per parent spec. (#2524)
+
+Cherries picked
+================================================================================
+Merge base from: origin/master
+
+commit 8bf026028fe6f66454d18711daab7a26967b37cd
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Sep 26 15:09:24 2017 -0700
+
+    Add test case performing repeated blitFramebuffer calls without clears. (#2523)
+    
+    Test case for crbug.com/768969 .

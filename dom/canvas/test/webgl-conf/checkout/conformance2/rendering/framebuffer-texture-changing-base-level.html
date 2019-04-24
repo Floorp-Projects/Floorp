@@ -86,7 +86,6 @@ function testNonSquareFramebufferTextureWithChangingBaseLevel() {
   {
     var levelW = Math.floor(width / Math.pow(2, level));
     var levelH = Math.floor(height / Math.pow(2, level));
-    gl.viewport(0, 0, levelW, levelH);
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_BASE_LEVEL, level);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, level);
@@ -95,6 +94,7 @@ function testNonSquareFramebufferTextureWithChangingBaseLevel() {
     gl.clearColor(0, 1, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Clearing the texture level " + level + " to green should succeed.");
+    wtu.checkCanvasRect(gl, 0, 0, 1, 1, [0, 255, 0, 255], "should be green");
     ++level;
   }
 

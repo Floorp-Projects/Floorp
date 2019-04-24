@@ -35,7 +35,7 @@ instanced-arrays.html
 --min-version 2.0.1 multisampling-fragment-evaluation.html
 out-of-bounds-index-buffers-after-copying.html
 --min-version 2.0.1 read-draw-when-missing-image.html
---min-version 2.0.1 rendering-sampling-feedback-loop.html
 rgb-format-support.html
 uniform-block-buffer-size.html
 --min-version 2.0.1 texture-switch-performance.html
+--min-version 2.0.1 vertex-id.html

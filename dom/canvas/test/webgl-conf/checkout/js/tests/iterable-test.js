@@ -33,7 +33,7 @@ IterableTest = (function() {
       debug("Test " + count + " of " + target);
       var success = test();
       if (count < target && success !== false) {
-        wtu.dispatchTask(doNextTest);
+        wtu.dispatchPromise(doNextTest);
       } else {
         finishTest();
       }

@@ -358,8 +358,14 @@ function runDrawTests() {
   // GLES3 spec section 3.9.2 Shader Outputs
   debug("test that gl_FragColor only writes to color number zero");
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+  gl.drawBuffers(bufs);
   gl.useProgram(blueProgramESSL1);
+
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no errors");
+  wtu.drawUnitQuad(gl);
+  wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Active draw buffers with missing frag outputs.");
+
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
   wtu.drawUnitQuad(gl);
 
   drawBuffersUtils.checkAttachmentsForColorFn(attachments, function(attachment, index) {
@@ -370,8 +376,14 @@ function runDrawTests() {
   // See GLSL ES Spec 3.00.4, Section 4.3.8.2, Output Layout Qualifiers.
   debug("test that an OpenGL ES Shading Language 3.00 shader with a single output color defaults to color number zero");
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+  gl.drawBuffers(bufs);
   gl.useProgram(redProgram);
+
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no errors");
+  wtu.drawUnitQuad(gl);
+  wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Active draw buffers with missing frag outputs.");
+
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
   wtu.drawUnitQuad(gl);
 
   drawBuffersUtils.checkAttachmentsForColorFn(attachments, function(attachment, index) {

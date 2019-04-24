@@ -1,0 +1,422 @@
+<!--
+
+/*
+** Copyright (c) 2018 The Khronos Group Inc.
+**
+** Permission is hereby granted, free of charge, to any person obtaining a
+** copy of this software and/or associated documentation files (the
+** "Materials"), to deal in the Materials without restriction, including
+** without limitation the rights to use, copy, modify, merge, publish,
+** distribute, sublicense, and/or sell copies of the Materials, and to
+** permit persons to whom the Materials are furnished to do so, subject to
+** the following conditions:
+**
+** The above copyright notice and this permission notice shall be included
+** in all copies or substantial portions of the Materials.
+**
+** THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+** IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+** CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+*/
+
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Parallel Shader Compile test</title>
+
+    <style>
+        body {
+            margin: 0;
+        }
+        #log {
+            margin: 16px;
+        }
+        @keyframes move {
+            0% { left: 0%; }
+            50% { left: calc(100% - 64px); }
+            100% { left: 0%; }
+        }
+        #block {
+            position: relative;
+            bottom: 0%;
+            left: 0%;
+            width: 32px;
+            height: 32px;
+            background-color: #07f;
+
+            animation-name: move;
+            animation-duration: 2000ms;
+            animation-iteration-count: infinite;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .button {
+            width: 260px
+        }
+    </style>
+</head>
+<body>
+    <pre id='log'></pre>
+
+    <!-- The smoothness of the block's moving indicates whether the main thread is too busy. -->
+    <div id='block'></div>
+
+    <script>
+        var testGroup;
+
+        window.addEventListener('error', function (err) {
+            var logElement = document.getElementById('log');
+            logElement.textContent += ' \n';
+            logElement.textContent += err.error.stack.replace(
+                new RegExp(window.location.href, 'g'), '/') + '\n';
+        });
+
+        function setupGLContextSerial(testRun) {
+            var infoElement = testRun.logElement;
+
+            testRun.gl = document.createElement('canvas').getContext('webgl2');
+            if (testRun.gl) {
+                infoElement.textContent += 'webgl2 context created.' + '\n\n';
+                return true;
+            } else {
+                infoElement.textContent += 'webgl2 context is not supported.' + '\n\n';
+                return false;
+            }
+        }
+
+        function setupGLContextParallel(testRun) {
+            var infoElement = testRun.logElement;
+            if (setupGLContextSerial(testRun)) {
+                // Enable KHR_parallel_shader_compile extension
+                testRun.ext = testRun.gl.getExtension('KHR_parallel_shader_compile');
+                if (testRun.ext) {
+                    return true;
+                } else {
+                    infoElement.textContent += 'KHR_parallel_shader_compile is unavailable, you' +
+                        ' may need to turn on the webgl draft extensions for your browser.'
+                }
+            }
+            return false;
+        }
+
+        function releasePrograms(testRun) {
+            var gl = testRun.gl;
+
+            var programs = testRun.programs;
+            for (var i = 0; i < programs.length; i++) {
+                var program = programs[i];
+                if (program.vShader) {
+                    gl.deleteShader(program.vShader);
+                    program.vShader = null;
+                }
+                if (program.fShader) {
+                    gl.deleteShader(program.fShader);
+                    program.fShader = null;
+                }
+                if (program.program) {
+                    gl.deleteProgram(program.program);
+                    program.program = null;
+                }
+            }
+        }
+
+        function showStatistics(testRun) {
+            var infoElement = testRun.logElement;
+            infoElement.textContent += ' ' + '\n';
+            infoElement.textContent += (Math.round(testRun.elapsedTotal * 100) / 100) +
+                'ms - ' + 'all shaders compiled, and linked.\n';
+            infoElement.textContent += ' ' + '\n';
+            infoElement.textContent += 'done.' + '\n';
+
+            releasePrograms(testRun);
+        }
+
+        function checkShader(gl, shader, infoElement) {
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                var info = gl.getShaderInfoLog(shader);
+                infoElement.textContent += 'couldn\'t compile shader:\n';
+                infoElement.textContent += info.toString() + '\n';
+                return false;
+            }
+            return true;
+        }
+
+        function checkProgram(gl, program, infoElement) {
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                var info = gl.getProgramInfoLog(program);
+                infoElement.textContent += ' ' + '\n';
+                infoElement.textContent += 'couldn\'t link program:\n';
+                infoElement.textContent += info.toString() + '\n';
+                return false;
+            }
+            return true;
+         }
+
+        function makeAllProgramsSerial(testRun) {
+            var gl = testRun.gl;
+            var infoElement = testRun.logElement;
+
+            var programs = testRun.programs;
+            for (var i = 0; i < programs.length; i++) {
+                var program = programs[i];
+                // vertex shader compilation
+                var vShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vShader, program.vSource);
+                gl.compileShader(vShader);
+                checkShader(gl, vShader, infoElement);
+
+                // fragment shader compilation
+                var fShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fShader, program.fSource);
+                gl.compileShader(fShader);
+                checkShader(gl, fShader, infoElement);
+
+                // program
+                var programHandle = gl.createProgram();
+                gl.attachShader(programHandle, vShader);
+                gl.attachShader(programHandle, fShader);
+                gl.linkProgram(programHandle);
+                checkProgram(gl, programHandle, infoElement);
+            }
+            testRun.elapsedTotal = performance.now() - testRun.start;
+            showStatistics(testRun);
+        };
+
+        function makeAllProgramsParallel(testRun) {
+            var gl = testRun.gl;
+            var infoElement = testRun.logElement;
+
+            var programs = testRun.programs;
+            for (var i = 0; i < programs.length; i++) {
+                var program = programs[i];
+                var vShader = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vShader, program.vSource);
+                gl.compileShader(vShader);
+
+                var fShader = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fShader, program.fSource);
+                gl.compileShader(fShader);
+
+                programHandle = gl.createProgram();
+                gl.attachShader(programHandle, vShader);
+                gl.attachShader(programHandle, fShader);
+
+                program.vShader = vShader;
+                program.fShader = fShader;
+                program.program = programHandle;
+                program.status = "Compiling";
+            }
+
+            function checkCompletion() {
+                var ext = testRun.ext;
+
+                var allProgramsLinked = true;
+
+                for (var i = 0; i < programs.length; i++) {
+                    var program = programs[i];
+                    switch (program.status) {
+                        case "Compiling":
+                            if (gl.getShaderParameter(program.vShader, ext.COMPLETION_STATUS_KHR) &&
+                                gl.getShaderParameter(program.fShader, ext.COMPLETION_STATUS_KHR))
+                            {
+                                checkShader(gl, program.vShader, infoElement);
+                                checkShader(gl, program.fShader, infoElement);
+                                gl.linkProgram(program.program);
+                                program.status = "Linking";
+                            }
+                            allProgramsLinked = false;
+                            break;
+
+                        case "Linking":
+                            if (gl.getProgramParameter(program.program, ext.COMPLETION_STATUS_KHR))
+                            {
+                                checkProgram(gl, program.program, infoElement);
+                                program.status = "Done";
+                            }
+                            else {
+                                allProgramsLinked = false;
+                            }
+                            break;
+
+                        case "Done":
+                            break;
+                    }
+                }
+
+                if (allProgramsLinked) {
+                    testRun.elapsedTotal = performance.now() - testRun.start;
+                    showStatistics(testRun);
+                }
+                else {
+                    requestAnimationFrame(checkCompletion);
+                }
+            }
+            requestAnimationFrame(checkCompletion);
+        }
+
+        function parsePrograms(testRun) {
+            var gl = testRun.gl;
+            var infoElement = testRun.logElement;
+
+            // Parse programs from the cached text, formatted as:
+            //    __BEGINPROGRAM__
+            //    __VERTEXSHADER__
+            //        shader source line
+            //        ...
+            //    __FRAGMENTSHADER__
+            //        shader source line
+            //        ...
+            //    __ENDPROGRAM__
+            //
+            //    __BEGINPROGRAM__
+            //    ...
+            var arrayOfLines = testRun.test.shaderCache.match(/[^\r\n]+/g);
+            var programs = [];
+            var currentProgram = {};
+            var currentShader;
+            var shaderSourceLine = false;
+            for (var ii = 0; ii < arrayOfLines.length; ii++) {
+                var cur = arrayOfLines[ii];
+                // Use random numbers to fool the program cache mechanism.
+                if (cur.indexOf('PROGRAM_CACHE_BREAKER_RANDOM') != -1) {
+                    cur = cur.replace('PROGRAM_CACHE_BREAKER_RANDOM', Math.random())
+                }
+
+                if (cur == '__VERTEXSHADER__') {
+                    currentShader = [];
+                    shaderSourceLine = true;
+                } else if (cur == '__FRAGMENTSHADER__') {
+                    currentProgram.vSource = currentShader.join('\n');
+
+                    currentShader = [];
+                    shaderSourceLine = true;
+                } else if (cur == '__ENDPROGRAM__') {
+                    currentProgram.fSource = currentShader.join('\n');
+                    programs.push(currentProgram);
+
+                    currentProgram = {};
+                    currentShader = [];
+                    shaderSourceLine = false;
+                } else if (shaderSourceLine) {
+                    currentShader.push(cur);
+                }
+            }
+
+            infoElement.textContent += programs.length + ' programs found.' + '\n';
+            infoElement.textContent += 'starting compilations ...' + '\n';
+
+            testRun.start = performance.now();
+
+            testRun.programs = programs;
+
+            testRun.makeAllPrograms(testRun);
+        };
+
+
+        function runTest(index, isParallel) {
+            var testRun = {};
+            var test = testGroup[index];
+            testRun.test = test;
+            testRun.name = test.name + (isParallel ? "_parallel" : "_serial");
+            testRun.logElement = document.getElementById(testRun.name);
+            testRun.logElement.textContent = '';
+
+            testRun.setupGLContext =
+                (isParallel ? setupGLContextParallel : setupGLContextSerial);
+
+            testRun.makeAllPrograms =
+                (isParallel ? makeAllProgramsParallel : makeAllProgramsSerial);
+
+            if (!testRun.setupGLContext(testRun)) {
+                return;
+            }
+
+            if (test.shaderCache === undefined) {
+                // load shader cache
+                var xhr = new XMLHttpRequest();
+                xhr.addEventListener('load', function() {
+                    test.shaderCache = xhr.responseText;
+
+                    requestAnimationFrame(function() {
+                        parsePrograms(testRun);
+                    });
+                });
+                xhr.open('GET', test.location);
+                xhr.send();
+            } else {
+                parsePrograms(testRun);
+            }
+        }
+
+        function createElement(element, attribute, inner) {
+            if (element === undefined) {
+                return false;
+            }
+            if (inner === undefined) {
+                inner = [];
+            }
+            var el = document.createElement(element);
+            if (typeof(attribute) === 'object') {
+                for (var key in attribute) {
+                    el.setAttribute(key, attribute[key]);
+                }
+            }
+            if (!Array.isArray(inner)) {
+                inner = [inner];
+            }
+            for (var k = 0; k < inner.length; k++) {
+                if (inner[k].tagName) {
+                    el.appendChild(inner[k]);
+                } else {
+                    el.appendChild(document.createTextNode(inner[k]));
+                }
+            }
+            return el;
+        }
+
+        var container = createElement("div", {"class": "container"});
+        document.body.appendChild(container);
+
+        testGroup = [{
+            'location': './shaders/aquarium/shader-cache.txt',
+            'name': 'aquarium'
+            },
+        ];
+
+        testGroup.forEach((test, index) => {
+
+            function createTestView(test, index, isParallel) {
+
+                testName = test.name + (isParallel ? "_parallel" : "_serial");
+
+                var tButton = createElement(
+                    'button',
+                    {'class': 'button', 'onclick': 'runTest(' + index + ', ' + isParallel + ')'},
+                    testName
+                );
+
+                var tPrex = createElement("pre");
+                var tPre = createElement("textarea", { "id": testName, "rows": 10, "cols": 30});
+                var tDivContainer = createElement(
+                    "div",
+                    {"id": " " + testName + "_container"},
+                    [tButton, tPrex, tPre]
+                );
+                container.appendChild(tDivContainer);
+            }
+
+            createTestView(test, index, false);
+            createTestView(test, index, true);
+        });
+
+    </script>
+</body>

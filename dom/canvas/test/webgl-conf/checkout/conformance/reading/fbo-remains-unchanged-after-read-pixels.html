@@ -103,6 +103,7 @@ if (!gl) {
   var result_2 = new Uint8Array(N * N * 4);
   gl.readPixels(0, 0, N, N, gl.RGBA, gl.UNSIGNED_BYTE, result_1);
   gl.readPixels(0, 0, N, N, gl.RGBA, gl.UNSIGNED_BYTE, result_2);
+  wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
   var tolerance = 0;
   var diff = new Uint8Array(N * N * 4);
