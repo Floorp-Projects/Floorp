@@ -854,8 +854,6 @@ class DOMLocalization extends Localization {
   }
 }
 
-DOMLocalization.DOMOverlays = { translateElement };
-
 /**
  * Helper function which allows us to construct a new
  * DOMLocalization from DocumentL10n.

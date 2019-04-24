@@ -6,8 +6,8 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
+  /* global DOMOverlays */
   "use strict";
-  const {DOMLocalization} = ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
 
   function elem(name) {
     return function(str) {
@@ -18,7 +18,7 @@
     };
   }
 
-  const { translateElement } = DOMLocalization.DOMOverlays;
+  const { translateElement } = DOMOverlays;
 
   {
     // without data-l10n-name
