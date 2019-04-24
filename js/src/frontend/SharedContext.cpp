@@ -17,13 +17,19 @@ namespace frontend {
 void SharedContext::computeAllowSyntax(Scope* scope) {
   for (ScopeIter si(scope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
+      FunctionScope* funScope = &si.scope()->as<FunctionScope>();
+      JSFunction* fun = funScope->canonicalFunction();
       if (fun->isArrow()) {
         continue;
       }
       allowNewTarget_ = true;
       allowSuperProperty_ = fun->allowSuperProperty();
       allowSuperCall_ = fun->isDerivedClassConstructor();
+      if (funScope->isFieldInitializer() == IsFieldInitializer::Yes) {
+        allowSuperProperty_ = false;
+        allowSuperCall_ = false;
+        allowArguments_ = false;
+      }
       return;
     }
   }

@@ -558,41 +558,11 @@ skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1542406
-skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
-skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
-skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall.js
+# https://github.com/tc39/test262/issues/2127
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-superproperty-1.js
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-superproperty-2.js
-skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js
-skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js
-skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-supercall.js
-skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-superproperty-1.js
-skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-superproperty-2.js
-skip script test262/language/expressions/class/elements/direct-eval-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js
-skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js
-skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js
-skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js
-skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js
-skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js
-skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
-skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
-skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall.js
 skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-superproperty-1.js
 skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-superproperty-2.js
-skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-1.js
-skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall-2.js
-skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-supercall.js
-skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-superproperty-1.js
-skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-superproperty-2.js
-skip script test262/language/statements/class/elements/direct-eval-err-contains-arguments.js
-skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js
-skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js
-skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js
-skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js
-skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js
-skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js
 
 
 ###########################################################
