@@ -7781,21 +7781,21 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
 
 bool CData::ReadString(JSContext* cx, unsigned argc, Value* vp) {
   return ReadStringCommon(cx, JS::UTF8CharsToNewTwoByteCharsZ, argc, vp,
-                          "CData.prototype.readString", js::MallocArena);
+                          "CData.prototype.readString", js::StringBufferArena);
 }
 
 bool CDataFinalizer::Methods::ReadString(JSContext* cx, unsigned argc,
                                          Value* vp) {
   return ReadStringCommon(cx, JS::UTF8CharsToNewTwoByteCharsZ, argc, vp,
                           "CDataFinalizer.prototype.readString",
-                          js::MallocArena);
+                          js::StringBufferArena);
 }
 
 bool CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc,
                                        Value* vp) {
   return ReadStringCommon(cx, JS::LossyUTF8CharsToNewTwoByteCharsZ, argc, vp,
                           "CData.prototype.readStringReplaceMalformed",
-                          js::MallocArena);
+                          js::StringBufferArena);
 }
 
 JSString* CData::GetSourceString(JSContext* cx, HandleObject typeObj,

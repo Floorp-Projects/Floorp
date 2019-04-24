@@ -1832,7 +1832,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEFocus(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIWidget> widget = GetDocWidget();
+  nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
     aResolve(IMENotificationRequests());
     return IPC_OK();

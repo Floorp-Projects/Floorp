@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 var { Ci } = require("chrome");
 var gRegisteredModules = Object.create(null);
 
@@ -193,8 +192,7 @@ const ActorRegistry = {
       constructor: "CssPropertiesActor",
       type: { target: true },
     });
-    if ("nsIProfiler" in Ci &&
-        !Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)) {
+    if ("nsIProfiler" in Ci) {
       this.registerModule("devtools/server/actors/performance", {
         prefix: "performance",
         constructor: "PerformanceActor",

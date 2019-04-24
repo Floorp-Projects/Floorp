@@ -398,6 +398,13 @@ class JSString : public js::gc::Cell {
   MOZ_ALWAYS_INLINE
   uint32_t flags() const { return uint32_t(d.flags_); }
 
+  template <typename CharT>
+  static MOZ_ALWAYS_INLINE void checkStringCharsArena(const CharT* chars) {
+#ifdef MOZ_DEBUG
+    js::AssertJSStringBufferInCorrectArena(chars);
+#endif
+  }
+
  public:
   MOZ_ALWAYS_INLINE
   size_t length() const {
@@ -1907,12 +1914,16 @@ MOZ_ALWAYS_INLINE bool JSInlineString::lengthFits<char16_t>(size_t length) {
 
 template <>
 MOZ_ALWAYS_INLINE void JSString::setNonInlineChars(const char16_t* chars) {
+  // Check that the new buffer is located in the StringBufferArena
+  checkStringCharsArena(chars);
   d.s.u2.nonInlineCharsTwoByte = chars;
 }
 
 template <>
 MOZ_ALWAYS_INLINE void JSString::setNonInlineChars(
     const JS::Latin1Char* chars) {
+  // Check that the new buffer is located in the StringBufferArena
+  checkStringCharsArena(chars);
   d.s.u2.nonInlineCharsLatin1 = chars;
 }
 

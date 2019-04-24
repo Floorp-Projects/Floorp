@@ -90,6 +90,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
+import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ViewUtil;
 
@@ -688,7 +689,14 @@ public class GeckoPreferences
                 }
 
                 pref.setOnPreferenceChangeListener(this);
-                if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
+
+                if (PREFS_DEFAULT_BROWSER.equals(key)) {
+                    if (PackageUtil.isDefaultBrowser(this)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else  if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
                     if (!AppConstants.MOZ_UPDATER || ContextUtils.isInstalledFromGooglePlay(this)) {
                         preferences.removePreference(pref);
                         i--;

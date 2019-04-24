@@ -607,6 +607,10 @@ bool TouchBlockState::GetAllowedTouchBehaviors(
   return true;
 }
 
+bool TouchBlockState::HasAllowedTouchBehaviors() const {
+  return mAllowedTouchBehaviorSet;
+}
+
 void TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther) {
   TBS_LOG("%p copying properties from %p\n", this, &aOther);
   if (gfxPrefs::TouchActionEnabled()) {

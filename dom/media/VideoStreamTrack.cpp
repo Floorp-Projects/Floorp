@@ -35,8 +35,6 @@ class VideoOutput : public DirectMediaStreamTrackListener {
   virtual ~VideoOutput() = default;
 
   void DropPastFrames() {
-    mMutex.AssertCurrentThreadOwns();
-
     TimeStamp now = TimeStamp::Now();
     size_t nrChunksInPast = 0;
     for (const auto& idChunkPair : mFrames) {
@@ -54,9 +52,12 @@ class VideoOutput : public DirectMediaStreamTrackListener {
     }
   }
 
-  void SendFrames() {
+  void SendFramesEnsureLocked() {
     mMutex.AssertCurrentThreadOwns();
+    SendFrames();
+  }
 
+  void SendFrames() {
     DropPastFrames();
 
     if (mFrames.IsEmpty()) {
@@ -143,17 +144,38 @@ class VideoOutput : public DirectMediaStreamTrackListener {
       mLastFrameTime = i->mTimeStamp;
     }
 
-    SendFrames();
+    SendFramesEnsureLocked();
   }
   void NotifyRemoved() override {
     // Doesn't need locking by mMutex, since the direct listener is removed from
     // the track before we get notified.
+    if (mFrames.Length() <= 1) {
+      // The compositor has already received the last frame.
+      mFrames.ClearAndRetainStorage();
+      mVideoFrameContainer->ClearFutureFrames();
+      return;
+    }
+
+    // The compositor has multiple frames. ClearFutureFrames() would only retain
+    // the first as that's normally the current one. We however stop doing
+    // SetCurrentFrames() once we've received the last frame in a track, so
+    // there might be old frames lingering. We'll find the current one and
+    // re-send that.
+    DropPastFrames();
+    mFrames.RemoveElementsAt(1, mFrames.Length() - 1);
+    SendFrames();
     mFrames.ClearAndRetainStorage();
-    mVideoFrameContainer->ClearFutureFrames();
   }
   void NotifyEnded() override {
     // Doesn't need locking by mMutex, since for the track to end, it must have
     // been ended by the source, meaning that the source won't append more data.
+    if (mFrames.IsEmpty()) {
+      return;
+    }
+
+    // Re-send only the last one to the compositor.
+    mFrames.RemoveElementsAt(0, mFrames.Length() - 1);
+    SendFrames();
     mFrames.ClearAndRetainStorage();
   }
   void NotifyEnabledStateChanged(bool aEnabled) override {
@@ -164,7 +186,7 @@ class VideoOutput : public DirectMediaStreamTrackListener {
     for (auto& idChunkPair : mFrames) {
       idChunkPair.first() = mVideoFrameContainer->NewFrameID();
     }
-    SendFrames();
+    SendFramesEnsureLocked();
   }
 
   Mutex mMutex;

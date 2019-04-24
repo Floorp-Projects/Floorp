@@ -74,7 +74,7 @@ class MOZ_NON_PARAM InlineCharBuffer {
     }
 
     MOZ_ASSERT(!heapStorage, "heap storage already allocated");
-    heapStorage = cx->make_pod_array<CharT>(length + 1);
+    heapStorage = cx->make_pod_array<CharT>(length + 1, js::StringBufferArena);
     return !!heapStorage;
   }
 
@@ -86,7 +86,8 @@ class MOZ_NON_PARAM InlineCharBuffer {
     }
 
     if (!heapStorage) {
-      heapStorage = cx->make_pod_array<CharT>(newLength + 1);
+      heapStorage =
+          cx->make_pod_array<CharT>(newLength + 1, js::StringBufferArena);
       if (!heapStorage) {
         return false;
       }
@@ -97,7 +98,8 @@ class MOZ_NON_PARAM InlineCharBuffer {
     }
 
     CharT* oldChars = heapStorage.release();
-    CharT* newChars = cx->pod_realloc(oldChars, oldLength + 1, newLength + 1);
+    CharT* newChars = cx->pod_realloc(oldChars, oldLength + 1, newLength + 1,
+                                      js::StringBufferArena);
     if (!newChars) {
       js_free(oldChars);
       return false;

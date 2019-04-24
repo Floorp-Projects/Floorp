@@ -81,7 +81,6 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   inputs.AppendElements(mSuspendedInputs);
 
   bool allFinished = !inputs.IsEmpty();
-  bool allHaveCurrentData = !inputs.IsEmpty();
   for (uint32_t i = 0; i < inputs.Length(); ++i) {
     MediaStream* stream = inputs[i]->GetSource();
     if (!stream->IsFinishedOnGraphThread()) {
@@ -89,9 +88,6 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       // aTo, not just that it's finishing when all its queued data eventually
       // runs out.
       allFinished = false;
-    }
-    if (!stream->HasCurrentData()) {
-      allHaveCurrentData = false;
     }
     for (StreamTracks::TrackIter tracks(stream->GetStreamTracks());
          !tracks.IsEnded(); tracks.Next()) {
@@ -143,10 +139,6 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     // all our tracks have actually finished and been removed from our map,
     // so we're finished now.
     FinishOnGraphThread();
-  }
-  if (allHaveCurrentData) {
-    // We can make progress if we're not blocked
-    mHasCurrentData = true;
   }
 }
 

@@ -14,6 +14,9 @@
 #include "jit/MacroAssembler.h"
 
 namespace js {
+
+enum class GeneratorResumeKind;
+
 namespace jit {
 
 #define OPCODE_LIST(_)          \
@@ -393,6 +396,12 @@ class BaselineCodeGen {
   template <typename F>
   MOZ_MUST_USE bool emitTestScriptFlag(JSScript::MutableFlags flag, bool value,
                                        const F& emit, Register scratch);
+
+  MOZ_MUST_USE bool emitGeneratorResume(GeneratorResumeKind resumeKind);
+  MOZ_MUST_USE bool emitEnterGeneratorCode(Register script,
+                                           Register resumeIndex,
+                                           Register scratch);
+  void emitJumpToInterpretOpLabel();
 
   MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);

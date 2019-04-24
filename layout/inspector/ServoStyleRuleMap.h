@@ -13,7 +13,6 @@
 #include "nsDataHashtable.h"
 
 struct RawServoStyleRule;
-class nsXBLPrototypeResources;
 
 namespace mozilla {
 class ServoCSSRuleList;
@@ -29,7 +28,6 @@ class ServoStyleRuleMap {
   ServoStyleRuleMap() = default;
 
   void EnsureTable(ServoStyleSet&);
-  void EnsureTable(nsXBLPrototypeResources&);
   void EnsureTable(dom::ShadowRoot&);
 
   dom::CSSStyleRule* Lookup(const RawServoStyleRule* aRawRule) const {

@@ -54,7 +54,8 @@ class InputQueue {
   nsEventStatus ReceiveInputEvent(const RefPtr<AsyncPanZoomController>& aTarget,
                                   TargetConfirmationFlags aFlags,
                                   const InputData& aEvent,
-                                  uint64_t* aOutInputBlockId);
+                                  uint64_t* aOutInputBlockId,
+                                  const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors = Nothing());
   /**
    * This function should be invoked to notify the InputQueue when web content
    * decides whether or not it wants to cancel a block of events. The block
@@ -174,7 +175,8 @@ class InputQueue {
   nsEventStatus ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                   TargetConfirmationFlags aFlags,
                                   const MultiTouchInput& aEvent,
-                                  uint64_t* aOutInputBlockId);
+                                  uint64_t* aOutInputBlockId,
+                                  const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors);
   nsEventStatus ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                   TargetConfirmationFlags aFlags,
                                   const MouseInput& aEvent,
