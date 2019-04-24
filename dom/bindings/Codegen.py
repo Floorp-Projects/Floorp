@@ -1757,6 +1757,14 @@ def finalizeHook(descriptor, hookName, freeOp, obj):
         finalize += "ClearWrapper(self, self, %s);\n" % obj
     if descriptor.isGlobal():
         finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), %s);\n" % (freeOp, obj)
+    finalize += fill(
+        """
+        if (size_t mallocBytes = BindingJSObjectMallocBytes(self)) {
+          JS::RemoveAssociatedMemory(${obj}, mallocBytes,
+                                     JS::MemoryUse::DOMBinding);
+        }
+        """,
+        obj=obj)
     finalize += ("AddForDeferredFinalization<%s>(self);\n" %
                  descriptor.nativeType)
     return CGIfWrapper(CGGeneric(finalize), "self")

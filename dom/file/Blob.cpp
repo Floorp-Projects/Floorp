@@ -13,6 +13,7 @@
 #include "nsPIDOMWindow.h"
 #include "StreamBlobImpl.h"
 #include "StringBlobImpl.h"
+#include "js/GCAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -229,6 +230,12 @@ void Blob::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) {
 
 size_t BindingJSObjectMallocBytes(Blob* aBlob) {
   MOZ_ASSERT(aBlob);
+
+  // TODO: The hazard analysis currently can't see that none of the
+  // implementations of the GetAllocationSize virtual method call can GC (see
+  // bug 1531951).
+  JS::AutoSuppressGCAnalysis nogc;
+
   return aBlob->GetAllocationSize();
 }
 
