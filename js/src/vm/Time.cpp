@@ -252,6 +252,7 @@ static int64_t PRMJ_NowImpl() {
 }
 #endif
 
+#if !ENABLE_INTL_API || MOZ_SYSTEM_ICU
 #ifdef XP_WIN
 static void PRMJ_InvalidParameterHandler(const wchar_t* expression,
                                          const wchar_t* function,
@@ -399,3 +400,4 @@ size_t PRMJ_FormatTime(char* buf, size_t buflen, const char* fmt,
 #endif
   return result;
 }
+#endif /* !ENABLE_INTL_API || MOZ_SYSTEM_ICU */
