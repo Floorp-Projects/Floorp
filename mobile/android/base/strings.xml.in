@@ -118,6 +118,7 @@
   <string name="find_prev">&find_prev;</string>
   <string name="find_next">&find_next;</string>
   <string name="find_close">&find_close;</string>
+  <string name="find_error">&find_error;</string>
 
   <string name="media_sending_to">&media_sending_to;</string>
   <string name="media_play">&media_play;</string>

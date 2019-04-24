@@ -504,6 +504,10 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY find_next "Next">
 <!ENTITY find_close "Close">
 
+<!-- Localization note (find_error) : Error message shown when there is no result for the
+     searched for text in this webpage -->
+<!ENTITY find_error "Phrase not found">
+
 <!-- Localization note (media_sending_to, media_play, media_pause, media_stop) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->
 <!ENTITY media_sending_to "Sending to Device">
