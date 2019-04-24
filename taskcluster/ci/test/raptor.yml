@@ -303,7 +303,7 @@ raptor-tp6m-1-fenix:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -762,7 +762,7 @@ raptor-tp6m-1-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -779,7 +779,7 @@ raptor-tp6m-2-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -796,7 +796,7 @@ raptor-tp6m-3-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -813,7 +813,7 @@ raptor-tp6m-4-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -830,7 +830,7 @@ raptor-tp6m-5-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -847,7 +847,7 @@ raptor-tp6m-6-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -864,7 +864,7 @@ raptor-tp6m-7-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -881,7 +881,7 @@ raptor-tp6m-8-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -898,7 +898,7 @@ raptor-tp6m-9-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -915,7 +915,7 @@ raptor-tp6m-10-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -932,7 +932,7 @@ raptor-tp6m-11-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -949,7 +949,7 @@ raptor-tp6m-12-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -966,7 +966,7 @@ raptor-tp6m-13-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
@@ -983,7 +983,7 @@ raptor-tp6m-14-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.branch.master.latest.greenfield.arm-release-raptor
+        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
         name: target.apk
     tier: 2
     mozharness:
