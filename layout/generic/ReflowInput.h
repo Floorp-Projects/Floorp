@@ -368,8 +368,7 @@ struct ReflowInput : public SizeComputationInput {
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
-  MOZ_INIT_OUTSIDE_CTOR
-  nsCSSFrameType mFrameType;
+  nsCSSFrameType mFrameType = NS_CSS_FRAME_TYPE_UNKNOWN;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
@@ -625,21 +624,14 @@ struct ReflowInput : public SizeComputationInput {
   // Our saved containing block dimensions.
   LogicalSize mContainingBlockSize = LogicalSize(mWritingMode);
 
-  // Cached pointers to the various style structs used during intialization
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleDisplay* mStyleDisplay;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleVisibility* mStyleVisibility;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePosition* mStylePosition;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleBorder* mStyleBorder;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleMargin* mStyleMargin;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePadding* mStylePadding;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleText* mStyleText;
+  // Cached pointers to the various style structs used during initialization.
+  const nsStyleDisplay* mStyleDisplay = nullptr;
+  const nsStyleVisibility* mStyleVisibility = nullptr;
+  const nsStylePosition* mStylePosition = nullptr;
+  const nsStyleBorder* mStyleBorder = nullptr;
+  const nsStyleMargin* mStyleMargin = nullptr;
+  const nsStylePadding* mStylePadding = nullptr;
+  const nsStyleText* mStyleText = nullptr;
 
   bool IsFloating() const;
 
