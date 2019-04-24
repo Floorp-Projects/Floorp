@@ -590,6 +590,14 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Enable the "noreferrer" feature argument for window.open()
+VARCACHE_PREF(
+  "dom.window.open.noreferrer.enabled",
+   dom_window_open_noreferrer_enabled,
+  bool, true
+)
+
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------

@@ -3412,10 +3412,11 @@ nsBrowserAccess.prototype = {
     Services.io.offline = false;
 
     let referrer;
+    let forceNoReferrer = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_REFERRER);
     if (aOpener) {
       try {
         let location = aOpener.location;
-        referrer = Services.io.newURI(location);
+        referrer = forceNoReferrer ? null : Services.io.newURI(location);
       } catch(e) { }
     }
 
