@@ -27,7 +27,7 @@ from mozrunner import runners
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
 paths = [here]
-if os.environ.get('SCRIPTSPATH', None) is not None:
+if os.environ.get('SCRIPTSPATH') is not None:
     # in production it is env SCRIPTS_PATH
     paths.append(os.environ['SCRIPTSPATH'])
 else:
@@ -153,11 +153,11 @@ class Raptor(object):
 
         self.install_raptor_webext()
 
-        if test.get("preferences", None) is not None:
+        if test.get("preferences") is not None:
             self.set_browser_test_prefs(test['preferences'])
 
         # if 'alert_on' was provided in the test INI, add to our config for results/output
-        self.config['subtest_alert_on'] = test.get('alert_on', None)
+        self.config['subtest_alert_on'] = test.get('alert_on')
 
     def run_test_teardown(self):
         self.check_for_crashes()
@@ -421,7 +421,7 @@ class RaptorDesktop(Raptor):
     def run_test(self, test, timeout=None):
         self.run_test_setup(test)
 
-        if test.get('playback', None) is not None:
+        if test.get('playback') is not None:
             self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
@@ -484,7 +484,7 @@ class RaptorDesktopFirefox(RaptorDesktop):
 
         self.start_runner_proc()
 
-        if self.config['is_release_build'] and test.get('playback', None) is not None:
+        if self.config['is_release_build'] and test.get('playback') is not None:
             self.enable_non_local_connections()
 
         # if geckoProfile is enabled, initialize it
@@ -526,7 +526,7 @@ class RaptorDesktopChrome(RaptorDesktop):
         if self.debug_mode:
             self.runner.cmdargs.extend(['--auto-open-devtools-for-tabs'])
 
-        if test.get('playback', None) is not None:
+        if test.get('playback') is not None:
             self.setup_chrome_desktop_for_playback()
 
         self.start_runner_proc()
@@ -721,7 +721,7 @@ class RaptorAndroid(Raptor):
             if test['browser_cycle'] == 1:
                 self.create_raptor_sdcard_folder()
 
-                if test.get('playback', None) is not None:
+                if test.get('playback') is not None:
                     self.start_playback(test)
 
                     # an ssl cert db has now been created in the profile; copy it out so we
@@ -752,7 +752,7 @@ class RaptorAndroid(Raptor):
 
                 self.run_test_setup(test)
 
-            if test.get('playback', None) is not None:
+            if test.get('playback') is not None:
                 self.turn_on_android_app_proxy()
 
             self.copy_profile_onto_device()
@@ -784,13 +784,13 @@ class RaptorAndroid(Raptor):
         self.run_test_setup(test)
         self.create_raptor_sdcard_folder()
 
-        if test.get('playback', None) is not None:
+        if test.get('playback') is not None:
             self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             self.delete_proxy_settings_from_profile()
 
-        if test.get('playback', None) is not None:
+        if test.get('playback') is not None:
             self.turn_on_android_app_proxy()
 
         self.clear_app_data()
