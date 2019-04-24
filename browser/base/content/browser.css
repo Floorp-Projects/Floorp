@@ -1106,7 +1106,9 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-window-transform: translateY(70px);
 }
 
-#BMB_bookmarksPopup[side][animate="open"] {
+/* [animate] is here only so that this rule has greater specificity than the
+ * rule right above */
+#BMB_bookmarksPopup[animate][animate="open"] {
   -moz-window-opacity: 1.0;
   transition-duration: 0.18s, 0.18s;
   -moz-window-transform: none;
@@ -1114,7 +1116,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
     var(--animation-easing-function), ease-in-out;
 }
 
-#BMB_bookmarksPopup[animate="cancel"] {
+#BMB_bookmarksPopup[animate][animate="cancel"] {
   -moz-window-transform: none;
 }
 
@@ -1137,7 +1139,9 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   transform: translateY(70px);
 }
 
-#BMB_bookmarksPopup[side][animate="open"] {
+/* [animate] is here only so that this rule has greater specificity than the
+ * rule right above */
+#BMB_bookmarksPopup[animate][animate="open"] {
   opacity: 1.0;
   transition-duration: 0.18s, 0.18s;
   transform: none;
@@ -1145,7 +1149,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
     var(--animation-easing-function), ease-in-out;
 }
 
-#BMB_bookmarksPopup[animate="cancel"] {
+#BMB_bookmarksPopup[animate][animate="cancel"] {
   transform: none;
 }
 %endif
