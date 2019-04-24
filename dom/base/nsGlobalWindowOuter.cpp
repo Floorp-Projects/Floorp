@@ -7070,6 +7070,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
 
   nsAutoCString options;
   bool forceNoOpener = aForceNoOpener;
+  bool forceNoReferrer = false;
   // Unlike other window flags, "noopener" comes from splitting on commas with
   // HTML whitespace trimming...
   nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
@@ -7077,6 +7078,13 @@ nsresult nsGlobalWindowOuter::OpenInternal(
   while (tok.hasMoreTokens()) {
     auto nextTok = tok.nextToken();
     if (nextTok.EqualsLiteral("noopener")) {
+      forceNoOpener = true;
+      continue;
+    }
+    if (StaticPrefs::dom_window_open_noreferrer_enabled() &&
+        nextTok.LowerCaseEqualsLiteral("noreferrer")) {
+      forceNoReferrer = true;
+      // noreferrer implies noopener
       forceNoOpener = true;
       continue;
     }
@@ -7185,7 +7193,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
       rv = pwwatch->OpenWindow2(
           this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
           /* aCalledFromScript = */ true, aDialog, aNavigate, argv,
-          isPopupSpamWindow, forceNoOpener, aLoadState,
+          isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
           getter_AddRefs(domReturn));
     } else {
       // Force a system caller here so that the window watcher won't screw us
@@ -7205,7 +7213,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
       rv = pwwatch->OpenWindow2(
           this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
           /* aCalledFromScript = */ false, aDialog, aNavigate, aExtraArgument,
-          isPopupSpamWindow, forceNoOpener, aLoadState,
+          isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
           getter_AddRefs(domReturn));
     }
   }

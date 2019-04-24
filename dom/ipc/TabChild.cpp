@@ -901,8 +901,9 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                         bool aCalledFromJS, bool aPositionSpecified,
                         bool aSizeSpecified, nsIURI* aURI,
                         const nsAString& aName, const nsACString& aFeatures,
-                        bool aForceNoOpener, nsDocShellLoadState* aLoadState,
-                        bool* aWindowIsNew, mozIDOMWindowProxy** aReturn) {
+                        bool aForceNoOpener, bool aForceNoReferrer,
+                        nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+                        mozIDOMWindowProxy** aReturn) {
   *aReturn = nullptr;
 
   // If aParent is inside an <iframe mozbrowser> and this isn't a request to
@@ -935,8 +936,8 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
   ContentChild* cc = ContentChild::GetSingleton();
   return cc->ProvideWindowCommon(
       this, aParent, iframeMoz, aChromeFlags, aCalledFromJS, aPositionSpecified,
-      aSizeSpecified, aURI, aName, aFeatures, aForceNoOpener, aLoadState,
-      aWindowIsNew, aReturn);
+      aSizeSpecified, aURI, aName, aFeatures, aForceNoOpener, aForceNoReferrer,
+      aLoadState, aWindowIsNew, aReturn);
 }
 
 void TabChild::DestroyWindow() {
