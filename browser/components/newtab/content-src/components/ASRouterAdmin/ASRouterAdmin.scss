@@ -1,15 +1,25 @@
 
 .asrouter-toggle {
-  background: $yellow-50;
-  color: $black;
   position: fixed;
-  top: 0;
-  left: 43px;
-  padding: 5px 10px;
-  border-radius: 0 0 3px 3px;
-  border: 1px solid $black-10;
-  border-top: 0;
+  top: 15px;
+  right: 48px;
+  border: 0;
+  background: none;
   z-index: 3000;
+  border-radius: 2px;
+
+  .icon-devtools {
+    background-image: url('chrome://browser/skin/developer.svg');
+    padding: 15px;
+  }
+
+  &:hover {
+    background: var(--newtab-element-hover-color);
+  }
+
+  &.expanded {
+    background: $black-20;
+  }
 }
 
 .asrouter-admin {

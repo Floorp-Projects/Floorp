@@ -2,7 +2,7 @@
 <html lang="ga-IE" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
     <title>Cluaisín Nua</title>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
@@ -10,31 +10,17 @@
   </head>
   <body class="activity-stream">
     <div id="root"><div><div class="outer-wrapper fixed-to-top"><main><div class="non-collapsible-section"><div class="search-wrapper"><div class="search-inner-wrapper"><label for="newtab-search-text" class="search-label"><span class="sr-only"><span>Cuardaigh an Gréasán</span></span></label><input type="search" id="newtab-search-text" maxLength="256" placeholder="Cuardaigh an Gréasán" title="Cuardaigh an Gréasán"/><button id="searchSubmit" class="search-button" title="Cuardach"><span class="sr-only"><span>Cuardach</span></span></button></div></div></div><div class="body-wrapper"><div class="sections-list"><section class="collapsible-section top-sites animation-enabled" data-section-id="topsites"><div class="section-top-bar"><h3 class="section-title"><span class="click-target-container"><span class="click-target"><span class="icon icon-small-spacer icon-topsites"></span><span>Barrshuímh</span></span><span class="click-target"></span><span class="learn-more-link-wrapper"></span></span></h3><div><button class="context-menu-button icon" title="Open menu"><span class="sr-only"><span>Open the section context menu</span></span></button></div></div><div class="section-body"><ul class="top-sites-list"><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder "><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder hide-for-narrow"><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li><li class="top-site-outer placeholder hide-for-narrow"><div class="top-site-inner"><a tabindex="0" draggable="true"><div class="tile" aria-hidden="true"><div class="screenshot" style="background-image:none"></div></div><div class="title "><span dir="auto"></span></div></a><button class="context-menu-button edit-button icon" title="Cuir an suíomh seo in eagar"></button></div></li></ul><div class="edit-topsites-wrapper"></div></div></section><section class="collapsible-section section normal-cards animation-enabled" data-section-id="topstories"><div class="section-top-bar"><h3 class="section-title"><span class="click-target-container"><span class="click-target"><span class="icon icon-small-spacer icon-pocket"></span><span>Recommended by Pocket</span></span><span class="click-target"></span><span class="learn-more-link-wrapper"></span></span></h3><div><button class="context-menu-button icon" title="Open menu"><span class="sr-only"><span>Open the section context menu</span></span></button></div></div><div class="section-body"><ul class="section-list" style="padding:0"></ul><div class="top-stories-bottom-container"><div class="wrapper-more-recommendations"></div></div></div></section><section class="collapsible-section section normal-cards animation-enabled" data-section-id="highlights"><div class="section-top-bar"><h3 class="section-title"><span class="click-target-container"><span class="click-target"><span class="icon icon-small-spacer icon-highlights"></span><span>Highlights</span></span><span class="click-target"></span><span class="learn-more-link-wrapper"></span></span></h3><div><button class="context-menu-button icon" title="Open menu"><span class="sr-only"><span>Open the section context menu</span></span></button></div></div><div class="section-body"><ul class="section-list" style="padding:0"></ul></div></section></div><div class="prefs-button"><button class="icon icon-settings" title="Saincheap an Leathanach do Chluaisín Nua"></button></div></div></main></div></div></div>
-    <div id="snippets-container">
-      <div id="snippets"></div>
-    </div>
-    <script>
-// Don't directly load the following scripts as part of html to let the page
-// finish loading to render the content sooner.
-for (const src of [
-  "resource://activity-stream/prerendered/static/activity-stream-initial-state.js",
-  "chrome://browser/content/contentSearchUI.js",
-  "chrome://browser/content/contentTheme.js",
-  "resource://activity-stream/vendor/react.js",
-  "resource://activity-stream/vendor/react-dom.js",
-  "resource://activity-stream/vendor/prop-types.js",
-  "resource://activity-stream/vendor/react-intl.js",
-  "resource://activity-stream/vendor/redux.js",
-  "resource://activity-stream/vendor/react-redux.js",
-  "resource://activity-stream/prerendered/ga-IE/activity-stream-strings.js",
-  "resource://activity-stream/data/content/activity-stream.bundle.js"
-]) {
-  // These dynamically inserted scripts by default are async, but we need them
-  // to load in the desired order (i.e., bundle last).
-  const script = document.body.appendChild(document.createElement("script"));
-  script.async = false;
-  script.src = src;
-}
-    </script>
+    <div id="footer-snippets-container" />
+    <script src="resource://activity-stream/prerendered/static/activity-stream-initial-state.js"></script>
+    <script src="chrome://browser/content/contentSearchUI.js"></script>
+    <script src="chrome://browser/content/contentTheme.js"></script>
+    <script src="resource://activity-stream/vendor/react.js"></script>
+    <script src="resource://activity-stream/vendor/react-dom.js"></script>
+    <script src="resource://activity-stream/vendor/prop-types.js"></script>
+    <script src="resource://activity-stream/vendor/react-intl.js"></script>
+    <script src="resource://activity-stream/vendor/redux.js"></script>
+    <script src="resource://activity-stream/vendor/react-redux.js"></script>
+    <script src="resource://activity-stream/prerendered/ga-IE/activity-stream-strings.js"></script>
+    <script src="resource://activity-stream/data/content/activity-stream.bundle.js"></script>
   </body>
 </html>

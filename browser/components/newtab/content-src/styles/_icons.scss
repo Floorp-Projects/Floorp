@@ -54,10 +54,6 @@
     background-image: url('#{$image-path}glyph-info-16.svg');
   }
 
-  &.icon-import {
-    background-image: url('#{$image-path}glyph-import-16.svg');
-  }
-
   &.icon-new-window {
     @include flip-icon;
     background-image: url('#{$image-path}glyph-newWindow-16.svg');

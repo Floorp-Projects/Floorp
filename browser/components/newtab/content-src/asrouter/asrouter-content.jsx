@@ -7,12 +7,14 @@ import {LocalizationProvider} from "fluent-react";
 import {NEWTAB_DARK_THEME} from "content-src/lib/constants";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
+import ReactDOM from "react-dom";
 import {ReturnToAMO} from "./templates/ReturnToAMO/ReturnToAMO";
 import {SnippetsTemplates} from "./templates/template-manifest";
 import {StartupOverlay} from "./templates/StartupOverlay/StartupOverlay";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
+const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
 
 export const ASRouterUtils = {
   addListener(listener) {
@@ -93,6 +95,9 @@ export class ASRouterUISurface extends React.PureComponent {
     this.sendImpression = this.sendImpression.bind(this);
     this.sendUserActionTelemetry = this.sendUserActionTelemetry.bind(this);
     this.state = {message: {}, bundle: {}};
+    if (props.document) {
+      this.portalContainer = props.document.getElementById("footer-snippets-container");
+    }
   }
 
   sendUserActionTelemetry(extraProps = {}) {
@@ -299,14 +304,22 @@ export class ASRouterUISurface extends React.PureComponent {
   render() {
     const {message, bundle} = this.state;
     if (!message.id && !bundle.template) { return null; }
-    return (
-      <React.Fragment>
-        {this.renderPreviewBanner()}
-        {this.renderFirstRunOverlay()}
-        {this.renderOnboarding()}
-        {this.renderSnippets()}
-      </React.Fragment>
-    );
+    const shouldRenderBelowSearch = TEMPLATES_BELOW_SEARCH.includes(message.template);
+
+    return shouldRenderBelowSearch ?
+      // Render special below search snippets in place;
+      <div className="below-search-snippet">{this.renderSnippets()}</div> :
+      // For onboarding, regular snippets etc. we should render
+      // everything in our footer container.
+      ReactDOM.createPortal(
+        <>
+          {this.renderPreviewBanner()}
+          {this.renderFirstRunOverlay()}
+          {this.renderOnboarding()}
+          {this.renderSnippets()}
+        </>,
+        this.portalContainer
+      );
   }
 }
 

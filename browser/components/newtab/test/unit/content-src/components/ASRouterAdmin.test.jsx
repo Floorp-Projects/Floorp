@@ -1,4 +1,4 @@
-import {ASRouterAdminInner, CollapseToggle, DiscoveryStreamAdmin, ToggleSpocButton} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import {ASRouterAdminInner, CollapseToggle, DiscoveryStreamAdmin, ToggleStoryButton} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {GlobalOverrider} from "test/unit/utils";
 import React from "react";
 import {shallow} from "enzyme";
@@ -189,6 +189,9 @@ describe("ASRouterAdmin", () => {
         spocs: {
           frequency_caps: [],
         },
+        feeds: {
+          data: {},
+        },
       }} />);
       assert.equal(wrapper.find("h3").at(0).text(), "Endpoint variant");
     });
@@ -207,22 +210,25 @@ describe("ASRouterAdmin", () => {
             }],
           },
         },
+        feeds: {
+          data: {},
+        },
       }} />);
-      wrapper.instance().onSpocToggle({id: 12345});
+      wrapper.instance().onStoryToggle({id: 12345});
       const messageSummary = wrapper.find(".message-summary").at(0);
       const pre = messageSummary.find("pre").at(0);
       const spocText = pre.text();
       assert.equal(spocText, "{\n  \"id\": 12345\n}");
     });
   });
-  describe("#ToggleSpocButton", () => {
-    it("should render a DiscoveryStreamAdmin component", async () => {
+  describe("#ToggleStoryButton", () => {
+    it("should fire onClick in toggle button", async () => {
       let result = "";
       function onClick(spoc) {
         result = spoc;
       }
 
-      wrapper = shallow(<ToggleSpocButton spoc="spoc" onClick={onClick} />);
+      wrapper = shallow(<ToggleStoryButton story="spoc" onClick={onClick} />);
       wrapper.find("button").simulate("click");
 
       assert.equal(result, "spoc");

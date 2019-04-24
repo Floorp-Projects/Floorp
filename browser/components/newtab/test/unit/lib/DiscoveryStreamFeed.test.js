@@ -384,22 +384,34 @@ describe("DiscoveryStreamFeed", () => {
       const fakeCache = {};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
       sandbox.stub(feed, "rotate").callsFake(val => val);
-      sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+      sandbox.stub(feed, "scoreItems").callsFake(val => val);
+      sandbox.stub(feed, "fetchFromEndpoint").resolves({
+        recommendations: "data",
+        settings: {
+          recsExpireTime: 1,
+        },
+      });
 
       const feedResp = await feed.getComponentFeed("foo.com");
 
-      assert.equal(feedResp.data, "data");
+      assert.equal(feedResp.data.recommendations, "data");
     });
     it("should fetch fresh data if cache is old", async () => {
       const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now()}}};
       sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
-      sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+      sandbox.stub(feed, "fetchFromEndpoint").resolves({
+        recommendations: "data",
+        settings: {
+          recsExpireTime: 1,
+        },
+      });
       sandbox.stub(feed, "rotate").callsFake(val => val);
+      sandbox.stub(feed, "scoreItems").callsFake(val => val);
       clock.tick(THIRTY_MINUTES + 1);
 
       const feedResp = await feed.getComponentFeed("foo.com");
 
-      assert.equal(feedResp.data, "data");
+      assert.equal(feedResp.data.recommendations, "data");
     });
     it("should return data from cache if it is fresh", async () => {
       const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
@@ -528,9 +540,9 @@ describe("DiscoveryStreamFeed", () => {
       };
       sandbox.stub(feed, "readImpressionsPref").returns(fakeImpressions);
 
-      const result = feed.rotate(feedResponse);
+      const result = feed.rotate(feedResponse.recommendations, feedResponse.settings.recsExpireTime);
 
-      assert.equal(result.recommendations[3].id, "first");
+      assert.equal(result[3].id, "first");
     });
   });
 
@@ -1486,12 +1498,18 @@ describe("DiscoveryStreamFeed", () => {
         const fakeDiscoveryStream = {DiscoveryStream: {layout: fakeLayout}};
         sandbox.stub(feed.store, "getState").returns(fakeDiscoveryStream);
         sandbox.stub(feed, "rotate").callsFake(val => val);
+        sandbox.stub(feed, "scoreItems").callsFake(val => val);
         sandbox.stub(feed, "cleanUpTopRecImpressionPref").callsFake(val => val);
 
         const fakeCache = {feeds: {"foo.com": {lastUpdated: Date.now(), data: "data"}}};
         sandbox.stub(feed.cache, "get").resolves(fakeCache);
         clock.tick(THIRTY_MINUTES + 1);
-        sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({
+          recommendations: "data",
+          settings: {
+            recsExpireTime: 1,
+          },
+        });
 
         await feed.refreshAll({isStartup: true});
 
@@ -1623,8 +1641,23 @@ describe("DiscoveryStreamFeed", () => {
       assert.isTrue(!feed.affinityProvider);
     });
   });
-
   describe("#scoreItems", () => {
+    it("should score items using item_score and min_score", () => {
+      const result = feed.scoreItems([
+        {item_score: 0.8, min_score: 0.1},
+        {item_score: 0.5, min_score: 0.6},
+        {item_score: 0.7, min_score: 0.1},
+        {item_score: 0.9, min_score: 0.1},
+      ]);
+      assert.deepEqual(result, [
+        {item_score: 0.9, score: 0.9, min_score: 0.1},
+        {item_score: 0.8, score: 0.8, min_score: 0.1},
+        {item_score: 0.7, score: 0.7, min_score: 0.1},
+      ]);
+    });
+  });
+
+  describe("#scoreItem", () => {
     it("should use personalized score with affinity provider", () => {
       const item = {};
       feed._prefCache.config = {
@@ -1633,7 +1666,7 @@ describe("DiscoveryStreamFeed", () => {
       feed.affinityProvider = {
         calculateItemRelevanceScore: () => 0.5,
       };
-      const result = feed.scoreItems(item);
+      const result = feed.scoreItem(item);
       assert.equal(result.score, 0.5);
     });
     it("should use item_score score without affinity provider score", () => {
@@ -1646,8 +1679,19 @@ describe("DiscoveryStreamFeed", () => {
       feed.affinityProvider = {
         calculateItemRelevanceScore: () => {},
       };
-      const result = feed.scoreItems(item);
+      const result = feed.scoreItem(item);
       assert.equal(result.score, 0.6);
+    });
+    it("should add min_score of 0 if undefined", () => {
+      const item = {};
+      feed._prefCache.config = {
+        personalized: true,
+      };
+      feed.affinityProvider = {
+        calculateItemRelevanceScore: () => 0.5,
+      };
+      const result = feed.scoreItem(item);
+      assert.equal(result.min_score, 0);
     });
   });
 });

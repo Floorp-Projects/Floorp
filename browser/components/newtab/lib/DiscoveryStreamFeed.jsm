@@ -413,8 +413,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
-  scoreItems(item) {
+  scoreItems(items) {
+    return items.map(item => this.scoreItem(item))
+      // Remove spocs that are scored too low.
+      .filter(s => s.score >= s.min_score)
+      // Sort by highest scores.
+      .sort((a, b) => b.score - a.score);
+  }
+
+  scoreItem(item) {
     item.score = item.item_score;
+    item.min_score = item.min_score || 0;
     if (item.score !== 0 && !item.score) {
       item.score = 1;
     }
@@ -445,14 +454,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       const campaignMap = {};
       return {
         ...data,
-        spocs: data.spocs
-          // This order of operations is intended.
-          // scoreItems must be first because it creates this.score.
-          .map(item => this.scoreItems(item))
-          // Remove spocs that are scored too low.
-          .filter(s => s.score >= s.min_score)
-          // Sort by highest scores.
-          .sort((a, b) => b.score - a.score)
+        // This order of operations is intended.
+        // scoreItems must be first because it creates this.score.
+        spocs: this.scoreItems(data.spocs)
           // This removes campaign dupes.
           // We do this only after scoring and sorting because that way
           // we can keep the first item we see, and end up keeping the highest scored.
@@ -541,10 +545,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (this.isExpired({cachedData, key: "feed", url: feedUrl, isStartup})) {
       const feedResponse = await this.fetchFromEndpoint(feedUrl);
       if (feedResponse) {
+        const scoredItems = this.scoreItems(feedResponse.recommendations);
+        const {recsExpireTime} = feedResponse.settings;
+        const recommendations = this.rotate(scoredItems, recsExpireTime);
         this.componentFeedFetched = true;
         feed = {
           lastUpdated: Date.now(),
-          data: this.rotate(feedResponse),
+          data: {
+            ...feedResponse,
+            recommendations,
+          },
         };
       } else {
         Cu.reportError("No response for feed");
@@ -600,10 +610,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   // We have to rotate stories on the client so that
   // active stories are at the front of the list, followed by stories that have expired
   // impressions i.e. have been displayed for longer than recsExpireTime.
-  rotate(feedResponse) {
-    const {recommendations} = feedResponse;
-
-    const maxImpressionAge = Math.max(feedResponse.settings.recsExpireTime * 1000 || DEFAULT_RECS_EXPIRE_TIME, DEFAULT_RECS_EXPIRE_TIME);
+  rotate(recommendations, recsExpireTime) {
+    const maxImpressionAge = Math.max(recsExpireTime * 1000 || DEFAULT_RECS_EXPIRE_TIME, DEFAULT_RECS_EXPIRE_TIME);
     const impressions = this.readImpressionsPref(PREF_REC_IMPRESSIONS);
     const expired = [];
     const active = [];
@@ -614,7 +622,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         active.push(item);
       }
     }
-    return {...feedResponse, recommendations: active.concat(expired)};
+    return active.concat(expired);
   }
 
   /**
@@ -856,7 +864,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           // store if the SPOCs are changed.
           const {spocs} = this.store.getState().DiscoveryStream;
           const newSpocs = this.frequencyCapSpocs(spocs.data);
-          if (spocs.data.spocs.length !== newSpocs.spocs.length) {
+          const prevSpocs = spocs.data.spocs || [];
+          const currentSpocs = newSpocs.spocs || [];
+          if (prevSpocs.length !== currentSpocs.length) {
             this.store.dispatch(ac.AlsoToPreloaded({
               type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
               data: {
@@ -930,38 +940,12 @@ defaultLayoutResp = {
       ],
     },
     {
-      "width": 8,
-      "components": [
-        {
-          "type": "List",
-          "header": {
-            "title": "",
-          },
-          "feed": {
-            "embed_reference": null,
-            "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=en-US",
-          },
-          "properties": {
-            "items": 8,
-            "has_numbers": false,
-            "has_images": true,
-            "border": "no-border",
-          },
-          "styles": {
-            ".ds-list": "margin-right: -12px",
-          },
-        },
-      ],
-    },
-    {
-      "width": 4,
+      "width": 12,
       "components": [
         {
           "type": "CardGrid",
           "properties": {
-            "items": 1,
-            "border": "no-border",
-            "offset": 8,
+            "items": 4,
           },
           "header": {
             "title": "",
@@ -969,16 +953,12 @@ defaultLayoutResp = {
           "feed": {
             "embed_reference": null,
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=3&consumer_key=$apiKey&locale_lang=en-US",
-          },
-          "styles": {
-            ".ds-card": "margin-left: -12px;",
-            ".ds-card .meta .excerpt": "max-height: 100px;",
           },
           "spocs": {
             "probability": 1,
             "positions": [
               {
-                "index": 0,
+                "index": 3,
               },
             ],
           },
@@ -989,7 +969,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Health & Fitness 💪",
           },
@@ -998,7 +978,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=4&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1007,7 +987,7 @@ defaultLayoutResp = {
             "probability": 1,
             "positions": [
               {
-                "index": 5,
+                "index": 3,
               },
             ],
           },
@@ -1018,7 +998,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Tech 🖥",
           },
@@ -1027,7 +1007,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=5&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1039,7 +1019,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Entertainment 🍿",
           },
@@ -1048,7 +1028,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=8&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1057,7 +1037,7 @@ defaultLayoutResp = {
             "probability": 1,
             "positions": [
               {
-                "index": 5,
+                "index": 3,
               },
             ],
           },
@@ -1068,7 +1048,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Personal Finance 💰",
           },
@@ -1077,7 +1057,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=2&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1089,7 +1069,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Business 💼",
           },
@@ -1098,7 +1078,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=1&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1110,7 +1090,7 @@ defaultLayoutResp = {
       "width": 12,
       "components": [
         {
-          "type": "List",
+          "type": "CardGrid",
           "header": {
             "title": "Science 🔬",
           },
@@ -1119,7 +1099,7 @@ defaultLayoutResp = {
             "url": "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?topic_id=7&duration=2592000&end_time_offset=172800&version=3&consumer_key=$apiKey&locale_lang=en-US&feed_variant=OptimalCuratedLinksForLocaleFeed&model_id=external_time_live",
           },
           "properties": {
-            "items": 6,
+            "items": 4,
             "has_numbers": false,
             "has_images": true,
             "border": "no-border",
@@ -1128,7 +1108,7 @@ defaultLayoutResp = {
             "probability": 1,
             "positions": [
               {
-                "index": 5,
+                "index": 3,
               },
             ],
           },
