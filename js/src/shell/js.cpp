@@ -8105,7 +8105,7 @@ static constexpr uint32_t DOM_OBJECT_SLOT = 0;
 
 static const JSClass* GetDomClass();
 
-static JSObject* GetDOMPrototype(JSObject* global);
+static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global);
 
 static const JSClass TransplantableDOMObjectClass = {
     "TransplantableDOMObject",
@@ -8229,12 +8229,12 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject proto(cx);
   if (JS_GetClass(source) == GetDomClass()) {
-    proto = GetDOMPrototype(newGlobal);
+    proto = GetDOMPrototype(cx, newGlobal);
   } else {
     proto = JS::GetRealmObjectPrototype(cx);
-    if (!proto) {
-      return false;
-    }
+  }
+  if (!proto) {
+    return false;
   }
 
   RootedObject target(cx, JS_CloneObject(cx, source, proto));
@@ -9820,8 +9820,12 @@ static void InitDOMObject(HandleObject obj) {
                   PrivateValue(const_cast<void*>(DOM_PRIVATE_VALUE)));
 }
 
-static JSObject* GetDOMPrototype(JSObject* global) {
+static JSObject* GetDOMPrototype(JSContext* cx, JSObject* global) {
   MOZ_ASSERT(JS_IsGlobalObject(global));
+  if (GetObjectJSClass(global) != &global_class) {
+    JS_ReportErrorASCII(cx, "Can't get FakeDOMObject prototype in sandbox");
+    return nullptr;
+  }
   MOZ_ASSERT(GetReservedSlot(global, DOM_PROTOTYPE_SLOT).isObject());
   return &GetReservedSlot(global, DOM_PROTOTYPE_SLOT).toObject();
 }
