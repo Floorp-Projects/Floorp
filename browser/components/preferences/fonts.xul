@@ -22,8 +22,8 @@
     <html:link rel="localization" href="browser/preferences/fonts.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
 
   <keyset>
     <key data-l10n-id="fonts-window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
@@ -284,6 +284,6 @@
   </groupbox>
 
   <!-- Load the script after the elements for layout issues (bug 1501755). -->
-  <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
+  <script src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+  <script src="chrome://browser/content/preferences/fonts.js"/>
 </dialog>

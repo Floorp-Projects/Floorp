@@ -50,14 +50,10 @@
   <html:link rel="shortcut icon"
               href="chrome://browser/skin/settings.svg"/>
 
-  <script type="application/javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/preferencesBindings.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/preferences/in-content/preferences.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/preferences/in-content/preferences.js"/>
+  <script src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
   <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 

@@ -24,11 +24,11 @@
         width="800" height="600"
         persist="screenX screenY width height sizemode">
 
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
-  <script type="application/javascript" src="project-panel.js"></script>
-  <script type="application/javascript" src="runtime-panel.js"></script>
-  <script type="application/javascript" src="webide.js"></script>
-  <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/globalOverlay.js"></script>
+  <script src="project-panel.js"></script>
+  <script src="runtime-panel.js"></script>
+  <script src="webide.js"></script>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
   <commandset id="mainCommandSet">
     <commandset id="webideCommands">

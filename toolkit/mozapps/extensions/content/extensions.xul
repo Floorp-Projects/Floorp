@@ -26,10 +26,8 @@
     <xhtml:link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
   </linkset>
 
-  <script type="application/javascript"
-          src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://mozapps/content/extensions/extensions.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://mozapps/content/extensions/extensions.js"/>
 
   <popupset>
     <!-- menu for an addon item -->

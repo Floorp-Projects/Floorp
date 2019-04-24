@@ -21,8 +21,8 @@
     <html:link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/javascript" src="chrome://pippki/content/certManager.js"/>
+  <script src="chrome://pippki/content/pippki.js"/>
+  <script src="chrome://pippki/content/certManager.js"/>
 
   <vbox flex="1">
     <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">

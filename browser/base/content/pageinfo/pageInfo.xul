@@ -31,13 +31,13 @@
   <linkset>
     <html:link rel="localization" href="browser/pageInfo.ftl"/>
   </linkset>
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://global/content/treeUtils.js"/>
-  <script type="application/javascript" src="chrome://browser/content/pageinfo/pageInfo.js"/>
-  <script type="application/javascript" src="chrome://browser/content/pageinfo/permissions.js"/>
-  <script type="application/javascript" src="chrome://browser/content/pageinfo/security.js"/>
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://global/content/treeUtils.js"/>
+  <script src="chrome://browser/content/pageinfo/pageInfo.js"/>
+  <script src="chrome://browser/content/pageinfo/permissions.js"/>
+  <script src="chrome://browser/content/pageinfo/security.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
 
   <stringbundleset id="pageinfobundleset">
     <stringbundle id="pkiBundle" src="chrome://pippki/locale/pippki.properties"/>

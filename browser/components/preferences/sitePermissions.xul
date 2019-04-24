@@ -25,7 +25,7 @@
   </linkset>
 
   <script src="chrome://browser/content/preferences/sitePermissions.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
+  <script src="chrome://browser/content/preferences/in-content/extensionControlled.js"/>
 
   <keyset>
     <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>

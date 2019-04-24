@@ -21,11 +21,10 @@
   <html:link rel="localization" href="security/certificates/certManager.ftl"/>
 </linkset>
 
-<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
-<script type="application/javascript"
-        src="chrome://pippki/content/certViewer.js"/>
+<script src="chrome://pippki/content/pippki.js"/>
+<script src="chrome://global/content/globalOverlay.js"/>
+<script src="chrome://global/content/editMenuOverlay.js"/>
+<script src="chrome://pippki/content/certViewer.js"/>
 <html:style>
   table {
     border-spacing: 0.5ch 2px;

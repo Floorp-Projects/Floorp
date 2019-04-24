@@ -22,7 +22,7 @@
     <html:link rel="localization" href="browser/safeMode.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
+  <script src="chrome://browser/content/safeMode.js"/>
 
 
   <vbox id="autoSafeMode" hidden="true">

@@ -4,8 +4,7 @@
 
 <!-- Home panel -->
 
-<script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/home.js"/>
+<script src="chrome://browser/content/preferences/in-content/home.js"/>
 <html:template id="template-paneHome">
 <hbox id="firefoxHomeCategory"
       class="subcategory"

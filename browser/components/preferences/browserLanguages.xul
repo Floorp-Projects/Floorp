@@ -24,9 +24,9 @@
     <html:link rel="localization" href="browser/preferences/languages.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences/browserLanguages.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/preferences/browserLanguages.js"/>
 
   <description data-l10n-id="browser-languages-description"/>
 

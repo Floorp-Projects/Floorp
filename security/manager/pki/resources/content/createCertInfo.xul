@@ -16,8 +16,8 @@
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
-<script type="application/javascript" src="pippki.js" />
-<script type="application/javascript" src="createCertInfo.js" />
+<script src="pippki.js" />
+<script src="createCertInfo.js" />
 
 <vbox style="margin: 5px; max-width: 50em;">
 

@@ -26,11 +26,10 @@
         width="640" height="480"
         persist="screenX screenY width height sizemode">
 
-<script type="application/javascript"
-        src="chrome://devtools/content/shared/theme-switching.js"/>
-<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/javascript" src="resource://devtools/client/scratchpad/scratchpad.js"/>
-<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+<script src="chrome://devtools/content/shared/theme-switching.js"/>
+<script src="chrome://global/content/globalOverlay.js"/>
+<script src="resource://devtools/client/scratchpad/scratchpad.js"/>
+<script src="chrome://global/content/editMenuOverlay.js"/>
 
 <commandset id="sourceEditorCommands">
   <command id="cmd_find" oncommand=";"/>

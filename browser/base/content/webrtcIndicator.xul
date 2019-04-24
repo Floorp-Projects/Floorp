@@ -22,7 +22,7 @@
         hidechrome="true"
         orient="horizontal"
         >
-  <script type="application/javascript" src="chrome://browser/content/webrtcIndicator.js"/>
+  <script src="chrome://browser/content/webrtcIndicator.js"/>
 
   <button id="firefoxButton"/>
   <button id="audioVideoButton" type="menu">

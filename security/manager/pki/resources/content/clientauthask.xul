@@ -21,10 +21,10 @@
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 </stringbundleset>
 
-<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/javascript" src="chrome://pippki/content/clientauthask.js"/>
-<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+<script src="chrome://pippki/content/pippki.js"/>
+<script src="chrome://pippki/content/clientauthask.js"/>
+<script src="chrome://global/content/globalOverlay.js"/>
+<script src="chrome://global/content/editMenuOverlay.js"/>
 
 <description style="font-weight: bold;">&clientAuthAsk.message1;</description>
 <description id="hostname"/>
