@@ -1561,8 +1561,8 @@ void Context::getIntegervImpl(GLenum pname, GLint *params)
             *params = mState.mExtensions.maxLabelLength;
             break;
 
-        // GL_ANGLE_multiview
-        case GL_MAX_VIEWS_ANGLE:
+        // GL_OVR_multiview2
+        case GL_MAX_VIEWS_OVR:
             *params = mState.mExtensions.maxViews;
             break;
 
@@ -3140,7 +3140,7 @@ Extensions Context::generateSupportedExtensions() const
         supportedExtensions.colorBufferFloat      = false;
         supportedExtensions.eglImageExternalEssl3 = false;
         supportedExtensions.textureNorm16         = false;
-        supportedExtensions.multiview             = false;
+        supportedExtensions.multiview2            = false;
         supportedExtensions.maxViews              = 1u;
         supportedExtensions.copyTexture3d         = false;
         supportedExtensions.textureMultisample    = false;
@@ -3806,12 +3806,12 @@ void Context::framebufferTextureLayer(GLenum target,
     mState.setObjectDirty(target);
 }
 
-void Context::framebufferTextureMultiviewLayered(GLenum target,
-                                                 GLenum attachment,
-                                                 GLuint texture,
-                                                 GLint level,
-                                                 GLint baseViewIndex,
-                                                 GLsizei numViews)
+void Context::framebufferTextureMultiview(GLenum target,
+                                          GLenum attachment,
+                                          GLuint texture,
+                                          GLint level,
+                                          GLint baseViewIndex,
+                                          GLsizei numViews)
 {
     Framebuffer *framebuffer = mState.getTargetFramebuffer(target);
     ASSERT(framebuffer);
@@ -3831,34 +3831,8 @@ void Context::framebufferTextureMultiviewLayered(GLenum target,
             ASSERT(level == 0);
             index = ImageIndex::Make2DMultisampleArrayRange(baseViewIndex, numViews);
         }
-        framebuffer->setAttachmentMultiviewLayered(this, GL_TEXTURE, attachment, index, textureObj,
-                                                   numViews, baseViewIndex);
-    }
-    else
-    {
-        framebuffer->resetAttachment(this, attachment);
-    }
-
-    mState.setObjectDirty(target);
-}
-
-void Context::framebufferTextureMultiviewSideBySide(GLenum target,
-                                                    GLenum attachment,
-                                                    GLuint texture,
-                                                    GLint level,
-                                                    GLsizei numViews,
-                                                    const GLint *viewportOffsets)
-{
-    Framebuffer *framebuffer = mState.getTargetFramebuffer(target);
-    ASSERT(framebuffer);
-
-    if (texture != 0)
-    {
-        Texture *textureObj = getTexture(texture);
-
-        ImageIndex index = ImageIndex::Make2D(level);
-        framebuffer->setAttachmentMultiviewSideBySide(this, GL_TEXTURE, attachment, index,
-                                                      textureObj, numViews, viewportOffsets);
+        framebuffer->setAttachmentMultiview(this, GL_TEXTURE, attachment, index, textureObj,
+                                            numViews, baseViewIndex);
     }
     else
     {
@@ -7577,7 +7551,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
         return true;
     }
 
-    if (getExtensions().multiview && pname == GL_MAX_VIEWS_ANGLE)
+    if (getExtensions().multiview2 && pname == GL_MAX_VIEWS_OVR)
     {
         *type      = GL_INT;
         *numParams = 1;

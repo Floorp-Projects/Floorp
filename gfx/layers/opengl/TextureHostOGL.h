@@ -440,6 +440,8 @@ class SurfaceTextureHost : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
 
+  bool SupportsWrNativeTexture() override { return true; }
+
  protected:
   bool EnsureAttached();
 

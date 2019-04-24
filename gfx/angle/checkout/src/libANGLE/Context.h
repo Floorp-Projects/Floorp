@@ -876,18 +876,13 @@ class Context final : public egl::LabeledObject, angle::NonCopyable, public angl
                                  GLuint texture,
                                  GLint level,
                                  GLint layer);
-    void framebufferTextureMultiviewLayered(GLenum target,
-                                            GLenum attachment,
-                                            GLuint texture,
-                                            GLint level,
-                                            GLint baseViewIndex,
-                                            GLsizei numViews);
-    void framebufferTextureMultiviewSideBySide(GLenum target,
-                                               GLenum attachment,
-                                               GLuint texture,
-                                               GLint level,
-                                               GLsizei numViews,
-                                               const GLint *viewportOffsets);
+
+    void framebufferTextureMultiview(GLenum target,
+                                     GLenum attachment,
+                                     GLuint texture,
+                                     GLint level,
+                                     GLint baseViewIndex,
+                                     GLsizei numViews);
 
     void drawBuffers(GLsizei n, const GLenum *bufs);
     void readBuffer(GLenum mode);

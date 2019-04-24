@@ -109,22 +109,6 @@ bool ValidateMultiDrawElementsInstancedANGLE(Context *context,
                                              const GLsizei *instanceCounts,
                                              GLsizei drawcount);
 
-// GL_ANGLE_multiview
-bool ValidateFramebufferTextureMultiviewLayeredANGLE(Context *context,
-                                                     GLenum target,
-                                                     GLenum attachment,
-                                                     GLuint texture,
-                                                     GLint level,
-                                                     GLint baseViewIndex,
-                                                     GLsizei numViews);
-bool ValidateFramebufferTextureMultiviewSideBySideANGLE(Context *context,
-                                                        GLenum target,
-                                                        GLenum attachment,
-                                                        GLuint texture,
-                                                        GLint level,
-                                                        GLsizei numViews,
-                                                        const GLint *viewportOffsets);
-
 // GL_ANGLE_provoking_vertex
 bool ValidateProvokingVertexANGLE(Context *context, ProvokingVertex modePacked);
 
@@ -1094,6 +1078,17 @@ bool ValidateBindVertexArrayOES(Context *context, GLuint array);
 bool ValidateDeleteVertexArraysOES(Context *context, GLsizei n, const GLuint *arrays);
 bool ValidateGenVertexArraysOES(Context *context, GLsizei n, GLuint *arrays);
 bool ValidateIsVertexArrayOES(Context *context, GLuint array);
+
+// GL_OVR_multiview
+bool ValidateFramebufferTextureMultiviewOVR(Context *context,
+                                            GLenum target,
+                                            GLenum attachment,
+                                            GLuint texture,
+                                            GLint level,
+                                            GLint baseViewIndex,
+                                            GLsizei numViews);
+
+// GL_OVR_multiview2
 }  // namespace gl
 
 #endif  // LIBANGLE_VALIDATION_ESEXT_AUTOGEN_H_

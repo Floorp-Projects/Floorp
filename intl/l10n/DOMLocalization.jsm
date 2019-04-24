@@ -15,404 +15,50 @@
  * limitations under the License.
  */
 
-/* fluent-dom@fa25466f (October 12, 2018) */
+/* Based on fluent-dom@fa25466f (October 12, 2018) */
+/* global DOMOverlays */
 
 const { Localization } =
   ChromeUtils.import("resource://gre/modules/Localization.jsm");
 const { Services } =
   ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-// Match the opening angle bracket (<) in HTML tags, and HTML entities like
-// &amp;, &#0038;, &#x0026;.
-const reOverlay = /<|&#?\w+;/;
-
-/**
- * Elements allowed in translations even if they are not present in the source
- * HTML. They are text-level elements as defined by the HTML5 spec:
- * https://www.w3.org/TR/html5/text-level-semantics.html with the exception of:
- *
- *   - a - because we don't allow href on it anyways,
- *   - ruby, rt, rp - because we don't allow nested elements to be inserted.
- */
-const TEXT_LEVEL_ELEMENTS = {
-  "http://www.w3.org/1999/xhtml": [
-    "em", "strong", "small", "s", "cite", "q", "dfn", "abbr", "data",
-    "time", "code", "var", "samp", "kbd", "sub", "sup", "i", "b", "u",
-    "mark", "bdi", "bdo", "span", "br", "wbr",
-  ],
-};
-
-const LOCALIZABLE_ATTRIBUTES = {
-  "http://www.w3.org/1999/xhtml": {
-    global: ["title", "aria-label", "aria-valuetext", "aria-moz-hint"],
-    a: ["download"],
-    area: ["download", "alt"],
-    // value is special-cased in isAttrNameLocalizable
-    input: ["alt", "placeholder"],
-    menuitem: ["label"],
-    menu: ["label"],
-    optgroup: ["label"],
-    option: ["label"],
-    track: ["label"],
-    img: ["alt"],
-    textarea: ["placeholder"],
-    th: ["abbr"],
-  },
-  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": {
-    global: [
-      "accesskey", "aria-label", "aria-valuetext", "aria-moz-hint", "label",
-      "title", "tooltiptext"],
-    description: ["value"],
-    key: ["key", "keycode"],
-    label: ["value"],
-    textbox: ["placeholder", "value"],
-  },
-};
-
-
-/**
- * Translate an element.
- *
- * Translate the element's text content and attributes. Some HTML markup is
- * allowed in the translation. The element's children with the data-l10n-name
- * attribute will be treated as arguments to the translation. If the
- * translation defines the same children, their attributes and text contents
- * will be used for translating the matching source child.
- *
- * @param   {Element} element
- * @param   {Object} translation
- * @private
- */
-function translateElement(element, translation) {
-  const {value} = translation;
-
-  if (typeof value === "string") {
-    if (!reOverlay.test(value)) {
-      // If the translation doesn't contain any markup skip the overlay logic.
-      element.textContent = value;
-    } else {
-      // Else parse the translation's HTML using an inert template element,
-      // sanitize it and replace the element's content.
-      const templateElement = element.ownerDocument.createElementNS(
-        "http://www.w3.org/1999/xhtml", "template"
-      );
-      // eslint-disable-next-line no-unsanitized/property
-      templateElement.innerHTML = value;
-      overlayChildNodes(templateElement.content, element);
-    }
-  }
-
-  // Even if the translation doesn't define any localizable attributes, run
-  // overlayAttributes to remove any localizable attributes set by previous
-  // translations.
-  overlayAttributes(translation, element);
-}
-
-/**
- * Replace child nodes of an element with child nodes of another element.
- *
- * The contents of the target element will be cleared and fully replaced with
- * sanitized contents of the source element.
- *
- * @param {DocumentFragment} fromFragment - The source of children to overlay.
- * @param {Element} toElement - The target of the overlay.
- * @private
- */
-function overlayChildNodes(fromFragment, toElement) {
-  for (const childNode of fromFragment.childNodes) {
-    if (childNode.nodeType === childNode.TEXT_NODE) {
-      // Keep the translated text node.
-      continue;
-    }
-
-    if (childNode.hasAttribute("data-l10n-name")) {
-      const sanitized = namedChildFrom(toElement, childNode);
-      fromFragment.replaceChild(sanitized, childNode);
-      continue;
-    }
-
-    if (isElementAllowed(childNode)) {
-      const sanitized = allowedChild(childNode);
-      fromFragment.replaceChild(sanitized, childNode);
-      continue;
-    }
-
-    console.warn(
-      `An element of forbidden type "${childNode.localName}" was found in ` +
-      "the translation. Only safe text-level elements and elements with " +
-      "data-l10n-name are allowed."
-    );
-
-    // If all else fails, replace the element with its text content.
-    fromFragment.replaceChild(textNode(childNode), childNode);
-  }
-
-  toElement.textContent = "";
-  toElement.appendChild(fromFragment);
-}
-
-function hasAttribute(attributes, name) {
-  if (!attributes) {
-    return false;
-  }
-  for (let attr of attributes) {
-    if (attr.name === name) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Transplant localizable attributes of an element to another element.
- *
- * Any localizable attributes already set on the target element will be
- * cleared.
- *
- * @param   {Element|Object} fromElement - The source of child nodes to overlay.
- * @param   {Element} toElement - The target of the overlay.
- * @private
- */
-function overlayAttributes(fromElement, toElement) {
-  const explicitlyAllowed = toElement.hasAttribute("data-l10n-attrs")
-    ? toElement.getAttribute("data-l10n-attrs")
-      .split(",").map(i => i.trim())
-    : null;
-
-  // Remove existing localizable attributes if they
-  // will not be used in the new translation.
-  for (const attr of Array.from(toElement.attributes)) {
-    if (isAttrNameLocalizable(attr.name, toElement, explicitlyAllowed)
-      && !hasAttribute(fromElement.attributes, attr.name)) {
-      toElement.removeAttribute(attr.name);
-    }
-  }
-
-  // fromElement might be a {value, attributes} object as returned by
-  // Localization.messageFromBundle. In which case attributes may be null to
-  // save GC cycles.
-  if (!fromElement.attributes) {
-    return;
-  }
-
-  // Set localizable attributes.
-  for (const attr of Array.from(fromElement.attributes)) {
-    if (isAttrNameLocalizable(attr.name, toElement, explicitlyAllowed)
-      && toElement.getAttribute(attr.name) !== attr.value) {
-      toElement.setAttribute(attr.name, attr.value);
-    }
-  }
-}
-
-/**
- * Sanitize a child element created by the translation.
- *
- * Try to find a corresponding child in sourceElement and use it as the base
- * for the sanitization. This will preserve functional attribtues defined on
- * the child element in the source HTML.
- *
- * @param   {Element} sourceElement - The source for data-l10n-name lookups.
- * @param   {Element} translatedChild - The translated child to be sanitized.
- * @returns {Element}
- * @private
- */
-function namedChildFrom(sourceElement, translatedChild) {
-  const childName = translatedChild.getAttribute("data-l10n-name");
-  const sourceChild = sourceElement.querySelector(
-    `[data-l10n-name="${childName}"]`
-  );
-
-  if (!sourceChild) {
-    console.warn(
-      `An element named "${childName}" wasn't found in the source.`
-    );
-    return textNode(translatedChild);
-  }
-
-  if (sourceChild.localName !== translatedChild.localName &&
-      // Create a specific exception for img vs. image mismatches,
-      // see bug 1543493
-      !(translatedChild.localName == "img" &&
-        sourceChild.localName == "image")) {
-    console.warn(
-      `An element named "${childName}" was found in the translation ` +
-      `but its type ${translatedChild.localName} didn't match the ` +
-      `element found in the source (${sourceChild.localName}).`
-    );
-    return textNode(translatedChild);
-  }
-
-  // Remove it from sourceElement so that the translation cannot use
-  // the same reference name again.
-  sourceElement.removeChild(sourceChild);
-  // We can't currently guarantee that a translation won't remove
-  // sourceChild from the element completely, which could break the app if
-  // it relies on an event handler attached to the sourceChild. Let's make
-  // this limitation explicit for now by breaking the identitiy of the
-  // sourceChild by cloning it. This will destroy all event handlers
-  // attached to sourceChild via addEventListener and via on<name>
-  // properties.
-  const clone = sourceChild.cloneNode(false);
-  return shallowPopulateUsing(translatedChild, clone);
-}
-
-/**
- * Sanitize an allowed element.
- *
- * Text-level elements allowed in translations may only use safe attributes
- * and will have any nested markup stripped to text content.
- *
- * @param   {Element} element - The element to be sanitized.
- * @returns {Element}
- * @private
- */
-function allowedChild(element) {
-  // Start with an empty element of the same type to remove nested children
-  // and non-localizable attributes defined by the translation.
-  const clone = element.ownerDocument.createElement(element.localName);
-  return shallowPopulateUsing(element, clone);
-}
-
-/**
- * Convert an element to a text node.
- *
- * @param   {Element} element - The element to be sanitized.
- * @returns {Node}
- * @private
- */
-function textNode(element) {
-  return element.ownerDocument.createTextNode(element.textContent);
-}
-
-/**
- * Check if element is allowed in the translation.
- *
- * This method is used by the sanitizer when the translation markup contains
- * an element which is not present in the source code.
- *
- * @param   {Element} element
- * @returns {boolean}
- * @private
- */
-function isElementAllowed(element) {
-  const allowed = TEXT_LEVEL_ELEMENTS[element.namespaceURI];
-  return allowed && allowed.includes(element.localName);
-}
-
-/**
- * Check if attribute is allowed for the given element.
- *
- * This method is used by the sanitizer when the translation markup contains
- * DOM attributes, or when the translation has traits which map to DOM
- * attributes.
- *
- * `explicitlyAllowed` can be passed as a list of attributes explicitly
- * allowed on this element.
- *
- * @param   {string}         name
- * @param   {Element}        element
- * @param   {Array}          explicitlyAllowed
- * @returns {boolean}
- * @private
- */
-function isAttrNameLocalizable(name, element, explicitlyAllowed = null) {
-  if (explicitlyAllowed && explicitlyAllowed.includes(name)) {
-    return true;
-  }
-
-  const allowed = LOCALIZABLE_ATTRIBUTES[element.namespaceURI];
-  if (!allowed) {
-    return false;
-  }
-
-  const attrName = name.toLowerCase();
-  const elemName = element.localName;
-
-  // Is it a globally safe attribute?
-  if (allowed.global.includes(attrName)) {
-    return true;
-  }
-
-  // Are there no allowed attributes for this element?
-  if (!allowed[elemName]) {
-    return false;
-  }
-
-  // Is it allowed on this element?
-  if (allowed[elemName].includes(attrName)) {
-    return true;
-  }
-
-  // Special case for value on HTML inputs with type button, reset, submit
-  if (element.namespaceURI === "http://www.w3.org/1999/xhtml" &&
-      elemName === "input" && attrName === "value") {
-    const type = element.type.toLowerCase();
-    if (type === "submit" || type === "button" || type === "reset") {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Helper to set textContent and localizable attributes on an element.
- *
- * @param   {Element} fromElement
- * @param   {Element} toElement
- * @returns {Element}
- * @private
- */
-function shallowPopulateUsing(fromElement, toElement) {
-  toElement.textContent = fromElement.textContent;
-  overlayAttributes(fromElement, toElement);
-  return toElement;
-}
-
-/**
- * Sanitizes a translation before passing them to Node.localize API.
- *
- * It returns `false` if the translation contains DOM Overlays and should
- * not go into Node.localize.
- *
- * Note: There's a third item of work that JS DOM Overlays do - removal
- * of attributes from the previous translation.
- * This is not trivial to implement for Node.localize scenario, so
- * at the moment it is not supported.
- *
- * @param {{
- *          localName: string,
- *          namespaceURI: string,
- *          type: string || null
- *          l10nId: string,
- *          l10nArgs: Array<Object> || null,
- *          l10nAttrs: string ||null,
- *        }}                                     l10nItems
- * @param {{value: string, attrs: Object}} translations
- * @returns boolean
- * @private
- */
-function sanitizeTranslationForNodeLocalize(l10nItem, translation) {
-  if (reOverlay.test(translation.value)) {
-    return false;
-  }
-
-  if (translation.attributes) {
-    const explicitlyAllowed = l10nItem.l10nAttrs === null ? null :
-      l10nItem.l10nAttrs.split(",").map(i => i.trim());
-    for (const [j, {name}] of translation.attributes.entries()) {
-      if (!isAttrNameLocalizable(name, l10nItem, explicitlyAllowed)) {
-        translation.attributes.splice(j, 1);
-      }
-    }
-  }
-  return true;
-}
-
 const L10NID_ATTR_NAME = "data-l10n-id";
 const L10NARGS_ATTR_NAME = "data-l10n-args";
 
 const L10N_ELEMENT_QUERY = `[${L10NID_ATTR_NAME}]`;
+
+function reportDOMOverlayErrors(errors) {
+  for (let error of errors) {
+    switch (error.code) {
+      case DOMOverlays.ERROR_FORBIDDEN_TYPE: {
+        console.warn(
+          `An element of forbidden type "${error.translatedElementName}" was found in ` +
+          "the translation. Only safe text-level elements and elements with " +
+          "data-l10n-name are allowed."
+        );
+        break;
+      }
+      case DOMOverlays.ERROR_NAMED_ELEMENT_MISSING: {
+        console.warn(
+          `An element named "${error.l10nName}" wasn't found in the source.`
+        );
+        break;
+      }
+      case DOMOverlays.ERROR_NAMED_ELEMENT_TYPE_MISMATCH: {
+        console.warn(
+          `An element named "${error.l10nName}" was found in the translation ` +
+          `but its type ${error.translatedElementName} didn't match the ` +
+          `element found in the source (${error.sourceElementName}).`
+        );
+        break;
+      }
+      default: {
+        console.warn(`Unknown error ${error.code} happend while translation an element.`);
+      }
+    }
+  }
+}
 
 /**
  * The `DOMLocalization` class is responsible for fetching resources and
@@ -720,30 +366,10 @@ class DOMLocalization extends Localization {
 
       // A sparse array which will store translations separated out from
       // all translations that is needed for DOM Overlay.
-      const overlayTranslations = [];
-
       const getTranslationsForItems = async l10nItems => {
         const keys = l10nItems.map(
           l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
         const translations = await this.formatMessages(keys);
-
-        // Here we want to separate out elements that require DOM Overlays.
-        // Those elements will have to be translated using our JS
-        // implementation, while everything else is going to use the fast-path.
-        for (const [i, translation] of translations.entries()) {
-          if (translation === undefined) {
-            continue;
-          }
-
-          const hasOnlyText =
-            sanitizeTranslationForNodeLocalize(l10nItems[i], translation);
-          if (!hasOnlyText) {
-            // Removing from translations to make Node.localize skip it.
-            // We will translate it below using JS DOM Overlays.
-            overlayTranslations[i] = translations[i];
-            translations[i] = undefined;
-          }
-        }
 
         // We pause translation observing here because Node.localize
         // will translate the whole DOM next, using the `translations`.
@@ -755,12 +381,9 @@ class DOMLocalization extends Localization {
       };
 
       return frag.localize(getTranslationsForItems.bind(this))
-        .then(untranslatedElements => {
-          for (let i = 0; i < overlayTranslations.length; i++) {
-            if (overlayTranslations[i] !== undefined &&
-                untranslatedElements[i] !== undefined) {
-              translateElement(untranslatedElements[i], overlayTranslations[i]);
-            }
+        .then((errors) => {
+          if (errors) {
+            reportDOMOverlayErrors(errors);
           }
           this.resumeObserving();
         })
@@ -811,10 +434,17 @@ class DOMLocalization extends Localization {
   applyTranslations(elements, translations) {
     this.pauseObserving();
 
+    const errors = [];
     for (let i = 0; i < elements.length; i++) {
       if (translations[i] !== undefined) {
-        translateElement(elements[i], translations[i]);
+        const translationErrors = DOMOverlays.translateElement(elements[i], translations[i]);
+        if (translationErrors) {
+          errors.push(...translationErrors);
+        }
       }
+    }
+    if (errors.length) {
+      reportDOMOverlayErrors(errors);
     }
 
     this.resumeObserving();

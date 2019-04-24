@@ -440,13 +440,9 @@ ProcEntry g_procTable[] = {
     {"glFramebufferTextureEXTContextANGLE", P(gl::FramebufferTextureEXTContextANGLE)},
     {"glFramebufferTextureLayer", P(gl::FramebufferTextureLayer)},
     {"glFramebufferTextureLayerContextANGLE", P(gl::FramebufferTextureLayerContextANGLE)},
-    {"glFramebufferTextureMultiviewLayeredANGLE", P(gl::FramebufferTextureMultiviewLayeredANGLE)},
-    {"glFramebufferTextureMultiviewLayeredANGLEContextANGLE",
-     P(gl::FramebufferTextureMultiviewLayeredANGLEContextANGLE)},
-    {"glFramebufferTextureMultiviewSideBySideANGLE",
-     P(gl::FramebufferTextureMultiviewSideBySideANGLE)},
-    {"glFramebufferTextureMultiviewSideBySideANGLEContextANGLE",
-     P(gl::FramebufferTextureMultiviewSideBySideANGLEContextANGLE)},
+    {"glFramebufferTextureMultiviewOVR", P(gl::FramebufferTextureMultiviewOVR)},
+    {"glFramebufferTextureMultiviewOVRContextANGLE",
+     P(gl::FramebufferTextureMultiviewOVRContextANGLE)},
     {"glFrontFace", P(gl::FrontFace)},
     {"glFrontFaceContextANGLE", P(gl::FrontFaceContextANGLE)},
     {"glFrustumf", P(gl::Frustumf)},
@@ -1374,5 +1370,5 @@ ProcEntry g_procTable[] = {
     {"glWeightPointerOES", P(gl::WeightPointerOES)},
     {"glWeightPointerOESContextANGLE", P(gl::WeightPointerOESContextANGLE)}};
 
-size_t g_numProcs = 1290;
+size_t g_numProcs = 1288;
 }  // namespace egl
