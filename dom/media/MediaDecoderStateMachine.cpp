@@ -3933,7 +3933,7 @@ void MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const {
   MOZ_ASSERT(OnTaskQueue());
   if (mAudioDecodedDuration.isSome() &&
       mAudioDecodedDuration.ref().IsPositive()) {
-    aTime = aTime % mAudioDecodedDuration.ref().ToMicroseconds();
+    aTime = aTime % mAudioDecodedDuration.ref();
   }
 }
 
