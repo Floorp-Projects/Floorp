@@ -75,7 +75,7 @@
 #include "nsIScriptError.h"
 
 #include "nsIExternalProtocolHandler.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 #include "URIUtils.h"
 
 #include "mozilla/dom/MediaDevices.h"
@@ -974,8 +974,9 @@ void Navigator::RegisterProtocolHandler(const nsAString& aScheme,
   if (XRE_IsContentProcess()) {
     nsAutoString scheme(aScheme);
     nsAutoString title(aTitle);
-    RefPtr<TabChild> tabChild = TabChild::GetFrom(mWindow);
-    tabChild->SendRegisterProtocolHandler(scheme, handlerURI, title, docURI);
+    RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(mWindow);
+    browserChild->SendRegisterProtocolHandler(scheme, handlerURI, title,
+                                              docURI);
     return;
   }
 

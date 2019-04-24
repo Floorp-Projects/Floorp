@@ -36,23 +36,23 @@ ChromeUtils.defineModuleGetter(this, "FileUtils",
 ChromeUtils.defineModuleGetter(this, "NetUtil",
                                "resource://gre/modules/NetUtil.jsm");
 
-function _TabRemovalObserver(resolver, tabParentIds) {
+function _TabRemovalObserver(resolver, remoteTabIds) {
   this._resolver = resolver;
-  this._tabParentIds = tabParentIds;
+  this._remoteTabIds = remoteTabIds;
   Services.obs.addObserver(this, "ipc:browser-destroyed");
 }
 
 _TabRemovalObserver.prototype = {
   _resolver: null,
-  _tabParentIds: null,
+  _remoteTabIds: null,
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
 
   observe(subject, topic, data) {
-    let tabParent = subject.QueryInterface(Ci.nsITabParent);
-    if (this._tabParentIds.has(tabParent.tabId)) {
-      this._tabParentIds.delete(tabParent.tabId);
-      if (this._tabParentIds.size == 0) {
+    let remoteTab = subject.QueryInterface(Ci.nsIRemoteTab);
+    if (this._remoteTabIds.has(remoteTab.tabId)) {
+      this._remoteTabIds.delete(remoteTab.tabId);
+      if (this._remoteTabIds.size == 0) {
         Services.obs.removeObserver(this, "ipc:browser-destroyed");
         this._resolver();
       }
@@ -448,24 +448,24 @@ _ContextualIdentityService.prototype = {
 
   closeContainerTabs(userContextId = 0) {
     return new Promise(resolve => {
-      let tabParentIds = new Set();
+      let remoteTabIds = new Set();
       this._forEachContainerTab((tab, tabbrowser) => {
         let frameLoader = tab.linkedBrowser.frameLoader;
 
-        // We don't have tabParent in non-e10s mode.
-        if (frameLoader.tabParent) {
-          tabParentIds.add(frameLoader.tabParent.tabId);
+        // We don't have remoteTab in non-e10s mode.
+        if (frameLoader.remoteTab) {
+          remoteTabIds.add(frameLoader.remoteTab.tabId);
         }
 
         tabbrowser.removeTab(tab);
       }, userContextId);
 
-      if (tabParentIds.size == 0) {
+      if (remoteTabIds.size == 0) {
         resolve();
         return;
       }
 
-      new _TabRemovalObserver(resolve, tabParentIds);
+      new _TabRemovalObserver(resolve, remoteTabIds);
     });
   },
 

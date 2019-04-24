@@ -12,7 +12,7 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsIPrincipal.h"
@@ -178,10 +178,10 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   // Prompt the user (asynchronous).
   nsPIDOMWindowOuter* win = aDocument->GetWindow();
   if (XRE_IsContentProcess()) {
-    TabChild* tabChild = TabChild::GetFrom(win);
-    if (tabChild) {
-      tabChild->SendShowCanvasPermissionPrompt(topLevelDocURISpec,
-                                               isAutoBlockCanvas);
+    BrowserChild* browserChild = BrowserChild::GetFrom(win);
+    if (browserChild) {
+      browserChild->SendShowCanvasPermissionPrompt(topLevelDocURISpec,
+                                                   isAutoBlockCanvas);
     }
   } else {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

@@ -171,7 +171,7 @@ function getContentChromeFlags(win) {
     docShell.QueryInterface(Ci.nsIInterfaceRequestor);
     try {
       // This will throw if we're not a remote browser.
-      return docShell.getInterface(Ci.nsITabChild)
+      return docShell.getInterface(Ci.nsIBrowserChild)
                       .QueryInterface(Ci.nsIWebBrowserChrome)
                       .chromeFlags;
     } catch (e) {
@@ -265,7 +265,7 @@ add_task(async function test_new_remote_window_flags() {
     }
 
     // Confusingly, chromeFlags also exist in the content process
-    // as part of the TabChild, so we have to check those too.
+    // as part of the BrowserChild, so we have to check those too.
     let contentChromeFlags = await getContentChromeFlags(win);
     assertContentFlags(contentChromeFlags);
     Assert.ok(!(contentChromeFlags &

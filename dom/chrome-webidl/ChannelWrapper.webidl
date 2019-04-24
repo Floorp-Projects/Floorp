@@ -4,7 +4,7 @@
 
 interface LoadInfo;
 interface MozChannel;
-interface TabParent;
+interface RemoteTab;
 interface URI;
 interface nsISupports;
 
@@ -55,7 +55,7 @@ interface ChannelWrapper : EventTarget {
    */
   static ChannelWrapper? getRegisteredChannel(unsigned long long aChannelId,
                                              WebExtensionPolicy extension,
-                                             TabParent? tabParent);
+                                             RemoteTab? remoteTab);
 
   /**
    * A unique ID for for the requests which remains constant throughout the
@@ -156,9 +156,9 @@ interface ChannelWrapper : EventTarget {
 
   /**
    * Register's this channel as traceable by the given add-on when accessed
-   * via the process of the given TabParent.
+   * via the process of the given RemoteTab.
    */
-  void registerTraceableChannel(WebExtensionPolicy extension, TabParent? tabParent);
+  void registerTraceableChannel(WebExtensionPolicy extension, RemoteTab? remoteTab);
 
   /**
    * The current HTTP status code of the request. This will be 0 if a response

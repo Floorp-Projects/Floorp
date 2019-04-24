@@ -8,7 +8,7 @@
 #include "BackgroundUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -20,7 +20,7 @@
 using namespace mozilla::ipc;
 using mozilla::BasePrincipal;
 using mozilla::OriginAttributes;
-using mozilla::dom::TabParent;
+using mozilla::dom::BrowserParent;
 
 //
 // To enable logging (see mozilla/Logging.h for full details):

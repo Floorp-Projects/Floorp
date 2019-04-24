@@ -32,7 +32,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIWidgetListener.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 
 namespace mozilla {
 namespace dom {
@@ -124,13 +124,13 @@ class nsXULWindow : public nsIBaseWindow,
                          int32_t aCY);
   NS_IMETHOD ExitModalLoop(nsresult aStatus);
   NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags,
-                                   nsITabParent* aOpeningTab,
+                                   nsIRemoteTab* aOpeningTab,
                                    mozIDOMWindowProxy* aOpenerWindow,
                                    nsIXULWindow** _retval);
   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags,
-                                    nsITabParent* aOpeningTab,
+                                    nsIRemoteTab* aOpeningTab,
                                     mozIDOMWindowProxy* aOpenerWindow,
-                                    uint64_t aNextTabParentId,
+                                    uint64_t aNextRemoteTabId,
                                     nsIXULWindow** _retval);
   NS_IMETHOD GetHasPrimaryContent(bool* aResult);
 
@@ -180,20 +180,20 @@ class nsXULWindow : public nsIBaseWindow,
   uint32_t mPersistentAttributesDirty;  // persistentAttributes
   uint32_t mPersistentAttributesMask;
   uint32_t mChromeFlags;
-  uint64_t mNextTabParentId;
+  uint64_t mNextRemoteTabId;
   nsString mTitle;
   nsIntRect mOpenerScreenRect;  // the screen rect of the opener
 
-  nsCOMPtr<nsITabParent> mPrimaryTabParent;
+  nsCOMPtr<nsIRemoteTab> mPrimaryBrowserParent;
 
  private:
-  // GetPrimaryTabParentSize is called from xpidl methods and we don't have a
-  // good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
+  // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have
+  // a good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
   // refcounted args other than "this", and the "this" uses seem ok.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  GetPrimaryTabParentSize(int32_t* aWidth, int32_t* aHeight);
+  GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight);
   nsresult GetPrimaryContentShellSize(int32_t* aWidth, int32_t* aHeight);
-  nsresult SetPrimaryTabParentSize(int32_t aWidth, int32_t aHeight);
+  nsresult SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)

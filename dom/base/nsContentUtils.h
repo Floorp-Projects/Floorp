@@ -147,9 +147,9 @@ class MessageBroadcaster;
 class NodeInfo;
 class ContentChild;
 class ContentParent;
-class TabChild;
+class BrowserChild;
 class Selection;
-class TabParent;
+class BrowserParent;
 }  // namespace dom
 
 namespace ipc {
@@ -202,8 +202,8 @@ struct EventNameMapping {
   bool mMaybeSpecialSVGorSMILEvent;
 };
 
-typedef bool (*CallOnRemoteChildFunction)(mozilla::dom::TabParent* aTabParent,
-                                          void* aArg);
+typedef bool (*CallOnRemoteChildFunction)(
+    mozilla::dom::BrowserParent* aBrowserParent, void* aArg);
 
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
@@ -2805,8 +2805,8 @@ class nsContentUtils {
 
   /*
    * Call nsPIDOMWindow::SetKeyboardIndicators all all remote children. This is
-   * in here rather than nsGlobalWindow because TabParent indirectly includes
-   * Windows headers which aren't allowed there.
+   * in here rather than nsGlobalWindow because BrowserParent indirectly
+   * includes Windows headers which aren't allowed there.
    */
   static void SetKeyboardIndicatorsOnRemoteChildren(
       nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowAccelerators,
@@ -2849,7 +2849,7 @@ class nsContentUtils {
       const nsContentPolicyType& aContentPolicyType,
       nsITransferable* aTransferable,
       mozilla::dom::ContentParent* aContentParent,
-      mozilla::dom::TabChild* aTabChild);
+      mozilla::dom::BrowserChild* aBrowserChild);
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
@@ -3331,7 +3331,7 @@ class nsContentUtils {
   static bool ContentIsLink(nsIContent* aContent);
 
   static already_AddRefed<mozilla::dom::ContentFrameMessageManager>
-  TryGetTabChildGlobal(nsISupports* aFrom);
+  TryGetBrowserChildGlobal(nsISupports* aFrom);
 
   // Get a serial number for a newly created inner or outer window.
   static uint32_t InnerOrOuterWindowCreated();

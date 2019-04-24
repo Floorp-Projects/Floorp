@@ -7,7 +7,7 @@
 #include "ContentProcessController.h"
 
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZChild.h"
 #include "nsIContentInlines.h"
@@ -18,7 +18,7 @@ namespace mozilla {
 namespace layers {
 
 ContentProcessController::ContentProcessController(
-    const RefPtr<dom::TabChild>& aBrowser)
+    const RefPtr<dom::BrowserChild>& aBrowser)
     : mBrowser(aBrowser) {
   MOZ_ASSERT(mBrowser);
 }

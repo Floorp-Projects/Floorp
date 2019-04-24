@@ -10,7 +10,7 @@
 #endif
 
 #include "PuppetWidget.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 
 /*
  * PluginWidgetProxy is a nsIWidget wrapper we hand around in plugin and layout
@@ -27,7 +27,7 @@ namespace widget {
 
 class PluginWidgetProxy final : public PuppetWidget {
  public:
-  explicit PluginWidgetProxy(dom::TabChild* aTabChild,
+  explicit PluginWidgetProxy(dom::BrowserChild* aBrowserChild,
                              mozilla::plugins::PluginWidgetChild* aChannel);
 
  protected:

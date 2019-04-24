@@ -38,8 +38,8 @@
 #include "nsTArray.h"         // for nsTArray, nsTArray_Impl
 #include "nsXULAppAPI.h"      // for XRE_GetIOMessageLoop, etc
 #include "FrameLayerBuilder.h"
-#include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/DebugOnly.h"
@@ -53,7 +53,7 @@
 #include "VsyncSource.h"
 
 using mozilla::Unused;
-using mozilla::dom::TabChildBase;
+using mozilla::dom::BrowserChildBase;
 using mozilla::gfx::GPUProcessManager;
 using mozilla::layers::LayerTransactionChild;
 
@@ -290,12 +290,12 @@ PLayerTransactionChild* CompositorBridgeChild::AllocPLayerTransactionChild(
   LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
 
-  TabChild* tabChild = TabChild::GetFrom(c->GetId());
+  BrowserChild* browserChild = BrowserChild::GetFrom(c->GetId());
 
   // Do the DOM Labeling.
-  if (tabChild) {
+  if (browserChild) {
     nsCOMPtr<nsIEventTarget> target =
-        tabChild->TabGroup()->EventTargetFor(TaskCategory::Other);
+        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other);
     SetEventTargetForActor(c, target);
     MOZ_ASSERT(c->GetActorEventTarget());
   }
@@ -317,7 +317,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvInvalidateLayers(
     MOZ_ASSERT(!aLayersId.IsValid());
     FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
   } else if (aLayersId.IsValid()) {
-    if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
+    if (dom::BrowserChild* child = dom::BrowserChild::GetFrom(aLayersId)) {
       child->InvalidateLayers();
     }
   }
@@ -510,7 +510,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
     RefPtr<LayerManager> m = mLayerManager;
     m->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
   } else if (aId.IsValid()) {
-    RefPtr<dom::TabChild> child = dom::TabChild::GetFrom(aId);
+    RefPtr<dom::BrowserChild> child = dom::BrowserChild::GetFrom(aId);
     if (child) {
       child->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
     }
@@ -631,47 +631,52 @@ uint32_t CompositorBridgeChild::SharedFrameMetricsData::GetAPZCId() {
 
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvRemotePaintIsReady() {
   // Used on the content thread, this bounces the message to the
-  // TabParent (via the TabChild) if the notification was previously requested.
-  // XPCOM gives a soup of compiler errors when trying to do_QueryReference
-  // so I'm using static_cast<>
+  // BrowserParent (via the BrowserChild) if the notification was previously
+  // requested. XPCOM gives a soup of compiler errors when trying to
+  // do_QueryReference so I'm using static_cast<>
   MOZ_LAYERS_LOG(
       ("[RemoteGfx] CompositorBridgeChild received RemotePaintIsReady"));
-  RefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
-  if (!iTabChildBase) {
+  RefPtr<nsISupports> iBrowserChildBase(do_QueryReferent(mWeakBrowserChild));
+  if (!iBrowserChildBase) {
     MOZ_LAYERS_LOG(
-        ("[RemoteGfx] Note: TabChild was released before RemotePaintIsReady. "
+        ("[RemoteGfx] Note: BrowserChild was released before "
+         "RemotePaintIsReady. "
          "MozAfterRemotePaint will not be sent to listener."));
     return IPC_OK();
   }
-  TabChildBase* tabChildBase = static_cast<TabChildBase*>(iTabChildBase.get());
-  TabChild* tabChild = static_cast<TabChild*>(tabChildBase);
-  MOZ_ASSERT(tabChild);
-  Unused << tabChild->SendRemotePaintIsReady();
-  mWeakTabChild = nullptr;
+  BrowserChildBase* browserChildBase =
+      static_cast<BrowserChildBase*>(iBrowserChildBase.get());
+  BrowserChild* browserChild = static_cast<BrowserChild*>(browserChildBase);
+  MOZ_ASSERT(browserChild);
+  Unused << browserChild->SendRemotePaintIsReady();
+  mWeakBrowserChild = nullptr;
   return IPC_OK();
 }
 
-void CompositorBridgeChild::RequestNotifyAfterRemotePaint(TabChild* aTabChild) {
-  MOZ_ASSERT(aTabChild,
-             "NULL TabChild not allowed in "
+void CompositorBridgeChild::RequestNotifyAfterRemotePaint(
+    BrowserChild* aBrowserChild) {
+  MOZ_ASSERT(aBrowserChild,
+             "NULL BrowserChild not allowed in "
              "CompositorBridgeChild::RequestNotifyAfterRemotePaint");
-  mWeakTabChild =
-      do_GetWeakReference(static_cast<dom::TabChildBase*>(aTabChild));
+  mWeakBrowserChild =
+      do_GetWeakReference(static_cast<dom::BrowserChildBase*>(aBrowserChild));
   if (!mCanSend) {
     return;
   }
   Unused << SendRequestNotifyAfterRemotePaint();
 }
 
-void CompositorBridgeChild::CancelNotifyAfterRemotePaint(TabChild* aTabChild) {
-  RefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
-  if (!iTabChildBase) {
+void CompositorBridgeChild::CancelNotifyAfterRemotePaint(
+    BrowserChild* aBrowserChild) {
+  RefPtr<nsISupports> iBrowserChildBase(do_QueryReferent(mWeakBrowserChild));
+  if (!iBrowserChildBase) {
     return;
   }
-  TabChildBase* tabChildBase = static_cast<TabChildBase*>(iTabChildBase.get());
-  TabChild* tabChild = static_cast<TabChild*>(tabChildBase);
-  if (tabChild == aTabChild) {
-    mWeakTabChild = nullptr;
+  BrowserChildBase* browserChildBase =
+      static_cast<BrowserChildBase*>(iBrowserChildBase.get());
+  BrowserChild* browserChild = static_cast<BrowserChild*>(browserChildBase);
+  if (browserChild == aBrowserChild) {
+    mWeakBrowserChild = nullptr;
   }
 }
 
@@ -802,8 +807,8 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvObserveLayersUpdate(
   MOZ_ASSERT(aLayersId.IsValid());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (RefPtr<dom::TabParent> tab =
-          dom::TabParent::GetTabParentFromLayersId(aLayersId)) {
+  if (RefPtr<dom::BrowserParent> tab =
+          dom::BrowserParent::GetBrowserParentFromLayersId(aLayersId)) {
     tab->LayerTreeUpdate(aEpoch, aActive);
   }
   return IPC_OK();
@@ -950,10 +955,10 @@ PAPZCTreeManagerChild* CompositorBridgeChild::AllocPAPZCTreeManagerChild(
   APZCTreeManagerChild* child = new APZCTreeManagerChild();
   child->AddIPDLReference();
   if (aLayersId.IsValid()) {
-    TabChild* tabChild = TabChild::GetFrom(aLayersId);
-    if (tabChild) {
+    BrowserChild* browserChild = BrowserChild::GetFrom(aLayersId);
+    if (browserChild) {
       SetEventTargetForActor(
-          child, tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+          child, browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
       MOZ_ASSERT(child->GetActorEventTarget());
     }
   }

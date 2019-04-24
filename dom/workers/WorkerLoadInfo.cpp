@@ -8,7 +8,7 @@
 #include "WorkerPrivate.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/LoadContext.h"
@@ -16,7 +16,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIProtocolHandler.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
@@ -384,7 +384,7 @@ WorkerLoadInfo::InterfaceRequestor::InterfaceRequestor(
   mLoadContext = new LoadContext(aPrincipal, baseContext);
 }
 
-void WorkerLoadInfo::InterfaceRequestor::MaybeAddTabChild(
+void WorkerLoadInfo::InterfaceRequestor::MaybeAddBrowserChild(
     nsILoadGroup* aLoadGroup) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -398,16 +398,18 @@ void WorkerLoadInfo::InterfaceRequestor::MaybeAddTabChild(
     return;
   }
 
-  nsCOMPtr<nsITabChild> tabChild;
-  callbacks->GetInterface(NS_GET_IID(nsITabChild), getter_AddRefs(tabChild));
-  if (!tabChild) {
+  nsCOMPtr<nsIBrowserChild> browserChild;
+  callbacks->GetInterface(NS_GET_IID(nsIBrowserChild),
+                          getter_AddRefs(browserChild));
+  if (!browserChild) {
     return;
   }
 
   // Use weak references to the tab child.  Holding a strong reference will
-  // not prevent an ActorDestroy() from being called on the TabChild.
-  // Therefore, we should let the TabChild destroy itself as soon as possible.
-  mTabChildList.AppendElement(do_GetWeakReference(tabChild));
+  // not prevent an ActorDestroy() from being called on the BrowserChild.
+  // Therefore, we should let the BrowserChild destroy itself as soon as
+  // possible.
+  mBrowserChildList.AppendElement(do_GetWeakReference(browserChild));
 }
 
 NS_IMETHODIMP
@@ -422,15 +424,15 @@ WorkerLoadInfo::InterfaceRequestor::GetInterface(const nsIID& aIID,
     return NS_OK;
   }
 
-  // If we still have an active nsITabChild, then return it.  Its possible,
-  // though, that all of the TabChild objects have been destroyed.  In that
+  // If we still have an active nsIBrowserChild, then return it.  Its possible,
+  // though, that all of the BrowserChild objects have been destroyed.  In that
   // case we return NS_NOINTERFACE.
-  if (aIID.Equals(NS_GET_IID(nsITabChild))) {
-    nsCOMPtr<nsITabChild> tabChild = GetAnyLiveTabChild();
-    if (!tabChild) {
+  if (aIID.Equals(NS_GET_IID(nsIBrowserChild))) {
+    nsCOMPtr<nsIBrowserChild> browserChild = GetAnyLiveBrowserChild();
+    if (!browserChild) {
       return NS_NOINTERFACE;
     }
-    tabChild.forget(aSink);
+    browserChild.forget(aSink);
     return NS_OK;
   }
 
@@ -444,23 +446,24 @@ WorkerLoadInfo::InterfaceRequestor::GetInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-already_AddRefed<nsITabChild>
-WorkerLoadInfo::InterfaceRequestor::GetAnyLiveTabChild() {
+already_AddRefed<nsIBrowserChild>
+WorkerLoadInfo::InterfaceRequestor::GetAnyLiveBrowserChild() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Search our list of known TabChild objects for one that still exists.
-  while (!mTabChildList.IsEmpty()) {
-    nsCOMPtr<nsITabChild> tabChild =
-        do_QueryReferent(mTabChildList.LastElement());
+  // Search our list of known BrowserChild objects for one that still exists.
+  while (!mBrowserChildList.IsEmpty()) {
+    nsCOMPtr<nsIBrowserChild> browserChild =
+        do_QueryReferent(mBrowserChildList.LastElement());
 
     // Does this tab child still exist?  If so, return it.  We are done.  If the
     // PBrowser actor is no longer useful, don't bother returning this tab.
-    if (tabChild && !static_cast<TabChild*>(tabChild.get())->IsDestroyed()) {
-      return tabChild.forget();
+    if (browserChild &&
+        !static_cast<BrowserChild*>(browserChild.get())->IsDestroyed()) {
+      return browserChild.forget();
     }
 
     // Otherwise remove the stale weak reference and check the next one
-    mTabChildList.RemoveLastElement();
+    mBrowserChildList.RemoveLastElement();
   }
 
   return nullptr;

@@ -111,38 +111,39 @@ class ContentProcessManager final {
   ContentParentId GetTabProcessId(const TabId& aTabId);
 
   /**
-   * Get all TabParents' Ids managed by the givent content process.
-   * Return empty array when TabParent couldn't be found via aChildCpId
+   * Get all BrowserParents' Ids managed by the givent content process.
+   * Return empty array when BrowserParent couldn't be found via aChildCpId
    */
-  nsTArray<TabId> GetTabParentsByProcessId(const ContentParentId& aChildCpId);
+  nsTArray<TabId> GetBrowserParentsByProcessId(
+      const ContentParentId& aChildCpId);
 
   /**
-   * Get the number of TabParents managed by the givent content process.
-   * Return 0 when TabParent couldn't be found via aChildCpId.
+   * Get the number of BrowserParents managed by the givent content process.
+   * Return 0 when BrowserParent couldn't be found via aChildCpId.
    */
-  uint32_t GetTabParentCountByProcessId(const ContentParentId& aChildCpId);
+  uint32_t GetBrowserParentCountByProcessId(const ContentParentId& aChildCpId);
 
   /**
-   * Get the TabParent by the given content process and tab id.
-   * Return nullptr when TabParent couldn't be found via aChildCpId
+   * Get the BrowserParent by the given content process and tab id.
+   * Return nullptr when BrowserParent couldn't be found via aChildCpId
    * and aChildTabId.
-   * (or probably because the TabParent is not in the chrome process)
+   * (or probably because the BrowserParent is not in the chrome process)
    */
-  already_AddRefed<TabParent> GetTabParentByProcessAndTabId(
+  already_AddRefed<BrowserParent> GetBrowserParentByProcessAndTabId(
       const ContentParentId& aChildCpId, const TabId& aChildTabId);
 
   /**
-   * Get the TabParent on top level by the given content process and tab id.
+   * Get the BrowserParent on top level by the given content process and tab id.
    *
-   *  This function return the TabParent belong to the chrome process,
-   *  called top-level TabParent here, by given aChildCpId and aChildTabId.
+   *  This function return the BrowserParent belong to the chrome process,
+   *  called top-level BrowserParent here, by given aChildCpId and aChildTabId.
    *  The given aChildCpId and aChildTabId are related to a content process
-   *  and a tab respectively. In nested-oop, the top-level TabParent isn't
+   *  and a tab respectively. In nested-oop, the top-level BrowserParent isn't
    *  always the opener tab of the given tab in content process. This function
-   *  will call GetTabParentByProcessAndTabId iteratively until the Tab returned
-   *  is belong to the chrome process.
+   *  will call GetBrowserParentByProcessAndTabId iteratively until the Tab
+   * returned is belong to the chrome process.
    */
-  already_AddRefed<TabParent> GetTopLevelTabParentByProcessAndTabId(
+  already_AddRefed<BrowserParent> GetTopLevelBrowserParentByProcessAndTabId(
       const ContentParentId& aChildCpId, const TabId& aChildTabId);
 
  private:

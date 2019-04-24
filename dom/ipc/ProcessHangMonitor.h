@@ -14,14 +14,14 @@
 #include "nsStringFwd.h"
 
 class nsIRunnable;
-class nsITabChild;
+class nsIBrowserChild;
 class nsIThread;
 
 namespace mozilla {
 
 namespace dom {
 class ContentParent;
-class TabParent;
+class BrowserParent;
 }  // namespace dom
 
 namespace layers {
@@ -49,7 +49,7 @@ class ProcessHangMonitor final : public nsIObserver {
   static void ClearHang();
 
   static void PaintWhileInterruptingJS(
-      PProcessHangMonitorParent* aParent, dom::TabParent* aTab,
+      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
       bool aForceRepaint, const layers::LayersObserverEpoch& aEpoch);
   static void ClearPaintWhileInterruptingJS(
       const layers::LayersObserverEpoch& aEpoch);
@@ -61,7 +61,7 @@ class ProcessHangMonitor final : public nsIObserver {
     StartDebugger,
     TerminateGlobal,
   };
-  SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
+  SlowScriptAction NotifySlowScript(nsIBrowserChild* aBrowserChild,
                                     const char* aFileName,
                                     const nsString& aAddonId);
 

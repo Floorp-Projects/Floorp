@@ -60,7 +60,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 using namespace mozilla;
 using dom::AutoNoJSAPI;
@@ -107,7 +107,7 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
       mPersistentAttributesDirty(0),
       mPersistentAttributesMask(0),
       mChromeFlags(aChromeFlags),
-      mNextTabParentId(0) {}
+      mNextRemoteTabId(0) {}
 
 nsXULWindow::~nsXULWindow() { Destroy(); }
 
@@ -289,29 +289,29 @@ NS_IMETHODIMP nsXULWindow::GetPrimaryContentShell(
 }
 
 NS_IMETHODIMP
-nsXULWindow::TabParentAdded(nsITabParent* aTab, bool aPrimary) {
+nsXULWindow::RemoteTabAdded(nsIRemoteTab* aTab, bool aPrimary) {
   if (aPrimary) {
-    mPrimaryTabParent = aTab;
+    mPrimaryBrowserParent = aTab;
     mPrimaryContentShell = nullptr;
-  } else if (mPrimaryTabParent == aTab) {
-    mPrimaryTabParent = nullptr;
+  } else if (mPrimaryBrowserParent == aTab) {
+    mPrimaryBrowserParent = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULWindow::TabParentRemoved(nsITabParent* aTab) {
-  if (aTab == mPrimaryTabParent) {
-    mPrimaryTabParent = nullptr;
+nsXULWindow::RemoteTabRemoved(nsIRemoteTab* aTab) {
+  if (aTab == mPrimaryBrowserParent) {
+    mPrimaryBrowserParent = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULWindow::GetPrimaryTabParent(nsITabParent** aTab) {
-  nsCOMPtr<nsITabParent> tab = mPrimaryTabParent;
+nsXULWindow::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
+  nsCOMPtr<nsIRemoteTab> tab = mPrimaryBrowserParent;
   tab.forget(aTab);
   return NS_OK;
 }
@@ -348,8 +348,9 @@ nsXULWindow::GetOuterToInnerWidthDifferenceInCSSPixels(uint32_t* aResult) {
 nsTArray<RefPtr<mozilla::LiveResizeListener>>
 nsXULWindow::GetLiveResizeListeners() {
   nsTArray<RefPtr<mozilla::LiveResizeListener>> listeners;
-  if (mPrimaryTabParent) {
-    TabParent* parent = static_cast<TabParent*>(mPrimaryTabParent.get());
+  if (mPrimaryBrowserParent) {
+    BrowserParent* parent =
+        static_cast<BrowserParent*>(mPrimaryBrowserParent.get());
     listeners.AppendElement(parent);
   }
   return listeners;
@@ -1807,7 +1808,7 @@ nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
     NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
     aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
     mPrimaryContentShell = aContentShell;
-    mPrimaryTabParent = nullptr;
+    mPrimaryBrowserParent = nullptr;
   } else {
     NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
     aContentShell->SetTreeOwner(mContentTreeOwner);
@@ -1826,19 +1827,19 @@ nsresult nsXULWindow::ContentShellRemoved(nsIDocShellTreeItem* aContentShell) {
 
 NS_IMETHODIMP
 nsXULWindow::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
-  if (mPrimaryTabParent) {
-    return GetPrimaryTabParentSize(aWidth, aHeight);
+  if (mPrimaryBrowserParent) {
+    return GetPrimaryRemoteTabSize(aWidth, aHeight);
   } else if (mPrimaryContentShell) {
     return GetPrimaryContentShellSize(aWidth, aHeight);
   }
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult nsXULWindow::GetPrimaryTabParentSize(int32_t* aWidth,
+nsresult nsXULWindow::GetPrimaryRemoteTabSize(int32_t* aWidth,
                                               int32_t* aHeight) {
-  TabParent* tabParent = TabParent::GetFrom(mPrimaryTabParent);
+  BrowserParent* browserParent = BrowserParent::GetFrom(mPrimaryBrowserParent);
   // Need strong ref, since Client* can run script.
-  nsCOMPtr<Element> element = tabParent->GetOwnerElement();
+  nsCOMPtr<Element> element = browserParent->GetOwnerElement();
   NS_ENSURE_STATE(element);
 
   *aWidth = element->ClientWidth();
@@ -1868,17 +1869,17 @@ nsresult nsXULWindow::GetPrimaryContentShellSize(int32_t* aWidth,
 
 NS_IMETHODIMP
 nsXULWindow::SetPrimaryContentSize(int32_t aWidth, int32_t aHeight) {
-  if (mPrimaryTabParent) {
-    return SetPrimaryTabParentSize(aWidth, aHeight);
+  if (mPrimaryBrowserParent) {
+    return SetPrimaryRemoteTabSize(aWidth, aHeight);
   } else if (mPrimaryContentShell) {
     return SizeShellTo(mPrimaryContentShell, aWidth, aHeight);
   }
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult nsXULWindow::SetPrimaryTabParentSize(int32_t aWidth, int32_t aHeight) {
+nsresult nsXULWindow::SetPrimaryRemoteTabSize(int32_t aWidth, int32_t aHeight) {
   int32_t shellWidth, shellHeight;
-  GetPrimaryTabParentSize(&shellWidth, &shellHeight);
+  GetPrimaryRemoteTabSize(&shellWidth, &shellHeight);
 
   double scale = 1.0;
   GetUnscaledDevicePixelsPerCSSPixel(&scale);
@@ -1927,25 +1928,25 @@ NS_IMETHODIMP nsXULWindow::ExitModalLoop(nsresult aStatus) {
 
 // top-level function to create a new window
 NS_IMETHODIMP nsXULWindow::CreateNewWindow(int32_t aChromeFlags,
-                                           nsITabParent* aOpeningTab,
+                                           nsIRemoteTab* aOpeningTab,
                                            mozIDOMWindowProxy* aOpener,
-                                           uint64_t aNextTabParentId,
+                                           uint64_t aNextRemoteTabId,
                                            nsIXULWindow** _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) {
     MOZ_RELEASE_ASSERT(
-        aNextTabParentId == 0,
-        "Unexpected next tab parent ID, should never have a non-zero "
-        "nextTabParentId when creating a new chrome window");
+        aNextRemoteTabId == 0,
+        "Unexpected next remote tab ID, should never have a non-zero "
+        "aNextRemoteTabId when creating a new chrome window");
     return CreateNewChromeWindow(aChromeFlags, aOpeningTab, aOpener, _retval);
   }
   return CreateNewContentWindow(aChromeFlags, aOpeningTab, aOpener,
-                                aNextTabParentId, _retval);
+                                aNextRemoteTabId, _retval);
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(int32_t aChromeFlags,
-                                                 nsITabParent* aOpeningTab,
+                                                 nsIRemoteTab* aOpeningTab,
                                                  mozIDOMWindowProxy* aOpener,
                                                  nsIXULWindow** _retval) {
   nsCOMPtr<nsIAppShellService> appShell(
@@ -1968,9 +1969,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(int32_t aChromeFlags,
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
-                                                  nsITabParent* aOpeningTab,
+                                                  nsIRemoteTab* aOpeningTab,
                                                   mozIDOMWindowProxy* aOpener,
-                                                  uint64_t aNextTabParentId,
+                                                  uint64_t aNextRemoteTabId,
                                                   nsIXULWindow** _retval) {
   nsCOMPtr<nsIAppShellService> appShell(
       do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
@@ -2012,8 +2013,8 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
   nsXULWindow* xulWin =
       static_cast<nsXULWindow*>(static_cast<nsIXULWindow*>(newWindow));
 
-  if (aNextTabParentId) {
-    xulWin->mNextTabParentId = aNextTabParentId;
+  if (aNextRemoteTabId) {
+    xulWin->mNextRemoteTabId = aNextRemoteTabId;
   }
 
   if (aOpener) {
@@ -2033,8 +2034,9 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
     SpinEventLoopUntil([&]() { return !xulWin->IsLocked(); });
   }
 
-  NS_ENSURE_STATE(xulWin->mPrimaryContentShell || xulWin->mPrimaryTabParent);
-  MOZ_ASSERT_IF(xulWin->mPrimaryContentShell, aNextTabParentId == 0);
+  NS_ENSURE_STATE(xulWin->mPrimaryContentShell ||
+                  xulWin->mPrimaryBrowserParent);
+  MOZ_ASSERT_IF(xulWin->mPrimaryContentShell, aNextRemoteTabId == 0);
 
   *_retval = newWindow;
   NS_ADDREF(*_retval);
@@ -2043,7 +2045,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
 }
 
 NS_IMETHODIMP nsXULWindow::GetHasPrimaryContent(bool* aResult) {
-  *aResult = mPrimaryTabParent || mPrimaryContentShell;
+  *aResult = mPrimaryBrowserParent || mPrimaryContentShell;
   return NS_OK;
 }
 
@@ -2344,7 +2346,7 @@ void nsXULWindow::SizeShell() {
   if (nsContentUtils::ShouldResistFingerprinting() &&
       windowType.EqualsLiteral("navigator:browser")) {
     // Once we've got primary content, force dimensions.
-    if (mPrimaryContentShell || mPrimaryTabParent) {
+    if (mPrimaryContentShell || mPrimaryBrowserParent) {
       ForceRoundedDimensions();
     }
     // Always avoid setting size/sizemode on this window.
@@ -2455,8 +2457,8 @@ nsresult nsXULWindow::GetTabCount(uint32_t* aResult) {
   return NS_OK;
 }
 
-nsresult nsXULWindow::GetNextTabParentId(uint64_t* aNextTabParentId) {
-  NS_ENSURE_ARG_POINTER(aNextTabParentId);
-  *aNextTabParentId = mNextTabParentId;
+nsresult nsXULWindow::GetNextRemoteTabId(uint64_t* aNextRemoteTabId) {
+  NS_ENSURE_ARG_POINTER(aNextRemoteTabId);
+  *aNextRemoteTabId = mNextRemoteTabId;
   return NS_OK;
 }

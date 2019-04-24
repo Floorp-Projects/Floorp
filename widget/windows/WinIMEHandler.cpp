@@ -432,7 +432,7 @@ bool IMEHandler::GetOpenState(nsWindow* aWindow) {
 void IMEHandler::OnDestroyWindow(nsWindow* aWindow) {
   // When focus is in remote process, but the window is being destroyed, we
   // need to clean up TSFTextStore here since NOTIFY_IME_OF_BLUR won't reach
-  // here because TabParent already lost the reference to the nsWindow when
+  // here because BrowserParent already lost the reference to the nsWindow when
   // it receives from the remote process.
   if (sFocusedWindow == aWindow) {
     MOZ_ASSERT(aWindow->GetInputContext().IsOriginContentProcess(),

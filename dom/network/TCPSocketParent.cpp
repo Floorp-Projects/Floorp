@@ -12,7 +12,7 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"

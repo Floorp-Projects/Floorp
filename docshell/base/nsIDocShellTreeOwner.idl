@@ -11,7 +11,7 @@
  */
 
 interface nsIDocShellTreeItem;
-interface nsITabParent;
+interface nsIRemoteTab;
 
 [scriptable, uuid(0e3dc4b1-4cea-4a37-af71-79f0afd07574)]
 interface nsIDocShellTreeOwner : nsISupports
@@ -42,14 +42,14 @@ interface nsIDocShellTreeOwner : nsISupports
 	*/
 	readonly attribute nsIDocShellTreeItem primaryContentShell;
 
-	void tabParentAdded(in nsITabParent aTab, in boolean aPrimary);
-	void tabParentRemoved(in nsITabParent aTab);
+	void remoteTabAdded(in nsIRemoteTab aTab, in boolean aPrimary);
+	void remoteTabRemoved(in nsIRemoteTab aTab);
 
 	/*
 	In multiprocess case we may not have primaryContentShell but
-	primaryTabParent.
+	primaryRemoteTab.
 	 */
-	readonly attribute nsITabParent primaryTabParent;
+	readonly attribute nsIRemoteTab primaryRemoteTab;
 
 	/*
 	Tells the tree owner to size its window or parent window in such a way
@@ -100,7 +100,7 @@ interface nsIDocShellTreeOwner : nsISupports
 
 	/*
 	Returns true if there is a primary content shell or a primary
-	tab parent.
+	remote tab.
 	*/
 	readonly attribute bool hasPrimaryContent;
 };
