@@ -631,20 +631,12 @@ static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland** aSurface) {
 
 void WindowSurfaceWayland::CalcRectScale(LayoutDeviceIntRect& aRect,
                                          int aScale) {
-  if (aRect.x & 0x1) {
-    aRect.width += 1;
-  }
   aRect.x = aRect.x / aScale;
-
-  if (aRect.y & 0x1) {
-    aRect.height += 1;
-  }
   aRect.y = aRect.y / aScale;
 
-  aRect.width =
-      (aRect.width & 0x1) ? aRect.width / aScale + 1 : aRect.width / aScale;
-  aRect.height =
-      (aRect.height & 0x1) ? aRect.height / aScale + 1 : aRect.height / aScale;
+  // We don't need exact damage size - just safely cover the round errors.
+  aRect.width = (aRect.width / aScale) + 2;
+  aRect.height = (aRect.height / aScale) + 2;
 }
 
 void WindowSurfaceWayland::CommitWaylandBuffer() {
