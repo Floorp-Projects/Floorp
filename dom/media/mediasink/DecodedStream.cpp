@@ -835,6 +835,7 @@ TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) const {
 
 void DecodedStream::NotifyOutput(int64_t aTime) {
   AssertOwnerThread();
+  MOZ_ASSERT(mLastOutputTime <= FromMicroseconds(aTime));
   mLastOutputTime = FromMicroseconds(aTime);
   auto currentTime = GetPosition();
 
