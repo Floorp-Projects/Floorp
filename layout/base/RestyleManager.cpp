@@ -833,7 +833,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
   LogicalSize lcbSize(frameWM, cbSize);
   ReflowInput reflowInput(aFrame->PresContext(), parentReflowInput, aFrame,
-                          availSize, &lcbSize);
+                          availSize, Some(lcbSize));
   nsSize computedSize(reflowInput.ComputedWidth(),
                       reflowInput.ComputedHeight());
   computedSize.width += reflowInput.ComputedPhysicalBorderPadding().LeftRight();

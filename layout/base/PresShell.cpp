@@ -9163,7 +9163,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     // was reflowed by its parent.
     nsMargin currentBorder = target->GetUsedBorder();
     nsMargin currentPadding = target->GetUsedPadding();
-    reflowInput.Init(mPresContext, nullptr, &currentBorder, &currentPadding);
+    reflowInput.Init(mPresContext, Nothing(), &currentBorder, &currentPadding);
   }
 
   // fix the computed height

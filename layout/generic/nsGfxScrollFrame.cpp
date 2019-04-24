@@ -535,9 +535,9 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   ReflowInput kidReflowInput(presContext, aState->mReflowInput,
                              mHelper.mScrolledFrame,
                              LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                             nullptr, ReflowInput::CALLER_WILL_INIT);
+                             Nothing(), ReflowInput::CALLER_WILL_INIT);
   const nsMargin physicalPadding = padding.GetPhysicalMargin(wm);
-  kidReflowInput.Init(presContext, nullptr, nullptr, &physicalPadding);
+  kidReflowInput.Init(presContext, Nothing(), nullptr, &physicalPadding);
   kidReflowInput.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowInput.mFlags.mAssumingVScrollbar = aAssumeVScroll;
   kidReflowInput.SetComputedBSize(computedBSize);
