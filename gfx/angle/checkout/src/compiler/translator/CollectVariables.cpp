@@ -554,7 +554,7 @@ void CollectVariablesTraverser::visitSymbol(TIntermSymbol *symbol)
                 else
                 {
                     ASSERT(mShaderType == GL_VERTEX_SHADER &&
-                           IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview));
+                           IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview2));
                 }
                 break;
             default:
@@ -766,7 +766,7 @@ Uniform CollectVariablesTraverser::recordUniform(const TIntermSymbol &variable) 
 {
     Uniform uniform;
     setCommonVariableProperties(variable.getType(), variable.variable(), &uniform);
-    uniform.binding   = variable.getType().getLayoutQualifier().binding;
+    uniform.binding = variable.getType().getLayoutQualifier().binding;
     uniform.imageUnitFormat =
         GetImageInternalFormatType(variable.getType().getLayoutQualifier().imageInternalFormat);
     uniform.location  = variable.getType().getLayoutQualifier().location;

@@ -1603,13 +1603,13 @@ constexpr const TVariable kVar_gl_ViewID_OVR(
     BuiltInId::gl_ViewID_OVR,
     BuiltInName::gl_ViewID_OVR,
     SymbolType::BuiltIn,
-    TExtension::OVR_multiview,
+    TExtension::OVR_multiview2,
     StaticType::Get<EbtUInt, EbpHigh, EvqViewIDOVR, 1, 1>());
 constexpr const TVariable kVar_gl_ViewID_OVRESSL1(
     BuiltInId::gl_ViewID_OVRESSL1,
     BuiltInName::gl_ViewID_OVR,
     SymbolType::BuiltIn,
-    TExtension::OVR_multiview,
+    TExtension::OVR_multiview2,
     StaticType::Get<EbtInt, EbpHigh, EvqViewIDOVR, 1, 1>());
 constexpr const TVariable kVar_gl_ViewportIndex(
     BuiltInId::gl_ViewportIndex,
@@ -16806,7 +16806,7 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                 }
             }
         }
-        if (mResources.OVR_multiview && mShaderType != GL_COMPUTE_SHADER)
+        if (mResources.OVR_multiview2 && mShaderType != GL_COMPUTE_SHADER)
         {
             switch (nameHash)
             {
@@ -17296,7 +17296,7 @@ const TSymbol *TSymbolTable::findBuiltIn(const ImmutableString &name, int shader
                 }
             }
         }
-        if (mResources.OVR_multiview && mShaderType != GL_COMPUTE_SHADER)
+        if (mResources.OVR_multiview2 && mShaderType != GL_COMPUTE_SHADER)
         {
             switch (nameHash)
             {

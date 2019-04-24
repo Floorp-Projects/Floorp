@@ -95,7 +95,7 @@ class FramebufferState final : angle::NonCopyable
     bool hasDepth() const;
     bool hasStencil() const;
 
-    GLenum getMultiviewLayout() const;
+    bool isMultiview() const;
 
     ANGLE_INLINE GLsizei getNumViews() const
     {
@@ -107,7 +107,6 @@ class FramebufferState final : angle::NonCopyable
         return attachment->getNumViews();
     }
 
-    const std::vector<Offset> *getViewportOffsets() const;
     GLint getBaseViewIndex() const;
 
     GLuint id() const { return mId; }
@@ -175,20 +174,13 @@ class Framebuffer final : public angle::ObserverInterface,
                        GLenum binding,
                        const ImageIndex &textureIndex,
                        FramebufferAttachmentObject *resource);
-    void setAttachmentMultiviewLayered(const Context *context,
-                                       GLenum type,
-                                       GLenum binding,
-                                       const ImageIndex &textureIndex,
-                                       FramebufferAttachmentObject *resource,
-                                       GLsizei numViews,
-                                       GLint baseViewIndex);
-    void setAttachmentMultiviewSideBySide(const Context *context,
-                                          GLenum type,
-                                          GLenum binding,
-                                          const ImageIndex &textureIndex,
-                                          FramebufferAttachmentObject *resource,
-                                          GLsizei numViews,
-                                          const GLint *viewportOffsets);
+    void setAttachmentMultiview(const Context *context,
+                                GLenum type,
+                                GLenum binding,
+                                const ImageIndex &textureIndex,
+                                FramebufferAttachmentObject *resource,
+                                GLsizei numViews,
+                                GLint baseViewIndex);
     void resetAttachment(const Context *context, GLenum binding);
 
     bool detachTexture(const Context *context, GLuint texture);
@@ -206,11 +198,10 @@ class Framebuffer final : public angle::ObserverInterface,
     const FramebufferAttachment *getFirstNonNullAttachment() const;
 
     const FramebufferAttachment *getAttachment(const Context *context, GLenum attachment) const;
-    GLenum getMultiviewLayout() const;
+    bool isMultiview() const;
     bool readDisallowedByMultiview() const;
     GLsizei getNumViews() const;
     GLint getBaseViewIndex() const;
-    const std::vector<Offset> *getViewportOffsets() const;
 
     size_t getDrawbufferStateCount() const;
     GLenum getDrawBufferState(size_t drawBuffer) const;
@@ -379,13 +370,11 @@ class Framebuffer final : public angle::ObserverInterface,
                        FramebufferAttachmentObject *resource,
                        GLsizei numViews,
                        GLuint baseViewIndex,
-                       GLenum multiviewLayout,
-                       const GLint *viewportOffsets);
+                       bool isMultiview);
     void commitWebGL1DepthStencilIfConsistent(const Context *context,
                                               GLsizei numViews,
                                               GLuint baseViewIndex,
-                                              GLenum multiviewLayout,
-                                              const GLint *viewportOffsets);
+                                              bool isMultiview);
     void setAttachmentImpl(const Context *context,
                            GLenum type,
                            GLenum binding,
@@ -393,8 +382,7 @@ class Framebuffer final : public angle::ObserverInterface,
                            FramebufferAttachmentObject *resource,
                            GLsizei numViews,
                            GLuint baseViewIndex,
-                           GLenum multiviewLayout,
-                           const GLint *viewportOffsets);
+                           bool isMultiview);
     void updateAttachment(const Context *context,
                           FramebufferAttachment *attachment,
                           size_t dirtyBit,
@@ -405,8 +393,7 @@ class Framebuffer final : public angle::ObserverInterface,
                           FramebufferAttachmentObject *resource,
                           GLsizei numViews,
                           GLuint baseViewIndex,
-                          GLenum multiviewLayout,
-                          const GLint *viewportOffsets);
+                          bool isMultiview);
 
     void markDrawAttachmentsInitialized(bool color, bool depth, bool stencil);
     void markBufferInitialized(GLenum bufferType, GLint bufferIndex);

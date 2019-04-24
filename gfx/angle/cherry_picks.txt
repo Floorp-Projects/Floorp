@@ -1,3 +1,30 @@
+commit f2915830eaf4b2970c37d4baecf0dc8030c85dba
+Author: Jan Beich <jbeich@FreeBSD.org>
+Date:   Tue Apr 23 16:25:18 2019 -0700
+
+    `environ` needs to be declared for (at least) FreeBSD.
+    
+    Declaring it unconditionally seems to build fine on all other platforms.
+    
+    Change-Id: I4c587d6ec47989f0d22588aca8883c4ef68f91c8
+
+commit 95eb4bfbc4a349b6c1274527dc3245212e5075e5
+Author: Mingyu Hu <mihu@microsoft.com>
+Date:   Tue Mar 12 14:27:40 2019 -0700
+
+    GL_ANGLE_multiview has been renamed to GL_OVR_multiview2.
+    
+    changes include:
+    1) GL_OVR_multiview to GL_OVR_multiview2 extension directive change
+    2) Removal of all references to side by side. We no longer support multiple views in a single 2DTexture. Only 2DTextureArray's are supported
+    3) WebGL 2 (ES3) is required for multiview
+    
+    Bug: angleproject:3341
+    Change-Id: Ie0c1d21d7610f8feebdb2e4d01c6947f57e69328
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/1552023
+    Commit-Queue: Rafael Cintron <rafael.cintron@microsoft.com>
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+
 commit 11fe1e4ce42be6e5136621b15ec163e0bbc0b7be
 Author: Jamie Madill <jmadill@chromium.org>
 Date:   Fri Apr 12 10:36:00 2019 -0400

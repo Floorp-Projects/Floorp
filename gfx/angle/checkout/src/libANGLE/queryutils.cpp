@@ -1077,28 +1077,13 @@ void QueryFramebufferAttachmentParameteriv(const Context *context,
             *params = attachmentObject->layer();
             break;
 
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_ANGLE:
+        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR:
             *params = attachmentObject->getNumViews();
             break;
 
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_MULTIVIEW_LAYOUT_ANGLE:
-            *params = static_cast<GLint>(attachmentObject->getMultiviewLayout());
-            break;
-
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_ANGLE:
+        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR:
             *params = attachmentObject->getBaseViewIndex();
             break;
-
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_VIEWPORT_OFFSETS_ANGLE:
-        {
-            const std::vector<Offset> &offsets = attachmentObject->getMultiviewViewportOffsets();
-            for (size_t i = 0u; i < offsets.size(); ++i)
-            {
-                params[i * 2u]      = offsets[i].x;
-                params[i * 2u + 1u] = offsets[i].y;
-            }
-        }
-        break;
 
         case GL_FRAMEBUFFER_ATTACHMENT_LAYERED_EXT:
             *params = attachmentObject->isLayered();

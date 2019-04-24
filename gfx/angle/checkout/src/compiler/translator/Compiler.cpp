@@ -565,7 +565,7 @@ bool TCompiler::checkAndSimplifyAST(TIntermBlock *root,
     }
 
     if ((compileOptions & SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW) &&
-        parseContext.isExtensionEnabled(TExtension::OVR_multiview) &&
+        parseContext.isExtensionEnabled(TExtension::OVR_multiview2) &&
         getShaderType() != GL_COMPUTE_SHADER)
     {
         DeclareAndInitBuiltinsForInstancedMultiview(root, mNumViews, mShaderType, compileOptions,
@@ -967,7 +967,7 @@ void TCompiler::setResourceString()
         << ":EXT_shader_framebuffer_fetch:" << mResources.EXT_shader_framebuffer_fetch
         << ":NV_shader_framebuffer_fetch:" << mResources.NV_shader_framebuffer_fetch
         << ":ARM_shader_framebuffer_fetch:" << mResources.ARM_shader_framebuffer_fetch
-        << ":OVR_multiview:" << mResources.OVR_multiview
+        << ":OVR_multiview2:" << mResources.OVR_multiview2
         << ":EXT_YUV_target:" << mResources.EXT_YUV_target
         << ":EXT_geometry_shader:" << mResources.EXT_geometry_shader
         << ":MaxVertexOutputVectors:" << mResources.MaxVertexOutputVectors
@@ -1094,7 +1094,7 @@ bool TCompiler::checkCallDepth()
 
     for (size_t i = 0; i < mCallDag.size(); i++)
     {
-        int depth    = 0;
+        int depth                     = 0;
         const CallDAG::Record &record = mCallDag.getRecordFromIndex(i);
 
         for (const int &calleeIndex : record.callees)
