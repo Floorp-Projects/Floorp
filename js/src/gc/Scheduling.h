@@ -309,8 +309,16 @@
 
 #include "mozilla/Atomics.h"
 
+#include "js/HashTable.h"
+
 namespace js {
+
+// This will eventually have internal reasons too.
+using JS::MemoryUse;
+
 namespace gc {
+
+struct Cell;
 
 enum TriggerKind { NoTrigger = 0, IncrementalTrigger, NonIncrementalTrigger };
 
@@ -638,6 +646,66 @@ class ZoneHeapThreshold {
                                         JSGCInvocationKind gckind,
                                         const GCSchedulingTunables& tunables,
                                         const AutoLockGC& lock);
+};
+
+// Counts memory associated with GC things in a zone.
+//
+// In debug builds, this records details of the cell the memory allocations is
+// associated with to check the correctness of the information provided. In opt
+// builds it's just a counter.
+class MemoryTracker {
+ public:
+#ifdef DEBUG
+  MemoryTracker();
+  ~MemoryTracker();
+  void fixupAfterMovingGC();
+#endif
+
+  void addMemory(Cell* cell, size_t nbytes, MemoryUse use) {
+#ifdef DEBUG
+    trackMemory(cell, nbytes, use);
+#endif
+    MOZ_ASSERT(bytes_ + nbytes >= bytes_);
+    bytes_ += nbytes;
+  }
+  void removeMemory(Cell* cell, size_t nbytes, MemoryUse use) {
+#ifdef DEBUG
+    untrackMemory(cell, nbytes, use);
+#endif
+    MOZ_ASSERT(bytes_ >= nbytes);
+    bytes_ -= nbytes;
+  }
+
+  size_t bytes() const { return bytes_; }
+
+  void adopt(MemoryTracker& other);
+
+ private:
+  mozilla::Atomic<size_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      bytes_;
+
+#ifdef DEBUG
+  void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+
+  struct Key {
+    Cell* cell;
+    MemoryUse use;
+  };
+
+  struct Hasher {
+    using Lookup = Key;
+    static HashNumber hash(const Lookup& l);
+    static bool match(const Key& key, const Lookup& l);
+    static void rekey(Key& k, const Key& newKey);
+  };
+
+  Mutex mutex;
+
+  using Map = HashMap<Key, size_t, Hasher, SystemAllocPolicy>;
+  Map map;
+#endif
 };
 
 }  // namespace gc
