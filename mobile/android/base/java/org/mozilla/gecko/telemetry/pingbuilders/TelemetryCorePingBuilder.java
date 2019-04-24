@@ -14,21 +14,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
-
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
-import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.util.DateUtil;
-import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.StringUtils;
 
 import java.text.DateFormat;
@@ -97,7 +96,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         final Calendar nowCalendar = Calendar.getInstance();
         final DateFormat pingCreationDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
-        payload.put(DEFAULT_BROWSER, MmaDelegate.isDefaultBrowser(context));
+        payload.put(DEFAULT_BROWSER, PackageUtil.isDefaultBrowser(context));
         payload.put(ARCHITECTURE, HardwareUtils.getRealAbi());
         payload.put(DEVICE, deviceDescriptor);
         payload.put(LOCALE, Locales.getLanguageTag(Locale.getDefault()));
