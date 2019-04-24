@@ -19,7 +19,11 @@
 #endif
 
 #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+#ifdef GL_ES
+#extension GL_EXT_blend_func_extended : require
+#else
 #extension GL_ARB_explicit_attrib_location : require
+#endif
 #endif
 
 #include base
