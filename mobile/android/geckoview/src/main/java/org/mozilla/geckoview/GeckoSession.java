@@ -401,7 +401,7 @@ public class GeckoSession implements Parcelable {
      *
      * Note: To receive messages from content scripts, the WebExtension needs
      * to explicitely allow it in {@link WebExtension#WebExtension} by setting
-     * {@link WebExtension#allowContentMessaging} to <code>true</code>.
+     * {@link WebExtension.Flags#ALLOW_CONTENT_MESSAGING}.
      *
      * @param delegate {@link WebExtension.MessageDelegate} that will receive
      *                 messages from this session.
