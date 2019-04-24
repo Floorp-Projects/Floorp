@@ -55,7 +55,7 @@ public class GeckoWebExecutor {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FETCH_FLAGS_NONE, FETCH_FLAGS_ANONYMOUS, FETCH_FLAGS_NO_REDIRECTS})
-    public @interface FetchFlags {};
+    /* package */ @interface FetchFlags {};
 
     /**
      * No special treatment.
@@ -100,7 +100,7 @@ public class GeckoWebExecutor {
      * Send the given {@link WebRequest} with specified flags.
      *
      * @param request A {@link WebRequest} instance
-     * @param flags The specified flags. One or more of {@link FetchFlags}.
+     * @param flags The specified flags. One or more of the {@link #FETCH_FLAGS_NONE FETCH_*} flags.
      * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
      *         request fails to complete, the {@link GeckoResult} will be completed exceptionally
      *         with a {@link WebRequestError}.
