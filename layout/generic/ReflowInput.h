@@ -352,14 +352,14 @@ struct SizeComputationInput {
 struct ReflowInput : public SizeComputationInput {
   // the reflow inputs are linked together. this is the pointer to the
   // parent's reflow input
-  const ReflowInput* mParentReflowInput;
+  const ReflowInput* mParentReflowInput = nullptr;
 
   // A non-owning pointer to the float manager associated with this area,
   // which points to the object owned by nsAutoFloatManager::mNew.
-  nsFloatManager* mFloatManager;
+  nsFloatManager* mFloatManager = nullptr;
 
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
-  nsLineLayout* mLineLayout;
+  nsLineLayout* mLineLayout = nullptr;
 
   // The appropriate reflow input for the containing block (for
   // percentage widths, etc.) of this reflow input's frame. It will be setup
@@ -647,14 +647,14 @@ struct ReflowInput : public SizeComputationInput {
 
   // a frame (e.g. nsTableCellFrame) which may need to generate a special
   // reflow for percent bsize calculations
-  nsIPercentBSizeObserver* mPercentBSizeObserver;
+  nsIPercentBSizeObserver* mPercentBSizeObserver = nullptr;
 
   // CSS margin collapsing sometimes requires us to reflow
   // optimistically assuming that margins collapse to see if clearance
   // is required. When we discover that clearance is required, we
   // store the frame in which clearance was discovered to the location
   // requested here.
-  nsIFrame** mDiscoveredClearance;
+  nsIFrame** mDiscoveredClearance = nullptr;
 
   ReflowInputFlags mFlags;
 
