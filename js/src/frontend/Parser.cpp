@@ -1116,11 +1116,9 @@ Maybe<EvalScope::Data*> ParserBase::newEvalScopeData(
   return NewEvalScopeData(cx_, scope, alloc_, pc_);
 }
 
-Maybe<FunctionScope::Data*> NewFunctionScopeData(JSContext* cx,
-                                                 ParseContext::Scope& scope,
-                                                 bool hasParameterExprs,
-                                                 LifoAlloc& alloc,
-                                                 ParseContext* pc) {
+Maybe<FunctionScope::Data*> NewFunctionScopeData(
+    JSContext* cx, ParseContext::Scope& scope, bool hasParameterExprs,
+    IsFieldInitializer isFieldInitializer, LifoAlloc& alloc, ParseContext* pc) {
   BindingNameVector positionalFormals(cx);
   BindingNameVector formals(cx);
   BindingNameVector vars(cx);
@@ -1200,6 +1198,8 @@ Maybe<FunctionScope::Data*> NewFunctionScopeData(JSContext* cx,
       return Nothing();
     }
 
+    bindings->isFieldInitializer = isFieldInitializer;
+
     // The ordering here is important. See comments in FunctionScope.
     InitializeBindingData(bindings, numBindings, positionalFormals,
                           &FunctionScope::Data::nonPositionalFormalStart,
@@ -1210,8 +1210,10 @@ Maybe<FunctionScope::Data*> NewFunctionScopeData(JSContext* cx,
 }
 
 Maybe<FunctionScope::Data*> ParserBase::newFunctionScopeData(
-    ParseContext::Scope& scope, bool hasParameterExprs) {
-  return NewFunctionScopeData(cx_, scope, hasParameterExprs, alloc_, pc_);
+    ParseContext::Scope& scope, bool hasParameterExprs,
+    IsFieldInitializer isFieldInitializer) {
+  return NewFunctionScopeData(cx_, scope, hasParameterExprs, isFieldInitializer,
+                              alloc_, pc_);
 }
 
 Maybe<VarScope::Data*> NewVarScopeData(JSContext* cx,
@@ -1614,7 +1616,8 @@ bool PerHandlerParser<ParseHandler>::finishFunctionScopes(
 
 template <>
 bool PerHandlerParser<FullParseHandler>::finishFunction(
-    bool isStandaloneFunction /* = false */) {
+    bool isStandaloneFunction /* = false */,
+    IsFieldInitializer isFieldInitializer /* = IsFieldInitializer::No */) {
   if (!finishFunctionScopes(isStandaloneFunction)) {
     return false;
   }
@@ -1631,8 +1634,8 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   {
-    Maybe<FunctionScope::Data*> bindings =
-        newFunctionScopeData(pc_->functionScope(), hasParameterExprs);
+    Maybe<FunctionScope::Data*> bindings = newFunctionScopeData(
+        pc_->functionScope(), hasParameterExprs, isFieldInitializer);
     if (!bindings) {
       return false;
     }
@@ -1653,7 +1656,8 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
 
 template <>
 bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
-    bool isStandaloneFunction /* = false */) {
+    bool isStandaloneFunction /* = false */,
+    IsFieldInitializer isFieldInitializer /* = IsFieldInitializer::Yes */) {
   // The LazyScript for a lazily parsed function needs to know its set of
   // free variables and inner functions so that when it is fully parsed, we
   // can skip over any already syntax parsed inner functions and still
@@ -7471,7 +7475,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   handler_.setFunctionBody(funNode, initializerBody);
 
-  if (!finishFunction()) {
+  if (!finishFunction(/* isStandaloneFunction = */ false,
+                      IsFieldInitializer::Yes)) {
     return null();
   }
 
