@@ -85,23 +85,15 @@ function templateHTML(options, html) {
   if (isPrerendered) {
     scripts.unshift(`${options.baseUrl}prerendered/static/activity-stream-initial-state.js`);
   }
-  const scriptTag = `
-    <script>
-// Don't directly load the following scripts as part of html to let the page
-// finish loading to render the content sooner.
-for (const src of ${JSON.stringify(scripts, null, 2)}) {
-  // These dynamically inserted scripts by default are async, but we need them
-  // to load in the desired order (i.e., bundle last).
-  const script = document.body.appendChild(document.createElement("script"));
-  script.async = false;
-  script.src = src;
-}
-    </script>`;
+
+  // Add spacing and script tags
+  const scriptRender = `\n${scripts.map(script => `    <script src="${script}"></script>`).join("\n")}`;
+
   return `<!doctype html>
 <html lang="${options.locale}" dir="${options.direction}">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; connect-src https:; img-src https: data: blob:; style-src 'unsafe-inline';">
     <title>${options.strings.newtab_page_title}</title>
     <link rel="icon" type="image/png" href="chrome://branding/content/icon32.png"/>
     <link rel="stylesheet" href="chrome://browser/content/contentSearchUI.css" />
@@ -109,9 +101,7 @@ for (const src of ${JSON.stringify(scripts, null, 2)}) {
   </head>
   <body class="activity-stream">
     <div id="root">${isPrerendered ? html : "<!-- Regular React Rendering -->"}</div>
-    <div id="snippets-container">
-      <div id="snippets"></div>
-    </div>${options.noscripts ? "" : scriptTag}
+    <div id="footer-snippets-container" />${options.noscripts ? "" : scriptRender}
   </body>
 </html>
 `;

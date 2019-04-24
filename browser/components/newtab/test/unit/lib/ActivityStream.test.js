@@ -16,7 +16,6 @@ describe("ActivityStream", () => {
     ({ActivityStream, PREFS_CONFIG} = injector({
       "lib/Store.jsm": {Store: FakeStore},
       "lib/AboutPreferences.jsm": {AboutPreferences: Fake},
-      "lib/ManualMigration.jsm": {ManualMigration: Fake},
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
       "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
       "lib/PrefsFeed.jsm": {PrefsFeed: Fake},
@@ -123,10 +122,6 @@ describe("ActivityStream", () => {
     });
     it("should create a AboutPreferences feed", () => {
       const feed = as.feeds.get("feeds.aboutpreferences")();
-      assert.instanceOf(feed, Fake);
-    });
-    it("should create a ManualMigration feed", () => {
-      const feed = as.feeds.get("feeds.migration")();
       assert.instanceOf(feed, Fake);
     });
     it("should create a SectionsFeed", () => {
