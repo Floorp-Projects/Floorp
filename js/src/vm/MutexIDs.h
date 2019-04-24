@@ -56,6 +56,7 @@
   _(WasmStreamStatus, 500)            \
   _(WasmRuntimeInstances, 500)        \
   _(WasmSignalInstallState, 500)      \
+  _(MemoryTracker, 500)               \
                                       \
   _(IcuTimeZoneStateMutex, 600)       \
   _(ThreadId, 600)                    \
