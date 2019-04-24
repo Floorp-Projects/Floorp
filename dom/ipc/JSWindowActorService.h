@@ -7,8 +7,13 @@
 #ifndef mozilla_dom_JSWindowActorService_h
 #define mozilla_dom_JSWindowActorService_h
 
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/ErrorResult.h"
+#include "nsIURI.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
