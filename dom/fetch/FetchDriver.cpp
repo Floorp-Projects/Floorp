@@ -1047,7 +1047,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   mResponse = BeginAndGetFilteredResponse(response, foundOpaqueRedirect);
   if (NS_WARN_IF(!mResponse)) {
     // Fail to generate a paddingInfo for opaque response.
-    MOZ_DIAGNOSTIC_ASSERT(mResponse->Type() == ResponseType::Opaque);
+    MOZ_DIAGNOSTIC_ASSERT(mRequest->GetResponseTainting() ==
+                              LoadTainting::Opaque &&
+                          !foundOpaqueRedirect);
     FailWithNetworkError(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
   }
