@@ -20,7 +20,6 @@ interface mozIDOMLocalization : nsISupports
   Promise formatValues(in Array<jsval> aKeys);
   Promise formatValue(in AString aId, [optional] in jsval aArgs);
 
-  Promise translateFragment(in Node aNode);
   Promise translateElements(in Array<Element> aElements);
 
   void connectRoot(in Element aElement);
