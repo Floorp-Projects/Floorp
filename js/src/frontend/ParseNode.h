@@ -145,6 +145,7 @@ class BigIntBox;
   F(SetThis, BinaryNode)                                                     \
   F(ImportMetaExpr, BinaryNode)                                              \
   F(CallImportExpr, BinaryNode)                                              \
+  F(InitExpr, BinaryNode)                                                    \
                                                                              \
   /* Unary operators. */                                                     \
   F(TypeOfNameExpr, UnaryNode)                                               \
@@ -185,7 +186,7 @@ class BigIntBox;
   F(PowExpr, ListNode)                                                       \
                                                                              \
   /* Assignment operators (= += -= etc.). */                                 \
-  /* ParseNode::isAssignment assumes all these are consecutive. */           \
+  /* AssignmentNode::test assumes all these are consecutive. */              \
   F(AssignExpr, AssignmentNode)                                              \
   F(AddAssignExpr, AssignmentNode)                                           \
   F(SubAssignExpr, AssignmentNode)                                           \
