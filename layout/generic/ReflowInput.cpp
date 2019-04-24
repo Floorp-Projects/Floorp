@@ -52,15 +52,7 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
                          const LogicalSize& aAvailableSpace, uint32_t aFlags)
-    : SizeComputationInput(aFrame, aRenderingContext),
-      // will be setup properly later in InitCBReflowInput
-      mCBReflowInput(nullptr),
-      mBlockDelta(0),
-      mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
-      mAvailableWidth(0),
-      mAvailableHeight(0),
-      mContainingBlockSize(mWritingMode),
-      mReflowDepth(0) {
+    : SizeComputationInput(aFrame, aRenderingContext) {
   MOZ_ASSERT(aRenderingContext, "no rendering context");
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
@@ -180,13 +172,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const LogicalSize* aContainingBlockSize,
                          uint32_t aFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
-      // will be setup properly later in InitCBReflowInput
-      mCBReflowInput(nullptr),
-      mBlockDelta(0),
-      mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
-      mAvailableWidth(0),
-      mAvailableHeight(0),
-      mContainingBlockSize(mWritingMode),
       mFlags(aParentReflowInput.mFlags),
       mReflowDepth(aParentReflowInput.mReflowDepth + 1) {
   MOZ_ASSERT(aPresContext, "no pres context");
