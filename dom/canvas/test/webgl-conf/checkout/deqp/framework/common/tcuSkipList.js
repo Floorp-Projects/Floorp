@@ -95,6 +95,9 @@ goog.scope(function() {
         // Please see https://android.googlesource.com/platform/external/deqp/+/master/android/cts/master/src/gles3-driver-issues.txt
         _skip("texture_functions.textureprojlodoffset.isampler3d_vertex");
         _skip("texture_functions.texturegrad.samplercubeshadow*");
+        // Please see https://android.googlesource.com/platform/external/deqp/+/40ff528%5E%21/
+        // and https://bugs.chromium.org/p/angleproject/issues/detail?id=3094
+        _skip("texture_functions.texturelodoffset.sampler3d_float_vertex");
 
         // https://android.googlesource.com/platform/external/deqp/+/0c1f83aee4709eef7ef2a3edd384f9c192f476fd/android/cts/master/src/gles3-hw-issues.txt#801
         _setReason("Tricky blit rects can result in imperfect copies on some HW.");
@@ -117,13 +120,6 @@ goog.scope(function() {
         _skip("blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_dst_x");
         _skip("blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_x");
         _skip("blit.rect.nearest_consistency_out_of_bounds_min_reverse_src_y");
-
-        _setReason("Tricky blit rects can result in imperfect copies on Mac Intel driver.");
-        // crbug.com/658724
-        // deqp/functional/gles3/framebufferblit/rect_03.html
-        _skip("blit.rect.nearest_consistency_mag_reverse_src_dst_y");
-        // deqp/functional/gles3/framebufferblit/rect_04.html
-        _skip("blit.rect.nearest_consistency_min_reverse_src_dst_y");
 
         // https://android.googlesource.com/platform/external/deqp/+/0c1f83aee4709eef7ef2a3edd384f9c192f476fd/android/cts/master/src/gles3-driver-issues.txt#381
         _setReason("Tricky blit rects can result in imperfect copies on some drivers.");
@@ -210,6 +206,25 @@ goog.scope(function() {
         // Also see conformance2/rendering/blitframebuffer-stencil-only.html for 2.0.1 test.
         _skip("blit.depth_stencil.depth24_stencil8_scale");
         _skip("blit.depth_stencil.depth24_stencil8_stencil_only");
+
+        _setReason("Removed from native dEQP mustpass. Not passable on Adreno.");
+        // These tests have been skipped in native dEQP since 2015:
+        // https://android.googlesource.com/platform/external/deqp/+/ea026b329e6bf73f109cda914c90f08d5f7a5b8d
+        // They do not pass on Android/Qualcomm (Google Pixel 1, Pixel 3).
+        // It's not clear if the tests or the hardware are out-of-spec, but there's nothing we can do about it right now.
+        // See also: crbug.com/695679
+        _skip("derivate.dfdy.fbo_float.float_highp");
+        _skip("derivate.dfdy.fbo_float.vec2_highp");
+        _skip("derivate.dfdy.fbo_float.vec3_highp");
+        _skip("derivate.dfdy.fbo_float.vec4_highp");
+        _skip("derivate.dfdy.nicest.fbo_float.float_highp");
+        _skip("derivate.dfdy.nicest.fbo_float.vec2_highp");
+        _skip("derivate.dfdy.nicest.fbo_float.vec3_highp");
+        _skip("derivate.dfdy.nicest.fbo_float.vec4_highp");
+        _skip("derivate.dfdy.fastest.fbo_float.float_highp");
+        _skip("derivate.dfdy.fastest.fbo_float.vec2_highp");
+        _skip("derivate.dfdy.fastest.fbo_float.vec3_highp");
+        _skip("derivate.dfdy.fastest.fbo_float.vec4_highp");
     } // if (!runSkippedTests)
 
     /*

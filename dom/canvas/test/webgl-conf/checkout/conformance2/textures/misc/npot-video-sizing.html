@@ -134,6 +134,7 @@ function runNextVideo() {
     debug("");
     debug("testing: " + videoInfo.type);
     video = document.createElement("video");
+    video.muted = true;
     var canPlay = true;
     if (!video.canPlayType) {
         testFailed("video.canPlayType required method missing");

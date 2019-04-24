@@ -359,6 +359,7 @@ randomImage = function(w,h) {
     img.getContext('2d').fillRect(0,0,w,h);
   } else if (r < 0.5) {
     img = document.createElement('video');
+    img.muted = true;
     img.width = w; img.height = h;
   } else if (r < 0.75) {
     img = document.createElement('img');

@@ -33,21 +33,31 @@
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
 <script src="../../js/tests/oes-texture-float-and-half-float-linear.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
 <script>
 "use strict";
-function testPrologue(gl, extensionTypeName) {
-    if (!gl.getExtension(extensionTypeName)) {
-        testPassed("No " + extensionTypeName + " support -- this is legal");
-        return false;
+
+description("Test OES_texture_float_linear, if available.");
+
+const wtu = WebGLTestUtils;
+const gl = wtu.create3DContext();
+
+(function() {
+    if (!(gl instanceof WebGL2RenderingContext)) {
+        if (!gl.getExtension("OES_texture_float")) {
+            testPassed("No OES_texture_float support -- this is legal");
+            return;
+        }
     }
-    testPassed("Successfully enabled " + extensionTypeName + " extension");
-    return true;
-}
+    testTexLinear(gl, "OES_texture_float_linear", "RGBA32F", "FLOAT");
+})();
+
+debug("");
+const successfullyParsed = true;
 </script>
-</head>
-<body onload='generateTest("OES_texture_float", "OES_texture_float_linear", "FLOAT", testPrologue)()'>
-<div id="description"></div>
-<canvas id="canvas" style="width: 50px; height: 50px;"> </canvas>
-<div id="console"></div>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

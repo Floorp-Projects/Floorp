@@ -47,4 +47,5 @@ texture-transparent-pixels-initialized.html
 --min-version 1.0.2 mipmap-fbo.html
 --min-version 1.0.3 --max-version 1.9.9 texture-fakeblack.html
 --min-version 1.0.3 texture-draw-with-2d-and-cube.html
+--min-version 1.0.4 texture-video-transparent.html
 --min-version 1.0.4 texture-with-flip-y-and-premultiply-alpha.html

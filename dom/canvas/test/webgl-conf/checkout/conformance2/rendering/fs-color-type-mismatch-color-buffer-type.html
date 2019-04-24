@@ -108,7 +108,7 @@ if (!gl) {
 function check_type_match() {
     gl.useProgram(program0);
     rendering([gl.COLOR_ATTACHMENT0, gl.NONE], gl.NO_ERROR);
-    rendering([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1], gl.NO_ERROR);
+    rendering([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1], gl.INVALID_OPERATION);
 
     gl.useProgram(program1);
     rendering([gl.COLOR_ATTACHMENT0, gl.NONE], gl.NO_ERROR);
