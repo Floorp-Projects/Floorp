@@ -32,12 +32,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsGridContainerFrame.h"
 
-#ifdef DEBUG
-#  undef NOISY_VERTICAL_ALIGN
-#else
-#  undef NOISY_VERTICAL_ALIGN
-#endif
-
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
