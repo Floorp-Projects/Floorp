@@ -35,9 +35,7 @@ key2 = Value for <a>Key 2<a/>.
     const elem2 = document.querySelector("#elem2");
 
     ok(elem1.textContent.includes("Value for"));
-    // This is a limitation of us using Node.localize API
-    // Documenting it here to make sure we notice when we fix it
-    is(elem1.getAttribute("title"), "Old Translation");
+    ok(!elem1.hasAttribute("title"));
 
     ok(elem2.textContent.includes("Value for"));
     ok(!elem2.hasAttribute("title"));
