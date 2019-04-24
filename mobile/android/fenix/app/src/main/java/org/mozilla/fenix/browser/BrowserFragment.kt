@@ -298,6 +298,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     @Suppress("ComplexMethod")
     override fun onStart() {
         super.onStart()
+        setToolbarBehavior(false)
         sessionObserver = subscribeToSession()
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
