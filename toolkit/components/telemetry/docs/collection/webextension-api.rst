@@ -118,7 +118,7 @@ Record an event in Telemetry. Throws when trying to record an unknown event.
 * ``category`` - *(string)* The category name.
 * ``method`` - *(string)* The method name.
 * ``object`` - *(string)* The object name.
-* ``value`` - *(optional, integer)* An optional string value to record.
+* ``value`` - *(optional, string)* An optional string value to record.
 * ``extra`` - *(optional, object)* An optional object of the form (string -> string). It should only contain registered extra keys.
 
 ``registerScalars``
