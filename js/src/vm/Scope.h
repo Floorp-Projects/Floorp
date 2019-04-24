@@ -82,6 +82,8 @@ enum class ScopeKind : uint8_t {
   WasmFunction
 };
 
+enum class IsFieldInitializer : bool { No, Yes };
+
 static inline bool ScopeKindIsCatch(ScopeKind kind) {
   return kind == ScopeKind::SimpleCatch || kind == ScopeKind::Catch;
 }
@@ -521,6 +523,8 @@ class FunctionScope : public Scope {
     // bindings.
     bool hasParameterExprs = false;
 
+    IsFieldInitializer isFieldInitializer = IsFieldInitializer::No;
+
     // Bindings are sorted by kind in both frames and environments.
     //
     // Positional formal parameter names are those that are not
@@ -579,12 +583,10 @@ class FunctionScope : public Scope {
                        HandleScope enclosing, MutableHandleScope scope);
 
  private:
-  static FunctionScope* createWithData(JSContext* cx,
-                                       MutableHandle<UniquePtr<Data>> data,
-                                       bool hasParameterExprs,
-                                       bool needsEnvironment,
-                                       HandleFunction fun,
-                                       HandleScope enclosing);
+  static FunctionScope* createWithData(
+      JSContext* cx, MutableHandle<UniquePtr<Data>> data,
+      bool hasParameterExprs, IsFieldInitializer isFieldInitializer,
+      bool needsEnvironment, HandleFunction fun, HandleScope enclosing);
 
   Data& data() { return *static_cast<Data*>(data_); }
 
@@ -598,6 +600,10 @@ class FunctionScope : public Scope {
   JSScript* script() const;
 
   bool hasParameterExprs() const { return data().hasParameterExprs; }
+
+  IsFieldInitializer isFieldInitializer() const {
+    return data().isFieldInitializer;
+  }
 
   uint32_t numPositionalFormalParameters() const {
     return data().nonPositionalFormalStart;
