@@ -364,6 +364,19 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
   }
 
+  RefPtr<FlushPromise> Flush() override {
+    mFirstDemuxedSampleTime.reset();
+    return RemoteDataDecoder::Flush();
+  }
+
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override {
+    if (mFirstDemuxedSampleTime.isNothing()) {
+      MOZ_ASSERT(aSample->mTime.IsValid());
+      mFirstDemuxedSampleTime.emplace(aSample->mTime);
+    }
+    return RemoteDataDecoder::Decode(aSample);
+  }
+
  private:
   class CallbacksSupport final : public JavaCallbacksSupport {
    public:
@@ -408,6 +421,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     RemoteAudioDecoder* mDecoder;
   };
 
+  bool IsSampleTimeSmallerThanFirstDemuxedSampleTime(int64_t aTime) const {
+    return TimeUnit::FromMicroseconds(aTime) < mFirstDemuxedSampleTime.ref();
+  }
+
   // Param and LocalRef are only valid for the duration of a JNI method call.
   // Use GlobalRef as the parameter type to keep the Java object referenced
   // until running.
@@ -448,7 +465,8 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     int32_t size;
     ok &= NS_SUCCEEDED(info->Size(&size));
 
-    if (!ok) {
+    if (!ok ||
+        IsSampleTimeSmallerThanFirstDemuxedSampleTime(presentationTimeUs)) {
       Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
@@ -500,6 +518,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 
   int32_t mOutputChannels;
   int32_t mOutputSampleRate;
+  Maybe<TimeUnit> mFirstDemuxedSampleTime;
 };
 
 already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateAudioDecoder(
