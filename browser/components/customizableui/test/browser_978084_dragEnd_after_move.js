@@ -40,7 +40,7 @@ add_task(async function() {
   await endCustomizing();
 });
 
-add_task(async function asyncCleanup() {
+registerCleanupFunction(async function asyncCleanup() {
   await endCustomizing();
-  await resetCustomization();
+  removeCustomToolbars();
 });

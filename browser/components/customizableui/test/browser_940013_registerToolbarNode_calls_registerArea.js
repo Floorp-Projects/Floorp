@@ -33,11 +33,7 @@ add_task(async function() {
   btn.remove();
 });
 
-add_task(async function asyncCleanup() {
-  await resetCustomization();
-});
-
-function cleanup() {
+async function cleanup() {
   let toolbar = document.getElementById(kToolbarId);
   if (toolbar) {
     toolbar.remove();
@@ -47,4 +43,5 @@ function cleanup() {
   if (btn) {
     btn.remove();
   }
+  await resetCustomization();
 }
