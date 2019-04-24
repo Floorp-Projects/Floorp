@@ -1817,7 +1817,7 @@ var Events = {
     setHasData("events-section", hasData);
     if (Object.keys(events).length > 0) {
       const headings = [
-        "about-telemetry-timestamp-header",
+        "about-telemetry-time-stamp-header",
         "about-telemetry-category-header",
         "about-telemetry-method-header",
         "about-telemetry-object-header",
