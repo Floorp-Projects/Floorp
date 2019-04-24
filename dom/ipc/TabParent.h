@@ -192,7 +192,8 @@ class TabParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
-      const nsString& aFeatures, BrowserFrameOpenWindowResolver&& aResolve);
+      bool aForceNoReferrer, const nsString& aFeatures,
+      BrowserFrameOpenWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,

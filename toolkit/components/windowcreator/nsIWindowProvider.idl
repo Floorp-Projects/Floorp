@@ -106,6 +106,7 @@ interface nsIWindowProvider : nsISupports
                                    in AString aName,
                                    in AUTF8String aFeatures,
                                    in boolean aForceNoOpener,
+                                   in boolean aForceNoReferrer,
                                    in nsDocShellLoadStatePtr aLoadState,
                                    out boolean aWindowIsNew);
 };
