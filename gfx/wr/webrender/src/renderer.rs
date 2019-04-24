@@ -2018,13 +2018,17 @@ impl Renderer {
             options.allow_pixel_local_storage_support,
         );
 
-        let ext_dual_source_blending =
+        let supports_dual_source_blending = match gl_type {
+            gl::GlType::Gl => device.supports_extension("GL_ARB_blend_func_extended") &&
+                device.supports_extension("GL_ARB_explicit_attrib_location"),
+            gl::GlType::Gles => device.supports_extension("GL_EXT_blend_func_extended"),
+        };
+        let use_dual_source_blending =
+            supports_dual_source_blending &&
             !options.disable_dual_source_blending &&
             // If using pixel local storage, subpixel AA isn't supported (we disable it on all
             // mobile devices explicitly anyway).
-            !device.get_capabilities().supports_pixel_local_storage &&
-            device.supports_extension("GL_ARB_blend_func_extended") &&
-            device.supports_extension("GL_ARB_explicit_attrib_location");
+            !device.get_capabilities().supports_pixel_local_storage;
 
         // 512 is the minimum that the texture cache can work with.
         const MIN_TEXTURE_SIZE: i32 = 512;
@@ -2195,7 +2199,7 @@ impl Renderer {
         let config = FrameBuilderConfig {
             default_font_render_mode,
             dual_source_blending_is_enabled: true,
-            dual_source_blending_is_supported: ext_dual_source_blending,
+            dual_source_blending_is_supported: use_dual_source_blending,
             chase_primitive: options.chase_primitive,
             enable_picture_caching: options.enable_picture_caching,
             testing: options.testing,
