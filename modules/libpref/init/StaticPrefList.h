@@ -1138,6 +1138,21 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Pref to control whether arrow-panel animations are enabled or not.
+// Transitions are currently disabled on Linux due to rendering issues on
+// certain configurations.
+#ifdef MOZ_WIDGET_GTK
+#define PREF_VALUE false
+#else
+#define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "xul.panel-animations.enabled",
+   xul_panel_animations_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 //---------------------------------------------------------------------------
 // JavaScript prefs
 //---------------------------------------------------------------------------

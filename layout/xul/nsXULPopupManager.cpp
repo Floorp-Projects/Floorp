@@ -1438,11 +1438,9 @@ void nsXULPopupManager::FirePopupHidingEvent(
       // transition may still occur either way, but the view will be hidden and
       // you won't be able to see it. If there is a next popup, indicating that
       // mutliple popups are rolling up, don't wait and hide the popup right
-      // away since the effect would likely be undesirable. Transitions are
-      // currently disabled on Linux due to rendering issues on certain
-      // configurations.
-#ifndef MOZ_WIDGET_GTK
-      if (!aNextPopup && aPopup->IsElement() &&
+      // away since the effect would likely be undesirable.
+      if (StaticPrefs::xul_panel_animations_enabled() &&
+          !aNextPopup && aPopup->IsElement() &&
           aPopup->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
         // If animate="false" then don't transition at all. If animate="cancel",
         // only show the transition if cancelling the popup or rolling up.
@@ -1469,7 +1467,6 @@ void nsXULPopupManager::FirePopupHidingEvent(
           }
         }
       }
-#endif
 
       HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup, aPopupType,
                         aDeselectMenu);
