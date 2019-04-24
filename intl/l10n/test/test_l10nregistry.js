@@ -459,3 +459,31 @@ add_task(async function test_hasSource() {
   equal(L10nRegistry.hasSource("app"), true, "hasSource returns true after registering a source");
   L10nRegistry.sources.clear();
 });
+
+/**
+ * This test verifies that we handle correctly a scenario where a source
+ * is being removed while the iterator operates.
+ */
+add_task(async function test_remove_source_mid_iter_cycle() {
+  let oneSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
+  L10nRegistry.registerSource(oneSource);
+
+  let secondSource = new FileSource("app", ["pl"], "./app/data/locales/{locale}/");
+  L10nRegistry.registerSource(secondSource);
+
+  fs = {
+    "./platform/data/locales/en-US/test.ftl": "key = platform value",
+    "./app/data/locales/pl/test.ftl": "key = app value",
+  };
+
+  let bundles = L10nRegistry.generateBundles(["en-US", "pl"], ["test.ftl"]);
+
+  let bundle0 = await bundles.next();
+
+  L10nRegistry.removeSource("app");
+
+  equal((await bundles.next()).done, true);
+
+  // cleanup
+  L10nRegistry.sources.clear();
+});

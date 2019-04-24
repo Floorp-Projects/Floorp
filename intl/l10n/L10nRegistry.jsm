@@ -312,7 +312,8 @@ async function* generateResourceSetsForLocale(locale, sourcesOrder, resourceIds,
     // loop, but if it's somewhere in the middle, we can
     // safely bail from the whole branch.
     for (let [idx, sourceName] of order.entries()) {
-      if (L10nRegistry.sources.get(sourceName).hasFile(locale, resourceIds[idx]) === false) {
+      const source = L10nRegistry.sources.get(sourceName);
+      if (!source || source.hasFile(locale, resourceIds[idx]) === false) {
         if (idx === order.length - 1) {
           continue;
         } else {
@@ -371,7 +372,8 @@ function* generateResourceSetsForLocaleSync(locale, sourcesOrder, resourceIds, r
     // loop, but if it's somewhere in the middle, we can
     // safely bail from the whole branch.
     for (let [idx, sourceName] of order.entries()) {
-      if (L10nRegistry.sources.get(sourceName).hasFile(locale, resourceIds[idx]) === false) {
+      const source = L10nRegistry.sources.get(sourceName);
+      if (!source || source.hasFile(locale, resourceIds[idx]) === false) {
         if (idx === order.length - 1) {
           continue;
         } else {
@@ -526,9 +528,13 @@ const PSEUDO_STRATEGIES = {
  * @param {Array} resourceIds
  * @returns {Promise<FluentBundle>}
  */
-async function generateResourceSet(locale, sourcesOrder, resourceIds) {
+function generateResourceSet(locale, sourcesOrder, resourceIds) {
   return Promise.all(resourceIds.map((resourceId, i) => {
-    return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId);
+    const source = L10nRegistry.sources.get(sourcesOrder[i]);
+    if (!source) {
+      return false;
+    }
+    return source.fetchFile(locale, resourceId);
   }));
 }
 
@@ -544,7 +550,11 @@ async function generateResourceSet(locale, sourcesOrder, resourceIds) {
  */
 function generateResourceSetSync(locale, sourcesOrder, resourceIds) {
   return resourceIds.map((resourceId, i) => {
-    return L10nRegistry.sources.get(sourcesOrder[i]).fetchFile(locale, resourceId, {sync: true});
+    const source = L10nRegistry.sources.get(sourcesOrder[i]);
+    if (!source) {
+      return false;
+    }
+    return source.fetchFile(locale, resourceId, {sync: true});
   });
 }
 
