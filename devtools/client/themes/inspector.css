@@ -69,6 +69,11 @@ window {
   background-image: url("chrome://devtools/skin/images/open-3-pane.svg");
 }
 
+/* Flip the icon horizontally when in RTL mode */
+#inspector-splitter-box .sidebar-toggle:dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .devtools-toolbar {
   background-color: var(--theme-body-background);
   display: flex;
