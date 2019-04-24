@@ -9,7 +9,7 @@ To build it, put this in your [mozconfig]:
 This exposes a `--remote-debugger` flag you can use to start the
 remote agent:
 
-	% ./mach run --setpref "browser.fission.simulate=true" -- --remote-debugger
+	% ./mach run --remote-debugger
 
 When you make changes to the XPCOM component you need to rebuild
 in order for the changes to take effect.  The most efficient way to
