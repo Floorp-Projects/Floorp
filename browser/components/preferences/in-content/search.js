@@ -238,7 +238,7 @@ var gSearchPane = {
       case "blur":
         if (aEvent.target.id == "engineList" &&
             aEvent.target.inputField == document.getBindingParent(aEvent.originalTarget)) {
-          gSearchPane.onInputBlur();
+          gSearchPane.onInputBlur(aEvent);
         }
         break;
     }

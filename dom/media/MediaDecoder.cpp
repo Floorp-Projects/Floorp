@@ -248,7 +248,10 @@ void MediaDecoder::AddOutputStream(DOMMediaStream* aStream) {
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
   mDecoderStateMachine->EnsureOutputStreamManager(
-      aStream->GetInputStream()->Graph(), ToMaybe(mInfo.get()));
+      aStream->GetInputStream()->Graph());
+  if (mInfo) {
+    mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
+  }
   mDecoderStateMachine->AddOutputStream(aStream);
 }
 
@@ -656,6 +659,7 @@ void MediaDecoder::MetadataLoaded(
       aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = aInfo.release();
   GetOwner()->ConstructMediaTracks(mInfo);
+  mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
 
   // Make sure the element and the frame (if any) are told about
   // our new size.

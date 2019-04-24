@@ -50,7 +50,7 @@ char16_t* StringBuffer::stealChars() {
 bool StringBuffer::inflateChars() {
   MOZ_ASSERT(isLatin1());
 
-  TwoByteCharBuffer twoByte(cx);
+  TwoByteCharBuffer twoByte(TempAllocPolicy{cx_, arenaId_});
 
   /*
    * Note: we don't use Vector::capacity() because it always returns a
@@ -106,10 +106,10 @@ JSFlatString* StringBuffer::finishStringInternal(JSContext* cx) {
 JSFlatString* JSStringBuilder::finishString() {
   size_t len = length();
   if (len == 0) {
-    return cx->names().empty;
+    return cx_->names().empty;
   }
 
-  if (!JSString::validateLength(cx, len)) {
+  if (!JSString::validateLength(cx_, len)) {
     return nullptr;
   }
 
@@ -118,23 +118,23 @@ JSFlatString* JSStringBuilder::finishString() {
   JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_LATIN1 <
                    Latin1CharBuffer::InlineLength);
 
-  return isLatin1() ? finishStringInternal<Latin1Char>(cx)
-                    : finishStringInternal<char16_t>(cx);
+  return isLatin1() ? finishStringInternal<Latin1Char>(cx_)
+                    : finishStringInternal<char16_t>(cx_);
 }
 
 JSAtom* StringBuffer::finishAtom() {
   size_t len = length();
   if (len == 0) {
-    return cx->names().empty;
+    return cx_->names().empty;
   }
 
   if (isLatin1()) {
-    JSAtom* atom = AtomizeChars(cx, latin1Chars().begin(), len);
+    JSAtom* atom = AtomizeChars(cx_, latin1Chars().begin(), len);
     latin1Chars().clear();
     return atom;
   }
 
-  JSAtom* atom = AtomizeChars(cx, twoByteChars().begin(), len);
+  JSAtom* atom = AtomizeChars(cx_, twoByteChars().begin(), len);
   twoByteChars().clear();
   return atom;
 }

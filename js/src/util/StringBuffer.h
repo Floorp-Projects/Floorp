@@ -39,7 +39,8 @@ class StringBuffer {
   using Latin1CharBuffer = BufferType<Latin1Char>;
   using TwoByteCharBuffer = BufferType<char16_t>;
 
-  JSContext* cx;
+  JSContext* cx_;
+  const arena_id_t& arenaId_;
 
   /*
    * If Latin1 strings are enabled, cb starts out as a Latin1CharBuffer. When
@@ -97,8 +98,10 @@ class StringBuffer {
   JSFlatString* finishStringInternal(JSContext* cx);
 
  public:
-  explicit StringBuffer(JSContext* cx) : cx(cx), reserved_(0) {
-    cb.construct<Latin1CharBuffer>(cx);
+  explicit StringBuffer(JSContext* cx,
+                        const arena_id_t& arenaId = js::MallocArena)
+      : cx_(cx), arenaId_(arenaId), reserved_(0) {
+    cb.construct<Latin1CharBuffer>(TempAllocPolicy{cx_, arenaId_});
   }
 
   void clear() {
@@ -278,7 +281,8 @@ class StringBuffer {
 
 class JSStringBuilder : public StringBuffer {
  public:
-  explicit JSStringBuilder(JSContext* cx) : StringBuffer(cx) {}
+  explicit JSStringBuilder(JSContext* cx)
+      : StringBuffer(cx, js::StringBufferArena) {}
 
   /*
    * Creates a string from the characters in this buffer, then (regardless
@@ -357,7 +361,7 @@ inline bool StringBuffer::appendSubstring(JSLinearString* base, size_t off,
 
 inline bool StringBuffer::appendSubstring(JSString* base, size_t off,
                                           size_t len) {
-  JSLinearString* linear = base->ensureLinear(cx);
+  JSLinearString* linear = base->ensureLinear(cx_);
   if (!linear) {
     return false;
   }
@@ -366,7 +370,7 @@ inline bool StringBuffer::appendSubstring(JSString* base, size_t off,
 }
 
 inline bool StringBuffer::append(JSString* str) {
-  JSLinearString* linear = str->ensureLinear(cx);
+  JSLinearString* linear = str->ensureLinear(cx_);
   if (!linear) {
     return false;
   }

@@ -421,49 +421,6 @@ def ctypes_and_compile_environment(ctypes, compile_environment):
 include('ffi.configure', when=ctypes_and_compile_environment)
 
 
-# Support various fuzzing options
-# ==============================================================
-with only_when('--enable-compile-environment'):
-    js_option('--enable-fuzzing', help='Enable fuzzing support')
-
-    @depends('--enable-fuzzing')
-    def enable_fuzzing(value):
-        if value:
-            return True
-
-    @depends(try_compile(body='__AFL_COMPILER;',
-                         check_msg='for AFL compiler',
-                         when='--enable-fuzzing'))
-    def enable_aflfuzzer(afl):
-        if afl:
-            return True
-
-    @depends(enable_fuzzing,
-             enable_aflfuzzer,
-             c_compiler,
-             target)
-    def enable_libfuzzer(fuzzing, afl, c_compiler, target):
-        if fuzzing and not afl and c_compiler.type == 'clang' and target.os != 'Android':
-            return True
-
-    @depends(enable_fuzzing,
-             enable_aflfuzzer,
-             enable_libfuzzer)
-    def enable_fuzzing_interfaces(fuzzing, afl, libfuzzer):
-        if fuzzing and (afl or libfuzzer):
-            return True
-
-    set_config('FUZZING', enable_fuzzing)
-    set_define('FUZZING', enable_fuzzing)
-
-    set_config('LIBFUZZER', enable_libfuzzer)
-    set_define('LIBFUZZER', enable_libfuzzer)
-    add_old_configure_assignment('LIBFUZZER', enable_libfuzzer)
-
-    set_config('FUZZING_INTERFACES', enable_fuzzing_interfaces)
-    set_define('FUZZING_INTERFACES', enable_fuzzing_interfaces)
-    add_old_configure_assignment('FUZZING_INTERFACES', enable_fuzzing_interfaces)
-
 # Enable pipeline operator
 # ===================================================
 js_option('--enable-pipeline-operator', default=False, help='Enable pipeline operator')

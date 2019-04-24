@@ -3181,9 +3181,13 @@ Toolbox.prototype = {
    * necessary because of the WebConsole's `profile` and `profileEnd` methods.
    */
   async initPerformance() {
-    // If target does not have performance actor (addons), do not
-    // even register the shared performance connection.
-    if (!this.target.hasActor("performance")) {
+    // If:
+    // - target does not have performance actor (addons)
+    // - or client uses the new performance panel (incompatible with console.profile())
+    // do not even register the shared performance connection.
+    const isNewPerfPanel =
+      Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false);
+    if (isNewPerfPanel || !this.target.hasActor("performance")) {
       return promise.resolve();
     }
 

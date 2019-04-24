@@ -2209,7 +2209,51 @@ add_gcc_flag(
         'MOZ_LIBSTDCXX_HOST_VERSION', host_cxx_compiler))
 
 
+# Support various fuzzing options
+# ==============================================================
+js_option('--enable-fuzzing', help='Enable fuzzing support')
+
+@depends('--enable-fuzzing')
+def enable_fuzzing(value):
+    if value:
+        return True
+
+@depends(try_compile(body='__AFL_COMPILER;',
+                     check_msg='for AFL compiler',
+                     when='--enable-fuzzing'))
+def enable_aflfuzzer(afl):
+    if afl:
+        return True
+
+@depends(enable_fuzzing,
+         enable_aflfuzzer,
+         c_compiler,
+         target)
+def enable_libfuzzer(fuzzing, afl, c_compiler, target):
+    if fuzzing and not afl and c_compiler.type == 'clang' and target.os != 'Android':
+        return True
+
+@depends(enable_fuzzing,
+         enable_aflfuzzer,
+         enable_libfuzzer)
+def enable_fuzzing_interfaces(fuzzing, afl, libfuzzer):
+    if fuzzing and (afl or libfuzzer):
+        return True
+
+set_config('FUZZING', enable_fuzzing)
+set_define('FUZZING', enable_fuzzing)
+
+set_config('LIBFUZZER', enable_libfuzzer)
+set_define('LIBFUZZER', enable_libfuzzer)
+add_old_configure_assignment('LIBFUZZER', enable_libfuzzer)
+
+set_config('FUZZING_INTERFACES', enable_fuzzing_interfaces)
+set_define('FUZZING_INTERFACES', enable_fuzzing_interfaces)
+add_old_configure_assignment('FUZZING_INTERFACES', enable_fuzzing_interfaces)
+
+
 @depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
+         when=enable_fuzzing,
          check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'))
 def libfuzzer_flags(value):
     if value:

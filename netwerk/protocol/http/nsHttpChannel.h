@@ -587,6 +587,14 @@ class nsHttpChannel final : public HttpBaseChannel,
   // policy preferences.
   void ReEvaluateReferrerAfterTrackingStatusIsKnown();
 
+  // Create a dummy channel for the same principal, out of the load group
+  // just to revalidate the cache entry.  We don't care if this fails.
+  // This method can be called on any thread, and creates an idle task
+  // to perform the revalidation with delay.
+  void PerformBackgroundCacheRevalidation();
+  // This method can only be called on the main thread.
+  void PerformBackgroundCacheRevalidationNow();
+
  private:
   nsCOMPtr<nsICancelable> mProxyRequest;
 

@@ -2762,7 +2762,8 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
     return false;
   }
 
-  RootedString message(cx, NewLatin1StringZ(cx, std::move(str)));
+  size_t len = strlen(str.get());
+  RootedString message(cx, NewStringCopyN<CanGC>(cx, str.get(), len));
   if (!message) {
     return false;
   }

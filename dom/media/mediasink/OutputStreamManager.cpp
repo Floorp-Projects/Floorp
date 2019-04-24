@@ -201,10 +201,10 @@ void OutputStreamManager::Remove(DOMMediaStream* aDOMStream) {
   MOZ_ASSERT(rv);
 }
 
-bool OutputStreamManager::HasTrack(TrackID aTrackID) {
+bool OutputStreamManager::HasTrackType(MediaSegment::Type aType) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return mLiveTracks.Contains(aTrackID, TrackIDComparator());
+  return mLiveTracks.Contains(aType, TrackTypeComparator());
 }
 
 bool OutputStreamManager::HasTracks(TrackID aAudioTrack, TrackID aVideoTrack) {
@@ -216,13 +216,13 @@ bool OutputStreamManager::HasTracks(TrackID aAudioTrack, TrackID aVideoTrack) {
     Unused << ++nrExpectedTracks;
     asExpected = asExpected && mLiveTracks.Contains(
                                    MakePair(aAudioTrack, MediaSegment::AUDIO),
-                                   TrackTypeComparator());
+                                   TrackComparator());
   }
   if (IsTrackIDExplicit(aVideoTrack)) {
     Unused << ++nrExpectedTracks;
     asExpected = asExpected && mLiveTracks.Contains(
                                    MakePair(aVideoTrack, MediaSegment::VIDEO),
-                                   TrackTypeComparator());
+                                   TrackComparator());
   }
   asExpected = asExpected && mLiveTracks.Length() == nrExpectedTracks;
   return asExpected;
@@ -233,17 +233,20 @@ size_t OutputStreamManager::NumberOfTracks() {
   return mLiveTracks.Length();
 }
 
-void OutputStreamManager::AddTrack(TrackID aTrackID, MediaSegment::Type aType) {
+void OutputStreamManager::AddTrack(MediaSegment::Type aType) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSourceStream->IsDestroyed());
-  MOZ_ASSERT(!HasTrack(aTrackID));
+  MOZ_ASSERT(!HasTrackType(aType),
+             "Cannot have two tracks of the same type at the same time");
+
+  TrackID id = mNextTrackID++;
 
   LOG(LogLevel::Info, "Adding %s track with id %d",
-      aType == MediaSegment::AUDIO ? "audio" : "video", aTrackID);
+      aType == MediaSegment::AUDIO ? "audio" : "video", id);
 
-  mLiveTracks.AppendElement(MakePair(aTrackID, aType));
+  mLiveTracks.AppendElement(MakePair(id, aType));
   for (const auto& data : mStreams) {
-    data->AddTrack(aTrackID, aType, mPrincipal, mCORSMode, true);
+    data->AddTrack(id, aType, mPrincipal, mCORSMode, true);
   }
 }
 
@@ -260,21 +263,15 @@ void OutputStreamManager::RemoveTrack(TrackID aTrackID) {
 
 void OutputStreamManager::RemoveTracks() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mSourceStream->IsDestroyed());
-  for (const Pair<TrackID, MediaSegment::Type>& pair : mLiveTracks) {
-    for (const auto& data : mStreams) {
-      data->RemoveTrack(pair.first());
-    }
-  }
-  mLiveTracks.Clear();
-}
-
-void OutputStreamManager::Disconnect() {
-  MOZ_ASSERT(NS_IsMainThread());
   nsTArray<Pair<TrackID, MediaSegment::Type>> liveTracks(mLiveTracks);
   for (const auto& pair : liveTracks) {
     RemoveTrack(pair.first());
   }
+}
+
+void OutputStreamManager::Disconnect() {
+  MOZ_ASSERT(NS_IsMainThread());
+  RemoveTracks();
   MOZ_ASSERT(mLiveTracks.IsEmpty());
   nsTArray<RefPtr<DOMMediaStream>> domStreams(mStreams.Length());
   for (const auto& data : mStreams) {
@@ -311,10 +308,14 @@ TrackID OutputStreamManager::NextTrackID() const {
   return mNextTrackID;
 }
 
-TrackID OutputStreamManager::AllocateNextTrackID() {
+TrackID OutputStreamManager::GetLiveTrackIDFor(MediaSegment::Type aType) const {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(IsTrackIDExplicit(mNextTrackID));
-  return mNextTrackID++;
+  for (const auto& pair : mLiveTracks) {
+    if (pair.second() == aType) {
+      return pair.first();
+    }
+  }
+  return TRACK_NONE;
 }
 
 void OutputStreamManager::SetPlaying(bool aPlaying) {

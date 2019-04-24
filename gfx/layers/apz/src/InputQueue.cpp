@@ -27,7 +27,8 @@ InputQueue::~InputQueue() { mQueuedInputs.Clear(); }
 nsEventStatus InputQueue::ReceiveInputEvent(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags, const InputData& aEvent,
-    uint64_t* aOutInputBlockId) {
+    uint64_t* aOutInputBlockId,
+    const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors) {
   APZThreadUtils::AssertOnControllerThread();
 
   AutoRunImmediateTimeout timeoutRunner{this};
@@ -35,7 +36,7 @@ nsEventStatus InputQueue::ReceiveInputEvent(
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& event = aEvent.AsMultiTouchInput();
-      return ReceiveTouchInput(aTarget, aFlags, event, aOutInputBlockId);
+      return ReceiveTouchInput(aTarget, aFlags, event, aOutInputBlockId, aTouchBehaviors);
     }
 
     case SCROLLWHEEL_INPUT: {
@@ -74,7 +75,8 @@ nsEventStatus InputQueue::ReceiveInputEvent(
 nsEventStatus InputQueue::ReceiveTouchInput(
     const RefPtr<AsyncPanZoomController>& aTarget,
     TargetConfirmationFlags aFlags, const MultiTouchInput& aEvent,
-    uint64_t* aOutInputBlockId) {
+    uint64_t* aOutInputBlockId,
+    const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors) {
   TouchBlockState* block = nullptr;
   if (aEvent.mType == MultiTouchInput::MULTITOUCH_START) {
     nsTArray<TouchBehaviorFlags> currentBehaviors;
@@ -115,12 +117,21 @@ nsEventStatus InputQueue::ReceiveTouchInput(
         block->SetAllowedTouchBehaviors(currentBehaviors);
       }
       INPQ_LOG("block %p tagged as fast-motion\n", block);
+    } else if (aTouchBehaviors) {
+      // If this block isn't started during a fast-fling, and APZCTM has
+      // provided touch behavior information, then put it on the block so
+      // that the ArePointerEventsConsumable call below can use it.
+      block->SetAllowedTouchBehaviors(*aTouchBehaviors);
     }
 
     CancelAnimationsForNewBlock(block);
 
     MaybeRequestContentResponse(aTarget, block);
   } else {
+    // for touch inputs that don't start a block, APZCTM shouldn't be giving
+    // us any touch behaviors.
+    MOZ_ASSERT(aTouchBehaviors.isNothing());
+
     block = mActiveTouchBlock.get();
     if (!block) {
       NS_WARNING(
@@ -420,12 +431,7 @@ void InputQueue::MaybeRequestContentResponse(
   } else {
     waitForMainThread = true;
   }
-  if (aBlock->AsTouchBlock() && gfxPrefs::TouchActionEnabled()) {
-    // waitForMainThread is set to true unconditionally here, but if the APZCTM
-    // has the touch-action behaviours for this block, it will set it
-    // immediately after we unwind out of this ReceiveInputEvent call. So even
-    // though we are scheduling the main-thread timeout, we might end up not
-    // waiting.
+  if (aBlock->AsTouchBlock() && !aBlock->AsTouchBlock()->HasAllowedTouchBehaviors()) {
     INPQ_LOG("waiting for main thread touch-action info on block %p\n", aBlock);
     waitForMainThread = true;
   }

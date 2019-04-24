@@ -11,6 +11,13 @@
   height: 100%;
 }
 
+/* Reset the global rotation of the icon done for RTL layout.
+   Computed view is always LTR */
+#sidebar-panel-computedview .theme-twisty:not(.open):dir(rtl),
+#sidebar-panel-computedview .theme-twisty:not([open]):-moz-locale-dir(rtl) {
+  transform: rotate(-90deg);
+}
+
 #computed-container {
   overflow: auto;
   height: 100%;

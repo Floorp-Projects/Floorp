@@ -10,9 +10,13 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -136,15 +140,45 @@ public class FindInPageBar extends LinearLayout
     private void onMatchesCountResult(final int total, final int current, final int limit, final String searchString) {
         if (total == -1) {
             updateResult(Integer.toString(limit) + "+");
+            updateFindTextBackgroundColor(true);
         } else if (total > 0) {
             updateResult(Integer.toString(current) + "/" + Integer.toString(total));
+            updateFindTextBackgroundColor(true);
         } else if (TextUtils.isEmpty(searchString)) {
             updateResult("");
+            updateFindTextBackgroundColor(false);
+            updateFindTextError();
         } else {
             // We display 0/0, when there were no
             // matches found, or if matching has been turned off by setting
             // pref accessibility.typeaheadfind.matchesCountLimit to 0.
             updateResult("0/0");
+        }
+    }
+
+    private void updateFindTextError() {
+        if (!TextUtils.isEmpty(mFindText.getText().toString())) {
+            String errorText = getResources().getString(R.string.find_error);
+            ForegroundColorSpan foregroundColorSpan = new ForegroundColorSpan(Color.WHITE);
+            SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(errorText);
+            spannableStringBuilder.setSpan(foregroundColorSpan, 0, errorText.length(), 0);
+
+            Drawable errorDrawable = getResources().getDrawable(R.drawable.ic_baseline_error);
+            errorDrawable.setBounds(0, 0, errorDrawable.getIntrinsicWidth(), errorDrawable.getIntrinsicHeight());
+
+            mFindText.setError(spannableStringBuilder, errorDrawable);
+        }
+    }
+
+    private void updateFindTextBackgroundColor(final boolean hasResults) {
+        if (TextUtils.isEmpty(mFindText.getText().toString())) {
+            mFindText.setBackgroundColor(Color.WHITE);
+        } else {
+            if (hasResults) {
+                mFindText.setBackgroundColor(Color.WHITE);
+            } else {
+                mFindText.setBackgroundColor(getResources().getColor(R.color.fip_text_error_background));
+            }
         }
     }
 

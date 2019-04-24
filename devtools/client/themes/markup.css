@@ -40,6 +40,13 @@ body {
   min-width: 100%;
 }
 
+/* Reset the global rotation of the icon done for RTL layout.
+   Markup view is always LTR */
+#root .theme-twisty:not(.open):dir(rtl),
+#root .theme-twisty:not([open]):-moz-locale-dir(rtl) {
+  transform: rotate(-90deg);
+}
+
 /* Don't display a parent-child outline for the root elements */
 #root > ul > li > .children {
   background: none;

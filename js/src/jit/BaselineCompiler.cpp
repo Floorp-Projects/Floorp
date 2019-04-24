@@ -5575,9 +5575,52 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FINALYIELDRVAL() {
 }
 
 template <>
-bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
-  auto resumeKind = AbstractGeneratorObject::getResumeKind(handler.pc());
+void BaselineCompilerCodeGen::emitJumpToInterpretOpLabel() {
+  MOZ_CRASH("NYI: Interpreter emitJumpToInterpretOpLabel");
+}
 
+template <>
+void BaselineInterpreterCodeGen::emitJumpToInterpretOpLabel() {
+  masm.jump(handler.interpretOpLabel());
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
+                                                      Register resumeIndex,
+                                                      Register scratch) {
+  Address baselineAddr(script, JSScript::offsetOfBaselineScript());
+
+  auto emitEnterBaseline = [&]() {
+    masm.loadPtr(baselineAddr, script);
+    masm.load32(Address(script, BaselineScript::offsetOfResumeEntriesOffset()),
+                scratch);
+    masm.addPtr(scratch, script);
+    masm.loadPtr(
+        BaseIndex(script, resumeIndex, ScaleFromElemWidth(sizeof(uintptr_t))),
+        scratch);
+    masm.jump(scratch);
+  };
+
+  if (!JitOptions.baselineInterpreter) {
+    // We must have a BaselineScript.
+    emitEnterBaseline();
+    return true;
+  }
+
+  // If the Baseline Interpreter is enabled we resume in either the
+  // BaselineScript (if present) or Baseline Interpreter.
+  Label noBaselineScript;
+  masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
+                 ImmPtr(BASELINE_DISABLED_SCRIPT), &noBaselineScript);
+  emitEnterBaseline();
+
+  masm.bind(&noBaselineScript);
+  MOZ_CRASH("NYI: enter interpreted generator");
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitGeneratorResume(
+    GeneratorResumeKind resumeKind) {
   frame.syncStack(0);
   masm.assertStackAlignment(sizeof(Value), 0);
 
@@ -5593,16 +5636,21 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   masm.unboxObject(
       Address(genObj, AbstractGeneratorObject::offsetOfCalleeSlot()), callee);
 
-  // Load the script. Note that we don't relazify generator scripts, so it's
-  // guaranteed to be non-lazy.
+  // Load the return value.
+  ValueOperand retVal = regs.takeAnyValue();
+  masm.loadValue(frame.addressOfStackValue(-1), retVal);
+
+  // Branch to interpret if the script does not have a BaselineScript (if the
+  // Baseline Interpreter is not enabled). Note that we don't relazify generator
+  // scripts, so the function is guaranteed to be non-lazy.
+  Label interpret;
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
-
-  // Load the BaselineScript or call a stub if we don't have one.
-  Label interpret;
-  masm.loadPtr(Address(scratch1, JSScript::offsetOfBaselineScript()), scratch1);
-  masm.branchPtr(Assembler::BelowOrEqual, scratch1,
-                 ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
+  if (!JitOptions.baselineInterpreter) {
+    Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
+    masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
+                   ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
+  }
 
 #ifdef JS_TRACE_LOGGING
   if (JS::TraceLoggerSupported() && !emitTraceLoggerResume(scratch1, regs)) {
@@ -5644,10 +5692,6 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   masm.setFramePushed(0);
 
   regs.add(callee);
-
-  // Load the return value.
-  ValueOperand retVal = regs.takeAnyValue();
-  masm.loadValue(frame.addressOfStackValue(-1), retVal);
 
   // Push a fake return address on the stack. We will resume here when the
   // generator returns.
@@ -5731,7 +5775,8 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
     masm.branchTest32(Assembler::Zero, initLength, initLength, &loopDone);
     {
       masm.pushValue(Address(scratch2, 0));
-      masm.guardedCallPreBarrier(Address(scratch2, 0), MIRType::Value);
+      masm.guardedCallPreBarrierAnyZone(Address(scratch2, 0), MIRType::Value,
+                                        scratch1);
       masm.addPtr(Imm32(sizeof(Value)), scratch2);
       masm.sub32(Imm32(1), initLength);
       masm.jump(&loop);
@@ -5746,24 +5791,22 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   masm.switchToObjectRealm(genObj, scratch2);
 
   if (resumeKind == GeneratorResumeKind::Next) {
-    // Determine the resume address based on the resumeIndex and the
-    // resumeIndex -> native table in the BaselineScript.
-    masm.load32(
-        Address(scratch1, BaselineScript::offsetOfResumeEntriesOffset()),
-        scratch2);
-    masm.addPtr(scratch2, scratch1);
-    masm.unboxInt32(
-        Address(genObj, AbstractGeneratorObject::offsetOfResumeIndexSlot()),
-        scratch2);
-    masm.loadPtr(
-        BaseIndex(scratch1, scratch2, ScaleFromElemWidth(sizeof(uintptr_t))),
+    // Load script in scratch1.
+    masm.unboxObject(
+        Address(genObj, AbstractGeneratorObject::offsetOfCalleeSlot()),
         scratch1);
+    masm.loadPtr(Address(scratch1, JSFunction::offsetOfScript()), scratch1);
 
-    // Mark as running and jump to the generator's JIT code.
-    masm.storeValue(
-        Int32Value(AbstractGeneratorObject::RESUME_INDEX_RUNNING),
-        Address(genObj, AbstractGeneratorObject::offsetOfResumeIndexSlot()));
-    masm.jump(scratch1);
+    // Load resume index in scratch2 and mark generator as running.
+    Address resumeIndexSlot(genObj,
+                            AbstractGeneratorObject::offsetOfResumeIndexSlot());
+    masm.unboxInt32(resumeIndexSlot, scratch2);
+    masm.storeValue(Int32Value(AbstractGeneratorObject::RESUME_INDEX_RUNNING),
+                    resumeIndexSlot);
+
+    if (!emitEnterGeneratorCode(scratch1, scratch2, regs.getAny())) {
+      return false;
+    }
   } else {
     MOZ_ASSERT(resumeKind == GeneratorResumeKind::Throw ||
                resumeKind == GeneratorResumeKind::Return);
@@ -5820,26 +5863,28 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   }
 
   // If the generator script has no JIT code, call into the VM.
-  masm.bind(&interpret);
+  if (interpret.used()) {
+    masm.bind(&interpret);
 
-  prepareVMCall();
-  if (resumeKind == GeneratorResumeKind::Next) {
-    pushArg(ImmGCPtr(cx->names().next));
-  } else if (resumeKind == GeneratorResumeKind::Throw) {
-    pushArg(ImmGCPtr(cx->names().throw_));
-  } else {
-    MOZ_ASSERT(resumeKind == GeneratorResumeKind::Return);
-    pushArg(ImmGCPtr(cx->names().return_));
-  }
+    prepareVMCall();
+    if (resumeKind == GeneratorResumeKind::Next) {
+      pushArg(ImmGCPtr(cx->names().next));
+    } else if (resumeKind == GeneratorResumeKind::Throw) {
+      pushArg(ImmGCPtr(cx->names().throw_));
+    } else {
+      MOZ_ASSERT(resumeKind == GeneratorResumeKind::Return);
+      pushArg(ImmGCPtr(cx->names().return_));
+    }
 
-  masm.loadValue(frame.addressOfStackValue(-1), retVal);
-  pushArg(retVal);
-  pushArg(genObj);
+    masm.loadValue(frame.addressOfStackValue(-1), retVal);
+    pushArg(retVal);
+    pushArg(genObj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandlePropertyName,
-                      MutableHandleValue);
-  if (!callVM<Fn, jit::InterpretResume>()) {
-    return false;
+    using Fn = bool (*)(JSContext*, HandleObject, HandleValue,
+                        HandlePropertyName, MutableHandleValue);
+    if (!callVM<Fn, jit::InterpretResume>()) {
+      return false;
+    }
   }
 
   // After the generator returns, we restore the stack pointer, switch back to
@@ -5847,15 +5892,59 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   masm.bind(&returnTarget);
   masm.computeEffectiveAddress(frame.addressOfStackValue(-1),
                                masm.getStackPointer());
-  masm.switchToRealm(handler.script()->realm(), R2.scratchReg());
+  if (JSScript* script = handler.maybeScript()) {
+    masm.switchToRealm(script->realm(), R2.scratchReg());
+  } else {
+    masm.switchToBaselineFrameRealm(R2.scratchReg());
+  }
   frame.popn(2);
   frame.push(R0);
   return true;
 }
 
 template <>
+bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
+  auto resumeKind = AbstractGeneratorObject::getResumeKind(handler.pc());
+  return emitGeneratorResume(resumeKind);
+}
+
+template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_RESUME() {
-  MOZ_CRASH("NYI: interpreter JSOP_RESUME");
+  Register scratch = R0.scratchReg();
+
+  LoadUint8Operand(masm, PCRegAtStart, scratch);
+
+  Label throw_, return_, done;
+  masm.branch32(Assembler::Equal, scratch,
+                Imm32(int32_t(GeneratorResumeKind::Throw)), &throw_);
+  masm.branch32(Assembler::Equal, scratch,
+                Imm32(int32_t(GeneratorResumeKind::Return)), &return_);
+
+#ifdef DEBUG
+  Label ok;
+  masm.branch32(Assembler::Equal, scratch,
+                Imm32(int32_t(GeneratorResumeKind::Next)), &ok);
+  masm.assumeUnreachable("JSOP_RESUME invalid ResumeKind");
+  masm.bind(&ok);
+#endif
+  if (!emitGeneratorResume(GeneratorResumeKind::Next)) {
+    return false;
+  }
+  masm.jump(&done);
+
+  masm.bind(&throw_);
+  if (!emitGeneratorResume(GeneratorResumeKind::Throw)) {
+    return false;
+  }
+  masm.jump(&done);
+
+  masm.bind(&return_);
+  if (!emitGeneratorResume(GeneratorResumeKind::Return)) {
+    return false;
+  }
+
+  masm.bind(&done);
+  return true;
 }
 
 template <typename Handler>

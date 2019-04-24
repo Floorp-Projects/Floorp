@@ -275,13 +275,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_TOOLKIT_SEARCH:
-#ifdef MOZ_TOOLKIT_SEARCH
-  true,
-#else
-  false,
-#endif
-
   MOZ_GECKO_PROFILER:
 #ifdef MOZ_GECKO_PROFILER
   true,
