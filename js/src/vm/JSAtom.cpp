@@ -899,7 +899,8 @@ static MOZ_ALWAYS_INLINE JSFlatString* MakeUTF8AtomHelper(JSContext* cx,
   // expects functions to fail gracefully with nullptr on OOM, without throwing.
   //
   // Flat strings are null-terminated. Leave room with length + 1
-  UniquePtr<CharT[], JS::FreePolicy> newStr(js_pod_malloc<CharT>(length + 1));
+  UniquePtr<CharT[], JS::FreePolicy> newStr(
+      js_pod_arena_malloc<CharT>(js::StringBufferArena, length + 1));
   if (!newStr) {
     return nullptr;
   }

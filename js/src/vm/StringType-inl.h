@@ -249,12 +249,16 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
 MOZ_ALWAYS_INLINE void JSFlatString::init(const char16_t* chars,
                                           size_t length) {
   setLengthAndFlags(length, INIT_FLAT_FLAGS);
+  // Check that the new buffer is located in the StringBufferArena
+  checkStringCharsArena(chars);
   d.s.u2.nonInlineCharsTwoByte = chars;
 }
 
 MOZ_ALWAYS_INLINE void JSFlatString::init(const JS::Latin1Char* chars,
                                           size_t length) {
   setLengthAndFlags(length, INIT_FLAT_FLAGS | LATIN1_CHARS_BIT);
+  // Check that the new buffer is located in the StringBufferArena
+  checkStringCharsArena(chars);
   d.s.u2.nonInlineCharsLatin1 = chars;
 }
 

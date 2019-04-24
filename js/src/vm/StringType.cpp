@@ -293,7 +293,7 @@ static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
   *capacity = numChars - 1;
 
   JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(CharT) < UINT32_MAX);
-  *chars = str->zone()->pod_malloc<CharT>(numChars);
+  *chars = str->zone()->pod_malloc<CharT>(numChars, js::StringBufferArena);
   return *chars != nullptr;
 }
 
@@ -861,7 +861,7 @@ static void FillFromCompatibleAndTerminate(Dest* dest, Src* src,
 template <typename CharT>
 JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
   size_t n = length();
-  auto s = cx->make_pod_array<CharT>(n + 1);
+  auto s = cx->make_pod_array<CharT>(n + 1, js::StringBufferArena);
   if (!s) {
     return nullptr;
   }
@@ -1445,7 +1445,7 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
   MOZ_ASSERT(hasTwoByteChars());
 
   size_t n = length();
-  auto s = cx->make_pod_array<char16_t>(n + 1);
+  auto s = cx->make_pod_array<char16_t>(n + 1, js::StringBufferArena);
   if (!s) {
     return nullptr;
   }
@@ -1580,7 +1580,7 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const char16_t* s,
         cx, mozilla::Range<const char16_t>(s, n));
   }
 
-  auto news = cx->make_pod_array<Latin1Char>(n + 1);
+  auto news = cx->make_pod_array<Latin1Char>(n + 1, js::StringBufferArena);
   if (!news) {
     return nullptr;
   }
@@ -1612,7 +1612,7 @@ static JSFlatString* NewStringDeflatedFromLittleEndianNoGC(
     return str;
   }
 
-  auto news = cx->make_pod_array<Latin1Char>(length + 1);
+  auto news = cx->make_pod_array<Latin1Char>(length + 1, js::StringBufferArena);
   if (!news) {
     cx->recoverFromOutOfMemory();
     return nullptr;
@@ -1741,7 +1741,7 @@ JSFlatString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
     return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
   }
 
-  auto news = cx->make_pod_array<CharT>(n + 1);
+  auto news = cx->make_pod_array<CharT>(n + 1, js::StringBufferArena);
   if (!news) {
     if (!allowGC) {
       cx->recoverFromOutOfMemory();
@@ -1783,7 +1783,7 @@ static JSFlatString* NewUndeflatedStringFromLittleEndianNoGC(
     return str;
   }
 
-  auto news = cx->make_pod_array<char16_t>(length + 1);
+  auto news = cx->make_pod_array<char16_t>(length + 1, js::StringBufferArena);
   if (!news) {
     cx->recoverFromOutOfMemory();
     return nullptr;
@@ -1845,7 +1845,8 @@ JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
   size_t length;
   if (encoding == JS::SmallestEncoding::Latin1) {
     UniqueLatin1Chars latin1(
-        UTF8CharsToNewLatin1CharsZ(cx, utf8, &length, js::MallocArena).get());
+        UTF8CharsToNewLatin1CharsZ(cx, utf8, &length, js::StringBufferArena)
+            .get());
     if (!latin1) {
       return nullptr;
     }
@@ -1856,7 +1857,8 @@ JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
   MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
 
   UniqueTwoByteChars utf16(
-      UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length, js::MallocArena).get());
+      UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length, js::StringBufferArena)
+          .get());
   if (!utf16) {
     return nullptr;
   }
