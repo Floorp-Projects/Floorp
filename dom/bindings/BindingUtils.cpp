@@ -3436,10 +3436,7 @@ static inline prototypes::ID GetProtoIdForNewtarget(
 
 bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
                      JS::MutableHandle<JSObject*> aDesiredProto) {
-  if (!aCallArgs.isConstructing()) {
-    aDesiredProto.set(nullptr);
-    return true;
-  }
+  MOZ_ASSERT(aCallArgs.isConstructing(), "How did we end up here?");
 
   // The desired prototype depends on the actual constructor that was invoked,
   // which is passed to us as the newTarget in the callargs.  We want to do
