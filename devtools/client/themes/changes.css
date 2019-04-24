@@ -77,6 +77,20 @@
                      var(--diff-level-offset) * var(--diff-level));
 }
 
+#sidebar-panel-changes .changes__toolbar {
+  background: var(--theme-sidebar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 2px 5px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Remove the top border of the first source to avoid double border from sticky toolbar */
+#sidebar-panel-changes .changes__toolbar + .source .href {
+  border-top: none;
+}
+
 .changes__copy-all-changes-button {
   -moz-context-properties: fill;
   /* Use the Firefox copy icon (16px) instead of the smaller DevTools one (12px) */
@@ -87,7 +101,6 @@
   border-radius: 3px;
   color: var(--theme-body-color);
   fill: currentColor;
-  margin: 2px 5px;
   padding: 4px 5px 4px 25px;
 }
 
