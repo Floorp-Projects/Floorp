@@ -255,6 +255,9 @@ class TrySelect(MachCommandBase):
 
           ^start 'exact | !ignore fuzzy end$
         """
+        if kwargs.pop('interactive'):
+            kwargs['query'].append('INTERACTIVE')
+
         if kwargs.pop('intersection'):
             kwargs['intersect_query'] = kwargs['query']
             del kwargs['query']
