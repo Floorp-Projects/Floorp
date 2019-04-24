@@ -28,10 +28,6 @@
     </content>
   </binding>
 
-  <binding id="menu"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-  </binding>
-
   <binding id="toolbarbutton-badged"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
@@ -48,9 +44,5 @@
       <xul:dropmarker anonid="dropmarker" type="menu"
                       class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
-  </binding>
-
-  <binding id="toolbarbutton-badged-menu"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged">
   </binding>
 </bindings>
