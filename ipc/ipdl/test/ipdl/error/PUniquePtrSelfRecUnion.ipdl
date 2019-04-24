@@ -1,0 +1,7 @@
+//error: union `X' is only partially defined
+
+union X { UniquePtr<X>; };
+
+protocol PUniquePtrSelfRecUnion {
+child: async Msg(UniquePtr<X> aa);
+};

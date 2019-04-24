@@ -1,0 +1,7 @@
+//error: argument typename `X' of message `Test' has not been declared
+
+protocol PBadArrayBase {
+child:
+  async Test(X[] x);
+  async __delete__();
+};
