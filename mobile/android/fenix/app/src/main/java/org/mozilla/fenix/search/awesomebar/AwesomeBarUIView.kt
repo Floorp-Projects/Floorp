@@ -176,7 +176,9 @@ class AwesomeBarUIView(
     }
 
     private fun showSearchSuggestionProvider() {
-        view.addProviders(searchSuggestionProvider!!)
+        if (Settings.getInstance(container.context).showSearchSuggestions()) {
+            view.addProviders(searchSuggestionProvider!!)
+        }
     }
 
     private fun setShortcutEngine(engine: SearchEngine) {
