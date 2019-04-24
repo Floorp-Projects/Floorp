@@ -276,4 +276,7 @@
     <color name="dtp_header_text_inactive">#B2B2B2</color>
     <color name="dtp_selection">#FFFFFF</color>
 
+    <!-- FindInPageBar -->
+    <color name="fip_text_error_background">#FF6666</color>
+
 </resources>
