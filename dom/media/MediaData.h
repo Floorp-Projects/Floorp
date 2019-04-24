@@ -300,6 +300,7 @@ class MediaData {
   // the result is invalid.
   virtual bool AdjustForStartTime(const media::TimeUnit& aStartTime) {
     mTime -= aStartTime;
+    MOZ_ASSERT(!mTime.IsNegative());
     return mTime.IsValid();
   }
 
