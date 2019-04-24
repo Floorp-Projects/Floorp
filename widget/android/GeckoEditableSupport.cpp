@@ -17,7 +17,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 
 #include <android/api-level.h>
 #include <android/input.h>
@@ -1565,20 +1565,20 @@ void GeckoEditableSupport::TransferParent(jni::Object::Param aEditableParent) {
   }
 }
 
-void GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild) {
+void GeckoEditableSupport::SetOnBrowserChild(dom::BrowserChild* aBrowserChild) {
   MOZ_ASSERT(!XRE_IsParentProcess());
-  NS_ENSURE_TRUE_VOID(aTabChild);
+  NS_ENSURE_TRUE_VOID(aBrowserChild);
 
   const dom::ContentChild* const contentChild =
       dom::ContentChild::GetSingleton();
-  RefPtr<widget::PuppetWidget> widget(aTabChild->WebWidget());
+  RefPtr<widget::PuppetWidget> widget(aBrowserChild->WebWidget());
   NS_ENSURE_TRUE_VOID(contentChild && widget);
 
   // Get the content/tab ID in order to get the correct
   // IGeckoEditableParent object, which GeckoEditableChild uses to
   // communicate with the parent process.
   const uint64_t contentId = contentChild->GetID();
-  const uint64_t tabId = aTabChild->GetTabId();
+  const uint64_t tabId = aBrowserChild->GetTabId();
   NS_ENSURE_TRUE_VOID(contentId && tabId);
 
   RefPtr<widget::TextEventDispatcherListener> listener =
@@ -1600,7 +1600,7 @@ void GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild) {
     AttachNative(editableChild, editableSupport);
     editableSupport->mEditableAttached = true;
 
-    // Connect the new child to a parent that corresponds to the TabChild.
+    // Connect the new child to a parent that corresponds to the BrowserChild.
     java::GeckoServiceChildProcess::GetEditableParent(editableChild, contentId,
                                                       tabId);
     return;
@@ -1624,7 +1624,7 @@ void GeckoEditableSupport::SetOnTabChild(dom::TabChild* aTabChild) {
     support->mEditableAttached = true;
   }
 
-  // Transfer to a new parent that corresponds to the TabChild.
+  // Transfer to a new parent that corresponds to the BrowserChild.
   java::GeckoServiceChildProcess::GetEditableParent(support->GetJavaEditable(),
                                                     contentId, tabId);
 }

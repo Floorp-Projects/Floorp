@@ -48,7 +48,7 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "nsIMIMEInfo.h"
 #include "nsRange.h"
-#include "TabParent.h"
+#include "BrowserParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
@@ -552,10 +552,10 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     if (flo) {
       RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
       if (fl) {
-        TabParent* tp = static_cast<TabParent*>(fl->GetRemoteBrowser());
+        BrowserParent* tp = static_cast<BrowserParent*>(fl->GetRemoteBrowser());
         if (tp) {
-          // We have a TabParent, so it may have data for dnd in case the child
-          // process started a dnd session.
+          // We have a BrowserParent, so it may have data for dnd in case the
+          // child process started a dnd session.
           tp->AddInitialDnDDataTo(aDataTransfer, aPrincipal);
         }
       }

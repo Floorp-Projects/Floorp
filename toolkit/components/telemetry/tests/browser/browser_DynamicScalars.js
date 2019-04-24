@@ -29,7 +29,7 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_recording() {
-  let currentPid = gBrowser.selectedBrowser.frameLoader.tabParent.osPid;
+  let currentPid = gBrowser.selectedBrowser.frameLoader.remoteTab.osPid;
 
   // Register test scalars before spawning the content process: the scalar
   // definitions will propagate to it.
@@ -54,7 +54,7 @@ add_task(async function test_recording() {
       // Make sure our new browser is in its own process. The processCreated
       // promise should have already resolved by this point.
       await processCreated;
-      let newPid = browser.frameLoader.tabParent.osPid;
+      let newPid = browser.frameLoader.remoteTab.osPid;
       ok(currentPid != newPid, "The new tab must spawn its own process");
 
       // Register test scalars after spawning the content process: the scalar

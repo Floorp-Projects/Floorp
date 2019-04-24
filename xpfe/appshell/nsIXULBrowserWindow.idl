@@ -11,7 +11,7 @@ interface nsIBrowser;
 interface nsIRequest;
 interface nsIInputStream;
 interface nsIDocShell;
-interface nsITabParent;
+interface nsIRemoteTab;
 interface nsIPrincipal;
 interface mozIDOMWindowProxy;
 interface nsIContentSecurityPolicy;

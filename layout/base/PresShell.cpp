@@ -19,7 +19,7 @@
 #include "mozilla/GeckoMVMContext.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
@@ -5083,7 +5083,7 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext) {
   if (!pwin) return false;
   nsCOMPtr<Element> containerElement = pwin->GetFrameElementInternal();
 
-  TabChild* tab = TabChild::GetFrom(docShell);
+  BrowserChild* tab = BrowserChild::GetFrom(docShell);
   if (tab) {
     // Check if presShell is the top PresShell. Only the top can
     // influence the canvas background color.
@@ -7518,7 +7518,7 @@ Element* PresShell::EventHandler::ComputeFocusedEventTargetElement(
             sLastKeyDownEventTargetElement->GetComposedDoc());
         if (keyDownIsChrome != nsContentUtils::IsChromeDoc(
                                    eventTargetElement->GetComposedDoc()) ||
-            (keyDownIsChrome && TabParent::GetFrom(eventTargetElement))) {
+            (keyDownIsChrome && BrowserParent::GetFrom(eventTargetElement))) {
           eventTargetElement = sLastKeyDownEventTargetElement;
         }
       }
@@ -8214,7 +8214,7 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
 
     if (aEvent->mClass == eCompositionEventClass) {
       IMEStateManager::DispatchCompositionEvent(
-          eventTarget, GetPresContext(), TabParent::GetFocused(),
+          eventTarget, GetPresContext(), BrowserParent::GetFocused(),
           aEvent->AsCompositionEvent(), aEventStatus, eventCBPtr);
     } else {
       EventDispatcher::Dispatch(eventTarget, GetPresContext(), aEvent, nullptr,
@@ -10795,7 +10795,8 @@ bool nsIPresShell::DetermineFontSizeInflationState() {
 
   // Force-enabling font inflation always trumps the heuristics here.
   if (!FontSizeInflationForceEnabled()) {
-    if (TabChild* tab = TabChild::GetFrom(static_cast<PresShell*>(this))) {
+    if (BrowserChild* tab =
+            BrowserChild::GetFrom(static_cast<PresShell*>(this))) {
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
       if (!tab->AsyncPanZoomEnabled()) {

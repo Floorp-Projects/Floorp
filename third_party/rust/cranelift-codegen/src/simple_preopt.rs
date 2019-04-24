@@ -1,15 +1,21 @@
 //! A pre-legalization rewriting pass.
+//!
+//! This module provides early-stage optimizations. The optimizations found
+//! should be useful for already well-optimized code. More general purpose
+//! early-stage optimizations can be found in the preopt crate.
 
 #![allow(non_snake_case)]
 
 use crate::cursor::{Cursor, FuncCursor};
 use crate::divconst_magic_numbers::{magic_s32, magic_s64, magic_u32, magic_u64};
 use crate::divconst_magic_numbers::{MS32, MS64, MU32, MU64};
+use crate::flowgraph::ControlFlowGraph;
+use crate::ir::condcodes::{CondCode, IntCC};
 use crate::ir::dfg::ValueDef;
-use crate::ir::instructions::Opcode;
+use crate::ir::instructions::{Opcode, ValueList};
 use crate::ir::types::{I32, I64};
 use crate::ir::Inst;
-use crate::ir::{DataFlowGraph, Function, InstBuilder, InstructionData, Type, Value};
+use crate::ir::{DataFlowGraph, Ebb, Function, InstBuilder, InstructionData, Type, Value};
 use crate::timing;
 
 //----------------------------------------------------------------------
@@ -536,11 +542,230 @@ fn simplify(pos: &mut FuncCursor, inst: Inst) {
     }
 }
 
+struct BranchOptInfo {
+    br_inst: Inst,
+    cmp_arg: Value,
+    args: ValueList,
+    new_opcode: Opcode,
+}
+
+/// Fold comparisons into branch operations when possible.
+///
+/// This matches against operations which compare against zero, then use the
+/// result in a `brz` or `brnz` branch. It folds those two operations into a
+/// single `brz` or `brnz`.
+fn branch_opt(pos: &mut FuncCursor, inst: Inst) {
+    let mut info = if let InstructionData::Branch {
+        opcode: br_opcode,
+        args: ref br_args,
+        ..
+    } = pos.func.dfg[inst]
+    {
+        let first_arg = {
+            let args = pos.func.dfg.inst_args(inst);
+            args[0]
+        };
+
+        let icmp_inst = if let ValueDef::Result(icmp_inst, _) = pos.func.dfg.value_def(first_arg) {
+            icmp_inst
+        } else {
+            return;
+        };
+
+        if let InstructionData::IntCompareImm {
+            opcode: Opcode::IcmpImm,
+            arg: cmp_arg,
+            cond: cmp_cond,
+            imm: cmp_imm,
+        } = pos.func.dfg[icmp_inst]
+        {
+            let cmp_imm: i64 = cmp_imm.into();
+            if cmp_imm != 0 {
+                return;
+            }
+
+            // icmp_imm returns non-zero when the comparison is true. So, if
+            // we're branching on zero, we need to invert the condition.
+            let cond = match br_opcode {
+                Opcode::Brz => cmp_cond.inverse(),
+                Opcode::Brnz => cmp_cond,
+                _ => return,
+            };
+
+            let new_opcode = match cond {
+                IntCC::Equal => Opcode::Brz,
+                IntCC::NotEqual => Opcode::Brnz,
+                _ => return,
+            };
+
+            BranchOptInfo {
+                br_inst: inst,
+                cmp_arg: cmp_arg,
+                args: br_args.clone(),
+                new_opcode: new_opcode,
+            }
+        } else {
+            return;
+        }
+    } else {
+        return;
+    };
+
+    info.args.as_mut_slice(&mut pos.func.dfg.value_lists)[0] = info.cmp_arg;
+    if let InstructionData::Branch { ref mut opcode, .. } = pos.func.dfg[info.br_inst] {
+        *opcode = info.new_opcode;
+    } else {
+        panic!();
+    }
+}
+
+enum BranchOrderKind {
+    BrzToBrnz(Value),
+    BrnzToBrz(Value),
+    InvertIcmpCond(IntCC, Value, Value),
+}
+
+/// Reorder branches to encourage fallthroughs.
+///
+/// When an ebb ends with a conditional branch followed by an unconditional
+/// branch, this will reorder them if one of them is branching to the next Ebb
+/// layout-wise. The unconditional jump can then become a fallthrough.
+fn branch_order(pos: &mut FuncCursor, cfg: &mut ControlFlowGraph, ebb: Ebb, inst: Inst) {
+    let (term_inst, term_inst_args, term_dest, cond_inst, cond_inst_args, cond_dest, kind) =
+        match pos.func.dfg[inst] {
+            InstructionData::Jump {
+                opcode: Opcode::Jump,
+                destination,
+                ref args,
+            } => {
+                let next_ebb = if let Some(next_ebb) = pos.func.layout.next_ebb(ebb) {
+                    next_ebb
+                } else {
+                    return;
+                };
+
+                if destination == next_ebb {
+                    return;
+                }
+
+                let prev_inst = if let Some(prev_inst) = pos.func.layout.prev_inst(inst) {
+                    prev_inst
+                } else {
+                    return;
+                };
+
+                let prev_inst_data = &pos.func.dfg[prev_inst];
+
+                if let Some(prev_dest) = prev_inst_data.branch_destination() {
+                    if prev_dest != next_ebb {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+
+                match prev_inst_data {
+                    InstructionData::Branch {
+                        opcode,
+                        args: ref prev_args,
+                        destination: cond_dest,
+                    } => {
+                        let cond_arg = {
+                            let args = pos.func.dfg.inst_args(prev_inst);
+                            args[0]
+                        };
+
+                        let kind = match opcode {
+                            Opcode::Brz => BranchOrderKind::BrzToBrnz(cond_arg),
+                            Opcode::Brnz => BranchOrderKind::BrnzToBrz(cond_arg),
+                            _ => panic!("unexpected opcode"),
+                        };
+
+                        (
+                            inst,
+                            args.clone(),
+                            destination,
+                            prev_inst,
+                            prev_args.clone(),
+                            *cond_dest,
+                            kind,
+                        )
+                    }
+                    InstructionData::BranchIcmp {
+                        opcode: Opcode::BrIcmp,
+                        cond,
+                        destination: cond_dest,
+                        args: ref prev_args,
+                    } => {
+                        let (x_arg, y_arg) = {
+                            let args = pos.func.dfg.inst_args(prev_inst);
+                            (args[0], args[1])
+                        };
+
+                        (
+                            inst,
+                            args.clone(),
+                            destination,
+                            prev_inst,
+                            prev_args.clone(),
+                            *cond_dest,
+                            BranchOrderKind::InvertIcmpCond(*cond, x_arg, y_arg),
+                        )
+                    }
+                    _ => return,
+                }
+            }
+
+            _ => return,
+        };
+
+    let cond_args = { cond_inst_args.as_slice(&pos.func.dfg.value_lists).to_vec() };
+    let term_args = { term_inst_args.as_slice(&pos.func.dfg.value_lists).to_vec() };
+
+    match kind {
+        BranchOrderKind::BrnzToBrz(cond_arg) => {
+            pos.func
+                .dfg
+                .replace(term_inst)
+                .jump(cond_dest, &cond_args[1..]);
+            pos.func
+                .dfg
+                .replace(cond_inst)
+                .brz(cond_arg, term_dest, &term_args);
+        }
+        BranchOrderKind::BrzToBrnz(cond_arg) => {
+            pos.func
+                .dfg
+                .replace(term_inst)
+                .jump(cond_dest, &cond_args[1..]);
+            pos.func
+                .dfg
+                .replace(cond_inst)
+                .brnz(cond_arg, term_dest, &term_args);
+        }
+        BranchOrderKind::InvertIcmpCond(cond, x_arg, y_arg) => {
+            pos.func
+                .dfg
+                .replace(term_inst)
+                .jump(cond_dest, &cond_args[2..]);
+            pos.func.dfg.replace(cond_inst).br_icmp(
+                cond.inverse(),
+                x_arg,
+                y_arg,
+                term_dest,
+                &term_args,
+            );
+        }
+    }
+
+    cfg.recompute_ebb(pos.func, ebb);
+}
+
 /// The main pre-opt pass.
-pub fn do_preopt(func: &mut Function) {
+pub fn do_preopt(func: &mut Function, cfg: &mut ControlFlowGraph) {
     let _tt = timing::preopt();
     let mut pos = FuncCursor::new(func);
-    while let Some(_ebb) = pos.next_ebb() {
+    while let Some(ebb) = pos.next_ebb() {
         while let Some(inst) = pos.next_inst() {
             // Apply basic simplifications.
             simplify(&mut pos, inst);
@@ -554,6 +779,9 @@ pub fn do_preopt(func: &mut Function) {
             }
 
             //-- END -- division by constants ------------------
+
+            branch_opt(&mut pos, inst);
+            branch_order(&mut pos, cfg, ebb, inst);
         }
     }
 }

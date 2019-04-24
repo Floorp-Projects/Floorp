@@ -6,8 +6,8 @@
 
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/PTabContext.h"
-#include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
@@ -142,7 +142,8 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 
       TabContext* context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
-        context = TabParent::GetFrom(ipcContext.opener().get_PBrowserParent());
+        context =
+            BrowserParent::GetFrom(ipcContext.opener().get_PBrowserParent());
         if (!context) {
           mInvalidReason =
               "Child is-browser process tried to "
@@ -151,10 +152,10 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         }
         if (context->IsMozBrowserElement() &&
             !ipcContext.isMozBrowserElement()) {
-          // If the TabParent corresponds to a browser element, then it can only
-          // open other browser elements, for security reasons.  We should have
-          // checked this before calling the TabContext constructor, so this is
-          // a fatal error.
+          // If the BrowserParent corresponds to a browser element, then it can
+          // only open other browser elements, for security reasons.  We should
+          // have checked this before calling the TabContext constructor, so
+          // this is a fatal error.
           mInvalidReason =
               "Child is-browser process tried to "
               "open a non-browser tab.";
@@ -162,7 +163,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         }
       } else if (ipcContext.opener().type() == PBrowserOrId::TPBrowserChild) {
         context =
-            static_cast<TabChild*>(ipcContext.opener().get_PBrowserChild());
+            static_cast<BrowserChild*>(ipcContext.opener().get_PBrowserChild());
       } else if (ipcContext.opener().type() == PBrowserOrId::TTabId) {
         // We should never get here because this PopupIPCTabContext is only
         // used for allocating a new tab id, not for allocating a PBrowser.
@@ -210,7 +211,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     case IPCTabContext::TUnsafeIPCTabContext: {
       // XXXcatalinb: This used *only* by ServiceWorkerClients::OpenWindow.
       // It is meant as a temporary solution until service workers can
-      // provide a TabChild equivalent. Don't allow this on b2g since
+      // provide a BrowserChild equivalent. Don't allow this on b2g since
       // it might be used to escalate privileges.
       if (!StaticPrefs::dom_serviceWorkers_enabled()) {
         mInvalidReason = "ServiceWorkers should be enabled.";

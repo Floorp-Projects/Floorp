@@ -6,6 +6,15 @@
 
 #include "MMPrinter.h"
 
+#include "jsapi.h"
+#include "nsJSUtils.h"
+#include "Logging.h"
+#include "mozilla/Bootstrap.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ErrorResult.h"
+#include "nsFrameMessageManager.h"
+
 namespace mozilla {
 namespace dom {
 

@@ -40,7 +40,7 @@ struct IDBOpenDBOptions;
 class IDBOpenDBRequest;
 template <typename>
 class Optional;
-class TabChild;
+class BrowserChild;
 enum class CallerType : uint32_t;
 
 namespace indexedDB {
@@ -63,7 +63,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   // This will only be set if the factory belongs to a window in a child
   // process.
-  RefPtr<TabChild> mTabChild;
+  RefPtr<BrowserChild> mBrowserChild;
 
   indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
@@ -125,7 +125,7 @@ class IDBFactory final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  TabChild* GetTabChild() const { return mTabChild; }
+  BrowserChild* GetBrowserChild() const { return mBrowserChild; }
 
   PrincipalInfo* GetPrincipalInfo() const {
     AssertIsOnOwningThread();

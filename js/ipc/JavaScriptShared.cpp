@@ -8,7 +8,7 @@
 #include "JavaScriptShared.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "jsfriendapi.h"
 #include "js/Symbol.h"
 #include "xpcprivate.h"

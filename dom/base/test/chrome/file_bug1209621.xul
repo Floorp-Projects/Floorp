@@ -27,8 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
 
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
-    is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
+    is(treeOwner.primaryRemoteTab, null,
+       "There shouldn't be primaryRemoteTab because no remote browser has primary=true.");
 
     var ip = document.getElementById("inprocess");
     var remote = document.getElementById("remote");
@@ -38,29 +38,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
     ok(ip.docShell, "non-remote browser should have a DocShell.");
     is(treeOwner.primaryContentShell, ip.docShell,
        "primary browser should be the primaryContentShell.");
-    is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
+    is(treeOwner.primaryRemoteTab, null,
+       "There shouldn't be primaryRemoteTab because no remote browser has primary=true.");
 
     ip.removeAttribute("primary");
     remote.setAttribute("primary", "true");
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
-    var tp = remote.frameLoader.tabParent;
-    ok(tp, "Remote browsers should have a TabParent.");
-    is(treeOwner.primaryTabParent, tp,
-       "primary remote browser should be the primaryTabParent.");
+    var tp = remote.frameLoader.remoteTab;
+    ok(tp, "Remote browsers should have a remoteTab.");
+    is(treeOwner.primaryRemoteTab, tp,
+       "primary remote browser should be the primaryRemoteTab.");
 
     remote.removeAttribute("primary");
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
-    is(treeOwner.primaryTabParent, null,
-       "There shouldn't be primaryTabParent because no remote browser has primary=true.");
+    is(treeOwner.primaryRemoteTab, null,
+       "There shouldn't be primaryRemoteTab because no remote browser has primary=true.");
 
     remote2.setAttribute("primary", "true");
-    var tp2 = remote2.frameLoader.tabParent;
-    ok(tp2, "Remote browsers should have a TabParent.");
-    is(treeOwner.primaryTabParent, tp2,
-       "primary remote browser should be the primaryTabParent.");
+    var tp2 = remote2.frameLoader.remoteTab;
+    ok(tp2, "Remote browsers should have a remoteTab.");
+    is(treeOwner.primaryRemoteTab, tp2,
+       "primary remote browser should be the primaryRemoteTab.");
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
 

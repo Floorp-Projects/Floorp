@@ -42,7 +42,7 @@ function frameScript()
 }
 
 const EXPECTED = [
-  // Unload events on the TabChildGlobal. These come first so that the
+  // Unload events on the BrowserChildGlobal. These come first so that the
   // docshell is available.
   ["unload", false, 2],
   ["unload", false, 2],

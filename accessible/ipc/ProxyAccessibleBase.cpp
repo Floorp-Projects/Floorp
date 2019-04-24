@@ -12,7 +12,7 @@
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Unused.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
@@ -116,7 +116,7 @@ Derived* ProxyAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
 
 template <class Derived>
 Accessible* ProxyAccessibleBase<Derived>::OuterDocOfRemoteBrowser() const {
-  auto tab = static_cast<dom::TabParent*>(mDoc->Manager());
+  auto tab = static_cast<dom::BrowserParent*>(mDoc->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   NS_ASSERTION(frame, "why isn't the tab in a frame!");
   if (!frame) return nullptr;

@@ -17,7 +17,7 @@
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace a11y {
@@ -176,7 +176,7 @@ void FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive) {
     if (domfm) {
       nsIContent* focusedElm = domfm->GetFocusedElement();
       if (EventStateManager::IsRemoteTarget(focusedElm)) {
-        dom::TabParent* tab = dom::TabParent::GetFrom(focusedElm);
+        dom::BrowserParent* tab = dom::BrowserParent::GetFrom(focusedElm);
         if (tab) {
           a11y::DocAccessibleParent* dap = tab->GetTopLevelDocAccessible();
           if (dap) {

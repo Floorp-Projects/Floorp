@@ -46,8 +46,8 @@ async function checkGetTab(client, tab1, tab2, targetFront1, targetFront2) {
   const filter = {};
   // Filter either by tabId or outerWindowID,
   // if we are running tests OOP or not.
-  if (tab1.linkedBrowser.frameLoader.tabParent) {
-    filter.tabId = tab1.linkedBrowser.frameLoader.tabParent.tabId;
+  if (tab1.linkedBrowser.frameLoader.remoteTab) {
+    filter.tabId = tab1.linkedBrowser.frameLoader.remoteTab.tabId;
   } else {
     const windowUtils = tab1.linkedBrowser.contentWindow.windowUtils;
     filter.outerWindowID = windowUtils.outerWindowID;

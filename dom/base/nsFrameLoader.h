@@ -36,7 +36,7 @@ class nsView;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
 class nsFrameLoaderOwner;
-class nsITabParent;
+class nsIRemoteTab;
 class nsIDocShellTreeItem;
 class nsIDocShellTreeOwner;
 class nsILoadContext;
@@ -52,12 +52,12 @@ class OriginAttributes;
 namespace dom {
 class ChromeMessageSender;
 class ContentParent;
-class InProcessTabChildMessageManager;
+class InProcessBrowserChildMessageManager;
 class MessageSender;
 class PBrowserParent;
 class ProcessMessageManager;
 class Promise;
-class TabParent;
+class BrowserParent;
 class MutableTabContext;
 class BrowserBridgeChild;
 class RemoteFrameChild;
@@ -93,7 +93,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   friend class AutoResetInFrameSwap;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::Document Document;
-  typedef mozilla::dom::TabParent TabParent;
+  typedef mozilla::dom::BrowserParent BrowserParent;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
  public:
@@ -121,8 +121,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsIDocShell* GetExistingDocShell() const {
     return mBrowsingContext ? mBrowsingContext->GetDocShell() : nullptr;
   }
-  mozilla::dom::InProcessTabChildMessageManager* GetTabChildMessageManager()
-      const {
+  mozilla::dom::InProcessBrowserChildMessageManager*
+  GetBrowserChildMessageManager() const {
     return mChildMessageManager;
   }
   nsresult CreateStaticClone(nsFrameLoader* aDest);
@@ -132,7 +132,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   nsDocShell* GetDocShell(mozilla::ErrorResult& aRv);
 
-  already_AddRefed<nsITabParent> GetTabParent();
+  already_AddRefed<nsIRemoteTab> GetRemoteTab();
 
   already_AddRefed<nsILoadContext> LoadContext();
 
@@ -328,12 +328,12 @@ class nsFrameLoader final : public nsStubMutationObserver,
   /**
    * Tell this FrameLoader to use a particular remote browser.
    *
-   * This will assert if mRemoteBrowser is non-null.  In practice,
+   * This will assert if mBrowserParent is non-null.  In practice,
    * this means you can't have successfully run TryRemoteBrowser() on
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
    */
-  void SetRemoteBrowser(nsITabParent* aTabParent);
+  void SetRemoteBrowser(nsIRemoteTab* aBrowserParent);
 
   /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're
@@ -372,7 +372,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // public because a callback needs these.
   RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
-  RefPtr<mozilla::dom::InProcessTabChildMessageManager> mChildMessageManager;
+  RefPtr<mozilla::dom::InProcessBrowserChildMessageManager>
+      mChildMessageManager;
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -449,8 +450,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult GetNewTabContext(mozilla::dom::MutableTabContext* aTabContext,
                             nsIURI* aURI = nullptr);
 
-  enum TabParentChange { eTabParentRemoved, eTabParentChanged };
-  void MaybeUpdatePrimaryTabParent(TabParentChange aChange);
+  enum BrowserParentChange { eBrowserParentRemoved, eBrowserParentChanged };
+  void MaybeUpdatePrimaryBrowserParent(BrowserParentChange aChange);
 
   nsresult PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
@@ -480,7 +481,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // target process.
   uint64_t mPendingSwitchID;
 
-  RefPtr<TabParent> mRemoteBrowser;
+  RefPtr<BrowserParent> mBrowserParent;
   uint64_t mChildID;
 
   // This is used when this refers to a remote sub frame

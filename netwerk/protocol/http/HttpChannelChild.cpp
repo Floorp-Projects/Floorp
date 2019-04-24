@@ -15,7 +15,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
@@ -2026,17 +2026,18 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
   LOG(("HttpChannelChild::ConnectParent [this=%p, id=%" PRIu32 "]\n", this,
        registrarId));
   MOZ_ASSERT(NS_IsMainThread());
-  mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  GetCallback(iTabChild);
-  if (iTabChild) {
-    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  mozilla::dom::BrowserChild* browserChild = nullptr;
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
+  GetCallback(iBrowserChild);
+  if (iBrowserChild) {
+    browserChild =
+        static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "http")) {
+  if (MissingRequiredBrowserChild(browserChild, "http")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  if (tabChild && !tabChild->IPCOpen()) {
+  if (browserChild && !browserChild->IPCOpen()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2058,7 +2059,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 
   HttpChannelConnectArgs connectArgs(registrarId, mShouldParentIntercept);
   PBrowserOrId browser = static_cast<ContentChild*>(gNeckoChild->Manager())
-                             ->GetBrowserOrId(tabChild);
+                             ->GetBrowserOrId(browserChild);
   if (!gNeckoChild->SendPHttpChannelConstructor(
           this, browser, IPC::SerializedLoadContext(this), connectArgs)) {
     return NS_ERROR_FAILURE;
@@ -2635,13 +2636,14 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   // Send request to the chrome process...
   //
 
-  mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  GetCallback(iTabChild);
-  if (iTabChild) {
-    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  mozilla::dom::BrowserChild* browserChild = nullptr;
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
+  GetCallback(iBrowserChild);
+  if (iBrowserChild) {
+    browserChild =
+        static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "http")) {
+  if (MissingRequiredBrowserChild(browserChild, "http")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -2649,9 +2651,9 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   // which changes on every new load or navigation.
   uint64_t contentWindowId = 0;
   TimeStamp navigationStartTimeStamp;
-  if (tabChild) {
-    MOZ_ASSERT(tabChild->WebNavigation());
-    if (RefPtr<Document> document = tabChild->GetTopLevelDocument()) {
+  if (browserChild) {
+    MOZ_ASSERT(browserChild->WebNavigation());
+    if (RefPtr<Document> document = browserChild->GetTopLevelDocument()) {
       contentWindowId = document->InnerWindowID();
       nsDOMNavigationTiming* navigationTiming = document->GetNavigationTiming();
       if (navigationTiming) {
@@ -2754,7 +2756,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
        " topwinid=%" PRIx64,
        this, mChannelId, mTopLevelOuterContentWindowId));
 
-  if (tabChild && !tabChild->IPCOpen()) {
+  if (browserChild && !browserChild->IPCOpen()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2783,7 +2785,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  PBrowserOrId browser = cc->GetBrowserOrId(tabChild);
+  PBrowserOrId browser = cc->GetBrowserOrId(browserChild);
   if (!gNeckoChild->SendPHttpChannelConstructor(
           this, browser, IPC::SerializedLoadContext(this), openArgs)) {
     return NS_ERROR_FAILURE;

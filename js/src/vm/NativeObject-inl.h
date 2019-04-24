@@ -10,6 +10,7 @@
 #include "vm/NativeObject.h"
 
 #include "builtin/TypedObject.h"
+#include "gc/Allocator.h"
 #include "gc/GCTrace.h"
 #include "proxy/Proxy.h"
 #include "vm/JSContext.h"

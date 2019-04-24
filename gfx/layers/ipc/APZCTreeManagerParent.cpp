@@ -144,7 +144,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvStartAutoscroll(
     const SLGuidAndRenderRoot& aGuid, const ScreenPoint& aAnchorLocation) {
   // Unlike RecvStartScrollbarDrag(), this message comes from the parent
   // process (via nsBaseWidget::mAPZC) rather than from the child process
-  // (via TabChild::mApzcTreeManager), so there is no need to check the
+  // (via BrowserChild::mApzcTreeManager), so there is no need to check the
   // layers id against mWrRootId (and in any case, it wouldn't match, because
   // mWrRootId stores the parent process's layers id, while nsBaseWidget is
   // sending the child process's layers id).

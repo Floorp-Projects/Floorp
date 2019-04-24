@@ -18,7 +18,7 @@
 #include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
 #include "nsILoadContext.h"
@@ -86,9 +86,10 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
   {
     nsCOMPtr<nsINode> node(do_QueryInterface(requestingContext));
     nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(requestingContext));
-    nsCOMPtr<nsITabChild> tabChild(do_QueryInterface(requestingContext));
-    NS_ASSERTION(!requestingContext || node || window || tabChild,
-                 "Context should be a DOM node, DOM window or a tabChild!");
+    nsCOMPtr<nsIBrowserChild> browserChild(
+        do_QueryInterface(requestingContext));
+    NS_ASSERTION(!requestingContext || node || window || browserChild,
+                 "Context should be a DOM node, DOM window or a browserChild!");
   }
 #endif
 

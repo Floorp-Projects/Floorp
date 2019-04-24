@@ -12,7 +12,7 @@
 #include "mozilla/ResultExtensions.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "nsXULAppAPI.h"
 
 #include "nsExternalHelperAppService.h"
@@ -679,7 +679,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
           uriParams, loadInfoArgs, nsCString(aMimeContentType), disp,
           contentDisposition, fileName, aForceSave, contentLength,
           wasFileChannel, referrerParams,
-          mozilla::dom::TabChild::GetFrom(window));
+          mozilla::dom::BrowserChild::GetFrom(window));
   ExternalHelperAppChild* childListener =
       static_cast<ExternalHelperAppChild*>(pc);
 
@@ -955,9 +955,9 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    nsCOMPtr<nsITabChild> tabChild(do_GetInterface(aWindowContext));
+    nsCOMPtr<nsIBrowserChild> browserChild(do_GetInterface(aWindowContext));
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        uri, static_cast<dom::TabChild*>(tabChild.get()));
+        uri, static_cast<dom::BrowserChild*>(browserChild.get()));
     return NS_OK;
   }
 

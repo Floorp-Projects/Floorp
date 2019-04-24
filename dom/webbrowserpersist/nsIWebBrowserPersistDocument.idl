@@ -10,7 +10,7 @@
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIPrincipal;
-interface nsITabParent;
+interface nsIRemoteTab;
 interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
 

@@ -18,7 +18,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/TextRange.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Text.h"
 
 namespace mozilla {
@@ -39,13 +39,13 @@ class TextComposition final {
   NS_INLINE_DECL_REFCOUNTING(TextComposition)
 
  public:
-  typedef dom::TabParent TabParent;
+  typedef dom::BrowserParent BrowserParent;
   typedef dom::Text Text;
 
   static bool IsHandlingSelectionEvent() { return sHandlingSelectionEvent; }
 
   TextComposition(nsPresContext* aPresContext, nsINode* aNode,
-                  TabParent* aTabParent,
+                  BrowserParent* aBrowserParent,
                   WidgetCompositionEvent* aCompositionEvent);
 
   bool Destroyed() const { return !mPresContext; }
@@ -78,7 +78,7 @@ class TextComposition final {
     return mPresContext ? mPresContext->GetRootWidget() : nullptr;
   }
   // Returns the tab parent which has this composition in its remote process.
-  TabParent* GetTabParent() const { return mTabParent; }
+  BrowserParent* GetBrowserParent() const { return mBrowserParent; }
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
@@ -288,7 +288,7 @@ class TextComposition final {
   // this instance.
   nsPresContext* mPresContext;
   nsCOMPtr<nsINode> mNode;
-  RefPtr<TabParent> mTabParent;
+  RefPtr<BrowserParent> mBrowserParent;
 
   // The text node which includes the composition string.
   RefPtr<Text> mContainerTextNode;
@@ -470,12 +470,12 @@ class TextComposition final {
   MOZ_CAN_RUN_SCRIPT
   void HandleSelectionEvent(WidgetSelectionEvent* aSelectionEvent) {
     RefPtr<nsPresContext> presContext(mPresContext);
-    RefPtr<TabParent> tabParent(mTabParent);
-    HandleSelectionEvent(presContext, tabParent, aSelectionEvent);
+    RefPtr<BrowserParent> browserParent(mBrowserParent);
+    HandleSelectionEvent(presContext, browserParent, aSelectionEvent);
   }
   MOZ_CAN_RUN_SCRIPT
   static void HandleSelectionEvent(nsPresContext* aPresContext,
-                                   TabParent* aTabParent,
+                                   BrowserParent* aBrowserParent,
                                    WidgetSelectionEvent* aSelectionEvent);
 
   /**

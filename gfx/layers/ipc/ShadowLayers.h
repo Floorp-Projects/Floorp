@@ -432,8 +432,8 @@ class ShadowLayerForwarder final : public LayersIPCActor,
   PaintTiming mPaintTiming;
   /**
    * ShadowLayerForwarder might dispatch tasks to main while puppet widget and
-   * tabChild don't exist anymore; therefore we hold the event target since its
-   *  lifecycle is independent of these objects.
+   * browserChild don't exist anymore; therefore we hold the event target since
+   * its lifecycle is independent of these objects.
    */
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };

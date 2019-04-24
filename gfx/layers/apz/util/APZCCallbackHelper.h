@@ -122,7 +122,7 @@ class APZCCallbackHelper {
                                      const CSSToLayoutDeviceScale& aScale);
 
   /* Dispatch a widget event via the widget stored in the event, if any.
-   * In a child process, allows the TabParent event-capture mechanism to
+   * In a child process, allows the BrowserParent event-capture mechanism to
    * intercept the event. */
   static nsEventStatus DispatchWidgetEvent(WidgetGUIEvent& aEvent);
 

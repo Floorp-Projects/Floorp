@@ -7,7 +7,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
 

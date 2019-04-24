@@ -62,8 +62,8 @@ function SaveRecording() {
   fp.init(window, null, Ci.nsIFilePicker.modeSave);
   fp.open(rv => {
     if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-      const tabParent = gBrowser.selectedTab.linkedBrowser.frameLoader.tabParent;
-      if (!tabParent || !tabParent.saveRecording(fp.file.path)) {
+      const remoteTab = gBrowser.selectedTab.linkedBrowser.frameLoader.remoteTab;
+      if (!remoteTab || !remoteTab.saveRecording(fp.file.path)) {
         window.alert("Current tab is not recording");
       }
     }

@@ -307,19 +307,23 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     global.setOffset(globalDataOffset);
   }
 
-  // Accumulate all exported functions, whether by explicit export or
-  // implicitly by being an element of a function table or by being the start
-  // function. The FuncExportVector stored in Metadata needs to be sorted (to
-  // allow O(log(n)) lookup at runtime) and deduplicated, so use an
-  // intermediate vector to sort and de-duplicate.
+  // Accumulate all exported functions:
+  // - explicitly marked as such;
+  // - implicitly exported by being an element of function tables;
+  // - implicitly exported by being the start function;
+  // The FuncExportVector stored in Metadata needs to be sorted (to allow
+  // O(log(n)) lookup at runtime) and deduplicated. Use a vector with invalid
+  // entries for every single function, that we'll fill as we go through the
+  // exports, and in which we'll remove invalid entries after the fact.
 
-  static_assert((uint64_t(MaxFuncs) << 1) < uint64_t(UINT32_MAX),
-                "bit packing won't work");
+  static_assert(((uint64_t(MaxFuncs) << 1) | 1) < uint64_t(UINT32_MAX),
+                "bit packing won't work in ExportedFunc");
 
   class ExportedFunc {
     uint32_t value;
 
    public:
+    ExportedFunc() : value(UINT32_MAX) {}
     ExportedFunc(uint32_t index, bool isExplicit)
         : value((index << 1) | (isExplicit ? 1 : 0)) {}
     uint32_t index() const { return value >> 1; }
@@ -330,16 +334,36 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     bool operator==(const ExportedFunc& other) const {
       return index() == other.index();
     }
+    bool isInvalid() const { return value == UINT32_MAX; }
+    void mergeExplicit(bool explicitBit) {
+      if (!isExplicit() && explicitBit) {
+        value |= 0x1;
+      }
+    }
   };
 
   Vector<ExportedFunc, 8, SystemAllocPolicy> exportedFuncs;
+  if (!exportedFuncs.resize(env_->numFuncs())) {
+    return false;
+  }
+
+  auto addOrMerge = [&exportedFuncs](ExportedFunc newEntry) {
+    uint32_t index = newEntry.index();
+    if (exportedFuncs[index].isInvalid()) {
+      exportedFuncs[index] = newEntry;
+    } else {
+      exportedFuncs[index].mergeExplicit(newEntry.isExplicit());
+    }
+  };
 
   for (const Export& exp : env_->exports) {
     if (exp.kind() == DefinitionKind::Function) {
-      if (!exportedFuncs.emplaceBack(exp.funcIndex(), true)) {
-        return false;
-      }
+      addOrMerge(ExportedFunc(exp.funcIndex(), true));
     }
+  }
+
+  if (env_->startFuncIndex) {
+    addOrMerge(ExportedFunc(*env_->startFuncIndex, true));
   }
 
   for (const ElemSegment* seg : env_->elemSegments) {
@@ -347,14 +371,11 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
                                     : env_->tables[seg->tableIndex].kind;
     switch (kind) {
       case TableKind::AnyFunction:
-        if (!exportedFuncs.reserve(exportedFuncs.length() + seg->length())) {
-          return false;
-        }
         for (uint32_t funcIndex : seg->elemFuncIndices) {
           if (funcIndex == NullFuncIndex) {
             continue;
           }
-          exportedFuncs.infallibleEmplaceBack(funcIndex, false);
+          addOrMerge(ExportedFunc(funcIndex, false));
         }
         break;
       case TableKind::TypedFunction:
@@ -365,13 +386,9 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
   }
 
-  if (env_->startFuncIndex &&
-      !exportedFuncs.emplaceBack(*env_->startFuncIndex, true)) {
-    return false;
-  }
-
-  std::sort(exportedFuncs.begin(), exportedFuncs.end());
-  auto* newEnd = std::unique(exportedFuncs.begin(), exportedFuncs.end());
+  auto* newEnd =
+      std::remove_if(exportedFuncs.begin(), exportedFuncs.end(),
+                     [](const ExportedFunc& exp) { return exp.isInvalid(); });
   exportedFuncs.erase(newEnd, exportedFuncs.end());
 
   if (!metadataTier_->funcExports.reserve(exportedFuncs.length())) {

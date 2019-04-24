@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "nsXULAppAPI.h"
 
 #include "History.h"
@@ -2025,9 +2025,9 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     SerializeURI(aLastVisitedURI, lastVisitedURI);
 
     NS_ENSURE_ARG(aWidget);
-    TabChild* tabChild = aWidget->GetOwningTabChild();
-    NS_ENSURE_TRUE(tabChild, NS_ERROR_FAILURE);
-    (void)tabChild->SendVisitURI(uri, lastVisitedURI, aFlags);
+    BrowserChild* browserChild = aWidget->GetOwningBrowserChild();
+    NS_ENSURE_TRUE(browserChild, NS_ERROR_FAILURE);
+    (void)browserChild->SendVisitURI(uri, lastVisitedURI, aFlags);
     return NS_OK;
   }
 

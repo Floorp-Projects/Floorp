@@ -25,7 +25,7 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
 
     if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
       let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsITabChild);
+                             .getInterface(Ci.nsIBrowserChild);
       tabchild.webBrowserChrome = this;
     }
   }

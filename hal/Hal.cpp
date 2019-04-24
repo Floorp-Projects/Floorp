@@ -13,7 +13,7 @@
 #include "nsIDOMWindow.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocShell.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsIWebNavigation.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"

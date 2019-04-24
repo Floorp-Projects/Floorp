@@ -584,9 +584,9 @@ nsAppStartup::SetScreenId(uint32_t aScreenId) {
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
                                   uint32_t aChromeFlags,
-                                  nsITabParent *aOpeningTab,
+                                  nsIRemoteTab *aOpeningTab,
                                   mozIDOMWindowProxy *aOpener,
-                                  uint64_t aNextTabParentId, bool *aCancel,
+                                  uint64_t aNextRemoteTabId, bool *aCancel,
                                   nsIWebBrowserChrome **_retval) {
   NS_ENSURE_ARG_POINTER(aCancel);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -615,12 +615,12 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
 
     if (xulParent)
       xulParent->CreateNewWindow(aChromeFlags, aOpeningTab, aOpener,
-                                 aNextTabParentId, getter_AddRefs(newWindow));
+                                 aNextRemoteTabId, getter_AddRefs(newWindow));
     // And if it fails, don't try again without a parent. It could fail
     // intentionally (bug 115969).
   } else {  // try using basic methods:
-    MOZ_RELEASE_ASSERT(aNextTabParentId == 0,
-                       "Unexpected aNextTabParentId, we shouldn't ever have a "
+    MOZ_RELEASE_ASSERT(aNextRemoteTabId == 0,
+                       "Unexpected aNextRemoteTabId, we shouldn't ever have a "
                        "next actor ID without a parent");
 
     /* You really shouldn't be making dependent windows without a parent.

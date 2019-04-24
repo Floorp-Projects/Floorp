@@ -181,21 +181,21 @@ nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell) {
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary) {
+nsContentTreeOwner::RemoteTabAdded(nsIRemoteTab* aTab, bool aPrimary) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->TabParentAdded(aTab, aPrimary);
+  return mXULWindow->RemoteTabAdded(aTab, aPrimary);
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::TabParentRemoved(nsITabParent* aTab) {
+nsContentTreeOwner::RemoteTabRemoved(nsIRemoteTab* aTab) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->TabParentRemoved(aTab);
+  return mXULWindow->RemoteTabRemoved(aTab);
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::GetPrimaryTabParent(nsITabParent** aTab) {
+nsContentTreeOwner::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetPrimaryTabParent(aTab);
+  return mXULWindow->GetPrimaryRemoteTab(aTab);
 }
 
 NS_IMETHODIMP

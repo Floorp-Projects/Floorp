@@ -2039,8 +2039,8 @@ class MachineStackTracker {
   // Mark the stack slot |offsetFromSP| up from the bottom as holding a
   // pointer.
   void setGCPointer(size_t offsetFromSP) {
-    // Offset 0 is the most recently pushed, offset 1 is the second most
-    // recently pushed item, etc.
+    // offsetFromSP == 0 denotes the most recently pushed item, == 1 the
+    // second most recently pushed item, etc.
     MOZ_ASSERT(offsetFromSP < vec_.length());
 
     size_t offsetFromTop = vec_.length() - 1 - offsetFromSP;
@@ -2051,7 +2051,9 @@ class MachineStackTracker {
   // Query the pointerness of the slot |offsetFromSP| up from the bottom.
   bool isGCPointer(size_t offsetFromSP) {
     MOZ_ASSERT(offsetFromSP < vec_.length());
-    return vec_[offsetFromSP];
+
+    size_t offsetFromTop = vec_.length() - 1 - offsetFromSP;
+    return vec_[offsetFromTop];
   }
 
   // Return the number of words tracked by this MachineStackTracker.
@@ -2358,7 +2360,7 @@ struct StackMapGenerator {
     // Followed by the "main" part of the map.
     for (uint32_t i = 0; i < augmentedMstWords; i++) {
       if (augmentedMst.isGCPointer(i)) {
-        stackMap->setBit(numMappedWords - 1 - i);
+        stackMap->setBit(extraWords + i);
       }
     }
 

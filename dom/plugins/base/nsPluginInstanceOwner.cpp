@@ -58,7 +58,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "nsFrameSelection.h"
 #include "PuppetWidget.h"
@@ -874,7 +874,7 @@ bool nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted) {
   // call nsIWidget::NotifyIME() directly from here.
   IMEStateManager::NotifyIME(aCommitted ? widget::REQUEST_TO_COMMIT_COMPOSITION
                                         : widget::REQUEST_TO_CANCEL_COMPOSITION,
-                             widget, composition->GetTabParent());
+                             widget, composition->GetBrowserParent());
   // FYI: This instance may have been destroyed.  Be careful if you need to
   //      access members of this class.
   return true;
@@ -959,7 +959,8 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget* widget,
                                                  NPCoordinateSpace sourceSpace,
                                                  double* destX, double* destY,
                                                  NPCoordinateSpace destSpace) {
-  NS_ENSURE_TRUE(widget && widget->GetOwningTabChild() && pluginFrame, false);
+  NS_ENSURE_TRUE(widget && widget->GetOwningBrowserChild() && pluginFrame,
+                 false);
   // Caller has to want a result.
   NS_ENSURE_TRUE(destX || destY, false);
 
@@ -2822,7 +2823,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void) {
       if (XRE_IsContentProcess()) {
         if (nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow()) {
           if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop()) {
-            dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
+            dom::BrowserChild* tc = dom::BrowserChild::GetFrom(topWindow);
             if (tc) {
               // This returns a PluginWidgetProxy which remotes a number of
               // calls.

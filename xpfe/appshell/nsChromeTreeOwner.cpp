@@ -118,21 +118,21 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary) {
+nsChromeTreeOwner::RemoteTabAdded(nsIRemoteTab* aTab, bool aPrimary) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->TabParentAdded(aTab, aPrimary);
+  return mXULWindow->RemoteTabAdded(aTab, aPrimary);
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::TabParentRemoved(nsITabParent* aTab) {
+nsChromeTreeOwner::RemoteTabRemoved(nsIRemoteTab* aTab) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->TabParentRemoved(aTab);
+  return mXULWindow->RemoteTabRemoved(aTab);
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::GetPrimaryTabParent(nsITabParent** aTab) {
+nsChromeTreeOwner::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
   NS_ENSURE_STATE(mXULWindow);
-  return mXULWindow->GetPrimaryTabParent(aTab);
+  return mXULWindow->GetPrimaryRemoteTab(aTab);
 }
 
 NS_IMETHODIMP

@@ -540,13 +540,13 @@ void GPUProcessManager::HandleProcessLost() {
   //      Compositor/ImageBridgeChild singletons and recreate them, as well
   //      as invalidate all retained layers.
   //
-  //  (7) In addition, each ContentChild will ask each of its TabChildren
+  //  (7) In addition, each ContentChild will ask each of its BrowserChildren
   //      to re-request association with the compositor for the window
   //      owning the tab. The sequence of calls looks like:
   //        (a) [CONTENT] ContentChild::RecvReinitRendering
-  //        (b) [CONTENT] TabChild::ReinitRendering
-  //        (c) [CONTENT] TabChild::SendEnsureLayersConnected
-  //        (d)      [UI] TabParent::RecvEnsureLayersConnected
+  //        (b) [CONTENT] BrowserChild::ReinitRendering
+  //        (c) [CONTENT] BrowserChild::SendEnsureLayersConnected
+  //        (d)      [UI] BrowserParent::RecvEnsureLayersConnected
   //        (e)      [UI] RenderFrame::EnsureLayersConnected
   //        (f)      [UI] CompositorBridgeChild::SendNotifyChildRecreated
   //

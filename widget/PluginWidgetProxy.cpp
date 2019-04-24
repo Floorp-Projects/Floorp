@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PluginWidgetProxy.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/plugins/PluginWidgetChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "nsDebug.h"
@@ -13,9 +13,9 @@
 
 /* static */
 already_AddRefed<nsIWidget> nsIWidget::CreatePluginProxyWidget(
-    TabChild* aTabChild, mozilla::plugins::PluginWidgetChild* aActor) {
+    BrowserChild* aBrowserChild, mozilla::plugins::PluginWidgetChild* aActor) {
   nsCOMPtr<nsIWidget> widget =
-      new mozilla::widget::PluginWidgetProxy(aTabChild, aActor);
+      new mozilla::widget::PluginWidgetProxy(aBrowserChild, aActor);
   return widget.forget();
 }
 
@@ -35,8 +35,9 @@ NS_IMPL_ISUPPORTS_INHERITED(PluginWidgetProxy, PuppetWidget, nsIWidget)
   } while (0)
 
 PluginWidgetProxy::PluginWidgetProxy(
-    dom::TabChild* aTabChild, mozilla::plugins::PluginWidgetChild* aActor)
-    : PuppetWidget(aTabChild), mActor(aActor), mCachedPluginPort(0) {
+    dom::BrowserChild* aBrowserChild,
+    mozilla::plugins::PluginWidgetChild* aActor)
+    : PuppetWidget(aBrowserChild), mActor(aActor), mCachedPluginPort(0) {
   // See ChannelDestroyed() in the header
   mActor->SetWidget(this);
 }
@@ -116,7 +117,7 @@ void* PluginWidgetProxy::GetNativeData(uint32_t aDataType) {
   if (!mActor) {
     return nullptr;
   }
-  auto tab = static_cast<mozilla::dom::TabChild*>(mActor->Manager());
+  auto tab = static_cast<mozilla::dom::BrowserChild*>(mActor->Manager());
   if (tab && tab->IsDestroyed()) {
     return nullptr;
   }
@@ -146,7 +147,7 @@ void PluginWidgetProxy::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
     return;
   }
 
-  auto tab = static_cast<mozilla::dom::TabChild*>(mActor->Manager());
+  auto tab = static_cast<mozilla::dom::BrowserChild*>(mActor->Manager());
   if (tab && tab->IsDestroyed()) {
     return;
   }

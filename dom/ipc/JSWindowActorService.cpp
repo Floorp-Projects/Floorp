@@ -8,14 +8,23 @@
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/EventListenerManager.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozJSComponentLoader.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
 #include "mozilla/Logging.h"
+
+#include "nsIObserver.h"
+#include "nsIDOMEventListener.h"
 
 namespace mozilla {
 namespace dom {

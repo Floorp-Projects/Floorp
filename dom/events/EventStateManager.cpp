@@ -24,8 +24,8 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
@@ -61,7 +61,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsPluginFrame.h"
 #include "nsMenuPopupFrame.h"
 
@@ -659,9 +659,9 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // If the eKeyPress event will be sent to a remote process, this
         // process needs to wait reply from the remote process for checking if
         // preceding eKeyDown event is consumed.  If preceding eKeyDown event
-        // is consumed in the remote process, TabChild won't send the event
+        // is consumed in the remote process, BrowserChild won't send the event
         // back to this process.  So, only when this process receives a reply
-        // eKeyPress event in TabParent, we should handle accesskey in this
+        // eKeyPress event in BrowserParent, we should handle accesskey in this
         // process.
         if (IsRemoteTarget(GetFocusedContent())) {
           // However, if there is no accesskey target for the key combination,
@@ -1030,8 +1030,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           // focus, but pass false since we don't want to change the window
           // order.
           nsIDocShell* docShell = mPresContext->GetDocShell();
-          nsCOMPtr<nsITabChild> child =
-              docShell ? docShell->GetTabChild() : nullptr;
+          nsCOMPtr<nsIBrowserChild> child =
+              docShell ? docShell->GetBrowserChild() : nullptr;
           if (child) {
             child->SendRequestFocus(false);
           }
@@ -1091,12 +1091,13 @@ struct MOZ_STACK_CLASS AccessKeyInfo {
       : event(aEvent), charCodes(aCharCodes) {}
 };
 
-static bool HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg) {
+static bool HandleAccessKeyInRemoteChild(BrowserParent* aBrowserParent,
+                                         void* aArg) {
   AccessKeyInfo* accessKeyInfo = static_cast<AccessKeyInfo*>(aArg);
 
   // Only forward accesskeys for the active tab.
   bool active;
-  aTabParent->GetDocShellIsActive(&active);
+  aBrowserParent->GetDocShellIsActive(&active);
   if (active) {
     // Even if there is no target for the accesskey in this process,
     // the event may match with a content accesskey.  If so, the keyboard
@@ -1105,8 +1106,8 @@ static bool HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg) {
     // "File" menu.)
     accessKeyInfo->event->StopPropagation();
     accessKeyInfo->event->MarkAsWaitingReplyFromRemoteProcess();
-    aTabParent->HandleAccessKey(*accessKeyInfo->event,
-                                accessKeyInfo->charCodes);
+    aBrowserParent->HandleAccessKey(*accessKeyInfo->event,
+                                    accessKeyInfo->charCodes);
     return true;
   }
 
@@ -1205,10 +1206,10 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
   if (aExecute &&
       aEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent) &&
       mDocument && mDocument->GetWindow()) {
-    // If the focus is currently on a node with a TabParent, the key event
+    // If the focus is currently on a node with a BrowserParent, the key event
     // should've gotten forwarded to the child process and HandleAccessKey
     // called from there.
-    if (TabParent::GetFrom(GetFocusedContent())) {
+    if (BrowserParent::GetFrom(GetFocusedContent())) {
       // If access key may be only in remote contents, this method won't handle
       // access key synchronously.  In this case, only reply event should reach
       // here.
@@ -1233,23 +1234,24 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
 void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
                                                   nsFrameLoader* aFrameLoader,
                                                   nsEventStatus* aStatus) {
-  TabParent* remote = TabParent::GetFrom(aFrameLoader);
+  BrowserParent* remote = BrowserParent::GetFrom(aFrameLoader);
   if (!remote) {
     return;
   }
 
   if (aEvent->mLayersId.IsValid()) {
-    TabParent* preciseRemote =
-        TabParent::GetTabParentFromLayersId(aEvent->mLayersId);
+    BrowserParent* preciseRemote =
+        BrowserParent::GetBrowserParentFromLayersId(aEvent->mLayersId);
     if (preciseRemote) {
       remote = preciseRemote;
     }
-    // else there is a race between APZ and the LayersId to TabParent mapping,
-    // so fall back to delivering the event to the topmost child process.
+    // else there is a race between APZ and the LayersId to BrowserParent
+    // mapping, so fall back to delivering the event to the topmost child
+    // process.
   } else if (aEvent->mClass == eKeyboardEventClass) {
     // APZ attaches a LayersId to hit-testable events, for keyboard events,
     // we use focus.
-    TabParent* preciseRemote = TabParent::GetFocused();
+    BrowserParent* preciseRemote = BrowserParent::GetFocused();
     if (preciseRemote) {
       remote = preciseRemote;
     }
@@ -1278,8 +1280,8 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       return;
     }
     case eDragEventClass: {
-      RefPtr<TabParent> tabParent = remote;
-      tabParent->Manager()->MaybeInvokeDragSession(tabParent);
+      RefPtr<BrowserParent> browserParent = remote;
+      browserParent->Manager()->MaybeInvokeDragSession(browserParent);
 
       nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
@@ -1296,8 +1298,8 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
         }
       }
 
-      tabParent->SendRealDragEvent(*aEvent->AsDragEvent(), action, dropEffect,
-                                   IPC::Principal(principal));
+      browserParent->SendRealDragEvent(*aEvent->AsDragEvent(), action,
+                                       dropEffect, IPC::Principal(principal));
       return;
     }
     case ePluginEventClass: {
@@ -1312,7 +1314,7 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
 }
 
 bool EventStateManager::IsRemoteTarget(nsIContent* target) {
-  return !!TabParent::GetFrom(target);
+  return !!BrowserParent::GetFrom(target);
 }
 
 bool EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
@@ -2039,8 +2041,8 @@ nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
   if (!rootWindow) return NS_ERROR_FAILURE;
 
-  TabChild* tabChild = TabChild::GetFrom(rootWindow);
-  if (!tabChild) {
+  BrowserChild* browserChild = BrowserChild::GetFrom(rootWindow);
+  if (!browserChild) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm) return NS_ERROR_FAILURE;
 
@@ -2048,7 +2050,7 @@ nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
     fm->GetActiveWindow(getter_AddRefs(activeWindow));
     if (rootWindow != activeWindow) return NS_OK;
   } else {
-    if (!tabChild->ParentIsActive()) return NS_OK;
+    if (!browserChild->ParentIsActive()) return NS_OK;
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> contentWindow =
@@ -2887,8 +2889,8 @@ void EventStateManager::PostHandleKeyboardEvent(
 
   if (!aKeyboardEvent->HasBeenPostedToRemoteProcess()) {
     if (aKeyboardEvent->IsWaitingReplyFromRemoteProcess()) {
-      RefPtr<TabParent> remote =
-          aTargetFrame ? TabParent::GetFrom(aTargetFrame->GetContent())
+      RefPtr<BrowserParent> remote =
+          aTargetFrame ? BrowserParent::GetFrom(aTargetFrame->GetContent())
                        : nullptr;
       if (remote) {
         // remote is null-checked above in order to let pre-existing event
@@ -2897,7 +2899,7 @@ void EventStateManager::PostHandleKeyboardEvent(
         // there are still bugs in the Fission-mode code. That is, if remote
         // is nullptr, the pre-existing event targeting code has deemed this
         // event to belong to chrome rather than content.
-        TabParent* preciseRemote = TabParent::GetFocused();
+        BrowserParent* preciseRemote = BrowserParent::GetFocused();
         if (preciseRemote) {
           remote = preciseRemote;
         }
@@ -3619,8 +3621,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   return ret;
 }
 
-TabParent* EventStateManager::GetCrossProcessTarget() {
-  return IMEStateManager::GetActiveTabParent();
+BrowserParent* EventStateManager::GetCrossProcessTarget() {
+  return IMEStateManager::GetActiveBrowserParent();
 }
 
 bool EventStateManager::IsTargetCrossProcess(WidgetGUIEvent* aEvent) {
@@ -3628,7 +3630,7 @@ bool EventStateManager::IsTargetCrossProcess(WidgetGUIEvent* aEvent) {
   // in that case, do not forward IME events to content
   nsIContent* focusedContent = GetFocusedContent();
   if (focusedContent && focusedContent->IsEditable()) return false;
-  return IMEStateManager::GetActiveTabParent() != nullptr;
+  return IMEStateManager::GetActiveBrowserParent() != nullptr;
 }
 
 void EventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext) {
@@ -5596,7 +5598,7 @@ nsresult EventStateManager::DoContentCommandEvent(
     if (canDoIt && !aEvent->mOnlyEnabledCheck) {
       switch (aEvent->mMessage) {
         case eContentCommandPasteTransferable: {
-          TabParent* remote = TabParent::GetFocused();
+          BrowserParent* remote = BrowserParent::GetFocused();
           if (remote) {
             nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
             IPCDataTransfer ipcDataTransfer;
