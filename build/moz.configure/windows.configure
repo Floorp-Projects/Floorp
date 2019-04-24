@@ -163,12 +163,12 @@ def valid_ucrt_sdk_dir_result(value):
         return '%s in %s' % (value.version, quote(value.path))
 
 
-@depends(windows_sdk_dir, 'WINDOWSSDKDIR', c_compiler)
+@depends(windows_sdk_dir, 'WINDOWSSDKDIR')
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
 @imports(_import='mozpack.path', _as='mozpath')
-def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
+def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
     if windows_sdk_dir_env:
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
@@ -220,25 +220,13 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
                               'Please install it.')
 
     version, sdk = sdks[valid_sdks[0]]
-    minimum_ucrt_version = Version('10.0.15063.0')
+    minimum_ucrt_version = Version('10.0.17134.0')
     if version < minimum_ucrt_version:
         raise FatalCheckError('Latest Universal CRT SDK version found %s'
                               ' and minimum required is %s. This or a later'
                               ' version can be installed using the Visual'
                               ' Studio installer.'
                               % (version, minimum_ucrt_version))
-
-    broken_ucrt_version = Version('10.0.16299.0')
-    working_ucrt_version = Version('10.0.17134.0')
-    if (c_compiler.type == 'clang-cl' and version >= broken_ucrt_version and
-            version < working_ucrt_version):
-        raise FatalCheckError('Found SDK version %s but clang-cl builds'
-                              ' currently don\'t work with the SDK version.'
-                              ' You should use a different version, either'
-                              ' by uninstalling version %s or setting a'
-                              ' custom WINDOWSSDKDIR.\n'
-                              'Note: Version %s now works with clang-cl.'
-                              % (version, version, working_ucrt_version))
 
     return namespace(
         path=sdk.path,
