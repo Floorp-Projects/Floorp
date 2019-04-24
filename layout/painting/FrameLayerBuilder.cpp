@@ -6471,8 +6471,13 @@ static void DebugPaintItem(DrawTarget& aDrawTarget, nsPresContext* aPresContext,
   Rect bounds = NSRectToRect(aItem->GetBounds(aBuilder, &snap),
                              aPresContext->AppUnitsPerDevPixel());
 
-  RefPtr<DrawTarget> tempDT = aDrawTarget.CreateSimilarDrawTarget(
-      IntSize::Truncate(bounds.width, bounds.height), SurfaceFormat::B8G8R8A8);
+  const IntSize size = IntSize::Truncate(bounds.width, bounds.height);
+  if (size.IsEmpty()) {
+    return;
+  }
+
+  RefPtr<DrawTarget> tempDT =
+      aDrawTarget.CreateSimilarDrawTarget(size, SurfaceFormat::B8G8R8A8);
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(tempDT);
   if (!context) {
     // Leave this as crash, it's in the debugging code, we want to know
