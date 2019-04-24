@@ -127,6 +127,34 @@ add_task(async function testExtensionList() {
   await closeView(win);
 });
 
+add_task(async function testMouseSupport() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Test extension",
+      applications: {gecko: {id: "test@mochi.test"}},
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  let [card] = getTestCards(doc);
+  is(card.addon.id, "test@mochi.test", "The right card is found");
+
+  let menuButton = card.querySelector('[action="more-options"]');
+  let panel = card.querySelector("panel-list");
+
+  ok(!panel.open, "The panel is initially closed");
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    menuButton, {type: "mousedown"}, gBrowser.selectedBrowser);
+  ok(panel.open, "The panel is now open");
+
+  await closeView(win);
+  await extension.unload();
+});
+
 add_task(async function testKeyboardSupport() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
