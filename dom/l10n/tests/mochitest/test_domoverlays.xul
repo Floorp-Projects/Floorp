@@ -16,7 +16,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  const {DOMLocalization} = ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm");
+  /* global DOMOverlays */
 
   function elem(name) {
     return function(str) {
@@ -27,7 +27,7 @@
     };
   }
 
-  const { translateElement } = DOMLocalization.DOMOverlays;
+  const { translateElement } = DOMOverlays;
 
   SimpleTest.waitForExplicitFinish();
 

@@ -36,6 +36,7 @@ WEBIDL_FILES = [
     'BrowsingContext.webidl',
     'ChannelWrapper.webidl',
     'DominatorTree.webidl',
+    'DOMOverlays.webidl',
     'Flex.webidl',
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
