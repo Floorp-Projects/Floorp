@@ -130,6 +130,8 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
 
   IMPL_EVENT_HANDLER(online)
   IMPL_EVENT_HANDLER(offline)
+  IMPL_EVENT_HANDLER(rejectionhandled)
+  IMPL_EVENT_HANDLER(unhandledrejection)
 
   void Dump(const Optional<nsAString>& aString) const;
 
