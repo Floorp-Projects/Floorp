@@ -17,6 +17,7 @@
       "workaround-issue38586.patch",
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
-      "loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch",
+      "revert-r355311.patch"
     ]
 }
