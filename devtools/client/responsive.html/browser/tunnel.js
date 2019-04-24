@@ -263,13 +263,16 @@ function tunnelToInnerBrowser(outer, inner) {
       const { detail } = event;
       event.preventDefault();
       const uri = Services.io.newURI(detail.url);
+      let flags = Ci.nsIBrowserDOMWindow.OPEN_NEWTAB;
+      if (detail.forceNoReferrer) {
+        flags |= Ci.nsIBrowserDOMWindow.OPEN_NO_REFERRER;
+      }
       // This API is used mainly because it's near the path used for <a target/> with
       // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
       // that support openers, window features, etc. didn't seem callable from JS and / or
       // this event doesn't give enough info to use them.
       browserWindow.browserDOMWindow
-        .openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                 Ci.nsIBrowserDOMWindow.OPEN_NEW,
+        .openURI(uri, null, flags, Ci.nsIBrowserDOMWindow.OPEN_NEW,
                  outer.contentPrincipal);
     },
 
