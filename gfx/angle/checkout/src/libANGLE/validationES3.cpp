@@ -36,7 +36,7 @@ bool ValidateFramebufferTextureMultiviewBaseANGLE(Context *context,
                                                   GLint level,
                                                   GLsizei numViews)
 {
-    if (!context->getExtensions().multiview)
+    if (!context->getExtensions().multiview2)
     {
         context->validationError(GL_INVALID_OPERATION, kMultiviewNotAvailable);
         return false;
@@ -3157,13 +3157,13 @@ bool ValidateMultiDrawElementsInstancedANGLE(Context *context,
     return true;
 }
 
-bool ValidateFramebufferTextureMultiviewLayeredANGLE(Context *context,
-                                                     GLenum target,
-                                                     GLenum attachment,
-                                                     GLuint texture,
-                                                     GLint level,
-                                                     GLint baseViewIndex,
-                                                     GLsizei numViews)
+bool ValidateFramebufferTextureMultiviewOVR(Context *context,
+                                            GLenum target,
+                                            GLenum attachment,
+                                            GLuint texture,
+                                            GLint level,
+                                            GLint baseViewIndex,
+                                            GLsizei numViews)
 {
     if (!ValidateFramebufferTextureMultiviewBaseANGLE(context, target, attachment, texture, level,
                                                       numViews))
@@ -3205,53 +3205,6 @@ bool ValidateFramebufferTextureMultiviewLayeredANGLE(Context *context,
 
                 break;
             }
-            default:
-                context->validationError(GL_INVALID_OPERATION, kInvalidTextureType);
-                return false;
-        }
-
-        if (!ValidateFramebufferTextureMultiviewLevelAndFormat(context, tex, level))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool ValidateFramebufferTextureMultiviewSideBySideANGLE(Context *context,
-                                                        GLenum target,
-                                                        GLenum attachment,
-                                                        GLuint texture,
-                                                        GLint level,
-                                                        GLsizei numViews,
-                                                        const GLint *viewportOffsets)
-{
-    if (!ValidateFramebufferTextureMultiviewBaseANGLE(context, target, attachment, texture, level,
-                                                      numViews))
-    {
-        return false;
-    }
-
-    if (texture != 0)
-    {
-        const GLsizei numViewportOffsetValues = numViews * 2;
-        for (GLsizei i = 0; i < numViewportOffsetValues; ++i)
-        {
-            if (viewportOffsets[i] < 0)
-            {
-                context->validationError(GL_INVALID_VALUE, kNegativeOffset);
-                return false;
-            }
-        }
-
-        Texture *tex = context->getTexture(texture);
-        ASSERT(tex);
-
-        switch (tex->getType())
-        {
-            case TextureType::_2D:
-                break;
             default:
                 context->validationError(GL_INVALID_OPERATION, kInvalidTextureType);
                 return false;

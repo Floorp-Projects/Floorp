@@ -172,7 +172,7 @@ const std::string &VertexArray::getLabel() const
 
 bool VertexArray::detachBuffer(const Context *context, GLuint bufferName)
 {
-    bool isBound = context->isCurrentVertexArray(this);
+    bool isBound           = context->isCurrentVertexArray(this);
     bool anyBufferDetached = false;
     for (size_t bindingIndex = 0; bindingIndex < gl::MAX_VERTEX_ATTRIB_BINDINGS; ++bindingIndex)
     {

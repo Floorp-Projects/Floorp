@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMOverlays Top-level attributes</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  /* global DOMOverlays */
+  "use strict";
+
+  function elem(name) {
+    return function(str) {
+      const element = document.createElement(name);
+      // eslint-disable-next-line no-unsanitized/property
+      element.innerHTML = str;
+      return element;
+    };
+  }
+
+  const { translateElement } = DOMOverlays;
+
+  {
+    // Allowed attribute
+    const element = elem("div")``;
+    const translation = {
+      value: null,
+      attributes: [
+        {name: "title", value: "FOO"},
+      ],
+    };
+    translateElement(element, translation);
+    is(element.outerHTML, '<div title="FOO"></div>');
+  }
+
+  {
+    // Forbidden attribute
+    const element = elem("input")``;
+    const translation = {
+      value: null,
+      attributes: [
+        {name: "disabled", value: "DISABLED"},
+      ],
+    };
+    translateElement(element, translation);
+    is(element.outerHTML, "<input>");
+  }
+
+  {
+    // Attributes do not leak on first translation
+    const element = elem("div")`Foo`;
+    element.setAttribute("title", "Title");
+
+    const translation = {
+      value: "FOO",
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.outerHTML, "<div>FOO</div>");
+  }
+
+  {
+    // Attributes do not leak on retranslation
+    const element = elem("div")`Foo`;
+
+    const translationA = {
+      value: "FOO A",
+      attributes: [
+        {name: "title", value: "TITLE A"},
+      ],
+    };
+
+    const translationB = {
+      value: "FOO B",
+      attributes: null,
+    };
+    translateElement(element, translationA);
+    is(element.outerHTML, '<div title="TITLE A">FOO A</div>');
+    translateElement(element, translationB);
+    is(element.outerHTML, "<div>FOO B</div>");
+  }
+  </script>
+</head>
+<body>
+</body>
+</html>

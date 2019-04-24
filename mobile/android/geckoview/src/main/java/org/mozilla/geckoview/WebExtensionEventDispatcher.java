@@ -144,7 +144,7 @@ import java.util.Map;
     private WebExtension.MessageDelegate getDelegate(
             final String nativeApp, final WebExtension.MessageSender sender,
             final EventCallback callback) {
-        if (!sender.webExtension.allowContentMessaging &&
+        if ((sender.webExtension.flags & WebExtension.Flags.ALLOW_CONTENT_MESSAGING) == 0 &&
                 sender.environmentType == WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT) {
             callback.sendError("This NativeApp can't receive messages from Content Scripts.");
             return null;

@@ -262,7 +262,7 @@ OutputHLSL::OutputHLSL(sh::GLenum shaderType,
     mUsesPointSize   = false;
     mUsesInstanceID  = false;
     mHasMultiviewExtensionEnabled =
-        IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview);
+        IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview2);
     mUsesViewID                  = false;
     mUsesVertexID                = false;
     mUsesFragDepth               = false;

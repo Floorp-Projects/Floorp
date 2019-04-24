@@ -61,9 +61,9 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::ARM_shader_framebuffer_fetch] = EBhUndefined;
     }
-    if (resources.OVR_multiview)
+    if (resources.OVR_multiview2)
     {
-        extBehavior[TExtension::OVR_multiview] = EBhUndefined;
+        extBehavior[TExtension::OVR_multiview2] = EBhUndefined;
     }
     if (resources.EXT_YUV_target)
     {

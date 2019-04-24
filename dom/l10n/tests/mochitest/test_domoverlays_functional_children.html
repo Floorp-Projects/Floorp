@@ -1,0 +1,344 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMOverlays functional children test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  /* global DOMOverlays */
+  "use strict";
+
+  function elem(name) {
+    return function(str) {
+      const element = document.createElement(name);
+      // eslint-disable-next-line no-unsanitized/property
+      element.innerHTML = str;
+      return element;
+    };
+  }
+
+  const { translateElement } = DOMOverlays;
+
+  // Child without name
+  {
+    // in source
+    const element = elem("div")`
+      <a>Foo</a>`;
+    const translation = {
+      value: "FOO",
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  {
+    // in translation
+    const element = elem("div")`Foo`;
+    const translation = {
+      value: "<a>FOO</a>",
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  {
+    // in both
+    const element = elem("div")`
+      <a>Foo</a>`;
+    const translation = {
+      value: "<a>FOO</a>",
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  // Child with name
+  {
+    // in source
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: "<a>FOO</a>",
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  {
+    // in translation
+    const element = elem("div")`
+      <a>Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  {
+    // in both
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, '<a data-l10n-name="foo">FOO</a>');
+  }
+
+  {
+    // translation without text content
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo"></a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, '<a data-l10n-name="foo"></a>');
+  }
+
+  {
+    // different names
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="bar">BAR</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "BAR");
+  }
+
+  {
+    // of different types
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<div data-l10n-name="foo">FOO</div>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO");
+  }
+
+  {
+    // used twice
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO 1</a> <a data-l10n-name="foo">FOO 2</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, '<a data-l10n-name="foo">FOO 1</a> FOO 2');
+  }
+
+  // Two named children
+  {
+    // in order
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>
+      <a data-l10n-name="bar">Bar</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a><a data-l10n-name="bar">BAR</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, '<a data-l10n-name="foo">FOO</a><a data-l10n-name="bar">BAR</a>');
+  }
+
+  {
+    // out of order
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>
+      <a data-l10n-name="bar">Bar</a>`;
+    const translation = {
+      value: '<a data-l10n-name="bar">BAR</a><a data-l10n-name="foo">FOO</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(element.innerHTML, '<a data-l10n-name="bar">BAR</a><a data-l10n-name="foo">FOO</a>');
+  }
+
+  {
+    // nested in source
+    const element = elem("div")`
+      <a data-l10n-name="foo">
+        Foo 1
+        <a data-l10n-name="bar">Bar</a>
+        Foo 2
+      </a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a><a data-l10n-name="bar">BAR</a>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(
+      element.innerHTML,
+      '<a data-l10n-name="foo">FOO</a><a data-l10n-name="bar">BAR</a>'
+    );
+  }
+
+  {
+    // nested in translation
+    const element = elem("div")`
+      <div data-l10n-name="foo">Foo</div>
+      <div data-l10n-name="bar">Bar</div>`;
+    const translation = {
+      value: '<div data-l10n-name="foo">FOO 1 <div data-l10n-name="bar">BAR</div> FOO 2</div>',
+      attributes: null,
+    };
+    translateElement(element, translation);
+    is(
+      element.innerHTML,
+      '<div data-l10n-name="foo">FOO 1 BAR FOO 2</div>'
+    );
+  }
+
+  // Child attributes
+  {
+    // functional attribute in source
+    const element = elem("div")`
+      <a data-l10n-name="foo" class="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" class="foo">FOO</a>');
+  }
+
+  {
+    // functional attribute in translation
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" class="bar">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo">FOO</a>');
+  }
+
+  {
+    // functional attribute in both
+    const element = elem("div")`
+      <a data-l10n-name="foo" class="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" class="bar">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" class="foo">FOO</a>');
+  }
+
+  {
+    // localizable attribute in source
+    const element = elem("div")`
+      <a data-l10n-name="foo" title="Foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo">FOO</a>');
+  }
+
+  {
+    // localizable attribute in translation
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" title="FOO">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" title="FOO">FOO</a>');
+  }
+
+  {
+    // localizable attribute in both
+    const element = elem("div")`
+      <a data-l10n-name="foo" title="Foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" title="BAR">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" title="BAR">FOO</a>');
+  }
+
+  {
+    // localizable attribute does not leak on retranslation
+    const element = elem("div")`
+      <a data-l10n-name="foo">Foo</a>`;
+    const translationA = {
+      value: '<a data-l10n-name="foo" title="FOO A">FOO A</a>',
+      attributes: null,
+    };
+    const translationB = {
+      value: '<a data-l10n-name="foo">FOO B</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translationA);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" title="FOO A">FOO A</a>');
+    translateElement(element, translationB);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo">FOO B</a>');
+  }
+
+  // Child attributes overrides
+  {
+    // the source can override child's attributes
+    const element = elem("div")`
+      <a data-l10n-name="foo" data-l10n-attrs="class" class="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" class="FOO">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" data-l10n-attrs="class" class="FOO">FOO</a>');
+  }
+
+  {
+    // the translation cannot override child's attributes
+    const element = elem("div")`
+      <a data-l10n-name="foo" class="foo">Foo</a>`;
+    const translation = {
+      value: '<a data-l10n-name="foo" data-l10n-attrs="class" class="FOO">FOO</a>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      '<a data-l10n-name="foo" class="foo">FOO</a>');
+  }
+  </script>
+</head>
+<body>
+</body>
+</html>

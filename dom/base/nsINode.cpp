@@ -29,6 +29,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentType.h"
+#include "mozilla/dom/DOMOverlaysBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/L10nUtilsBinding.h"
@@ -37,6 +38,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/l10n/DOMOverlays.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
@@ -2770,59 +2772,30 @@ class LocalizationHandler : public PromiseNativeHandler {
       return;
     }
 
-    JS::Rooted<JSObject*> untranslatedElements(
-        aCx, JS_NewArrayObject(aCx, mElements.Length()));
-    if (!untranslatedElements) {
-      mReturnValuePromise->MaybeRejectWithUndefined();
-      return;
-    }
-
     ErrorResult rv;
+    nsTArray<DOMOverlaysError> errors;
     for (size_t i = 0; i < l10nData.Length(); ++i) {
       Element* elem = mElements[i];
-      nsString& content = l10nData[i].mValue;
-      if (!content.IsVoid()) {
-        elem->SetTextContent(content, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          mReturnValuePromise->MaybeRejectWithUndefined();
-          return;
-        }
-      }
-
-      Nullable<Sequence<AttributeNameValue>>& attributes =
-          l10nData[i].mAttributes;
-      if (!attributes.IsNull()) {
-        for (size_t j = 0; j < attributes.Value().Length(); ++j) {
-          nsString& name = attributes.Value()[j].mName;
-          nsString& value = attributes.Value()[j].mValue;
-          RefPtr<nsAtom> nameAtom = NS_Atomize(name);
-          if (!elem->AttrValueIs(kNameSpaceID_None, nameAtom, value,
-                                 eCaseMatters)) {
-            rv = elem->SetAttr(kNameSpaceID_None, nameAtom, value, true);
-            if (rv.Failed()) {
-              mReturnValuePromise->MaybeRejectWithUndefined();
-              return;
-            }
-          }
-        }
-      }
-
-      if (content.IsVoid() && attributes.IsNull()) {
-        JS::Rooted<JS::Value> wrappedElem(aCx);
-        if (!ToJSValue(aCx, elem, &wrappedElem)) {
-          mReturnValuePromise->MaybeRejectWithUndefined();
-          return;
-        }
-
-        if (!JS_DefineElement(aCx, untranslatedElements, i, wrappedElem,
-                              JSPROP_ENUMERATE)) {
-          mReturnValuePromise->MaybeRejectWithUndefined();
-          return;
-        }
+      mozilla::dom::l10n::DOMOverlays::TranslateElement(*elem, l10nData[i],
+                                                        errors, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
       }
     }
-    JS::Rooted<JS::Value> result(aCx, JS::ObjectValue(*untranslatedElements));
-    mReturnValuePromise->MaybeResolveWithClone(aCx, result);
+
+    nsTArray<JS::Value> jsErrors;
+    SequenceRooter<JS::Value> rooter(aCx, &jsErrors);
+    for (auto& error : errors) {
+      JS::RootedValue jsError(aCx);
+      if (!ToJSValue(aCx, error, &jsError)) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+      jsErrors.AppendElement(jsError);
+    }
+
+    mReturnValuePromise->MaybeResolve(jsErrors);
   }
 
   virtual void RejectedCallback(JSContext* aCx,

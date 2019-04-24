@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMOverlays Localized text markup</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  /* global DOMOverlays */
+  "use strict";
+
+  function elem(name) {
+    return function(str) {
+      const element = document.createElement(name);
+      // eslint-disable-next-line no-unsanitized/property
+      element.innerHTML = str;
+      return element;
+    };
+  }
+
+  const { translateElement } = DOMOverlays;
+
+  // Localized text markup
+  {
+    // allowed element
+    const element = elem("div")`Foo`;
+    const translation = {
+      value: "FOO <em>BAR</em> BAZ",
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO <em>BAR</em> BAZ");
+  }
+
+  {
+    // forbidden element
+    const element = elem("div")`Foo`;
+    const translation = {
+      value: 'FOO <img src="img.png" />',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO ");
+  }
+
+  {
+    // forbiden element with text
+    const element = elem("div")`Foo`;
+    const translation = {
+      value: "FOO <a>a</a>",
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO a");
+  }
+
+  {
+    // nested HTML is forbidden
+    const element = elem("div")`Foo`;
+    const translation = {
+      value: "FOO <em><strong>BAR</strong></em> BAZ",
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML, "FOO <em>BAR</em> BAZ");
+  }
+
+  // Attributes of localized text markup
+  {
+    // allowed attribute
+    const element = elem("div")`Foo Bar`;
+    const translation = {
+      value: 'FOO <em title="BAR">BAR</em>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      'FOO <em title="BAR">BAR</em>');
+  }
+
+  {
+    // forbidden attribute
+    const element = elem("div")`Foo Bar`;
+    const translation = {
+      value: 'FOO <em class="BAR" title="BAR">BAR</em>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      'FOO <em title="BAR">BAR</em>');
+  }
+
+  {
+    // attributes do not leak on first translation
+    const element = elem("div")`
+      <em title="Foo">Foo</a>`;
+    const translation = {
+      value: "<em>FOO</em>",
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(element.innerHTML,
+      "<em>FOO</em>");
+  }
+
+  {
+    // attributes do not leak on retranslation
+    const element = elem("div")``;
+    const translationA = {
+      value: '<em title="FOO A">FOO A</em>',
+      attributes: null,
+    };
+    const translationB = {
+      value: "<em>FOO B</em>",
+      attributes: null,
+    };
+
+    translateElement(element, translationA);
+    is(element.innerHTML,
+      '<em title="FOO A">FOO A</em>');
+    translateElement(element, translationB);
+    is(element.innerHTML,
+      "<em>FOO B</em>");
+  }
+  </script>
+</head>
+<body>
+</body>
+</html>

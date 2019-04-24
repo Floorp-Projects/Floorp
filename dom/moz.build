@@ -105,6 +105,7 @@ DIRS += [
     'reporting',
     'localstorage',
     'prio',
+    'l10n',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

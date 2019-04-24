@@ -39,8 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363862
         {name: "accesskey", value: "V"},
       ]
     },
-    "key4": undefined,
-    "key5": {
+    "key4": {
       value: null,
       attributes: [
         {name: "value", value: "Submit Value"},
@@ -97,24 +96,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363862
   async function testLocalization() {
     const container = document.getElementById("testContainer");
 
-    const untranslatedElements = await translateFragment(container);
+    await translateFragment(container);
 
     // We will walk through all translations and check if they
     // were correctly populated onto the DOM.
     for (const [l10nId, translation] of Object.entries(translations)) {
       const elem = document.querySelector(`[data-l10n-id=${l10nId}]`);
 
-      // If there is no translation then the element should be returned
-      // as part of the `untranslatedElements`.
-      if (translation === undefined) {
-        const i = Object.keys(translations).indexOf(l10nId);
-        ok(untranslatedElements[i] === elem);
-        continue;
-      }
-
       if (translation.value !== null) {
-      ok(elem.textContent === translation.value,
-        "element's textContent should be populated with the translation value");
+        ok(elem.textContent === translation.value,
+          "element's textContent should be populated with the translation value");
       }
 
       if (translation.attributes !== null) {
@@ -136,7 +127,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1363862
     <label data-l10n-id="key1" />
     <label data-l10n-id="key2" data-l10n-args='{"unreadCount": 5}' />
     <label data-l10n-id="key3" />
-    <label data-l10n-id="key4" />
-    <html:input type="submit" data-l10n-id="key5" />
+    <html:input type="submit" data-l10n-id="key4" />
   </box>
 </window>
