@@ -81,7 +81,7 @@ def pr_or_push(is_push):
 
             ALL_RAPTOR_CRAFT_FUNCTIONS = [
                 BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
-                for i in range(1, 11)
+                for i in range(1, 15)
             ]
             for craft_function in ALL_RAPTOR_CRAFT_FUNCTIONS:
                 args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
