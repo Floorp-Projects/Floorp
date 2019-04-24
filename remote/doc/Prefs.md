@@ -10,8 +10,10 @@ Configurable preferences
 ### `remote.enabled`
 
 Indicates whether the remote agent is enabled.  When the remote
-agent is enabled, it exposes a `--remote-debugger` flag for Firefox.
+agent is enabled, it exposes a [`--remote-debugger` flag] for Firefox.
 When set to false, the remote agent will not be loaded on startup.
+
+[`--remote-debugger` flag]: Usage.html
 
 ### `remote.force-local`
 
