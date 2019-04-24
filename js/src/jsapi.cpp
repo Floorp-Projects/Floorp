@@ -1159,6 +1159,7 @@ JS_PUBLIC_API void JS::AddAssociatedMemory(JSObject* obj, size_t nbytes,
   Zone* zone = obj->zone();
   zone->updateMallocCounter(nbytes);
   zone->addCellMemory(obj, nbytes, use);
+  zone->runtimeFromMainThread()->gc.maybeAllocTriggerZoneGC(zone);
 }
 
 JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
