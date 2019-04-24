@@ -703,7 +703,7 @@ nsContentTreeOwner::ProvideWindow(
     mozIDOMWindowProxy* aParent, uint32_t aChromeFlags, bool aCalledFromJS,
     bool aPositionSpecified, bool aSizeSpecified, nsIURI* aURI,
     const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
-    bool aForceNoReferrer, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+    nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
     mozIDOMWindowProxy** aReturn) {
   NS_ENSURE_ARG_POINTER(aParent);
 
@@ -796,9 +796,6 @@ nsContentTreeOwner::ProvideWindow(
     uint32_t flags = nsIBrowserDOMWindow::OPEN_NEW;
     if (aForceNoOpener) {
       flags |= nsIBrowserDOMWindow::OPEN_NO_OPENER;
-    }
-    if (aForceNoReferrer) {
-      flags |= nsIBrowserDOMWindow::OPEN_NO_REFERRER;
     }
 
     // Get a new rendering area from the browserDOMWin.

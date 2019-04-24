@@ -89,7 +89,6 @@ interface nsPIWindowWatcher : nsISupports
                                  in nsISupports aArgs,
                                  in boolean aIsPopupSpam,
                                  in boolean aForceNoOpener,
-                                 in boolean aForceNoReferrer,
                                  in nsDocShellLoadStatePtr aLoadState);
 
   /**

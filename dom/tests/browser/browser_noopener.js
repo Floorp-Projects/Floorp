@@ -10,11 +10,11 @@ const TESTS = [
 
   {id: "#test7", name: "", opener: true, newWindow: false},
   {id: "#test8", name: "", opener: false, newWindow: false},
-  {id: "#test9", name: "", opener: false, newWindow: false},
+  {id: "#test9", name: "", opener: true, newWindow: true},
 
   {id: "#test10", name: "uniquename1", opener: true, newWindow: false},
   {id: "#test11", name: "uniquename2", opener: false, newWindow: false},
-  {id: "#test12", name: "uniquename3", opener: false, newWindow: false},
+  {id: "#test12", name: "uniquename3", opener: true, newWindow: true},
 ];
 
 const TEST_URL = "http://mochi.test:8888/browser/dom/tests/browser/test_noopener_source.html";
@@ -98,10 +98,6 @@ async function doAllTests() {
 // This test takes a really long time, especially in debug builds, as it is
 // constant starting and stopping processes, and opens a new window ~144 times.
 requestLongerTimeout(25);
-
-add_task(async function prepare() {
-  await SpecialPowers.pushPrefEnv({set: [["dom.window.open.noreferrer.enabled", true]]});
-});
 
 add_task(async function newtab_sameproc() {
   await SpecialPowers.pushPrefEnv({set: [[OPEN_NEWWINDOW_PREF, OPEN_NEWTAB],

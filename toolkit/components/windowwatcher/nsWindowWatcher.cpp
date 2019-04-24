@@ -292,7 +292,6 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const char* aUrl,
                             /* navigate = */ true, argv,
                             /* aIsPopupSpam = */ false,
                             /* aForceNoOpener = */ false,
-                            /* aForceNoReferrer = */ false,
                             /* aLoadState = */ nullptr, aResult);
 }
 
@@ -348,7 +347,6 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent, const char* aUrl,
                              bool aCalledFromScript, bool aDialog,
                              bool aNavigate, nsISupports* aArguments,
                              bool aIsPopupSpam, bool aForceNoOpener,
-                             bool aForceNoReferrer,
                              nsDocShellLoadState* aLoadState,
                              mozIDOMWindowProxy** aResult) {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
@@ -368,8 +366,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent, const char* aUrl,
 
   return OpenWindowInternal(aParent, aUrl, aName, aFeatures, aCalledFromScript,
                             dialog, aNavigate, argv, aIsPopupSpam,
-                            aForceNoOpener, aForceNoReferrer, aLoadState,
-                            aResult);
+                            aForceNoOpener, aLoadState, aResult);
 }
 
 // This static function checks if the aDocShell uses an UserContextId equal to
@@ -581,10 +578,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     mozIDOMWindowProxy* aParent, const char* aUrl, const char* aName,
     const char* aFeatures, bool aCalledFromJS, bool aDialog, bool aNavigate,
     nsIArray* aArgv, bool aIsPopupSpam, bool aForceNoOpener,
-    bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
-    mozIDOMWindowProxy** aResult) {
-  MOZ_ASSERT_IF(aForceNoReferrer, aForceNoOpener);
-
+    nsDocShellLoadState* aLoadState, mozIDOMWindowProxy** aResult) {
   nsresult rv = NS_OK;
   bool isNewToplevelWindow = false;
   bool windowIsNew = false;
@@ -767,8 +761,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         rv = provider->ProvideWindow(
             aParent, chromeFlags, aCalledFromJS, sizeSpec.PositionSpecified(),
             sizeSpec.SizeSpecified(), uriToLoad, name, features, aForceNoOpener,
-            aForceNoReferrer, aLoadState, &windowIsNew,
-            getter_AddRefs(newWindow));
+            aLoadState, &windowIsNew, getter_AddRefs(newWindow));
 
         if (NS_SUCCEEDED(rv)) {
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
@@ -1086,22 +1079,20 @@ nsresult nsWindowWatcher::OpenWindowInternal(
                "nsWindowWatcher: triggeringPrincipal required");
 #endif
 
-    if (!aForceNoReferrer) {
-      /* use the URL from the *extant* document, if any. The usual accessor
-         GetDocument will synchronously create an about:blank document if
-         it has no better answer, and we only care about a real document.
-         Also using GetDocument to force document creation seems to
-         screw up focus in the hidden window; see bug 36016.
-      */
-      RefPtr<Document> doc = GetEntryDocument();
-      if (!doc && parentWindow) {
-        doc = parentWindow->GetExtantDoc();
-      }
-      if (doc) {
-        nsCOMPtr<nsIReferrerInfo> referrerInfo =
-            new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
-        loadState->SetReferrerInfo(referrerInfo);
-      }
+    /* use the URL from the *extant* document, if any. The usual accessor
+       GetDocument will synchronously create an about:blank document if
+       it has no better answer, and we only care about a real document.
+       Also using GetDocument to force document creation seems to
+       screw up focus in the hidden window; see bug 36016.
+    */
+    RefPtr<Document> doc = GetEntryDocument();
+    if (!doc && parentWindow) {
+      doc = parentWindow->GetExtantDoc();
+    }
+    if (doc) {
+      nsCOMPtr<nsIReferrerInfo> referrerInfo =
+          new ReferrerInfo(doc->GetDocumentURI(), doc->GetReferrerPolicy());
+      loadState->SetReferrerInfo(referrerInfo);
     }
   }
 
