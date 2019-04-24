@@ -1315,7 +1315,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.isFalse(result);
     });
-    it("should return true for layout for isStartup=false", () => {
+    it("should return true for layout for isStartup=false after 30 mins", () => {
       const layout = {lastUpdated: Date.now()};
       clock.tick(THIRTY_MINUTES + 1);
       const result = feed.isExpired({cachedData: {layout}, key: "layout"});
@@ -1328,6 +1328,16 @@ describe("DiscoveryStreamFeed", () => {
       const result = feed.isExpired({cachedData: {layout}, key: "layout", isStartup: true});
 
       assert.isTrue(result);
+    });
+    it("should return false for hardcoded layout on startup for content over 1 week", () => {
+      feed._prefCache.config = {
+        hardcoded_layout: true,
+      };
+      const layout = {lastUpdated: Date.now()};
+      clock.tick(ONE_WEEK + 1);
+      const result = feed.isExpired({cachedData: {layout}, key: "layout", isStartup: true});
+
+      assert.isFalse(result);
     });
   });
 
