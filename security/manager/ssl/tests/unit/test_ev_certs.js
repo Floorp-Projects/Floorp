@@ -245,7 +245,7 @@ add_task(async function oneCRLTests() {
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
   // set the blocklist-background-update-timer value to the recent past
-  Services.prefs.setIntPref("services.blocklist.onecrl.checked",
+  Services.prefs.setIntPref("services.settings.security.onecrl.checked",
                             Math.floor(Date.now() / 1000) - 1);
   Services.prefs.setIntPref(
     "app.update.lastUpdateTime.blocklist-background-update-timer",
@@ -269,7 +269,7 @@ add_task(async function oneCRLTests() {
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
   // set the blocklist-background-update-timer value to the more distant past
-  Services.prefs.setIntPref("services.blocklist.onecrl.checked",
+  Services.prefs.setIntPref("services.settings.security.onecrl.checked",
                             Math.floor(Date.now() / 1000) - 108080);
   Services.prefs.setIntPref(
     "app.update.lastUpdateTime.blocklist-background-update-timer",
@@ -279,13 +279,13 @@ add_task(async function oneCRLTests() {
   await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
-  // test the OCSP behavior when services.blocklist.onecrl.checked is in the
+  // test the OCSP behavior when services.settings.security.onecrl.checked is in the
   // distant past and blacklist-background-update-timer is recent
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
   // set the blocklist-background-update-timer value to the recent past
-  // (services.blocklist.onecrl.checked defaults to 0)
+  // (services.settings.security.onecrl.checked defaults to 0)
   Services.prefs.setIntPref(
     "app.update.lastUpdateTime.blocklist-background-update-timer",
     Math.floor(Date.now() / 1000) - 1);
@@ -295,19 +295,19 @@ add_task(async function oneCRLTests() {
   await ensureVerifiesAsEV("test-oid-path");
 
   clearOCSPCache();
-  // test the OCSP behavior when services.blocklist.onecrl.checked is recent
+  // test the OCSP behavior when services.settings.security.onecrl.checked is recent
   // enable OneCRL OCSP skipping - allow staleness of up to 30 hours
   Services.prefs.setIntPref("security.onecrl.maximum_staleness_in_seconds",
                             108000);
-  // now set services.blocklist.onecrl.checked to a recent value
-  Services.prefs.setIntPref("services.blocklist.onecrl.checked",
+  // now set services.settings.security.onecrl.checked to a recent value
+  Services.prefs.setIntPref("services.settings.security.onecrl.checked",
                             Math.floor(Date.now() / 1000) - 1);
   await ensureOneCRLSkipsOCSPForIntermediates("anyPolicy-int-path");
   await ensureOneCRLSkipsOCSPForIntermediates("no-ocsp-int-path");
   await ensureOneCRLSkipsOCSPForIntermediates("test-oid-path");
 
   Services.prefs.clearUserPref("security.onecrl.maximum_staleness_in_seconds");
-  Services.prefs.clearUserPref("services.blocklist.onecrl.checked");
+  Services.prefs.clearUserPref("services.settings.security.onecrl.checked");
   Services.prefs.clearUserPref(
     "app.update.lastUpdateTime.blocklist-background-update-timer");
 });

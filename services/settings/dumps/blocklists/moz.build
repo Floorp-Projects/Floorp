@@ -8,7 +8,6 @@ with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
 
 FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons.json',
-                                                    'certificates.json',
                                                     'gfx.json',
                                                     'plugins.json']
 

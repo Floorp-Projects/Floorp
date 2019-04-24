@@ -2780,6 +2780,12 @@ pref("services.settings.default_signer", "remote-settings.content-signature.mozi
 // other channels always report events.
 pref("services.common.uptake.sampleRate", 1);   // 1%
 
+// Security state OneCRL.
+pref("services.settings.security.onecrl.bucket", "security-state");
+pref("services.settings.security.onecrl.collection", "onecrl");
+pref("services.settings.security.onecrl.signer", "onecrl.content-signature.mozilla.org");
+pref("services.settings.security.onecrl.checked", 0);
+
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
 // OneCRL freshness checking depends on this value, so if you change it,
@@ -2796,9 +2802,6 @@ pref("extensions.blocklist.itemURL", "https://blocked.cdn.mozilla.net/%blockID%.
 pref("extensions.blocklist.level", 2);
 // Blocklist via settings server (Kinto)
 pref("services.blocklist.bucket", "blocklists");
-pref("services.blocklist.onecrl.collection", "certificates");
-pref("services.blocklist.onecrl.checked", 0);
-pref("services.blocklist.onecrl.signer", "onecrl.content-signature.mozilla.org");
 pref("services.blocklist.addons.collection", "addons");
 pref("services.blocklist.addons.checked", 0);
 pref("services.blocklist.addons.signer", "remote-settings.content-signature.mozilla.org");
