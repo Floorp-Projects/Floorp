@@ -72,7 +72,7 @@ buildscript {
     }
 
     ext.kotlin_version = '1.2.41'
-    ext.support_library_version = '26.1.0'
+    ext.support_library_version = '28.0.0'
     ext.jacoco_version = '0.8.1'
 
     if (gradle.mozconfig.substs.MOZ_ANDROID_GOOGLE_PLAY_SERVICES) {

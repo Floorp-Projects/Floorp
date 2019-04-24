@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.support.v7.app.NotificationCompat;
 
 import org.mozilla.gecko.notifications.NotificationHelper;
 
@@ -27,7 +27,7 @@ public final class GuestSession {
 
     @SuppressWarnings("NewApi")
     public static void showNotification(Context context) {
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        final Notification.Builder builder = new Notification.Builder(context);
         final Resources res = context.getResources();
         builder.setContentTitle(res.getString(R.string.guest_browsing_notification_title))
                .setContentText(res.getString(R.string.guest_browsing_notification_text))
