@@ -451,3 +451,31 @@ add_task(function test_parallel_io() {
   L10nRegistry.sources.clear();
   L10nRegistry.load = originalLoad;
 });
+
+/**
+ * This test verifies that we handle correctly a scenario where a source
+ * is being removed while the iterator operates.
+ */
+add_task(function test_remove_source_mid_iter_cycle() {
+  let oneSource = new FileSource("platform", ["en-US"], "./platform/data/locales/{locale}/");
+  L10nRegistry.registerSource(oneSource);
+
+  let secondSource = new FileSource("app", ["pl"], "./app/data/locales/{locale}/");
+  L10nRegistry.registerSource(secondSource);
+
+  fs = {
+    "./platform/data/locales/en-US/test.ftl": "key = platform value",
+    "./app/data/locales/pl/test.ftl": "key = app value",
+  };
+
+  let bundles = L10nRegistry.generateBundlesSync(["en-US", "pl"], ["test.ftl"]);
+
+  let bundle0 = bundles.next();
+
+  L10nRegistry.removeSource("app");
+
+  equal((bundles.next()).done, true);
+
+  // cleanup
+  L10nRegistry.sources.clear();
+});
