@@ -6,7 +6,6 @@ import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog"
 import {connect} from "react-redux";
 import {DiscoveryStreamBase} from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
-import {ManualMigration} from "content-src/components/ManualMigration/ManualMigration";
 import {PrerenderData} from "common/PrerenderData.jsm";
 import React from "react";
 import {Search} from "content-src/components/Search/Search";
@@ -159,12 +158,8 @@ export class BaseContent extends React.PureComponent {
                 </ErrorBoundary>
               </div>
             }
+            <ASRouterUISurface dispatch={this.props.dispatch} />
             <div className={`body-wrapper${(initialized ? " on" : "")}`}>
-              {!isDiscoveryStream && !prefs.migrationExpired &&
-                <div className="non-collapsible-section">
-                  <ManualMigration />
-                </div>
-                }
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">
                   <DiscoveryStreamBase />
@@ -174,7 +169,6 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        <ASRouterUISurface dispatch={this.props.dispatch} />
       </div>);
   }
 }

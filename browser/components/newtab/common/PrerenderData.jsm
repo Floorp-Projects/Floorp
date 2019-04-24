@@ -74,7 +74,6 @@ class _PrerenderData {
 
 this.PrerenderData = new _PrerenderData({
   initialPrefs: {
-    "migrationExpired": true,
     "feeds.topsites": true,
     "showSearch": true,
     "topSitesRows": 1,

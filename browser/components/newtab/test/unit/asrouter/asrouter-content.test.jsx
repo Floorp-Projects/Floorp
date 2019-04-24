@@ -7,6 +7,7 @@ import React from "react";
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
 const FAKE_NEWSLETTER_SNIPPET = FAKE_LOCAL_MESSAGES.find(msg => msg.id === "newsletter");
 const FAKE_FXA_SNIPPET = FAKE_LOCAL_MESSAGES.find(msg => msg.id === "fxa");
+const FAKE_BELOW_SEARCH_SNIPPET = FAKE_LOCAL_MESSAGES.find(msg => msg.id === "belowsearch");
 
 FAKE_MESSAGE = Object.assign({}, FAKE_MESSAGE, {provider: "fakeprovider"});
 const FAKE_BUNDLED_MESSAGE = {bundle: [{id: "foo", template: "onboarding", content: {title: "Foo", primary_button: {}, body: "Foo123"}}], extraTemplateStrings: {}, template: "onboarding"};
@@ -40,10 +41,12 @@ describe("ASRouterUISurface", () => {
   let wrapper;
   let global;
   let sandbox;
+  let portalContainer;
   let fakeDocument;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    portalContainer = document.createElement("div");
     fakeDocument = {
       location: {href: ""},
       _listeners: new Set(),
@@ -63,6 +66,9 @@ describe("ASRouterUISurface", () => {
       },
       removeEventListener(event, listener) {
         this._listeners.delete(listener);
+      },
+      getElementById() {
+        return portalContainer;
       },
     };
     global = new GlobalOverrider();
@@ -114,6 +120,16 @@ describe("ASRouterUISurface", () => {
   it("should not render a preview banner if message provider is not preview", () => {
     wrapper.setState({message: FAKE_MESSAGE});
     assert.isFalse(wrapper.find(".snippets-preview-banner").exists());
+  });
+
+  it("should render a SimpleSnippet in the portal", () => {
+    wrapper.setState({message: FAKE_MESSAGE});
+    assert.isTrue(portalContainer.childElementCount > 0);
+  });
+
+  it("should not render a SimpleBelowSearchSnippet in the portal", () => {
+    wrapper.setState({message: FAKE_BELOW_SEARCH_SNIPPET});
+    assert.equal(portalContainer.childElementCount, 0);
   });
 
   it("should dispatch an event to select the correct theme", () => {

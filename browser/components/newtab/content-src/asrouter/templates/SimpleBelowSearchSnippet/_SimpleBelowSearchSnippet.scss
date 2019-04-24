@@ -1,0 +1,70 @@
+.SimpleBelowSearchSnippet {
+  background-color: inherit;
+  border: 0;
+  box-shadow: none;
+  position: relative;
+  z-index: auto;
+
+  &.active {
+    background: var(--newtab-element-hover-color);
+    border-radius: 4px;
+  }
+
+  .innerWrapper {
+    flex-direction: column;
+    padding: 15px;
+    text-align: center;
+    width: 100%;
+
+    @mixin full-width-styles {
+      flex-direction: row;
+      padding: 0;
+      padding-inline-end: 36px;
+      text-align: inherit;
+    }
+
+    @media (min-width: $break-point-medium) {
+      @include full-width-styles;
+    }
+
+    // Disable breakpoints for now if discovery stream is enabled.
+    .ds-outer-wrapper-breakpoint-override & {
+      @include full-width-styles;
+    }
+  }
+
+  .blockButton {
+    display: block;
+    inset-inline-end: 15px;
+    opacity: 1;
+    top: 20px;
+
+    @media (min-width: $break-point-medium) {
+      top: 50%;
+    }
+
+    // Disable breakpoints for now if discovery stream is enabled.
+    .ds-outer-wrapper-breakpoint-override & {
+      top: 50%;
+    }
+  }
+
+  .icon {
+    height: 28px;
+    margin-inline-start: 12px;
+    width: 28px;
+  }
+
+  .body {
+    margin: 5px 0 0;
+
+    @media (min-width: $break-point-medium) {
+      margin: 14px 0;
+    }
+
+    // Disable breakpoints for now if discovery stream is enabled.
+    .ds-outer-wrapper-breakpoint-override & {
+      margin: 14px 0;
+    }
+  }
+}

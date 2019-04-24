@@ -15,7 +15,6 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils",
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 const {AboutPreferences} = ChromeUtils.import("resource://activity-stream/lib/AboutPreferences.jsm");
 const {DefaultPrefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
-const {ManualMigration} = ChromeUtils.import("resource://activity-stream/lib/ManualMigration.jsm");
 const {NewTabInit} = ChromeUtils.import("resource://activity-stream/lib/NewTabInit.jsm");
 const {SectionsFeed} = ChromeUtils.import("resource://activity-stream/lib/SectionsManager.jsm");
 const {PlacesFeed} = ChromeUtils.import("resource://activity-stream/lib/PlacesFeed.jsm");
@@ -92,18 +91,6 @@ const PREFS_CONFIG = new Map([
   ["filterAdult", {
     title: "Remove adult pages from sites, highlights, etc.",
     value: true,
-  }],
-  ["migrationExpired", {
-    title: "Boolean flag that decides whether to show the migration message or not.",
-    value: false,
-  }],
-  ["migrationLastShownDate", {
-    title: "Timestamp when migration message was last shown. In seconds.",
-    value: 0,
-  }],
-  ["migrationRemainingDays", {
-    title: "Number of days to show the manual migration message",
-    value: 4,
   }],
   ["prerender", {
     title: "Use the prerendered version of activity-stream.html. This is set automatically by PrefsFeed.jsm.",
@@ -248,7 +235,7 @@ const PREFS_CONFIG = new Map([
         collapsible: true,
         enabled: isEnabled,
         show_spocs: showSpocs({geo}),
-        hardcoded_layout: false,
+        hardcoded_layout: true,
         personalized: false,
         // This is currently an exmple layout used for dev purposes.
         layout_endpoint: "https://getpocket.cdn.mozilla.net/v3/newtab/layout?version=1&consumer_key=$apiKey&layout_variant=basic",
@@ -281,12 +268,6 @@ const FEEDS_DATA = [
     name: "aboutpreferences",
     factory: () => new AboutPreferences(),
     title: "about:preferences rendering",
-    value: true,
-  },
-  {
-    name: "migration",
-    factory: () => new ManualMigration(),
-    title: "Manual migration wizard",
     value: true,
   },
   {
