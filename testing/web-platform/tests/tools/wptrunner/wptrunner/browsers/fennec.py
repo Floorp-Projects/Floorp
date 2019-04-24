@@ -111,6 +111,7 @@ class FennecBrowser(FirefoxBrowser):
         self.device_serial = device_serial
         self.tests_root = kwargs["tests_root"]
         self.install_fonts = kwargs["install_fonts"]
+        self.stackwalk_binary = kwargs["stackwalk_binary"]
 
     @property
     def package_name(self):
@@ -221,3 +222,8 @@ class FennecBrowser(FirefoxBrowser):
             # browser to shut down. This allows the leak log to be written
             self.runner.stop()
         self.logger.debug("stopped")
+
+    def check_crash(self, process, test):
+        if not os.environ.get("MINIDUMP_STACKWALK", "") and self.stackwalk_binary:
+            os.environ["MINIDUMP_STACKWALK"] = self.stackwalk_binary
+        return self.runner.check_for_crashes()
