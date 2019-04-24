@@ -47,8 +47,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   friend class ::nsSVGViewportFrame;
 
  protected:
-  explicit SVGViewportElement(
-      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  SVGViewportElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   ~SVGViewportElement() = default;
 
  public:
