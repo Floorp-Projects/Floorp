@@ -25,6 +25,14 @@ add_task(async function test_regular_init() {
       SearchTestUtils.promiseSearchNotification("ensure-known-region-done"),
       promiseAfterCache(),
     ]);
+    // If the system is under load (e.g. xpcshell-tests running in parallel),
+    // then we can hit the state where init() is still running, but the cache
+    // save fires early. This generates a second `write-cache-to-disk-complete`
+    // which can then let us sometimes proceed early. Therefore we have this
+    // additional wait to ensure that any cache saves are complete before
+    // we move on.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 2000));
     checkRequest(requests);
 
     // Install kTestEngineName and wait for it to reach the disk.
