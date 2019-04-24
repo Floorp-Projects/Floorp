@@ -44,13 +44,9 @@
 // 64-bit atomics are not required by the JS spec, and you can compile
 // SpiderMonkey without them.
 //
-// 64-bit lock-free atomics are however required for WebAssembly, and
-// WebAssembly will be disabled if you do not define both HAS_64BIT_ATOMICS and
-// HAS_64BIT_LOCKFREE.
-//
-// If you are only able to provide 64-bit non-lock-free atomics and you really
-// want WebAssembly support you can always just lie about the lock-freedom.
-// After all, you're already feeling lucky.
+// 64-bit lock-free atomics are required for WebAssembly, but gating in the
+// WebAssembly subsystem ensures that no WebAssembly-supporting platforms need
+// code in this file.
 
 #if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM)
 // On some x86 (32-bit) systems this will not work because the compiler does not

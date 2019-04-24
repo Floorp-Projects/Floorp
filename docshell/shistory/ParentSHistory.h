@@ -29,7 +29,7 @@ class nsDocShell;
 namespace mozilla {
 namespace dom {
 
-class TabParent;
+class BrowserParent;
 class ChildSHistory;
 
 class ParentSHistory : public nsISupports, public nsWrapperCache {
@@ -50,7 +50,7 @@ class ParentSHistory : public nsISupports, public nsWrapperCache {
 
  private:
   nsDocShell* GetDocShell();
-  TabParent* GetTabParent();
+  BrowserParent* GetBrowserParent();
 
   already_AddRefed<ChildSHistory> GetChildIfSameProcess();
 

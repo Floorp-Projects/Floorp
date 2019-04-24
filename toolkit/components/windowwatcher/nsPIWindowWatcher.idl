@@ -20,7 +20,7 @@ interface nsISimpleEnumerator;
 interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
-interface nsITabParent;
+interface nsIRemoteTab;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 
 [uuid(d162f9c4-19d5-4723-931f-f1e51bfa9f68)]
@@ -97,7 +97,7 @@ interface nsPIWindowWatcher : nsISupports
    * inherit load context information from aOpeningTab.
    *
    * @param aOpeningTab
-   *        The nsITabParent that is requesting the new window be opened.
+   *        The nsIRemoteTab that is requesting the new window be opened.
    * @param aFeatures
    *        Window features if called with window.open or similar.
    * @param aCalledFromJS
@@ -105,21 +105,21 @@ interface nsPIWindowWatcher : nsISupports
    * @param aOpenerFullZoom
    *        The current zoom multiplier for the opener tab. This is then
    *        applied to the newly opened window.
-   * @param aNextTabParentId
-   *        The integer ID for the next tab parent actor.
-   *        0 means there is no next tab parent actor to use.
+   * @param aNextRemoteTabId
+   *        The integer ID for the next remote tab actor.
+   *        0 means there is no next remote tab actor to use.
    * @param aForceNoOpener
    *        If true, then aOpeningTab will not be used to set the opener
    *        for the newly created window.
    *
-   * @return the nsITabParent of the initial browser for the newly opened
+   * @return the nsIRemoteTab of the initial browser for the newly opened
    *         window.
    */
-  nsITabParent openWindowWithTabParent(in nsITabParent aOpeningTab,
+  nsIRemoteTab openWindowWithRemoteTab(in nsIRemoteTab aOpeningTab,
                                        in ACString aFeatures,
                                        in boolean aCalledFromJS,
                                        in float aOpenerFullZoom,
-                                       in unsigned long long aNextTabParentId,
+                                       in unsigned long long aNextRemoteTabId,
                                        in boolean aForceNoOpener);
 
   /**

@@ -10,10 +10,10 @@
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "nsContentUtils.h"
 #include "nsFtpProtocolHandler.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 #include "base/compiler_specific.h"
@@ -153,15 +153,17 @@ FTPChannelChild::AsyncOpen(nsIStreamListener* aListener) {
                                                   // a typedef URI is defined...
   if (NS_FAILED(rv)) return rv;
 
-  mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(nsITabChild),
-                                getter_AddRefs(iTabChild));
-  GetCallback(iTabChild);
-  if (iTabChild) {
-    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  mozilla::dom::BrowserChild* browserChild = nullptr;
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsIBrowserChild),
+                                getter_AddRefs(iBrowserChild));
+  GetCallback(iBrowserChild);
+  if (iBrowserChild) {
+    browserChild =
+        static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "ftp")) {
+  if (MissingRequiredBrowserChild(browserChild, "ftp")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -193,7 +195,7 @@ FTPChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   SetupNeckoTarget();
 
   gNeckoChild->SendPFTPChannelConstructor(
-      this, tabChild, IPC::SerializedLoadContext(this), openArgs);
+      this, browserChild, IPC::SerializedLoadContext(this), openArgs);
 
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.
@@ -687,13 +689,15 @@ FTPChannelChild::ConnectParent(uint32_t id) {
 
   LOG(("FTPChannelChild::ConnectParent [this=%p]\n", this));
 
-  mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(nsITabChild),
-                                getter_AddRefs(iTabChild));
-  GetCallback(iTabChild);
-  if (iTabChild) {
-    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+  mozilla::dom::BrowserChild* browserChild = nullptr;
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsIBrowserChild),
+                                getter_AddRefs(iBrowserChild));
+  GetCallback(iBrowserChild);
+  if (iBrowserChild) {
+    browserChild =
+        static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
 
   // This must happen before the constructor message is sent.
@@ -706,7 +710,7 @@ FTPChannelChild::ConnectParent(uint32_t id) {
   FTPChannelConnectArgs connectArgs(id);
 
   if (!gNeckoChild->SendPFTPChannelConstructor(
-          this, tabChild, IPC::SerializedLoadContext(this), connectArgs)) {
+          this, browserChild, IPC::SerializedLoadContext(this), connectArgs)) {
     return NS_ERROR_FAILURE;
   }
 

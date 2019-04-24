@@ -17,12 +17,12 @@
 #include "nsDataHashtable.h"
 
 class nsAtom;
-class nsITabParent;
+class nsIRemoteTab;
 class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
-class TabParent;
+class BrowserParent;
 class ContentParent;
 }  // namespace dom
 

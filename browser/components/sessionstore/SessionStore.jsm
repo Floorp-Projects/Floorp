@@ -2297,14 +2297,14 @@ var SessionStoreInternal = {
     // If the process switch seems to have failed, send an error over to our
     // caller, to give it a chance to kill our channel.
     if (aBrowser.remoteType != aRemoteType ||
-        !aBrowser.frameLoader || !aBrowser.frameLoader.tabParent) {
+        !aBrowser.frameLoader || !aBrowser.frameLoader.remoteTab) {
       throw Cr.NS_ERROR_FAILURE;
     }
 
     // Tell our caller to redirect the load into this newly created process.
-    let tabParent = aBrowser.frameLoader.tabParent;
-    debug(`[process-switch]: new tabID: ${tabParent.tabId}`);
-    return tabParent;
+    let remoteTab = aBrowser.frameLoader.remoteTab;
+    debug(`[process-switch]: new tabID: ${remoteTab.tabId}`);
+    return remoteTab;
   },
 
   /**
@@ -5251,11 +5251,11 @@ var SessionStoreInternal = {
       for (let origin of Object.getOwnPropertyNames(options.tabData.storage)) {
         try {
           let {frameLoader} = browser;
-          if (frameLoader.tabParent) {
+          if (frameLoader.remoteTab) {
             let attrs = browser.contentPrincipal.originAttributes;
             let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
             let principal = Services.scriptSecurityManager.createCodebasePrincipal(dataPrincipal.URI, attrs);
-            frameLoader.tabParent.transmitPermissionsForPrincipal(principal);
+            frameLoader.remoteTab.transmitPermissionsForPrincipal(principal);
           }
         } catch (e) {
           console.error(e);

@@ -15,7 +15,7 @@ interface nsIBrowser : nsISupports
   /**
    * Gets an optional frame loader that is "related" to this browser.
    * If this exists, then we should attempt to use the same content parent as
-   * this frame loader for any new tab parents.  For example, view source
+   * this frame loader for any new remote tabs.  For example, view source
    * browsers set this to the frame loader for the original content to ensure
    * they are loaded in the same process as the content.
    */

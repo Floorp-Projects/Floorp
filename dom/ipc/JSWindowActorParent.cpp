@@ -70,8 +70,8 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
 
   // Cross-process case - send data over WindowGlobalParent to other side.
   ClonedMessageData msgData;
-  RefPtr<TabParent> tabParent = mManager->GetTabParent();
-  ContentParent* cp = tabParent->Manager();
+  RefPtr<BrowserParent> browserParent = mManager->GetRemoteTab();
+  ContentParent* cp = browserParent->Manager();
   if (NS_WARN_IF(!aData.BuildClonedMessageDataForParent(cp, msgData))) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;

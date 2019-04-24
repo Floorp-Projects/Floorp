@@ -28,7 +28,7 @@ class GeckoProcessManager final
     ContentProcessManager* const cpm = ContentProcessManager::GetSingleton();
     NS_ENSURE_TRUE(cpm, nullptr);
 
-    RefPtr<TabParent> tab = cpm->GetTopLevelTabParentByProcessAndTabId(
+    RefPtr<BrowserParent> tab = cpm->GetTopLevelBrowserParentByProcessAndTabId(
         ContentParentId(aContentId), TabId(aTabId));
     NS_ENSURE_TRUE(tab, nullptr);
 

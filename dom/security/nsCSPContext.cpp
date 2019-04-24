@@ -1088,7 +1088,7 @@ nsresult nsCSPContext::SendReports(
 
     // apply the loadgroup from the channel taken by setRequestContext.  If
     // there's no loadgroup, AsyncOpen will fail on process-split necko (since
-    // the channel cannot query the iTabChild).
+    // the channel cannot query the iBrowserChild).
     rv = reportChannel->SetLoadGroup(mCallingChannelLoadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 

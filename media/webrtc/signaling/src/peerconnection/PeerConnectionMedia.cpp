@@ -27,7 +27,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/PBrowserOrId.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "MediaManager.h"
 #include "WebrtcGmpVideoCodec.h"
 
@@ -66,7 +66,7 @@ void PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
   CSFLogInfo(LOGTAG, "%s: Had proxyinfo", __FUNCTION__);
 
   nsCString alpn = NS_LITERAL_CSTRING("webrtc,c-webrtc");
-  PBrowserOrId browser = TabChild::GetFrom(pcm_->GetWindow());
+  PBrowserOrId browser = BrowserChild::GetFrom(pcm_->GetWindow());
   pcm_->mProxyConfig.reset(new NrSocketProxyConfig(browser, alpn));
 }
 

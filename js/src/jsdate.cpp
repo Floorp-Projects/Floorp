@@ -41,6 +41,7 @@
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/DateObject.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

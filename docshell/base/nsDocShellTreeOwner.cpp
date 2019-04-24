@@ -39,8 +39,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsITabParent.h"
-#include "nsITabChild.h"
+#include "nsIRemoteTab.h"
+#include "nsIBrowserChild.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
@@ -248,7 +248,7 @@ nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
   if (aPrimary) {
     mPrimaryContentShell = aContentShell;
-    mPrimaryTabParent = nullptr;
+    mPrimaryRemoteTab = nullptr;
   }
   return NS_OK;
 }
@@ -275,7 +275,7 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> shell;
-  if (!mPrimaryTabParent) {
+  if (!mPrimaryRemoteTab) {
     shell =
         mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell;
   }
@@ -285,41 +285,41 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell) {
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary) {
+nsDocShellTreeOwner::RemoteTabAdded(nsIRemoteTab* aTab, bool aPrimary) {
   if (mTreeOwner) {
-    return mTreeOwner->TabParentAdded(aTab, aPrimary);
+    return mTreeOwner->RemoteTabAdded(aTab, aPrimary);
   }
 
   if (aPrimary) {
-    mPrimaryTabParent = aTab;
+    mPrimaryRemoteTab = aTab;
     mPrimaryContentShell = nullptr;
-  } else if (mPrimaryTabParent == aTab) {
-    mPrimaryTabParent = nullptr;
+  } else if (mPrimaryRemoteTab == aTab) {
+    mPrimaryRemoteTab = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::TabParentRemoved(nsITabParent* aTab) {
+nsDocShellTreeOwner::RemoteTabRemoved(nsIRemoteTab* aTab) {
   if (mTreeOwner) {
-    return mTreeOwner->TabParentRemoved(aTab);
+    return mTreeOwner->RemoteTabRemoved(aTab);
   }
 
-  if (aTab == mPrimaryTabParent) {
-    mPrimaryTabParent = nullptr;
+  if (aTab == mPrimaryRemoteTab) {
+    mPrimaryRemoteTab = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetPrimaryTabParent(nsITabParent** aTab) {
+nsDocShellTreeOwner::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
   if (mTreeOwner) {
-    return mTreeOwner->GetPrimaryTabParent(aTab);
+    return mTreeOwner->GetPrimaryRemoteTab(aTab);
   }
 
-  nsCOMPtr<nsITabParent> tab = mPrimaryTabParent;
+  nsCOMPtr<nsIRemoteTab> tab = mPrimaryRemoteTab;
   tab.forget(aTab);
   return NS_OK;
 }
@@ -356,8 +356,9 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
   }
 
   if (aShellItem == mWebBrowser->mDocShell) {
-    nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
-    if (tabChild) {
+    nsCOMPtr<nsIBrowserChild> browserChild =
+        do_QueryInterface(webBrowserChrome);
+    if (browserChild) {
       // The XUL window to resize is in the parent process, but there we
       // won't be able to get aShellItem to do the hack in
       // nsXULWindow::SizeShellTo, so let's send the width and height of
@@ -368,7 +369,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
       int32_t width = 0;
       int32_t height = 0;
       shellAsWin->GetSize(&width, &height);
-      return tabChild->RemoteSizeShellTo(aCX, aCY, width, height);
+      return browserChild->RemoteSizeShellTo(aCX, aCY, width, height);
     }
     // XXX: this is weird, but we used to call a method here
     // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed
@@ -430,7 +431,7 @@ nsDocShellTreeOwner::GetTabCount(uint32_t* aResult) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetHasPrimaryContent(bool* aResult) {
-  *aResult = mPrimaryTabParent || mPrimaryContentShell;
+  *aResult = mPrimaryRemoteTab || mPrimaryContentShell;
   return NS_OK;
 }
 
@@ -884,10 +885,10 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
           nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome =
               GetWebBrowserChrome();
           if (webBrowserChrome) {
-            nsCOMPtr<nsITabChild> tabChild =
+            nsCOMPtr<nsIBrowserChild> browserChild =
                 do_QueryInterface(webBrowserChrome);
-            if (tabChild) {
-              nsresult rv = tabChild->RemoteDropLinks(linksCount, links);
+            if (browserChild) {
+              nsresult rv = browserChild->RemoteDropLinks(linksCount, links);
               for (uint32_t i = 0; i < linksCount; i++) {
                 NS_RELEASE(links[i]);
               }

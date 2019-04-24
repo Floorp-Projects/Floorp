@@ -14,6 +14,7 @@
 
 #include "jsutil.h"
 
+#include "builtin/MapObject.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"

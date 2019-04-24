@@ -4,7 +4,7 @@
 
 #include "mozilla/plugins/PluginWidgetChild.h"
 
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/plugins/PluginWidgetParent.h"
 #include "PluginWidgetProxy.h"
 
@@ -36,7 +36,7 @@ void PluginWidgetChild::ProxyShutdown() {
   PWLOG("PluginWidgetChild::ProxyShutdown()\n");
   if (mWidget) {
     mWidget = nullptr;
-    auto tab = static_cast<mozilla::dom::TabChild*>(Manager());
+    auto tab = static_cast<mozilla::dom::BrowserChild*>(Manager());
     if (!tab->IsDestroyed()) {
       Unused << Send__delete__(this);
     }

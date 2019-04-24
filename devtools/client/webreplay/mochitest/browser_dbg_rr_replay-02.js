@@ -26,9 +26,9 @@ add_task(async function() {
   await reverseStepOverToLine(client, 13);
   const lastNumberValue = await evaluateInTopFrame(target, "number");
 
-  const tabParent = recordingTab.linkedBrowser.frameLoader.tabParent;
-  ok(tabParent, "Found recording tab parent");
-  ok(tabParent.saveRecording(recordingFile), "Saved recording");
+  const remoteTab = recordingTab.linkedBrowser.frameLoader.remoteTab;
+  ok(remoteTab, "Found recording remote tab");
+  ok(remoteTab.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
   await client.removeBreakpoint(bp);

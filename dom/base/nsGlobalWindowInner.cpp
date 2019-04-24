@@ -229,7 +229,7 @@
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -905,7 +905,7 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
   if (XRE_IsContentProcess()) {
     nsCOMPtr<nsIDocShell> docShell = GetDocShell();
     if (docShell) {
-      mTabChild = docShell->GetTabChild();
+      mBrowserChild = docShell->GetBrowserChild();
     }
   }
 
@@ -1180,10 +1180,10 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   // This breaks a cycle between the window and the ClientSource object.
   mClientSource.reset();
 
-  if (mTabChild) {
+  if (mBrowserChild) {
     // Remove any remaining listeners, and reset mBeforeUnloadListenerCount.
     for (int i = 0; i < mBeforeUnloadListenerCount; ++i) {
-      mTabChild->BeforeUnloadRemoved();
+      mBrowserChild->BeforeUnloadRemoved();
     }
     mBeforeUnloadListenerCount = 0;
   }
@@ -1359,7 +1359,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleRequestExecutor)
@@ -1463,7 +1463,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
@@ -1614,11 +1614,11 @@ void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
   ClearDocumentDependentSlots(aCx);
 
   // FIXME: Currently, devtools can crete a fallback webextension window global
-  // in the content process which does not have a corresponding TabChild actor.
-  // This means we have no actor to be our parent. (Bug 1498293)
+  // in the content process which does not have a corresponding BrowserChild
+  // actor. This means we have no actor to be our parent. (Bug 1498293)
   MOZ_DIAGNOSTIC_ASSERT(!mWindowGlobalChild,
                         "Shouldn't have created WindowGlobalChild yet!");
-  if (XRE_IsParentProcess() || mTabChild) {
+  if (XRE_IsParentProcess() || mBrowserChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
 
@@ -1833,18 +1833,18 @@ void nsGlobalWindowInner::UpdateParentTarget() {
 
   nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
   nsCOMPtr<EventTarget> eventTarget =
-      nsContentUtils::TryGetTabChildGlobal(frameElement);
+      nsContentUtils::TryGetBrowserChildGlobal(frameElement);
 
   if (!eventTarget) {
     nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
     if (topWin) {
       frameElement = topWin->GetFrameElementInternal();
-      eventTarget = nsContentUtils::TryGetTabChildGlobal(frameElement);
+      eventTarget = nsContentUtils::TryGetBrowserChildGlobal(frameElement);
     }
   }
 
   if (!eventTarget) {
-    eventTarget = nsContentUtils::TryGetTabChildGlobal(mChromeEventHandler);
+    eventTarget = nsContentUtils::TryGetBrowserChildGlobal(mChromeEventHandler);
   }
 
   if (!eventTarget) {
@@ -4616,7 +4616,8 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
     ProcessHangMonitor::SlowScriptAction action;
     RefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
     nsIDocShell* docShell = GetDocShell();
-    nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
+    nsCOMPtr<nsIBrowserChild> child =
+        docShell ? docShell->GetBrowserChild() : nullptr;
     action = monitor->NotifySlowScript(child, filename.get(), aAddonId);
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
@@ -5839,11 +5840,11 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
     mHasVRDisplayActivateEvents = true;
   }
 
-  if (aType == nsGkAtoms::onbeforeunload && mTabChild &&
+  if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
     mBeforeUnloadListenerCount++;
     MOZ_ASSERT(mBeforeUnloadListenerCount > 0);
-    mTabChild->BeforeUnloadAdded();
+    mBrowserChild->BeforeUnloadAdded();
   }
 
   // We need to initialize localStorage in order to receive notifications.
@@ -5862,11 +5863,11 @@ void nsGlobalWindowInner::EventListenerAdded(nsAtom* aType) {
 }
 
 void nsGlobalWindowInner::EventListenerRemoved(nsAtom* aType) {
-  if (aType == nsGkAtoms::onbeforeunload && mTabChild &&
+  if (aType == nsGkAtoms::onbeforeunload && mBrowserChild &&
       (!mDoc || !(mDoc->GetSandboxFlags() & SANDBOXED_MODALS))) {
     mBeforeUnloadListenerCount--;
     MOZ_ASSERT(mBeforeUnloadListenerCount >= 0);
-    mTabChild->BeforeUnloadRemoved();
+    mBrowserChild->BeforeUnloadRemoved();
   }
 
   if (aType == nsGkAtoms::onstorage) {
