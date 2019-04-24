@@ -24,6 +24,8 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
         zones.push(zone);
     }
 
+    gc();
+
     var didAbort = false;
     startgc(sliceCount, "shrinking");
     while (gcstate() !== "NotActive") {
