@@ -6,6 +6,17 @@
 // Test for About Dialog foreground check for updates
 // with a partial bad size patch.
 add_task(async function aboutDialog_foregroundCheck_partialBadSize() {
+  let downloadInfo = [];
+  if (Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED)) {
+    downloadInfo[0] = {patchType: "partial",
+                       bitsResult: gBadSizeResult};
+    downloadInfo[1] = {patchType: "partial",
+                       internalResult: gBadSizeResult};
+  } else {
+    downloadInfo[0] = {patchType: "partial",
+                       internalResult: gBadSizeResult};
+  }
+
   let updateParams = "&partialPatchOnly=1&invalidPartialSize=1";
   await runAboutDialogUpdateTest(updateParams, false, [
     {
@@ -17,6 +28,7 @@ add_task(async function aboutDialog_foregroundCheck_partialBadSize() {
       panelId: "downloading",
       checkActiveUpdate: {state: STATE_DOWNLOADING},
       continueFile: CONTINUE_DOWNLOAD,
+      downloadInfo,
     },
     {
       panelId: "downloadFailed",
