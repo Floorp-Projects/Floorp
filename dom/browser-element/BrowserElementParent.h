@@ -90,6 +90,7 @@ class BrowserElementParent {
                                         dom::TabParent* aPopupTabParent,
                                         const nsAString& aURL,
                                         const nsAString& aName,
+                                        bool aForceNoReferrer,
                                         const nsAString& aFeatures);
 
   /**
@@ -111,7 +112,7 @@ class BrowserElementParent {
  private:
   static OpenWindowResult DispatchOpenWindowEvent(
       dom::Element* aOpenerFrameElement, dom::Element* aPopupFrameElement,
-      const nsAString& aURL, const nsAString& aName,
+      const nsAString& aURL, const nsAString& aName, bool aForceNoReferrer,
       const nsAString& aFeatures);
 };
 
