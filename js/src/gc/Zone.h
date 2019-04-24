@@ -516,6 +516,10 @@ class Zone : public JS::shadow::Zone,
     gcMallocSize.removeMemory(cell, nbytes, use);
   }
 
+  size_t totalBytes() const {
+    return zoneSize.gcBytes() + gcMallocSize.bytes();
+  }
+
   void keepAtoms() { keepAtomsCount++; }
   void releaseAtoms();
   bool hasKeptAtoms() const { return keepAtomsCount; }
