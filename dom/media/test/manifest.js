@@ -200,7 +200,7 @@ var gPlayTests = [
   // Theora only oggz-chop stream
   { name:"bug482461-theora.ogv", type:"video/ogg", duration:4.138 },
   // With first frame a "duplicate" (empty) frame.
-  { name:"bug500311.ogv", type:"video/ogg", duration:1.96 },
+  { name:"bug500311.ogv", type:"video/ogg", duration:1.96, contentDuration:1.958 },
   // Small audio file
   { name:"small-shot.ogg", type:"audio/ogg", duration:0.276 },
   // More audio in file than video.
@@ -210,7 +210,7 @@ var gPlayTests = [
   // Multiple audio streams.
   { name:"bug516323.ogv", type:"video/ogg", duration:4.208 },
   // oggz-chop with non-keyframe as first frame
-  { name:"bug556821.ogv", type:"video/ogg", duration:2.936 },
+  { name:"bug556821.ogv", type:"video/ogg", duration:2.936, contentDuration:2.903 },
 
   // Encoded with vorbis beta1, includes unusually sized codebooks
   { name:"beta-phrasebook.ogg", type:"audio/ogg", duration:4.01 },
@@ -220,16 +220,16 @@ var gPlayTests = [
   { name:"bug520500.ogg", type:"audio/ogg", duration:0.123 },
 
   // Various weirdly formed Ogg files
-  { name:"bug499519.ogv", type:"video/ogg", duration:0.24 },
+  { name:"bug499519.ogv", type:"video/ogg", duration:0.24, contentDuration:0.22 },
   { name:"bug506094.ogv", type:"video/ogg", duration:0 },
   { name:"bug498855-1.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug498855-2.ogv", type:"video/ogg", duration:0.24 },
   { name:"bug498855-3.ogv", type:"video/ogg", duration:0.24 },
-  { name:"bug504644.ogv", type:"video/ogg", duration:1.6 },
-  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN },
-  { name:"bug523816.ogv", type:"video/ogg", duration:0.766 },
+  { name:"bug504644.ogv", type:"video/ogg", duration:1.6, contentDuration:1.52 },
+  { name:"chain.ogv", type:"video/ogg", duration:Number.NaN, contentDuration:0.266 },
+  { name:"bug523816.ogv", type:"video/ogg", duration:0.766, contentDuration:0 },
   { name:"bug495129.ogv", type:"video/ogg", duration:2.41 },
-  { name:"bug498380.ogv", type:"video/ogg", duration:0.7663 },
+  { name:"bug498380.ogv", type:"video/ogg", duration:0.7663, contentDuration:0 },
   { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
   { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
   { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
@@ -261,11 +261,11 @@ var gPlayTests = [
   { name:"spacestorm-1000Hz-100ms.ogg", type:"audio/ogg", duration:0.099 },
 
   // Opus data in an ogg container
-  { name:"detodos-short.opus", type:"audio/ogg; codecs=opus", duration:0.22 },
+  { name:"detodos-short.opus", type:"audio/ogg; codecs=opus", duration:0.22, contentDuration:0.2135 },
   // Opus data in a webm container
-  { name:"detodos-short.webm", type:"audio/webm; codecs=opus", duration:0.26 },
+  { name:"detodos-short.webm", type:"audio/webm; codecs=opus", duration:0.26, contentDuration:0.2535 },
   // Opus in webm channel mapping=2 sample file
-  { name:"opus-mapping2.webm", type:"audio/webm; codecs=opus", duration:10.01 },
+  { name:"opus-mapping2.webm", type:"audio/webm; codecs=opus", duration:10.01, contentDuration:9.99 },
   { name:"bug1066943.webm", type:"audio/webm; codecs=opus", duration:1.383 },
 
   // Multichannel Opus in an ogg container
@@ -285,8 +285,8 @@ var gPlayTests = [
   // Ambisonics AAC, requires AAC extradata to be set when creating decoder (see bug 1431169)
   // Also test 4.0 decoding.
   { name:"ambisonics.mp4", type:"audio/mp4", duration:16.48 },
-  // Opus in MP4 channel mapping=0 sample file
-  { name:"opus-sample.mp4", type:"audio/mp4; codecs=opus", duration:10.92 },
+  // Opus in MP4 channel mapping=0 sample file (content shorter due to preskip)
+  { name:"opus-sample.mp4", type:"audio/mp4; codecs=opus", duration:10.92, contentDuration:10.09 },
   // Opus in MP4 channel mapping=2 sample file
   { name:"opus-mapping2.mp4", type:"audio/mp4; codecs=opus", duration:10.0 },
 
@@ -308,13 +308,13 @@ var gPlayTests = [
   // The Xing header reports the length of the file to be around 10 seconds, but
   // there is really only one second worth of data. We want MP3FrameParser to
   // trust the header, so this should be reported as 10 seconds.
-  { name:"vbr-head.mp3", type:"audio/mpeg", duration:10.00 },
+  { name:"vbr-head.mp3", type:"audio/mpeg", duration:10.00, contentDuration:1.019 },
 
   // A flac file where the STREAMINFO block was removed.
   // It is necessary to parse the file to find an audio frame instead.
   { name:"flac-noheader-s16.flac", type:"audio/flac", duration:4.0 },
   { name:"flac-s24.flac", type:"audio/flac", duration:4.04 },
-  { name:"flac-sample.mp4", type:"audio/mp4; codecs=flac", duration:4.95 },
+  { name:"flac-sample.mp4", type:"audio/mp4; codecs=flac", duration:4.95, contentDuration:5.03 },
   // Ogg with theora video and flac audio.
   { name:"A4.ogv", type:"video/ogg", width:320, height:240, duration:3.13 },
 
@@ -354,7 +354,7 @@ var gSeekToNextFrameTests = [
 
   { name:"bug523816.ogv", type:"video/ogg", duration:0.766 },
 
-  { name:"bug498380.ogv", type:"video/ogg", duration:0.766 },
+  { name:"bug498380.ogv", type:"video/ogg", duration:0.2 },
   { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
   { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
   // Test playback/metadata work after a redirect
