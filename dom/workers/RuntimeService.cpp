@@ -1668,7 +1668,7 @@ void RuntimeService::Shutdown() {
         MutexAutoUnlock unlock(mMutex);
 
         for (uint32_t index = 0; index < workers.Length(); index++) {
-          if (!workers[index]->Kill()) {
+          if (!workers[index]->Cancel()) {
             NS_WARNING("Failed to cancel worker!");
           }
         }

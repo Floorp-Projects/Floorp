@@ -133,8 +133,6 @@ class WorkerPrivate : public RelativeTimeline {
 
   bool Cancel() { return Notify(Canceling); }
 
-  bool Kill() { return Notify(Killing); }
-
   bool Close();
 
   // The passed principal must be the Worker principal in case of a
