@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMOverlays Text-semantic argument elements</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  /* global DOMOverlays */
+  "use strict";
+
+  function elem(name) {
+    return function(str) {
+      const element = document.createElement(name);
+      // eslint-disable-next-line no-unsanitized/property
+      element.innerHTML = str;
+      return element;
+    };
+  }
+
+  const { translateElement } = DOMOverlays;
+
+  {
+    // without data-l10n-name
+    const element = elem("div")`
+      <em class="bar"></em>`;
+    const translation = {
+      value: '<em title="FOO">FOO</em>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(
+      element.innerHTML,
+      '<em title="FOO">FOO</em>'
+    );
+  }
+
+  {
+    // mismatched types
+    const element = elem("div")`
+      <button data-l10n-name="foo"></button>`;
+    const translation = {
+      value: '<em data-l10n-name="foo" title="FOO">FOO</em>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(
+      element.innerHTML,
+      "FOO"
+    );
+  }
+
+  {
+    // types and names mismatch
+    const element = elem("div")`
+      <em data-l10n-name="foo" class="foo"></em>`;
+    const translation = {
+      value: '<em data-l10n-name="foo" title="FOO">FOO</em>',
+      attributes: null,
+    };
+
+    translateElement(element, translation);
+    is(
+      element.innerHTML,
+      '<em data-l10n-name="foo" class="foo" title="FOO">FOO</em>'
+    );
+  }
+  </script>
+</head>
+<body>
+</body>
+</html>

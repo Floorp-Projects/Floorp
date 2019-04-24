@@ -2545,29 +2545,6 @@ void GL_APIENTRY glMultiDrawElementsInstancedANGLE(GLenum mode,
                                                drawcount);
 }
 
-// GL_ANGLE_multiview
-void GL_APIENTRY glFramebufferTextureMultiviewLayeredANGLE(GLenum target,
-                                                           GLenum attachment,
-                                                           GLuint texture,
-                                                           GLint level,
-                                                           GLint baseViewIndex,
-                                                           GLsizei numViews)
-{
-    return gl::FramebufferTextureMultiviewLayeredANGLE(target, attachment, texture, level,
-                                                       baseViewIndex, numViews);
-}
-
-void GL_APIENTRY glFramebufferTextureMultiviewSideBySideANGLE(GLenum target,
-                                                              GLenum attachment,
-                                                              GLuint texture,
-                                                              GLint level,
-                                                              GLsizei numViews,
-                                                              const GLint *viewportOffsets)
-{
-    return gl::FramebufferTextureMultiviewSideBySideANGLE(target, attachment, texture, level,
-                                                          numViews, viewportOffsets);
-}
-
 // GL_ANGLE_provoking_vertex
 void GL_APIENTRY glProvokingVertexANGLE(GLenum mode)
 {
@@ -4192,6 +4169,20 @@ GLboolean GL_APIENTRY glIsVertexArrayOES(GLuint array)
     return gl::IsVertexArrayOES(array);
 }
 
+// GL_OVR_multiview
+void GL_APIENTRY glFramebufferTextureMultiviewOVR(GLenum target,
+                                                  GLenum attachment,
+                                                  GLuint texture,
+                                                  GLint level,
+                                                  GLint baseViewIndex,
+                                                  GLsizei numViews)
+{
+    return gl::FramebufferTextureMultiviewOVR(target, attachment, texture, level, baseViewIndex,
+                                              numViews);
+}
+
+// GL_OVR_multiview2
+
 // EGL_ANGLE_explicit_context
 void GL_APIENTRY glActiveShaderProgramContextANGLE(GLeglContext ctx,
                                                    GLuint pipeline,
@@ -5246,6 +5237,18 @@ void GL_APIENTRY glFramebufferTextureLayerContextANGLE(GLeglContext ctx,
                                                        GLint layer)
 {
     return gl::FramebufferTextureLayerContextANGLE(ctx, target, attachment, texture, level, layer);
+}
+
+void GL_APIENTRY glFramebufferTextureMultiviewOVRContextANGLE(GLeglContext ctx,
+                                                              GLenum target,
+                                                              GLenum attachment,
+                                                              GLuint texture,
+                                                              GLint level,
+                                                              GLint baseViewIndex,
+                                                              GLsizei numViews)
+{
+    return gl::FramebufferTextureMultiviewOVRContextANGLE(ctx, target, attachment, texture, level,
+                                                          baseViewIndex, numViews);
 }
 
 void GL_APIENTRY glFrontFaceContextANGLE(GLeglContext ctx, GLenum mode)
@@ -9060,31 +9063,6 @@ void GL_APIENTRY glGetQueryObjectui64vRobustANGLEContextANGLE(GLeglContext ctx,
                                                               GLuint64 *params)
 {
     return gl::GetQueryObjectui64vRobustANGLEContextANGLE(ctx, id, pname, bufSize, length, params);
-}
-
-void GL_APIENTRY glFramebufferTextureMultiviewLayeredANGLEContextANGLE(GLeglContext ctx,
-                                                                       GLenum target,
-                                                                       GLenum attachment,
-                                                                       GLuint texture,
-                                                                       GLint level,
-                                                                       GLint baseViewIndex,
-                                                                       GLsizei numViews)
-{
-    return gl::FramebufferTextureMultiviewLayeredANGLEContextANGLE(ctx, target, attachment, texture,
-                                                                   level, baseViewIndex, numViews);
-}
-
-void GL_APIENTRY
-glFramebufferTextureMultiviewSideBySideANGLEContextANGLE(GLeglContext ctx,
-                                                         GLenum target,
-                                                         GLenum attachment,
-                                                         GLuint texture,
-                                                         GLint level,
-                                                         GLsizei numViews,
-                                                         const GLint *viewportOffsets)
-{
-    return gl::FramebufferTextureMultiviewSideBySideANGLEContextANGLE(
-        ctx, target, attachment, texture, level, numViews, viewportOffsets);
 }
 
 void GL_APIENTRY glCopyTexture3DANGLEContextANGLE(GLeglContext ctx,

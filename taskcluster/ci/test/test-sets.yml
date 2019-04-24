@@ -409,6 +409,8 @@ android-x86_64-opt-tests:
     # geckoview-junit perma-fail on opt and debug; bug 1521195
     # - geckoview-junit
     - mochitest
+    - web-platform-tests
+    - web-platform-tests-reftests
 
 android-x86_64-tests:
     - gtest

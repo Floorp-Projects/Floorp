@@ -473,11 +473,6 @@ class StateManager11 final : angle::NonCopyable
     float mCurNear;
     float mCurFar;
 
-    // The viewport offsets are guaranteed to be updated whenever the gl::State::DirtyBits are
-    // resolved and can be applied to the viewport and scissor whenever the internal viewport and
-    // scissor bits are resolved.
-    std::vector<gl::Offset> mViewportOffsets;
-
     // Things needed in viewport state
     ShaderConstants11 mShaderConstants;
 

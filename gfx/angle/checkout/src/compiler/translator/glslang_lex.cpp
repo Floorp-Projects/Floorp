@@ -3895,7 +3895,7 @@ int ES2_ident_ES3_keyword_multiview_keyword(TParseContext *context, int token)
 
     // not a reserved word in GLSL ES 1.00, so could be used as an identifier/type name
     // except when multiview extension is enabled
-    if (context->getShaderVersion() < 300 && !context->isExtensionEnabled(TExtension::OVR_multiview))
+    if (context->getShaderVersion() < 300 && !context->isExtensionEnabled(TExtension::OVR_multiview2))
     {
         yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
         return check_type(yyscanner);

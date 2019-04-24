@@ -22,6 +22,8 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLTemplateElement, _template);
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTemplateElement,
                                            nsGenericHTMLElement)
 
