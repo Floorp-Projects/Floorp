@@ -128,8 +128,23 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
         mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
-    if (!mRDDChild->Init()) {
-      KillHard("ActorInitFailed");
+    bool startMacSandbox = false;
+
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+    // If the sandbox was started at launch time,
+    // do not start the sandbox again.
+    startMacSandbox = !sLaunchWithMacSandbox;
+#endif
+
+    if (!mRDDChild->Init(startMacSandbox)) {
+      // Can't just kill here because it will create a timing race that
+      // will crash the tab. We don't really want to crash the tab just
+      // because RDD linux sandbox failed to initialize.  In this case,
+      // we'll close the child channel which will cause the RDD process
+      // to shutdown nicely avoiding the tab crash (which manifests as
+      // Bug 1535335).
+      mRDDChild->Close();
+      return;
     }
   }
 
