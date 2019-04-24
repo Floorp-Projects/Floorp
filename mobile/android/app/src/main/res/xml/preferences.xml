@@ -15,6 +15,12 @@
                                                   android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
+    <org.mozilla.gecko.preferences.DefaultBrowserPreference
+            android:key="android.not_a_preference.default_browser.link"
+            android:persistent="false"
+            android:title="@string/pref_default_browser"
+            url="https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid" />
+
     <PreferenceScreen android:title="@string/pref_category_general"
                       android:summary="@string/pref_category_general_summary"
                       android:key="android.not_a_preference.general_screen"
@@ -70,11 +76,6 @@
             gecko:entryValues="@array/pref_private_data_values"
             gecko:entryKeys="@array/pref_private_data_keys"
             gecko:initialValues="@array/pref_private_data_defaults" />
-
-    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.default_browser.link"
-                                                  android:title="@string/pref_default_browser"
-                                                  android:persistent="false"
-                                                  url="https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid"/>
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
                       android:summary="@string/pref_category_vendor_summary"

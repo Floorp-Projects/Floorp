@@ -7,10 +7,10 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import java.util.List;
 
@@ -59,6 +59,22 @@ public class PackageUtil {
             return resolveInfo.activityInfo.packageName;
         } else {
             return null;
+        }
+    }
+
+    public static boolean isNoDefaultBrowserSet(Context context) {
+        final String defaultBrowserPackageName = PackageUtil.getDefaultBrowserPackage(context);
+        return TextUtils.isEmpty(defaultBrowserPackageName);
+    }
+
+    public static void showInstalledBrowsers(Context context) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://www.mozilla.org/firefox/mobile"));
+
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
