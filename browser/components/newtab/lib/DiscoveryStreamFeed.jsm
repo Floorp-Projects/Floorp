@@ -143,6 +143,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const EXPIRATION_TIME = isStartup ? STARTUP_CACHE_EXPIRE_TIME : updateTimePerComponent[key];
     switch (key) {
       case "layout":
+        // This never needs to expire, as it's not expected to change.
+        if (this.config.hardcoded_layout) {
+          return false;
+        }
         return (!layout || !(Date.now() - layout.lastUpdated < EXPIRATION_TIME));
       case "spocs":
         return (!spocs || !(Date.now() - spocs.lastUpdated < EXPIRATION_TIME));

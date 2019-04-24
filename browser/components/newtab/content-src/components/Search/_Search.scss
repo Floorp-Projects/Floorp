@@ -132,7 +132,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 }
 
 .below-search-snippet {
-  margin: 0 auto;
+  margin: 0 auto 16px;
   width: $searchbar-width-small;
 
   @media (min-width: $break-point-medium) {
@@ -151,7 +151,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
 .non-collapsible-section + .below-search-snippet {
   // If search is enabled, we need to invade its large bottom padding.
-  margin-top: -50px;
+  margin-top: -48px;
 }
 
 @media (max-height: 700px) {
@@ -161,7 +161,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
   .non-collapsible-section + .below-search-snippet {
     // In shorter windows, search doesn't have such a large padding.
-    margin-top: -16px;
+    margin-top: -14px;
   }
 
   .below-search-snippet {

@@ -101,7 +101,7 @@ function templateHTML(options, html) {
   </head>
   <body class="activity-stream">
     <div id="root">${isPrerendered ? html : "<!-- Regular React Rendering -->"}</div>
-    <div id="footer-snippets-container" />${options.noscripts ? "" : scriptRender}
+    <div id="footer-snippets-container"></div>${options.noscripts ? "" : scriptRender}
   </body>
 </html>
 `;
