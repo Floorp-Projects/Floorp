@@ -58,11 +58,11 @@
 == variable-declaration-59.html support/color-green-ref.html
 == variable-declaration-60.html support/color-green-ref.html
 == variable-external-declaration-01.html support/color-green-ref.html
-== variable-external-font-face-01.html variable-external-font-face-01-ref.html
+pref(gfx.font_ahem_antialias_none,false) fuzzy-if(OSX,95-101,1760-1788) fuzzy-if(winWidget,88-113,992-1726) == variable-external-font-face-01.html variable-external-font-face-01-ref.html
 == variable-external-reference-01.html support/color-green-ref.html
 == variable-external-supports-01.html support/color-green-ref.html
-== variable-font-face-01.html variable-font-face-01-ref.html
-== variable-font-face-02.html variable-font-face-02-ref.html
+fuzzy-if(OSX,95-101,1760-1788) fuzzy-if(winWidget,88-113,992-1726) == variable-font-face-01.html variable-font-face-01-ref.html
+fuzzy-if(OSX,95-101,1760-1788) fuzzy-if(winWidget,88-113,992-1726) == variable-font-face-02.html variable-font-face-02-ref.html
 == variable-reference-01.html support/color-green-ref.html
 == variable-reference-02.html support/color-green-ref.html
 == variable-reference-03.html support/color-green-ref.html
