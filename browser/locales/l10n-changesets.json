@@ -252,7 +252,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e6471e3ee3a5"
+        "revision": "664e34995aa5"
     },
     "cs": {
         "platforms": [
@@ -575,7 +575,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "54b8058050d1"
+        "revision": "ca4555ccc960"
     },
     "fr": {
         "platforms": [
@@ -903,7 +903,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4ab6a2e17e29"
+        "revision": "4e9fffa23aa0"
     },
     "kab": {
         "platforms": [
