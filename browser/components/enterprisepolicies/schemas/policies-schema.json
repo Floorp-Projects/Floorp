@@ -403,6 +403,13 @@
       }
     },
 
+    "LocalFileLinks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
     "NetworkPrediction": {
       "type": "boolean"
     },

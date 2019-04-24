@@ -679,6 +679,17 @@ var Policies = {
     },
   },
 
+  "LocalFileLinks": {
+    onBeforeAddons(manager, param) {
+      // If there are existing capabilities, lock them with the policy pref.
+      let policyNames = Services.prefs.getCharPref("capability.policy.policynames", "").split(" ");
+      policyNames.push("localfilelinks_policy");
+      setAndLockPref("capability.policy.policynames", policyNames.join(" "));
+      setAndLockPref("capability.policy.localfilelinks_policy.checkloaduri.enabled", "allAccess");
+      setAndLockPref("capability.policy.localfilelinks_policy.sites", param.join(" "));
+    },
+  },
+
   "NetworkPrediction": {
     onBeforeAddons(manager, param) {
       setAndLockPref("network.dns.disablePrefetch", !param);
