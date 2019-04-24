@@ -2591,7 +2591,8 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
-      JS_updateMallocCounter(aCx, mallocBytes);
+      JS::AddAssociatedMemory(aReflector, mallocBytes,
+                              JS::MemoryUse::DOMBinding);
     }
   }
 
@@ -2607,7 +2608,8 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
-      JS_updateMallocCounter(aCx, mallocBytes);
+      JS::AddAssociatedMemory(aReflector, mallocBytes,
+                              JS::MemoryUse::DOMBinding);
     }
   }
 
