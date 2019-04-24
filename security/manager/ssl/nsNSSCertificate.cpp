@@ -104,7 +104,15 @@ bool nsNSSCertificate::InitFromDER(char* certDER, int derLen) {
 
   CERTCertificate* aCert = CERT_DecodeCertFromPackage(certDER, derLen);
 
-  if (!aCert) return false;
+  if (!aCert) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      MOZ_CRASH_UNSAFE_PRINTF("CERT_DecodeCertFromPackage failed in child: %d",
+                              PR_GetError());
+    }
+#endif
+    return false;
+  }
 
   if (!aCert->dbhandle) {
     aCert->dbhandle = CERT_GetDefaultCertDB();
