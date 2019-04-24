@@ -178,9 +178,8 @@ function* nextTest()
     $("bottomright").removeAttribute("right");
   }
 
-  // Test that a transition occurs when opening or closing the popup. The transition is
-  // disabled on Linux.
-  if (!navigator.platform.includes("Linux")) {
+  // Test that a transition occurs when opening or closing the popup.
+  if (Services.prefs.getBoolPref("xul.panel-animations.enabled")) {
     function transitionEnded(event) {
       if ($("animatepanel").state != "open") {
         is($("animatepanel").state, "showing", "state is showing during transitionend");
