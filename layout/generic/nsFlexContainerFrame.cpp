@@ -1834,7 +1834,7 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
   LogicalSize availSize = aParentReflowInput.ComputedSize(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput childRIForMeasuringBSize(aPresContext, aParentReflowInput,
-                                       aFlexItem.Frame(), availSize, nullptr,
+                                       aFlexItem.Frame(), availSize, Nothing(),
                                        ReflowInput::CALLER_WILL_INIT);
   childRIForMeasuringBSize.mFlags.mIsFlexContainerMeasuringBSize = true;
   childRIForMeasuringBSize.Init(aPresContext);

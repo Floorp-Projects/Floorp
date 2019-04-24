@@ -33,7 +33,7 @@ struct TableCellReflowInput : public ReflowInput {
                        const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
                        const LogicalSize& aAvailableSpace, uint32_t aFlags = 0)
       : ReflowInput(aPresContext, aParentReflowInput, aFrame, aAvailableSpace,
-                    nullptr, aFlags) {}
+                    Nothing(), aFlags) {}
 
   void FixUp(const LogicalSize& aAvailSpace);
 };
@@ -79,7 +79,7 @@ void nsTableRowFrame::InitChildReflowInput(nsPresContext& aPresContext,
       pCollapseBorder = &collapseBorder;
     }
   }
-  aReflowInput.Init(&aPresContext, nullptr, pCollapseBorder);
+  aReflowInput.Init(&aPresContext, Nothing(), pCollapseBorder);
   aReflowInput.FixUp(aAvailSize);
 }
 

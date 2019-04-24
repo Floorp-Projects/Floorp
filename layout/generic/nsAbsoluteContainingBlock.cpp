@@ -667,7 +667,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   }
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
                              LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                             &logicalCBSize, rsFlags);
+                             Some(logicalCBSize), rsFlags);
 
   // Get the border values
   WritingMode outerWM = aReflowInput.GetWritingMode();

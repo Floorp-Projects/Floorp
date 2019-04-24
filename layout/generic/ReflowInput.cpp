@@ -164,7 +164,7 @@ SizeComputationInput::SizeComputationInput(
 ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const ReflowInput& aParentReflowInput,
                          nsIFrame* aFrame, const LogicalSize& aAvailableSpace,
-                         const LogicalSize* aContainingBlockSize,
+                         const Maybe<LogicalSize>& aContainingBlockSize,
                          uint32_t aFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
       mParentReflowInput(&aParentReflowInput),
@@ -329,7 +329,7 @@ void ReflowInput::MarkFrameChildrenDirty(nsIFrame* aFrame) {
 }
 
 void ReflowInput::Init(nsPresContext* aPresContext,
-                       const LogicalSize* aContainingBlockSize,
+                       const Maybe<LogicalSize>& aContainingBlockSize,
                        const nsMargin* aBorder, const nsMargin* aPadding) {
   if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
     // FIXME (bug 1376530): It would be better for memory locality if we
@@ -377,11 +377,8 @@ void ReflowInput::Init(nsPresContext* aPresContext,
 
   InitFrameType(type);
 
-  LogicalSize cbSize(mWritingMode, -1, -1);
-  if (aContainingBlockSize) {
-    cbSize = *aContainingBlockSize;
-  }
-
+  LogicalSize cbSize =
+      aContainingBlockSize.valueOr(LogicalSize(mWritingMode, -1, -1));
   InitConstraints(aPresContext, cbSize, aBorder, aPadding, type);
 
   InitResizeFlags(aPresContext, type);

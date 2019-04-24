@@ -302,7 +302,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode())
                                .ConvertTo(wm, aMetrics.GetWritingMode());
       ReflowInput kidReflowInput(aPresContext, aReflowInput, imageFrame,
-                                 availableSize, &cbSize);
+                                 availableSize, Some(cbSize));
 
       nsRect posterRenderRect;
       if (ShouldDisplayPoster()) {

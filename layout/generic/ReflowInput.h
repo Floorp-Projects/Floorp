@@ -13,6 +13,7 @@
 #include "nsStyleCoord.h"
 #include "nsIFrame.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include <algorithm>
 
 class gfxContext;
@@ -717,14 +718,15 @@ struct ReflowInput : public SizeComputationInput {
    *        members.
    * @param aContainingBlockSize An optional size, in app units, specifying
    *        the containing block size to use instead of the default which is
-   *        to use the aAvailableSpace.
+   *        computed by ComputeContainingBlockRectangle().
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
   ReflowInput(nsPresContext* aPresContext,
               const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
               const mozilla::LogicalSize& aAvailableSpace,
-              const mozilla::LogicalSize* aContainingBlockSize = nullptr,
+              const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+                  mozilla::Nothing(),
               uint32_t aFlags = 0);
 
   // Values for |aFlags| passed to constructor
@@ -764,7 +766,8 @@ struct ReflowInput : public SizeComputationInput {
   // This method initializes various data members. It is automatically
   // called by the various constructors
   void Init(nsPresContext* aPresContext,
-            const mozilla::LogicalSize* aContainingBlockSize = nullptr,
+            const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+                mozilla::Nothing(),
             const nsMargin* aBorder = nullptr,
             const nsMargin* aPadding = nullptr);
 

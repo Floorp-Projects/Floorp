@@ -720,7 +720,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
       LogicalSize kidCBSize(wm, availSize.ISize(wm), computedSize.BSize(wm));
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
-                                 &kidCBSize);
+                                 Some(kidCBSize));
       kidReflowInput.mFlags.mIsTopOfPage = true;
       kidReflowInput.mFlags.mTableIsSplittable = false;
       kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mIsBalancing;

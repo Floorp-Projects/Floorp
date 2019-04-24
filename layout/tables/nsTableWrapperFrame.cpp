@@ -248,8 +248,7 @@ void nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
       cbSize.emplace(aOuterRI.mContainingBlockSize);
     }
   }
-  aReflowInput.Init(&aPresContext, cbSize.ptrOr(nullptr), pCollapseBorder,
-                    pCollapsePadding);
+  aReflowInput.Init(&aPresContext, cbSize, pCollapseBorder, pCollapsePadding);
 }
 
 // get the margin and padding data. ReflowInput doesn't handle the
@@ -269,7 +268,7 @@ void nsTableWrapperFrame::GetChildMargin(nsPresContext* aPresContext,
   // XXX We really shouldn't construct a reflow input to do this.
   WritingMode wm = aOuterRI.GetWritingMode();
   LogicalSize availSize(wm, aAvailISize, aOuterRI.AvailableSize(wm).BSize(wm));
-  ReflowInput childRI(aPresContext, aOuterRI, aChildFrame, availSize, nullptr,
+  ReflowInput childRI(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
                       ReflowInput::CALLER_WILL_INIT);
   InitChildReflowInput(*aPresContext, aOuterRI, childRI);
 
@@ -735,7 +734,7 @@ void nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext* aPresContext,
   LogicalSize availSize(wm, aAvailISize, availBSize);
   // create and init the child reflow input, using passed-in Maybe<>,
   // so that caller can use it after we return.
-  aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize, nullptr,
+  aChildRI.emplace(aPresContext, aOuterRI, aChildFrame, availSize, Nothing(),
                    ReflowInput::CALLER_WILL_INIT);
   InitChildReflowInput(*aPresContext, aOuterRI, *aChildRI);
 
