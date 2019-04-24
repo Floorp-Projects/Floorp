@@ -22,12 +22,20 @@
 # in which the manifest file resides and it should be called
 # 'manifest.tt'
 
+from __future__ import print_function
+
+import base64
+import calendar
 import hashlib
+import hmac
 import httplib
 import json
 import logging
+import math
 import optparse
 import os
+import pprint
+import re
 import shutil
 import sys
 import tarfile
@@ -43,8 +51,20 @@ from subprocess import Popen
 
 __version__ = '1'
 
+# Allowed request header characters:
+# !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
+REQUEST_HEADER_ATTRIBUTE_CHARS = re.compile(
+    r"^[ a-zA-Z0-9_\!#\$%&'\(\)\*\+,\-\./\:;<\=>\?@\[\]\^`\{\|\}~]*$")
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
+HAWK_VER = 1
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    # TODO: py3 coverage
+    six_binary_type = bytes  # pragma: no cover
+else:
+    six_binary_type = str
 
 
 log = logging.getLogger(__name__)
@@ -77,10 +97,208 @@ class MissingFileException(ExceptionWithFilename):
     pass
 
 
+class InvalidCredentials(Exception):
+    pass
+
+
+class BadHeaderValue(Exception):
+    pass
+
+
+def parse_url(url):
+    url_parts = urlparse.urlparse(url)
+    url_dict = {
+        'scheme': url_parts.scheme,
+        'hostname': url_parts.hostname,
+        'port': url_parts.port,
+        'path': url_parts.path,
+        'resource': url_parts.path,
+        'query': url_parts.query,
+    }
+    if len(url_dict['query']) > 0:
+        url_dict['resource'] = '%s?%s' % (url_dict['resource'],  # pragma: no cover
+                                          url_dict['query'])
+
+    if url_parts.port is None:
+        if url_parts.scheme == 'http':
+            url_dict['port'] = 80
+        elif url_parts.scheme == 'https':  # pragma: no cover
+            url_dict['port'] = 443
+    return url_dict
+
+
+def utc_now(offset_in_seconds=0.0):
+    return int(math.floor(calendar.timegm(time.gmtime()) + float(offset_in_seconds)))
+
+
+def random_string(length):
+    return base64.urlsafe_b64encode(os.urandom(length))[:length]
+
+
+def prepare_header_val(val):
+    if isinstance(val, six_binary_type):
+        val = val.decode('utf-8')
+
+    if not REQUEST_HEADER_ATTRIBUTE_CHARS.match(val):
+        raise BadHeaderValue(  # pragma: no cover
+            'header value value={val} contained an illegal character'.format(val=repr(val)))
+
+    return val
+
+
+def parse_content_type(content_type):  # pragma: no cover
+    if content_type:
+        return content_type.split(';')[0].strip().lower()
+    else:
+        return ''
+
+
+def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cover
+    parts = [
+        part if isinstance(part, six_binary_type) else part.encode('utf8')
+        for part in ['hawk.' + str(HAWK_VER) + '.payload\n',
+                     parse_content_type(content_type) + '\n',
+                     payload or '',
+                     '\n',
+                     ]
+    ]
+
+    p_hash = hashlib.new(algorithm)
+    p_hash.update(''.join(parts))
+
+    log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
+
+    return base64.b64encode(p_hash.digest())
+
+
+def validate_taskcluster_credentials(credentials):
+    if not hasattr(credentials, '__getitem__'):
+        raise InvalidCredentials('credentials must be a dict-like object')  # pragma: no cover
+    try:
+        credentials['clientId']
+        credentials['accessToken']
+    except KeyError:  # pragma: no cover
+        etype, val, tb = sys.exc_info()
+        raise InvalidCredentials('{etype}: {val}'.format(etype=etype, val=val))
+
+
+def normalize_header_attr(val):
+    if isinstance(val, six_binary_type):
+        return val.decode('utf-8')
+    return val  # pragma: no cover
+
+
+def normalize_string(mac_type,
+                     timestamp,
+                     nonce,
+                     method,
+                     name,
+                     host,
+                     port,
+                     content_hash,
+                     ):
+    return '\n'.join([
+        normalize_header_attr(header)
+        # The blank lines are important. They follow what the Node Hawk lib does.
+        for header in ['hawk.' + str(HAWK_VER) + '.' + mac_type,
+                       timestamp,
+                       nonce,
+                       method or '',
+                       name or '',
+                       host,
+                       port,
+                       content_hash or ''
+                       '',  # for ext which is empty in this case
+                       '',  # Add trailing new line.
+                       ]
+    ])
+
+
+def calculate_mac(mac_type,
+                  access_token,
+                  algorithm,
+                  timestamp,
+                  nonce,
+                  method,
+                  name,
+                  host,
+                  port,
+                  content_hash,
+                  ):
+    normalized = normalize_string(mac_type,
+                                  timestamp,
+                                  nonce,
+                                  method,
+                                  name,
+                                  host,
+                                  port,
+                                  content_hash)
+    log.debug(u'normalized resource for mac calc: {norm}'.format(norm=normalized))
+    digestmod = getattr(hashlib, algorithm)
+
+    # Make sure we are about to hash binary strings.
+
+    if not isinstance(normalized, six_binary_type):
+        normalized = normalized.encode('utf8')
+
+    if not isinstance(access_token, six_binary_type):
+        access_token = access_token.encode('ascii')
+
+    result = hmac.new(access_token, normalized, digestmod)
+    return base64.b64encode(result.digest())
+
+
+def make_taskcluster_header(credentials, req):
+    validate_taskcluster_credentials(credentials)
+
+    url = req.get_full_url()
+    method = req.get_method()
+    algorithm = 'sha256'
+    timestamp = str(utc_now())
+    nonce = random_string(6)
+    url_parts = parse_url(url)
+
+    content_hash = None
+    if req.has_data():
+        content_hash = calculate_payload_hash(  # pragma: no cover
+            algorithm,
+            req.get_data(),
+            req.get_method(),
+        )
+
+    mac = calculate_mac('header',
+                        credentials['accessToken'],
+                        algorithm,
+                        timestamp,
+                        nonce,
+                        method,
+                        url_parts['resource'],
+                        url_parts['hostname'],
+                        str(url_parts['port']),
+                        content_hash,
+                        )
+
+    header = u'Hawk mac="{}"'.format(prepare_header_val(mac))
+
+    if content_hash:  # pragma: no cover
+        header = u'{}, hash="{}"'.format(header, prepare_header_val(content_hash))
+
+    header = u'{header}, id="{id}", ts="{ts}", nonce="{nonce}"'.format(
+        header=header,
+        id=prepare_header_val(credentials['clientId']),
+        ts=prepare_header_val(timestamp),
+        nonce=prepare_header_val(nonce),
+    )
+
+    log.debug('Hawk header for URL={} method={}: {}'.format(url, method, header))
+
+    return header
+
+
 class FileRecord(object):
 
     def __init__(self, filename, size, digest, algorithm, unpack=False,
-                 version=None, visibility=None):
+                 version=None, visibility=None, setup=None):
         object.__init__(self)
         if '/' in filename or '\\' in filename:
             log.error(
@@ -93,6 +311,7 @@ class FileRecord(object):
         self.unpack = unpack
         self.version = version
         self.visibility = visibility
+        self.setup = setup
 
     def __eq__(self, other):
         if self is other:
@@ -184,6 +403,8 @@ class FileRecordJSONEncoder(json.JSONEncoder):
                 rv['version'] = obj.version
             if obj.visibility is not None:
                 rv['visibility'] = obj.visibility
+            if obj.setup:
+                rv['setup'] = obj.setup
             return rv
 
     def default(self, f):
@@ -229,9 +450,10 @@ class FileRecordJSONDecoder(json.JSONDecoder):
                 unpack = obj.get('unpack', False)
                 version = obj.get('version', None)
                 visibility = obj.get('visibility', None)
+                setup = obj.get('setup')
                 rv = FileRecord(
                     obj['filename'], obj['size'], obj['digest'], obj['algorithm'],
-                    unpack, version, visibility)
+                    unpack, version, visibility, setup)
                 log.debug("materialized %s" % rv)
                 return rv
         return obj
@@ -334,7 +556,7 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
-    process = Popen(cmd, shell=True, stdout=PIPE)
+    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
     while True:
         line = process.stdout.readline()
         if not line:
@@ -535,7 +757,7 @@ def _compute_cache_checksum(filename):
         return digest_file(f, "sha256")
 
 
-def unpack_file(filename):
+def unpack_file(filename, setup=None):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
@@ -579,6 +801,9 @@ def unpack_file(filename):
         log.error("Unknown archive extension for filename '%s'" % filename)
         return False
 
+    if setup and not execute(os.path.join(base_file, setup)):
+        return False
+
     with open(base_file + CHECKSUM_SUFFIX, "wb") as f:
         f.write(checksum)
 
@@ -608,6 +833,9 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
 
     # Files that we want to unpack.
     unpack_files = []
+
+    # Setup for unpacked files.
+    setup_files = {}
 
     # Lets go through the manifest and fetch the files that we want
     for f in manifest.file_records:
@@ -668,6 +896,13 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
         else:
             log.debug("skipping %s" % f.filename)
 
+        if f.setup:
+            if f.unpack:
+                setup_files[f.filename] = f.setup
+            else:
+                log.error("'setup' requires 'unpack' being set for %s" % f.filename)
+                failed_files.append(f.filename)
+
     # lets ensure that fetched files match what the manifest specified
     for localfile, temp_file_name in fetched_files:
         # since I downloaded to a temp file, I need to perform all validations on the temp file
@@ -710,7 +945,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
 
     # Unpack files that need to be unpacked.
     for filename in unpack_files:
-        if not unpack_file(filename):
+        if not unpack_file(filename, setup_files.get(filename)):
             failed_files.append(filename)
 
     # If we failed to fetch or validate a file, we need to fail
@@ -778,10 +1013,25 @@ def _log_api_error(e):
 
 
 def _authorize(req, auth_file):
-    if auth_file:
-        log.debug("using bearer token in %s" % auth_file)
-        req.add_unredirected_header('Authorization',
-                                    'Bearer %s' % (open(auth_file, "rb").read().strip()))
+    if not auth_file:
+        return
+
+    is_taskcluster_auth = False
+    with open(auth_file) as f:
+        auth_file_content = f.read().strip()
+        try:
+            auth_file_content = json.loads(auth_file_content)
+            is_taskcluster_auth = True
+        except:
+            pass
+
+    if is_taskcluster_auth:
+        taskcluster_header = make_taskcluster_header(auth_file_content, req)
+        log.debug("Using taskcluster credentials in %s" % auth_file)
+        req.add_unredirected_header('Authorization', taskcluster_header)
+    else:
+        log.debug("Using Bearer token in %s" % auth_file)
+        req.add_unredirected_header('Authorization', 'Bearer %s' % auth_file_content)
 
 
 def _send_batch(base_url, auth_file, batch, region):
@@ -808,7 +1058,7 @@ def _s3_upload(filename, file):
     try:
         req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
         conn.request('PUT', req_path, open(filename, "rb"),
-                     {'Content-type': 'application/octet-stream'})
+                     {'Content-Type': 'application/octet-stream'})
         resp = conn.getresponse()
         resp_body = resp.read()
         conn.close()
