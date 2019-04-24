@@ -16,8 +16,6 @@ var EXPORTED_SYMBOLS = ["LoginManagerContent"];
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 const AUTOFILL_STATE = "-moz-autofill";
-const MIN_SUBMIT_USERNAME_LENGTH = 2;
-const MIN_SUBMIT_PASSWORD_LENGTH = 2;
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -904,9 +902,10 @@ var LoginManagerContent = {
     if (!pwFields) {
       // Locate the password field(s) in the form. Up to 3 supported.
       // If there's no password field, there's nothing for us to do.
+      const minSubmitPasswordLength = 2;
       pwFields = this._getPasswordFields(form, {
         fieldOverrideRecipe,
-        minPasswordLength: isSubmission ? MIN_SUBMIT_PASSWORD_LENGTH : 0,
+        minPasswordLength: isSubmission ? minSubmitPasswordLength : 0,
       });
     }
 
@@ -1108,11 +1107,6 @@ var LoginManagerContent = {
 
     if (usernameField && usernameField.value.match(/[•\*]{3,}/)) {
       log(`usernameField.value "${usernameField.value}" looks munged, setting to null`);
-      usernameField = null;
-    }
-
-    if (usernameField && usernameField.value.length < MIN_SUBMIT_USERNAME_LENGTH) {
-      log(`usernameField.value "${usernameField.value}" too short, setting to null`);
       usernameField = null;
     }
 

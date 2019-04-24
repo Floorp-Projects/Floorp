@@ -64,7 +64,7 @@ struct JSPluginFrameIPCTabContext
 };
 
 // XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
-// Because service workers don't have an associated TabChild
+// Because service workers don't have an associated BrowserChild
 // we can't satisfy the security constraints on b2g. As such, the parent
 // process will accept this tab context only on desktop.
 struct UnsafeIPCTabContext

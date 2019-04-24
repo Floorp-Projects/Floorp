@@ -27,6 +27,7 @@
 #include "builtin/WeakSetObject.h"
 #include "gc/FreeOp.h"
 #include "js/ProtoKey.h"
+#include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/HelperThreads.h"

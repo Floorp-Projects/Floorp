@@ -68,7 +68,7 @@ class nsIScrollableFrame;
 class nsIControllers;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
-class nsITabChild;
+class nsIBrowserChild;
 class nsITimeoutHandler;
 class nsIWebBrowserChrome;
 class mozIDOMWindowProxy;

@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULWindow.h"
 #include "nsIWidgetListener.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 
 /* Forward declarations.... */
 class nsIURI;
@@ -82,7 +82,7 @@ class nsWebShellWindow final : public nsXULWindow,
   nsresult Initialize(nsIXULWindow* aParent, nsIXULWindow* aOpener,
                       nsIURI* aUrl, int32_t aInitialWidth,
                       int32_t aInitialHeight, bool aIsHiddenWindow,
-                      nsITabParent* aOpeningTab,
+                      nsIRemoteTab* aOpeningTab,
                       mozIDOMWindowProxy* aOpenerWIndow,
                       nsWidgetInitData& widgetInitData);
 

@@ -1432,7 +1432,7 @@ gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget *aWidget,
   if (aEvent->atom == gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE)) {
     UpdateClientOffset();
 
-    // Send a WindowMoved notification. This ensures that TabParent
+    // Send a WindowMoved notification. This ensures that BrowserParent
     // picks up the new client offset and sends it to the child process
     // if appropriate.
     NotifyWindowMoved(mBounds.x, mBounds.y);
@@ -6121,7 +6121,7 @@ void nsWindow::UpdateClientOffsetForCSDWindow() {
     mClientOffset = nsIntPoint(0, 0);
   }
 
-  // Send a WindowMoved notification. This ensures that TabParent
+  // Send a WindowMoved notification. This ensures that BrowserParent
   // picks up the new client offset and sends it to the child process
   // if appropriate.
   NotifyWindowMoved(mBounds.x, mBounds.y);

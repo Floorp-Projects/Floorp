@@ -16,7 +16,7 @@
 #include "mozilla/dom/FileSystemSecurity.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 
 using mozilla::Unused;
@@ -128,7 +128,7 @@ void FilePickerParent::IORunnable::Destroy() { mFilePickerParent = nullptr; }
 
 void FilePickerParent::SendFilesOrDirectories(
     const nsTArray<BlobImplOrString>& aData) {
-  ContentParent* parent = TabParent::GetFrom(Manager())->Manager();
+  ContentParent* parent = BrowserParent::GetFrom(Manager())->Manager();
 
   if (mMode == nsIFilePicker::modeGetFolder) {
     MOZ_ASSERT(aData.Length() <= 1);
@@ -223,7 +223,7 @@ bool FilePickerParent::CreateFilePicker() {
     return false;
   }
 
-  Element* element = TabParent::GetFrom(Manager())->GetOwnerElement();
+  Element* element = BrowserParent::GetFrom(Manager())->GetOwnerElement();
   if (!element) {
     return false;
   }

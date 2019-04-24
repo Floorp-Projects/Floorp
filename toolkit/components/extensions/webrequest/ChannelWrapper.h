@@ -26,7 +26,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIStreamListener.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsPointerHashKeys.h"
 #include "nsInterfaceHashtable.h"
@@ -127,7 +127,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
       const dom::GlobalObject& global, nsIChannel* channel);
   static already_AddRefed<extensions::ChannelWrapper> GetRegisteredChannel(
       const dom::GlobalObject& global, uint64_t aChannelId,
-      const WebExtensionPolicy& aAddon, nsITabParent* aTabParent);
+      const WebExtensionPolicy& aAddon, nsIRemoteTab* aBrowserParent);
 
   uint64_t Id() const { return mId; }
 
@@ -148,7 +148,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   void SetContentType(const nsACString& aContentType);
 
   void RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
-                                nsITabParent* aTabParent);
+                                nsIRemoteTab* aBrowserParent);
 
   already_AddRefed<nsITraceableChannel> GetTraceableChannel(
       nsAtom* aAddonId, dom::ContentParent* aContentParent) const;
@@ -305,7 +305,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   bool mSuspended = false;
   bool mResponseStarted = false;
 
-  nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsITabParent> mAddonEntries;
+  nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsIRemoteTab> mAddonEntries;
 
   class RequestListener final : public nsIStreamListener,
                                 public nsIThreadRetargetableStreamListener {

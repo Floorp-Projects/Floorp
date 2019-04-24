@@ -9,7 +9,7 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "MainThreadUtils.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
@@ -59,8 +59,8 @@ void RemoteContentController::HandleTapOnMainThread(TapType aTapType,
                                                     uint64_t aInputBlockId) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  dom::TabParent* tab =
-      dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
+  dom::BrowserParent* tab =
+      dom::BrowserParent::GetBrowserParentFromLayersId(aGuid.mLayersId);
   if (tab) {
     tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
   }
@@ -110,9 +110,9 @@ void RemoteContentController::HandleTap(TapType aTapType,
   if (NS_IsMainThread()) {
     HandleTapOnMainThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
   } else {
-    // We don't want to get the TabParent or call TabParent::SendHandleTap()
-    // from a non-main thread (this might happen on Android, where this is
-    // called from the Java UI thread)
+    // We don't want to get the BrowserParent or call
+    // BrowserParent::SendHandleTap() from a non-main thread (this might happen
+    // on Android, where this is called from the Java UI thread)
     NS_DispatchToMainThread(
         NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
                           ScrollableLayerGuid, uint64_t>(

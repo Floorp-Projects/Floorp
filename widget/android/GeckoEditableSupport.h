@@ -22,7 +22,7 @@ namespace mozilla {
 class TextComposition;
 
 namespace dom {
-class TabChild;
+class BrowserChild;
 }
 
 namespace widget {
@@ -156,7 +156,7 @@ class GeckoEditableSupport final
     nsAppShell::PostEvent(mozilla::MakeUnique<IMEEvent>(std::move(aCall)));
   }
 
-  static void SetOnTabChild(dom::TabChild* aTabChild);
+  static void SetOnBrowserChild(dom::BrowserChild* aBrowserChild);
 
   // Constructor for main process GeckoEditableChild.
   GeckoEditableSupport(nsWindow::NativePtr<GeckoEditableSupport>* aPtr,

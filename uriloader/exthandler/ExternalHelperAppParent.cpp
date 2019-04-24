@@ -12,7 +12,7 @@
 #include "nsIExternalHelperAppService.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsStringStream.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -61,17 +61,17 @@ ExternalHelperAppParent::ExternalHelperAppParent(
   }
 }
 
-already_AddRefed<nsIInterfaceRequestor> GetWindowFromTabParent(
+already_AddRefed<nsIInterfaceRequestor> GetWindowFromBrowserParent(
     PBrowserParent* aBrowser) {
   if (!aBrowser) {
     return nullptr;
   }
 
   nsCOMPtr<nsIInterfaceRequestor> window;
-  TabParent* tabParent = TabParent::GetFrom(aBrowser);
-  if (tabParent->GetOwnerElement()) {
+  BrowserParent* browserParent = BrowserParent::GetFrom(aBrowser);
+  if (browserParent->GetOwnerElement()) {
     window = do_QueryInterface(
-        tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+        browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
   }
 
   return window.forget();
@@ -80,7 +80,7 @@ already_AddRefed<nsIInterfaceRequestor> GetWindowFromTabParent(
 void UpdateContentContext(nsIStreamListener* aListener,
                           PBrowserParent* aBrowser) {
   MOZ_ASSERT(aListener);
-  nsCOMPtr<nsIInterfaceRequestor> window = GetWindowFromTabParent(aBrowser);
+  nsCOMPtr<nsIInterfaceRequestor> window = GetWindowFromBrowserParent(aBrowser);
   static_cast<nsExternalAppHandler*>(aListener)->SetContentContext(window);
 }
 
@@ -102,13 +102,13 @@ void ExternalHelperAppParent::Init(
 
   nsCOMPtr<nsIInterfaceRequestor> window;
   if (aBrowser) {
-    TabParent* tabParent = TabParent::GetFrom(aBrowser);
-    if (tabParent->GetOwnerElement())
+    BrowserParent* browserParent = BrowserParent::GetFrom(aBrowser);
+    if (browserParent->GetOwnerElement())
       window = do_QueryInterface(
-          tabParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+          browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
 
     bool isPrivate = false;
-    nsCOMPtr<nsILoadContext> loadContext = tabParent->GetLoadContext();
+    nsCOMPtr<nsILoadContext> loadContext = browserParent->GetLoadContext();
     loadContext->GetUsePrivateBrowsing(&isPrivate);
     SetPrivate(isPrivate);
   }

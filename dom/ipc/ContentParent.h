@@ -59,7 +59,7 @@ class nsConsoleService;
 class nsIContentProcessInfo;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
-class nsITabParent;
+class nsIRemoteTab;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
@@ -103,7 +103,7 @@ namespace dom {
 
 class BrowsingContextGroup;
 class Element;
-class TabParent;
+class BrowserParent;
 class ClonedMessageData;
 class MemoryReport;
 class TabContext;
@@ -206,12 +206,12 @@ class ContentParent final : public PContentParent,
    * should be the frame/iframe element with which this process will
    * associated.
    */
-  static TabParent* CreateBrowser(const TabContext& aContext,
-                                  Element* aFrameElement,
-                                  BrowsingContext* aBrowsingContext,
-                                  ContentParent* aOpenerContentParent,
-                                  TabParent* aSameTabGroupAs,
-                                  uint64_t aNextTabParentId);
+  static BrowserParent* CreateBrowser(const TabContext& aContext,
+                                      Element* aFrameElement,
+                                      BrowsingContext* aBrowsingContext,
+                                      ContentParent* aOpenerContentParent,
+                                      BrowserParent* aSameTabGroupAs,
+                                      uint64_t aNextRemoteTabId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -495,7 +495,7 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvFinishShutdown();
 
-  void MaybeInvokeDragSession(TabParent* aParent);
+  void MaybeInvokeDragSession(BrowserParent* aParent);
 
   PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
       const InfallibleTArray<PermissionRequest>& aRequests,
@@ -512,7 +512,7 @@ class ContentParent final : public PContentParent,
   void ForkNewProcess(bool aBlocking);
 
   mozilla::ipc::IPCResult RecvCreateWindow(
-      PBrowserParent* aThisTabParent, PBrowserParent* aNewTab,
+      PBrowserParent* aThisBrowserParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aPositionSpecified, const bool& aSizeSpecified,
       const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
@@ -584,7 +584,8 @@ class ContentParent final : public PContentParent,
   bool DeallocPURLClassifierParent(PURLClassifierParent* aActor);
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
-  void PaintTabWhileInterruptingJS(TabParent* aTabParent, bool aForceRepaint,
+  void PaintTabWhileInterruptingJS(BrowserParent* aBrowserParent,
+                                   bool aForceRepaint,
                                    const layers::LayersObserverEpoch& aEpoch);
 
   // This function is called when we are about to load a document from an
@@ -665,8 +666,8 @@ class ContentParent final : public PContentParent,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
-      uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
-      nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
+      uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
+      nsCOMPtr<nsIRemoteTab>& aNewBrowserParent, bool* aWindowIsNew,
       int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
       nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
       nsIContentSecurityPolicy* aCsp);
@@ -1222,7 +1223,7 @@ class ContentParent final : public PContentParent,
   Atomic<uint32_t> mRemoteWorkerActors;
 
   // How many tabs we're waiting to finish their destruction
-  // sequence.  Precisely, how many TabParents have called
+  // sequence.  Precisely, how many BrowserParents have called
   // NotifyTabDestroying() but not called NotifyTabDestroyed().
   int32_t mNumDestroyingTabs;
 
@@ -1311,8 +1312,8 @@ class ContentParent final : public PContentParent,
 
   RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
 
-  static uint64_t sNextTabParentId;
-  static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
+  static uint64_t sNextRemoteTabId;
+  static nsDataHashtable<nsUint64HashKey, BrowserParent*> sNextBrowserParents;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // When set to true, indicates that content processes should

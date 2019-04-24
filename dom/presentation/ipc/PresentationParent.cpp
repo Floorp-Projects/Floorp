@@ -359,8 +359,8 @@ nsresult PresentationRequestParent::DoRequest(
 
   RefPtr<EventTarget> eventTarget;
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  RefPtr<TabParent> tp =
-      cpm->GetTopLevelTabParentByProcessAndTabId(mChildId, aRequest.tabId());
+  RefPtr<BrowserParent> tp = cpm->GetTopLevelBrowserParentByProcessAndTabId(
+      mChildId, aRequest.tabId());
   if (tp) {
     eventTarget = tp->GetOwnerElement();
   }

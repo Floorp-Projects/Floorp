@@ -2759,7 +2759,7 @@ void gfxPlatform::InitWebRenderConfig() {
           WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
     }
   }
-#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_GTK)
   else if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
     // Hardware compositing should be disabled by default if we aren't using
     // WebRender. We had to check if it is enabled at all, because it may

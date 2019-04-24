@@ -5646,7 +5646,7 @@ nsBrowserAccess.prototype = {
                    aIsExternal, aForceNotRemote = false,
                    aUserContextId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
                    aOpenerWindow = null, aOpenerBrowser = null,
-                   aTriggeringPrincipal = null, aNextTabParentId = 0, aName = "", aCsp = null) {
+                   aTriggeringPrincipal = null, aNextRemoteTabId = 0, aName = "", aCsp = null) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -5679,7 +5679,7 @@ nsBrowserAccess.prototype = {
                                       forceNotRemote: aForceNotRemote,
                                       opener: aOpenerWindow,
                                       openerBrowser: aOpenerBrowser,
-                                      nextTabParentId: aNextTabParentId,
+                                      nextRemoteTabId: aNextRemoteTabId,
                                       name: aName,
                                       csp: aCsp,
                                       });
@@ -5818,22 +5818,22 @@ nsBrowserAccess.prototype = {
   },
 
   createContentWindowInFrame: function browser_createContentWindowInFrame(
-                              aURI, aParams, aWhere, aFlags, aNextTabParentId,
+                              aURI, aParams, aWhere, aFlags, aNextRemoteTabId,
                               aName) {
     // Passing a null-URI to only create the content window.
     return this.getContentWindowOrOpenURIInFrame(null, aParams, aWhere, aFlags,
-                                                 aNextTabParentId, aName);
+                                                 aNextRemoteTabId, aName);
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags,
-                                                  aNextTabParentId, aName) {
+                                                  aNextRemoteTabId, aName) {
     return this.getContentWindowOrOpenURIInFrame(aURI, aParams, aWhere, aFlags,
-                                                 aNextTabParentId, aName);
+                                                 aNextRemoteTabId, aName);
   },
 
   getContentWindowOrOpenURIInFrame: function browser_getContentWindowOrOpenURIInFrame(
                                     aURI, aParams, aWhere, aFlags,
-                                    aNextTabParentId, aName) {
+                                    aNextRemoteTabId, aName) {
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       dump("Error: openURIInFrame can only open in new tabs");
       return null;
@@ -5852,7 +5852,7 @@ nsBrowserAccess.prototype = {
                                  isExternal, false,
                                  userContextId, null, aParams.openerBrowser,
                                  aParams.triggeringPrincipal,
-                                 aNextTabParentId, aName, aParams.csp);
+                                 aNextRemoteTabId, aName, aParams.csp);
   },
 
   isTabContentWindow(aWindow) {

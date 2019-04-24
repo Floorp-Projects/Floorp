@@ -2205,7 +2205,7 @@ HttpBaseChannel::RedirectTo(nsIURI* targetURI) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SwitchProcessTo(mozilla::dom::Promise* aTabParent,
+HttpBaseChannel::SwitchProcessTo(mozilla::dom::Promise* aBrowserParent,
                                  uint64_t aIdentifier) {
   return NS_ERROR_NOT_AVAILABLE;
 }

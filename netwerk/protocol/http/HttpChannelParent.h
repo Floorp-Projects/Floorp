@@ -34,7 +34,7 @@ class nsICacheEntry;
 namespace mozilla {
 
 namespace dom {
-class TabParent;
+class BrowserParent;
 class PBrowserOrId;
 }  // namespace dom
 
@@ -220,7 +220,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   void FailDiversion(nsresult aErrorCode);
 
   friend class HttpChannelParentListener;
-  RefPtr<mozilla::dom::TabParent> mTabParent;
+  RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
 
   MOZ_MUST_USE nsresult ReportSecurityMessage(
       const nsAString& aMessageTag, const nsAString& aMessageCategory) override;

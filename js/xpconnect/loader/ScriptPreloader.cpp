@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
@@ -39,7 +40,6 @@
 #define CONTENT_DOCUMENT_LOADED_TOPIC "content-document-loaded"
 #define CACHE_WRITE_TOPIC "browser-idle-startup-tasks-finished"
 #define CLEANUP_TOPIC "xpcom-shutdown"
-#define SHUTDOWN_TOPIC "quit-application-granted"
 #define CACHE_INVALIDATE_TOPIC "startupcache-invalidate"
 
 // The maximum time we'll wait for a child process to finish starting up before
@@ -230,7 +230,6 @@ ScriptPreloader::ScriptPreloader()
     obs->AddObserver(this, CACHE_WRITE_TOPIC, false);
   }
 
-  obs->AddObserver(this, SHUTDOWN_TOPIC, false);
   obs->AddObserver(this, CLEANUP_TOPIC, false);
   obs->AddObserver(this, CACHE_INVALIDATE_TOPIC, false);
 
@@ -238,33 +237,7 @@ ScriptPreloader::ScriptPreloader()
   JS_AddExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
 }
 
-void ScriptPreloader::ForceWriteCacheFile() {
-  if (mSaveThread) {
-    MonitorAutoLock mal(mSaveMonitor);
-
-    // Make sure we've prepared scripts, so we don't risk deadlocking while
-    // dispatching the prepare task during shutdown.
-    PrepareCacheWrite();
-
-    // Unblock the save thread, so it can start saving before we get to
-    // XPCOM shutdown.
-    mal.Notify();
-  }
-}
-
 void ScriptPreloader::Cleanup() {
-  if (mSaveThread) {
-    MonitorAutoLock mal(mSaveMonitor);
-
-    // Make sure the save thread is not blocked dispatching a sync task to
-    // the main thread, or we will deadlock.
-    MOZ_RELEASE_ASSERT(!mBlockedOnSyncDispatch);
-
-    while (!mSaveComplete && mSaveThread) {
-      mal.Wait();
-    }
-  }
-
   // Wait for any pending parses to finish before clearing the mScripts
   // hashtable, since the parse tasks depend on memory allocated by those
   // scripts.
@@ -279,6 +252,16 @@ void ScriptPreloader::Cleanup() {
   JS_RemoveExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
 
   UnregisterWeakMemoryReporter(this);
+}
+
+void ScriptPreloader::StartCacheWrite() {
+  MOZ_ASSERT(!mSaveThread);
+
+  Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread),
+                              this);
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+  barrier->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__, EmptyString());
 }
 
 void ScriptPreloader::InvalidateCache() {
@@ -310,12 +293,7 @@ void ScriptPreloader::InvalidateCache() {
   if (mSaveComplete && mChildCache) {
     mSaveComplete = false;
 
-    // Make sure scripts are prepared to avoid deadlock when invalidating
-    // the cache during shutdown.
-    PrepareCacheWriteInternal();
-
-    Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread),
-                                this);
+    StartCacheWrite();
   }
 }
 
@@ -335,8 +313,7 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     MOZ_ASSERT(XRE_IsParentProcess());
 
     if (mChildCache) {
-      Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread),
-                                  this);
+      StartCacheWrite();
     }
   } else if (mContentStartupFinishedTopic.Equals(topic)) {
     // If this is an uninitialized about:blank viewer or a chrome: document
@@ -355,8 +332,6 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     FinishContentStartup();
   } else if (!strcmp(topic, "timer-callback")) {
     FinishContentStartup();
-  } else if (!strcmp(topic, SHUTDOWN_TOPIC)) {
-    ForceWriteCacheFile();
   } else if (!strcmp(topic, CLEANUP_TOPIC)) {
     Cleanup();
   } else if (!strcmp(topic, CACHE_INVALIDATE_TOPIC)) {
@@ -671,9 +646,6 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
   MOZ_ASSERT(!NS_IsMainThread());
 
   if (!mDataPrepared && !mSaveComplete) {
-    MOZ_ASSERT(!mBlockedOnSyncDispatch);
-    mBlockedOnSyncDispatch = true;
-
     MonitorAutoUnlock mau(mSaveMonitor);
 
     NS_DispatchToMainThread(
@@ -681,8 +653,6 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
                           &ScriptPreloader::PrepareCacheWrite),
         NS_DISPATCH_SYNC);
   }
-
-  mBlockedOnSyncDispatch = false;
 
   if (mSaveComplete) {
     // If we don't have anything we need to save, we're done.
@@ -769,12 +739,20 @@ nsresult ScriptPreloader::Run() {
   result = mChildCache->WriteCache();
   Unused << NS_WARN_IF(result.isErr());
 
-  mSaveComplete = true;
-  NS_ReleaseOnMainThreadSystemGroup("ScriptPreloader::mSaveThread",
-                                    mSaveThread.forget());
-
-  mal.NotifyAll();
+  NS_DispatchToMainThread(
+      NewRunnableMethod("ScriptPreloader::CacheWriteComplete", this,
+                        &ScriptPreloader::CacheWriteComplete),
+      NS_DISPATCH_NORMAL);
   return NS_OK;
+}
+
+void ScriptPreloader::CacheWriteComplete() {
+  mSaveThread->AsyncShutdown();
+  mSaveThread = nullptr;
+  mSaveComplete = true;
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
+  barrier->RemoveBlocker(this);
 }
 
 void ScriptPreloader::NoteScript(const nsCString& url,
@@ -1167,7 +1145,38 @@ JSScript* ScriptPreloader::CachedScript::GetJSScript(JSContext* cx) {
   return mScript;
 }
 
-NS_IMPL_ISUPPORTS(ScriptPreloader, nsIObserver, nsIRunnable, nsIMemoryReporter)
+// nsIAsyncShutdownBlocker
+
+nsresult ScriptPreloader::GetName(nsAString& aName) {
+  aName.AssignLiteral(u"ScriptPreloader: Saving bytecode cache");
+  return NS_OK;
+}
+
+nsresult ScriptPreloader::GetState(nsIPropertyBag** aState) {
+  *aState = nullptr;
+  return NS_OK;
+}
+
+nsresult ScriptPreloader::BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) {
+  // If we're waiting on a timeout to finish saving, interrupt it and just save
+  // immediately.
+  mSaveMonitor.NotifyAll();
+  return NS_OK;
+}
+
+already_AddRefed<nsIAsyncShutdownClient> ScriptPreloader::GetShutdownBarrier() {
+  nsCOMPtr<nsIAsyncShutdownService> svc = components::AsyncShutdown::Service();
+  MOZ_RELEASE_ASSERT(svc);
+
+  nsCOMPtr<nsIAsyncShutdownClient> barrier;
+  Unused << svc->GetXpcomWillShutdown(getter_AddRefs(barrier));
+  MOZ_RELEASE_ASSERT(barrier);
+
+  return barrier.forget();
+}
+
+NS_IMPL_ISUPPORTS(ScriptPreloader, nsIObserver, nsIRunnable, nsIMemoryReporter,
+                  nsIAsyncShutdownBlocker)
 
 #undef LOG
 

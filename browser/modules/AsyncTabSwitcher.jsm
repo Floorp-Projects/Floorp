@@ -149,7 +149,7 @@ class AsyncTabSwitcher {
     let initialBrowser = initialTab.linkedBrowser;
 
     let tabIsLoaded = !initialBrowser.isRemoteBrowser ||
-      initialBrowser.frameLoader.tabParent.hasLayers;
+      initialBrowser.frameLoader.remoteTab.hasLayers;
 
     // If we minimized the window before the switcher was activated,
     // we might have set  the preserveLayers flag for the current
@@ -252,7 +252,7 @@ class AsyncTabSwitcher {
     this.setTabStateNoAction(tab, state);
 
     let browser = tab.linkedBrowser;
-    let { tabParent } = browser.frameLoader;
+    let { remoteTab } = browser.frameLoader;
     if (state == this.STATE_LOADING) {
       this.assert(!this.minimizedOrFullyOccluded);
 
@@ -262,7 +262,7 @@ class AsyncTabSwitcher {
         browser.docShellIsActive = true;
       }
 
-      if (tabParent) {
+      if (remoteTab) {
         browser.renderLayers = true;
       } else {
         this.onLayersReady(browser);
@@ -272,7 +272,7 @@ class AsyncTabSwitcher {
       // Setting the docShell to be inactive will also cause it
       // to stop rendering layers.
       browser.docShellIsActive = false;
-      if (!tabParent) {
+      if (!remoteTab) {
         this.onLayersCleared(browser);
       }
     } else if (state == this.STATE_LOADED) {
@@ -336,7 +336,7 @@ class AsyncTabSwitcher {
     // the tab switch spinner - especially since the spinner is usually
     // preceded by a perceived lag of TAB_SWITCH_TIMEOUT ms in the
     // tab switch. We can hide this lag, and hide the time being spent
-    // constructing TabChild's, layer trees, etc, by showing a blank
+    // constructing BrowserChild's, layer trees, etc, by showing a blank
     // tab instead and focusing it immediately.
     let shouldBeBlank = false;
     if (requestedBrowser.isRemoteBrowser) {
@@ -344,7 +344,7 @@ class AsyncTabSwitcher {
       // blank tab instead of a spinner in the following cases:
       //
       // 1. The tab has just crashed, and we haven't started showing the
-      //    tab crashed page yet (in this case, the TabParent is null)
+      //    tab crashed page yet (in this case, the RemoteTab is null)
       // 2. The tab has never presented, and has not finished loading
       //    a non-local-about: page.
       //
@@ -356,8 +356,8 @@ class AsyncTabSwitcher {
 
       let fl = requestedBrowser.frameLoader;
       shouldBeBlank = !this.minimizedOrFullyOccluded &&
-        (!fl.tabParent ||
-          (!hasSufficientlyLoaded && !fl.tabParent.hasPresented));
+        (!fl.remoteTab ||
+          (!hasSufficientlyLoaded && !fl.remoteTab.hasPresented));
     }
 
     this.log("Tab should be blank: " + shouldBeBlank);
@@ -497,7 +497,7 @@ class AsyncTabSwitcher {
     let browser = tab.linkedBrowser;
     let state = this.getTabState(tab);
     let canCheckDocShellState = !browser.mDestroyed &&
-      (browser.docShell || browser.frameLoader.tabParent);
+      (browser.docShell || browser.frameLoader.remoteTab);
     if (tab == this.requestedTab &&
         canCheckDocShellState &&
         state == this.STATE_LOADED &&
@@ -893,7 +893,7 @@ class AsyncTabSwitcher {
         !tab.linkedPanel ||
         tab.closing ||
         !tab.linkedBrowser.isRemoteBrowser ||
-        !tab.linkedBrowser.frameLoader.tabParent) {
+        !tab.linkedBrowser.frameLoader.remoteTab) {
       return false;
     }
 

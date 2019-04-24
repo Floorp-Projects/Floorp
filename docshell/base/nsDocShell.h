@@ -34,7 +34,7 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIRefreshURI.h"
 #include "nsIScrollable.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -966,8 +966,8 @@ class nsDocShell final : public nsDocLoader,
   RefPtr<nsCommandManager> mCommandManager;
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
-  // Weak reference to our TabChild actor.
-  nsWeakPtr mTabChild;
+  // Weak reference to our BrowserChild actor.
+  nsWeakPtr mBrowserChild;
 
   // Dimensions of the docshell
   nsIntRect mBounds;

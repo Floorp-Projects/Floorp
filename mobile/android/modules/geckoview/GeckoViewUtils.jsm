@@ -317,7 +317,7 @@ var GeckoViewUtils = {
    */
   getContentFrameMessageManager: function(aWin) {
     const docShell = this.getRootDocShell(aWin);
-    return docShell && docShell.getInterface(Ci.nsITabChild).messageManager;
+    return docShell && docShell.getInterface(Ci.nsIBrowserChild).messageManager;
   },
 
   /**

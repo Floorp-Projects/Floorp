@@ -78,7 +78,7 @@ struct FrameStats {
  *   lives in the GPU process (if there is one) or the UI process otherwise. The
  *   CompositorBridgeChild is a singleton in the content process. Note that
  *   a given content process may have multiple browser instances (represented
- *   by TabChild instances), that are attached to different windows, and therefore
+ *   by BrowserChild instances), that are attached to different windows, and therefore
  *   rendered by different compositors. This means that when a browser instance
  *   sends messages via its CompositorBridgeChild, the corresponding
  *   ContentCompositorBridgeParent has to use the layers id in the message
