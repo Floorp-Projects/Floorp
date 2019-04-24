@@ -15,11 +15,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-// On mac, environ is not declared anywhere:
+// On BSDs (including mac), environ is not declared anywhere:
 // https://stackoverflow.com/a/31347357/912144
-#if defined(ANGLE_PLATFORM_APPLE)
 extern char **environ;
-#endif
 
 namespace angle
 {
