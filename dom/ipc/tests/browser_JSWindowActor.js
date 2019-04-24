@@ -2,6 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+// This test opens and closes a large number of windows, which can be slow
+// especially on debug builds. This decreases the likelihood of the test timing
+// out.
+requestLongerTimeout(2);
+
 const URL = "about:blank";
 const TEST_URL = "http://test2.example.org/";
 let windowActorOptions = {
@@ -21,119 +26,144 @@ let windowActorOptions = {
   },
 };
 
-function teardown() {
-  windowActorOptions.allFrames = false;
-  delete windowActorOptions.matches;
-  delete windowActorOptions.remoteTypes;
-  ChromeUtils.unregisterWindowActor("Test");
+function declTest(name, cfg) {
+  let {
+    url = "about:blank",
+    allFrames = false,
+    includeChrome = false,
+    matches,
+    remoteTypes,
+    fission,
+    test,
+  } = cfg;
+
+  // Build the actor options object which will be used to register & unregister our window actor.
+  let actorOptions = {
+    parent: Object.assign({}, windowActorOptions.parent),
+    child: Object.assign({}, windowActorOptions.child),
+  };
+  actorOptions.allFrames = allFrames;
+  actorOptions.includeChrome = includeChrome;
+  if (matches !== undefined) {
+    actorOptions.matches = matches;
+  }
+  if (remoteTypes !== undefined) {
+    actorOptions.remoteTypes = remoteTypes;
+  }
+
+  // Add a new task for the actor test declared here.
+  add_task(async function() {
+    info("Entering test: " + name);
+
+    // Create a fresh window with the correct settings, and register our actor.
+    let win = await BrowserTestUtils.openNewBrowserWindow({remote: true, fission});
+    ChromeUtils.registerWindowActor("Test", actorOptions);
+
+    // Wait for the provided URL to load in our browser
+    let browser = win.gBrowser.selectedBrowser;
+    BrowserTestUtils.loadURI(browser, url);
+    await BrowserTestUtils.browserLoaded(browser);
+
+    // Run the provided test
+    info("browser ready");
+    await Promise.resolve(test(browser, win));
+
+    // Clean up after we're done.
+    ChromeUtils.unregisterWindowActor("Test");
+    await BrowserTestUtils.closeWindow(win);
+
+    info("Exiting test: " + name);
+  });
 }
 
-add_task(function test_registerWindowActor() {
-  ok(ChromeUtils, "Should be able to get the ChromeUtils interface");
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  SimpleTest.doesThrow(() =>
-    ChromeUtils.registerWindowActor("Test", windowActorOptions),
-    "Should throw if register has duplicate name.");
-  ChromeUtils.unregisterWindowActor("Test");
+declTest("double register", {
+  async test() {
+    SimpleTest.doesThrow(() =>
+      ChromeUtils.registerWindowActor("Test", windowActorOptions),
+      "Should throw if register has duplicate name.");
+  },
 });
 
-add_task(async function test_getActor() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      ok(parent, "WindowGlobalParent should have value.");
-      let actorParent = parent.getActor("Test");
-      is(actorParent.show(), "TestParent", "actor show should have vaule.");
-      is(actorParent.manager, parent, "manager should match WindowGlobalParent.");
+declTest("getActor on both sides", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    ok(parent, "WindowGlobalParent should have value.");
+    let actorParent = parent.getActor("Test");
+    is(actorParent.show(), "TestParent", "actor show should have vaule.");
+    is(actorParent.manager, parent, "manager should match WindowGlobalParent.");
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          ok(child, "WindowGlobalChild should have value.");
-          is(child.isInProcess, false, "Actor should be loaded in the content process.");
-          let actorChild = child.getActor("Test");
-          is(actorChild.show(), "TestChild", "actor show should have vaule.");
-          is(actorChild.manager, child, "manager should match WindowGlobalChild.");
-        });
-      ChromeUtils.unregisterWindowActor("Test");
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+      is(child.isInProcess, false, "Actor should be loaded in the content process.");
+      let actorChild = child.getActor("Test");
+      is(actorChild.show(), "TestChild", "actor show should have vaule.");
+      is(actorChild.manager, child, "manager should match WindowGlobalChild.");
     });
+  },
 });
 
-add_task(async function test_asyncMessage() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      let actorParent = parent.getActor("Test");
-      ok(actorParent, "JSWindowActorParent should have value.");
+declTest("asyncMessage testing", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+    ok(actorParent, "JSWindowActorParent should have value.");
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          let actorChild = child.getActor("Test");
-          ok(actorChild, "JSWindowActorChild should have value.");
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
 
-          let promise = new Promise(resolve => {
-            actorChild.sendAsyncMessage("init", {});
-            actorChild.done = (data) => resolve(data);
-          }).then(data => {
-            ok(data.initial, "Initial should be true.");
-            ok(data.toParent, "ToParent should be true.");
-            ok(data.toChild, "ToChild should be true.");
-          });
+      let promise = new Promise(resolve => {
+        actorChild.sendAsyncMessage("init", {});
+        actorChild.done = (data) => resolve(data);
+      }).then(data => {
+        ok(data.initial, "Initial should be true.");
+        ok(data.toParent, "ToParent should be true.");
+        ok(data.toChild, "ToChild should be true.");
+      });
 
-          await promise;
-        });
-        ChromeUtils.unregisterWindowActor("Test");
+      await promise;
     });
+  },
 });
 
-add_task(async function test_query() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      let actorParent = parent.getActor("Test");
-      ok(actorParent, "JSWindowActorParent should have value.");
+declTest("sendQuery testing", {
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+    ok(actorParent, "JSWindowActorParent should have value.");
 
-      let {result} = await actorParent.sendQuery("asyncAdd", {a: 10, b: 20});
-      is(result, 30);
+    let {result} = await actorParent.sendQuery("asyncAdd", {a: 10, b: 20});
+    is(result, 30);
+  },
+});
 
-      ChromeUtils.unregisterWindowActor("Test");
+declTest("asyncMessage without both sides", {
+  async test(browser) {
+    // If we don't create a parent actor, make sure the parent actor
+    // gets created by having sent the message.
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
+
+      let promise = new Promise(resolve => {
+        actorChild.sendAsyncMessage("init", {});
+        actorChild.done = (data) => resolve(data);
+      }).then(data => {
+        ok(data.initial, "Initial should be true.");
+        ok(data.toParent, "ToParent should be true.");
+        ok(data.toChild, "ToChild should be true.");
+      });
+
+      await promise;
     });
+  },
 });
 
-add_task(async function test_asyncMessage_without_both_side_actor() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      // If we don't create a parent actor, make sure the parent actor
-      // gets created by having sent the message.
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          let actorChild = child.getActor("Test");
-          ok(actorChild, "JSWindowActorChild should have value.");
-
-          let promise = new Promise(resolve => {
-            actorChild.sendAsyncMessage("init", {});
-            actorChild.done = (data) => resolve(data);
-          }).then(data => {
-            ok(data.initial, "Initial should be true.");
-            ok(data.toParent, "ToParent should be true.");
-            ok(data.toChild, "ToChild should be true.");
-          });
-
-          await promise;
-        });
-        ChromeUtils.unregisterWindowActor("Test");
-    });
-});
-
-add_task(async function test_events() {
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+declTest("test event triggering actor creation", {
+  async test(browser) {
     // Add a select element to the DOM of the loaded document.
     await ContentTask.spawn(browser, {}, async function() {
       content.document.body.innerHTML += `
@@ -165,13 +195,11 @@ add_task(async function test_events() {
     let actorParent = parent.getActor("Test");
     ok(actorParent, "JSWindowActorParent should have value.");
     is(subject.wrappedJSObject, actorParent, "Should have been recieved on the right actor");
-  });
-  ChromeUtils.unregisterWindowActor("Test");
+  },
 });
 
-add_task(async function test_observers() {
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+declTest("test observer triggering actor creation", {
+  async test(browser) {
     await ContentTask.spawn(browser, {}, async function() {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
@@ -185,13 +213,11 @@ add_task(async function test_observers() {
       is(topic, TOPIC, "Topic matches");
       is(data, "dataString", "Data matches");
     });
-  });
-  ChromeUtils.unregisterWindowActor("Test");
+  },
 });
 
-add_task(async function test_observers_with_null_data() {
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+declTest("test observers with null data", {
+  async test(browser) {
     await ContentTask.spawn(browser, {}, async function() {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(content.window, TOPIC);
@@ -205,13 +231,11 @@ add_task(async function test_observers_with_null_data() {
       is(topic, TOPIC, "Topic matches");
       is(data, null, "Data matches");
     });
-  });
-  ChromeUtils.unregisterWindowActor("Test");
+  },
 });
 
-add_task(async function test_observers_dont_notify_with_wrong_window() {
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+declTest("observers don't notify with wrong window", {
+  async test(browser) {
     await ContentTask.spawn(browser, {}, async function() {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(null, TOPIC);
@@ -220,193 +244,165 @@ add_task(async function test_observers_dont_notify_with_wrong_window() {
       ok(actorChild, "JSWindowActorChild should have value.");
       is(actorChild.lastObserved, undefined, "Should not receive wrong window's observer notification!");
     });
-  });
-  ChromeUtils.unregisterWindowActor("Test");
+  },
 });
 
-add_task(async function test_getActor_with_mismatch() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      windowActorOptions.matches = ["*://*/*"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      ok(parent, "WindowGlobalParent should have value.");
-      Assert.throws(() => parent.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
+declTest("getActor with mismatch", {
+  matches: ["*://*/*"],
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          ok(child, "WindowGlobalChild should have value.");
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    ok(parent, "WindowGlobalParent should have value.");
+    Assert.throws(() => parent.getActor("Test"),
+          /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
 
-          Assert.throws(() => child.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
-        });
-      teardown();
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+
+      Assert.throws(() => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_matches() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL},
-    async function(browser) {
-      windowActorOptions.matches = ["*://*/*"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+declTest("getActor with matches", {
+  matches: ["*://*/*"],
+  url: TEST_URL,
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          ok(child, "WindowGlobalChild should have value.");
-          ok(child.getActor("Test"), "JSWindowActorChild should have value.");
-        });
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
 
-      teardown();
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_iframe_matches() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      windowActorOptions.allFrames = true;
-      windowActorOptions.matches = ["*://*/*"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+declTest("getActor with iframe matches", {
+  allFrames: true,
+  matches: ["*://*/*"],
 
-      await ContentTask.spawn(
-        browser, TEST_URL, async function(url) {
-          // Create and append an iframe into the window's document.
-          let frame = content.document.createElement("iframe");
-          frame.src = url;
-          content.document.body.appendChild(frame);
-          await ContentTaskUtils.waitForEvent(frame, "load");
+  async test(browser) {
+    await ContentTask.spawn(browser, TEST_URL, async function(url) {
+      // Create and append an iframe into the window's document.
+      let frame = content.document.createElement("iframe");
+      frame.src = url;
+      content.document.body.appendChild(frame);
+      await ContentTaskUtils.waitForEvent(frame, "load");
 
-          is(content.window.frames.length, 1, "There should be an iframe.");
-          let child = frame.contentWindow.window.getWindowGlobalChild();
-          ok(child.getActor("Test"), "JSWindowActorChild should have value.");
-        });
-      teardown();
+      is(content.window.frames.length, 1, "There should be an iframe.");
+      let child = frame.contentWindow.window.getWindowGlobalChild();
+      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_iframe_mismatch() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      windowActorOptions.allFrames = true;
-      windowActorOptions.matches = ["about:home"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+declTest("getActor with iframe mismatch", {
+  allFrames: true,
+  matches: ["about:home"],
 
-      await ContentTask.spawn(
-        browser, TEST_URL, async function(url) {
-          // Create and append an iframe into the window's document.
-          let frame = content.document.createElement("iframe");
-          frame.src = url;
-          content.document.body.appendChild(frame);
-          await ContentTaskUtils.waitForEvent(frame, "load");
+  async test(browser) {
+    await ContentTask.spawn(browser, TEST_URL, async function(url) {
+      // Create and append an iframe into the window's document.
+      let frame = content.document.createElement("iframe");
+      frame.src = url;
+      content.document.body.appendChild(frame);
+      await ContentTaskUtils.waitForEvent(frame, "load");
 
-          is(content.window.frames.length, 1, "There should be an iframe.");
-          let child = frame.contentWindow.window.getWindowGlobalChild();
-          Assert.throws(() => child.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
-        });
-      teardown();
+      is(content.window.frames.length, 1, "There should be an iframe.");
+      let child = frame.contentWindow.window.getWindowGlobalChild();
+      Assert.throws(() => child.getActor("Test"),
+        /NS_ERROR_NOT_AVAILABLE/, "Should throw if it doesn't match.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_remoteType_match() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL},
-    async function(browser) {
-      windowActorOptions.remoteTypes = ["web"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+declTest("getActor with remoteType match", {
+  remoteTypes: ["web"],
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          ok(child, "WindowGlobalChild should have value.");
-          ok(child.getActor("Test"), "JSWindowActorChild should have value.");
-        });
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
 
-      teardown();
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_remoteType_mismatch() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL},
-    async function(browser) {
-      windowActorOptions.remoteTypes = ["privileged"];
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
-      let parent = browser.browsingContext.currentWindowGlobal;
-      Assert.throws(() => parent.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
+declTest("getActor with remoteType mismatch", {
+  remoteTypes: ["privileged"],
+  url: TEST_URL,
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          let child = content.window.getWindowGlobalChild();
-          ok(child, "WindowGlobalChild should have value.");
-          Assert.throws(() => child.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
-        });
+  async test(browser) {
+    let parent = browser.browsingContext.currentWindowGlobal;
+    Assert.throws(() => parent.getActor("Test"),
+          /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
 
-      teardown();
+    await ContentTask.spawn(browser, {}, async function() {
+      let child = content.window.getWindowGlobalChild();
+      ok(child, "WindowGlobalChild should have value.");
+      Assert.throws(() => child.getActor("Test"),
+          /NS_ERROR_NOT_AVAILABLE/, "Should throw if its remoteTypes don't match.");
     });
+  },
 });
 
-add_task(async function test_getActor_without_allFrames() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      windowActorOptions.allFrames = false;
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+declTest("getActor without allFrames", {
+  allFrames: false,
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          // Create and append an iframe into the window's document.
-          let frame = content.document.createElement("iframe");
-          content.document.body.appendChild(frame);
-          is(content.window.frames.length, 1, "There should be an iframe.");
-          let child = frame.contentWindow.window.getWindowGlobalChild();
-          Assert.throws(() => child.getActor("Test"),
-            /NS_ERROR_NOT_AVAILABLE/, "Should throw if allFrames is false.");
-        });
-      ChromeUtils.unregisterWindowActor("Test");
+  async test(browser) {
+    await ContentTask.spawn(browser, {}, async function() {
+      // Create and append an iframe into the window's document.
+      let frame = content.document.createElement("iframe");
+      content.document.body.appendChild(frame);
+      is(content.window.frames.length, 1, "There should be an iframe.");
+      let child = frame.contentWindow.window.getWindowGlobalChild();
+      Assert.throws(() => child.getActor("Test"),
+          /NS_ERROR_NOT_AVAILABLE/, "Should throw if allFrames is false.");
     });
+  },
 });
 
-add_task(async function test_getActor_with_allFrames() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
-    async function(browser) {
-      windowActorOptions.allFrames = true;
-      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+declTest("getActor with allFrames", {
+  allFrames: true,
 
-      await ContentTask.spawn(
-        browser, {}, async function() {
-          // Create and append an iframe into the window's document.
-          let frame = content.document.createElement("iframe");
-          content.document.body.appendChild(frame);
-          is(content.window.frames.length, 1, "There should be an iframe.");
-          let child = frame.contentWindow.window.getWindowGlobalChild();
-          let actorChild = child.getActor("Test");
-          ok(actorChild, "JSWindowActorChild should have value.");
-        });
-      ChromeUtils.unregisterWindowActor("Test");
+  async test(browser) {
+    await ContentTask.spawn(browser, {}, async function() {
+      // Create and append an iframe into the window's document.
+      let frame = content.document.createElement("iframe");
+      content.document.body.appendChild(frame);
+      is(content.window.frames.length, 1, "There should be an iframe.");
+      let child = frame.contentWindow.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
     });
+  },
 });
 
-add_task(async function test_getActor_without_includeChrome() {
-  windowActorOptions.includeChrome = false;
-  let parent = window.docShell.browsingContext.currentWindowGlobal;
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  SimpleTest.doesThrow(() =>
-    parent.getActor("Test"),
-    "Should throw if includeChrome is false.");
-  ChromeUtils.unregisterWindowActor("Test");
+declTest("getActor without includeChrome", {
+  includeChrome: false,
+
+  async test(_browser, win) {
+    let parent = win.docShell.browsingContext.currentWindowGlobal;
+    SimpleTest.doesThrow(() =>
+      parent.getActor("Test"),
+      "Should throw if includeChrome is false.");
+  },
 });
 
-add_task(async function test_getActor_with_includeChrome() {
-  windowActorOptions.includeChrome = true;
-  ChromeUtils.registerWindowActor("Test", windowActorOptions);
-  let parent = window.docShell.browsingContext.currentWindowGlobal;
-  let actorParent = parent.getActor("Test");
-  ok(actorParent, "JSWindowActorParent should have value.");
-  ChromeUtils.unregisterWindowActor("Test");
+declTest("getActor with includeChrome", {
+  includeChrome: true,
+
+  async test(_browser, win) {
+    let parent = win.docShell.browsingContext.currentWindowGlobal;
+    let actorParent = parent.getActor("Test");
+    ok(actorParent, "JSWindowActorParent should have value.");
+  },
 });
