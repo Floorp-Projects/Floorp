@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
                 } else {
                     var bookmarksRootAndChildren = "Bookmarks, root ->"
                     bookmarksRoot.children!!.forEach {
-                        bookmarksRootAndChildren += "\n-- ${it?.title}"
+                        bookmarksRootAndChildren += "\n-- ${it.title}"
                     }
                     bookmarksResultTextView.text = bookmarksRootAndChildren
                 }

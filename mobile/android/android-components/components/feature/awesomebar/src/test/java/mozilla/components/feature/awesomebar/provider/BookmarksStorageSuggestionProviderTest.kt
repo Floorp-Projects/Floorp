@@ -85,7 +85,18 @@ class BookmarksStorageSuggestionProviderTest {
         val bookmarkMap: HashMap<String, BookmarkNode> = hashMapOf()
 
         override suspend fun getTree(guid: String, recursive: Boolean): BookmarkNode? {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
+        }
+
+        override suspend fun getBookmark(guid: String): BookmarkNode? {
+            // "Not needed for the test"
+            throw NotImplementedError()
+        }
+
+        override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override suspend fun searchBookmarks(query: String, limit: Int): List<BookmarkNode> =
@@ -130,27 +141,33 @@ class BookmarksStorageSuggestionProviderTest {
         }
 
         override suspend fun addFolder(parentGuid: String, title: String, position: Int?): String {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override suspend fun addSeparator(parentGuid: String, position: Int?): String {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override suspend fun updateNode(guid: String, info: BookmarkInfo) {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override suspend fun deleteNode(guid: String): Boolean {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override suspend fun runMaintenance() {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
 
         override fun cleanup() {
-            TODO("Not needed for the test")
+            // "Not needed for the test"
+            throw NotImplementedError()
         }
     }
 }

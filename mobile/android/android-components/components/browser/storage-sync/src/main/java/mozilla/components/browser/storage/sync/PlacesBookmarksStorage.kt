@@ -24,6 +24,7 @@ import mozilla.components.concept.sync.SyncableStore
 /**
  * Implementation of the [BookmarksStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
+@Suppress("TooManyFunctions")
 open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), BookmarksStorage, SyncableStore {
 
     /**
@@ -38,6 +39,30 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
             reader.getBookmarksTree(guid, recursive)?.let {
                 asBookmarkNode(it)
             }
+        }
+    }
+
+    /**
+     * Obtains the details of a bookmark without children, if one exists with that guid. Otherwise, null.
+     *
+     * @param guid The bookmark guid to obtain.
+     * @return The bookmark node or null if it does not exist.
+     */
+    override suspend fun getBookmark(guid: String): BookmarkNode? {
+        return withContext(scope.coroutineContext) {
+            asBookmarkNode(reader.getBookmark(guid))
+        }
+    }
+
+    /**
+     * Produces a list of all bookmarks with the given URL.
+     *
+     * @param url The URL string.
+     * @return The list of bookmarks that match the URL
+     */
+    override suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode> {
+        return withContext(scope.coroutineContext) {
+            reader.getBookmarksWithURL(url).mapNotNull(::asBookmarkNode)
         }
     }
 

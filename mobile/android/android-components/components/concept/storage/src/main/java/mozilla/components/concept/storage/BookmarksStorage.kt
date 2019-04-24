@@ -19,6 +19,22 @@ interface BookmarksStorage : Storage {
     suspend fun getTree(guid: String, recursive: Boolean = false): BookmarkNode?
 
     /**
+     * Obtains the details of a bookmark without children, if one exists with that guid. Otherwise, null.
+     *
+     * @param guid The bookmark guid to obtain.
+     * @return The bookmark node or null if it does not exist.
+     */
+    suspend fun getBookmark(guid: String): BookmarkNode?
+
+    /**
+     * Produces a list of all bookmarks with the given URL.
+     *
+     * @param url The URL string.
+     * @return The list of bookmarks that match the URL
+     */
+    suspend fun getBookmarksWithUrl(url: String): List<BookmarkNode>
+
+    /**
      * Searches bookmarks with a query string.
      *
      * @param query The query string to search.
@@ -97,7 +113,7 @@ data class BookmarkNode(
     val position: Int?,
     val title: String?,
     val url: String?,
-    val children: List<BookmarkNode?>?
+    val children: List<BookmarkNode>?
 )
 
 /**

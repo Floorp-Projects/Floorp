@@ -63,6 +63,32 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
+    fun `get bookmarks by URL`() {
+        val reader = reader!!
+        val storage = storage!!
+
+        val url = "http://www.mozilla.org"
+
+        runBlocking {
+            storage.getBookmarksWithUrl(url)
+        }
+        verify(reader, times(1)).getBookmarksWithURL(url)
+    }
+
+    @Test
+    fun `get bookmark by guid`() {
+        val reader = reader!!
+        val storage = storage!!
+
+        val guid = "123"
+
+        runBlocking {
+            storage.getBookmark(guid)
+        }
+        verify(reader, times(1)).getBookmark(guid)
+    }
+
+    @Test
     fun `search bookmarks by keyword`() {
         val reader = reader!!
         val storage = storage!!

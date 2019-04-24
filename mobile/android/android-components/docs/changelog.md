@@ -47,6 +47,8 @@ permalink: /changelog/
   * ⚠️ **This is a breaking API change**
   * Added new method `getVisitsPaginated`; use it to paginate history.
   * Added `excludeTypes` param to `getDetailedVisits`; use it to query only subsets of history.
+  * Added new `getBookmarksWithUrl` method for checking if a site is already bookmarked
+  * Added new `getBookmark` method for obtaining the details of a single bookmark by GUID
 
 * **browser-storage-sync**
   * `PlacesBookmarksStorage` now supports synchronization!
