@@ -1730,7 +1730,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
 
 
 def finalizeHook(descriptor, hookName, freeOp, obj):
-    finalize = ""
+    finalize = "js::SetReservedSlot(%s, DOM_OBJECT_SLOT, JS::UndefinedValue());\n" % obj
     if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
         finalize += fill(
             """
@@ -3847,6 +3847,11 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             return false;
             """)
 
+        if self.descriptor.proxy:
+            finalize = "DOMProxyHandler::getInstance()->finalize"
+        else:
+            finalize = FINALIZE_HOOK_NAME
+
         return fill(
             """
             static_assert(!IsBaseOf<NonRefcountedDOMObject, ${nativeType}>::value,
@@ -3859,6 +3864,17 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),
                        "nsISupports must be on our primary inheritance chain");
+
+            // If the wrapper cache contains a dead reflector then finalize that
+            // now, ensuring that the finalizer for the old reflector always
+            // runs before the new reflector is created and attached. This
+            // avoids the awkward situation where there are multiple reflector
+            // objects that contain pointers to the same native.
+
+            if (JSObject* oldReflector = aCache->GetWrapperMaybeDead()) {
+              ${finalize}(nullptr /* unused */, oldReflector);
+              MOZ_ASSERT(!aCache->GetWrapperMaybeDead());
+            }
 
             JS::Rooted<JSObject*> global(aCx, FindAssociatedGlobal(aCx, aObject->GetParentObject()));
             if (!global) {
@@ -3907,7 +3923,8 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(self.descriptor,
                                                             failureCode),
-            slots=InitMemberSlots(self.descriptor, failureCode))
+            slots=InitMemberSlots(self.descriptor, failureCode),
+            finalize=finalize)
 
 
 class CGWrapMethod(CGAbstractMethod):
@@ -12869,14 +12886,14 @@ class CGDOMJSProxyHandler_set(ClassMethod):
             }
 
             JS_MarkCrossZoneId(cx, id);
-            
+
             return dom::DOMProxyHandler::set(cx, proxy, id, wrappedValue, wrappedReceiver, result);
             """)
 
 
 class CGDOMJSProxyHandler_EnsureHolder(ClassMethod):
     """
-    Implementation of set().  We only use this for cross-origin objects. 
+    Implementation of set().  We only use this for cross-origin objects.
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
