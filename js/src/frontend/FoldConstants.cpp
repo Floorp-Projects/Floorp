@@ -362,6 +362,7 @@ restart:
     case ParseNodeKind::DivExpr:
     case ParseNodeKind::ModExpr:
     case ParseNodeKind::PowExpr:
+    case ParseNodeKind::InitExpr:
     case ParseNodeKind::AssignExpr:
     case ParseNodeKind::AddAssignExpr:
     case ParseNodeKind::SubAssignExpr:
