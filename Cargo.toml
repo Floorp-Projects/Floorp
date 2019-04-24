@@ -61,11 +61,5 @@ libudev-sys = { path = "dom/webauthn/libudev-sys" }
 serde_derive = { git = "https://github.com/servo/serde", branch = "deserialize_from_enums10" }
 winapi = { git = "https://github.com/froydnj/winapi-rs", branch = "aarch64" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", branch = "rust_1_32" }
-
-[patch.crates-io.cranelift-codegen]
-git = "https://github.com/CraneStation/Cranelift"
-rev = "538a0662bf90a1daa9921c10f34827ace134abf1"
-
-[patch.crates-io.cranelift-wasm]
-git = "https://github.com/CraneStation/Cranelift"
-rev = "538a0662bf90a1daa9921c10f34827ace134abf1"
+cranelift-codegen = { git = "https://github.com/CraneStation/Cranelift", rev = "542d799dd7a3b2cc15b91eefdcd85cace8fe5cee" }
+cranelift-wasm = { git = "https://github.com/CraneStation/Cranelift", rev = "542d799dd7a3b2cc15b91eefdcd85cace8fe5cee" }
