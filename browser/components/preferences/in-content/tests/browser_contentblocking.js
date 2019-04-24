@@ -304,20 +304,12 @@ add_task(async function testContentBlockingCustomCategory() {
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
   strictRadioOption.click();
-  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
-
-  // Changing the TP_PREF should necessarily set CAT_PREF to "custom"
-  Services.prefs.setBoolPref(TP_PREF, false);
-  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(TP_PREF));
-  is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
-
-  strictRadioOption.click();
   await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "strict");
 
-  // Changing the FP_PREF and CM_PREF should necessarily set CAT_PREF to "custom"
-  for (let pref of [FP_PREF, CM_PREF]) {
+  // Changing the FP_PREF, CM_PREF, TP_PREF, or TP_PBM_PREF should necessarily set CAT_PREF to "custom"
+  for (let pref of [FP_PREF, CM_PREF, TP_PREF, TP_PBM_PREF]) {
     Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));
-    await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(pref));
+    await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "custom");
     is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
     strictRadioOption.click();
