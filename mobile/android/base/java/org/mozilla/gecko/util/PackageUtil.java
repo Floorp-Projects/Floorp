@@ -53,7 +53,7 @@ public class PackageUtil {
         return null;
     }
 
-    public static String getDefaultBrowserPackage(@NonNull final Context context) {
+    private static String getDefaultBrowserPackage(@NonNull final Context context) {
         final ResolveInfo resolveInfo = getDefaultBrowser(context);
         if (resolveInfo != null) {
             return resolveInfo.activityInfo.packageName;
@@ -62,8 +62,13 @@ public class PackageUtil {
         }
     }
 
+    public static boolean isDefaultBrowser(Context context) {
+        final String defaultBrowserPackageName = getDefaultBrowserPackage(context);
+        return TextUtils.equals(defaultBrowserPackageName, context.getPackageName());
+    }
+
     public static boolean isNoDefaultBrowserSet(Context context) {
-        final String defaultBrowserPackageName = PackageUtil.getDefaultBrowserPackage(context);
+        final String defaultBrowserPackageName = getDefaultBrowserPackage(context);
         return TextUtils.isEmpty(defaultBrowserPackageName);
     }
 
