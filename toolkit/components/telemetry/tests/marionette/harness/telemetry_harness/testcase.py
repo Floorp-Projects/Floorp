@@ -35,6 +35,9 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Set up the test case and start the ping server."""
         super(TelemetryTestCase, self).setUp(*args, **kwargs)
 
+        # Store IDs of addons installed via self.install_addon()
+        self.addon_ids = []
+
         with self.marionette.using_context(self.marionette.CONTEXT_CONTENT):
             self.marionette.navigate("about:about")
 
@@ -132,19 +135,20 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         return self.marionette.restart(clean=False, in_app=True)
 
     def install_addon(self):
-        """Install a minimal addon."""
+        """Install a minimal addon and add its ID to self.addon_ids."""
 
         resources_dir = os.path.join(os.path.dirname(__file__), "resources")
-
         addon_path = os.path.abspath(os.path.join(resources_dir, "helloworld"))
 
         try:
             addons = Addons(self.marionette)
-            addons.install(addon_path, temp=True)
+            addon_id = addons.install(addon_path, temp=True)
         except MarionetteException as e:
             self.fail(
                 "{} - Error installing addon: {} - ".format(e.cause, e.message)
             )
+        else:
+            self.addon_ids.append(addon_id)
 
     @property
     def client_id(self):
