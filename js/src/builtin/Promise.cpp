@@ -97,10 +97,12 @@ enum PromiseAllResolveElementFunctionSlots {
   PromiseAllResolveElementFunctionSlot_ElementIndex,
 };
 
+#ifdef NIGHTLY_BUILD
 enum PromiseAllSettledElementFunctionSlots {
   PromiseAllSettledElementFunctionSlot_Data = 0,
   PromiseAllSettledElementFunctionSlot_ElementIndex,
 };
+#endif
 
 enum ReactionJobSlots {
   ReactionJobSlot_ReactionRecord = 0,
@@ -2277,15 +2279,23 @@ static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
+#ifdef NIGHTLY_BUILD
 static MOZ_MUST_USE bool PerformPromiseAllSettled(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
+#endif
 
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-enum class IterationMode { All, AllSettled, Race };
+enum class IterationMode {
+  All,
+#ifdef NIGHTLY_BUILD
+  AllSettled,
+#endif
+  Race
+};
 
 // ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
 //
@@ -2309,9 +2319,11 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
       case IterationMode::All:
         message = "Receiver of Promise.all call";
         break;
+#ifdef NIGHTLY_BUILD
       case IterationMode::AllSettled:
         message = "Receiver of Promise.allSettled call";
         break;
+#endif
       case IterationMode::Race:
         message = "Receiver of Promise.race call";
         break;
@@ -2342,9 +2354,11 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
       case IterationMode::All:
         message = "Argument of Promise.all";
         break;
+#ifdef NIGHTLY_BUILD
       case IterationMode::AllSettled:
         message = "Argument of Promise.allSettled";
         break;
+#endif
       case IterationMode::Race:
         message = "Argument of Promise.race";
         break;
@@ -2362,9 +2376,11 @@ static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
     case IterationMode::All:
       result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
       break;
+#ifdef NIGHTLY_BUILD
     case IterationMode::AllSettled:
       result = PerformPromiseAllSettled(cx, iter, C, promiseCapability, &done);
       break;
+#endif
     case IterationMode::Race:
       result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
       break;
@@ -3144,6 +3160,7 @@ static MOZ_MUST_USE bool PerformPromiseRace(
                                      isDefaultResolveFn, getResolveAndReject);
 }
 
+#ifdef NIGHTLY_BUILD
 enum class PromiseAllSettledElementFunctionKind { Resolve, Reject };
 
 // Promise.allSettled (Stage 3 proposal)
@@ -3422,6 +3439,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
   args.rval().setUndefined();
   return true;
 }
+#endif  // NIGHTLY_BUILD
 
 // https://tc39.github.io/ecma262/#sec-promise.reject
 //
