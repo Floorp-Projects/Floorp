@@ -1232,7 +1232,7 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
       nsCOMPtr<nsIWebProgressListener> printProgressListener;
 
       nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
-      nsresult rv = printPromptService->ShowProgress(
+      nsresult rv = printPromptService->ShowPrintProgressDialog(
           domWin, wbp, printData->mPrintSettings, this, aIsForPrinting,
           getter_AddRefs(printProgressListener),
           getter_AddRefs(printData->mPrintProgressParams), &aDoNotify);
