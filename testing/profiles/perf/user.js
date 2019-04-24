@@ -2,7 +2,6 @@
 /* globals user_pref */
 user_pref("app.normandy.api_url", "https://127.0.0.1/selfsupport-dummy/");
 user_pref("browser.EULA.override", true);
-user_pref("browser.aboutHomeSnippets.updateUrl", "https://127.0.0.1/about-dummy/");
 user_pref("browser.addon-watch.interval", -1); // Deactivate add-on watching
 // Disable Bookmark backups by default.
 user_pref("browser.bookmarks.max_backups", 0);
