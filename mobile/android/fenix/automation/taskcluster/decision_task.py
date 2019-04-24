@@ -91,6 +91,7 @@ def pr_or_push(is_push):
         BUILDER.craft_ktlint_task,
         BUILDER.craft_lint_task,
         BUILDER.craft_compare_locales_task,
+        BUILDER.craft_dependencies_task,
     ):
         other_tasks[taskcluster.slugId()] = craft_function()
 
