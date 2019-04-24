@@ -594,18 +594,6 @@ skip script test262/language/statements/class/elements/private-derived-cls-indir
 skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js
 skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1541641
-skip script test262/language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js
-skip script test262/language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js
-skip script test262/language/expressions/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js
-skip script test262/language/expressions/class/elements/evaluation-error/computed-name-tostring-err.js
-skip script test262/language/expressions/class/elements/evaluation-error/computed-name-valueof-err.js
-skip script test262/language/statements/class/elements/evaluation-error/computed-name-toprimitive-err.js
-skip script test262/language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-noncallable.js
-skip script test262/language/statements/class/elements/evaluation-error/computed-name-toprimitive-returns-nonobject.js
-skip script test262/language/statements/class/elements/evaluation-error/computed-name-tostring-err.js
-skip script test262/language/statements/class/elements/evaluation-error/computed-name-valueof-err.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
