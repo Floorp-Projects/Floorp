@@ -21,29 +21,27 @@ var sandboxCode = (function() {
   req.send(null);
 }).toSource() + "();";
 
-function test() {
-  waitForExplicitFinish();
-  let appShell = Services.appShell;
-  let doc = appShell.hiddenDOMWindow.document;
-  let frame = doc.createElement("iframe");
+add_task(async function test() {
+  let newWin = await BrowserTestUtils.openNewBrowserWindow();
+
+  let frame = newWin.document.createElement("iframe");
   frame.setAttribute("type", "content");
   frame.setAttribute("src", "http://mochi.test:8888/browser/dom/tests/browser/browser_xhr_sandbox.js");
 
-  frame.addEventListener("load", function() {
-    let workerWindow = frame.contentWindow;
-    workerWindow.addEventListener("message", function(evt) {
-      is(evt.data.result, "ok", "check the sandbox code was happy");
-      frame.remove();
-      finish();
-    }, true);
-    let sandbox = new Cu.Sandbox(workerWindow);
-    // inject some functions from the window into the sandbox.
-    // postMessage so the async code in the sandbox can report a result.
-    sandbox.importFunction(workerWindow.postMessage.bind(workerWindow), "postMessage");
-    sandbox.importFunction(workerWindow.XMLHttpRequest, "XMLHttpRequest");
-    Cu.evalInSandbox(sandboxCode, sandbox, "1.8");
-  }, true);
+  newWin.document.documentElement.appendChild(frame);
+  await BrowserTestUtils.waitForEvent(frame, "load", true);
 
-  let container = doc.body ? doc.body : doc.documentElement;
-  container.appendChild(frame);
-}
+  let contentWindow = frame.contentWindow;
+  let sandbox = new Cu.Sandbox(contentWindow);
+
+  // inject some functions from the window into the sandbox.
+  // postMessage so the async code in the sandbox can report a result.
+  sandbox.importFunction(contentWindow.postMessage.bind(contentWindow), "postMessage");
+  sandbox.importFunction(contentWindow.XMLHttpRequest, "XMLHttpRequest");
+  Cu.evalInSandbox(sandboxCode, sandbox, "1.8");
+
+  let sandboxReply = await BrowserTestUtils.waitForEvent(contentWindow, "message", true);
+  is(sandboxReply.data.result, "ok", "check the sandbox code was felipe");
+
+  await BrowserTestUtils.closeWindow(newWin);
+});
