@@ -69,9 +69,9 @@ export class SnippetBase extends React.PureComponent {
       );
     }
 
-    const defaultTitle = schema.properties.block_button_text.default;
+    const label = this.props.content.block_button_text || schema.properties.block_button_text.default;
     return (
-      <button className="blockButton" title={this.props.content.block_button_text || defaultTitle} onClick={this.onBlockClicked} ref={this.setBlockButtonRef} />
+      <button className="blockButton" title={label} aria-label={label} onClick={this.onBlockClicked} ref={this.setBlockButtonRef} />
     );
   }
 
