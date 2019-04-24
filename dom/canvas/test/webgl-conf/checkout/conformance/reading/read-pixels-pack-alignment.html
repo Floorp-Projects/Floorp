@@ -56,6 +56,7 @@ void main()
 </head>
 <body>
 <canvas id="example" width="32" height="32"></canvas>
+<canvas id="example2" width="32" height="32"></canvas>
 <div id="description"></div>
 <div id="console"></div>
 <script>
@@ -220,43 +221,51 @@ function runTestIteration(format, type, packAlignment, width, height)
 
 description('Verify readPixels() works fine with various PACK_ALIGNMENT values.');
 
-shouldBeNonNull("gl = wtu.create3DContext('example')")
-shouldBeNonNull("program = wtu.setupProgram(gl, ['vshader', 'fshader'], ['pos', 'colorIn'])");
 
+debug("<h1>antialias = false</h1>");
+shouldBeNonNull("gl = wtu.create3DContext('example', {antialias: false})")
 var formats = [ gl.RGBA ];
 var formatNames = [ "RGBA" ];
+runAllIterations();
+debug("<h1>antialias = true</h1>");
+shouldBeNonNull("gl = wtu.create3DContext('example2', {antialias: true})")
+runAllIterations();
 
-for (var i = 0; i < formats.length; ++i) {
-    var format = formats[i];
+function runAllIterations() {
+    shouldBeNonNull("program = wtu.setupProgram(gl, ['vshader', 'fshader'], ['pos', 'colorIn'])");
 
-    debug("Testing format = " + formatNames[i] + " and type = UNSIGNED_BYTE");
-    runTestIteration(format, gl.UNSIGNED_BYTE, 1, 1, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 1, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 1, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 2, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 2, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 3, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 3, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 4, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 4, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 1);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 5, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 6, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 7, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 8, 2);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 1, 0, 0);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 0, 0);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, 0);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, 0, 0);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 1, -1, 1);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, -1);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, -1);
-    runTestIteration(format, gl.UNSIGNED_BYTE, 8, -1, -1);
+    for (var i = 0; i < formats.length; ++i) {
+        var format = formats[i];
+
+        debug("Testing format = " + formatNames[i] + " and type = UNSIGNED_BYTE");
+        runTestIteration(format, gl.UNSIGNED_BYTE, 1, 1, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 1, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 1, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 2, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 2, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 3, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 3, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 4, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 4, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 1);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 5, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 5, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 6, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 7, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 8, 2);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 1, 0, 0);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 2, 0, 0);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, 0);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, 0, 0);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 1, -1, 1);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 2, 1, -1);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 4, 0, -1);
+        runTestIteration(format, gl.UNSIGNED_BYTE, 8, -1, -1);
+    }
 }
-
 var successfullyParsed = true;
+
 </script>
 <script src="../../js/js-test-post.js"></script>
 </body>

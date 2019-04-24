@@ -90,7 +90,13 @@ _GROUPS = [
     'angle_and_trigonometry_02',
     'angle_and_trigonometry_03',
     'exponential',
-    'common_fucntions',
+    'common_functions_00',
+    'common_functions_01',
+    'common_functions_02',
+    'common_functions_03',
+    'common_functions_04',
+    'common_functions_05',
+    'common_functions_06',
     'geometric',
     'float_compare',
     'int_compare',
@@ -98,7 +104,7 @@ _GROUPS = [
     'selection',
     'sequence',
 ]
-    
+
 def GenerateFilename(group):
   """Generate test filename."""
   filename = group

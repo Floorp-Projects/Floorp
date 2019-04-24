@@ -105,23 +105,8 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
               sourceSubRectangleString);
 
         var loc;
-        var skipCorner = false;
         if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
             loc = gl.getUniformLocation(program, "face");
-            switch (gl[pixelFormat]) {
-              case gl.RED_INTEGER:
-              case gl.RG_INTEGER:
-              case gl.RGB_INTEGER:
-              case gl.RGBA_INTEGER:
-                // https://github.com/KhronosGroup/WebGL/issues/1819
-                skipCorner = true;
-                break;
-            }
-        }
-
-        if (skipCorner && expected.length == 1 && (flipY ^ sourceSubRectangle[1] == 0)) {
-            debug("Test skipped, see WebGL#1819");
-            return;
         }
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -213,13 +198,9 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
             // Check the top pixel and bottom pixel and make sure they have
             // the right color.
             wtu.checkCanvasRect(gl, left, top, halfWidth, halfHeight, tl, "shouldBe " + tl);
-            if (!skipCorner) {
-                wtu.checkCanvasRect(gl, right, top, halfWidth, halfHeight, tr, "shouldBe " + tr);
-            }
+            wtu.checkCanvasRect(gl, right, top, halfWidth, halfHeight, tr, "shouldBe " + tr);
             wtu.checkCanvasRect(gl, left, bottom, halfWidth, halfHeight, bl, "shouldBe " + bl);
-            if (!skipCorner) {
-                wtu.checkCanvasRect(gl, right, bottom, halfWidth, halfHeight, br, "shouldBe " + br);
-            }
+            wtu.checkCanvasRect(gl, right, bottom, halfWidth, halfHeight, br, "shouldBe " + br);
         }
     }
 
