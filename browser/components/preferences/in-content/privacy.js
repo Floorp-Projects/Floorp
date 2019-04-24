@@ -474,11 +474,11 @@ var gPrivacyPane = {
     // If any relevant content blocking pref changes, show a warning that the changes will
     // not be implemented until they refresh their tabs.
     for (let pref of CONTENT_BLOCKING_PREFS) {
-      Preferences.get(pref).on("change", gPrivacyPane.notifyUserToReload);
+      Preferences.get(pref).on("change", gPrivacyPane.maybeNotifyUserToReload);
     }
-    Preferences.get("urlclassifier.trackingTable").on("change", gPrivacyPane.notifyUserToReload);
+    Preferences.get("urlclassifier.trackingTable").on("change", gPrivacyPane.maybeNotifyUserToReload);
     for (let button of document.querySelectorAll(".reload-tabs-button")) {
-      button.addEventListener("command", gPrivacyPane.reloadAllTabs);
+      button.addEventListener("command", gPrivacyPane.reloadAllOtherTabs);
     }
 
     let cryptoMinersOption = document.getElementById("contentBlockingCryptominersOption");
@@ -1121,21 +1121,42 @@ var gPrivacyPane = {
   },
 
   /**
-   * Reload all tabs in all windows.
+   * Reload all tabs in all windows, except the active Preferences tab.
    */
-  reloadAllTabs() {
+  reloadAllOtherTabs() {
+    let activeWindow = window.BrowserWindowTracker.getTopWindow();
+    let selectedPrefTab = activeWindow.gBrowser.selectedTab;
     for (let win of window.BrowserWindowTracker.orderedWindows) {
       let tabbrowser = win.gBrowser;
-      tabbrowser.reloadTabs(tabbrowser.tabs);
+      let tabsToReload = [...tabbrowser.tabs];
+      if (win == activeWindow ) {
+        tabsToReload = tabsToReload.filter(tab => tab !== selectedPrefTab);
+      }
+      tabbrowser.reloadTabs(tabsToReload);
+    }
+    for (let notification of document.querySelectorAll(".reload-tabs")) {
+      notification.hidden = true;
     }
   },
 
   /**
-   * Show a warning to the user that they need to reload their tabs to apply the setting.
+   * If there are more tabs than just the preferences tab, show a warning to the user that
+   * they need to reload their tabs to apply the setting.
    */
-  notifyUserToReload() {
-    for (let notification of document.querySelectorAll(".reload-tabs")) {
-      notification.hidden = false;
+  maybeNotifyUserToReload() {
+    let shouldShow = false;
+    if (window.BrowserWindowTracker.orderedWindows.length > 1) {
+      shouldShow = true;
+    } else {
+      let tabbrowser = window.BrowserWindowTracker.getTopWindow().gBrowser;
+      if (tabbrowser.tabs.length > 1) {
+        shouldShow = true;
+      }
+    }
+    if (shouldShow) {
+      for (let notification of document.querySelectorAll(".reload-tabs")) {
+        notification.hidden = false;
+      }
     }
   },
 
