@@ -57,13 +57,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  mParentReflowInput = nullptr;
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
-  mFloatManager = nullptr;
-  mLineLayout = nullptr;
-  mDiscoveredClearance = nullptr;
-  mPercentBSizeObserver = nullptr;
 
   if (aFlags & DUMMY_PARENT_REFLOW_INPUT) {
     mFlags.mDummyParentReflowInput = true;
@@ -172,6 +167,16 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const LogicalSize* aContainingBlockSize,
                          uint32_t aFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
+      mParentReflowInput(&aParentReflowInput),
+      mFloatManager(aParentReflowInput.mFloatManager),
+      mLineLayout(mFrame->IsFrameOfType(nsIFrame::eLineParticipant)
+                      ? aParentReflowInput.mLineLayout
+                      : nullptr),
+      mPercentBSizeObserver(
+          (aParentReflowInput.mPercentBSizeObserver &&
+           aParentReflowInput.mPercentBSizeObserver->NeedsToObserve(*this))
+              ? aParentReflowInput.mPercentBSizeObserver
+              : nullptr),
       mFlags(aParentReflowInput.mFlags),
       mReflowDepth(aParentReflowInput.mReflowDepth + 1) {
   MOZ_ASSERT(aPresContext, "no pres context");
@@ -179,8 +184,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
   MOZ_ASSERT(!mFlags.mSpecialBSizeReflow || !NS_SUBTREE_DIRTY(aFrame),
              "frame should be clean when getting special bsize reflow");
-
-  mParentReflowInput = &aParentReflowInput;
 
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
@@ -194,12 +197,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       AvailableISize() = aParentReflowInput.ComputedBSize();
     }
   }
-
-  mFloatManager = aParentReflowInput.mFloatManager;
-  if (mFrame->IsFrameOfType(nsIFrame::eLineParticipant))
-    mLineLayout = aParentReflowInput.mLineLayout;
-  else
-    mLineLayout = nullptr;
 
   // Note: mFlags was initialized as a copy of aParentReflowInput.mFlags up in
   // this constructor's init list, so the only flags that we need to explicitly
@@ -218,13 +215,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mIClampMarginBoxMinSize = !!(aFlags & I_CLAMP_MARGIN_BOX_MIN_SIZE);
   mFlags.mBClampMarginBoxMinSize = !!(aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE);
   mFlags.mApplyAutoMinSize = !!(aFlags & I_APPLY_AUTO_MIN_SIZE);
-
-  mDiscoveredClearance = nullptr;
-  mPercentBSizeObserver =
-      (aParentReflowInput.mPercentBSizeObserver &&
-       aParentReflowInput.mPercentBSizeObserver->NeedsToObserve(*this))
-          ? aParentReflowInput.mPercentBSizeObserver
-          : nullptr;
 
   if ((aFlags & DUMMY_PARENT_REFLOW_INPUT) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&
