@@ -436,10 +436,6 @@ EXPORTS
     glMultiDrawElementsANGLE
     glMultiDrawElementsInstancedANGLE
 
-    ; GL_ANGLE_multiview
-    glFramebufferTextureMultiviewLayeredANGLE
-    glFramebufferTextureMultiviewSideBySideANGLE
-
     ; GL_ANGLE_provoking_vertex
     glProvokingVertexANGLE
 
@@ -724,6 +720,11 @@ EXPORTS
     glGenVertexArraysOES
     glIsVertexArrayOES
 
+    ; GL_OVR_multiview
+    glFramebufferTextureMultiviewOVR
+
+    ; GL_OVR_multiview2
+
     ; EGL_ANGLE_explicit_context
     glActiveShaderProgramContextANGLE
     glActiveTextureContextANGLE
@@ -889,8 +890,7 @@ EXPORTS
     glFramebufferTexture2DOESContextANGLE
     glFramebufferTextureEXTContextANGLE
     glFramebufferTextureLayerContextANGLE
-    glFramebufferTextureMultiviewLayeredANGLEContextANGLE
-    glFramebufferTextureMultiviewSideBySideANGLEContextANGLE
+    glFramebufferTextureMultiviewOVRContextANGLE
     glFrontFaceContextANGLE
     glFrustumfContextANGLE
     glFrustumxContextANGLE

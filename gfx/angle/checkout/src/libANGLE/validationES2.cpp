@@ -2640,7 +2640,7 @@ bool ValidateClear(Context *context, GLbitfield mask)
         }
     }
 
-    if (extensions.multiview && extensions.disjointTimerQuery)
+    if (extensions.multiview2 && extensions.disjointTimerQuery)
     {
         const State &state       = context->getState();
         Framebuffer *framebuffer = state.getDrawFramebuffer();

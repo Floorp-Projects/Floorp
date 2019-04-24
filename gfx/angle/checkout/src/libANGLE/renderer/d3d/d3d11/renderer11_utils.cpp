@@ -1610,17 +1610,17 @@ void GenerateCaps(ID3D11Device *device,
     extensions->robustBufferAccessBehavior = true;
     extensions->blendMinMax                = true;
     // https://docs.microsoft.com/en-us/windows/desktop/direct3ddxgi/format-support-for-direct3d-11-0-feature-level-hardware
-    extensions->floatBlend                 = true;
-    extensions->framebufferBlit            = GetFramebufferBlitSupport(featureLevel);
-    extensions->framebufferMultisample     = GetFramebufferMultisampleSupport(featureLevel);
-    extensions->instancedArraysANGLE       = GetInstancingSupport(featureLevel);
-    extensions->instancedArraysEXT         = GetInstancingSupport(featureLevel);
-    extensions->packReverseRowOrder        = true;
-    extensions->standardDerivatives        = GetDerivativeInstructionSupport(featureLevel);
-    extensions->shaderTextureLOD           = GetShaderTextureLODSupport(featureLevel);
-    extensions->fragDepth                  = true;
-    extensions->multiview                  = IsMultiviewSupported(featureLevel);
-    if (extensions->multiview)
+    extensions->floatBlend             = true;
+    extensions->framebufferBlit        = GetFramebufferBlitSupport(featureLevel);
+    extensions->framebufferMultisample = GetFramebufferMultisampleSupport(featureLevel);
+    extensions->instancedArraysANGLE   = GetInstancingSupport(featureLevel);
+    extensions->instancedArraysEXT     = GetInstancingSupport(featureLevel);
+    extensions->packReverseRowOrder    = true;
+    extensions->standardDerivatives    = GetDerivativeInstructionSupport(featureLevel);
+    extensions->shaderTextureLOD       = GetShaderTextureLODSupport(featureLevel);
+    extensions->fragDepth              = true;
+    extensions->multiview2             = IsMultiviewSupported(featureLevel);
+    if (extensions->multiview2)
     {
         extensions->maxViews =
             std::min(static_cast<GLuint>(gl::IMPLEMENTATION_ANGLE_MULTIVIEW_MAX_VIEWS),
@@ -1644,7 +1644,7 @@ void GenerateCaps(ID3D11Device *device,
     extensions->copyCompressedTexture            = true;
     extensions->textureStorageMultisample2DArray = true;
     extensions->multiviewMultisample =
-        (extensions->multiview && extensions->textureStorageMultisample2DArray);
+        (extensions->multiview2 && extensions->textureStorageMultisample2DArray);
     extensions->copyTexture3d      = true;
     extensions->textureBorderClamp = true;
     extensions->textureMultisample = true;

@@ -132,7 +132,7 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
     {
         if (iter->second != EBhUndefined)
         {
-            const bool isMultiview = (iter->first == TExtension::OVR_multiview);
+            const bool isMultiview = (iter->first == TExtension::OVR_multiview2);
             if (getResources().NV_shader_framebuffer_fetch &&
                 iter->first == TExtension::EXT_shader_framebuffer_fetch)
             {
@@ -151,7 +151,7 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
                 {
                     // Emit the NV_viewport_array2 extension in a vertex shader if the
                     // SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER option is set and the
-                    // OVR_multiview(2) extension is requested.
+                    // OVR_multiview2 extension is requested.
                     sink << "#extension GL_NV_viewport_array2 : require\n";
                 }
             }

@@ -1138,7 +1138,7 @@ void StateManager11::syncState(const gl::Context *context, const gl::State::Dirt
                 invalidateProgramAtomicCounterBuffers();
                 invalidateProgramShaderStorageBuffers();
                 invalidateDriverUniforms();
-                // If ANGLE_multiview is enabled, the attribute divisor has to be updated for each
+                // If OVR_multiview2 is enabled, the attribute divisor has to be updated for each
                 // binding. When using compute, there could be no vertex array.
                 if (mIsMultiviewEnabled && mVertexArray11)
                 {
@@ -1174,37 +1174,12 @@ void StateManager11::handleMultiviewDrawFramebufferChange(const gl::Context *con
     const gl::Framebuffer *drawFramebuffer = glState.getDrawFramebuffer();
     ASSERT(drawFramebuffer != nullptr);
 
-    // Update viewport offsets.
-    const std::vector<gl::Offset> *attachmentViewportOffsets =
-        drawFramebuffer->getViewportOffsets();
-    const std::vector<gl::Offset> &viewportOffsets =
-        attachmentViewportOffsets != nullptr
-            ? *attachmentViewportOffsets
-            : gl::FramebufferAttachment::GetDefaultViewportOffsetVector();
-    if (mViewportOffsets != viewportOffsets)
+    if (drawFramebuffer->isMultiview())
     {
-        mViewportOffsets = viewportOffsets;
-
-        // Because new viewport offsets are to be applied, we have to mark the internal viewport and
-        // scissor state as dirty.
-        invalidateViewport(context);
-        mInternalDirtyBits.set(DIRTY_BIT_SCISSOR_STATE);
-    }
-    switch (drawFramebuffer->getMultiviewLayout())
-    {
-        case GL_FRAMEBUFFER_MULTIVIEW_SIDE_BY_SIDE_ANGLE:
-            mShaderConstants.setMultiviewWriteToViewportIndex(1.0f);
-            break;
-        case GL_FRAMEBUFFER_MULTIVIEW_LAYERED_ANGLE:
-            // Because the base view index is applied as an offset to the 2D texture array when the
-            // RTV is created, we just have to pass a boolean to select which code path is to be
-            // used.
-            mShaderConstants.setMultiviewWriteToViewportIndex(0.0f);
-            break;
-        default:
-            // There is no need to update the value in the constant buffer if the active framebuffer
-            // object does not have a multiview layout.
-            break;
+        // Because the base view index is applied as an offset to the 2D texture array when the
+        // RTV is created, we just have to pass a boolean to select which code path is to be
+        // used.
+        mShaderConstants.setMultiviewWriteToViewportIndex(0.0f);
     }
 }
 
@@ -1368,19 +1343,14 @@ void StateManager11::syncScissorRectangle(const gl::Rectangle &scissor, bool ena
 
     if (enabled)
     {
-        std::array<D3D11_RECT, gl::IMPLEMENTATION_ANGLE_MULTIVIEW_MAX_VIEWS> rectangles;
-        const UINT numRectangles = static_cast<UINT>(mViewportOffsets.size());
-        for (UINT i = 0u; i < numRectangles; ++i)
-        {
-            D3D11_RECT &rect = rectangles[i];
-            int x            = scissor.x + mViewportOffsets[i].x;
-            int y            = modifiedScissorY + mViewportOffsets[i].y;
-            rect.left        = std::max(0, x);
-            rect.top         = std::max(0, y);
-            rect.right       = x + std::max(0, scissor.width);
-            rect.bottom      = y + std::max(0, scissor.height);
-        }
-        mRenderer->getDeviceContext()->RSSetScissorRects(numRectangles, rectangles.data());
+        D3D11_RECT rect;
+        int x       = scissor.x;
+        int y       = modifiedScissorY;
+        rect.left   = std::max(0, x);
+        rect.top    = std::max(0, y);
+        rect.right  = x + std::max(0, scissor.width);
+        rect.bottom = y + std::max(0, scissor.height);
+        mRenderer->getDeviceContext()->RSSetScissorRects(1, &rect);
     }
 
     mCurScissorRect    = scissor;
@@ -1412,65 +1382,58 @@ void StateManager11::syncViewport(const gl::Context *context)
     }
 
     const auto &viewport = glState.getViewport();
-    std::array<D3D11_VIEWPORT, gl::IMPLEMENTATION_ANGLE_MULTIVIEW_MAX_VIEWS> dxViewports;
-    const UINT numRectangles = static_cast<UINT>(mViewportOffsets.size());
 
     int dxViewportTopLeftX = 0;
     int dxViewportTopLeftY = 0;
     int dxViewportWidth    = 0;
     int dxViewportHeight   = 0;
 
-    for (UINT i = 0u; i < numRectangles; ++i)
+    dxViewportTopLeftX = gl::clamp(viewport.x, dxMinViewportBoundsX, dxMaxViewportBoundsX);
+    dxViewportTopLeftY = gl::clamp(viewport.y, dxMinViewportBoundsY, dxMaxViewportBoundsY);
+    dxViewportWidth    = gl::clamp(viewport.width, 0, dxMaxViewportBoundsX - dxViewportTopLeftX);
+    dxViewportHeight   = gl::clamp(viewport.height, 0, dxMaxViewportBoundsY - dxViewportTopLeftY);
+
+    D3D11_VIEWPORT dxViewport;
+    dxViewport.TopLeftX = static_cast<float>(dxViewportTopLeftX);
+    if (mCurPresentPathFastEnabled)
     {
-        dxViewportTopLeftX = gl::clamp(viewport.x + mViewportOffsets[i].x, dxMinViewportBoundsX,
-                                       dxMaxViewportBoundsX);
-        dxViewportTopLeftY = gl::clamp(viewport.y + mViewportOffsets[i].y, dxMinViewportBoundsY,
-                                       dxMaxViewportBoundsY);
-        dxViewportWidth  = gl::clamp(viewport.width, 0, dxMaxViewportBoundsX - dxViewportTopLeftX);
-        dxViewportHeight = gl::clamp(viewport.height, 0, dxMaxViewportBoundsY - dxViewportTopLeftY);
-
-        D3D11_VIEWPORT &dxViewport = dxViewports[i];
-        dxViewport.TopLeftX        = static_cast<float>(dxViewportTopLeftX);
-        if (mCurPresentPathFastEnabled)
-        {
-            // When present path fast is active and we're rendering to framebuffer 0, we must invert
-            // the viewport in Y-axis.
-            // NOTE: We delay the inversion until right before the call to RSSetViewports, and leave
-            // dxViewportTopLeftY unchanged. This allows us to calculate viewAdjust below using the
-            // unaltered dxViewportTopLeftY value.
-            dxViewport.TopLeftY = static_cast<float>(mCurPresentPathFastColorBufferHeight -
-                                                     dxViewportTopLeftY - dxViewportHeight);
-        }
-        else
-        {
-            dxViewport.TopLeftY = static_cast<float>(dxViewportTopLeftY);
-        }
-
-        // The es 3.1 spec section 9.2 states that, "If there are no attachments, rendering
-        // will be limited to a rectangle having a lower left of (0, 0) and an upper right of
-        // (width, height), where width and height are the framebuffer object's default width
-        // and height." See http://anglebug.com/1594
-        // If the Framebuffer has no color attachment and the default width or height is smaller
-        // than the current viewport, use the smaller of the two sizes.
-        // If framebuffer default width or height is 0, the params should not set.
-        if (!framebuffer->getFirstNonNullAttachment() &&
-            (framebuffer->getDefaultWidth() || framebuffer->getDefaultHeight()))
-        {
-            dxViewport.Width =
-                static_cast<GLfloat>(std::min(viewport.width, framebuffer->getDefaultWidth()));
-            dxViewport.Height =
-                static_cast<GLfloat>(std::min(viewport.height, framebuffer->getDefaultHeight()));
-        }
-        else
-        {
-            dxViewport.Width  = static_cast<float>(dxViewportWidth);
-            dxViewport.Height = static_cast<float>(dxViewportHeight);
-        }
-        dxViewport.MinDepth = actualZNear;
-        dxViewport.MaxDepth = actualZFar;
+        // When present path fast is active and we're rendering to framebuffer 0, we must invert
+        // the viewport in Y-axis.
+        // NOTE: We delay the inversion until right before the call to RSSetViewports, and leave
+        // dxViewportTopLeftY unchanged. This allows us to calculate viewAdjust below using the
+        // unaltered dxViewportTopLeftY value.
+        dxViewport.TopLeftY = static_cast<float>(mCurPresentPathFastColorBufferHeight -
+                                                 dxViewportTopLeftY - dxViewportHeight);
+    }
+    else
+    {
+        dxViewport.TopLeftY = static_cast<float>(dxViewportTopLeftY);
     }
 
-    mRenderer->getDeviceContext()->RSSetViewports(numRectangles, dxViewports.data());
+    // The es 3.1 spec section 9.2 states that, "If there are no attachments, rendering
+    // will be limited to a rectangle having a lower left of (0, 0) and an upper right of
+    // (width, height), where width and height are the framebuffer object's default width
+    // and height." See http://anglebug.com/1594
+    // If the Framebuffer has no color attachment and the default width or height is smaller
+    // than the current viewport, use the smaller of the two sizes.
+    // If framebuffer default width or height is 0, the params should not set.
+    if (!framebuffer->getFirstNonNullAttachment() &&
+        (framebuffer->getDefaultWidth() || framebuffer->getDefaultHeight()))
+    {
+        dxViewport.Width =
+            static_cast<GLfloat>(std::min(viewport.width, framebuffer->getDefaultWidth()));
+        dxViewport.Height =
+            static_cast<GLfloat>(std::min(viewport.height, framebuffer->getDefaultHeight()));
+    }
+    else
+    {
+        dxViewport.Width  = static_cast<float>(dxViewportWidth);
+        dxViewport.Height = static_cast<float>(dxViewportHeight);
+    }
+    dxViewport.MinDepth = actualZNear;
+    dxViewport.MaxDepth = actualZFar;
+
+    mRenderer->getDeviceContext()->RSSetViewports(1, &dxViewport);
 
     mCurViewport = viewport;
     mCurNear     = actualZNear;
@@ -1884,8 +1847,7 @@ angle::Result StateManager11::ensureInitialized(const gl::Context *context)
 
     mShaderConstants.init(caps);
 
-    mIsMultiviewEnabled = extensions.multiview;
-    mViewportOffsets.resize(1u);
+    mIsMultiviewEnabled = extensions.multiview2;
 
     ANGLE_TRY(mVertexDataManager.initialize(context));
 
