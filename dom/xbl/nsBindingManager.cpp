@@ -454,27 +454,6 @@ void nsBindingManager::RemoveLoadingDocListener(nsIURI* aURL) {
   }
 }
 
-void nsBindingManager::FlushSkinBindings() {
-  if (!mBoundContentSet) {
-    return;
-  }
-
-  for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
-    nsXBLBinding* binding = iter.Get()->GetKey()->GetXBLBinding();
-
-    if (binding->MarkedForDeath()) {
-      continue;
-    }
-
-    nsAutoCString path;
-    binding->PrototypeBinding()->DocURI()->GetPathQueryRef(path);
-
-    if (!strncmp(path.get(), "/skin", 5)) {
-      binding->MarkForDeath();
-    }
-  }
-}
-
 // Used below to protect from recurring in QI calls through XPConnect.
 struct AntiRecursionData {
   nsIContent* element;

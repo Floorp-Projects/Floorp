@@ -54,9 +54,6 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
   // (or may be overridden by intl.uidirection pref)
   boolean isLocaleRTL(in ACString package);
 
-  /* Should be called when skins change. Reloads only stylesheets. */
-  void refreshSkins();
-
   /**
    * Installable skin XBL is not always granted the same privileges as other
    * chrome. This asks the chrome registry whether scripts are allowed to be
@@ -98,12 +95,5 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
  */
 #define NS_CHROME_FLUSH_TOPIC \
   "chrome-flush-caches"
-
-/**
- * Chrome registry will notify various caches that skin files need flushing.
- * If "chrome-flush-caches" is notified, this topic will *not* be notified.
- */
-#define NS_CHROME_FLUSH_SKINS_TOPIC \
-  "chrome-flush-skin-caches"
 
 %}

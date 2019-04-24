@@ -160,11 +160,6 @@ nsChromeRegistryContent::GetLocalesForPackage(
 }
 
 NS_IMETHODIMP
-nsChromeRegistryContent::CheckForOSAccessibility() {
-  CONTENT_NOT_IMPLEMENTED();
-}
-
-NS_IMETHODIMP
 nsChromeRegistryContent::CheckForNewChrome() { CONTENT_NOT_IMPLEMENTED(); }
 
 NS_IMETHODIMP

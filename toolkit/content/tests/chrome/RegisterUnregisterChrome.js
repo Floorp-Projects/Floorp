@@ -103,12 +103,9 @@ function createManifestTemporarily(tempDir, manifestText) {
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
     autoRegister(tempfile);
 
-  gChromeReg.refreshSkins();
-
   return function() {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
-    gChromeReg.refreshSkins();
     Services.prefs.clearUserPref(XUL_CACHE_PREF);
   };
 }
@@ -124,12 +121,9 @@ function registerManifestTemporarily(manifestURI) {
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
     autoRegister(tempfile);
 
-  gChromeReg.refreshSkins();
-
   return function() {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
-    gChromeReg.refreshSkins();
     Services.prefs.clearUserPref(XUL_CACHE_PREF);
   };
 }

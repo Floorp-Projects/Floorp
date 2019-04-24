@@ -111,8 +111,6 @@ class nsBindingManager final : public nsStubMutationObserver {
   nsIStreamListener* GetLoadingDocListener(nsIURI* aURL);
   void RemoveLoadingDocListener(nsIURI* aURL);
 
-  void FlushSkinBindings();
-
   nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
                                     void** aResult);
 

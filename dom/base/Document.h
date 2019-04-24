@@ -1661,17 +1661,6 @@ class Document : public nsINode,
   void InsertSheetAt(size_t aIndex, StyleSheet&);
 
   /**
-   * Replace the stylesheets in aOldSheets with the stylesheets in
-   * aNewSheets. The two lists must have equal length, and the sheet
-   * at positon J in the first list will be replaced by the sheet at
-   * position J in the second list.  Some sheets in the second list
-   * may be null; if so the corresponding sheets in the first list
-   * will simply be removed.
-   */
-  void UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
-                         nsTArray<RefPtr<StyleSheet>>& aNewSheets);
-
-  /**
    * Add a stylesheet to the document
    *
    * TODO(emilio): This is only used by parts of editor that are no longer in
@@ -2415,10 +2404,6 @@ class Document : public nsINode,
                                           nsAtom* aAttrName,
                                           const nsAString& aAttrValue) const;
 
-  /**
-   * See FlushSkinBindings on nsBindingManager
-   */
-  void FlushSkinBindings();
 
   /**
    * To batch DOMSubtreeModified, document needs to be informed when

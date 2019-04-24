@@ -29,7 +29,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry {
   nsresult Init() override;
 
   NS_IMETHOD CheckForNewChrome() override;
-  NS_IMETHOD CheckForOSAccessibility() override;
   NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
                                   nsIUTF8StringEnumerator** aResult) override;
   NS_IMETHOD IsLocaleRTL(const nsACString& package, bool* aResult) override;
@@ -103,8 +102,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry {
 
   bool mProfileLoaded;
   bool mDynamicRegistration;
-
-  nsCString mSelectedSkin;
 
   // Hash of package names ("global") to PackageEntry objects
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
