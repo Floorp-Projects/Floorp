@@ -9,10 +9,9 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/xpcshell/xpcshell.ini',
 ]
 
-if CONFIG['MOZ_TOOLKIT_SEARCH']:
-    XPIDL_SOURCES += [
-        'nsISearchService.idl',
-    ]
+XPIDL_SOURCES += [
+    'nsISearchService.idl',
+]
 
 XPIDL_MODULE = 'toolkit_search'
 

@@ -86,6 +86,7 @@ var initTable = {
   storage: ["@mozilla.org/storage/service;1", "mozIStorageService"],
   domStorageManager: ["@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
   lsm: ["@mozilla.org/dom/localStorage-manager;1", "nsILocalStorageManager"],
+  search: ["@mozilla.org/browser/search-service;1", "nsISearchService"],
   strings: ["@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
   telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
   textToSubURI: ["@mozilla.org/intl/texttosuburi;1", "nsITextToSubURI"],
@@ -108,9 +109,6 @@ var initTable = {
 
 if (AppConstants.platform == "android") {
   initTable.androidBridge = ["@mozilla.org/android/bridge;1", "nsIAndroidBridge"];
-}
-if (AppConstants.MOZ_TOOLKIT_SEARCH) {
-  initTable.search = ["@mozilla.org/browser/search-service;1", "nsISearchService"];
 }
 if (AppConstants.MOZ_GECKO_PROFILER) {
   initTable.profiler = ["@mozilla.org/tools/profiler;1", "nsIProfiler"];

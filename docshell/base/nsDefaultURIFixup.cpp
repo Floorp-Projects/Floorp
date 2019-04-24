@@ -11,10 +11,7 @@
 #include "nsIFile.h"
 #include <algorithm>
 
-#ifdef MOZ_TOOLKIT_SEARCH
-#  include "nsISearchService.h"
-#endif
-
+#include "nsISearchService.h"
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
 #include "nsDefaultURIFixup.h"
@@ -429,7 +426,6 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     return NS_OK;
   }
 
-#ifdef MOZ_TOOLKIT_SEARCH
   // Try falling back to the search service's default search engine
   nsCOMPtr<nsISearchService> searchSvc =
       do_GetService("@mozilla.org/browser/search-service;1");
@@ -474,7 +470,6 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
       }
     }
   }
-#endif
 
   // out of options
   return NS_ERROR_NOT_AVAILABLE;

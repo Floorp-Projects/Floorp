@@ -313,8 +313,7 @@ for var in ('ANDROID_PACKAGE_NAME',
             'OMNIJAR_NAME'):
             DEFINES[var] = CONFIG[var]
 
-for var in ('MOZ_TOOLKIT_SEARCH',
-            'MOZ_SYSTEM_NSS',
+for var in ('MOZ_SYSTEM_NSS',
             'MOZ_UNSIGNED_APP_SCOPE',
             'MOZ_UNSIGNED_SYSTEM_SCOPE',
             'MOZ_UPDATER',

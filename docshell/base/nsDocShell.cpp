@@ -183,6 +183,7 @@
 #include "nsEscape.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindow.h"
+#include "nsISearchService.h"
 #include "nsJSEnvironment.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -220,10 +221,6 @@
 #if NS_PRINT_PREVIEW
 #  include "nsIDocumentViewerPrint.h"
 #  include "nsIWebBrowserPrint.h"
-#endif
-
-#ifdef MOZ_TOOLKIT_SEARCH
-#  include "nsISearchService.h"
 #endif
 
 using namespace mozilla;
@@ -13229,7 +13226,6 @@ void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
     return;
   }
 
-#ifdef MOZ_TOOLKIT_SEARCH
   nsCOMPtr<nsISearchService> searchSvc =
       do_GetService("@mozilla.org/browser/search-service;1");
   if (searchSvc) {
@@ -13244,7 +13240,6 @@ void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
       }
     }
   }
-#endif
 }
 
 NS_IMETHODIMP
