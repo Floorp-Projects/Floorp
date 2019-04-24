@@ -121,8 +121,5 @@ LOCAL_INCLUDES += [
     '/tools/profiler',
 ]
 
-if CONFIG['MOZ_TOOLKIT_SEARCH']:
-    DEFINES['MOZ_TOOLKIT_SEARCH'] = True
-
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
