@@ -47,25 +47,15 @@ class Target extends Domain {
     });
   }
 
-  async createTarget(a, b) {
+  async createTarget() {
+    const {targets} = this.session.target;
+    const onTarget = targets.once("connect");
     const tab = TabManager.addTab();
-    const browser = tab.linkedBrowser;
-
-    // Wait for the related target to be created
-    const target = await new Promise(resolve => {
-      const { targets } = this.session.target;
-      const listener = (eventName, target) => {
-        if (target.browser == browser) {
-          targets.off("connect", listener);
-          resolve(target);
-        }
-      };
-      targets.on("connect", listener);
-    });
-
-    return {
-      targetId: target.id,
-    };
+    const target = await onTarget;
+    if (tab.linkedBrowser != target.browser) {
+      throw new Error("Unexpected tab opened: " + tab.linkedBrowser.currentURI.spec);
+    }
+    return {targetId: target.id};
   }
 
   attachToTarget({ targetId }) {
