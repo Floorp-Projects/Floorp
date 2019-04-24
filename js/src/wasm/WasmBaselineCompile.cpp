@@ -4156,6 +4156,17 @@ class BaseCompiler final : public BaseCompilerInterface {
       return false;
     }
 
+    // Locals are stack allocated.  Mark ref-typed ones in the stackmap
+    // accordingly.
+    for (const Local& l : localInfo_) {
+      if (l.type == MIRType::RefOrNull) {
+        uint32_t offs = fr.localOffset(l);
+        MOZ_ASSERT(0 == (offs % sizeof(void*)));
+        stackMapGenerator_.machineStackTracker
+                          .setGCPointer(offs / sizeof(void*));
+      }
+    }
+
     // Copy arguments from registers to stack.
     for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
       if (!i->argInRegister()) {
@@ -4170,11 +4181,12 @@ class BaseCompiler final : public BaseCompilerInterface {
           fr.storeLocalI64(RegI64(i->gpr64()), l);
           break;
         case MIRType::RefOrNull: {
-          uint32_t offs = fr.localOffset(l);
+          DebugOnly<uint32_t> offs = fr.localOffset(l);
           MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
-          stackMapGenerator_.machineStackTracker.setGCPointer(offs /
-                                                              sizeof(void*));
+          // We should have just visited this local in the preceding loop.
+          MOZ_ASSERT(stackMapGenerator_.machineStackTracker
+                                       .isGCPointer(offs / sizeof(void*)));
           break;
         }
         case MIRType::Double:
