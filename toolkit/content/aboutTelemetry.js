@@ -208,10 +208,10 @@ var Settings = {
     let settingsExplanation = document.getElementById("settings-explanation");
     let extendedEnabled = Services.telemetry.canRecordExtended;
 
-    let datacase = extendedEnabled ? "prerelease" : "release";
+    let channel = extendedEnabled ? "prerelease" : "release";
     let uploadcase = TelemetrySend.sendingEnabled() ? "enabled" : "disabled";
 
-    document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {datacase, uploadcase});
+    document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {channel, uploadcase});
 
     this.attachObservers();
   },
