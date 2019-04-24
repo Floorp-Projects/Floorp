@@ -1,4 +1,4 @@
-requestLongerTimeout(4);
+requestLongerTimeout(8);
 
 const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 Services.scriptloader.loadSubScript(CHROME_BASE + "head.js", this);
@@ -15,6 +15,17 @@ async function testOnWindow(private, expectedReferrer, rp) {
   info("Loading tracking scripts and tracking images");
   await ContentTask.spawn(b, {rp}, async function({rp}) {
     {
+      let src = content.document.createElement("script");
+      let p = new content.Promise(resolve => { src.onload = resolve; });
+      content.document.body.appendChild(src);
+      if (rp) {
+        src.referrerPolicy = rp;
+      }
+      src.src = "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=script";
+      await p;
+    }
+
+    {
       let img = content.document.createElement("img");
       let p = new content.Promise(resolve => { img.onload = resolve; });
       content.document.body.appendChild(img);
@@ -25,6 +36,12 @@ async function testOnWindow(private, expectedReferrer, rp) {
       await p;
     }
   });
+
+  await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?result&what=script")
+    .then(r => r.text())
+    .then(text => {
+      is(text, expectedReferrer, "We sent the correct Referer header");
+    });
 
   await fetch("https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?result&what=image")
     .then(r => r.text())
