@@ -70,9 +70,8 @@ class Table : public ShareableBase<Table> {
   void trace(JSTracer* trc);
 
   TableKind kind() const { return kind_; }
-  bool isTypedFunction() const { return kind_ == TableKind::TypedFunction; }
   bool isFunction() const {
-    return kind_ == TableKind::FuncRef || kind_ == TableKind::TypedFunction;
+    return kind_ == TableKind::FuncRef || kind_ == TableKind::AsmJS;
   }
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
