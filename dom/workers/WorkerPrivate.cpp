@@ -3945,6 +3945,8 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
       return true;
     }
 
+    MOZ_ASSERT_IF(aStatus == Killing, mStatus == Canceling);
+
     if (aStatus >= Canceling) {
       MutexAutoUnlock unlock(mMutex);
       data->mClientSource.reset();
