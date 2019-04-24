@@ -40,10 +40,11 @@ using namespace mozilla;
 // It is now owned exclusively by its JS object. Either a weak reference will be
 // turned into a strong ref which will bring its refcount up to 2 and change the
 // wrapper back to the rooting state, or it will stay alive until the JS object
-// dies. If the JS object dies, then when XPCJSContext::FinalizeCallback calls
-// FindDyingJSObjects it will find the wrapper and call Release() in it,
-// destroying the wrapper. Otherwise, the wrapper will stay alive, even if it no
-// longer has a weak reference to it.
+// dies. If the JS object dies, then when
+// JSObject2WrappedJSMap::UpdateWeakPointersAfterGC is called (via the JS
+// engine's weak pointer zone or compartment callbacks) it will find the wrapper
+// and call Release() on it, destroying the wrapper. Otherwise, the wrapper will
+// stay alive, even if it no longer has a weak reference to it.
 //
 // When the wrapper is subject to finalization, it is kept alive by an implicit
 // reference from the JS object which is invisible to the cycle collector, so
