@@ -253,6 +253,7 @@ windows-tests:
     - xpcshell
 
 windows-aarch64-tests:
+    - cppunit
     - crashtest
     - gtest
     - jsreftest
