@@ -90,6 +90,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
+import org.mozilla.gecko.util.PackageUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ViewUtil;
 
@@ -690,7 +691,7 @@ public class GeckoPreferences
                 pref.setOnPreferenceChangeListener(this);
 
                 if (PREFS_DEFAULT_BROWSER.equals(key)) {
-                    if (MmaDelegate.isDefaultBrowser(this)) {
+                    if (PackageUtil.isDefaultBrowser(this)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

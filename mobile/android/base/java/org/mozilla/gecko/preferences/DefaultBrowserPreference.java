@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.util.PackageUtil;
 
 public class DefaultBrowserPreference extends LinkPreference {
@@ -32,7 +31,7 @@ public class DefaultBrowserPreference extends LinkPreference {
                 // the user don't have setup a default browser
                 PackageUtil.showInstalledBrowsers(this.getContext());
 
-            } else if (!MmaDelegate.isDefaultBrowser(this.getContext())) {
+            } else if (!PackageUtil.isDefaultBrowser(this.getContext())) {
                 Toast.makeText(this.getContext(),
                         this.getContext().getString(R.string.default_browser_system_settings_toast),
                         Toast.LENGTH_LONG).show();
