@@ -1,0 +1,10 @@
+include protocol PUniquePtrOfActorsSub;
+
+protocol PUniquePtrOfActors {
+    manages PUniquePtrOfActorsSub;
+
+child:
+    async Msg(UniquePtr<PUniquePtrOfActorsSub> p);
+
+    async PUniquePtrOfActorsSub();
+};
