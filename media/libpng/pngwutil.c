@@ -1,10 +1,10 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.35 [July 15, 2018]
+ * Copyright (c) 2018 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -1994,16 +1994,16 @@ png_write_start_row(png_structrp png_ptr)
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
    /* Start of interlace block */
-   static PNG_CONST png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
+   static const png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
 
    /* Offset to next interlace block */
-   static PNG_CONST png_byte png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
+   static const png_byte png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
 
    /* Start of interlace block in the y direction */
-   static PNG_CONST png_byte png_pass_ystart[7] = {0, 0, 4, 0, 2, 0, 1};
+   static const png_byte png_pass_ystart[7] = {0, 0, 4, 0, 2, 0, 1};
 
    /* Offset to next interlace block in the y direction */
-   static PNG_CONST png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
+   static const png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
 #endif
 
    png_alloc_size_t buf_size;
@@ -2109,16 +2109,16 @@ png_write_finish_row(png_structrp png_ptr)
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
    /* Start of interlace block */
-   static PNG_CONST png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
+   static const png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
 
    /* Offset to next interlace block */
-   static PNG_CONST png_byte png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
+   static const png_byte png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
 
    /* Start of interlace block in the y direction */
-   static PNG_CONST png_byte png_pass_ystart[7] = {0, 0, 4, 0, 2, 0, 1};
+   static const png_byte png_pass_ystart[7] = {0, 0, 4, 0, 2, 0, 1};
 
    /* Offset to next interlace block in the y direction */
-   static PNG_CONST png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
+   static const png_byte png_pass_yinc[7] = {8, 8, 8, 4, 4, 2, 2};
 #endif
 
    png_debug(1, "in png_write_finish_row");
@@ -2199,10 +2199,10 @@ png_do_write_interlace(png_row_infop row_info, png_bytep row, int pass)
    /* Arrays to facilitate easy interlacing - use pass (0 - 6) as index */
 
    /* Start of interlace block */
-   static PNG_CONST png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
+   static const png_byte png_pass_start[7] = {0, 4, 0, 2, 0, 1, 0};
 
    /* Offset to next interlace block */
-   static PNG_CONST png_byte  png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
+   static const png_byte png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
 
    png_debug(1, "in png_do_write_interlace");
 
@@ -2377,7 +2377,7 @@ png_write_filtered_row(png_structrp png_ptr, png_bytep filtered_row,
 
 #ifdef PNG_WRITE_FILTER_SUPPORTED
 static size_t /* PRIVATE */
-png_setup_sub_row(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_sub_row(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes, size_t lmins)
 {
    png_bytep rp, dp, lp;
@@ -2416,7 +2416,7 @@ png_setup_sub_row(png_structrp png_ptr, const png_uint_32 bpp,
 }
 
 static void /* PRIVATE */
-png_setup_sub_row_only(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_sub_row_only(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes)
 {
    png_bytep rp, dp, lp;
@@ -2481,7 +2481,7 @@ png_setup_up_row_only(png_structrp png_ptr, size_t row_bytes)
 }
 
 static size_t /* PRIVATE */
-png_setup_avg_row(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_avg_row(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes, size_t lmins)
 {
    png_bytep rp, dp, pp, lp;
@@ -2521,7 +2521,7 @@ png_setup_avg_row(png_structrp png_ptr, const png_uint_32 bpp,
    return (sum);
 }
 static void /* PRIVATE */
-png_setup_avg_row_only(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_avg_row_only(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes)
 {
    png_bytep rp, dp, pp, lp;
@@ -2543,7 +2543,7 @@ png_setup_avg_row_only(png_structrp png_ptr, const png_uint_32 bpp,
 }
 
 static size_t /* PRIVATE */
-png_setup_paeth_row(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_paeth_row(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes, size_t lmins)
 {
    png_bytep rp, dp, pp, cp, lp;
@@ -2604,7 +2604,7 @@ png_setup_paeth_row(png_structrp png_ptr, const png_uint_32 bpp,
    return (sum);
 }
 static void /* PRIVATE */
-png_setup_paeth_row_only(png_structrp png_ptr, const png_uint_32 bpp,
+png_setup_paeth_row_only(png_structrp png_ptr, png_uint_32 bpp,
     size_t row_bytes)
 {
    png_bytep rp, dp, pp, cp, lp;

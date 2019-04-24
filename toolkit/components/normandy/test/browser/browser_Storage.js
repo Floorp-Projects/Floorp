@@ -1,7 +1,6 @@
 "use strict";
 
 ChromeUtils.import("resource://normandy/lib/Storage.jsm", this);
-ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm", this);
 
 add_task(async function() {
   const store1 = new Storage("prefix1");

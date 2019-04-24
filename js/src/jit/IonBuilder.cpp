@@ -1124,6 +1124,20 @@ AbortReasonOr<Ok> IonBuilder::buildInline(IonBuilder* callerBuilder,
   return Ok();
 }
 
+void IonBuilder::runTask() {
+  // This is the entry point when ion compiles are run offthread.
+  JSRuntime* rt = script()->runtimeFromAnyThread();
+
+  TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+  TraceLoggerEvent event(TraceLogger_AnnotateScripts, script());
+  AutoTraceLog logScript(logger, event);
+  AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
+
+  jit::JitContext jctx(jit::CompileRuntime::get(rt),
+                       jit::CompileRealm::get(script()->realm()), &alloc());
+  setBackgroundCodegen(jit::CompileBackEnd(this));
+}
+
 void IonBuilder::rewriteParameter(uint32_t slotIdx, MDefinition* param) {
   MOZ_ASSERT(param->isParameter() || param->isGetArgumentsObjectArg());
 

@@ -6,6 +6,14 @@ using refcounted SomeRefcountedType from "SomeFile.h";
 using refcounted class SomeRefcountedClass from "SomeFile.h";
 using refcounted struct SomeRefcountedStruct from "SomeFile.h";
 
+using moveonly SomeMoveonlyType from "SomeFile.h";
+using moveonly class SomeMoveonlyClass from "SomeFile.h";
+using moveonly struct SomeMoveonlyStruct from "SomeFile.h";
+
+using refcounted moveonly SomeRefcountedMoveonlyType from "SomeFile.h";
+using refcounted moveonly class SomeRefcountedMoveonlyClass from "SomeFile.h";
+using refcounted moveonly struct SomeRefcountedMoveonlyStruct from "SomeFile.h";
+
 union SomeUnion
 {
   SomeType;
@@ -14,6 +22,12 @@ union SomeUnion
   SomeRefcountedType;
   SomeRefcountedClass;
   SomeRefcountedStruct;
+  SomeMoveonlyType;
+  SomeMoveonlyClass;
+  SomeMoveonlyStruct;
+  SomeRefcountedMoveonlyType;
+  SomeRefcountedMoveonlyClass;
+  SomeRefcountedMoveonlyStruct;
 };
 
 protocol PbasicUsing {

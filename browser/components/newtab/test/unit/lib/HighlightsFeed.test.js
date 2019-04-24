@@ -562,13 +562,6 @@ describe("Highlights Feed", () => {
 
       assert.notCalled(feed.fetchHighlights);
     });
-    it("should fetch highlights on MIGRATION_COMPLETED", async () => {
-      await feed.fetchHighlights();
-      feed.fetchHighlights = sinon.spy();
-      feed.onAction({type: at.MIGRATION_COMPLETED});
-      assert.calledOnce(feed.fetchHighlights);
-      assert.calledWith(feed.fetchHighlights, {broadcast: true});
-    });
     it("should fetch highlights on PLACES_HISTORY_CLEARED", async () => {
       await feed.fetchHighlights();
       feed.fetchHighlights = sinon.spy();

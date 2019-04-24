@@ -2485,3 +2485,15 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
     SetPopupPosition(nullptr, true, false, true);
   }
 }
+
+nsIWidget* nsMenuPopupFrame::GetParentMenuWidget()
+{
+  nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
+  if (menuFrame) {
+    nsMenuParent* parentPopup = menuFrame->GetMenuParent();
+    if (parentPopup && parentPopup->IsMenu()) {
+      return static_cast<nsMenuPopupFrame*>(parentPopup)->GetWidget();
+    }
+  }
+  return nullptr;
+}

@@ -5,8 +5,6 @@
 # Add-on signing is not required for DevEdition
 MOZ_REQUIRE_SIGNING=0
 
-ac_add_options --enable-verify-mar
-
 export MOZ_LTO=1
 
 ac_add_options --with-branding=browser/branding/aurora

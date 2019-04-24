@@ -419,6 +419,13 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
+struct MOZ_RAII AutoSetContextRuntime {
+  explicit AutoSetContextRuntime(JSRuntime* rt) {
+    TlsContext.get()->setRuntime(rt);
+  }
+  ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
+};
+
 static const JSClass parseTaskGlobalClass = {"internal-parse-task-global",
                                              JSCLASS_GLOBAL_FLAGS,
                                              &JS::DefaultGlobalClassOps};
@@ -478,6 +485,27 @@ size_t ParseTask::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   return options.sizeOfExcludingThis(mallocSizeOf) +
          errors.sizeOfExcludingThis(mallocSizeOf);
+}
+
+void ParseTask::runTask() {
+  JSContext* cx = TlsContext.get();
+  JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
+
+  AutoSetContextRuntime ascr(runtime);
+
+  Zone* zone = parseGlobal->zoneFromAnyThread();
+  zone->setHelperThreadOwnerContext(cx);
+  auto resetOwnerContext = mozilla::MakeScopeExit(
+      [&] { zone->setHelperThreadOwnerContext(nullptr); });
+
+  AutoRealm ar(cx, parseGlobal);
+
+  parse(cx);
+
+  MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
+  cx->tempLifoAlloc().freeAll();
+  cx->frontendCollectionPool().purge();
+  cx->atomsZoneFreeLists().clear();
 }
 
 ScriptParseTask::ScriptParseTask(JSContext* cx,
@@ -1207,13 +1235,6 @@ void GlobalHelperThreadState::triggerFreeUnusedMemory() {
   }
   notifyAll(PRODUCER, lock);
 }
-
-struct MOZ_RAII AutoSetContextRuntime {
-  explicit AutoSetContextRuntime(JSRuntime* rt) {
-    TlsContext.get()->setRuntime(rt);
-  }
-  ~AutoSetContextRuntime() { TlsContext.get()->setRuntime(nullptr); }
-};
 
 static inline bool IsHelperThreadSimulatingOOM(js::ThreadType threadType) {
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
@@ -1953,7 +1974,7 @@ void HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked,
   wasm::CompileTask* task = wasmTask();
   {
     AutoUnlockHelperThreadState unlock(locked);
-    wasm::ExecuteCompileTaskFromHelperThread(task);
+    task->runTask();
   }
 
   currentTask.reset();
@@ -1974,7 +1995,7 @@ void HelperThread::handleWasmTier2GeneratorWorkload(
   wasm::Tier2GeneratorTask* task = wasmTier2GeneratorTask();
   {
     AutoUnlockHelperThreadState unlock(locked);
-    task->execute();
+    task->runTask();
   }
 
   currentTask.reset();
@@ -1998,8 +2019,7 @@ void HelperThread::handlePromiseHelperTaskWorkload(
 
   {
     AutoUnlockHelperThreadState unlock(locked);
-    task->execute();
-    task->dispatchResolveAndDestroy();
+    task->runTask();
   }
 
   currentTask.reset();
@@ -2012,7 +2032,6 @@ void HelperThread::handlePromiseHelperTaskWorkload(
 void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(HelperThreadState().canStartIonCompile(locked));
   MOZ_ASSERT(idle());
-
   // Find the IonBuilder in the worklist with the highest priority, and
   // remove it from the worklist.
   jit::IonBuilder* builder =
@@ -2028,17 +2047,9 @@ void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
 
   {
     AutoUnlockHelperThreadState unlock(locked);
-
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    TraceLoggerEvent event(TraceLogger_AnnotateScripts, builder->script());
-    AutoTraceLog logScript(logger, event);
-    AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
-
     AutoSetContextRuntime ascr(rt);
-    jit::JitContext jctx(jit::CompileRuntime::get(rt),
-                         jit::CompileRealm::get(builder->script()->realm()),
-                         &builder->alloc());
-    builder->setBackgroundCodegen(jit::CompileBackEnd(builder));
+
+    builder->runTask();
   }
 
   FinishOffThreadIonCompile(builder, locked);
@@ -2124,33 +2135,15 @@ void HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked) {
   currentTask.emplace(HelperThreadState().parseWorklist(locked).popCopy());
   ParseTask* task = parseTask();
 
-  JSRuntime* runtime = task->parseGlobal->runtimeFromAnyThread();
-
 #ifdef DEBUG
+  JSRuntime* runtime = task->parseGlobal->runtimeFromAnyThread();
   runtime->incOffThreadParsesRunning();
 #endif
 
   {
     AutoUnlockHelperThreadState unlock(locked);
-    AutoSetContextRuntime ascr(runtime);
-
-    JSContext* cx = TlsContext.get();
-
-    Zone* zone = task->parseGlobal->zoneFromAnyThread();
-    zone->setHelperThreadOwnerContext(cx);
-    auto resetOwnerContext = mozilla::MakeScopeExit(
-        [&] { zone->setHelperThreadOwnerContext(nullptr); });
-
-    AutoRealm ar(cx, task->parseGlobal);
-
-    task->parse(cx);
-
-    MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
-    cx->tempLifoAlloc().freeAll();
-    cx->frontendCollectionPool().purge();
-    cx->atomsZoneFreeLists().clear();
+    task->runTask();
   }
-
   // The callback is invoked while we are still off thread.
   task->callback(task, task->callbackData);
 
@@ -2187,7 +2180,7 @@ void HelperThread::handleCompressionWorkload(
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
 
-    task->work();
+    task->runTask();
   }
 
   {
@@ -2296,6 +2289,11 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
 void PromiseHelperTask::executeAndResolveAndDestroy(JSContext* cx) {
   execute();
   run(cx, JS::Dispatchable::NotShuttingDown);
+}
+
+void PromiseHelperTask::runTask() {
+  execute();
+  dispatchResolveAndDestroy();
 }
 
 bool js::StartOffThreadPromiseHelperTask(JSContext* cx,

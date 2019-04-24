@@ -545,6 +545,11 @@ class nsMenuPopupFrame final : public nsBoxFrame,
  public:
   bool ShouldFollowAnchor(nsRect& aRect);
 
+  // Returns parent menu widget for submenus that are in the same
+  // frame hierarchy, it's needed for Linux/Wayland which demands
+  // strict popup windows hierarchy.
+  nsIWidget* GetParentMenuWidget();
+
  protected:
   nsString mIncrementalString;  // for incremental typing navigation
 
