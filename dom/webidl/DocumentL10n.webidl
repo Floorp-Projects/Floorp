@@ -122,7 +122,7 @@ interface DocumentL10n {
    *    await document.l10n.translatFragment(frag);
    *    parent.appendChild(frag);
    */
-  [NewObject] Promise<void> translateFragment(Node aNode);
+  [NewObject] Promise<any> translateFragment(Node aNode);
 
   /**
    * Triggers translation of a list of Elements using the localization context.

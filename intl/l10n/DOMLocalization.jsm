@@ -357,42 +357,16 @@ class DOMLocalization extends Localization {
    * @param   {DOMFragment} frag - Element or DocumentFragment to be translated
    * @returns {Promise}
    */
-  translateFragment(frag) {
-    if (frag.localize) {
-      // This is a temporary fast-path offered by Gecko to workaround performance
-      // issues coming from Fluent and XBL+Stylo performing unnecesary
-      // operations during startup.
-      // For details see bug 1441037, bug 1442262, and bug 1363862.
-
-      // A sparse array which will store translations separated out from
-      // all translations that is needed for DOM Overlay.
-      const getTranslationsForItems = async l10nItems => {
-        const keys = l10nItems.map(
-          l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
-        const translations = await this.formatMessages(keys);
-
-        // We pause translation observing here because Node.localize
-        // will translate the whole DOM next, using the `translations`.
-        //
-        // The observer will be resumed after DOM Overlays are localized
-        // in the next microtask.
-        this.pauseObserving();
-        return translations;
-      };
-
-      return frag.localize(getTranslationsForItems.bind(this))
-        .then((errors) => {
-          if (errors) {
-            reportDOMOverlayErrors(errors);
-          }
-          this.resumeObserving();
-        })
-        .catch(e => {
-          this.resumeObserving();
-          throw e;
-        });
+  async translateFragment(frag) {
+    if (frag.ownerDocument.l10n) {
+      // We use DocumentL10n's version of this API.
+      let errors = await frag.ownerDocument.l10n.translateFragment(frag);
+      if (errors) {
+        reportDOMOverlayErrors(errors);
+      }
+    } else {
+      await this.translateElements(this.getTranslatables(frag));
     }
-    return this.translateElements(this.getTranslatables(frag));
   }
 
   /**
