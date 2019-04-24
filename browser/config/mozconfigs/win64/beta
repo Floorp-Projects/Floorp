@@ -5,6 +5,5 @@ export MOZ_PGO=1
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
 
 ac_add_options --enable-official-branding
-ac_add_options --enable-verify-mar
 
 . "$topsrcdir/build/mozconfig.common.override"

@@ -2,7 +2,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm", this);
-ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm", this);
 
 /**
  * Assert an array is in non-descending order, and that every element is a number
@@ -67,11 +66,6 @@ function assertTelemetrySent(hb, eventNames) {
     });
   });
 }
-
-
-const sandboxManager = new SandboxManager();
-sandboxManager.addHold("test running");
-
 
 // Several of the behaviors of heartbeat prompt are mutually exclusive, so checks are broken up
 // into three batches.
@@ -180,14 +174,4 @@ add_task(async function() {
   // triggers sending ping to normandy
   await BrowserTestUtils.closeWindow(targetWindow);
   await telemetrySentPromise;
-});
-
-
-// Cleanup
-add_task(async function() {
-  // Make sure the sandbox is clean.
-  sandboxManager.removeHold("test running");
-  await sandboxManager.isNuked()
-    .then(() => ok(true, "sandbox is nuked"))
-    .catch(e => ok(false, "sandbox is nuked", e));
 });

@@ -7,6 +7,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366697
   <title>Test for Bug 366697</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #padsvg1 { padding-left: 27px; padding-top: 43px; }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366697">Mozilla Bug 366697</a>
@@ -14,6 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366697
 <div id="content" style="display: none"></div>
 
 <iframe id="svg" src="getCTM-helper.svg"></iframe>
+
+<svg id="padsvg1" width="100" height="100">
+  <rect width="10" height="10" />
+</svg>
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -26,6 +33,10 @@ function runTest() {
   var buggy = doc.getElementById("buggy");
   is(buggy.getCTM().e, 30, "buggy.getCTM().e");
   is(buggy.getCTM().f, 40, "buggy.getCTM().f");
+
+  var padsvg1 = document.getElementById("padsvg1");
+  is(padsvg1.getScreenCTM().e - padsvg1.getBoundingClientRect().x, 27, "padsvg1.getScreenCTM().e");
+  is(padsvg1.getScreenCTM().f - padsvg1.getBoundingClientRect().y, 43, "padsvg1.getScreenCTM().f");
 
   var root = doc.documentElement;
   var inner = doc.getElementById("inner");

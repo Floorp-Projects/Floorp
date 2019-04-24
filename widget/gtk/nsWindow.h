@@ -605,6 +605,9 @@ class nsWindow final : public nsBaseWidget {
 
   void ForceTitlebarRedraw();
 
+  // This is used by Wayland backend to keep strict popup window hierarchy.
+  GtkWindow* GetPopupParentWindow();
+
   /**
    * |mIMContext| takes all IME related stuff.
    *

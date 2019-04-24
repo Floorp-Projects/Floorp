@@ -3794,8 +3794,9 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // Step 11.
     // Do prototype swizzling for upgrading a custom element here, for cases
     // when we have a reflector already.  If we don't have one yet, we will
-    // create it with the right proto (by calling DoGetOrCreateDOMReflector with
-    // that proto).
+    // create it with the right proto (by calling GetOrCreateDOMReflector with
+    // that proto), and will preserve it by means of the proto != canonicalProto
+    // check).
     JS::Rooted<JSObject*> reflector(aCx, element->GetWrapper());
     if (reflector) {
       // reflector might be in different realm.
@@ -3805,6 +3806,7 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
           !JS_SetPrototype(aCx, reflector, givenProto)) {
         return false;
       }
+      PreserveWrapper(element.get());
     }
 
     // Step 12.
