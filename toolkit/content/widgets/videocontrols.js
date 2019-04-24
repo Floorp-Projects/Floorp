@@ -241,6 +241,13 @@ this.VideoControlsImplWidget = class {
         // fullscreen.
         this.updateOrientationState(this.isVideoInFullScreen);
 
+        // The video itself might not be fullscreen, but part of the
+        // document might be, in which case we set this attribute to
+        // apply any styles for the DOM fullscreen case.
+        if (this.document.fullscreenElement) {
+          this.videocontrols.setAttribute("inDOMFullscreen", true);
+        }
+
         if (this.isAudioOnly) {
           this.startFadeOut(this.clickToPlay, true);
         }
@@ -1370,6 +1377,12 @@ this.VideoControlsImplWidget = class {
       },
 
       onFullscreenChange() {
+        if (this.document.fullscreenElement) {
+          this.videocontrols.setAttribute("inDOMFullscreen", true);
+        } else {
+          this.videocontrols.removeAttribute("inDOMFullscreen");
+        }
+
         this.updateOrientationState(this.isVideoInFullScreen);
 
         if (this.isVideoInFullScreen) {
@@ -2552,6 +2565,19 @@ this.NoControlsDesktopImplWidget = class {
     this.generateContent();
 
     this.Utils = {
+      handleEvent(event) {
+        switch (event.type) {
+          case "fullscreenchange": {
+            if (this.document.fullscreenElement) {
+              this.videocontrols.setAttribute("inDOMFullscreen", true);
+            } else {
+              this.videocontrols.removeAttribute("inDOMFullscreen");
+            }
+            break;
+          }
+        }
+      },
+
       init(shadowRoot, prefs) {
         this.shadowRoot = shadowRoot;
         this.prefs = prefs;
@@ -2564,9 +2590,23 @@ this.NoControlsDesktopImplWidget = class {
         this.pictureInPictureToggleButton =
           this.shadowRoot.getElementById("pictureInPictureToggleButton");
 
+        if (this.document.fullscreenElement) {
+          this.videocontrols.setAttribute("inDOMFullscreen", true);
+        }
+
         if (!this.pipToggleEnabled) {
           this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
+
+        this.document.addEventListener("fullscreenchange", this, {
+          capture: true,
+        });
+      },
+
+      terminate() {
+        this.document.removeEventListener("fullscreenchange", this, {
+          capture: true,
+        });
       },
 
       get pipToggleEnabled() {
@@ -2581,6 +2621,7 @@ this.NoControlsDesktopImplWidget = class {
   }
 
   destructor() {
+    this.Utils.terminate();
   }
 
   generateContent() {
