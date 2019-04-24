@@ -362,8 +362,9 @@ struct ReflowInput : public SizeComputationInput {
   nsLineLayout* mLineLayout;
 
   // The appropriate reflow input for the containing block (for
-  // percentage widths, etc.) of this reflow input's frame.
-  const ReflowInput* mCBReflowInput;
+  // percentage widths, etc.) of this reflow input's frame. It will be setup
+  // properly in InitCBReflowInput().
+  const ReflowInput* mCBReflowInput = nullptr;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
@@ -378,16 +379,16 @@ struct ReflowInput : public SizeComputationInput {
   // The intended use of this value is to allow the accurate determination
   // of the potential impact of a float
   // This takes on an arbitrary value the first time a block is reflowed
-  nscoord mBlockDelta;
+  nscoord mBlockDelta = 0;
 
-  // If an ReflowInput finds itself initialized with an unconstrained
-  // inline-size, it will look up its parentReflowInput chain for a state
+  // If a ReflowInput finds itself initialized with an unconstrained
+  // inline-size, it will look up its parentReflowInput chain for a reflow input
   // with an orthogonal writing mode and a non-NS_UNCONSTRAINEDSIZE value for
-  // orthogonal limit; when it finds such a reflow-state, it will use its
+  // orthogonal limit; when it finds such a reflow input, it will use its
   // orthogonal-limit value to constrain inline-size.
   // This is initialized to NS_UNCONSTRAINEDSIZE (so it will be ignored),
   // but reset to a suitable value for the reflow root by nsPresShell.
-  nscoord mOrthogonalLimit;
+  nscoord mOrthogonalLimit = NS_UNCONSTRAINEDSIZE;
 
   // Accessors for the private fields below. Forcing all callers to use these
   // will allow us to introduce logical-coordinate versions and gradually
@@ -569,7 +570,7 @@ struct ReflowInput : public SizeComputationInput {
   // represents the amount of room for the frame's margin, border,
   // padding, and content area. The frame size you choose should fit
   // within the available width.
-  nscoord mAvailableWidth;
+  nscoord mAvailableWidth = 0;
 
   // A value of NS_UNCONSTRAINEDSIZE for the available height means
   // you can choose whatever size you want. In galley mode the
@@ -579,7 +580,7 @@ struct ReflowInput : public SizeComputationInput {
   // element is complete after reflow then its bottom border, padding
   // and margin (and similar for its complete ancestors) will need to
   // fit in this height.
-  nscoord mAvailableHeight;
+  nscoord mAvailableHeight = 0;
 
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
@@ -622,8 +623,7 @@ struct ReflowInput : public SizeComputationInput {
 
  public:
   // Our saved containing block dimensions.
-  MOZ_INIT_OUTSIDE_CTOR
-  LogicalSize mContainingBlockSize;
+  LogicalSize mContainingBlockSize = LogicalSize(mWritingMode);
 
   // Cached pointers to the various style structs used during intialization
   MOZ_INIT_OUTSIDE_CTOR
@@ -660,7 +660,7 @@ struct ReflowInput : public SizeComputationInput {
 
   // This value keeps track of how deeply nested a given reflow input
   // is from the top of the frame tree.
-  int16_t mReflowDepth;
+  int16_t mReflowDepth = 0;
 
   // Logical and physical accessors for the resize flags. All users should go
   // via these accessors, so that in due course we can change the storage from
