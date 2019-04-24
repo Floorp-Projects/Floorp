@@ -2019,7 +2019,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
     }
 
     env_.asmJSSigToTableIndex[sigIndex] = env_.tables.length();
-    if (!env_.tables.emplaceBack(TableKind::TypedFunction, Limits(mask + 1))) {
+    if (!env_.tables.emplaceBack(TableKind::AsmJS, Limits(mask + 1))) {
       return false;
     }
 

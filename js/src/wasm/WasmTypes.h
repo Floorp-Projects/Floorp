@@ -1953,10 +1953,13 @@ struct Limits {
 };
 
 // TableDesc describes a table as well as the offset of the table's base pointer
-// in global memory. Currently, wasm only has "any function" and asm.js only
-// "typed function".
+// in global memory. The TableKind determines the representation:
+//  - AnyRef: a wasm anyref word (wasm::AnyRef)
+//  - FuncRef: a two-word FunctionTableElem (wasm indirect call ABI)
+//  - AsmJS: a two-word FunctionTableElem (asm.js ABI)
+// Eventually there should be a single unified AnyRef representation.
 
-enum class TableKind { FuncRef, AnyRef, TypedFunction };
+enum class TableKind { AnyRef, FuncRef, AsmJS };
 
 struct TableDesc {
   TableKind kind;
