@@ -708,7 +708,7 @@ class MarionetteTestharnessExecutor(TestharnessExecutor):
 
         format_map = {"url": strip_server(url)}
 
-        protocol.base.execute_script("window.open('about:blank', '%s', 'noopener')" % self.window_id)
+        protocol.base.execute_script("window.open(undefined, '%s', 'noopener')" % self.window_id)
         test_window = protocol.testharness.get_test_window(self.window_id, parent_window,
                                                            timeout=10*self.timeout_multiplier)
         self.protocol.base.set_window(test_window)
