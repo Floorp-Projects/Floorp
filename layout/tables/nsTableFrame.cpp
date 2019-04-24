@@ -2842,7 +2842,7 @@ void nsTableFrame::InitChildReflowInput(ReflowInput& aReflowInput) {
     collapseBorder = border.GetPhysicalMargin(wm);
     pCollapseBorder = &collapseBorder;
   }
-  aReflowInput.Init(presContext, nullptr, pCollapseBorder, &padding);
+  aReflowInput.Init(presContext, Nothing(), pCollapseBorder, &padding);
 
   NS_ASSERTION(!mBits.mResizedColumns ||
                    !aReflowInput.mParentReflowInput->mFlags.mSpecialBSizeReflow,
@@ -2994,7 +2994,8 @@ nsresult nsTableFrame::SetupHeaderFooterChild(
 
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   ReflowInput kidReflowInput(presContext, aReflowInput.reflowInput, aFrame,
-                             availSize, nullptr, ReflowInput::CALLER_WILL_INIT);
+                             availSize, Nothing(),
+                             ReflowInput::CALLER_WILL_INIT);
   InitChildReflowInput(kidReflowInput);
   kidReflowInput.mFlags.mIsTopOfPage = true;
   ReflowOutput desiredSize(aReflowInput.reflowInput);
@@ -3022,7 +3023,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
 
   kidAvailSize.BSize(wm) = aFooterHeight;
   ReflowInput footerReflowInput(presContext, aReflowInput.reflowInput, aTfoot,
-                                kidAvailSize, nullptr,
+                                kidAvailSize, Nothing(),
                                 ReflowInput::CALLER_WILL_INIT);
   InitChildReflowInput(footerReflowInput);
   aReflowInput.bCoord += GetRowSpacing(GetRowCount());
@@ -3170,7 +3171,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       // Reflow the child into the available space
       ReflowInput kidReflowInput(presContext, aReflowInput.reflowInput,
-                                 kidFrame, kidAvailSize, nullptr,
+                                 kidFrame, kidAvailSize, Nothing(),
                                  ReflowInput::CALLER_WILL_INIT);
       InitChildReflowInput(kidReflowInput);
 

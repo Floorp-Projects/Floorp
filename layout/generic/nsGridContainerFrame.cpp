@@ -3392,7 +3392,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
   } else {
     aChild->DeleteProperty(nsIFrame::BClampMarginBoxMinSizeProperty());
   }
-  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, &aCBSize, riFlags);
+  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, Some(aCBSize), riFlags);
 
   // Because we pass ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE, and the
   // previous reflow of the child might not have, set the child's
@@ -4838,7 +4838,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   }
   LogicalSize percentBasis(cb.Size(wm).ConvertTo(childWM, wm));
   ReflowInput childRI(pc, *aState.mReflowInput, aChild, childCBSize,
-                      &percentBasis, flags);
+                      Some(percentBasis), flags);
   childRI.mFlags.mIsTopOfPage =
       aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
 
