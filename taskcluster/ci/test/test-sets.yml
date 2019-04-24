@@ -259,6 +259,7 @@ windows-aarch64-tests:
     - marionette
     - marionette-headless
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-clipboard
