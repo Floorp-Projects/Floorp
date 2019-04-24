@@ -2511,7 +2511,8 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
     if (t <= current) {
       continue;
     }
-    if (!track.mPullingEnabled) {
+    if (!track.mPullingEnabled &&
+        track.mData->GetType() == MediaSegment::AUDIO) {
       if (streamPullingEnabled) {
         LOG(LogLevel::Verbose,
             ("%p: Pulling disabled for track but enabled for stream, append "
@@ -2534,6 +2535,67 @@ bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
     }
   }
   return true;
+}
+
+/**
+ * This moves chunks from aIn to aOut. For audio this is simple. For video
+ * we carry durations over if present, or extend up to aDesiredUpToTime if not.
+ *
+ * We also handle "resetters" from captured media elements. This type of source
+ * pushes future frames into the track, and should it need to remove some, e.g.,
+ * because of a seek or pause, it tells us by letting time go backwards. Without
+ * this, tracks would be live for too long after a seek or pause.
+ */
+static void MoveToSegment(SourceMediaStream* aStream, MediaSegment* aIn,
+                          MediaSegment* aOut, StreamTime aCurrentTime,
+                          StreamTime aDesiredUpToTime) {
+  MOZ_ASSERT(aIn->GetType() == aOut->GetType());
+  MOZ_ASSERT(aOut->GetDuration() >= aCurrentTime);
+  if (aIn->GetType() == MediaSegment::AUDIO) {
+    aOut->AppendFrom(aIn);
+  } else {
+    VideoSegment* in = static_cast<VideoSegment*>(aIn);
+    VideoSegment* out = static_cast<VideoSegment*>(aOut);
+    for (VideoSegment::ConstChunkIterator c(*in); !c.IsEnded(); c.Next()) {
+      MOZ_ASSERT(!c->mTimeStamp.IsNull());
+      VideoChunk* last = out->GetLastChunk();
+      if (!last || last->mTimeStamp.IsNull()) {
+        // This is the first frame, or the last frame pushed to `out` has been
+        // all consumed. Just append and we deal with its duration later.
+        out->AppendFrame(do_AddRef(c->mFrame.GetImage()),
+                         c->mFrame.GetIntrinsicSize(),
+                         c->mFrame.GetPrincipalHandle(),
+                         c->mFrame.GetForceBlack(), c->mTimeStamp);
+        if (c->GetDuration() > 0) {
+          out->ExtendLastFrameBy(c->GetDuration());
+        }
+        continue;
+      }
+
+      // We now know when this frame starts, aka when the last frame ends.
+
+      if (c->mTimeStamp < last->mTimeStamp) {
+        // Time is going backwards. This is a resetting frame from
+        // DecodedStream. Clear everything up to currentTime.
+        out->Clear();
+        out->AppendNullData(aCurrentTime);
+      }
+
+      // Append the current frame (will have duration 0).
+      out->AppendFrame(do_AddRef(c->mFrame.GetImage()),
+                       c->mFrame.GetIntrinsicSize(),
+                       c->mFrame.GetPrincipalHandle(),
+                       c->mFrame.GetForceBlack(), c->mTimeStamp);
+      if (c->GetDuration() > 0) {
+        out->ExtendLastFrameBy(c->GetDuration());
+      }
+    }
+    if (out->GetDuration() < aDesiredUpToTime) {
+      out->ExtendLastFrameBy(aDesiredUpToTime - out->GetDuration());
+    }
+    in->Clear();
+  }
+  MOZ_ASSERT(aIn->GetDuration() == 0, "aIn must be consumed");
 }
 
 void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
@@ -2563,43 +2625,34 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
       b.mListener->NotifyQueuedChanges(GraphImpl(), offset, *data->mData);
     }
     if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
-      MediaSegment* segment = data->mData.forget();
+      MediaSegment* segment = data->mData->CreateEmptyClone();
       LOG(LogLevel::Debug,
           ("%p: SourceMediaStream %p creating track %d, start %" PRId64
            ", initial end %" PRId64,
            GraphImpl(), this, data->mID, int64_t(streamCurrentTime),
            int64_t(segment->GetDuration())));
 
-      segment->InsertNullDataAtStart(streamCurrentTime);
+      segment->AppendNullData(streamCurrentTime);
+      MoveToSegment(this, data->mData, segment, streamCurrentTime,
+                    streamDesiredUpToTime);
       data->mEndOfFlushedData += segment->GetDuration();
       mTracks.AddTrack(data->mID, streamCurrentTime, segment);
-      // The track has taken ownership of data->mData, so let's replace
-      // data->mData with an empty clone.
-      data->mData = segment->CreateEmptyClone();
       data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
     } else {
-      MediaSegment* dest = mTracks.FindTrack(data->mID)->GetSegment();
+      StreamTracks::Track* track = mTracks.FindTrack(data->mID);
+      MediaSegment* dest = track->GetSegment();
       LOG(LogLevel::Verbose,
           ("%p: SourceMediaStream %p track %d, advancing end from %" PRId64
            " to %" PRId64,
            GraphImpl(), this, data->mID, int64_t(dest->GetDuration()),
            int64_t(dest->GetDuration() + data->mData->GetDuration())));
       data->mEndOfFlushedData += data->mData->GetDuration();
-      dest->AppendFrom(data->mData);
+      MoveToSegment(this, data->mData, dest, streamCurrentTime,
+                    streamDesiredUpToTime);
     }
     if (data->mCommands & SourceMediaStream::TRACK_END) {
       mTracks.FindTrack(data->mID)->SetEnded();
       mUpdateTracks.RemoveElementAt(i);
-    } else if (!data->mPullingEnabled &&
-               data->mData->GetType() == MediaSegment::VIDEO) {
-      // This video track is pushed. Since we use timestamps rather than
-      // durations for video we avoid making the video track block the stream
-      // by extending the duration when there's not enough video data, so a
-      // video track always has valid data.
-      VideoSegment* segment = static_cast<VideoSegment*>(
-          mTracks.FindTrack(data->mID)->GetSegment());
-      StreamTime missingTime = streamDesiredUpToTime - segment->GetDuration();
-      segment->ExtendLastFrameBy(missingTime);
     }
   }
 
