@@ -96,6 +96,12 @@ interface nsIBrowserDOMWindow : nsISupports
   const long OPEN_NO_OPENER     = 0x4;
 
   /**
+   * Don't set the referrer on the navigation inside the window which is
+   * being opened.
+   */
+  const long OPEN_NO_REFERRER   = 0x8;
+
+  /**
    * Create the content window for the given URI.
 
    * @param aURI the URI to be opened in the window (can be null).

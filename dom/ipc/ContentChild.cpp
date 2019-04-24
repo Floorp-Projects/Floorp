@@ -754,18 +754,18 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                             bool aCalledFromJS, bool aPositionSpecified,
                             bool aSizeSpecified, nsIURI* aURI,
                             const nsAString& aName, const nsACString& aFeatures,
-                            bool aForceNoOpener,
+                            bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             mozIDOMWindowProxy** aReturn) {
-  return ProvideWindowCommon(nullptr, aParent, false, aChromeFlags,
-                             aCalledFromJS, aPositionSpecified, aSizeSpecified,
-                             aURI, aName, aFeatures, aForceNoOpener, aLoadState,
-                             aWindowIsNew, aReturn);
+  return ProvideWindowCommon(
+      nullptr, aParent, false, aChromeFlags, aCalledFromJS, aPositionSpecified,
+      aSizeSpecified, aURI, aName, aFeatures, aForceNoOpener, aForceNoReferrer,
+      aLoadState, aWindowIsNew, aReturn);
 }
 
 static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
                                       nsDocShellLoadState* aLoadState,
-                                      float* aFullZoom,
+                                      bool aForceNoReferrer, float* aFullZoom,
                                       nsIReferrerInfo** aReferrerInfo,
                                       nsIPrincipal** aTriggeringPrincipal,
                                       nsIContentSecurityPolicy** aCsp) {
@@ -781,7 +781,11 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
   }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  if (aLoadState) {
+  if (aForceNoReferrer) {
+    referrerInfo = new ReferrerInfo(
+        nullptr, mozilla::net::ReferrerPolicy::RP_Unset, false);
+  }
+  if (aLoadState && !referrerInfo) {
     referrerInfo = aLoadState->GetReferrerInfo();
   }
 
@@ -842,7 +846,7 @@ nsresult ContentChild::ProvideWindowCommon(
     BrowserChild* aTabOpener, mozIDOMWindowProxy* aParent, bool aIframeMoz,
     uint32_t aChromeFlags, bool aCalledFromJS, bool aPositionSpecified,
     bool aSizeSpecified, nsIURI* aURI, const nsAString& aName,
-    const nsACString& aFeatures, bool aForceNoOpener,
+    const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
     nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
     mozIDOMWindowProxy** aReturn) {
   *aReturn = nullptr;
@@ -888,9 +892,10 @@ nsresult ContentChild::ProvideWindowCommon(
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    rv = GetCreateWindowParams(
-        aParent, aLoadState, &fullZoom, getter_AddRefs(referrerInfo),
-        getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
+    rv = GetCreateWindowParams(aParent, aLoadState, aForceNoReferrer, &fullZoom,
+                               getter_AddRefs(referrerInfo),
+                               getter_AddRefs(triggeringPrincipal),
+                               getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1106,17 +1111,18 @@ nsresult ContentChild::ProvideWindowCommon(
 
     // NOTE: BrowserFrameOpenWindowPromise is the same type as
     // CreateWindowPromise, and this code depends on that fact.
-    newChild->SendBrowserFrameOpenWindow(aTabOpener, NS_ConvertUTF8toUTF16(url),
-                                         name, NS_ConvertUTF8toUTF16(features),
-                                         std::move(resolve), std::move(reject));
+    newChild->SendBrowserFrameOpenWindow(
+        aTabOpener, NS_ConvertUTF8toUTF16(url), name, aForceNoReferrer,
+        NS_ConvertUTF8toUTF16(features), std::move(resolve), std::move(reject));
   } else {
     float fullZoom;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
-    rv = GetCreateWindowParams(
-        aParent, aLoadState, &fullZoom, getter_AddRefs(referrerInfo),
-        getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
+    rv = GetCreateWindowParams(aParent, aLoadState, aForceNoReferrer, &fullZoom,
+                               getter_AddRefs(referrerInfo),
+                               getter_AddRefs(triggeringPrincipal),
+                               getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
