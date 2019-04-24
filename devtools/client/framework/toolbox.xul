@@ -17,15 +17,11 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <script type="application/javascript"
-          src="chrome://devtools/content/shared/theme-switching.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/viewSourceUtils.js"/>
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script src="chrome://global/content/viewSourceUtils.js"/>
 
-  <script type="application/javascript"
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://devtools/content/framework/toolbox-init.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://devtools/content/framework/toolbox-init.js"/>
 
   <vbox id="toolbox-container" flex="1">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-error-mount"/>

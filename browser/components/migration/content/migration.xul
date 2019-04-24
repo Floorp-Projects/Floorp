@@ -17,8 +17,8 @@
         buttons="accept,cancel"
         branded="true">
 
-  <script type="application/javascript" src="chrome://global/content/customElements.js"/>
-  <script type="application/javascript" src="chrome://browser/content/migration/migration.js"/>
+  <script src="chrome://global/content/customElements.js"/>
+  <script src="chrome://browser/content/migration/migration.js"/>
 
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;">

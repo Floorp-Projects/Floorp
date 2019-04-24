@@ -26,14 +26,14 @@
     <html:link rel="localization" href="branding/brand.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
 
   <keyset>
     <key data-l10n-id="window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
-  <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
+  <script src="chrome://browser/content/preferences/sanitize.js"/>
 
   <description data-l10n-id="clear-data-settings-label"></description>
 

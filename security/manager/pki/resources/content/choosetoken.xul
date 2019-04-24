@@ -19,8 +19,8 @@
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
-<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-<script type="application/javascript" src="chrome://pippki/content/choosetoken.js"/>
+<script src="chrome://pippki/content/pippki.js"/>
+<script src="chrome://pippki/content/choosetoken.js"/>
 
 <description>&chooseToken.message1;</description>
 <menulist id="tokens">

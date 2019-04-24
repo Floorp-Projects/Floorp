@@ -16,9 +16,9 @@
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
-<script type="application/javascript" src="pippki.js" />
-<script type="application/javascript" src="protectedAuth.js" />
-<script type="application/javascript" src="chrome://help/content/help.js" />
+<script src="pippki.js" />
+<script src="protectedAuth.js" />
+<script src="chrome://help/content/help.js" />
 
 <vbox style="margin: 5px; max-width: 50em;">
 
