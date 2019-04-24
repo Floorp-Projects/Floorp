@@ -1672,6 +1672,7 @@ nsresult nsNSSComponent::InitializeNSS() {
 
   nsAutoCString profileStr;
   nsresult rv = GetNSSProfilePath(profileStr);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1688,6 +1689,7 @@ nsresult nsNSSComponent::InitializeNSS() {
   // modules will be loaded).
   if (runtime) {
     rv = runtime->GetInSafeMode(&inSafeMode);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1695,6 +1697,7 @@ nsresult nsNSSComponent::InitializeNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
   rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to initialize NSS"));
     return rv;
@@ -1711,6 +1714,7 @@ nsresult nsNSSComponent::InitializeNSS() {
   SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
 
   rv = setEnabledTLSVersions();
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1753,7 +1757,9 @@ nsresult nsNSSComponent::InitializeNSS() {
       Preferences::GetBool("security.tls.enable_post_handshake_auth",
                            ENABLED_POST_HANDSHAKE_AUTH_DEFAULT));
 
-  if (NS_FAILED(InitializeCipherSuite())) {
+  rv = InitializeCipherSuite();
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
             ("Unable to initialize cipher suite settings\n"));
     return NS_ERROR_FAILURE;
@@ -1817,6 +1823,7 @@ nsresult nsNSSComponent::InitializeNSS() {
         Preferences::GetUint(kFamilySafetyModePref, kFamilySafetyModeDefault);
     Vector<nsCString> possibleLoadableRootsLocations;
     rv = ListPossibleLoadableRootsLocations(possibleLoadableRootsLocations);
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1824,6 +1831,7 @@ nsresult nsNSSComponent::InitializeNSS() {
         new LoadLoadableRootsTask(this, importEnterpriseRoots, familySafetyMode,
                                   std::move(possibleLoadableRootsLocations)));
     rv = loadLoadableRootsTask->Dispatch();
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     if (NS_FAILED(rv)) {
       return rv;
     }
