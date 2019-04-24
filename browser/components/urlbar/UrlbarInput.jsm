@@ -555,8 +555,7 @@ class UrlbarInput {
       return;
     }
 
-    let { value, selectionStart, selectionEnd } = result.autofill;
-    this._autofillValue(value, selectionStart, selectionEnd);
+    this.setValueFromResult(result);
   }
 
   /**
