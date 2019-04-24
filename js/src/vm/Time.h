@@ -13,6 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if !ENABLE_INTL_API || MOZ_SYSTEM_ICU
 /*
  * Broken down form of 64 bit time value.
  */
@@ -28,6 +29,7 @@ struct PRMJTime {
   int16_t tm_yday; /* day of year (0 to 365) */
   int8_t tm_isdst; /* non-zero if DST in effect */
 };
+#endif
 
 /* Some handy constants */
 #define PRMJ_USEC_PER_SEC 1000000L
@@ -50,10 +52,12 @@ extern void PRMJ_NowShutdown();
 inline void PRMJ_NowShutdown() {}
 #endif
 
+#if !ENABLE_INTL_API || MOZ_SYSTEM_ICU
 /* Format a time value into a buffer. Same semantics as strftime() */
 extern size_t PRMJ_FormatTime(char* buf, size_t buflen, const char* fmt,
                               const PRMJTime* tm, int timeZoneYear,
                               int offsetInSeconds);
+#endif
 
 /**
  * Requesting the number of cycles from the CPU.
