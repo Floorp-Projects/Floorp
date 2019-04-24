@@ -4,6 +4,7 @@ job-defaults:
     tier:
         by-test-platform:
             windows10-64-ccov/.*: 3
+            windows10-aarch64/.*: 3
             linux64-ccov/.*: 3
             default: default
     virtualization:
@@ -35,6 +36,7 @@ talos-bcv:
             windows10-64-ccov/.*: ['try']
             .*-qr/.*: []  # this test is not useful with webrender
             (?:windows10-64|windows7-32|linux64)/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     tier:
@@ -55,6 +57,7 @@ talos-chrome:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1200
@@ -88,6 +91,7 @@ talos-dromaeojs:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 2100
@@ -103,6 +107,7 @@ talos-flex:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 1800
@@ -119,6 +124,7 @@ talos-g1:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
@@ -138,6 +144,7 @@ talos-g3:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 900
@@ -155,6 +162,7 @@ talos-g4:
             windows10-64-ccov/.*: ['try']
             windows10-64-ux/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
@@ -174,6 +182,7 @@ talos-g5:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
@@ -191,6 +200,7 @@ talos-h1:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
@@ -208,6 +218,7 @@ talos-h2:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
@@ -225,6 +236,7 @@ talos-motionmark:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -246,6 +258,7 @@ talos-other:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
@@ -262,6 +275,7 @@ talos-sessionrestore-many-windows:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 1500
@@ -295,6 +309,7 @@ talos-perf-reftest-singletons:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
@@ -309,6 +324,7 @@ talos-speedometer:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
@@ -325,6 +341,7 @@ talos-svgr:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
@@ -341,6 +358,7 @@ talos-tp5o:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
@@ -357,6 +375,7 @@ talos-tp6:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
@@ -374,6 +393,7 @@ talos-tp6-stylo-threads:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
@@ -390,6 +410,7 @@ talos-tabswitch:
             windows10-64-ccov/.*: ['try']
             linux64-ccov/.*: ['try']  # Bug 1407593
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            windows10-aarch64/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
