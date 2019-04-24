@@ -997,9 +997,6 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
   {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-#ifdef MOZ_XUL
-      os->AddObserver(this, "chrome-flush-skin-caches", false);
-#endif
       os->AddObserver(this, "memory-pressure", false);
       os->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, false);
       if (XRE_IsParentProcess() && !sProcessInteractable) {
@@ -1224,9 +1221,6 @@ void PresShell::Destroy() {
   {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
-#ifdef MOZ_XUL
-      os->RemoveObserver(this, "chrome-flush-skin-caches");
-#endif
       os->RemoveObserver(this, "memory-pressure");
       os->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
       if (XRE_IsParentProcess()) {
@@ -9411,63 +9405,6 @@ void PresShell::WindowSizeMoveDone() {
   }
 }
 
-#ifdef MOZ_XUL
-/*
- * It's better to add stuff to the |DidSetComputedStyle| method of the
- * relevant frames than adding it here.  These methods should (ideally,
- * anyway) go away.
- */
-
-// Return value says whether to walk children.
-typedef bool (*frameWalkerFn)(nsIFrame* aFrame);
-
-static bool ReResolveMenusAndTrees(nsIFrame* aFrame) {
-  // Trees have a special style cache that needs to be flushed when
-  // the theme changes.
-  nsTreeBodyFrame* treeBody = do_QueryFrame(aFrame);
-  if (treeBody) treeBody->ClearStyleAndImageCaches();
-
-  // We deliberately don't re-resolve style on a menu's popup
-  // sub-content, since doing so slows menus to a crawl.  That means we
-  // have to special-case them on a skin switch, and ensure that the
-  // popup frames just get destroyed completely.
-  nsMenuFrame* menu = do_QueryFrame(aFrame);
-  if (menu) menu->CloseMenu(true);
-  return true;
-}
-
-static bool ReframeImageBoxes(nsIFrame* aFrame) {
-  if (aFrame->IsImageBoxFrame()) {
-    aFrame->PresContext()->RestyleManager()->PostRestyleEvent(
-        aFrame->GetContent()->AsElement(), RestyleHint{0},
-        nsChangeHint_ReconstructFrame);
-    return false;  // don't walk descendants
-  }
-  return true;  // walk descendants
-}
-
-static void WalkFramesThroughPlaceholders(nsPresContext* aPresContext,
-                                          nsIFrame* aFrame,
-                                          frameWalkerFn aFunc) {
-  bool walkChildren = (*aFunc)(aFrame);
-  if (!walkChildren) return;
-
-  nsIFrame::ChildListIterator lists(aFrame);
-  for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
-      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-        // only do frames that are in flow, and recur through the
-        // out-of-flows of placeholders.
-        WalkFramesThroughPlaceholders(
-            aPresContext, nsPlaceholderFrame::GetRealFrameFor(child), aFunc);
-      }
-    }
-  }
-}
-#endif
-
 NS_IMETHODIMP
 PresShell::Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData) {
@@ -9475,24 +9412,6 @@ PresShell::Observe(nsISupports* aSubject, const char* aTopic,
     NS_WARNING("our observers should have been unregistered by now");
     return NS_OK;
   }
-
-#ifdef MOZ_XUL
-  if (!nsCRT::strcmp(aTopic, "chrome-flush-skin-caches")) {
-    // Need to null-check because "chrome-flush-skin-caches" can happen
-    // at interesting times during startup.
-    if (nsIFrame* rootFrame = mFrameConstructor->GetRootFrame()) {
-      NS_ASSERTION(mViewManager, "View manager must exist");
-
-      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    ReResolveMenusAndTrees);
-
-      // Because "chrome:" URL equality is messy, reframe image box
-      // frames (hack!).
-      WalkFramesThroughPlaceholders(mPresContext, rootFrame, ReframeImageBoxes);
-    }
-    return NS_OK;
-  }
-#endif
 
   if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
     if (!AssumeAllFramesVisible() && mPresContext->IsRootContentDocument()) {
