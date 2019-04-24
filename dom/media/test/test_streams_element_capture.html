@@ -112,9 +112,9 @@ function startTest(test, token) {
     ]});
   let tests = gPlayTests;
   // Filter out bug1377278.webm due to bug 1541401.
-  tests = gPlayTests.filter(t => !t.name.includes("1377278"));
+  tests = tests.filter(t => !t.name.includes("1377278"));
   // Filter out ambisonics.mp4 due to bug 1546655.
-  tests = gPlayTests.filter(t => !t.name.includes("ambisonics"));
+  tests = tests.filter(t => !t.name.includes("ambisonics"));
   manager.runTests(tests, startTest);
 })();
 </script>
