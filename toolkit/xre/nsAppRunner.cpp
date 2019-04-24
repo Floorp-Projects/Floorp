@@ -1331,12 +1331,6 @@ nsresult ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native) {
 
   NS_IF_ADDREF(gNativeAppSupport = native);
 
-  // Inform the chrome registry about OS accessibility
-  nsCOMPtr<nsIToolkitChromeRegistry> cr =
-      mozilla::services::GetToolkitChromeRegistryService();
-
-  if (cr) cr->CheckForOSAccessibility();
-
   nsCOMPtr<nsIWindowCreator> creator(components::AppStartup::Service());
   if (!creator) return NS_ERROR_UNEXPECTED;
 

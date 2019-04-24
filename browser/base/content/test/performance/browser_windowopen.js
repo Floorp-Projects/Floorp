@@ -27,7 +27,6 @@ add_task(async function() {
   // behaviour when opening a new window, even if windows have been
   // opened in previous tests.
   Services.obs.notifyObservers(null, "startupcache-invalidate");
-  Services.obs.notifyObservers(null, "chrome-flush-skin-caches");
   Services.obs.notifyObservers(null, "chrome-flush-caches");
 
   let win = window.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
