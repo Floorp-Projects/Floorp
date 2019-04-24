@@ -376,10 +376,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   }
 
   InitFrameType(type);
-
-  LogicalSize cbSize =
-      aContainingBlockSize.valueOr(LogicalSize(mWritingMode, -1, -1));
-  InitConstraints(aPresContext, cbSize, aBorder, aPadding, type);
+  InitConstraints(aPresContext, aContainingBlockSize, aBorder, aPadding, type);
 
   InitResizeFlags(aPresContext, type);
   InitDynamicReflowRoot();
@@ -2198,21 +2195,22 @@ static inline bool IsSideCaption(nsIFrame* aFrame,
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
-void ReflowInput::InitConstraints(nsPresContext* aPresContext,
-                                  const LogicalSize& aContainingBlockSize,
-                                  const nsMargin* aBorder,
-                                  const nsMargin* aPadding,
-                                  LayoutFrameType aFrameType) {
+void ReflowInput::InitConstraints(
+    nsPresContext* aPresContext, const Maybe<LogicalSize>& aContainingBlockSize,
+    const nsMargin* aBorder, const nsMargin* aPadding,
+    LayoutFrameType aFrameType) {
   WritingMode wm = GetWritingMode();
-  DISPLAY_INIT_CONSTRAINTS(mFrame, this, aContainingBlockSize.ISize(wm),
-                           aContainingBlockSize.BSize(wm), aBorder, aPadding);
+  LogicalSize cbSize = aContainingBlockSize.valueOr(
+      LogicalSize(mWritingMode, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE));
+  DISPLAY_INIT_CONSTRAINTS(mFrame, this, cbSize.ISize(wm), cbSize.BSize(wm),
+                           aBorder, aPadding);
 
   // If this is a reflow root, then set the computed width and
   // height equal to the available space
   if (nullptr == mParentReflowInput || mFlags.mDummyParentReflowInput) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(wm, aContainingBlockSize.ISize(wm), aFrameType, mFlags, aBorder,
-                aPadding, mStyleDisplay);
+    InitOffsets(wm, cbSize.ISize(wm), aFrameType, mFlags, aBorder, aPadding,
+                mStyleDisplay);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
@@ -2241,12 +2239,10 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
     MOZ_ASSERT(cbri, "no containing block");
     MOZ_ASSERT(mFrame->GetParent());
 
-    // If we weren't given a containing block width and height, then
-    // compute one
-    LogicalSize cbSize =
-        (aContainingBlockSize == LogicalSize(wm, -1, -1))
-            ? ComputeContainingBlockRectangle(aPresContext, cbri)
-            : aContainingBlockSize;
+    // If we weren't given a containing block size, then compute one.
+    if (aContainingBlockSize.isNothing()) {
+      cbSize = ComputeContainingBlockRectangle(aPresContext, cbri);
+    }
 
     // See if the containing block height is based on the size of its
     // content
@@ -2513,7 +2509,7 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
   }
 
   // Save our containing block dimensions
-  mContainingBlockSize = aContainingBlockSize;
+  mContainingBlockSize = cbSize;
 }
 
 static void UpdateProp(nsIFrame* aFrame,

@@ -981,10 +981,11 @@ struct ReflowInput : public SizeComputationInput {
                        mozilla::LayoutFrameType aFrameType);
   void InitDynamicReflowRoot();
 
-  void InitConstraints(nsPresContext* aPresContext,
-                       const mozilla::LogicalSize& aContainingBlockSize,
-                       const nsMargin* aBorder, const nsMargin* aPadding,
-                       mozilla::LayoutFrameType aFrameType);
+  void InitConstraints(
+      nsPresContext* aPresContext,
+      const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize,
+      const nsMargin* aBorder, const nsMargin* aPadding,
+      mozilla::LayoutFrameType aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns
