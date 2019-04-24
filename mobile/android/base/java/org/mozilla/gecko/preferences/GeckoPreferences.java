@@ -688,7 +688,14 @@ public class GeckoPreferences
                 }
 
                 pref.setOnPreferenceChangeListener(this);
-                if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
+
+                if (PREFS_DEFAULT_BROWSER.equals(key)) {
+                    if (MmaDelegate.isDefaultBrowser(this)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else  if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
                     if (!AppConstants.MOZ_UPDATER || ContextUtils.isInstalledFromGooglePlay(this)) {
                         preferences.removePreference(pref);
                         i--;
