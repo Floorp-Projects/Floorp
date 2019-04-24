@@ -54,6 +54,8 @@ SCOPE_WHITELIST = [
     re.compile(r'^secrets:get:project/taskcluster/gecko/(hgfingerprint|hgmointernal)$'),
     # public downloads are OK
     re.compile(r'^docker-worker:relengapi-proxy:tooltool.download.public$'),
+    # internal downloads are OK
+    re.compile(r'^docker-worker:relengapi-proxy:tooltool.download.internal$'),
     # level-appropriate secrets are generally necessary to run a task; these
     # also are "not that secret" - most of them are built into the resulting
     # binary and could be extracted by someone with `strings`.
