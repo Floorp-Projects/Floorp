@@ -243,6 +243,7 @@ talos-motionmark:
     tier:
         by-test-platform:
             windows10-64-ccov/.*: 3
+            windows10-aarch64/.*: 2
             linux64-ccov/.*: 3
             default: 2
     mozharness:
