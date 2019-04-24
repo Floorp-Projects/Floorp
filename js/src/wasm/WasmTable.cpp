@@ -56,7 +56,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
                           HandleWasmTableObject maybeObject) {
   switch (desc.kind) {
     case TableKind::FuncRef:
-    case TableKind::TypedFunction: {
+    case TableKind::AsmJS: {
       UniqueFuncRefArray functions(
           cx->pod_calloc<FunctionTableElem>(desc.limits.initial));
       if (!functions) {
@@ -104,7 +104,7 @@ void Table::tracePrivate(JSTracer* trc) {
       objects_.trace(trc);
       break;
     }
-    case TableKind::TypedFunction: {
+    case TableKind::AsmJS: {
 #ifdef DEBUG
       for (uint32_t i = 0; i < length_; i++) {
         MOZ_ASSERT(!functions_[i].tls);
@@ -169,7 +169,7 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
       MOZ_ASSERT(elem.tls->instance->objectUnbarriered()->isTenured(),
                  "no writeBarrierPost (Table::set)");
       break;
-    case TableKind::TypedFunction:
+    case TableKind::AsmJS:
       elem.code = code;
       elem.tls = nullptr;
       break;
@@ -202,7 +202,7 @@ void Table::setNull(uint32_t index) {
       setAnyRef(index, AnyRef::null());
       break;
     }
-    case TableKind::TypedFunction: {
+    case TableKind::AsmJS: {
       MOZ_CRASH("Should not happen");
     }
   }
@@ -233,7 +233,7 @@ void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       setAnyRef(dstIndex, srcTable.getAnyRef(srcIndex));
       break;
     }
-    case TableKind::TypedFunction: {
+    case TableKind::AsmJS: {
       MOZ_CRASH("Bad table type");
     }
   }
@@ -285,7 +285,7 @@ uint32_t Table::grow(uint32_t delta, JSContext* cx) {
       }
       break;
     }
-    case TableKind::TypedFunction: {
+    case TableKind::AsmJS: {
       MOZ_CRASH("Bad table type");
     }
   }
