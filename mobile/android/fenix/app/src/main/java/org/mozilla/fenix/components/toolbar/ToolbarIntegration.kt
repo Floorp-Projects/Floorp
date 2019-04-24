@@ -22,6 +22,7 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.utils.Settings
 
 class ToolbarIntegration(
     context: Context,
@@ -87,7 +88,9 @@ class ToolbarIntegration(
 
         ToolbarAutocompleteFeature(toolbar).apply {
             addDomainProvider(domainAutocompleteProvider)
-            addHistoryStorageProvider(historyStorage)
+            if (Settings.getInstance(context).shouldShowVisitedSitesBookmarks) {
+                addHistoryStorageProvider(historyStorage)
+            }
         }
     }
 
