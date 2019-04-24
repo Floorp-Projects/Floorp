@@ -2,10 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
 - License, v. 2.0. If a copy of the MPL was not distributed with this
 - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto">
-    <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.default_browser.link"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <org.mozilla.gecko.preferences.DefaultBrowserPreference
+        android:key="android.not_a_preference.default_browser.link"
         android:title="@string/pref_default_browser_mozilla_support_tablet"
         android:persistent="false"
         url="https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid"/>
+
 </PreferenceScreen>

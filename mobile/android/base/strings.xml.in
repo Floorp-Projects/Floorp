@@ -306,8 +306,9 @@
   <string name="tab_queue_notification_title">&tab_queue_notification_title;</string>
   <string name="tab_queue_notification_settings">&tab_queue_notification_settings;</string>
 
-  <string name="pref_default_browser">&pref_default_browser;</string>
+  <string name="pref_default_browser">&pref_default_browser2;</string>
   <string name="pref_default_browser_mozilla_support_tablet">&pref_default_browser_mozilla_support_tablet;</string>
+  <string name="default_browser_system_settings_toast">&default_browser_system_settings_toast;</string>
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>
 
