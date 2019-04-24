@@ -3,6 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from __future__ import absolute_import
 
 import json
@@ -20,6 +21,7 @@ import mozinfo
 from mozdevice import ADBDevice
 from mozlog import commandline, get_default_logger
 from mozprofile import create_profile
+from mozproxy import get_playback
 from mozrunner import runners
 
 # need this so raptor imports work both from /raptor and via mach
@@ -52,14 +54,14 @@ from cmdline import (parse_args,
                      FIREFOX_ANDROID_APPS,
                      CHROMIUM_DISTROS)
 from control_server import RaptorControlServer
+from gecko_profile import GeckoProfile
 from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
 from manifest import get_raptor_test_list
-from mozproxy import get_playback
-from results import RaptorResultsHandler
-from gecko_profile import GeckoProfile
-from power import init_android_power_test, finish_android_power_test
 from memory import generate_android_memory_profile
+from mozproxy import get_playback
+from power import init_android_power_test, finish_android_power_test
+from results import RaptorResultsHandler
 from utils import view_gecko_profile
 
 
@@ -127,6 +129,9 @@ class Raptor(object):
             return os.path.join(build.topsrcdir, 'testing', 'profiles')
         return os.path.join(here, 'profile_data')
 
+    def check_for_crashes(self):
+        raise NotImplementedError
+
     def run_test_setup(self, test):
         self.log.info("starting raptor test: %s" % test['name'])
         self.log.info("test settings: %s" % str(test))
@@ -135,14 +140,16 @@ class Raptor(object):
         if test.get('type') == "benchmark":
             self.serve_benchmark_source(test)
 
-        gen_test_config(self.config['app'],
-                        test['name'],
-                        self.control_server.port,
-                        self.post_startup_delay,
-                        host=self.config['host'],
-                        b_port=self.benchmark_port,
-                        debug_mode=1 if self.debug_mode else 0,
-                        browser_cycle=test.get('browser_cycle', 1))
+        gen_test_config(
+            self.config['app'],
+            test['name'],
+            self.control_server.port,
+            self.post_startup_delay,
+            host=self.config['host'],
+            b_port=self.benchmark_port,
+            debug_mode=1 if self.debug_mode else 0,
+            browser_cycle=test.get('browser_cycle', 1),
+            )
 
         self.install_raptor_webext()
 
@@ -151,15 +158,6 @@ class Raptor(object):
 
         # if 'alert_on' was provided in the test INI, add to our config for results/output
         self.config['subtest_alert_on'] = test.get('alert_on', None)
-
-    def set_browser_test_prefs(self, raw_prefs):
-        # add test specific preferences
-        if self.config['app'] == "firefox":
-            self.log.info("setting test-specific browser preferences")
-            self.profile.set_preferences(json.loads(raw_prefs))
-        else:
-            self.log.info("preferences were configured for the test, however \
-                          we currently do not install them on non Firefox browsers.")
 
     def run_test_teardown(self):
         self.check_for_crashes()
@@ -175,6 +173,11 @@ class Raptor(object):
             # clean up the temp gecko profiling folders
             self.log.info("cleaning up after gecko profiling")
             self.gecko_profiler.clean()
+
+    def set_browser_test_prefs(self, raw_prefs):
+        # add test specific preferences
+        self.log.info("preferences were configured for the test, however \
+                        we currently do not install them on non Firefox browsers.")
 
     def create_browser_profile(self):
         self.profile = create_profile(self.profile_class)
@@ -198,39 +201,29 @@ class Raptor(object):
         if self.config['enable_control_server_wait']:
             self.control_server_wait_set('webext_status/__raptor_shutdownBrowser')
 
-        # for android we must make the control server available to the device
-        if self.config['app'] in self.firefox_android_apps and \
-                self.config['host'] in ('localhost', '127.0.0.1'):
-            self.log.info("making the raptor control server port available to device")
-            _tcp_port = "tcp:%s" % self.control_server.port
-            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
-
     def get_playback_config(self, test):
-        self.config['playback_tool'] = test.get('playback')
-        self.log.info("test uses playback tool: %s " % self.config['playback_tool'])
         platform = self.config['platform']
-        self.config['playback_version'] = test.get('playback_version', "2.0.2")
-        self.config['playback_binary_zip'] = test.get('playback_binary_zip_%s' % platform)
-        self.config['playback_pageset_zip'] = test.get('playback_pageset_zip_%s' % platform)
         playback_dir = os.path.join(here, 'playback')
-        self.config['playback_binary_manifest'] = test.get('playback_binary_manifest')
-        self.config['playback_pageset_manifest'] = test.get('playback_pageset_manifest')
+
+        self.config.update({
+            'playback_tool': test.get('playback'),
+            'playback_version': test.get('playback_version', "2.0.2"),
+            'playback_binary_zip': test.get('playback_binary_zip_%s' % platform),
+            'playback_pageset_zip': test.get('playback_pageset_zip_%s' % platform),
+            'playback_binary_manifest': test.get('playback_binary_manifest'),
+            'playback_pageset_manifest': test.get('playback_pageset_manifest'),
+        })
         for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
             if self.config.get(key) is None:
                 continue
             self.config[key] = os.path.join(playback_dir, self.config[key])
 
+        self.log.info("test uses playback tool: %s " % self.config['playback_tool'])
+
     def serve_benchmark_source(self, test):
         # benchmark-type tests require the benchmark test to be served out
         self.benchmark = Benchmark(self.config, test)
         self.benchmark_port = int(self.benchmark.port)
-
-        # for android we must make the benchmarks server available to the device
-        if self.config['app'] in self.firefox_android_apps and \
-                self.config['host'] in ('localhost', '127.0.0.1'):
-            self.log.info("making the raptor benchmarks server port available to device")
-            _tcp_port = "tcp:%s" % self.benchmark_port
-            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
     def install_raptor_webext(self):
         # must intall raptor addon each time because we dynamically update some content
@@ -257,14 +250,6 @@ class Raptor(object):
         chrome_apps = CHROMIUM_DISTROS + ["chrome-android", "chromium-android"]
         if self.config['app'] in chrome_apps:
             self.profile.addons.remove(self.raptor_webext)
-
-    def set_test_browser_prefs(self, test_prefs):
-        # if the test has any specific browser prefs specified, set those in browser profiile
-        if self.config['app'] == "firefox":
-            self.profile.set_preferences(json.loads(test_prefs))
-        else:
-            self.log.info("preferences were configured for the test, \
-                          but we do not install them on non Firefox browsers.")
 
     def get_proxy_command_for_mitm(self, test, version):
         # Generate Mitmproxy playback args
@@ -307,13 +292,6 @@ class Raptor(object):
 
         # let's start it!
         self.playback.start()
-
-        # for android we must make the playback server available to the device
-        if self.config['app'] in self.firefox_android_apps and self.config['host'] \
-                in ('localhost', '127.0.0.1'):
-            self.log.info("making the raptor playback server port available to device")
-            _tcp_port = "tcp:8080"
-            self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
 
     def delete_proxy_settings_from_profile(self):
         # Must delete the proxy settings from the profile if running
@@ -386,13 +364,6 @@ class Raptor(object):
             self.control_server_wait_clear('all')
 
         self.control_server.stop()
-        if self.config['app'] not in self.firefox_android_apps:
-            self.runner.stop()
-        elif self.config['app'] in self.firefox_android_apps:
-            self.log.info('removing reverse socket connections')
-            self.device.remove_socket_connections('reverse')
-        else:
-            pass
         self.log.info("finished")
 
     def control_server_wait_set(self, state):
@@ -434,6 +405,9 @@ class RaptorDesktop(Raptor):
         self.runner = runner_cls(
             self.config['binary'], profile=self.profile, process_args=process_args,
             symbols_path=self.config['symbols_path'])
+
+    def launch_desktop_browser(self, test):
+        raise NotImplementedError
 
     def start_runner_proc(self):
         # launch the browser via our previously-created runner
@@ -479,6 +453,11 @@ class RaptorDesktop(Raptor):
         except NotImplementedError:  # not implemented for Chrome
             pass
 
+    def clean_up(self):
+        self.runner.stop()
+
+        super(RaptorDesktop, self).clean_up()
+
 
 class RaptorDesktopFirefox(RaptorDesktop):
 
@@ -515,6 +494,11 @@ class RaptorDesktopFirefox(RaptorDesktop):
             # receive the actual gecko profiles from the web ext and will write them
             # to disk; then profiles are picked up by gecko_profile.symbolicate
             self.control_server.gecko_profile_dir = self.gecko_profiler.gecko_profile_dir
+
+    def set_browser_test_prefs(self, raw_prefs):
+        # add test specific preferences
+        self.log.info("setting test-specific Firefox preferences")
+        self.profile.set_preferences(json.loads(raw_prefs))
 
 
 class RaptorDesktopChrome(RaptorDesktop):
@@ -558,6 +542,34 @@ class RaptorAndroid(Raptor):
             'activity': activity,
             'intent': intent,
         })
+
+    def set_reverse_port(self, port):
+        tcp_port = "tcp:{}".format(port)
+        self.device.create_socket_connection('reverse', tcp_port, tcp_port)
+
+    def serve_benchmark_source(self, *args, **kwargs):
+        super(RaptorAndroid, self).serve_benchmark_source(*args, **kwargs)
+
+        # for Android we must make the benchmarks server available to the device
+        if self.config['host'] in ('localhost', '127.0.0.1'):
+            self.log.info("making the raptor benchmarks server port available to device")
+            self.set_reverse_port(self.benchmark_port)
+
+    def start_control_server(self):
+        super(RaptorAndroid, self).start_control_server()
+
+        # for Android we must make the control server available to the device
+        if self.config['host'] in ('localhost', '127.0.0.1'):
+            self.log.info("making the raptor control server port available to device")
+            self.set_reverse_port(self.control_server.port)
+
+    def start_playback(self, test):
+        super(RaptorAndroid, self).start_playback(test)
+
+        # for Android we must make the playback server available to the device
+        if self.config['host'] in ('localhost', '127.0.0.1'):
+            self.log.info("making the raptor playback server port available to device")
+            self.set_reverse_port(8080)
 
     def create_browser_handler(self):
         # create the android device handler; it gets initiated and sets up adb etc
@@ -824,6 +836,12 @@ class RaptorAndroid(Raptor):
                 shutil.rmtree(dump_dir)
             except Exception:
                 self.log.warning("unable to remove directory: %s" % dump_dir)
+
+    def clean_up(self):
+        self.log.info('removing reverse socket connections')
+        self.device.remove_socket_connections('reverse')
+
+        super(RaptorAndroid, self).clean_up()
 
 
 def main(args=sys.argv[1:]):
