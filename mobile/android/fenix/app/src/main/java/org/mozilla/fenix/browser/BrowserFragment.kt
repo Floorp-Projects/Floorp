@@ -392,6 +392,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     override fun onBackPressed(): Boolean {
         return when {
             findInPageIntegration.onBackPressed() -> true
+            fullScreenFeature.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
             else -> false
         }
