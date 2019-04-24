@@ -163,6 +163,7 @@
 #include "nsIRemoteWindowContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISearchService.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISiteSecurityService.h"
 #include "nsISound.h"
@@ -272,10 +273,6 @@
 #  if defined(XP_MACOSX)
 #    include "mozilla/Sandbox.h"
 #  endif
-#endif
-
-#ifdef MOZ_TOOLKIT_SEARCH
-#  include "nsISearchService.h"
 #endif
 
 #ifdef XP_WIN
@@ -4198,7 +4195,6 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyKeywordSearchLoading(
     const nsString& aProvider, const nsString& aKeyword) {
-#ifdef MOZ_TOOLKIT_SEARCH
   nsCOMPtr<nsISearchService> searchSvc =
       do_GetService("@mozilla.org/browser/search-service;1");
   if (searchSvc) {
@@ -4214,7 +4210,6 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyKeywordSearchLoading(
       }
     }
   }
-#endif
   return IPC_OK();
 }
 
