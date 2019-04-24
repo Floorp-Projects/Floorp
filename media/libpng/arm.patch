@@ -1,7 +1,7 @@
 diff --git a/arm/arm_init.c b/arm/arm_init.c
 --- a/arm/arm_init.c
 +++ b/arm/arm_init.c
-@@ -33,9 +33,9 @@
+@@ -34,9 +34,9 @@
   * implementation which reads /proc/cpufino.
   */
  #ifndef PNG_ARM_NEON_FILE

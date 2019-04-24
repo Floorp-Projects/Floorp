@@ -20,7 +20,6 @@ CompiledModules(
     'ResultList.js',
     'SearchInput.js',
     'SourceIcon.js',
-    'Svg.js',
 )
 
 DevToolsModules(

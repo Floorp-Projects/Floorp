@@ -71,6 +71,14 @@ let HomePage = {
     return Services.prefs.prefHasUserValue(kPrefName);
   },
 
+  get locked() {
+    return Services.prefs.prefIsLocked(kPrefName);
+  },
+
+  get isDefault() {
+    return HomePage.get() === HomePage.getDefault();
+  },
+
   set(value) {
     Services.prefs.setStringPref(kPrefName, value);
   },

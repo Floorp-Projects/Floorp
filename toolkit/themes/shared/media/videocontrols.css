@@ -70,7 +70,8 @@
 
 .controlsContainer [hidden],
 .controlBar[hidden],
-.pictureInPictureToggleButton[hidden] {
+.pictureInPictureToggleButton[hidden],
+.videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > .pictureInPictureToggleButton {
   display: none;
 }
 

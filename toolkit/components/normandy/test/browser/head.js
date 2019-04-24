@@ -2,8 +2,6 @@ ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
 ChromeUtils.import("resource://normandy-content/AboutPages.jsm", this);
-ChromeUtils.import("resource://normandy/lib/SandboxManager.jsm", this);
-ChromeUtils.import("resource://normandy/lib/NormandyDriver.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
@@ -98,30 +96,6 @@ this.withInstalledWebExtension = function(manifestOverrides = {}, expectUninstal
       }
     );
   };
-};
-
-this.withSandboxManager = function(Assert) {
-  return function wrapper(testFunction) {
-    return async function wrappedTestFunction(...args) {
-      const sandboxManager = new SandboxManager();
-      sandboxManager.addHold("test running");
-
-      await testFunction(...args, sandboxManager);
-
-      sandboxManager.removeHold("test running");
-      await sandboxManager.isNuked()
-        .then(() => Assert.ok(true, "sandbox is nuked"))
-        .catch(e => Assert.ok(false, "sandbox is nuked", e));
-    };
-  };
-};
-
-this.withDriver = function(Assert, testFunction) {
-  return withSandboxManager(Assert)(async function inner(...args) {
-    const sandboxManager = args[args.length - 1];
-    const driver = new NormandyDriver(sandboxManager);
-    await testFunction(driver, ...args);
-  });
 };
 
 this.withMockNormandyApi = function(testFunction) {

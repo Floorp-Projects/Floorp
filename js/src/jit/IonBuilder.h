@@ -43,7 +43,8 @@ BaselineFrameInspector* NewBaselineFrameInspector(TempAllocator* temp,
 using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 
 class IonBuilder : public MIRGenerator,
-                   public mozilla::LinkedListElement<IonBuilder> {
+                   public mozilla::LinkedListElement<IonBuilder>,
+                   public RunnableTask {
  public:
   IonBuilder(JSContext* analysisContext, CompileRealm* realm,
              const JitCompileOptions& options, TempAllocator* temp,
@@ -65,6 +66,8 @@ class IonBuilder : public MIRGenerator,
   mozilla::GenericErrorResult<AbortReason> abort(AbortReason r,
                                                  const char* message, ...)
       MOZ_FORMAT_PRINTF(3, 4);
+
+  void runTask() override;
 
  private:
   AbortReasonOr<Ok> traverseBytecode();

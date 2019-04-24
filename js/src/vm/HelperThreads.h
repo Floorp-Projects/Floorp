@@ -63,10 +63,9 @@ namespace wasm {
 struct CompileTask;
 typedef Fifo<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrFifo;
 
-struct Tier2GeneratorTask {
+struct Tier2GeneratorTask : public RunnableTask {
   virtual ~Tier2GeneratorTask() = default;
   virtual void cancel() = 0;
-  virtual void execute() = 0;
 };
 
 typedef UniquePtr<Tier2GeneratorTask> UniqueTier2GeneratorTask;
@@ -694,7 +693,8 @@ class MOZ_RAII AutoUnlockHelperThreadState : public UnlockGuard<Mutex> {
 };
 
 struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
-                   public JS::OffThreadToken {
+                   public JS::OffThreadToken,
+                   public RunnableTask {
   ParseTaskKind kind;
   JS::OwningCompileOptions options;
 
@@ -739,6 +739,8 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
+
+  void runTask() override;
 };
 
 struct ScriptParseTask : public ParseTask {
@@ -801,7 +803,7 @@ extern bool OffThreadParsingMustWaitForGC(JSRuntime* rt);
 // GCs after being enqueued. Completed tasks are handled during the sweeping
 // phase by AttachCompressedSourcesTask, which runs in parallel with other GC
 // sweeping tasks.
-class SourceCompressionTask {
+class SourceCompressionTask : public RunnableTask {
   friend struct HelperThread;
   friend class ScriptSource;
 
@@ -827,6 +829,7 @@ class SourceCompressionTask {
       : runtime_(rt),
         majorGCNumber_(rt->gc.majorGCCount()),
         sourceHolder_(source) {}
+  virtual ~SourceCompressionTask() {}
 
   bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
   bool shouldStart() const {
@@ -841,7 +844,7 @@ class SourceCompressionTask {
     return sourceHolder_.get()->refs == 1;
   }
 
-  void work();
+  void runTask() override;
   void complete();
 
  private:
@@ -863,7 +866,7 @@ class SourceCompressionTask {
 // The helper thread will call execute() to do the main work. Then, the thread
 // of the JSContext used to create the PromiseHelperTask will call resolve() to
 // resolve promise according to those results.
-struct PromiseHelperTask : OffThreadPromiseTask {
+struct PromiseHelperTask : OffThreadPromiseTask, public RunnableTask {
   PromiseHelperTask(JSContext* cx, Handle<PromiseObject*> promise)
       : OffThreadPromiseTask(cx, promise) {}
 
@@ -876,6 +879,7 @@ struct PromiseHelperTask : OffThreadPromiseTask {
   // Warning: After this function returns, 'this' can be deleted at any time, so
   // the caller must immediately return from the stream callback.
   void executeAndResolveAndDestroy(JSContext* cx);
+  void runTask() override;
 };
 
 } /* namespace js */

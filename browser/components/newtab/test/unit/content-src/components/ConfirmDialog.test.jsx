@@ -14,8 +14,8 @@ describe("<ConfirmDialog>", () => {
       visible: true,
       data: {
         onConfirm: [],
-        cancel_button_string_id: "manual_migration_cancel_button",
-        confirm_button_string_id: "manual_migration_import_button",
+        cancel_button_string_id: "topsites_form_cancel_button",
+        confirm_button_string_id: "topsites_form_save_button",
         eventSource: "HIGHLIGHTS",
       },
     };

@@ -3762,7 +3762,7 @@ var homeButtonObserver = {
     },
 
   onDragOver(aEvent) {
-      if (Services.prefs.prefIsLocked("browser.startup.homepage")) {
+      if (HomePage.locked) {
         return;
       }
       browserDragAndDrop.dragOver(aEvent);

@@ -1294,7 +1294,7 @@ set_define('MOZ_BUNDLED_FONTS',
 # Verify MAR signatures
 # ==============================================================
 
-option('--enable-verify-mar', help='Enable verifying MAR signatures')
+option('--disable-verify-mar', help='Disable verifying MAR signatures')
 
 set_define('MOZ_VERIFY_MAR_SIGNATURE',
            depends_if('--enable-verify-mar')(lambda _: True))

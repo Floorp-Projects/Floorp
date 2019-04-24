@@ -1,5 +1,4 @@
 ac_add_options --enable-debug
-ac_add_options --enable-verify-mar
 
 . $topsrcdir/build/mozconfig.stylo
 

@@ -1,7 +1,6 @@
 . $topsrcdir/build/macosx/mozconfig.common
 
 ac_add_options --enable-debug
-ac_add_options --enable-verify-mar
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1

@@ -125,20 +125,31 @@ add_task(async function testExtractLocalizedManifest() {
     "manifest": {
       "name": "__MSG_extensionName__",
       "default_locale": "en_US",
+      "icons": {
+        "16": "__MSG_extensionIcon__",
+      },
     },
 
     "files": {
-      "_locales/en_US/messages.json": '{"extensionName": {"message": "foo"}}',
-      "_locales/de_DE/messages.json": '{"extensionName": {"message": "bar"}}',
+      "_locales/en_US/messages.json": `{
+        "extensionName": {"message": "foo"},
+        "extensionIcon": {"message": "icon-en.png"}
+      }`,
+      "_locales/de_DE/messages.json": `{
+        "extensionName": {"message": "bar"},
+        "extensionIcon": {"message": "icon-de.png"}
+      }`,
     },
   });
 
   await extension.loadManifest();
   equal(extension.manifest.name, "foo", "name localized");
+  equal(extension.manifest.icons["16"], "icon-en.png", "icons localized");
 
   let manifest = await extension.getLocalizedManifest("de-DE");
   ok(extension.localeData.has("de-DE"), "has de_DE locale");
   equal(manifest.name, "bar", "name localized");
+  equal(manifest.icons["16"], "icon-de.png", "icons localized");
 
   await Assert.rejects(extension.getLocalizedManifest("xx-XX"),
                        /does not contain the locale xx-XX/, "xx-XX does not exist");

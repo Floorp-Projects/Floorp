@@ -128,11 +128,6 @@ input {
   }
 }
 
-// Make sure snippets show up above other UI elements
-#snippets-container { // sass-lint:disable-line no-ids
-  z-index: 1;
-}
-
 // Components
 @import '../components/Base/Base';
 @import '../components/ErrorBoundary/ErrorBoundary';
@@ -143,7 +138,6 @@ input {
 @import '../components/ContextMenu/ContextMenu';
 @import '../components/ConfirmDialog/ConfirmDialog';
 @import '../components/Card/Card';
-@import '../components/ManualMigration/ManualMigration';
 @import '../components/CollapsibleSection/CollapsibleSection';
 @import '../components/ASRouterAdmin/ASRouterAdmin';
 @import '../components/PocketLoggedInCta/PocketLoggedInCta';
@@ -170,6 +164,7 @@ input {
 @import '../asrouter/components/SnippetBase/SnippetBase';
 @import '../asrouter/components/ModalOverlay/ModalOverlay';
 @import '../asrouter/templates/ReturnToAMO/ReturnToAMO';
+@import '../asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet';
 @import '../asrouter/templates/SimpleSnippet/SimpleSnippet';
 @import '../asrouter/templates/SubmitFormSnippet/SubmitFormSnippet';
 @import '../asrouter/templates/OnboardingMessage/OnboardingMessage';
