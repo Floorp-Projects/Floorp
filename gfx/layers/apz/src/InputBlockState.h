@@ -400,6 +400,12 @@ class TouchBlockState : public CancelableBlockState {
       nsTArray<TouchBehaviorFlags>& aOutBehaviors) const;
 
   /**
+   * Returns true if the allowed touch behaviours have been set, or if touch
+   * action is disabled.
+   */
+  bool HasAllowedTouchBehaviors() const;
+
+  /**
    * Copy various properties from another block.
    */
   void CopyPropertiesFrom(const TouchBlockState& aOther);

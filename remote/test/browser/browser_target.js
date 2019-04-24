@@ -52,7 +52,7 @@ async function testCDP() {
   // Create a new target so that the test runs against a fresh new tab
   const targetCreated = Target.targetCreated();
   const {targetId} = await Target.createTarget();
-  ok(true, "Target created");
+  ok(true, `Target created: ${targetId}`);
   ok(!!targetId, "createTarget returns a non-empty target id");
   const {targetInfo} = await targetCreated;
   is(targetId, targetInfo.targetId, "createTarget and targetCreated refers to the same target id");

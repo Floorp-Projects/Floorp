@@ -116,15 +116,16 @@ static bool AsyncFunctionResume(JSContext* cx,
                               &generatorOrValue)) {
     if (!generator->isClosed()) {
       generator->setClosed();
+    }
 
-      // Handle the OOM case mentioned above.
-      if (cx->isExceptionPending()) {
-        RootedValue exn(cx);
-        if (!GetAndClearException(cx, &exn)) {
-          return false;
-        }
-        return AsyncFunctionThrown(cx, resultPromise, exn);
+    // Handle the OOM case mentioned above.
+    if (resultPromise->state() == JS::PromiseState::Pending &&
+        cx->isExceptionPending()) {
+      RootedValue exn(cx);
+      if (!GetAndClearException(cx, &exn)) {
+        return false;
       }
+      return AsyncFunctionThrown(cx, resultPromise, exn);
     }
     return false;
   }

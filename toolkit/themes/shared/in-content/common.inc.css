@@ -115,6 +115,7 @@
 
     --in-content-table-background: #202023;
     --in-content-table-border-dark-color: rgba(249,249,250,0.2);
+    --in-content-table-header-background: #002b57;
 
     --in-content-category-text-selected: var(--blue-40);
     --in-content-category-text-selected-active: var(--blue-50);

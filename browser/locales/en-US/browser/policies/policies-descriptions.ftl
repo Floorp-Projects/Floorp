@@ -97,6 +97,8 @@ policy-Homepage = Set and optionally lock the homepage.
 
 policy-InstallAddonsPermission = Allow certain websites to install add-ons.
 
+policy-LocalFileLinks = Allow specific websites to link to local files.
+
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
 
 policy-NewTabPage = Enable or disable the New Tab page.

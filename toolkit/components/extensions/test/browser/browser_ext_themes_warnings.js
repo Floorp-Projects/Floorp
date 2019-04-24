@@ -72,12 +72,14 @@ add_task(async function test_dynamic_theme() {
   await extension.unload();
 });
 
-add_task(async function test_experiment() {
-  Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+add_task(async function test_experiments_enabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.legacy.enabled", AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS]],
+  });
 
   info("Testing that experiments are handled correctly when legacy pref is enabled");
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       theme: {
         properties: {
@@ -105,11 +107,17 @@ add_task(async function test_experiment() {
   }
   await extension.unload();
 
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_experiments_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.legacy.enabled", false]],
+  });
+
   info("Testing that experiments are handled correctly when legacy pref is disabled");
 
-  Services.prefs.setBoolPref("extensions.legacy.enabled", false);
-
-  extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       theme: {
         properties: {
@@ -128,4 +136,5 @@ add_task(async function test_experiment() {
     "This extension is not allowed to run theme experiments"
   );
   await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });

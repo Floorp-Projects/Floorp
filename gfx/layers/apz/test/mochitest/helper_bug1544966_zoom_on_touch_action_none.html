@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for Bug 1544966</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  var target = document.getElementById("target");
+
+  var pointersDown = 0;
+  var pointersUp = 0;
+  var pointerMoveCount = 0;
+
+  target.addEventListener("pointerdown", function(e) {
+    dump(`Got pointerdown, pointer id ${e.pointerId}\n`);
+    pointersDown++;
+  });
+  target.addEventListener("pointermove", function(e) {
+    dump(`Got pointermove, pointer id ${e.pointerId}, at ${e.clientX}, ${e.clientY}\n`);
+    pointerMoveCount++;
+  });
+  target.addEventListener("pointercancel", function(e) {
+    dump(`Got pointercancel, pointer id ${e.pointerId}\n`);
+    ok(false, "Should not have gotten pointercancel");
+    pointersUp++;
+    if (pointersDown == pointersUp) {
+      // All pointers lifted, let's continue the test
+      setTimeout(testDriver, 0);
+    }
+  });
+  target.addEventListener("pointerup", function(e) {
+    dump(`Got pointerup, pointer id ${e.pointerId}\n`);
+    pointersUp++;
+    if (pointersDown == pointersUp) {
+      // All pointers lifted, let's continue the test
+      setTimeout(testDriver, 0);
+    }
+  });
+
+  var zoom_in = [
+      [ { x: 125, y: 175 }, { x: 175, y: 225 } ],
+      [ { x: 120, y: 150 }, { x: 180, y: 250 } ],
+      [ { x: 115, y: 125 }, { x: 185, y: 275 } ],
+      [ { x: 110, y: 100 }, { x: 190, y: 300 } ],
+      [ { x: 105, y:  75 }, { x: 195, y: 325 } ],
+      [ { x: 100, y:  50 }, { x: 200, y: 350 } ],
+  ];
+
+  var touchIds = [0, 1];
+  yield* synthesizeNativeTouchSequences(document.getElementById("target"), zoom_in, null, touchIds);
+
+  dump("All touch events synthesized, waiting for final pointerup...\n");
+  yield true;
+
+  // Should get at least one pointermove per pointer, even if the events
+  // get coalesced somewhere.
+  is(pointersDown, 2, "Got expected numbers of pointers recorded");
+  ok(pointerMoveCount >= 2, "Got " + pointerMoveCount + " pointermove events");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style>
+    body {
+        height: 5000px;
+    }
+    #target {
+        touch-action: none;
+        height: 400px
+    }
+  </style>
+</head>
+<body>
+ <div id="target">
+  Put down two fingers at the same time and do a pinch action.
+ </div>
+</body>
+</html>

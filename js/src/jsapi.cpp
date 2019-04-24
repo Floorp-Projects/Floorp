@@ -1136,7 +1136,7 @@ JS_PUBLIC_API void* JS_string_malloc(JSContext* cx, size_t nbytes) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   return static_cast<void*>(
-      cx->maybe_pod_malloc<uint8_t>(nbytes, js::MallocArena));
+      cx->maybe_pod_malloc<uint8_t>(nbytes, js::StringBufferArena));
 }
 
 JS_PUBLIC_API void* JS_string_realloc(JSContext* cx, void* p, size_t oldBytes,
@@ -1144,7 +1144,7 @@ JS_PUBLIC_API void* JS_string_realloc(JSContext* cx, void* p, size_t oldBytes,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   return static_cast<void*>(cx->maybe_pod_realloc<uint8_t>(
-      static_cast<uint8_t*>(p), oldBytes, newBytes, js::MallocArena));
+      static_cast<uint8_t*>(p), oldBytes, newBytes, js::StringBufferArena));
 }
 
 JS_PUBLIC_API void JS_string_free(JSContext* cx, void* p) { return js_free(p); }

@@ -62,6 +62,7 @@ DIRS += [
     'reflect',
     'reputationservice',
     'resistfingerprinting',
+    'search',
     'securityreporter',
     'sessionstore',
     'shell',
@@ -94,9 +95,6 @@ if CONFIG['BUILD_CTYPES']:
 
 if CONFIG['MOZ_XUL']:
     DIRS += ['autocomplete', 'printingui', 'satchel']
-
-if CONFIG['MOZ_TOOLKIT_SEARCH']:
-    DIRS += ['search']
 
 DIRS += ['captivedetect']
 
