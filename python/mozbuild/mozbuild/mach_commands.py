@@ -1884,7 +1884,7 @@ class StaticAnalysis(MachCommandBase):
                               'Run coverity static-analysis tool on the given files. '
                               'Can only be run by automation! '
                               'It\'s result is stored as an json file on the artifacts server.')
-    @CommandArgument('source', nargs='*', default=['.*'],
+    @CommandArgument('source', nargs='*', default=[],
                      help='Source files to be analyzed by Coverity Static Analysis Tool. '
                           'This is ran only in automation.')
     @CommandArgument('--output', '-o', default=None,
@@ -1895,7 +1895,7 @@ class StaticAnalysis(MachCommandBase):
                      '~./mozbuild/coverity is used.')
     @CommandArgument('--outgoing', default=False, action='store_true',
                      help='Run coverity on outgoing files from mercurial or git repository')
-    def check_coverity(self, source=None, output=None, coverity_output_path=None, outgoing=False, verbose=False):
+    def check_coverity(self, source=[], output=None, coverity_output_path=None, outgoing=False, verbose=False):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()
 
@@ -1908,6 +1908,10 @@ class StaticAnalysis(MachCommandBase):
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
             source = map(os.path.abspath, files)
+
+        if len(source) == 0:
+            self.log(logging.ERROR, 'static-analysis', {}, 'There are no files that coverity can use to scan.')
+            return 0
 
         rc = self._build_compile_db(verbose=verbose)
         rc = rc or self._build_export(jobs=2, verbose=verbose)
@@ -1964,15 +1968,14 @@ class StaticAnalysis(MachCommandBase):
             cov_result = mozpath.join(coverity_output_path, 'cov-results.json')
 
         # Once the capture is performed we need to do the actual Coverity Desktop analysis
-        cmd = [self.cov_run_desktop, '--json-output-v6', cov_result, '--strip-path', self.topsrcdir]
-        cmd += [element['file'] for element in commands_list]
+        cmd = [self.cov_run_desktop, '--json-output-v6', cov_result, '--analyze-captured-source']
         self.log(logging.INFO, 'static-analysis', {}, 'Running Coverity Analysis for {}'.format(cmd))
         rc = self.run_process(cmd, cwd=self.cov_state_path, pass_thru=True)
         if rc != 0:
             self.log(logging.ERROR, 'static-analysis', {}, 'Coverity Analysis failed!')
 
         if output is not None:
-            self.dump_cov_artifact(cov_result, output)
+            self.dump_cov_artifact(cov_result, source, output)
 
     def get_reliability_index_for_cov_checker(self, checker_name):
         if self._cov_config is None:
@@ -1997,7 +2000,7 @@ class StaticAnalysis(MachCommandBase):
 
         return checkers[checker_name]['reliability']
 
-    def dump_cov_artifact(self, cov_results, output):
+    def dump_cov_artifact(self, cov_results, source, output):
         # Parse Coverity json into structured issues
         with open(cov_results) as f:
             result = json.load(f)
@@ -2033,7 +2036,12 @@ class StaticAnalysis(MachCommandBase):
                 return dict_issue
 
             for issue in result['issues']:
-                path = issue['strippedMainEventFilePathname'].strip('/')
+                path = self.cov_is_file_in_source(issue['strippedMainEventFilePathname'], source)
+                if path is None:
+                    # Since we skip a result we should log it
+                    self.log(logging.INFO, 'static-analysis', {}, 'Skipping CID: {0} from file: {1} since it\'s not related with the current patch.'.format(
+                        issue['stateOnServer']['cid'], issue['strippedMainEventFilePathname']))
+                    continue
                 if path in files_list:
                     files_list[path]['warnings'].append(build_element(issue))
                 else:
@@ -2148,6 +2156,17 @@ class StaticAnalysis(MachCommandBase):
             return 1
 
         return 0
+
+    def cov_is_file_in_source(self, abs_path, source):
+        # We have as an input an absolute path for whom we verify if it's a symlink,
+        # if so, we follow that symlink and we match it with elements from source.
+        # If the match is done we return abs_path, otherwise None
+        assert isinstance(source, list)
+        if os.path.islink(abs_path):
+            abs_path = os.path.realpath(abs_path)
+        if abs_path in source:
+            return abs_path
+        return None
 
     def get_files_with_commands(self, source):
         '''
