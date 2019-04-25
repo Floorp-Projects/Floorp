@@ -39,13 +39,9 @@ using namespace mozilla::gfx;
  */
 static IntrinsicSize IntrinsicSizeFromCanvasSize(
     const nsIntSize& aCanvasSizeInPx) {
-  IntrinsicSize intrinsicSize;
-  intrinsicSize.width.SetCoordValue(
-      nsPresContext::CSSPixelsToAppUnits(aCanvasSizeInPx.width));
-  intrinsicSize.height.SetCoordValue(
+  return IntrinsicSize(
+      nsPresContext::CSSPixelsToAppUnits(aCanvasSizeInPx.width),
       nsPresContext::CSSPixelsToAppUnits(aCanvasSizeInPx.height));
-
-  return intrinsicSize;
 }
 
 /* Helper for our nsIFrame::GetIntrinsicRatio() impl. Takes the result of

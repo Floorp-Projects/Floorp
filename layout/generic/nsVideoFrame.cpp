@@ -191,9 +191,7 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
   // can pass to ComputeObjectRenderRect.
   nsSize aspectRatio(nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.width),
                      nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.height));
-  IntrinsicSize intrinsicSize;
-  intrinsicSize.width.SetCoordValue(aspectRatio.width);
-  intrinsicSize.height.SetCoordValue(aspectRatio.height);
+  IntrinsicSize intrinsicSize(aspectRatio.width, aspectRatio.height);
 
   nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
       area, intrinsicSize, aspectRatio, StylePosition());
@@ -436,9 +434,7 @@ class nsDisplayVideo : public nsDisplayItem {
     nsSize aspectRatio(
         nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.width),
         nsPresContext::CSSPixelsToAppUnits(videoSizeInPx.height));
-    IntrinsicSize intrinsicSize;
-    intrinsicSize.width.SetCoordValue(aspectRatio.width);
-    intrinsicSize.height.SetCoordValue(aspectRatio.height);
+    IntrinsicSize intrinsicSize(aspectRatio.width, aspectRatio.height);
 
     nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
         area, intrinsicSize, aspectRatio, Frame()->StylePosition());
@@ -574,10 +570,7 @@ LogicalSize nsVideoFrame::ComputeSize(
   }
 
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
-
-  IntrinsicSize intrinsicSize;
-  intrinsicSize.width.SetCoordValue(size.width);
-  intrinsicSize.height.SetCoordValue(size.height);
+  IntrinsicSize intrinsicSize(size.width, size.height);
 
   // Only video elements have an intrinsic ratio.
   nsSize intrinsicRatio = HasVideoElement() ? size : nsSize(0, 0);
