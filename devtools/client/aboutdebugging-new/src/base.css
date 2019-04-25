@@ -77,7 +77,8 @@
   --base-font-size: var(--body-10-font-size);
   --base-font-weight: var(--body-10-font-weight);
   --base-line-height: 1.8;
-  --message-font-size: 13px; /* Body 10 in Photon - https://design.firefox.com/photon/visuals/typography.html */
+  --icon-label-font-size: var(--body-10-font-size);
+  --message-font-size: var(--body-10-font-size);
   --button-font-size: var(--base-font-size);
   --micro-font-size: 11px;
   --monospace-font-family: monospace;
