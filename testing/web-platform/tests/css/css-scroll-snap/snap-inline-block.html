@@ -32,18 +32,18 @@ div {
 </div>
 
 <script>
-var scroller = document.getElementById("scroller");
-var width = scroller.clientWidth;
-var height = scroller.clientHeight;
+const scroller_width = scroller.clientWidth;
+const scroller_height = scroller.clientHeight;
 [
-  ["horizontal-tb", 300, 500 - height],
-  ["vertical-lr", 500 - width, 300],
-  ["vertical-rl", width - 700, 300]
+  ["horizontal-tb", 300,                  500 - scroller_height],
+  ["vertical-lr",   500 - scroller_width, 300],
+  ["vertical-rl",   scroller_width - 700, 300]
 ].forEach(([writing_mode, left, top]) => {
   test(() => {
     scroller.style.writingMode = writing_mode;
-    if (writing_mode == "vertical-rl")
-      document.getElementById("target").style.left = (width - 700) + "px";
+    if (writing_mode == "vertical-rl") {
+      target.style.left = (scroller_width - 700) + "px";
+    }
     scroller.scrollTo(0, 0);
     assert_equals(scroller.scrollLeft, left, "aligns correctly on x");
     assert_equals(scroller.scrollTop, top, "aligns correctly on y");
