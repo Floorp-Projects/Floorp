@@ -144,4 +144,9 @@ interface nsIRemoteTab : nsISupports
   void maybeCancelContentJSExecution(
       in nsIRemoteTab_NavigationType aNavigationType,
       [optional] in jsval aCancelContentJSOptions);
+
+  /**
+   * Notify the remote tab that the resolution has changed.
+   */
+  [noscript] void notifyResolutionChanged();
 };

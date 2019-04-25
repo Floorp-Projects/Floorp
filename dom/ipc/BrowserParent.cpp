@@ -1056,21 +1056,6 @@ void BrowserParent::SizeModeChanged(const nsSizeMode& aSizeMode) {
   }
 }
 
-void BrowserParent::UIResolutionChanged() {
-  if (!mIsDestroyed) {
-    // TryCacheDPIAndScale()'s cache is keyed off of
-    // mDPI being greater than 0, so this invalidates it.
-    mDPI = -1;
-    TryCacheDPIAndScale();
-    // If mDPI was set to -1 to invalidate it and then TryCacheDPIAndScale
-    // fails to cache the values, then mDefaultScale.scale might be invalid.
-    // We don't want to send that value to content. Just send -1 for it too in
-    // that case.
-    Unused << SendUIResolutionChanged(mDPI, mRounding,
-                                      mDPI < 0 ? -1.0 : mDefaultScale.scale);
-  }
-}
-
 void BrowserParent::ThemeChanged() {
   if (!mIsDestroyed) {
     // The theme has changed, and any cached values we had sent down
@@ -3252,6 +3237,23 @@ BrowserParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
 NS_IMETHODIMP
 BrowserParent::GetHasBeforeUnload(bool* aResult) {
   *aResult = mHasBeforeUnload;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BrowserParent::NotifyResolutionChanged() {
+  if (!mIsDestroyed) {
+    // TryCacheDPIAndScale()'s cache is keyed off of
+    // mDPI being greater than 0, so this invalidates it.
+    mDPI = -1;
+    TryCacheDPIAndScale();
+    // If mDPI was set to -1 to invalidate it and then TryCacheDPIAndScale
+    // fails to cache the values, then mDefaultScale.scale might be invalid.
+    // We don't want to send that value to content. Just send -1 for it too in
+    // that case.
+    Unused << SendUIResolutionChanged(mDPI, mRounding,
+                                      mDPI < 0 ? -1.0 : mDefaultScale.scale);
+  }
   return NS_OK;
 }
 
