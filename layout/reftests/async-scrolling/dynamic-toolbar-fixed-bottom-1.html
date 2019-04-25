@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<!--
+  Tests that setting a fixed bottom margin in AsyncCompositionManager results
+  in the margin being applied to an element fixed to the bottom.
+
+  The fixed margin is specified as a test-pref in reftest.list.
+
+  The purpose of the fixed margin is to compensate for the transform that the
+  dynamic toolbar applies to the entire content area. We don't have a way of
+  simulating that transform in a reftest, so the fixed margin in isolation will
+  cause the fixed element to be offset from the bottom of the screen, and in
+  the ref page we use a regular CSS "margin-bottom" to match the rendering.
+-->
+<html>
+<meta name="viewport" content="width=device-width">
+<style>
+html {
+    scrollbar-width: none;
+}
+#scrolled {
+    height: 2000px;
+    width: 100%;
+}
+#fixed {
+    width: 100%;
+    height: 200px;
+    position: fixed;
+    bottom: 0;
+    background: red;
+}
+</style>
+<body>
+  <div id="scrolled"></div>
+  <div id="fixed"></div>
+</body>
+</html>
