@@ -855,13 +855,18 @@ class TestInfoCommand(MachCommandBase):
             self.activedata_test_name = self.test_name
 
     def get_platform(self, record):
-        platform = record['build']['platform']
-        type = record['build']['type']
-        if 'run' in record and 'type' in record['run'] and 'e10s' in record['run']['type']:
+        if 'platform' in record['build']:
+            platform = record['build']['platform']
+        else:
+            platform = "-"
+        tp = record['build']['type']
+        if type(tp) is list:
+            tp = "-".join(tp)
+        if 'run' in record and 'type' in record['run'] and 'e10s' in str(record['run']['type']):
             e10s = "-e10s"
         else:
             e10s = ""
-        return "%s/%s%s:" % (platform, type, e10s)
+        return "%s/%s%s:" % (platform, tp, e10s)
 
     def submit(self, query):
         import requests
@@ -915,6 +920,8 @@ class TestInfoCommand(MachCommandBase):
             total_failures = 0
             for record in data:
                 platform = self.get_platform(record)
+                if platform.startswith("-"):
+                    continue
                 runs = record['count']
                 total_runs = total_runs + runs
                 failures = record.get('failures', 0)
@@ -964,6 +971,8 @@ class TestInfoCommand(MachCommandBase):
             data.sort(key=self.get_platform)
             for record in data:
                 platform = self.get_platform(record)
+                if platform.startswith("-"):
+                    continue
                 print("%-40s %6.2f s (%.2f s - %.2f s over %d runs)" % (
                     platform, record['average'], record['min'],
                     record['max'], record['count']))
