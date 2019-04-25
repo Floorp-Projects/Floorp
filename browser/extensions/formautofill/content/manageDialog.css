@@ -34,7 +34,7 @@ fieldset > legend {
 }
 
 option:nth-child(even) {
-  background-color: -moz-oddtreerow;
+  background-color: var(--in-content-box-background-odd);
 }
 
 #addresses,
