@@ -198,17 +198,17 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+      InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvRpcMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
-      InfallibleTArray<CpowEntry>&& aCpows, const IPC::Principal& aPrincipal,
+      InfallibleTArray<CpowEntry>&& aCpows, nsIPrincipal* aPrincipal,
       nsTArray<ipc::StructuredCloneData>* aRetVal);
 
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMessage,
                                            InfallibleTArray<CpowEntry>&& aCpows,
-                                           const IPC::Principal& aPrincipal,
+                                           nsIPrincipal* aPrincipal,
                                            const ClonedMessageData& aData);
 
   mozilla::ipc::IPCResult RecvNotifyIMEFocus(
@@ -441,8 +441,7 @@ class BrowserParent final : public PBrowserParent,
   void SendRealMouseEvent(WidgetMouseEvent& aEvent);
 
   void SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
-                         uint32_t aDropEffect,
-                         const IPC::Principal& aPrincipal);
+                         uint32_t aDropEffect, nsIPrincipal* aPrincipal);
 
   void SendMouseWheelEvent(WidgetWheelEvent& aEvent);
 
@@ -473,8 +472,7 @@ class BrowserParent final : public PBrowserParent,
   bool DeallocPFilePickerParent(PFilePickerParent* actor);
 
   mozilla::ipc::IPCResult RecvIndexedDBPermissionRequest(
-      const Principal& aPrincipal,
-      IndexedDBPermissionRequestResolver&& aResolve);
+      nsIPrincipal* aPrincipal, IndexedDBPermissionRequestResolver&& aResolve);
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
@@ -486,7 +484,7 @@ class BrowserParent final : public PBrowserParent,
 
   bool SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
                              const bool& aIsPrivateData,
-                             const IPC::Principal& aRequestingPrincipal,
+                             nsIPrincipal* aRequestingPrincipal,
                              const uint32_t& aContentPolicyType);
 
   // Call from LayoutStatics only
@@ -591,7 +589,7 @@ class BrowserParent final : public PBrowserParent,
       nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
       Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
-      const IPC::Principal& aPrincipal);
+      nsIPrincipal* aPrincipal);
 
   void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal);

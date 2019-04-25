@@ -1832,7 +1832,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityRealTouchMoveEvent(
 
 mozilla::ipc::IPCResult BrowserChild::RecvRealDragEvent(
     const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
-    const uint32_t& aDropEffect, const IPC::Principal& aPrincipal) {
+    const uint32_t& aDropEffect, nsIPrincipal* aPrincipal) {
   WidgetDragEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
 
@@ -2039,8 +2039,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPrioritySelectionEvent(
 
 mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
-    const IPC::Principal& aRequestingPrincipal,
-    const uint32_t& aContentPolicyType) {
+    nsIPrincipal* aRequestingPrincipal, const uint32_t& aContentPolicyType) {
   nsresult rv;
   nsCOMPtr<nsITransferable> trans =
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
@@ -2154,7 +2153,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
 
 mozilla::ipc::IPCResult BrowserChild::RecvAsyncMessage(
     const nsString& aMessage, InfallibleTArray<CpowEntry>&& aCpows,
-    const IPC::Principal& aPrincipal, const ClonedMessageData& aData) {
+    nsIPrincipal* aPrincipal, const ClonedMessageData& aData) {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING("BrowserChild::RecvAsyncMessage",
                                              OTHER, aMessage);
   MMPrinter::Print("BrowserChild::RecvAsyncMessage", aMessage, aData);
@@ -2872,12 +2871,12 @@ bool BrowserChild::DoSendBlockingMessage(
     }
   }
   if (aIsSync) {
-    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
-                           Principal(aPrincipal), aRetVal);
+    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows, aPrincipal,
+                           aRetVal);
   }
 
-  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows,
-                        Principal(aPrincipal), aRetVal);
+  return SendRpcMessage(PromiseFlatString(aMessage), data, cpows, aPrincipal,
+                        aRetVal);
 }
 
 nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
@@ -2896,8 +2895,7 @@ nsresult BrowserChild::DoSendAsyncMessage(JSContext* aCx,
       return NS_ERROR_UNEXPECTED;
     }
   }
-  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows,
-                        Principal(aPrincipal), data)) {
+  if (!SendAsyncMessage(PromiseFlatString(aMessage), cpows, aPrincipal, data)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;

@@ -353,7 +353,7 @@ class BrowserChild final : public BrowserChildBase,
 
   virtual mozilla::ipc::IPCResult RecvRealDragEvent(
       const WidgetDragEvent& aEvent, const uint32_t& aDragAction,
-      const uint32_t& aDropEffect, const IPC::Principal& aPrincipal) override;
+      const uint32_t& aDropEffect, nsIPrincipal* aPrincipal) override;
 
   virtual mozilla::ipc::IPCResult RecvRealKeyEvent(
       const mozilla::WidgetKeyboardEvent& aEvent) override;
@@ -410,7 +410,7 @@ class BrowserChild final : public BrowserChildBase,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvPasteTransferable(
       const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
-      const IPC::Principal& aRequestingPrincipal,
+      nsIPrincipal* aRequestingPrincipal,
       const uint32_t& aContentPolicyType) override;
 
   virtual mozilla::ipc::IPCResult RecvActivateFrameEvent(
@@ -421,8 +421,7 @@ class BrowserChild final : public BrowserChildBase,
 
   virtual mozilla::ipc::IPCResult RecvAsyncMessage(
       const nsString& aMessage, InfallibleTArray<CpowEntry>&& aCpows,
-      const IPC::Principal& aPrincipal,
-      const ClonedMessageData& aData) override;
+      nsIPrincipal* aPrincipal, const ClonedMessageData& aData) override;
   virtual mozilla::ipc::IPCResult RecvSwappedWithOtherRemoteLoader(
       const IPCTabContext& aContext) override;
 

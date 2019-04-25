@@ -59,7 +59,7 @@ class NeckoChild : public PNeckoChild {
       const uint16_t& aLocalPort, const uint16_t& aBacklog,
       const bool& aUseArrayBuffers);
   bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
-  PUDPSocketChild* AllocPUDPSocketChild(const Principal& aPrincipal,
+  PUDPSocketChild* AllocPUDPSocketChild(nsIPrincipal* aPrincipal,
                                         const nsCString& aFilter);
   bool DeallocPUDPSocketChild(PUDPSocketChild*);
   PDNSRequestChild* AllocPDNSRequestChild(

@@ -272,7 +272,7 @@ bool NeckoChild::DeallocPTCPServerSocketChild(PTCPServerSocketChild* child) {
   return true;
 }
 
-PUDPSocketChild* NeckoChild::AllocPUDPSocketChild(const Principal& aPrincipal,
+PUDPSocketChild* NeckoChild::AllocPUDPSocketChild(nsIPrincipal* aPrincipal,
                                                   const nsCString& aFilter) {
   MOZ_ASSERT_UNREACHABLE("AllocPUDPSocket should not be called");
   return nullptr;

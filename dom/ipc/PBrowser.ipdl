@@ -30,7 +30,6 @@ include PTabContext;
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
-using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
@@ -133,7 +132,7 @@ nested(upto inside_cpow) sync protocol PBrowser
 
 both:
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       Principal aPrincipal, ClonedMessageData aData);
+                       nsIPrincipal aPrincipal, ClonedMessageData aData);
 
 parent:
     /**
@@ -214,11 +213,11 @@ parent:
     async Event(RemoteDOMEvent aEvent);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
-                     CpowEntry[] aCpows, Principal aPrincipal)
+                     CpowEntry[] aCpows, nsIPrincipal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     nested(inside_sync) sync RpcMessage(nsString aMessage, ClonedMessageData aData,
-                                        CpowEntry[] aCpows, Principal aPrincipal)
+                                        CpowEntry[] aCpows, nsIPrincipal aPrincipal)
       returns (StructuredCloneData[] retval);
 
     /**
@@ -440,7 +439,7 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    async IndexedDBPermissionRequest(Principal aPrincipal) returns (uint32_t permission);
+    async IndexedDBPermissionRequest(nsIPrincipal aPrincipal) returns (uint32_t permission);
 
     /**
      * window.open from inside <iframe mozbrowser> is special.  When the child
@@ -594,7 +593,7 @@ parent:
                             Shmem? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
-                            Principal principal);
+                            nsIPrincipal principal);
 
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
@@ -743,7 +742,7 @@ child:
      * don't need support RealDragEvent with input priority.
      */
     async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
-                        uint32_t aDropEffect, Principal aPrincipal);
+                        uint32_t aDropEffect, nsIPrincipal aPrincipal);
 
     async PluginEvent(WidgetPluginEvent aEvent);
 
@@ -759,7 +758,7 @@ child:
      */
     async PasteTransferable(IPCDataTransfer aDataTransfer,
                             bool aIsPrivateData,
-                            Principal aRequestingPrincipal,
+                            nsIPrincipal aRequestingPrincipal,
                             uint32_t aContentPolicyType);
 
     /**
