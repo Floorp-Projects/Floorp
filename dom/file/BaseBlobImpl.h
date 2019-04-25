@@ -86,10 +86,10 @@ class BaseBlobImpl : public BlobImpl {
 
   virtual void GetMozFullPath(nsAString& aName,
                               SystemCallerGuarantee /* unused */,
-                              ErrorResult& aRv) const override;
+                              ErrorResult& aRv) override;
 
   virtual void GetMozFullPathInternal(nsAString& aFileName,
-                                      ErrorResult& aRv) const override;
+                                      ErrorResult& aRv) override;
 
   virtual uint64_t GetSize(ErrorResult& aRv) override { return mLength; }
 

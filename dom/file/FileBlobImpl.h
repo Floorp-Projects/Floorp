@@ -37,9 +37,8 @@ class FileBlobImpl : public BaseBlobImpl {
   virtual uint64_t GetSize(ErrorResult& aRv) override;
   virtual void GetType(nsAString& aType) override;
   virtual int64_t GetLastModified(ErrorResult& aRv) override;
-  virtual void SetLastModified(int64_t aLastModified) override;
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
-                                      ErrorResult& aRv) const override;
+                                      ErrorResult& aRv) override;
   virtual void CreateInputStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 
@@ -57,6 +56,10 @@ class FileBlobImpl : public BaseBlobImpl {
 
   void SetFileId(int64_t aFileId) { mFileId = aFileId; }
 
+  void SetEmptySize() { mLength = 0; }
+
+  void SetMozFullPath(const nsAString& aPath) { mMozFullPath = aPath; }
+
  protected:
   virtual ~FileBlobImpl() = default;
 
@@ -70,8 +73,9 @@ class FileBlobImpl : public BaseBlobImpl {
                                                  ErrorResult& aRv) override;
 
   nsCOMPtr<nsIFile> mFile;
-  bool mWholeFile;
+  nsString mMozFullPath;
   int64_t mFileId;
+  bool mWholeFile;
 };
 
 }  // namespace dom
