@@ -16,6 +16,8 @@
 
 "use strict";
 
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
+
 let MOCK_STORAGE = [{
   "given-name": "John",
   "additional-name": "R",
