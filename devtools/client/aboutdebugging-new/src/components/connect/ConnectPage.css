@@ -20,6 +20,7 @@
                        "status . toggle";
   grid-template-columns: auto 1fr auto;
   grid-column-gap: calc(var(--base-unit) * 2);
+  grid-row-gap: var(--base-unit);
 }
 
 .connect-page__usb-section__heading__toggle {

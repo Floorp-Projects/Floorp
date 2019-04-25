@@ -30,11 +30,6 @@
   padding-inline-end: 0;
 }
 
-/* .sidebar-item--overflow {
-  min-height: var(--category-height);
-  height: auto;
-} */
-
 .sidebar-item__link {
   display: block;
   height: 100%;
@@ -46,7 +41,7 @@
 }
 
 .sidebar-item:not(.sidebar-item--selectable) {
-  color: var(--grey-40);
+  color: var(--grey-50);
 }
 
 .sidebar-item--selectable:hover {
