@@ -1059,6 +1059,13 @@ bitflags! {
         /// any mapping between debug display items and page content, so shouldn't
         /// be used with overlays like the picture caching or primitive display.
         const SMALL_SCREEN = 1 << 18;
+        /// Disable various bits of the WebRender pipeline, to help narrow
+        /// down where slowness might be coming from.
+        const DISABLE_OPAQUE_PASS = 1 << 19;
+        const DISABLE_ALPHA_PASS = 1 << 20;
+        const DISABLE_CLIP_MASKS = 1 << 21;
+        const DISABLE_TEXT_PRIMS = 1 << 22;
+        const DISABLE_GRADIENT_PRIMS = 1 << 23;
     }
 }
 
