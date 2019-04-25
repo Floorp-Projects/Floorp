@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/rust-lang-nursery/net2-rs.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/net2-rs)
 [![Build status](https://ci.appveyor.com/api/projects/status/ns78f02jt2uvd2lp?svg=true)](https://ci.appveyor.com/project/alexcrichton/net2-rs)
 
-[Documentation](https://doc.rust-lang.org/net2-rs/)
+[Documentation](https://docs.rs/net2/0.2.32/net2/)
 
 Extensions to the standard library's networking types, proposed in [RFC
 1158][rfc].
