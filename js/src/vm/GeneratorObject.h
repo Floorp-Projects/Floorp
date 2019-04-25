@@ -128,19 +128,18 @@ class AbstractGeneratorObject : public NativeObject {
     return getFixedSlot(RESUME_INDEX_SLOT).isUndefined();
   }
   bool isRunning() const {
-    MOZ_ASSERT(!isClosed());
-    return getFixedSlot(RESUME_INDEX_SLOT).toInt32() == RESUME_INDEX_RUNNING;
+    return getFixedSlot(RESUME_INDEX_SLOT) == Int32Value(RESUME_INDEX_RUNNING);
   }
   bool isClosing() const {
-    return getFixedSlot(RESUME_INDEX_SLOT).toInt32() == RESUME_INDEX_CLOSING;
+    return getFixedSlot(RESUME_INDEX_SLOT) == Int32Value(RESUME_INDEX_CLOSING);
   }
   bool isSuspended() const {
     // Note: also update Baseline's IsSuspendedGenerator code if this
     // changes.
-    MOZ_ASSERT(!isClosed());
     static_assert(RESUME_INDEX_CLOSING < RESUME_INDEX_RUNNING,
                   "test below should return false for RESUME_INDEX_RUNNING");
-    return getFixedSlot(RESUME_INDEX_SLOT).toInt32() < RESUME_INDEX_CLOSING;
+    Value resumeIndex = getFixedSlot(RESUME_INDEX_SLOT);
+    return resumeIndex.isInt32() && resumeIndex.toInt32() < RESUME_INDEX_CLOSING;
   }
   void setRunning() {
     MOZ_ASSERT(isSuspended());
