@@ -168,7 +168,6 @@ update {
 }
 
 #historyItems {
-  -moz-appearance: listbox;
   height: 200px;
   margin: 1px 5px 5px 5px;
 }
