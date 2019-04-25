@@ -609,10 +609,18 @@ nsresult PersistentStoragePermissionRequest::Start() {
   MOZ_ASSERT(NS_IsMainThread());
 
   PromptResult pr;
+  #ifdef MOZ_WIDGET_ANDROID
+  // on Android calling `ShowPrompt` here calls `nsContentPermissionUtils::AskPermission` 
+  // once, and a response of `PromptResult::Pending` calls it again. This results in 
+  // multiple requests for storage access, so we check the prompt prefs only to ensure we
+  // only request it once.
+  pr = CheckPromptPrefs();
+  #else
   nsresult rv = ShowPrompt(pr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  #endif
   if (pr == PromptResult::Granted) {
     return Allow(JS::UndefinedHandleValue);
   }
