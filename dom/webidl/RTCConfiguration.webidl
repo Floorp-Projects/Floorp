@@ -9,7 +9,6 @@
 
 enum RTCIceCredentialType {
     "password",
-    "token"
 };
 
 dictionary RTCIceServer {
