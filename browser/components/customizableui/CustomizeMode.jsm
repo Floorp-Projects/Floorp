@@ -1366,7 +1366,7 @@ CustomizeMode.prototype = {
       importantThemes.add(currentTheme.id);
     }
 
-    themes.sort((a, b) => importantThemes.has(b) - importantThemes.has(a));
+    themes.sort((a, b) => importantThemes.has(a.id) - importantThemes.has(b.id));
 
     if (themes.length > MAX_THEME_COUNT)
       themes.length = MAX_THEME_COUNT;
