@@ -1588,9 +1588,8 @@ option('--enable-hardening', env='MOZ_SECURITY_HARDENING',
 # possible security flags will be omitted by --disable-hardening, as many are
 # compiler-default options we do not explicitly enable.)
 @depends('--enable-hardening', '--enable-address-sanitizer',
-         '--enable-debug', '--enable-optimize', c_compiler, target)
-def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
-                              target):
+         '--enable-optimize', c_compiler, target)
+def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target):
     compiler_is_gccish = c_compiler.type in ('gcc', 'clang')
 
     flags = []
@@ -1615,29 +1614,18 @@ def security_hardening_cflags(hardening_flag, asan, debug, optimize, c_compiler,
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
         # not on as ASAN will catch the crashes for us
-        # mingw-clang cross-compile toolchain has bugs with stack protector
-        mingw_clang = c_compiler.type == 'clang' and target.os == 'WINNT'
-        if compiler_is_gccish and not mingw_clang and not asan:
-            flags.append("-fstack-protector-strong")
-            ldflags.append("-fstack-protector-strong")
-            js_flags.append("-fstack-protector-strong")
-            js_ldflags.append("-fstack-protector-strong")
-
-        # ftrivial-auto-var-init ------------------------------
-        # Initialize local variables with a 0xAA fill pattern in debug builds.
-        # mingw32-clang doesn't recognize -ftrivial-auto-var-init at this time.
-        if debug and c_compiler.version >= '8':
-            if c_compiler.type == 'clang' and not mingw_clang:
-                flags.append("-ftrivial-auto-var-init=pattern")
-                js_flags.append("-ftrivial-auto-var-init=pattern")
-            elif c_compiler.type == 'clang-cl':
-                flags.append("-clang:-ftrivial-auto-var-init=pattern")
-                js_flags.append("-clang:-ftrivial-auto-var-init=pattern")
+        if compiler_is_gccish and not asan:
+            # mingw-clang cross-compile toolchain has bugs with stack protector
+            if target.os != 'WINNT' or c_compiler == 'gcc':
+                flags.append("-fstack-protector-strong")
+                ldflags.append("-fstack-protector-strong")
+                js_flags.append("-fstack-protector-strong")
+                js_ldflags.append("-fstack-protector-strong")
 
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
         # mingw-clang build requires it to be explicitly enabled
-        if mingw_clang:
+        if target.os == 'WINNT' and c_compiler.type == 'clang':
             ldflags.append("-Wl,--dynamicbase")
             js_ldflags.append("-Wl,--dynamicbase")
 

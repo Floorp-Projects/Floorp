@@ -11,13 +11,10 @@ FORCE_STATIC_LIB = True
 UNIFIED_SOURCES += [
     '/ipc/mscom/ProcessRuntime.cpp',
     '/widget/windows/WindowsConsole.cpp',
+    'DllBlocklistWin.cpp',
     'ErrorHandler.cpp',
     'LauncherProcessWin.cpp',
     'LaunchUnelevated.cpp',
-]
-
-SOURCES += [
-    'DllBlocklistWin.cpp',
 ]
 
 OS_LIBS += [
@@ -40,12 +37,3 @@ if CONFIG['MOZ_LAUNCHER_PROCESS']:
         DEFINES[var] = '"%s"' % CONFIG[var]
 
 DisableStlWrapping()
-
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    # Disable -ftrivial-auto-var-init=pattern for DllBLocklistWin.cpp because
-    # the file's interceptions happen so early in the main process that the
-    # loader hasn't yet resolved the import of memset (used by
-    # -ftrivial-auto-var-init) from vcruntime140.dll.
-    SOURCES['DllBlocklistWin.cpp'].flags += [
-        '-clang:-ftrivial-auto-var-init=uninitialized',
-    ]
