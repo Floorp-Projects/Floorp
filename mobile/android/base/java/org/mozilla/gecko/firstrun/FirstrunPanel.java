@@ -26,6 +26,7 @@ import org.mozilla.gecko.TelemetryContract;
 public class FirstrunPanel extends Fragment {
 
     protected boolean showBrowserHint = true;
+    public static final String NO_MESSAGE = "";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
@@ -39,6 +40,13 @@ public class FirstrunPanel extends Fragment {
             ((ImageView) root.findViewById(R.id.firstrun_image)).setImageDrawable(getResources().getDrawable(image));
             ((TextView) root.findViewById(R.id.firstrun_text)).setText(message);
             ((TextView) root.findViewById(R.id.firstrun_subtext)).setText(subtext);
+
+            final TextView messageView = root.findViewById(R.id.firstrun_text);
+            if (NO_MESSAGE.equals(message)) {
+                messageView.setVisibility(View.GONE);
+            } else {
+                messageView.setText(message);
+            }
         }
 
         root.findViewById(R.id.firstrun_link).setOnClickListener(new View.OnClickListener() {
