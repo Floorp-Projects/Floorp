@@ -1143,7 +1143,7 @@ impl<'a> RawtestHarness<'a> {
         println!("\tzero height test...");
 
         let layout_size = LayoutSize::new(120.0, 0.0);
-        let window_size = FramebufferIntSize::new(layout_size.width as i32, layout_size.height as i32);
+        let window_size = DeviceIntSize::new(layout_size.width as i32, layout_size.height as i32);
         let doc_id = self.wrench.api.add_document(window_size, 1);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);

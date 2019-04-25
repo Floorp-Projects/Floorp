@@ -1033,10 +1033,11 @@ pub enum DrawTarget<'a> {
 }
 
 impl<'a> DrawTarget<'a> {
-    pub fn new_default(size: FramebufferIntSize) -> Self {
+    pub fn new_default(size: DeviceIntSize) -> Self {
+        let total_size = FramebufferIntSize::from_untyped(&size.to_untyped());
         DrawTarget::Default {
-            rect: size.into(),
-            total_size: size,
+            rect: total_size.into(),
+            total_size,
         }
     }
 

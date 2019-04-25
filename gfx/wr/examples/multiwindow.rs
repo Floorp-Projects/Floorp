@@ -97,17 +97,17 @@ impl Window {
             ..webrender::RendererOptions::default()
         };
 
-        let framebuffer_size = {
+        let device_size = {
             let size = window
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
-            FramebufferIntSize::new(size.width as i32, size.height as i32)
+            DeviceIntSize::new(size.width as i32, size.height as i32)
         };
         let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
-        let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None, framebuffer_size).unwrap();
+        let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None, device_size).unwrap();
         let api = sender.create_api();
-        let document_id = api.add_document(framebuffer_size, 0);
+        let document_id = api.add_document(device_size, 0);
 
         let epoch = Epoch(0);
         let pipeline_id = PipelineId(0, 0);
@@ -176,14 +176,14 @@ impl Window {
         }
 
         let device_pixel_ratio = self.window.get_hidpi_factor() as f32;
-        let framebuffer_size = {
+        let device_size = {
             let size = self.window
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
-            FramebufferIntSize::new(size.width as i32, size.height as i32)
+            DeviceIntSize::new(size.width as i32, size.height as i32)
         };
-        let layout_size = framebuffer_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
+        let layout_size = device_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
         let mut txn = Transaction::new();
         let mut builder = DisplayListBuilder::new(self.pipeline_id, layout_size);
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);
@@ -286,7 +286,7 @@ impl Window {
         api.send_transaction(self.document_id, txn);
 
         renderer.update();
-        renderer.render(framebuffer_size).unwrap();
+        renderer.render(device_size).unwrap();
         self.window.swap_buffers().ok();
 
         false

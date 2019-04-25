@@ -1172,7 +1172,7 @@ pub struct Frame {
     /// The origin on content produced by the render tasks.
     pub content_origin: DeviceIntPoint,
     /// The rectangle to show the frame in, on screen.
-    pub framebuffer_rect: FramebufferIntRect,
+    pub device_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
     pub layer: DocumentLayer,
     pub passes: Vec<RenderPass>,

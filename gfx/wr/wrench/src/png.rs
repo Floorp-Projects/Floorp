@@ -25,7 +25,7 @@ pub struct SaveSettings {
 pub fn save<P: Clone + AsRef<Path>>(
     path: P,
     orig_pixels: Vec<u8>,
-    size: FramebufferIntSize,
+    size: DeviceIntSize,
     settings: SaveSettings
 ) {
     let mut width = size.width as u32;
@@ -66,7 +66,7 @@ pub fn save<P: Clone + AsRef<Path>>(
 pub fn save_flipped<P: Clone + AsRef<Path>>(
     path: P,
     orig_pixels: Vec<u8>,
-    size: FramebufferIntSize,
+    size: DeviceIntSize,
 ) {
     save(path, orig_pixels, size, SaveSettings {
         flip_vertical: true,
@@ -91,8 +91,8 @@ pub fn png(
     let (fb_size, data, settings) = match surface {
         ReadSurface::Screen => {
             let dim = window.get_inner_size();
-            let data = wrench.renderer
-                .read_pixels_rgba8(dim.into());
+            let rect = FramebufferIntSize::new(dim.width, dim.height).into();
+            let data = wrench.renderer.read_pixels_rgba8(rect);
             (dim, data, SaveSettings {
                 flip_vertical: true,
                 try_crop: true,

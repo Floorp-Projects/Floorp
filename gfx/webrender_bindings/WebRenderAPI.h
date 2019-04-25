@@ -104,8 +104,7 @@ class TransactionBuilder final {
       const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
       const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  void SetDocumentView(const LayoutDeviceIntRect& aDocRect,
-                       const LayoutDeviceIntSize& aWidgetSize);
+  void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
   void UpdateScrollPosition(
       const wr::WrPipelineId& aPipelineId,

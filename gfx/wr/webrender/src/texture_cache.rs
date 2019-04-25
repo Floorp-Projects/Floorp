@@ -527,7 +527,7 @@ impl TextureCache {
         max_texture_size: i32,
         mut max_texture_layers: usize,
         picture_tile_size: Option<DeviceIntSize>,
-        initial_size: FramebufferIntSize,
+        initial_size: DeviceIntSize,
     ) -> Self {
         if cfg!(target_os = "macos") {
             // On MBP integrated Intel GPUs, texture arrays appear to be
@@ -598,7 +598,7 @@ impl TextureCache {
     /// directly from unit test code.
     #[cfg(test)]
     pub fn new_for_testing(max_texture_size: i32, max_texture_layers: usize) -> Self {
-        let mut cache = Self::new(max_texture_size, max_texture_layers, None, FramebufferIntSize::zero());
+        let mut cache = Self::new(max_texture_size, max_texture_layers, None, DeviceIntSize::zero());
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
         cache.begin_frame(now);

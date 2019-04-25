@@ -493,7 +493,7 @@ impl FrameBuilder {
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         global_device_pixel_scale: DevicePixelScale,
         layer: DocumentLayer,
-        framebuffer_origin: FramebufferIntPoint,
+        device_origin: DeviceIntPoint,
         pan: WorldPoint,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         gpu_cache_profile: &mut GpuCacheProfileCounters,
@@ -644,9 +644,9 @@ impl FrameBuilder {
 
         Frame {
             content_origin: self.output_rect.origin,
-            framebuffer_rect: FramebufferIntRect::new(
-                framebuffer_origin,
-                FramebufferIntSize::from_untyped(&self.output_rect.size.to_untyped()),
+            device_rect: DeviceIntRect::new(
+                device_origin,
+                self.output_rect.size,
             ),
             background_color: self.background_color,
             layer,
