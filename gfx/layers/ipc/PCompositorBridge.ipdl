@@ -264,7 +264,7 @@ parent:
     returns (bool isContentOnlyTDR);
 
   async BeginRecording(TimeStamp aRecordingStart);
-  sync EndRecording();
+  async EndRecording();
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
