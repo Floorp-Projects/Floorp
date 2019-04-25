@@ -186,8 +186,7 @@ FTPChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   openArgs.uploadStream() = autoStream.TakeOptionalValue();
   openArgs.loadFlags() = loadFlags;
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  GetLoadInfo(getter_AddRefs(loadInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
   rv = mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &openArgs.loadInfo());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -811,10 +810,7 @@ void FTPChannelChild::SetupNeckoTarget() {
   if (mNeckoTarget) {
     return;
   }
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  GetLoadInfo(getter_AddRefs(loadInfo));
-
+  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
   mNeckoTarget =
       nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Network);
   if (!mNeckoTarget) {

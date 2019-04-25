@@ -1248,10 +1248,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
     uint32_t loadFlags;
     rv = channel->GetLoadFlags(&loadFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_STATE(loadInfo);
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
     mContentPolicyType = loadInfo->InternalContentPolicyType();
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);

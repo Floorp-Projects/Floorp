@@ -292,9 +292,7 @@ class LoaderListener final : public nsIStreamListener,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Redirected
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
     builder->Redirected(!loadInfo->RedirectChain().IsEmpty());
 

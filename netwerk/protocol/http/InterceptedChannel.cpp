@@ -373,13 +373,9 @@ InterceptedChannelContent::GetInternalContentPolicyType(
     nsContentPolicyType* aPolicyType) {
   NS_ENSURE_ARG(aPolicyType);
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  nsresult rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
 
-  if (loadInfo) {
-    *aPolicyType = loadInfo->InternalContentPolicyType();
-  }
+  *aPolicyType = loadInfo->InternalContentPolicyType();
   return NS_OK;
 }
 

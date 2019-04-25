@@ -1884,8 +1884,7 @@ static nsresult CreateHTTPProxiedChannel(nsIChannel *channel, nsIProxyInfo *pi,
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  channel->GetLoadInfo(getter_AddRefs(loadInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
 
   return pph->NewProxiedChannel(uri, pi, 0, nullptr, loadInfo, newChannel);
 }
