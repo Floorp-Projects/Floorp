@@ -4,10 +4,13 @@
 
 <!ENTITY firstrun_panel_title_welcome "Welcome">
 <!ENTITY firstrun_urlbar_message2 "Thanks for choosing &brandShortName;">
+<!ENTITY newfirstrun_urlbar_message "Welcome to &brandShortName;">
 <!ENTITY firstrun_urlbar_subtext2 "A modern mobile browser from Mozilla, the non-profit committed to a free and open web.">
+<!ENTITY newfirstrun_urlbar_subtext "Fast, private, and on your side.">
 <!ENTITY firstrun_panel_title_privacy "Privacy">
 <!ENTITY firstrun_privacy_message "Browse like no one\'s watching">
 <!ENTITY firstrun_privacy_subtext "Private Browsing with Tracking Protection blocks trackers while you browse and won’t remember your history when you finish browsing.">
+<!ENTITY newfirstrun_privacy_subtext "Private browsing blocks ad trackers that follow you online.">
 <!ENTITY firstrun_panel_title_customize "Customize">
 <!ENTITY firstrun_customize_message "Make &brandShortName; your own.">
 <!ENTITY firstrun_customize_subtext "Customize &brandShortName; with add-ons. Block ads, add features, or choose a new theme to reflect your personality.">
@@ -20,8 +23,10 @@
 <!ENTITY firstrun_sync_title "Sync">
 <!ENTITY firstrun_sync_message2 "Pick up where you left off.">
 <!ENTITY firstrun_sync_subtext2 "Use Sync to find the bookmarks, passwords, and other things you save to &brandShortName; on all your devices.">
+<!ENTITY newfirstrun_sync_subtext "Sync the things you save on mobile to Firefox for desktop, privately and securely.">
 <!ENTITY firstrun_signin_message "Get connected, get started">
 <!ENTITY firstrun_signin_button "Sign in to Sync">
+<!ENTITY newfirstrun_signin_button "Turn on Sync">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
 <!ENTITY firstrun_button_notnow "Not right now">
 <!ENTITY firstrun_button_next "Next">
