@@ -22,13 +22,12 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
                    EmptyString(), UINT64_MAX, INT64_MAX),
       mFile(aFile),
-      mFileId(-1),
-      mWholeFile(true) {
+      mWholeFile(true),
+      mFileId(-1) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
   // Lazily get the content type and size
   mContentType.SetIsVoid(true);
-  mMozFullPath.SetIsVoid(true);
   mFile->GetLeafName(mName);
 }
 
@@ -38,11 +37,10 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
                    aLength, UINT64_MAX),
       mFile(aFile),
-      mFileId(-1),
-      mWholeFile(true) {
+      mWholeFile(true),
+      mFileId(-1) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
-  mMozFullPath.SetIsVoid(true);
 }
 
 FileBlobImpl::FileBlobImpl(const nsAString& aName,
@@ -51,11 +49,10 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
                    aLength, aLastModificationDate),
       mFile(aFile),
-      mFileId(-1),
-      mWholeFile(true) {
+      mWholeFile(true),
+      mFileId(-1) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
-  mMozFullPath.SetIsVoid(true);
 }
 
 FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
@@ -63,16 +60,14 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
                            const nsAString& aBlobImplType)
     : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, INT64_MAX),
       mFile(aFile),
-      mFileId(-1),
-      mWholeFile(true) {
+      mWholeFile(true),
+      mFileId(-1) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
   if (aContentType.IsEmpty()) {
     // Lazily get the content type and size
     mContentType.SetIsVoid(true);
   }
-
-  mMozFullPath.SetIsVoid(true);
 }
 
 FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
@@ -80,37 +75,24 @@ FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aContentType,
                    aOther->mStart + aStart, aLength),
       mFile(aOther->mFile),
-      mFileId(-1),
-      mWholeFile(false) {
+      mWholeFile(false),
+      mFileId(-1) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
   mImmutable = aOther->mImmutable;
-  mMozFullPath = aOther->mMozFullPath;
 }
 
 already_AddRefed<BlobImpl> FileBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
     ErrorResult& aRv) {
-  RefPtr<FileBlobImpl> impl =
-      new FileBlobImpl(this, aStart, aLength, aContentType);
+  RefPtr<BlobImpl> impl = new FileBlobImpl(this, aStart, aLength, aContentType);
   return impl.forget();
 }
 
 void FileBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
-                                          ErrorResult& aRv) {
+                                          ErrorResult& aRv) const {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
-
-  if (!mMozFullPath.IsVoid()) {
-    aFilename = mMozFullPath;
-    return;
-  }
-
   aRv = mFile->GetPath(aFilename);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  mMozFullPath = aFilename;
 }
 
 uint64_t FileBlobImpl::GetSize(ErrorResult& aRv) {
@@ -221,6 +203,10 @@ int64_t FileBlobImpl::GetLastModified(ErrorResult& aRv) {
   }
 
   return mLastModificationDate;
+}
+
+void FileBlobImpl::SetLastModified(int64_t aLastModified) {
+  MOZ_CRASH("SetLastModified of a real file is not allowed!");
 }
 
 const uint32_t sFileStreamFlags =

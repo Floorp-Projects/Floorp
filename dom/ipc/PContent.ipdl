@@ -203,6 +203,22 @@ union GetFilesResponseResult
   GetFilesResponseFailure;
 };
 
+struct FileCreationSuccessResult
+{
+  IPCBlob blob;
+};
+
+struct FileCreationErrorResult
+{
+  nsresult errorCode;
+};
+
+union FileCreationResult
+{
+  FileCreationSuccessResult;
+  FileCreationErrorResult;
+};
+
 struct BlobURLRegistrationData
 {
   nsCString url;
@@ -653,6 +669,8 @@ child:
 
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
+
+    async FileCreationResponse(nsID aID, FileCreationResult aResult);
 
     /**
      * Sending an activate message moves focus to the child.
@@ -1187,6 +1205,11 @@ parent:
 
      async GetFilesRequest(nsID aID, nsString aDirectory, bool aRecursiveFlag);
      async DeleteGetFilesRequest(nsID aID);
+
+     async FileCreationRequest(nsID aID, nsString aFullPath, nsString aType,
+                               nsString aName, bool lastModifiedPassed,
+                               int64_t lastModified, bool aExistenceCheck,
+                               bool aIsFromNsIFile);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
                                                 Principal principal);

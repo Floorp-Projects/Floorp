@@ -39,8 +39,8 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
+#include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/GetFilesHelper.h"
-#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LSObject.h"
@@ -55,6 +55,7 @@
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
@@ -3385,6 +3386,51 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
 
   delete aActor;
   return true;
+}
+
+void ContentChild::FileCreationRequest(nsID& aUUID, FileCreatorHelper* aHelper,
+                                       const nsAString& aFullPath,
+                                       const nsAString& aType,
+                                       const nsAString& aName,
+                                       const Optional<int64_t>& aLastModified,
+                                       bool aExistenceCheck,
+                                       bool aIsFromNsIFile) {
+  MOZ_ASSERT(aHelper);
+
+  bool lastModifiedPassed = false;
+  int64_t lastModified = 0;
+  if (aLastModified.WasPassed()) {
+    lastModifiedPassed = true;
+    lastModified = aLastModified.Value();
+  }
+
+  Unused << SendFileCreationRequest(
+      aUUID, nsString(aFullPath), nsString(aType), nsString(aName),
+      lastModifiedPassed, lastModified, aExistenceCheck, aIsFromNsIFile);
+  mFileCreationPending.Put(aUUID, aHelper);
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvFileCreationResponse(
+    const nsID& aUUID, const FileCreationResult& aResult) {
+  FileCreatorHelper* helper = mFileCreationPending.GetWeak(aUUID);
+  if (!helper) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (aResult.type() == FileCreationResult::TFileCreationErrorResult) {
+    helper->ResponseReceived(nullptr,
+                             aResult.get_FileCreationErrorResult().errorCode());
+  } else {
+    MOZ_ASSERT(aResult.type() ==
+               FileCreationResult::TFileCreationSuccessResult);
+
+    RefPtr<BlobImpl> impl = IPCBlobUtils::Deserialize(
+        aResult.get_FileCreationSuccessResult().blob());
+    helper->ResponseReceived(impl, NS_OK);
+  }
+
+  mFileCreationPending.Remove(aUUID);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvActivate(PBrowserChild* aTab) {

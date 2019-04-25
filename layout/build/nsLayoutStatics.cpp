@@ -113,8 +113,8 @@
 #include "mozilla/HTMLEditorController.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #ifdef OS_WIN
 #  include "mozilla/dom/WinWebAuthnManager.h"

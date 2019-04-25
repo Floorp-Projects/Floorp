@@ -46,7 +46,8 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
   void SetFullPath(const nsAString& aFullPath) { mFullPath = aFullPath; }
 
-  void GetMozFullPathInternal(nsAString& aFullPath, ErrorResult& aRv) override {
+  void GetMozFullPathInternal(nsAString& aFullPath,
+                              ErrorResult& aRv) const override {
     aFullPath = mFullPath;
   }
 

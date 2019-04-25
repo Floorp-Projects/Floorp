@@ -100,11 +100,13 @@ int64_t File::GetLastModified(ErrorResult& aRv) {
 }
 
 void File::GetMozFullPath(nsAString& aFilename,
-                          SystemCallerGuarantee aGuarantee, ErrorResult& aRv) {
+                          SystemCallerGuarantee aGuarantee,
+                          ErrorResult& aRv) const {
   mImpl->GetMozFullPath(aFilename, aGuarantee, aRv);
 }
 
-void File::GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) {
+void File::GetMozFullPathInternal(nsAString& aFileName,
+                                  ErrorResult& aRv) const {
   mImpl->GetMozFullPathInternal(aFileName, aRv);
 }
 
