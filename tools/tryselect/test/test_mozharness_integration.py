@@ -23,7 +23,7 @@ MOZHARNESS_SCRIPTS = {
             'cppunittest',
             'gtest',
             'geckoview-junit',
-            'jittest-chunked',
+            'jittest',
             'jsreftest',
         ],
     },

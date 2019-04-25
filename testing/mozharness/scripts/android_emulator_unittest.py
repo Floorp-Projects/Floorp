@@ -132,7 +132,10 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
-        self.test_suite = c.get('test_suite')
+        suite = c.get('test_suite')
+        if suite and '-chunked' in suite:
+            suite = suite[:suite.index('-chunked')]
+        self.test_suite = suite
         self.this_chunk = c.get('this_chunk')
         self.total_chunks = c.get('total_chunks')
         self.xre_path = None
