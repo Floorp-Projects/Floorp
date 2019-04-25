@@ -193,8 +193,7 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(
       PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
-      bool aForceNoReferrer, const nsString& aFeatures,
-      BrowserFrameOpenWindowResolver&& aResolve);
+      const nsString& aFeatures, BrowserFrameOpenWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
