@@ -53,13 +53,13 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         val view = LayoutInflater.from(parent.context).inflate(R.layout.bookmark_row, parent, false)
 
         return when (viewType) {
-            BookmarkItemViewHolder.viewType.ordinal -> BookmarkAdapter.BookmarkItemViewHolder(
+            BookmarkItemViewHolder.viewType.ordinal -> BookmarkItemViewHolder(
                 view, actionEmitter, job
             )
-            BookmarkFolderViewHolder.viewType.ordinal -> BookmarkAdapter.BookmarkFolderViewHolder(
+            BookmarkFolderViewHolder.viewType.ordinal -> BookmarkFolderViewHolder(
                 view, actionEmitter, job
             )
-            BookmarkSeparatorViewHolder.viewType.ordinal -> BookmarkAdapter.BookmarkSeparatorViewHolder(
+            BookmarkSeparatorViewHolder.viewType.ordinal -> BookmarkSeparatorViewHolder(
                 view, actionEmitter, job
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
@@ -91,17 +91,17 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
 
         when (holder) {
-            is BookmarkAdapter.BookmarkItemViewHolder -> holder.bind(
+            is BookmarkItemViewHolder -> holder.bind(
                 tree[position],
                 mode,
                 tree[position] in selected
             )
-            is BookmarkAdapter.BookmarkFolderViewHolder -> holder.bind(
+            is BookmarkFolderViewHolder -> holder.bind(
                 tree[position],
                 mode,
                 tree[position] in selected
             )
-            is BookmarkAdapter.BookmarkSeparatorViewHolder -> holder.bind(
+            is BookmarkSeparatorViewHolder -> holder.bind(
                 tree[position], mode,
                 tree[position] in selected
             )
@@ -230,7 +230,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         }
 
         companion object {
-            val viewType = BookmarkAdapter.ViewType.ITEM
+            val viewType = ViewType.ITEM
         }
     }
 
@@ -290,7 +290,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                 }
             }
 
-            if (enumValues<BookmarkRoot>().all { it.id != item.guid }) {
+            if (!item.inRoots()) {
                 bookmark_overflow.increaseTapArea(bookmarkOverflowExtraDips)
                 bookmark_overflow.setOnClickListener {
                     bookmarkItemMenu.menuBuilder.build(containerView.context).show(
@@ -298,6 +298,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                         orientation = BrowserMenu.Orientation.DOWN
                     )
                 }
+                bookmark_layout.setOnLongClickListener(null)
             } else {
                 bookmark_overflow.visibility = View.GONE
             }
@@ -319,7 +320,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             }
 
             bookmark_layout.setOnLongClickListener {
-                if (mode == BookmarkState.Mode.Normal) {
+                if (mode == BookmarkState.Mode.Normal && !item.inRoots()) {
                     if (selected) actionEmitter.onNext(BookmarkAction.Deselect(item)) else actionEmitter.onNext(
                         BookmarkAction.Select(item)
                     )
@@ -329,7 +330,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         }
 
         companion object {
-            val viewType = BookmarkAdapter.ViewType.FOLDER
+            val viewType = ViewType.FOLDER
         }
     }
 
@@ -366,7 +367,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         }
 
         companion object {
-            val viewType = BookmarkAdapter.ViewType.SEPARATOR
+            val viewType = ViewType.SEPARATOR
         }
     }
 
@@ -378,3 +379,5 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         ITEM, FOLDER, SEPARATOR
     }
 }
+
+fun BookmarkNode.inRoots() = enumValues<BookmarkRoot>().any { it.id == guid }
