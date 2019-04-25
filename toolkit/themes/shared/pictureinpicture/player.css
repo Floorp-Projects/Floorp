@@ -44,6 +44,17 @@ browser {
   min-width: 16px;
   position: absolute;
   width: 10%;
+  transition: opacity 160ms linear;
+  opacity: 0;
+}
+
+#controls:hover > .control-item {
+  opacity: 0.8;
+}
+
+#controls[showing] > .control-item,
+#controls:hover > .control-item:hover {
+  opacity: 1;
 }
 
 #close {
