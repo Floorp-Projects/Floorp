@@ -273,11 +273,17 @@
            aria-labelledby="editBookmarkPanelTitle">
       <box class="panel-header">
         <label id="editBookmarkPanelTitle"/>
+        <toolbarbutton id="editBookmarkPanelInfoButton" oncommand="StarUI.toggleRecommendation();" >
+          <image/>
+        </toolbarbutton>
       </box>
-      <html:div id="editBookmarkPanelFaviconContainer">
-        <html:img id="editBookmarkPanelFavicon"/>
+      <html:div id="editBookmarkPanelInfoArea">
+        <html:div id="editBookmarkPanelRecommendation"></html:div>
+        <html:div id="editBookmarkPanelFaviconContainer">
+          <html:img id="editBookmarkPanelFavicon"/>
+        </html:div>
+        <html:div id="editBookmarkPanelImage"></html:div>
       </html:div>
-      <box id="editBookmarkPanelImage"/>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
       <vbox id="editBookmarkPanelBottomContent"
             flex="1">
