@@ -2250,7 +2250,8 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend) {
   nsIFrame* frame = nullptr;
   if (!aExtend) {
-    frame = do_QueryFrame(GetScrollableFrameToScroll(nsIPresShell::eVertical));
+    frame = do_QueryFrame(
+        GetScrollableFrameToScroll(ScrollableDirection::Vertical));
     // If there is no scrollable frame, get the frame to move caret instead.
   }
   if (!frame) {
@@ -2273,7 +2274,7 @@ PresShell::PageMove(bool aForward, bool aExtend) {
 NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(nsIPresShell::eVertical);
+      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::PAGES, ScrollMode::eSmooth,
@@ -2286,7 +2287,7 @@ PresShell::ScrollPage(bool aForward) {
 NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(nsIPresShell::eVertical);
+      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
     int32_t lineCount =
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
@@ -2302,7 +2303,7 @@ PresShell::ScrollLine(bool aForward) {
 NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(nsIPresShell::eHorizontal);
+      GetScrollableFrameToScroll(ScrollableDirection::Horizontal);
   if (scrollFrame) {
     int32_t h =
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
@@ -2318,7 +2319,7 @@ PresShell::ScrollCharacter(bool aRight) {
 NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
-      GetScrollableFrameToScroll(nsIPresShell::eVertical);
+      GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                           nsIScrollableFrame::WHOLE, ScrollMode::eSmooth,
@@ -2768,18 +2769,19 @@ already_AddRefed<nsIContent> nsIPresShell::GetSelectedContentForScrolling()
 }
 
 nsIScrollableFrame* nsIPresShell::GetNearestScrollableFrame(
-    nsIFrame* aFrame, nsIPresShell::ScrollDirection aDirection) {
-  if (aDirection == nsIPresShell::eEither) {
+    nsIFrame* aFrame, ScrollableDirection aDirection) {
+  if (aDirection == ScrollableDirection::Either) {
     return nsLayoutUtils::GetNearestScrollableFrame(aFrame);
   }
 
   return nsLayoutUtils::GetNearestScrollableFrameForDirection(
-      aFrame, aDirection == eVertical ? nsLayoutUtils::eVertical
-                                      : nsLayoutUtils::eHorizontal);
+      aFrame, aDirection == ScrollableDirection::Vertical
+                  ? nsLayoutUtils::eVertical
+                  : nsLayoutUtils::eHorizontal);
 }
 
 nsIScrollableFrame* nsIPresShell::GetScrollableFrameToScrollForContent(
-    nsIContent* aContent, nsIPresShell::ScrollDirection aDirection) {
+    nsIContent* aContent, ScrollableDirection aDirection) {
   nsIScrollableFrame* scrollFrame = nullptr;
   if (aContent) {
     nsIFrame* startFrame = aContent->GetPrimaryFrame();
@@ -2803,7 +2805,7 @@ nsIScrollableFrame* nsIPresShell::GetScrollableFrameToScrollForContent(
 }
 
 nsIScrollableFrame* nsIPresShell::GetScrollableFrameToScroll(
-    nsIPresShell::ScrollDirection aDirection) {
+    ScrollableDirection aDirection) {
   nsCOMPtr<nsIContent> content = GetContentForScrolling();
   return GetScrollableFrameToScrollForContent(content.get(), aDirection);
 }
@@ -3665,7 +3667,7 @@ void PresShell::ScheduleViewManagerFlush(PaintType aType) {
     return;
   }
 
-  if (aType == PAINT_DELAYED_COMPRESS) {
+  if (aType == PaintType::DelayedCompress) {
     // Delay paint for 1 second.
     static const uint32_t kPaintDelayPeriod = 1000;
     if (!mDelayedPaintTimer) {
@@ -4421,10 +4423,12 @@ void PresShell::ReconstructFrames() {
       nsCSSFrameConstructor::InsertionKind::Sync);
 }
 
-nsresult PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
+nsresult PresShell::RenderDocument(const nsRect& aRect,
+                                   RenderDocumentFlags aFlags,
                                    nscolor aBackgroundColor,
                                    gfxContext* aThebesContext) {
-  NS_ENSURE_TRUE(!(aFlags & RENDER_IS_UNTRUSTED), NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE(!(aFlags & RenderDocumentFlags::IsUntrusted),
+                 NS_ERROR_NOT_IMPLEMENTED);
 
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (rootPresContext) {
@@ -4482,10 +4486,10 @@ nsresult PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   if (aThebesContext->CurrentMatrix().HasNonIntegerTranslation()) {
     flags |= PaintFrameFlags::PAINT_IN_TRANSFORM;
   }
-  if (!(aFlags & RENDER_ASYNC_DECODE_IMAGES)) {
+  if (!(aFlags & RenderDocumentFlags::AsyncDecodeImages)) {
     flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
-  if (aFlags & RENDER_USE_WIDGET_LAYERS) {
+  if (aFlags & RenderDocumentFlags::UseWidgetLayers) {
     // We only support using widget layers on display root's with widgets.
     nsView* view = rootFrame->GetView();
     if (view && view->GetWidget() &&
@@ -4499,20 +4503,20 @@ nsresult PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
       }
     }
   }
-  if (!(aFlags & RENDER_CARET)) {
+  if (!(aFlags & RenderDocumentFlags::DrawCaret)) {
     wouldFlushRetainedLayers = true;
     flags |= PaintFrameFlags::PAINT_HIDE_CARET;
   }
-  if (aFlags & RENDER_IGNORE_VIEWPORT_SCROLLING) {
+  if (aFlags & RenderDocumentFlags::IgnoreViewportScrolling) {
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
     mRenderFlags =
         ChangeFlag(mRenderFlags, true, STATE_IGNORING_VIEWPORT_SCROLLING);
   }
-  if (aFlags & RENDER_DRAWWINDOW_NOT_FLUSHING) {
+  if (aFlags & RenderDocumentFlags::DrawWindowNotFlushing) {
     mRenderFlags =
         ChangeFlag(mRenderFlags, true, STATE_DRAWWINDOW_NOT_FLUSHING);
   }
-  if (aFlags & RENDER_DOCUMENT_RELATIVE) {
+  if (aFlags & RenderDocumentFlags::DocumentRelative) {
     // XXX be smarter about this ... drawWindow might want a rect
     // that's "pretty close" to what our retained layer tree covers.
     // In that case, it wouldn't disturb normal rendering too much,
@@ -4762,7 +4766,7 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     const nsTArray<UniquePtr<RangePaintInfo>>& aItems, Selection* aSelection,
     const Maybe<CSSIntRegion>& aRegion, nsRect aArea,
     const LayoutDeviceIntPoint aPoint, LayoutDeviceIntRect* aScreenRect,
-    uint32_t aFlags) {
+    RenderImageFlags aFlags) {
   nsPresContext* pc = GetPresContext();
   if (!pc || aArea.width == 0 || aArea.height == 0) return nullptr;
 
@@ -4779,11 +4783,11 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
   pc->DeviceContext()->GetClientRect(maxSize);
 
   // check if the image should be resized
-  bool resize = aFlags & RENDER_AUTO_SCALE;
+  bool resize = !!(aFlags & RenderImageFlags::AutoScale);
 
   if (resize) {
     // check if image-resizing-algorithm should be used
-    if (aFlags & RENDER_IS_IMAGE) {
+    if (aFlags & RenderImageFlags::IsImage) {
       // get max screensize
       nscoord maxWidth = pc->AppUnitsToDevPixels(maxSize.width);
       nscoord maxHeight = pc->AppUnitsToDevPixels(maxSize.height);
@@ -4909,7 +4913,7 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
 already_AddRefed<SourceSurface> PresShell::RenderNode(
     nsINode* aNode, const Maybe<CSSIntRegion>& aRegion,
     const LayoutDeviceIntPoint aPoint, LayoutDeviceIntRect* aScreenRect,
-    uint32_t aFlags) {
+    RenderImageFlags aFlags) {
   // area will hold the size of the surface needed to draw the node, measured
   // from the root frame.
   nsRect area;
@@ -4955,7 +4959,7 @@ already_AddRefed<SourceSurface> PresShell::RenderNode(
 
 already_AddRefed<SourceSurface> PresShell::RenderSelection(
     Selection* aSelection, const LayoutDeviceIntPoint aPoint,
-    LayoutDeviceIntRect* aScreenRect, uint32_t aFlags) {
+    LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags) {
   // area will hold the size of the surface needed to draw the selection,
   // measured from the root frame.
   nsRect area;
@@ -5017,7 +5021,8 @@ static bool AddCanvasBackgroundColor(const nsDisplayList& aList,
 
 void PresShell::AddCanvasBackgroundColorItem(
     nsDisplayListBuilder& aBuilder, nsDisplayList& aList, nsIFrame* aFrame,
-    const nsRect& aBounds, nscolor aBackstopColor, uint32_t aFlags) {
+    const nsRect& aBounds, nscolor aBackstopColor,
+    AddCanvasBackgroundColorFlags aFlags) {
   if (aBounds.IsEmpty()) {
     return;
   }
@@ -5027,7 +5032,7 @@ void PresShell::AddCanvasBackgroundColorItem(
   // (sub)tree we are painting is a canvas frame that should cover us in all
   // cases (it will usually be a viewport frame when we have a canvas frame in
   // the (sub)tree).
-  if (!(aFlags & nsIPresShell::FORCE_DRAW) &&
+  if (!(aFlags & AddCanvasBackgroundColorFlags::ForceDraw) &&
       !nsCSSRendering::IsCanvasFrame(aFrame)) {
     return;
   }
@@ -5041,7 +5046,8 @@ void PresShell::AddCanvasBackgroundColorItem(
   // by making nsDisplayCanvasBackground paint it.
   // If we're only adding an unscrolled item, then pretend that we've
   // already done it.
-  bool addedScrollingBackgroundColor = (aFlags & APPEND_UNSCROLLED_ONLY);
+  bool addedScrollingBackgroundColor =
+      !!(aFlags & AddCanvasBackgroundColorFlags::AppendUnscrolledOnly);
   if (!aFrame->GetParent() && !addedScrollingBackgroundColor) {
     nsIScrollableFrame* sf =
         aFrame->PresShell()->GetRootScrollFrameAsScrollable();
@@ -5061,7 +5067,7 @@ void PresShell::AddCanvasBackgroundColorItem(
   // We can only do that if the color is opaque.
   bool forceUnscrolledItem =
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
-  if ((aFlags & ADD_FOR_SUBDOC) &&
+  if ((aFlags & AddCanvasBackgroundColorFlags::AddForSubDocument) &&
       gfxPrefs::LayoutUseContainersForRootFrames()) {
     // If we're using ContainerLayers for a subdoc, then any items we add here
     // will still be scrolled (since we're inside the container at this point),
@@ -5191,7 +5197,7 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore) {
 }
 
 nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
-                                            ChangeOrigin aOrigin) {
+                                            ResolutionChangeOrigin aOrigin) {
   if (!(aResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -5205,7 +5211,7 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
   if (mMobileViewportManager) {
     mMobileViewportManager->ResolutionUpdated();
   }
-  if (aOrigin == ChangeOrigin::eApz) {
+  if (aOrigin == ResolutionChangeOrigin::Apz) {
     mResolutionUpdatedByApz = true;
   } else {
     mResolutionUpdated = true;
@@ -5895,21 +5901,21 @@ void PresShell::RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) {
 
 class nsAutoNotifyDidPaint {
  public:
-  nsAutoNotifyDidPaint(PresShell* aShell, uint32_t aFlags)
+  nsAutoNotifyDidPaint(PresShell* aShell, PaintFlags aFlags)
       : mShell(aShell), mFlags(aFlags) {}
   ~nsAutoNotifyDidPaint() {
-    if (mFlags & nsIPresShell::PAINT_COMPOSITE) {
+    if (!!(mFlags & PaintFlags::PaintComposite)) {
       mShell->GetPresContext()->NotifyDidPaintForSubtree();
     }
   }
 
  private:
   PresShell* mShell;
-  uint32_t mFlags;
+  PaintFlags mFlags;
 };
 
 void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-                      uint32_t aFlags) {
+                      PaintFlags aFlags) {
   nsCString url;
   nsIURI* uri = mDocument->GetDocumentURI();
   Document* contentRoot = GetPrimaryContentDocument();
@@ -5927,7 +5933,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   // assert there. However, we don't rely on this assertion on Android because
   // we don't paint while JS is running.
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (!(aFlags & nsIPresShell::PAINT_COMPOSITE)) {
+  if (!(aFlags & PaintFlags::PaintComposite)) {
     // We need to allow content JS when the flag is set since we may trigger
     // MozAfterPaint events in content in those cases.
     nojs.emplace(dom::danger::GetJSContext());
@@ -5987,14 +5993,14 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
     // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
     // that will cause us to forget to update the real layer manager!
 
-    if (!(aFlags & PAINT_LAYERS)) {
+    if (!(aFlags & PaintFlags::PaintLayers)) {
       if (layerManager->EndEmptyTransaction()) {
         return;
       }
       NS_WARNING("Must complete empty transaction when compositing!");
     }
 
-    if (!(aFlags & PAINT_SYNC_DECODE_IMAGES) &&
+    if (!(aFlags & PaintFlags::PaintSyncDecodeImages) &&
         !(frame->GetStateBits() & NS_FRAME_UPDATE_LAYER_TREE) &&
         !mNextPaintCompressed) {
       NotifySubDocInvalidationFunc computeInvalidFunc =
@@ -6016,8 +6022,9 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
       MaybeSetupTransactionIdAllocator(layerManager, presContext);
 
       if (layerManager->EndEmptyTransaction(
-              (aFlags & PAINT_COMPOSITE) ? LayerManager::END_DEFAULT
-                                         : LayerManager::END_NO_COMPOSITE)) {
+              (aFlags & PaintFlags::PaintComposite)
+                  ? LayerManager::END_DEFAULT
+                  : LayerManager::END_NO_COMPOSITE)) {
         nsIntRegion invalid;
         bool areaOverflowed = false;
         if (props) {
@@ -6059,10 +6066,10 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
   PaintFrameFlags flags = PaintFrameFlags::PAINT_WIDGET_LAYERS |
                           PaintFrameFlags::PAINT_EXISTING_TRANSACTION;
-  if (!(aFlags & PAINT_COMPOSITE)) {
+  if (!(aFlags & PaintFlags::PaintComposite)) {
     flags |= PaintFrameFlags::PAINT_NO_COMPOSITE;
   }
-  if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
+  if (aFlags & PaintFlags::PaintSyncDecodeImages) {
     flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
   }
   if (mNextPaintCompressed) {
@@ -6115,7 +6122,7 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   }
   MaybeSetupTransactionIdAllocator(layerManager, presContext);
   layerManager->EndTransaction(nullptr, nullptr,
-                               (aFlags & PAINT_COMPOSITE)
+                               (aFlags & PaintFlags::PaintComposite)
                                    ? LayerManager::END_DEFAULT
                                    : LayerManager::END_NO_COMPOSITE);
 }

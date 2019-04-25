@@ -6489,7 +6489,7 @@ void ScrollFrameHelper::RestoreState(PresState* aState) {
 
   if (mIsRoot) {
     mOuter->PresShell()->SetResolutionAndScaleTo(
-        aState->resolution(), nsIPresShell::ChangeOrigin::eMainThread);
+        aState->resolution(), ResolutionChangeOrigin::MainThread);
   }
 }
 

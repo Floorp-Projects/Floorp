@@ -385,9 +385,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * aDirection is eEither.  Otherwise, this returns a nearest frame that is
    * scrollable in the specified direction.
    */
-  enum ScrollDirection { eHorizontal, eVertical, eEither };
   nsIScrollableFrame* GetScrollableFrameToScrollForContent(
-      nsIContent* aContent, ScrollDirection aDirection);
+      nsIContent* aContent, mozilla::ScrollableDirection aDirection);
 
   /**
    * Gets nearest scrollable frame from current focused content or DOM
@@ -396,7 +395,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * eEither.  Otherwise, this returns a nearest frame that is scrollable in
    * the specified direction.
    */
-  nsIScrollableFrame* GetScrollableFrameToScroll(ScrollDirection aDirection);
+  nsIScrollableFrame* GetScrollableFrameToScroll(
+      mozilla::ScrollableDirection aDirection);
 
   /**
    * Gets nearest ancestor scrollable frame from aFrame.  The frame is
@@ -404,8 +404,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * aDirection is eEither.  Otherwise, this returns a nearest frame that is
    * scrollable in the specified direction.
    */
-  nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame,
-                                                ScrollDirection aDirection);
+  nsIScrollableFrame* GetNearestScrollableFrame(
+      nsIFrame* aFrame, mozilla::ScrollableDirection aDirection);
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
@@ -984,48 +984,39 @@ class nsIPresShell : public nsStubDocumentObserver {
    * or in the root scrolled frame's coordinate system
    * (if aIgnoreViewportScrolling is true). The coordinates are in appunits.
    * @param aFlags see below;
-   *   set RENDER_IS_UNTRUSTED if the contents may be passed to malicious
-   * agents. E.g. we might choose not to paint the contents of sensitive widgets
-   * such as the file name in a file upload widget, and we might choose not
-   * to paint themes.
-   *   set RENDER_IGNORE_VIEWPORT_SCROLLING to ignore
-   * clipping and scrollbar painting due to scrolling in the viewport
-   *   set RENDER_CARET to draw the caret if one would be visible
-   * (by default the caret is never drawn)
-   *   set RENDER_USE_LAYER_MANAGER to force rendering to go through
-   * the layer manager for the window. This may be unexpectedly slow
+   *   set RenderDocumentFlags::IsUntrusted if the contents may be passed to
+   * malicious agents. E.g. we might choose not to paint the contents of
+   * sensitive widgets such as the file name in a file upload widget, and we
+   * might choose not to paint themes.
+   *   set RenderDocumentFlags::IgnoreViewportScrolling to ignore clipping and
+   *  scrollbar painting due to scrolling in the viewport
+   *   set RenderDocumentFlags::DrawCaret to draw the caret if one would be
+   *  visible (by default the caret is never drawn)
+   *   set RenderDocumentFlags::UseWidgetLayers to force rendering to go
+   *  through the layer manager for the window. This may be unexpectedly slow
    * (if the layer manager must read back data from the GPU) or low-quality
    * (if the layer manager reads back pixel data and scales it
    * instead of rendering using the appropriate scaling). It may also
    * slow everything down if the area rendered does not correspond to the
    * normal visible area of the window.
-   *   set RENDER_ASYNC_DECODE_IMAGES to avoid having images synchronously
-   * decoded during rendering.
+   *   set RenderDocumentFlags::AsyncDecodeImages to avoid having images
+   * synchronously decoded during rendering.
    * (by default images decode synchronously with RenderDocument)
-   *   set RENDER_DOCUMENT_RELATIVE to render the document as if there has been
-   * no scrolling and interpret |aRect| relative to the document instead of the
-   * CSS viewport. Only considered if RENDER_IGNORE_VIEWPORT_SCROLLING is set
-   * or the document is in ignore viewport scrolling mode
+   *   set RenderDocumentFlags::DocumentRelative to render the document as if
+   * there has been no scrolling and interpret |aRect| relative to the document
+   * instead of the CSS viewport. Only considered if
+   * RenderDocumentFlags::IgnoreViewportScrolling is set or the document is in
+   * ignore viewport scrolling mode
    * (nsIPresShell::SetIgnoreViewportScrolling/IgnoringViewportScrolling).
    * @param aBackgroundColor a background color to render onto
    * @param aRenderedContext the gfxContext to render to. We render so that
    * one CSS pixel in the source document is rendered to one unit in the current
    * transform.
    */
-  enum {
-    RENDER_IS_UNTRUSTED = 0x01,
-    RENDER_IGNORE_VIEWPORT_SCROLLING = 0x02,
-    RENDER_CARET = 0x04,
-    RENDER_USE_WIDGET_LAYERS = 0x08,
-    RENDER_ASYNC_DECODE_IMAGES = 0x10,
-    RENDER_DOCUMENT_RELATIVE = 0x20,
-    RENDER_DRAWWINDOW_NOT_FLUSHING = 0x40
-  };
-  virtual nsresult RenderDocument(const nsRect& aRect, uint32_t aFlags,
+  virtual nsresult RenderDocument(const nsRect& aRect,
+                                  mozilla::RenderDocumentFlags aFlags,
                                   nscolor aBackgroundColor,
                                   gfxContext* aRenderedContext) = 0;
-
-  enum { RENDER_IS_IMAGE = 0x100, RENDER_AUTO_SCALE = 0x80 };
 
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used
@@ -1036,7 +1027,8 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual already_AddRefed<mozilla::gfx::SourceSurface> RenderNode(
       nsINode* aNode, const mozilla::Maybe<mozilla::CSSIntRegion>& aRegion,
       const mozilla::LayoutDeviceIntPoint aPoint,
-      mozilla::LayoutDeviceIntRect* aScreenRect, uint32_t aFlags) = 0;
+      mozilla::LayoutDeviceIntRect* aScreenRect,
+      mozilla::RenderImageFlags aFlags) = 0;
 
   /**
    * Renders a selection to a surface and returns it. This method is primarily
@@ -1045,8 +1037,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * aScreenRect will be filled in with the bounding rectangle of the
    * selection area on screen.
    *
-   * If the area of the selection is large and the RENDER_AUTO_SCALE flag is
-   * set, the image will be scaled down. The argument aPoint is used in this
+   * If the area of the selection is large and the RenderImageFlags::AutoScale
+   * is set, the image will be scaled down. The argument aPoint is used in this
    * case as a reference point when determining the new screen rectangle after
    * scaling. Typically, this will be the mouse position, so that the screen
    * rectangle is positioned such that the mouse is over the same point in the
@@ -1057,7 +1049,8 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual already_AddRefed<mozilla::gfx::SourceSurface> RenderSelection(
       mozilla::dom::Selection* aSelection,
       const mozilla::LayoutDeviceIntPoint aPoint,
-      mozilla::LayoutDeviceIntRect* aScreenRect, uint32_t aFlags) = 0;
+      mozilla::LayoutDeviceIntRect* aScreenRect,
+      mozilla::RenderImageFlags aFlags) = 0;
 
   void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame);
   void AddWeakFrame(WeakFrame* aWeakFrame);
@@ -1093,36 +1086,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    * color of the most recently drawn canvas.
    */
   virtual void UpdateCanvasBackground() = 0;
-
-  /**
-   * Add a solid color item to the bottom of aList with frame aFrame and bounds
-   * aBounds. Checks first if this needs to be done by checking if aFrame is a
-   * canvas frame (if the FORCE_DRAW flag is passed then this check is skipped).
-   * aBackstopColor is composed behind the background color of the canvas, it is
-   * transparent by default.
-   *
-   * We attempt to make the background color part of the scrolled canvas (to
-   * reduce transparent layers), and if async scrolling is enabled (and the
-   * background is opaque) then we add a second, unscrolled item to handle the
-   * checkerboarding case.
-   *
-   * ADD_FOR_SUBDOC should be specified when calling this for a subdocument, and
-   * LayoutUseContainersForRootFrame might cause the whole list to be scrolled.
-   * In that case the second unscrolled item will be elided.
-   *
-   * APPEND_UNSCROLLED_ONLY only attempts to add the unscrolled item, so that
-   * we can add it manually after LayoutUseContainersForRootFrame has built the
-   * scrolling ContainerLayer.
-   */
-  enum {
-    FORCE_DRAW = 0x01,
-    ADD_FOR_SUBDOC = 0x02,
-    APPEND_UNSCROLLED_ONLY = 0x04,
-  };
-  virtual void AddCanvasBackgroundColorItem(
-      nsDisplayListBuilder& aBuilder, nsDisplayList& aList, nsIFrame* aFrame,
-      const nsRect& aBounds, nscolor aBackstopColor = NS_RGBA(0, 0, 0, 0),
-      uint32_t aFlags = 0) = 0;
 
   /**
    * Add a solid color item to the bottom of aList with frame aFrame and
@@ -1221,29 +1184,6 @@ class nsIPresShell : public nsStubDocumentObserver {
     return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING;
   }
 
-  /**
-   * Set a "resolution" for the document, which if not 1.0 will
-   * allocate more or fewer pixels for rescalable content by a factor
-   * of |resolution| in both dimensions.  Return NS_OK iff the
-   * resolution bounds are sane, and the resolution of this was
-   * actually updated.
-   *
-   * Also increase the scale of the content by the same amount
-   * (that's the "AndScaleTo" part).
-   *
-   * The resolution defaults to 1.0.
-   *
-   * |aOrigin| specifies who originated the resolution change. For changes
-   * sent by APZ, pass ChangeOrigin::eApz. For changes sent by the main thread,
-   * use pass ChangeOrigin::eMainThread (similar to the |aOrigin| parameter of
-   * nsIScrollableFrame::ScrollToCSSPixels()).
-   */
-  enum class ChangeOrigin : uint8_t {
-    eApz,
-    eMainThread,
-  };
-  virtual nsresult SetResolutionAndScaleTo(float aResolution,
-                                           ChangeOrigin aOrigin) = 0;
   float GetResolution() const { return mResolution.valueOr(1.0); }
   virtual float GetCumulativeResolution() = 0;
 
@@ -1299,18 +1239,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
-  enum PaintFlags {
-    /* Update the layer tree and paint PaintedLayers. If this is not specified,
-     * we may still have to do it if the layer tree lost PaintedLayer contents
-     * we need for compositing. */
-    PAINT_LAYERS = 0x01,
-    /* Composite layers to the window. */
-    PAINT_COMPOSITE = 0x02,
-    /* Sync-decode images. */
-    PAINT_SYNC_DECODE_IMAGES = 0x04
-  };
-  virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-                     uint32_t aFlags) = 0;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleEvent(nsIFrame* aFrame,
                                mozilla::WidgetGUIEvent* aEvent,
@@ -1318,28 +1246,18 @@ class nsIPresShell : public nsStubDocumentObserver {
                                nsEventStatus* aEventStatus) = 0;
   virtual bool ShouldIgnoreInvalidation() = 0;
   /**
-   * Notify that we're going to call Paint with PAINT_COMPOSITE.
+   * Notify that we're going to call Paint with PaintFlags::PaintComposite.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
   virtual void WillPaintWindow() = 0;
   /**
-   * Notify that we called Paint with PAINT_COMPOSITE.
+   * Notify that we called Paint with PaintFlags::PaintComposite.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
    */
   virtual void DidPaintWindow() = 0;
 
-  /**
-   * Ensures that the refresh driver is running, and schedules a view
-   * manager flush on the next tick.
-   *
-   * @param aType PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after
-   * a delay, and put FrameLayerBuilder in 'compressed' mode that avoids short
-   * cut optimizations.
-   */
-  enum PaintType { PAINT_DEFAULT, PAINT_DELAYED_COMPRESS };
-  virtual void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) = 0;
   virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
   MOZ_CAN_RUN_SCRIPT

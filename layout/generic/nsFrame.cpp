@@ -6863,9 +6863,8 @@ static void SchedulePaintInternal(
   }
 
   pres->PresShell()->ScheduleViewManagerFlush(
-      aType == nsIFrame::PAINT_DELAYED_COMPRESS
-          ? nsIPresShell::PAINT_DELAYED_COMPRESS
-          : nsIPresShell::PAINT_DEFAULT);
+      aType == nsIFrame::PAINT_DELAYED_COMPRESS ? PaintType::DelayedCompress
+                                                : PaintType::Default);
 
   if (aType == nsIFrame::PAINT_DELAYED_COMPRESS) {
     return;

@@ -10511,8 +10511,8 @@ void Document::CleanupFullscreenState() {
   // Restore the zoom level that was in place prior to entering fullscreen.
   if (PresShell* presShell = GetPresShell()) {
     if (presShell->GetMobileViewportManager()) {
-      presShell->SetResolutionAndScaleTo(
-          mSavedResolution, nsIPresShell::ChangeOrigin::eMainThread);
+      presShell->SetResolutionAndScaleTo(mSavedResolution,
+                                         ResolutionChangeOrigin::MainThread);
     }
   }
 
@@ -10910,7 +10910,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
         child->mSavedResolution = presShell->GetResolution();
         presShell->SetResolutionAndScaleTo(
             manager->ComputeIntrinsicResolution(),
-            nsIPresShell::ChangeOrigin::eMainThread);
+            ResolutionChangeOrigin::MainThread);
       }
     }
 
