@@ -25,11 +25,6 @@
   height: calc(var(--base-unit) * 9);
 }
 
-.sidebar-item--full-width {
-  padding-inline-start: 0;
-  padding-inline-end: 0;
-}
-
 .sidebar-item__link {
   display: block;
   height: 100%;

@@ -84,6 +84,11 @@ const DEBUG_TARGET_PANE = {
   TEMPORARY_EXTENSION: "temporaryExtension",
 };
 
+const ICON_LABEL_LEVEL = {
+  INFO: "info",
+  OK: "ok",
+};
+
 const MESSAGE_LEVEL = {
   ERROR: "error",
   INFO: "info",
@@ -139,6 +144,7 @@ const USB_STATES = {
 module.exports = Object.assign({}, {
   DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
+  ICON_LABEL_LEVEL,
   MESSAGE_LEVEL,
   PAGE_TYPES,
   PREFERENCES,
