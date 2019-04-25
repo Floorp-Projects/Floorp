@@ -981,6 +981,11 @@ pref("gfx.webrender.dl.dump-parent", false);
 pref("gfx.webrender.dl.dump-content", false);
 pref("gfx.webrender.picture-caching", true);
 pref("gfx.webrender.split-render-roots", false);
+#ifdef NIGHTLY_BUILD
+// Keep this pref hidden on non-nightly builds to avoid people accidentally
+// turning it on
+pref("gfx.webrender.start-debug-server", false);
+#endif
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
