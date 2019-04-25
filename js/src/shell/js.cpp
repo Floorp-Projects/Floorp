@@ -10542,7 +10542,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   reportWarnings = op.getBoolOption('w');
   compileOnly = op.getBoolOption('c');
   printTiming = op.getBoolOption('b');
-  enableCodeCoverage = op.getBoolOption("code-coverage");
   enableDisassemblyDumps = op.getBoolOption('D');
   cx->runtime()->profilingScripts =
       enableCodeCoverage || enableDisassemblyDumps;
@@ -11226,6 +11225,11 @@ int main(int argc, char** argv, char** envp) {
 
   if (op.getBoolOption("no-threads")) {
     js::DisableExtraThreads();
+  }
+
+  enableCodeCoverage = op.getBoolOption("code-coverage");
+  if (enableCodeCoverage) {
+    coverage::EnableLCov();
   }
 
   AutoLibraryLoader loader;
