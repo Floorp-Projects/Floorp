@@ -736,7 +736,7 @@ class Output(object):
 
     def output(self, test_names):
         """output to file and perfherder data json """
-        if os.environ['MOZ_UPLOAD_DIR']:
+        if os.getenv('MOZ_UPLOAD_DIR'):
             # i.e. testing/mozharness/build/raptor.json locally; in production it will
             # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
             # and made into a tc artifact accessible in treeherder as perfherder-data.json)

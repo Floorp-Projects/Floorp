@@ -21,36 +21,19 @@
 ** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
-function generateTest(extensionTypeName, extensionName, pixelType, prologue) {
+function testTexLinear(gl, extensionName, internalFormatWebgl2, pixelType) {
     var wtu = WebGLTestUtils;
-    var gl = null;
-    var successfullyParsed = false;
 
-    var init = function()
-    {
-        description("This test verifies the functionality of the " + extensionName + " extension, if it is available.");
+    // Before the extension is enabled
+    var extensionEnabled = false;
+    runTestSuite(extensionEnabled);
 
-        var canvas = document.getElementById("canvas");
-        gl = wtu.create3DContext(canvas);
-
-        if (!prologue(gl, extensionTypeName)) {
-            finishTest();
-            return;
-        }
-
-        // Before the extension is enabled
-        var extensionEnabled = false;
+    if (!gl.getExtension(extensionName))
+        testPassed("No " + extensionName + " support -- this is legal");
+    else {
+        // After the extension is enabled
+        extensionEnabled = true;
         runTestSuite(extensionEnabled);
-
-        if (!gl.getExtension(extensionName))
-            testPassed("No " + extensionName + " support -- this is legal");
-        else {
-            // After the extension is enabled
-            extensionEnabled = true;
-            runTestSuite(extensionEnabled);
-        }
-
-        finishTest();
     }
 
     function runTestSuite(extensionEnabled)
@@ -110,7 +93,11 @@ function generateTest(extensionTypeName, extensionName, pixelType, prologue) {
 
     function runEachTest(textureTarget, magFilter, minFilter, linear, extensionEnabled, expected)
     {
-        var format = gl.RGBA;
+        const format = gl.RGBA;
+        let internalFormat = format;
+        if (gl instanceof WebGL2RenderingContext) {
+            internalFormat = gl[internalFormatWebgl2];
+        }
         var numberOfChannels = 4;
         debug("");
         debug("testing target: " + wtu.glEnumToString(gl,textureTarget) +
@@ -139,7 +126,7 @@ function generateTest(extensionTypeName, extensionName, pixelType, prologue) {
         gl.texParameteri(textureTarget, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         if (textureTarget == gl.TEXTURE_2D) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, format, format, gl[pixelType], canvas2d);
+            gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, format, gl[pixelType], canvas2d);
             if (minFilter != gl.NEAREST && minFilter != gl.LINEAR) {
                 wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors during texture setup");
                 gl.generateMipmap(gl.TEXTURE_2D);
@@ -157,7 +144,7 @@ function generateTest(extensionTypeName, extensionName, pixelType, prologue) {
                 gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
                 gl.TEXTURE_CUBE_MAP_NEGATIVE_Z];
                 for (var tt = 0; tt < targets.length; ++tt)
-                    gl.texImage2D(targets[tt], 0, format, format, gl[pixelType], canvas2d);
+                    gl.texImage2D(targets[tt], 0, internalFormat, format, gl[pixelType], canvas2d);
                 if (minFilter != gl.NEAREST && minFilter != gl.LINEAR) {
                     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors during texture setup");
                     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
@@ -169,15 +156,13 @@ function generateTest(extensionTypeName, extensionName, pixelType, prologue) {
         }
         wtu.clearAndDrawUnitQuad(gl);
         if (!linear) {
-            wtu.glErrorShouldBe(gl, gl.NO_ERROR, extensionTypeName + " texture with non-Linear filter should succeed with NO_ERROR no matter whether " + extensionName + " is enabled or not");
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, pixelType + " texture with non-Linear filter should succeed with NO_ERROR no matter whether " + extensionName + " is enabled or not");
         } else if (!extensionEnabled) {
-            wtu.glErrorShouldBe(gl, gl.NO_ERROR, extensionTypeName + " texture with Linear filter should produce [0, 0, 0, 1.0] with NO_ERROR if " + extensionName + " isn't enabled");
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, pixelType + " texture with Linear filter should produce [0, 0, 0, 1.0] with NO_ERROR if " + extensionName + " isn't enabled");
         } else {
-            wtu.glErrorShouldBe(gl, gl.NO_ERROR, extensionTypeName + " texture with Linear filter should succeed with NO_ERROR if " + extensionTypeName + " is enabled");
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, pixelType + " texture with Linear filter should succeed with NO_ERROR if " + extensionName + " is enabled");
         }
 
         wtu.checkCanvas(gl, expected, "should be " + expected[0] + "," + expected[1]  + "," +  expected[2] + "," + expected[3]);
     }
-
-    return init;
 }

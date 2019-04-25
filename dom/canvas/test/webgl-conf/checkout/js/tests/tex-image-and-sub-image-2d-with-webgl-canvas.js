@@ -176,18 +176,8 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         var bottom = flipY ? 0 : (height - halfHeight);
 
         var loc;
-        var skipCorner = false;
         if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
             loc = gl.getUniformLocation(program, "face");
-            switch (gl[pixelFormat]) {
-              case gl.RED_INTEGER:
-              case gl.RG_INTEGER:
-              case gl.RGB_INTEGER:
-              case gl.RGBA_INTEGER:
-                // https://github.com/KhronosGroup/WebGL/issues/1819
-                skipCorner = true;
-                break;
-            }
         }
 
         for (var tt = 0; tt < targets.length; ++tt) {
@@ -199,10 +189,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
             // Check the top and bottom halves and make sure they have the right color.
             debug("Checking " + (flipY ? "top" : "bottom"));
-            wtu.checkCanvasRect(gl, 0, bottom, (skipCorner && !flipY) ? halfWidth : width, halfHeight, redColor,
+            wtu.checkCanvasRect(gl, 0, bottom, width, halfHeight, redColor,
                     "shouldBe " + redColor);
             debug("Checking " + (flipY ? "bottom" : "top"));
-            wtu.checkCanvasRect(gl, 0, top, (skipCorner && flipY) ? halfWidth : width, halfHeight, greenColor,
+            wtu.checkCanvasRect(gl, 0, top, width, halfHeight, greenColor,
                     "shouldBe " + greenColor);
         }
 
@@ -292,7 +282,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                             return;
                         }
                     }
-                    wtu.dispatchTask(runNextTest);
+                    wtu.dispatchPromise(runNextTest);
                 }
                 runNextTest();
             });

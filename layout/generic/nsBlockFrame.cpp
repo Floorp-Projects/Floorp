@@ -3347,6 +3347,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
     // Construct the reflow input for the block.
     Maybe<ReflowInput> blockReflowInput;
+    Maybe<LogicalSize> cbSize;
     if (Style()->GetPseudoType() == PseudoStyleType::columnContent) {
       // Calculate the multicol containing block's block size so that the
       // children with percentage block size get correct percentage basis.
@@ -3359,18 +3360,14 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
       // Use column-width as the containing block's inline-size, i.e. the column
       // content's computed inline-size.
-      LogicalSize cbSize = LogicalSize(wm, aState.mReflowInput.ComputedISize(),
-                                       cbReflowInput->ComputedBSize())
-                               .ConvertTo(frame->GetWritingMode(), wm);
-
-      blockReflowInput.emplace(
-          aState.mPresContext, aState.mReflowInput, frame,
-          availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm), &cbSize);
-    } else {
-      blockReflowInput.emplace(
-          aState.mPresContext, aState.mReflowInput, frame,
-          availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
+      cbSize.emplace(LogicalSize(wm, aState.mReflowInput.ComputedISize(),
+                                 cbReflowInput->ComputedBSize())
+                         .ConvertTo(frame->GetWritingMode(), wm));
     }
+
+    blockReflowInput.emplace(
+        aState.mPresContext, aState.mReflowInput, frame,
+        availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm), cbSize);
 
     nsFloatManager::SavedState floatManagerState;
     nsReflowStatus frameReflowStatus;
@@ -5122,7 +5119,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   AddFrames(aFrameList, lastKid);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
-        this, nsIPresShell::eTreeChange,
+        this, IntrinsicDirty::TreeChange,
         NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
   }
 }
@@ -5157,7 +5154,7 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   AddFrames(aFrameList, aPrevFrame);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
-        this, nsIPresShell::eTreeChange,
+        this, IntrinsicDirty::TreeChange,
         NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
   }
 }
@@ -5198,7 +5195,7 @@ void nsBlockFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 
   PresShell()->FrameNeedsReflow(
-      this, nsIPresShell::eTreeChange,
+      this, IntrinsicDirty::TreeChange,
       NS_FRAME_HAS_DIRTY_CHILDREN);  // XXX sufficient?
 }
 
@@ -6872,7 +6869,7 @@ void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
   availSize.BSize(markerWM) = NS_UNCONSTRAINEDSIZE;
 
   ReflowInput reflowInput(aState.mPresContext, ri, aMarkerFrame, availSize,
-                          nullptr, ReflowInput::COMPUTE_SIZE_SHRINK_WRAP);
+                          Nothing(), ReflowInput::COMPUTE_SIZE_SHRINK_WRAP);
   nsReflowStatus status;
   aMarkerFrame->Reflow(aState.mPresContext, aMetrics, reflowInput, status);
 

@@ -19,13 +19,13 @@
 <page id="webextpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://browser/content/browser.js"/>
-  <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
-  <script type="application/javascript" src="chrome://browser/content/webext-panels.js"/>
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://browser/content/browser.js"/>
+  <script src="chrome://browser/content/browser-places.js"/>
+  <script src="chrome://browser/content/webext-panels.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
   <commandset id="mainCommandset">
     <command id="Browser:Back"

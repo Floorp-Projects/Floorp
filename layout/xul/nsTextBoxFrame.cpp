@@ -78,7 +78,7 @@ nsresult nsTextBoxFrame::AttributeChanged(int32_t aNameSpaceID,
   UpdateAttributes(aAttribute, aResize, aRedraw);
 
   if (aResize) {
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
   } else if (aRedraw) {
     nsBoxLayoutState state(PresContext());
@@ -177,7 +177,7 @@ bool nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis) {
     RecomputeTitle();
     mAccessKey = accesskey;
     UpdateAccessTitle();
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
     return true;
   }

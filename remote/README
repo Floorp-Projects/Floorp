@@ -12,12 +12,7 @@ layer.
 
 See https://firefox-source-docs.mozilla.org/remote/ for documentation.
 
-The remote agent is not by default included in Firefox builds.  To
-build it, put this in your mozconfig:
+The remote agent is disabled by default, but can be enabled by
+setting a preference before running it:
 
-	ac_add_options --enable-cdp
-
-This exposes a --remote-debugger flag you can use to start the
-remote agent:
-
-	% ./mach run --setpref "browser.fission.simulate=true" -- --remote-debugger
+	% ./mach run --setpref "remote.enabled=true" --remote-debugger

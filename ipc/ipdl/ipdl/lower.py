@@ -249,7 +249,7 @@ For example: |Actor[]| would turn into |Array<ActorParent*>|, so this
 function would return true for |Actor[]|."""
     return (ipdltype.isIPDL()
             and (ipdltype.isActor()
-                 or ((ipdltype.isArray() or ipdltype.isMaybe())
+                 or (ipdltype.hasBaseType()
                      and _hasVisibleActor(ipdltype.basetype))))
 
 
@@ -557,7 +557,7 @@ def _cxxConstRefType(ipdltype, side):
     if ipdltype.isIPDL() and ipdltype.isByteBuf():
         t.ref = True
         return t
-    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isMaybe()):
+    if ipdltype.isIPDL() and ipdltype.hasBaseType():
         # Keep same constness as inner type.
         inner = _cxxConstRefType(ipdltype.basetype, side)
         t.const = inner.const or not inner.ref
@@ -603,7 +603,7 @@ def _cxxTypeNeedsMoveForSend(ipdltype):
         return ipdltype.isMoveonly()
 
     if ipdltype.isIPDL():
-        if ipdltype.isMaybe() or ipdltype.isArray():
+        if ipdltype.hasBaseType():
             return _cxxTypeNeedsMove(ipdltype.basetype)
         return (ipdltype.isShmem() or
                 ipdltype.isByteBuf() or

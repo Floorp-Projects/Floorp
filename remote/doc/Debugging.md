@@ -9,6 +9,6 @@ To increase the internal logging verbosity you can use the
 
 If you use mach to start the Firefox:
 
-	./mach run --setpref "browser.fission.simulate=true" --setpref "remote.log.level=Debug" -- --remote-debugger
+	./mach run --setpref "remote.enabled=true" --setpref "remote.log.level=Debug" --remote-debugger
 
 [preference]: ./Prefs.md

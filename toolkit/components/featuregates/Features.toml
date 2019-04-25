@@ -2,7 +2,7 @@
 title = "Normandy: Remote Settings transport"
 description = """
 When enabled, the Normandy client will fetch recipes from Remote Settings \
-instead of direclty from the Normandy API."""
+instead of directly from the Normandy API."""
 restart-required = false
 type = "boolean"
 bug-numbers = [1519276]

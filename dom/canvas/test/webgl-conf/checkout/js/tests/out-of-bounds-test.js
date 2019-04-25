@@ -72,9 +72,8 @@ var runDrawArraysTest = function(callTemplate, gl, wtu, ext) {
     debug("Test empty buffer")
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([  ]), gl.STATIC_DRAW);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 1}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 10000000000000}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: 0, count: 1}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 1, count: 0}));
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 0, count: 0}));
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 100, count: 0}));
@@ -85,9 +84,8 @@ var runDrawArraysTest = function(callTemplate, gl, wtu, ext) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([ 0,0.5,0, -0.5,-0.5,0, 0.5,-0.5,0 ]), gl.STATIC_DRAW);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 0, count: 3}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 3, count: 2}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 10000000000000}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: 3, count: 2}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 0, count: 0}));
     wtu.shouldGenerateGLError(gl, gl.NO_ERROR, wtu.replaceParams(callTemplate, {offset: 100, count: 0}));
     runCommonInvalidValueTests(callTemplate, gl, wtu, ext);
@@ -125,8 +123,8 @@ var runDrawArraysTest = function(callTemplate, gl, wtu, ext) {
 
     // values that could otherwise be valid but aren't due to bindings generate
     // INVALID_OPERATION
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
-    wtu.shouldGenerateGLError(gl, gl.INVALID_OPERATION, wtu.replaceParams(callTemplate, {offset: '0x7fffffff', count: 1}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: 0, count: 10000}));
+    wtu.shouldGenerateGLError(gl, [gl.NO_ERROR, gl.INVALID_OPERATION], wtu.replaceParams(callTemplate, {offset: '0x7fffffff', count: 1}));
 };
 
 var runDrawElementsTest = function(callTemplate, gl, wtu, ext) {

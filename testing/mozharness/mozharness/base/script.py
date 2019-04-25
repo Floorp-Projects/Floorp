@@ -1456,6 +1456,14 @@ class ScriptMixin(PlatformMixin):
                             break
                         parser.add_lines(line)
                 returncode = p.returncode
+        except KeyboardInterrupt:
+            level = error_level
+            if halt_on_failure:
+                level = FATAL
+            self.log("Process interrupted by the user, killing process with pid %s" % p.pid,
+                     level=level)
+            p.kill()
+            return -1
         except OSError, e:
             level = error_level
             if halt_on_failure:

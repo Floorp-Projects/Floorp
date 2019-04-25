@@ -6,6 +6,23 @@
 // Test for about:preferences foreground check for updates
 // with a partial bad size patch and a complete bad size patch.
 add_task(async function aboutPrefs_foregroundCheck_partialBadSize_completeBadSize() {
+  let downloadInfo = [];
+  if (Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED)) {
+    downloadInfo[0] = {patchType: "partial",
+                       bitsResult: gBadSizeResult};
+    downloadInfo[1] = {patchType: "partial",
+                       internalResult: gBadSizeResult};
+    downloadInfo[2] = {patchType: "complete",
+                       bitsResult: gBadSizeResult};
+    downloadInfo[3] = {patchType: "complete",
+                       internalResult: gBadSizeResult};
+  } else {
+    downloadInfo[0] = {patchType: "partial",
+                       internalResult: gBadSizeResult};
+    downloadInfo[1] = {patchType: "complete",
+                       internalResult: gBadSizeResult};
+  }
+
   let updateParams = "&invalidPartialSize=1&invalidCompleteSize=1";
   await runAboutPrefsUpdateTest(updateParams, false, [
     {
@@ -17,11 +34,7 @@ add_task(async function aboutPrefs_foregroundCheck_partialBadSize_completeBadSiz
       panelId: "downloading",
       checkActiveUpdate: {state: STATE_DOWNLOADING},
       continueFile: CONTINUE_DOWNLOAD,
-    },
-    {
-      panelId: "downloading",
-      checkActiveUpdate: {state: STATE_DOWNLOADING},
-      continueFile: CONTINUE_DOWNLOAD,
+      downloadInfo,
     },
     {
       panelId: "downloadFailed",

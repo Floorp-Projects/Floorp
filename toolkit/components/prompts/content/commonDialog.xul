@@ -16,9 +16,9 @@
         onunload="commonDialogOnUnload();"
         buttonpack="center">
 
-  <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript">
+  <script src="chrome://global/content/commonDialog.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script>
     document.addEventListener("DOMContentLoaded", function() {
       commonDialogOnLoad();
     });

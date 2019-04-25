@@ -482,6 +482,16 @@
   transform: translateY(-50%) translateX(0);
 }
 
+@supports -moz-bool-pref("media.videocontrols.picture-in-picture.video-toggle.testing") {
+  /**
+   * To make automated tests faster, we drop the transition duration in
+   * testing mode.
+   */
+  .pictureInPictureToggleButton {
+    transition-duration: 10ms;
+  }
+}
+
 /* Overlay Play button */
 .clickToPlay {
   min-width: var(--clickToPlay-size);

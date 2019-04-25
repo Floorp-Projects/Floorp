@@ -8815,7 +8815,7 @@ static void MaybeReflowForInflationScreenSizeChange(
               nsIFrame* rootFrame = descendantPresShell->GetRootFrame();
               if (rootFrame) {
                 descendantPresShell->FrameNeedsReflow(
-                    rootFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+                    rootFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
               }
             }
           }

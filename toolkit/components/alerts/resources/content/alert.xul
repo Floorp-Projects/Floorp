@@ -21,7 +21,7 @@
         onclick="onAlertClick();"
         onbeforeunload="onAlertBeforeUnload();">
 
-  <script type="application/javascript" src="chrome://global/content/alerts/alert.js"/>
+  <script src="chrome://global/content/alerts/alert.js"/>
 
   <vbox id="alertBox">
     <box id="alertTitleBox">
@@ -62,6 +62,6 @@
 
   <!-- This method is called inline because we want to make sure we establish the width
        and height of the alert before we fire the onload handler. -->
-  <script type="application/javascript">prefillAlertInfo();</script>
+  <script>prefillAlertInfo();</script>
 </window>
 

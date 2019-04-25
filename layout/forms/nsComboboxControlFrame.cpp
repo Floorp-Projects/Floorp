@@ -515,7 +515,7 @@ class nsAsyncResize : public Runnable {
       static_cast<nsListControlFrame*>(combo->mDropdownFrame)
           ->SetSuppressScrollbarUpdate(true);
       RefPtr<PresShell> presShell = mFrame->PresShell();
-      presShell->FrameNeedsReflow(combo->mDropdownFrame, nsIPresShell::eResize,
+      presShell->FrameNeedsReflow(combo->mDropdownFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
       presShell->FlushPendingNotifications(FlushType::Layout);
       if (mFrame.IsAlive()) {
@@ -971,7 +971,7 @@ void nsComboboxControlFrame::HandleRedisplayTextEvent() {
   }
 
   // XXXbz This should perhaps be eResize.  Check.
-  PresShell()->FrameNeedsReflow(mDisplayFrame, nsIPresShell::eStyleChange,
+  PresShell()->FrameNeedsReflow(mDisplayFrame, IntrinsicDirty::StyleChange,
                                 NS_FRAME_IS_DIRTY);
 
   mInRedisplayText = false;

@@ -119,7 +119,7 @@ function runNextTest() {
       return;
     }
   }
-  wtu.dispatchTask(runNextTest);
+  wtu.dispatchPromise(runNextTest);
 }
 
 function testFormatType(t, test) {

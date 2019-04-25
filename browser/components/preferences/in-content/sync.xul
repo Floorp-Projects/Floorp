@@ -4,8 +4,7 @@
 
 <!-- Sync panel -->
 
-<script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/sync.js"/>
+<script src="chrome://browser/content/preferences/in-content/sync.js"/>
 <html:template id="template-paneSync">
 <hbox id="firefoxAccountCategory"
       class="subcategory"

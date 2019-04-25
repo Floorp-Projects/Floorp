@@ -19,9 +19,8 @@
     <html:link rel="localization" href="security/certificates/certManager.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
-  <script type="application/javascript"
-          src="chrome://pippki/content/editcacert.js"/>
+  <script src="chrome://pippki/content/pippki.js"/>
+  <script src="chrome://pippki/content/editcacert.js"/>
 
   <description id="certmsg"/>
   <separator/>

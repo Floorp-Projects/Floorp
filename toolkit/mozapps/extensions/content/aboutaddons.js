@@ -95,13 +95,13 @@ class PanelList extends HTMLElement {
   }
 
   show(triggeringEvent) {
-    this.open = true;
     this.triggeringEvent = triggeringEvent;
+    this.open = true;
   }
 
   hide(triggeringEvent) {
-    this.open = false;
     this.triggeringEvent = triggeringEvent;
+    this.open = false;
   }
 
   toggle(triggeringEvent) {
@@ -165,6 +165,8 @@ class PanelList extends HTMLElement {
     document.addEventListener("mousedown", this);
     // Hide if focus changes and the panel isn't in focus.
     document.addEventListener("focusin", this);
+    // Reset or focus tracking, we treat the first focusin differently.
+    this.focusHasChanged = false;
     // Hide on resize, scroll or losing window focus.
     window.addEventListener("resize", this);
     window.addEventListener("scroll", this);
@@ -199,10 +201,20 @@ class PanelList extends HTMLElement {
         break;
       case "mousedown":
       case "focusin":
+        // There will be a focusin after the mousedown that opens the panel
+        // using the mouse. Ignore the first focusin event if it's on the
+        // triggering target.
+        if (this.triggeringEvent &&
+            e.target == this.triggeringEvent.target &&
+            !this.focusHasChanged) {
+          this.focusHasChanged = true;
         // If the target isn't in the panel, hide. This will close when focus
         // moves out of the panel, or there's a click started outside the panel.
-        if (!e.target || e.target.closest("panel-list") != this) {
+        } else if (!e.target || e.target.closest("panel-list") != this) {
           this.hide();
+        // Just record that there was a focusin event.
+        } else {
+          this.focusHasChanged = true;
         }
         break;
     }

@@ -28,7 +28,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Resizing Test for OffscreenCanvas</title>
+<title>Resizing Test for OffscreenCanvas commit()</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
@@ -39,7 +39,7 @@
 <div id="console"></div>
 <script>
 "use strict";
-description("This test ensures that the OffscreenCanvas context returns the correct image size after resizing.");
+description("This test ensures that the OffscreenCanvas context returns the correct image size after resizing and calling commit().");
 
 function testResizeOnNewOffscreenCanvas() {
   var canvas = new OffscreenCanvas(10, 20);
@@ -101,6 +101,9 @@ function testResizeOnTransferredOffscreenCanvas() {
 
 if (!window.OffscreenCanvas) {
   testPassed("No OffscreenCanvas support");
+  finishTest();
+} else if (!new OffscreenCanvas(10, 20).getContext("webgl").commit) {
+  testPassed("commit() not supported");
   finishTest();
 } else {
   testResizeOnNewOffscreenCanvas();

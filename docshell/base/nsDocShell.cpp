@@ -10494,8 +10494,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     nsresult rv = NS_ERROR_FAILURE;
     NS_ConvertUTF8toUTF16 uStr(aNewHash);
     if (!uStr.IsEmpty()) {
-      rv =
-          presShell->GoToAnchor(uStr, scroll, nsIPresShell::SCROLL_SMOOTH_AUTO);
+      rv = presShell->GoToAnchor(uStr, scroll, ScrollFlags::ScrollSmoothAuto);
     }
 
     if (NS_FAILED(rv)) {
@@ -10507,7 +10506,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
       NS_ConvertUTF8toUTF16 utf16Str(str);
       if (!utf16Str.IsEmpty()) {
         rv = presShell->GoToAnchor(utf16Str, scroll,
-                                   nsIPresShell::SCROLL_SMOOTH_AUTO);
+                                   ScrollFlags::ScrollSmoothAuto);
       }
       free(str);
     }
@@ -10541,7 +10540,7 @@ nsresult nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
       // When aNewHash contains "%00", unescaped string may be empty.
       // And GoToAnchor asserts if we ask it to scroll to an empty ref.
       presShell->GoToAnchor(uStr, scroll && !uStr.IsEmpty(),
-                            nsIPresShell::SCROLL_SMOOTH_AUTO);
+                            ScrollFlags::ScrollSmoothAuto);
     }
   } else {
     // Tell the shell it's at an anchor, without scrolling.

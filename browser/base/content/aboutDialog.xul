@@ -39,9 +39,9 @@
     <html:link rel="localization" href="browser/aboutDialog.ftl"/>
   </linkset>
 
-  <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
+  <script src="chrome://browser/content/aboutDialog.js"/>
 #ifdef MOZ_UPDATER
-  <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
+  <script src="chrome://browser/content/aboutDialog-appUpdater.js"/>
 #endif
 
   <vbox id="aboutDialogContainer">

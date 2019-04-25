@@ -700,6 +700,7 @@ var setupIndexedQuadWithOptions = function (gl, options) {
 
   if (options.colorLocation !== undefined) {
     var colors = new Float32Array(numVerts * 4);
+    poffset = 0;
     for (var yy = 0; yy <= gridRes; ++yy) {
       for (var xx = 0; xx <= gridRes; ++xx) {
         if (options.color !== undefined) {
@@ -1510,7 +1511,7 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
     attributes.antialias = false;
   }
   if (!opt_version) {
-    opt_version = parseInt(getUrlOptions().webglVersion, 10) || default3DContextVersion;
+    opt_version = getDefault3DContextVersion();
   }
   opt_canvas = opt_canvas || document.createElement("canvas");
   if (typeof opt_canvas == 'string') {
@@ -1537,6 +1538,11 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
   }
   if (!context) {
     testFailed("Unable to fetch WebGL rendering context for Canvas");
+  } else {
+    if (!window._wtu_contexts) {
+      window._wtu_contexts = []
+    }
+    window._wtu_contexts.push(context);
   }
   return context;
 };
@@ -1682,6 +1688,45 @@ var glErrorShouldBeImpl = function(gl, glErrors, reportSuccesses, opt_msg) {
     testPassed(msg + expected + " : " + opt_msg);
   }
   return err;
+};
+
+/**
+ * Tests that a function throws or not.
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ * @param throwType Type of thrown error (e.g. TypeError), or false.
+ * @param {string} info Info on what's being tested
+ * @param {function} func The func to test.
+ */
+var shouldThrow = function(gl, throwType, info, func) {
+  while (gl.getError()) {}
+
+  var shouldThrow = (throwType != false);
+
+  try {
+    func();
+
+    if (shouldThrow) {
+      testFailed("Should throw a " + throwType.name + ": " + info);
+    } else {
+      testPassed("Should not have thrown: " + info);
+    }
+  } catch (e) {
+    if (shouldThrow) {
+      if (e instanceof throwType) {
+        testPassed("Should throw a " + throwType.name + ": " + info);
+      } else {
+        testFailed("Should throw a " + throwType.name + ", threw " + e.name + ": " + info);
+      }
+    } else {
+      testFailed("Should not have thrown: " + info);
+    }
+
+    if (gl.getError()) {
+      testFailed("Should not generate an error when throwing: " + info);
+    }
+  }
+
+  while (gl.getError()) {}
 };
 
 /**
@@ -2460,6 +2505,7 @@ var makeImageFromCanvas = function(canvas, onload, imageFormat) {
  */
 var makeVideo = function(src, onerror) {
   var vid = document.createElement('video');
+  vid.muted = true;
   if (onerror) {
     vid.onerror = onerror;
   } else {
@@ -2927,6 +2973,14 @@ var setZeroTimeout = (function() {
   return setZeroTimeout;
 })();
 
+function dispatchPromise(fn) {
+  return new Promise((fn_resolve, fn_reject) => {
+    setZeroTimeout(() => {
+      fn_resolve(fn());
+    });
+  });
+}
+
 /**
  * Runs an array of functions, yielding to the browser between each step.
  * If you want to know when all the steps are finished add a last step.
@@ -2966,7 +3020,6 @@ var startPlayingAndWaitForVideo = function(video, callback) {
 
   requestAnimFrame.call(window, timeWatcher);
   video.loop = true;
-  video.muted = true;
   video.play();
 };
 
@@ -3138,6 +3191,24 @@ function comparePixels(cmp, ref, tolerance, diff) {
     return count;
 }
 
+function destroyContext(gl) {
+  gl.canvas.width = 1;
+  gl.canvas.height = 1;
+  const ext = gl.getExtension('WEBGL_lose_context');
+  if (ext) {
+    ext.loseContext();
+  }
+}
+
+function destroyAllContexts() {
+  if (!window._wtu_contexts)
+    return;
+  for (const x of window._wtu_contexts) {
+    destroyContext(x);
+  }
+  window._wtu_contexts = [];
+}
+
 function displayImageDiff(cmp, ref, diff, width, height) {
     var div = document.createElement("div");
 
@@ -3186,7 +3257,9 @@ var API = {
   clearAndDrawUnitQuad: clearAndDrawUnitQuad,
   clearAndDrawIndexedQuad: clearAndDrawIndexedQuad,
   comparePixels: comparePixels,
-  dispatchTask: setZeroTimeout,
+  destroyAllContexts: destroyAllContexts,
+  destroyContext: destroyContext,
+  dispatchPromise: dispatchPromise,
   displayImageDiff: displayImageDiff,
   drawUnitQuad: drawUnitQuad,
   drawIndexedQuad: drawIndexedQuad,
@@ -3216,6 +3289,7 @@ var API = {
   glTypeToTypedArrayType: glTypeToTypedArrayType,
   hasAttributeCaseInsensitive: hasAttributeCaseInsensitive,
   insertImage: insertImage,
+  linkProgram: linkProgram,
   loadImageAsync: loadImageAsync,
   loadImagesAsync: loadImagesAsync,
   loadProgram: loadProgram,
@@ -3267,6 +3341,7 @@ var API = {
   startPlayingAndWaitForVideo: startPlayingAndWaitForVideo,
   startsWith: startsWith,
   shouldGenerateGLError: shouldGenerateGLError,
+  shouldThrow: shouldThrow,
   readFile: readFile,
   readFileList: readFileList,
   replaceParams: replaceParams,

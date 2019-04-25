@@ -16,7 +16,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
-  <script type="application/javascript" src="resource://devtools/client/performance/initializer.js"/>
+  <script src="resource://devtools/client/performance/initializer.js"/>
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup" position="before_start"/>

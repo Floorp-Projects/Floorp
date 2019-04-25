@@ -8,6 +8,7 @@
 #define MOZILLA_SVGTEXTFRAME_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/PresShellForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxMatrix.h"
@@ -27,7 +28,6 @@ namespace mozilla {
 
 class CharIterator;
 class nsISVGPoint;
-class PresShell;
 class TextFrameIterator;
 class TextNodeCorrespondenceRecorder;
 struct TextRenderedRun;
@@ -300,7 +300,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
    * animated SVG-in-OpenType glyphs), in which case aReason will be eResize,
    * since layout doesn't need to be recomputed.
    */
-  void ScheduleReflowSVGNonDisplayText(nsIPresShell::IntrinsicDirty aReason);
+  void ScheduleReflowSVGNonDisplayText(mozilla::IntrinsicDirty aReason);
 
   /**
    * Updates the mFontSizeScaleFactor value by looking at the range of

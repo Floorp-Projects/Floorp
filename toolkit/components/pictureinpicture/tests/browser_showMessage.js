@@ -24,7 +24,7 @@ add_task(async () => {
         await assertShowingMessage(browser, videoID, true);
       } finally {
         let uaWidgetUpdate = BrowserTestUtils.waitForContentEvent(browser, "UAWidgetSetupOrChange");
-        pipWin.close();
+        await BrowserTestUtils.closeWindow(pipWin);
         await uaWidgetUpdate;
       }
 

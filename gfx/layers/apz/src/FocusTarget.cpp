@@ -209,10 +209,10 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
   // for this scroll target
   nsIScrollableFrame* horizontal =
       presShell->GetScrollableFrameToScrollForContent(
-          selectedContent.get(), nsIPresShell::eHorizontal);
+          selectedContent.get(), ScrollableDirection::Horizontal);
   nsIScrollableFrame* vertical =
-      presShell->GetScrollableFrameToScrollForContent(selectedContent.get(),
-                                                      nsIPresShell::eVertical);
+      presShell->GetScrollableFrameToScrollForContent(
+          selectedContent.get(), ScrollableDirection::Vertical);
 
   // We might have the globally focused element for scrolling. Gather a ViewID
   // for the horizontal and vertical scroll targets of this element.

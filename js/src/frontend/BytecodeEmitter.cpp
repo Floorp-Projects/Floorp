@@ -1200,6 +1200,10 @@ restart:
       return checkSideEffects(pn->as<UnaryNode>().kid(), answer);
 
     // Binary cases with obvious side effects.
+    case ParseNodeKind::InitExpr:
+      *answer = true;
+      return true;
+
     case ParseNodeKind::AssignExpr:
     case ParseNodeKind::AddAssignExpr:
     case ParseNodeKind::SubAssignExpr:
@@ -4091,6 +4095,8 @@ static bool EmitAssignmentRhs(BytecodeEmitter* bce, ParseNode* rhs,
 
 static inline JSOp CompoundAssignmentParseNodeKindToJSOp(ParseNodeKind pnk) {
   switch (pnk) {
+    case ParseNodeKind::InitExpr:
+      return JSOP_NOP;
     case ParseNodeKind::AssignExpr:
       return JSOP_NOP;
     case ParseNodeKind::AddAssignExpr:
@@ -4122,9 +4128,14 @@ static inline JSOp CompoundAssignmentParseNodeKindToJSOp(ParseNodeKind pnk) {
   }
 }
 
-bool BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp,
-                                     ParseNode* rhs) {
+bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
+                                           ParseNode* rhs) {
+  JSOp compoundOp = CompoundAssignmentParseNodeKindToJSOp(kind);
   bool isCompound = compoundOp != JSOP_NOP;
+  bool isInit = kind == ParseNodeKind::InitExpr;
+
+  MOZ_ASSERT_IF(isInit, lhs->isKind(ParseNodeKind::DotExpr) ||
+                            lhs->isKind(ParseNodeKind::ElemExpr));
 
   // Name assignments are handled separately because choosing ops and when
   // to emit BINDNAME is involved and should avoid duplication.
@@ -4183,7 +4194,8 @@ bool BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp,
       bool isSuper = prop->isSuper();
       poe.emplace(this,
                   isCompound ? PropOpEmitter::Kind::CompoundAssignment
-                             : PropOpEmitter::Kind::SimpleAssignment,
+                             : isInit ? PropOpEmitter::Kind::PropInit
+                                      : PropOpEmitter::Kind::SimpleAssignment,
                   isSuper ? PropOpEmitter::ObjKind::Super
                           : PropOpEmitter::ObjKind::Other);
       if (!poe->prepareForObj()) {
@@ -4211,7 +4223,8 @@ bool BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp,
       bool isSuper = elem->isSuper();
       eoe.emplace(this,
                   isCompound ? ElemOpEmitter::Kind::CompoundAssignment
-                             : ElemOpEmitter::Kind::SimpleAssignment,
+                             : isInit ? ElemOpEmitter::Kind::PropInit
+                                      : ElemOpEmitter::Kind::SimpleAssignment,
                   isSuper ? ElemOpEmitter::ObjKind::Super
                           : ElemOpEmitter::ObjKind::Other);
       if (!emitElemObjAndKey(elem, isSuper, *eoe)) {
@@ -5262,7 +5275,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   // initialization is just assigning the iteration value to a target
   // expression.
   if (!parser->astGenerator().isDeclarationList(target)) {
-    return emitAssignment(target, JSOP_NOP, nullptr);
+    return emitAssignmentOrInit(ParseNodeKind::AssignExpr, target, nullptr);
     //              [stack] ... ITERVAL
   }
 
@@ -5283,8 +5296,9 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   NameNode* nameNode = nullptr;
   if (target->isKind(ParseNodeKind::Name)) {
     nameNode = &target->as<NameNode>();
-  } else if (target->isKind(ParseNodeKind::AssignExpr)) {
-    AssignmentNode* assignNode = &target->as<AssignmentNode>();
+  } else if (target->isKind(ParseNodeKind::AssignExpr) ||
+             target->isKind(ParseNodeKind::InitExpr)) {
+    BinaryNode* assignNode = &target->as<BinaryNode>();
     if (assignNode->left()->is<NameNode>()) {
       nameNode = &assignNode->left()->as<NameNode>();
     }
@@ -5318,7 +5332,8 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   }
 
   MOZ_ASSERT(
-      !target->isKind(ParseNodeKind::AssignExpr),
+      !target->isKind(ParseNodeKind::AssignExpr) &&
+          !target->isKind(ParseNodeKind::InitExpr),
       "for-in/of loop destructuring declarations can't have initializers");
 
   MOZ_ASSERT(target->isKind(ParseNodeKind::ArrayExpr) ||
@@ -5421,8 +5436,9 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
   if (parser->astGenerator().isDeclarationList(forInTarget)) {
     ParseNode* decl = parser->astGenerator().singleBindingFromDeclaration(
         &forInTarget->as<ListNode>());
-    if (decl->isKind(ParseNodeKind::AssignExpr)) {
-      AssignmentNode* assignNode = &decl->as<AssignmentNode>();
+    if (decl->isKind(ParseNodeKind::AssignExpr) ||
+        decl->isKind(ParseNodeKind::InitExpr)) {
+      BinaryNode* assignNode = &decl->as<BinaryNode>();
       if (assignNode->left()->is<NameNode>()) {
         NameNode* nameNode = &assignNode->left()->as<NameNode>();
         ParseNode* initializer = assignNode->right();
@@ -7992,6 +8008,11 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
           return false;
         }
 
+        if (!emit1(JSOP_TOID)) {
+          //        [stack] ARRAY KEY
+          return false;
+        }
+
         if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldKeyIndex)) {
           //        [stack] ARRAY
           return false;
@@ -8458,9 +8479,10 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
        arg = arg->pn_next) {
     ParseNode* bindingElement = arg;
     ParseNode* initializer = nullptr;
-    if (arg->isKind(ParseNodeKind::AssignExpr)) {
-      bindingElement = arg->as<AssignmentNode>().left();
-      initializer = arg->as<AssignmentNode>().right();
+    if (arg->isKind(ParseNodeKind::AssignExpr) ||
+        arg->isKind(ParseNodeKind::InitExpr)) {
+      bindingElement = arg->as<BinaryNode>().left();
+      initializer = arg->as<BinaryNode>().right();
     }
     bool hasInitializer = !!initializer;
     bool isRest = hasRest && arg->pn_next == funBody;
@@ -9007,6 +9029,7 @@ bool BytecodeEmitter::emitTree(
       }
       break;
 
+    case ParseNodeKind::InitExpr:
     case ParseNodeKind::AssignExpr:
     case ParseNodeKind::AddAssignExpr:
     case ParseNodeKind::SubAssignExpr:
@@ -9020,11 +9043,9 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::DivAssignExpr:
     case ParseNodeKind::ModAssignExpr:
     case ParseNodeKind::PowAssignExpr: {
-      AssignmentNode* assignNode = &pn->as<AssignmentNode>();
-      if (!emitAssignment(
-              assignNode->left(),
-              CompoundAssignmentParseNodeKindToJSOp(assignNode->getKind()),
-              assignNode->right())) {
+      BinaryNode* assignNode = &pn->as<BinaryNode>();
+      if (!emitAssignmentOrInit(assignNode->getKind(), assignNode->left(),
+                                assignNode->right())) {
         return false;
       }
       break;

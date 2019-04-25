@@ -3634,7 +3634,7 @@ void Document::ReleaseCapture() const {
   // page from stopping a scrollbar grab for example.
   nsCOMPtr<nsINode> node = nsIPresShell::GetCapturingContent();
   if (node && nsContentUtils::CanCallerAccess(node)) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);
+    PresShell::ReleaseCapturingContent();
   }
 }
 
@@ -10511,8 +10511,8 @@ void Document::CleanupFullscreenState() {
   // Restore the zoom level that was in place prior to entering fullscreen.
   if (PresShell* presShell = GetPresShell()) {
     if (presShell->GetMobileViewportManager()) {
-      presShell->SetResolutionAndScaleTo(
-          mSavedResolution, nsIPresShell::ChangeOrigin::eMainThread);
+      presShell->SetResolutionAndScaleTo(mSavedResolution,
+                                         ResolutionChangeOrigin::MainThread);
     }
   }
 
@@ -10910,7 +10910,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
         child->mSavedResolution = presShell->GetResolution();
         presShell->SetResolutionAndScaleTo(
             manager->ComputeIntrinsicResolution(),
-            nsIPresShell::ChangeOrigin::eMainThread);
+            ResolutionChangeOrigin::MainThread);
       }
     }
 
@@ -11095,7 +11095,7 @@ static void ChangePointerLockedElement(Element* aElement, Document* aDocument,
   }
   // Retarget all events to aElement via capture or
   // stop retargeting if aElement is nullptr.
-  nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
+  PresShell::SetCapturingContent(aElement, CaptureFlags::PointerLock);
   DispatchPointerLockChange(aDocument);
 }
 

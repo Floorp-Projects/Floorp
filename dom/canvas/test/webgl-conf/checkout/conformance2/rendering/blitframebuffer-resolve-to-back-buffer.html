@@ -48,13 +48,17 @@ description("This test verifies the behavior of blitFramebuffer when resolving d
 debug("Regression test for <a href='http://crbug.com/699566'>http://crbug.com/699566</a>");
 
 function runTest(testParams) {
-    // Assume a square framebuffer. Doesn't need to match the size of the canvas, necessarily.
-    let sz = 64;
+    const sz = 64;
+
+    if (testParams.multisampled === undefined) {
+        testParams.multisampled = true;
+    }
 
     debug('');
     debug('Testing with alpha = ' + testParams.attribs.alpha +
           ', antialias = ' + testParams.attribs.antialias +
-          ', internalformat = ' + testParams.internalformat);
+          ', internalformat = ' + testParams.internalformat +
+          ', multisampled = ' + testParams.multisampled);
 
     var canvas = document.createElement('canvas');
     canvas.width = sz;
@@ -63,10 +67,13 @@ function runTest(testParams) {
     var gl = wtu.create3DContext(canvas, testParams.attribs, 2);
 
     // Find the supported samples for a multisampled renderbuffer of the appropriate internal format.
-    let samples = gl.getInternalformatParameter(gl.RENDERBUFFER, gl[testParams.internalformat], gl.SAMPLES);
-    if (!samples || !samples.length) {
-        testFailed("At least one multisampled format is required to be supported");
-        return;
+    let samples = [0];
+    if (testParams.multisampled) {
+        samples = gl.getInternalformatParameter(gl.RENDERBUFFER, gl[testParams.internalformat], gl.SAMPLES);
+        if (!samples || !samples.length) {
+            testFailed("At least one multisampled format is required to be supported");
+            return;
+        }
     }
 
     // Create a framebuffer with a multisampled renderbuffer.
@@ -122,9 +129,32 @@ var tests = [
             antialias: false,
         },
         internalformat: 'RGB8',
-        clearColor: [ 0.0, 1.0, 0.0, 1.0 ],
+        clearColor: [ 0.0, 1.0, 0.0, 0.5 ],
         resultColor: [ 0, 255, 0, 255 ],
         shouldSucceed: true,
+    },
+    // No-alpha, no-antialias, RGBA8 source
+    {
+        attribs: {
+            alpha: false,
+            antialias: false,
+        },
+        internalformat: 'RGBA8',
+        clearColor: [ 0.0, 1.0, 0.0, 0.5 ],
+        resultColor: [ 0, 255, 0, 255 ],
+        shouldSucceed: false,
+    },
+    // No-alpha, no-antialias, RGBA8 source, single-sampled blit
+    {
+        attribs: {
+            alpha: false,
+            antialias: false,
+        },
+        internalformat: 'RGBA8',
+        clearColor: [ 0.0, 1.0, 0.0, 0.5 ],
+        resultColor: [ 0, 255, 0, 255 ],
+        shouldSucceed: true,
+        multisampled: false,
     },
     // Alpha, no-antialias, RGB8 source
     {

@@ -1165,7 +1165,8 @@ void nsHTMLFramesetFrame::StartMouseDrag(nsPresContext* aPresContext,
   NS_ASSERTION((nullptr != aBorder) && (index >= 0), "invalid dragger");
 #endif
 
-  nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
+  PresShell::SetCapturingContent(GetContent(),
+                                 CaptureFlags::IgnoreAllowedState);
 
   mDragger = aBorder;
 
@@ -1255,7 +1256,7 @@ void nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
 }
 
 void nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext) {
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
   mDragger = nullptr;
   gDragInProgress = false;
 }
