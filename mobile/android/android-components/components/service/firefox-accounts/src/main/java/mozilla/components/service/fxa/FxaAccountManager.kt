@@ -385,9 +385,9 @@ open class FxaAccountManager(
             AccountState.AuthenticatedNoProfile -> {
                 when (via) {
                     is Event.Authenticated -> {
-                        account.completeOAuthFlow(via.code, via.state).await()
-
                         account.registerPersistenceCallback(statePersistenceCallback)
+
+                        account.completeOAuthFlow(via.code, via.state).await()
 
                         notifyObservers { onAuthenticated(account) }
 
