@@ -17,8 +17,6 @@ DIRECT_CALL_OVERRIDES = {
         "BackgroundMutableFileParentBase", "mozilla/dom/filehandle/ActorsParent.h"
     ),
 
-    ("PBrowser", "parent"): ("BrowserParent", "mozilla/dom/BrowserParent.h"),
-
     ("PChromiumCDM", "parent"): ("ChromiumCDMParent", "ChromiumCDMParent.h"),
 
     ("PCompositorBridge", "parent"): (
