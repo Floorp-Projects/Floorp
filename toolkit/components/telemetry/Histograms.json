@@ -10853,6 +10853,68 @@
     "n_values": 160,
     "description": "The longest hash match between a newly added entry and all the existing entries."
   },
+  "NETWORK_CACHE_ISOLATION_SIZE_INCREASE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1506534],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 200,
+    "keyed": true,
+    "keys": [
+      "ALL",
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "n_buckets": 100,
+    "description": "Percentage increase of cache size that would be caused by first party isolation without deduplication keyed by content type."
+  },
+  "NETWORK_CACHE_ISOLATION_ENTRY_COUNT_INCREASE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1506534],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 200,
+    "keyed": true,
+    "keys": [
+      "ALL",
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "n_buckets": 100,
+    "description": "Percentage increase of cache entry count that would be caused by first party isolation without deduplication keyed by content type."
+  },
+  "NETWORK_CACHE_ISOLATION_UNIQUE_SITE_ACCESS_COUNT" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1506534],
+    "expires_in_version": "74",
+    "kind": "exponential",
+    "high": 1000,
+    "keyed": true,
+    "keys": [
+      "UNKNOWN",
+      "OTHER",
+      "JAVASCRIPT",
+      "IMAGE",
+      "MEDIA",
+      "STYLESHEET",
+      "WASM"
+    ],
+    "n_buckets": 100,
+    "description": "Number of unique sites accessing the cache entry keyed by content type."
+  },
   "DATABASE_LOCKED_EXCEPTION": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "42",

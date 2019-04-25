@@ -1092,6 +1092,13 @@ nsresult CacheEntry::SetContentType(uint8_t aContentType) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+nsresult CacheEntry::AddBaseDomainAccess(uint32_t aSiteID) {
+  if (NS_SUCCEEDED(mFileStatus)) {
+    return mFile->AddBaseDomainAccess(aSiteID);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 nsresult CacheEntry::GetIsForcedValid(bool *aIsForcedValid) {
   NS_ENSURE_ARG(aIsForcedValid);
 
