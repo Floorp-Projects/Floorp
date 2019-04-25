@@ -12,7 +12,6 @@ dictionary OpenWindowEventDetail {
   DOMString name = "";
   DOMString features = "";
   Node? frameElement = null;
-  boolean forceNoReferrer = false;
 };
 
 dictionary DOMWindowResizeEventDetail {

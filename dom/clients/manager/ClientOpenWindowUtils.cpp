@@ -241,7 +241,6 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs,
         // opener anyway, and we _do_ want the returned
         // window.
         /* aForceNoOpener = */ false,
-        /* aForceNoReferrer = */ false,
         /* aLoadInfp = */ nullptr, getter_AddRefs(newWindow));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

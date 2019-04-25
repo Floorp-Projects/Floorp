@@ -5749,13 +5749,8 @@ nsBrowserAccess.prototype = {
         aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
     }
 
-    let referrerInfo;
-    if (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_REFERRER) {
-      referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, false, null);
-    } else {
-      referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true,
-        aOpener ? makeURI(aOpener.location.href) : null);
-    }
+    let referrerInfo = new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true,
+      aOpener ? makeURI(aOpener.location.href) : null);
     if (aOpener && aOpener.document) {
       referrerInfo.referrerPolicy = aOpener.document.referrerPolicy;
     }
