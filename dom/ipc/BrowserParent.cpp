@@ -257,8 +257,7 @@ BrowserParent* BrowserParent::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {
     return nullptr;
   }
-  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
-  return static_cast<BrowserParent*>(remoteBrowser);
+  return aFrameLoader->GetBrowserParent();
 }
 
 /*static*/
