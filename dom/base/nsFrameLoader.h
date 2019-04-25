@@ -342,7 +342,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
    */
-  void SetRemoteBrowser(nsIRemoteTab* aBrowserParent);
+  void InitializeFromBrowserParent(BrowserParent* aBrowserParent);
 
   /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're
