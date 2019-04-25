@@ -4,7 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from io import BytesIO
+from io import (
+    BytesIO,
+    UnsupportedOperation,
+)
 import struct
 import subprocess
 import zlib
@@ -630,8 +633,10 @@ class JarWriter(object):
             if isinstance(data, (six.binary_type, six.string_types)):
                 deflater.write(data)
             elif hasattr(data, 'read'):
-                if hasattr(data, 'seek'):
+                try:
                     data.seek(0)
+                except (UnsupportedOperation, AttributeError):
+                    pass
                 deflater.write(data.read())
             else:
                 raise JarWriterError("Don't know how to handle %s" %
