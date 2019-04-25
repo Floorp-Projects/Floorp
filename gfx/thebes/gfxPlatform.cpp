@@ -855,6 +855,19 @@ void gfxPlatform::Init() {
 
   if (XRE_IsParentProcess()) {
     WrRolloutPrefShutdownSaver::AddShutdownObserver();
+
+    nsCOMPtr<nsIFile> profDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP,
+                                         getter_AddRefs(profDir));
+    if (NS_FAILED(rv)) {
+      gfxVars::SetProfDirectory(nsString());
+    } else {
+      nsAutoString path;
+      profDir->GetPath(path);
+      gfxVars::SetProfDirectory(nsString(path));
+    }
+
+    gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
   }
 
   // Drop a note in the crash report if we end up forcing an option that could
@@ -1048,19 +1061,6 @@ void gfxPlatform::Init() {
       Preferences::SetBool(FONT_VARIATIONS_PREF, false);
       Preferences::Lock(FONT_VARIATIONS_PREF);
     }
-
-    nsCOMPtr<nsIFile> profDir;
-    rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP,
-                                getter_AddRefs(profDir));
-    if (NS_FAILED(rv)) {
-      gfxVars::SetProfDirectory(nsString());
-    } else {
-      nsAutoString path;
-      profDir->GetPath(path);
-      gfxVars::SetProfDirectory(nsString(path));
-    }
-
-    gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
   }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
