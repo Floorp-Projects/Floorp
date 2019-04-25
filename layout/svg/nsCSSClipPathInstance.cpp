@@ -25,8 +25,8 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 /* static*/
-void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(gfxContext& aContext,
-                                                      nsIFrame* aFrame) {
+void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(
+    gfxContext& aContext, nsIFrame* aFrame, const gfxMatrix& aTransform) {
   auto& clipPathStyle = aFrame->StyleSVGReset()->mClipPath;
 
 #ifdef DEBUG
@@ -40,7 +40,8 @@ void nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(gfxContext& aContext,
   nsCSSClipPathInstance instance(aFrame, clipPathStyle);
 
   aContext.NewPath();
-  RefPtr<Path> path = instance.CreateClipPath(aContext.GetDrawTarget());
+  RefPtr<Path> path =
+      instance.CreateClipPath(aContext.GetDrawTarget(), aTransform);
   aContext.SetPath(path);
   aContext.Clip();
 }
@@ -61,7 +62,8 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
 
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<Path> path = instance.CreateClipPath(drawTarget);
+  RefPtr<Path> path = instance.CreateClipPath(
+      drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   float pixelRatio = float(AppUnitsPerCSSPixel()) /
                      aFrame->PresContext()->AppUnitsPerDevPixel();
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
@@ -78,18 +80,30 @@ Rect nsCSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
 
   RefPtr<DrawTarget> drawTarget =
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<Path> path = instance.CreateClipPath(drawTarget);
+  RefPtr<Path> path = instance.CreateClipPath(
+      drawTarget, nsSVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   return path->GetBounds();
 }
 
 already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPath(
-    DrawTarget* aDrawTarget) {
+    DrawTarget* aDrawTarget, const gfxMatrix& aTransform) {
   if (mClipPathStyle.GetType() == StyleShapeSourceType::Path) {
     return CreateClipPathPath(aDrawTarget);
   }
 
+  nscoord appUnitsPerDevPixel =
+      mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+
   nsRect r = nsLayoutUtils::ComputeGeometryBox(
       mTargetFrame, mClipPathStyle.GetReferenceBox());
+
+  gfxRect rr(r.x, r.y, r.width, r.height);
+  rr.Scale(1.0 / AppUnitsPerCSSPixel());
+  rr = aTransform.TransformRect(rr);
+  rr.Scale(appUnitsPerDevPixel);
+  rr.Round();
+
+  r = nsRect(int(rr.x), int(rr.y), int(rr.width), int(rr.height));
 
   if (mClipPathStyle.GetType() != StyleShapeSourceType::Shape) {
     // TODO Clip to border-radius/reference box if no shape
@@ -98,8 +112,6 @@ already_AddRefed<Path> nsCSSClipPathInstance::CreateClipPath(
     return builder->Finish();
   }
 
-  nscoord appUnitsPerDevPixel =
-      mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   r = ToAppUnits(r.ToNearestPixels(appUnitsPerDevPixel), appUnitsPerDevPixel);
 
   const auto& basicShape = mClipPathStyle.BasicShape();

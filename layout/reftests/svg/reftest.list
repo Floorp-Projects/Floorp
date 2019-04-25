@@ -79,6 +79,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == clipPath-basic-06.svg pass.svg
 == clipPath-basic-07.svg pass.svg
 == clipPath-basic-08.svg pass.svg
+== clipPath-basic-shape-transform.html clipPath-basic-shape-transform-ref.html
 == clipPath-css-transform.html clipPath-css-transform-ref.html
 == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
