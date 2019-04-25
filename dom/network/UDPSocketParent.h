@@ -29,7 +29,7 @@ class UDPSocketParent : public mozilla::net::PUDPSocketParent,
   explicit UDPSocketParent(PBackgroundParent* aManager);
   explicit UDPSocketParent(PNeckoParent* aManager);
 
-  bool Init(const IPC::Principal& aPrincipal, const nsACString& aFilter);
+  bool Init(nsIPrincipal* aPrincipal, const nsACString& aFilter);
 
   mozilla::ipc::IPCResult RecvBind(const UDPAddressInfo& aAddressInfo,
                                    const bool& aAddressReuse,
