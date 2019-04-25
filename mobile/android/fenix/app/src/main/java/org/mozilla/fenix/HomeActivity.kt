@@ -112,8 +112,12 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleCrashIfNecessary(intent: Intent?) {
-        if (intent == null) { return }
-        if (!Crash.isCrashIntent(intent)) { return }
+        if (intent == null) {
+            return
+        }
+        if (!Crash.isCrashIntent(intent)) {
+            return
+        }
 
         openToCrashReporter(intent)
     }
@@ -131,7 +135,10 @@ open class HomeActivity : AppCompatActivity() {
 
     private fun handleOpenedFromExternalSource() {
         intent?.putExtra(OPEN_TO_BROWSER, false)
-        openToBrowser(SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID), BrowserDirection.FromGlobal)
+        openToBrowser(
+            SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
+                ?: components.core.sessionManager.selectedSession?.id, BrowserDirection.FromGlobal
+        )
     }
 
     fun openToBrowserAndLoad(
