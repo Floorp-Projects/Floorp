@@ -371,7 +371,7 @@ version = "0.1.0"
 dependencies = [
  "euclid 0.19.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.6.16 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozangle 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozangle 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender 0.60.0",
  "winapi 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "winit 0.16.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -865,7 +865,7 @@ dependencies = [
 
 [[package]]
 name = "mozangle"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1646,7 +1646,7 @@ dependencies = [
  "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "malloc_size_of_derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozangle 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozangle 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "pathfinder_font_renderer 0.5.0 (git+https://github.com/pcwalton/pathfinder?branch=webrender)",
  "pathfinder_gfx_utils 0.2.0 (git+https://github.com/pcwalton/pathfinder?branch=webrender)",
@@ -1798,7 +1798,7 @@ dependencies = [
  "image 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozangle 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozangle 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "osmesa-src 0.1.1 (git+https://github.com/servo/osmesa-src)",
  "osmesa-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ron 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1975,7 +1975,7 @@ dependencies = [
 "checksum memoffset 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0f9dc261e2b62d7a622bf416ea3c5245cdd5d9a7fcc428c0d06804dfce1775b3"
 "checksum mio 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "75f72a93f046f1517e3cfddc0a096eb756a2ba727d36edc8227dee769a50a9b0"
 "checksum miow 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f2f3b1cf331de6896aabf6e9d55dca90356cc9960cca7eaaf408a355ae919"
-"checksum mozangle 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1f0583e6792917f498bb3a7440f777a59353102063445ab7f5e9d1dc4ed593aa"
+"checksum mozangle 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "45a8a18a41cfab0fde25cc2f43ea89064d211a0fbb33225b8ff93ab20406e0e7"
 "checksum net2 0.2.32 (registry+https://github.com/rust-lang/crates.io-index)" = "9044faf1413a1057267be51b5afba8eb1090bd2231c693664aa1db716fe1eae0"
 "checksum nix 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d37e713a259ff641624b6cb20e3b12b2952313ba36b6823c0f16e6cfd9e5de17"
 "checksum nodrop 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "9a2228dca57108069a5262f2ed8bd2e82496d2e074a06d1ccc7ce1687b6ae0a2"

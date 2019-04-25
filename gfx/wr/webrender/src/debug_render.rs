@@ -312,7 +312,7 @@ impl DebugRenderer {
     pub fn render(
         &mut self,
         device: &mut Device,
-        viewport_size: Option<FramebufferIntSize>,
+        viewport_size: Option<DeviceIntSize>,
         scale: f32,
     ) {
         if let Some(viewport_size) = viewport_size {

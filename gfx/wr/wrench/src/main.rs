@@ -180,18 +180,18 @@ impl WindowWrapper {
         }
     }
 
-    fn get_inner_size(&self) -> FramebufferIntSize {
-        fn inner_size(window: &winit::Window) -> FramebufferIntSize {
+    fn get_inner_size(&self) -> DeviceIntSize {
+        fn inner_size(window: &winit::Window) -> DeviceIntSize {
             let size = window
                 .get_inner_size()
                 .unwrap()
                 .to_physical(window.get_hidpi_factor());
-            FramebufferIntSize::new(size.width as i32, size.height as i32)
+            DeviceIntSize::new(size.width as i32, size.height as i32)
         }
         match *self {
             WindowWrapper::Window(ref window, _) => inner_size(window.window()),
             WindowWrapper::Angle(ref window, ..) => inner_size(window),
-            WindowWrapper::Headless(ref context, _) => FramebufferIntSize::new(context.width, context.height),
+            WindowWrapper::Headless(ref context, _) => DeviceIntSize::new(context.width, context.height),
         }
     }
 
@@ -203,7 +203,7 @@ impl WindowWrapper {
         }
     }
 
-    fn resize(&mut self, size: FramebufferIntSize) {
+    fn resize(&mut self, size: DeviceIntSize) {
         match *self {
             WindowWrapper::Window(ref mut window, _) => {
                 window.set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
@@ -241,7 +241,7 @@ impl WindowWrapper {
 }
 
 fn make_window(
-    size: FramebufferIntSize,
+    size: DeviceIntSize,
     dp_ratio: Option<f32>,
     vsync: bool,
     events_loop: &Option<winit::EventsLoop>,
@@ -427,20 +427,20 @@ fn main() {
     });
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
-            FramebufferIntSize::new(1280, 720)
+            DeviceIntSize::new(1280, 720)
         } else if s == "1080p" {
-            FramebufferIntSize::new(1920, 1080)
+            DeviceIntSize::new(1920, 1080)
         } else if s == "4k" {
-            FramebufferIntSize::new(3840, 2160)
+            DeviceIntSize::new(3840, 2160)
         } else {
             let x = s.find('x').expect(
                 "Size must be specified exactly as 720p, 1080p, 4k, or width x height",
             );
             let w = s[0 .. x].parse::<i32>().expect("Invalid size width");
             let h = s[x + 1 ..].parse::<i32>().expect("Invalid size height");
-            FramebufferIntSize::new(w, h)
+            DeviceIntSize::new(w, h)
         })
-        .unwrap_or(FramebufferIntSize::new(1920, 1080));
+        .unwrap_or(DeviceIntSize::new(1920, 1080));
     let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
@@ -545,7 +545,7 @@ fn main() {
 fn render<'a>(
     wrench: &mut Wrench,
     window: &mut WindowWrapper,
-    size: FramebufferIntSize,
+    size: DeviceIntSize,
     events_loop: &mut Option<winit::EventsLoop>,
     subargs: &clap::ArgMatches<'a>,
 ) {
@@ -556,7 +556,7 @@ fn render<'a>(
         let mut documents = wrench.api.load_capture(input_path);
         println!("loaded {:?}", documents.iter().map(|cd| cd.document_id).collect::<Vec<_>>());
         let captured = documents.swap_remove(0);
-        if let Some(fb_size) = wrench.renderer.framebuffer_size() {
+        if let Some(fb_size) = wrench.renderer.device_size() {
             window.resize(fb_size);
         }
         wrench.document_id = captured.document_id;
@@ -787,7 +787,8 @@ fn render<'a>(
     match *events_loop {
         None => {
             while body(wrench, vec![winit::Event::Awakened]) == winit::ControlFlow::Continue {}
-            let pixels = wrench.renderer.read_pixels_rgba8(size.into());
+            let fb_rect = FramebufferIntSize::new(size.width, size.height).into();
+            let pixels = wrench.renderer.read_pixels_rgba8(fb_rect);
             save_flipped("screenshot.png", pixels, size);
         }
         Some(ref mut events_loop) => {
