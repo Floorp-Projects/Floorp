@@ -976,7 +976,7 @@ class InitIndexEntryEvent : public Runnable {
     // if there is no write to the file.
     uint32_t sizeInK = mHandle->FileSizeInK();
     CacheIndex::UpdateEntry(mHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
-                            nullptr, &sizeInK);
+                            nullptr, nullptr, 0, &sizeInK);
 
     return NS_OK;
   }
@@ -993,7 +993,9 @@ class UpdateIndexEntryEvent : public Runnable {
   UpdateIndexEntryEvent(CacheFileHandle *aHandle, const uint32_t *aFrecency,
                         const bool *aHasAltData, const uint16_t *aOnStartTime,
                         const uint16_t *aOnStopTime,
-                        const uint8_t *aContentType)
+                        const uint8_t *aContentType,
+                        const uint16_t *aBaseDomainAccessCount,
+                        const uint32_t aTelemetryReportID)
       : Runnable("net::UpdateIndexEntryEvent"),
         mHandle(aHandle),
         mHasFrecency(false),
@@ -1001,11 +1003,14 @@ class UpdateIndexEntryEvent : public Runnable {
         mHasOnStartTime(false),
         mHasOnStopTime(false),
         mHasContentType(false),
+        mHasBaseDomainAccessCount(false),
         mFrecency(0),
         mHasAltData(false),
         mOnStartTime(0),
         mOnStopTime(0),
-        mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN) {
+        mContentType(nsICacheEntry::CONTENT_TYPE_UNKNOWN),
+        mBaseDomainAccessCount(0),
+        mTelemetryReportID(aTelemetryReportID) {
     if (aFrecency) {
       mHasFrecency = true;
       mFrecency = *aFrecency;
@@ -1026,6 +1031,10 @@ class UpdateIndexEntryEvent : public Runnable {
       mHasContentType = true;
       mContentType = *aContentType;
     }
+    if (aBaseDomainAccessCount) {
+      mHasBaseDomainAccessCount = true;
+      mBaseDomainAccessCount = *aBaseDomainAccessCount;
+    }
   }
 
  protected:
@@ -1037,12 +1046,14 @@ class UpdateIndexEntryEvent : public Runnable {
       return NS_OK;
     }
 
-    CacheIndex::UpdateEntry(mHandle->Hash(),
-                            mHasFrecency ? &mFrecency : nullptr,
-                            mHasHasAltData ? &mHasAltData : nullptr,
-                            mHasOnStartTime ? &mOnStartTime : nullptr,
-                            mHasOnStopTime ? &mOnStopTime : nullptr,
-                            mHasContentType ? &mContentType : nullptr, nullptr);
+    CacheIndex::UpdateEntry(
+        mHandle->Hash(), mHasFrecency ? &mFrecency : nullptr,
+        mHasHasAltData ? &mHasAltData : nullptr,
+        mHasOnStartTime ? &mOnStartTime : nullptr,
+        mHasOnStopTime ? &mOnStopTime : nullptr,
+        mHasContentType ? &mContentType : nullptr,
+        mHasBaseDomainAccessCount ? &mBaseDomainAccessCount : nullptr,
+        mTelemetryReportID, nullptr);
     return NS_OK;
   }
 
@@ -1054,12 +1065,15 @@ class UpdateIndexEntryEvent : public Runnable {
   bool mHasOnStartTime;
   bool mHasOnStopTime;
   bool mHasContentType;
+  bool mHasBaseDomainAccessCount;
 
   uint32_t mFrecency;
   bool mHasAltData;
   uint16_t mOnStartTime;
   uint16_t mOnStopTime;
   uint8_t mContentType;
+  uint16_t mBaseDomainAccessCount;
+  uint32_t mTelemetryReportID;
 };
 
 class MetadataWriteScheduleEvent : public Runnable {
@@ -2052,12 +2066,14 @@ nsresult CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle,
     if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
         !aHandle->IsSpecialFile()) {
       CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr,
-                              nullptr, nullptr, &newSizeInK);
+                              nullptr, nullptr, nullptr, 0, &newSizeInK);
 
       if (oldSizeInK < newSizeInK) {
         EvictIfOverLimitInternal();
       }
     }
+
+    CacheIndex::UpdateTotalBytesWritten(bytesWritten);
   }
 
   if (bytesWritten != aCount) {
@@ -2578,7 +2594,7 @@ nsresult CacheFileIOManager::TruncateSeekSetEOFInternal(
   if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
       !aHandle->IsSpecialFile()) {
     CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, nullptr, nullptr,
-                            nullptr, &newSizeInK);
+                            nullptr, nullptr, 0, &newSizeInK);
 
     if (oldSizeInK < newSizeInK) {
       EvictIfOverLimitInternal();
@@ -2892,7 +2908,7 @@ nsresult CacheFileIOManager::OverLimitEvictionInternal() {
       // failing on one entry forever.
       uint32_t frecency = 0;
       rv = CacheIndex::UpdateEntry(&hash, &frecency, nullptr, nullptr, nullptr,
-                                   nullptr, nullptr);
+                                   nullptr, nullptr, 0, nullptr);
       NS_ENSURE_SUCCESS(rv, rv);
 
       consecutiveFailures++;
@@ -3546,20 +3562,24 @@ nsresult CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
 }
 
 // static
-nsresult CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
-                                              const uint32_t *aFrecency,
-                                              const bool *aHasAltData,
-                                              const uint16_t *aOnStartTime,
-                                              const uint16_t *aOnStopTime,
-                                              const uint8_t *aContentType) {
+nsresult CacheFileIOManager::UpdateIndexEntry(
+    CacheFileHandle *aHandle, const uint32_t *aFrecency,
+    const bool *aHasAltData, const uint16_t *aOnStartTime,
+    const uint16_t *aOnStopTime, const uint8_t *aContentType,
+    const uint16_t *aBaseDomainAccessCount, const uint32_t aTelemetryReportID) {
   LOG(
       ("CacheFileIOManager::UpdateIndexEntry() [handle=%p, frecency=%s, "
-       "hasAltData=%s, onStartTime=%s, onStopTime=%s, contentType=%s]",
+       "hasAltData=%s, onStartTime=%s, onStopTime=%s, contentType=%s, "
+       "baseDomainAccessCount=%s, telemetryReportID=%u]",
        aHandle, aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
        aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
-       aContentType ? nsPrintfCString("%u", *aContentType).get() : ""));
+       aContentType ? nsPrintfCString("%u", *aContentType).get() : "",
+       aBaseDomainAccessCount
+           ? nsPrintfCString("%u", *aBaseDomainAccessCount).get()
+           : "",
+       aTelemetryReportID));
 
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3573,7 +3593,8 @@ nsresult CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
   }
 
   RefPtr<UpdateIndexEntryEvent> ev = new UpdateIndexEntryEvent(
-      aHandle, aFrecency, aHasAltData, aOnStartTime, aOnStopTime, aContentType);
+      aHandle, aFrecency, aHasAltData, aOnStartTime, aOnStopTime, aContentType,
+      aBaseDomainAccessCount, aTelemetryReportID);
   rv = ioMan->mIOThread->Dispatch(ev, aHandle->mPriority
                                           ? CacheIOThread::WRITE_PRIORITY
                                           : CacheIOThread::WRITE);

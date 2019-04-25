@@ -26,8 +26,9 @@
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
 #define kMaxBufSize 16384
-#define kIndexVersion 0x00000007
+#define kIndexVersion 0x00000008
 #define kUpdateIndexStartDelay 50000  // in milliseconds
+#define kTelemetryReportBytesLimit (2U * 1024U * 1024U * 1024U)  // 2GB
 
 #define INDEX_NAME "index"
 #define TEMP_INDEX_NAME "index.tmp"
@@ -262,7 +263,8 @@ CacheIndex::CacheIndex()
       mRWBufPos(0),
       mRWPending(false),
       mJournalReadSuccessfully(false),
-      mAsyncGetDiskConsumptionBlocked(false) {
+      mAsyncGetDiskConsumptionBlocked(false),
+      mTotalBytesWritten(0) {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
   MOZ_ASSERT(!gInstance, "multiple CacheIndex instances!");
@@ -303,6 +305,9 @@ nsresult CacheIndex::InitInternal(nsIFile *aCacheDirectory) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStartTime = TimeStamp::NowLoRes();
+
+  mTotalBytesWritten = CacheObserver::CacheAmountWritten();
+  mTotalBytesWritten <<= 10;
 
   ReadIndexFromDisk();
 
@@ -420,6 +425,8 @@ nsresult CacheIndex::Shutdown() {
   }
 
   bool sanitize = CacheObserver::ClearCacheOnShutdown();
+
+  CacheObserver::SetCacheAmountWritten(index->mTotalBytesWritten >> 10);
 
   LOG(
       ("CacheIndex::Shutdown() - [state=%d, indexOnDiskIsValid=%d, "
@@ -920,23 +927,26 @@ nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash) {
 }
 
 // static
-nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
-                                 const uint32_t *aFrecency,
-                                 const bool *aHasAltData,
-                                 const uint16_t *aOnStartTime,
-                                 const uint16_t *aOnStopTime,
-                                 const uint8_t *aContentType,
-                                 const uint32_t *aSize) {
+nsresult CacheIndex::UpdateEntry(
+    const SHA1Sum::Hash *aHash, const uint32_t *aFrecency,
+    const bool *aHasAltData, const uint16_t *aOnStartTime,
+    const uint16_t *aOnStopTime, const uint8_t *aContentType,
+    const uint16_t *aBaseDomainAccessCount, const uint32_t aTelemetryReportID,
+    const uint32_t *aSize) {
   LOG(
       ("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
        "frecency=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s, "
-       "contentType=%s, size=%s]",
+       "contentType=%s, baseDomainAccessCount=%s, telemetryReportID=%u, "
+       "size=%s]",
        LOGSHA1(aHash), aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
        aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
        aContentType ? nsPrintfCString("%u", *aContentType).get() : "",
-       aSize ? nsPrintfCString("%u", *aSize).get() : ""));
+       aBaseDomainAccessCount
+           ? nsPrintfCString("%u", *aBaseDomainAccessCount).get()
+           : "",
+       aTelemetryReportID, aSize ? nsPrintfCString("%u", *aSize).get() : ""));
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
@@ -957,6 +967,19 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
     CacheIndexEntry *entry = index->mIndex.GetEntry(*aHash);
 
+    uint16_t baseDomainAccessCount = 0;
+    if (aBaseDomainAccessCount) {
+      if (aTelemetryReportID != CacheObserver::TelemetryReportID()) {
+        // Telemetry report ID has changed and the value is no longer valid.
+        // Reset the count to 0.
+        LOG(
+            ("CacheIndex::UpdateEntry() - Telemetry report ID has changed, "
+             "setting baseDomainAccessCount to 0."));
+      } else {
+        baseDomainAccessCount = *aBaseDomainAccessCount;
+      }
+    }
+
     if (entry && entry->IsRemoved()) {
       entry = nullptr;
     }
@@ -973,8 +996,11 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (!HasEntryChanged(entry, aFrecency, aHasAltData, aOnStartTime,
-                           aOnStopTime, aContentType, aSize)) {
+      if (!HasEntryChanged(
+              entry, aFrecency, aHasAltData, aOnStartTime, aOnStopTime,
+              aContentType,
+              aBaseDomainAccessCount ? &baseDomainAccessCount : nullptr,
+              aSize)) {
         return NS_OK;
       }
 
@@ -1000,6 +1026,10 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aContentType) {
         entry->SetContentType(*aContentType);
+      }
+
+      if (aBaseDomainAccessCount) {
+        entry->SetBaseDomainAccessCount(baseDomainAccessCount);
       }
 
       if (aSize) {
@@ -1050,6 +1080,10 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aContentType) {
         updated->SetContentType(*aContentType);
+      }
+
+      if (aBaseDomainAccessCount) {
+        updated->SetBaseDomainAccessCount(baseDomainAccessCount);
       }
 
       if (aSize) {
@@ -1537,7 +1571,8 @@ bool CacheIndex::IsCollision(CacheIndexEntry *aEntry,
 bool CacheIndex::HasEntryChanged(
     CacheIndexEntry *aEntry, const uint32_t *aFrecency, const bool *aHasAltData,
     const uint16_t *aOnStartTime, const uint16_t *aOnStopTime,
-    const uint8_t *aContentType, const uint32_t *aSize) {
+    const uint8_t *aContentType, const uint16_t *aBaseDomainAccessCount,
+    const uint32_t *aSize) {
   if (aFrecency && *aFrecency != aEntry->GetFrecency()) {
     return true;
   }
@@ -1555,6 +1590,11 @@ bool CacheIndex::HasEntryChanged(
   }
 
   if (aContentType && *aContentType != aEntry->GetContentType()) {
+    return true;
+  }
+
+  if (aBaseDomainAccessCount &&
+      *aBaseDomainAccessCount != aEntry->GetBaseDomainAccessCount()) {
     return true;
   }
 
@@ -2673,6 +2713,15 @@ nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
     contentType = n64;
   }
   aEntry->SetContentType(contentType);
+
+  uint32_t trID = CacheObserver::TelemetryReportID();
+  const char *siteIDInfo = aMetaData->GetElement("eTLD1Access");
+  uint16_t siteIDCount = 0;
+  if (siteIDInfo) {
+    CacheFileUtils::ParseBaseDomainAccessInfo(siteIDInfo, trID, nullptr,
+                                              nullptr, &siteIDCount);
+  }
+  aEntry->SetBaseDomainAccessCount(siteIDCount);
 
   aEntry->SetFileSize(static_cast<uint32_t>(std::min(
       static_cast<int64_t>(PR_UINT32_MAX), (aFileSize + 0x3FF) >> 10)));
@@ -3855,13 +3904,139 @@ void CacheIndex::ReportHashStats() {
 }
 
 // static
-void CacheIndex::OnAsyncEviction(bool aEvicting) {
+void CacheIndex::UpdateTotalBytesWritten(uint32_t aBytesWritten) {
+  StaticMutexAutoLock lock(sLock);
+
   RefPtr<CacheIndex> index = gInstance;
   if (!index) {
     return;
   }
 
+  index->mTotalBytesWritten += aBytesWritten;
+
+  // Do telemetry report if enough data has been written and the index is
+  // in READY state. The data is available also in WRITING state, but we would
+  // need to deal with pending updates.
+  if (index->mTotalBytesWritten >= kTelemetryReportBytesLimit &&
+      index->mState == READY && !index->mIndexNeedsUpdate &&
+      !index->mShuttingDown) {
+    index->DoBaseDomainAccessTelemetryReport();
+
+    index->mTotalBytesWritten = 0;
+    CacheObserver::SetCacheAmountWritten(0);
+    return;
+  }
+
+  uint64_t writtenKB = index->mTotalBytesWritten >> 10;
+  // Store number of written kilobytes to prefs after writing at least 10MB.
+  if ((writtenKB - CacheObserver::CacheAmountWritten()) > (10 * 1024)) {
+    CacheObserver::SetCacheAmountWritten(writtenKB);
+  }
+}
+
+void CacheIndex::DoBaseDomainAccessTelemetryReport() {
+  static const nsLiteralCString
+      contentTypeNames[nsICacheEntry::CONTENT_TYPE_LAST] = {
+          NS_LITERAL_CSTRING("UNKNOWN"),    NS_LITERAL_CSTRING("OTHER"),
+          NS_LITERAL_CSTRING("JAVASCRIPT"), NS_LITERAL_CSTRING("IMAGE"),
+          NS_LITERAL_CSTRING("MEDIA"),      NS_LITERAL_CSTRING("STYLESHEET"),
+          NS_LITERAL_CSTRING("WASM")};
+
+  // size in kB of all entries
+  uint32_t size = 0;
+  // increase of size in kB that would be caused by first party isolation
+  uint32_t sizeInc = 0;
+  // count of all entries
+  uint32_t count = 0;
+  // increase of count that would be caused by first party isolation
+  uint32_t countInc = 0;
+
+  // the same stats as above split by content type
+  uint32_t sizeByType[nsICacheEntry::CONTENT_TYPE_LAST];
+  uint32_t sizeIncByType[nsICacheEntry::CONTENT_TYPE_LAST];
+  uint32_t countByType[nsICacheEntry::CONTENT_TYPE_LAST];
+  uint32_t countIncByType[nsICacheEntry::CONTENT_TYPE_LAST];
+
+  memset(&sizeByType, 0, sizeof(sizeByType));
+  memset(&sizeIncByType, 0, sizeof(sizeIncByType));
+  memset(&countByType, 0, sizeof(countByType));
+  memset(&countIncByType, 0, sizeof(countIncByType));
+
+  for (auto iter = mIndex.Iter(); !iter.Done(); iter.Next()) {
+    CacheIndexEntry *entry = iter.Get();
+    if (entry->IsRemoved() || !entry->IsInitialized() || entry->IsFileEmpty()) {
+      entry->SetBaseDomainAccessCount(0);
+      continue;
+    }
+
+    uint32_t entrySize = entry->GetFileSize();
+    uint32_t accessCnt = entry->GetBaseDomainAccessCount();
+    uint8_t contentType = entry->GetContentType();
+    entry->SetBaseDomainAccessCount(0);
+
+    ++count;
+    ++countByType[contentType];
+    size += entrySize;
+    sizeByType[contentType] += entrySize;
+
+    if (accessCnt > 1) {
+      countInc += accessCnt - 1;
+      countIncByType[contentType] += accessCnt - 1;
+      sizeInc += (accessCnt - 1) * entrySize;
+      sizeIncByType[contentType] += (accessCnt - 1) * entrySize;
+    }
+
+    Telemetry::Accumulate(
+        Telemetry::NETWORK_CACHE_ISOLATION_UNIQUE_SITE_ACCESS_COUNT,
+        contentTypeNames[contentType], accessCnt);
+  }
+
+  if (size > 0) {
+    Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ISOLATION_SIZE_INCREASE,
+                          NS_LITERAL_CSTRING("ALL"),
+                          round(static_cast<double>(sizeInc) * 100.0 /
+                                static_cast<double>(size)));
+  }
+
+  if (count > 0) {
+    Telemetry::Accumulate(
+        Telemetry::NETWORK_CACHE_ISOLATION_ENTRY_COUNT_INCREASE,
+        NS_LITERAL_CSTRING("ALL"),
+        round(static_cast<double>(countInc) * 100.0 /
+              static_cast<double>(count)));
+  }
+
+  for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
+    if (sizeByType[i] > 0) {
+      Telemetry::Accumulate(Telemetry::NETWORK_CACHE_ISOLATION_SIZE_INCREASE,
+                            contentTypeNames[i],
+                            round(static_cast<double>(sizeIncByType[i]) *
+                                  100.0 / static_cast<double>(sizeByType[i])));
+    }
+
+    if (countByType[i] > 0) {
+      Telemetry::Accumulate(
+          Telemetry::NETWORK_CACHE_ISOLATION_ENTRY_COUNT_INCREASE,
+          contentTypeNames[i],
+          round(static_cast<double>(countIncByType[i]) * 100.0 /
+                static_cast<double>(countByType[i])));
+    }
+  }
+
+  // Change telemetry report ID. This will invalidate eTLD+1 access data stored
+  // in all cache entries.
+  CacheObserver::SetTelemetryReportID(CacheObserver::TelemetryReportID() + 1);
+}
+
+// static
+void CacheIndex::OnAsyncEviction(bool aEvicting) {
   StaticMutexAutoLock lock(sLock);
+
+  RefPtr<CacheIndex> index = gInstance;
+  if (!index) {
+    return;
+  }
+
   index->mAsyncGetDiskConsumptionBlocked = aEvicting;
   if (!aEvicting) {
     index->NotifyAsyncGetDiskConsumptionCallbacks();
