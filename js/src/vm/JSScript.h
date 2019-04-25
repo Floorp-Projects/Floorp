@@ -1537,7 +1537,7 @@ class alignas(uintptr_t) SharedScriptData final {
 
  private:
   // Layout of trailing arrays
-  size_t atomOffset() const { return sizeof(SharedScriptData); };
+  size_t atomOffset() const { return offsetOfAtoms(); }
   size_t codeOffset() const { return codeOffset_; }
   size_t noteOffset() const { return codeOffset_ + codeLength_; }
 
@@ -1620,6 +1620,7 @@ class alignas(uintptr_t) SharedScriptData final {
   static constexpr size_t offsetOfFunLength() {
     return offsetof(SharedScriptData, funLength);
   }
+  static constexpr size_t offsetOfAtoms() { return sizeof(SharedScriptData); }
 
   void traceChildren(JSTracer* trc);
 
