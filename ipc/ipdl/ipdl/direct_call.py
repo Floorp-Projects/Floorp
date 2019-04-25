@@ -42,13 +42,6 @@ DIRECT_CALL_OVERRIDES = {
     ("PGMPVideoEncoder", "child"): ("GMPVideoEncoderChild", "GMPVideoEncoderChild.h"),
     ("PGMPVideoDecoder", "child"): ("GMPVideoDecoderChild", "GMPVideoDecoderChild.h"),
 
-    ("PIPCBlobInputStream", "child"): (
-        "mozilla::dom::IPCBlobInputStreamChild", "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
-    ),
-    ("PIPCBlobInputStream", "parent"): (
-        "mozilla::dom::IPCBlobInputStreamParent", "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-    ),
-
     ("PLoginReputation", "parent"): ("LoginReputationParent", "mozilla/LoginReputationIPC.h"),
 
     ("PMedia", "child"): ("Child", "mozilla/media/MediaChild.h"),

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ipc_IPCBlobInputStreamStorage_h
-#define mozilla_dom_ipc_IPCBlobInputStreamStorage_h
+#ifndef mozilla_dom_IPCBlobInputStreamStorage_h
+#define mozilla_dom_IPCBlobInputStreamStorage_h
 
 #include "mozilla/RefPtr.h"
 #include "nsClassHashtable.h"
@@ -64,4 +64,4 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_ipc_IPCBlobInputStreamStorage_h
+#endif  // mozilla_dom_IPCBlobInputStreamStorage_h
