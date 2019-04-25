@@ -639,8 +639,8 @@ public class BrowserApp extends GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        if (mIsAbortingAppLaunch) {
-          return;
+        if (isShutDownOrAbort()) {
+            return;
         }
 
         mOnboardingHelper = new OnboardingHelper(this, safeStartingIntent);
@@ -1083,7 +1083,7 @@ public class BrowserApp extends GeckoApp
     public void onResume() {
         super.onResume();
 
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             return;
         }
 
@@ -1104,7 +1104,7 @@ public class BrowserApp extends GeckoApp
         dismissTabHistoryFragment();
 
         super.onPause();
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             return;
         }
 
@@ -1168,7 +1168,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onRestart() {
         super.onRestart();
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             return;
         }
 
@@ -1180,7 +1180,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onStart() {
         super.onStart();
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             return;
         }
 
@@ -1217,7 +1217,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onStop() {
         super.onStop();
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             return;
         }
 
@@ -1510,7 +1510,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onDestroy() {
-        if (mIsAbortingAppLaunch) {
+        if (isShutDownOrAbort()) {
             super.onDestroy();
             return;
         }
@@ -4241,5 +4241,9 @@ public class BrowserApp extends GeckoApp
         if (frag != null) {
             frag.dismiss();
         }
+    }
+
+    private boolean isShutDownOrAbort() {
+        return mIsAbortingAppLaunch || mShutdownOnDestroy;
     }
 }
