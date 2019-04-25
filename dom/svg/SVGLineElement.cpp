@@ -104,7 +104,7 @@ void SVGLineElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
 
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
-  float angle = atan2(y2 - y1, x2 - x1);
+  float angle = std::atan2(y2 - y1, x2 - x1);
 
   aMarks->AppendElement(SVGMark(x1, y1, angle, SVGMark::eStart));
   aMarks->AppendElement(SVGMark(x2, y2, angle, SVGMark::eEnd));
