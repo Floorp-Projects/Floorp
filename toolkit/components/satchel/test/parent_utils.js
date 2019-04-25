@@ -101,6 +101,9 @@ var ParentUtils = {
     });
   },
 
+  // Tests using this function need to flip pref for exceptional use of
+  // `new Function` / `eval()`.
+  // See test_autofill_and_ordinal_forms.html for example.
   testMenuEntry(index, statement) {
     ContentTaskUtils.waitForCondition(() => {
       let el = gAutocompletePopup.richlistbox.getItemAtIndex(index);
