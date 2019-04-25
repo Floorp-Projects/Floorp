@@ -473,8 +473,6 @@ class BrowserParent final : public PBrowserParent,
 
   void SizeModeChanged(const nsSizeMode& aSizeMode);
 
-  void UIResolutionChanged();
-
   void ThemeChanged();
 
   void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
