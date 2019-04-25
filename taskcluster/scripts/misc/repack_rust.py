@@ -240,12 +240,8 @@ def fetch_optional(manifest, pkg, host):
 
 
 def tar_for_host(host):
-    if 'linux' in host:
-        tar_options = 'cJf'
-        tar_ext = '.tar.xz'
-    else:
-        tar_options = 'cjf'
-        tar_ext = '.tar.bz2'
+    tar_options = 'cJf'
+    tar_ext = '.tar.xz'
     return tar_options, tar_ext
 
 
