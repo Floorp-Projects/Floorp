@@ -3467,6 +3467,28 @@ bool ReadableByteStreamController::constructor(JSContext* cx, unsigned argc,
   return false;
 }
 
+// Disconnect the source from a controller without calling finalize() on it,
+// unless this class is reset(). This ensures that finalize() will not be called
+// on the source if setting up the controller fails.
+class MOZ_RAII AutoClearUnderlyingSource {
+  Rooted<ReadableStreamController*> controller_;
+
+ public:
+  AutoClearUnderlyingSource(JSContext* cx, ReadableStreamController* controller)
+      : controller_(cx, controller) {}
+
+  ~AutoClearUnderlyingSource() {
+    if (controller_) {
+      ReadableStreamController::clearUnderlyingSource(
+          controller_, /* finalizeSource */ false);
+    }
+  }
+
+  void reset() {
+    controller_ = nullptr;
+  }
+};
+
 /**
  * Version of SetUpReadableByteStreamController that's specialized for handling
  * external, embedding-provided, underlying sources.
@@ -3480,6 +3502,8 @@ static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
   if (!controller) {
     return false;
   }
+
+  AutoClearUnderlyingSource autoClear(cx, controller);
 
   // Step 1: Assert: stream.[[readableStreamController]] is undefined.
   MOZ_ASSERT(!stream->hasController());
@@ -3556,6 +3580,7 @@ static MOZ_MUST_USE bool SetUpExternalReadableByteStreamController(
     return false;
   }
 
+  autoClear.reset();
   return true;
 }
 
