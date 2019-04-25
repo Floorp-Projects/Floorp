@@ -523,10 +523,12 @@ class PictureInPictureChild extends ActorChild {
     });
 
     if (this.weakPlayerContent) {
-      await new Promise(resolve => {
-        this.weakPlayerContent.addEventListener("unload", resolve,
-                                                { once: true });
-      });
+      if (!this.weakPlayerContent.closed) {
+        await new Promise(resolve => {
+          this.weakPlayerContent.addEventListener("unload", resolve,
+                                                  { once: true });
+        });
+      }
       // Nothing should be holding a reference to the Picture-in-Picture
       // player window content at this point, but just in case, we'll
       // clear the weak reference directly so nothing else can get a hold
