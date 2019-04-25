@@ -9,6 +9,7 @@ description = "Rust code for libxul"
 bindgen = ["gkrust-shared/bindgen"]
 servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
+webrender_debugger = ["gkrust-shared/webrender_debugger"]
 cubeb-remoting = ["gkrust-shared/cubeb-remoting"]
 cubeb_pulse_rust = ["gkrust-shared/cubeb_pulse_rust"]
 gecko_debug = ["gkrust-shared/gecko_debug"]
