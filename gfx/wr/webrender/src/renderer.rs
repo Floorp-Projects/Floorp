@@ -3749,6 +3749,19 @@ impl Renderer {
             }
         }
 
+        fn should_skip_batch(kind: &BatchKind, flags: &DebugFlags) -> bool {
+            match kind {
+                BatchKind::TextRun(_) => {
+                    flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
+                }
+                BatchKind::Brush(BrushBatchKind::RadialGradient) |
+                BatchKind::Brush(BrushBatchKind::LinearGradient) => {
+                    flags.contains(DebugFlags::DISABLE_GRADIENT_PRIMS)
+                }
+                _ => false,
+            }
+        }
+
         for alpha_batch_container in &target.alpha_batch_containers {
             let uses_scissor = alpha_batch_container.task_scissor_rect.is_some() ||
                                !alpha_batch_container.regions.is_empty();
@@ -3762,7 +3775,8 @@ impl Renderer {
                 self.device.set_scissor_rect(scissor_rect)
             }
 
-            if !alpha_batch_container.opaque_batches.is_empty() {
+            if !alpha_batch_container.opaque_batches.is_empty()
+                    && !self.debug_flags.contains(DebugFlags::DISABLE_OPAQUE_PASS) {
                 let _gl = self.gpu_profile.start_marker("opaque batches");
                 let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
                 self.set_blend(false, framebuffer_kind);
@@ -3778,6 +3792,10 @@ impl Renderer {
                     .iter()
                     .rev()
                 {
+                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                        continue;
+                    }
+
                     self.shaders.borrow_mut()
                         .get(&batch.key, self.debug_flags)
                         .bind(
@@ -3812,7 +3830,8 @@ impl Renderer {
                 self.gpu_profile.finish_sampler(opaque_sampler);
             }
 
-            if !alpha_batch_container.alpha_batches.is_empty() {
+            if !alpha_batch_container.alpha_batches.is_empty()
+                    && !self.debug_flags.contains(DebugFlags::DISABLE_ALPHA_PASS) {
                 let _gl = self.gpu_profile.start_marker("alpha batches");
                 let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
                 self.set_blend(true, framebuffer_kind);
@@ -3836,6 +3855,10 @@ impl Renderer {
                 }
 
                 for batch in &alpha_batch_container.alpha_batches {
+                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                        continue;
+                    }
+
                     self.shaders.borrow_mut()
                         .get(&batch.key, self.debug_flags)
                         .bind(
@@ -4040,6 +4063,10 @@ impl Renderer {
         projection: &Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
+        if self.debug_flags.contains(DebugFlags::DISABLE_CLIP_MASKS) {
+            return;
+        }
+
         // draw rounded cornered rectangles
         if !list.slow_rectangles.is_empty() {
             let _gm2 = self.gpu_profile.start_marker("slow clip rectangles");
