@@ -6,6 +6,7 @@
 
 BROWSER_CHROME_MANIFESTS += [
     'test/allocations/browser_allocations_target.ini',
+    'test/browser-rtl.ini',
     'test/browser.ini',
     'test/metrics/browser_metrics_debugger.ini',
     'test/metrics/browser_metrics_inspector.ini',
