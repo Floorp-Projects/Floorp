@@ -14,8 +14,6 @@
 
 #include <stddef.h>
 
-#include "jstypes.h"
-
 /**
  * Definition of Binary AST tokens.
  *
@@ -187,7 +185,7 @@ namespace frontend {
   F(YieldExpression, "YieldExpression")                                       \
   F(YieldStarExpression, "YieldStarExpression")
 
-enum class BinASTKind : uint16_t {
+enum class BinASTKind {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
@@ -280,7 +278,7 @@ const size_t BINASTKIND_LIMIT = 120;
   F(Update, "update")                                 \
   F(Value, "value")
 
-enum class BinASTField : uint16_t {
+enum class BinASTField {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
@@ -356,7 +354,7 @@ const size_t BINASTFIELD_LIMIT = 69;
   F(VariableDeclarationKindConst, "const")                    \
   F(VariableDeclarationKindLet, "let")
 
-enum class BinASTVariant : uint16_t {
+enum class BinASTVariant {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
