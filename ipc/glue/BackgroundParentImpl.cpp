@@ -30,10 +30,10 @@
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/StorageActivityService.h"
+#include "mozilla/dom/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-#include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
@@ -586,19 +586,20 @@ bool BackgroundParentImpl::DeallocPFileCreatorParent(
   return true;
 }
 
-PTemporaryIPCBlobParent* BackgroundParentImpl::AllocPTemporaryIPCBlobParent() {
-  return new mozilla::dom::TemporaryIPCBlobParent();
+dom::PTemporaryIPCBlobParent*
+BackgroundParentImpl::AllocPTemporaryIPCBlobParent() {
+  return new dom::TemporaryIPCBlobParent();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPTemporaryIPCBlobConstructor(
-    PTemporaryIPCBlobParent* aActor) {
-  mozilla::dom::TemporaryIPCBlobParent* actor =
-      static_cast<mozilla::dom::TemporaryIPCBlobParent*>(aActor);
+    dom::PTemporaryIPCBlobParent* aActor) {
+  dom::TemporaryIPCBlobParent* actor =
+      static_cast<dom::TemporaryIPCBlobParent*>(aActor);
   return actor->CreateAndShareFile();
 }
 
 bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
-    PTemporaryIPCBlobParent* aActor) {
+    dom::PTemporaryIPCBlobParent* aActor) {
   delete aActor;
   return true;
 }
