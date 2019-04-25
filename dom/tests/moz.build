@@ -41,7 +41,7 @@ with Files("mochitest/ajax/offline/**"):
     BUG_COMPONENT = ("Core", "Networking: Cache")
 
 with Files("mochitest/beacon/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 # big mix of components here
 with Files("mochitest/bugs/**"):
@@ -67,7 +67,10 @@ with Files("mochitest/dom-level2-html/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("mochitest/fetch/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("mochitest/fetch/*sw_*"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
 
 with Files("mochitest/gamepad/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
