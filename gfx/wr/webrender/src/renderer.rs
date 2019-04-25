@@ -34,7 +34,7 @@
 //! up the scissor, are accepting already transformed coordinates, which we can get by
 //! calling `DrawTarget::to_framebuffer_rect`
 
-use api::{BlobImageHandler, ColorF, ColorU};
+use api::{ApiMsg, BlobImageHandler, ColorF, ColorU};
 use api::{DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{ImageRendering, Checkpoint, NotificationRequest};
@@ -43,7 +43,7 @@ use api::{RenderApiSender, RenderNotifier, TextureTarget};
 use api::channel;
 use api::units::*;
 pub use api::DebugFlags;
-use api::channel::PayloadReceiverHelperMethods;
+use api::channel::{MsgSender, PayloadReceiverHelperMethods};
 use batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -113,10 +113,7 @@ use time::precise_time_ns;
 cfg_if! {
     if #[cfg(feature = "debugger")] {
         use serde_json;
-        use debug_server::{self, DebugServer};
-    } else {
-        use api::ApiMsg;
-        use api::channel::MsgSender;
+        use debug_server;
     }
 }
 
@@ -1851,7 +1848,7 @@ impl AsyncScreenshotGrabber {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
-    debug_server: DebugServer,
+    debug_server: Box<DebugServer>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
@@ -2008,7 +2005,7 @@ impl Renderer {
         let (result_tx, result_rx) = channel();
         let gl_type = gl.get_type();
 
-        let debug_server = DebugServer::new(api_tx.clone());
+        let debug_server = new_debug_server(options.start_debug_server, api_tx.clone());
 
         let mut device = Device::new(
             gl,
@@ -5596,6 +5593,8 @@ pub struct RendererOptions {
     /// and not complete. This option will probably be removed once support is
     /// complete, and WR can implicitly choose whether to make use of PLS.
     pub allow_pixel_local_storage_support: bool,
+    /// Start the debug server for this renderer.
+    pub start_debug_server: bool,
 }
 
 impl Default for RendererOptions {
@@ -5636,20 +5635,43 @@ impl Default for RendererOptions {
             testing: false,
             gpu_supports_fast_clears: false,
             allow_pixel_local_storage_support: false,
+            // For backwards compatibility we set this to true by default, so
+            // that if the debugger feature is enabled, the debug server will
+            // be started automatically. Users can explicitly disable this as
+            // needed.
+            start_debug_server: true,
         }
     }
 }
 
-#[cfg(not(feature = "debugger"))]
-pub struct DebugServer;
+pub trait DebugServer {
+    fn send(&mut self, _message: String);
+}
 
-#[cfg(not(feature = "debugger"))]
-impl DebugServer {
-    pub fn new(_: MsgSender<ApiMsg>) -> Self {
-        DebugServer
+struct NoopDebugServer;
+
+impl NoopDebugServer {
+    fn new(_: MsgSender<ApiMsg>) -> Self {
+        NoopDebugServer
     }
+}
 
-    pub fn send(&mut self, _: String) {}
+impl DebugServer for NoopDebugServer {
+    fn send(&mut self, _: String) {}
+}
+
+#[cfg(feature = "debugger")]
+fn new_debug_server(enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
+    if enable {
+        Box::new(debug_server::DebugServerImpl::new(api_tx))
+    } else {
+        Box::new(NoopDebugServer::new(api_tx))
+    }
+}
+
+#[cfg(not(feature = "debugger"))]
+fn new_debug_server(_enable: bool, api_tx: MsgSender<ApiMsg>) -> Box<DebugServer> {
+    Box::new(NoopDebugServer::new(api_tx))
 }
 
 /// Some basic statistics about the rendered scene, used in Gecko, as
