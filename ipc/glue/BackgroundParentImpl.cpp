@@ -33,7 +33,7 @@
 #include "mozilla/dom/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
+#include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
@@ -604,21 +604,22 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
   return true;
 }
 
-PIPCBlobInputStreamParent* BackgroundParentImpl::AllocPIPCBlobInputStreamParent(
-    const nsID& aID, const uint64_t& aSize) {
+dom::PIPCBlobInputStreamParent*
+BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
+                                                     const uint64_t& aSize) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
-      mozilla::dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  RefPtr<dom::IPCBlobInputStreamParent> actor =
+      dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
   return actor.forget().take();
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
-    PIPCBlobInputStreamParent* aActor, const nsID& aID, const uint64_t& aSize) {
-  if (!static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor)
-           ->HasValidStream()) {
+    dom::PIPCBlobInputStreamParent* aActor, const nsID& aID,
+    const uint64_t& aSize) {
+  if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -626,13 +627,13 @@ BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
 }
 
 bool BackgroundParentImpl::DeallocPIPCBlobInputStreamParent(
-    PIPCBlobInputStreamParent* aActor) {
+    dom::PIPCBlobInputStreamParent* aActor) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
-      dont_AddRef(static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor));
+  RefPtr<dom::IPCBlobInputStreamParent> actor =
+      dont_AddRef(static_cast<dom::IPCBlobInputStreamParent*>(aActor));
   return true;
 }
 
