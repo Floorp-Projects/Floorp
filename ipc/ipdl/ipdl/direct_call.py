@@ -93,13 +93,6 @@ DIRECT_CALL_OVERRIDES = {
         "mozilla::dom::TCPSocketParent", "mozilla/dom/network/TCPSocketParent.h"
     ),
 
-    ("PTemporaryIPCBlob", "child"): (
-        "mozilla::dom::TemporaryIPCBlobChild", "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
-    ),
-    ("PTemporaryIPCBlob", "parent"): (
-        "mozilla::dom::TemporaryIPCBlobParent", "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
-    ),
-
     ("PTestShellCommand", "parent"): ("TestShellCommandParent", "mozilla/ipc/TestShellParent.h"),
 
     ("PTransportProvider", "child"): (

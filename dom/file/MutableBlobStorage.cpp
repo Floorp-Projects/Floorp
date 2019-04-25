@@ -8,7 +8,7 @@
 #include "MutableBlobStorage.h"
 #include "MemoryBlobImpl.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
+#include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
