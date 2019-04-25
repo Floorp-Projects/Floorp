@@ -175,14 +175,6 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                         dump_directory,
                         symbols_path,
                         test_name=None):
-        if not self.device.is_dir(self.remoteMinidumpDir, root=True):
-            # The minidumps directory is automatically created when Fennec
-            # (first) starts, so its lack of presence is a hint that
-            # something went wrong.
-            print("Automation Error: No crash directory (%s) found on remote device" %
-                  self.remoteMinidumpDir)
-            # Whilst no crash was found, the run should still display as a failure
-            return True
         with mozfile.TemporaryDirectory() as dumpDir:
             self.device.pull(self.remoteMinidumpDir, dumpDir)
             crashed = xpcshell.XPCShellTestThread.checkForCrashes(
@@ -511,9 +503,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.initDir(self.remoteScriptsDir)
         self.device.push(self.xpcDir, self.remoteScriptsDir, timeout=600)
         self.device.chmod(self.remoteScriptsDir, recursive=True, root=True)
-
-    def setupMinidumpDir(self):
-        self.initDir(self.remoteMinidumpDir)
 
     def buildTestList(self, test_tags=None, test_paths=None, verify=False):
         xpcshell.XPCShellTests.buildTestList(
