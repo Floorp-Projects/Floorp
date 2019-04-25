@@ -586,7 +586,7 @@ double SVGContentUtils::ComputeNormalizedHypotenuse(double aWidth,
 }
 
 float SVGContentUtils::AngleBisect(float a1, float a2) {
-  float delta = fmod(a2 - a1, static_cast<float>(2 * M_PI));
+  float delta = std::fmod(a2 - a1, static_cast<float>(2 * M_PI));
   if (delta < 0) {
     delta += static_cast<float>(2 * M_PI);
   }
