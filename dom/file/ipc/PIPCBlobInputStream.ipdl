@@ -11,7 +11,7 @@ include protocol PParentToChildStream;
 include IPCStream;
 
 namespace mozilla {
-namespace dom {
+namespace ipc {
 
 protocol PIPCBlobInputStream
 {

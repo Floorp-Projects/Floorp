@@ -17,7 +17,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/EndpointForReportParent.h"
-#include "mozilla/dom/FileCreatorParent.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
@@ -25,16 +24,15 @@
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
-#include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/StorageActivityService.h"
-#include "mozilla/dom/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/IPCBlobInputStreamParent.h"
-#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
+#include "mozilla/dom/ipc/PendingIPCBlobParent.h"
+#include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
@@ -58,7 +56,6 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyRelease.h"
@@ -468,13 +465,13 @@ bool BackgroundParentImpl::DeallocPBackgroundStorageParent(
   return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
 }
 
-mozilla::dom::PPendingIPCBlobParent*
-BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob) {
+PPendingIPCBlobParent* BackgroundParentImpl::AllocPPendingIPCBlobParent(
+    const IPCBlob& aBlob) {
   MOZ_CRASH("PPendingIPCBlobParent actors should be manually constructed!");
 }
 
 bool BackgroundParentImpl::DeallocPPendingIPCBlobParent(
-    mozilla::dom::PPendingIPCBlobParent* aActor) {
+    PPendingIPCBlobParent* aActor) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -541,85 +538,38 @@ bool BackgroundParentImpl::DeallocPSharedWorkerParent(
   return true;
 }
 
-dom::PFileCreatorParent* BackgroundParentImpl::AllocPFileCreatorParent(
-    const nsString& aFullPath, const nsString& aType, const nsString& aName,
-    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
-    const bool& aIsFromNsIFile) {
-  RefPtr<dom::FileCreatorParent> actor = new dom::FileCreatorParent();
-  return actor.forget().take();
-}
-
-mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
-    dom::PFileCreatorParent* aActor, const nsString& aFullPath,
-    const nsString& aType, const nsString& aName,
-    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
-    const bool& aIsFromNsIFile) {
-  bool isFileRemoteType = false;
-
-  // If the ContentParent is null we are dealing with a same-process actor.
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
-  if (!parent) {
-    isFileRemoteType = true;
-  } else {
-    isFileRemoteType = parent->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
-    NS_ReleaseOnMainThreadSystemGroup("ContentParent release", parent.forget());
-  }
-
-  dom::FileCreatorParent* actor = static_cast<dom::FileCreatorParent*>(aActor);
-
-  // We allow the creation of File via this IPC call only for the 'file' process
-  // or for testing.
-  if (!isFileRemoteType && !StaticPrefs::dom_file_createInChild()) {
-    Unused << dom::FileCreatorParent::Send__delete__(
-        actor, dom::FileCreationErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
-    return IPC_OK();
-  }
-
-  return actor->CreateAndShareFile(aFullPath, aType, aName, aLastModified,
-                                   aExistenceCheck, aIsFromNsIFile);
-}
-
-bool BackgroundParentImpl::DeallocPFileCreatorParent(
-    dom::PFileCreatorParent* aActor) {
-  RefPtr<dom::FileCreatorParent> actor =
-      dont_AddRef(static_cast<dom::FileCreatorParent*>(aActor));
-  return true;
-}
-
-dom::PTemporaryIPCBlobParent*
-BackgroundParentImpl::AllocPTemporaryIPCBlobParent() {
-  return new dom::TemporaryIPCBlobParent();
+PTemporaryIPCBlobParent* BackgroundParentImpl::AllocPTemporaryIPCBlobParent() {
+  return new mozilla::dom::TemporaryIPCBlobParent();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPTemporaryIPCBlobConstructor(
-    dom::PTemporaryIPCBlobParent* aActor) {
-  dom::TemporaryIPCBlobParent* actor =
-      static_cast<dom::TemporaryIPCBlobParent*>(aActor);
+    PTemporaryIPCBlobParent* aActor) {
+  mozilla::dom::TemporaryIPCBlobParent* actor =
+      static_cast<mozilla::dom::TemporaryIPCBlobParent*>(aActor);
   return actor->CreateAndShareFile();
 }
 
 bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
-    dom::PTemporaryIPCBlobParent* aActor) {
+    PTemporaryIPCBlobParent* aActor) {
   delete aActor;
   return true;
 }
 
-dom::PIPCBlobInputStreamParent*
-BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
-                                                     const uint64_t& aSize) {
+PIPCBlobInputStreamParent* BackgroundParentImpl::AllocPIPCBlobInputStreamParent(
+    const nsID& aID, const uint64_t& aSize) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::IPCBlobInputStreamParent> actor =
-      dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
+      mozilla::dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
   return actor.forget().take();
 }
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
-    dom::PIPCBlobInputStreamParent* aActor, const nsID& aID,
-    const uint64_t& aSize) {
-  if (!static_cast<dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
+    PIPCBlobInputStreamParent* aActor, const nsID& aID, const uint64_t& aSize) {
+  if (!static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor)
+           ->HasValidStream()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -627,13 +577,13 @@ BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(
 }
 
 bool BackgroundParentImpl::DeallocPIPCBlobInputStreamParent(
-    dom::PIPCBlobInputStreamParent* aActor) {
+    PIPCBlobInputStreamParent* aActor) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<dom::IPCBlobInputStreamParent> actor =
-      dont_AddRef(static_cast<dom::IPCBlobInputStreamParent*>(aActor));
+  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
+      dont_AddRef(static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor));
   return true;
 }
 

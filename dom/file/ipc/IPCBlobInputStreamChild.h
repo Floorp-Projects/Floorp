@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_IPCBlobInputStreamChild_h
-#define mozilla_dom_IPCBlobInputStreamChild_h
+#ifndef mozilla_dom_ipc_IPCBlobInputStreamChild_h
+#define mozilla_dom_ipc_IPCBlobInputStreamChild_h
 
-#include "mozilla/dom/PIPCBlobInputStreamChild.h"
+#include "mozilla/ipc/PIPCBlobInputStreamChild.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIThread.h"
@@ -19,7 +19,8 @@ namespace dom {
 class IPCBlobInputStream;
 class ThreadSafeWorkerRef;
 
-class IPCBlobInputStreamChild final : public PIPCBlobInputStreamChild {
+class IPCBlobInputStreamChild final
+    : public mozilla::ipc::PIPCBlobInputStreamChild {
  public:
   enum ActorState {
     // The actor is connected via IPDL to the parent.
@@ -100,4 +101,4 @@ class IPCBlobInputStreamChild final : public PIPCBlobInputStreamChild {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_IPCBlobInputStreamChild_h
+#endif  // mozilla_dom_ipc_IPCBlobInputStreamChild_h
