@@ -80,6 +80,13 @@ class EnumeratedArray {
     return *this;
   }
 
+  EnumeratedArray& operator=(const EnumeratedArray& aOther) {
+    for (size_t i = 0; i < kSize; i++) {
+      mArray[i] = aOther.mArray[i];
+    }
+    return *this;
+  }
+
   typedef typename ArrayType::iterator iterator;
   typedef typename ArrayType::const_iterator const_iterator;
   typedef typename ArrayType::reverse_iterator reverse_iterator;
