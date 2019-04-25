@@ -207,7 +207,7 @@ class Sidebar extends PureComponent {
         ),
         SidebarItem(
           {
-            className: "sidebar-item--overflow sidebar-item--full-width",
+            className: "sidebar__adb-status sidebar-item--full-width",
           },
           dom.hr({ className: "separator separator--breathe" }),
           this.renderAdbStatus(),
