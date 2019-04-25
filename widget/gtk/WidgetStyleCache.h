@@ -10,12 +10,6 @@
 #include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
-typedef unsigned StyleFlags;
-enum : StyleFlags {
-  NO_STYLE_FLAGS,
-  WHATEVER_MIGHT_BE_NEEDED = 1U << 0,
-};
-
 GtkWidget* GetWidget(WidgetNodeType aNodeType);
 
 cairo_surface_t* GetWidgetIconSurface(GtkWidget* aWidgetIcon, int aScale);
@@ -41,9 +35,9 @@ GtkStyleContext* CreateCSSNode(const char* aName, GtkStyleContext* aParentStyle,
  * The context is owned by WidgetStyleCache. Do not unref.
  */
 GtkStyleContext* GetStyleContext(
-    WidgetNodeType aNodeType, GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
-    GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL,
-    StyleFlags aFlags = NO_STYLE_FLAGS);
+    WidgetNodeType aNodeType, int aScale = 1,
+    GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
+    GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL);
 
 /*
  * Returns a pointer to a style context for the specified node
@@ -52,9 +46,12 @@ GtkStyleContext* GetStyleContext(
  * The context is owned by caller and must be released by g_object_unref().
  */
 GtkStyleContext* CreateStyleContextWithStates(
-    WidgetNodeType aNodeType, GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
+    WidgetNodeType aNodeType, int aScale = 1,
+    GtkTextDirection aDirection = GTK_TEXT_DIR_NONE,
     GtkStateFlags aStateFlags = GTK_STATE_FLAG_NORMAL);
 
 void ResetWidgetCache(void);
+
+void StyleContextSetScale(GtkStyleContext *style, gint aScaleFactor);
 
 #endif  // WidgetStyleCache_h

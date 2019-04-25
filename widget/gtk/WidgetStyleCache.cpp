@@ -1346,9 +1346,9 @@ void ResetWidgetCache(void) {
   mozilla::PodArrayZero(sWidgetStorage);
 }
 
-GtkStyleContext* GetStyleContext(WidgetNodeType aNodeType,
+GtkStyleContext* GetStyleContext(WidgetNodeType aNodeType, int aScale,
                                  GtkTextDirection aDirection,
-                                 GtkStateFlags aStateFlags, StyleFlags aFlags) {
+                                 GtkStateFlags aStateFlags) {
   if (aNodeType == MOZ_GTK_DROPDOWN_ENTRY) {
     aNodeType = MOZ_GTK_ENTRY;
   }
@@ -1358,6 +1358,7 @@ GtkStyleContext* GetStyleContext(WidgetNodeType aNodeType,
     style = GetWidgetStyleInternal(aNodeType);
   } else {
     style = GetCssNodeStyleInternal(aNodeType);
+    StyleContextSetScale(style, aScale);
   }
   bool stateChanged = false;
   bool stateHasDirection = gtk_get_minor_version() >= 8;
@@ -1408,9 +1409,11 @@ GtkStyleContext* GetStyleContext(WidgetNodeType aNodeType,
 }
 
 GtkStyleContext* CreateStyleContextWithStates(WidgetNodeType aNodeType,
+                                              int aScale,
                                               GtkTextDirection aDirection,
                                               GtkStateFlags aStateFlags) {
-  GtkStyleContext* style = GetStyleContext(aNodeType, aDirection, aStateFlags);
+  GtkStyleContext* style = GetStyleContext(aNodeType, aScale, aDirection,
+                                           aStateFlags);
   GtkWidgetPath* path = gtk_widget_path_copy(gtk_style_context_get_path(style));
 
   if (gtk_check_version(3, 14, 0) == nullptr) {
@@ -1433,4 +1436,12 @@ GtkStyleContext* CreateStyleContextWithStates(WidgetNodeType aNodeType,
   gtk_widget_path_unref(path);
 
   return style;
+}
+
+void StyleContextSetScale(GtkStyleContext *style, gint aScaleFactor) {
+  // Support HiDPI styles on Gtk 3.20+
+  static auto sGtkStyleContextSetScalePtr =
+      (void (*)(GtkStyleContext *, gint))dlsym(
+          RTLD_DEFAULT, "gtk_style_context_set_scale");
+  sGtkStyleContextSetScalePtr(style, aScaleFactor);
 }
