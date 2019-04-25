@@ -4,10 +4,6 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
-:root {
-  --exception-button-container-background: #F5F5F7;
-}
-
 body.certerror {
   width: 100%;
   justify-content: normal;
@@ -64,7 +60,7 @@ button:disabled {
 }
 
 #advancedPanelButtonContainer {
-  background-color: var(--exception-button-container-background);
+  background-color: rgba(128, 128, 147, 0.1);
   display: flex;
   justify-content: end;
   padding: 5px;
@@ -124,8 +120,8 @@ body:not(.neterror) #advancedButton {
 .advanced-panel {
   /* Hidden until the link is clicked */
   display: none;
-  background-color: white;
-  border: 1px lightgray solid;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
   margin: 48px auto;
   min-width: var(--in-content-container-min-width);
   max-width: var(--in-content-container-max-width);
@@ -200,7 +196,6 @@ body:not(.neterror) #advancedButton {
 }
 
 .exceptionDialogButtonContainer {
-  background-color: var(--exception-button-container-background);
   display: flex;
   justify-content: end;
 }
