@@ -1,0 +1,34 @@
+<html class="reftest-wait">
+<head>
+<script>
+const xhr = new XMLHttpRequest()
+
+async function boom () {
+  await new Promise(r => setTimeout(r, 100))
+
+  SpecialPowers.forceCC()
+  SpecialPowers.forceCC()
+  SpecialPowers.forceCC()
+
+  document.documentElement.removeAttribute("class")
+}
+
+function start () {
+  const context = new AudioContext({})
+  const filter = new BiquadFilterNode(context, {})
+  const destination = context.createMediaStreamDestination()
+  const processor = context.createScriptProcessor(8192, 8, 8)
+  processor.connect(filter.Q)
+  processor.disconnect()
+  xhr.open('G', '', false)
+  xhr.send()
+  context.createMediaStreamSource(destination.stream)
+  processor.connect(filter.Q)
+  context.close()
+  context.addEventListener('statechange', boom, true)
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+</html>
