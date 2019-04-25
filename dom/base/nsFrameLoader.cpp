@@ -2715,7 +2715,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
   if (XRE_IsContentProcess()) {
     mBrowsingContext->SetEmbedderElement(mOwnerContent);
 
-    mBrowserBridgeChild = BrowserBridgeChild::Create(
+    mBrowserBridgeChild = ContentChild::CreateBrowser(
         this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
         mBrowsingContext);
     return !!mBrowserBridgeChild;
