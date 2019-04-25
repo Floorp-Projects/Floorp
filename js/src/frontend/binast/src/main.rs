@@ -835,12 +835,18 @@ impl CPPExporter {
                 "".to_string()
             }
         };
-        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra});\n",
+        format!("    JS::Result<{type_ok}> parse{prefix}{kind}({args}{extra}{before_context}{context});\n",
             prefix = prefix,
             type_ok = type_ok,
             kind = kind,
             args = args,
             extra = extra,
+            before_context = if args.len() > 0 || extra_params.is_some() {
+                ", "
+            } else {
+                ""
+            },
+            context = "const Context& context",
         )
     }
 
@@ -862,7 +868,7 @@ impl CPPExporter {
                 "".to_string()
             }
         };
-        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args}{extra})",
+        format!("{parser_class_template}JS::Result<{type_ok}>\n{parser_class_name}::parse{prefix}{kind}({args}{extra}{before_context}{context})",
             parser_class_template = self.rules.parser_class_template,
             prefix = prefix,
             type_ok = type_ok,
@@ -870,12 +876,19 @@ impl CPPExporter {
             kind = kind,
             args = args,
             extra = extra,
+            before_context = if args.len() > 0 || extra_params.is_some() {
+                ", "
+            } else {
+                ""
+            },
+            context = "const Context& context",
         )
     }
 
     fn get_method_call(&self, var_name: &str, name: &NodeName,
                        prefix: &str, args: &str,
                        extra_params: &Option<Rc<String>>,
+                       context_name: &str,
                        call_kind: MethodCallKind) -> String {
         let type_ok_is_ok = match call_kind {
             MethodCallKind::Decl | MethodCallKind::Var => {
@@ -899,11 +912,18 @@ impl CPPExporter {
                 "".to_string()
             }
         };
-        let call = format!("parse{prefix}{name}({args}{extra})",
+        let call = format!("parse{prefix}{name}({args}{extra}{before_context}{context})",
                            prefix = prefix,
                            name = name.to_class_cases(),
                            args = args,
-                           extra = extra);
+                           extra = extra,
+                           before_context = if extra_params.is_some() || args.len() > 0 {
+                               ", "
+                           } else {
+                               ""
+                           },
+                           context = context_name
+        );
 
         if type_ok_is_ok {
             // Special case: `Ok` means that we shouldn't bind the return value.
@@ -1248,7 +1268,7 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
 
 {call}
 
@@ -1259,6 +1279,7 @@ impl CPPExporter {
                 call = self.get_method_call("result", name,
                                             "Sum", INTERFACE_ARGS,
                                             &extra_args,
+                                            "context",
                                             MethodCallKind::AlwaysDecl)
                     .reindent("    "),
                 first_line = self.get_method_definition_start(name, "", "",
@@ -1293,6 +1314,7 @@ impl CPPExporter {
                 call = self.get_method_call("result", node,
                                             "Interface", INTERFACE_ARGS,
                                             &extra_args,
+                                            "context",
                                             MethodCallKind::AlwaysVar)
                     .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
@@ -1378,10 +1400,11 @@ impl CPPExporter {
     AutoList guard(*tokenizer_);
 
     const auto start = tokenizer_->offset();
-    MOZ_TRY(tokenizer_->enterList(length, guard));{empty_check}
+    MOZ_TRY(tokenizer_->enterList(length, context, guard));{empty_check}
 {init}
 
-    for (uint32_t i = 0; i < length; ++i) {{
+    const Context childContext(context.arrayElement());
+    for (uint8_t i = 0; i < length; ++i) {{
 {call}
 {append}    }}
 
@@ -1403,6 +1426,7 @@ impl CPPExporter {
             call = self.get_method_call("item",
                                         &parser.elements, "", "",
                                         &extra_args,
+                                        "childContext",
                                         MethodCallKind::Decl)
                 .reindent("        "),
             init = init,
@@ -1462,7 +1486,7 @@ impl CPPExporter {
     BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -1485,6 +1509,7 @@ impl CPPExporter {
                                                 &parser.elements,
                                                 "Interface", INTERFACE_ARGS,
                                                 &extra_args,
+                                                "context",
                                                 MethodCallKind::AlwaysVar)
                         .reindent("        "),
                     before = rules_for_this_node.some_before
@@ -1515,7 +1540,7 @@ impl CPPExporter {
     BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -1534,6 +1559,7 @@ impl CPPExporter {
                             call = self.get_method_call("result", &parser.elements,
                                                         "Sum", INTERFACE_ARGS,
                                                         &extra_args,
+                                                        "context",
                                                         MethodCallKind::AlwaysVar)
                                 .reindent("        "),
                             before = rules_for_this_node.some_before
@@ -1571,7 +1597,7 @@ impl CPPExporter {
                         } else {
                             buffer.push_str(&format!("{first_line}
 {{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeAtom());
+    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeAtom(context));
 
 {build}
 
@@ -1600,7 +1626,7 @@ impl CPPExporter {
                         } else {
                             buffer.push_str(&format!("{first_line}
 {{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeIdentifierName());
+    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybeIdentifierName(context));
 
 {build}
 
@@ -1665,7 +1691,7 @@ impl CPPExporter {
     BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
     if (kind != BinASTKind::{kind}) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
@@ -1683,6 +1709,7 @@ impl CPPExporter {
                 call = self.get_method_call("result", name,
                                             "Interface", INTERFACE_ARGS,
                                             &extra_args,
+                                            "context",
                                             MethodCallKind::AlwaysDecl)
                     .reindent("    ")
             ));
@@ -1707,6 +1734,8 @@ impl CPPExporter {
 
         let mut fields_implem = String::new();
         for field in interface.contents().fields() {
+            let context = "fieldContext++";
+
             let rules_for_this_field = rules_for_this_interface.by_field.get(field.name())
                 .cloned()
                 .unwrap_or_default();
@@ -1717,37 +1746,53 @@ impl CPPExporter {
                 Some(IsNullable { is_nullable: false, content: Primitive::Number }) => {
                     if needs_block {
                         (Some(format!("double {var_name};", var_name = var_name)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readDouble());", var_name = var_name)))
+                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readDouble({context}));",
+                                var_name = var_name,
+                                context = context)))
                     } else {
                         (None,
-                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readDouble());", var_name = var_name)))
+                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readDouble({context}));",
+                                var_name = var_name,
+                                context = context)))
                     }
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::UnsignedLong }) => {
                     if needs_block {
                         (Some(format!("uint32_t {var_name};", var_name = var_name)),
-                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readUnsignedLong());", var_name = var_name)))
+                            Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readUnsignedLong({context}));",
+                                var_name = var_name,
+                                context = context)))
                     } else {
                         (None,
-                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readUnsignedLong());", var_name = var_name)))
+                            Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readUnsignedLong({context}));",
+                                var_name = var_name,
+                                context = context)))
                     }
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::Boolean }) => {
                     if needs_block {
                         (Some(format!("bool {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readBool());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readBool({context}));",
+                            var_name = var_name,
+                            context = context)))
                     } else {
                         (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readBool());", var_name = var_name)))
+                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readBool({context}));",
+                            var_name = var_name,
+                            context = context)))
                     }
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::Offset }) => {
                     if needs_block {
                         (Some(format!("BinASTTokenReaderBase::SkippableSubTree {var_name};", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readSkippableSubTree());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readSkippableSubTree({context}));",
+                            var_name = var_name,
+                            context = context)))
                     } else {
                         (None,
-                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readSkippableSubTree());", var_name = var_name)))
+                        Some(format!("BINJS_MOZ_TRY_DECL({var_name}, tokenizer_->readSkippableSubTree({context}));",
+                            var_name = var_name,
+                            context = context)))
                     }
                 }
                 Some(IsNullable { content: Primitive::Void, .. }) => {
@@ -1757,23 +1802,33 @@ impl CPPExporter {
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::String }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readAtom({context}));",
+                            var_name = var_name,
+                            context = context)))
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::IdentifierName }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readIdentifierName());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readIdentifierName({context}));",
+                            var_name = var_name,
+                            context = context)))
                 }
                 Some(IsNullable { is_nullable: false, content: Primitive::PropertyKey }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readPropertyKey());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readPropertyKey({context}));",
+                            var_name = var_name,
+                            context = context)))
                 }
                 Some(IsNullable { is_nullable: true, content: Primitive::String }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeAtom());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeAtom({context}));",
+                            var_name = var_name,
+                            context = context)))
                 }
                 Some(IsNullable { is_nullable: true, content: Primitive::IdentifierName }) => {
                     (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName());", var_name = var_name)))
+                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName({context}));",
+                            var_name = var_name,
+                            context = context)))
                 }
                 Some(IsNullable { is_nullable: true, content: Primitive::PropertyKey }) => {
                     panic!("PropertyKey shouldn't be optional");
@@ -1797,6 +1852,7 @@ impl CPPExporter {
                     (decl_var,
                      Some(self.get_method_call(var_name.to_str(),
                                                &name, "", "", &field_extra_args,
+                                               &context,
                                                call_kind)))
                 }
             };
@@ -1823,7 +1879,8 @@ impl CPPExporter {
                     };
                     if needs_block {
                         let parse_var = parse_var.reindent("        ");
-                        format!("{before_field}{decl_var}    {{
+                        format!("
+{before_field}{decl_var}    {{
 {block_before_field}{parse_var}{block_after_field}
     }}
 {after_field}",
@@ -1832,7 +1889,8 @@ impl CPPExporter {
                             block_before_field = rules_for_this_field.block_before_field.reindent("        ").newline_if_not_empty(),
                             parse_var = parse_var.reindent("        ").newline_if_not_empty(),
                             block_after_field = rules_for_this_field.block_after_field.reindent("        "),
-                            after_field = after_field.reindent("    "))
+                            after_field = after_field.reindent("    "),
+                        )
                     } else {
                         // We have a before_field and an after_field. This will create newlines
                         // for them.
@@ -1878,7 +1936,7 @@ impl CPPExporter {
 {{
     MOZ_ASSERT(kind == BinASTKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
-{check_fields}
+{maybe_field_context}{check_fields}
 {pre}{fields_implem}
 {post}    return result;
 }}
@@ -1890,6 +1948,11 @@ impl CPPExporter {
                 post = build_result.newline_if_not_empty(),
                 kind = name.to_cpp_enum_case(),
                 first_line = first_line,
+                maybe_field_context = if interface.contents().fields().len() > 0 {
+                    "    Context fieldContext = Context::firstField(kind);\n"
+                } else {
+                    ""
+                },
             ));
         }
     }
@@ -1967,7 +2030,7 @@ impl CPPExporter {
                 );
                 buffer.push_str(&format!("{rendered_doc}{first_line}
 {{
-    BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
+    BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant(context));
 
 {convert}
 }}
