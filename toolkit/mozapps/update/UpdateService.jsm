@@ -3700,7 +3700,7 @@ Downloader.prototype = {
    * The name of the downloader being used to download the update. This is used
    * when setting property names on the update patch for telemetry.
    */
-  _downloaderName: null,
+  _downloaderName: "bits",
 
   /**
    * Cancels the active download.
@@ -3948,8 +3948,9 @@ Downloader.prototype = {
     if (this._update.getProperty("disableBITS") != null) {
       canUseBits = false;
     }
-
-    this._downloaderName = canUseBits ? "bits" : "internal";
+    if (!canUseBits) {
+      this._downloaderName = "internal";
+    }
     if (!this._patch.getProperty(this._downloaderName + "DownloadStart")) {
       this._patch.setProperty(this._downloaderName + "DownloadStart", Math.floor(Date.now() / 1000));
     }
