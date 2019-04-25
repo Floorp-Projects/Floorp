@@ -10,6 +10,8 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
+    'PendingIPCBlobChild.h',
+    'PendingIPCBlobParent.h',
 ]
 
 EXPORTS.mozilla.dom.ipc += [
@@ -17,8 +19,6 @@ EXPORTS.mozilla.dom.ipc += [
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
     'IPCBlobInputStreamStorage.h',
-    'PendingIPCBlobChild.h',
-    'PendingIPCBlobParent.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]

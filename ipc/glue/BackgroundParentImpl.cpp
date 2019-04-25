@@ -25,6 +25,7 @@
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
@@ -32,7 +33,6 @@
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-#include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
@@ -468,13 +468,13 @@ bool BackgroundParentImpl::DeallocPBackgroundStorageParent(
   return mozilla::dom::DeallocPBackgroundStorageParent(aActor);
 }
 
-PPendingIPCBlobParent* BackgroundParentImpl::AllocPPendingIPCBlobParent(
-    const IPCBlob& aBlob) {
+mozilla::dom::PPendingIPCBlobParent*
+BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob) {
   MOZ_CRASH("PPendingIPCBlobParent actors should be manually constructed!");
 }
 
 bool BackgroundParentImpl::DeallocPPendingIPCBlobParent(
-    PPendingIPCBlobParent* aActor) {
+    mozilla::dom::PPendingIPCBlobParent* aActor) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);

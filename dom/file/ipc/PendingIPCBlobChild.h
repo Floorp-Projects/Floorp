@@ -4,18 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ipc_PendingIPCBlobChild_h
-#define mozilla_dom_ipc_PendingIPCBlobChild_h
+#ifndef mozilla_dom_PendingIPCBlobChild_h
+#define mozilla_dom_PendingIPCBlobChild_h
 
-#include "mozilla/ipc/PPendingIPCBlob.h"
-#include "mozilla/ipc/PPendingIPCBlobChild.h"
+#include "mozilla/dom/PPendingIPCBlob.h"
+#include "mozilla/dom/PPendingIPCBlobChild.h"
 
 namespace mozilla {
 namespace dom {
 
 class BlobImpl;
 
-class PendingIPCBlobChild final : public mozilla::ipc::PPendingIPCBlobChild {
+class PendingIPCBlobChild final : public PPendingIPCBlobChild {
  public:
   explicit PendingIPCBlobChild(const IPCBlob& aBlob);
 
@@ -39,4 +39,4 @@ class PendingIPCBlobChild final : public mozilla::ipc::PPendingIPCBlobChild {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_ipc_PendingIPCBlobChild_h
+#endif  // mozilla_dom_PendingIPCBlobChild_h

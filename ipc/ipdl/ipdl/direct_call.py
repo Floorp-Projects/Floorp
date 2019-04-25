@@ -53,11 +53,6 @@ DIRECT_CALL_OVERRIDES = {
 
     ("PMedia", "child"): ("Child", "mozilla/media/MediaChild.h"),
 
-    ("PPendingIPCBlob", "child"): ("PendingIPCBlobChild", "mozilla/dom/ipc/PendingIPCBlobChild.h"),
-    ("PPendingIPCBlob", "parent"): (
-        "mozilla::dom::PendingIPCBlobParent", "mozilla/dom/ipc/PendingIPCBlobParent.h"
-    ),
-
     ("PPresentationRequest", "child"): (
         "PresentationRequestChild", "mozilla/dom/PresentationChild.h"
     ),
