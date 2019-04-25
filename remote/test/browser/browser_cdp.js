@@ -6,6 +6,8 @@
 /* global getCDP */
 
 const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
+const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+
 
 // Test very basic CDP features.
 
@@ -18,7 +20,7 @@ add_task(async function() {
     // Display better error message with the server side stacktrace
     // if an error happened on the server side:
     if (e.response) {
-      throw new Error("CDP Exception:\n" + e.response + "\n");
+      throw RemoteAgentError.fromJSON(e.response);
     } else {
       throw e;
     }
