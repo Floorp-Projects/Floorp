@@ -39,6 +39,7 @@ marionette-headless:
     treeherder-symbol: MnH
     max-run-time: 5400
     instance-size: default
+    tier: 2
     mozharness:
         extra-options:
             - --headless
