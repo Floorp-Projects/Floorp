@@ -71,7 +71,8 @@ class SidebarRuntimeItem extends PureComponent {
     return Message(
       {
         level,
-        className: `${className} sidebar-runtime-item__message`,
+        key: className,
+        className,
       },
       Localized(
         {
@@ -158,25 +159,29 @@ class SidebarRuntimeItem extends PureComponent {
       getString("aboutdebugging-sidebar-runtime-connection-status-connected") :
       getString("aboutdebugging-sidebar-runtime-connection-status-disconnected");
 
-    return SidebarItem(
-      {
-        isSelected,
-        to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
-      },
-      dom.section(
+    return [
+      SidebarItem(
         {
-          className: "sidebar-runtime-item__container",
+          className: "sidebar-item--tall",
+          key: "sidebar-item",
+          isSelected,
+          to: isConnected ? `/runtime/${encodeURIComponent(runtimeId)}` : null,
         },
-        dom.img(
+        dom.section(
           {
-            className: "sidebar-runtime-item__icon ",
-            src: icon,
-            alt: connectionStatus,
-            title: connectionStatus,
-          }
+            className: "sidebar-runtime-item__container",
+          },
+          dom.img(
+            {
+              className: "sidebar-runtime-item__icon ",
+              src: icon,
+              alt: connectionStatus,
+              title: connectionStatus,
+            }
+          ),
+          this.renderName(),
+          !isUnavailable && !isConnected ? this.renderConnectButton() : null
         ),
-        this.renderName(),
-        !isUnavailable && !isConnected ? this.renderConnectButton() : null
       ),
       this.renderMessage(
         isConnectionFailed,
@@ -196,7 +201,7 @@ class SidebarRuntimeItem extends PureComponent {
         "about-debugging-sidebar-item-connect-button-connection-not-responding",
         "qa-connection-not-responding"
       ),
-    );
+    ];
   }
 }
 

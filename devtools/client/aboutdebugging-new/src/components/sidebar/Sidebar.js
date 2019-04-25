@@ -11,11 +11,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { ICON_LABEL_LEVEL, PAGE_TYPES, RUNTIMES } = require("../../constants");
+const { MESSAGE_LEVEL, PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
-const IconLabel = createFactory(require("../shared/IconLabel"));
+const Message = createFactory(require("../shared/Message"));
 const SidebarItem = createFactory(require("./SidebarItem"));
 const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
 const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
@@ -45,20 +45,21 @@ class Sidebar extends PureComponent {
       this.props.adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
     const localizationId = isUsbEnabled ? "about-debugging-sidebar-usb-enabled" :
                                           "about-debugging-sidebar-usb-disabled";
-    return IconLabel(
+    return Message(
       {
-          level: isUsbEnabled ? ICON_LABEL_LEVEL.OK : ICON_LABEL_LEVEL.INFO,
+          level: MESSAGE_LEVEL.INFO,
+          isCloseable: true,
       },
-      Localized(
-        {
-          id: localizationId,
-        },
-        dom.span(
+        Localized(
           {
-            className: "js-sidebar-usb-status",
+            id: localizationId,
           },
-          localizationId
-        )
+          dom.div(
+            {
+              className: "js-sidebar-usb-status",
+            },
+            localizationId
+          )
       )
     );
   }
@@ -206,7 +207,7 @@ class Sidebar extends PureComponent {
         ),
         SidebarItem(
           {
-            className: "sidebar__adb-status",
+            className: "sidebar-item--overflow sidebar-item--full-width",
           },
           dom.hr({ className: "separator separator--breathe" }),
           this.renderAdbStatus(),

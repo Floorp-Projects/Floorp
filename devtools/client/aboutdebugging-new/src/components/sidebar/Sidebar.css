@@ -15,10 +15,6 @@
   font-size: var(--message-font-size);
 }
 
-.sidebar__adb-status {
-  margin-block-end: calc(var(--base-unit) * 2);
-}
-
 .sidebar__refresh-usb {
   text-align: center;
 }
