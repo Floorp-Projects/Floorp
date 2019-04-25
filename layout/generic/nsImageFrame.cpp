@@ -208,6 +208,7 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                            ClassID aID, Kind aKind)
     : nsAtomicContainerFrame(aStyle, aPresContext, aID),
       mComputedSize(0, 0),
+      mIntrinsicSize(0, 0),
       mIntrinsicRatio(0, 0),
       mKind(aKind),
       mContentURLRequestRegistered(false),
@@ -216,11 +217,6 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
       mReflowCallbackPosted(false),
       mForceSyncDecoding(false) {
   EnableVisibilityTracking();
-
-  // We assume our size is not constrained and we haven't gotten an
-  // initial reflow yet, so don't touch those flags.
-  mIntrinsicSize.width.SetCoordValue(0);
-  mIntrinsicSize.height.SetCoordValue(0);
 }
 
 nsImageFrame::~nsImageFrame() {}
@@ -466,14 +462,13 @@ bool nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage) {
     // eStyleUnit_None. Otherwise we use intrinsicSize.width. Height works the
     // same way.
     if (intrinsicSize.width != -1)
-      mIntrinsicSize.width.SetCoordValue(intrinsicSize.width);
+      mIntrinsicSize.width.emplace(intrinsicSize.width);
     if (intrinsicSize.height != -1)
-      mIntrinsicSize.height.SetCoordValue(intrinsicSize.height);
+      mIntrinsicSize.height.emplace(intrinsicSize.height);
   } else {
     // Failure means that the image hasn't loaded enough to report a result. We
     // treat this case as if the image's intrinsic size was 0x0.
-    mIntrinsicSize.width.SetCoordValue(0);
-    mIntrinsicSize.height.SetCoordValue(0);
+    mIntrinsicSize = IntrinsicSize(0, 0);
   }
 
   return mIntrinsicSize != oldIntrinsicSize;
@@ -695,8 +690,7 @@ nsresult nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
     mImage = mPrevImage = nullptr;
 
     // Have to size to 0,0 so that GetDesiredSize recalculates the size.
-    mIntrinsicSize.width.SetCoordValue(0);
-    mIntrinsicSize.height.SetCoordValue(0);
+    mIntrinsicSize = IntrinsicSize(0, 0);
     mIntrinsicRatio.SizeTo(0, 0);
     intrinsicSizeChanged = true;
   }
@@ -817,8 +811,7 @@ void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
     mImage = mPrevImage = nullptr;
 
     // Have to size to 0,0 so that GetDesiredSize recalculates the size
-    mIntrinsicSize.width.SetCoordValue(0);
-    mIntrinsicSize.height.SetCoordValue(0);
+    mIntrinsicSize = IntrinsicSize(0, 0);
     mIntrinsicRatio.SizeTo(0, 0);
   }
 
@@ -904,10 +897,7 @@ nsRect nsImageFrame::PredictedDestRect(const nsRect& aFrameContentBox) {
 void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
   // If mIntrinsicSize.width and height are 0, then we need to update from the
   // image container.
-  if (mIntrinsicSize.width.GetUnit() != eStyleUnit_Coord ||
-      mIntrinsicSize.width.GetCoordValue() != 0 ||
-      mIntrinsicSize.height.GetUnit() != eStyleUnit_Coord ||
-      mIntrinsicSize.height.GetCoordValue() != 0) {
+  if (mIntrinsicSize != IntrinsicSize(0, 0)) {
     return;
   }
 
@@ -921,8 +911,7 @@ void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
   if (ShouldShowBrokenImageIcon()) {
     nscoord edgeLengthToUse = nsPresContext::CSSPixelsToAppUnits(
         ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
-    mIntrinsicSize.width.SetCoordValue(edgeLengthToUse);
-    mIntrinsicSize.height.SetCoordValue(edgeLengthToUse);
+    mIntrinsicSize = IntrinsicSize(edgeLengthToUse, edgeLengthToUse);
     mIntrinsicRatio.SizeTo(1, 1);
   }
 }
@@ -970,10 +959,10 @@ nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
   DebugOnly<nscoord> result;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   EnsureIntrinsicSizeAndRatio();
-  const nsStyleCoord& iSize = GetWritingMode().IsVertical()
+  const auto& iSize = GetWritingMode().IsVertical()
                                   ? mIntrinsicSize.height
                                   : mIntrinsicSize.width;
-  return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
+  return iSize.valueOr(0);
 }
 
 /* virtual */
@@ -983,11 +972,11 @@ nscoord nsImageFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DebugOnly<nscoord> result;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   EnsureIntrinsicSizeAndRatio();
-  const nsStyleCoord& iSize = GetWritingMode().IsVertical()
+  const auto& iSize = GetWritingMode().IsVertical()
                                   ? mIntrinsicSize.height
                                   : mIntrinsicSize.width;
   // convert from normal twips to scaled twips (printing...)
-  return iSize.GetUnit() == eStyleUnit_Coord ? iSize.GetCoordValue() : 0;
+  return iSize.valueOr(0);
 }
 
 /* virtual */
@@ -2405,10 +2394,8 @@ nsIFrame::LogicalSides nsImageFrame::GetLogicalSkipSides(
 }
 
 nsresult nsImageFrame::GetIntrinsicImageSize(nsSize& aSize) {
-  if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
-      mIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
-    aSize.SizeTo(mIntrinsicSize.width.GetCoordValue(),
-                 mIntrinsicSize.height.GetCoordValue());
+  if (mIntrinsicSize.width && mIntrinsicSize.width) {
+    aSize.SizeTo(*mIntrinsicSize.width, *mIntrinsicSize.height);
     return NS_OK;
   }
 

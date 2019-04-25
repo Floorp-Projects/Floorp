@@ -203,26 +203,24 @@ IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
   // XXXjwatt Note that here we want to return the CSS width/height if they're
   // specified and we're embedded inside an nsIObjectLoadingContent.
 
-  IntrinsicSize intrinsicSize;
-
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
   const SVGAnimatedLength& width =
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
   const SVGAnimatedLength& height =
       content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
+  IntrinsicSize intrinsicSize;
+
   if (!width.IsPercentage()) {
     nscoord val =
         nsPresContext::CSSPixelsToAppUnits(width.GetAnimValue(content));
-    if (val < 0) val = 0;
-    intrinsicSize.width.SetCoordValue(val);
+    intrinsicSize.width.emplace(std::max(val, 0));
   }
 
   if (!height.IsPercentage()) {
     nscoord val =
         nsPresContext::CSSPixelsToAppUnits(height.GetAnimValue(content));
-    if (val < 0) val = 0;
-    intrinsicSize.height.SetCoordValue(val);
+    intrinsicSize.height.emplace(std::max(val, 0));
   }
 
   return intrinsicSize;
@@ -325,11 +323,10 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
     const SVGAnimatedLength& width =
         content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
     if (width.IsPercentage()) {
-      MOZ_ASSERT(intrinsicSize.width.GetUnit() == eStyleUnit_None,
+      MOZ_ASSERT(!intrinsicSize.width,
                  "GetIntrinsicSize should have reported no intrinsic width");
       float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
-      if (val < 0.0f) val = 0.0f;
-      intrinsicSize.width.SetCoordValue(val * cbSize.Width(aWM));
+      intrinsicSize.width.emplace(std::max(val, 0.0f) * cbSize.Width(aWM));
     }
 
     const SVGAnimatedLength& height =
@@ -337,14 +334,12 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
     NS_ASSERTION(aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
-      MOZ_ASSERT(intrinsicSize.height.GetUnit() == eStyleUnit_None,
+      MOZ_ASSERT(!intrinsicSize.height,
                  "GetIntrinsicSize should have reported no intrinsic height");
       float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
-      if (val < 0.0f) val = 0.0f;
-      intrinsicSize.height.SetCoordValue(val * cbSize.Height(aWM));
+      intrinsicSize.height.emplace(std::max(val, 0.0f) * cbSize.Height(aWM));
     }
-    MOZ_ASSERT(intrinsicSize.height.GetUnit() == eStyleUnit_Coord &&
-                   intrinsicSize.width.GetUnit() == eStyleUnit_Coord,
+    MOZ_ASSERT(intrinsicSize.height && intrinsicSize.width,
                "We should have just handled the only situation where"
                "we lack an intrinsic height or width.");
   }

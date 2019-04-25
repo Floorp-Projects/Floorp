@@ -5905,27 +5905,15 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
   Stretch stretchB = eNoStretch;  // stretch behavior in the block axis
 
   const bool isVertical = aWM.IsVertical();
-  const nsStyleCoord& isizeCoord =
+  const auto& isizeCoord =
       isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
-  const bool hasIntrinsicISize = isizeCoord.GetUnit() == eStyleUnit_Coord;
-  nscoord intrinsicISize;
-  if (hasIntrinsicISize) {
-    intrinsicISize = std::max(nscoord(0), isizeCoord.GetCoordValue());
-  } else {
-    NS_ASSERTION(isizeCoord.GetUnit() == eStyleUnit_None, "unexpected unit");
-    intrinsicISize = 0;
-  }
+  const bool hasIntrinsicISize = isizeCoord.isSome();
+  nscoord intrinsicISize = std::max(0, isizeCoord.valueOr(0));
 
-  const nsStyleCoord& bsizeCoord =
+  const auto& bsizeCoord =
       isVertical ? aIntrinsicSize.width : aIntrinsicSize.height;
-  const bool hasIntrinsicBSize = bsizeCoord.GetUnit() == eStyleUnit_Coord;
-  nscoord intrinsicBSize;
-  if (hasIntrinsicBSize) {
-    intrinsicBSize = std::max(nscoord(0), bsizeCoord.GetCoordValue());
-  } else {
-    NS_ASSERTION(bsizeCoord.GetUnit() == eStyleUnit_None, "unexpected unit");
-    intrinsicBSize = 0;
-  }
+  const bool hasIntrinsicBSize = bsizeCoord.isSome();
+  nscoord intrinsicBSize = std::max(0, bsizeCoord.valueOr(0));
 
   NS_ASSERTION(aIntrinsicRatio.width >= 0 && aIntrinsicRatio.height >= 0,
                "Intrinsic ratio has a negative component!");
