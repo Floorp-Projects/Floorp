@@ -1737,7 +1737,8 @@ TextEditor::Redo(uint32_t aCount) {
   return NS_OK;
 }
 
-bool TextEditor::CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed) {
+bool TextEditor::CanCutOrCopy(
+    PasswordFieldAllowed aPasswordFieldAllowed) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (aPasswordFieldAllowed == ePasswordFieldNotAllowed && IsPasswordEditor()) {
@@ -1790,22 +1791,19 @@ TextEditor::Cut() {
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-TextEditor::CanCut(bool* aCanCut) {
-  if (NS_WARN_IF(!aCanCut)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+bool TextEditor::CanCut() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
   }
 
   // Cut is always enabled in HTML documents
-  RefPtr<Document> doc = GetDocument();
-  *aCanCut = (doc && doc->IsHTMLOrXHTML()) ||
-             (IsModifiable() && CanCutOrCopy(ePasswordFieldNotAllowed));
-  return NS_OK;
+  Document* document = GetDocument();
+  if (document && document->IsHTMLOrXHTML()) {
+    return true;
+  }
+
+  return IsModifiable() && CanCutOrCopy(ePasswordFieldNotAllowed);
 }
 
 NS_IMETHODIMP
@@ -1821,37 +1819,28 @@ TextEditor::Copy() {
   return actionTaken ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-TextEditor::CanCopy(bool* aCanCopy) {
-  if (NS_WARN_IF(!aCanCopy)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+bool TextEditor::CanCopy() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
   }
 
   // Copy is always enabled in HTML documents
-  RefPtr<Document> doc = GetDocument();
-  *aCanCopy =
-      (doc && doc->IsHTMLOrXHTML()) || CanCutOrCopy(ePasswordFieldNotAllowed);
-  return NS_OK;
+  Document* document = GetDocument();
+  if (document && document->IsHTMLOrXHTML()) {
+    return true;
+  }
+
+  return CanCutOrCopy(ePasswordFieldNotAllowed);
 }
 
-NS_IMETHODIMP
-TextEditor::CanDelete(bool* aCanDelete) {
-  if (NS_WARN_IF(!aCanDelete)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+bool TextEditor::CanDelete() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return false;
   }
 
-  *aCanDelete = IsModifiable() && CanCutOrCopy(ePasswordFieldAllowed);
-  return NS_OK;
+  return IsModifiable() && CanCutOrCopy(ePasswordFieldAllowed);
 }
 
 already_AddRefed<nsIDocumentEncoder> TextEditor::GetAndInitDocEncoder(

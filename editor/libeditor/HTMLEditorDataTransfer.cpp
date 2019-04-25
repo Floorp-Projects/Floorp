@@ -1621,44 +1621,45 @@ static const char* textHtmlEditorFlavors[] = {kUnicodeMime,   kHTMLMime,
                                               kJPEGImageMime, kJPGImageMime,
                                               kPNGImageMime,  kGIFImageMime};
 
-NS_IMETHODIMP
-HTMLEditor::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
-  NS_ENSURE_ARG_POINTER(aCanPaste);
-  *aCanPaste = false;
-
+bool HTMLEditor::CanPaste(int32_t aClipboardType) const {
   // Always enable the paste command when inside of a HTML or XHTML document.
-  RefPtr<Document> doc = GetDocument();
-  if (doc && doc->IsHTMLOrXHTML()) {
-    *aCanPaste = true;
-    return NS_OK;
+  Document* document = GetDocument();
+  if (document && document->IsHTMLOrXHTML()) {
+    return true;
   }
 
   // can't paste if readonly
   if (!IsModifiable()) {
-    return NS_OK;
+    return false;
   }
 
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(
       do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool haveFlavors;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
 
   // Use the flavors depending on the current editor mask
   if (IsPlaintextEditor()) {
+    bool haveFlavors;
     rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
                                            ArrayLength(textEditorFlavors),
-                                           aSelectionType, &haveFlavors);
-  } else {
-    rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
-                                           ArrayLength(textHtmlEditorFlavors),
-                                           aSelectionType, &haveFlavors);
+                                           aClipboardType, &haveFlavors);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+    return haveFlavors;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  *aCanPaste = haveFlavors;
-  return NS_OK;
+  bool haveFlavors;
+  rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
+                                         ArrayLength(textHtmlEditorFlavors),
+                                         aClipboardType, &haveFlavors);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  return haveFlavors;
 }
 
 bool HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable) {

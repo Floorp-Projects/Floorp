@@ -439,27 +439,24 @@ TextEditor::PasteTransferable(nsITransferable* aTransferable) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditor::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
-  NS_ENSURE_ARG_POINTER(aCanPaste);
-  *aCanPaste = false;
-
+bool TextEditor::CanPaste(int32_t aClipboardType) const {
   // Always enable the paste command when inside of a HTML or XHTML document.
   RefPtr<Document> doc = GetDocument();
   if (doc && doc->IsHTMLOrXHTML()) {
-    *aCanPaste = true;
-    return NS_OK;
+    return true;
   }
 
   // can't paste if readonly
   if (!IsModifiable()) {
-    return NS_OK;
+    return false;
   }
 
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(
       do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
 
   // the flavors that we can deal with
   const char* textEditorFlavors[] = {kUnicodeMime};
@@ -467,11 +464,11 @@ TextEditor::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
   bool haveFlavors;
   rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
                                          ArrayLength(textEditorFlavors),
-                                         aSelectionType, &haveFlavors);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCanPaste = haveFlavors;
-  return NS_OK;
+                                         aClipboardType, &haveFlavors);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  return haveFlavors;
 }
 
 bool TextEditor::CanPasteTransferable(nsITransferable* aTransferable) {
