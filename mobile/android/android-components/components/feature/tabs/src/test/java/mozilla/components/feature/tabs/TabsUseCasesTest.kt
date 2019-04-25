@@ -128,7 +128,7 @@ class TabsUseCasesTest {
 
         assertEquals(0, sessionManager.size)
 
-        verify(sessionManager).removeAll()
+        verify(sessionManager).removeSessions()
     }
 
     @Test
@@ -139,23 +139,32 @@ class TabsUseCasesTest {
 
         val useCases = TabsUseCases(sessionManager)
 
+        val session1 = Session("https://www.mozilla.org")
+        session1.customTabConfig = mock()
+        sessionManager.add(session1)
+
         useCases.addPrivateTab.invoke("https://www.mozilla.org")
         useCases.addTab.invoke("https://www.mozilla.org")
 
-        assertEquals(2, sessionManager.size)
+        assertEquals(3, sessionManager.size)
 
         useCases.removeAllTabsOfType.invoke(private = false)
 
-        assertEquals(1, sessionManager.all.size)
+        assertEquals(2, sessionManager.all.size)
 
         useCases.addPrivateTab.invoke("https://www.mozilla.org")
         useCases.addTab.invoke("https://www.mozilla.org")
         useCases.addTab.invoke("https://www.mozilla.org")
 
-        assertEquals(4, sessionManager.size)
+        assertEquals(5, sessionManager.size)
 
         useCases.removeAllTabsOfType.invoke(private = true)
 
-        assertEquals(2, sessionManager.size)
+        assertEquals(3, sessionManager.size)
+
+        useCases.removeAllTabsOfType.invoke(private = false)
+        assertEquals(1, sessionManager.size)
+
+        assertTrue(sessionManager.all[0].isCustomTabSession())
     }
 }

@@ -121,7 +121,7 @@ class TabsUseCases(
         private val sessionManager: SessionManager
     ) {
         fun invoke() {
-            sessionManager.removeAll()
+            sessionManager.removeSessions()
         }
     }
 
@@ -133,12 +133,11 @@ class TabsUseCases(
          */
 
         fun invoke(private: Boolean) {
-            sessionManager.all.filter { it.private == private }.forEach {
-
+            sessionManager.sessions.filter { it.private == private }.forEach {
                 sessionManager.remove(it)
             }
         }
-        }
+    }
 
     val selectTab: SelectTabUseCase by lazy { SelectTabUseCase(sessionManager) }
     val removeTab: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
