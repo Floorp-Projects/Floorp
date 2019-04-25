@@ -937,7 +937,7 @@ win64-aarch64/debug:
         mozconfig-variant: debug
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust
+        - win64-rust
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
@@ -975,7 +975,7 @@ win64-aarch64/opt:
             mozconfig_platform: win64-aarch64
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust
+        - win64-rust
         - win64-rust-size
         - win64-cbindgen
         - win64-sccache
@@ -1107,7 +1107,7 @@ win64-aarch64-shippable-no-eme/opt:
     run-on-projects: []
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust
+        - win64-rust
         - win64-rust-size
         - win64-cbindgen
         - win64-nasm
@@ -1151,7 +1151,7 @@ win64-aarch64-devedition-nightly/opt:
     run-on-projects: ['mozilla-beta']
     toolchains:
         - win64-clang-cl
-        - win64-aarch64-rust
+        - win64-rust
         - win64-rust-size
         - win64-cbindgen
         - win64-nasm
