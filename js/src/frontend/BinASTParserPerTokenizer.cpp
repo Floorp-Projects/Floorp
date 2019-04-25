@@ -132,8 +132,7 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
   MOZ_TRY(tokenizer_->readHeader());
 
   ParseNode* result(nullptr);
-  const Context topContext(Context::topLevel());
-  MOZ_TRY_VAR(result, asFinalParser()->parseProgram(topContext));
+  MOZ_TRY_VAR(result, asFinalParser()->parseProgram());
 
   mozilla::Maybe<GlobalScope::Data*> bindings =
       NewGlobalScopeData(cx_, varScope, alloc_, pc_);
@@ -192,12 +191,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
   ListNode* tmpBody;
   auto parseFunc = isExpr ? &FinalParser::parseFunctionExpressionContents
                           : &FinalParser::parseFunctionOrMethodContents;
-
-  // Inject a toplevel context (i.e. no parent) to parse the lazy content.
-  // In the future, we may move this to a more specific context.
-  const Context context(Context::topLevel());
-  MOZ_TRY(
-      (asFinalParser()->*parseFunc)(func->nargs(), &params, &tmpBody, context));
+  MOZ_TRY((asFinalParser()->*parseFunc)(func->nargs(), &params, &tmpBody));
 
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
