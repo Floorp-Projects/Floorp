@@ -984,7 +984,11 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
  * @return An object that can be passed to checkTelemetryUpdatePhases for update
  *         phase telemetry tests.
  */
+/* This function is intentionally complex so tests don't have to be */
+/* eslint-disable-next-line complexity */
 function getTelemetryUpdatePhaseValues(overrides) {
+  let bitsEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED);
+
   // Set values that could never be recorded due to values that would prevent
   // them from occurring. This makes it so callers only have to specify a couple
   // of values.
@@ -992,16 +996,22 @@ function getTelemetryUpdatePhaseValues(overrides) {
     if (!overrides.noInternalPartial) {
       overrides.noInternalPartial = true;
     }
+    if (!overrides.noBitsPartial) {
+      overrides.noBitsPartial = true;
+    }
   }
 
   if (overrides.noCompletePatch) {
     if (!overrides.noInternalComplete) {
       overrides.noInternalComplete = true;
     }
+    if (!overrides.noBitsComplete) {
+      overrides.noBitsComplete = true;
+    }
   }
 
   if (overrides.noPartialPatch || overrides.partialBadSize ||
-      overrides.noInternalPartial) {
+      overrides.noInternalPartial || overrides.noBitsPartial) {
     if (!overrides.noStagePartial) {
       overrides.noStagePartial = true;
     }
@@ -1011,7 +1021,7 @@ function getTelemetryUpdatePhaseValues(overrides) {
   }
 
   if (overrides.noCompletePatch || overrides.completeBadSize ||
-      overrides.noInternalComplete) {
+      overrides.noInternalComplete || overrides.noBitsComplete) {
     if (!overrides.noStageComplete) {
       overrides.noStageComplete = true;
     }
@@ -1051,12 +1061,31 @@ function getTelemetryUpdatePhaseValues(overrides) {
 
   obj.intervals = {};
   obj.intervals.check = 1;
-  obj.intervals.download_bits_partial = null;
-  obj.intervals.download_bits_complete = null;
-  obj.intervals.download_internal_partial =
-    overrides.noInternalPartial ? null : 1;
-  obj.intervals.download_internal_complete =
-    overrides.noInternalComplete ? null : 1;
+  if (bitsEnabled) {
+    obj.intervals.download_bits_partial =
+      overrides.noBitsPartial ? null : 1;
+    obj.intervals.download_bits_complete =
+      overrides.noBitsComplete ? null : 1;
+    if (overrides.partialBadSize) {
+      obj.intervals.download_internal_partial =
+        overrides.noInternalPartial ? null : 1;
+    } else {
+      obj.intervals.download_internal_partial = null;
+    }
+    if (overrides.completeBadSize) {
+      obj.intervals.download_internal_complete =
+        overrides.noInternalComplete ? null : 1;
+    } else {
+      obj.intervals.download_internal_complete = null;
+    }
+  } else {
+    obj.intervals.download_bits_partial = null;
+    obj.intervals.download_bits_complete = null;
+    obj.intervals.download_internal_partial =
+      overrides.noInternalPartial ? null : 1;
+    obj.intervals.download_internal_complete =
+      overrides.noInternalComplete ? null : 1;
+  }
   obj.intervals.stage_partial = overrides.noStagePartial ? null : 1;
   obj.intervals.stage_complete = overrides.noStageComplete ? null : 1;
   obj.intervals.apply_partial = overrides.noApplyPartial ? null : 1;
@@ -1064,21 +1093,50 @@ function getTelemetryUpdatePhaseValues(overrides) {
 
   obj.downloads = {};
   obj.downloads.bits_partial_ = {};
-  obj.downloads.bits_partial_.bytes = null;
-  obj.downloads.bits_partial_.seconds = null;
   obj.downloads.bits_complete_ = {};
-  obj.downloads.bits_complete_.bytes = null;
-  obj.downloads.bits_complete_.seconds = null;
   obj.downloads.internal_partial_ = {};
-  obj.downloads.internal_partial_.bytes =
-    overrides.noInternalPartial ? null : partialDownloadBytes;
-  obj.downloads.internal_partial_.seconds =
-    overrides.noInternalPartial ? null : 1;
   obj.downloads.internal_complete_ = {};
-  obj.downloads.internal_complete_.bytes =
-    overrides.noInternalComplete ? null : completeDownloadBytes;
-  obj.downloads.internal_complete_.seconds =
-    overrides.noInternalComplete ? null : 1;
+  if (bitsEnabled) {
+    obj.downloads.bits_partial_.bytes =
+      overrides.noBitsPartial ? null : partialDownloadBytes;
+    obj.downloads.bits_partial_.seconds =
+      overrides.noBitsPartial ? null : 1;
+    obj.downloads.bits_complete_.bytes =
+      overrides.noBitsComplete ? null : completeDownloadBytes;
+    obj.downloads.bits_complete_.seconds =
+      overrides.noBitsComplete ? null : 1;
+    if (overrides.partialBadSize) {
+      obj.downloads.internal_partial_.seconds =
+        overrides.noInternalPartial ? null : 1;
+      obj.downloads.internal_partial_.bytes =
+        overrides.noInternalPartial ? null : partialDownloadBytes;
+    } else {
+      obj.downloads.internal_partial_.bytes = null;
+      obj.downloads.internal_partial_.seconds = null;
+    }
+    if (overrides.completeBadSize) {
+      obj.downloads.internal_complete_.seconds =
+        overrides.noInternalComplete ? null : 1;
+      obj.downloads.internal_complete_.bytes =
+        overrides.noInternalComplete ? null : completeDownloadBytes;
+    } else {
+      obj.downloads.internal_complete_.bytes = null;
+      obj.downloads.internal_complete_.seconds = null;
+    }
+  } else {
+    obj.downloads.bits_partial_.bytes = null;
+    obj.downloads.bits_partial_.seconds = null;
+    obj.downloads.bits_complete_.bytes = null;
+    obj.downloads.bits_complete_.seconds = null;
+    obj.downloads.internal_partial_.bytes =
+      overrides.noInternalPartial ? null : partialDownloadBytes;
+    obj.downloads.internal_partial_.seconds =
+      overrides.noInternalPartial ? null : 1;
+    obj.downloads.internal_complete_.bytes =
+      overrides.noInternalComplete ? null : completeDownloadBytes;
+    obj.downloads.internal_complete_.seconds =
+      overrides.noInternalComplete ? null : 1;
+  }
 
   return obj;
 }
