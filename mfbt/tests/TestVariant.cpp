@@ -473,6 +473,37 @@ static void testRvalueMatcher() {
   MOZ_RELEASE_ASSERT(v.match(Describer()) == Describer::little);
 }
 
+static void testAddTagToHash() {
+  printf("testAddToHash\n");
+  using V = Variant<uint8_t, uint16_t, uint32_t, uint64_t>;
+
+  // We don't know what our hash function is, and these are certainly not all
+  // true under all hash functions. But they are probably true under almost any
+  // decent hash function, and our aim is simply to establish that the tag
+  // *does* influence the hash value.
+  {
+    mozilla::HashNumber h8 = V(uint8_t(1)).addTagToHash(0);
+    mozilla::HashNumber h16 = V(uint16_t(1)).addTagToHash(0);
+    mozilla::HashNumber h32 = V(uint32_t(1)).addTagToHash(0);
+    mozilla::HashNumber h64 = V(uint64_t(1)).addTagToHash(0);
+
+    MOZ_RELEASE_ASSERT(h8 != h16 && h8 != h32 && h8 != h64);
+    MOZ_RELEASE_ASSERT(h16 != h32 && h16 != h64);
+    MOZ_RELEASE_ASSERT(h32 != h64);
+  }
+
+  {
+    mozilla::HashNumber h8 = V(uint8_t(1)).addTagToHash(0x124356);
+    mozilla::HashNumber h16 = V(uint16_t(1)).addTagToHash(0x124356);
+    mozilla::HashNumber h32 = V(uint32_t(1)).addTagToHash(0x124356);
+    mozilla::HashNumber h64 = V(uint64_t(1)).addTagToHash(0x124356);
+
+    MOZ_RELEASE_ASSERT(h8 != h16 && h8 != h32 && h8 != h64);
+    MOZ_RELEASE_ASSERT(h16 != h32 && h16 != h64);
+    MOZ_RELEASE_ASSERT(h32 != h64);
+  }
+}
+
 int main() {
   testDetails();
   testSimple();
@@ -487,6 +518,7 @@ int main() {
   testMatchingLambda();
   testMatchingLambdas();
   testRvalueMatcher();
+  testAddTagToHash();
 
   printf("TestVariant OK!\n");
   return 0;
