@@ -72,6 +72,7 @@ class Session(
         fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
         fun onIconChanged(session: Session, icon: Bitmap?) = Unit
+        fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
     }
 
     /**
@@ -369,6 +370,13 @@ class Session(
      */
     var crashed: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onCrashStateChanged(this@Session, new) }
+    }
+
+    /**
+     * Readerable state, whether or not the current page can be shown in a reader view.
+     */
+    var readerable: Boolean by Delegates.observable(false) { _, _, new ->
+        notifyObservers { onReaderableStateUpdated(this@Session, new) }
     }
 
     /**

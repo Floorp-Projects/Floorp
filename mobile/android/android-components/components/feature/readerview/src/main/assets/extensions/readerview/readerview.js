@@ -5,9 +5,27 @@
 /* Avoid adding ID selector rules in this style sheet, since they could
  * inadvertently match elements in the article content. */
 
+const supportedProtocols = ["http:", "https:"];
+
+// Prevent false positives for these sites. This list is taken from Fennec:
+// https://dxr.mozilla.org/mozilla-central/rev/7d47e7fa2489550ffa83aae67715c5497048923f/toolkit/components/reader/Readerable.js#45
+const blockedHosts = ["amazon.com", "github.com", "mail.google.com", "pinterest.com", "reddit.com", "twitter.com", "youtube.com"];
+
 class ReaderView {
 
   static isReaderable() {
+    if (!supportedProtocols.includes(location.protocol)) {
+      return false;
+    }
+
+    if (blockedHosts.some(blockedHost => location.hostname.endsWith(blockedHost))) {
+      return false;
+    }
+
+    if (location.pathname == "/") {
+      return false;
+    }
+
     return isProbablyReaderable(document);
   }
 
@@ -261,14 +279,23 @@ class ReaderView {
    }
 }
 
-// TODO remove (for testing purposes only)
 let port = browser.runtime.connectNative("mozacReaderview");
-port.postMessage(`Hello from ReaderView on page ${location.hostname}`);
 
-port.onMessage.addListener((response) => {
-  console.log(`Received: ${JSON.stringify(response)} on page ${location.hostname}`);
+port.onMessage.addListener((message) => {
+    switch (message.action) {
+      case 'show':
+        readerView.show({fontSize: 3, fontType: "serif", colorScheme: "light"});
+        break;
+      case 'hide':
+        readerView.hide();
+        break;
+      case 'checkReaderable':
+        port.postMessage({readerable: ReaderView.isReaderable()});
+        break;
+      default:
+        console.error(`Received invalid action ${message.action}`);
+    }
 });
-
 
 // TODO remove hostname check (for testing purposes only)
 // e.g. https://blog.mozilla.org/firefox/reader-view

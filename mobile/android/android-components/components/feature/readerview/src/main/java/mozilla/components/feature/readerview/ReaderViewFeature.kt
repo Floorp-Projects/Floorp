@@ -38,8 +38,11 @@ typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
  * @property sessionManager a reference to the application's [SessionManager].
  * @property onReaderViewAvailableChange a callback invoked to indicate whether
  * or not reader view is available for the page loaded by the currently selected
- * (active) session.
+ * session. The callback will be invoked when a page is loaded or refreshed,
+ * on any navigation (back or forward), and when the selected session
+ * changes.
  */
+@Suppress("TooManyFunctions")
 class ReaderViewFeature(
     private val context: Context,
     private val engine: Engine,
@@ -93,6 +96,8 @@ class ReaderViewFeature(
             ReaderViewFeature.install(engine)
         }
 
+        checkReaderable()
+
         controlsInteractor.start()
     }
 
@@ -101,26 +106,24 @@ class ReaderViewFeature(
             return
         }
 
-        // TODO https://github.com/mozilla-mobile/android-components/issues/2624
         val messageHandler = object : MessageHandler {
             override fun onPortConnected(port: Port) {
-                ReaderViewFeature.ports[port.engineSession] = port
+                ports[port.engineSession] = port
+                checkReaderable()
             }
 
             override fun onPortDisconnected(port: Port) {
-                ReaderViewFeature.ports.remove(port.engineSession)
+                ports.remove(port.engineSession)
             }
 
             override fun onPortMessage(message: Any, port: Port) {
-                Logger.info("Received message: $message")
-                val response = JSONObject().apply {
-                    put("response", "Message received! Hello from Android!")
+                if (message is JSONObject) {
+                    activeSession?.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
                 }
-                ReaderViewFeature.sendMessage(response, port.engineSession!!)
             }
         }
 
-        ReaderViewFeature.registerMessageHandler(sessionManager.getOrCreateEngineSession(session), messageHandler)
+        registerMessageHandler(sessionManager.getOrCreateEngineSession(session), messageHandler)
     }
 
     override fun stop() {
@@ -136,19 +139,32 @@ class ReaderViewFeature(
     override fun onSessionSelected(session: Session) {
         // TODO restore selected state of whether the controls are open or not
         registerContentMessageHandler(activeSession)
+        checkReaderable()
         super.onSessionSelected(session)
     }
 
     override fun onSessionRemoved(session: Session) {
-        ReaderViewFeature.ports.remove(sessionManager.getEngineSession(session))
+        ports.remove(sessionManager.getEngineSession(session))
+    }
+
+    override fun onUrlChanged(session: Session, url: String) {
+        checkReaderable()
+    }
+
+    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
+        onReaderViewAvailableChange(readerable)
     }
 
     fun showReaderView() {
-        // TODO send message to show reader view (-> see ReaderView.show())
+        activeSession?.let {
+            sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SHOW), it)
+        }
     }
 
     fun hideReaderView() {
-        // TODO send message to hide reader view (-> see ReaderView.hide())
+        activeSession?.let {
+            sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE), it)
+        }
     }
 
     /**
@@ -165,12 +181,43 @@ class ReaderViewFeature(
         controlsPresenter.hide()
     }
 
+    internal fun checkReaderable() {
+        activeSession?.let {
+            if (ports.containsKey(sessionManager.getEngineSession(it))) {
+                sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
+            }
+        }
+    }
+
+    private fun sendMessage(msg: Any, session: Session) {
+        val port = ports[sessionManager.getEngineSession(session)]
+        port?.postMessage(msg) ?: throw IllegalStateException("No port connected for the provided session")
+    }
+
     companion object {
-        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        @VisibleForTesting
         internal const val READER_VIEW_EXTENSION_ID = "mozacReaderview"
+
+        @VisibleForTesting
         internal const val READER_VIEW_EXTENSION_URL = "resource://android/assets/extensions/readerview/"
 
+        @VisibleForTesting
+        internal const val ACTION_MESSAGE_KEY = "action"
+
+        @VisibleForTesting
+        internal const val ACTION_SHOW = "show"
+
+        @VisibleForTesting
+        internal const val ACTION_HIDE = "hide"
+
+        @VisibleForTesting
+        internal const val ACTION_CHECK_READERABLE = "checkReaderable"
+
+        @VisibleForTesting
+        internal const val READERABLE_RESPONSE_MESSAGE_KEY = "readerable"
+
         @Volatile
+        @VisibleForTesting
         internal var installedWebExt: WebExtension? = null
 
         @Volatile
@@ -204,11 +251,6 @@ class ReaderViewFeature(
             }
 
             installedWebExt?.let { registerContentMessageHandler(it) }
-        }
-
-        fun sendMessage(msg: Any, engineSession: EngineSession) {
-            val port = ports[engineSession]
-            port?.postMessage(msg) ?: throw IllegalStateException("No port connected for the provided session")
         }
     }
 }
