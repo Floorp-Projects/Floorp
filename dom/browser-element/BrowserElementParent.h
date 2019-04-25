@@ -87,12 +87,10 @@ class BrowserElementParent {
    *         frame to a document and whether it called preventDefault to prevent
    *         the platform from handling the open request.
    */
-  static OpenWindowResult OpenWindowOOP(dom::BrowserParent* aOpenerTabParent,
-                                        dom::BrowserParent* aPopupTabParent,
-                                        const nsAString& aURL,
-                                        const nsAString& aName,
-                                        bool aForceNoReferrer,
-                                        const nsAString& aFeatures);
+  static OpenWindowResult OpenWindowOOP(
+      dom::BrowserParent* aOpenerBrowserParent,
+      dom::BrowserParent* aPopupBrowserParent, const nsAString& aURL,
+      const nsAString& aName, const nsAString& aFeatures);
 
   /**
    * Handle a window.open call from an in-process <iframe mozbrowser>.
@@ -113,7 +111,7 @@ class BrowserElementParent {
  private:
   static OpenWindowResult DispatchOpenWindowEvent(
       dom::Element* aOpenerFrameElement, dom::Element* aPopupFrameElement,
-      const nsAString& aURL, const nsAString& aName, bool aForceNoReferrer,
+      const nsAString& aURL, const nsAString& aName,
       const nsAString& aFeatures);
 };
 

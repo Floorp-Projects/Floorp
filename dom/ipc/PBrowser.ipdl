@@ -454,8 +454,7 @@ parent:
      * @param opener the PBrowser whose content called window.open.
      */
     async BrowserFrameOpenWindow(PBrowser opener,
-                                 nsString aURL, nsString aName,
-                                 bool aForceNoReferrer, nsString aFeatures)
+                                 nsString aURL, nsString aName, nsString aFeatures)
         returns (CreatedWindowInfo window);
 
     /**
