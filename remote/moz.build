@@ -16,12 +16,10 @@ JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
     BUG_COMPONENT = ("Remote Protocol", "Agent")
+with Files("targets/**"):
+    BUG_COMPONENT = ("Remote Protocol", "Target")
 with Files("domains/**/Emulation.jsm"):
     BUG_COMPONENT = ("Remote Protocol", "Emulation")
-with Files("domains/**/DOM.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "DOM")
-with Files("domains/**/Input.jsm"):
-    BUG_COMPONENT = ("Remote Protocol", "Input")
 with Files("domains/**/Log.jsm"):
     BUG_COMPONENT = ("Remote Protocol", "Log")
 with Files("domains/**/Network.jsm"):
