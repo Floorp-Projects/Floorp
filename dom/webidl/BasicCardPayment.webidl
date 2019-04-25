@@ -9,6 +9,7 @@
 
 dictionary BasicCardRequest {
   sequence<DOMString> supportedNetworks = [];
+  boolean requestSecurityCode = true;
 };
 
 dictionary BasicCardResponse {
