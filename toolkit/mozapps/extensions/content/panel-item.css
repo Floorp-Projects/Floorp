@@ -1,4 +1,5 @@
 button {
+  color: inherit;
   background-color: transparent;
   background-image: var(--icon);
   background-position: 16px center;
