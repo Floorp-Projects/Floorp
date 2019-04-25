@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
+const TOGGLE_TESTING_PREF =
+  "media.videocontrols.picture-in-picture.video-toggle.testing";
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
 
 // A weak reference to the most recent <video> in this content
@@ -26,6 +28,10 @@ var gWeakVideo = null;
 // A weak reference to the content window of the most recent
 // Picture-in-Picture window for this content process.
 var gWeakPlayerContent = null;
+// To make it easier to write tests, we have a process-global
+// WeakSet of all <video> elements that are being tracked for
+// mouseover
+var gWeakIntersectingVideosForTesting = new WeakSet();
 
 /**
  * The PictureInPictureToggleChild is responsible for displaying the overlaid
@@ -42,6 +48,7 @@ class PictureInPictureToggleChild extends ActorChild {
     // itself.
     this.weakDocStates = new WeakMap();
     this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+    this.toggleTesting = Services.prefs.getBoolPref(TOGGLE_TESTING_PREF, false);
   }
 
   /**
@@ -150,21 +157,40 @@ class PictureInPictureToggleChild extends ActorChild {
         if (!state.weakVisibleVideos.has(video)) {
           state.weakVisibleVideos.add(video);
           state.visibleVideosCount++;
+          if (this.toggleTesting) {
+            gWeakIntersectingVideosForTesting.add(video);
+          }
         }
       } else if (state.weakVisibleVideos.has(video)) {
         state.weakVisibleVideos.delete(video);
         state.visibleVideosCount--;
+        if (this.toggleTesting) {
+          gWeakIntersectingVideosForTesting.delete(video);
+        }
       }
     }
 
+    // For testing, especially in debug or asan builds, we might not
+    // run this idle callback within an acceptable time. While we're
+    // testing, we'll bypass the idle callback performance optimization
+    // and run our callbacks as soon as possible during the next idle
+    // period.
     if (!oldVisibleVideosCount && state.visibleVideosCount) {
-      this.content.requestIdleCallback(() => {
+      if (this.toggleTesting) {
         this.beginTrackingMouseOverVideos();
-      });
+      } else {
+        this.content.requestIdleCallback(() => {
+          this.beginTrackingMouseOverVideos();
+        });
+      }
     } else if (oldVisibleVideosCount && !state.visibleVideosCount) {
-      this.content.requestIdleCallback(() => {
+      if (this.toggleTesting) {
         this.stopTrackingMouseOverVideos();
-      });
+      } else {
+        this.content.requestIdleCallback(() => {
+          this.stopTrackingMouseOverVideos();
+        });
+      }
     }
   }
 
@@ -412,6 +438,14 @@ class PictureInPictureToggleChild extends ActorChild {
            clientX <= toggleRect.right &&
            clientY >= toggleRect.top &&
            clientY <= toggleRect.bottom;
+  }
+
+  /**
+   * This is a test-only function that returns true if a video is being tracked
+   * for mouseover events after having intersected the viewport.
+   */
+  static isTracking(video) {
+    return gWeakIntersectingVideosForTesting.has(video);
   }
 }
 
