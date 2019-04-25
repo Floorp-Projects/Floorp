@@ -27,13 +27,11 @@
   --link-color-hover: #0060df;
 
   /* Colors from Photon */
-  --success-background: #30e60b;
-  --warning-background: #fffbd6; /* from the Web Console */
-  --warning-icon: var(--yellow-65); /* from the Web Console */
-  --warning-text: var(--yellow-80); /* from the Web Console */
-  --error-background: #fdf2f5; /* from the Web Console */
-  --error-icon: var(--red-60); /* from the Web Console */
-  --error-text: var(--red-70); /* from the Web Console */
+  --success-50: #30e60b;
+  --warning-50: #ffe900;
+  --warning-90: #3e2800;
+  --error-50: #ff0039;
+  --error-60: #d70022;
   --highlight-50: #0a84ff;
   --grey-20: #ededf0; /* for ui, no special semantic */
   --grey-30: #d7d7db; /* for ui, no special semantic */
@@ -64,8 +62,6 @@
   --caption-20-color: var(--grey-50);
   --display-20-font-size: 36px;
   --display-20-font-weight: 200;
-  --display-10-font-size: 28px;
-  --display-10-font-weight: 200;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
   --title-30-font-size: 22px;
@@ -80,8 +76,7 @@
   --base-font-size: var(--body-10-font-size);
   --base-font-weight: var(--body-10-font-weight);
   --base-line-height: 1.8;
-  --icon-label-font-size: var(--body-10-font-size);
-  --message-font-size: var(--body-10-font-size);
+  --message-font-size: 13px; /* Body 10 in Photon - https://design.firefox.com/photon/visuals/typography.html */
   --button-font-size: var(--base-font-size);
   --micro-font-size: 11px;
   --monospace-font-family: monospace;
@@ -183,8 +178,8 @@ p, h1 {
 
 /* Main style for heading (i.e. h1) */
 .main-heading {
-  font-size: var(--display-10-font-size);
-  font-weight: var(--display-10-font-weight);
+  font-size: var(--display-20-font-size);
+  font-weight: var(--display-20-font-weight);
   line-height: 1.2;
   color: var(--in-content-text-color);
 }
@@ -227,11 +222,6 @@ p, h1 {
 
   margin-block-start: 0;
   margin-block-end: calc(var(--base-unit) * 4);
-}
-
-.alt-heading--larger {
-  font-size: var(--title-30-font-size);
-  font-weight: var(--title-30-font-weight);
 }
 
 /* Alternative style for a subheading (i.e. h2). It features an icon */
@@ -405,15 +395,15 @@ Form controls
 }
 
 .badge--success {
-  background: var(--success-background);
+  background: var(--success-50);
 }
 
 .badge--warning {
-  background: var(--warning-background);
+  background: var(--warning-50);
 }
 
 .badge--error {
-  background: var(--error-background);
+  background: var(--error-50);
 }
 
 /*
@@ -423,7 +413,7 @@ Form controls
   background-color: var(--white-100); /* from common.inc.css */
   border-radius: var(--card-shadow-blur-radius); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
-  padding-block: calc(var(--base-unit) * 5);
+  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
 }
 
 .card__heading {

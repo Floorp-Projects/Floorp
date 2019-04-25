@@ -20,7 +20,7 @@
   grid-column-gap: var(--header-col-gap);
   align-items: center;
 
-  padding-block-end: calc(var(--base-unit) * 4);
+  padding-block: calc(var(--base-unit) * 4);
   padding-inline: calc(var(--base-unit) * 5);
 }
 
@@ -39,8 +39,10 @@
   padding-inline-start: calc(var(--base-unit) * 5
     + var(--header-col-gap) + var(--icon-size));
   padding-inline-end: calc(var(--base-unit) * 5);
+  padding-block-end: calc(var(--base-unit) * 4);
 }
 
 .connect-section__extra {
   border-block-start: 1px solid var(--card-separator-color);
+  padding-block-end: calc(var(--base-unit) * 4);
 }

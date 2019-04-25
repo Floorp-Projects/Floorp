@@ -17,7 +17,7 @@
 
 .app {
   /* from common */
-  --sidebar-width: 320px;
+  --sidebar-width: 240px;
   --app-top-padding: 70px;
   --app-bottom-padding: 40px;
   --app-left-padding: 34px;
@@ -57,6 +57,4 @@
 
 .page {
   max-width: var(--page-width);
-  font-size: var(--body-20-font-size);
-  font-weight: var(--body-20-font-weight);
 }

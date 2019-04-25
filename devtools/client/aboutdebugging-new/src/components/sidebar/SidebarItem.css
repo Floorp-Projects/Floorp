@@ -25,6 +25,16 @@
   height: calc(var(--base-unit) * 9);
 }
 
+.sidebar-item--full-width {
+  padding-inline-start: 0;
+  padding-inline-end: 0;
+}
+
+/* .sidebar-item--overflow {
+  min-height: var(--category-height);
+  height: auto;
+} */
+
 .sidebar-item__link {
   display: block;
   height: 100%;
@@ -36,7 +46,7 @@
 }
 
 .sidebar-item:not(.sidebar-item--selectable) {
-  color: var(--grey-50);
+  color: var(--grey-40);
 }
 
 .sidebar-item--selectable:hover {
