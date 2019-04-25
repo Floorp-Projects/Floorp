@@ -77,7 +77,8 @@ from mozpack.mozjar import (
 from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
 
-NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50  # Number of candidate pushheads to cache per parent changeset.
+# Number of candidate pushheads to cache per parent changeset.
+NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50
 
 # Number of parent changesets to consider as possible pushheads.
 # There isn't really such a thing as a reasonable default here, because we don't
@@ -313,8 +314,8 @@ class AndroidArtifactJob(ArtifactJob):
 
                 dirname, basename = os.path.split(p)
                 self.log(logging.INFO, 'artifact',
-                    {'basename': basename},
-                   'Adding {basename} to processed archive')
+                         {'basename': basename},
+                         'Adding {basename} to processed archive')
 
                 basedir = 'bin'
                 if not basename.endswith('.so'):
@@ -323,7 +324,8 @@ class AndroidArtifactJob(ArtifactJob):
                 writer.add(basename.encode('utf-8'), f.open())
 
     def process_symbols_archive(self, filename, processed_filename):
-        ArtifactJob.process_symbols_archive(self, filename, processed_filename, skip_compressed=True)
+        ArtifactJob.process_symbols_archive(
+            self, filename, processed_filename, skip_compressed=True)
 
         if self._symbols_archive_suffix != 'crashreporter-symbols-full.zip':
             return
@@ -440,8 +442,8 @@ class MacArtifactJob(ArtifactJob):
         oldcwd = os.getcwd()
         try:
             self.log(logging.INFO, 'artifact',
-                {'tempdir': tempdir},
-                'Unpacking DMG into {tempdir}')
+                     {'tempdir': tempdir},
+                     'Unpacking DMG into {tempdir}')
             if self._substs['HOST_OS_ARCH'] == 'Linux':
                 # This is a cross build, use hfsplus and dmg tools to extract the dmg.
                 os.chdir(tempdir)
@@ -486,8 +488,8 @@ class MacArtifactJob(ArtifactJob):
                 for path in paths:
                     for p, f in finder.find(path):
                         self.log(logging.INFO, 'artifact',
-                            {'path': p},
-                            'Adding {path} to processed archive')
+                                 {'path': p},
+                                 'Adding {path} to processed archive')
                         destpath = mozpath.join('bin', os.path.basename(p))
                         writer.add(destpath.encode('utf-8'), f, mode=f.mode)
 
@@ -507,8 +509,8 @@ class MacArtifactJob(ArtifactJob):
                 shutil.rmtree(tempdir)
             except (OSError, IOError):
                 self.log(logging.WARN, 'artifact',
-                    {'tempdir': tempdir},
-                    'Unable to delete {tempdir}')
+                         {'tempdir': tempdir},
+                         'Unable to delete {tempdir}')
                 pass
 
 
@@ -561,8 +563,8 @@ class WinArtifactJob(ArtifactJob):
                 basename = mozpath.relpath(p, self.product)
                 basename = mozpath.join('bin', basename)
                 self.log(logging.INFO, 'artifact',
-                    {'basename': basename},
-                    'Adding {basename} to processed archive')
+                         {'basename': basename},
+                         'Adding {basename} to processed archive')
                 writer.add(basename.encode('utf-8'), f.open(), mode=f.mode)
                 added_entry = True
 
@@ -668,8 +670,8 @@ class CacheManager(object):
     def load_cache(self):
         if self._skip_cache:
             self.log(logging.INFO, 'artifact',
-                {},
-                'Skipping cache: ignoring load_cache!')
+                     {},
+                     'Skipping cache: ignoring load_cache!')
             return
 
         try:
@@ -681,25 +683,26 @@ class CacheManager(object):
             # exceptions, so it's not worth trying to be fine grained here.
             # We ignore any exception, so the cache is effectively dropped.
             self.log(logging.INFO, 'artifact',
-                {'filename': self._cache_filename, 'exception': repr(e)},
-                'Ignoring exception unpickling cache file {filename}: {exception}')
+                     {'filename': self._cache_filename, 'exception': repr(e)},
+                     'Ignoring exception unpickling cache file {filename}: {exception}')
             pass
 
     def dump_cache(self):
         if self._skip_cache:
             self.log(logging.INFO, 'artifact',
-                {},
-                'Skipping cache: ignoring dump_cache!')
+                     {},
+                     'Skipping cache: ignoring dump_cache!')
             return
 
         ensureParentDir(self._cache_filename)
-        pickle.dump(list(reversed(list(self._cache.items()))), open(self._cache_filename, 'wb'), -1)
+        pickle.dump(list(reversed(list(self._cache.items()))),
+                    open(self._cache_filename, 'wb'), -1)
 
     def clear_cache(self):
         if self._skip_cache:
             self.log(logging.INFO, 'artifact',
-                {},
-                'Skipping cache: ignoring clear_cache!')
+                     {},
+                     'Skipping cache: ignoring clear_cache!')
             return
 
         with self:
@@ -712,11 +715,13 @@ class CacheManager(object):
     def __exit__(self, type, value, traceback):
         self.dump_cache()
 
+
 class PushheadCache(CacheManager):
     '''Helps map tree/revision pairs to parent pushheads according to the pushlog.'''
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
-        CacheManager.__init__(self, cache_dir, 'pushhead_cache', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
+        CacheManager.__init__(self, cache_dir, 'pushhead_cache',
+                              MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
     @cachedmethod(operator.attrgetter('_cache'))
     def parent_pushhead_id(self, tree, revision):
@@ -743,11 +748,13 @@ class PushheadCache(CacheManager):
             p['changesets'][-1] for p in result['pushes'].values()
         ]
 
+
 class TaskCache(CacheManager):
     '''Map candidate pushheads to Task Cluster task IDs and artifact URLs.'''
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
-        CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
+        CacheManager.__init__(self, cache_dir, 'artifact_url',
+                              MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
 
     @cachedmethod(operator.attrgetter('_cache'))
     def artifacts(self, tree, job, artifact_job_class, rev):
@@ -782,7 +789,8 @@ class TaskCache(CacheManager):
         except KeyError:
             # Not all revisions correspond to pushes that produce the job we
             # care about; and even those that do may not have completed yet.
-            raise ValueError('Task for {namespace} does not exist (yet)!'.format(namespace=namespace))
+            raise ValueError(
+                'Task for {namespace} does not exist (yet)!'.format(namespace=namespace))
 
         return taskId, list_artifacts(taskId)
 
@@ -820,13 +828,15 @@ class Artifacts(object):
                                      substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
-                {'job': self._job},
-                'Unknown job {job}')
+                     {'job': self._job},
+                     'Unknown job {job}')
             raise KeyError("Unknown job")
 
         self._task_cache = TaskCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
-        self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
-        self._pushhead_cache = PushheadCache(self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._artifact_cache = ArtifactCache(
+            self._cache_dir, log=self._log, skip_cache=self._skip_cache)
+        self._pushhead_cache = PushheadCache(
+            self._cache_dir, log=self._log, skip_cache=self._skip_cache)
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -953,8 +963,8 @@ from remote.  Please run `hg pull` and build again.
 see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles""")
 
         self.log(logging.INFO, 'artifact',
-            {'len': len(last_revs)},
-            'hg suggested {len} candidate revisions')
+                 {'len': len(last_revs)},
+                 'hg suggested {len} candidate revisions')
 
         def to_pair(line):
             rev, node = line.split(':', 1)
@@ -1002,7 +1012,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
     def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
-            taskId, artifacts = task_cache.artifacts(tree, job, self._artifact_job.__class__, pushhead)
+            taskId, artifacts = task_cache.artifacts(
+                tree, job, self._artifact_job.__class__, pushhead)
         except ValueError:
             return None
 
@@ -1023,32 +1034,32 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
     def install_from_file(self, filename, distdir):
         self.log(logging.INFO, 'artifact',
-            {'filename': filename},
-            'Installing from {filename}')
+                 {'filename': filename},
+                 'Installing from {filename}')
 
         # Do we need to post-process?
         processed_filename = filename + PROCESSED_SUFFIX
 
         if self._skip_cache and os.path.exists(processed_filename):
             self.log(logging.INFO, 'artifact',
-                {'path': processed_filename},
-                'Skipping cache: removing cached processed artifact {path}')
+                     {'path': processed_filename},
+                     'Skipping cache: removing cached processed artifact {path}')
             os.remove(processed_filename)
 
         if not os.path.exists(processed_filename):
             self.log(logging.INFO, 'artifact',
-                {'filename': filename},
-                'Processing contents of {filename}')
+                     {'filename': filename},
+                     'Processing contents of {filename}')
             self.log(logging.INFO, 'artifact',
-                {'processed_filename': processed_filename},
-                'Writing processed {processed_filename}')
+                     {'processed_filename': processed_filename},
+                     'Writing processed {processed_filename}')
             self._artifact_job.process_artifact(filename, processed_filename)
 
         self._artifact_cache._persist_limit.register_file(processed_filename)
 
         self.log(logging.INFO, 'artifact',
-            {'processed_filename': processed_filename},
-            'Installing from processed {processed_filename}')
+                 {'processed_filename': processed_filename},
+                 'Installing from processed {processed_filename}')
 
         # Copy all .so files, avoiding modification where possible.
         ensureParentDir(mozpath.join(distdir, '.dummy'))
@@ -1062,20 +1073,20 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
-                    {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
-                    '{updating} {filename}')
+                         {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
+                         '{updating} {filename}')
                 if not file_existed or file_updated:
                     # Libraries and binaries may need to be marked executable,
                     # depending on platform.
-                    perms = info.external_attr >> 16 # See http://stackoverflow.com/a/434689.
-                    perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH # u+w, a+r.
+                    perms = info.external_attr >> 16  # See http://stackoverflow.com/a/434689.
+                    perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH  # u+w, a+r.
                     os.chmod(n, perms)
         return 0
 
     def install_from_url(self, url, distdir):
         self.log(logging.INFO, 'artifact',
-            {'url': url},
-            'Installing from {url}')
+                 {'url': url},
+                 'Installing from {url}')
         filename = self._artifact_cache.fetch(url)
         return self.install_from_file(filename, distdir)
 
@@ -1117,7 +1128,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         try:
             if self._hg:
                 revision = subprocess.check_output([self._hg, 'log', '--template', '{node}\n',
-                                                  '-r', revset], cwd=self._topsrcdir).strip()
+                                                    '-r', revset], cwd=self._topsrcdir).strip()
             elif self._git:
                 revset = subprocess.check_output([
                     self._git, 'rev-parse', '%s^{commit}' % revset],
@@ -1165,7 +1176,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
-            raise ValueError('Task {taskId} existed, but no artifacts found!'.format(taskId=taskId))
+            raise ValueError(
+                'Task {taskId} existed, but no artifacts found!'.format(taskId=taskId))
         for url in urls:
             if self.install_from_url(url, distdir):
                 return 1
@@ -1194,11 +1206,10 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
             return self.install_from_recent(distdir)
 
-
     def clear_cache(self):
         self.log(logging.INFO, 'artifact',
-            {},
-            'Deleting cached artifacts and caches.')
+                 {},
+                 'Deleting cached artifacts and caches.')
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
         self._pushhead_cache.clear_cache()

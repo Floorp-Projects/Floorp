@@ -24,6 +24,7 @@ CONTENTS = {
     'http://server/larger': b'larger' * 3000,
 }
 
+
 class FakeResponse(object):
     def __init__(self, content):
         self._content = content

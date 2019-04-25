@@ -123,7 +123,7 @@ class TestClobberer(unittest.TestCase):
         self.assertFalse(os.path.exists(dummy_path))
         self.assertTrue(os.path.exists(c.obj_clobber))
         self.assertGreaterEqual(os.path.getmtime(c.obj_clobber),
-            os.path.getmtime(c.src_clobber))
+                                os.path.getmtime(c.src_clobber))
 
     def test_objdir_is_srcdir(self):
         """If topobjdir is the topsrcdir, refuse to clobber."""
@@ -180,7 +180,6 @@ class TestClobberer(unittest.TestCase):
         self.assertTrue(required)
         self.assertFalse(performed)
         self.assertIn('Cannot clobber while the shell is inside', reason)
-
 
     def test_mozconfig_opt_in(self):
         """Auto clobber iff AUTOCLOBBER is in the environment."""

@@ -16,6 +16,7 @@ if sys.version_info[0] == 3:
 else:
     str_type = basestring
 
+
 class DotProperties:
     r'''A thin representation of a key=value .properties file.'''
 

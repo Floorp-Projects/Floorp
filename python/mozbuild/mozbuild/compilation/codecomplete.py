@@ -26,9 +26,9 @@ class Introspection(MachCommandBase):
     """Instropection commands."""
 
     @Command('compileflags', category='devenv',
-        description='Display the compilation flags for a given source file')
+             description='Display the compilation flags for a given source file')
     @CommandArgument('what', default=None,
-        help='Source file to display compilation flags for')
+                     help='Source file to display compilation flags for')
     def compileflags(self, what):
         from mozbuild.util import resolve_target_to_make
         from mozbuild.compilation import util
@@ -39,7 +39,7 @@ class Introspection(MachCommandBase):
         path_arg = self._wrap_path_argument(what)
 
         make_dir, make_target = resolve_target_to_make(self.topobjdir,
-            path_arg.relpath())
+                                                       path_arg.relpath())
 
         if make_dir is None and make_target is None:
             return 1

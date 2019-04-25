@@ -17,6 +17,7 @@ from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
 from manifest_handler import ChromeManifestHandler
 
+
 class LcovRecord(object):
     __slots__ = ("test_name",
                  "source_file",
@@ -30,6 +31,7 @@ class LcovRecord(object):
                  "lines",
                  "line_count",
                  "covered_line_count")
+
     def __init__(self):
         self.functions = {}
         self.function_exec_counts = {}
@@ -71,6 +73,7 @@ class LcovRecord(object):
         self.covered_line_count = len([c for c, _ in self.lines.values() if c])
         self.branch_count = len(self.branches)
         self.covered_branch_count = len([c for c in self.branches.values() if c])
+
 
 class RecordRewriter(object):
     # Helper class for rewriting/spliting individual lcov records according
@@ -164,7 +167,8 @@ class RecordRewriter(object):
     def rewrite_record(self, record, pp_info):
         # Rewrite the lines in the given record according to preprocessor info
         # and split to additional records when pp_info has included file info.
-        self._current_pp_info = dict([(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
+        self._current_pp_info = dict(
+            [(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
         self._ranges = sorted(self._current_pp_info.keys())
         self._additions = {}
         self._rewrite_lines(record)
@@ -177,6 +181,7 @@ class RecordRewriter(object):
         for r in generated_records:
             r.resummarize()
         return generated_records
+
 
 class LcovFile(object):
     # Simple parser/pretty-printer for lcov format.
@@ -404,6 +409,7 @@ class LcovFile(object):
 class UrlFinderError(Exception):
     pass
 
+
 class UrlFinder(object):
     # Given a "chrome://" or "resource://" url, uses data from the UrlMapBackend
     # and install manifests to find a path to the source file and the corresponding
@@ -580,7 +586,8 @@ class UrlFinder(object):
                     return url_obj.path, None
 
                 dir_parts = parts[0].rsplit(app_name + '/', 1)
-                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist', 'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/')))
+                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist',
+                                                    'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/')))
             elif '.xpi!' in url:
                 # This matching mechanism is quite brittle and based on examples seen in the wild.
                 # There's no rule to match the XPI name to the path in dist/xpi-stage.
@@ -590,7 +597,8 @@ class UrlFinder(object):
                     addon_name = addon_name[:-len('-test@mozilla.org')]
                 elif addon_name.endswith('@mozilla.org'):
                     addon_name = addon_name[:-len('@mozilla.org')]
-                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist', 'xpi-stage', addon_name, parts[1].lstrip('/')))
+                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist',
+                                                    'xpi-stage', addon_name, parts[1].lstrip('/')))
         elif url_obj.scheme == 'file' and os.path.isabs(url_obj.path):
             path = url_obj.path
             if not os.path.isfile(path):
@@ -606,6 +614,7 @@ class UrlFinder(object):
         result = self.find_files(url)
         self._final_mapping[url] = result
         return result
+
 
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
@@ -693,6 +702,7 @@ def main():
             files.append(f)
 
     rewriter.rewrite_files(files, args.output_file, args.output_suffix)
+
 
 if __name__ == '__main__':
     main()

@@ -21,6 +21,7 @@ import mozpack.path as mozpath
 
 TOPSRCDIR = os.path.abspath(os.path.join(__file__, '../../../../../'))
 
+
 class InvalidPathException(Exception):
     """Represents an error due to an invalid path."""
 
@@ -28,11 +29,11 @@ class InvalidPathException(Exception):
 @CommandProvider
 class MozbuildFileCommands(MachCommandBase):
     @Command('mozbuild-reference', category='build-dev',
-        description='View reference documentation on mozbuild files.')
+             description='View reference documentation on mozbuild files.')
     @CommandArgument('symbol', default=None, nargs='*',
-        help='Symbol to view help on. If not specified, all will be shown.')
+                     help='Symbol to view help on. If not specified, all will be shown.')
     @CommandArgument('--name-only', '-n', default=False, action='store_true',
-        help='Print symbol names only.')
+                     help='Print symbol names only.')
     def reference(self, symbol, name_only=False):
         # mozbuild.sphinx imports some Sphinx modules, so we need to be sure
         # the optional Sphinx package is installed.
@@ -284,7 +285,6 @@ class MozbuildFileCommands(MachCommandBase):
             print(e.message)
             return 1
 
-
     def _get_files_info(self, paths, rev=None):
         reader = self.mozbuild_reader(config_mode='empty', vcs_revision=rev)
 
@@ -327,7 +327,6 @@ class MozbuildFileCommands(MachCommandBase):
                     allpaths.append(path)
 
         return reader.files_info(allpaths)
-
 
     @SubCommand('file-info', 'schedules',
                 'Show the combined SCHEDULES for the files listed.')

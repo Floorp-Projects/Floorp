@@ -99,7 +99,7 @@ class TestSandbox(unittest.TestCase):
 
         sandbox.exec_source('DIRS = ["foo"]')
         with self.assertRaises(SandboxExecutionError) as se:
-          sandbox.exec_source('DIRS = ["bar"]')
+            sandbox.exec_source('DIRS = ["bar"]')
 
         self.assertEqual(sandbox['DIRS'], ['foo'])
         e = se.exception
@@ -129,6 +129,7 @@ class TestedSandbox(MozbuildSandbox):
     It automatically normalizes paths given to exec_file and exec_source. This
     helps simplify the test code.
     '''
+
     def normalize_path(self, path):
         return mozpath.normpath(
             mozpath.join(self._context.config.topsrcdir, path))
@@ -141,7 +142,7 @@ class TestedSandbox(MozbuildSandbox):
 
     def exec_source(self, source, path=''):
         super(TestedSandbox, self).exec_source(source,
-            self.normalize_path(path) if path else '')
+                                               self.normalize_path(path) if path else '')
 
 
 class TestMozbuildSandbox(unittest.TestCase):
@@ -188,9 +189,9 @@ class TestMozbuildSandbox(unittest.TestCase):
         self.assertEqual(sandbox['TOPOBJDIR'], config.topobjdir)
         self.assertEqual(sandbox['RELATIVEDIR'], 'foo/bar')
         self.assertEqual(sandbox['SRCDIR'],
-            mozpath.join(config.topsrcdir, 'foo/bar'))
+                         mozpath.join(config.topsrcdir, 'foo/bar'))
         self.assertEqual(sandbox['OBJDIR'],
-            mozpath.join(config.topobjdir, 'foo/bar'))
+                         mozpath.join(config.topobjdir, 'foo/bar'))
 
     def test_config_access(self):
         sandbox = self.sandbox()
@@ -238,7 +239,7 @@ class TestMozbuildSandbox(unittest.TestCase):
 
         sandbox.exec_source('DIST_SUBDIR = "foo"')
         with self.assertRaises(SandboxExecutionError) as se:
-          sandbox.exec_source('DIST_SUBDIR = "bar"')
+            sandbox.exec_source('DIST_SUBDIR = "bar"')
 
         self.assertEqual(sandbox['DIST_SUBDIR'], 'foo')
         e = se.exception
@@ -259,7 +260,7 @@ class TestMozbuildSandbox(unittest.TestCase):
             sandbox.source_path('bar'),
         ])
         self.assertEqual(sandbox._context.main_path,
-            sandbox.normalize_path('moz.build'))
+                         sandbox.normalize_path('moz.build'))
         self.assertEqual(len(sandbox._context.all_paths), 2)
 
     def test_include_outside_topsrcdir(self):
@@ -269,7 +270,7 @@ class TestMozbuildSandbox(unittest.TestCase):
             sandbox.exec_file('relative.build')
 
         self.assertEqual(se.exception.illegal_path,
-            sandbox.normalize_path('../moz.build'))
+                         sandbox.normalize_path('../moz.build'))
 
     def test_include_error_stack(self):
         # Ensure the path stack is reported properly in exceptions.
@@ -345,7 +346,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         sandbox = MozbuildSandbox(Context(VARIABLES, config))
 
         self.assertEqual(sandbox['CONFIG']['BAD_UTF8'],
-            u'\ufffd\ufffd\ufffd\ufffd:')
+                         u'\ufffd\ufffd\ufffd\ufffd:')
 
     def test_invalid_exports_set_base(self):
         sandbox = self.sandbox()
@@ -472,7 +473,7 @@ def foo():
 
         e = se.exception.exc_value
         self.assertEqual(e.message,
-            'Template function names must be CamelCase.')
+                         'Template function names must be CamelCase.')
 
         # Template names must not already be registered.
         sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
@@ -489,11 +490,12 @@ def Template():
 
         e = se.exception.exc_value
         self.assertEqual(e.message,
-            'A template named "Template" was already declared in %s.' %
-            sandbox.normalize_path('templates.mozbuild'))
+                         'A template named "Template" was already declared in %s.' %
+                         sandbox.normalize_path('templates.mozbuild'))
 
     def test_function_args(self):
-        class Foo(int): pass
+        class Foo(int):
+            pass
 
         def foo(a, b):
             return type(a), type(b)
