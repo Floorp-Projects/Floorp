@@ -78,7 +78,7 @@ It is augmented as it progresses through the system, with various information:
     preselected; // {boolean} whether the first result should be preselected.
     results; // {array} list of UrlbarResult objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
-            // object in the form {type, value}.
+            // object in the form {type, value, lowerCaseValue}.
   }
 
 
