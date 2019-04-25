@@ -150,7 +150,7 @@ async function testClickInInnerIframe(doc) {
   const onFrameLoad = new Promise(r => {
     iframe.addEventListener("load", r, true);
   });
-  iframe.src = "data:text/html,<div id=test style='height:50px;'></div>";
+  iframe.srcdoc = "<div id=test style='height:50px;'></div>";
   await onFrameLoad;
 
   tooltip.setContentSize({width: 100, height: 50});
