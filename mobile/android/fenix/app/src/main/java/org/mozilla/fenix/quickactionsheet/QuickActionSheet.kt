@@ -142,6 +142,20 @@ class QuickActionSheetBehavior(
     context: Context,
     attrs: AttributeSet
 ) : BottomSheetBehavior<NestedScrollView>(context, attrs) {
+
+    override fun onNestedPreScroll(
+        coordinatorLayout: CoordinatorLayout,
+        child: NestedScrollView,
+        target: View,
+        dx: Int,
+        dy: Int,
+        consumed: IntArray,
+        type: Int
+    ) {
+        if (dy < 0) { state = STATE_COLLAPSED }
+        super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
+    }
+
     override fun layoutDependsOn(parent: CoordinatorLayout, child: NestedScrollView, dependency: View): Boolean {
         if (dependency is BrowserToolbar) {
             return true
@@ -164,6 +178,7 @@ class QuickActionSheetBehavior(
     }
 
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
+        if (toolbar.translationY == toolbar.height.toFloat()) { state = STATE_HIDDEN }
         quickActionSheetContainer.translationY = (toolbar.translationY + toolbar.height * -1.0).toFloat()
     }
 }
