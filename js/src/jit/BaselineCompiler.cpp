@@ -1230,7 +1230,50 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
-  MOZ_CRASH("NYI: interpreter emitWarmUpCounterIncrement");
+  Register scriptReg = R2.scratchReg();
+  Register countReg = R0.scratchReg();
+
+  // Bump warm-up counter.
+  Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
+  loadScript(scriptReg);
+  masm.load32(warmUpCounterAddr, countReg);
+  masm.add32(Imm32(1), countReg);
+  masm.store32(countReg, warmUpCounterAddr);
+
+  // If the script is warm enough for Baseline compilation, call into the VM to
+  // compile it.
+  Label done;
+  masm.branch32(Assembler::BelowOrEqual, countReg,
+                Imm32(JitOptions.baselineWarmUpThreshold), &done);
+  masm.branchPtr(Assembler::Equal,
+                 Address(scriptReg, JSScript::offsetOfBaselineScript()),
+                 ImmPtr(BASELINE_DISABLED_SCRIPT), &done);
+  {
+    prepareVMCall();
+
+    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, uint8_t**);
+    if (!callVM<Fn, BaselineCompileFromBaselineInterpreter>()) {
+      return false;
+    }
+
+    // If the function returned nullptr we either skipped compilation or were
+    // unable to compile the script. Continue running in the interpreter.
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &done);
+
+    // Success! Switch from interpreter to JIT code by jumping to the
+    // corresponding code in the BaselineScript.
+    //
+    // This works because BaselineCompiler uses the same frame layout (stack is
+    // synced at OSR points) and BaselineCompileFromBaselineInterpreter has
+    // already cleared the RUNNING_IN_INTERPRETER flag for us.
+    // See BaselineFrame::prepareForBaselineInterpreterToJitOSR.
+    masm.jump(ReturnReg);
+  }
+
+  masm.bind(&done);
+  return true;
 }
 
 template <>
