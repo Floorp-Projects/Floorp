@@ -135,7 +135,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
 
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
-    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst,
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::First,
                                      aBaseline);
   }
 
@@ -145,7 +145,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
     if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
       return false;
     }
-    *aBaseline = aBaselineGroup == BaselineSharingGroup::eFirst
+    *aBaseline = aBaselineGroup == BaselineSharingGroup::First
                      ? mBaselineFromLastReflow
                      : mLastBaselineFromLastReflow;
     return true;

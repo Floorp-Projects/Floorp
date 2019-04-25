@@ -485,7 +485,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
         do_QueryFrame(nsBox::GetChildXULBox(this));
     if (scrollframe) {
       AutoWeakFrame weakFrame(this);
-      scrollframe->ScrollTo(nsPoint(0, 0), ScrollMode::eInstant);
+      scrollframe->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
       if (!weakFrame.IsAlive()) {
         return;
       }
@@ -2485,8 +2485,7 @@ void nsMenuPopupFrame::CheckForAnchorChange(nsRect& aRect) {
   }
 }
 
-nsIWidget* nsMenuPopupFrame::GetParentMenuWidget()
-{
+nsIWidget* nsMenuPopupFrame::GetParentMenuWidget() {
   nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
   if (menuFrame) {
     nsMenuParent* parentPopup = menuFrame->GetMenuParent();

@@ -663,10 +663,10 @@ nsSimplePageSequenceFrame::PrintNextPage() {
 
     nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
     nsRegion drawingRegion(drawingRect);
-    nsLayoutUtils::PaintFrame(
-        gCtx, currentPageFrame, drawingRegion, NS_RGBA(0, 0, 0, 0),
-        nsDisplayListBuilderMode::PAINTING,
-        nsLayoutUtils::PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES);
+    nsLayoutUtils::PaintFrame(gCtx, currentPageFrame, drawingRegion,
+                              NS_RGBA(0, 0, 0, 0),
+                              nsDisplayListBuilderMode::Painting,
+                              nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);
   }
   return rv;
 }

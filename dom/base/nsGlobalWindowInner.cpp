@@ -3557,7 +3557,7 @@ void nsGlobalWindowInner::ScrollTo(const CSSIntPoint& aScroll,
         sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollToCSSPixels(
-        scroll, smoothScroll ? ScrollMode::eSmoothMsd : ScrollMode::eInstant);
+        scroll, smoothScroll ? ScrollMode::SmoothMsd : ScrollMode::Instant);
   }
 }
 
@@ -3589,13 +3589,13 @@ void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
       scrollDelta.y = mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
     }
 
-    ScrollMode scrollMode = ScrollMode::eInstant;
+    ScrollMode scrollMode = ScrollMode::Instant;
     if (aOptions.mBehavior == ScrollBehavior::Smooth) {
-      scrollMode = ScrollMode::eSmoothMsd;
+      scrollMode = ScrollMode::SmoothMsd;
     } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
       ScrollStyles styles = sf->GetScrollStyles();
       if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
-        scrollMode = ScrollMode::eSmoothMsd;
+        scrollMode = ScrollMode::SmoothMsd;
       }
     }
 
@@ -3615,7 +3615,7 @@ void nsGlobalWindowInner::ScrollByLines(int32_t numLines,
         sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollBy(nsIntPoint(0, numLines), nsIScrollableFrame::LINES,
-                 smoothScroll ? ScrollMode::eSmoothMsd : ScrollMode::eInstant);
+                 smoothScroll ? ScrollMode::SmoothMsd : ScrollMode::Instant);
   }
 }
 
@@ -3631,7 +3631,7 @@ void nsGlobalWindowInner::ScrollByPages(int32_t numPages,
         sf->GetScrollStyles().IsSmoothScroll(aOptions.mBehavior);
 
     sf->ScrollBy(nsIntPoint(0, numPages), nsIScrollableFrame::PAGES,
-                 smoothScroll ? ScrollMode::eSmoothMsd : ScrollMode::eInstant);
+                 smoothScroll ? ScrollMode::SmoothMsd : ScrollMode::Instant);
   }
 }
 

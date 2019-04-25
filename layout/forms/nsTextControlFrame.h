@@ -62,7 +62,7 @@ class nsTextControlFrame final : public nsContainerFrame,
 
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
-    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst,
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::First,
                                      aBaseline);
   }
 
@@ -74,7 +74,7 @@ class nsTextControlFrame final : public nsContainerFrame,
     }
     NS_ASSERTION(mFirstBaseline != NS_INTRINSIC_WIDTH_UNKNOWN,
                  "please call Reflow before asking for the baseline");
-    if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+    if (aBaselineGroup == BaselineSharingGroup::First) {
       *aBaseline = mFirstBaseline;
     } else {
       *aBaseline = BSize(aWM) - mFirstBaseline;

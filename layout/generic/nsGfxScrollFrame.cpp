@@ -1380,14 +1380,14 @@ static nsRect GetOnePixelRangeAroundPoint(const nsPoint& aPoint,
 void ScrollFrameHelper::ScrollByPage(
     nsScrollbarFrame* aScrollbar, int32_t aDirection,
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
-  ScrollByUnit(aScrollbar, ScrollMode::eSmooth, aDirection,
+  ScrollByUnit(aScrollbar, ScrollMode::Smooth, aDirection,
                nsIScrollableFrame::PAGES, aSnap);
 }
 
 void ScrollFrameHelper::ScrollByWhole(
     nsScrollbarFrame* aScrollbar, int32_t aDirection,
     nsIScrollbarMediator::ScrollSnapMode aSnap) {
-  ScrollByUnit(aScrollbar, ScrollMode::eInstant, aDirection,
+  ScrollByUnit(aScrollbar, ScrollMode::Instant, aDirection,
                nsIScrollableFrame::WHOLE, aSnap);
 }
 
@@ -1423,7 +1423,7 @@ void ScrollFrameHelper::ScrollByLine(
   }
 
   nsIntPoint overflow;
-  ScrollBy(delta, nsIScrollableFrame::LINES, ScrollMode::eSmooth, &overflow,
+  ScrollBy(delta, nsIScrollableFrame::LINES, ScrollMode::Smooth, &overflow,
            nsGkAtoms::other, nsIScrollableFrame::NOT_MOMENTUM, aSnap);
 }
 
@@ -1451,7 +1451,7 @@ void ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
     return;
   }
 
-  ScrollTo(dest, ScrollMode::eInstant, nsGkAtoms::other, &allowedRange);
+  ScrollTo(dest, ScrollMode::Instant, nsGkAtoms::other, &allowedRange);
 }
 
 void ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar) {
@@ -1461,7 +1461,7 @@ void ScrollFrameHelper::ScrollbarReleased(nsScrollbarFrame* aScrollbar) {
 
   // Perform scroll snapping, if needed.  Scrollbar movement uses the same
   // smooth scrolling animation as keyboard scrolling.
-  ScrollSnap(mDestination, ScrollMode::eSmooth);
+  ScrollSnap(mDestination, ScrollMode::Smooth);
 }
 
 void ScrollFrameHelper::ScrollByUnit(
@@ -2218,7 +2218,7 @@ void ScrollFrameHelper::ScrollToCSSPixelsApproximate(
   nscoord halfRange = nsPresContext::CSSPixelsToAppUnits(1000);
   nsRect range(pt.x - halfRange, pt.y - halfRange, 2 * halfRange - 1,
                2 * halfRange - 1);
-  ScrollToWithOrigin(pt, ScrollMode::eInstant, aOrigin, &range);
+  ScrollToWithOrigin(pt, ScrollMode::Instant, aOrigin, &range);
   // 'this' might be destroyed here
 }
 
@@ -2255,13 +2255,13 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
   nsRect range = aRange ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
 
-  if (aMode != ScrollMode::eSmoothMsd) {
+  if (aMode != ScrollMode::SmoothMsd) {
     // If we get a non-smooth-scroll, reset the cached APZ scroll destination,
     // so that we know to process the next smooth-scroll destined for APZ.
     mApzSmoothScrollDestination = Nothing();
   }
 
-  if (aMode == ScrollMode::eInstant) {
+  if (aMode == ScrollMode::Instant) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
     CompleteAsyncScroll(range, aOrigin);
@@ -2274,12 +2274,12 @@ void ScrollFrameHelper::ScrollToWithOrigin(
           ? presContext->RefreshDriver()->MostRecentRefresh()
           : TimeStamp::Now();
   bool isSmoothScroll =
-      (aMode == ScrollMode::eSmooth) && IsSmoothScrollingEnabled();
+      (aMode == ScrollMode::Smooth) && IsSmoothScrollingEnabled();
 
   nsSize currentVelocity(0, 0);
 
   if (gfxPrefs::ScrollBehaviorEnabled()) {
-    if (aMode == ScrollMode::eSmoothMsd) {
+    if (aMode == ScrollMode::SmoothMsd) {
       mIgnoreMomentumScroll = true;
       if (!mAsyncSmoothMSDScroll) {
         nsPoint sv = mVelocityQueue.GetVelocity();
@@ -2892,7 +2892,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   }
 
   presContext->RecordInteractionTime(
-      nsPresContext::InteractionType::eScrollInteraction, TimeStamp::Now());
+      nsPresContext::InteractionType::ScrollInteraction, TimeStamp::Now());
 
   PostScrollEvent();
   // If this is a viewport scroll, this could affect the relative offset
@@ -2970,7 +2970,7 @@ static void AppendToTop(nsDisplayListBuilder* aBuilder,
     }
 
     newItem = MakeDisplayItem<nsDisplayOwnLayer>(
-        aBuilder, aSourceFrame, aSource, asr, nsDisplayOwnLayerFlags::eNone,
+        aBuilder, aSourceFrame, aSource, asr, nsDisplayOwnLayerFlags::None,
         scrollbarData);
   } else {
     // Build the wrap list with an index of 1, since the scrollbar frame itself
@@ -4501,14 +4501,14 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
       AutoWeakFrame weakFrame(mOuter);
       // It's very important to pass nsGkAtoms::restore here, so
       // ScrollToWithOrigin won't clear out mRestorePos.
-      ScrollToWithOrigin(layoutScrollToPos, ScrollMode::eInstant,
+      ScrollToWithOrigin(layoutScrollToPos, ScrollMode::Instant,
                          nsGkAtoms::restore, nullptr);
       if (!weakFrame.IsAlive()) {
         return;
       }
       if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
         mOuter->PresShell()->ScrollToVisual(
-            visualScrollToPos, FrameMetrics::eRestore, ScrollMode::eInstant);
+            visualScrollToPos, FrameMetrics::eRestore, ScrollMode::Instant);
       }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
@@ -5024,7 +5024,7 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent,
 
   if (aDoScroll) {
     ScrollToWithOrigin(dest,
-                       isSmooth ? ScrollMode::eSmooth : ScrollMode::eInstant,
+                       isSmooth ? ScrollMode::Smooth : ScrollMode::Instant,
                        nsGkAtoms::scrollbars, &allowedRange);
   }
   // 'this' might be destroyed here
@@ -6980,7 +6980,7 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   }
 
   if (offset.x || offset.y) {
-    ScrollTo(GetScrollPosition() + offset, ScrollMode::eNormal,
+    ScrollTo(GetScrollPosition() + offset, ScrollMode::Normal,
              nsGkAtoms::other);
   }
 

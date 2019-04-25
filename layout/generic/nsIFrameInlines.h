@@ -91,7 +91,7 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromMarginBox(
     mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const {
   MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
   auto margin = GetLogicalUsedMargin(aWM);
-  if (aGroup == BaselineSharingGroup::eFirst) {
+  if (aGroup == BaselineSharingGroup::First) {
     if (aWM.IsAlphabeticalBaseline()) {
       // First baseline for inverted-line content is the block-start margin
       // edge, as the frame is in effect "flipped" for alignment purposes.
@@ -101,7 +101,7 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromMarginBox(
     nscoord marginBoxCenter = (BSize(aWM) + margin.BStartEnd(aWM)) / 2;
     return marginBoxCenter - margin.BStart(aWM);
   }
-  MOZ_ASSERT(aGroup == BaselineSharingGroup::eLast);
+  MOZ_ASSERT(aGroup == BaselineSharingGroup::Last);
   if (aWM.IsAlphabeticalBaseline()) {
     // Last baseline for inverted-line content is the block-start margin edge,
     // as the frame is in effect "flipped" for alignment purposes.
@@ -118,11 +118,11 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromBorderBox(
     mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const {
   MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
   nscoord borderBoxSize = BSize(aWM);
-  if (aGroup == BaselineSharingGroup::eFirst) {
+  if (aGroup == BaselineSharingGroup::First) {
     return MOZ_LIKELY(aWM.IsAlphabeticalBaseline()) ? borderBoxSize
                                                     : borderBoxSize / 2;
   }
-  MOZ_ASSERT(aGroup == BaselineSharingGroup::eLast);
+  MOZ_ASSERT(aGroup == BaselineSharingGroup::Last);
   // Round up for central baseline offset, to be consistent with eFirst.
   auto borderBoxCenter = (borderBoxSize / 2) + (borderBoxSize % 2);
   return MOZ_LIKELY(aWM.IsAlphabeticalBaseline()) ? 0 : borderBoxCenter;
@@ -136,10 +136,10 @@ nscoord nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
   if (GetNaturalBaselineBOffset(aWM, aBaselineGroup, &baseline)) {
     return baseline;
   }
-  if (aAlignmentContext == AlignmentContext::eInline) {
+  if (aAlignmentContext == AlignmentContext::Inline) {
     return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
   }
-  // XXX AlignmentContext::eTable should use content box?
+  // XXX AlignmentContext::Table should use content box?
   return SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
 }
 

@@ -259,7 +259,7 @@ void nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
   nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
   scrollPoint -= deltaPoint;
 
-  scrollableFrame->ScrollTo(scrollPoint, ScrollMode::eInstant);
+  scrollableFrame->ScrollTo(scrollPoint, ScrollMode::Instant);
 }
 
 void nsCoreUtils::ConvertScrollTypeToPercents(

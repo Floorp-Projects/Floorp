@@ -337,7 +337,7 @@ bool nsHTMLButtonControlFrame::GetVerticalAlignBaseline(
   if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
     // <input type=color> has an empty block frame as inner frame
     *aBaseline = inner->SynthesizeBaselineBOffsetFromBorderBox(
-        aWM, BaselineSharingGroup::eFirst);
+        aWM, BaselineSharingGroup::First);
   }
   nscoord innerBStart = inner->BStart(aWM, GetSize());
   *aBaseline += innerBStart;
@@ -357,7 +357,7 @@ bool nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
         inner->SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
   }
   nscoord innerBStart = inner->BStart(aWM, GetSize());
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+  if (aBaselineGroup == BaselineSharingGroup::First) {
     *aBaseline += innerBStart;
   } else {
     *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));

@@ -266,9 +266,8 @@ class nsTextFrame : public nsFrame {
   TrimOutput TrimTrailingWhiteSpace(DrawTarget* aDrawTarget);
   RenderedText GetRenderedText(
       uint32_t aStartOffset = 0, uint32_t aEndOffset = UINT32_MAX,
-      TextOffsetType aOffsetType = TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-      TrailingWhitespace aTrimTrailingWhitespace =
-          TrailingWhitespace::TRIM_TRAILING_WHITESPACE) final;
+      TextOffsetType aOffsetType = TextOffsetType::OffsetsInContentText,
+      TrailingWhitespace aTrimTrailingWhitespace = TrailingWhitespace::Trim) final;
 
   nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame,
                                     bool aIncludeShadows = true);
@@ -571,14 +570,14 @@ class nsTextFrame : public nsFrame {
     int32_t GetEnd() const { return mStart + mLength; }
   };
   enum class TrimmedOffsetFlags : uint8_t {
-    kDefaultTrimFlags = 0,
-    kNotPostReflow = 1 << 0,
-    kNoTrimAfter = 1 << 1,
-    kNoTrimBefore = 1 << 2
+    Default = 0,
+    NotPostReflow = 1 << 0,
+    NoTrimAfter = 1 << 1,
+    NoTrimBefore = 1 << 2
   };
   TrimmedOffsets GetTrimmedOffsets(
       const nsTextFragment* aFrag,
-      TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::kDefaultTrimFlags) const;
+      TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::Default) const;
 
   // Similar to Reflow(), but for use from nsLineLayout
   void ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,

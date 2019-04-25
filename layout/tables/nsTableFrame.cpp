@@ -3822,8 +3822,7 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
 /* virtual */
 nscoord nsTableFrame::GetLogicalBaseline(WritingMode aWM) const {
   nscoord baseline;
-  if (!GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst,
-                                 &baseline)) {
+  if (!GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::First, &baseline)) {
     baseline = BSize(aWM);
   }
   return baseline;
@@ -3845,7 +3844,7 @@ bool nsTableFrame::GetNaturalBaselineBOffset(
         LogicalRect(aWM, aRow->GetNormalRect(), containerSize).BStart(aWM);
     return rgBStart + rowBStart + aRow->GetRowBaseline(aWM);
   };
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+  if (aBaselineGroup == BaselineSharingGroup::First) {
     for (uint32_t rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
       nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
       nsTableRowFrame* row = rgFrame->GetFirstRow();
@@ -6202,26 +6201,26 @@ struct BCCreateWebRenderCommandsData {
 
 struct BCPaintBorderAction {
   explicit BCPaintBorderAction(DrawTarget& aDrawTarget)
-      : mMode(Mode::PAINT), mPaintData(aDrawTarget) {}
+      : mMode(Mode::Paint), mPaintData(aDrawTarget) {}
 
   BCPaintBorderAction(wr::DisplayListBuilder& aBuilder,
                       const layers::StackingContextHelper& aSc,
                       const nsPoint& aOffsetToReferenceFrame)
-      : mMode(Mode::CREATE_WEBRENDER_COMMANDS),
+      : mMode(Mode::CreateWebRenderCommands),
         mCreateWebRenderCommandsData(aBuilder, aSc, aOffsetToReferenceFrame) {}
 
   ~BCPaintBorderAction() {
     // mCreateWebRenderCommandsData is in a union which means the destructor
     // wouldn't be called when BCPaintBorderAction get destroyed. So call the
     // destructor here explicitly.
-    if (mMode == Mode::CREATE_WEBRENDER_COMMANDS) {
+    if (mMode == Mode::CreateWebRenderCommands) {
       mCreateWebRenderCommandsData.~BCCreateWebRenderCommandsData();
     }
   }
 
   enum class Mode {
-    PAINT,
-    CREATE_WEBRENDER_COMMANDS,
+    Paint,
+    CreateWebRenderCommands,
   };
 
   Mode mMode;
@@ -7487,11 +7486,11 @@ void BCPaintBorderIterator::AccumulateOrDoActionInlineDirSegment(
     if (mInlineSeg.mLength > 0) {
       mInlineSeg.GetIEndCorner(*this, iStartSegISize);
       if (mInlineSeg.mWidth > 0) {
-        if (aAction.mMode == BCPaintBorderAction::Mode::PAINT) {
+        if (aAction.mMode == BCPaintBorderAction::Mode::Paint) {
           mInlineSeg.Paint(*this, aAction.mPaintData.mDrawTarget);
         } else {
           MOZ_ASSERT(aAction.mMode ==
-                     BCPaintBorderAction::Mode::CREATE_WEBRENDER_COMMANDS);
+                     BCPaintBorderAction::Mode::CreateWebRenderCommands);
           mInlineSeg.CreateWebRenderCommands(
               *this, aAction.mCreateWebRenderCommandsData.mBuilder,
               aAction.mCreateWebRenderCommandsData.mSc,
@@ -7538,12 +7537,12 @@ void BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(
     if (blockDirSeg.mLength > 0) {
       blockDirSeg.GetBEndCorner(*this, inlineSegBSize);
       if (blockDirSeg.mWidth > 0) {
-        if (aAction.mMode == BCPaintBorderAction::Mode::PAINT) {
+        if (aAction.mMode == BCPaintBorderAction::Mode::Paint) {
           blockDirSeg.Paint(*this, aAction.mPaintData.mDrawTarget,
                             inlineSegBSize);
         } else {
           MOZ_ASSERT(aAction.mMode ==
-                     BCPaintBorderAction::Mode::CREATE_WEBRENDER_COMMANDS);
+                     BCPaintBorderAction::Mode::CreateWebRenderCommands);
           blockDirSeg.CreateWebRenderCommands(
               *this, inlineSegBSize,
               aAction.mCreateWebRenderCommandsData.mBuilder,

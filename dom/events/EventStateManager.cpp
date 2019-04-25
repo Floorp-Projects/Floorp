@@ -2676,21 +2676,21 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   switch (aEvent->mScrollType) {
     case WidgetWheelEvent::SCROLL_DEFAULT:
       if (isDeltaModePixel) {
-        mode = ScrollMode::eNormal;
+        mode = ScrollMode::Normal;
       } else if (aEvent->mFlags.mHandledByAPZ) {
-        mode = ScrollMode::eSmoothMsd;
+        mode = ScrollMode::SmoothMsd;
       } else {
-        mode = ScrollMode::eSmooth;
+        mode = ScrollMode::Smooth;
       }
       break;
     case WidgetWheelEvent::SCROLL_SYNCHRONOUSLY:
-      mode = ScrollMode::eInstant;
+      mode = ScrollMode::Instant;
       break;
     case WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY:
-      mode = ScrollMode::eNormal;
+      mode = ScrollMode::Normal;
       break;
     case WidgetWheelEvent::SCROLL_SMOOTHLY:
-      mode = ScrollMode::eSmooth;
+      mode = ScrollMode::Smooth;
       break;
     default:
       MOZ_CRASH("Invalid mScrollType value comes");
@@ -5710,7 +5710,7 @@ nsresult EventStateManager::DoContentCommandScrollEvent(
   }
 
   // The caller may want synchronous scrolling.
-  sf->ScrollBy(pt, scrollUnit, ScrollMode::eInstant);
+  sf->ScrollBy(pt, scrollUnit, ScrollMode::Instant);
   return NS_OK;
 }
 

@@ -343,12 +343,12 @@ struct ActiveScrolledRoot {
 }  // namespace mozilla
 
 enum class nsDisplayListBuilderMode : uint8_t {
-  PAINTING,
-  EVENT_DELIVERY,
-  PLUGIN_GEOMETRY,
-  FRAME_VISIBILITY,
-  TRANSFORM_COMPUTATION,
-  GENERATE_GLYPH
+  Painting,
+  EventDelivery,
+  PluginGeometry,
+  FrameVisibility,
+  TransformComputation,
+  GenerateGlyph,
 };
 
 /**
@@ -452,15 +452,15 @@ class nsDisplayListBuilder {
 
   void SetForPluginGeometry(bool aForPlugin) {
     if (aForPlugin) {
-      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PAINTING,
-                   "Can only switch from PAINTING to PLUGIN_GEOMETRY");
+      NS_ASSERTION(mMode == nsDisplayListBuilderMode::Painting,
+                   "Can only switch from Painting to PluginGeometry");
       NS_ASSERTION(mWillComputePluginGeometry,
                    "Should have signalled this in advance");
-      mMode = nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
+      mMode = nsDisplayListBuilderMode::PluginGeometry;
     } else {
-      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY,
-                   "Can only switch from PAINTING to PLUGIN_GEOMETRY");
-      mMode = nsDisplayListBuilderMode::PAINTING;
+      NS_ASSERTION(mMode == nsDisplayListBuilderMode::PluginGeometry,
+                   "Can only switch from Painting to PluginGeometry");
+      mMode = nsDisplayListBuilderMode::Painting;
     }
   }
 
@@ -472,25 +472,25 @@ class nsDisplayListBuilder {
    * frame is under the mouse position.
    */
   bool IsForEventDelivery() const {
-    return mMode == nsDisplayListBuilderMode::EVENT_DELIVERY;
+    return mMode == nsDisplayListBuilderMode::EventDelivery;
   }
 
   /**
-   * Be careful with this. The display list will be built in PAINTING mode
-   * first and then switched to PLUGIN_GEOMETRY before a second call to
+   * Be careful with this. The display list will be built in Painting mode
+   * first and then switched to PluginGeometry before a second call to
    * ComputeVisibility.
    * @return true if the display list is being built to compute geometry
    * for plugins.
    */
   bool IsForPluginGeometry() const {
-    return mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
+    return mMode == nsDisplayListBuilderMode::PluginGeometry;
   }
 
   /**
    * @return true if the display list is being built for painting.
    */
   bool IsForPainting() const {
-    return mMode == nsDisplayListBuilderMode::PAINTING;
+    return mMode == nsDisplayListBuilderMode::Painting;
   }
 
   /**
@@ -498,7 +498,7 @@ class nsDisplayListBuilder {
    * visibility.
    */
   bool IsForFrameVisibility() const {
-    return mMode == nsDisplayListBuilderMode::FRAME_VISIBILITY;
+    return mMode == nsDisplayListBuilderMode::FrameVisibility;
   }
 
   /**
@@ -506,7 +506,7 @@ class nsDisplayListBuilder {
    * mask from text items.
    */
   bool IsForGenerateGlyphMask() const {
-    return mMode == nsDisplayListBuilderMode::GENERATE_GLYPH;
+    return mMode == nsDisplayListBuilderMode::GenerateGlyph;
   }
 
   bool BuildCompositorHitTestInfo() const {
@@ -604,7 +604,7 @@ class nsDisplayListBuilder {
    * of performance if regions get very complex.
    */
   bool GetAccurateVisibleRegions() {
-    return mMode == nsDisplayListBuilderMode::PLUGIN_GEOMETRY;
+    return mMode == nsDisplayListBuilderMode::PluginGeometry;
   }
   /**
    * @return Returns true if we should include the caret in any display lists
@@ -4553,26 +4553,26 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
 };
 
 enum class TableType : uint8_t {
-  TABLE,
-  TABLE_COL,
-  TABLE_COL_GROUP,
-  TABLE_ROW,
-  TABLE_ROW_GROUP,
-  TABLE_CELL,
+  Table,
+  TableCol,
+  TableColGroup,
+  TableRow,
+  TableRowGroup,
+  TableCell,
 
-  TABLE_TYPE_MAX
+  MAX,
 };
 
-enum class TableTypeBits : uint8_t { COUNT = 3 };
+enum class TableTypeBits : uint8_t { Count = 3 };
 
-static_assert(static_cast<uint8_t>(TableType::TABLE_TYPE_MAX) <
-                  (1 << (static_cast<uint8_t>(TableTypeBits::COUNT) + 1)),
-              "TableType cannot fit with TableTypeBits::COUNT");
+static_assert(static_cast<uint8_t>(TableType::MAX) <
+                  (1 << (static_cast<uint8_t>(TableTypeBits::Count) + 1)),
+              "TableType cannot fit with TableTypeBits::Count");
 TableType GetTableTypeFromFrame(nsIFrame* aFrame);
 
 static uint16_t CalculateTablePerFrameKey(const uint16_t aIndex,
                                           const TableType aType) {
-  const uint32_t key = (aIndex << static_cast<uint8_t>(TableTypeBits::COUNT)) |
+  const uint32_t key = (aIndex << static_cast<uint8_t>(TableTypeBits::Count)) |
                        static_cast<uint8_t>(aType);
 
   return static_cast<uint16_t>(key);
@@ -5878,9 +5878,9 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
  * file and that makes it hard to use in all the places that we need to use it.
  */
 enum class nsDisplayOwnLayerFlags {
-  eNone = 0,
-  eGenerateSubdocInvalidations = 1 << 0,
-  eGenerateScrollableLayer = 1 << 1,
+  None = 0,
+  GenerateSubdocInvalidations = 1 << 0,
+  GenerateScrollableLayer = 1 << 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsDisplayOwnLayerFlags)
@@ -5907,7 +5907,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   nsDisplayOwnLayer(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
       const ActiveScrolledRoot* aActiveScrolledRoot,
-      nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::eNone,
+      nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::None,
       const ScrollbarData& aScrollbarData = ScrollbarData{},
       bool aForceActive = true, bool aClearClipChain = false);
 
@@ -6340,7 +6340,7 @@ class nsDisplayZoom : public nsDisplaySubDocument {
   nsDisplayZoom(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsSubDocumentFrame* aSubDocFrame, nsDisplayList* aList,
                 int32_t aAPD, int32_t aParentAPD,
-                nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::eNone);
+                nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::None);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayZoom() override { MOZ_COUNT_DTOR(nsDisplayZoom); }

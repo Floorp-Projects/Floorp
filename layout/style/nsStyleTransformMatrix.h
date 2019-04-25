@@ -204,7 +204,7 @@ mozilla::gfx::Point Convert2DPosition(const mozilla::LengthPercentage& aX,
                                       int32_t aAppUnitsPerDevPixel);
 
 // Shear type for decomposition.
-enum class ShearType { XYSHEAR, XZSHEAR, YZSHEAR, Count };
+enum class ShearType { XY, XZ, YZ, Count };
 using ShearArray = mozilla::EnumeratedArray<ShearType, ShearType::Count, float>;
 
 /*

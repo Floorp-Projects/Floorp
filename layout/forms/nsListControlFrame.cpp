@@ -1798,7 +1798,7 @@ void nsListControlFrame::ScrollToIndex(int32_t aIndex) {
   if (aIndex < 0) {
     // XXX shouldn't we just do nothing if we're asked to scroll to
     // kNothingSelected?
-    ScrollTo(nsPoint(0, 0), ScrollMode::eInstant);
+    ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
   } else {
     RefPtr<dom::HTMLOptionElement> option =
         GetOption(AssertedCast<uint32_t>(aIndex));
