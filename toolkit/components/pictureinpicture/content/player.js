@@ -4,6 +4,9 @@
 
 const {PictureInPicture} = ChromeUtils.import("resource://gre/modules/PictureInPicture.jsm");
 
+// Time to fade the Picture-in-Picture video controls after first opening.
+const CONTROLS_FADE_TIMEOUT = 3000;
+
 async function setupPlayer(originatingBrowser, videoData) {
   window.windowUtils.setChromeMargin(0, 0, 0, 0);
   let holder = document.querySelector(".player-holder");
@@ -50,4 +53,9 @@ async function setupPlayer(originatingBrowser, videoData) {
   close.addEventListener("click", () => {
     window.close();
   });
+
+  document.getElementById("controls").setAttribute("showing", true);
+  setTimeout(() => {
+    document.getElementById("controls").removeAttribute("showing");
+  }, CONTROLS_FADE_TIMEOUT);
 }
