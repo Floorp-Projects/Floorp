@@ -237,6 +237,7 @@ class AsyncCompositionManager final {
 #ifdef MOZ_WIDGET_ANDROID
  public:
   void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
+  ScreenMargin GetFixedLayerMargins() const;
 
  private:
   // This calculates whether frame metrics should be sent to Java.

@@ -317,6 +317,9 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "apz.drag.initial.enabled",              APZDragInitiationEnabled, bool, false);
   DECL_GFX_PREF(Live, "apz.drag.touch.enabled",                APZTouchDragEnabled, bool, false);
   DECL_GFX_PREF(Live, "apz.enlarge_displayport_when_clipped",  APZEnlargeDisplayPortWhenClipped, bool, false);
+  DECL_GFX_PREF(Live, "apz.fixed-margin-override.enabled",     APZFixedMarginOverrideEnabled, bool, false);
+  DECL_GFX_PREF(Live, "apz.fixed-margin-override.bottom",      APZFixedMarginOverrideBottom, int32_t, 0);
+  DECL_GFX_PREF(Live, "apz.fixed-margin-override.top",         APZFixedMarginOverrideTop, int32_t, 0);
   DECL_GFX_PREF(Live, "apz.fling_accel_base_mult",             APZFlingAccelBaseMultiplier, float, 1.0f);
   DECL_GFX_PREF(Live, "apz.fling_accel_interval_ms",           APZFlingAccelInterval, int32_t, 500);
   DECL_GFX_PREF(Live, "apz.fling_accel_supplemental_mult",     APZFlingAccelSupplementalMultiplier, float, 1.0f);
