@@ -10,7 +10,7 @@
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
-    "buefy": "^0.6.2",
+    "buefy": "^0.6.7",
     "vue": "^2.5.11",
     "vue-material-design-icons": "^0.8.2",
     "vuex": "^3.0.1"
