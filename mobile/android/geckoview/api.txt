@@ -546,6 +546,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onMediaPermissionRequest(@NonNull GeckoSession, @NonNull String, @Nullable GeckoSession.PermissionDelegate.MediaSource[], @Nullable GeckoSession.PermissionDelegate.MediaSource[], @NonNull GeckoSession.PermissionDelegate.MediaCallback);
     field public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
     field public static final int PERMISSION_GEOLOCATION = 0;
+    field public static final int PERMISSION_PERSISTENT_STORAGE = 2;
   }
 
   public static interface GeckoSession.PermissionDelegate.Callback {

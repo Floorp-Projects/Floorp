@@ -5,6 +5,7 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="clear_field">Clear</string>
+    <string name="request_storage">Allow access to device storage for "%1$s"?</string>
     <string name="request_geolocation">Share location with "%1$s"?</string>
     <string name="request_notification">Allow notifications for "%1$s"?</string>
     <string name="request_video">Share video with "%1$s"</string>

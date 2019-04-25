@@ -98,6 +98,10 @@ exclude: true
 [68.21]: ./GeckoRuntimeSettings.html#setDoubleTapZoomingEnabled-boolean-
 [68.22]: ./GeckoRuntimeSettings.html#setGlMsaaLevel-int-
 
+- Added new constant for requesting external storage Android permissions, [`PERMISSION_PERSISTENT_STORAGE`][68.23]
+
+[68.23]: ../GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_STORAGE
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -304,4 +308,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 3fbf9d92418d270558cefad65cfe00599aeae263
+[api-version]: fb98a878c61a487c5e9af358682b54375957d88d
