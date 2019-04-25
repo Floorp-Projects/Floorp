@@ -20,12 +20,13 @@ add_task(async function setup() {
 async function testResult(input, expected) {
   const ESCAPED_URL = encodeURI(input.url);
 
+  await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits({
     uri: input.url,
     title: input.title,
   });
 
-  await promiseAutocompleteResultPopup("\u6e2C\u8a66");
+  await promiseAutocompleteResultPopup(input.query);
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.url, ESCAPED_URL,
@@ -99,4 +100,146 @@ add_task(async function test_url_result_no_trimming() {
   });
 
   Services.prefs.clearUserPref("browser.urlbar.trimURLs");
+});
+
+add_task(async function test_case_insensitive_highlights_1() {
+  await testResult({
+    query: "exam",
+    title: "The examPLE URL EXAMple",
+    url: "http://example.com/ExAm",
+  }, {
+    displayedUrl: "example.com/ExAm",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["EXAM", true],
+      ["ple", false],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+    ],
+  });
+});
+
+add_task(async function test_case_insensitive_highlights_2() {
+  await testResult({
+    query: "EXAM",
+    title: "The examPLE URL EXAMple",
+    url: "http://example.com/ExAm",
+  }, {
+    displayedUrl: "example.com/ExAm",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["EXAM", true],
+      ["ple", false],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+    ],
+  });
+});
+
+add_task(async function test_case_insensitive_highlights_3() {
+  await testResult({
+    query: "eXaM",
+    title: "The examPLE URL EXAMple",
+    url: "http://example.com/ExAm",
+  }, {
+    displayedUrl: "example.com/ExAm",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["EXAM", true],
+      ["ple", false],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+    ],
+  });
+});
+
+add_task(async function test_case_insensitive_highlights_4() {
+  await testResult({
+    query: "ExAm",
+    title: "The examPLE URL EXAMple",
+    url: "http://example.com/ExAm",
+  }, {
+    displayedUrl: "example.com/ExAm",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["EXAM", true],
+      ["ple", false],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+    ],
+  });
+});
+
+add_task(async function test_case_insensitive_highlights_5() {
+  await testResult({
+    query: "exam foo",
+    title: "The examPLE URL foo EXAMple FOO",
+    url: "http://example.com/ExAm/fOo",
+  }, {
+    displayedUrl: "example.com/ExAm/fOo",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["foo", true],
+      [" ", false],
+      ["EXAM", true],
+      ["ple ", false],
+      ["FOO", true],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+      ["/", false],
+      ["fOo", true],
+    ],
+  });
+});
+
+add_task(async function test_case_insensitive_highlights_6() {
+  await testResult({
+    query: "EXAM FOO",
+    title: "The examPLE URL foo EXAMple FOO",
+    url: "http://example.com/ExAm/fOo",
+  }, {
+    displayedUrl: "example.com/ExAm/fOo",
+    highlightedTitle: [
+      ["The ", false],
+      ["exam", true],
+      ["PLE URL ", false],
+      ["foo", true],
+      [" ", false],
+      ["EXAM", true],
+      ["ple ", false],
+      ["FOO", true],
+    ],
+    highlightedUrl: [
+      ["exam", true],
+      ["ple.com/", false],
+      ["ExAm", true],
+      ["/", false],
+      ["fOo", true],
+    ],
+  });
 });
