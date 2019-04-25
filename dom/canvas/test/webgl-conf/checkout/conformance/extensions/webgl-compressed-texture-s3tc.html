@@ -157,6 +157,11 @@ function runTestExtension() {
     testDXT1_RGBA();
     testDXT3_RGBA();
     testDXT5_RGBA();
+
+    // Test compressed PBOs with a single format
+    if (contextVersion >= 2) {
+        testDXT5_RGBA_PBO();
+    }
 }
 
 function testDXT1_RGB() {
@@ -607,6 +612,46 @@ function testDXTTexture(test, useTexStorage) {
             compareRect(width, height, test.channels, uncompressedData, "LINEAR");
         }
     }
+}
+
+function testDXT5_RGBA_PBO() {
+    var width = 8;
+    var height = 8;
+    var channels = 4;
+    var data = img_8x8_rgba_dxt5;
+    var format = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+    var uncompressedData = uncompressDXT(width, height, data, format);
+
+    var tex = gl.createTexture();
+
+    // First, PBO size = image size
+    var pbo1 = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo1);
+    gl.bufferData(gl.PIXEL_UNPACK_BUFFER, data, gl.STATIC_DRAW);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a PBO");
+
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, data.length, 0);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a texture from a PBO");
+
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    wtu.clearAndDrawUnitQuad(gl);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
+    compareRect(width, height, channels, uncompressedData, "NEAREST");
+
+    // Second, image is just a subrange of the PBO
+    var pbo2 = gl.createBuffer();
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pbo2);
+    gl.bufferData(gl.PIXEL_UNPACK_BUFFER, data.length*3, gl.STATIC_DRAW);
+    gl.bufferSubData(gl.PIXEL_UNPACK_BUFFER, data.length, data);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a PBO subrange");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, data.length, data.length);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading a texture from a PBO subrange");
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    wtu.clearAndDrawUnitQuad(gl);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
+    compareRect(width, height, channels, uncompressedData, "NEAREST");
 }
 
 function compareRect(width, height, channels, expectedData, filteringMode) {

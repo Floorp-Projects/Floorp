@@ -5,7 +5,6 @@
 /* eslint-disable no-tabs */
 
 const {
-  FatalError,
   RemoteAgentError,
   UnknownMethodError,
   UnsupportedError,
@@ -77,17 +76,6 @@ caused by: DogError: woof:
 	one
 	two
 	three`);
-
-  run_next_test();
-});
-
-// FatalError calls nsIAppStartup.quit(), but it's OK because this is an xpcshell test:
-add_test(function test_FatalError() {
-  const e = new FatalError();
-  ok(e instanceof RemoteAgentError);
-  e.notify();
-  equal(e.toString(), RemoteAgentError.format(e));
-  e.quit();
 
   run_next_test();
 });

@@ -70,7 +70,7 @@ void nsAbsoluteContainingBlock::AppendFrames(nsIFrame* aDelegatingFrame,
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   aDelegatingFrame->PresShell()->FrameNeedsReflow(
-      aDelegatingFrame, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
+      aDelegatingFrame, IntrinsicDirty::Resize, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
@@ -89,7 +89,7 @@ void nsAbsoluteContainingBlock::InsertFrames(nsIFrame* aDelegatingFrame,
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   aDelegatingFrame->PresShell()->FrameNeedsReflow(
-      aDelegatingFrame, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
+      aDelegatingFrame, IntrinsicDirty::Resize, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void nsAbsoluteContainingBlock::RemoveFrame(nsIFrame* aDelegatingFrame,
@@ -667,7 +667,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   }
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
                              LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
-                             &logicalCBSize, rsFlags);
+                             Some(logicalCBSize), rsFlags);
 
   // Get the border values
   WritingMode outerWM = aReflowInput.GetWritingMode();

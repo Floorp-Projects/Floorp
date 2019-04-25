@@ -4,11 +4,11 @@
 
 package org.mozilla.gecko.fxa.sync;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.NotificationCompat;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
@@ -103,7 +103,7 @@ public class FxAccountNotificationManager {
 
     final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
 
-    final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+    final Notification.Builder builder = new Notification.Builder(context);
     builder
     .setContentTitle(title)
     .setContentText(text)

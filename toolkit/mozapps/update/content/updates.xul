@@ -27,10 +27,10 @@
         onload="gUpdates.onLoad();"
         onunload="gUpdates.onUnload();">
 
-  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://mozapps/content/update/updates.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
 #include ../../../../browser/base/content/macWindow.inc.xul

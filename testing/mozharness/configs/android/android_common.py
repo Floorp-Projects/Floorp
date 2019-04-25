@@ -243,7 +243,7 @@ config = {
             ],
             "tests": ["tests/testing/crashtest/crashtests.list",],
         },
-        "jittest": {
+        "jittest-chunked": {
             "run_filename": "jit_test.py",
             "testsdir": "jit-test/jit-test",
             "options": [

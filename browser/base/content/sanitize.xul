@@ -28,10 +28,8 @@
     <html:link rel="localization" href="browser/sanitize.ftl"/>
   </linkset>
 
-  <script type="application/javascript"
-          src="chrome://global/content/preferencesBindings.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/sanitizeDialog.js"/>
+  <script src="chrome://global/content/preferencesBindings.js"/>
+  <script src="chrome://browser/content/sanitizeDialog.js"/>
 
   <hbox id="SanitizeDurationBox" align="center">
     <label data-l10n-id="clear-time-duration-prefix"

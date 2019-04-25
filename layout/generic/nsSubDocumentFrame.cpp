@@ -519,8 +519,9 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // happens after we've built the list so that
         // AddCanvasBackgroundColorItem can monkey with the contents if
         // necessary.
-        uint32_t flags =
-            nsIPresShell::FORCE_DRAW | nsIPresShell::ADD_FOR_SUBDOC;
+        AddCanvasBackgroundColorFlags flags =
+            AddCanvasBackgroundColorFlags::ForceDraw |
+            AddCanvasBackgroundColorFlags::AddForSubDocument;
         presShell->AddCanvasBackgroundColorItem(
             *aBuilder, childItems, frame, bounds, NS_RGBA(0, 0, 0, 0), flags);
       }
@@ -595,8 +596,9 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // Add the canvas background color to the bottom of the list. This
     // happens after we've built the list so that AddCanvasBackgroundColorItem
     // can monkey with the contents if necessary.
-    uint32_t flags =
-        nsIPresShell::FORCE_DRAW | nsIPresShell::APPEND_UNSCROLLED_ONLY;
+    AddCanvasBackgroundColorFlags flags =
+        AddCanvasBackgroundColorFlags::ForceDraw |
+        AddCanvasBackgroundColorFlags::AppendUnscrolledOnly;
     presShell->AddCanvasBackgroundColorItem(*aBuilder, childItems, this, bounds,
                                             NS_RGBA(0, 0, 0, 0), flags);
   }
@@ -867,8 +869,8 @@ nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
   } else if (aAttribute == nsGkAtoms::showresizer) {
     nsIFrame* rootFrame = GetSubdocumentRootFrame();
     if (rootFrame) {
-      rootFrame->PresShell()->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
-                                               NS_FRAME_IS_DIRTY);
+      rootFrame->PresShell()->FrameNeedsReflow(
+          rootFrame, IntrinsicDirty::Resize, NS_FRAME_IS_DIRTY);
     }
   } else if (aAttribute == nsGkAtoms::marginwidth ||
              aAttribute == nsGkAtoms::marginheight) {
@@ -1183,12 +1185,12 @@ void nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther) {
   // And repaint them, for good measure, in case there's nothing
   // interesting that happens during reflow.
   if (weakThis.IsAlive()) {
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_IS_DIRTY);
     InvalidateFrameSubtree();
   }
   if (weakOther.IsAlive()) {
-    other->PresShell()->FrameNeedsReflow(other, nsIPresShell::eTreeChange,
+    other->PresShell()->FrameNeedsReflow(other, IntrinsicDirty::TreeChange,
                                          NS_FRAME_IS_DIRTY);
     other->InvalidateFrameSubtree();
   }

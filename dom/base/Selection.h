@@ -378,8 +378,9 @@ class Selection final : public nsSupportsWeakReference,
                             nsTArray<RefPtr<nsRange>>& aReturn,
                             mozilla::ErrorResult& aRv);
 
-  void ScrollIntoView(int16_t aRegion, bool aIsSynchronous, int16_t aVPercent,
-                      int16_t aHPercent, mozilla::ErrorResult& aRv);
+  void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
+                      WhereToScroll aVPercent, WhereToScroll aHPercent,
+                      mozilla::ErrorResult& aRv);
 
   void SetColors(const nsAString& aForeColor, const nsAString& aBackColor,
                  const nsAString& aAltForeColor, const nsAString& aAltBackColor,

@@ -70,6 +70,9 @@ class TypeVisitor:
     def visitMaybeType(self, m, *args):
         m.basetype.accept(self, *args)
 
+    def visitUniquePtrType(self, m, *args):
+        m.basetype.accept(self, *args)
+
     def visitShmemType(self, s, *args):
         pass
 
@@ -86,9 +89,6 @@ class TypeVisitor:
         pass
 
     def visitManagedEndpointType(self, s, *args):
-        pass
-
-    def visitUniquePtrType(self, s, *args):
         pass
 
 
@@ -224,6 +224,8 @@ class IPDLType(Type):
     def isInterrupt(self): return self.sendSemantics is INTR
 
     def hasReply(self): return (self.isSync() or self.isInterrupt())
+
+    def hasBaseType(self): return False
 
     @classmethod
     def convertsTo(cls, lesser, greater):
@@ -394,7 +396,7 @@ looks for such a cycle and returns True if found.'''
             return False
         elif t is self or t in self.mutualRec:
             return True
-        elif t.isArray() or t.isMaybe():
+        elif t.hasBaseType():
             isrec = self.mutuallyRecursiveWith(t.basetype, exploring)
             if isrec:
                 self.mutualRec.add(t)
@@ -454,6 +456,8 @@ class ArrayType(IPDLType):
 
     def isArray(self): return True
 
+    def hasBaseType(self): return True
+
     def name(self): return self.basetype.name() + '[]'
 
     def fullname(self): return self.basetype.fullname() + '[]'
@@ -466,6 +470,8 @@ class MaybeType(IPDLType):
     def isAtom(self): return False
 
     def isMaybe(self): return True
+
+    def hasBaseType(self): return True
 
     def name(self): return self.basetype.name() + '?'
 
@@ -537,17 +543,21 @@ class ManagedEndpointType(IPDLType):
         return str(self.qname)
 
 
-class UniquePtrType(Type):
-    def __init__(self, innertype):
-        self.innertype = innertype
+class UniquePtrType(IPDLType):
+    def __init__(self, basetype):
+        self.basetype = basetype
+
+    def isAtom(self): return False
 
     def isUniquePtr(self): return True
 
+    def hasBaseType(self): return True
+
     def name(self):
-        return 'UniquePtr<' + self.innertype.fullname() + '>'
+        return 'UniquePtr<' + self.basetype.name() + '>'
 
     def fullname(self):
-        return 'mozilla::UniquePtr<' + self.innertype.fullname() + '>'
+        return 'mozilla::UniquePtr<' + self.basetype.fullname() + '>'
 
 
 def iteractortypes(t, visited=None):
@@ -560,7 +570,7 @@ def iteractortypes(t, visited=None):
         return
     elif t.isActor():
         yield t
-    elif t.isArray() or t.isMaybe():
+    elif t.hasBaseType():
         for actor in iteractortypes(t.basetype, visited):
             yield actor
     elif t.isCompound() and t not in visited:
@@ -1167,7 +1177,7 @@ def fullyDefined(t, exploring=None):
 
     if t.isAtom():
         return True
-    elif t.isArray() or t.isMaybe():
+    elif t.hasBaseType():
         return fullyDefined(t.basetype, exploring)
     elif t.defined:
         return True

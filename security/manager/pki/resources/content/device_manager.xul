@@ -21,7 +21,7 @@
   <html:link rel="localization" href="security/certificates/deviceManager.ftl"/>
 </linkset>
 
-<script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
+<script src="chrome://pippki/content/device_manager.js"/>
 
 <hbox flex="1" style="margin:5px">
   <!-- List of devices -->

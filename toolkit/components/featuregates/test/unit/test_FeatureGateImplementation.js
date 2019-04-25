@@ -68,11 +68,11 @@ add_task(async function testGetValue() {
   );
   const feature = new FeatureGateImplementation(definitionFactory({ preference, defaultValue: false }));
   equal(
-    Services.prefs.getBoolPref(preference),
-    false,
-    "Creating a preference should set its default value",
+    Services.prefs.getPrefType(preference),
+    Services.prefs.PREF_INVALID,
+    "Instantiating a feature gate should not set its default value",
   );
-  equal(await feature.getValue(), false, "getValue() should return the same value");
+  equal(await feature.getValue(), false, "getValue() should return the feature gate's default");
 
   Services.prefs.setBoolPref(preference, true);
   equal(await feature.getValue(), true, "getValue() should return the new value");

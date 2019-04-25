@@ -1241,7 +1241,8 @@ void gfxUtils::WriteAsPNG(nsIPresShell* aShell, const char* aFile) {
 
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context);  // already checked the draw target above
-  aShell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
+  aShell->RenderDocument(r, RenderDocumentFlags::None, NS_RGB(255, 255, 0),
+                         context);
   WriteAsPNG(dt.get(), aFile);
 }
 

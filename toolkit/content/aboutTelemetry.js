@@ -208,10 +208,10 @@ var Settings = {
     let settingsExplanation = document.getElementById("settings-explanation");
     let extendedEnabled = Services.telemetry.canRecordExtended;
 
-    let datacase = extendedEnabled ? "prerelease" : "release";
+    let channel = extendedEnabled ? "prerelease" : "release";
     let uploadcase = TelemetrySend.sendingEnabled() ? "enabled" : "disabled";
 
-    document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {datacase, uploadcase});
+    document.l10n.setAttributes(settingsExplanation, "about-telemetry-settings-explanation", {channel, uploadcase});
 
     this.attachObservers();
   },
@@ -1817,7 +1817,7 @@ var Events = {
     setHasData("events-section", hasData);
     if (Object.keys(events).length > 0) {
       const headings = [
-        "about-telemetry-timestamp-header",
+        "about-telemetry-time-stamp-header",
         "about-telemetry-category-header",
         "about-telemetry-method-header",
         "about-telemetry-object-header",

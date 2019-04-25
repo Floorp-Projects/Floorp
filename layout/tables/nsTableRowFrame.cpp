@@ -33,7 +33,7 @@ struct TableCellReflowInput : public ReflowInput {
                        const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
                        const LogicalSize& aAvailableSpace, uint32_t aFlags = 0)
       : ReflowInput(aPresContext, aParentReflowInput, aFrame, aAvailableSpace,
-                    nullptr, aFlags) {}
+                    Nothing(), aFlags) {}
 
   void FixUp(const LogicalSize& aAvailSpace);
 };
@@ -79,7 +79,7 @@ void nsTableRowFrame::InitChildReflowInput(nsPresContext& aPresContext,
       pCollapseBorder = &collapseBorder;
     }
   }
-  aReflowInput.Init(&aPresContext, nullptr, pCollapseBorder);
+  aReflowInput.Init(&aPresContext, Nothing(), pCollapseBorder);
   aReflowInput.FixUp(aAvailSize);
 }
 
@@ -199,7 +199,7 @@ void nsTableRowFrame::AppendFrames(ChildListID aListID,
                            GetRowIndex());
   }
 
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   tableFrame->SetGeometryDirty();
 }
@@ -244,7 +244,7 @@ void nsTableRowFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   }
   tableFrame->InsertCells(cellChildren, GetRowIndex(), colIndex);
 
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   tableFrame->SetGeometryDirty();
 }
@@ -261,7 +261,7 @@ void nsTableRowFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   // Remove the frame and destroy it
   mFrames.DestroyFrame(aOldFrame);
 
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
 
   tableFrame->SetGeometryDirty();

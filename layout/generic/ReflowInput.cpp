@@ -32,12 +32,6 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsGridContainerFrame.h"
 
-#ifdef DEBUG
-#  undef NOISY_VERTICAL_ALIGN
-#else
-#  undef NOISY_VERTICAL_ALIGN
-#endif
-
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
@@ -58,26 +52,13 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
                          const LogicalSize& aAvailableSpace, uint32_t aFlags)
-    : SizeComputationInput(aFrame, aRenderingContext),
-      // will be setup properly later in InitCBReflowInput
-      mCBReflowInput(nullptr),
-      mBlockDelta(0),
-      mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
-      mAvailableWidth(0),
-      mAvailableHeight(0),
-      mContainingBlockSize(mWritingMode),
-      mReflowDepth(0) {
+    : SizeComputationInput(aFrame, aRenderingContext) {
   MOZ_ASSERT(aRenderingContext, "no rendering context");
   MOZ_ASSERT(aPresContext, "no pres context");
   MOZ_ASSERT(aFrame, "no frame");
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
-  mParentReflowInput = nullptr;
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
-  mFloatManager = nullptr;
-  mLineLayout = nullptr;
-  mDiscoveredClearance = nullptr;
-  mPercentBSizeObserver = nullptr;
 
   if (aFlags & DUMMY_PARENT_REFLOW_INPUT) {
     mFlags.mDummyParentReflowInput = true;
@@ -183,16 +164,19 @@ SizeComputationInput::SizeComputationInput(
 ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const ReflowInput& aParentReflowInput,
                          nsIFrame* aFrame, const LogicalSize& aAvailableSpace,
-                         const LogicalSize* aContainingBlockSize,
+                         const Maybe<LogicalSize>& aContainingBlockSize,
                          uint32_t aFlags)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
-      // will be setup properly later in InitCBReflowInput
-      mCBReflowInput(nullptr),
-      mBlockDelta(0),
-      mOrthogonalLimit(NS_UNCONSTRAINEDSIZE),
-      mAvailableWidth(0),
-      mAvailableHeight(0),
-      mContainingBlockSize(mWritingMode),
+      mParentReflowInput(&aParentReflowInput),
+      mFloatManager(aParentReflowInput.mFloatManager),
+      mLineLayout(mFrame->IsFrameOfType(nsIFrame::eLineParticipant)
+                      ? aParentReflowInput.mLineLayout
+                      : nullptr),
+      mPercentBSizeObserver(
+          (aParentReflowInput.mPercentBSizeObserver &&
+           aParentReflowInput.mPercentBSizeObserver->NeedsToObserve(*this))
+              ? aParentReflowInput.mPercentBSizeObserver
+              : nullptr),
       mFlags(aParentReflowInput.mFlags),
       mReflowDepth(aParentReflowInput.mReflowDepth + 1) {
   MOZ_ASSERT(aPresContext, "no pres context");
@@ -200,8 +184,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext == aFrame->PresContext(), "wrong pres context");
   MOZ_ASSERT(!mFlags.mSpecialBSizeReflow || !NS_SUBTREE_DIRTY(aFrame),
              "frame should be clean when getting special bsize reflow");
-
-  mParentReflowInput = &aParentReflowInput;
 
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
@@ -215,12 +197,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
       AvailableISize() = aParentReflowInput.ComputedBSize();
     }
   }
-
-  mFloatManager = aParentReflowInput.mFloatManager;
-  if (mFrame->IsFrameOfType(nsIFrame::eLineParticipant))
-    mLineLayout = aParentReflowInput.mLineLayout;
-  else
-    mLineLayout = nullptr;
 
   // Note: mFlags was initialized as a copy of aParentReflowInput.mFlags up in
   // this constructor's init list, so the only flags that we need to explicitly
@@ -239,13 +215,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mIClampMarginBoxMinSize = !!(aFlags & I_CLAMP_MARGIN_BOX_MIN_SIZE);
   mFlags.mBClampMarginBoxMinSize = !!(aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE);
   mFlags.mApplyAutoMinSize = !!(aFlags & I_APPLY_AUTO_MIN_SIZE);
-
-  mDiscoveredClearance = nullptr;
-  mPercentBSizeObserver =
-      (aParentReflowInput.mPercentBSizeObserver &&
-       aParentReflowInput.mPercentBSizeObserver->NeedsToObserve(*this))
-          ? aParentReflowInput.mPercentBSizeObserver
-          : nullptr;
 
   if ((aFlags & DUMMY_PARENT_REFLOW_INPUT) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&
@@ -360,7 +329,7 @@ void ReflowInput::MarkFrameChildrenDirty(nsIFrame* aFrame) {
 }
 
 void ReflowInput::Init(nsPresContext* aPresContext,
-                       const LogicalSize* aContainingBlockSize,
+                       const Maybe<LogicalSize>& aContainingBlockSize,
                        const nsMargin* aBorder, const nsMargin* aPadding) {
   if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY)) {
     // FIXME (bug 1376530): It would be better for memory locality if we
@@ -407,13 +376,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
   }
 
   InitFrameType(type);
-
-  LogicalSize cbSize(mWritingMode, -1, -1);
-  if (aContainingBlockSize) {
-    cbSize = *aContainingBlockSize;
-  }
-
-  InitConstraints(aPresContext, cbSize, aBorder, aPadding, type);
+  InitConstraints(aPresContext, aContainingBlockSize, aBorder, aPadding, type);
 
   InitResizeFlags(aPresContext, type);
   InitDynamicReflowRoot();
@@ -2232,21 +2195,22 @@ static inline bool IsSideCaption(nsIFrame* aFrame,
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
-void ReflowInput::InitConstraints(nsPresContext* aPresContext,
-                                  const LogicalSize& aContainingBlockSize,
-                                  const nsMargin* aBorder,
-                                  const nsMargin* aPadding,
-                                  LayoutFrameType aFrameType) {
+void ReflowInput::InitConstraints(
+    nsPresContext* aPresContext, const Maybe<LogicalSize>& aContainingBlockSize,
+    const nsMargin* aBorder, const nsMargin* aPadding,
+    LayoutFrameType aFrameType) {
   WritingMode wm = GetWritingMode();
-  DISPLAY_INIT_CONSTRAINTS(mFrame, this, aContainingBlockSize.ISize(wm),
-                           aContainingBlockSize.BSize(wm), aBorder, aPadding);
+  LogicalSize cbSize = aContainingBlockSize.valueOr(
+      LogicalSize(mWritingMode, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE));
+  DISPLAY_INIT_CONSTRAINTS(mFrame, this, cbSize.ISize(wm), cbSize.BSize(wm),
+                           aBorder, aPadding);
 
   // If this is a reflow root, then set the computed width and
   // height equal to the available space
   if (nullptr == mParentReflowInput || mFlags.mDummyParentReflowInput) {
     // XXXldb This doesn't mean what it used to!
-    InitOffsets(wm, aContainingBlockSize.ISize(wm), aFrameType, mFlags, aBorder,
-                aPadding, mStyleDisplay);
+    InitOffsets(wm, cbSize.ISize(wm), aFrameType, mFlags, aBorder, aPadding,
+                mStyleDisplay);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
@@ -2275,12 +2239,10 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
     MOZ_ASSERT(cbri, "no containing block");
     MOZ_ASSERT(mFrame->GetParent());
 
-    // If we weren't given a containing block width and height, then
-    // compute one
-    LogicalSize cbSize =
-        (aContainingBlockSize == LogicalSize(wm, -1, -1))
-            ? ComputeContainingBlockRectangle(aPresContext, cbri)
-            : aContainingBlockSize;
+    // If we weren't given a containing block size, then compute one.
+    if (aContainingBlockSize.isNothing()) {
+      cbSize = ComputeContainingBlockRectangle(aPresContext, cbri);
+    }
 
     // See if the containing block height is based on the size of its
     // content
@@ -2547,7 +2509,7 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
   }
 
   // Save our containing block dimensions
-  mContainingBlockSize = aContainingBlockSize;
+  mContainingBlockSize = cbSize;
 }
 
 static void UpdateProp(nsIFrame* aFrame,

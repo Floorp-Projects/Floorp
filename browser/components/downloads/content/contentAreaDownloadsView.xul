@@ -22,16 +22,11 @@
         title="&downloads.title;"
         onload="ContentAreaDownloadsView.init();">
 
-  <script type="application/javascript"
-          src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/downloads/contentAreaDownloadsView.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/downloads/allDownloadsView.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/downloads/contentAreaDownloadsView.js"/>
+  <script src="chrome://browser/content/downloads/allDownloadsView.js"/>
+  <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
 
 #include ../../../../toolkit/content/editMenuKeys.inc.xul
 #ifdef XP_MACOSX

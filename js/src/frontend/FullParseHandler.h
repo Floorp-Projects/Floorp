@@ -816,8 +816,9 @@ class FullParseHandler {
   }
 
   AssignmentNodeType newAssignment(ParseNodeKind kind, Node lhs, Node rhs) {
-    if (kind == ParseNodeKind::AssignExpr && lhs->isKind(ParseNodeKind::Name) &&
-        !lhs->isInParens()) {
+    if ((kind == ParseNodeKind::AssignExpr ||
+         kind == ParseNodeKind::InitExpr) &&
+        lhs->isKind(ParseNodeKind::Name) && !lhs->isInParens()) {
       checkAndSetIsDirectRHSAnonFunction(rhs);
     }
 
@@ -825,7 +826,7 @@ class FullParseHandler {
   }
 
   bool isUnparenthesizedAssignment(Node node) {
-    if (node->isKind(ParseNodeKind::AssignExpr) && !node->isInParens()) {
+    if ((node->isKind(ParseNodeKind::AssignExpr)) && !node->isInParens()) {
       return true;
     }
 

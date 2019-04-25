@@ -927,7 +927,7 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
     // margins have changed
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame) {
-      presShell->FrameNeedsReflow(rootScrollFrame, nsIPresShell::eResize,
+      presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
     }
     return true;

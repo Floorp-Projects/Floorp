@@ -383,7 +383,7 @@ nsDOMWindowUtils::UpdateLayerTree() {
       nsAutoScriptBlocker scriptBlocker;
       presShell->Paint(
           view, view->GetBounds(),
-          nsIPresShell::PAINT_LAYERS | nsIPresShell::PAINT_SYNC_DECODE_IMAGES);
+          PaintFlags::PaintLayers | PaintFlags::PaintSyncDecodeImages);
       presShell->GetLayerManager()->WaitOnTransactionProcessed();
     }
   }
@@ -568,7 +568,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution) {
   }
 
   presShell->SetResolutionAndScaleTo(aResolution,
-                                     nsIPresShell::ChangeOrigin::eMainThread);
+                                     ResolutionChangeOrigin::MainThread);
 
   return NS_OK;
 }
@@ -2517,11 +2517,9 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     // the bounding content rect and ask APZ to adjust the visual viewport.
     presShell->ScrollContentIntoView(
         content,
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        ScrollFlags::ScrollOverflowHidden);
 
     CSSRect bounds =
         nsLayoutUtils::GetBoundingContentRect(content, rootScrollFrame);
@@ -4065,7 +4063,7 @@ nsDOMWindowUtils::EnsureDirtyRootFrame() {
     return NS_ERROR_FAILURE;
   }
 
-  presShell->FrameNeedsReflow(frame, nsIPresShell::eStyleChange,
+  presShell->FrameNeedsReflow(frame, IntrinsicDirty::StyleChange,
                               NS_FRAME_IS_DIRTY);
   return NS_OK;
 }

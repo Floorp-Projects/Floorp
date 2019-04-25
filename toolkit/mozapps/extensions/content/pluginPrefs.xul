@@ -19,8 +19,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mozapps/content/extensions/pluginPrefs.js"/>
+  <script src="chrome://mozapps/content/extensions/pluginPrefs.js"/>
 
   <vbox class="detail-view-container">
     <grid id="detail-grid">

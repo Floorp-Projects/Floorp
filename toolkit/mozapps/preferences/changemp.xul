@@ -13,7 +13,7 @@
         onload="init()"
         data-l10n-id="set-password">
 
-  <script type="application/javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
+  <script src="chrome://mozapps/content/preferences/changemp.js"/>
 
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>

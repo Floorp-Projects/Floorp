@@ -7,9 +7,9 @@
 <head>
   <title>Time Picker</title>
   <link rel="stylesheet" href="chrome://global/skin/datetimeinputpickers.css"/>
-  <script type="application/javascript" src="chrome://global/content/bindings/timekeeper.js"></script>
-  <script type="application/javascript" src="chrome://global/content/bindings/spinner.js"></script>
-  <script type="application/javascript" src="chrome://global/content/bindings/timepicker.js"></script>
+  <script src="chrome://global/content/bindings/timekeeper.js"></script>
+  <script src="chrome://global/content/bindings/spinner.js"></script>
+  <script src="chrome://global/content/bindings/timepicker.js"></script>
 </head>
 <body>
   <div id="time-picker"></div>
@@ -20,7 +20,7 @@
       <button class="down"/>
     </div>
   </template>
-  <script type="application/javascript">
+  <script>
   /* import-globals-from widgets/timepicker.js */
   // We need to hide the scroll bar but maintain its scrolling
   // capability, so using |overflow: hidden| is not an option.

@@ -67,6 +67,7 @@ var gl = wtu.create3DContext(canvas, null, 2);
 var tf = null;
 var tf1 = null;
 var buf = null;
+let out_add_buffer = null;
 var program = null;
 var activeInfo = null;
 var query = null;
@@ -81,8 +82,11 @@ if (!gl) {
     runTFBufferBindingTest();
     runObjectTest();
     runGetBufferSubDataTest();
-    runOneOutFeedbackTest();
-    runTwoOutFeedbackTest();
+    runUnboundDeleteTest();
+    runBoundDeleteTest();
+    runOneOutputFeedbackTest();
+    // Must be the last test, since it's asynchronous and calls finishTest().
+    runTwoOutputFeedbackTest();
 }
 
 function runBindingTest() {
@@ -169,9 +173,9 @@ function runObjectTest() {
     tf = null;
 }
 
-function runOneOutFeedbackTest() {
+function runOneOutputFeedbackTest() {
     debug("");
-    debug("Testing transform feedback processing");
+    debug("Testing one-output transform feedback");
 
     // Build the input and output buffers
     var in_data = [
@@ -184,7 +188,7 @@ function runOneOutFeedbackTest() {
     gl.bindBuffer(gl.ARRAY_BUFFER, in_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(in_data), gl.STATIC_DRAW);
 
-    var out_add_buffer = gl.createBuffer();
+    out_add_buffer = gl.createBuffer();
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
     gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, Float32Array.BYTES_PER_ELEMENT * in_data.length, gl.STATIC_DRAW);
 
@@ -208,6 +212,13 @@ function runOneOutFeedbackTest() {
     gl.enable(gl.RASTERIZER_DISCARD);
     gl.beginTransformFeedback(gl.POINTS);
 
+    debug("Testing deleting an active transform feedback object");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be no errors before testing deletion");
+    gl.deleteTransformFeedback(tf);
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Deleting the transform feedback while active should fail, and have no effect");
+    shouldBe("gl.isTransformFeedback(tf)", "true");
+    debug("Resuming testing of single-output transform feedback");
+
     gl.drawArrays(gl.POINTS, 0, 3);
 
     gl.endTransformFeedback();
@@ -224,13 +235,18 @@ function runOneOutFeedbackTest() {
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
     wtu.checkFloatBuffer(gl, gl.TRANSFORM_FEEDBACK_BUFFER, add_expected);
 
+    gl.deleteBuffer(in_buffer);
+    gl.deleteBuffer(out_add_buffer);
+    gl.deleteProgram(program);
+    gl.deleteTransformFeedback(tf);
+
     tf = null;
     program = null;
 }
 
-function runTwoOutFeedbackTest() {
+function runTwoOutputFeedbackTest() {
     debug("");
-    debug("Testing transform feedback processing");
+    debug("Testing two-output transform feedback");
 
     // Build the input and output buffers
     var in_data = [
@@ -243,7 +259,7 @@ function runTwoOutFeedbackTest() {
     gl.bindBuffer(gl.ARRAY_BUFFER, in_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(in_data), gl.STATIC_DRAW);
 
-    var out_add_buffer = gl.createBuffer();
+    out_add_buffer = gl.createBuffer();
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
     gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, Float32Array.BYTES_PER_ELEMENT * in_data.length, gl.STATIC_DRAW);
 
@@ -302,6 +318,12 @@ function runTwoOutFeedbackTest() {
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_mul_buffer);
     wtu.checkFloatBuffer(gl, gl.TRANSFORM_FEEDBACK_BUFFER, mul_expected);
 
+    gl.deleteBuffer(in_buffer);
+    gl.deleteBuffer(out_add_buffer);
+    gl.deleteBuffer(out_mul_buffer);
+    gl.deleteProgram(program);
+    gl.deleteTransformFeedback(tf);
+
     tf = null;
     program = null;
 
@@ -322,6 +344,87 @@ function runTwoOutFeedbackTest() {
 
     // Complete the rest of the test asynchronously.
     requestAnimationFrame(completeTransformFeedbackQueryTest);
+}
+
+function runUnboundDeleteTest() {
+    debug("");
+    debug("Testing deleting buffers attached to an unbound transform feedback object");
+
+    // Theoretically it would be possible to verify the result of performing
+    // transform feedback into a deleted buffer object. The buffer would have to
+    // be latched into a VAO as well as into the transform feedback object. In
+    // order to get the results out of the output buffer, it would be necessary
+    // to run transform feedback again, reading from the buffer bound to the
+    // VAO, and writing into a (non-deleted) buffer object latched into the
+    // transform feedback object. It's not possible to arrange things to be able
+    // to copyBufferSubData from the deleted buffer object into a temporary one
+    // for readback.
+
+    // This would be a lot of code to test an unlikely corner case, so instead,
+    // this test verifies simpler behaviors.
+
+    out_add_buffer = gl.createBuffer();
+    const output_buffer_length = Float32Array.BYTES_PER_ELEMENT * 16;
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
+    gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, output_buffer_length, gl.STATIC_DRAW);
+
+    // Set up the transform feedback object
+    tf = gl.createTransformFeedback();
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, out_add_buffer);
+
+    // Unbind transform feedback and delete out_add_buffer.
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+    gl.deleteBuffer(out_add_buffer);
+    debug("isBuffer should report false after deletion");
+    shouldBe("gl.isBuffer(out_add_buffer)", "false");
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
+    debug("Transform feedback object should keep output buffer alive");
+    shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "out_add_buffer");
+    // Deleting the buffer again while the transform feedback is bound shouldn't unbind it.
+    gl.deleteBuffer(out_add_buffer);
+    debug("Deleting output buffer again should be a no-op");
+    shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "out_add_buffer");
+
+    // Try unbinding and rebinding the transform feedback object just
+    // to make sure that has no effect on the attached output buffer.
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
+    debug("Transform feedback object should still keep output buffer alive");
+    shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "out_add_buffer");
+
+    gl.deleteTransformFeedback(tf);
+
+    tf = null;
+    out_add_buffer = null;
+}
+
+function runBoundDeleteTest() {
+    debug("");
+    debug("Testing deleting buffers attached to a bound transform feedback object");
+
+    out_add_buffer = gl.createBuffer();
+    const output_buffer_length = Float32Array.BYTES_PER_ELEMENT * 16;
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
+    gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, output_buffer_length, gl.STATIC_DRAW);
+
+    // Set up the transform feedback object
+    tf = gl.createTransformFeedback();
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, out_add_buffer);
+
+    // Delete the output buffer
+    gl.deleteBuffer(out_add_buffer);
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf);
+    debug("Buffer should have been unbound from active transform feedback");
+    shouldBeNull("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)");
+
+    gl.deleteTransformFeedback(tf);
+
+    tf = null;
+    out_add_buffer = null;
 }
 
 var retArray;
@@ -347,7 +450,7 @@ function runGetBufferSubDataTest() {
     gl.bindBuffer(gl.ARRAY_BUFFER, in_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(in_data), gl.STATIC_DRAW);
 
-    var out_add_buffer = gl.createBuffer();
+    out_add_buffer = gl.createBuffer();
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, out_add_buffer);
     gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, Float32Array.BYTES_PER_ELEMENT * in_data.length, gl.STATIC_DRAW);
 
@@ -448,8 +551,8 @@ function runVaryingsTest() {
     debug("");
     debug("Testing transform feedback varyings");
 
-    // Create the transform feedback shader. This is explicitly run after runFeedbackTest,
-    // as re-llinking the shader here will test browser caching.
+    // Create the transform feedback shader. This is explicitly run after runTwoOutputFeedbackTest,
+    // as re-linking the shader here will test browser caching.
     program = wtu.setupTransformFeedbackProgram(gl, ["vshader", "fshader"],
         ["out_add", "out_mul"], gl.SEPARATE_ATTRIBS,
         ["in_data"]);

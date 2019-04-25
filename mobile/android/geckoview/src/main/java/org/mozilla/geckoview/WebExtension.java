@@ -1,6 +1,7 @@
 package org.mozilla.geckoview;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.LongDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -68,7 +69,7 @@ public class WebExtension {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef(flag = true,
+    @LongDef(flag = true,
             value = { Flags.NONE, Flags.ALLOW_CONTENT_MESSAGING })
     /* package */ @interface WebExtensionFlags {}
 

@@ -263,6 +263,7 @@ function generateTest(desc,
                     currentTolerance = info.tolerance || 5;
                     debug("tolerance: " + currentTolerance);
                     video = document.createElement("video");
+                    video.muted = true;
                     var canPlay = true;
                     if (!video.canPlayType) {
                       testFailed("video.canPlayType required method missing");

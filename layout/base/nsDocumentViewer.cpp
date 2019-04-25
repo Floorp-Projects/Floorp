@@ -2766,7 +2766,7 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
     nsIPageSequenceFrame* pf = presShell->GetPageSequenceFrame();
     if (pf) {
       nsIFrame* f = do_QueryFrame(pf);
-      presShell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(f, IntrinsicDirty::Resize, NS_FRAME_IS_DIRTY);
     }
 
     nsIFrame* rootFrame = presShell->GetRootFrame();
@@ -3134,8 +3134,8 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
     prefWidth = aMaxWidth;
   }
 
-  nsresult rv = presShell->ResizeReflow(
-      prefWidth, aMaxHeight, 0, 0, mozilla::ResizeReflowOptions::eBSizeLimit);
+  nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight, 0, 0,
+                                        ResizeReflowOptions::BSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsPresContext> presContext = GetPresContext();

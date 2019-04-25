@@ -1785,8 +1785,8 @@ function testASTCTexture(test, useTexStorage) {
         wtu.glErrorShouldBe(gl, gl.NO_ERROR, "allocating compressed texture via texStorage2D");
         wtu.clearAndDrawUnitQuad(gl);
         wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
-        var clearColor = [0, 0, 0, 0];
-        wtu.checkCanvas(gl, clearColor, "texture should be initialized to black");
+        var clearColor = [255, 0, 255, 255];
+        wtu.checkCanvas(gl, clearColor, "texture should be initialized to error color");
         gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, data);
         wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture data via compressedTexSubImage2D");
     } else {

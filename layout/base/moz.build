@@ -80,6 +80,7 @@ EXPORTS.mozilla += [
     'MVMContext.h',
     'OverflowChangedTracker.h',
     'PresShell.h',
+    'PresShellForwards.h',
     'RestyleManager.h',
     'ScrollStyles.h',
     'ScrollTypes.h',
