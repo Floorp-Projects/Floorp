@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
@@ -18,6 +19,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
+import org.mozilla.gecko.util.OnboardingStringUtil;
 
 public class SyncPanel extends FirstrunPanel {
     @Override
@@ -32,6 +34,10 @@ public class SyncPanel extends FirstrunPanel {
             ((ImageView) root.findViewById(R.id.firstrun_image)).setImageDrawable(getResources().getDrawable(image));
             ((TextView) root.findViewById(R.id.firstrun_text)).setText(message);
             ((TextView) root.findViewById(R.id.firstrun_subtext)).setText(subtext);
+
+            if (OnboardingStringUtil.getInstance(getContext()).areStringsLocalized()) {
+                ((Button) root.findViewById(R.id.welcome_account)).setText(R.string.newfirstrun_signin_button);
+            }
         }
 
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {

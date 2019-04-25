@@ -9,6 +9,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import org.mozilla.gecko.util.OnboardingStringUtil;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,7 +25,9 @@ class FirstrunPagerConfig {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
         panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.WELCOME, useLocalValues));
         panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
-        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.CUSTOMIZE, useLocalValues));
+        if (!OnboardingStringUtil.getInstance(context).areStringsLocalized()) {
+            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.CUSTOMIZE, useLocalValues));
+        }
         panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.SYNC, useLocalValues));
 
         return panels;
@@ -32,8 +36,12 @@ class FirstrunPagerConfig {
     static List<FirstrunPanelConfig> forFxAUser(Context context, final boolean useLocalValues) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
         panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.WELCOME, useLocalValues));
-        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
-        panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_CUSTOMIZE, useLocalValues));
+        if (OnboardingStringUtil.getInstance(context).areStringsLocalized()) {
+            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_PRIVACY, useLocalValues));
+        } else {
+            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.PRIVACY, useLocalValues));
+            panels.add(FirstrunPanelConfig.getConfiguredPanel(context, PanelConfig.TYPE.LAST_CUSTOMIZE, useLocalValues));
+        }
 
         return panels;
     }
