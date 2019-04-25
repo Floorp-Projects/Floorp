@@ -11,11 +11,36 @@ extern "C" void report_mapping() {}
 extern "C" void delete_mapping() {}
 
 /**
+ * ZIP_DATA(FOO, "foo") defines the variables FOO and FOO_SIZE.
+ * The former contains the content of the "foo" file in the same directory
+ * as this file, and FOO_SIZE its size.
+ */
+/* clang-format off */
+#define ZIP_DATA(name, file)                          \
+  __asm__(".global " #name "\n"                       \
+          ".data\n"                                   \
+          ".balign 16\n"                              \
+          #name ":\n"                                 \
+          "  .incbin \"" SRCDIR "/" file "\"\n"       \
+          ".L" #name "_END:\n"                        \
+          "  .size " #name ", .L" #name "_END-" #name \
+          "\n"                                        \
+          ".global " #name "_SIZE\n"                  \
+          ".data\n"                                   \
+          ".balign 4\n"                               \
+          #name "_SIZE:\n"                            \
+          "  .int .L" #name "_END-" #name "\n");      \
+  extern const unsigned char name[];                  \
+  extern const unsigned int name##_SIZE
+/* clang-format on */
+
+/**
  * test.zip is a basic test zip file with a central directory. It contains
  * four entries, in the following order:
  * "foo", "bar", "baz", "qux".
  * The entries are going to be read out of order.
  */
+ZIP_DATA(TEST_ZIP, "test.zip");
 const char *test_entries[] = {"baz", "foo", "bar", "qux"};
 
 /**
@@ -32,18 +57,12 @@ const char *test_entries[] = {"baz", "foo", "bar", "qux"};
  *   zipalign if it had a data descriptor originally.
  * - Fourth entry is a file "d", STOREd.
  */
+ZIP_DATA(NO_CENTRAL_DIR_ZIP, "no_central_dir.zip");
 const char *no_central_dir_entries[] = {"a", "b", "c", "d"};
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    fprintf(
-        stderr,
-        "TEST-FAIL | TestZip | Expecting the directory containing test Zips\n");
-    return 1;
-  }
-  chdir(argv[1]);
   Zip::Stream s;
-  RefPtr<Zip> z = ZipCollection::GetZip("test.zip");
+  RefPtr<Zip> z = Zip::Create((void *)TEST_ZIP, TEST_ZIP_SIZE);
   for (auto& entry : test_entries) {
     if (!z->GetStream(entry, &s)) {
       fprintf(stderr,
@@ -55,7 +74,7 @@ int main(int argc, char *argv[]) {
   }
   fprintf(stderr, "TEST-PASS | TestZip | test.zip could be accessed fully\n");
 
-  z = ZipCollection::GetZip("no_central_dir.zip");
+  z = Zip::Create((void *)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
   for (auto& entry : no_central_dir_entries) {
     if (!z->GetStream(entry, &s)) {
       fprintf(stderr,
