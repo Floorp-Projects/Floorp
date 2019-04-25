@@ -1269,7 +1269,6 @@ nsresult imgLoader::InitCache() {
   }
 
   os->AddObserver(this, "memory-pressure", false);
-  os->AddObserver(this, "chrome-flush-skin-caches", false);
   os->AddObserver(this, "chrome-flush-caches", false);
   os->AddObserver(this, "last-pb-context-exited", false);
   os->AddObserver(this, "profile-before-change", false);
@@ -1307,8 +1306,7 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
 
   } else if (strcmp(aTopic, "memory-pressure") == 0) {
     MinimizeCaches();
-  } else if (strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
-             strcmp(aTopic, "chrome-flush-caches") == 0) {
+  } else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     MinimizeCaches();
     ClearChromeImageCache();
   } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {

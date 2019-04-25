@@ -25,7 +25,6 @@ class AboutRedirector : public nsIAboutModule {
 
  private:
   static bool sNewTabPageEnabled;
-  static bool sNewCertErrorPageEnabled;
 };
 
 }  // namespace browser

@@ -206,7 +206,6 @@ class ServoStyleSet {
   // manage the set of style sheets in the style set
   void AppendStyleSheet(Origin, StyleSheet*);
   void RemoveStyleSheet(Origin, StyleSheet*);
-  void ReplaceSheets(Origin, const nsTArray<RefPtr<StyleSheet>>& aNewSheets);
   void InsertStyleSheetBefore(Origin, StyleSheet*, StyleSheet* aReferenceSheet);
 
   size_t SheetCount(Origin) const;

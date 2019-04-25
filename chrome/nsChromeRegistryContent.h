@@ -26,7 +26,6 @@ class nsChromeRegistryContent : public nsChromeRegistry {
   NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
                                   nsIUTF8StringEnumerator** aResult) override;
   NS_IMETHOD CheckForNewChrome() override;
-  NS_IMETHOD CheckForOSAccessibility() override;
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
   NS_IMETHOD IsLocaleRTL(const nsACString& package, bool* aResult) override;

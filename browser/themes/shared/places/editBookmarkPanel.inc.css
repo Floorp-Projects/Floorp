@@ -8,6 +8,115 @@
   padding: 0;
 }
 
+#editBookmarkPanelTitle {
+  margin-inline-start: 32px;
+}
+
+#editBookmarkPanelInfoButton {
+  border-radius: var(--toolbarbutton-border-radius);
+  margin-right: 4px;
+}
+
+#editBookmarkPanelInfoButton[disabled=true] {
+  visibility: hidden;
+}
+
+#editBookmarkPanelInfoButton[checked] {
+  background-color: var(--toolbarbutton-active-background);
+}
+
+#editBookmarkPanelInfoButton:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+#editBookmarkPanelInfoButton > image {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+  padding: 2px;
+}
+
+#editBookmarkPanelInfoArea {
+  overflow: hidden;
+  position: relative;
+  margin: 6px 8px 0 8px;
+}
+
+#editBookmarkPanelRecommendation {
+  position: absolute;
+  height: 100%;
+  transition: all 0.25s cubic-bezier(0.07, 0.95, 0, 1);
+}
+
+#editBookmarkPanelRecommendation[disabled] {
+  transform: translateY(-100%);
+}
+
+#editBookmarkPanelRecommendation > div {
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  height: 150px;
+  cursor: pointer;
+  position: relative;
+  padding: 0 16px;
+}
+
+#editBookmarkPanelRecommendation > div::-moz-focus-inner {
+  border: none;
+}
+
+#editBookmarkPanelRecommendation > div * {
+  max-width: 220px;
+}
+
+#editBookmarkPanelRecommendationTitle {
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.25;
+  margin-bottom: 6px;
+  padding-top: 2px;
+}
+
+#editBookmarkPanelRecommendationContent {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+#editBookmarkPanelRecommendationCta {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: auto 0;
+  padding: 0;
+  text-align: start;
+}
+
+#editBookmarkPanelRecommendation #cfrClose {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  background-image: url(chrome://browser/skin/stop.svg);
+  background-size: 12px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.6;
+}
+
+#editBookmarkPanelRecommendation #cfrClose:hover {
+  fill-opacity: 1;
+}
+
 html|div#editBookmarkPanelFaviconContainer {
   display: flex;
 }
@@ -26,11 +135,12 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanelImage {
-  border-bottom: 1px solid var(--panel-separator-color);
+  border-radius: 2px;
   height: 150px;
   background-image: -moz-element(#editBookmarkPanelImageCanvas);
   background-repeat: no-repeat;
   background-size: cover;
+  margin: 0 2px;
 }
 
 #editBookmarkPanelRows,

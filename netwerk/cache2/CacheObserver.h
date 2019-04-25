@@ -70,6 +70,13 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static void SetCacheFSReported();
   static bool HashStatsReported() { return sHashStatsReported; }
   static void SetHashStatsReported();
+  static uint32_t TelemetryReportID() { return sTelemetryReportID; }
+  static void SetTelemetryReportID(uint32_t);
+  static uint32_t CacheAmountWritten()  // result in kilobytes
+  {
+    return sCacheAmountWritten;
+  }
+  static void SetCacheAmountWritten(uint32_t);  // parameter in kilobytes.
   static void ParentDirOverride(nsIFile** aDir);
 
   static bool EntryIsTooBig(int64_t aSize, bool aUsingDisk);
@@ -87,6 +94,8 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   void StoreDiskCacheCapacity();
   void StoreCacheFSReported();
   void StoreHashStatsReported();
+  void StoreTelemetryReportID();
+  void StoreCacheAmountWritten();
   void AttachToPreferences();
 
   static bool sUseMemoryCache;
@@ -111,6 +120,8 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static bool sHashStatsReported;
   static Atomic<uint32_t, Relaxed> sMaxShutdownIOLag;
   static Atomic<PRIntervalTime> sShutdownDemandedTime;
+  static Atomic<uint32_t, Relaxed> sTelemetryReportID;
+  static Atomic<uint32_t, Relaxed> sCacheAmountWritten;
 
   // Non static properties, accessible via sSelf
   nsCOMPtr<nsIFile> mCacheParentDirectoryOverride;

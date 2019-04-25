@@ -3,24 +3,42 @@
 
 "use strict";
 
-/**
- * This test asserts that the sidebar shows a message with a closing button describing
- * the status of the USB devices debugging.
- */
+/* import-globals-from helper-addons.js */
+Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
+
+// Test that Message component can be closed with the X button
 add_task(async function() {
-  const { document, tab } = await openAboutDebugging();
+  const EXTENSION_NAME = "Temporary web extension";
+  const EXTENSION_ID = "test-devtools@mozilla.org";
 
-  const usbStatusElement = document.querySelector(".js-sidebar-usb-status");
-  ok(usbStatusElement, "Sidebar shows the USB status element");
-  ok(usbStatusElement.textContent.includes("USB disabled"),
-    "USB status element has the expected content");
+  const { document, tab, window } = await openAboutDebugging();
+  await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const button = document.querySelector(".js-sidebar-item .qa-message-button-close");
+  await installTemporaryExtensionFromXPI({
+    id: EXTENSION_ID,
+    name: EXTENSION_NAME,
+    extraProperties: {
+      // This property is not expected in the manifest and should trigger a warning!
+      "wrongProperty": {},
+    },
+  }, document);
+
+  info("Wait until a debug target item appears");
+  await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
+  const target = findDebugTargetByText(EXTENSION_NAME, document);
+
+  const warningMessage = target.querySelector(".js-message");
+  ok(!!warningMessage, "A warning message is displayed for the installed addon");
+
+  const button = warningMessage.querySelector(".qa-message-button-close");
+  ok(!!button, "The warning message has a close button");
+
+  info("Closing the message and waiting for it to disappear");
   button.click();
+  await waitUntil(() => {
+    return target.querySelector(".js-message") === null;
+  });
 
-  // new search for element
-  ok(document.querySelector(".js-sidebar-usb-status") === null,
-    "USB status element is no longer displayed");
-
+  await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);
 });

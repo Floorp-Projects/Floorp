@@ -39,33 +39,33 @@ impl App {
         let init_data = vec![
             (
                 PipelineId(1, 0),
-                1,
+                -2,
                 ColorF::new(0.0, 1.0, 0.0, 1.0),
-                FramebufferIntPoint::new(0, 400),
+                DeviceIntPoint::new(0, 0),
             ),
             (
                 PipelineId(2, 0),
-                2,
+                -1,
                 ColorF::new(1.0, 1.0, 0.0, 1.0),
-                FramebufferIntPoint::new(200, 400),
+                DeviceIntPoint::new(200, 0),
             ),
             (
                 PipelineId(3, 0),
-                3,
+                0,
                 ColorF::new(1.0, 0.0, 0.0, 1.0),
-                FramebufferIntPoint::new(200, 600),
+                DeviceIntPoint::new(200, 200),
             ),
             (
                 PipelineId(4, 0),
-                4,
+                1,
                 ColorF::new(1.0, 0.0, 1.0, 1.0),
-                FramebufferIntPoint::new(0, 600),
+                DeviceIntPoint::new(0, 200),
             ),
         ];
 
         for (pipeline_id, layer, color, offset) in init_data {
-            let size = FramebufferIntSize::new(250, 250);
-            let bounds = FramebufferIntRect::new(offset, size);
+            let size = DeviceIntSize::new(250, 250);
+            let bounds = DeviceIntRect::new(offset, size);
 
             let document_id = api.add_document(size, layer);
             let mut txn = Transaction::new();
@@ -92,12 +92,12 @@ impl Example for App {
         api: &RenderApi,
         base_builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
         _pipeline_id: PipelineId,
         _: DocumentId,
     ) {
         if self.documents.is_empty() {
-            let device_pixel_ratio = framebuffer_size.width as f32 /
+            let device_pixel_ratio = device_size.width as f32 /
                 base_builder.content_size().width;
             // this is the first run, hack around the boilerplate,
             // which assumes an example only needs one document

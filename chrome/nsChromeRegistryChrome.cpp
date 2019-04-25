@@ -37,8 +37,8 @@
 #include "nsIScriptError.h"
 #include "nsIXULRuntime.h"
 
-#define SELECTED_SKIN_PREF "general.skins.selectedSkin"
 #define PACKAGE_OVERRIDE_BRANCH "chrome.override_package."
+#define SKIN NS_LITERAL_CSTRING("classic/1.0")
 
 using namespace mozilla;
 using mozilla::dom::ContentParent;
@@ -94,59 +94,15 @@ nsresult nsChromeRegistryChrome::Init() {
   nsresult rv = nsChromeRegistry::Init();
   if (NS_FAILED(rv)) return rv;
 
-  mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
-
   bool safeMode = false;
   nsCOMPtr<nsIXULRuntime> xulrun(do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
   if (xulrun) xulrun->GetInSafeMode(&safeMode);
-
-  nsCOMPtr<nsIPrefService> prefserv(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  nsCOMPtr<nsIPrefBranch> prefs;
-
-  if (prefserv) {
-    if (safeMode) {
-      prefserv->GetDefaultBranch(nullptr, getter_AddRefs(prefs));
-    } else {
-      prefs = do_QueryInterface(prefserv);
-    }
-  }
-
-  if (!prefs) {
-    NS_WARNING("Could not get pref service!");
-  } else {
-    nsAutoCString provider;
-    rv = prefs->GetCharPref(SELECTED_SKIN_PREF, provider);
-    if (NS_SUCCEEDED(rv)) mSelectedSkin = provider;
-
-    rv = prefs->AddObserver(SELECTED_SKIN_PREF, this, true);
-  }
 
   nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, "profile-initial-state", true);
     obsService->AddObserver(this, "intl:app-locales-changed", true);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsChromeRegistryChrome::CheckForOSAccessibility() {
-  int32_t useAccessibilityTheme =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
-
-  if (useAccessibilityTheme) {
-    /* Set the skin to classic and remove pref observers */
-    if (!mSelectedSkin.EqualsLiteral("classic/1.0")) {
-      mSelectedSkin.AssignLiteral("classic/1.0");
-      RefreshSkins();
-    }
-
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefs) {
-      prefs->RemoveObserver(SELECTED_SKIN_PREF, this);
-    }
   }
 
   return NS_OK;
@@ -240,26 +196,7 @@ nsChromeRegistryChrome::Observe(nsISupports* aSubject, const char* aTopic,
                                 const char16_t* someData) {
   nsresult rv = NS_OK;
 
-  if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
-    nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject));
-    NS_ASSERTION(prefs, "Bad observer call!");
-
-    NS_ConvertUTF16toUTF8 pref(someData);
-
-    if (pref.EqualsLiteral(SELECTED_SKIN_PREF)) {
-      nsAutoCString provider;
-      rv = prefs->GetCharPref(pref.get(), provider);
-      if (NS_FAILED(rv)) {
-        NS_ERROR("Couldn't get new skin pref!");
-        return rv;
-      }
-
-      mSelectedSkin = provider;
-      RefreshSkins();
-    } else {
-      NS_ERROR("Unexpected pref!");
-    }
-  } else if (!strcmp("profile-initial-state", aTopic)) {
+  if (!strcmp("profile-initial-state", aTopic)) {
     mProfileLoaded = true;
   } else if (!strcmp("intl:app-locales-changed", aTopic)) {
     if (mProfileLoaded) {
@@ -308,7 +245,7 @@ void nsChromeRegistryChrome::SendRegisteredChrome(
   for (auto iter = mPackagesHash.Iter(); !iter.Done(); iter.Next()) {
     ChromePackage chromePackage;
     ChromePackageFromPackageEntry(iter.Key(), iter.UserData(), &chromePackage,
-                                  mSelectedSkin);
+                                  SKIN);
     packages.AppendElement(chromePackage);
   }
 
@@ -402,7 +339,7 @@ nsIURI* nsChromeRegistryChrome::GetBaseURIFromPackage(
     LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
     return entry->locales.GetBase(appLocale, nsProviderArray::LOCALE);
   } else if (aProvider.EqualsLiteral("skin")) {
-    return entry->skins.GetBase(mSelectedSkin, nsProviderArray::ANY);
+    return entry->skins.GetBase(SKIN, nsProviderArray::ANY);
   } else if (aProvider.EqualsLiteral("content")) {
     return entry->baseURI;
   }
@@ -554,8 +491,7 @@ void nsChromeRegistryChrome::ManifestContent(ManifestProcessingContext& cx,
 
   if (mDynamicRegistration) {
     ChromePackage chromePackage;
-    ChromePackageFromPackageEntry(packageName, entry, &chromePackage,
-                                  mSelectedSkin);
+    ChromePackageFromPackageEntry(packageName, entry, &chromePackage, SKIN);
     SendManifestEntry(chromePackage);
   }
 }
@@ -591,8 +527,7 @@ void nsChromeRegistryChrome::ManifestLocale(ManifestProcessingContext& cx,
 
   if (mDynamicRegistration) {
     ChromePackage chromePackage;
-    ChromePackageFromPackageEntry(packageName, entry, &chromePackage,
-                                  mSelectedSkin);
+    ChromePackageFromPackageEntry(packageName, entry, &chromePackage, SKIN);
     SendManifestEntry(chromePackage);
   }
 
@@ -638,8 +573,7 @@ void nsChromeRegistryChrome::ManifestSkin(ManifestProcessingContext& cx,
 
   if (mDynamicRegistration) {
     ChromePackage chromePackage;
-    ChromePackageFromPackageEntry(packageName, entry, &chromePackage,
-                                  mSelectedSkin);
+    ChromePackageFromPackageEntry(packageName, entry, &chromePackage, SKIN);
     SendManifestEntry(chromePackage);
   }
 }

@@ -11,6 +11,7 @@ const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const PREF_TEST_NOTIFICATIONS = "browser.safebrowsing.test-notifications.enabled";
 const STRICT_PREF = "browser.contentblocking.features.strict";
+const PRIVACY_PAGE = "about:preferences#privacy";
 
 const {
   EnterprisePolicyTesting,
@@ -489,5 +490,47 @@ add_task(async function testContentBlockingReloadWarning() {
   ok(!BrowserTestUtils.is_hidden(strictWarning), "The warning in the strict section should be showing");
 
   Services.prefs.setStringPref(CAT_PREF, "standard");
+  gBrowser.removeCurrentTab();
+});
+
+// Tests that changing a content blocking pref does not show the content blocking warning
+// if it is the only tab.
+add_task(async function testContentBlockingReloadWarning() {
+  Services.prefs.setStringPref(CAT_PREF, "standard");
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, PRIVACY_PAGE);
+
+  let reloadWarnings = [...gBrowser.contentDocument.querySelectorAll(".content-blocking-warning.reload-tabs")];
+  ok(reloadWarnings.every((el) => el.hidden), "all of the warnings to reload tabs are initially hidden");
+
+  is(BrowserWindowTracker.windowCount, 1, "There is only one window open");
+  is(gBrowser.tabs.length, 1, "There is only one tab open");
+  Services.prefs.setStringPref(CAT_PREF, "strict");
+
+  ok(reloadWarnings.every((el) => el.hidden), "all of the warnings to reload tabs are still hidden");
+  Services.prefs.setStringPref(CAT_PREF, "standard");
+  await BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:newtab");
+});
+
+// Checks that the reload tabs message reloads all tabs except the active tab.
+add_task(async function testReloadTabsMessage() {
+  Services.prefs.setStringPref(CAT_PREF, "strict");
+  let exampleTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+  let standardWarning = doc.querySelector("#contentBlockingOptionStandard .content-blocking-warning.reload-tabs");
+  let standardReloadButton = doc.querySelector("#contentBlockingOptionStandard .reload-tabs-button");
+
+  Services.prefs.setStringPref(CAT_PREF, "standard");
+  ok(!BrowserTestUtils.is_hidden(standardWarning), "The warning in the standard section should be showing");
+
+  standardReloadButton.click();
+  // The example page had a load event
+  await BrowserTestUtils.browserLoaded(exampleTab.linkedBrowser);
+
+  ok(BrowserTestUtils.is_hidden(standardWarning), "The warning in the standard section should have hidden after being clicked");
+
+  // cleanup
+  Services.prefs.setStringPref(CAT_PREF, "standard");
+  gBrowser.removeTab(exampleTab);
   gBrowser.removeCurrentTab();
 });
