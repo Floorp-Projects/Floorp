@@ -562,7 +562,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     private fun setToolbarBehavior(loading: Boolean) {
         if (sessionId?.let { sessionId ->
-                requireComponents.core.sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true
+                context?.components?.core?.sessionManager?.findSessionById(sessionId)?.isCustomTabSession() == true
             } == true) return
         val toolbarView = toolbarComponent.uiView.view
         (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
