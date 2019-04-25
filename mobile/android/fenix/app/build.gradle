@@ -31,6 +31,7 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         manifestPlaceholders.isRaptorEnabled = "false"
         buildConfigField "boolean", "IS_RELEASED", "false"
+        resValue "bool", "IS_NOT_RELEASED", "true"
     }
 
     def releaseTemplate = {
@@ -53,9 +54,11 @@ android {
         }
         nightly releaseTemplate >> {
             buildConfigField "boolean", "IS_RELEASED", "true"
+            resValue "bool", "IS_NOT_RELEASED", "false"
         }
         beta releaseTemplate >> {
             buildConfigField "boolean", "IS_RELEASED", "true"
+            resValue "bool", "IS_NOT_RELEASED", "false"
         }
     }
 

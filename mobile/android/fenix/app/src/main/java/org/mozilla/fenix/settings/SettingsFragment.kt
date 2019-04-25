@@ -198,7 +198,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         preferenceMakeDefaultBrowser?.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
 
-        preferenceLeakCanary?.isVisible = !BuildConfig.IS_RELEASED
         if (!BuildConfig.IS_RELEASED) {
             preferenceLeakCanary?.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _, newValue ->
