@@ -78,7 +78,8 @@ import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
+class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
+    AccessibilityManager.TouchExplorationStateChangeListener {
     private lateinit var toolbarComponent: ToolbarComponent
 
     private var sessionObserver: Session.Observer? = null
@@ -304,8 +305,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     @Suppress("ComplexMethod")
     override fun onStart() {
         super.onStart()
-        setToolbarBehavior(false)
         sessionObserver = subscribeToSession()
+        updateToolbar()
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
@@ -566,6 +567,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
         requireComponents.core.sessionManager.selectedSession?.register(observer)
         return observer
+    }
+
+    override fun onTouchExplorationStateChanged(enabled: Boolean) {
+        updateToolbar()
+    }
+
+    private fun updateToolbar() {
+        getSessionById()?.loading?.let {
+            setToolbarBehavior(it)
+        }
     }
 
     private fun setToolbarBehavior(loading: Boolean) {
