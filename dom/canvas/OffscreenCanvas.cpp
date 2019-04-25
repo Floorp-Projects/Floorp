@@ -251,13 +251,17 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
 
   RefPtr<EncodeCompleteCallback> callback = new EncodeCallback(global, promise);
 
-  // TODO: Can we obtain the context and document here somehow
-  // so that we can decide when usePlaceholder should be true/false?
-  // See https://trac.torproject.org/18599
-  // For now, we always return a placeholder if fingerprinting resistance is on.
-  dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
-  bool usePlaceholder =
-      nsContentUtils::ShouldResistFingerprinting(workerPrivate->GetPrincipal());
+  bool usePlaceholder;
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetGlobalObject());
+    Document* doc = window->GetExtantDoc();
+    usePlaceholder =
+        doc ? nsContentUtils::ShouldResistFingerprinting(doc) : false;
+  } else {
+    dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
+    usePlaceholder = nsContentUtils::ShouldResistFingerprinting(
+        workerPrivate->GetPrincipal());
+  }
   CanvasRenderingContextHelper::ToBlob(aCx, global, callback, aType, aParams,
                                        usePlaceholder, aRv);
 
