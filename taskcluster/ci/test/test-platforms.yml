@@ -60,6 +60,7 @@ linux64-shippable/opt:
         - talos
         - awsy
         - mochitest-headless
+        - marionette-headless
         - linux-talos-flex
         - raptor-chromium
         - raptor-fetch-chromium

@@ -24,7 +24,6 @@ common-tests:
     - jittest
     - jsreftest
     - marionette
-    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -232,7 +231,6 @@ windows-tests:
     - jittest
     - jsreftest
     - marionette
-    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -259,7 +257,6 @@ windows-aarch64-tests:
     - jittest
     - jsreftest
     - marionette
-    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -310,7 +307,6 @@ macosx64-tests:
     - jittest
     - jsreftest
     - marionette
-    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -438,6 +434,9 @@ devtools-tests:
 
 mochitest-headless:
     - mochitest-plain-headless
+
+marionette-headless:
+    - marionette-headless
 
 android-hw-arm7-opt-unittests:
     - jittest
