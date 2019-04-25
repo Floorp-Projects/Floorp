@@ -291,7 +291,7 @@ interface nsIEditor  : nsISupports
     * the selected text (if any)
     */
   [can_run_script]
-  void paste(in long aSelectionType);
+  void paste(in long aClipboardType);
 
   /** Paste the text in |aTransferable| at the cursor position, replacing the
     * selected text (if any).
@@ -302,7 +302,7 @@ interface nsIEditor  : nsISupports
   /** Can we paste? True if the doc is modifiable, and we have
     * pasteable data in the clipboard.
     */
-  boolean canPaste(in long aSelectionType);
+  boolean canPaste(in long aClipboardType);
 
   /* ------------ Selection methods -------------- */
 
