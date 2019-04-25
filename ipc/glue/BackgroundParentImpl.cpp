@@ -17,6 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/EndpointForReportParent.h"
+#include "mozilla/dom/FileCreatorParent.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
@@ -30,7 +31,6 @@
 #include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/ipc/FileCreatorParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
@@ -541,17 +541,16 @@ bool BackgroundParentImpl::DeallocPSharedWorkerParent(
   return true;
 }
 
-PFileCreatorParent* BackgroundParentImpl::AllocPFileCreatorParent(
+dom::PFileCreatorParent* BackgroundParentImpl::AllocPFileCreatorParent(
     const nsString& aFullPath, const nsString& aType, const nsString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
-  RefPtr<mozilla::dom::FileCreatorParent> actor =
-      new mozilla::dom::FileCreatorParent();
+  RefPtr<dom::FileCreatorParent> actor = new dom::FileCreatorParent();
   return actor.forget().take();
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
-    PFileCreatorParent* aActor, const nsString& aFullPath,
+    dom::PFileCreatorParent* aActor, const nsString& aFullPath,
     const nsString& aType, const nsString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
@@ -566,14 +565,13 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
     NS_ReleaseOnMainThreadSystemGroup("ContentParent release", parent.forget());
   }
 
-  mozilla::dom::FileCreatorParent* actor =
-      static_cast<mozilla::dom::FileCreatorParent*>(aActor);
+  dom::FileCreatorParent* actor = static_cast<dom::FileCreatorParent*>(aActor);
 
   // We allow the creation of File via this IPC call only for the 'file' process
   // or for testing.
   if (!isFileRemoteType && !StaticPrefs::dom_file_createInChild()) {
-    Unused << mozilla::dom::FileCreatorParent::Send__delete__(
-        actor, FileCreationErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
+    Unused << dom::FileCreatorParent::Send__delete__(
+        actor, dom::FileCreationErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
     return IPC_OK();
   }
 
@@ -582,9 +580,9 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPFileCreatorConstructor(
 }
 
 bool BackgroundParentImpl::DeallocPFileCreatorParent(
-    PFileCreatorParent* aActor) {
-  RefPtr<mozilla::dom::FileCreatorParent> actor =
-      dont_AddRef(static_cast<mozilla::dom::FileCreatorParent*>(aActor));
+    dom::PFileCreatorParent* aActor) {
+  RefPtr<dom::FileCreatorParent> actor =
+      dont_AddRef(static_cast<dom::FileCreatorParent*>(aActor));
   return true;
 }
 
