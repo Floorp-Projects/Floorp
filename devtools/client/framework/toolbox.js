@@ -218,10 +218,8 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
    * call it only once.
    */
   loader.lazyGetter(this, "direction", () => {
-    // Get the direction from browser.xul document
-    const top = this.topWindow;
-    const topDocEl = top.document.documentElement;
-    const isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
+    const { documentElement } = this.doc;
+    const isRtl = this.win.getComputedStyle(documentElement).direction === "rtl";
     return isRtl ? "rtl" : "ltr";
   });
 }
