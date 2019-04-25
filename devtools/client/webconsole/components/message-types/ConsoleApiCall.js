@@ -82,7 +82,7 @@ function ConsoleApiCall(props) {
     ];
   } else if (type === "assert") {
     const reps = formatReps(messageBodyConfig);
-    messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
+    messageBody = dom.span({}, "Assertion failed: ", reps);
   } else if (type === "table") {
     // TODO: Chrome does not output anything, see if we want to keep this
     messageBody = dom.span({className: "cm-variable"}, "console.table()");
