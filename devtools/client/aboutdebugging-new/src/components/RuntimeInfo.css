@@ -21,7 +21,7 @@
   grid-column-gap: var(--main-heading-icon-gap);
   grid-template-areas:
   "icon title    action"
-  "icon subtitle action";
+  "icon subtitle .";
   grid-template-columns: var(--main-heading-icon-size) 1fr max-content;
   grid-template-rows: 1fr max-content;
 
@@ -38,9 +38,5 @@
   grid-area: subtitle;
 }
 .runtime-info__action {
-  align-self: start;
-  /* The default-button has a font-size of 1em at the moment, this rule should not be
-   * necessary after the first patch from Bug 1525615 lands. */
-  font-size: var(--base-font-size);
   grid-area: action;
 }

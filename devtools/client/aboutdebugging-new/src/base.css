@@ -27,11 +27,13 @@
   --link-color-hover: #0060df;
 
   /* Colors from Photon */
-  --success-50: #30e60b;
-  --warning-50: #ffe900;
-  --warning-90: #3e2800;
-  --error-50: #ff0039;
-  --error-60: #d70022;
+  --success-background: #30e60b;
+  --warning-background: #fffbd6; /* from the Web Console */
+  --warning-icon: var(--yellow-65); /* from the Web Console */
+  --warning-text: var(--yellow-80); /* from the Web Console */
+  --error-background: #fdf2f5; /* from the Web Console */
+  --error-icon: var(--red-60); /* from the Web Console */
+  --error-text: var(--red-70); /* from the Web Console */
   --highlight-50: #0a84ff;
   --grey-20: #ededf0; /* for ui, no special semantic */
   --grey-30: #d7d7db; /* for ui, no special semantic */
@@ -43,7 +45,6 @@
   --grey-90-a60: rgba(12, 12, 13, 0.6);
   --grey-90-a80: rgba(12, 12, 13, 0.8);
   --red-70: #a4000f; /* for ui, no special semantic */
-  --red-80: #5a0002; /* for ui, no special semantic */
   --white-100: #fff; /* for ui, no special semantic */
   --yellow-60: #d7b600; /* for ui, no special semantic */
   --yellow-70: #a47f00; /* for ui, no special semantic */
@@ -60,8 +61,8 @@
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
   --caption-20-color: var(--grey-50);
-  --display-20-font-size: 36px;
-  --display-20-font-weight: 200;
+  --display-10-font-size: 28px;
+  --display-10-font-weight: 200;
   --title-20-font-size: 17px;
   --title-20-font-weight: 600;
   --title-30-font-size: 22px;
@@ -178,8 +179,8 @@ p, h1 {
 
 /* Main style for heading (i.e. h1) */
 .main-heading {
-  font-size: var(--display-20-font-size);
-  font-weight: var(--display-20-font-weight);
+  font-size: var(--display-10-font-size);
+  font-weight: var(--display-10-font-weight);
   line-height: 1.2;
   color: var(--in-content-text-color);
 }
@@ -222,6 +223,11 @@ p, h1 {
 
   margin-block-start: 0;
   margin-block-end: calc(var(--base-unit) * 4);
+}
+
+.alt-heading--larger {
+  font-size: var(--title-30-font-size);
+  font-weight: var(--title-30-font-weight);
 }
 
 /* Alternative style for a subheading (i.e. h2). It features an icon */
@@ -395,15 +401,15 @@ Form controls
 }
 
 .badge--success {
-  background: var(--success-50);
+  background: var(--success-background);
 }
 
 .badge--warning {
-  background: var(--warning-50);
+  background: var(--warning-background);
 }
 
 .badge--error {
-  background: var(--error-50);
+  background: var(--error-background);
 }
 
 /*
@@ -413,7 +419,7 @@ Form controls
   background-color: var(--white-100); /* from common.inc.css */
   border-radius: var(--card-shadow-blur-radius); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
-  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+  padding-block: calc(var(--base-unit) * 5);
 }
 
 .card__heading {

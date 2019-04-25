@@ -35,7 +35,7 @@ class DebugTargetList extends PureComponent {
       {
         id: "about-debugging-debug-target-list-empty",
       },
-      dom.span(
+      dom.p(
         {
           className: "js-debug-target-list-empty",
         },
@@ -53,22 +53,23 @@ class DebugTargetList extends PureComponent {
       targets,
     } = this.props;
 
-    return dom.ul(
-      {
-        className: "debug-target-list js-debug-target-list",
-      },
-      targets.length === 0
-        ? this.renderEmptyList()
-        : targets.map((target, key) =>
-            DebugTargetItem({
-              actionComponent,
-              additionalActionsComponent,
-              detailComponent,
-              dispatch,
-              key,
-              target,
-            })),
-    );
+    return targets.length === 0
+      ? this.renderEmptyList()
+      : dom.ul(
+        {
+          className: "debug-target-list js-debug-target-list",
+        },
+        targets.map((target, key) =>
+          DebugTargetItem({
+            actionComponent,
+            additionalActionsComponent,
+            detailComponent,
+            dispatch,
+            key,
+            target,
+          })
+        ),
+      );
   }
 }
 
