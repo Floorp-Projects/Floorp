@@ -4284,6 +4284,27 @@ bool CacheIRCompiler::emitCallNumberToString() {
   return true;
 }
 
+bool CacheIRCompiler::emitBooleanToString() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register boolean = allocator.useRegister(masm, reader.int32OperandId());
+  Register result = allocator.defineRegister(masm, reader.stringOperandId());
+  const JSAtomState& names = cx_->names();
+  Label true_, done;
+
+  masm.branchTest32(Assembler::NonZero, boolean, boolean, &true_);
+
+  // False case
+  masm.movePtr(ImmGCPtr(names.false_), result);
+  masm.jump(&done);
+
+  // True case
+  masm.bind(&true_);
+  masm.movePtr(ImmGCPtr(names.true_), result);
+  masm.bind(&done);
+
+  return true;
+}
+
 void js::jit::LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout,
                                  Register obj, Register result) {
   switch (layout) {

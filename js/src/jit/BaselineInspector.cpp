@@ -284,6 +284,7 @@ static MIRType ParseCacheIRStub(ICStub* stub) {
     case CacheOp::CallStringConcatResult:
     case CacheOp::CallStringObjectConcatResult:
     case CacheOp::CallInt32ToString:
+    case CacheOp::BooleanToString:
     case CacheOp::CallNumberToString:
       return MIRType::String;
     case CacheOp::DoubleAddResult:

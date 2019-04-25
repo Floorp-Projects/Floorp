@@ -126,6 +126,7 @@ namespace jit {
   _(CallObjectHasSparseElementResult)     \
   _(CallInt32ToString)                    \
   _(CallNumberToString)                   \
+  _(BooleanToString)                      \
   _(CallIsSuspendedGeneratorResult)       \
   _(MetaTwoByte)                          \
   _(WrapResult)

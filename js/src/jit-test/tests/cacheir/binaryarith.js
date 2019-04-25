@@ -50,6 +50,11 @@ var funAdd6 = (a, b) => { return a + b; }
 warmup(funAdd6, [["x", 10, "x10"], [10, "bba", "10bba"], ["x", 1.2, "x1.2"],
                  [1.2, "bba", "1.2bba"]]);
 
+// Add: String Boolean
+var funAddStrBool = (a, b) => { return a + b; }
+warmup(funAddStrBool, [[true, "true", "truetrue"], [false, "true", "falsetrue"],
+  ["a string", true, "a stringtrue"]]);
+
 // Sub Int32
 var funSub1 = (a, b) => { return a - b; }
 warmup(funSub1, [[7, 0, 7], [7, 8, -1], [4294967295, 2, 4294967293], [0,0,0]]);
