@@ -112,7 +112,7 @@ void nsContainerFrame::AppendFrames(ChildListID aListID,
   mFrames.AppendFrames(this, aFrameList);
 
   if (aListID != kNoReflowPrincipalList) {
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
@@ -132,7 +132,7 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
   if (aListID != kNoReflowPrincipalList) {
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
   }
 }
@@ -167,7 +167,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     parent->StealFrame(continuation);
     continuation->Destroy();
     if (generateReflowCommand && parent != lastParent) {
-      presShell->FrameNeedsReflow(parent, nsIPresShell::eTreeChange,
+      presShell->FrameNeedsReflow(parent, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
       lastParent = parent;
     }

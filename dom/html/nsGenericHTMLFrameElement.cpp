@@ -296,7 +296,7 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
                 presShell ? presShell->GetRootScrollFrame() : nullptr;
             if (rootScroll) {
               presShell->FrameNeedsReflow(
-                  rootScroll, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+                  rootScroll, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
             }
           }
         }

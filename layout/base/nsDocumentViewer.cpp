@@ -2766,7 +2766,7 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
     nsIPageSequenceFrame* pf = presShell->GetPageSequenceFrame();
     if (pf) {
       nsIFrame* f = do_QueryFrame(pf);
-      presShell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(f, IntrinsicDirty::Resize, NS_FRAME_IS_DIRTY);
     }
 
     nsIFrame* rootFrame = presShell->GetRootFrame();
