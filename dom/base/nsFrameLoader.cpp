@@ -3043,10 +3043,10 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
 }
 
-void nsFrameLoader::SetRemoteBrowser(nsIRemoteTab* aBrowserParent) {
+void nsFrameLoader::InitializeFromBrowserParent(BrowserParent* aBrowserParent) {
   MOZ_ASSERT(!mBrowserParent);
   mIsRemoteFrame = true;
-  mBrowserParent = BrowserParent::GetFrom(aBrowserParent);
+  mBrowserParent = aBrowserParent;
   mChildID = mBrowserParent ? mBrowserParent->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
   ReallyLoadFrameScripts();
