@@ -37,9 +37,10 @@ include protocol PAltDataOutputStream;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
-using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
+using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
+
 
 namespace mozilla {
 namespace net {
@@ -80,7 +81,7 @@ parent:
   async PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext,
                    uint32_t aSerialID);
   async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
-  async PUDPSocket(Principal principal, nsCString filter);
+  async PUDPSocket(nsIPrincipal principal, nsCString filter);
 
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
                     uint32_t flags);
@@ -95,7 +96,7 @@ parent:
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 
-  async SpeculativeConnect(URIParams uri, Principal principal, bool anonymous);
+  async SpeculativeConnect(URIParams uri, nsIPrincipal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
                         OriginAttributes originAttributes, uint16_t flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,

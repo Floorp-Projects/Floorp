@@ -122,8 +122,8 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
  public:
   ContentPermissionRequestParent(
       const nsTArray<PermissionRequest>& aRequests, Element* aElement,
-      const IPC::Principal& aPrincipal,
-      const IPC::Principal& aTopLevelPrincipal, const bool aIsHandlingUserInput,
+      nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
+      const bool aIsHandlingUserInput,
       const bool aUserHadInteractedWithDocument,
       const DOMTimeStamp aDocumentDOMContentLoadedTimestamp);
   virtual ~ContentPermissionRequestParent();
@@ -151,7 +151,7 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
 
 ContentPermissionRequestParent::ContentPermissionRequestParent(
     const nsTArray<PermissionRequest>& aRequests, Element* aElement,
-    const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
+    nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
     const bool aIsHandlingUserInput, const bool aUserHadInteractedWithDocument,
     const DOMTimeStamp aDocumentDOMContentLoadedTimestamp) {
   MOZ_COUNT_CTOR(ContentPermissionRequestParent);
@@ -328,7 +328,7 @@ nsresult nsContentPermissionUtils::CreatePermissionArray(
 PContentPermissionRequestParent*
 nsContentPermissionUtils::CreateContentPermissionRequestParent(
     const nsTArray<PermissionRequest>& aRequests, Element* aElement,
-    const IPC::Principal& aPrincipal, const IPC::Principal& aTopLevelPrincipal,
+    nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
     const bool aIsHandlingUserInput, const bool aUserHadInteractedWithDocument,
     const DOMTimeStamp aDocumentDOMContentLoadedTimestamp,
     const TabId& aTabId) {
