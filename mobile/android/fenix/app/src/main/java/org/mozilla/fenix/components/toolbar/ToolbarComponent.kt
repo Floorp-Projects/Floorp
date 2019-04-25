@@ -36,6 +36,8 @@ class ToolbarComponent(
 
     override val reducer: Reducer<SearchState, SearchChange> = { state, change ->
         when (change) {
+            is SearchChange.ToolbarClearedFocus -> state.copy(focused = false)
+            is SearchChange.ToolbarRequestedFocus -> state.copy(focused = true)
             is SearchChange.SearchShortcutEngineSelected ->
                 state.copy(engine = change.engine)
         }
@@ -75,7 +77,8 @@ data class SearchState(
     val query: String,
     val searchTerm: String,
     val isEditing: Boolean,
-    val engine: SearchEngine? = null
+    val engine: SearchEngine? = null,
+    val focused: Boolean = isEditing
 ) : ViewState
 
 sealed class SearchAction : Action {
@@ -88,5 +91,7 @@ sealed class SearchAction : Action {
 }
 
 sealed class SearchChange : Change {
+    object ToolbarRequestedFocus : SearchChange()
+    object ToolbarClearedFocus : SearchChange()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchChange()
 }

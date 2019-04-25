@@ -11,12 +11,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
@@ -38,7 +40,8 @@ import org.mozilla.fenix.search.awesomebar.AwesomeBarChange
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComponent
 import org.mozilla.fenix.search.awesomebar.AwesomeBarUIView
 
-class SearchFragment : Fragment() {
+@Suppress("TooManyFunctions")
+class SearchFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
     private lateinit var awesomeBarComponent: AwesomeBarComponent
     private var sessionId: String? = null
@@ -93,6 +96,7 @@ class SearchFragment : Fragment() {
         )
 
         view.search_scan_button.setOnClickListener {
+            getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarClearedFocus)
             qrFeature.get()?.scan(R.id.container)
         }
 
@@ -115,13 +119,30 @@ class SearchFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarRequestedFocus)
         (activity as AppCompatActivity).supportActionBar?.hide()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarClearedFocus)
     }
 
     override fun onStart() {
         super.onStart()
         subscribeToSearchActions()
         subscribeToAwesomeBarActions()
+    }
+
+    override fun onBackPressed(): Boolean {
+        return when {
+            qrFeature.onBackPressed() -> {
+                view?.search_scan_button?.isChecked = false
+                getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarRequestedFocus)
+                true
+            }
+            else -> false
+        }
     }
 
     private fun subscribeToSearchActions() {

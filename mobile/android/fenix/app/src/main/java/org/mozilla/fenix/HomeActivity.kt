@@ -4,14 +4,12 @@
 
 package org.mozilla.fenix
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
@@ -87,11 +85,6 @@ open class HomeActivity : AppCompatActivity() {
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
-    override fun onResume() {
-        super.onResume()
-        showSoftwareKeyboardIfNecessary()
-    }
-
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleCrashIfNecessary(intent)
@@ -116,29 +109,6 @@ open class HomeActivity : AppCompatActivity() {
             }
         }
         super.onBackPressed()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        hideSoftwareKeyboardIfNecessary()
-    }
-
-    private fun showSoftwareKeyboardIfNecessary() {
-        if (navHost.navController.currentDestination?.id != R.id.searchFragment) { return }
-        (getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager).apply {
-            currentFocus?.also {
-                this.showSoftInput(it, 0)
-            }
-        }
-    }
-
-    private fun hideSoftwareKeyboardIfNecessary() {
-        if (navHost.navController.currentDestination?.id != R.id.searchFragment) { return }
-        (getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager).apply {
-            currentFocus?.also {
-                this.hideSoftInputFromWindow(it.windowToken, 0)
-            }
-        }
     }
 
     private fun handleCrashIfNecessary(intent: Intent?) {

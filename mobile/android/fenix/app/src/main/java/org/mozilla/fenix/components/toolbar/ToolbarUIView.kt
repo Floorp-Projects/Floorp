@@ -113,19 +113,25 @@ class ToolbarUIView(
     }
 
     override fun updateView() = Consumer<SearchState> {
-        if (shouldUpdateEngineIcon(it)) {
-            updateEngineIcon(it)
+        var newState = it
+        if (shouldUpdateEngineIcon(newState)) {
+            updateEngineIcon(newState)
         }
 
         if (shouldClearSearchURL(it)) {
-            clearSearchURL()
+            newState = SearchState("", "", it.isEditing, it.engine, it.focused)
         }
 
-        if (shouldUpdateEditingState(it)) {
-            updateEditingState(it)
+        // Need to set edit mode if the url value was cleared
+        if (newState.focused || shouldClearSearchURL(it) || shouldUpdateEditingState(newState)) {
+            updateEditingState(newState)
         }
 
-        state = it
+        if (!newState.focused) {
+            view.clearFocus()
+        }
+
+        state = newState
     }
 
     private fun shouldUpdateEngineIcon(newState: SearchState): Boolean {
@@ -145,16 +151,20 @@ class ToolbarUIView(
     }
 
     private fun shouldClearSearchURL(newState: SearchState): Boolean {
-        return newState.engine != state?.engine && view.url == newState.query
-    }
+        with(view.context) {
+            val defaultEngine = this
+                .components
+                .search
+                .searchEngineManager
+                .defaultSearchEngine
 
-    private fun clearSearchURL() {
-        view.url = ""
-        view.editMode()
+            return (newState.engine != null && newState.engine != defaultEngine) ||
+                    (state?.engine != null && state?.engine != defaultEngine)
+        }
     }
 
     private fun shouldUpdateEditingState(newState: SearchState): Boolean {
-        return !engineDidChange(newState)
+        return !engineDidChange(newState) && (state?.isEditing != newState.isEditing)
     }
 
     private fun updateEditingState(newState: SearchState) {
