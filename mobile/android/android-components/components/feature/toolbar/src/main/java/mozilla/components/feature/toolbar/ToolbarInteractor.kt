@@ -6,7 +6,8 @@ package mozilla.components.feature.toolbar
 
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.utils.URLStringUtils
+import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 
 /**
  * Connects a toolbar instance to the browser engine via use cases
@@ -24,8 +25,8 @@ class ToolbarInteractor(
      */
     fun start() {
         toolbar.setOnUrlCommitListener { text ->
-            if (URLStringUtils.isURLLike(text)) {
-                loadUrlUseCase.invoke(URLStringUtils.toNormalizedURL(text))
+            if (text.isUrl()) {
+                loadUrlUseCase.invoke(text.toNormalizedUrl())
             } else {
                 searchUseCase?.invoke(text) ?: loadUrlUseCase.invoke(text)
             }

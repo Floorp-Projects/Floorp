@@ -28,6 +28,7 @@ dependencies {
     implementation Dependencies.support_compat
 
     implementation project(':support-base')
+    implementation project(':support-utils')
 
     testImplementation project(':support-test')
     testImplementation Dependencies.androidx_test_core

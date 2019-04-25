@@ -69,7 +69,7 @@ permalink: /changelog/
       installedExt.registerContentMessageHandler(session, EXTENSION_ID, messageHandler)
 
       // To listen to message events from background scripts call:
-      installedExt.registerBackgroundMessageHandler(EXTENSION_ID, messageHandler)  
+      installedExt.registerBackgroundMessageHandler(EXTENSION_ID, messageHandler)
     ```
 
 * **browser-icons**
@@ -93,9 +93,8 @@ permalink: /changelog/
   * Add `URLStringUtils` to unify parsing of strings that may be URLs.
 
 * **support-ktx**
-  * ⚠️ **This is a breaking API change**:
-    - **Removed**: `String.isUrl()` and `String.toNormalizedUrl()`
-    - use `URLStringUtils` `isURLLike()` and `toNormalizedURL()` instead.
+    - Add `URLStringUtils` `isURLLike()` and `toNormalizedURL()`.
+    - Update the implementation for `String.isUrl()` and `String.toNormalizedUrl()` to the new one above.
 
 * **concept-sync**
   * ⚠️ **This is a breaking API change**

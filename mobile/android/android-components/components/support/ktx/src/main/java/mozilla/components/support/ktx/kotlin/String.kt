@@ -5,6 +5,7 @@
 package mozilla.components.support.ktx.kotlin
 
 import android.net.Uri
+import mozilla.components.support.utils.URLStringUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -17,6 +18,13 @@ private val re = object {
     val emailish = "^\\s*mailto:\\w+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
     val geoish = "^\\s*geo:\\S*\\d+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
 }
+
+/**
+ * Checks if this String is a URL.
+ */
+fun String.isUrl() = URLStringUtils.isURLLike(this)
+
+fun String.toNormalizedUrl() = URLStringUtils.toNormalizedURL(this)
 
 fun String.isPhone() = re.phoneish.matches(this)
 
