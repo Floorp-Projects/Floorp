@@ -3361,7 +3361,7 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
   script->setFlag(MutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
 
-  if (cx->runtime()->lcovOutput().isEnabled()) {
+  if (coverage::IsLCovEnabled()) {
     if (!script->initScriptName(cx)) {
       return nullptr;
     }
@@ -3714,8 +3714,8 @@ void JSScript::finalize(FreeOp* fop) {
 
   // Collect code coverage information for this script and all its inner
   // scripts, and store the aggregated information on the realm.
-  MOZ_ASSERT_IF(hasScriptName(), fop->runtime()->lcovOutput().isEnabled());
-  if (fop->runtime()->lcovOutput().isEnabled() && hasScriptName()) {
+  MOZ_ASSERT_IF(hasScriptName(), coverage::IsLCovEnabled());
+  if (coverage::IsLCovEnabled() && hasScriptName()) {
     realm()->lcovOutput.collectCodeCoverageInfo(realm(), this, getScriptName());
     destroyScriptName();
   }
