@@ -6519,7 +6519,7 @@ void nsGridContainerFrame::NoteNewChildren(ChildListID aListID,
     if (aListID == kPrincipalList) {
       pif->AddStateBits(NS_STATE_GRID_DID_PUSH_ITEMS);
     }
-    presShell->FrameNeedsReflow(pif, nsIPresShell::eTreeChange,
+    presShell->FrameNeedsReflow(pif, IntrinsicDirty::TreeChange,
                                 NS_FRAME_IS_DIRTY);
   }
 }
@@ -6745,7 +6745,7 @@ nsGridContainerFrame* nsGridContainerFrame::GetGridFrameWithComputedInfo(
 
       RefPtr<mozilla::PresShell> presShell = gridFrame->PresShell();
       gridFrame->AddStateBits(NS_STATE_GRID_GENERATE_COMPUTED_VALUES);
-      presShell->FrameNeedsReflow(gridFrame, nsIPresShell::eResize,
+      presShell->FrameNeedsReflow(gridFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
       presShell->FlushPendingNotifications(FlushType::Layout);
 

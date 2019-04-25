@@ -887,7 +887,7 @@ void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
   AutoWeakFrame weakBox(aChildBox);
   content->AsElement()->SetAttr(kNameSpaceID_None, attribute, prefValue, true);
   NS_ENSURE_TRUE_VOID(weakBox.IsAlive());
-  aState.PresShell()->FrameNeedsReflow(aChildBox, nsIPresShell::eStyleChange,
+  aState.PresShell()->FrameNeedsReflow(aChildBox, IntrinsicDirty::StyleChange,
                                        NS_FRAME_IS_DIRTY);
 }
 

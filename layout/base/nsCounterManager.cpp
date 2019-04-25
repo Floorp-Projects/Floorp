@@ -192,7 +192,7 @@ void nsCounterList::RecalcAll() {
         node->mPseudoFrame->StyleDisplay()->mDisplay ==
             StyleDisplay::ListItem) {
       auto* shell = node->mPseudoFrame->PresShell();
-      shell->FrameNeedsReflow(node->mPseudoFrame, nsIPresShell::eStyleChange,
+      shell->FrameNeedsReflow(node->mPseudoFrame, IntrinsicDirty::StyleChange,
                               NS_FRAME_IS_DIRTY);
     }
   }

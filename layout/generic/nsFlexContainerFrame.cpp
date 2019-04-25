@@ -4423,7 +4423,7 @@ nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
 
       RefPtr<mozilla::PresShell> presShell = flexFrame->PresShell();
       flexFrame->AddStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES);
-      presShell->FrameNeedsReflow(flexFrame, nsIPresShell::eResize,
+      presShell->FrameNeedsReflow(flexFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
       presShell->FlushPendingNotifications(FlushType::Layout);
 

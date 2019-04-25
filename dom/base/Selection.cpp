@@ -1878,8 +1878,7 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   while (true) {
     didScroll = presShell->ScrollFrameRectIntoView(
         aFrame, nsRect(aPoint, nsSize(0, 0)), nsIPresShell::ScrollAxis(),
-        nsIPresShell::ScrollAxis(),
-        nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+        nsIPresShell::ScrollAxis(), ScrollFlags::IgnoreMarginAndPadding);
     if (!weakFrame || !weakRootFrame) {
       return NS_OK;
     }
@@ -3027,7 +3026,7 @@ nsresult Selection::PostScrollSelectionIntoViewEvent(
 }
 
 void Selection::ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
-                               int16_t aVPercent, int16_t aHPercent,
+                               WhereToScroll aVPercent, WhereToScroll aHPercent,
                                ErrorResult& aRv) {
   int32_t flags = aIsSynchronous ? Selection::SCROLL_SYNCHRONOUS : 0;
   nsresult rv = ScrollIntoView(aRegion, nsIPresShell::ScrollAxis(aVPercent),
@@ -3089,16 +3088,16 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
   // vertical scrollbar or the scroll range is at least one device pixel)
   aVertical.mOnlyIfPerceivedScrollableDirection = true;
 
-  uint32_t flags = nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING;
+  ScrollFlags scrollFlags = ScrollFlags::IgnoreMarginAndPadding;
   if (aFlags & Selection::SCROLL_FIRST_ANCESTOR_ONLY) {
-    flags |= nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY;
+    scrollFlags |= ScrollFlags::ScrollFirstAncestorOnly;
   }
   if (aFlags & Selection::SCROLL_OVERFLOW_HIDDEN) {
-    flags |= nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
+    scrollFlags |= ScrollFlags::ScrollOverflowHidden;
   }
 
   presShell->ScrollFrameRectIntoView(frame, rect, aVertical, aHorizontal,
-                                     flags);
+                                     scrollFlags);
   return NS_OK;
 }
 

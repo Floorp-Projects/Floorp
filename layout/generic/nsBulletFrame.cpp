@@ -1157,7 +1157,7 @@ nsresult nsBulletFrame::OnSizeAvailable(imgIRequest* aRequest,
     // a reflow of the bullet frame.
     mozilla::PresShell* presShell = presContext->GetPresShell();
     if (presShell) {
-      presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+      presShell->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
     }
   }

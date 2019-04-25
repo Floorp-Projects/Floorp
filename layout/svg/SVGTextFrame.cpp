@@ -2973,7 +2973,7 @@ void SVGTextFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     // child to be reflowed when it is next painted, and (b) not cause the
     // <text> to be repainted anyway since the user of the <mask> would not
     // know it needs to be repainted.
-    ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
+    ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
   }
 }
 
@@ -3002,8 +3002,7 @@ void SVGTextFrame::ReflowSVGNonDisplayText() {
   UpdateGlyphPositioning();
 }
 
-void SVGTextFrame::ScheduleReflowSVGNonDisplayText(
-    nsIPresShell::IntrinsicDirty aReason) {
+void SVGTextFrame::ScheduleReflowSVGNonDisplayText(IntrinsicDirty aReason) {
   MOZ_ASSERT(!nsSVGUtils::OuterSVGIsCallingReflowSVG(this),
              "do not call ScheduleReflowSVGNonDisplayText when the outer SVG "
              "frame is under ReflowSVG");
@@ -4988,7 +4987,7 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
 
 void SVGTextFrame::ScheduleReflowSVG() {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
-    ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
+    ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
   } else {
     nsSVGUtils::ScheduleReflowSVG(this);
   }

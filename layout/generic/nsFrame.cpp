@@ -596,7 +596,7 @@ static void MaybeScheduleReflowSVGNonDisplayText(nsFrame* aFrame) {
     return;
   }
 
-  svgTextFrame->ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
+  svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
 }
 
 void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

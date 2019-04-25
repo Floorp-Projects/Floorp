@@ -87,7 +87,7 @@ nsresult nsSVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
           nsChangeHint_InvalidateRenderingObservers);
       nsSVGUtils::ScheduleReflowSVG(this);
       // XXXjwatt: why mark intrinsic widths dirty? can't we just use eResize?
-      RequestReflow(nsIPresShell::eStyleChange);
+      RequestReflow(IntrinsicDirty::StyleChange);
     } else if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nullptr;
@@ -427,7 +427,7 @@ void nsSVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags) {
   // that, nsSVGOuterSVGFrame::DidReflow will take care of reflowing us
   // synchronously, so there's no need.
   if (needReflow && !PresShell()->IsReflowLocked()) {
-    RequestReflow(nsIPresShell::eResize);
+    RequestReflow(IntrinsicDirty::Resize);
   }
 
   if (needNewCanvasTM) {
@@ -476,8 +476,7 @@ gfxMatrix nsSVGForeignObjectFrame::GetCanvasTM() {
 //----------------------------------------------------------------------
 // Implementation helpers
 
-void nsSVGForeignObjectFrame::RequestReflow(
-    nsIPresShell::IntrinsicDirty aType) {
+void nsSVGForeignObjectFrame::RequestReflow(IntrinsicDirty aType) {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
     // If we haven't had a ReflowSVG() yet, nothing to do.
     return;

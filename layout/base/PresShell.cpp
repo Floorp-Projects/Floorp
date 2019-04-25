@@ -198,9 +198,6 @@
 using namespace mozilla::tasktracer;
 #endif
 
-#define ANCHOR_SCROLL_FLAGS \
-  (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
-
 // define the scalfactor of drag and drop images
 // relative to the max screen height/width
 #define RELATIVE_SCALEFACTOR 0.0925f
@@ -1771,7 +1768,7 @@ nsresult PresShell::Initialize() {
     rootFrame->RemoveStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
     NS_ASSERTION(!mDirtyRoots.Contains(rootFrame),
                  "Why is the root in mDirtyRoots already?");
-    FrameNeedsReflow(rootFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    FrameNeedsReflow(rootFrame, IntrinsicDirty::Resize, NS_FRAME_IS_DIRTY);
     NS_ASSERTION(mDirtyRoots.Contains(rootFrame),
                  "Should be in mDirtyRoots now");
     NS_ASSERTION(mObservingLayoutFlushes, "Why no reflow scheduled?");
@@ -2581,7 +2578,7 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
              "Unexpected bits being added");
 
   // FIXME bug 478135
-  NS_ASSERTION(!(aIntrinsicDirty == eStyleChange &&
+  NS_ASSERTION(!(aIntrinsicDirty == IntrinsicDirty::StyleChange &&
                  aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN),
                "bits don't correspond to style change reason");
 
@@ -2627,13 +2624,13 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
     // reflow root if subtreeRoot itself is a reflow root.
     bool targetNeedsReflowFromParent;
     switch (aRootHandling) {
-      case ePositionOrSizeChange:
+      case ReflowRootHandling::PositionOrSizeChange:
         targetNeedsReflowFromParent = true;
         break;
-      case eNoPositionOrSizeChange:
+      case ReflowRootHandling::NoPositionOrSizeChange:
         targetNeedsReflowFromParent = false;
         break;
-      case eInferFromBitToAdd:
+      case ReflowRootHandling::InferFromBitToAdd:
         targetNeedsReflowFromParent = (aBitToAdd == NS_FRAME_IS_DIRTY);
         break;
     }
@@ -2646,7 +2643,7 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
     // Mark the intrinsic widths as dirty on the frame, all of its ancestors,
     // and all of its descendants, if needed:
 
-    if (aIntrinsicDirty != nsIPresShell::eResize) {
+    if (aIntrinsicDirty != IntrinsicDirty::Resize) {
       // Mark argument and all ancestors dirty. (Unless we hit a reflow
       // root that should contain the reflow.  That root could be
       // subtreeRoot itself if it's not dirty, or it could be some
@@ -2664,7 +2661,7 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
       }
     }
 
-    if (aIntrinsicDirty == eStyleChange) {
+    if (aIntrinsicDirty == IntrinsicDirty::StyleChange) {
       // Mark all descendants dirty (using an nsTArray stack rather than
       // recursion).
       // Note that ReflowInput::InitResizeFlags has some similar
@@ -2999,7 +2996,7 @@ already_AddRefed<gfxContext> nsIPresShell::CreateReferenceRenderingContext() {
 }
 
 nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
-                               uint32_t aAdditionalScrollFlags) {
+                               ScrollFlags aAdditionalScrollFlags) {
   if (!mDocument) {
     return NS_ERROR_FAILURE;
   }
@@ -3086,9 +3083,9 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 
   if (content) {
     if (aScroll) {
-      rv = ScrollContentIntoView(content, ScrollAxis(SCROLL_TOP, SCROLL_ALWAYS),
-                                 ScrollAxis(),
-                                 ANCHOR_SCROLL_FLAGS | aAdditionalScrollFlags);
+      rv = ScrollContentIntoView(
+          content, ScrollAxis(kScrollToTop, WhenToScroll::Always), ScrollAxis(),
+          ScrollFlags::AnchorScrollFlags | aAdditionalScrollFlags);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
@@ -3176,9 +3173,9 @@ nsresult PresShell::ScrollToAnchor() {
     return NS_OK;
   }
   nsCOMPtr<nsIContent> lastAnchorScrollTo = mLastAnchorScrolledTo;
-  nsresult rv = ScrollContentIntoView(lastAnchorScrollTo,
-                                      ScrollAxis(SCROLL_TOP, SCROLL_ALWAYS),
-                                      ScrollAxis(), ANCHOR_SCROLL_FLAGS);
+  nsresult rv = ScrollContentIntoView(
+      lastAnchorScrollTo, ScrollAxis(kScrollToTop, WhenToScroll::Always),
+      ScrollAxis(), ScrollFlags::AnchorScrollFlags);
   mLastAnchorScrolledTo = nullptr;
   return rv;
 }
@@ -3261,18 +3258,17 @@ static void AccumulateFrameBounds(nsIFrame* aContainerFrame, nsIFrame* aFrame,
   }
 }
 
-static bool ComputeNeedToScroll(nsIPresShell::WhenToScroll aWhenToScroll,
-                                nscoord aLineSize, nscoord aRectMin,
-                                nscoord aRectMax, nscoord aViewMin,
-                                nscoord aViewMax) {
+static bool ComputeNeedToScroll(WhenToScroll aWhenToScroll, nscoord aLineSize,
+                                nscoord aRectMin, nscoord aRectMax,
+                                nscoord aViewMin, nscoord aViewMax) {
   // See how the rect should be positioned vertically
-  if (nsIPresShell::SCROLL_ALWAYS == aWhenToScroll) {
+  if (WhenToScroll::Always == aWhenToScroll) {
     // The caller wants the frame as visible as possible
     return true;
-  } else if (nsIPresShell::SCROLL_IF_NOT_VISIBLE == aWhenToScroll) {
+  } else if (WhenToScroll::IfNotVisible == aWhenToScroll) {
     // Scroll only if no part of the frame is visible in this view
     return aRectMax - aLineSize <= aViewMin || aRectMin + aLineSize >= aViewMax;
-  } else if (nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE == aWhenToScroll) {
+  } else if (WhenToScroll::IfNotFullyVisible == aWhenToScroll) {
     // Scroll only if part of the frame is hidden and more can fit in view
     return !(aRectMin >= aViewMin && aRectMax <= aViewMax) &&
            std::min(aViewMax, aRectMax) - std::max(aRectMin, aViewMin) <
@@ -3281,14 +3277,14 @@ static bool ComputeNeedToScroll(nsIPresShell::WhenToScroll aWhenToScroll,
   return false;
 }
 
-static nscoord ComputeWhereToScroll(int16_t aWhereToScroll,
+static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
                                     nscoord aOriginalCoord, nscoord aRectMin,
                                     nscoord aRectMax, nscoord aViewMin,
                                     nscoord aViewMax, nscoord* aRangeMin,
                                     nscoord* aRangeMax) {
   nscoord resultCoord = aOriginalCoord;
   nscoord scrollPortLength = aViewMax - aViewMin;
-  if (nsIPresShell::SCROLL_MINIMUM == aWhereToScroll) {
+  if (kScrollMinimum == aWhereToScroll) {
     // Scroll the minimum amount necessary to show as much as possible of the
     // frame. If the frame is too large, don't hide any initially visible part
     // of it.
@@ -3325,7 +3321,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                              const nsRect& aRect,
                              nsIPresShell::ScrollAxis aVertical,
                              nsIPresShell::ScrollAxis aHorizontal,
-                             uint32_t aFlags) {
+                             ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   nsRect visibleRect(scrollPt, aFrameAsScrollable->GetVisualViewportSize());
 
@@ -3335,8 +3331,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // during reflow (because it depends on font size inflation and doesn't
   // use the in-reflow-safe font-size inflation path). If we did call it,
   // it would assert and possible give the wrong result.
-  if (aVertical.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE ||
-      aHorizontal.mWhenToScroll == nsIPresShell::SCROLL_IF_NOT_VISIBLE) {
+  if (aVertical.mWhenToScroll == WhenToScroll::IfNotVisible ||
+      aHorizontal.mWhenToScroll == WhenToScroll::IfNotVisible) {
     lineSize = aFrameAsScrollable->GetLineScrollAmount();
   }
   ScrollStyles ss = aFrameAsScrollable->GetScrollStyles();
@@ -3344,7 +3340,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   bool needToScroll = false;
   uint32_t directions = aFrameAsScrollable->GetPerceivedScrollingDirections();
 
-  if (((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+  if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
        ss.mVertical != StyleOverflow::Hidden) &&
       (!aVertical.mOnlyIfPerceivedScrollableDirection ||
        (directions & nsIScrollableFrame::VERTICAL))) {
@@ -3360,7 +3356,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
     }
   }
 
-  if (((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+  if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
        ss.mHorizontal != StyleOverflow::Hidden) &&
       (!aHorizontal.mOnlyIfPerceivedScrollableDirection ||
        (directions & nsIScrollableFrame::HORIZONTAL))) {
@@ -3383,14 +3379,14 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
     bool autoBehaviorIsSmooth =
         (aFrameAsScrollable->GetScrollStyles().mScrollBehavior ==
          NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
-    bool smoothScroll =
-        (aFlags & nsIPresShell::SCROLL_SMOOTH) ||
-        ((aFlags & nsIPresShell::SCROLL_SMOOTH_AUTO) && autoBehaviorIsSmooth);
+    bool smoothScroll = (aScrollFlags & ScrollFlags::ScrollSmooth) ||
+                        ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
+                         autoBehaviorIsSmooth);
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
       scrollMode = ScrollMode::eSmoothMsd;
     }
     aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
-                                 aFlags & nsIPresShell::SCROLL_SNAP
+                                 aScrollFlags & ScrollFlags::ScrollSnap
                                      ? nsIScrollbarMediator::ENABLE_SNAP
                                      : nsIScrollbarMediator::DISABLE_SNAP);
   }
@@ -3399,7 +3395,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
 nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
                                           nsIPresShell::ScrollAxis aVertical,
                                           nsIPresShell::ScrollAxis aHorizontal,
-                                          uint32_t aFlags) {
+                                          ScrollFlags aScrollFlags) {
   NS_ENSURE_TRUE(aContent, NS_ERROR_NULL_POINTER);
   RefPtr<Document> composedDoc = aContent->GetComposedDoc();
   NS_ENSURE_STATE(composedDoc);
@@ -3413,7 +3409,7 @@ nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
   ScrollIntoViewData* data = new ScrollIntoViewData();
   data->mContentScrollVAxis = aVertical;
   data->mContentScrollHAxis = aHorizontal;
-  data->mContentToScrollToFlags = aFlags;
+  data->mContentToScrollToFlags = aScrollFlags;
   if (NS_FAILED(mContentToScrollTo->SetProperty(
           nsGkAtoms::scrolling, data,
           nsINode::DeleteProperty<PresShell::ScrollIntoViewData>))) {
@@ -3476,8 +3472,7 @@ void PresShell::DoScrollContentIntoView() {
   // Get the scroll-margin here since |frame| is going to be changed to iterate
   // over all continuation frames below.
   nsMargin scrollMargin;
-  if (!(data->mContentToScrollToFlags &
-        nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+  if (!(data->mContentToScrollToFlags & ScrollFlags::IgnoreMarginAndPadding)) {
     scrollMargin = frame->StyleMargin()->GetScrollMargin();
   }
 
@@ -3494,7 +3489,7 @@ void PresShell::DoScrollContentIntoView() {
   nsRect frameBounds;
   bool haveRect = false;
   bool useWholeLineHeightForInlines = data->mContentScrollVAxis.mWhenToScroll !=
-                                      nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
+                                      WhenToScroll::IfNotFullyVisible;
   // Reuse the same line iterator across calls to AccumulateFrameBounds.  We set
   // it every time we detect a new block (stored in prevBlock).
   nsIFrame* prevBlock = nullptr;
@@ -3518,7 +3513,7 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
                                            const nsRect& aRect,
                                            nsIPresShell::ScrollAxis aVertical,
                                            nsIPresShell::ScrollAxis aHorizontal,
-                                           uint32_t aFlags) {
+                                           ScrollFlags aScrollFlags) {
   bool didScroll = false;
   // This function needs to work even if rect has a width or height of 0.
   nsRect rect = aRect;
@@ -3553,13 +3548,13 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
       }
 
       targetRect -= sf->GetScrolledFrame()->GetPosition();
-      if (!(aFlags & nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+      if (!(aScrollFlags & ScrollFlags::IgnoreMarginAndPadding)) {
         nsMargin scrollPadding = sf->GetScrollPadding();
         targetRect.Inflate(scrollPadding);
         targetRect = targetRect.Intersect(sf->GetScrolledRect());
       }
 
-      ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aFlags);
+      ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aScrollFlags);
 
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
@@ -3571,7 +3566,7 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
       }
 
       // only scroll one container when this flag is set
-      if (aFlags & nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY) {
+      if (aScrollFlags & ScrollFlags::ScrollFirstAncestorOnly) {
         break;
       }
     }
@@ -3584,7 +3579,7 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
       rect += container->GetPosition();
       parent = container->GetParent();
     }
-    if (!parent && !(aFlags & nsIPresShell::SCROLL_NO_PARENT_FRAMES)) {
+    if (!parent && !(aScrollFlags & ScrollFlags::ScrollNoParentFrames)) {
       nsPoint extraOffset(0, 0);
       parent = nsLayoutUtils::GetCrossDocParentFrame(container, &extraOffset);
       if (parent) {
@@ -8512,12 +8507,12 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
     rv = MOZ_KnownLive(mPresShell)
              ->ScrollContentIntoView(
                  content,
-                 nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                          nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-                 nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                          nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-                 nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-                     nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+                 nsIPresShell::ScrollAxis(kScrollMinimum,
+                                          WhenToScroll::IfNotVisible),
+                 nsIPresShell::ScrollAxis(kScrollMinimum,
+                                          WhenToScroll::IfNotVisible),
+                 ScrollFlags::ScrollOverflowHidden |
+                     ScrollFlags::IgnoreMarginAndPadding);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
@@ -8576,10 +8571,9 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     LayoutDeviceIntPoint& aTargetPt, nsIWidget* aRootWidget) {
   nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
   MOZ_KnownLive(mPresShell)
-      ->ScrollContentIntoView(
-          focusedContent, ScrollAxis(), ScrollAxis(),
-          nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-              nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+      ->ScrollContentIntoView(focusedContent, ScrollAxis(), ScrollAxis(),
+                              ScrollFlags::ScrollOverflowHidden |
+                                  ScrollFlags::IgnoreMarginAndPadding);
 
   nsPresContext* presContext = GetPresContext();
 
@@ -10667,7 +10661,7 @@ void nsIPresShell::CompleteChangeToVisualViewportSize() {
   if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
     rootScrollFrame->MarkScrollbarsDirtyForReflow();
   }
-  MarkFixedFramesForReflow(nsIPresShell::eResize);
+  MarkFixedFramesForReflow(IntrinsicDirty::Resize);
 
   if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
     window->VisualViewport()->PostResizeEvent();

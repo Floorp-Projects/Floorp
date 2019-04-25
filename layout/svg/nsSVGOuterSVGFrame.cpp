@@ -128,7 +128,7 @@ void nsSVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
           // intrinsic size.  We need it to resize itself to use our (now
           // available) intrinsic size:
           embeddingFrame->PresShell()->FrameNeedsReflow(
-              embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+              embeddingFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
         }
       }
     }
@@ -702,13 +702,13 @@ nsresult nsSVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
           // Tell embeddingFrame's presShell it needs to be reflowed (which
           // takes care of reflowing us too).
           embeddingFrame->PresShell()->FrameNeedsReflow(
-              embeddingFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+              embeddingFrame, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
         }
         // else our width and height is overridden - don't reflow anything
       } else {
         // We are not embedded by reference, so our 'width' and 'height'
         // attributes are not overridden - we need to reflow.
-        PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+        PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                       NS_FRAME_IS_DIRTY);
       }
     }

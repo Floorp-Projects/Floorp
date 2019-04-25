@@ -2365,11 +2365,11 @@ static void AdjustViews(nsIFrame* aFrame) {
 void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const {
   PresShell* presShell = mOuter->PresShell();
   if (mVScrollbarBox) {
-    presShell->FrameNeedsReflow(mVScrollbarBox, nsIPresShell::eResize,
+    presShell->FrameNeedsReflow(mVScrollbarBox, IntrinsicDirty::Resize,
                                 NS_FRAME_IS_DIRTY);
   }
   if (mHScrollbarBox) {
-    presShell->FrameNeedsReflow(mHScrollbarBox, nsIPresShell::eResize,
+    presShell->FrameNeedsReflow(mHScrollbarBox, IntrinsicDirty::Resize,
                                 NS_FRAME_IS_DIRTY);
   }
 }
@@ -5801,7 +5801,7 @@ bool ScrollFrameHelper::ReflowFinished() {
              parentFrame->GetChildList(nsIFrame::kFixedList).FirstChild();
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
-      mOuter->PresShell()->FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
+      mOuter->PresShell()->FrameNeedsReflow(fixedChild, IntrinsicDirty::Resize,
                                             NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
@@ -5916,7 +5916,7 @@ bool ScrollFrameHelper::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
     // needing reflow. Don't use NS_FRAME_IS_DIRTY as dirty as that means
     // we have to reflow the frame and all its descendants, and we don't
     // have to do that here. Only this frame needs to be reflowed.
-    mOuter->PresShell()->FrameNeedsReflow(mOuter, nsIPresShell::eResize,
+    mOuter->PresShell()->FrameNeedsReflow(mOuter, IntrinsicDirty::Resize,
                                           NS_FRAME_HAS_DIRTY_CHILDREN);
     // Ensure that next time nsHTMLScrollFrame::Reflow runs, we don't skip
     // updating the scrollbars. (Because the overflow area of the scrolled

@@ -113,7 +113,7 @@ void nsTableWrapperFrame::AppendFrames(ChildListID aListID,
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   // The presence of caption frames makes us sort our display
   // list differently, so mark us as changed for the new
@@ -133,7 +133,7 @@ void nsTableWrapperFrame::InsertFrames(ChildListID aListID,
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   MarkNeedsDisplayItemRebuild();
 }
@@ -153,7 +153,7 @@ void nsTableWrapperFrame::RemoveFrame(ChildListID aListID,
   // Remove the frame and destroy it
   mCaptionFrames.DestroyFrame(aOldFrame);
 
-  PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);
   MarkNeedsDisplayItemRebuild();
 }
