@@ -92,9 +92,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
                             public nsWrapperCache {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
-  typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::Document Document;
   typedef mozilla::dom::BrowserParent BrowserParent;
+  typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
   typedef mozilla::dom::BrowsingContext BrowsingContext;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
@@ -311,13 +311,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Returns the IPDL actor used if this is a top-level remote browser, or null
    * otherwise.
    */
-  PBrowserParent* GetRemoteBrowser() const;
+  BrowserParent* GetBrowserParent() const;
 
   /**
-   * Returns the BrowserBridgeChild if this is an out-of-process iframe, or null
+   * Returns the IPDL actor used if this is an out-of-process iframe, or null
    * otherwise.
    */
-  mozilla::dom::BrowserBridgeChild* GetBrowserBridgeChild() const;
+  BrowserBridgeChild* GetBrowserBridgeChild() const;
 
   /**
    * Returns the layers ID that this remote frame is using to render.
