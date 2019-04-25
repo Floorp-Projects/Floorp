@@ -6,7 +6,7 @@ The remote agent has unit- and functional tests located under
 
 You may run all the tests locally using `mach test` like this:
 
-	% ./mach test --setpref "remote.enabled=true" remote/test
+	% ./mach test remote/test
 
 The tests are currently not run on try.
 
@@ -17,7 +17,7 @@ Unit tests
 Because tests are run in parallel and [xpcshell] itself is quite
 chatty, it can sometimes be useful to run the tests in sequence:
 
-	% ./mach xcpshell-test --setpref "remote.enabled=true" --sequential remote/test/unit/test_Assert.js
+	% ./mach xcpshell-test --sequential remote/test/unit/test_Assert.js
 
 The unit tests will appear as part of the `X` jobs on Treeherder.
 
@@ -30,6 +30,6 @@ Functional tests
 We also have a set of functional [browser chrome] tests located
 under _remote/test/browser_:
 
-	% ./mach mochitest --setpref "remote.enabled=true" -f browser remote/test/browser/browser_cdp.js
+	% ./mach mochitest -f browser remote/test/browser/browser_cdp.js
 
 [browser chrome]: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests
