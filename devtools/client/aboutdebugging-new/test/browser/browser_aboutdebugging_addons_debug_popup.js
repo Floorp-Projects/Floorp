@@ -220,8 +220,10 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
       await waitUntil(() => toolbox.highlighter);
       await Promise.race([toolbox.highlighter.once("node-highlight"), wait(1000)]);
       await waitForNavigated;
-
       await jsterm.execute("myWebExtensionPopupAddonFunction()");
+
+      info("Wait for all pending requests to settle on the DebuggerClient");
+      await toolbox.target.client.waitForRequestsToSettle();
 
       await removeTab(devtoolsTab);
     })
