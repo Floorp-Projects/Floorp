@@ -111,8 +111,9 @@ add_task(async function testReportBreakageVisibility() {
       await openIdentityPopup();
 
       let reportBreakageButton = document.getElementById("identity-popup-content-blocking-report-breakage");
-      is(BrowserTestUtils.is_visible(reportBreakageButton), scenario.buttonVisible,
-        "report breakage button has the correct visibility");
+      await TestUtils.waitForCondition(() => BrowserTestUtils.is_visible(reportBreakageButton) == scenario.buttonVisible,
+        "waiting for correct visibility");
+      ok(true, "report breakage button has the correct visibility");
     });
 
     Services.perms.remove(uri, "trackingprotection");

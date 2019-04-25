@@ -1,0 +1,9 @@
+//error: struct `X' is only partially defined
+
+struct X {
+    UniquePtr<X> x;
+};
+
+protocol PUniquePtrSelfRecStruct {
+child: async Msg(UniquePtr<X> aa);
+};

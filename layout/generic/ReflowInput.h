@@ -13,6 +13,7 @@
 #include "nsStyleCoord.h"
 #include "nsIFrame.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include <algorithm>
 
 class gfxContext;
@@ -352,23 +353,23 @@ struct SizeComputationInput {
 struct ReflowInput : public SizeComputationInput {
   // the reflow inputs are linked together. this is the pointer to the
   // parent's reflow input
-  const ReflowInput* mParentReflowInput;
+  const ReflowInput* mParentReflowInput = nullptr;
 
   // A non-owning pointer to the float manager associated with this area,
   // which points to the object owned by nsAutoFloatManager::mNew.
-  nsFloatManager* mFloatManager;
+  nsFloatManager* mFloatManager = nullptr;
 
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
-  nsLineLayout* mLineLayout;
+  nsLineLayout* mLineLayout = nullptr;
 
   // The appropriate reflow input for the containing block (for
-  // percentage widths, etc.) of this reflow input's frame.
-  const ReflowInput* mCBReflowInput;
+  // percentage widths, etc.) of this reflow input's frame. It will be setup
+  // properly in InitCBReflowInput().
+  const ReflowInput* mCBReflowInput = nullptr;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
-  MOZ_INIT_OUTSIDE_CTOR
-  nsCSSFrameType mFrameType;
+  nsCSSFrameType mFrameType = NS_CSS_FRAME_TYPE_UNKNOWN;
 
   // The amount the in-flow position of the block is moving vertically relative
   // to its previous in-flow position (i.e. the amount the line containing the
@@ -378,16 +379,16 @@ struct ReflowInput : public SizeComputationInput {
   // The intended use of this value is to allow the accurate determination
   // of the potential impact of a float
   // This takes on an arbitrary value the first time a block is reflowed
-  nscoord mBlockDelta;
+  nscoord mBlockDelta = 0;
 
-  // If an ReflowInput finds itself initialized with an unconstrained
-  // inline-size, it will look up its parentReflowInput chain for a state
+  // If a ReflowInput finds itself initialized with an unconstrained
+  // inline-size, it will look up its parentReflowInput chain for a reflow input
   // with an orthogonal writing mode and a non-NS_UNCONSTRAINEDSIZE value for
-  // orthogonal limit; when it finds such a reflow-state, it will use its
+  // orthogonal limit; when it finds such a reflow input, it will use its
   // orthogonal-limit value to constrain inline-size.
   // This is initialized to NS_UNCONSTRAINEDSIZE (so it will be ignored),
   // but reset to a suitable value for the reflow root by nsPresShell.
-  nscoord mOrthogonalLimit;
+  nscoord mOrthogonalLimit = NS_UNCONSTRAINEDSIZE;
 
   // Accessors for the private fields below. Forcing all callers to use these
   // will allow us to introduce logical-coordinate versions and gradually
@@ -569,7 +570,7 @@ struct ReflowInput : public SizeComputationInput {
   // represents the amount of room for the frame's margin, border,
   // padding, and content area. The frame size you choose should fit
   // within the available width.
-  nscoord mAvailableWidth;
+  nscoord mAvailableWidth = 0;
 
   // A value of NS_UNCONSTRAINEDSIZE for the available height means
   // you can choose whatever size you want. In galley mode the
@@ -579,7 +580,7 @@ struct ReflowInput : public SizeComputationInput {
   // element is complete after reflow then its bottom border, padding
   // and margin (and similar for its complete ancestors) will need to
   // fit in this height.
-  nscoord mAvailableHeight;
+  nscoord mAvailableHeight = 0;
 
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
@@ -622,24 +623,16 @@ struct ReflowInput : public SizeComputationInput {
 
  public:
   // Our saved containing block dimensions.
-  MOZ_INIT_OUTSIDE_CTOR
-  LogicalSize mContainingBlockSize;
+  LogicalSize mContainingBlockSize = LogicalSize(mWritingMode);
 
-  // Cached pointers to the various style structs used during intialization
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleDisplay* mStyleDisplay;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleVisibility* mStyleVisibility;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePosition* mStylePosition;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleBorder* mStyleBorder;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleMargin* mStyleMargin;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStylePadding* mStylePadding;
-  MOZ_INIT_OUTSIDE_CTOR
-  const nsStyleText* mStyleText;
+  // Cached pointers to the various style structs used during initialization.
+  const nsStyleDisplay* mStyleDisplay = nullptr;
+  const nsStyleVisibility* mStyleVisibility = nullptr;
+  const nsStylePosition* mStylePosition = nullptr;
+  const nsStyleBorder* mStyleBorder = nullptr;
+  const nsStyleMargin* mStyleMargin = nullptr;
+  const nsStylePadding* mStylePadding = nullptr;
+  const nsStyleText* mStyleText = nullptr;
 
   bool IsFloating() const;
 
@@ -647,20 +640,20 @@ struct ReflowInput : public SizeComputationInput {
 
   // a frame (e.g. nsTableCellFrame) which may need to generate a special
   // reflow for percent bsize calculations
-  nsIPercentBSizeObserver* mPercentBSizeObserver;
+  nsIPercentBSizeObserver* mPercentBSizeObserver = nullptr;
 
   // CSS margin collapsing sometimes requires us to reflow
   // optimistically assuming that margins collapse to see if clearance
   // is required. When we discover that clearance is required, we
   // store the frame in which clearance was discovered to the location
   // requested here.
-  nsIFrame** mDiscoveredClearance;
+  nsIFrame** mDiscoveredClearance = nullptr;
 
   ReflowInputFlags mFlags;
 
   // This value keeps track of how deeply nested a given reflow input
   // is from the top of the frame tree.
-  int16_t mReflowDepth;
+  int16_t mReflowDepth = 0;
 
   // Logical and physical accessors for the resize flags. All users should go
   // via these accessors, so that in due course we can change the storage from
@@ -725,14 +718,15 @@ struct ReflowInput : public SizeComputationInput {
    *        members.
    * @param aContainingBlockSize An optional size, in app units, specifying
    *        the containing block size to use instead of the default which is
-   *        to use the aAvailableSpace.
+   *        computed by ComputeContainingBlockRectangle().
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
   ReflowInput(nsPresContext* aPresContext,
               const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
               const mozilla::LogicalSize& aAvailableSpace,
-              const mozilla::LogicalSize* aContainingBlockSize = nullptr,
+              const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+                  mozilla::Nothing(),
               uint32_t aFlags = 0);
 
   // Values for |aFlags| passed to constructor
@@ -772,7 +766,8 @@ struct ReflowInput : public SizeComputationInput {
   // This method initializes various data members. It is automatically
   // called by the various constructors
   void Init(nsPresContext* aPresContext,
-            const mozilla::LogicalSize* aContainingBlockSize = nullptr,
+            const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize =
+                mozilla::Nothing(),
             const nsMargin* aBorder = nullptr,
             const nsMargin* aPadding = nullptr);
 
@@ -986,10 +981,11 @@ struct ReflowInput : public SizeComputationInput {
                        mozilla::LayoutFrameType aFrameType);
   void InitDynamicReflowRoot();
 
-  void InitConstraints(nsPresContext* aPresContext,
-                       const mozilla::LogicalSize& aContainingBlockSize,
-                       const nsMargin* aBorder, const nsMargin* aPadding,
-                       mozilla::LayoutFrameType aFrameType);
+  void InitConstraints(
+      nsPresContext* aPresContext,
+      const mozilla::Maybe<mozilla::LogicalSize>& aContainingBlockSize,
+      const nsMargin* aBorder, const nsMargin* aPadding,
+      mozilla::LayoutFrameType aFrameType);
 
   // Returns the nearest containing block or block frame (whether or not
   // it is a containing block) for the specified frame.  Also returns

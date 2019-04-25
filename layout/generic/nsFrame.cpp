@@ -596,7 +596,7 @@ static void MaybeScheduleReflowSVGNonDisplayText(nsFrame* aFrame) {
     return;
   }
 
-  svgTextFrame->ScheduleReflowSVGNonDisplayText(nsIPresShell::eStyleChange);
+  svgTextFrame->ScheduleReflowSVGNonDisplayText(IntrinsicDirty::StyleChange);
 }
 
 void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -4274,8 +4274,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
     if (scrollFrame) {
       nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
-      nsIPresShell::SetCapturingContent(capturingFrame->GetContent(),
-                                        CAPTURE_IGNOREALLOWED);
+      PresShell::SetCapturingContent(capturingFrame->GetContent(),
+                                     CaptureFlags::IgnoreAllowedState);
     }
   }
 
@@ -4677,7 +4677,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
   // We can unconditionally stop capturing because
   // we should never be capturing when the mouse button is up
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
 
   bool selectionOff =
       (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF);
@@ -6863,9 +6863,8 @@ static void SchedulePaintInternal(
   }
 
   pres->PresShell()->ScheduleViewManagerFlush(
-      aType == nsIFrame::PAINT_DELAYED_COMPRESS
-          ? nsIPresShell::PAINT_DELAYED_COMPRESS
-          : nsIPresShell::PAINT_DEFAULT);
+      aType == nsIFrame::PAINT_DELAYED_COMPRESS ? PaintType::DelayedCompress
+                                                : PaintType::Default);
 
   if (aType == nsIFrame::PAINT_DELAYED_COMPRESS) {
     return;
@@ -10233,8 +10232,8 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
     logicalSize.BSize(wm) = NS_INTRINSICSIZE;
-    ReflowInput reflowInput(aPresContext, *parentRI, this, logicalSize, nullptr,
-                            ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
+    ReflowInput reflowInput(aPresContext, *parentRI, this, logicalSize,
+                            Nothing(), ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
     //            here (which it might be), then we should make sure that it's

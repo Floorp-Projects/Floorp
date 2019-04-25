@@ -8429,10 +8429,11 @@ class SnippetBase_SnippetBase extends external_React_default.a.PureComponent {
       }, this.props.content.scene2_dismiss_button_text)));
     }
 
-    const defaultTitle = SimpleSnippet_schema.properties.block_button_text.default;
+    const label = this.props.content.block_button_text || SimpleSnippet_schema.properties.block_button_text.default;
     return external_React_default.a.createElement("button", {
       className: "blockButton",
-      title: this.props.content.block_button_text || defaultTitle,
+      title: label,
+      "aria-label": label,
       onClick: this.onBlockClicked,
       ref: this.setBlockButtonRef
     });

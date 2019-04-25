@@ -253,8 +253,10 @@ windows-tests:
     - xpcshell
 
 windows-aarch64-tests:
+    - cppunit
     - crashtest
     - gtest
+    - jittest
     - jsreftest
     - marionette
     - marionette-headless

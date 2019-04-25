@@ -159,6 +159,7 @@ win64-rust-1.34:
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
         toolchain-artifact: public/build/rustc.tar.bz2
@@ -172,20 +173,6 @@ win64-rust-nightly:
             '--channel', 'nightly-2018-12-14',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-        ]
-        toolchain-artifact: public/build/rustc.tar.bz2
-
-win64-aarch64-rust:
-    description: "rust repack with aarch64 support"
-    treeherder:
-        symbol: TW64(rust-aarch64)
-    run:
-        arguments: [
-            '--channel', '1.34.0',
-            '--host', 'x86_64-pc-windows-msvc',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-artifact: public/build/rustc.tar.bz2

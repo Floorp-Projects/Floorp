@@ -1097,6 +1097,24 @@ function assertThrowNoGLError(gl, name, f) {
   return true;
 }
 
+function assertThrows(gl, shouldThrow, info, func) {
+  var didThrow = false;
+  try {
+    func();
+  } catch (e) {
+    var didGLError = (e instanceof GLError);
+    if (!didGLError) {
+      didThrow = true;
+    }
+  }
+
+  var text = shouldThrow ? "Should throw: "
+                         : "Should not throw: ";
+  var func = (didThrow == shouldThrow) ? testPassed : testFailed;
+
+  func(text + info);
+}
+
 Quad = {
   vertices : [
     -1,-1,0,

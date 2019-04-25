@@ -139,7 +139,7 @@ gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0);
 
 // Setup the verification program.
 var glProgram = wtu.setupProgram(gl, ["vsCheckOutOfBounds", wtu.simpleVertexColorFragmentShader], ["position", "vecRandom"]);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Shader and buffer setup should generate errors");
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Shader and buffer setup should not generate errors");
 
 debug("Test -- Index off the end of the vertex buffer near the beginning of the out of bounds area.");
 drawAndVerifyOutOfBoundsIndex(gl, /*StartIndex*/4);

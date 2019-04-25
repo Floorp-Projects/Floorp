@@ -94,6 +94,25 @@ Tests.testTexImage2D = function(gl) {
     assertGLError(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1,1,0,gl.RGB,gl.UNSIGNED_SHORT_4_4_4_4, null);
     });
+
+    assertThrows(gl, true, "too few args", function(){
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE);
+    });
+    assertThrows(gl, false, "too many args", function(){
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null, null);
+    });
+
+    assertThrows(gl, true, "bad TexSourceType", function(){
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, window);
+    });
+    assertThrows(gl, true, "fake TexSourceType", function(){
+        var fakeObj = {
+            get width() { throw 7 },
+            get height() { throw 7 },
+            data: new Uint8ClampedArray(10)
+        };
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fakeObj);
+    });
 }
 
 

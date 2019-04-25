@@ -4,8 +4,7 @@
 
 <!-- Privacy panel -->
 
-<script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/privacy.js"/>
+<script src="chrome://browser/content/preferences/in-content/privacy.js"/>
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 <html:template id="template-panePrivacy">

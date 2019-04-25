@@ -507,7 +507,8 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
     declareThis = funbox->function()->lazyScript()->hasThisBinding();
   } else {
     declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
-                  funbox->isDerivedClassConstructor();
+                  funbox->function()->kind() ==
+                      JSFunction::FunctionKind::ClassConstructor;
   }
 
   if (declareThis) {

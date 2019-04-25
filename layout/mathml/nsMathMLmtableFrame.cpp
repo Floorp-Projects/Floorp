@@ -690,7 +690,7 @@ nsresult nsMathMLmtableWrapperFrame::AttributeChanged(int32_t aNameSpaceID,
 
   // align - just need to issue a dirty (resize) reflow command
   if (aAttribute == nsGkAtoms::align) {
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
     return NS_OK;
   }
@@ -702,7 +702,7 @@ nsresult nsMathMLmtableWrapperFrame::AttributeChanged(int32_t aNameSpaceID,
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(GetParent());
     // Need to reflow the parent, not us, because this can actually
     // affect siblings.
-    PresShell()->FrameNeedsReflow(GetParent(), nsIPresShell::eStyleChange,
+    PresShell()->FrameNeedsReflow(GetParent(), IntrinsicDirty::StyleChange,
                                   NS_FRAME_IS_DIRTY);
     return NS_OK;
   }
@@ -732,7 +732,7 @@ nsresult nsMathMLmtableWrapperFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   // Explicitly request a reflow in our subtree to pick up any changes
-  presContext->PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+  presContext->PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                              NS_FRAME_IS_DIRTY);
 
   return NS_OK;
@@ -1066,7 +1066,7 @@ nsresult nsMathMLmtrFrame::AttributeChanged(int32_t aNameSpaceID,
   ParseFrameAttribute(this, aAttribute, allowMultiValues);
 
   // Explicitly request a reflow in our subtree to pick up any changes
-  presContext->PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+  presContext->PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                              NS_FRAME_IS_DIRTY);
 
   return NS_OK;

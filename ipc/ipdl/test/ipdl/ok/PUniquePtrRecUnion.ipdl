@@ -1,0 +1,21 @@
+union X {
+    int;
+    Y[];
+    UniquePtr<Y>;
+};
+
+union Y {
+    X;
+    Z;
+};
+
+union Z {
+    double;
+    X;
+};
+
+protocol PUniquePtrRecUnion {
+child:
+    async Test(X x, Y y, Z z);
+    async __delete__();
+};

@@ -26,9 +26,8 @@
   <link rel="stylesheet" href="resource://devtools/client/shared/components/reps/reps.css"/>
   <link rel="stylesheet" href="resource://devtools/client/shared/components/tree/TreeView.css"/>
 
-  <script type="application/javascript"
-          src="chrome://devtools/content/shared/theme-switching.js"></script>
-  <script type="text/javascript">
+  <script src="chrome://devtools/content/shared/theme-switching.js"></script>
+  <script>
     /* eslint-disable */
     var isInChrome = window.location.href.includes("chrome:");
     if (isInChrome) {
@@ -38,7 +37,7 @@
     }
   </script>
 
-  <script type="application/javascript" src="resource://devtools/client/inspector/inspector.js" defer="true"></script>
+  <script src="resource://devtools/client/inspector/inspector.js" defer="true"></script>
 </head>
 <body class="theme-body" role="application">
   <div class="inspector-responsive-container theme-body inspector"

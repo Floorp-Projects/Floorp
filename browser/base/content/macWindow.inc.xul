@@ -15,7 +15,7 @@
 # that they can be shared with browser.xul.
 #include global-scripts.inc
 
-<script type="application/javascript" src="chrome://browser/content/nonbrowser-mac.js"></script>
+<script src="chrome://browser/content/nonbrowser-mac.js"></script>
 
 # All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with

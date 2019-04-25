@@ -35,9 +35,9 @@
 
     <stringbundle id="backgroundBundle"
                   src="chrome://browser/locale/shellservice.properties"/>
-    <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-    <script type="application/javascript" src="chrome://browser/content/setDesktopBackground.js"/>
-    <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+    <script src="chrome://browser/content/utilityOverlay.js"/>
+    <script src="chrome://browser/content/setDesktopBackground.js"/>
+    <script src="chrome://global/content/contentAreaUtils.js"/>
 
 #ifndef XP_MACOSX
     <hbox align="center">

@@ -67,8 +67,14 @@ Tests.testBufferData = function(gl) {
         function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 19, new Uint16Array([1,2,3]));});
     assertFail("data too large",
         function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, new Uint16Array(data.concat([1])));});
-    assertOk("offset + data too large",
+    assertOk("offset + data.length = end",
         function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 18, new Uint16Array([1,2,3]));});
+    assertOk("offset Infinity",
+        function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, Infinity, new Uint16Array([1,2,3]));});
+    assertOk("offset -Infinity",
+        function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, -Infinity, new Uint16Array([1,2,3]));});
+    assertOk("offset NaN",
+        function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, NaN, new Uint16Array([1,2,3]));});
     assertOk("good args",
         function(){gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, new Uint16Array([1,2,3]));});
     throwError(gl, 'bufferData0');

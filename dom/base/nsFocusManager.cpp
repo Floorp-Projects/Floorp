@@ -719,7 +719,7 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   if (mActiveWindow != window) return NS_OK;
 
   // clear the mouse capture as the active window has changed
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
 
   // In addition, reset the drag state to ensure that we are no longer in
   // drag-select mode.
@@ -2125,16 +2125,14 @@ void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
                                     uint32_t aFlags) {
   // if the noscroll flag isn't set, scroll the newly focused element into view
   if (!(aFlags & FLAG_NOSCROLL)) {
-    uint32_t scrollFlags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
+    ScrollFlags scrollFlags = ScrollFlags::ScrollOverflowHidden;
     if (!(aFlags & FLAG_BYELEMENTFOCUS)) {
-      scrollFlags |= nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING;
+      scrollFlags |= ScrollFlags::IgnoreMarginAndPadding;
     }
     aPresShell->ScrollContentIntoView(
         aContent,
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
-                                 nsIPresShell::SCROLL_IF_NOT_VISIBLE),
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
         scrollFlags);
   }
 }

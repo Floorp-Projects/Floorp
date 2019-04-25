@@ -13,7 +13,7 @@
         onload="gRemovePasswordDialog.init()"
         data-l10n-id="remove-password">
 
-  <script type="application/javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
+  <script src="chrome://mozapps/content/preferences/removemp.js"/>
 
   <linkset>
     <html:link rel="localization" href="toolkit/preferences/preferences.ftl"/>

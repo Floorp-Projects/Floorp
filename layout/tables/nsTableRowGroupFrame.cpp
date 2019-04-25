@@ -300,7 +300,7 @@ void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext& aPresContext,
       pCollapseBorder = &collapseBorder;
     }
   }
-  aReflowInput.Init(&aPresContext, nullptr, pCollapseBorder, &padding);
+  aReflowInput.Init(&aPresContext, Nothing(), pCollapseBorder, &padding);
 }
 
 static void CacheRowBSizesForPrinting(nsPresContext* aPresContext,
@@ -372,7 +372,7 @@ void nsTableRowGroupFrame::ReflowChildren(
       LogicalSize kidAvailSize = aReflowInput.availSize;
       kidAvailSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       ReflowInput kidReflowInput(aPresContext, aReflowInput.reflowInput,
-                                 kidFrame, kidAvailSize, nullptr,
+                                 kidFrame, kidAvailSize, Nothing(),
                                  ReflowInput::CALLER_WILL_INIT);
       InitChildReflowInput(*aPresContext, borderCollapse, kidReflowInput);
 
@@ -994,7 +994,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         rowAvailSize.height = std::min(rowAvailSize.height, rowRect.height);
         ReflowInput rowReflowInput(
             &aPresContext, aReflowInput, row,
-            LogicalSize(row->GetWritingMode(), rowAvailSize), nullptr,
+            LogicalSize(row->GetWritingMode(), rowAvailSize), Nothing(),
             ReflowInput::CALLER_WILL_INIT);
         InitChildReflowInput(aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page
@@ -1130,7 +1130,7 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
 
         ReflowInput rowReflowInput(
             aPresContext, aReflowInput, rowFrame,
-            LogicalSize(rowFrame->GetWritingMode(), availSize), nullptr,
+            LogicalSize(rowFrame->GetWritingMode(), availSize), Nothing(),
             ReflowInput::CALLER_WILL_INIT);
 
         InitChildReflowInput(*aPresContext, borderCollapse, rowReflowInput);
@@ -1484,7 +1484,7 @@ void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
   if (rows.Length() > 0) {
     nsTableFrame* tableFrame = GetTableFrame();
     tableFrame->AppendRows(this, rowIndex, rows);
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }
@@ -1533,7 +1533,7 @@ void nsTableRowGroupFrame::InsertFrames(ChildListID aListID,
     int32_t rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(this, rows, rowIndex, true);
 
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }
@@ -1552,7 +1552,7 @@ void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
     // remove the rows from the table (and flag a rebalance)
     tableFrame->RemoveRows(*rowFrame, 1, true);
 
-    PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::TreeChange,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }

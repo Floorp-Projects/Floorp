@@ -96,12 +96,35 @@ If instead you want the intersection of queries, you can pass in ``-x/--and``:
     # selects all windows mochitest tasks
     $ mach try fuzzy --and -q "mochitest" -q "windows"
 
-Using query intersections is especially useful with presets:
+
+Modifying Presets
+~~~~~~~~~~~~~~~~~
+
+:doc:`Presets <../presets>` make it easy to run a pre-determined set of tasks. But sometimes you
+might not want to run that set exactly as is, you may only want to use the preset as a starting
+point then add or remove tasks as needed. This can be accomplished with ``-q/--query`` or
+``-i/--interactive``.
+
+Here are some examples of adding tasks to a preset:
 
 .. code-block:: shell
 
-    # selects all windows perf tasks
+    # selects all perf tasks plus all mochitest-chrome tasks
+    $ mach try fuzzy --preset perf -q "mochitest-chrome"
+
+    # adds tasks to the perf preset interactively
+    $ mach try fuzzy --preset perf -i
+
+Similarly, ``-x/--and`` can be used to filter down a preset by taking the intersection of the two
+sets:
+
+.. code-block:: shell
+
+    # limits perf tasks to windows only
     $ mach try fuzzy --preset perf -xq "windows"
+
+    # limits perf tasks interactively
+    $ mach try fuzzy --preset perf -xi
 
 
 Shell Conflicts

@@ -31,8 +31,13 @@
 <!-- Prevents Chrome from offering to translate tests which generate
      random characters for things like attribute names -->
 <meta name="google" value="notranslate">
+<meta name="viewport" content="width=device-width">
 <title>WebGL Conformance Tests</title>
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     border: 0;
     margin: 0;
@@ -41,6 +46,14 @@
     max-height:100%;
     font-family: Verdana, Arial, sans-serif;
     font-size: 0.8em;
+  }
+
+  input[type=button], select {
+    padding: 2px 6px 2px 6px;
+    margin: 0;
+    border: 1px solid #888;
+    border-radius: 2px;
+    background: #f4f4f4;
   }
 
   a {
@@ -52,14 +65,24 @@
     border-bottom: 1px solid #66D;
   }
 
+  label {
+    white-space: nowrap;
+  }
+
   #testlist {
     position:fixed;
-    top:310px;
+    top:200px;
     left:0;
-    right:0;
+    right:10%;
     bottom:0px;
     overflow:auto;
-    padding:1em;
+    min-height: 200px;
+  }
+
+  @media screen and (max-width: 500px) {
+    #testlist {
+      font-size: 80%;
+    }
   }
 
   #header {
@@ -67,37 +90,47 @@
     top:0;
     left:0;
     width:100%;
-    height:310px;
-    overflow:auto;
+    height: 160px;
+    overflow: scroll;
     border-bottom: 1px solid #CCC;
   }
 
   #info {
-    text-align: center;
-    min-width: 300px;
+    margin: 0 auto;
+    max-width: 280px;
+  }
+  #logo {
+    width: 68px;
+    height: 40px;
   }
 
-  table {
-    width: 100%;
+  #iframe-container {
+    color: white;
+    display: block;
+    position: fixed;
+    width: 90%;
+    height: calc(100% - 170px);
+    bottom: 0px;
+    left: calc(91% - 15px);
+    transition: left 0.15s;
+  }
+  #iframe-container.iframe-shown {
+    left: 10%;
+  }
+  #iframe-toggle {
+    display: inline-block;
+    vertical-align: middle;
+    width: 20px;
     height: 100%;
-    border: 0;
+    padding: 0;
   }
-
-  #frames {
-    border-left: 1px solid #CCC;
-  }
-
-  #frames td {
-      min-height: 1px;
-      min-width: 1px;
-  }
-
-  #frames iframe {
-    border: 0;
-  }
-
-  #testList {
-    padding:1em;
+  #test-iframe {
+    display: inline-block;
+    vertical-align: middle;
+    background: white;
+    width: calc(100% - 20px);
+    height: 100%;
+    border: 1px solid black;
   }
 
   .folder {
@@ -106,6 +139,15 @@
 
   .folderHeader {
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  .folderHeaderInner {
+    background: white;
+    /* to hide checkboxes from parent headers */
+    position: relative;
+    left: -2em;
+    padding-left: 2em;
   }
 
   .folderName {
@@ -230,6 +272,7 @@ function start() {
   var folderCount = 0;
   var autoScrollEnabled = true; // Whether the user prefers to auto scroll
   var autoScroll = true; // Whether auto scroll is actually performed
+  let quickTestMode = true;
 
   var Page = function(reporter, folder, testIndex, url) {
     this.reporter = reporter;
@@ -276,10 +319,15 @@ function start() {
     var a = reporter.localDoc.createElement('a');
     a.href = WebGLTestHarnessModule.getURLWithOptions(url, {
       webglVersion: reporter.selectedWebGLVersion,
-      quiet: OPTIONS.quiet
+      quiet: OPTIONS.quiet,
+      quick: quickTestMode ? 1 : 0,
     });
     a.target = "_blank";
-    var node = reporter.localDoc.createTextNode(url);
+    const folderName = that.folder.displayName;
+    console.assert(folderName.startsWith("all/"));
+    console.assert(url.startsWith(folderName.substring(4) + "/"));
+    const urlWithoutFolder = url.substring(folderName.length - 4 + 1);
+    var node = reporter.localDoc.createTextNode(urlWithoutFolder);
     a.appendChild(node);
     div.appendChild(a);
     li.setAttribute('class', 'testpage');
@@ -449,8 +497,11 @@ function start() {
     var li = doc.createElement('li');
     li.id = this.elementId;
     li.classList.add("folder");
-    var div = doc.createElement('div');
-    div.classList.add('folderHeader');
+    var folderHeader = doc.createElement('div');
+    folderHeader.classList.add('folderHeader');
+    var folderHeaderInner = doc.createElement('div');
+    folderHeaderInner.classList.add('folderHeaderInner');
+    folderHeader.appendChild(folderHeaderInner);
     var check = doc.createElement('input');
     check.type = 'checkbox';
     check.checked = true;
@@ -462,7 +513,7 @@ function start() {
         that.disableTest(".*", true);
       }
     };
-    div.appendChild(check);
+    folderHeaderInner.appendChild(check);
     var button = doc.createElement('input');
     button.type = 'button';
     button.value = 'run';
@@ -473,23 +524,23 @@ function start() {
     if (reporter.noSelectedWebGLVersion) {
       button.disabled = true;
     }
-    div.appendChild(button);
+    folderHeaderInner.appendChild(button);
     var h = doc.createElement('span');
     h.classList.add('folderName');
     h.appendChild(doc.createTextNode(this.displayName));
-    div.appendChild(h);
+    folderHeaderInner.appendChild(h);
     var m = doc.createElement('span');
     m.classList.add('folderMessage');
     this.msgNode = doc.createTextNode('');
     m.appendChild(this.msgNode);
-    div.appendChild(m);
+    folderHeaderInner.appendChild(m);
     var ul = doc.createElement('ul');
-    li.appendChild(div);
+    li.appendChild(folderHeader);
     li.appendChild(ul);
     this.childUL = ul;
     this.elem = li;
     this.check = check;
-    this.folderHeader = div;
+    this.folderHeader = folderHeader;
   };
 
   Folder.prototype.checked = function() {
@@ -966,8 +1017,8 @@ function start() {
       var r = document.getElementById("testResultsAsText");
       while (r.firstChild) r.removeChild(r.firstChild);
       r.appendChild(document.createTextNode(tx));
-      document.getElementById("showTextSummary").style.visibility = "visible";
-      document.getElementById("dlTextSummary").style.visibility = "visible";
+      document.getElementById("showTextSummary").disabled = false;
+      document.getElementById("dlTextSummary").disabled = false;
 
       this.postResultsToServer(tx);
     } else {
@@ -1086,84 +1137,7 @@ function start() {
   makeVersionSelect(OPTIONS.version);
 
   // Make iframes
-  var makeIFrames = function() {
-    var toparea = document.getElementById("toparea");
-    var frame = document.getElementById("frames");
-    var areaWidth = Math.max(100, toparea.clientWidth - 300);
-    var areaHeight = Math.max(100, frame.clientHeight);
-
-    var numCells = OPTIONS.frames;
-
-    var gridWidth = Math.max(1, Math.ceil(Math.sqrt(numCells)));
-    var gridHeight = gridWidth;
-    var bestAspect = 99999;
-    var bestNumEmptyCells = 99999;
-    var bestNumEmptyCellsColumns = 0;
-    var bestNumEmptyCellsAspect = 99999;
-    var minGoodAspect = 1 / 3;
-    var maxGoodAspect = 3 / 1;
-
-    for (var columns = 1; columns <= numCells; ++columns) {
-        var rows = Math.ceil(numCells / columns);
-        var cellWidth = areaWidth / columns;
-        var cellHeight = areaHeight / rows;
-        var cellAspect = cellWidth / cellHeight;
-        if (cellAspect >= minGoodAspect && cellAspect <= maxGoodAspect) {
-            var numEmptyCells = columns * rows - numCells;
-            // Keep the one with the least number of empty cells.
-            if (numEmptyCells < bestNumEmptyCells) {
-                bestNumEmptyCells = numEmptyCells;
-                bestNumEmptyCellsColumns = columns;
-                bestNumEmptyCellsAspect = cellAspect;
-            // If it's the same number of empty cells keep the one
-            // with the best aspect.
-            } else if (numEmptyCells == bestNumEmptyCells &&
-                  Math.abs(cellAspect - 1) <
-                  Math.abs(bestNumEmptyCellsAspect - 1)) {
-                bestNumEmptyCellsColumns = columns;
-                bestNumEmptyCellsAspect = cellAspect;
-            }
-        }
-        if (Math.abs(cellAspect - 1) < Math.abs(bestAspect - 1)) {
-            gridWidth = columns;
-            gridHeight = rows;
-            bestAspect = cellAspect;
-        }
-    }
-
-    // if we found an aspect with few empty cells use that.
-    var numEmptyCells = gridWidth * gridHeight - numCells;
-    if (bestNumEmptyCellsColumns && bestNumEmptyCells < numEmptyCells) {
-        gridWidth = bestNumEmptyCellsColumns;
-        gridHeight = Math.ceil(numCells / gridWidth);
-    }
-
-    var table = document.createElement("table");
-    table.style.height = areaHeight + "px";
-    var tbody = document.createElement("tbody");
-    var iframes = [];
-    for (var row = 0; row < gridHeight; ++row) {
-      var tr = document.createElement("tr");
-      for (var column = 0; column < gridWidth; ++column) {
-        var td = document.createElement("td");
-        if (numCells > 0) {
-          --numCells;
-          var iframe = document.createElement("iframe");
-          iframe.setAttribute("scrolling", "yes");
-          iframe.style.width = "100%";
-          iframe.style.height = "100%";
-          iframes.push(iframe);
-          td.appendChild(iframe);
-        }
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
-    }
-    table.appendChild(tbody);
-    frame.appendChild(table);
-    return iframes;
-  };
-  var iframes = makeIFrames();
+  var iframes = [document.getElementById("test-iframe")];
 
   var testPath = "00_test_list.txt";
   if (OPTIONS.root) {
@@ -1227,6 +1201,12 @@ function start() {
     }
   };
 
+  var quickTestModeCheckbox = document.getElementById("quickTestModeCheckbox");
+  quickTestModeCheckbox.checked = quickTestMode;
+  quickTestModeCheckbox.onclick = function() {
+    quickTestMode = quickTestModeCheckbox.checked;
+  };
+
   var textbutton = document.getElementById("showTextSummary");
   textbutton.onclick = function() {
     log("click");
@@ -1270,84 +1250,74 @@ function start() {
     elem.style.display = "";
     reporter.postResultsToServer("Browser does not appear to support the selected version of WebGL");
   }
+
+  const iframeContainer = document.getElementById("iframe-container");
+  const iframeToggle = document.getElementById("iframe-toggle");
+  iframeToggle.value = iframeToggle.getAttribute("data-value-hidden");
+  iframeToggle.onclick = function() {
+    const expanded = iframeToggle.myExpanded = !iframeToggle.myExpanded;
+    if (expanded) {
+      iframeContainer.classList.add("iframe-shown");
+      iframeToggle.value = iframeToggle.getAttribute("data-value-shown");
+    } else {
+      iframeContainer.classList.remove("iframe-shown");
+      iframeToggle.value = iframeToggle.getAttribute("data-value-hidden");
+    }
+  };
 }
 </script>
 </head>
 <body onload="start()">
 
 <div id="testlist">
-
-        <div id="testResultsHTML">
-          <ul id="results">
-          </ul>
-        </div>
-        <div style="display: none;" id="testResultsText">
-          <pre id="testResultsAsText"></pre>
-        </div>
-
+  <div id="testResultsHTML">
+    <ul id="results">
+    </ul>
+  </div>
+  <div style="display: none;" id="testResultsText">
+    <pre id="testResultsAsText"></pre>
+  </div>
 </div> <!-- end of container -->
 
-<div id="header">
+<div id="iframe-container">
+  <input type="button" data-value-hidden="◄" data-value-shown="►" id="iframe-toggle" aria-hidden="true"
+  ><iframe id="test-iframe"></iframe>
+</div>
 
-<table>
-  <tr style="height: 300px;">
-    <td>
-      <table id="toparea">
-        <tr>
-          <td style="width: 300px">
-            <div id="info">
-              <img src="resources/webgl-logo.png" /><br />
-              WebGL Conformance Test Runner<br/>
-              Version
-              <select id="testVersion">
-              </select>
-              <br/>
-              <a href="../../conformance-suites/"><i>(click here for previous versions)</i></a>
-              <br/>
-              <input type="button" value="run tests" id="runTestsButton"/>
-              <br/>
-              <input type="checkbox" id="autoScrollCheckbox"/>
-              <label for="autoScrollCheckbox">auto scroll</label>
-              <br/>
-              <input type="checkbox" id="hidePassedCheckbox"/>
-              <label for="hidePassedCheckbox">hide passed tests</label>
-              <br/>
-              <input type="button" style="visibility: hidden;" value="display text summary" id="showTextSummary"/>
-              <br/>
-              <input type="button" style="visibility: hidden;" value="download text summary" id="dlTextSummary"/>
-              <div id="nowebgl" class="nowebgl" style="display: none;">
-                This browser does not appear to support WebGL
-              </div>
-              <div id="noselectedwebgl" class="nowebgl" style="display: none;">
-                This browser does not appear to support the selected version of WebGL
-              </div>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div id="loading">
-              Loading Tests...
-            </div>
-            <div>
-              Results:
-              <span id="fullresults">
-              </span>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div id="error-wrap">
-              <pre id="error"></pre>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </td>
-    <td id="frames"></td>
-  </tr>
-</table>
+<div id="header">
+  <div id="info">
+    <div style="text-align:center">
+      <img src="resources/webgl-logo.png" alt="WebGL" id="logo"/>
+      <br/>
+      Conformance Test Runner
+    </div>
+    Version
+    <select id="testVersion">
+    </select>
+    <a href="../../conformance-suites/">(older versions?)</a>
+    <br/>
+    <input type="button" value="run tests" id="runTestsButton"/>
+    <label for="autoScrollCheckbox"><input type="checkbox" id="autoScrollCheckbox"/>auto scroll</label>
+    <label for="hidePassedCheckbox"><input type="checkbox" id="hidePassedCheckbox"/>hide passed</label>
+    <label for="quickTestModeCheckbox"><input type="checkbox" id="quickTestModeCheckbox"/>quick test mode</label>
+    <br/>
+    <input type="button" disabled value="show text summary" id="showTextSummary"/>
+    <input type="button" disabled value="download text" id="dlTextSummary"/>
+    <div id="nowebgl" class="nowebgl" style="display: none;">
+      This browser does not appear to support WebGL
+    </div>
+    <div id="noselectedwebgl" class="nowebgl" style="display: none;">
+      This browser does not appear to support the selected version of WebGL
+    </div>
+    <div id="loading">
+      Loading Tests...
+    </div>
+    <div id="fullresults">
+    </div>
+  </div>
+  <div id="error-wrap">
+    <pre id="error"></pre>
+  </div>
 </div> <!-- end of header -->
 
 </body>

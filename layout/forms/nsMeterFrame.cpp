@@ -175,7 +175,7 @@ nsresult nsMeterFrame::AttributeChanged(int32_t aNameSpaceID,
        aAttribute == nsGkAtoms::min)) {
     nsIFrame* barFrame = mBarDiv->GetPrimaryFrame();
     NS_ASSERTION(barFrame, "The meter frame should have a child with a frame!");
-    PresShell()->FrameNeedsReflow(barFrame, nsIPresShell::eResize,
+    PresShell()->FrameNeedsReflow(barFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
     InvalidateFrame();
   }
