@@ -82,6 +82,8 @@
     <string name="preferences_category_about">Über</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Suchmaschine</string>
+    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
+    <string name="preference_show_visited_sites_bookmarks">Besuchte Websites und Lesezeichen anzeigen</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Hilfe</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -148,6 +150,15 @@
     <string name="sync_never_synced_summary">Letzte Synchronisierung: nie</string>
 
     <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Schutz vor Aktivitätenverfolgung</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Schutz vor Aktivitätenverfolgung</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Inhalte und Skripte blockieren, die Sie im Internet verfolgen</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Ausnahmen</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetrie</string>
     <!-- Preference switch for crash reporter -->
@@ -278,8 +289,10 @@
     <string name="bookmark_select_folder">Ordner auswählen</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Ordner hinzufügen</string>
-    <!-- Snackbar title shown after a bookmark has been created. -->
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_created_snackbar">Lesezeichen erstellt.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Lesezeichen gespeichert!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">BEARBEITEN</string>
 
@@ -297,4 +310,82 @@
     <string name="bookmark_menu_open_in_private_tab_button">In privatem Tab öffnen</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Löschen</string>
+    <!-- Bookmark multi select title in app bar -->
+    <string name="bookmarks_multi_select_title">%1$d ausgewählt</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Lesezeichen bearbeiten</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Melden Sie sich an, um die synchronisierten Lesezeichen anzuzeigen</string>
+
+
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">ADRESSE</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">ORDNER</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">NAME</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Ordner hinzufügen</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Ordner auswählen</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Titel muss ausgefüllt sein</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Ungültige Adresse</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Hier gibt es keine Lesezeichen</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s gelöscht</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Ausgewählte Lesezeichen werden gelöscht</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">RÜCKGÄNGIG</string>
+
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Adresse kopiert</string>
+
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Zu Einstellungen wechseln</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Übersicht über Schnelleinstellungen</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Empfohlen</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Website-Berechtigungen verwalten</string>
+    <!-- Button label for clear all the information of a site permissions-->
+    <string name="clear_permissions">Berechtigungen löschen</string>
+    <!-- Button label for clear a site permissions-->
+    <string name="clear_permission">Berechtigung löschen</string>
+    <!-- Button label for clear all the information fall all sites-->
+    <string name="clear_permissions_on_all_sites">Berechtigungen auf allen Websites löschen</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofon</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Standort</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Benachrichtigung</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Um Erlaubnis fragen</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blockiert</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Erlaubt</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Von Android blockiert</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Ausnahmen</string>
+    <!-- Action in Quick Settings dialog to report a site problem related to tracking protection -->
+    <string name="tracking_protection_report_problem">Problem melden</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Ein</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Aus</string>
 </resources>
