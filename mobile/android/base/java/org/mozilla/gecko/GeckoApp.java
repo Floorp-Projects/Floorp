@@ -350,7 +350,7 @@ public abstract class GeckoApp extends GeckoActivity
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
 
-    private boolean mShutdownOnDestroy;
+    protected boolean mShutdownOnDestroy;
     private boolean mRestartOnShutdown;
 
     private boolean mWasFirstTabShownAfterActivityUnhidden;
