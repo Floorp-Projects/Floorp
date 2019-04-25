@@ -380,6 +380,32 @@ static bool AsyncTransformShouldBeUnapplied(
   return false;
 }
 
+/**
+ * Given a fixed-position layer, check if it's fixed with respect to the
+ * zoomed APZC.
+ */
+static bool IsFixedToZoomContainer(Layer* aFixedLayer) {
+  ScrollableLayerGuid::ViewID targetId =
+      aFixedLayer->GetFixedPositionScrollContainerId();
+  MOZ_ASSERT(targetId != ScrollableLayerGuid::NULL_SCROLL_ID);
+  LayerMetricsWrapper result(aFixedLayer, LayerMetricsWrapper::StartAt::BOTTOM);
+  while (result) {
+    if (Maybe<ScrollableLayerGuid::ViewID> zoomedScrollId =
+            result.IsAsyncZoomContainer()) {
+      return *zoomedScrollId == targetId;
+    }
+    // Don't ascend into another layer tree. Scroll IDs are not unique
+    // across layer trees, and in any case position:fixed doesn't reach
+    // across documents.
+    if (result.AsRefLayer() != nullptr) {
+      break;
+    }
+
+    result = result.GetParent();
+  }
+  return false;
+}
+
 // If |aLayer| is fixed or sticky, returns the scroll id of the scroll frame
 // that it's fixed or sticky to. Otherwise, returns Nothing().
 static Maybe<ScrollableLayerGuid::ViewID> IsFixedOrSticky(Layer* aLayer) {
@@ -1196,6 +1222,27 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
               // about:config on mobile, for just one frame or so, before the
               // scroll metadata for zoomedScrollId appears in the layer tree.
             }
+          }
+
+          // Layers fixed to the RCD-RSF no longer need
+          // AdjustFixedOrStickyLayer() to scroll them by the eVisual transform,
+          // as that's now applied to the async zoom container itself. However,
+          // we still need to adjust them by the fixed layer margins to
+          // account for dynamic toolbar transitions. This is also handled by
+          // AdjustFixedOrStickyLayer(), so we now call it with empty transforms
+          // to get it to perform just the fixed margins adjustment.
+          if (zoomedMetrics && layer->GetIsFixedPosition() &&
+              !layer->GetParent()->GetIsFixedPosition() &&
+              IsFixedToZoomContainer(layer)) {
+            LayerToParentLayerMatrix4x4 emptyTransform;
+            ScreenMargin marginsForFixedLayer;
+#ifdef MOZ_WIDGET_ANDROID
+            marginsForFixedLayer = GetFixedLayerMargins();
+#endif
+            AdjustFixedOrStickyLayer(zoomContainer, layer,
+                                     sampler->GetGuid(*zoomedMetrics).mScrollId,
+                                     emptyTransform, emptyTransform,
+                                     marginsForFixedLayer, clipPartsCache);
           }
         }
 
