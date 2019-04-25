@@ -175,7 +175,8 @@ CutCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  return editor->CanCut(aIsEnabled);
+  *aIsEnabled = textEditor->CanCut();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -284,7 +285,8 @@ CopyCommand::IsCommandEnabled(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->CanCopy(aIsEnabled);
+  *aIsEnabled = textEditor->CanCopy();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -400,7 +402,8 @@ PasteCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  return textEditor->CanPaste(nsIClipboard::kGlobalClipboard, aIsEnabled);
+  *aIsEnabled = textEditor->CanPaste(nsIClipboard::kGlobalClipboard);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -609,10 +612,7 @@ DeleteCommand::IsCommandEnabled(const char* aCommandName,
   *aIsEnabled = textEditor->IsSelectionEditable();
 
   if (!nsCRT::strcmp("cmd_delete", aCommandName) && *aIsEnabled) {
-    nsresult rv = textEditor->CanDelete(aIsEnabled);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    *aIsEnabled = textEditor->CanDelete();
   }
   return NS_OK;
 }
@@ -1118,7 +1118,8 @@ PasteQuotationCommand::IsCommandEnabled(const char* aCommandName,
   if (textEditor->IsSingleLineEditor()) {
     return NS_OK;
   }
-  return textEditor->CanPaste(nsIClipboard::kGlobalClipboard, aIsEnabled);
+  *aIsEnabled = textEditor->CanPaste(nsIClipboard::kGlobalClipboard);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1170,9 +1171,8 @@ PasteQuotationCommand::GetCommandStateParams(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  bool enabled = false;
-  textEditor->CanPaste(nsIClipboard::kGlobalClipboard, &enabled);
-  aParams->AsCommandParams()->SetBool(STATE_ENABLED, enabled);
+  aParams->AsCommandParams()->SetBool(
+      STATE_ENABLED, textEditor->CanPaste(nsIClipboard::kGlobalClipboard));
   return NS_OK;
 }
 

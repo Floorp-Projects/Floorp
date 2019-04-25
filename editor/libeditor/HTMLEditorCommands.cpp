@@ -145,7 +145,8 @@ PasteNoFormattingCommand::IsCommandEnabled(const char* aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
+  *outCmdEnabled = htmlEditor->CanPaste(nsIClipboard::kGlobalClipboard);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
