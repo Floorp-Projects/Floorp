@@ -40,6 +40,7 @@ const scroller_height = scroller.clientHeight;
   ["vertical-rl",   scroller_width - 700, 300]
 ].forEach(([writing_mode, left, top]) => {
   test(() => {
+    const target_left = getComputedStyle(target).left;
     scroller.style.writingMode = writing_mode;
     if (writing_mode == "vertical-rl") {
       target.style.left = (scroller_width - 700) + "px";
@@ -47,6 +48,7 @@ const scroller_height = scroller.clientHeight;
     scroller.scrollTo(0, 0);
     assert_equals(scroller.scrollLeft, left, "aligns correctly on x");
     assert_equals(scroller.scrollTop, top, "aligns correctly on y");
+    target.style.left = target_left;
   }, "Snaps correctly for " + writing_mode +
      " writing mode with 'inline' and 'block' alignments");
 })
