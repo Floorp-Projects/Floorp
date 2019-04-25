@@ -8,6 +8,9 @@
 XPCOMUtils.defineLazyScriptGetter(this, ["PlacesToolbar", "PlacesMenu",
                                          "PlacesPanelview", "PlacesPanelMenuView"],
                                   "chrome://browser/content/places/browserPlacesViews.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
+});
 
 var StarUI = {
   _itemGuids: null,
@@ -182,6 +185,21 @@ var StarUI = {
     }
   },
 
+  getRecommendation(data) {
+    return BookmarkPanelHub.messageRequest(data, window);
+  },
+
+  toggleRecommendation(visible) {
+    const info = this._element("editBookmarkPanelInfoButton");
+    info.checked = visible !== undefined ? !!visible : !info.checked;
+    const recommendation = this._element("editBookmarkPanelRecommendation");
+    if (info.checked) {
+      recommendation.removeAttribute("disabled");
+    } else {
+      recommendation.setAttribute("disabled", "disabled");
+    }
+  },
+
   async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl) {
     // Slow double-clicks (not true double-clicks) shouldn't
     // cause the panel to flicker.
@@ -222,6 +240,21 @@ var StarUI = {
     }
 
     this._setIconAndPreviewImage();
+
+    const showRecommendation = await this.getRecommendation({
+      container: this._element("editBookmarkPanelRecommendation"),
+      createElement: elem => document.createElementNS("http://www.w3.org/1999/xhtml", elem),
+      url: aUrl.href,
+      close: e => {
+        e.stopPropagation();
+        this.toggleRecommendation(false);
+      },
+      hidePopup: () => {
+        this.panel.hidePopup();
+      },
+    });
+    this._element("editBookmarkPanelInfoButton").disabled = !showRecommendation;
+    this.toggleRecommendation(showRecommendation);
 
     this.beginBatch();
 
