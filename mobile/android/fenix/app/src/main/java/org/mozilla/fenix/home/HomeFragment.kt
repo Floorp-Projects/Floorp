@@ -208,8 +208,7 @@ class HomeFragment : Fragment(), CoroutineScope {
             is TabAction.Select -> {
                 val session = requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
-                val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(action.sessionId)
-                Navigation.findNavController(view!!).navigate(directions)
+                (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
             }
             is TabAction.Close -> {
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
@@ -225,12 +224,8 @@ class HomeFragment : Fragment(), CoroutineScope {
                 requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(action.private)
             }
             is TabAction.PrivateBrowsingLearnMore -> {
-                requireComponents.useCases.tabsUseCases.addPrivateTab
-                    .invoke(SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
-                (activity as HomeActivity).openToBrowser(
-                    requireComponents.core.sessionManager.selectedSession?.id,
-                    BrowserDirection.FromHome
-                )
+                (activity as HomeActivity).openToBrowserAndLoad(SupportUtils.getGenericSumoURLForTopic
+                    (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS), from = BrowserDirection.FromHome)
             }
             is TabAction.Add -> {
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)

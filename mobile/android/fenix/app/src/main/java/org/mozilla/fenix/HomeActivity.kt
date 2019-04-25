@@ -136,40 +136,43 @@ open class HomeActivity : AppCompatActivity() {
     private fun handleOpenedFromExternalSource() {
         intent?.putExtra(OPEN_TO_BROWSER, false)
         openToBrowser(
+            BrowserDirection.FromGlobal,
             SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
-                ?: components.core.sessionManager.selectedSession?.id, BrowserDirection.FromGlobal
+                ?: components.core.sessionManager.selectedSession?.id
         )
     }
 
     fun openToBrowserAndLoad(
-        text: String,
-        sessionId: String? = null,
+        searchTermOrURL: String,
+        externalSessionId: String? = null,
         engine: SearchEngine? = null,
         from: BrowserDirection
     ) {
-        openToBrowser(sessionId, from)
-        load(text, sessionId, engine)
+        openToBrowser(from, externalSessionId)
+        load(searchTermOrURL, externalSessionId, engine)
     }
 
-    fun openToBrowser(sessionId: String?, from: BrowserDirection) {
+    fun openToBrowser(from: BrowserDirection, externalSessionId: String? = null) {
         val directions = when (from) {
-            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(sessionId)
-            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(sessionId)
-            BrowserDirection.FromSearch -> SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
+            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(externalSessionId)
+            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(externalSessionId)
+            BrowserDirection.FromSearch ->
+                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(externalSessionId)
             BrowserDirection.FromSettings ->
-                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(sessionId)
+                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(externalSessionId)
             BrowserDirection.FromBookmarks ->
-                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(sessionId)
+                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(externalSessionId)
             BrowserDirection.FromBookmarksFolderSelect ->
-                SelectBookmarkFolderFragmentDirections.actionBookmarkSelectFolderFragmentToBrowserFragment(sessionId)
+                SelectBookmarkFolderFragmentDirections
+                    .actionBookmarkSelectFolderFragmentToBrowserFragment(externalSessionId)
             BrowserDirection.FromHistory ->
-                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(sessionId)
+                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(externalSessionId)
         }
 
         navHost.navController.navigate(directions)
     }
 
-    private fun load(text: String, sessionId: String?, engine: SearchEngine?) {
+    private fun load(searchTermOrURL: String, sessionId: String?, engine: SearchEngine?) {
         val isPrivate = this.browsingModeManager.isPrivate
 
         val loadUrlUseCase = if (sessionId == null) {
@@ -187,10 +190,10 @@ open class HomeActivity : AppCompatActivity() {
             } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
         }
 
-        if (text.isUrl()) {
-            loadUrlUseCase.invoke(text.toNormalizedUrl())
+        if (searchTermOrURL.isUrl()) {
+            loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl())
         } else {
-            searchUseCase.invoke(text)
+            searchUseCase.invoke(searchTermOrURL)
         }
     }
 

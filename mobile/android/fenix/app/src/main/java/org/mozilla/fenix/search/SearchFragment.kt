@@ -152,8 +152,7 @@ class SearchFragment : Fragment(), BackHandler {
                     is SearchAction.UrlCommitted -> {
                         if (it.url.isNotBlank()) {
                             (activity as HomeActivity).openToBrowserAndLoad(
-                                it.url, it.session, it.engine,
-                                BrowserDirection.FromSearch
+                                it.url, engine = it.engine, from = BrowserDirection.FromSearch
                             )
 
                             val event = if (it.url.isUrl()) {
@@ -184,13 +183,13 @@ class SearchFragment : Fragment(), BackHandler {
                 when (it) {
                     is AwesomeBarAction.URLTapped -> {
                         getSessionUseCase(requireContext(), sessionId == null).invoke(it.url)
-                        (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
+                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromSearch)
                         requireComponents.analytics.metrics.track(Event.EnteredUrl(false))
                     }
                     is AwesomeBarAction.SearchTermsTapped -> {
                         getSearchUseCase(requireContext(), sessionId == null)
                             .invoke(it.searchTerms, it.engine)
-                        (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
+                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromSearch)
 
                         val engine = it.engine ?: requireComponents
                             .search.searchEngineManager.getDefaultSearchEngine(requireContext())

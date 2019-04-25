@@ -187,7 +187,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             (activity as HomeActivity).browsingModeManager.mode =
                                 BrowsingModeManager.Mode.Normal
                             (activity as HomeActivity).openToBrowserAndLoad(
-                                text = url,
+                                searchTermOrURL = url,
                                 from = BrowserDirection.FromBookmarks
                             )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInNewTab)
@@ -198,7 +198,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             (activity as HomeActivity).browsingModeManager.mode =
                                 BrowsingModeManager.Mode.Private
                             (activity as HomeActivity).openToBrowserAndLoad(
-                                text = url,
+                                searchTermOrURL = url,
                                 from = BrowserDirection.FromBookmarks
                             )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInPrivateTab)
@@ -223,7 +223,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 when (it) {
                     is SignInAction.ClickedSignIn -> {
                         requireComponents.services.accountsAuthFeature.beginAuthentication()
-                        (activity as HomeActivity).openToBrowser(null, from = BrowserDirection.FromBookmarks)
+                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromBookmarks)
                     }
                 }
             }

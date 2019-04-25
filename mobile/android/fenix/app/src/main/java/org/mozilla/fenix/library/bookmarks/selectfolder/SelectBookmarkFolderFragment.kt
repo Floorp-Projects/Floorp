@@ -80,7 +80,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
                     is SignInAction.ClickedSignIn -> {
                         requireComponents.services.accountsAuthFeature.beginAuthentication()
                         view?.let {
-                            (activity as HomeActivity).openToBrowser(null, BrowserDirection.FromBookmarksFolderSelect)
+                            (activity as HomeActivity).openToBrowser(BrowserDirection.FromBookmarksFolderSelect)
                         }
                     }
                 }

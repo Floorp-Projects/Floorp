@@ -94,7 +94,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private lateinit var job: Job
 
-    var sessionId: String? = null
+    // Session id for custom tab or opened from external intent
+    var externalSessionId: String? = null
 
     override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
 
@@ -109,15 +110,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         savedInstanceState: Bundle?
     ): View? {
         require(arguments != null)
-        sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
+        externalSessionId = BrowserFragmentArgs.fromBundle(arguments!!).externalSessionId
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
-            ActionBusFactory.get(this), sessionId,
+            ActionBusFactory.get(this), externalSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
-            SearchState("", getSessionByIdOrUseSelectedSession().searchTerms, isEditing = false),
+            SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false),
             search_engine_icon
         )
 
@@ -146,19 +147,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun getAppropriateLayoutGravity(): Int {
-        sessionId?.let { sessionId ->
-            if (requireComponents.core.sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true) {
-                return Gravity.TOP
-            }
-        }
+        if (getSessionById()?.isCustomTabSession() == true) { return Gravity.TOP }
 
         return Gravity.BOTTOM
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 
         val sessionManager = requireComponents.core.sessionManager
 
@@ -206,7 +201,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 sessionManager,
                 SessionUseCases(sessionManager),
                 view.engineView,
-                sessionId
+                externalSessionId
             ),
             owner = this,
             view = view
@@ -241,7 +236,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             feature = FullScreenFeature(
                 sessionManager,
                 SessionUseCases(sessionManager),
-                sessionId
+                externalSessionId
             ) {
                 if (it) {
                     FenixSnackbar.make(view.rootView, Snackbar.LENGTH_LONG)
@@ -275,21 +270,18 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
 
-        sessionId?.let { sessionId ->
-            if (sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true) {
-                customTabsIntegration.set(
-                    feature = CustomTabsIntegration(
-                        requireContext(),
-                        requireComponents.core.sessionManager,
-                        toolbar,
-                        sessionId,
-                        activity,
-                        onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
-                    ),
-                    owner = this,
-                    view = view
-                )
-            }
+        externalSessionId?.let {
+            customTabsIntegration.set(
+                feature = CustomTabsIntegration(
+                    requireContext(),
+                    requireComponents.core.sessionManager,
+                    toolbar,
+                    it,
+                    activity,
+                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                ),
+                owner = this,
+                view = view)
         }
 
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
@@ -322,7 +314,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                             .findNavController(toolbarComponent.getView())
                             .navigate(
                                 BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                                    getSessionByIdOrUseSelectedSession().id
+                                    getSessionById()?.id
                                 )
                             )
 
@@ -335,10 +327,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                         handleToolbarItemInteraction(it)
                     }
                     is SearchAction.ToolbarLongClicked -> {
-                        getSessionByIdOrUseSelectedSession().copyUrl(requireContext())
-                        FenixSnackbar.make(view!!, Snackbar.LENGTH_LONG)
-                            .setText(resources.getString(R.string.url_copied))
-                            .show()
+                        getSessionById()?.let { session ->
+                            session.copyUrl(requireContext())
+                            FenixSnackbar.make(view!!, Snackbar.LENGTH_LONG)
+                                .setText(resources.getString(R.string.url_copied))
+                                .show()
+                        }
                     }
                 }
             }
@@ -354,7 +348,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     }
                     is QuickActionAction.SharePressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetShareTapped)
-                        getSessionByIdOrUseSelectedSession().url.apply { requireContext().share(this) }
+                        getSessionById()?.let { session ->
+                            session.url.apply { requireContext().share(this) }
+                        }
                     }
                     is QuickActionAction.DownloadsPressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetDownloadTapped)
@@ -362,28 +358,29 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     }
                     is QuickActionAction.BookmarkPressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetBookmarkTapped)
-                        val session = getSessionByIdOrUseSelectedSession()
-                        CoroutineScope(IO).launch {
-                            val guid = requireComponents.core.bookmarksStorage
-                                .addItem(BookmarkRoot.Mobile.id, session.url, session.title, null)
-                            launch(Main) {
-                                requireComponents.analytics.metrics.track(Event.AddBookmark)
-                                view?.let {
-                                    FenixSnackbar.make(
-                                        it,
-                                        Snackbar.LENGTH_LONG
-                                    )
-                                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                            Navigation.findNavController(requireActivity(), R.id.container)
-                                                .navigate(
-                                                    BrowserFragmentDirections
-                                                        .actionBrowserFragmentToBookmarkEditFragment(
-                                                            guid
-                                                        )
-                                                )
-                                        }
-                                        .setText(getString(R.string.bookmark_saved_snackbar))
-                                        .show()
+                        getSessionById()?.let { session ->
+                            CoroutineScope(IO).launch {
+                                val guid = requireComponents.core.bookmarksStorage
+                                    .addItem(BookmarkRoot.Mobile.id, session.url, session.title, null)
+                                launch(Main) {
+                                    requireComponents.analytics.metrics.track(Event.AddBookmark)
+                                    view?.let {
+                                        FenixSnackbar.make(
+                                            it,
+                                            Snackbar.LENGTH_LONG
+                                        )
+                                            .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                                Navigation.findNavController(requireActivity(), R.id.container)
+                                                    .navigate(
+                                                        BrowserFragmentDirections
+                                                            .actionBrowserFragmentToBookmarkEditFragment(
+                                                                guid
+                                                            )
+                                                    )
+                                            }
+                                            .setText(getString(R.string.bookmark_saved_snackbar))
+                                            .show()
+                                    }
                                 }
                             }
                         }
@@ -474,7 +471,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.Library -> Navigation.findNavController(toolbarComponent.getView())
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment())
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
-            ToolbarMenu.Item.Share -> getSessionByIdOrUseSelectedSession().url.apply { requireContext().share(this) }
+            ToolbarMenu.Item.Share -> getSessionById()?.let { session ->
+                session.url.apply { requireContext().share(this)
+                }
+            }
             ToolbarMenu.Item.NewPrivateTab -> {
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
@@ -485,9 +485,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 FindInPageIntegration.launch?.invoke()
                 requireComponents.analytics.metrics.track(Event.FindInPageOpened)
             }
-            ToolbarMenu.Item.ReportIssue -> getSessionByIdOrUseSelectedSession().url.apply {
-                val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
-                sessionUseCases.loadUrl.invoke(reportUrl)
+            ToolbarMenu.Item.ReportIssue -> getSessionById()?.let { session ->
+                session.url.apply {
+                    val reportUrl = String.format(REPORT_SITE_ISSUE_URL, this)
+                    sessionUseCases.loadUrl.invoke(reportUrl)
+                }
             }
             ToolbarMenu.Item.Help -> {
                 // TODO Help #1016
@@ -501,9 +503,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 val intent = Intent(context, IntentReceiverActivity::class.java)
-                val session = context!!.components.core.sessionManager.findSessionById(sessionId!!)
                 intent.action = Intent.ACTION_VIEW
-                intent.data = Uri.parse(session?.url)
+                intent.data = Uri.parse(getSessionById()?.url)
                 startActivity(intent)
             }
         }
@@ -520,8 +521,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun showQuickSettingsDialog() {
-        val session = getSessionByIdOrUseSelectedSession()
-        val host = requireNotNull(session.url.toUri().host)
+        val session = requireNotNull(getSessionById())
+        val host = requireNotNull(session.url.toUri()?.host)
 
         launch {
             val storage = requireContext().components.storage
@@ -543,11 +544,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
-    private fun getSessionByIdOrUseSelectedSession(): Session {
-        return if (sessionId != null) {
-            requireNotNull(requireContext().components.core.sessionManager.findSessionById(requireNotNull(sessionId)))
+    private fun getSessionById(): Session? {
+        return if (externalSessionId != null) {
+            requireNotNull(requireContext().components.core.sessionManager.findSessionById(externalSessionId!!))
         } else {
-            requireContext().components.core.sessionManager.selectedSessionOrThrow
+            requireComponents.core.sessionManager.selectedSession
         }
     }
 
@@ -568,9 +569,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun setToolbarBehavior(loading: Boolean) {
-        if (sessionId?.let { sessionId ->
-                context?.components?.core?.sessionManager?.findSessionById(sessionId)?.isCustomTabSession() == true
-            } == true) return
+        if (getSessionById()?.isCustomTabSession() == true) { return }
+
         val toolbarView = toolbarComponent.uiView.view
         (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
             // Stop toolbar from collapsing if TalkBack is enabled or page is loading
@@ -581,7 +581,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     behavior = BrowserToolbarBottomBehavior(context, null)
                 } else {
                     (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
-                    behavior = null
+                    null
                 }
             }
         }
