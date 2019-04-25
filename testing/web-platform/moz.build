@@ -60,7 +60,7 @@ with Files("mozilla/tests/editor/**"):
     BUG_COMPONENT = ("Core", "Editor")
 
 with Files("mozilla/tests/fetch/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("mozilla/tests/focus/**"):
     BUG_COMPONENT = ("Core", "Editor")
@@ -125,7 +125,7 @@ with Files("tests/2dcontext/**"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
 
 with Files("tests/FileAPI/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: File")
 
 with Files("tests/IndexedDB/**"):
     BUG_COMPONENT = ("Core", "DOM: IndexedDB")
@@ -137,7 +137,7 @@ with Files("tests/WebIDL/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/xhr/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("tests/accelerometer/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -167,7 +167,7 @@ with Files("tests/battery-status/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/beacon/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("tests/bluetooth/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -283,13 +283,13 @@ with Files("tests/entries-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/eventsource/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/fetch/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("tests/fonts/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -333,7 +333,7 @@ with Files("tests/infrastructure/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/input-events/**"):
-    BUG_COMPONENT = ("Core", "General")
+    BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/interfaces/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -366,7 +366,7 @@ with Files("tests/media-capabilities/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
 
 with Files("tests/mediasession/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 with Files("tests/media-source/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
@@ -387,7 +387,7 @@ with Files("tests/mixed-content/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/navigation-timing/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Performance")
 
 with Files("tests/netinfo/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -436,7 +436,7 @@ with Files("tests/payment-request/**"):
     BUG_COMPONENT = ("Core", "DOM: Web Payments")
 
 with Files("tests/performance-timeline/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Performance")
 
 with Files("tests/pointerevents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
@@ -470,7 +470,7 @@ with Files("tests/resize-observer/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/resource-timing/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Performance")
 
 with Files("tests/resources/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -497,10 +497,10 @@ with Files("tests/speech-api/**"):
     BUG_COMPONENT = ("Core", "Web Speech")
 
 with Files("tests/storage/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Quota Manager")
 
 with Files("tests/streams/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Javascript Engine")
 
 with Files("tests/subresource-integrity/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -512,7 +512,7 @@ with Files("tests/svg-aam/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
 with Files("tests/touch-events/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("tests/tools/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -527,10 +527,10 @@ with Files("tests/upgrade-insecure-requests/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/url/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Networking")
 
 with Files("tests/user-timing/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Performance")
 
 with Files("tests/vibration/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -581,7 +581,7 @@ with Files("tests/webusb/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/webvr/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: WebVR")
 
 with Files("tests/webvtt/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
