@@ -28,14 +28,14 @@ void BaseBlobImpl::SetDOMPath(const nsAString& aPath) {
 
 void BaseBlobImpl::GetMozFullPath(nsAString& aFileName,
                                   SystemCallerGuarantee /* unused */,
-                                  ErrorResult& aRv) const {
+                                  ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
 
   GetMozFullPathInternal(aFileName, aRv);
 }
 
 void BaseBlobImpl::GetMozFullPathInternal(nsAString& aFileName,
-                                          ErrorResult& aRv) const {
+                                          ErrorResult& aRv) {
   if (!mIsFile) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
