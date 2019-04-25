@@ -91,6 +91,11 @@ html|button > * {
   pointer-events: none;
 }
 
+/* Prevent buttons from having a text selection highlight. Bug 1546366 */
+button::selection {
+  all: unset;
+}
+
 /* Autocomplete Popup */
 .devtools-autocomplete-popup {
   overflow: hidden;
