@@ -1114,93 +1114,10 @@ void nsWindow::Move(double aX, double aY) {
   NotifyRollupGeometryChange();
 }
 
-bool nsWindow::IsWaylandPopup() {
-  return !mIsX11Display && mIsTopLevel && mWindowType == eWindowType_popup;
-}
-
-#ifdef DEBUG
-static void NativeMoveResizeWaylandPopupCallback(
-    GdkWindow *window, const GdkRectangle *flipped_rect,
-    const GdkRectangle *final_rect, gboolean flipped_x, gboolean flipped_y,
-    void *unused) {
-  LOG(("%s flipped %d %d\n", __FUNCTION__, flipped_rect->x, flipped_rect->y));
-  LOG(("%s final %d %d\n", __FUNCTION__, final_rect->x, final_rect->y));
-}
-#endif
-
-void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint *aPosition,
-                                            GdkRectangle *aSize) {
-  // Available as of GTK 3.24+
-  static auto sGdkWindowMoveToRect = (void (*)(
-      GdkWindow *, const GdkRectangle *, GdkGravity, GdkGravity, GdkAnchorHints,
-      gint, gint))dlsym(RTLD_DEFAULT, "gdk_window_move_to_rect");
-
-  if (aSize) {
-    gtk_window_resize(GTK_WINDOW(mShell), aSize->width, aSize->height);
-  }
-
-  GdkWindow *gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-  // gdk_window_move_to_rect() is not available, we don't have a valid GdkWindow
-  // (we're not realized yet) - try plain gtk_window_move() at least.
-  if (!sGdkWindowMoveToRect || !gdkWindow) {
-    gtk_window_move(GTK_WINDOW(mShell), aPosition->x, aPosition->y);
-    return;
-  }
-
-  GtkWindow *parentWindow = GetPopupParentWindow();
-  if (parentWindow) {
-    gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWindow);
-  } else {
-    parentWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
-  }
-
-  LOG(("nsWindow::NativeMoveResizeWaylandPopup [%p] Set popup parent %p\n",
-       (void *)this, parentWindow));
-
-  int x_parent, y_parent;
-  gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentWindow)),
-                        &x_parent, &y_parent);
-
-  GdkRectangle rect = {aPosition->x - x_parent, aPosition->y - y_parent, 1, 1};
-  if (aSize) {
-    rect.width = aSize->width;
-    rect.height = aSize->height;
-  }
-
-  LOG(("%s [%p] request position %d,%d\n", __FUNCTION__, (void *)this,
-       aPosition->x, aPosition->y));
-  if (aSize) {
-    LOG(("  request size %d,%d\n", aSize->width, aSize->height));
-  }
-  LOG(("  request result %d %d\n", rect.x, rect.y));
-#ifdef DEBUG
-  g_signal_connect(gdkWindow, "moved-to-rect",
-                   G_CALLBACK(NativeMoveResizeWaylandPopupCallback), this);
-#endif
-
-  GdkGravity rectAnchor = GDK_GRAVITY_NORTH_WEST;
-  GdkGravity menuAnchor = GDK_GRAVITY_NORTH_WEST;
-  if (GetTextDirection() == GTK_TEXT_DIR_RTL) {
-    rectAnchor = GDK_GRAVITY_NORTH_EAST;
-    menuAnchor = GDK_GRAVITY_NORTH_EAST;
-  }
-
-  GdkAnchorHints hints = GdkAnchorHints(GDK_ANCHOR_SLIDE | GDK_ANCHOR_FLIP);
-  if (aSize) {
-    hints = GdkAnchorHints(hints | GDK_ANCHOR_RESIZE);
-  }
-
-  sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints, 0, 0);
-}
-
 void nsWindow::NativeMove() {
   GdkPoint point = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
-  LOG(("nsWindow::NativeMove [%p] %d %d\n", (void *)this, point.x, point.y));
-
-  if (IsWaylandPopup()) {
-    NativeMoveResizeWaylandPopup(&point, nullptr);
-  } else if (mIsTopLevel) {
+  if (mIsTopLevel) {
     gtk_window_move(GTK_WINDOW(mShell), point.x, point.y);
   } else if (mGdkWindow) {
     gdk_window_move(mGdkWindow, point.x, point.y);
@@ -3491,6 +3408,11 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
                                  GDK_WINDOW_TYPE_HINT_DIALOG);
         gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
       } else if (mWindowType == eWindowType_popup) {
+        // With popup windows, we want to control their position, so don't
+        // wait for the window manager to place them (which wouldn't
+        // happen with override-redirect windows anyway).
+        NativeMove();
+
         gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
                                gdk_get_program_class());
 
@@ -3543,18 +3465,8 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
         gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
 
         if (topLevelParent) {
-          LOG(("nsWindow::Create [%p] Set popup parent %p\n", (void *)this,
-               topLevelParent));
           gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
         }
-
-        // We need realized mShell at NativeMove().
-        gtk_widget_realize(mShell);
-
-        // With popup windows, we want to control their position, so don't
-        // wait for the window manager to place them (which wouldn't
-        // happen with override-redirect windows anyway).
-        NativeMove();
       } else {  // must be eWindowType_toplevel
         SetDefaultIcon();
         gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel",
@@ -3998,27 +3910,23 @@ void nsWindow::NativeMoveResize() {
   LOG(("nsWindow::NativeMoveResize [%p] %d %d %d %d\n", (void *)this, topLeft.x,
        topLeft.y, size.width, size.height));
 
-  if (IsWaylandPopup()) {
-    NativeMoveResizeWaylandPopup(&topLeft, &size);
-  } else {
-    if (mIsTopLevel) {
-      // x and y give the position of the window manager frame top-left.
-      gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
-      // This sets the client window size.
-      MOZ_ASSERT(size.width > 0 && size.height > 0,
-                 "Can't resize window smaller than 1x1.");
-      gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
-    } else if (mContainer) {
-      GtkAllocation allocation;
-      allocation.x = topLeft.x;
-      allocation.y = topLeft.y;
-      allocation.width = size.width;
-      allocation.height = size.height;
-      gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
-    } else if (mGdkWindow) {
-      gdk_window_move_resize(mGdkWindow, topLeft.x, topLeft.y, size.width,
-                             size.height);
-    }
+  if (mIsTopLevel) {
+    // x and y give the position of the window manager frame top-left.
+    gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
+    // This sets the client window size.
+    MOZ_ASSERT(size.width > 0 && size.height > 0,
+               "Can't resize window smaller than 1x1.");
+    gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+  } else if (mContainer) {
+    GtkAllocation allocation;
+    allocation.x = topLeft.x;
+    allocation.y = topLeft.y;
+    allocation.width = size.width;
+    allocation.height = size.height;
+    gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
+  } else if (mGdkWindow) {
+    gdk_window_move_resize(mGdkWindow, topLeft.x, topLeft.y, size.width,
+                           size.height);
   }
 
 #ifdef MOZ_X11
@@ -4046,11 +3954,9 @@ void nsWindow::NativeShow(bool aAction) {
         SetUserTimeAndStartupIDForActivatedWindow(mShell);
       }
       // Update popup window hierarchy run-time on Wayland.
-      if (IsWaylandPopup()) {
+      if (!mIsX11Display && mWindowType == eWindowType_popup) {
         GtkWindow *parentWindow = GetPopupParentWindow();
         if (parentWindow) {
-          LOG(("nsWindow::NativeShow [%p] Set popup parent %p\n", (void *)this,
-               parentWindow));
           gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWindow);
         }
       }
@@ -5538,9 +5444,9 @@ static gboolean key_press_event_cb(GtkWidget *widget, GdkEventKey *event) {
   // are generated only when the key is physically released.
 #  define NS_GDKEVENT_MATCH_MASK 0x1FFF  // GDK_SHIFT_MASK .. GDK_BUTTON5_MASK
   // Our headers undefine X11 KeyPress - let's redefine it here.
-#  ifndef KeyPress
-#    define KeyPress 2
-#  endif
+#ifndef KeyPress
+  #define KeyPress 2
+#endif
   GdkDisplay *gdkDisplay = gtk_widget_get_display(widget);
   if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
@@ -6913,32 +6819,18 @@ void nsWindow::ForceTitlebarRedraw(void) {
   }
 }
 
-GtkWindow *nsWindow::GetPopupParentWindow() {
-  nsView *view = nsView::GetViewFor(this);
+GtkWindow* nsWindow::GetPopupParentWindow()
+{
+  nsView* view = nsView::GetViewFor(this);
   if (!view) {
     return nullptr;
   }
-  nsIFrame *frame = view->GetFrame();
+  nsIFrame* frame = view->GetFrame();
   if (!frame) {
     return nullptr;
   }
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(frame);
-  nsWindow *window =
-      static_cast<nsWindow *>(menuPopupFrame->GetParentMenuWidget());
+  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(frame);
+  nsWindow* window =
+    static_cast<nsWindow*>(menuPopupFrame->GetParentMenuWidget());
   return window ? GTK_WINDOW(window->GetGtkWidget()) : nullptr;
-}
-
-GtkTextDirection nsWindow::GetTextDirection() {
-  nsView *view = nsView::GetViewFor(this);
-  if (!view) {
-    return GTK_TEXT_DIR_LTR;
-  }
-  nsIFrame *frame = view->GetFrame();
-  if (!frame) {
-    return GTK_TEXT_DIR_LTR;
-  }
-
-  WritingMode wm = frame->GetWritingMode();
-  bool isFrameRTL = !(wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR());
-  return isFrameRTL ? GTK_TEXT_DIR_RTL : GTK_TEXT_DIR_LTR;
 }
