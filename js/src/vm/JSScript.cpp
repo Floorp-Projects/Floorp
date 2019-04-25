@@ -1672,9 +1672,26 @@ class ScriptSource::LoadSourceMatcher {
     return sourceAlreadyLoaded();
   }
 
-  bool operator()(const Missing&) const { return tryLoadingSource(); }
+  bool operator()(const Retrievable<Utf8Unit>&) {
+    MOZ_CRASH("retrievable UTF-8 not implemented yet -- but soon!");
+    return false;
+  }
 
-  bool operator()(const BinAST&) const { return tryLoadingSource(); }
+  bool operator()(const Retrievable<char16_t>&) { return tryLoadingSource(); }
+
+  bool operator()(const Missing&) const {
+    MOZ_ASSERT(!ss_->sourceRetrievable(),
+               "should have Retrievable<Unit> source, not Missing source, if "
+               "retrievable");
+    *loaded_ = false;
+    return true;
+  }
+
+  bool operator()(const BinAST&) const {
+    MOZ_ASSERT(!ss_->sourceRetrievable(), "binast source is never retrievable");
+    *loaded_ = false;
+    return true;
+  }
 
  private:
   bool sourceAlreadyLoaded() const {
@@ -1889,8 +1906,11 @@ const Unit* ScriptSource::units(JSContext* cx,
   }
 
   if (data.is<Missing>()) {
-    MOZ_CRASH(
-        "ScriptSource::units() on ScriptSource with SourceType = Missing");
+    MOZ_CRASH("ScriptSource::units() on ScriptSource with missing source");
+  }
+
+  if (data.is<Retrievable<Unit>>()) {
+    MOZ_CRASH("ScriptSource::units() on ScriptSource with retrievable source");
   }
 
   MOZ_ASSERT(data.is<Compressed<Unit>>());
@@ -2096,8 +2116,6 @@ JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
 template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
-  MOZ_ASSERT(data.is<Missing>());
-
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
@@ -2116,8 +2134,9 @@ MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
                                                    EntryUnits<Unit>&& source,
                                                    size_t length) {
   MOZ_ASSERT(sourceRetrievable_);
-  MOZ_ASSERT(data.is<Missing>(),
-             "retrievable source must be indicated as missing");
+  MOZ_ASSERT(data.is<Retrievable<Unit>>(),
+             "retrieved source can only overwrite the corresponding "
+             "retrievable source");
   return setUncompressedSourceHelper(cx, std::move(source), length);
 }
 
@@ -2126,13 +2145,15 @@ MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
 MOZ_MUST_USE bool ScriptSource::setBinASTSourceCopy(JSContext* cx,
                                                     const uint8_t* buf,
                                                     size_t len) {
+  MOZ_ASSERT(data.is<Missing>());
+
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(reinterpret_cast<const char*>(buf), len);
   if (!deduped) {
     ReportOutOfMemory(cx);
     return false;
   }
-  MOZ_ASSERT(data.is<Missing>());
+
   data = SourceType(BinAST(std::move(*deduped)));
   return true;
 }
@@ -2165,7 +2186,7 @@ const uint8_t* ScriptSource::binASTSource() {
 
 bool ScriptSource::tryCompressOffThread(JSContext* cx) {
   if (!hasUncompressedSource()) {
-    // This excludes already-compressed, missing, and BinAST source.
+    // This excludes compressed, missing, retrievable, and BinAST source.
     return true;
   }
 
@@ -2262,6 +2283,7 @@ bool ScriptSource::assignSource(JSContext* cx,
 
   if (options.sourceIsLazy) {
     sourceRetrievable_ = true;
+    data = SourceType(Retrievable<Unit>());
     return true;
   }
 
@@ -2400,8 +2422,8 @@ struct SourceCompressionTask::PerformTaskWork {
   template <typename T>
   void operator()(const T&) {
     MOZ_CRASH(
-        "why are we compressing missing, already-compressed, or "
-        "BinAST source?");
+        "why are we compressing missing, missing-but-retrievable, "
+        "already-compressed, or BinAST source?");
   }
 };
 
@@ -2621,6 +2643,8 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     UncompressedUtf8,
     CompressedUtf16,
     UncompressedUtf16,
+    RetrievableUtf8,
+    RetrievableUtf16,
     Missing,
     BinAST,
   };
@@ -2645,6 +2669,12 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
       }
       DataType operator()(const Uncompressed<char16_t>&) {
         return DataType::UncompressedUtf16;
+      }
+      DataType operator()(const Retrievable<Utf8Unit>&) {
+        return DataType::RetrievableUtf8;
+      }
+      DataType operator()(const Retrievable<char16_t>&) {
+        return DataType::RetrievableUtf16;
       }
       DataType operator()(const Missing&) { return DataType::Missing; }
       DataType operator()(const BinAST&) { return DataType::BinAST; }
@@ -2679,6 +2709,9 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     if (retrievable) {
       // It's unnecessary to code compressed data if it can just be retrieved
       // using the source hook.
+      if (mode == XDR_DECODE) {
+        ss->data = SourceType(Retrievable<Unit>());
+      }
       return Ok();
     }
 
@@ -2730,6 +2763,9 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     if (retrievable) {
       // It's unnecessary to code uncompressed data if it can just be retrieved
       // using the source hook.
+      if (mode == XDR_DECODE) {
+        ss->data = SourceType(Retrievable<Unit>());
+      }
       return Ok();
     }
 
@@ -2887,6 +2923,16 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 
       // There's no data to XDR for missing source.
       break;
+    }
+
+    case DataType::RetrievableUtf8: {
+      ss->data = SourceType(Retrievable<Utf8Unit>());
+      return Ok();
+    }
+
+    case DataType::RetrievableUtf16: {
+      ss->data = SourceType(Retrievable<char16_t>());
+      return Ok();
     }
 
     case DataType::BinAST:
