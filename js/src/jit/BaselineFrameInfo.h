@@ -372,7 +372,11 @@ class InterpreterFrameInfo : public FrameInfo {
 
   void popn(uint32_t n) { masm.addToStackPtr(Imm32(n * sizeof(Value))); }
 
-  void popn(Register reg) { masm.addToStackPtr(reg); }
+  void popn(Register reg) {
+    // sp := sp + reg * sizeof(Value)
+    Register spReg = AsRegister(masm.getStackPointer());
+    masm.computeEffectiveAddress(BaseValueIndex(spReg, reg), spReg);
+  }
 
   void popValue(ValueOperand dest) { masm.popValue(dest); }
 
