@@ -134,7 +134,7 @@ nsFlowAreaRect nsFloatManager::GetFlowArea(
                           mFloats[floatCount - 1].mRightBEnd <= blockStart)) {
     return nsFlowAreaRect(aWM, aContentArea.IStart(aWM), aBCoord,
                           aContentArea.ISize(aWM), aBSize,
-                          nsFlowAreaRectFlags::NO_FLAGS);
+                          nsFlowAreaRectFlags::NoFlags);
   }
 
   nscoord blockEnd;
@@ -244,10 +244,10 @@ nsFlowAreaRect nsFloatManager::GetFlowArea(
           ? lineLeft - mLineLeft
           : mLineLeft - lineRight + LogicalSize(aWM, aContainerSize).ISize(aWM);
 
-  nsFlowAreaRectFlags flags = (haveFloats ? nsFlowAreaRectFlags::HAS_FLOATS
-                                          : nsFlowAreaRectFlags::NO_FLAGS) |
-                              (mayWiden ? nsFlowAreaRectFlags::MAY_WIDEN
-                                        : nsFlowAreaRectFlags::NO_FLAGS);
+  nsFlowAreaRectFlags flags =
+      (haveFloats ? nsFlowAreaRectFlags::HasFloats
+                  : nsFlowAreaRectFlags::NoFlags) |
+      (mayWiden ? nsFlowAreaRectFlags::MayWiden : nsFlowAreaRectFlags::NoFlags);
 
   return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
                         lineRight - lineLeft, blockSize, flags);

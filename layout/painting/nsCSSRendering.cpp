@@ -852,7 +852,7 @@ ImgDrawResult nsCSSRendering::PaintBorderWithStyleBorder(
     ImgDrawResult result = ImgDrawResult::SUCCESS;
 
     uint32_t irFlags = 0;
-    if (aFlags & PaintBorderFlags::SYNC_DECODE_IMAGES) {
+    if (aFlags & PaintBorderFlags::SyncDecodeImages) {
       irFlags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
     }
 

@@ -279,7 +279,7 @@ image::ImgDrawResult nsFieldSetFrame::PaintBorder(
   nsPresContext* presContext = PresContext();
 
   PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
-                                     ? PaintBorderFlags::SYNC_DECODE_IMAGES
+                                     ? PaintBorderFlags::SyncDecodeImages
                                      : PaintBorderFlags();
 
   ImgDrawResult result = ImgDrawResult::SUCCESS;
@@ -695,11 +695,11 @@ nscoord nsFieldSetFrame::GetLogicalBaseline(WritingMode aWM) const {
     case mozilla::StyleDisplay::InlineGrid:
     case mozilla::StyleDisplay::Flex:
     case mozilla::StyleDisplay::InlineFlex:
-      return BaselineBOffset(aWM, BaselineSharingGroup::eFirst,
-                             AlignmentContext::eInline);
+      return BaselineBOffset(aWM, BaselineSharingGroup::First,
+                             AlignmentContext::Inline);
     default:
-      return BSize(aWM) - BaselineBOffset(aWM, BaselineSharingGroup::eLast,
-                                          AlignmentContext::eInline);
+      return BSize(aWM) - BaselineBOffset(aWM, BaselineSharingGroup::Last,
+                                          AlignmentContext::Inline);
   }
 }
 
@@ -734,7 +734,7 @@ bool nsFieldSetFrame::GetNaturalBaselineBOffset(
     return false;
   }
   nscoord innerBStart = inner->BStart(aWM, GetSize());
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+  if (aBaselineGroup == BaselineSharingGroup::First) {
     *aBaseline += innerBStart;
   } else {
     *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));

@@ -28,9 +28,9 @@ class StyleBasicShape;
 }  // namespace mozilla
 
 enum class nsFlowAreaRectFlags : uint32_t {
-  NO_FLAGS = 0,
-  HAS_FLOATS = 1 << 0,
-  MAY_WIDEN = 1 << 1
+  NoFlags = 0,
+  HasFloats = 1 << 0,
+  MayWiden = 1 << 1
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsFlowAreaRectFlags)
 
@@ -55,10 +55,10 @@ struct nsFlowAreaRect {
         mAreaFlags(aAreaFlags) {}
 
   bool HasFloats() const {
-    return (bool)(mAreaFlags & nsFlowAreaRectFlags::HAS_FLOATS);
+    return (bool)(mAreaFlags & nsFlowAreaRectFlags::HasFloats);
   }
   bool MayWiden() const {
-    return (bool)(mAreaFlags & nsFlowAreaRectFlags::MAY_WIDEN);
+    return (bool)(mAreaFlags & nsFlowAreaRectFlags::MayWiden);
   }
 };
 

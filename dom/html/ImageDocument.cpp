@@ -423,7 +423,7 @@ void ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage) {
       nsPoint(
           nsPresContext::CSSPixelsToAppUnits(aX / ratio) - portRect.width / 2,
           nsPresContext::CSSPixelsToAppUnits(aY / ratio) - portRect.height / 2),
-      ScrollMode::eInstant);
+      ScrollMode::Instant);
 }
 
 void ImageDocument::RestoreImage() {

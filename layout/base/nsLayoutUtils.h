@@ -129,8 +129,8 @@ enum class RelativeTo { ScrollPort, ScrollFrame };
 
 // Flags to customize the behavior of nsLayoutUtils::DrawString.
 enum class DrawStringFlags {
-  eDefault = 0x0,
-  eForceHorizontal = 0x1  // Forces the text to be drawn horizontally.
+  Default = 0x0,
+  ForceHorizontal = 0x1  // Forces the text to be drawn horizontally.
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
 
@@ -1099,17 +1099,17 @@ class nsLayoutUtils {
       nsIFrame* aFrame, nsDisplayListBuilder& aBuilder);
 
   enum class PaintFrameFlags : uint32_t {
-    PAINT_IN_TRANSFORM = 0x01,
-    PAINT_SYNC_DECODE_IMAGES = 0x02,
-    PAINT_WIDGET_LAYERS = 0x04,
-    PAINT_IGNORE_SUPPRESSION = 0x08,
-    PAINT_DOCUMENT_RELATIVE = 0x10,
-    PAINT_HIDE_CARET = 0x20,
-    PAINT_TO_WINDOW = 0x40,
-    PAINT_EXISTING_TRANSACTION = 0x80,
-    PAINT_NO_COMPOSITE = 0x100,
-    PAINT_COMPRESSED = 0x200,
-    PAINT_FOR_WEBRENDER = 0x400,
+    InTransform = 0x01,
+    SyncDecodeImages = 0x02,
+    WidgetLayers = 0x04,
+    IgnoreSuppression = 0x08,
+    DocumentRelative = 0x10,
+    HideCaret = 0x20,
+    ToWindow = 0x40,
+    ExistingTransaction = 0x80,
+    NoComposite = 0x100,
+    Compressed = 0x200,
+    ForWebRender = 0x400,
   };
 
   /**
@@ -1439,9 +1439,9 @@ class nsLayoutUtils {
    * size by reducing the *content size* (flooring at zero).  This is used for:
    * https://drafts.csswg.org/css-grid/#min-size-auto
    */
-  enum class IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
-  static const auto MIN_ISIZE = IntrinsicISizeType::MIN_ISIZE;
-  static const auto PREF_ISIZE = IntrinsicISizeType::PREF_ISIZE;
+  enum class IntrinsicISizeType { MinISize, PrefISize };
+  static const auto MIN_ISIZE = IntrinsicISizeType::MinISize;
+  static const auto PREF_ISIZE = IntrinsicISizeType::PrefISize;
   enum {
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02,  // returns NS_INTRINSIC_WIDTH_UNKNOWN if so
@@ -1629,7 +1629,7 @@ class nsLayoutUtils {
                          gfxContext* aContext, const char16_t* aString,
                          int32_t aLength, nsPoint aPoint,
                          ComputedStyle* aComputedStyle = nullptr,
-                         DrawStringFlags aFlags = DrawStringFlags::eDefault);
+                         DrawStringFlags aFlags = DrawStringFlags::Default);
 
   static nsPoint GetBackgroundFirstTilePos(const nsPoint& aDest,
                                            const nsPoint& aFill,

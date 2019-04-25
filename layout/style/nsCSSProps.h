@@ -254,14 +254,14 @@ class nsCSSProps {
     if (IsEnabled(aProperty)) {
       return true;
     }
-    if (aEnabled == EnabledState::eIgnoreEnabledState) {
+    if (aEnabled == EnabledState::IgnoreEnabledState) {
       return true;
     }
-    if ((aEnabled & EnabledState::eInUASheets) &&
+    if ((aEnabled & EnabledState::InUASheets) &&
         PropHasFlags(aProperty, Flags::EnabledInUASheets)) {
       return true;
     }
-    if ((aEnabled & EnabledState::eInChrome) &&
+    if ((aEnabled & EnabledState::InChrome) &&
         PropHasFlags(aProperty, Flags::EnabledInChrome)) {
       return true;
     }

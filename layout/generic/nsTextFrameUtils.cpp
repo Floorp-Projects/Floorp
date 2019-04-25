@@ -31,7 +31,7 @@ static bool IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags) {
   // gfxTextRun and discarding it would force us to copy text in many cases of
   // preformatted text containing \r\n.
   if (ch == CH_SHY) {
-    *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
+    *aFlags |= nsTextFrameUtils::Flags::HasShy;
     return true;
   }
   return IsBidiControl(ch);
@@ -39,7 +39,7 @@ static bool IsDiscardable(char16_t ch, nsTextFrameUtils::Flags* aFlags) {
 
 static bool IsDiscardable(uint8_t ch, nsTextFrameUtils::Flags* aFlags) {
   if (ch == CH_SHY) {
-    *aFlags |= nsTextFrameUtils::Flags::TEXT_HAS_SHY;
+    *aFlags |= nsTextFrameUtils::Flags::HasShy;
     return true;
   }
   return false;
@@ -216,7 +216,7 @@ CharT* nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
         } else {
           // aCompression == COMPRESS_NONE
           if (ch == '\t') {
-            flags |= Flags::TEXT_HAS_TAB;
+            flags |= Flags::HasTab;
           }
         }
         *aOutput++ = ch;

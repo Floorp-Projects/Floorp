@@ -698,10 +698,10 @@ class nsPresContext : public nsISupports,
   bool IsVisualMode() const { return mIsVisual; }
 
   enum class InteractionType : uint32_t {
-    eClickInteraction,
-    eKeyInteraction,
-    eMouseMoveInteraction,
-    eScrollInteraction
+    ClickInteraction,
+    KeyInteraction,
+    MouseMoveInteraction,
+    ScrollInteraction
   };
 
   void RecordInteractionTime(InteractionType aType,

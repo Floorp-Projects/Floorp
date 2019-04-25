@@ -1850,8 +1850,8 @@ nsresult HyperTextAccessible::ContentToRenderedOffset(
 
   nsIFrame::RenderedText text = aFrame->GetRenderedText(
       aContentOffset, aContentOffset + 1,
-      nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-      nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+      nsIFrame::TextOffsetType::OffsetsInContentText,
+      nsIFrame::TrailingWhitespace::DontTrim);
   *aRenderedOffset = text.mOffsetWithinNodeRenderedText;
 
   return NS_OK;
@@ -1873,8 +1873,8 @@ nsresult HyperTextAccessible::RenderedToContentOffset(
 
   nsIFrame::RenderedText text = aFrame->GetRenderedText(
       aRenderedOffset, aRenderedOffset + 1,
-      nsIFrame::TextOffsetType::OFFSETS_IN_RENDERED_TEXT,
-      nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+      nsIFrame::TextOffsetType::OffsetsInContentText,
+      nsIFrame::TrailingWhitespace::DontTrim);
   *aContentOffset = text.mOffsetWithinNodeText;
 
   return NS_OK;

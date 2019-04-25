@@ -462,15 +462,15 @@ void nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect,
 }
 
 nscoord nsBlockFrame::GetLogicalBaseline(WritingMode aWM) const {
-  auto lastBaseline = BaselineBOffset(aWM, BaselineSharingGroup::eLast,
-                                      AlignmentContext::eInline);
+  auto lastBaseline = BaselineBOffset(aWM, BaselineSharingGroup::Last,
+                                      AlignmentContext::Inline);
   return BSize(aWM) - lastBaseline;
 }
 
 bool nsBlockFrame::GetNaturalBaselineBOffset(
     mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+  if (aBaselineGroup == BaselineSharingGroup::First) {
     return nsLayoutUtils::GetFirstLineBaseline(aWM, this, aBaseline);
   }
 
@@ -1283,7 +1283,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       // Tall ::markers won't look particularly nice here...
       LogicalRect bbox =
           marker->GetLogicalRect(wm, reflowOutput.PhysicalSize());
-      const auto baselineGroup = BaselineSharingGroup::eFirst;
+      const auto baselineGroup = BaselineSharingGroup::First;
       nscoord markerBaseline;
       if (MOZ_UNLIKELY(wm.IsOrthogonalTo(marker->GetWritingMode()) ||
                        !marker->GetNaturalBaselineBOffset(wm, baselineGroup,
@@ -1420,12 +1420,12 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
       nsRect containingBlock(nsPoint(0, 0),
                              containingBlockSize.GetPhysicalSize(parentWM));
-      AbsPosReflowFlags flags = AbsPosReflowFlags::eConstrainHeight;
+      AbsPosReflowFlags flags = AbsPosReflowFlags::ConstrainHeight;
       if (cbWidthChanged) {
-        flags |= AbsPosReflowFlags::eCBWidthChanged;
+        flags |= AbsPosReflowFlags::CBWidthChanged;
       }
       if (cbHeightChanged) {
-        flags |= AbsPosReflowFlags::eCBHeightChanged;
+        flags |= AbsPosReflowFlags::CBHeightChanged;
       }
       // Setup the line cursor here to optimize line searching for
       // calculating hypothetical position of absolutely-positioned

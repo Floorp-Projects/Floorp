@@ -1795,7 +1795,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // track list, false if all tracks are removed from the track list.
   bool mMediaTracksConstructed = false;
 
-  Visibility mVisibilityState = Visibility::UNTRACKED;
+  Visibility mVisibilityState = Visibility::Untracked;
 
   UniquePtr<ErrorSink> mErrorSink;
 

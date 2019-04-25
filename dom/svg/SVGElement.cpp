@@ -1097,7 +1097,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
       // since it doesn't have a sheet.
       if (nsCSSProps::IsShorthand(propertyID)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, propertyID,
-                                             CSSEnabledState::eForAllContent) {
+                                             CSSEnabledState::ForAllContent) {
           UseCounter useCounter = nsCSSProps::UseCounterFor(*subprop);
           if (useCounter != eUseCounter_UNKNOWN) {
             mElement->OwnerDoc()->SetDocumentAndPageUseCounter(useCounter);

@@ -540,7 +540,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // is created, we don't need to create a separate nsDisplaySubDocument.
 
   nsDisplayOwnLayerFlags flags =
-      nsDisplayOwnLayerFlags::eGenerateSubdocInvalidations;
+      nsDisplayOwnLayerFlags::GenerateSubdocInvalidations;
   // If ignoreViewportScrolling is true then the top most layer we create here
   // is going to become the scrollable layer for the root scroll frame, so we
   // want to add nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER to whatever layer
@@ -548,7 +548,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   if (constructZoomItem) {
     nsDisplayOwnLayerFlags zoomFlags = flags;
     if (ignoreViewportScrolling && !constructResolutionItem) {
-      zoomFlags |= nsDisplayOwnLayerFlags::eGenerateScrollableLayer;
+      zoomFlags |= nsDisplayOwnLayerFlags::GenerateScrollableLayer;
     }
     childItems.AppendNewToTop<nsDisplayZoom>(aBuilder, subdocRootFrame, this,
                                              &childItems, subdocAPD, parentAPD,
@@ -560,7 +560,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // the resolution scale applied on top of the app units per dev pixel
   // conversion.
   if (ignoreViewportScrolling) {
-    flags |= nsDisplayOwnLayerFlags::eGenerateScrollableLayer;
+    flags |= nsDisplayOwnLayerFlags::GenerateScrollableLayer;
   }
   if (constructResolutionItem) {
     childItems.AppendNewToTop<nsDisplayResolution>(aBuilder, subdocRootFrame,

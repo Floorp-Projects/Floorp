@@ -227,7 +227,7 @@ struct RangePaintInfo {
 
   RangePaintInfo(nsRange* aRange, nsIFrame* aFrame)
       : mRange(aRange),
-        mBuilder(aFrame, nsDisplayListBuilderMode::PAINTING, false) {
+        mBuilder(aFrame, nsDisplayListBuilderMode::Painting, false) {
     MOZ_COUNT_CTOR(RangePaintInfo);
     mBuilder.BeginFrame();
   }
@@ -1251,7 +1251,7 @@ void PresShell::Destroy() {
 
   mUpdateApproximateFrameVisibilityEvent.Revoke();
 
-  ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+  ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DiscardImages));
 
   if (mCaret) {
     mCaret->Terminate();
@@ -2271,7 +2271,7 @@ PresShell::ScrollPage(bool aForward) {
       GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                          nsIScrollableFrame::PAGES, ScrollMode::eSmooth,
+                          nsIScrollableFrame::PAGES, ScrollMode::Smooth,
                           nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
@@ -2287,7 +2287,7 @@ PresShell::ScrollLine(bool aForward) {
         Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
                             NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
-                          nsIScrollableFrame::LINES, ScrollMode::eSmooth,
+                          nsIScrollableFrame::LINES, ScrollMode::Smooth,
                           nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
@@ -2303,7 +2303,7 @@ PresShell::ScrollCharacter(bool aRight) {
         Preferences::GetInt("toolkit.scrollbox.horizontalScrollDistance",
                             NS_DEFAULT_HORIZONTAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(nsIntPoint(aRight ? h : -h, 0),
-                          nsIScrollableFrame::LINES, ScrollMode::eSmooth,
+                          nsIScrollableFrame::LINES, ScrollMode::Smooth,
                           nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
@@ -2316,7 +2316,7 @@ PresShell::CompleteScroll(bool aForward) {
       GetScrollableFrameToScroll(ScrollableDirection::Vertical);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                          nsIScrollableFrame::WHOLE, ScrollMode::eSmooth,
+                          nsIScrollableFrame::WHOLE, ScrollMode::Smooth,
                           nullptr, nullptr, nsIScrollableFrame::NOT_MOMENTUM,
                           nsIScrollableFrame::ENABLE_SNAP);
   }
@@ -3142,7 +3142,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
       // thing whether or not |aScroll| is true.
       if (aScroll && sf) {
         // Scroll to the top of the page
-        sf->ScrollTo(nsPoint(0, 0), ScrollMode::eInstant);
+        sf->ScrollTo(nsPoint(0, 0), ScrollMode::Instant);
       }
     }
   }
@@ -3371,7 +3371,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   // If we don't need to scroll, then don't try since it might cancel
   // a current smooth scroll operation.
   if (needToScroll) {
-    ScrollMode scrollMode = ScrollMode::eInstant;
+    ScrollMode scrollMode = ScrollMode::Instant;
     bool autoBehaviorIsSmooth =
         (aFrameAsScrollable->GetScrollStyles().mScrollBehavior ==
          NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
@@ -3379,7 +3379,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
                         ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) &&
                          autoBehaviorIsSmooth);
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
-      scrollMode = ScrollMode::eSmoothMsd;
+      scrollMode = ScrollMode::SmoothMsd;
     }
     aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
                                  aScrollFlags & ScrollFlags::ScrollSnap
@@ -4476,12 +4476,12 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
   AutoSaveRestoreRenderingState _(this);
 
   bool wouldFlushRetainedLayers = false;
-  PaintFrameFlags flags = PaintFrameFlags::PAINT_IGNORE_SUPPRESSION;
+  PaintFrameFlags flags = PaintFrameFlags::IgnoreSuppression;
   if (aThebesContext->CurrentMatrix().HasNonIntegerTranslation()) {
-    flags |= PaintFrameFlags::PAINT_IN_TRANSFORM;
+    flags |= PaintFrameFlags::InTransform;
   }
   if (!(aFlags & RenderDocumentFlags::AsyncDecodeImages)) {
-    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
+    flags |= PaintFrameFlags::SyncDecodeImages;
   }
   if (aFlags & RenderDocumentFlags::UseWidgetLayers) {
     // We only support using widget layers on display root's with widgets.
@@ -4493,13 +4493,13 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
       // don't support taking snapshots.
       if (layerManager &&
           (!layerManager->AsKnowsCompositor() || XRE_IsParentProcess())) {
-        flags |= PaintFrameFlags::PAINT_WIDGET_LAYERS;
+        flags |= PaintFrameFlags::WidgetLayers;
       }
     }
   }
   if (!(aFlags & RenderDocumentFlags::DrawCaret)) {
     wouldFlushRetainedLayers = true;
-    flags |= PaintFrameFlags::PAINT_HIDE_CARET;
+    flags |= PaintFrameFlags::HideCaret;
   }
   if (aFlags & RenderDocumentFlags::IgnoreViewportScrolling) {
     wouldFlushRetainedLayers = !IgnoringViewportScrolling();
@@ -4516,18 +4516,17 @@ nsresult PresShell::RenderDocument(const nsRect& aRect,
     // In that case, it wouldn't disturb normal rendering too much,
     // and we should allow it.
     wouldFlushRetainedLayers = true;
-    flags |= PaintFrameFlags::PAINT_DOCUMENT_RELATIVE;
+    flags |= PaintFrameFlags::DocumentRelative;
   }
 
   // Don't let drawWindow blow away our retained layer tree
-  if ((flags & PaintFrameFlags::PAINT_WIDGET_LAYERS) &&
-      wouldFlushRetainedLayers) {
-    flags &= ~PaintFrameFlags::PAINT_WIDGET_LAYERS;
+  if ((flags & PaintFrameFlags::WidgetLayers) && wouldFlushRetainedLayers) {
+    flags &= ~PaintFrameFlags::WidgetLayers;
   }
 
   nsLayoutUtils::PaintFrame(aThebesContext, rootFrame, nsRegion(aRect),
                             aBackgroundColor,
-                            nsDisplayListBuilderMode::PAINTING, flags);
+                            nsDisplayListBuilderMode::Painting, flags);
 
   return NS_OK;
 }
@@ -5560,7 +5559,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
   if (aFrame->TrackingVisibility() && aFrame->StyleVisibility()->IsVisible() &&
       (!aRemoveOnly ||
-       aFrame->GetVisibility() == Visibility::APPROXIMATELY_VISIBLE)) {
+       aFrame->GetVisibility() == Visibility::ApproximatelyVisible)) {
     MOZ_ASSERT(!AssumeAllFramesVisible());
     if (mApproximatelyVisibleFrames.EnsureInserted(aFrame)) {
       // The frame was added to mApproximatelyVisibleFrames, so increment its
@@ -5707,7 +5706,7 @@ void PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly) {
   // call update on that frame
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
-    ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DISCARD_IMAGES));
+    ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DiscardImages));
     return;
   }
 
@@ -6058,26 +6057,26 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   }
 
   nscolor bgcolor = ComputeBackstopColor(aViewToPaint);
-  PaintFrameFlags flags = PaintFrameFlags::PAINT_WIDGET_LAYERS |
-                          PaintFrameFlags::PAINT_EXISTING_TRANSACTION;
+  PaintFrameFlags flags =
+      PaintFrameFlags::WidgetLayers | PaintFrameFlags::ExistingTransaction;
   if (!(aFlags & PaintFlags::PaintComposite)) {
-    flags |= PaintFrameFlags::PAINT_NO_COMPOSITE;
+    flags |= PaintFrameFlags::NoComposite;
   }
   if (aFlags & PaintFlags::PaintSyncDecodeImages) {
-    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
+    flags |= PaintFrameFlags::SyncDecodeImages;
   }
   if (mNextPaintCompressed) {
-    flags |= PaintFrameFlags::PAINT_COMPRESSED;
+    flags |= PaintFrameFlags::Compressed;
     mNextPaintCompressed = false;
   }
   if (layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-    flags |= PaintFrameFlags::PAINT_FOR_WEBRENDER;
+    flags |= PaintFrameFlags::ForWebRender;
   }
 
   if (frame) {
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
-                              nsDisplayListBuilderMode::PAINTING, flags);
+                              nsDisplayListBuilderMode::Painting, flags);
 
     // When recording/replaying, create a checkpoint after every paint. This
     // can cause content JS to run, so reset |nojs|.
@@ -8002,8 +8001,7 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     case eKeyUp:
       if (aEvent->AsKeyboardEvent()->ShouldInteractionTimeRecorded()) {
         GetPresContext()->RecordInteractionTime(
-            nsPresContext::InteractionType::eKeyInteraction,
-            aEvent->mTimeStamp);
+            nsPresContext::InteractionType::KeyInteraction, aEvent->mTimeStamp);
       }
       Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS,
                                      aEvent->mTimeStamp);
@@ -8017,8 +8015,7 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     case ePointerDown:
     case ePointerUp:
       GetPresContext()->RecordInteractionTime(
-          nsPresContext::InteractionType::eClickInteraction,
-          aEvent->mTimeStamp);
+          nsPresContext::InteractionType::ClickInteraction, aEvent->mTimeStamp);
       return;
 
     case eMouseMove:
@@ -8028,7 +8025,7 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
             aEvent->mTimeStamp);
       }
       GetPresContext()->RecordInteractionTime(
-          nsPresContext::InteractionType::eMouseMoveInteraction,
+          nsPresContext::InteractionType::MouseMoveInteraction,
           aEvent->mTimeStamp);
       return;
 
@@ -10623,9 +10620,9 @@ bool nsIPresShell::SetVisualViewportOffset(
 void nsIPresShell::ScrollToVisual(
     const nsPoint& aVisualViewportOffset,
     FrameMetrics::ScrollOffsetUpdateType aUpdateType, ScrollMode aMode) {
-  MOZ_ASSERT(aMode == ScrollMode::eInstant || aMode == ScrollMode::eSmoothMsd);
+  MOZ_ASSERT(aMode == ScrollMode::Instant || aMode == ScrollMode::SmoothMsd);
 
-  if (aMode == ScrollMode::eSmoothMsd) {
+  if (aMode == ScrollMode::SmoothMsd) {
     if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
       if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
         return;

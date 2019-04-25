@@ -120,13 +120,13 @@ class nsGridContainerFrame final : public nsContainerFrame {
       return nsContainerFrame::GetLogicalBaseline(aWM);
     }
     nscoord b;
-    GetBBaseline(BaselineSharingGroup::eFirst, &b);
+    GetBBaseline(BaselineSharingGroup::First, &b);
     return b;
   }
 
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
-    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst,
+    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::First,
                                      aBaseline);
   }
 

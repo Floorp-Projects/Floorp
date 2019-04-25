@@ -433,7 +433,7 @@ bool nsTransitionManager::DoUpdateTransitions(
     if (property == eCSSPropertyExtra_all_properties) {
       for (nsCSSPropertyID p = nsCSSPropertyID(0);
            p < eCSSProperty_COUNT_no_shorthands; p = nsCSSPropertyID(p + 1)) {
-        if (!nsCSSProps::IsEnabled(p, CSSEnabledState::eForAllContent)) {
+        if (!nsCSSProps::IsEnabled(p, CSSEnabledState::ForAllContent)) {
           continue;
         }
         startedAny |= ConsiderInitiatingTransition(
@@ -442,7 +442,7 @@ bool nsTransitionManager::DoUpdateTransitions(
       }
     } else if (nsCSSProps::IsShorthand(property)) {
       CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
-                                           CSSEnabledState::eForAllContent) {
+                                           CSSEnabledState::ForAllContent) {
         startedAny |= ConsiderInitiatingTransition(
             *subprop, aDisp, i, aElement, aPseudoType, aElementTransitions,
             aOldStyle, aNewStyle, propertiesChecked);
@@ -484,8 +484,8 @@ bool nsTransitionManager::DoUpdateTransitions(
                 nsCSSProps::Physicalize(p, aNewStyle));
           }
         } else if (nsCSSProps::IsShorthand(property)) {
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
-              subprop, property, CSSEnabledState::eForAllContent) {
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
+                                               CSSEnabledState::ForAllContent) {
             auto p = nsCSSProps::Physicalize(*subprop, aNewStyle);
             allTransitionProperties.AddProperty(p);
           }

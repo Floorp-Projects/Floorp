@@ -45,7 +45,7 @@ namespace wr {
 class DisplayListBuilder;
 }  // namespace wr
 
-enum class PaintBorderFlags : uint8_t { SYNC_DECODE_IMAGES = 1 << 0 };
+enum class PaintBorderFlags : uint8_t { SyncDecodeImages = 1 << 0 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintBorderFlags)
 
 }  // namespace mozilla

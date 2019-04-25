@@ -39,7 +39,7 @@ namespace mozilla {
  * scroll is already in progress, the |eSmoothMsd| scroll is interrupted without
  * first scrolling to the destination.
  */
-enum class ScrollMode { eInstant, eSmooth, eSmoothMsd, eNormal };
+enum class ScrollMode { Instant, Smooth, SmoothMsd, Normal };
 
 }  // namespace mozilla
 

@@ -381,8 +381,8 @@ uint64_t Accessible::VisibilityState() const {
   if (frame->IsTextFrame() && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       frame->GetRect().IsEmpty()) {
     nsIFrame::RenderedText text = frame->GetRenderedText(
-        0, UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-        nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+        0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
+        nsIFrame::TrailingWhitespace::DontTrim);
     if (text.mString.IsEmpty()) {
       return states::INVISIBLE;
     }
