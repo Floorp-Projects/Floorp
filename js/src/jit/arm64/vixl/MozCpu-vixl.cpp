@@ -81,12 +81,14 @@ void CPU::EnsureIAndDCacheCoherency(void *address, size_t length) {
       //
       // dc       : Data Cache maintenance
       //     c    : Clean
+      //      i   : Invalidate
       //      va  : by (Virtual) Address
-      //        u : to the point of Unification
-      // The point of unification for a processor is the point by which the
-      // instruction and data caches are guaranteed to see the same copy of a
-      // memory location. See ARM DDI 0406B page B2-12 for more information.
-      "   dc    cvau, %[dline]\n"
+      //        c : to the point of Coherency
+      // Original implementation used cvau, but changed to civac due to
+      // errata on Cortex-A53 819472, 826319, 827319 and 824069.
+      // See ARM DDI 0406B page B2-12 for more information.
+      //
+      "   dc    civac, %[dline]\n"
       :
       : [dline] "r" (dline)
       // This code does not write to memory, but the "memory" dependency
