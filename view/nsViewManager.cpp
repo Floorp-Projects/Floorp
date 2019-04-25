@@ -332,7 +332,7 @@ void nsViewManager::Refresh(nsView* aView,
         printf_stderr("--COMPOSITE-- %p\n", mPresShell);
       }
 #endif
-      uint32_t paintFlags = nsIPresShell::PAINT_COMPOSITE;
+      PaintFlags paintFlags = PaintFlags::PaintComposite;
       LayerManager* manager = widget->GetLayerManager();
       if (!manager->NeedsWidgetInvalidation()) {
         manager->FlushRendering();
@@ -459,7 +459,7 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       }
 #endif
 
-      mPresShell->Paint(view, nsRegion(), nsIPresShell::PAINT_LAYERS);
+      mPresShell->Paint(view, nsRegion(), PaintFlags::PaintLayers);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING

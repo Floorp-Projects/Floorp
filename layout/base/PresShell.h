@@ -140,7 +140,7 @@ class PresShell final : public nsIPresShell,
   void Thaw() override;
   void FireOrClearDelayedEvents(bool aFireEvents) override;
 
-  nsresult RenderDocument(const nsRect& aRect, uint32_t aFlags,
+  nsresult RenderDocument(const nsRect& aRect, RenderDocumentFlags aFlags,
                           nscolor aBackgroundColor,
                           gfxContext* aThebesContext) override;
 
@@ -148,11 +148,11 @@ class PresShell final : public nsIPresShell,
                                              const Maybe<CSSIntRegion>& aRegion,
                                              const LayoutDeviceIntPoint aPoint,
                                              LayoutDeviceIntRect* aScreenRect,
-                                             uint32_t aFlags) override;
+                                             RenderImageFlags aFlags) override;
 
   already_AddRefed<SourceSurface> RenderSelection(
       dom::Selection* aSelection, const LayoutDeviceIntPoint aPoint,
-      LayoutDeviceIntRect* aScreenRect, uint32_t aFlags) override;
+      LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags) override;
 
   already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() override;
 
@@ -165,8 +165,26 @@ class PresShell final : public nsIPresShell,
 
   void SetIgnoreViewportScrolling(bool aIgnore) override;
 
+  /**
+   * Set a "resolution" for the document, which if not 1.0 will
+   * allocate more or fewer pixels for rescalable content by a factor
+   * of |resolution| in both dimensions.  Return NS_OK iff the
+   * resolution bounds are sane, and the resolution of this was
+   * actually updated.
+   *
+   * Also increase the scale of the content by the same amount
+   * (that's the "AndScaleTo" part).
+   *
+   * The resolution defaults to 1.0.
+   *
+   * |aOrigin| specifies who originated the resolution change. For changes
+   * sent by APZ, pass ResolutionChangeOrigin::Apz. For changes sent by
+   * the main thread, use pass ResolutionChangeOrigin::MainThread (similar
+   * to the |aOrigin| parameter of nsIScrollableFrame::ScrollToCSSPixels()).
+   */
   nsresult SetResolutionAndScaleTo(float aResolution,
-                                   ChangeOrigin aOrigin) override;
+                                   ResolutionChangeOrigin aOrigin);
+
   float GetCumulativeResolution() override;
   float GetCumulativeNonRootScaleResolution() override;
   void SetRestoreResolution(float aResolution,
@@ -190,7 +208,8 @@ class PresShell final : public nsIPresShell,
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
-             uint32_t aFlags) override;
+             PaintFlags aFlags);
+
   MOZ_CAN_RUN_SCRIPT nsresult HandleEvent(nsIFrame* aFrameForPresShell,
                                           WidgetGUIEvent* aEvent,
                                           bool aDontRetargetEvents,
@@ -203,7 +222,7 @@ class PresShell final : public nsIPresShell,
                                     nsEventStatus* aStatus) override;
   bool ShouldIgnoreInvalidation() override;
   /**
-   * Notify that we're going to call Paint with PAINT_LAYERS
+   * Notify that we're going to call Paint with PaintFlags::PaintLayers
    * on the pres shell for a widget (which might not be this one, since
    * WillPaint is called on all presshells in the same toplevel window as the
    * painted widget). This is issued at a time when it's safe to modify
@@ -212,7 +231,17 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT void WillPaint();
   void WillPaintWindow() override;
   void DidPaintWindow() override;
-  void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) override;
+
+  /**
+   * Ensures that the refresh driver is running, and schedules a view
+   * manager flush on the next tick.
+   *
+   * @param aType PaintType::DelayedCompress : Schedule a paint to be executed
+   * after a delay, and put FrameLayerBuilder in 'compressed' mode that avoids
+   * short cut optimizations.
+   */
+  void ScheduleViewManagerFlush(PaintType aType = PaintType::Default);
+
   void ClearMouseCaptureOnView(nsView* aView) override;
   bool IsVisible() override;
   void SuppressDisplayport(bool aEnabled) override;
@@ -293,10 +322,32 @@ class PresShell final : public nsIPresShell,
 
   void UpdateCanvasBackground() override;
 
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and bounds
+   * aBounds. Checks first if this needs to be done by checking if aFrame is a
+   * canvas frame (if the AddCanvasBackgroundColorFlags::ForceDraw is passed
+   * then this check is skipped). aBackstopColor is composed behind the
+   * background color of the canvas, it is transparent by default.
+   *
+   * We attempt to make the background color part of the scrolled canvas (to
+   * reduce transparent layers), and if async scrolling is enabled (and the
+   * background is opaque) then we add a second, unscrolled item to handle the
+   * checkerboarding case.
+   *
+   * AddCanvasBackgroundColorFlags::AddSubDocument should be specified when
+   * calling this for a subdocument, and LayoutUseContainersForRootFrame might
+   * cause the whole list to be scrolled. In that case the second unscrolled
+   * item will be elided.
+   *
+   * AddCanvasBackgroundColorFlags::AppendUnscrolledOnly only attempts to add
+   * the unscrolled item, so that we can add it manually after
+   * LayoutUseContainersForRootFrame has built the scrolling ContainerLayer.
+   */
   void AddCanvasBackgroundColorItem(
       nsDisplayListBuilder& aBuilder, nsDisplayList& aList, nsIFrame* aFrame,
       const nsRect& aBounds, nscolor aBackstopColor = NS_RGBA(0, 0, 0, 0),
-      uint32_t aFlags = 0) override;
+      AddCanvasBackgroundColorFlags aFlags =
+          AddCanvasBackgroundColorFlags::None);
 
   void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                      nsDisplayList& aList, nsIFrame* aFrame,
@@ -538,14 +589,14 @@ class PresShell final : public nsIPresShell,
    * aPoint - reference point, typically the mouse position
    * aScreenRect - [out] set to the area of the screen the painted area should
    *               be displayed at
-   * aFlags - set RENDER_AUTO_SCALE to scale down large images, but it must not
-   *          be set if a custom image was specified
+   * aFlags - set RenderImageFlags::AutoScale to scale down large images, but
+   * it must not be set if a custom image was specified
    */
   already_AddRefed<SourceSurface> PaintRangePaintInfo(
       const nsTArray<UniquePtr<RangePaintInfo>>& aItems,
       dom::Selection* aSelection, const Maybe<CSSIntRegion>& aRegion,
       nsRect aArea, const LayoutDeviceIntPoint aPoint,
-      LayoutDeviceIntRect* aScreenRect, uint32_t aFlags);
+      LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags);
 
   // Hide a view if it is a popup
   void HideViewIfPopup(nsView* aView);

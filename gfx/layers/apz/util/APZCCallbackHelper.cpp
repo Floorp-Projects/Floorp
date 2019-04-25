@@ -337,7 +337,7 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     presShellResolution =
         aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom().scale;
     presShell->SetResolutionAndScaleTo(presShellResolution,
-                                       nsIPresShell::ChangeOrigin::eApz);
+                                       ResolutionChangeOrigin::Apz);
   }
 
   // Do this as late as possible since scrolling can flush layout. It also

@@ -107,6 +107,63 @@ enum class ScrollFlags {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollFlags)
 
+enum class ScrollableDirection { Horizontal, Vertical, Either };
+
+// See comment at declaration of RenderDocument() for the detail.
+enum class RenderDocumentFlags {
+  None = 0,
+  IsUntrusted = 1 << 0,
+  IgnoreViewportScrolling = 1 << 1,
+  DrawCaret = 1 << 2,
+  UseWidgetLayers = 1 << 3,
+  AsyncDecodeImages = 1 << 4,
+  DocumentRelative = 1 << 5,
+  DrawWindowNotFlushing = 1 << 6,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderDocumentFlags)
+
+// See comment at declaration of RenderSelection() for the detail.
+enum class RenderImageFlags {
+  None = 0,
+  IsImage = 1 << 0,
+  AutoScale = 1 << 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderImageFlags)
+
+enum class ResolutionChangeOrigin : uint8_t {
+  Apz,
+  MainThread,
+};
+
+// See comment at declaration of AddCanvasBackgroundColorItem() for the detail.
+enum class AddCanvasBackgroundColorFlags {
+  None = 0,
+  ForceDraw = 1 << 0,
+  AddForSubDocument = 1 << 1,
+  AppendUnscrolledOnly = 1 << 2,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AddCanvasBackgroundColorFlags)
+
+enum class PaintFlags {
+  None = 0,
+  /* Update the layer tree and paint PaintedLayers. If this is not specified,
+   * we may still have to do it if the layer tree lost PaintedLayer contents
+   * we need for compositing. */
+  PaintLayers = 1 << 0,
+  /* Composite layers to the window. */
+  PaintComposite = 1 << 1,
+  /* Sync-decode images. */
+  PaintSyncDecodeImages = 1 << 2,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintFlags)
+
+// See comment at declaration of ScheduleViewManagerFlush() for the detail.
+enum class PaintType { Default, DelayedCompress };
+
 #ifdef DEBUG
 
 enum class VerifyReflowFlags {
