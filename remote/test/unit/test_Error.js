@@ -80,6 +80,19 @@ caused by: DogError: woof:
   run_next_test();
 });
 
+add_test(function test_RemoteAgentError_fromJSON() {
+  const cdpErr = {message: `TypeError: foo:
+      bar
+      baz`};
+  const err = RemoteAgentError.fromJSON(cdpErr);
+
+  equal(err.message, "TypeError: foo");
+  equal(err.stack, "bar\nbaz");
+  equal(err.cause, null);
+
+  run_next_test();
+});
+
 add_test(function test_UnsupportedError() {
   ok(new UnsupportedError() instanceof RemoteAgentError);
   run_next_test();
