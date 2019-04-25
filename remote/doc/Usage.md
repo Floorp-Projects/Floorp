@@ -14,13 +14,12 @@ three different programs/components running simultaneously:
 
   * and the __target__, which is the web document being debugging.
 
-The remote agent is not currently part of the default Firefox build.
-To self-service a build with it built in, you should follow the
-[_Building_] steps in the developer documentation.
+The remote agent currently only ships with builds of [Firefox
+Nightly] and is __not enabled by default__.  To enable it, you must
+flip the [`remote.enabled` preference] to true.
 
-To check if your Firefox binary comes with the remote agent built
-in, you can look in its help message for this:
-
+To check if your Firefox binary has the remote agent enabled, you
+can look in its help message for this:
 
 	% ./firefox -h
 	…
@@ -65,4 +64,5 @@ ephemeral port range, which varies depending on your system and
 system configuration, but is always guaranteed to be free thus
 eliminating the risk of binding to a port that is already in use.
 
-[_Building_]: ./Building.html
+[Firefox Nightly]: https://www.mozilla.org/en-GB/firefox/channel/desktop/#nightly
+[`remote.enabled` preference]: ./Prefs.html
