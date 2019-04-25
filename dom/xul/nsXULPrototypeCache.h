@@ -114,8 +114,6 @@ class nsXULPrototypeCache : public nsIObserver {
 
   static nsXULPrototypeCache* sInstance;
 
-  void FlushSkinFiles();
-
   using StyleSheetTable = nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet>;
   using XBLDocTable = nsRefPtrHashtable<nsURIHashKey, nsXBLDocumentInfo>;
 

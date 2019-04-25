@@ -25,6 +25,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jit/arm64/vixl/Cpu-vixl.h"
+
+#include <algorithm>
+
 #include "jit/arm64/vixl/Utils-vixl.h"
 
 namespace vixl {
@@ -54,6 +57,15 @@ void CPU::SetUp() {
 
   dcache_line_size_ = 4 << dcache_line_size_power_of_two;
   icache_line_size_ = 4 << icache_line_size_power_of_two;
+
+  // Bug 1521158 suggests that having CPU with different cache line sizes could
+  // cause issues as we would only invalidate half of the cache line of we
+  // invalidate every 128 bytes, but other little cores have a different stride
+  // such as 64 bytes. To be conservative, we will try reducing the stride to 32
+  // bytes, which should be smaller than any known cache line.
+  const uint32_t conservative_line_size = 32;
+  dcache_line_size_ = std::min(dcache_line_size_, conservative_line_size);
+  icache_line_size_ = std::min(icache_line_size_, conservative_line_size);
 }
 
 }  // namespace vixl

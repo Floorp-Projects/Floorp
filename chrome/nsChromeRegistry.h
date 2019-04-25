@@ -42,7 +42,6 @@ class nsChromeRegistry : public nsIToolkitChromeRegistry,
   NS_DECL_ISUPPORTS
 
   // nsIXULChromeRegistry methods:
-  NS_IMETHOD RefreshSkins() override;
   NS_IMETHOD AllowScriptsForPackage(nsIURI* url, bool* _retval) override;
   NS_IMETHOD AllowContentToAccess(nsIURI* url, bool* _retval) override;
   NS_IMETHOD CanLoadURLRemotely(nsIURI* url, bool* _retval) override;

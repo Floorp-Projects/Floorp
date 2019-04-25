@@ -202,12 +202,12 @@ impl Transaction {
     /// Setup the output region in the framebuffer for a given document.
     pub fn set_document_view(
         &mut self,
-        framebuffer_rect: FramebufferIntRect,
+        device_rect: DeviceIntRect,
         device_pixel_ratio: f32,
     ) {
         self.scene_ops.push(
             SceneMsg::SetDocumentView {
-                framebuffer_rect,
+                device_rect,
                 device_pixel_ratio,
             },
         );
@@ -600,7 +600,7 @@ pub enum SceneMsg {
         preserve_frame_state: bool,
     },
     SetDocumentView {
-        framebuffer_rect: FramebufferIntRect,
+        device_rect: DeviceIntRect,
         device_pixel_ratio: f32,
     },
 }
@@ -729,7 +729,7 @@ pub enum ApiMsg {
     /// Adds a new document namespace.
     CloneApiByClient(IdNamespace),
     /// Adds a new document with given initial size.
-    AddDocument(DocumentId, FramebufferIntSize, DocumentLayer),
+    AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     /// A message targeted at a particular document.
     UpdateDocuments(Vec<DocumentId>, Vec<TransactionMsg>),
     /// Deletes an existing document.
@@ -1078,13 +1078,13 @@ impl RenderApi {
         RenderApiSender::new(self.api_sender.clone(), self.payload_sender.clone())
     }
 
-    pub fn add_document(&self, initial_size: FramebufferIntSize, layer: DocumentLayer) -> DocumentId {
+    pub fn add_document(&self, initial_size: DeviceIntSize, layer: DocumentLayer) -> DocumentId {
         let new_id = self.next_unique_id();
         self.add_document_with_id(initial_size, layer, new_id)
     }
 
     pub fn add_document_with_id(&self,
-                                initial_size: FramebufferIntSize,
+                                initial_size: DeviceIntSize,
                                 layer: DocumentLayer,
                                 id: u32) -> DocumentId {
         let document_id = DocumentId::new(self.namespace_id, id);
@@ -1284,12 +1284,12 @@ impl RenderApi {
     pub fn set_document_view(
         &self,
         document_id: DocumentId,
-        framebuffer_rect: FramebufferIntRect,
+        device_rect: DeviceIntRect,
         device_pixel_ratio: f32,
     ) {
         self.send_scene_msg(
             document_id,
-            SceneMsg::SetDocumentView { framebuffer_rect, device_pixel_ratio },
+            SceneMsg::SetDocumentView { device_rect, device_pixel_ratio },
         );
     }
 

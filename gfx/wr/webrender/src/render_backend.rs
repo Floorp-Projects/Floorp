@@ -68,7 +68,7 @@ use util::{Recycler, VecHelper, drain_filter};
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Clone)]
 pub struct DocumentView {
-    pub framebuffer_rect: FramebufferIntRect,
+    pub device_rect: DeviceIntRect,
     pub layer: DocumentLayer,
     pub pan: DeviceIntPoint,
     pub device_pixel_ratio: f32,
@@ -359,7 +359,7 @@ struct Document {
 impl Document {
     pub fn new(
         id: DocumentId,
-        size: FramebufferIntSize,
+        size: DeviceIntSize,
         layer: DocumentLayer,
         default_device_pixel_ratio: f32,
     ) -> Self {
@@ -368,7 +368,7 @@ impl Document {
             scene: Scene::new(),
             removed_pipelines: Vec::new(),
             view: DocumentView {
-                framebuffer_rect: FramebufferIntRect::new(FramebufferIntPoint::zero(), size),
+                device_rect: size.into(),
                 layer,
                 pan: DeviceIntPoint::zero(),
                 page_zoom_factor: 1.0,
@@ -396,7 +396,7 @@ impl Document {
     }
 
     fn has_pixels(&self) -> bool {
-        !self.view.framebuffer_rect.size.is_empty_or_negative()
+        !self.view.device_rect.size.is_empty_or_negative()
     }
 
     fn process_frame_msg(
@@ -517,7 +517,7 @@ impl Document {
                 &self.scene.pipelines,
                 accumulated_scale_factor,
                 self.view.layer,
-                self.view.framebuffer_rect.origin,
+                self.view.device_rect.origin,
                 pan,
                 &mut resource_profile.texture_cache,
                 &mut resource_profile.gpu_cache,
@@ -756,10 +756,10 @@ impl RenderBackend {
                 doc.view.page_zoom_factor = factor.get();
             }
             SceneMsg::SetDocumentView {
-                framebuffer_rect,
+                device_rect,
                 device_pixel_ratio,
             } => {
-                doc.view.framebuffer_rect = framebuffer_rect;
+                doc.view.device_rect = device_rect;
                 doc.view.device_pixel_ratio = device_pixel_ratio;
             }
             SceneMsg::SetDisplayList {

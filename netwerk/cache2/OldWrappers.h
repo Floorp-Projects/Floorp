@@ -122,6 +122,9 @@ class _OldCacheEntryWrapper : public nsICacheEntry {
   NS_IMETHOD SetContentType(uint8_t aContentType) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD AddBaseDomainAccess(uint32_t aSiteID) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   NS_IMETHOD GetLoadContextInfo(nsILoadContextInfo **aInfo) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

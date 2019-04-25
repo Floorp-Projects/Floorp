@@ -1213,6 +1213,8 @@ Document::Document(const char* aContentType)
       mNeedsReleaseAfterStackRefCntRelease(false),
       mStyleSetFilled(false),
       mQuirkSheetAdded(false),
+      mContentEditableSheetAdded(false),
+      mDesignModeSheetAdded(false),
       mSSApplicableStateNotificationPending(false),
       mMayHaveTitleElement(false),
       mDOMLoadingSet(false),
@@ -2399,6 +2401,58 @@ void Document::FillStyleSet() {
   FillStyleSetUserAndUASheets();
   FillStyleSetDocumentSheets();
   mStyleSetFilled = true;
+}
+
+void Document::RemoveContentEditableStyleSheets() {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+
+  auto* cache = nsLayoutStylesheetCache::Singleton();
+  bool changed = false;
+  if (mDesignModeSheetAdded) {
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                cache->DesignModeSheet());
+    mDesignModeSheetAdded = false;
+    changed = true;
+  }
+  if (mContentEditableSheetAdded) {
+    mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                cache->ContentEditableSheet());
+    mContentEditableSheetAdded = false;
+    changed = true;
+  }
+  if (changed) {
+    MOZ_ASSERT(mStyleSetFilled);
+    ApplicableStylesChanged();
+  }
+}
+
+void Document::AddContentEditableStyleSheetsToStyleSet(bool aDesignMode) {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+  MOZ_DIAGNOSTIC_ASSERT(mStyleSetFilled,
+                        "Caller should ensure we're being rendered");
+
+  auto* cache = nsLayoutStylesheetCache::Singleton();
+  bool changed = false;
+  if (!mContentEditableSheetAdded) {
+    mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                                cache->ContentEditableSheet());
+    mContentEditableSheetAdded = true;
+    changed = true;
+  }
+  if (mDesignModeSheetAdded != aDesignMode) {
+    if (mDesignModeSheetAdded) {
+      mStyleSet->RemoveStyleSheet(StyleOrigin::UserAgent,
+                                  cache->DesignModeSheet());
+    } else {
+      mStyleSet->AppendStyleSheet(StyleOrigin::UserAgent,
+                                  cache->DesignModeSheet());
+    }
+    mDesignModeSheetAdded = !mDesignModeSheetAdded;
+    changed = true;
+  }
+  if (changed) {
+    ApplicableStylesChanged();
+  }
 }
 
 void Document::FillStyleSetDocumentSheets() {
@@ -4008,6 +4062,8 @@ void Document::DeletePresShell() {
   mStyleSet->ShellDetachedFromDocument();
   mStyleSetFilled = false;
   mQuirkSheetAdded = false;
+  mContentEditableSheetAdded = false;
+  mDesignModeSheetAdded = false;
 }
 
 void Document::SetBFCacheEntry(nsIBFCacheEntry* aEntry) {
@@ -4291,36 +4347,6 @@ void Document::RemoveStyleSheet(StyleSheet* aSheet) {
   }
 
   sheet->ClearAssociatedDocumentOrShadowRoot();
-}
-
-void Document::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
-                                 nsTArray<RefPtr<StyleSheet>>& aNewSheets) {
-  // XXX Need to set the sheet on the ownernode, if any
-  MOZ_ASSERT(aOldSheets.Length() == aNewSheets.Length(),
-             "The lists must be the same length!");
-  int32_t count = aOldSheets.Length();
-
-  RefPtr<StyleSheet> oldSheet;
-  int32_t i;
-  for (i = 0; i < count; ++i) {
-    oldSheet = aOldSheets[i];
-
-    // First remove the old sheet.
-    NS_ASSERTION(oldSheet, "None of the old sheets should be null");
-    int32_t oldIndex = mStyleSheets.IndexOf(oldSheet);
-    RemoveStyleSheet(oldSheet);  // This does the right notifications
-
-    // Now put the new one in its place.  If it's null, just ignore it.
-    StyleSheet* newSheet = aNewSheets[i];
-    if (newSheet) {
-      DocumentOrShadowRoot::InsertSheetAt(oldIndex, *newSheet);
-      if (newSheet->IsApplicable()) {
-        AddStyleSheetToStyleSets(newSheet);
-      }
-
-      NotifyStyleSheetAdded(newSheet, true);
-    }
-  }
 }
 
 void Document::InsertSheetAt(size_t aIndex, StyleSheet& aSheet) {
@@ -6230,8 +6256,6 @@ already_AddRefed<MediaQueryList> Document::MatchMedia(
 
   return result.forget();
 }
-
-void Document::FlushSkinBindings() { BindingManager()->FlushSkinBindings(); }
 
 void Document::SetMayStartLayout(bool aMayStartLayout) {
   mMayStartLayout = aMayStartLayout;
@@ -8747,11 +8771,10 @@ void Document::PreloadStyle(
                          aReferrerPolicy, aIntegrity);
 }
 
-nsresult Document::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
-                                       RefPtr<mozilla::StyleSheet>* aSheet) {
-  css::SheetParsingMode mode =
-      isAgentSheet ? css::eAgentSheetFeatures : css::eAuthorSheetFeatures;
-  return CSSLoader()->LoadSheetSync(uri, mode, isAgentSheet, aSheet);
+RefPtr<StyleSheet> Document::LoadChromeSheetSync(nsIURI* uri) {
+  RefPtr<StyleSheet> sheet;
+  CSSLoader()->LoadSheetSync(uri, css::eAuthorSheetFeatures, false, &sheet);
+  return sheet;
 }
 
 void Document::ResetDocumentDirection() {

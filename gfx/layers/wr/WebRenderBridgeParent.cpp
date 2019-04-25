@@ -936,7 +936,7 @@ bool WebRenderBridgeParent::SetDisplayList(
         // cache items.
         rect = LayoutDeviceIntRect(LayoutDeviceIntPoint(), widgetSize);
       }
-      aTxn.SetDocumentView(rect, widgetSize);
+      aTxn.SetDocumentView(rect);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     aTxn.SetDisplayList(clearColor, aWrEpoch,

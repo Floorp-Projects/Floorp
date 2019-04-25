@@ -207,7 +207,7 @@ class ConnectPage extends PureComponent {
         },
         dom.h1(
           {
-            className: "alt-heading",
+            className: "alt-heading alt-heading--larger",
           },
           "Setup"
         ),
@@ -258,7 +258,7 @@ class ConnectPage extends PureComponent {
           {
             id: "about-debugging-setup-connect-heading",
           },
-          dom.h1(
+          dom.h2(
             {
               className: "alt-heading",
             },

@@ -29,6 +29,9 @@ pref("geckoview.logging", "Debug");
 // Disable Web Push until we get it working
 pref("dom.push.enabled", false);
 
+// enable external storage API
+pref("dom.storageManager.enabled", true);
+
 // Use containerless scrolling.
 pref("layout.scroll.root-frame-containers", 0);
 

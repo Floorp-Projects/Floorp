@@ -460,6 +460,10 @@ class nsWindow final : public nsBaseWidget {
   nsWindow* GetTransientForWindowIfPopup();
   bool IsHandlingTouchSequence(GdkEventSequence* aSequence);
 
+  void NativeMoveResizeWaylandPopup(GdkPoint* aPosition, GdkRectangle* aSize);
+
+  GtkTextDirection GetTextDirection();
+
 #ifdef MOZ_X11
   typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
                 GTK_WIDGET_COMPOSIDED_DISABLED = 1,
@@ -607,6 +611,8 @@ class nsWindow final : public nsBaseWidget {
 
   // This is used by Wayland backend to keep strict popup window hierarchy.
   GtkWindow* GetPopupParentWindow();
+
+  bool IsWaylandPopup();
 
   /**
    * |mIMContext| takes all IME related stuff.

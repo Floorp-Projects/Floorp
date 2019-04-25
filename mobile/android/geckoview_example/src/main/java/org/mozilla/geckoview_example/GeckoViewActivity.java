@@ -47,6 +47,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -73,6 +74,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mKillProcessOnDestroy;
 
     private boolean mShowNotificationsRejected;
+    private ArrayList<String> mAcceptedPersistentStorage = new ArrayList<String>();
 
     private LocationView mLocationView;
     private String mCurrentUri;
@@ -621,6 +623,26 @@ public class GeckoViewActivity extends AppCompatActivity {
             }
         }
 
+        class ExamplePersistentStorageCallback implements GeckoSession.PermissionDelegate.Callback {
+            private final GeckoSession.PermissionDelegate.Callback mCallback;
+            private final String mUri;
+            ExamplePersistentStorageCallback(final GeckoSession.PermissionDelegate.Callback callback, String uri) {
+                mCallback = callback;
+                mUri = uri;
+            }
+
+            @Override
+            public void reject() {
+                mCallback.reject();
+            }
+
+            @Override
+            public void grant() {
+                mAcceptedPersistentStorage.add(mUri);
+                mCallback.grant();
+            }
+        }
+
         public void onRequestPermissionsResult(final String[] permissions,
                                                final int[] grantResults) {
             if (mCallback == null) {
@@ -666,6 +688,14 @@ public class GeckoViewActivity extends AppCompatActivity {
                 }
                 resId = R.string.request_notification;
                 contentPermissionCallback = new ExampleNotificationCallback(callback);
+            } else if (PERMISSION_PERSISTENT_STORAGE == type) {
+                if (mAcceptedPersistentStorage.contains(uri)) {
+                    Log.w(LOGTAG, "Persistent Storage for "+ uri +" already granted by user.");
+                    callback.grant();
+                    return;
+                }
+                resId = R.string.request_storage;
+                contentPermissionCallback = new ExamplePersistentStorageCallback(callback, uri);
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
                 callback.reject();

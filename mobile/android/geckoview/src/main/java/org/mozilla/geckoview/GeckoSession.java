@@ -757,6 +757,8 @@ public class GeckoSession implements Parcelable {
                         type = PermissionDelegate.PERMISSION_GEOLOCATION;
                     } else if ("desktop-notification".equals(typeString)) {
                         type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
+                    } else if ("persistent-storage".equals(typeString)) {
+                        type = PermissionDelegate.PERMISSION_PERSISTENT_STORAGE;
                     } else {
                         throw new IllegalArgumentException("Unknown permission request: " + typeString);
                     }
@@ -4269,6 +4271,12 @@ public class GeckoSession implements Parcelable {
         int PERMISSION_DESKTOP_NOTIFICATION = 1;
 
         /**
+         * Permission for using the storage API.
+         * See: https://developer.mozilla.org/en-US/docs/Web/API/Storage_API
+         */
+        int PERMISSION_PERSISTENT_STORAGE = 2;
+
+        /**
          * Callback interface for notifying the result of a permission request.
          */
         interface Callback {
@@ -4308,11 +4316,17 @@ public class GeckoSession implements Parcelable {
         /**
          * Request content permission.
          *
+         * Note, that in the case of PERMISSION_PERSISTENT_STORAGE, once permission has been granted
+         * for a site, it cannot be revoked. If the permission has previously been granted, it is
+         * the responsibility of the consuming app to remember the permission and prevent the prompt
+         * from being redisplayed to the user.
+         *
          * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param type The type of the requested permission; possible values are,
          *             PERMISSION_GEOLOCATION
          *             PERMISSION_DESKTOP_NOTIFICATION
+         *             PERMISSION_PERSISTENT_STORAGE
          * @param callback Callback interface.
          */
         @UiThread

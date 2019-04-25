@@ -41,6 +41,38 @@ class RemoteAgentError extends Error {
   static format(e, {stack = false} = {}) {
     return formatError(e, {stack});
   }
+
+  /**
+   * Takes a serialised CDP error and reconstructs it
+   * as a RemoteAgentError.
+   *
+   * The error must be of this form:
+   *
+   *     {"message": "TypeError: foo is not a function\n
+   *     execute@chrome://remote/content/sessions/Session.jsm:73:39\n
+   *     onMessage@chrome://remote/content/sessions/TabSession.jsm:65:20"}
+   *
+   * This approach has the notable deficiency that it cannot deal
+   * with causes to errors because of the unstructured nature of CDP
+   * errors.  A possible future improvement would be to extend the
+   * error serialisation to include discrete fields for each data
+   * property.
+   *
+   * @param {Object} json
+   *     CDP error encoded as a JSON object, which must have a
+   *     "message" field, where the first line will make out the error
+   *     message and the subsequent lines the stacktrace.
+   *
+   * @return {RemoteAgentError}
+   */
+  static fromJSON(json) {
+    const [message, ...stack] = json.message.split("\n");
+    const err = new RemoteAgentError();
+    err.message = message.slice(0, -1);
+    err.stack = stack.map(s => s.trim()).join("\n");
+    err.cause = null;
+    return err;
+  }
 }
 
 /**
