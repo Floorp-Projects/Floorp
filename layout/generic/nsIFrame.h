@@ -466,22 +466,19 @@ enum class AlignmentContext {
 };
 
 /*
- * For replaced elements only. Gets the intrinsic dimensions of this element.
- * The dimensions may only be one of the following two types:
- *
- *   eStyleUnit_Coord   - a length in app units
- *   eStyleUnit_None    - the element has no intrinsic size in this dimension
+ * For replaced elements only. Gets the intrinsic dimensions of this element,
+ * which can be specified on a per-axis basis.
  */
 struct IntrinsicSize {
-  nsStyleCoord width, height;
+  Maybe<nscoord> width;
+  Maybe<nscoord> height;
 
-  IntrinsicSize() : width(eStyleUnit_None), height(eStyleUnit_None) {}
+  IntrinsicSize() = default;
+
   IntrinsicSize(nscoord aWidth, nscoord aHeight)
-      : width(aWidth, nsStyleCoord::CoordConstructor),
-        height(aHeight, nsStyleCoord::CoordConstructor) {}
+      : width(Some(aWidth)), height(Some(aHeight)) {}
 
-  IntrinsicSize(const IntrinsicSize& rhs)
-      : width(rhs.width), height(rhs.height) {}
+  IntrinsicSize(const IntrinsicSize& rhs) = default;
   IntrinsicSize& operator=(const IntrinsicSize& rhs) {
     width = rhs.width;
     height = rhs.height;

@@ -731,8 +731,7 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
         // Some percents are treated like 'auto', so check != coord
         !pos->BSize(aWM).ConvertsToLength()) {
       const IntrinsicSize& intrinsicSize = f->GetIntrinsicSize();
-      if (intrinsicSize.width.GetUnit() == eStyleUnit_None &&
-          intrinsicSize.height.GetUnit() == eStyleUnit_None) {
+      if (!intrinsicSize.width && !intrinsicSize.height) {
         return true;
       }
     }
