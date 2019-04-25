@@ -552,11 +552,11 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     if (flo) {
       RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
       if (fl) {
-        BrowserParent* tp = static_cast<BrowserParent*>(fl->GetRemoteBrowser());
-        if (tp) {
+        BrowserParent* bp = fl->GetBrowserParent();
+        if (bp) {
           // We have a BrowserParent, so it may have data for dnd in case the
           // child process started a dnd session.
-          tp->AddInitialDnDDataTo(aDataTransfer, aPrincipal);
+          bp->AddInitialDnDDataTo(aDataTransfer, aPrincipal);
         }
       }
     }
