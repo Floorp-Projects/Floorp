@@ -17,6 +17,7 @@ add_task(async function telemetry_partial_applied() {
 
   let expected = getTelemetryUpdatePhaseValues({
     noInternalComplete: true,
+    noBitsComplete: true,
   });
   checkTelemetryUpdatePhases(expected);
 

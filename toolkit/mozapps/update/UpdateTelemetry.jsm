@@ -512,7 +512,7 @@ var AUSTLMY = {
         // is applied during a restart and then to try the complete patch.
         let applyStart = patch.getProperty("applyStart");
         if (applyStart !== null) {
-          let applyFinished = Date.now() / 1000;
+          let applyFinished = Math.ceil(Date.now() / 1000);
           scalarSet(prefix + "apply_" + type,
                     Math.max((applyFinished - applyStart), 1));
         }

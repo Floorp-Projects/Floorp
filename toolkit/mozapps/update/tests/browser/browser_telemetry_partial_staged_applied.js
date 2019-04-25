@@ -23,6 +23,7 @@ add_task(async function telemetry_partial_staged_applied() {
   testPostUpdateProcessing();
 
   let expected = getTelemetryUpdatePhaseValues({
+    noBitsComplete: true,
     noInternalComplete: true,
   });
   checkTelemetryUpdatePhases(expected);
