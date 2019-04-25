@@ -1772,9 +1772,8 @@ void HttpChannelChild::BeginNonIPCRedirect(
     // redirect, though, we are performing a redirect to communicate the URL of
     // the service worker synthetic response itself.  This redirect still
     // represents the synthetic response, so we must preserve the flag.
-    if (mLoadInfo && mLoadInfo->GetServiceWorkerTaintingSynthesized()) {
-      nsCOMPtr<nsILoadInfo> newChannelLoadInfo;
-      Unused << newChannel->GetLoadInfo(getter_AddRefs(newChannelLoadInfo));
+    if (mLoadInfo->GetServiceWorkerTaintingSynthesized()) {
+      nsCOMPtr<nsILoadInfo> newChannelLoadInfo = newChannel->LoadInfo();
       if (newChannelLoadInfo) {
         newChannelLoadInfo->SynthesizeServiceWorkerTainting(
             mLoadInfo->GetTainting());
@@ -2276,10 +2275,10 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
     appCacheChannel->GetChooseApplicationCache(&chooseAppcache);
   }
 
-  nsCOMPtr<nsILoadInfo> newChannelLoadInfo;
+  nsCOMPtr<nsILoadInfo> newChannelLoadInfo = nullptr;
   nsCOMPtr<nsIChannel> newChannel = do_QueryInterface(mRedirectChannelChild);
   if (newChannel) {
-    Unused << newChannel->GetLoadInfo(getter_AddRefs(newChannelLoadInfo));
+    newChannelLoadInfo = newChannel->LoadInfo();
   }
 
   ChildLoadInfoForwarderArgs loadInfoForwarder;
@@ -2569,8 +2568,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 // Assigns an nsIEventTarget to our IPDL actor so that IPC messages are sent to
 // the correct DocGroup/TabGroup.
 void HttpChannelChild::SetEventTarget() {
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  GetLoadInfo(getter_AddRefs(loadInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
 
   nsCOMPtr<nsIEventTarget> target =
       nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Network);

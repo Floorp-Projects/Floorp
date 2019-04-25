@@ -356,8 +356,7 @@ bool InternalRequest::IsClientRequest() const {
 RequestMode InternalRequest::MapChannelToRequestMode(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   nsContentPolicyType contentPolicy = loadInfo->InternalContentPolicyType();
   if (IsNavigationContentPolicy(contentPolicy)) {
@@ -394,8 +393,7 @@ RequestCredentials InternalRequest::MapChannelToRequestCredentials(
     nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   uint32_t cookiePolicy = loadInfo->GetCookiePolicy();
 

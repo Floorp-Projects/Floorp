@@ -369,12 +369,6 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
     return;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv)) {
-    AsyncOpenFailed(rv);
-    return;
-  }
   rv = mChannel->AsyncOpen(mParentListener);
   if (NS_FAILED(rv)) {
     AsyncOpenFailed(rv);
@@ -905,8 +899,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         appCacheChannel->SetChooseApplicationCache(aChooseAppcache);
       }
 
-      nsCOMPtr<nsILoadInfo> newLoadInfo;
-      Unused << newHttpChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+      nsCOMPtr<nsILoadInfo> newLoadInfo = newHttpChannel->LoadInfo();
       rv = MergeChildLoadInfoForwarder(aLoadInfoForwarder, newLoadInfo);
       if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
         result = rv;
@@ -1435,8 +1428,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   int64_t altDataLen = chan->GetAltDataLength();
   bool deliveringAltData = chan->IsDeliveringAltData();
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  Unused << chan->GetLoadInfo(getter_AddRefs(loadInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
 
   ParentLoadInfoForwarderArgs loadInfoForwarderArg;
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo,
@@ -1554,14 +1546,10 @@ HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
                 Suspended);
 
         // Only analyze non-local suspended cases, which we are interested in.
-        nsCOMPtr<nsILoadInfo> loadInfo;
-        if (NS_SUCCEEDED(mChannel->GetLoadInfo(getter_AddRefs(loadInfo)))) {
-          nsContentPolicyType type = loadInfo
-                                         ? loadInfo->InternalContentPolicyType()
-                                         : nsIContentPolicy::TYPE_OTHER;
-          Telemetry::Accumulate(
-              Telemetry::NETWORK_BACK_PRESSURE_SUSPENSION_CP_TYPE, type);
-        }
+        nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+        Telemetry::Accumulate(
+            Telemetry::NETWORK_BACK_PRESSURE_SUSPENSION_CP_TYPE,
+            loadInfo->InternalContentPolicyType());
       }
     } else {
       if (!mHasSuspendedByBackPressure) {
@@ -1940,22 +1928,19 @@ HttpChannelParent::StartRedirect(uint32_t registrarId, nsIChannel* newChannel,
       // to the new channel.  Normally this would be handled by the child
       // ClientChannelHelper, but that is not notified of this redirect since
       // we're not propagating it back to the child process.
-      nsCOMPtr<nsILoadInfo> oldLoadInfo;
-      Unused << mChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
-      nsCOMPtr<nsILoadInfo> newLoadInfo;
-      Unused << newChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
-      if (oldLoadInfo && newLoadInfo) {
-        Maybe<ClientInfo> reservedClientInfo(
-            oldLoadInfo->GetReservedClientInfo());
-        if (reservedClientInfo.isSome()) {
-          newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
-        }
+      nsCOMPtr<nsILoadInfo> oldLoadInfo = mChannel->LoadInfo();
 
-        Maybe<ClientInfo> initialClientInfo(
-            oldLoadInfo->GetInitialClientInfo());
-        if (initialClientInfo.isSome()) {
-          newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
-        }
+      nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
+
+      Maybe<ClientInfo> reservedClientInfo(
+          oldLoadInfo->GetReservedClientInfo());
+      if (reservedClientInfo.isSome()) {
+        newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
+      }
+
+      Maybe<ClientInfo> initialClientInfo(oldLoadInfo->GetInitialClientInfo());
+      if (initialClientInfo.isSome()) {
+        newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
       }
 
       // Re-link the HttpChannelParent to the new InterceptedHttpChannel.
@@ -2001,8 +1986,7 @@ HttpChannelParent::StartRedirect(uint32_t registrarId, nsIChannel* newChannel,
     NS_ENSURE_SUCCESS(rv, NS_BINDING_ABORTED);
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  Unused << mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
 
   ParentLoadInfoForwarderArgs loadInfoForwarderArg;
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo,
