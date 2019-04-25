@@ -121,7 +121,8 @@ class DocumentL10n final : public nsIObserver,
   void GetAttributes(JSContext* aCx, Element& aElement, L10nKey& aResult,
                      ErrorResult& aRv);
 
-  already_AddRefed<Promise> TranslateFragment(nsINode& aNode, ErrorResult& aRv);
+  already_AddRefed<Promise> TranslateFragment(JSContext* aCx, nsINode& aNode,
+                                              ErrorResult& aRv);
   already_AddRefed<Promise> TranslateElements(
       const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
 

@@ -1124,16 +1124,34 @@ NS_IMETHODIMP
 EditorBase::Cut() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-EditorBase::CanCut(bool* aCanCut) { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::CanCut(bool* aCanCut) {
+  if (NS_WARN_IF(!aCanCut)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aCanCut = AsTextEditor()->CanCut();
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 EditorBase::Copy() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-EditorBase::CanCopy(bool* aCanCut) { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::CanCopy(bool* aCanCopy) {
+  if (NS_WARN_IF(!aCanCopy)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aCanCopy = AsTextEditor()->CanCopy();
+  return NS_OK;
+}
 
 NS_IMETHODIMP
-EditorBase::CanDelete(bool* aCanDelete) { return NS_ERROR_NOT_IMPLEMENTED; }
+EditorBase::CanDelete(bool* aCanDelete) {
+  if (NS_WARN_IF(!aCanDelete)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aCanDelete = AsTextEditor()->CanDelete();
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 EditorBase::Paste(int32_t aClipboardType) {
@@ -1152,8 +1170,12 @@ EditorBase::PasteTransferable(nsITransferable* aTransferable) {
 }
 
 NS_IMETHODIMP
-EditorBase::CanPaste(int32_t aSelectionType, bool* aCanPaste) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+EditorBase::CanPaste(int32_t aClipboardType, bool* aCanPaste) {
+  if (NS_WARN_IF(!aCanPaste)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aCanPaste = AsTextEditor()->CanPaste(aClipboardType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -15,15 +15,6 @@
  *
  * For details on the implementation of the API, see `Node.webidl`.
  */
-dictionary L10nElement {
-  required DOMString namespaceURI;
-  required DOMString localName;
-  required DOMString l10nId; // value of data-l10n-id
-  DOMString? type = null;
-  DOMString? l10nAttrs = null; // value of data-l10n-attrs
-  object? l10nArgs = null; // json value of data-l10n-args attribute
-};
-
 dictionary AttributeNameValue {
   required DOMString name;
   required DOMString value;
@@ -33,6 +24,3 @@ dictionary L10nValue {
   DOMString? value = null;
   sequence<AttributeNameValue>? attributes = null;
 };
-
-callback L10nCallback =
-  Promise<sequence<L10nValue>> (sequence<L10nElement> l10nElements);
