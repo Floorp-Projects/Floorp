@@ -163,7 +163,6 @@ struct cubeb {
   /* Collection changed for output (render) devices. */
   cubeb_device_collection_changed_callback output_collection_changed_callback = nullptr;
   void * output_collection_changed_user_ptr = nullptr;
-  std::unique_ptr<monitor_device_notifications> monitor_notifications;
 };
 
 class wasapi_endpoint_notification_client;
@@ -308,6 +307,7 @@ public:
 
   void notify(EDataFlow flow)
   {
+    XASSERT(cubeb_context);
     if (flow == eCapture && cubeb_context->input_collection_changed_callback) {
       bool res = SetEvent(input_changed);
       if (!res) {
@@ -450,6 +450,7 @@ public:
   wasapi_collection_notification_client(cubeb * context)
     : ref_count(1)
     , cubeb_context(context)
+    , monitor_notifications(context)
   {
     XASSERT(cubeb_context);
   }
@@ -492,7 +493,7 @@ public:
       if (FAILED(hr)) {
         return hr;
       }
-      cubeb_context->monitor_notifications->notify(flow);
+      monitor_notifications.notify(flow);
     }
     return S_OK;
   }
@@ -530,6 +531,7 @@ private:
   LONG ref_count;
 
   cubeb * cubeb_context = nullptr;
+  monitor_device_notifications monitor_notifications;
 };
 
 class wasapi_endpoint_notification_client : public IMMNotificationClient
@@ -1336,8 +1338,6 @@ HRESULT register_collection_notification_client(cubeb * context)
     context->device_collection_enumerator.reset();
   }
 
-  context->monitor_notifications.reset(new monitor_device_notifications(context));
-
   return hr;
 }
 
@@ -1352,7 +1352,6 @@ HRESULT unregister_collection_notification_client(cubeb * context)
   context->collection_notification_client = nullptr;
   context->device_collection_enumerator = nullptr;
 
-  context->monitor_notifications.reset();
   return hr;
 }
 
