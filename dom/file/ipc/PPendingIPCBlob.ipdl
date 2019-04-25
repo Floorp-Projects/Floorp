@@ -7,7 +7,7 @@ include protocol PBackground;
 include IPCBlob;
 
 namespace mozilla {
-namespace ipc {
+namespace dom {
 
 // IndexedDB and FileHandle do not know all the Blob/File properties when they
 // create a IPCBlob. For this reason, they need to use this simple protocol.
