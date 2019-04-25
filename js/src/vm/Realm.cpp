@@ -62,9 +62,8 @@ Realm::~Realm() {
   MOZ_ASSERT(!hasBeenEnteredIgnoringJit());
 
   // Write the code coverage information in a file.
-  JSRuntime* rt = runtimeFromMainThread();
-  if (rt->lcovOutput().isEnabled()) {
-    rt->lcovOutput().writeLCovResult(lcovOutput);
+  if (coverage::IsLCovEnabled()) {
+    runtime_->lcovOutput().writeLCovResult(lcovOutput);
   }
 
   MOZ_ASSERT(runtime_->numRealms > 0);
@@ -826,9 +825,7 @@ bool Realm::collectCoverageForPGO() const {
 }
 
 bool Realm::collectCoverageForDebug() const {
-  return debuggerObservesCoverage() ||
-         runtimeFromAnyThread()->profilingScripts ||
-         runtimeFromAnyThread()->lcovOutput().isEnabled();
+  return debuggerObservesCoverage() || coverage::IsLCovEnabled();
 }
 
 void Realm::clearScriptCounts() {

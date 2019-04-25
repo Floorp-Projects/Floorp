@@ -8175,7 +8175,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
 
   // Merge script name maps in the target realm's map.
-  if (rt->lcovOutput().isEnabled() && source->scriptNameMap) {
+  if (coverage::IsLCovEnabled() && source->scriptNameMap) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
     if (!target->scriptNameMap) {

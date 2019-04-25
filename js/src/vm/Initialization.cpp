@@ -114,6 +114,8 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   js::gc::InitMemorySubsystem();  // Ensure gc::SystemPageSize() works.
 
+  js::coverage::InitLCov();
+
   RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());
 
   RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());

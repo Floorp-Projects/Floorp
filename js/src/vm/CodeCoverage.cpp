@@ -599,6 +599,21 @@ bool LCovRealm::writeRealmName(JS::Realm* realm) {
   return !outTN_.hadOutOfMemory();
 }
 
+bool gLCovIsEnabled = false;
+
+void InitLCov() {
+  const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
+  if (outDir && *outDir != 0) {
+    EnableLCov();
+  }
+}
+
+void EnableLCov() {
+  MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
+             "EnableLCov must not be called after creating a runtime!");
+  gLCovIsEnabled = true;
+}
+
 LCovRuntime::LCovRuntime() : out_(), pid_(getpid()), isEmpty_(true) {}
 
 LCovRuntime::~LCovRuntime() {
