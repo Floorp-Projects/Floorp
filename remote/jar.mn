@@ -29,12 +29,14 @@ remote.jar:
   content/targets/Targets.jsm (targets/Targets.jsm)
 
   # domains
-  content/domains/Domain.jsm (domains/Domain.jsm)
-  content/domains/Domains.jsm (domains/Domains.jsm)
   content/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
   content/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
+  content/domains/Domain.jsm (domains/Domain.jsm)
+  content/domains/Domains.jsm (domains/Domains.jsm)
   content/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)
+  content/domains/content/DOM.jsm (domains/content/DOM.jsm)
   content/domains/content/Emulation.jsm (domains/content/Emulation.jsm)
+  content/domains/content/Input.jsm (domains/content/Input.jsm)
   content/domains/content/Log.jsm (domains/content/Log.jsm)
   content/domains/content/Network.jsm (domains/content/Network.jsm)
   content/domains/content/Page.jsm (domains/content/Page.jsm)
