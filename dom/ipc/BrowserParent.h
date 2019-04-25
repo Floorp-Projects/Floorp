@@ -463,10 +463,7 @@ class BrowserParent final : public PBrowserParent,
   void InitRendering();
   void MaybeShowFrame();
 
-  // XXX/cjones: it's not clear what we gain by hiding these
-  // message-sending functions under a layer of indirection and
-  // eating the return values
-  void Show(const ScreenIntSize& aSize, bool aParentIsActive);
+  bool Show(const ScreenIntSize& aSize, bool aParentIsActive);
 
   void UpdateDimensions(const nsIntRect& aRect, const ScreenIntSize& aSize);
 
