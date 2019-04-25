@@ -1,0 +1,12 @@
+[package]
+name = "lzw"
+version = "0.10.0"
+license = "MIT/Apache-2.0"
+description = "LZW compression and decompression."
+authors = ["nwin <nwin@users.noreply.github.com>"]
+readme = "README.md"
+repository = "https://github.com/nwin/lzw.git"
+
+[features]
+default = ["raii_no_panic"]
+raii_no_panic = []
