@@ -476,6 +476,10 @@ struct IntrinsicSize {
   nsStyleCoord width, height;
 
   IntrinsicSize() : width(eStyleUnit_None), height(eStyleUnit_None) {}
+  IntrinsicSize(nscoord aWidth, nscoord aHeight)
+      : width(aWidth, nsStyleCoord::CoordConstructor),
+        height(aHeight, nsStyleCoord::CoordConstructor) {}
+
   IntrinsicSize(const IntrinsicSize& rhs)
       : width(rhs.width), height(rhs.height) {}
   IntrinsicSize& operator=(const IntrinsicSize& rhs) {
