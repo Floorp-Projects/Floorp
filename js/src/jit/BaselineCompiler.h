@@ -320,7 +320,7 @@ class BaselineCodeGen {
   // stored in the script) as argument for a VM function.
   enum class ScriptObjectType { RegExp, Function };
   void pushScriptObjectArg(ScriptObjectType type);
-  void pushScriptNameArg();
+  void pushScriptNameArg(Register scratch1, Register scratch2);
   void pushScriptScopeArg();
 
   // Pushes a bytecode operand as argument for a VM function.
@@ -348,6 +348,9 @@ class BaselineCodeGen {
 
   // Load the |this|-value from the global's lexical environment.
   void loadGlobalThisValue(ValueOperand dest);
+
+  // Load script atom |index| into |dest|.
+  void loadScriptAtom(Register index, Register dest);
 
   void prepareVMCall();
 
