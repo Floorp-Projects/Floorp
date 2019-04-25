@@ -6685,9 +6685,10 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
           }
         }
       }
-      StrokeOptions strokeOpts;
+      // Use ROUND joins as they are less likely to produce ugly artifacts
+      // when stroking glyphs with sharp angles (see bug 1546985).
+      StrokeOptions strokeOpts(aParams.textStrokeWidth, JoinStyle::ROUND);
       params.textStrokeColor = aParams.textStrokeColor;
-      strokeOpts.mLineWidth = aParams.textStrokeWidth;
       params.strokeOpts = &strokeOpts;
       aTextRun->Draw(aRange, aTextBaselinePt, params);
     } else {
