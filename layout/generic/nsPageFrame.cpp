@@ -362,7 +362,7 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
     aRenderingContext.SetColor(Color(0.f, 0.f, 0.f));
     nsLayoutUtils::DrawString(this, aFontMetrics, &aRenderingContext, str.get(),
                               str.Length(), nsPoint(x, y + aAscent), nullptr,
-                              DrawStringFlags::eForceHorizontal);
+                              DrawStringFlags::ForceHorizontal);
     aRenderingContext.Restore();
   }
 }

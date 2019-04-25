@@ -123,12 +123,12 @@ class nsCSSPseudoElements {
       return true;
     }
 
-    if ((aEnabledState & EnabledState::eInUASheets) &&
+    if ((aEnabledState & EnabledState::InUASheets) &&
         PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS)) {
       return true;
     }
 
-    if ((aEnabledState & EnabledState::eInChrome) &&
+    if ((aEnabledState & EnabledState::InChrome) &&
         PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_CHROME)) {
       return true;
     }

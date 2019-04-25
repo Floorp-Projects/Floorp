@@ -3684,7 +3684,7 @@ ImgDrawResult nsTreeBodyFrame::PaintBackgroundLayer(
 
   result &= nsCSSRendering::PaintBorderWithStyleBorder(
       aPresContext, aRenderingContext, this, aDirtyRect, aRect, *myBorder,
-      mComputedStyle, PaintBorderFlags::SYNC_DECODE_IMAGES);
+      mComputedStyle, PaintBorderFlags::SyncDecodeImages);
 
   nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                aDirtyRect, aRect, aComputedStyle);
@@ -3825,7 +3825,7 @@ nsresult nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts,
   // Update the column scroll view
   AutoWeakFrame weakFrame(this);
   aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),
-                                       ScrollMode::eInstant);
+                                       ScrollMode::Instant);
   if (!weakFrame.IsAlive()) {
     return NS_ERROR_FAILURE;
   }

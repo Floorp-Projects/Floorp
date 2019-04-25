@@ -433,8 +433,8 @@ void MathMLTextRunFactory::RebuildTextRun(
   AutoTArray<uint8_t, 50> canBreakBeforeArray;
   bool mergeNeeded = false;
 
-  bool singleCharMI = !!(aTextRun->GetFlags2() &
-                         nsTextFrameUtils::Flags::TEXT_IS_SINGLE_CHAR_MI);
+  bool singleCharMI =
+      !!(aTextRun->GetFlags2() & nsTextFrameUtils::Flags::IsSingleCharMi);
 
   uint32_t length = aTextRun->GetLength();
   const char16_t* str = aTextRun->mString.BeginReading();

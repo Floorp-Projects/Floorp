@@ -307,7 +307,7 @@ void nsImageLoadingContent::OnUnlockedDraw() {
     return;
   }
 
-  if (frame->GetVisibility() == Visibility::APPROXIMATELY_VISIBLE) {
+  if (frame->GetVisibility() == Visibility::ApproximatelyVisible) {
     // This frame is already marked visible; there's nothing to do.
     return;
   }
@@ -1100,7 +1100,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   if (aDocument->IsLoadedAsData()) {
     // This is the only codepath on which we can reach SetBlockedRequest while
     // our pending request exists.  Just clear it out here if we do have one.
-    ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+    ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 
     SetBlockedRequest(nsIContentPolicy::REJECT_REQUEST);
 
@@ -1326,8 +1326,8 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
 void nsImageLoadingContent::CancelImageRequests(bool aNotify) {
   RejectDecodePromises(NS_ERROR_DOM_IMAGE_INVALID_REQUEST);
   AutoStateChanger changer(this, aNotify);
-  ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
-  ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+  ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
+  ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 }
 
 Document* nsImageLoadingContent::GetOurOwnerDoc() {
@@ -1450,7 +1450,7 @@ RefPtr<imgRequestProxy>& nsImageLoadingContent::PrepareCurrentRequest(
   mImageBlockingStatus = nsIContentPolicy::ACCEPT;
 
   // Get rid of anything that was there previously.
-  ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+  ClearCurrentRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 
   if (mNewRequestsWillNeedAnimationReset) {
     mCurrentRequestFlags |= REQUEST_NEEDS_ANIMATION_RESET;
@@ -1467,7 +1467,7 @@ RefPtr<imgRequestProxy>& nsImageLoadingContent::PrepareCurrentRequest(
 RefPtr<imgRequestProxy>& nsImageLoadingContent::PreparePendingRequest(
     ImageLoadType aImageLoadType) {
   // Get rid of anything that was there previously.
-  ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DISCARD_IMAGES));
+  ClearPendingRequest(NS_BINDING_ABORTED, Some(OnNonvisible::DiscardImages));
 
   if (mNewRequestsWillNeedAnimationReset) {
     mPendingRequestFlags |= REQUEST_NEEDS_ANIMATION_RESET;
@@ -1633,17 +1633,17 @@ void nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
 void nsImageLoadingContent::OnVisibilityChange(
     Visibility aNewVisibility, const Maybe<OnNonvisible>& aNonvisibleAction) {
   switch (aNewVisibility) {
-    case Visibility::APPROXIMATELY_VISIBLE:
+    case Visibility::ApproximatelyVisible:
       TrackImage(mCurrentRequest);
       TrackImage(mPendingRequest);
       break;
 
-    case Visibility::APPROXIMATELY_NONVISIBLE:
+    case Visibility::ApproximatelyNonVisible:
       UntrackImage(mCurrentRequest, aNonvisibleAction);
       UntrackImage(mPendingRequest, aNonvisibleAction);
       break;
 
-    case Visibility::UNTRACKED:
+    case Visibility::Untracked:
       MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
       break;
   }
@@ -1676,7 +1676,7 @@ void nsImageLoadingContent::TrackImage(imgIRequest* aImage,
    * instead of the content node.
    */
   if (!aFrame ||
-      aFrame->GetVisibility() == Visibility::APPROXIMATELY_NONVISIBLE) {
+      aFrame->GetVisibility() == Visibility::ApproximatelyNonVisible) {
     return;
   }
 
@@ -1710,10 +1710,10 @@ void nsImageLoadingContent::UntrackImage(
       mCurrentRequestFlags &= ~REQUEST_IS_TRACKED;
       doc->ImageTracker()->Remove(
           mCurrentRequest,
-          aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)
+          aNonvisibleAction == Some(OnNonvisible::DiscardImages)
               ? ImageTracker::REQUEST_DISCARD
               : 0);
-    } else if (aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)) {
+    } else if (aNonvisibleAction == Some(OnNonvisible::DiscardImages)) {
       // If we're not in the document we may still need to be discarded.
       aImage->RequestDiscard();
     }
@@ -1723,10 +1723,10 @@ void nsImageLoadingContent::UntrackImage(
       mPendingRequestFlags &= ~REQUEST_IS_TRACKED;
       doc->ImageTracker()->Remove(
           mPendingRequest,
-          aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)
+          aNonvisibleAction == Some(OnNonvisible::DiscardImages)
               ? ImageTracker::REQUEST_DISCARD
               : 0);
-    } else if (aNonvisibleAction == Some(OnNonvisible::DISCARD_IMAGES)) {
+    } else if (aNonvisibleAction == Some(OnNonvisible::DiscardImages)) {
       // If we're not in the document we may still need to be discarded.
       aImage->RequestDiscard();
     }

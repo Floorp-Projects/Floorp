@@ -297,7 +297,7 @@ class nsDisplaymtdBorder final : public nsDisplayBorder {
     bounds.Inflate(overflow);
 
     PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
-                                 ? PaintBorderFlags::SYNC_DECODE_IMAGES
+                                 ? PaintBorderFlags::SyncDecodeImages
                                  : PaintBorderFlags();
 
     ImgDrawResult result = nsCSSRendering::PaintBorderWithStyleBorder(

@@ -126,7 +126,7 @@ class nsBlockFrame : public nsContainerFrame {
                  "You should only call this on frames with a WM that's "
                  "parallel to aWM");
     nscoord lastBaseline;
-    if (GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eLast,
+    if (GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::Last,
                                   &lastBaseline)) {
       *aBaseline = BSize() - lastBaseline;
       return true;

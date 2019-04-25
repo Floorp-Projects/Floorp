@@ -261,16 +261,16 @@ void nsSVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   aContext.Multiply(canvasTMForChildren);
 
   using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
-  PaintFrameFlags flags = PaintFrameFlags::PAINT_IN_TRANSFORM;
+  PaintFrameFlags flags = PaintFrameFlags::InTransform;
   if (SVGAutoRenderState::IsPaintingToWindow(aContext.GetDrawTarget())) {
-    flags |= PaintFrameFlags::PAINT_TO_WINDOW;
+    flags |= PaintFrameFlags::ToWindow;
   }
   if (aImgParams.imageFlags & imgIContainer::FLAG_SYNC_DECODE) {
-    flags |= PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES;
+    flags |= PaintFrameFlags::SyncDecodeImages;
   }
   Unused << nsLayoutUtils::PaintFrame(
       &aContext, kid, nsRegion(kidDirtyRect), NS_RGBA(0, 0, 0, 0),
-      nsDisplayListBuilderMode::PAINTING, flags);
+      nsDisplayListBuilderMode::Painting, flags);
 
   aContext.Restore();
 }

@@ -1106,7 +1106,7 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // Wrap the list to make it its own layer
       aLists.Content()->AppendNewToTop<nsDisplayOwnLayer>(
           aBuilder, this, &masterList, ownLayerASR,
-          nsDisplayOwnLayerFlags::eNone, mozilla::layers::ScrollbarData{}, true,
+          nsDisplayOwnLayerFlags::None, mozilla::layers::ScrollbarData{}, true,
           true);
     } else {
       MOZ_ASSERT(!XRE_IsContentProcess());

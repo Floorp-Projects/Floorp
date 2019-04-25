@@ -5484,7 +5484,7 @@ static PseudoStyleType GetPseudoElementType(const nsString& aString,
   }
   RefPtr<nsAtom> pseudo = NS_Atomize(Substring(aString, 1));
   return nsCSSPseudoElements::GetPseudoType(pseudo,
-                                            CSSEnabledState::eInUASheets);
+                                            CSSEnabledState::InUASheets);
 }
 
 already_AddRefed<Element> Document::CreateElement(

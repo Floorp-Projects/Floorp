@@ -336,8 +336,8 @@ void InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
                                          const PropertyNamesOptions& aOptions,
                                          nsTArray<nsString>& aResult) {
   CSSEnabledState enabledState = aOptions.mIncludeExperimentals
-                                     ? CSSEnabledState::eIgnoreEnabledState
-                                     : CSSEnabledState::eForAllContent;
+                                     ? CSSEnabledState::IgnoreEnabledState
+                                     : CSSEnabledState::ForAllContent;
 
   auto appendProperty = [enabledState, &aResult](uint32_t prop) {
     nsCSSPropertyID cssProp = nsCSSPropertyID(prop);
@@ -626,7 +626,7 @@ void InspectorUtils::GetCSSPseudoElementNames(GlobalObject& aGlobalObject,
       static_cast<size_t>(PseudoStyleType::CSSPseudoElementsEnd);
   for (size_t i = 0; i < kPseudoCount; ++i) {
     PseudoStyleType type = static_cast<PseudoStyleType>(i);
-    if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::eForAllContent)) {
+    if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::ForAllContent)) {
       nsAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
       aResult.AppendElement(nsDependentAtomString(atom));
     }

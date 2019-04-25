@@ -137,17 +137,17 @@ struct DisplayItemEntry {
  * Returns true if the given |aType| is an effect start marker.
  */
 static bool IsEffectStartMarker(DisplayItemEntryType aType) {
-  return aType == DisplayItemEntryType::PUSH_OPACITY ||
-         aType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG ||
-         aType == DisplayItemEntryType::PUSH_TRANSFORM;
+  return aType == DisplayItemEntryType::PushOpacity ||
+         aType == DisplayItemEntryType::PushOpacityWithBg ||
+         aType == DisplayItemEntryType::PushTransform;
 }
 
 /**
  * Returns true if the given |aType| is an effect end marker.
  */
 static bool IsEffectEndMarker(DisplayItemEntryType aType) {
-  return aType == DisplayItemEntryType::POP_OPACITY ||
-         aType == DisplayItemEntryType::POP_TRANSFORM;
+  return aType == DisplayItemEntryType::PopOpacity ||
+         aType == DisplayItemEntryType::PopTransform;
 }
 
 enum class MarkerType { StartMarker, EndMarker };
@@ -201,12 +201,12 @@ static bool AddMarkerIfNeeded(nsDisplayItem* aItem,
         return false;
       }
 
-      marker = GET_MARKER(DisplayItemEntryType::PUSH_OPACITY,
-                          DisplayItemEntryType::POP_OPACITY);
+      marker = GET_MARKER(DisplayItemEntryType::PushOpacity,
+                          DisplayItemEntryType::PopOpacity);
       break;
     case DisplayItemType::TYPE_TRANSFORM:
-      marker = GET_MARKER(DisplayItemEntryType::PUSH_TRANSFORM,
-                          DisplayItemEntryType::POP_TRANSFORM);
+      marker = GET_MARKER(DisplayItemEntryType::PushTransform,
+                          DisplayItemEntryType::PopTransform);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid display item type!");
@@ -1633,7 +1633,7 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
       return entry;
     }
 
-    return DisplayItemEntry{GetNextItem(), DisplayItemEntryType::ITEM};
+    return DisplayItemEntry{GetNextItem(), DisplayItemEntryType::Item};
   }
 
   bool HasNext() const override {
@@ -1643,7 +1643,7 @@ class FLBDisplayListIterator : public FlattenedDisplayListIterator {
  private:
   void AddHitTestMarkerIfNeeded(nsDisplayItem* aItem) {
     if (aItem->HasHitTestInfo()) {
-      mMarkers.emplace_back(aItem, DisplayItemEntryType::HIT_TEST_INFO);
+      mMarkers.emplace_back(aItem, DisplayItemEntryType::HitTestInfo);
     }
   }
 
@@ -3652,21 +3652,21 @@ static bool IsItemAreaInWindowOpaqueRegion(
 void PaintedLayerData::UpdateEffectStatus(DisplayItemEntryType aType,
                                           nsTArray<size_t>& aOpacityIndices) {
   switch (aType) {
-    case DisplayItemEntryType::PUSH_OPACITY:
+    case DisplayItemEntryType::PushOpacity:
       // The index of the new assigned display item in |mAssignedDisplayItems|
       // array will be the current length of the array.
       aOpacityIndices.AppendElement(mAssignedDisplayItems.size());
       break;
-    case DisplayItemEntryType::POP_OPACITY:
+    case DisplayItemEntryType::PopOpacity:
       MOZ_ASSERT(!aOpacityIndices.IsEmpty());
       aOpacityIndices.RemoveLastElement();
       break;
 #ifdef DEBUG
-    case DisplayItemEntryType::POP_TRANSFORM:
+    case DisplayItemEntryType::PopTransform:
       MOZ_ASSERT(mTransformLevel >= 0);
       mTransformLevel--;
       break;
-    case DisplayItemEntryType::PUSH_TRANSFORM:
+    case DisplayItemEntryType::PushTransform:
       mTransformLevel++;
       break;
 #endif
@@ -3726,7 +3726,7 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
                                   DisplayItemEntryType aType,
                                   nsTArray<size_t>& aOpacityIndices,
                                   const RefPtr<TransformClipNode>& aTransform) {
-  MOZ_ASSERT(aType != DisplayItemEntryType::HIT_TEST_INFO,
+  MOZ_ASSERT(aType != DisplayItemEntryType::HitTestInfo,
              "Should have handled hit test items earlier!");
 
   FLB_LOG_PAINTED_LAYER_DECISION(
@@ -3777,9 +3777,9 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
       // This display item needs background copy when pushing opacity group.
       for (size_t i : aOpacityIndices) {
         AssignedDisplayItem& item = mAssignedDisplayItems[i];
-        MOZ_ASSERT(item.mType == DisplayItemEntryType::PUSH_OPACITY ||
-                   item.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG);
-        item.mType = DisplayItemEntryType::PUSH_OPACITY_WITH_BG;
+        MOZ_ASSERT(item.mType == DisplayItemEntryType::PushOpacity ||
+                   item.mType == DisplayItemEntryType::PushOpacityWithBg);
+        item.mType = DisplayItemEntryType::PushOpacityWithBg;
       }
     }
   }
@@ -3788,7 +3788,7 @@ void PaintedLayerData::Accumulate(ContainerState* aState, nsDisplayItem* aItem,
     mShouldPaintOnContentSide = true;
   }
 
-  if (aTransform && aType == DisplayItemEntryType::ITEM) {
+  if (aTransform && aType == DisplayItemEntryType::Item) {
     // Bounds transformed with axis-aligned transforms could be included in the
     // opaque region calculations. For simplicity, this is currently not done.
     return;
@@ -4344,12 +4344,12 @@ static void ProcessDisplayItemMarker(DisplayItemEntryType aMarker,
                                      ClearFn ClearLayerSelectionIfNeeded,
                                      SelectFn SelectLayerIfNeeded) {
   switch (aMarker) {
-    case DisplayItemEntryType::PUSH_TRANSFORM:
-    case DisplayItemEntryType::PUSH_OPACITY:
+    case DisplayItemEntryType::PushTransform:
+    case DisplayItemEntryType::PushOpacity:
       SelectLayerIfNeeded();
       break;
-    case DisplayItemEntryType::POP_TRANSFORM:
-    case DisplayItemEntryType::POP_OPACITY:
+    case DisplayItemEntryType::PopTransform:
+    case DisplayItemEntryType::PopOpacity:
       ClearLayerSelectionIfNeeded();
       break;
     default:
@@ -4414,7 +4414,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
     if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
       // Override the marker for nsDisplayCompositorHitTestInfo items.
-      marker = DisplayItemEntryType::HIT_TEST_INFO;
+      marker = DisplayItemEntryType::HitTestInfo;
     }
 
     const bool inEffect = InTransform() || InOpacity();
@@ -4428,7 +4428,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     }
 
     LayerState layerState = LAYER_NONE;
-    if (marker == DisplayItemEntryType::ITEM) {
+    if (marker == DisplayItemEntryType::Item) {
       layerState = item->GetLayerState(mBuilder, mManager, mParameters);
 
       if (layerState == LAYER_INACTIVE && nsDisplayItem::ForceActiveLayers()) {
@@ -4445,7 +4445,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     bool snap = false;
     nsRect itemContent;
 
-    if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
+    if (marker == DisplayItemEntryType::HitTestInfo) {
       const auto& hitTestInfo =
           static_cast<nsDisplayHitTestInfoItem*>(item)->GetHitTestInfo();
 
@@ -4477,11 +4477,11 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       itemAGR = inEffect ? containerAGR : mContainerAnimatedGeometryRoot;
       itemASR = inEffect ? containerASR : mContainerASR;
 
-      if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
-        // Items with hit test info are processed twice, once with HIT_TEST_INFO
-        // marker and then with ITEM marker.
-        // With HIT_TEST_INFO markers, fuse the clip chain of hit test struct,
-        // and with ITEM markers, fuse the clip chain of the actual item.
+      if (marker == DisplayItemEntryType::HitTestInfo) {
+        // Items with hit test info are processed twice, once with ::HitTestInfo
+        // marker and then with ::Item marker.
+        // With ::HitTestInfo markers, fuse the clip chain of hit test struct,
+        // and with ::Item markers, fuse the clip chain of the actual item.
         itemClipChain = mBuilder->FuseClipChainUpTo(itemClipChain, itemASR);
       } else if (!IsEffectEndMarker(marker)) {
         // No need to fuse clip chain for effect end markers, since it was
@@ -4496,14 +4496,14 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
     const DisplayItemClip& itemClip =
         itemClipPtr ? *itemClipPtr : DisplayItemClip::NoClip();
 
-    if (inEffect && marker == DisplayItemEntryType::HIT_TEST_INFO) {
+    if (inEffect && marker == DisplayItemEntryType::HitTestInfo) {
       // Fast-path for hit test items inside flattened inactive layers.
       MOZ_ASSERT(selectedLayer);
       selectedLayer->AccumulateHitTestItem(this, item, itemClip, transformNode);
       continue;
     }
 
-    if (inEffect && marker == DisplayItemEntryType::ITEM) {
+    if (inEffect && marker == DisplayItemEntryType::Item) {
       // Fast-path for items inside flattened inactive layers. This works
       // because the layer state of the item cannot be active, otherwise the
       // parent item would not have been flattened.
@@ -4516,7 +4516,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
     // Items outside of flattened effects and non-item markers inside flattened
     // effects are processed here.
-    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::ITEM));
+    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::Item));
 
     if (itemAGR == lastAnimatedGeometryRoot) {
       topLeft = lastTopLeft;
@@ -4549,7 +4549,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       clipRect.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
     }
 
-    if (marker == DisplayItemEntryType::POP_TRANSFORM) {
+    if (marker == DisplayItemEntryType::PopTransform) {
       MOZ_ASSERT(transformNode);
       transformNode = transformNode->Parent();
     }
@@ -4567,7 +4567,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 #ifdef DEBUG
     nsRect bounds = itemContent;
 
-    if (marker == DisplayItemEntryType::HIT_TEST_INFO || inEffect) {
+    if (marker == DisplayItemEntryType::HitTestInfo || inEffect) {
       bounds.SetEmpty();
     }
 
@@ -4612,7 +4612,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       // Currently we do not support flattening effects within nested inactive
       // layer trees.
       MOZ_ASSERT(selectedLayer == nullptr);
-      MOZ_ASSERT(marker == DisplayItemEntryType::ITEM);
+      MOZ_ASSERT(marker == DisplayItemEntryType::Item);
 
       // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
       // We should never see an empty layer with any visible content!
@@ -4982,7 +4982,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
                                            : item->ReferenceFrame();
 
       MOZ_ASSERT(item != mContainerItem ||
-                 marker == DisplayItemEntryType::HIT_TEST_INFO);
+                 marker == DisplayItemEntryType::HitTestInfo);
 
       PaintedLayerData* paintedLayerData = selectedLayer;
 
@@ -4997,7 +4997,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       }
       MOZ_ASSERT(paintedLayerData);
 
-      if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
+      if (marker == DisplayItemEntryType::HitTestInfo) {
         MOZ_ASSERT(!transformNode);
         paintedLayerData->AccumulateHitTestItem(this, item, itemClip, nullptr);
       } else {
@@ -5044,7 +5044,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         }
       };
 
-      if (marker == DisplayItemEntryType::PUSH_TRANSFORM) {
+      if (marker == DisplayItemEntryType::PushTransform) {
         nsDisplayTransform* transform = static_cast<nsDisplayTransform*>(item);
 
         const Matrix4x4Flagged& matrix = transform->GetTransformForRendering();
@@ -6765,13 +6765,13 @@ static const DisplayItemClip* GetItemClip(const nsDisplayItem* aItem,
  * Pushes a new opacity group for |aContext| based on |aItem|.
  */
 static void PushOpacity(gfxContext* aContext, AssignedDisplayItem& aItem) {
-  MOZ_ASSERT(aItem.mType == DisplayItemEntryType::PUSH_OPACITY ||
-             aItem.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG);
+  MOZ_ASSERT(aItem.mType == DisplayItemEntryType::PushOpacity ||
+             aItem.mType == DisplayItemEntryType::PushOpacityWithBg);
   MOZ_ASSERT(aItem.mItem->GetType() == DisplayItemType::TYPE_OPACITY);
   nsDisplayOpacity* item = static_cast<nsDisplayOpacity*>(aItem.mItem);
 
   const float opacity = item->GetOpacity();
-  if (aItem.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG) {
+  if (aItem.mType == DisplayItemEntryType::PushOpacityWithBg) {
     aContext->PushGroupAndCopyBackground(gfxContentType::COLOR_ALPHA, opacity);
   } else {
     aContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
@@ -6786,7 +6786,7 @@ static void PushTransform(gfxContext* aContext, AssignedDisplayItem& aItem,
                           nsDisplayListBuilder* aBuilder,
                           MatrixStack4x4& aMatrixStack,
                           const Matrix4x4Flagged& aBaseMatrix) {
-  MOZ_ASSERT(aItem.mType == DisplayItemEntryType::PUSH_TRANSFORM);
+  MOZ_ASSERT(aItem.mType == DisplayItemEntryType::PushTransform);
   MOZ_ASSERT(aItem.mItem->GetType() == DisplayItemType::TYPE_TRANSFORM);
 
   nsDisplayTransform* item = static_cast<nsDisplayTransform*>(aItem.mItem);
@@ -6807,17 +6807,17 @@ static void PushTransform(gfxContext* aContext, AssignedDisplayItem& aItem,
 static void UpdateEffectTracking(int& aOpacityLevel, int& aTransformLevel,
                                  const DisplayItemEntryType aType) {
   switch (aType) {
-    case DisplayItemEntryType::PUSH_OPACITY:
-    case DisplayItemEntryType::PUSH_OPACITY_WITH_BG:
+    case DisplayItemEntryType::PushOpacity:
+    case DisplayItemEntryType::PushOpacityWithBg:
       aOpacityLevel++;
       break;
-    case DisplayItemEntryType::POP_OPACITY:
+    case DisplayItemEntryType::PopOpacity:
       aOpacityLevel--;
       break;
-    case DisplayItemEntryType::PUSH_TRANSFORM:
+    case DisplayItemEntryType::PushTransform:
       aTransformLevel++;
       break;
-    case DisplayItemEntryType::POP_TRANSFORM:
+    case DisplayItemEntryType::PopTransform:
       aTransformLevel--;
       break;
     default:
@@ -6882,7 +6882,7 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
     };
 
     if (!item) {
-      MOZ_ASSERT(cdi.mType == DisplayItemEntryType::ITEM);
+      MOZ_ASSERT(cdi.mType == DisplayItemEntryType::Item);
       continue;
     }
 
@@ -6929,14 +6929,14 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
                (transformLevel == 0 && !cdi.mHasTransform) ||
                (transformLevel > 0 && cdi.mHasTransform));
 
-    if (cdi.mType != DisplayItemEntryType::ITEM) {
+    if (cdi.mType != DisplayItemEntryType::Item) {
       // If we are processing an effect marker, remove the current item clip, if
       // there is one.
       itemClipTracker.Restore();
     }
 
-    if (cdi.mType == DisplayItemEntryType::PUSH_OPACITY ||
-        cdi.mType == DisplayItemEntryType::PUSH_OPACITY_WITH_BG) {
+    if (cdi.mType == DisplayItemEntryType::PushOpacity ||
+        cdi.mType == DisplayItemEntryType::PushOpacityWithBg) {
       // To avoid pushing large temporary surfaces, it is important to clip
       // opacity group with both the paint rect and the actual opacity clip.
       DisplayItemClip effectClip;
@@ -6946,18 +6946,18 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       PushOpacity(aContext, cdi);
     }
 
-    if (cdi.mType == DisplayItemEntryType::POP_OPACITY) {
+    if (cdi.mType == DisplayItemEntryType::PopOpacity) {
       MOZ_ASSERT(opacityLevel > 0);
       aContext->PopGroupAndBlend();
     }
 
-    if (cdi.mType == DisplayItemEntryType::PUSH_TRANSFORM) {
+    if (cdi.mType == DisplayItemEntryType::PushTransform) {
       effectClipStack.PushClip(item->GetClip());
       aContext->Save();
       PushTransform(aContext, cdi, aBuilder, matrixStack, base);
     }
 
-    if (cdi.mType == DisplayItemEntryType::POP_TRANSFORM) {
+    if (cdi.mType == DisplayItemEntryType::PopTransform) {
       MOZ_ASSERT(transformLevel > 0);
       matrixStack.Pop();
       aContext->Restore();
@@ -6975,7 +6975,7 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
       effectClipStack.PopClip(NextItemStartsEffect());
     }
 
-    if (cdi.mType != DisplayItemEntryType::ITEM) {
+    if (cdi.mType != DisplayItemEntryType::Item) {
 #ifdef DEBUG
       UpdateEffectTracking(opacityLevel, transformLevel, cdi.mType);
 #endif

@@ -228,7 +228,7 @@ ImgDrawResult nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
         NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &= nsCSSRendering::PaintBorder(
         presContext, aRenderingContext, this, aDirtyRect, rect, mComputedStyle,
-        PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+        PaintBorderFlags::SyncDecodeImages, skipSides);
     aRenderingContext.Restore();
 
     // draw right side
@@ -242,7 +242,7 @@ ImgDrawResult nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
         NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &= nsCSSRendering::PaintBorder(
         presContext, aRenderingContext, this, aDirtyRect, rect, mComputedStyle,
-        PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+        PaintBorderFlags::SyncDecodeImages, skipSides);
 
     aRenderingContext.Restore();
     // draw bottom
@@ -256,14 +256,14 @@ ImgDrawResult nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
         NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &= nsCSSRendering::PaintBorder(
         presContext, aRenderingContext, this, aDirtyRect, rect, mComputedStyle,
-        PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+        PaintBorderFlags::SyncDecodeImages, skipSides);
 
     aRenderingContext.Restore();
   } else {
     result &= nsCSSRendering::PaintBorder(
         presContext, aRenderingContext, this, aDirtyRect,
         nsRect(aPt, GetSize()), mComputedStyle,
-        PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
+        PaintBorderFlags::SyncDecodeImages, skipSides);
   }
 
   return result;

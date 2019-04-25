@@ -375,20 +375,20 @@ static Matrix4x4 OperateTransformMatrix(const Matrix4x4& aMatrix1,
 
   // TODO: Would it be better to operate these as angles?
   //       How do we convert back to angles?
-  float yzshear = Operator::operate(shear1[ShearType::YZSHEAR],
-                                    shear2[ShearType::YZSHEAR], aProgress);
+  float yzshear = Operator::operate(shear1[ShearType::YZ],
+                                    shear2[ShearType::YZ], aProgress);
   if (yzshear != 0.0) {
     result.SkewYZ(yzshear);
   }
 
-  float xzshear = Operator::operate(shear1[ShearType::XZSHEAR],
-                                    shear2[ShearType::XZSHEAR], aProgress);
+  float xzshear = Operator::operate(shear1[ShearType::XZ],
+                                    shear2[ShearType::XZ], aProgress);
   if (xzshear != 0.0) {
     result.SkewXZ(xzshear);
   }
 
-  float xyshear = Operator::operate(shear1[ShearType::XYSHEAR],
-                                    shear2[ShearType::XYSHEAR], aProgress);
+  float xyshear = Operator::operate(shear1[ShearType::XY],
+                                    shear2[ShearType::XY], aProgress);
   if (xyshear != 0.0) {
     result.SkewXY(xyshear);
   }
@@ -1023,7 +1023,7 @@ bool Decompose2DMatrix(const Matrix& aMatrix, Point3D& aScale,
 
   float rotate = atan2f(B, A);
   aRotate = gfxQuaternion(0, 0, sin(rotate / 2), cos(rotate / 2));
-  aShear[ShearType::XYSHEAR] = XYshear;
+  aShear[ShearType::XY] = XYshear;
   aScale.x = scaleX;
   aScale.y = scaleY;
   aTranslate.x = aMatrix._31;
@@ -1095,26 +1095,26 @@ bool Decompose3DMatrix(const Matrix4x4& aMatrix, Point3D& aScale,
   local[0] /= aScale.x;
 
   /* Compute XY shear factor and make 2nd local orthogonal to 1st. */
-  aShear[ShearType::XYSHEAR] = local[0].DotProduct(local[1]);
-  local[1] -= local[0] * aShear[ShearType::XYSHEAR];
+  aShear[ShearType::XY] = local[0].DotProduct(local[1]);
+  local[1] -= local[0] * aShear[ShearType::XY];
 
   /* Now, compute Y scale and normalize 2nd local. */
   aScale.y = local[1].Length();
   local[1] /= aScale.y;
-  aShear[ShearType::XYSHEAR] /= aScale.y;
+  aShear[ShearType::XY] /= aScale.y;
 
   /* Compute XZ and YZ shears, make 3rd local orthogonal */
-  aShear[ShearType::XZSHEAR] = local[0].DotProduct(local[2]);
-  local[2] -= local[0] * aShear[ShearType::XZSHEAR];
-  aShear[ShearType::YZSHEAR] = local[1].DotProduct(local[2]);
-  local[2] -= local[1] * aShear[ShearType::YZSHEAR];
+  aShear[ShearType::XZ] = local[0].DotProduct(local[2]);
+  local[2] -= local[0] * aShear[ShearType::XZ];
+  aShear[ShearType::YZ] = local[1].DotProduct(local[2]);
+  local[2] -= local[1] * aShear[ShearType::YZ];
 
   /* Next, get Z scale and normalize 3rd local. */
   aScale.z = local[2].Length();
   local[2] /= aScale.z;
 
-  aShear[ShearType::XZSHEAR] /= aScale.z;
-  aShear[ShearType::YZSHEAR] /= aScale.z;
+  aShear[ShearType::XZ] /= aScale.z;
+  aShear[ShearType::YZ] /= aScale.z;
 
   /**
    * At this point, the matrix (in locals) is orthonormal.

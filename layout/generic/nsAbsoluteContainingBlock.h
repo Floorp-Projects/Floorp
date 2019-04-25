@@ -65,11 +65,11 @@ class nsAbsoluteContainingBlock {
                    nsIFrame* aOldFrame);
 
   enum class AbsPosReflowFlags {
-    eConstrainHeight = 0x1,
-    eCBWidthChanged = 0x2,
-    eCBHeightChanged = 0x4,
-    eCBWidthAndHeightChanged = eCBWidthChanged | eCBHeightChanged,
-    eIsGridContainerCB = 0x8,
+    ConstrainHeight = 0x1,
+    CBWidthChanged = 0x2,
+    CBHeightChanged = 0x4,
+    CBWidthAndHeightChanged = CBWidthChanged | CBHeightChanged,
+    IsGridContainerCB = 0x8,
   };
 
   /**

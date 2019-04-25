@@ -125,8 +125,8 @@ nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
       nsIFrame* frame = aContent->GetPrimaryFrame();
       if (frame) {
         nsIFrame::RenderedText text = frame->GetRenderedText(
-            0, UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-            nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+            0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
+            nsIFrame::TrailingWhitespace::DontTrim);
         aString->Append(text.mString);
       } else {
         // If aContent is an object that is display: none, we have no a frame.

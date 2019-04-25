@@ -697,8 +697,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 #endif
 
     nsIFrame::RenderedText text = textFrame->GetRenderedText(
-        0, UINT32_MAX, nsIFrame::TextOffsetType::OFFSETS_IN_CONTENT_TEXT,
-        nsIFrame::TrailingWhitespace::DONT_TRIM_TRAILING_WHITESPACE);
+        0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
+        nsIFrame::TrailingWhitespace::DontTrim);
 
     // Remove text accessible if rendered text is empty.
     if (textAcc) {

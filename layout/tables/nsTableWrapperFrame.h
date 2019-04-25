@@ -74,7 +74,7 @@ class nsTableWrapperFrame : public nsContainerFrame {
     nscoord offset;
     if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
       auto bStart = innerTable->BStart(aWM, mRect.Size());
-      if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+      if (aBaselineGroup == BaselineSharingGroup::First) {
         *aBaseline = offset + bStart;
       } else {
         auto bEnd = bStart + innerTable->BSize(aWM);

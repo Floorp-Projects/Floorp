@@ -482,7 +482,7 @@ nsFrame::nsFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
 nsFrame::~nsFrame() {
   MOZ_COUNT_DTOR(nsFrame);
 
-  MOZ_ASSERT(GetVisibility() != Visibility::APPROXIMATELY_VISIBLE,
+  MOZ_ASSERT(GetVisibility() != Visibility::ApproximatelyVisible,
              "Visible nsFrame is being destroyed");
 }
 
@@ -1964,7 +1964,7 @@ void nsIFrame::GetCrossDocChildLists(nsTArray<ChildList>* aLists) {
 
 Visibility nsIFrame::GetVisibility() const {
   if (!(GetStateBits() & NS_FRAME_VISIBILITY_IS_TRACKED)) {
-    return Visibility::UNTRACKED;
+    return Visibility::Untracked;
   }
 
   bool isSet = false;
@@ -1974,8 +1974,8 @@ Visibility nsIFrame::GetVisibility() const {
              "Should have a VisibilityStateProperty value "
              "if NS_FRAME_VISIBILITY_IS_TRACKED is set");
 
-  return visibleCount > 0 ? Visibility::APPROXIMATELY_VISIBLE
-                          : Visibility::APPROXIMATELY_NONVISIBLE;
+  return visibleCount > 0 ? Visibility::ApproximatelyVisible
+                          : Visibility::ApproximatelyNonVisible;
 }
 
 void nsIFrame::UpdateVisibilitySynchronously() {
@@ -2077,7 +2077,7 @@ void nsIFrame::DisableVisibilityTracking() {
   }
 
   // We were visible, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(Visibility::APPROXIMATELY_NONVISIBLE);
+  OnVisibilityChange(Visibility::ApproximatelyNonVisible);
 }
 
 void nsIFrame::DecApproximateVisibleCount(
@@ -2102,7 +2102,7 @@ void nsIFrame::DecApproximateVisibleCount(
   }
 
   // We just became nonvisible, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(Visibility::APPROXIMATELY_NONVISIBLE, aNonvisibleAction);
+  OnVisibilityChange(Visibility::ApproximatelyNonVisible, aNonvisibleAction);
 }
 
 void nsIFrame::IncApproximateVisibleCount() {
@@ -2122,7 +2122,7 @@ void nsIFrame::IncApproximateVisibleCount() {
   }
 
   // We just became visible, so send an OnVisibilityChange() notification.
-  OnVisibilityChange(Visibility::APPROXIMATELY_VISIBLE);
+  OnVisibilityChange(Visibility::ApproximatelyVisible);
 }
 
 void nsIFrame::OnVisibilityChange(Visibility aNewVisibility,
@@ -3031,17 +3031,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // This enum lists all the potential container display items, in the order
   // outside to inside.
   enum class ContainerItemType : uint8_t {
-    eNone = 0,
-    eOwnLayerIfNeeded,
-    eBlendMode,
-    eFixedPosition,
-    eOwnLayerForTransformWithRoundedClip,
-    ePerspective,
-    eTransform,
-    eSeparatorTransforms,
-    eOpacity,
-    eFilter,
-    eBlendContainer
+    None = 0,
+    OwnLayerIfNeeded,
+    BlendMode,
+    FixedPosition,
+    OwnLayerForTransformWithRoundedClip,
+    Perspective,
+    Transform,
+    SeparatorTransforms,
+    Opacity,
+    Filter,
+    BlendContainer
   };
 
   nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
@@ -3073,9 +3073,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // themselves and unset the clip for their contents. If we create more than
   // one of those container items, the clip will be captured on the outermost
   // one and the inner container items will be unclipped.
-  ContainerItemType clipCapturedBy = ContainerItemType::eNone;
+  ContainerItemType clipCapturedBy = ContainerItemType::None;
   if (useFixedPosition) {
-    clipCapturedBy = ContainerItemType::eFixedPosition;
+    clipCapturedBy = ContainerItemType::FixedPosition;
   } else if (isTransformed) {
     const DisplayItemClipChain* currentClip =
         aBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder);
@@ -3086,18 +3086,18 @@ void nsIFrame::BuildDisplayListForStackingContext(
       // can't have an intermediate surface. Mask layers force an intermediate
       // surface, so if we're going to need both then create a separate
       // wrapping layer for the mask.
-      clipCapturedBy = ContainerItemType::eOwnLayerForTransformWithRoundedClip;
+      clipCapturedBy = ContainerItemType::OwnLayerForTransformWithRoundedClip;
     } else if (hasPerspective) {
-      clipCapturedBy = ContainerItemType::ePerspective;
+      clipCapturedBy = ContainerItemType::Perspective;
     } else {
-      clipCapturedBy = ContainerItemType::eTransform;
+      clipCapturedBy = ContainerItemType::Transform;
     }
   } else if (usingFilter) {
-    clipCapturedBy = ContainerItemType::eFilter;
+    clipCapturedBy = ContainerItemType::Filter;
   }
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-  if (clipCapturedBy != ContainerItemType::eNone) {
+  if (clipCapturedBy != ContainerItemType::None) {
     clipState.Clear();
   }
 
@@ -3261,7 +3261,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     MOZ_ASSERT(usingFilter || usingMask,
                "Beside filter & mask/clip-path, what else effect do we have?");
 
-    if (clipCapturedBy == ContainerItemType::eFilter) {
+    if (clipCapturedBy == ContainerItemType::Filter) {
       clipState.Restore();
     }
     // Revert to the post-filter dirty rect.
@@ -3373,7 +3373,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (isTransformed) {
     transformedCssClip.Restore();
-    if (clipCapturedBy == ContainerItemType::eTransform) {
+    if (clipCapturedBy == ContainerItemType::Transform) {
       // Restore clip state now so nsDisplayTransform is clipped properly.
       clipState.Restore();
     }
@@ -3399,7 +3399,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     if (hasPerspective) {
-      if (clipCapturedBy == ContainerItemType::ePerspective) {
+      if (clipCapturedBy == ContainerItemType::Perspective) {
         clipState.Restore();
       }
       resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
@@ -3409,11 +3409,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   if (clipCapturedBy ==
-      ContainerItemType::eOwnLayerForTransformWithRoundedClip) {
+      ContainerItemType::OwnLayerForTransformWithRoundedClip) {
     clipState.Restore();
     resultList.AppendNewToTop<nsDisplayOwnLayer>(
         aBuilder, this, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        nsDisplayOwnLayerFlags::eNone, ScrollbarData{},
+        nsDisplayOwnLayerFlags::None, ScrollbarData{},
         /* aForceActive = */ false);
     ct.TrackContainer(resultList.GetTop());
   }
@@ -3421,7 +3421,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   /* If we have sticky positioning, wrap it in a sticky position item.
    */
   if (useFixedPosition) {
-    if (clipCapturedBy == ContainerItemType::eFixedPosition) {
+    if (clipCapturedBy == ContainerItemType::FixedPosition) {
       clipState.Restore();
     }
     // The ASR for the fixed item should be the ASR of our containing block,
@@ -5890,16 +5890,16 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
   enum class Stretch {
     // stretch to fill the CB (preserving intrinsic ratio) in the relevant axis
-    eStretchPreservingRatio,  // XXX not used yet
+    StretchPreservingRatio,  // XXX not used yet
     // stretch to fill the CB in the relevant axis
-    eStretch,
+    Stretch,
     // no stretching in the relevant axis
-    eNoStretch,
+    NoStretch,
   };
   // just to avoid having to type these out everywhere:
-  const auto eStretchPreservingRatio = Stretch::eStretchPreservingRatio;
-  const auto eStretch = Stretch::eStretch;
-  const auto eNoStretch = Stretch::eNoStretch;
+  const auto eStretchPreservingRatio = Stretch::StretchPreservingRatio;
+  const auto eStretch = Stretch::Stretch;
+  const auto eNoStretch = Stretch::NoStretch;
 
   Stretch stretchI = eNoStretch;  // stretch behavior in the inline axis
   Stretch stretchB = eNoStretch;  // stretch behavior in the block axis
@@ -6398,9 +6398,9 @@ void nsFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
 
     nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
     AbsPosReflowFlags flags =
-        AbsPosReflowFlags::eCBWidthAndHeightChanged;  // XXX could be optimized
+        AbsPosReflowFlags::CBWidthAndHeightChanged;  // XXX could be optimized
     if (aConstrainBSize) {
-      flags |= AbsPosReflowFlags::eConstrainHeight;
+      flags |= AbsPosReflowFlags::ConstrainHeight;
     }
     absoluteContainer->Reflow(container, aPresContext, aReflowInput, aStatus,
                               containingBlock, flags,

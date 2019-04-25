@@ -19,16 +19,16 @@ namespace mozilla {
 enum class CSSEnabledState {
   // The default CSSEnabledState: only enable what's enabled for all
   // content, given the current values of preferences.
-  eForAllContent = 0,
+  ForAllContent = 0,
   // Enable features available in UA sheets.
-  eInUASheets = 0x01,
+  InUASheets = 0x01,
   // Enable features available in chrome code.
-  eInChrome = 0x02,
+  InChrome = 0x02,
   // Special value to unconditionally enable everything. This implies
   // all the bits above, but is strictly more than just their OR-ed
   // union. This just skips any test so a feature will be enabled even
   // if it would have been disabled with all the bits above set.
-  eIgnoreEnabledState = 0xff
+  IgnoreEnabledState = 0xff
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSEnabledState)

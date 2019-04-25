@@ -496,7 +496,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
       if (!found) {
         mAscent = mFrame->SynthesizeBaselineBOffsetFromBorderBox(
-            mWM, BaselineSharingGroup::eFirst);
+            mWM, BaselineSharingGroup::First);
       }
     }
     return mAscent;

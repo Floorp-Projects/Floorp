@@ -48,13 +48,13 @@ class ContainerState;
 class PaintedDisplayItemLayerUserData;
 
 enum class DisplayItemEntryType {
-  ITEM,
-  PUSH_OPACITY,
-  PUSH_OPACITY_WITH_BG,
-  POP_OPACITY,
-  PUSH_TRANSFORM,
-  POP_TRANSFORM,
-  HIT_TEST_INFO
+  Item,
+  PushOpacity,
+  PushOpacityWithBg,
+  PopOpacity,
+  PushTransform,
+  PopTransform,
+  HitTestInfo,
 };
 
 /**

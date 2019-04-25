@@ -114,7 +114,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   nsReflowStatus reflowStatus;
 
   const bool reflowAll = aReflowInput.ShouldReflowAllKids();
-  const bool isGrid = !!(aFlags & AbsPosReflowFlags::eIsGridContainerCB);
+  const bool isGrid = !!(aFlags & AbsPosReflowFlags::IsGridContainerCB);
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame;
@@ -122,8 +122,8 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
     bool kidNeedsReflow =
         reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
         FrameDependsOnContainer(
-            kidFrame, !!(aFlags & AbsPosReflowFlags::eCBWidthChanged),
-            !!(aFlags & AbsPosReflowFlags::eCBHeightChanged));
+            kidFrame, !!(aFlags & AbsPosReflowFlags::CBWidthChanged),
+            !!(aFlags & AbsPosReflowFlags::CBHeightChanged));
     nscoord availBSize = aReflowInput.AvailableBSize();
     const nsRect& cb =
         isGrid ? nsGridContainerFrame::GridItemCB(kidFrame) : aContainingBlock;
@@ -482,7 +482,7 @@ static nscoord OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                                     ? alignAreaSize.ISize(pcWM)
                                     : alignAreaSize.BSize(pcWM);
 
-  AlignJustifyFlags flags = AlignJustifyFlags::eIgnoreAutoMargins;
+  AlignJustifyFlags flags = AlignJustifyFlags::IgnoreAutoMargins;
   uint16_t alignConst = aPlaceholderContainer->CSSAlignmentForAbsPosChild(
       aKidReflowInput, pcAxis);
   // If the safe bit in alignConst is set, set the safe flag in |flags|.
@@ -490,7 +490,7 @@ static nscoord OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   // This doesn't quite match the css-align spec, which has an [at-risk]
   // "smart default" behavior with some extra nuance about scroll containers.
   if (alignConst & NS_STYLE_ALIGN_SAFE) {
-    flags |= AlignJustifyFlags::eOverflowSafe;
+    flags |= AlignJustifyFlags::OverflowSafe;
   }
   alignConst &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
@@ -498,7 +498,7 @@ static nscoord OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
   // in the placeholder-container's pcAxis.
   WritingMode kidWM = aKidReflowInput.GetWritingMode();
   if (pcWM.ParallelAxisStartsOnSameSide(pcAxis, kidWM)) {
-    flags |= AlignJustifyFlags::eSameSide;
+    flags |= AlignJustifyFlags::SameSide;
   }
 
   // (baselineAdjust is unused. CSSAlignmentForAbsPosChild() should've
@@ -653,7 +653,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   }
 
   uint32_t rsFlags = 0;
-  if (aFlags & AbsPosReflowFlags::eIsGridContainerCB) {
+  if (aFlags & AbsPosReflowFlags::IsGridContainerCB) {
     // When a grid container generates the abs.pos. CB for a *child* then
     // the static position is determined via CSS Box Alignment within the
     // abs.pos. CB (a grid area, i.e. a piece of the grid). In this scenario,
@@ -688,7 +688,7 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   bool constrainBSize =
       (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
-      (aFlags & AbsPosReflowFlags::eConstrainHeight) &&
+      (aFlags & AbsPosReflowFlags::ConstrainHeight) &&
       // Don't split if told not to (e.g. for fixed frames)
       !aDelegatingFrame->IsInlineFrame() &&
       // XXX we don't handle splitting frames for inline absolute containing

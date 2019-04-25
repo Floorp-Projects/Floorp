@@ -1638,7 +1638,7 @@ bool HTMLMediaElement::IsVideoDecodingSuspended() const {
 }
 
 bool HTMLMediaElement::IsVisible() const {
-  return mVisibilityState == Visibility::APPROXIMATELY_VISIBLE;
+  return mVisibilityState == Visibility::ApproximatelyVisible;
 }
 
 already_AddRefed<layers::Image> HTMLMediaElement::GetCurrentImage() {
@@ -4314,7 +4314,7 @@ void HTMLMediaElement::ReportTelemetry() {
 
 void HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   mUnboundFromTree = true;
-  mVisibilityState = Visibility::UNTRACKED;
+  mVisibilityState = Visibility::Untracked;
 
   if (IsInComposedDoc()) {
     NotifyUAWidgetTeardown();
@@ -6352,14 +6352,14 @@ bool HTMLMediaElement::AudioChannelAgentBlockedPlay() {
 
 static const char* VisibilityString(Visibility aVisibility) {
   switch (aVisibility) {
-    case Visibility::UNTRACKED: {
-      return "UNTRACKED";
+    case Visibility::Untracked: {
+      return "Untracked";
     }
-    case Visibility::APPROXIMATELY_NONVISIBLE: {
-      return "APPROXIMATELY_NONVISIBLE";
+    case Visibility::ApproximatelyNonVisible: {
+      return "ApproximatelyNonVisible";
     }
-    case Visibility::APPROXIMATELY_VISIBLE: {
-      return "APPROXIMATELY_VISIBLE";
+    case Visibility::ApproximatelyVisible: {
+      return "ApproximatelyVisible";
     }
   }
 
@@ -6380,11 +6380,11 @@ void HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility) {
   }
 
   switch (aNewVisibility) {
-    case Visibility::UNTRACKED: {
+    case Visibility::Untracked: {
       MOZ_ASSERT_UNREACHABLE("Shouldn't notify for untracked visibility");
       return;
     }
-    case Visibility::APPROXIMATELY_NONVISIBLE: {
+    case Visibility::ApproximatelyNonVisible: {
       if (mPlayTime.IsStarted()) {
         // Not visible, play time is running -> Start hidden play time if
         // needed.
@@ -6392,7 +6392,7 @@ void HTMLMediaElement::OnVisibilityChange(Visibility aNewVisibility) {
       }
       break;
     }
-    case Visibility::APPROXIMATELY_VISIBLE: {
+    case Visibility::ApproximatelyVisible: {
       // Visible -> Just pause hidden play time (no-op if already paused).
       HiddenVideoStop();
       break;
@@ -6942,7 +6942,7 @@ void HTMLMediaElement::NotifyCueDisplayStatesChanged() {
 }
 
 void HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI) {
-  const bool isVisible = mVisibilityState == Visibility::APPROXIMATELY_VISIBLE;
+  const bool isVisible = mVisibilityState == Visibility::ApproximatelyVisible;
 
   if (isVisible) {
     // 0 = ALL_VISIBLE

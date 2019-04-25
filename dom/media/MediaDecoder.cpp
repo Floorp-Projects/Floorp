@@ -304,7 +304,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
       mMinimizePreroll(aInit.mMinimizePreroll),
       mFiredMetadataLoaded(false),
       mIsDocumentVisible(false),
-      mElementVisibility(Visibility::UNTRACKED),
+      mElementVisibility(Visibility::Untracked),
       mIsElementInTree(false),
       mForcedHidden(false),
       mHasSuspendTaint(aInit.mHasSuspendTaint),
@@ -1028,7 +1028,7 @@ void MediaDecoder::UpdateVideoDecodeMode() {
   // If the element is in-tree with UNTRACKED visibility, that means the element
   // is not close enough to the viewport so we have not start to update its
   // visibility. In this case, it's equals to invisible.
-  if (mIsElementInTree && mElementVisibility == Visibility::UNTRACKED) {
+  if (mIsElementInTree && mElementVisibility == Visibility::Untracked) {
     LOG("UpdateVideoDecodeMode(), set Suspend because element hasn't be "
         "updated visibility state.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
@@ -1039,7 +1039,7 @@ void MediaDecoder::UpdateVideoDecodeMode() {
   // A element is visible only if its document is visible and the element
   // itself is visible.
   if (mIsDocumentVisible &&
-      mElementVisibility == Visibility::APPROXIMATELY_VISIBLE) {
+      mElementVisibility == Visibility::ApproximatelyVisible) {
     LOG("UpdateVideoDecodeMode(), set Normal because the element visible.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   } else {
