@@ -759,7 +759,7 @@ devtools.main:
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   persist_changed:
     objects: ["netmonitor", "webconsole"]
-    bug_numbers: [1531395]
+    bug_numbers: [1531395, 1542312]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
     description: User has changed log persist status.

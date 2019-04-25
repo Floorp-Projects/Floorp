@@ -133,7 +133,8 @@ class HTMLEditor final : public TextEditor,
   NS_IMETHOD BeginningOfDocument() override;
   NS_IMETHOD SetFlags(uint32_t aFlags) override;
 
-  NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
+  virtual bool CanPaste(int32_t aClipboardType) const override;
+  using EditorBase::CanPaste;
 
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;

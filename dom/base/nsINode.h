@@ -82,11 +82,9 @@ class DOMQuad;
 class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
-class L10nCallback;
 template <typename T>
 class Optional;
 class OwningNodeOrString;
-class Promise;
 template <typename>
 class Sequence;
 class SVGUseElement;
@@ -1638,11 +1636,6 @@ class nsINode : public mozilla::dom::EventTarget {
   void UnbindObject(nsISupports* aObject);
 
   void GenerateXPath(nsAString& aResult);
-
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<mozilla::dom::Promise> Localize(
-      JSContext* aCx, mozilla::dom::L10nCallback& aCallback,
-      mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::AccessibleNode> GetAccessibleNode();
 

@@ -10,6 +10,7 @@
 #include "nsDataHashtable.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
+#include "nsTArray.h"
 #include "TelemetryCommon.h"
 #include "TelemetryOriginEnums.h"
 
@@ -20,16 +21,23 @@
 #include "mozilla/Pair.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/Tuple.h"
+#include "mozilla/UniquePtr.h"
 
 #include <cmath>
 #include <type_traits>
 
 using mozilla::ErrorResult;
+using mozilla::Get;
 using mozilla::MakePair;
+using mozilla::MakeTuple;
+using mozilla::MakeUnique;
 using mozilla::MallocSizeOf;
 using mozilla::Pair;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
+using mozilla::Tuple;
+using mozilla::UniquePtr;
 using mozilla::dom::PrioEncoder;
 using mozilla::Telemetry::OriginMetricID;
 using mozilla::Telemetry::Common::ToJSString;
@@ -104,15 +112,19 @@ namespace {
 // cannot make sure that no other function is called before this point.
 static StaticMutex gTelemetryOriginMutex;
 
-nsTArray<const char*>* gOriginsList = nullptr;
+typedef nsTArray<Tuple<const char*, const char*>> OriginHashesList;
+UniquePtr<OriginHashesList> gOriginHashesList;
 
 typedef nsDataHashtable<nsCStringHashKey, size_t> OriginToIndexMap;
-OriginToIndexMap* gOriginToIndexMap;
+UniquePtr<OriginToIndexMap> gOriginToIndexMap;
+
+typedef nsDataHashtable<nsCStringHashKey, size_t> HashToIndexMap;
+UniquePtr<HashToIndexMap> gHashToIndexMap;
 
 typedef nsDataHashtable<nsCStringHashKey, uint32_t> OriginBag;
 typedef nsDataHashtable<OriginMetricIDHashKey, OriginBag> IdToOriginBag;
 
-IdToOriginBag* gMetricToOriginBag;
+UniquePtr<IdToOriginBag> gMetricToOriginBag;
 
 mozilla::Atomic<bool, mozilla::Relaxed> gInitDone(false);
 
@@ -196,7 +208,8 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
         }
       }
       auto& lastArray = metricData[metricData.Length() - 1];
-      lastArray.SetLength(gOriginsList->Length() % PrioEncoder::gNumBooleans);
+      lastArray.SetLength(gOriginHashesList->Length() %
+                          PrioEncoder::gNumBooleans);
       for (auto& metricDatum : lastArray) {
         metricDatum = false;
       }
@@ -212,7 +225,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
           if (!gOriginToIndexMap->Get(origin, &index)) {
             return NS_ERROR_FAILURE;
           }
-          MOZ_ASSERT(index < gOriginsList->Length());
+          MOZ_ASSERT(index < gOriginHashesList->Length());
           size_t shardIndex = index / PrioEncoder::gNumBooleans;
           MOZ_ASSERT(shardIndex < metricData.Length());
           MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
@@ -246,32 +259,38 @@ void TelemetryOrigin::InitializeGlobalState() {
 
   // The contents and order of this array matters.
   // Both ensure a consistent app-encoding.
-  gOriginsList = new nsTArray<const char*>({
-#define ORIGIN(domain) #domain,
+  gOriginHashesList = MakeUnique<OriginHashesList>(OriginHashesList{
+#define ORIGIN(origin, hash) MakeTuple(origin, hash),
 #include "TelemetryOriginData.inc"
 #undef ORIGIN
   });
 
   gPrioDatasPerMetric =
-      ceil(static_cast<double>(gOriginsList->Length() + kNumMetaOrigins) /
+      ceil(static_cast<double>(gOriginHashesList->Length() + kNumMetaOrigins) /
            PrioEncoder::gNumBooleans);
 
-  gOriginToIndexMap = new OriginToIndexMap(gOriginsList->Length());
-  for (size_t i = 0; i < gOriginsList->Length(); ++i) {
-    MOZ_ASSERT(!kUnknownOrigin.Equals((*gOriginsList)[i]),
+  gOriginToIndexMap = MakeUnique<OriginToIndexMap>(gOriginHashesList->Length() +
+                                                   kNumMetaOrigins);
+  gHashToIndexMap = MakeUnique<HashToIndexMap>(gOriginHashesList->Length());
+  for (size_t i = 0; i < gOriginHashesList->Length(); ++i) {
+    const char* origin = Get<0>((*gOriginHashesList)[i]);
+    const char* hash = Get<1>((*gOriginHashesList)[i]);
+    MOZ_ASSERT(!kUnknownOrigin.Equals(origin),
                "Unknown origin literal is reserved in Origin Telemetry");
-    gOriginToIndexMap->Put(nsDependentCString((*gOriginsList)[i]), i);
+    gOriginToIndexMap->Put(nsDependentCString(origin), i);
+    gHashToIndexMap->Put(nsDependentCString(hash), i);
   }
 
   // Add the meta-origin for tracking recordings to untracked origins.
-  gOriginToIndexMap->Put(kUnknownOrigin, gOriginsList->Length());
+  gOriginToIndexMap->Put(kUnknownOrigin, gOriginHashesList->Length());
 
-  gMetricToOriginBag = new IdToOriginBag();
+  gMetricToOriginBag = MakeUnique<IdToOriginBag>();
 
   // This map shouldn't change at runtime, so make debug builds complain
   // if it tries.
 #ifdef DEBUG
   gOriginToIndexMap->MarkImmutable();
+  gHashToIndexMap->MarkImmutable();
 #endif  // DEBUG
 
   gInitDone = true;
@@ -289,12 +308,12 @@ void TelemetryOrigin::DeInitializeGlobalState() {
     return;
   }
 
-  delete gOriginsList;
+  gOriginHashesList = nullptr;
 
-  delete gOriginToIndexMap;
   gOriginToIndexMap = nullptr;
 
-  delete gMetricToOriginBag;
+  gHashToIndexMap = nullptr;
+
   gMetricToOriginBag = nullptr;
 
   gInitDone = false;
@@ -317,8 +336,14 @@ nsresult TelemetryOrigin::RecordOrigin(OriginMetricID aId,
       return NS_OK;
     }
 
+    size_t index;
     nsCString origin(aOrigin);
-    if (!gOriginToIndexMap->Contains(aOrigin)) {
+    if (gHashToIndexMap->Get(aOrigin, &index)) {
+      MOZ_ASSERT(aOrigin.Equals(Get<1>((*gOriginHashesList)[index])));
+      origin = Get<0>((*gOriginHashesList)[index]);
+    }
+
+    if (!gOriginToIndexMap->Contains(origin)) {
       // Only record one unknown origin per metric per snapshot.
       // (otherwise we may get swamped and blow our data budget.)
       if (gMetricToOriginBag->Contains(aId) &&
