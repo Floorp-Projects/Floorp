@@ -757,7 +757,8 @@ void nsSVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     if (maskUsage.shouldApplyClipPath) {
       clipPathFrame->ApplyClipPath(aContext, aFrame, aTransform);
     } else {
-      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(aContext, aFrame);
+      nsCSSClipPathInstance::ApplyBasicShapeOrPathClip(aContext, aFrame,
+                                                       aTransform);
     }
   }
 
