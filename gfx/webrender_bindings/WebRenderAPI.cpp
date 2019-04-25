@@ -16,6 +16,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "TextDrawTarget.h"
+#include "malloc_decls.h"
 
 // clang-format off
 #define WRDL_LOG(...)

@@ -2883,14 +2883,16 @@ void BrowserParent::ApzAwareEventRoutingToChild(
 
 mozilla::ipc::IPCResult BrowserParent::RecvBrowserFrameOpenWindow(
     PBrowserParent* aOpener, const nsString& aURL, const nsString& aName,
-    const nsString& aFeatures, BrowserFrameOpenWindowResolver&& aResolve) {
+    bool aForceNoReferrer, const nsString& aFeatures,
+    BrowserFrameOpenWindowResolver&& aResolve) {
   CreatedWindowInfo cwi;
   cwi.rv() = NS_OK;
   cwi.maxTouchPoints() = 0;
 
   BrowserElementParent::OpenWindowResult opened =
       BrowserElementParent::OpenWindowOOP(BrowserParent::GetFrom(aOpener), this,
-                                          aURL, aName, aFeatures);
+                                          aURL, aName, aForceNoReferrer,
+                                          aFeatures);
   cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {

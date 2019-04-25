@@ -32,8 +32,8 @@ class SMILValue {
   const SMILValue& operator=(const SMILValue& aVal);
 
   // Move constructor / reassignment operator:
-  SMILValue(SMILValue&& aVal);
-  SMILValue& operator=(SMILValue&& aVal);
+  SMILValue(SMILValue&& aVal) noexcept;
+  SMILValue& operator=(SMILValue&& aVal) noexcept;
 
   // Equality operators. These are allowed to be conservative (return false
   // more than you'd expect) - see comment above SMILType::IsEqual.

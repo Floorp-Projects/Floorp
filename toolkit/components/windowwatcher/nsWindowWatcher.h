@@ -84,7 +84,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
                               const char* aName, const char* aFeatures,
                               bool aCalledFromJS, bool aDialog, bool aNavigate,
                               nsIArray* aArgv, bool aIsPopupSpam,
-                              bool aForceNoOpener,
+                              bool aForceNoOpener, bool aForceNoReferrer,
                               nsDocShellLoadState* aLoadState,
                               mozIDOMWindowProxy** aResult);
 

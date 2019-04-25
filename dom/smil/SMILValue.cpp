@@ -42,7 +42,7 @@ const SMILValue& SMILValue::operator=(const SMILValue& aVal) {
 }
 
 // Move constructor / reassignment operator:
-SMILValue::SMILValue(SMILValue&& aVal)
+SMILValue::SMILValue(SMILValue&& aVal) noexcept
     : mU(aVal.mU),  // Copying union is only OK because we clear aVal.mType
                     // below.
       mType(aVal.mType) {
@@ -51,7 +51,7 @@ SMILValue::SMILValue(SMILValue&& aVal)
   aVal.mType = SMILNullType::Singleton();
 }
 
-SMILValue& SMILValue::operator=(SMILValue&& aVal) {
+SMILValue& SMILValue::operator=(SMILValue&& aVal) noexcept {
   if (!IsNull()) {
     // Clean up any data we're currently tracking.
     DestroyAndCheckPostcondition();

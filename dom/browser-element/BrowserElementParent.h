@@ -90,7 +90,8 @@ class BrowserElementParent {
   static OpenWindowResult OpenWindowOOP(
       dom::BrowserParent* aOpenerBrowserParent,
       dom::BrowserParent* aPopupBrowserParent, const nsAString& aURL,
-      const nsAString& aName, const nsAString& aFeatures);
+      const nsAString& aName, bool aForceNoReferrer,
+      const nsAString& aFeatures);
 
   /**
    * Handle a window.open call from an in-process <iframe mozbrowser>.
@@ -111,7 +112,7 @@ class BrowserElementParent {
  private:
   static OpenWindowResult DispatchOpenWindowEvent(
       dom::Element* aOpenerFrameElement, dom::Element* aPopupFrameElement,
-      const nsAString& aURL, const nsAString& aName,
+      const nsAString& aURL, const nsAString& aName, bool aForceNoReferrer,
       const nsAString& aFeatures);
 };
 
