@@ -272,6 +272,7 @@ function filterTokens(tokens) {
     let token = tokens[i];
     let tokenObj = {
       value: token,
+      lowerCaseValue: token.toLocaleLowerCase(),
       type: UrlbarTokenizer.TYPE.TEXT,
     };
     let restrictionType = CHAR_TO_TYPE_MAP.get(token);
