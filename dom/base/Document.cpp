@@ -3634,7 +3634,7 @@ void Document::ReleaseCapture() const {
   // page from stopping a scrollbar grab for example.
   nsCOMPtr<nsINode> node = nsIPresShell::GetCapturingContent();
   if (node && nsContentUtils::CanCallerAccess(node)) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);
+    PresShell::ReleaseCapturingContent();
   }
 }
 
@@ -11095,7 +11095,7 @@ static void ChangePointerLockedElement(Element* aElement, Document* aDocument,
   }
   // Retarget all events to aElement via capture or
   // stop retargeting if aElement is nullptr.
-  nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
+  PresShell::SetCapturingContent(aElement, CaptureFlags::PointerLock);
   DispatchPointerLockChange(aDocument);
 }
 

@@ -1142,9 +1142,12 @@ nsresult nsSliderFrame::StopDrag() {
 void nsSliderFrame::DragThumb(bool aGrabMouseEvents) {
   mDragFinished = !aGrabMouseEvents;
 
-  nsIPresShell::SetCapturingContent(
-      aGrabMouseEvents ? GetContent() : nullptr,
-      aGrabMouseEvents ? CAPTURE_IGNOREALLOWED : 0);
+  if (aGrabMouseEvents) {
+    PresShell::SetCapturingContent(GetContent(),
+                                   CaptureFlags::IgnoreAllowedState);
+  } else {
+    PresShell::ReleaseCapturingContent();
+  }
 }
 
 bool nsSliderFrame::isDraggingThumb() const {

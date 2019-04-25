@@ -127,7 +127,7 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
   mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
                                  NS_LITERAL_STRING("true"), true);
 
-  nsIPresShell::SetCapturingContent(mContent, CAPTURE_IGNOREALLOWED);
+  PresShell::SetCapturingContent(mContent, CaptureFlags::IgnoreAllowedState);
 
   if (!weakFrame.IsAlive()) {
     return false;
@@ -182,7 +182,7 @@ NS_IMETHODIMP
 nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       WidgetGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus) {
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
   // we're not active anymore
   mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();

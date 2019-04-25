@@ -113,7 +113,8 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // we're tracking
         mTrackingMouseMove = true;
 
-        nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
+        PresShell::SetCapturingContent(GetContent(),
+                                       CaptureFlags::IgnoreAllowedState);
       }
     } break;
 
@@ -125,7 +126,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // we're done tracking.
         mTrackingMouseMove = false;
 
-        nsIPresShell::SetCapturingContent(nullptr, 0);
+        PresShell::ReleaseCapturingContent();
 
         doDefault = false;
       }

@@ -3026,7 +3026,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           !sNormalLMouseEventInProcess) {
         // We got a mouseup event while a mousedown event was being processed.
         // Make sure that the capturing content is cleared.
-        nsIPresShell::SetCapturingContent(nullptr, 0);
+        PresShell::ReleaseCapturingContent();
         break;
       }
 
@@ -3036,9 +3036,12 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // and therefore forwarded to the child.
       if (aEvent->HasBeenPostedToRemoteProcess() &&
           !nsIPresShell::GetCapturingContent()) {
-        nsIContent* content =
-            mCurrentTarget ? mCurrentTarget->GetContent() : nullptr;
-        nsIPresShell::SetCapturingContent(content, 0);
+        if (nsIContent* content =
+                mCurrentTarget ? mCurrentTarget->GetContent() : nullptr) {
+          PresShell::SetCapturingContent(content, CaptureFlags::None);
+        } else {
+          PresShell::ReleaseCapturingContent();
+        }
       }
 
       nsCOMPtr<nsIContent> activeContent;
@@ -6263,8 +6266,8 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
   }
   EventStateManager::StartHandlingUserInput(mMessage);
   if (mMessage == eMouseDown) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);
-    nsIPresShell::AllowMouseCapture(true);
+    PresShell::ReleaseCapturingContent();
+    PresShell::AllowMouseCapture(true);
   }
   if (!aDocument || !aEvent || !aEvent->IsTrusted()) {
     return;

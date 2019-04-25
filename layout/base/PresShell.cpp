@@ -250,22 +250,22 @@ struct RangePaintInfo {
 // Set the environment variable GECKO_VERIFY_REFLOW_FLAGS to one or
 // more of the following flags (comma separated) for handy debug
 // output.
-static uint32_t gVerifyReflowFlags;
+static VerifyReflowFlags gVerifyReflowFlags;
 
-struct VerifyReflowFlags {
+struct VerifyReflowFlagData {
   const char* name;
-  uint32_t bit;
+  VerifyReflowFlags bit;
 };
 
-static const VerifyReflowFlags gFlags[] = {
+static const VerifyReflowFlagData gFlags[] = {
     // clang-format off
-  { "verify",                VERIFY_REFLOW_ON },
-  { "reflow",                VERIFY_REFLOW_NOISY },
-  { "all",                   VERIFY_REFLOW_ALL },
-  { "list-commands",         VERIFY_REFLOW_DUMP_COMMANDS },
-  { "noisy-commands",        VERIFY_REFLOW_NOISY_RC },
-  { "really-noisy-commands", VERIFY_REFLOW_REALLY_NOISY_RC },
-  { "resize",                VERIFY_REFLOW_DURING_RESIZE_REFLOW },
+  { "verify",                VerifyReflowFlags::On },
+  { "reflow",                VerifyReflowFlags::Noisy },
+  { "all",                   VerifyReflowFlags::All },
+  { "list-commands",         VerifyReflowFlags::DumpCommands },
+  { "noisy-commands",        VerifyReflowFlags::NoisyCommands },
+  { "really-noisy-commands", VerifyReflowFlags::ReallyNoisyCommands },
+  { "resize",                VerifyReflowFlags::DuringResizeReflow },
     // clang-format on
 };
 
@@ -273,8 +273,8 @@ static const VerifyReflowFlags gFlags[] = {
 
 static void ShowVerifyReflowFlags() {
   printf("Here are the available GECKO_VERIFY_REFLOW_FLAGS:\n");
-  const VerifyReflowFlags* flag = gFlags;
-  const VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+  const VerifyReflowFlagData* flag = gFlags;
+  const VerifyReflowFlagData* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
   while (flag < limit) {
     printf("  %s\n", flag->name);
     ++flag;
@@ -658,8 +658,8 @@ bool nsIPresShell::GetVerifyReflowEnable() {
         if (comma) *comma = '\0';
 
         bool found = false;
-        const VerifyReflowFlags* flag = gFlags;
-        const VerifyReflowFlags* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
+        const VerifyReflowFlagData* flag = gFlags;
+        const VerifyReflowFlagData* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
         while (flag < limit) {
           if (PL_strcasecmp(flag->name, flags) == 0) {
             gVerifyReflowFlags |= flag->bit;
@@ -680,22 +680,22 @@ bool nsIPresShell::GetVerifyReflowEnable() {
       if (error) ShowVerifyReflowFlags();
     }
 
-    if (VERIFY_REFLOW_ON & gVerifyReflowFlags) {
+    if (VerifyReflowFlags::On & gVerifyReflowFlags) {
       gVerifyReflowEnabled = true;
 
       printf("Note: verifyreflow is enabled");
-      if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+      if (VerifyReflowFlags::Noisy & gVerifyReflowFlags) {
         printf(" (noisy)");
       }
-      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+      if (VerifyReflowFlags::All & gVerifyReflowFlags) {
         printf(" (all)");
       }
-      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      if (VerifyReflowFlags::DumpCommands & gVerifyReflowFlags) {
         printf(" (show reflow commands)");
       }
-      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      if (VerifyReflowFlags::NoisyCommands & gVerifyReflowFlags) {
         printf(" (noisy reflow commands)");
-        if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+        if (VerifyReflowFlags::ReallyNoisyCommands & gVerifyReflowFlags) {
           printf(" (REALLY noisy reflow commands)");
         }
       }
@@ -1704,7 +1704,7 @@ nsresult PresShell::Initialize() {
   mDidInitialize = true;
 
 #ifdef DEBUG
-  if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+  if (VerifyReflowFlags::NoisyCommands & gVerifyReflowFlags) {
     if (mDocument) {
       nsIURI* uri = mDocument->GetDocumentURI();
       if (uri) {
@@ -1874,7 +1874,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
-  const bool shrinkToFit = !!(aOptions & ResizeReflowOptions::eBSizeLimit);
+  const bool shrinkToFit = !!(aOptions & ResizeReflowOptions::BSizeLimit);
   MOZ_ASSERT(shrinkToFit ||
                  (wm.IsVertical() ? aWidth : aHeight) != NS_UNCONSTRAINEDSIZE,
              "unconstrained bsize only usable with eBSizeLimit");
@@ -1995,7 +1995,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   if (!mIsDestroying && !mResizeEventPending &&
-      !(aOptions & ResizeReflowOptions::eSuppressResizeEvent)) {
+      !(aOptions & ResizeReflowOptions::SuppressResizeEvent)) {
     mResizeEventPending = true;
     if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
       mPresContext->RefreshDriver()->AddResizeEventFlushObserver(this);
@@ -2451,7 +2451,7 @@ void PresShell::MaybeReleaseCapturingContent() {
     frameSelection->SetDragState(false);
   }
   if (gCaptureInfo.mContent && gCaptureInfo.mContent->OwnerDoc() == mDocument) {
-    SetCapturingContent(nullptr, 0);
+    PresShell::ReleaseCapturingContent();
   }
 }
 
@@ -2599,10 +2599,10 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
   // printf("gShellCounter: %d\n", gShellCounter++);
   if (mInVerifyReflow) return;
 
-  if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+  if (VerifyReflowFlags::NoisyCommands & gVerifyReflowFlags) {
     printf("\nPresShell@%p: frame %p needs reflow\n", (void*)this,
            (void*)aFrame);
-    if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+    if (VerifyReflowFlags::ReallyNoisyCommands & gVerifyReflowFlags) {
       printf("Current content model:\n");
       Element* rootElement = mDocument->GetRootElement();
       if (rootElement) {
@@ -3600,9 +3600,9 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
   return didScroll;
 }
 
-nsRectVisibility PresShell::GetRectVisibility(nsIFrame* aFrame,
-                                              const nsRect& aRect,
-                                              nscoord aMinTwips) const {
+RectVisibility PresShell::GetRectVisibility(nsIFrame* aFrame,
+                                            const nsRect& aRect,
+                                            nscoord aMinTwips) const {
   NS_ASSERTION(aFrame->PresContext() == GetPresContext(),
                "prescontext mismatch?");
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
@@ -3645,17 +3645,24 @@ nsRectVisibility PresShell::GetRectVisibility(nsIFrame* aFrame,
   // If aRect is entirely visible then we don't need to ensure that
   // at least aMinTwips of it is visible
   if (visibleAreaRect.Contains(r)) {
-    return nsRectVisibility_kVisible;
+    return RectVisibility::Visible;
   }
 
   nsRect insetRect = visibleAreaRect;
   insetRect.Deflate(aMinTwips, aMinTwips);
-  if (r.YMost() <= insetRect.y) return nsRectVisibility_kAboveViewport;
-  if (r.y >= insetRect.YMost()) return nsRectVisibility_kBelowViewport;
-  if (r.XMost() <= insetRect.x) return nsRectVisibility_kLeftOfViewport;
-  if (r.x >= insetRect.XMost()) return nsRectVisibility_kRightOfViewport;
-
-  return nsRectVisibility_kVisible;
+  if (r.YMost() <= insetRect.y) {
+    return RectVisibility::AboveViewport;
+  }
+  if (r.y >= insetRect.YMost()) {
+    return RectVisibility::BelowViewport;
+  }
+  if (r.XMost() <= insetRect.x) {
+    return RectVisibility::LeftOfViewport;
+  }
+  if (r.x >= insetRect.XMost()) {
+    return RectVisibility::RightOfViewport;
+  }
+  return RectVisibility::Visible;
 }
 
 void PresShell::ScheduleViewManagerFlush(PaintType aType) {
@@ -6119,30 +6126,30 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 }
 
 // static
-void nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags) {
+void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
   // If capture was set for pointer lock, don't unlock unless we are coming
   // out of pointer lock explicitly.
   if (!aContent && gCaptureInfo.mPointerLock &&
-      !(aFlags & CAPTURE_POINTERLOCK)) {
+      !(aFlags & CaptureFlags::PointerLock)) {
     return;
   }
 
   gCaptureInfo.mContent = nullptr;
 
-  // only set capturing content if allowed or the CAPTURE_IGNOREALLOWED or
-  // CAPTURE_POINTERLOCK flags are used.
-  if ((aFlags & CAPTURE_IGNOREALLOWED) || gCaptureInfo.mAllowed ||
-      (aFlags & CAPTURE_POINTERLOCK)) {
+  // only set capturing content if allowed or the
+  // CaptureFlags::IgnoreAllowedState or CaptureFlags::PointerLock are used.
+  if ((aFlags & CaptureFlags::IgnoreAllowedState) || gCaptureInfo.mAllowed ||
+      (aFlags & CaptureFlags::PointerLock)) {
     if (aContent) {
       gCaptureInfo.mContent = aContent;
     }
-    // CAPTURE_POINTERLOCK is the same as CAPTURE_RETARGETTOELEMENT &
-    // CAPTURE_IGNOREALLOWED
+    // CaptureFlags::PointerLock is the same as
+    // CaptureFlags::RetargetToElement & CaptureFlags::IgnoreAllowedState.
     gCaptureInfo.mRetargetToElement =
-        ((aFlags & CAPTURE_RETARGETTOELEMENT) != 0) ||
-        ((aFlags & CAPTURE_POINTERLOCK) != 0);
-    gCaptureInfo.mPreventDrag = (aFlags & CAPTURE_PREVENTDRAG) != 0;
-    gCaptureInfo.mPointerLock = (aFlags & CAPTURE_POINTERLOCK) != 0;
+        !!(aFlags & CaptureFlags::RetargetToElement) ||
+        !!(aFlags & CaptureFlags::PointerLock);
+    gCaptureInfo.mPreventDrag = !!(aFlags & CaptureFlags::PreventDragStart);
+    gCaptureInfo.mPointerLock = !!(aFlags & CaptureFlags::PointerLock);
   }
 }
 
@@ -7910,7 +7917,7 @@ void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
     }
     case eMouseUp:
       // reset the capturing content now that the mouse button is up
-      nsIPresShell::SetCapturingContent(nullptr, 0);
+      PresShell::ReleaseCapturingContent();
       return;
     case eMouseMove:
       nsIPresShell::AllowMouseCapture(false);
@@ -9301,7 +9308,7 @@ void nsIPresShell::DoVerifyReflow() {
     mInVerifyReflow = true;
     bool ok = VerifyIncrementalReflow();
     mInVerifyReflow = false;
-    if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+    if (VerifyReflowFlags::All & gVerifyReflowFlags) {
       printf("ProcessReflowCommands: finished (%s)\n", ok ? "ok" : "failed");
     }
 
@@ -9325,7 +9332,7 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
   bool interrupted = false;
   if (!mDirtyRoots.IsEmpty()) {
 #ifdef DEBUG
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+    if (VerifyReflowFlags::DumpCommands & gVerifyReflowFlags) {
       printf("ProcessReflowCommands: begin incremental reflow\n");
     }
 #endif
@@ -9376,7 +9383,7 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
     // DidDoReflow might have killed us
     if (!mIsDestroying) {
 #ifdef DEBUG
-      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      if (VerifyReflowFlags::DumpCommands & gVerifyReflowFlags) {
         printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n",
                (void*)this);
       }
@@ -9733,7 +9740,7 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
       LogVerifyMessage(kids1.FirstChild(), kids2.FirstChild(),
                        "child counts don't match: ");
       printf("%d != %d\n", l1, l2);
-      if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
+      if (!(VerifyReflowFlags::All & gVerifyReflowFlags)) {
         break;
       }
     }
@@ -9788,7 +9795,7 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
             }
           }
         }
-        if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
+        if (!ok && !(VerifyReflowFlags::All & gVerifyReflowFlags)) {
           break;
         }
 
@@ -9797,7 +9804,7 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
         // Compare the sub-trees too
         if (!CompareTrees(aFirstPresContext, k1, aSecondPresContext, k2)) {
           ok = false;
-          if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
+          if (!(VerifyReflowFlags::All & gVerifyReflowFlags)) {
             break;
           }
         }
@@ -9805,7 +9812,7 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
         break;
       }
     }
-    if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
+    if (!ok && (!(VerifyReflowFlags::All & gVerifyReflowFlags))) {
       break;
     }
 
@@ -9813,7 +9820,7 @@ static bool CompareTrees(nsPresContext* aFirstPresContext,
     lists2.Next();
     if (lists1.IsDone() != lists2.IsDone() ||
         (!lists1.IsDone() && lists1.CurrentID() != lists2.CurrentID())) {
-      if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
+      if (!(VerifyReflowFlags::All & gVerifyReflowFlags)) {
         ok = false;
       }
       LogVerifyMessage(kids1.FirstChild(), kids2.FirstChild(),
@@ -9864,7 +9871,7 @@ FindTopFrame(nsIFrame* aRoot)
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
 bool nsIPresShell::VerifyIncrementalReflow() {
-  if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+  if (VerifyReflowFlags::Noisy & gVerifyReflowFlags) {
     printf("Building Verification Tree...\n");
   }
 
@@ -9927,7 +9934,7 @@ bool nsIPresShell::VerifyIncrementalReflow() {
   // Force the non-primary presshell to unsuppress; it doesn't want to normally
   // because it thinks it's hidden
   presShell->mPaintingSuppressed = false;
-  if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+  if (VerifyReflowFlags::Noisy & gVerifyReflowFlags) {
     printf("Verification Tree built, comparing...\n");
   }
 
@@ -9936,7 +9943,7 @@ bool nsIPresShell::VerifyIncrementalReflow() {
   nsIFrame* root1 = mFrameConstructor->GetRootFrame();
   nsIFrame* root2 = presShell->GetRootFrame();
   bool ok = CompareTrees(mPresContext, root1, cx, root2);
-  if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
+  if (!ok && (VerifyReflowFlags::Noisy & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
     root1->List(stdout);
     printf("Verification tree:\n");
@@ -9964,7 +9971,7 @@ bool nsIPresShell::VerifyIncrementalReflow() {
 
   presShell->EndObservingDocument();
   presShell->Destroy();
-  if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
+  if (VerifyReflowFlags::Noisy & gVerifyReflowFlags) {
     printf("Finished Verifying Reflow...\n");
   }
 

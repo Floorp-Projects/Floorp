@@ -164,9 +164,9 @@ void GeckoMVMContext::Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize,
                              ResizeEventFlag aResizeEventFlag) {
   MOZ_ASSERT(mPresShell);
 
-  ResizeReflowOptions reflowOptions = ResizeReflowOptions::eNoOption;
+  ResizeReflowOptions reflowOptions = ResizeReflowOptions::NoOption;
   if (aResizeEventFlag == ResizeEventFlag::Suppress) {
-    reflowOptions |= ResizeReflowOptions::eSuppressResizeEvent;
+    reflowOptions |= ResizeReflowOptions::SuppressResizeEvent;
   }
 
   RefPtr<PresShell> presShell = mPresShell;

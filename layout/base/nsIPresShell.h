@@ -9,6 +9,8 @@
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
 
+#include "mozilla/PresShellForwards.h"
+
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
@@ -23,6 +25,7 @@
 #include "FrameMetrics.h"
 #include "GeckoProfiler.h"
 #include "gfxPoint.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
@@ -125,25 +128,14 @@ class SourceSurface;
 }  // namespace gfx
 }  // namespace mozilla
 
-// Flags to pass to SetCapturingContent
-//
-// when assigning capture, ignore whether capture is allowed or not
-#define CAPTURE_IGNOREALLOWED 1
-// true if events should be targeted at the capturing content or its children
-#define CAPTURE_RETARGETTOELEMENT 2
-// true if the current capture wants drags to be prevented
-#define CAPTURE_PREVENTDRAG 4
-// true when the mouse is pointer locked, and events are sent to locked element
-#define CAPTURE_POINTERLOCK 8
-
-typedef struct CapturingContentInfo {
+struct CapturingContentInfo final {
   // capture should only be allowed during a mousedown event
   bool mAllowed;
   bool mPointerLock;
   bool mRetargetToElement;
   bool mPreventDrag;
   mozilla::StaticRefPtr<nsIContent> mContent;
-} CapturingContentInfo;
+};
 
 // b7b89561-4f03-44b3-9afa-b47e7f313ffb
 #define NS_IPRESSHELL_IID                            \
@@ -153,39 +145,7 @@ typedef struct CapturingContentInfo {
     }                                                \
   }
 
-// debug VerifyReflow flags
-#define VERIFY_REFLOW_ON 0x01
-#define VERIFY_REFLOW_NOISY 0x02
-#define VERIFY_REFLOW_ALL 0x04
-#define VERIFY_REFLOW_DUMP_COMMANDS 0x08
-#define VERIFY_REFLOW_NOISY_RC 0x10
-#define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
-#define VERIFY_REFLOW_DURING_RESIZE_REFLOW 0x40
-
 #undef NOISY_INTERRUPTIBLE_REFLOW
-
-enum nsRectVisibility {
-  nsRectVisibility_kVisible,
-  nsRectVisibility_kAboveViewport,
-  nsRectVisibility_kBelowViewport,
-  nsRectVisibility_kLeftOfViewport,
-  nsRectVisibility_kRightOfViewport
-};
-
-namespace mozilla {
-enum class ResizeReflowOptions : uint32_t {
-  eNoOption = 0,
-  // the resulting BSize can be less than the given one, producing
-  // shrink-to-fit sizing in the block dimension
-  eBSizeLimit = 1 << 0,
-  // suppress resize events even if the content size is changed due to the
-  // reflow.  This flag is used for mobile since on mobile we need to do an
-  // additional reflow to zoom the content by the initial-scale or auto scaling
-  // and we don't want any resize events during the initial paint.
-  eSuppressResizeEvent = 1 << 1,
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)
-}  // namespace mozilla
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -354,7 +314,7 @@ class nsIPresShell : public nsStubDocumentObserver {
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
       nscoord aOldHeight = 0,
       mozilla::ResizeReflowOptions aOptions =
-          mozilla::ResizeReflowOptions::eNoOption) = 0;
+          mozilla::ResizeReflowOptions::NoOption) = 0;
   /**
    * Do the same thing as ResizeReflow but even if ResizeReflowOverride was
    * called previously.
@@ -362,7 +322,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
       mozilla::ResizeReflowOptions aOptions =
-          mozilla::ResizeReflowOptions::eNoOption) = 0;
+          mozilla::ResizeReflowOptions::NoOption) = 0;
 
   /**
    * Returns true if the platform/pref or docshell require a meta viewport.
@@ -780,16 +740,15 @@ class nsIPresShell : public nsStubDocumentObserver {
    * @param aMinTwips is the minimum distance in from the edge of the
    *                  visible area that an object must be to be counted
    *                  visible
-   * @return nsRectVisibility_kVisible if the rect is visible
-   *         nsRectVisibility_kAboveViewport
-   *         nsRectVisibility_kBelowViewport
-   *         nsRectVisibility_kLeftOfViewport
-   *         nsRectVisibility_kRightOfViewport rectangle is outside the
+   * @return RectVisibility::Visible if the rect is visible
+   *         RectVisibility::AboveViewport
+   *         RectVisibility::BelowViewport
+   *         RectVisibility::LeftOfViewport
+   *         RectVisibility::RightOfViewport rectangle is outside the
    *         topmost ancestor scrollable frame in the specified direction
    */
-  virtual nsRectVisibility GetRectVisibility(nsIFrame* aFrame,
-                                             const nsRect& aRect,
-                                             nscoord aMinTwips) const = 0;
+  virtual mozilla::RectVisibility GetRectVisibility(
+      nsIFrame* aFrame, const nsRect& aRect, nscoord aMinTwips) const = 0;
 
   /**
    * Suppress notification of the frame manager that frames are
@@ -1229,30 +1188,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   // mouse capturing
   static CapturingContentInfo gCaptureInfo;
-
-  /**
-   * When capturing content is set, it traps all mouse events and retargets
-   * them at this content node. If capturing is not allowed
-   * (gCaptureInfo.mAllowed is false), then capturing is not set. However, if
-   * the CAPTURE_IGNOREALLOWED flag is set, the allowed state is ignored and
-   * capturing is set regardless. To disable capture, pass null for the value
-   * of aContent.
-   *
-   * If CAPTURE_RETARGETTOELEMENT is set, all mouse events are targeted at
-   * aContent only. Otherwise, mouse events are targeted at aContent or its
-   * descendants. That is, descendants of aContent receive mouse events as
-   * they normally would, but mouse events outside of aContent are retargeted
-   * to aContent.
-   *
-   * If CAPTURE_PREVENTDRAG is set then drags are prevented from starting while
-   * this capture is active.
-   *
-   * If CAPTURE_POINTERLOCK is set, similar to CAPTURE_RETARGETTOELEMENT, then
-   * events are targeted at aContent, but capturing is held more strongly (i.e.,
-   * calls to SetCapturingContent won't unlock unless CAPTURE_POINTERLOCK is
-   * set again).
-   */
-  static void SetCapturingContent(nsIContent* aContent, uint8_t aFlags);
 
   /**
    * Return the active content currently capturing the mouse if any.

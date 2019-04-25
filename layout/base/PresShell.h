@@ -9,6 +9,9 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
+#include "mozilla/PresShellForwards.h"
+#include "nsIPresShell.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
@@ -21,7 +24,6 @@
 #include "nsContentUtils.h"  // For AddScriptBlocker().
 #include "nsCRT.h"
 #include "nsIObserver.h"
-#include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
@@ -52,20 +54,16 @@ class EventDispatchingCallback;
 class GeckoMVMContext;
 class OverflowChangedTracker;
 
-// A set type for tracking visible frames, for use by the visibility code in
-// PresShell. The set contains nsIFrame* pointers.
-typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
-
-// This is actually pref-controlled, but we use this value if we fail
-// to get the pref for any reason.
-#define PAINTLOCK_EVENT_DELAY 5
-
 class PresShell final : public nsIPresShell,
                         public nsISelectionController,
                         public nsIObserver,
                         public nsSupportsWeakReference {
   typedef layers::FocusTarget FocusTarget;
   typedef dom::Element Element;
+
+  // A set type for tracking visible frames, for use by the visibility code in
+  // PresShell. The set contains nsIFrame* pointers.
+  typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
 
  public:
   PresShell();
@@ -96,23 +94,21 @@ class PresShell final : public nsIPresShell,
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   nsresult Initialize() override;
-  MOZ_CAN_RUN_SCRIPT nsresult
-  ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
-               nscoord aOldHeight = 0,
-               mozilla::ResizeReflowOptions aOptions =
-                   mozilla::ResizeReflowOptions::eNoOption) override;
+  MOZ_CAN_RUN_SCRIPT nsresult ResizeReflow(
+      nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
+      nscoord aOldHeight = 0,
+      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption) override;
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      mozilla::ResizeReflowOptions aOptions =
-          mozilla::ResizeReflowOptions::eNoOption) override;
+      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption) override;
 
   MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(FlushType aType) override;
   MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
 
-  nsRectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
-                                     nscoord aMinTwips) const override;
+  RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
+                                   nscoord aMinTwips) const override;
 
   nsresult CaptureHistoryState(
       nsILayoutHistoryState** aLayoutHistoryState) override;
@@ -419,6 +415,38 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT
   nsresult ScrollContentIntoView(nsIContent* aContent, ScrollAxis aVertical,
                                  ScrollAxis aHorizontal, uint32_t aFlags);
+
+  /**
+   * When capturing content is set, it traps all mouse events and retargets
+   * them at this content node. If capturing is not allowed
+   * (gCaptureInfo.mAllowed is false), then capturing is not set. However, if
+   * the CaptureFlags::IgnoreAllowedState is set, the allowed state is ignored
+   * and capturing is set regardless. To disable capture, pass null for the
+   * value of aContent.
+   *
+   * If CaptureFlags::RetargetedToElement is set, all mouse events are
+   * targeted at aContent only. Otherwise, mouse events are targeted at
+   * aContent or its descendants. That is, descendants of aContent receive
+   * mouse events as they normally would, but mouse events outside of aContent
+   * are retargeted to aContent.
+   *
+   * If CaptureFlags::PreventDragStart is set then drags are prevented from
+   * starting while this capture is active.
+   *
+   * If CaptureFlags::PointerLock is set, similar to
+   * CaptureFlags::RetargetToElement, then events are targeted at aContent,
+   * but capturing is held more strongly (i.e., calls to SetCapturingContent()
+   * won't unlock unless CaptureFlags::PointerLock is set again).
+   */
+  static void SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags);
+
+  /**
+   * Alias for SetCapturingContent(nullptr, CaptureFlags::None) for making
+   * callers what they do clearer.
+   */
+  static void ReleaseCapturingContent() {
+    PresShell::SetCapturingContent(nullptr, CaptureFlags::None);
+  }
 
  private:
   ~PresShell();

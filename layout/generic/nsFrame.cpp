@@ -4274,8 +4274,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
     if (scrollFrame) {
       nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
-      nsIPresShell::SetCapturingContent(capturingFrame->GetContent(),
-                                        CAPTURE_IGNOREALLOWED);
+      PresShell::SetCapturingContent(capturingFrame->GetContent(),
+                                     CaptureFlags::IgnoreAllowedState);
     }
   }
 
@@ -4677,7 +4677,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
   // We can unconditionally stop capturing because
   // we should never be capturing when the mouse button is up
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
 
   bool selectionOff =
       (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF);
