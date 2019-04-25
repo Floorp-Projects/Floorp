@@ -68,11 +68,19 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   NS_IMETHOD Redo(uint32_t aCount) final;
 
   NS_IMETHOD Cut() override;
-  NS_IMETHOD CanCut(bool* aCanCut) override;
+  bool CanCut() const;
   NS_IMETHOD Copy() override;
-  NS_IMETHOD CanCopy(bool* aCanCopy) override;
-  NS_IMETHOD CanDelete(bool* aCanDelete) override;
-  NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
+  bool CanCopy() const;
+  bool CanDelete() const;
+  virtual bool CanPaste(int32_t aClipboardType) const;
+
+  // Shouldn't be used internally, but we need these using declarations for
+  // avoiding warnings of clang.
+  using EditorBase::CanCopy;
+  using EditorBase::CanCut;
+  using EditorBase::CanDelete;
+  using EditorBase::CanPaste;
+
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
@@ -504,7 +512,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
                               nsAString& aResult);
 
   enum PasswordFieldAllowed { ePasswordFieldAllowed, ePasswordFieldNotAllowed };
-  bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed);
+  bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed) const;
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 

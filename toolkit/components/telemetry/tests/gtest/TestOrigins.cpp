@@ -96,6 +96,38 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   ASSERT_EQ(ids.length(), (unsigned)0) << "Returned object must be empty.";
 }
 
+TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+  JSContext* aCx = cx.GetJSContext();
+
+  Unused << mTelemetry->ClearOrigins();
+
+  const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString doubleclickHash(
+      "uXNT1PzjAVau8b402OMAIGDejKbiXfQX5iXvPASfO/s=");
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
+
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclickHash);
+
+  JS::RootedValue originSnapshot(aCx);
+  GetOriginSnapshot(aCx, &originSnapshot, true /* aClear */);
+
+  ASSERT_FALSE(originSnapshot.isNullOrUndefined())
+  << "Origin snapshot must not be null/undefined.";
+
+  JS::RootedValue origins(aCx);
+  JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
+  << "telemetry.test_test1 must be in the snapshot.";
+
+  JS::RootedObject originsObj(aCx, &origins.toObject());
+  JS::RootedValue count(aCx);
+  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
+  ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
+  << "Must have recorded the origin exactly twice.";
+}
+
 TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
   JSContext* aCx = cx.GetJSContext();

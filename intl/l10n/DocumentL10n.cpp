@@ -4,12 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/JSON.h"
+#include "js/ForOfIterator.h"  // JS::ForOfIterator
+#include "js/JSON.h"           // JS_ParseJSON
 #include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/L10nUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/l10n/DOMOverlays.h"
 #include "nsQueryObject.h"
 #include "nsISupports.h"
 #include "nsImportModule.h"
@@ -311,15 +314,198 @@ void DocumentL10n::GetAttributes(JSContext* aCx, Element& aElement,
   }
 }
 
-already_AddRefed<Promise> DocumentL10n::TranslateFragment(nsINode& aNode,
+class LocalizationHandler : public PromiseNativeHandler {
+ public:
+  explicit LocalizationHandler(nsINode* aNode) { mNode = aNode; };
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(LocalizationHandler)
+
+  nsTArray<nsCOMPtr<Element>>& Elements() { return mElements; }
+
+  void SetReturnValuePromise(Promise* aReturnValuePromise) {
+    mReturnValuePromise = aReturnValuePromise;
+  }
+
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    ErrorResult rv;
+
+    RefPtr<DocumentL10n> docL10n = mNode->OwnerDoc()->GetL10n();
+
+    nsTArray<L10nValue> l10nData;
+    if (aValue.isObject()) {
+      JS::ForOfIterator iter(aCx);
+      if (!iter.init(aValue, JS::ForOfIterator::AllowNonIterable)) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+      if (!iter.valueIsIterable()) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+
+      JS::Rooted<JS::Value> temp(aCx);
+      while (true) {
+        bool done;
+        if (!iter.next(&temp, &done)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+
+        if (done) {
+          break;
+        }
+
+        L10nValue* slotPtr = l10nData.AppendElement(mozilla::fallible);
+        if (!slotPtr) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+
+        if (!slotPtr->Init(aCx, temp)) {
+          mReturnValuePromise->MaybeRejectWithUndefined();
+          return;
+        }
+      }
+    }
+
+    if (mElements.Length() != l10nData.Length()) {
+      mReturnValuePromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    if (docL10n) {
+      docL10n->PauseObserving(rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+    }
+
+    nsTArray<DOMOverlaysError> errors;
+    for (size_t i = 0; i < l10nData.Length(); ++i) {
+      Element* elem = mElements[i];
+      mozilla::dom::l10n::DOMOverlays::TranslateElement(*elem, l10nData[i],
+                                                        errors, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+    }
+
+    if (docL10n) {
+      docL10n->ResumeObserving(rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+    }
+
+    nsTArray<JS::Value> jsErrors;
+    SequenceRooter<JS::Value> rooter(aCx, &jsErrors);
+    for (auto& error : errors) {
+      JS::RootedValue jsError(aCx);
+      if (!ToJSValue(aCx, error, &jsError)) {
+        mReturnValuePromise->MaybeRejectWithUndefined();
+        return;
+      }
+      jsErrors.AppendElement(jsError);
+    }
+
+    mReturnValuePromise->MaybeResolve(jsErrors);
+  }
+
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    mReturnValuePromise->MaybeRejectWithClone(aCx, aValue);
+  }
+
+ private:
+  ~LocalizationHandler() = default;
+
+  nsTArray<nsCOMPtr<Element>> mElements;
+  RefPtr<nsINode> mNode;
+  RefPtr<Promise> mReturnValuePromise;
+};
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LocalizationHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(LocalizationHandler)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LocalizationHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LocalizationHandler)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(LocalizationHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValuePromise)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(LocalizationHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValuePromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+already_AddRefed<Promise> DocumentL10n::TranslateFragment(JSContext* aCx,
+                                                          nsINode& aNode,
                                                           ErrorResult& aRv) {
-  RefPtr<Promise> promise;
-  nsresult rv =
-      mDOMLocalization->TranslateFragment(&aNode, getter_AddRefs(promise));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  Sequence<L10nKey> l10nKeys;
+  SequenceRooter<L10nKey> rooter(aCx, &l10nKeys);
+  RefPtr<LocalizationHandler> nativeHandler = new LocalizationHandler(&aNode);
+  nsTArray<nsCOMPtr<Element>>& domElements = nativeHandler->Elements();
+  nsIContent* node =
+      aNode.IsContent() ? aNode.AsContent() : aNode.GetFirstChild();
+  for (; node; node = node->GetNextNode(&aNode)) {
+    if (!node->IsElement()) {
+      continue;
+    }
+
+    Element* domElement = node->AsElement();
+
+    if (!domElement->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
+      continue;
+    }
+
+    L10nKey* key = l10nKeys.AppendElement(fallible);
+    if (!key) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+
+    GetAttributes(aCx, *domElement, *key, aRv);
+    if (aRv.Failed()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+
+    if (!domElements.AppendElement(domElement, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
+
+  nsIGlobalObject* global = mDocument->GetScopeObject();
+  if (!global) {
     return nullptr;
   }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  RefPtr<Promise> callbackResult = FormatMessages(aCx, l10nKeys, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nativeHandler->SetReturnValuePromise(promise);
+  callbackResult->AppendNativeHandler(nativeHandler);
+
   return MaybeWrapPromise(promise);
 }
 
