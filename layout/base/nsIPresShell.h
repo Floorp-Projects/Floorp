@@ -872,18 +872,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual void UnsuppressPainting() = 0;
 
   /**
-   * Get the set of agent style sheets for this presentation
-   */
-  virtual nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
-
-  /**
-   * Replace the set of agent style sheets
-   */
-  virtual nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
-
-  /**
    * Add an override style sheet for this presentation
    */
   virtual nsresult AddOverrideStyleSheet(mozilla::StyleSheet* aSheet) = 0;

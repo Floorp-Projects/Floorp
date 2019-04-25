@@ -125,15 +125,6 @@ class LCovRuntime {
   // all the scripts executed in the current JSRuntime.
   void init();
 
-  // Check if we should collect code coverage information.
-  bool isEnabled() const {
-    static bool isEnabled_ = ([]() {
-      const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
-      return outDir && *outDir != 0;
-    })();
-    return isEnabled_;
-  }
-
   // Write the aggregated result of the code coverage of a realm
   // into a file.
   void writeLCovResult(LCovRealm& realm);
@@ -165,6 +156,15 @@ class LCovRuntime {
   // file is not a valid LCov file.
   bool isEmpty_;
 };
+
+extern void InitLCov();
+
+extern void EnableLCov();
+
+inline bool IsLCovEnabled() {
+  extern bool gLCovIsEnabled;
+  return gLCovIsEnabled;
+}
 
 }  // namespace coverage
 }  // namespace js

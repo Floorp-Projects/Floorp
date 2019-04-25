@@ -1,0 +1,23 @@
+.icon-label {
+  display: flex;
+  column-gap: var(--base-unit);
+  align-items: center;
+  margin: calc(var(--base-unit) * 2) 0;
+  -moz-context-properties: fill;
+
+  font-size: var(--icon-label-font-size);
+}
+
+.icon-label--ok {
+  --icon-color: var(--green-70);
+}
+.icon-label--info {
+  --icon-color: var(--grey-90);
+}
+
+.icon-label__icon {
+  padding: var(--base-unit);
+  fill: var(--icon-color);
+  width: calc(var(--base-unit) * 4);
+  height: calc(var(--base-unit) * 4);
+}

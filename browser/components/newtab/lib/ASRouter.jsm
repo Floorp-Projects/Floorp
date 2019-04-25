@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  BookmarkPanelHub: "resource://activity-stream/lib/BookmarkPanelHub.jsm",
 });
 const {ASRouterActions: ra, actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 const {CFRMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/CFRMessageProvider.jsm");
@@ -519,6 +520,7 @@ class _ASRouter {
 
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
+    BookmarkPanelHub.init(this.dispatch);
 
     const messageBlockList = await this._storage.get("messageBlockList") || [];
     const providerBlockList = await this._storage.get("providerBlockList") || [];
@@ -547,6 +549,7 @@ class _ASRouter {
 
     ASRouterPreferences.removeListener(this.onPrefChange);
     ASRouterPreferences.uninit();
+    BookmarkPanelHub.uninit();
 
     // Uninitialise all trigger listeners
     for (const listener of ASRouterTriggerListeners.values()) {
@@ -901,6 +904,14 @@ class _ASRouter {
     await this._sendMessageToTarget(message, target, trigger);
   }
 
+  async handleMessageRequest(trigger, target) {
+    const msgs = this._getUnblockedMessages();
+    const message = await this._findMessage(
+      msgs.filter(m => m.trigger && m.trigger.id === trigger.id),
+      trigger);
+    target.sendMessage({message});
+  }
+
   async setMessageById(id, target, force = true, action = {}) {
     await this.setState({lastMessageId: id});
     const newMessage = this.getMessageById(id);
@@ -1099,9 +1110,18 @@ class _ASRouter {
         target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {showDescription: true});
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
-        const url = await FxAccounts.config.promiseSignUpURI("snippets");
-        // We want to replace the current tab.
-        target.browser.ownerGlobal.openLinkIn(url, "current", {
+        let url;
+        const entrypoint = action.entrypoint || "snippets";
+        switch (action.method) {
+          case "emailFirst":
+            url = await FxAccounts.config.promiseEmailFirstURI(entrypoint);
+            break;
+          default:
+            url = await FxAccounts.config.promiseSignUpURI(entrypoint);
+            break;
+        }
+        const where = action.where || "current";
+        target.browser.ownerGlobal.openLinkIn(url, where, {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
           csp: null,
@@ -1222,6 +1242,13 @@ class _ASRouter {
         break;
       case "FORCE_ATTRIBUTION":
         this.forceAttribution(action.data);
+        break;
+      case "MESSAGE_REQUEST":
+        this.handleMessageRequest(action.data.trigger, target);
+        break;
+      default:
+        Cu.reportError("Unknown message received");
+        break;
     }
   }
 }

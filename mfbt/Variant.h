@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FunctionTypeTraits.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
@@ -758,6 +759,15 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_NON_PARAM Variant {
         "all matchers must have the same return type");
     return Impl::matchN(*this, std::forward<M0>(aM0), std::forward<M1>(aM1),
                         std::forward<Ms>(aMs)...);
+  }
+
+  /**
+   * Incorporate the current variant's tag into hashValue.
+   * Note that this does not hash the actual contents; you must take
+   * care of that yourself, perhaps by using a match.
+   */
+  mozilla::HashNumber addTagToHash(mozilla::HashNumber hashValue) {
+    return mozilla::AddToHash(hashValue, tag);
   }
 };
 

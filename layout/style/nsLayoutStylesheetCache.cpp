@@ -112,10 +112,6 @@ nsresult nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
     mUserChromeSheet = nullptr;
   } else if (!strcmp(aTopic, "profile-do-change")) {
     InitFromProfile();
-  } else if (strcmp(aTopic, "chrome-flush-skin-caches") == 0 ||
-             strcmp(aTopic, "chrome-flush-caches") == 0) {
-    mScrollbarsSheet = nullptr;
-    mFormsSheet = nullptr;
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected observer topic.");
   }
@@ -229,8 +225,6 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
   if (obsSvc) {
     obsSvc->AddObserver(this, "profile-before-change", false);
     obsSvc->AddObserver(this, "profile-do-change", false);
-    obsSvc->AddObserver(this, "chrome-flush-skin-caches", false);
-    obsSvc->AddObserver(this, "chrome-flush-caches", false);
   }
 
   // Load user style sheets.

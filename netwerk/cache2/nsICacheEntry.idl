@@ -102,6 +102,12 @@ interface nsICacheEntry : nsISupports
   void setContentType(in uint8_t contentType);
 
   /**
+   * Stores information about an access from site identified by unique siteID.
+   * It's used for first party cache isolation telemetry.
+   */
+  void addBaseDomainAccess(in uint32_t siteID);
+
+  /**
    * This method is intended to override the per-spec cache validation
    * decisions for a duration specified in seconds. The current state can
    * be examined with isForcedValid (see below). This value is not persisted,

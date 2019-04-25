@@ -210,12 +210,10 @@ bool TransactionBuilder::IsRenderedFrameInvalidated() const {
 }
 
 void TransactionBuilder::SetDocumentView(
-    const LayoutDeviceIntRect& aDocumentRect,
-    const LayoutDeviceIntSize& aWidgetSize) {
-  wr::FramebufferIntRect wrDocRect;
+    const LayoutDeviceIntRect& aDocumentRect) {
+  wr::DeviceIntRect wrDocRect;
   wrDocRect.origin.x = aDocumentRect.x;
-  wrDocRect.origin.y =
-      aWidgetSize.height - aDocumentRect.y - aDocumentRect.height;
+  wrDocRect.origin.y = aDocumentRect.y;
   wrDocRect.size.width = aDocumentRect.width;
   wrDocRect.size.height = aDocumentRect.height;
   wr_transaction_set_document_view(mTxn, &wrDocRect);
@@ -302,7 +300,7 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
 
 already_AddRefed<WebRenderAPI> WebRenderAPI::CreateDocument(
     LayoutDeviceIntSize aSize, int8_t aLayerIndex, wr::RenderRoot aRenderRoot) {
-  wr::FramebufferIntSize wrSize;
+  wr::DeviceIntSize wrSize;
   wrSize.width = aSize.width;
   wrSize.height = aSize.height;
   wr::DocumentHandle* newDoc;

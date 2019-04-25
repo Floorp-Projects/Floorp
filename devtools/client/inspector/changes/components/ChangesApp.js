@@ -35,7 +35,7 @@ class ChangesApp extends PureComponent {
   }
 
   renderCopyAllChangesButton() {
-    return dom.button(
+    const button = dom.button(
       {
         className: "changes__copy-all-changes-button",
         onClick: e => {
@@ -46,6 +46,8 @@ class ChangesApp extends PureComponent {
       },
       getStr("changes.contextmenu.copyAllChanges")
     );
+
+    return dom.div({ className: "changes__toolbar" }, button);
   }
 
   renderCopyButton(ruleId) {
