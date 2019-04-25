@@ -142,7 +142,7 @@ void PointerEventHandler::SetPointerCaptureById(uint32_t aPointerId,
                                                 nsIContent* aContent) {
   MOZ_ASSERT(aContent);
   if (MouseEvent_Binding::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
-    nsIPresShell::SetCapturingContent(aContent, CAPTURE_PREVENTDRAG);
+    PresShell::SetCapturingContent(aContent, CaptureFlags::PreventDragStart);
   }
 
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
@@ -166,7 +166,8 @@ void PointerEventHandler::ReleasePointerCaptureById(uint32_t aPointerId) {
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
   if (pointerCaptureInfo && pointerCaptureInfo->mPendingContent) {
     if (MouseEvent_Binding::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
-      nsIPresShell::SetCapturingContent(nullptr, CAPTURE_PREVENTDRAG);
+      // XXX Why do we need CaptureFlags::PreventDragStart here?
+      PresShell::SetCapturingContent(nullptr, CaptureFlags::PreventDragStart);
     }
     pointerCaptureInfo->mPendingContent = nullptr;
   }

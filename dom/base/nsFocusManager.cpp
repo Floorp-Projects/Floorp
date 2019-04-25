@@ -719,7 +719,7 @@ nsFocusManager::WindowLowered(mozIDOMWindowProxy* aWindow) {
   if (mActiveWindow != window) return NS_OK;
 
   // clear the mouse capture as the active window has changed
-  nsIPresShell::SetCapturingContent(nullptr, 0);
+  PresShell::ReleaseCapturingContent();
 
   // In addition, reset the drag state to ensure that we are no longer in
   // drag-select mode.

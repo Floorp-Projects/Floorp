@@ -73,8 +73,8 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
             mTrackingMouseMove = true;
 
             // start capture.
-            nsIPresShell::SetCapturingContent(GetContent(),
-                                              CAPTURE_IGNOREALLOWED);
+            PresShell::SetCapturingContent(GetContent(),
+                                           CaptureFlags::IgnoreAllowedState);
 
             // remember current mouse coordinates.
             mLastPoint = aEvent->mRefPoint;
@@ -93,7 +93,7 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
         mTrackingMouseMove = false;
 
         // end capture
-        nsIPresShell::SetCapturingContent(nullptr, 0);
+        PresShell::ReleaseCapturingContent();
 
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
         doDefault = false;
