@@ -2337,7 +2337,6 @@ function synthesizeDropAfterDragOver(aResult, aDataTransfer, aDestElement, aDest
                                   aDataTransfer, aDragEvent);
     sendDragEvent(event, aDestElement, aDestWindow);
   }
-  synthesizeMouse(aDestElement, 2, 2, { type: "mouseup" }, aDestWindow);
 
   return effect;
 }
