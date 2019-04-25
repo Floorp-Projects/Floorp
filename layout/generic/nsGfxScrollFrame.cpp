@@ -6610,7 +6610,9 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
       break;
     case StyleScrollSnapAlignKeyword::Start:
       blockDirectionPosition.emplace(
-          logicalTargetRect.BStart(aWritingModeOnScroller));
+          aWritingModeOnScroller.IsVerticalRL()
+              ? -logicalTargetRect.BStart(aWritingModeOnScroller)
+              : logicalTargetRect.BStart(aWritingModeOnScroller));
       break;
     case StyleScrollSnapAlignKeyword::End:
       if (aWritingModeOnScroller.IsVerticalRL()) {
@@ -6648,7 +6650,9 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
       break;
     case StyleScrollSnapAlignKeyword::Start:
       inlineDirectionPosition.emplace(
-          logicalTargetRect.IStart(aWritingModeOnScroller));
+          aWritingModeOnScroller.IsInlineReversed()
+              ? -logicalTargetRect.IStart(aWritingModeOnScroller)
+              : logicalTargetRect.IStart(aWritingModeOnScroller));
       break;
     case StyleScrollSnapAlignKeyword::End:
       if (aWritingModeOnScroller.IsInlineReversed()) {
