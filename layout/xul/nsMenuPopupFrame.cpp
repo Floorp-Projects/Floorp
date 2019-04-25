@@ -856,7 +856,7 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
         EventStateManager::ClearGlobalActiveContent(activeESM);
       }
 
-      nsIPresShell::SetCapturingContent(nullptr, 0);
+      PresShell::ReleaseCapturingContent();
     }
 
     nsMenuFrame* menuFrame = do_QueryFrame(GetParent());

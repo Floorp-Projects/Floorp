@@ -3410,9 +3410,9 @@ nsresult HTMLInputElement::PreHandleEvent(EventChainVisitor& aVisitor) {
 void HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent) {
   mIsDraggingRange = true;
   mRangeThumbDragStartValue = GetValueAsDecimal();
-  // Don't use CAPTURE_RETARGETTOELEMENT, as that breaks pseudo-class styling
-  // of the thumb.
-  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+  // Don't use CaptureFlags::RetargetToElement, as that breaks pseudo-class
+  // styling of the thumb.
+  PresShell::SetCapturingContent(this, CaptureFlags::IgnoreAllowedState);
   nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
 
   // Before we change the value, record the current value so that we'll
@@ -3429,7 +3429,7 @@ void HTMLInputElement::FinishRangeThumbDrag(WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(mIsDraggingRange);
 
   if (nsIPresShell::GetCapturingContent() == this) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);  // cancel capture
+    PresShell::ReleaseCapturingContent();
   }
   if (aEvent) {
     nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
@@ -3444,7 +3444,7 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
 
   mIsDraggingRange = false;
   if (nsIPresShell::GetCapturingContent() == this) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);  // cancel capture
+    PresShell::ReleaseCapturingContent();
   }
   if (aIsForUserEvent) {
     SetValueOfRangeForUserEvent(mRangeThumbDragStartValue);
@@ -3502,7 +3502,7 @@ void HTMLInputElement::StartNumberControlSpinnerSpin() {
 
   // Capture the mouse so that we can tell if the pointer moves from one
   // spin button to the other, or to some other element:
-  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+  PresShell::SetCapturingContent(this, CaptureFlags::IgnoreAllowedState);
 
   nsNumberControlFrame* numberControlFrame = do_QueryFrame(GetPrimaryFrame());
   if (numberControlFrame) {
@@ -3513,7 +3513,7 @@ void HTMLInputElement::StartNumberControlSpinnerSpin() {
 void HTMLInputElement::StopNumberControlSpinnerSpin(SpinnerStopState aState) {
   if (mNumberControlSpinnerIsSpinning) {
     if (nsIPresShell::GetCapturingContent() == this) {
-      nsIPresShell::SetCapturingContent(nullptr, 0);  // cancel capture
+      PresShell::ReleaseCapturingContent();
     }
 
     nsRepeatService::GetInstance()->Stop(HandleNumberControlSpin, this);

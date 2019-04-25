@@ -6315,7 +6315,7 @@ void nsGlobalWindowOuter::EnterModalState() {
                                 mDoc, activePresShell->GetDocument()))) {
       EventStateManager::ClearGlobalActiveContent(activeESM);
 
-      nsIPresShell::SetCapturingContent(nullptr, 0);
+      PresShell::ReleaseCapturingContent();
 
       if (activePresShell) {
         RefPtr<nsFrameSelection> frameSelection =
@@ -6339,7 +6339,7 @@ void nsGlobalWindowOuter::EnterModalState() {
   nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
   if (capturingContent && topDoc &&
       nsContentUtils::ContentIsCrossDocDescendantOf(capturingContent, topDoc)) {
-    nsIPresShell::SetCapturingContent(nullptr, 0);
+    PresShell::ReleaseCapturingContent();
   }
 
   if (topWin->mModalStateDepth == 0) {
