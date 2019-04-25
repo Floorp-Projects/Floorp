@@ -358,7 +358,7 @@ pref("devtools.aboutdebugging.new-enabled", true);
 #endif
 
 // Show process debug targets.
-pref("devtools.aboutdebugging.process-debugging", false);
+pref("devtools.aboutdebugging.process-debugging", true);
 // Stringified array of network locations that users can connect to.
 pref("devtools.aboutdebugging.network-locations", "[]");
 // Debug target pane collapse/expand settings.
