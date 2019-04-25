@@ -919,14 +919,9 @@ add_old_configure_assignment('FT2_CFLAGS',
 # See https://firefox-source-docs.mozilla.org/remote/ for more.
 # The source code lives under ../remote.
 
-@depends(target, milestone)
-def remote_default(target, milestone):
-    return target.os != 'Android' and milestone.is_nightly
+option('--enable-cdp', help='{Enable|Disable} remote agent')
 
-option('--disable-cdp', default=remote_default,
-       help='{Enable|Disable} remote agent')
-
-@depends('--disable-cdp')
+@depends('--enable-cdp')
 def remote(value):
     if value:
         return True
