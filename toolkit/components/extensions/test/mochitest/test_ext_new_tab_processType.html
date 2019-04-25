@@ -63,6 +63,9 @@ add_task(async function test_target_blank_link() {
   let link = win.document.getElementById("link");
 
   {
+    // Flush layout so that synthesizeMouseAtCenter on a cross-origin iframe
+    // works as expected.
+    document.body.getBoundingClientRect();
     synthesizeMouseAtCenter(link, {}, iframe.contentWindow);
     let {subject: doc} = await promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
     info("Link opened");
