@@ -31,6 +31,7 @@ use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
 use program_cache::{WrProgramCache, remove_disk_cache};
 use rayon;
+use num_cpus;
 use euclid::SideOffsets2D;
 use nsstring::nsAString;
 
@@ -1016,8 +1017,14 @@ pub struct WrThreadPool(Arc<rayon::ThreadPool>);
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
+    // Clamp the number of workers between 1 and 8. We get diminishing returns
+    // with high worker counts and extra overhead because of rayon and font
+    // management.
+    let num_threads = num_cpus::get().max(2).min(8);
+
     let worker = rayon::ThreadPoolBuilder::new()
         .thread_name(|idx|{ format!("WRWorker#{}", idx) })
+        .num_threads(num_threads)
         .start_handler(|idx| {
             let name = format!("WRWorker#{}", idx);
             register_thread_with_profiler(name.clone());
