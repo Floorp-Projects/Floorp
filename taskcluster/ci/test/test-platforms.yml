@@ -35,7 +35,6 @@ linux64/debug:
     test-sets:
         - common-tests
         - web-platform-tests
-        - mochitest-headless
         - marionette-media-tests
 linux64/opt:
     build-platform: linux64/opt
@@ -188,7 +187,6 @@ windows10-64/debug:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
-        - mochitest-headless
         - marionette-media-tests
 
 windows10-64/opt:
@@ -200,7 +198,6 @@ windows10-64/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
-        - mochitest-headless
         - raptor-firefox
         - marionette-media-tests
 
@@ -229,7 +226,6 @@ windows10-64-shippable/opt:
         - marionette-gpu-tests
         - windows-tests
         - web-platform-tests
-        - mochitest-headless
         - raptor-firefox
         - raptor-chromium
         - raptor-profiling

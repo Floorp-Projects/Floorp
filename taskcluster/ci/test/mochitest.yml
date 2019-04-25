@@ -370,10 +370,8 @@ mochitest-plain-headless:
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
+    tier: 2
+    run-on-projects: ['try', 'mozilla-central']
     mozharness:
         mochitest-flavor: plain
         chunked: true
