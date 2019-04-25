@@ -76,8 +76,6 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
-#include "mozilla/dom/ResizeObserver.h"
-#include "mozilla/dom/ResizeObserverController.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
@@ -1741,10 +1739,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
       cb.NoteXPCOMChild(mql);
     }
   }
-
-  if (tmp->mResizeObserverController) {
-    tmp->mResizeObserverController->Traverse(cb);
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Document)
@@ -1856,10 +1850,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   }
 
   tmp->mInUnlinkOrDeletion = false;
-
-  if (tmp->mResizeObserverController) {
-    tmp->mResizeObserverController->Unlink();
-  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsresult Document::Init() {
@@ -12451,22 +12441,6 @@ FlashClassification Document::DocumentFlashClassification() {
   }
 
   return mFlashClassification;
-}
-
-void Document::AddResizeObserver(ResizeObserver* aResizeObserver) {
-  if (!mResizeObserverController) {
-    mResizeObserverController = MakeUnique<ResizeObserverController>(this);
-  }
-
-  mResizeObserverController->AddResizeObserver(aResizeObserver);
-}
-
-void Document::ScheduleResizeObserversNotification() const {
-  if (!mResizeObserverController) {
-    return;
-  }
-
-  mResizeObserverController->ScheduleNotification();
 }
 
 /**

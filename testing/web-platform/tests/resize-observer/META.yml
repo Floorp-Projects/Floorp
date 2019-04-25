@@ -1,4 +1,4 @@
-spec: https://drafts.csswg.org/resize-observer/
+spec: https://wicg.github.io/ResizeObserver/
 suggested_reviewers:
   - atotic
   - dholbert
