@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell||(function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})())
 // Classes
 function testClassFields() {
     function constructor_(name) {
