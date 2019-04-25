@@ -44,26 +44,24 @@ int main(int argc, char *argv[]) {
   chdir(argv[1]);
   Zip::Stream s;
   RefPtr<Zip> z = ZipCollection::GetZip("test.zip");
-  for (size_t i = 0; i < sizeof(test_entries) / sizeof(*test_entries); i++) {
-    if (!z->GetStream(test_entries[i], &s)) {
+  for (auto& entry : test_entries) {
+    if (!z->GetStream(entry, &s)) {
       fprintf(stderr,
               "TEST-UNEXPECTED-FAIL | TestZip | test.zip: Couldn't get entry "
               "\"%s\"\n",
-              test_entries[i]);
+              entry);
       return 1;
     }
   }
   fprintf(stderr, "TEST-PASS | TestZip | test.zip could be accessed fully\n");
 
   z = ZipCollection::GetZip("no_central_dir.zip");
-  for (size_t i = 0;
-       i < sizeof(no_central_dir_entries) / sizeof(*no_central_dir_entries);
-       i++) {
-    if (!z->GetStream(no_central_dir_entries[i], &s)) {
+  for (auto& entry : no_central_dir_entries) {
+    if (!z->GetStream(entry, &s)) {
       fprintf(stderr,
               "TEST-UNEXPECTED-FAIL | TestZip | no_central_dir.zip: Couldn't "
               "get entry \"%s\"\n",
-              no_central_dir_entries[i]);
+              entry);
       return 1;
     }
   }
