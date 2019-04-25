@@ -299,6 +299,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        context?.components?.core?.let {
+            val preferredColorScheme = it.getPreferredColorScheme()
+            if (it.engine.settings.preferredColorScheme != preferredColorScheme) {
+                it.engine.settings.preferredColorScheme = preferredColorScheme
+                context?.components?.useCases?.sessionUseCases?.reload?.invoke()
+            }
+        }
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
