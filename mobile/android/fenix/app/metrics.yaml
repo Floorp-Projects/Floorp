@@ -330,6 +330,34 @@ metrics:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2019-09-01"
+  mozilla_products:
+    type: string_list
+    description: >
+     A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
+      Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
+      Fenix, Focus, and Lockbox.
+    send_in_pings:
+    - metrics
+    bugs:
+    - 1192
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1953/
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2019-09-01"
+  default_moz_browser:
+    type: string
+    description: >
+      The name of the default browser on device if and only if it's a Mozilla owned product, otherwise empty string
+    send_in_pings:
+    - metrics
+    bugs:
+    - 1192
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1953/
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2019-09-01"
 
 search.default_engine:
   code:
