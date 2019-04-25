@@ -711,7 +711,7 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
         UpdateForValueChange();
       }
     } else if (aAttribute == nsGkAtoms::orient) {
-      PresShell()->FrameNeedsReflow(this, nsIPresShell::eResize,
+      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::Resize,
                                     NS_FRAME_IS_DIRTY);
     }
   }

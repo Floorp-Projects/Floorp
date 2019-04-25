@@ -736,55 +736,57 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
     return;
   }
 
-  int16_t vpercent = nsIPresShell::SCROLL_CENTER;
+  WhereToScroll whereToScrollVertically = kScrollToCenter;
   switch (aOptions.mBlock) {
     case ScrollLogicalPosition::Start:
-      vpercent = nsIPresShell::SCROLL_TOP;
+      whereToScrollVertically = kScrollToTop;
       break;
     case ScrollLogicalPosition::Center:
-      vpercent = nsIPresShell::SCROLL_CENTER;
+      whereToScrollVertically = kScrollToCenter;
       break;
     case ScrollLogicalPosition::End:
-      vpercent = nsIPresShell::SCROLL_BOTTOM;
+      whereToScrollVertically = kScrollToBottom;
       break;
     case ScrollLogicalPosition::Nearest:
-      vpercent = nsIPresShell::SCROLL_MINIMUM;
+      whereToScrollVertically = kScrollMinimum;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected ScrollLogicalPosition value");
   }
 
-  int16_t hpercent = nsIPresShell::SCROLL_CENTER;
+  WhereToScroll whereToScrollHorizontally = kScrollToCenter;
   switch (aOptions.mInline) {
     case ScrollLogicalPosition::Start:
-      hpercent = nsIPresShell::SCROLL_LEFT;
+      whereToScrollHorizontally = kScrollToLeft;
       break;
     case ScrollLogicalPosition::Center:
-      hpercent = nsIPresShell::SCROLL_CENTER;
+      whereToScrollHorizontally = kScrollToCenter;
       break;
     case ScrollLogicalPosition::End:
-      hpercent = nsIPresShell::SCROLL_RIGHT;
+      whereToScrollHorizontally = kScrollToRight;
       break;
     case ScrollLogicalPosition::Nearest:
-      hpercent = nsIPresShell::SCROLL_MINIMUM;
+      whereToScrollHorizontally = kScrollMinimum;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected ScrollLogicalPosition value");
   }
 
-  uint32_t flags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
+  ScrollFlags scrollFlags = ScrollFlags::ScrollOverflowHidden;
   if (aOptions.mBehavior == ScrollBehavior::Smooth) {
-    flags |= nsIPresShell::SCROLL_SMOOTH;
+    scrollFlags |= ScrollFlags::ScrollSmooth;
   } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
-    flags |= nsIPresShell::SCROLL_SMOOTH_AUTO;
+    scrollFlags |= ScrollFlags::ScrollSmoothAuto;
   }
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    flags |= nsIPresShell::SCROLL_SNAP;
+    scrollFlags |= ScrollFlags::ScrollSnap;
   }
 
   presShell->ScrollContentIntoView(
-      this, nsIPresShell::ScrollAxis(vpercent, nsIPresShell::SCROLL_ALWAYS),
-      nsIPresShell::ScrollAxis(hpercent, nsIPresShell::SCROLL_ALWAYS), flags);
+      this,
+      nsIPresShell::ScrollAxis(whereToScrollVertically, WhenToScroll::Always),
+      nsIPresShell::ScrollAxis(whereToScrollHorizontally, WhenToScroll::Always),
+      scrollFlags);
 }
 
 void Element::Scroll(const CSSIntPoint& aScroll,

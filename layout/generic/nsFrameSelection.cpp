@@ -1400,8 +1400,8 @@ nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
     flags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
   if (aFlags & nsISelectionController::SCROLL_CENTER_VERTICALLY) {
-    verticalScroll = nsIPresShell::ScrollAxis(
-        nsIPresShell::SCROLL_CENTER, nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE);
+    verticalScroll = nsIPresShell::ScrollAxis(kScrollToCenter,
+                                              WhenToScroll::IfNotFullyVisible);
   }
   if (aFlags & nsISelectionController::SCROLL_FOR_CARET_MOVE) {
     flags |= Selection::SCROLL_FOR_CARET_MOVE;

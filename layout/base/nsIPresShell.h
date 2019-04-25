@@ -436,28 +436,16 @@ class nsIPresShell : public nsStubDocumentObserver {
    * be marked dirty.  Passing aIntrinsicDirty = eResize and aBitToAdd = 0
    * would result in no work being done, so don't do that.
    */
-  enum IntrinsicDirty {
-    // XXXldb eResize should be renamed
-    eResize,      // don't mark any intrinsic widths dirty
-    eTreeChange,  // mark intrinsic widths dirty on aFrame and its ancestors
-    eStyleChange  // Do eTreeChange, plus all of aFrame's descendants
-  };
-  enum ReflowRootHandling {
-    ePositionOrSizeChange,    // aFrame is changing position or size
-    eNoPositionOrSizeChange,  // ... NOT changing ...
-    eInferFromBitToAdd  // is changing iff (aBitToAdd == NS_FRAME_IS_DIRTY)
-
-    // Note:  With eStyleChange, these can also apply to out-of-flows
-    // in addition to aFrame.
-  };
-  void FrameNeedsReflow(nsIFrame* aFrame, IntrinsicDirty aIntrinsicDirty,
+  void FrameNeedsReflow(nsIFrame* aFrame,
+                        mozilla::IntrinsicDirty aIntrinsicDirty,
                         nsFrameState aBitToAdd,
-                        ReflowRootHandling aRootHandling = eInferFromBitToAdd);
+                        mozilla::ReflowRootHandling aRootHandling =
+                            mozilla::ReflowRootHandling::InferFromBitToAdd);
 
   /**
    * Calls FrameNeedsReflow on all fixed position children of the root frame.
    */
-  void MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty);
+  void MarkFixedFramesForReflow(mozilla::IntrinsicDirty aIntrinsicDirty);
 
   /**
    * Tell the presshell that the given frame's reflow was interrupted.  This
@@ -631,23 +619,9 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   already_AddRefed<gfxContext> CreateReferenceRenderingContext();
 
-  enum {
-    SCROLL_TOP = 0,
-    SCROLL_BOTTOM = 100,
-    SCROLL_LEFT = 0,
-    SCROLL_RIGHT = 100,
-    SCROLL_CENTER = 50,
-    SCROLL_MINIMUM = -1
-  };
-
-  enum WhenToScroll {
-    SCROLL_ALWAYS,
-    SCROLL_IF_NOT_VISIBLE,
-    SCROLL_IF_NOT_FULLY_VISIBLE
-  };
   typedef struct ScrollAxis {
-    int16_t mWhereToScroll;
-    WhenToScroll mWhenToScroll : 8;
+    mozilla::WhereToScroll mWhereToScroll;
+    mozilla::WhenToScroll mWhenToScroll;
     bool mOnlyIfPerceivedScrollableDirection : 1;
     /**
      * aWhere:
@@ -682,24 +656,16 @@ class nsIPresShell : public nsStubDocumentObserver {
      *   scrollbar showing and less than one device pixel of scrollable
      *   distance), don't scroll. Defaults to false.
      */
-    explicit ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
-                        WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,
-                        bool aOnlyIfPerceivedScrollableDirection = false)
+    explicit ScrollAxis(
+        mozilla::WhereToScroll aWhere = mozilla::kScrollMinimum,
+        mozilla::WhenToScroll aWhen = mozilla::WhenToScroll::IfNotFullyVisible,
+        bool aOnlyIfPerceivedScrollableDirection = false)
         : mWhereToScroll(aWhere),
           mWhenToScroll(aWhen),
           mOnlyIfPerceivedScrollableDirection(
               aOnlyIfPerceivedScrollableDirection) {}
   } ScrollAxis;
 
-  enum {
-    SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
-    SCROLL_OVERFLOW_HIDDEN = 0x02,
-    SCROLL_NO_PARENT_FRAMES = 0x04,
-    SCROLL_SMOOTH = 0x08,
-    SCROLL_SMOOTH_AUTO = 0x10,
-    SCROLL_SNAP = 0x20,
-    SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING = 0x40
-  };
   /**
    * Scrolls the view of the document so that the given area of a frame
    * is visible, if possible. Layout is not flushed before scrolling.
@@ -707,7 +673,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    * @param aRect relative to aFrame
    * @param aVertical see ScrollContentIntoView and ScrollAxis
    * @param aHorizontal see ScrollContentIntoView and ScrollAxis
-   * @param aFlags if SCROLL_FIRST_ANCESTOR_ONLY is set, only the
+   * @param aScrollFlags if SCROLL_FIRST_ANCESTOR_ONLY is set, only the
    * nearest scrollable ancestor is scrolled, otherwise all
    * scrollable ancestors may be scrolled if necessary
    * if SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a direction
@@ -725,7 +691,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
                                ScrollAxis aVertical, ScrollAxis aHorizontal,
-                               uint32_t aFlags);
+                               mozilla::ScrollFlags aScrollFlags);
 
   /**
    * Determine if a rectangle specified in the frame's coordinate system
@@ -1691,7 +1657,7 @@ class nsIPresShell : public nsStubDocumentObserver {
   struct ScrollIntoViewData {
     ScrollAxis mContentScrollVAxis;
     ScrollAxis mContentScrollHAxis;
-    uint32_t mContentToScrollToFlags;
+    mozilla::ScrollFlags mContentToScrollToFlags;
   };
 
   static mozilla::LazyLogModule gLog;
