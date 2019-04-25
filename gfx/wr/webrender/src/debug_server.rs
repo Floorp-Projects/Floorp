@@ -6,6 +6,7 @@ use api::{ApiMsg, DebugCommand, DebugFlags};
 use api::channel::MsgSender;
 use api::units::DeviceIntSize;
 use print_tree::PrintTreePrinter;
+use renderer;
 use std::sync::mpsc::{channel, Receiver};
 use std::sync::mpsc::Sender;
 use std::thread;
@@ -92,15 +93,15 @@ impl ws::Handler for Server {
 
 // Spawn a thread for a given renderer, and wait for
 // client connections.
-pub struct DebugServer {
+pub struct DebugServerImpl {
     join_handle: Option<thread::JoinHandle<()>>,
     broadcaster: ws::Sender,
     debug_rx: Receiver<DebugMsg>,
     senders: Vec<ws::Sender>,
 }
 
-impl DebugServer {
-    pub fn new(api_tx: MsgSender<ApiMsg>) -> DebugServer {
+impl DebugServerImpl {
+    pub fn new(api_tx: MsgSender<ApiMsg>) -> DebugServerImpl {
         let (debug_tx, debug_rx) = channel();
 
         let socket = ws::Builder::new()
@@ -124,15 +125,17 @@ impl DebugServer {
             }
         }));
 
-        DebugServer {
+        DebugServerImpl {
             join_handle,
             broadcaster,
             debug_rx,
             senders: Vec::new(),
         }
     }
+}
 
-    pub fn send(&mut self, message: String) {
+impl renderer::DebugServer for DebugServerImpl {
+    fn send(&mut self, message: String) {
         // Add any new connections that have been queued.
         while let Ok(msg) = self.debug_rx.try_recv() {
             match msg {
@@ -166,7 +169,7 @@ impl DebugServer {
     }
 }
 
-impl Drop for DebugServer {
+impl Drop for DebugServerImpl {
     fn drop(&mut self) {
         self.broadcaster.shutdown().ok();
         self.join_handle.take().unwrap().join().ok();
