@@ -22,5 +22,5 @@
 }
 
 .service-worker-action__status--running::before {
-  background-color: var(--success-50);
+  background-color: var(--success-background);
 }
