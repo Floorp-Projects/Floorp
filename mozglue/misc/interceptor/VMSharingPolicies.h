@@ -105,9 +105,8 @@ class VMSharingPolicyShared<MMPolicyInProcess, kChunkSize>
   }
 
   bool ShouldUnhookUponDestruction() const {
-    // Unhooking on destruction has issues with static destructor order.
-    // See bug 1546546.
-    return false;
+    AutoCriticalSection lock(&sCS);
+    return sUniqueVM.ShouldUnhookUponDestruction();
   }
 
   bool Reserve(uint32_t aCount, const ReservationFlags aFlags) {
