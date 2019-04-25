@@ -465,7 +465,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b32ab0c9031a"
+        "revision": "62b8ab8ed3de"
     },
     "son": {
         "platforms": [
@@ -573,6 +573,6 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "40bd418b907d"
+        "revision": "6908f57b0300"
     }
 }
