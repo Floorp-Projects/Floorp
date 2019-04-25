@@ -2,7 +2,7 @@
 
 # BookmarkNodeType
 
-`enum class BookmarkNodeType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/BookmarksStorage.kt#L116)
+`enum class BookmarkNodeType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/BookmarksStorage.kt#L132)
 
 The types of bookmark nodes
 

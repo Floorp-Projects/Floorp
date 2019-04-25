@@ -2,7 +2,7 @@
 
 # BookmarkInfo
 
-`data class BookmarkInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/BookmarksStorage.kt#L106)
+`data class BookmarkInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/BookmarksStorage.kt#L122)
 
 Class for making alterations to any bookmark node
 
