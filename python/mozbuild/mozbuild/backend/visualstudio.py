@@ -34,8 +34,10 @@ from mozbuild.base import ExecutionSummary
 
 MSBUILD_NAMESPACE = 'http://schemas.microsoft.com/developer/msbuild/2003'
 
+
 def get_id(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name)).upper()
+
 
 def visual_studio_product_to_solution_version(version):
     if version == '2017':
@@ -43,11 +45,13 @@ def visual_studio_product_to_solution_version(version):
     else:
         raise Exception('Unknown version seen: %s' % version)
 
+
 def visual_studio_product_to_platform_toolset_version(version):
     if version == '2017':
         return 'v141'
     else:
         raise Exception('Unknown version seen: %s' % version)
+
 
 class VisualStudioBackend(CommonBackend):
     """Generate Visual Studio project files.
@@ -100,7 +104,7 @@ class VisualStudioBackend(CommonBackend):
         elif isinstance(obj, UnifiedSources):
             # XXX we should be letting CommonBackend.consume_object call this
             # for us instead.
-            self._process_unified_sources(obj);
+            self._process_unified_sources(obj)
 
         elif isinstance(obj, Library):
             self._libs_to_paths[obj.basename] = reldir
@@ -133,9 +137,9 @@ class VisualStudioBackend(CommonBackend):
         out_proj_dir = os.path.join(self._out_dir, self._projsubdir)
 
         projects = self._write_projects_for_sources(self._libs_to_paths,
-            "library", out_proj_dir)
+                                                    "library", out_proj_dir)
         projects.update(self._write_projects_for_sources(self._progs_to_paths,
-            "binary", out_proj_dir))
+                                                         "binary", out_proj_dir))
 
         # Generate projects that can be used to build common targets.
         for target in ('export', 'binaries', 'tools', 'full'):
@@ -145,15 +149,15 @@ class VisualStudioBackend(CommonBackend):
                 command += ' %s' % target
 
             project_id = self._write_vs_project(out_proj_dir, basename, target,
-                build_command=command,
-                clean_command='$(SolutionDir)\\mach.bat build clean')
+                                                build_command=command,
+                                                clean_command='$(SolutionDir)\\mach.bat build clean')
 
             projects[basename] = (project_id, basename, target)
 
         # A project that can be used to regenerate the visual studio projects.
         basename = 'target_vs'
         project_id = self._write_vs_project(out_proj_dir, basename, 'visual-studio',
-            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
+                                            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
         projects[basename] = (project_id, basename, 'visual-studio')
 
         # Write out a shared property file with common variables.
@@ -190,7 +194,7 @@ class VisualStudioBackend(CommonBackend):
 
             headers = [t[0] for t in finder.find('*.h')]
             headers = [os.path.normpath(os.path.join('$(TopSrcDir)',
-                path, f)) for f in headers]
+                                                     path, f)) for f in headers]
 
             includes = [
                 os.path.join('$(TopSrcDir)', path),
@@ -201,7 +205,7 @@ class VisualStudioBackend(CommonBackend):
             includes.append('$(TopObjDir)\\dist\\include')
 
             for v in ('NSPR_CFLAGS', 'NSS_CFLAGS', 'MOZ_JPEG_CFLAGS',
-                    'MOZ_PNG_CFLAGS', 'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS'):
+                      'MOZ_PNG_CFLAGS', 'MOZ_ZLIB_CFLAGS', 'MOZ_PIXMAN_CFLAGS'):
                 if not config:
                     break
 
@@ -223,7 +227,7 @@ class VisualStudioBackend(CommonBackend):
                 else:
                     defines.append('%s=%s' % (k, v))
 
-            debugger=None
+            debugger = None
             if prefix == 'binary':
                 if item.startswith(self.environment.substs['MOZ_APP_NAME']):
                     app_args = '-no-remote -profile $(TopObjDir)\\tmp\\profile-default'
@@ -236,12 +240,13 @@ class VisualStudioBackend(CommonBackend):
             basename = '%s_%s' % (prefix, item)
 
             project_id = self._write_vs_project(out_dir, basename, item,
-                includes=includes,
-                forced_includes=['$(TopObjDir)\\dist\\include\\mozilla-config.h'],
-                defines=defines,
-                headers=headers,
-                sources=sources,
-                debugger=debugger)
+                                                includes=includes,
+                                                forced_includes=[
+                                                    '$(TopObjDir)\\dist\\include\\mozilla-config.h'],
+                                                defines=defines,
+                                                headers=headers,
+                                                sources=sources,
+                                                debugger=debugger)
 
             projects[basename] = (project_id, basename, item)
 
@@ -416,7 +421,7 @@ class VisualStudioBackend(CommonBackend):
             fh.write(b'$env:%s = "%s"\r\n' % (k, v))
 
         relpath = os.path.relpath(self.environment.topsrcdir,
-            self.environment.topobjdir).replace('\\', '/')
+                                  self.environment.topobjdir).replace('\\', '/')
 
         fh.write(b'$bashargs = "%s/mach", "--log-no-times"\r\n' % relpath)
         fh.write(b'$bashargs = $bashargs + $args\r\n')
@@ -425,9 +430,9 @@ class VisualStudioBackend(CommonBackend):
         fh.write(b'$procargs = "-c", $expanded\r\n')
 
         fh.write(b'Start-Process -WorkingDirectory $env:TOPOBJDIR '
-            b'-FilePath $env:MOZILLABUILD\\msys\\bin\\bash '
-            b'-ArgumentList $procargs '
-            b'-Wait -NoNewWindow\r\n')
+                 b'-FilePath $env:MOZILLABUILD\\msys\\bin\\bash '
+                 b'-ArgumentList $procargs '
+                 b'-Wait -NoNewWindow\r\n')
 
     def _write_mach_batch(self, fh):
         """Write out a batch script that builds the tree.
@@ -445,12 +450,12 @@ class VisualStudioBackend(CommonBackend):
         # relative paths, since munging c:\ to /c/ is slightly more
         # complicated.
         relpath = os.path.relpath(self.environment.topsrcdir,
-            self.environment.topobjdir).replace('\\', '/')
+                                  self.environment.topobjdir).replace('\\', '/')
 
         # We go through mach because it has the logic for choosing the most
         # appropriate build tool.
         fh.write(b'"%%MOZILLABUILD%%\\msys\\bin\\bash" '
-            b'-c "%s/mach --log-no-times %%1 %%2 %%3 %%4 %%5 %%6 %%7"' % relpath)
+                 b'-c "%s/mach --log-no-times %%1 %%2 %%3 %%4 %%5 %%6 %%7"' % relpath)
 
     def _write_vs_project(self, out_dir, basename, name, **kwargs):
         root = '%s.vcxproj' % basename
@@ -458,21 +463,21 @@ class VisualStudioBackend(CommonBackend):
 
         with self._write_file(os.path.join(out_dir, root), mode='rb') as fh:
             project_id, name = VisualStudioBackend.write_vs_project(fh,
-                self._version, project_id, name, **kwargs)
+                                                                    self._version, project_id, name, **kwargs)
 
         with self._write_file(os.path.join(out_dir, '%s.user' % root), mode='rb') as fh:
             fh.write('<?xml version="1.0" encoding="utf-8"?>\r\n')
             fh.write('<Project ToolsVersion="4.0" xmlns="%s">\r\n' %
-                MSBUILD_NAMESPACE)
+                     MSBUILD_NAMESPACE)
             fh.write('</Project>\r\n')
 
         return project_id
 
     @staticmethod
     def write_vs_project(fh, version, project_id, name, includes=[],
-        forced_includes=[], defines=[],
-        build_command=None, clean_command=None,
-        debugger=None, headers=[], sources=[]):
+                         forced_includes=[], defines=[],
+                         build_command=None, clean_command=None,
+                         debugger=None, headers=[], sources=[]):
 
         impl = getDOMImplementation()
         doc = impl.createDocument(MSBUILD_NAMESPACE, 'Project', None)
@@ -510,7 +515,8 @@ class VisualStudioBackend(CommonBackend):
         rn.appendChild(doc.createTextNode('mozilla'))
 
         pts = pg.appendChild(doc.createElement('PlatformToolset'))
-        pts.appendChild(doc.createTextNode(visual_studio_product_to_platform_toolset_version(version)))
+        pts.appendChild(doc.createTextNode(
+            visual_studio_product_to_platform_toolset_version(version)))
 
         i = project.appendChild(doc.createElement('Import'))
         i.setAttribute('Project', '$(VCTargetsPath)\\Microsoft.Cpp.Default.props')

@@ -12,6 +12,7 @@ from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 import mozpack.path as mozpath
 
+
 def make_archive(archive_name, base, exclude, include):
     compress = ['**/*.sym']
     finder = FileFinder(base, ignore=exclude)
@@ -27,11 +28,13 @@ def make_archive(archive_name, base, exclude, include):
                     writer.add(p.encode('utf-8'), f, mode=f.mode,
                                compress=should_compress, skip_duplicates=True)
 
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Produce a symbols archive')
     parser.add_argument('archive', help='Which archive to generate')
     parser.add_argument('base', help='Base directory to package')
-    parser.add_argument('--full-archive', action='store_true', help='Generate a full symbol archive')
+    parser.add_argument('--full-archive', action='store_true',
+                        help='Generate a full symbol archive')
 
     args = parser.parse_args(argv)
 
@@ -46,6 +49,7 @@ def main(argv):
         includes = ['**/*.sym']
 
     make_archive(args.archive, args.base, excludes, includes)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])

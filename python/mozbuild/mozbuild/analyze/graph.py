@@ -5,6 +5,7 @@
 import os
 import sqlite3 as lite
 
+
 class Node(object):
 
     def __init__(self, graph, node_id):
@@ -39,10 +40,11 @@ class Node(object):
         return os.path.join(parent.get_path(graph), self.name)
 
     def calculate_mtime(self):
-        if self.type == 0: # only files have meaningful costs
+        if self.type == 0:  # only files have meaningful costs
             return sum(x.mtime for x in self.cmds)
         else:
             return None
+
 
 class Graph(object):
 
@@ -67,7 +69,7 @@ class Graph(object):
         self.connect.close()
 
     def query_arg(self, q, arg):
-        assert isinstance(arg, tuple) #execute() requires tuple argument
+        assert isinstance(arg, tuple)  # execute() requires tuple argument
         cursor = self.connect.cursor()
         cursor.execute(q, arg)
         return cursor
@@ -112,7 +114,7 @@ class Graph(object):
                 m, s = sec / 60, sec % 60
                 print ("\n------ Summary for %s ------\
                     \nTotal Build Time (mm:ss) = %d:%d\nNum Downstream Commands = %d"
-                    % (f, m, s, node.num_cmds))
+                       % (f, m, s, node.num_cmds))
 
     def populate(self):
         # make nodes for files with downstream commands
@@ -127,5 +129,4 @@ class Graph(object):
     def get_cost_dict(self):
         if self.results is None:
             self.populate()
-        return {k:v for k,v in self.results if v > 0}
-
+        return {k: v for k, v in self.results if v > 0}

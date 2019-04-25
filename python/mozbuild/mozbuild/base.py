@@ -53,11 +53,13 @@ def ancestors(path):
             break
         path = newpath
 
+
 def samepath(path1, path2):
     if hasattr(os.path, 'samefile'):
         return os.path.samefile(path1, path2)
     return os.path.normcase(os.path.realpath(path1)) == \
         os.path.normcase(os.path.realpath(path2))
+
 
 class BadEnvironmentException(Exception):
     """Base class for errors raised when the build environment is not sane."""
@@ -69,6 +71,7 @@ class BuildEnvironmentNotFoundException(BadEnvironmentException):
 
 class ObjdirMismatchException(BadEnvironmentException):
     """Raised when the current dir is an objdir and doesn't match the mozconfig."""
+
     def __init__(self, objdir1, objdir2):
         self.objdir1 = objdir1
         self.objdir2 = objdir2
@@ -85,6 +88,7 @@ class MozbuildObject(ProcessExecutionMixin):
     running processes, etc. This classes provides that functionality. Other
     modules can inherit from this class to obtain this functionality easily.
     """
+
     def __init__(self, topsrcdir, settings, log_manager, topobjdir=None,
                  mozconfig=MozconfigLoader.AUTODETECT):
         """Create a new Mozbuild object instance.
@@ -176,8 +180,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
             if topsrcdir == topobjdir:
                 raise BadEnvironmentException('The object directory appears '
-                    'to be the same as your source directory (%s). This build '
-                    'configuration is not supported.' % topsrcdir)
+                                              'to be the same as your source directory (%s). This build '
+                                              'configuration is not supported.' % topsrcdir)
 
         # If we can't resolve topobjdir, oh well. We'll figure out when we need
         # one.
@@ -191,7 +195,7 @@ class MozbuildObject(ProcessExecutionMixin):
 
         if '@CONFIG_GUESS@' in topobjdir:
             topobjdir = topobjdir.replace('@CONFIG_GUESS@',
-                self.resolve_config_guess())
+                                          self.resolve_config_guess())
 
         if not os.path.isabs(topobjdir):
             topobjdir = os.path.abspath(os.path.join(self.topsrcdir, topobjdir))
@@ -253,9 +257,10 @@ class MozbuildObject(ProcessExecutionMixin):
     def virtualenv_manager(self):
         if self._virtualenv_manager is None:
             self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
-                self.topobjdir, os.path.join(self.topobjdir, '_virtualenvs', 'init'),
-                sys.stdout, os.path.join(self.topsrcdir, 'build',
-                'virtualenv_packages.txt'))
+                                                         self.topobjdir, os.path.join(
+                                                             self.topobjdir, '_virtualenvs', 'init'),
+                                                         sys.stdout, os.path.join(self.topsrcdir, 'build',
+                                                                                  'virtualenv_packages.txt'))
 
         return self._virtualenv_manager
 
@@ -490,7 +495,6 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return BuildReader(config, finder=finder)
 
-
     @memoized_property
     def python3(self):
         """Obtain info about a Python 3 executable.
@@ -542,10 +546,10 @@ class MozbuildObject(ProcessExecutionMixin):
 
         if substs['OS_ARCH'] == 'Darwin':
             if substs['MOZ_BUILD_APP'] == 'xulrunner':
-                stem = os.path.join(stem, 'XUL.framework');
+                stem = os.path.join(stem, 'XUL.framework')
             else:
                 stem = os.path.join(stem, substs['MOZ_MACBUNDLE_NAME'], 'Contents',
-                    'MacOS')
+                                    'MacOS')
         elif where == 'default':
             stem = os.path.join(stem, 'bin')
 
@@ -578,13 +582,14 @@ class MozbuildObject(ProcessExecutionMixin):
                     notifier = which.which('terminal-notifier')
                 except which.WhichError:
                     raise Exception('Install terminal-notifier to get '
-                        'a notification when the build finishes.')
+                                    'a notification when the build finishes.')
                 self.run_process([notifier, '-title',
-                    'Mozilla Build System', '-group', 'mozbuild',
-                    '-message', msg], ensure_exit_code=False)
+                                  'Mozilla Build System', '-group', 'mozbuild',
+                                  '-message', msg], ensure_exit_code=False)
             elif sys.platform.startswith('win'):
                 from ctypes import Structure, windll, POINTER, sizeof
                 from ctypes.wintypes import DWORD, HANDLE, WINFUNCTYPE, BOOL, UINT
+
                 class FLASHWINDOW(Structure):
                     _fields_ = [("cbSize", UINT),
                                 ("hwnd", HANDLE),
@@ -604,21 +609,21 @@ class MozbuildObject(ProcessExecutionMixin):
                     return
 
                 params = FLASHWINDOW(sizeof(FLASHWINDOW),
-                                    console,
-                                    FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
+                                     console,
+                                     FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
                 FlashWindowEx(params)
             else:
                 try:
                     notifier = which.which('notify-send')
                 except which.WhichError:
                     raise Exception('Install notify-send (usually part of '
-                        'the libnotify package) to get a notification when '
-                        'the build finishes.')
+                                    'the libnotify package) to get a notification when '
+                                    'the build finishes.')
                 self.run_process([notifier, '--app-name=Mozilla Build System',
-                    'Mozilla Build System', msg], ensure_exit_code=False)
+                                  'Mozilla Build System', msg], ensure_exit_code=False)
         except Exception as e:
             self.log(logging.WARNING, 'notifier-failed', {'error':
-                e.message}, 'Notification center failed: {error}')
+                                                          e.message}, 'Notification center failed: {error}')
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
@@ -646,10 +651,10 @@ class MozbuildObject(ProcessExecutionMixin):
         return PathArgument(arg, self.topsrcdir, self.topobjdir)
 
     def _run_make(self, directory=None, filename=None, target=None, log=True,
-            srcdir=False, allow_parallel=True, line_handler=None,
-            append_env=None, explicit_env=None, ignore_errors=False,
-            ensure_exit_code=0, silent=True, print_directory=True,
-            pass_thru=False, num_jobs=0, keep_going=False):
+                  srcdir=False, allow_parallel=True, line_handler=None,
+                  append_env=None, explicit_env=None, ignore_errors=False,
+                  ensure_exit_code=0, silent=True, print_directory=True,
+                  pass_thru=False, num_jobs=0, keep_going=False):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -791,11 +796,11 @@ class MozbuildObject(ProcessExecutionMixin):
 
         if xcode_lisense_error:
             raise Exception('Xcode requires accepting to the license agreement.\n'
-                'Please run Xcode and accept the license agreement.')
+                            'Please run Xcode and accept the license agreement.')
 
         if self._is_windows():
             raise Exception('Could not find a suitable make implementation.\n'
-                'Please use MozillaBuild 1.9 or newer')
+                            'Please use MozillaBuild 1.9 or newer')
         else:
             raise Exception('Could not find a suitable make implementation.')
 
@@ -820,12 +825,11 @@ class MozbuildObject(ProcessExecutionMixin):
         """
 
         return cls(self.topsrcdir, self.settings, self.log_manager,
-            topobjdir=self.topobjdir)
+                   topobjdir=self.topobjdir)
 
     def _activate_virtualenv(self):
         self.virtualenv_manager.ensure()
         self.virtualenv_manager.activate()
-
 
     def _set_log_level(self, verbose):
         self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
@@ -835,7 +839,8 @@ class MozbuildObject(ProcessExecutionMixin):
         pipenv = os.path.join(self.virtualenv_manager.bin_path, 'pipenv')
         if not os.path.exists(pipenv):
             for package in ['certifi', 'pipenv', 'six', 'virtualenv', 'virtualenv-clone']:
-                path = os.path.normpath(os.path.join(self.topsrcdir, 'third_party/python', package))
+                path = os.path.normpath(os.path.join(
+                    self.topsrcdir, 'third_party/python', package))
                 self.virtualenv_manager.install_pip_package(path, vendored=True)
         return pipenv
 
@@ -861,10 +866,10 @@ class MachCommandBase(MozbuildObject):
         detect_virtualenv_mozinfo = True
         if hasattr(context, 'detect_virtualenv_mozinfo'):
             detect_virtualenv_mozinfo = getattr(context,
-                'detect_virtualenv_mozinfo')
+                                                'detect_virtualenv_mozinfo')
         try:
             dummy = MozbuildObject.from_environment(cwd=context.cwd,
-                detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
+                                                    detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
             topsrcdir = dummy.topsrcdir
             topobjdir = dummy._topobjdir
             if topobjdir:
@@ -881,12 +886,12 @@ class MachCommandBase(MozbuildObject):
             pass
         except ObjdirMismatchException as e:
             print('Ambiguous object directory detected. We detected that '
-                'both %s and %s could be object directories. This is '
-                'typically caused by having a mozconfig pointing to a '
-                'different object directory from the current working '
-                'directory. To solve this problem, ensure you do not have a '
-                'default mozconfig in searched paths.' % (e.objdir1,
-                    e.objdir2))
+                  'both %s and %s could be object directories. This is '
+                  'typically caused by having a mozconfig pointing to a '
+                  'different object directory from the current working '
+                  'directory. To solve this problem, ensure you do not have a '
+                  'default mozconfig in searched paths.' % (e.objdir1,
+                                                            e.objdir2))
             sys.exit(1)
 
         except MozconfigLoadException as e:
@@ -903,7 +908,7 @@ class MachCommandBase(MozbuildObject):
             sys.exit(1)
 
         MozbuildObject.__init__(self, topsrcdir, context.settings,
-            context.log_manager, topobjdir=topobjdir)
+                                context.log_manager, topobjdir=topobjdir)
 
         self._mach_context = context
 

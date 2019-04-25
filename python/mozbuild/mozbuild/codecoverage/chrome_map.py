@@ -26,6 +26,8 @@ from manifest_handler import ChromeManifestHandler
 
 
 _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
+
+
 def generate_pp_info(path, topsrcdir):
     with open(path) as fh:
         # (start, end) -> (included_source, start)
@@ -57,6 +59,8 @@ def generate_pp_info(path, topsrcdir):
 
 # This build backend is assuming the build to have happened already, as it is parsing
 # built preprocessed files to generate data to map them to the original sources.
+
+
 class ChromeMapBackend(CommonBackend):
     def _init(self):
         CommonBackend._init(self)
