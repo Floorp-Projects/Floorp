@@ -7,9 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
-EXPORTS.mozilla.dom.ipc += [
+EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
+]
+
+EXPORTS.mozilla.dom.ipc += [
     'IPCBlobInputStream.h',
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',

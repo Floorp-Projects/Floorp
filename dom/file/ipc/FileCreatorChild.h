@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ipc_FileCreatorChild_h
-#define mozilla_dom_ipc_FileCreatorChild_h
+#ifndef mozilla_dom_FileCreatorChild_h
+#define mozilla_dom_FileCreatorChild_h
 
-#include "mozilla/ipc/PFileCreatorChild.h"
+#include "mozilla/dom/PFileCreatorChild.h"
 
 namespace mozilla {
 namespace dom {
 
-class FileCreatorChild final : public mozilla::ipc::PFileCreatorChild {
-  friend class mozilla::ipc::PFileCreatorChild;
+class FileCreatorChild final : public mozilla::dom::PFileCreatorChild {
+  friend class mozilla::dom::PFileCreatorChild;
 
  public:
   FileCreatorChild();
@@ -33,4 +33,4 @@ class FileCreatorChild final : public mozilla::ipc::PFileCreatorChild {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_ipc_FileCreatorChild_h
+#endif  // mozilla_dom_FileCreatorChild_h
