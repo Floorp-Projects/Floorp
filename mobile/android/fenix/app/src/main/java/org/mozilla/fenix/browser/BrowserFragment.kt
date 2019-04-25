@@ -140,7 +140,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         QuickActionComponent(view.nestedScrollQuickAction, ActionBusFactory.get(this))
 
         val activity = activity as HomeActivity
-        DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity, false)
+        DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
 
         return view
     }
@@ -252,6 +252,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     nestedScrollQuickAction.visibility = View.GONE
                 } else {
                     activity?.exitImmersiveModeIfNeeded()
+                    (activity as HomeActivity).let { activity: HomeActivity ->
+                        DefaultThemeManager.applyStatusBarTheme(
+                            activity.window,
+                            activity.themeManager,
+                            activity
+                        )
+                    }
                     toolbar.visibility = View.VISIBLE
                     nestedScrollQuickAction.visibility = View.VISIBLE
                 }

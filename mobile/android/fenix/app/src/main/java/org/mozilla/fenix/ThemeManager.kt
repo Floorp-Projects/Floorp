@@ -61,33 +61,29 @@ class DefaultThemeManager : ThemeManager {
         fun applyStatusBarTheme(
             window: Window,
             themeManager: ThemeManager,
-            context: Context,
-            onHomeScreen: Boolean = true
+            context: Context
         ) {
             window.statusBarColor = ContextCompat
                 .getColor(
-                    context, DefaultThemeManager
-                        .resolveAttribute(android.R.attr.statusBarColor, context)
+                    context, resolveAttribute(android.R.attr.statusBarColor, context)
                 )
 
             when (themeManager.currentTheme) {
                 ThemeManager.Theme.Normal -> {
-                    val currentNightMode =
-                        context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-                    when (currentNightMode) {
+                    when (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
                         Configuration.UI_MODE_NIGHT_NO -> {
-                            updateLightNavigationBar(onHomeScreen, window, context)
+                            updateLightNavigationBar(window, context)
                         }
                         Configuration.UI_MODE_NIGHT_YES -> {
                             window.decorView.systemUiVisibility =
                                 window.decorView.systemUiVisibility and
                                         View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
                                         View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                            updateNavigationBar(onHomeScreen, window, context)
+                            updateNavigationBar(window, context)
                         }
                         Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                             // We assume light here per Android doc's recommendation
-                            updateLightNavigationBar(onHomeScreen, window, context)
+                            updateLightNavigationBar(window, context)
                         }
                     }
                 }
@@ -95,19 +91,22 @@ class DefaultThemeManager : ThemeManager {
                     window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
                             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                    updateNavigationBar(onHomeScreen, window, context)
+                    updateNavigationBar(window, context)
                 }
             }
         }
 
-        private fun updateLightNavigationBar(onHomeScreen: Boolean, window: Window, context: Context) {
+        private fun updateLightNavigationBar(
+            window: Window,
+            context: Context
+        ) {
             if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
-                updateNavigationBar(onHomeScreen, window, context)
                 window.decorView.systemUiVisibility =
                     window.decorView.systemUiVisibility or
                             View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                updateNavigationBar(window, context)
             } else {
                 window.decorView.systemUiVisibility =
                     window.decorView.systemUiVisibility or
@@ -115,20 +114,14 @@ class DefaultThemeManager : ThemeManager {
             }
         }
 
-        private fun updateNavigationBar(onHomeScreen: Boolean, window: Window, context: Context) {
-            if (onHomeScreen) {
-                window.navigationBarColor = ContextCompat
-                    .getColor(
-                        context, DefaultThemeManager
-                            .resolveAttribute(R.attr.foundation, context)
-                    )
-            } else {
-                window.navigationBarColor = ContextCompat
-                    .getColor(
-                        context, DefaultThemeManager
-                            .resolveAttribute(R.attr.foundation, context)
-                    )
-            }
+        private fun updateNavigationBar(
+            window: Window,
+            context: Context
+        ) {
+            window.navigationBarColor = ContextCompat
+                .getColor(
+                    context, resolveAttribute(R.attr.foundation, context)
+                )
         }
     }
 }
