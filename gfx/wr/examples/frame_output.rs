@@ -70,7 +70,7 @@ impl App {
     fn init_output_document(
         &mut self,
         api: &RenderApi,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
         device_pixel_ratio: f32,
     ) {
         // Generate the external image key that will be used to render the output document to the root document.
@@ -79,14 +79,11 @@ impl App {
         let pipeline_id = PipelineId(1, 0);
         let layer = 1;
         let color = ColorF::new(1., 1., 0., 1.);
-        let document_id = api.add_document(framebuffer_size, layer);
+        let document_id = api.add_document(device_size, layer);
         api.enable_frame_output(document_id, pipeline_id, true);
         api.set_document_view(
             document_id,
-            FramebufferIntRect::new(
-                FramebufferIntPoint::new(0, 1000),
-                framebuffer_size,
-            ),
+            device_size.into(),
             device_pixel_ratio,
         );
 
@@ -95,7 +92,7 @@ impl App {
             pipeline_id,
             content_rect: LayoutRect::new(
                 LayoutPoint::zero(),
-                framebuffer_size.to_f32() / TypedScale::new(device_pixel_ratio),
+                device_size.to_f32() / TypedScale::new(device_pixel_ratio),
             ),
             color,
         };
@@ -151,14 +148,14 @@ impl Example for App {
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
         _txn: &mut Transaction,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         if self.output_document.is_none() {
-            let device_pixel_ratio = framebuffer_size.width as f32 /
+            let device_pixel_ratio = device_size.width as f32 /
                 builder.content_size().width;
-            self.init_output_document(api, FramebufferIntSize::new(200, 200), device_pixel_ratio);
+            self.init_output_document(api, DeviceIntSize::new(200, 200), device_pixel_ratio);
         }
 
         let bounds = (100, 100).to(200, 200);

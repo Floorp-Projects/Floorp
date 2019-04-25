@@ -1935,7 +1935,7 @@ pub struct Renderer {
     /// Notification requests to be fulfilled after rendering.
     notifications: Vec<NotificationRequest>,
 
-    framebuffer_size: Option<FramebufferIntSize>,
+    device_size: Option<DeviceIntSize>,
 
     /// A lazily created texture for the zoom debugging widget.
     zoom_debug_texture: Option<Texture>,
@@ -1999,7 +1999,7 @@ impl Renderer {
         notifier: Box<RenderNotifier>,
         mut options: RendererOptions,
         shaders: Option<&mut WrShaders>,
-        start_size: FramebufferIntSize,
+        start_size: DeviceIntSize,
     ) -> Result<(Self, RenderApiSender), RendererError> {
         HAS_BEEN_INITIALIZED.store(true, Ordering::SeqCst);
 
@@ -2418,7 +2418,7 @@ impl Renderer {
             #[cfg(feature = "replay")]
             owned_external_images: FastHashMap::default(),
             notifications: Vec::new(),
-            framebuffer_size: None,
+            device_size: None,
             zoom_debug_texture: None,
             cursor_position: DeviceIntPoint::zero(),
         };
@@ -2431,8 +2431,8 @@ impl Renderer {
         Ok((renderer, sender))
     }
 
-    pub fn framebuffer_size(&self) -> Option<FramebufferIntSize> {
-        self.framebuffer_size
+    pub fn device_size(&self) -> Option<DeviceIntSize> {
+        self.device_size
     }
 
     /// Update the current position of the debug cursor.
@@ -2497,8 +2497,8 @@ impl Renderer {
                             // (in order to update the texture cache), issue
                             // a render just to off-screen targets.
                             if self.active_documents[pos].1.frame.must_be_drawn() {
-                                let framebuffer_size = self.framebuffer_size;
-                                self.render_impl(framebuffer_size).ok();
+                                let device_size = self.device_size;
+                                self.render_impl(device_size).ok();
                             }
                             self.active_documents[pos].1 = doc;
                         }
@@ -2933,11 +2933,11 @@ impl Renderer {
     /// A Frame is supplied by calling [`generate_frame()`][webrender_api::Transaction::generate_frame].
     pub fn render(
         &mut self,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
     ) -> Result<RenderResults, Vec<RendererError>> {
-        self.framebuffer_size = Some(framebuffer_size);
+        self.device_size = Some(device_size);
 
-        let result = self.render_impl(Some(framebuffer_size));
+        let result = self.render_impl(Some(device_size));
 
         drain_filter(
             &mut self.notifications,
@@ -2953,13 +2953,13 @@ impl Renderer {
         result
     }
 
-    // If framebuffer_size is None, don't render
+    // If device_size is None, don't render
     // to the main frame buffer. This is useful
     // to update texture cache render tasks but
     // avoid doing a full frame render.
     fn render_impl(
         &mut self,
-        framebuffer_size: Option<FramebufferIntSize>,
+        device_size: Option<DeviceIntSize>,
     ) -> Result<RenderResults, Vec<RendererError>> {
         profile_scope!("render");
         let mut results = RenderResults::default();
@@ -3033,13 +3033,13 @@ impl Renderer {
 
                 self.draw_tile_frame(
                     frame,
-                    framebuffer_size,
+                    device_size,
                     cpu_frame_id,
                     &mut results.stats,
                     doc_index == 0,
                 );
 
-                if let Some(_) = framebuffer_size {
+                if let Some(_) = device_size {
                     self.draw_frame_debug_items(&frame.debug_items);
                 }
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
@@ -3063,16 +3063,16 @@ impl Renderer {
             self.active_documents = active_documents;
         });
 
-        if let Some(framebuffer_size) = framebuffer_size {
-            self.draw_render_target_debug(framebuffer_size);
-            self.draw_texture_cache_debug(framebuffer_size);
-            self.draw_gpu_cache_debug(framebuffer_size);
-            self.draw_zoom_debug(framebuffer_size);
+        if let Some(device_size) = device_size {
+            self.draw_render_target_debug(device_size);
+            self.draw_texture_cache_debug(device_size);
+            self.draw_gpu_cache_debug(device_size);
+            self.draw_zoom_debug(device_size);
             self.draw_epoch_debug();
         }
 
         let current_time = precise_time_ns();
-        if framebuffer_size.is_some() {
+        if device_size.is_some() {
             let ns = current_time - self.last_time;
             self.profile_counters.frame_time.set(ns);
         }
@@ -3091,10 +3091,10 @@ impl Renderer {
         }
 
         if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
-            if let Some(framebuffer_size) = framebuffer_size {
+            if let Some(device_size) = device_size {
                 //TODO: take device/pixel ratio into equation?
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
-                    let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
+                    let screen_fraction = 1.0 / device_size.to_f32().area();
                     self.profiler.draw_profile(
                         &frame_profiles,
                         &self.backend_profile_counters,
@@ -3162,7 +3162,7 @@ impl Renderer {
             if let Some(debug_renderer) = self.debug.try_get_mut() {
                 let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
                 let scale = if small_screen { 1.6 } else { 1.0 };
-                debug_renderer.render(&mut self.device, framebuffer_size, scale);
+                debug_renderer.render(&mut self.device, device_size, scale);
             }
             // See comment for texture_resolver.begin_frame() for explanation
             // of why this must be done after all rendering, including debug
@@ -3173,7 +3173,7 @@ impl Renderer {
             self.device.end_frame();
         });
 
-        if framebuffer_size.is_some() {
+        if device_size.is_some() {
             self.last_time = current_time;
         }
 
@@ -4630,7 +4630,7 @@ impl Renderer {
     fn draw_tile_frame(
         &mut self,
         frame: &mut Frame,
-        framebuffer_size: Option<FramebufferIntSize>,
+        device_size: Option<DeviceIntSize>,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
         clear_framebuffer: bool,
@@ -4640,25 +4640,6 @@ impl Renderer {
         if frame.passes.is_empty() {
             frame.has_been_rendered = true;
             return;
-        }
-
-        // TODO(gw): This is a hack / workaround for a resizing glitch. What
-        //           happens is that the framebuffer rect / content origin are
-        //           determined during frame building, rather than at render
-        //           time (which is what used to happen). This means that the
-        //           framebuffer rect/origin can be wrong by the time a frame
-        //           is drawn, if resizing is occurring. This hack just makes
-        //           the framebuffer rect/origin be hard coded to the current
-        //           framebuffer size at render time. It seems like this probably
-        //           breaks some assumptions elsewhere, but it seems to fix the
-        //           bug and I haven't noticed any other issues so far. We will
-        //           need to investigate this further and make a "proper" fix.
-        if let Some(framebuffer_size) = framebuffer_size {
-            frame.framebuffer_rect = FramebufferIntRect::new(
-                FramebufferIntPoint::zero(),
-                framebuffer_size,
-            );
-            frame.content_origin = DeviceIntPoint::zero();
         }
 
         self.device.disable_depth_write();
@@ -4683,11 +4664,11 @@ impl Renderer {
 
             match pass.kind {
                 RenderPassKind::MainFramebuffer(ref target) => {
-                    if let Some(framebuffer_size) = framebuffer_size {
+                    if let Some(device_size) = device_size {
                         stats.color_target_count += 1;
 
                         let offset = frame.content_origin.to_f32();
-                        let size = frame.framebuffer_rect.size.to_f32();
+                        let size = frame.device_rect.size.to_f32();
                         let projection = Transform3D::ortho(
                             offset.x,
                             offset.x + size.width,
@@ -4697,9 +4678,13 @@ impl Renderer {
                             ORTHO_FAR_PLANE,
                         );
 
+                        let fb_scale = TypedScale::<_, _, FramebufferPixel>::new(1i32);
+                        let mut fb_rect = frame.device_rect * fb_scale;
+                        fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
+
                         let draw_target = DrawTarget::Default {
-                            rect: frame.framebuffer_rect,
-                            total_size: framebuffer_size,
+                            rect: fb_rect,
+                            total_size: device_size * fb_scale,
                         };
                         if clear_framebuffer {
                             self.device.bind_draw_target(draw_target);
@@ -4817,12 +4802,12 @@ impl Renderer {
             }
         }
 
-        if let Some(framebuffer_size) = framebuffer_size {
+        if let Some(device_size) = device_size {
             self.draw_frame_debug_items(&frame.debug_items);
-            self.draw_render_target_debug(framebuffer_size);
-            self.draw_texture_cache_debug(framebuffer_size);
-            self.draw_gpu_cache_debug(framebuffer_size);
-            self.draw_zoom_debug(framebuffer_size);
+            self.draw_render_target_debug(device_size);
+            self.draw_texture_cache_debug(device_size);
+            self.draw_gpu_cache_debug(device_size);
+            self.draw_zoom_debug(device_size);
         }
         self.draw_epoch_debug();
 
@@ -4973,7 +4958,7 @@ impl Renderer {
         }
     }
 
-    fn draw_render_target_debug(&mut self, framebuffer_size: FramebufferIntSize) {
+    fn draw_render_target_debug(&mut self, device_size: DeviceIntSize) {
         if !self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
             return;
         }
@@ -4990,7 +4975,7 @@ impl Renderer {
             &mut self.device,
             debug_renderer,
             textures,
-            framebuffer_size,
+            device_size,
             0,
             &|_| [0.0, 1.0, 0.0, 1.0], // Use green for all RTs.
         );
@@ -4998,7 +4983,7 @@ impl Renderer {
 
     fn draw_zoom_debug(
         &mut self,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
     ) {
         if !self.debug_flags.contains(DebugFlags::ZOOM_DBG) {
             return;
@@ -5014,10 +4999,10 @@ impl Renderer {
 
         let source_origin = DeviceIntPoint::new(
             (self.cursor_position.x - source_size.width / 2)
-                .min(framebuffer_size.width - source_size.width)
+                .min(device_size.width - source_size.width)
                 .max(0),
             (self.cursor_position.y - source_size.height / 2)
-                .min(framebuffer_size.height - source_size.height)
+                .min(device_size.height - source_size.height)
                 .max(0),
         );
 
@@ -5028,8 +5013,8 @@ impl Renderer {
 
         let target_rect = DeviceIntRect::new(
             DeviceIntPoint::new(
-                framebuffer_size.width - target_size.width - 64,
-                framebuffer_size.height - target_size.height - 64,
+                device_size.width - target_size.width - 64,
+                device_size.height - target_size.height - 64,
             ),
             target_size,
         );
@@ -5059,7 +5044,7 @@ impl Renderer {
         }
 
         // Copy frame buffer into the zoom texture
-        let read_target = DrawTarget::new_default(framebuffer_size);
+        let read_target = DrawTarget::new_default(device_size);
         self.device.blit_render_target(
             read_target.into(),
             read_target.to_framebuffer_rect(source_rect),
@@ -5085,7 +5070,7 @@ impl Renderer {
         );
     }
 
-    fn draw_texture_cache_debug(&mut self, framebuffer_size: FramebufferIntSize) {
+    fn draw_texture_cache_debug(&mut self, device_size: DeviceIntSize) {
         if !self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
             return;
         }
@@ -5110,7 +5095,7 @@ impl Renderer {
             &mut self.device,
             debug_renderer,
             textures,
-            framebuffer_size,
+            device_size,
             if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) { 544 } else { 0 },
             &select_color,
         );
@@ -5120,15 +5105,15 @@ impl Renderer {
         device: &mut Device,
         debug_renderer: &mut DebugRenderer,
         mut textures: Vec<&Texture>,
-        framebuffer_size: FramebufferIntSize,
+        device_size: DeviceIntSize,
         bottom: i32,
         select_color: &Fn(&Texture) -> [f32; 4],
     ) {
         let mut spacing = 16;
         let mut size = 512;
 
-        let fb_width = framebuffer_size.width as i32;
-        let fb_height = framebuffer_size.height as i32;
+        let fb_width = device_size.width;
+        let fb_height = device_size.height;
         let num_layers: i32 = textures.iter()
             .map(|texture| texture.get_layer_count())
             .sum();
@@ -5198,7 +5183,7 @@ impl Renderer {
                 device.blit_render_target_invert_y(
                     ReadTarget::Texture { texture, layer },
                     src_rect,
-                    DrawTarget::new_default(framebuffer_size),
+                    DrawTarget::new_default(device_size),
                     FramebufferIntRect::from_untyped(&dest_rect),
                 );
                 i += 1;
@@ -5243,7 +5228,7 @@ impl Renderer {
         );
     }
 
-    fn draw_gpu_cache_debug(&mut self, framebuffer_size: FramebufferIntSize) {
+    fn draw_gpu_cache_debug(&mut self, device_size: DeviceIntSize) {
         if !self.debug_flags.contains(DebugFlags::GPU_CACHE_DBG) {
             return;
         }
@@ -5256,7 +5241,7 @@ impl Renderer {
         let (x_off, y_off) = (30f32, 30f32);
         let height = self.gpu_cache_texture.texture
             .as_ref().map_or(0, |t| t.get_dimensions().height)
-            .min(framebuffer_size.height - (y_off as i32) * 2) as usize;
+            .min(device_size.height - (y_off as i32) * 2) as usize;
         debug_renderer.add_quad(
             x_off,
             y_off,
@@ -5291,7 +5276,7 @@ impl Renderer {
         pixels
     }
 
-    pub fn read_gpu_cache(&mut self) -> (FramebufferIntSize, Vec<u8>) {
+    pub fn read_gpu_cache(&mut self) -> (DeviceIntSize, Vec<u8>) {
         let texture = self.gpu_cache_texture.texture.as_ref().unwrap();
         let size = FramebufferIntSize::from_untyped(&texture.get_dimensions().to_untyped());
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
@@ -5304,7 +5289,7 @@ impl Renderer {
         );
         self.device.reset_read_target();
         self.device.end_frame();
-        (size, texels)
+        (texture.get_dimensions(), texels)
     }
 
     // De-initialize the Renderer safely, assuming the GL is still alive and active.
@@ -5704,7 +5689,7 @@ struct PlainTexture {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderer {
-    framebuffer_size: Option<FramebufferIntSize>,
+    device_size: Option<DeviceIntSize>,
     gpu_cache: PlainTexture,
     gpu_cache_frame_id: FrameId,
     textures: FastHashMap<CacheTextureId, PlainTexture>,
@@ -5939,7 +5924,7 @@ impl Renderer {
             info!("saving GPU cache");
             self.update_gpu_cache(); // flush pending updates
             let mut plain_self = PlainRenderer {
-                framebuffer_size: self.framebuffer_size,
+                device_size: self.device_size,
                 gpu_cache: Self::save_texture(
                     &self.gpu_cache_texture.texture.as_ref().unwrap(),
                     "gpu", &config.root, &mut self.device,
@@ -6002,7 +5987,7 @@ impl Renderer {
 
         if let Some(renderer) = CaptureConfig::deserialize::<PlainRenderer, _>(&root, "renderer") {
             info!("loading cached textures");
-            self.framebuffer_size = renderer.framebuffer_size;
+            self.device_size = renderer.device_size;
             self.device.begin_frame();
 
             for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {
