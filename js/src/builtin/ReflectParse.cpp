@@ -2538,7 +2538,7 @@ bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
                            .head()
                            ->as<UnaryNode>()
                            .kid()
-                           ->as<AssignmentNode>()
+                           ->as<BinaryNode>()
                            .right();
     // RawUndefinedExpr is the node we use for "there is no initializer". If one
     // writes, literally, `x = undefined;`, it will not be a RawUndefinedExpr
