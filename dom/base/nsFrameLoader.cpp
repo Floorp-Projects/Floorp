@@ -3235,6 +3235,12 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
 already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
     double aX, double aY, double aW, double aH, double aScale,
     const nsAString& aBackgroundColor, mozilla::ErrorResult& aRv) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!XRE_IsParentProcess()) {
+    aRv = NS_ERROR_FAILURE;
+    return nullptr;
+  }
+
   RefPtr<nsIGlobalObject> global = GetOwnerContent()->GetOwnerGlobal();
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
