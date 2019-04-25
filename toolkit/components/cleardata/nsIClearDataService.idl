@@ -195,6 +195,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_STORAGE_ACCESS = 1 << 20;
 
   /**
+   * Clear Cert Exceptions.
+   */
+  const uint32_t CLEAR_CERT_EXCEPTIONS = 1 << 20;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFF;
@@ -223,7 +228,7 @@ interface nsIClearDataService : nsISupports
     CLEAR_COOKIES | CLEAR_EME | CLEAR_PLUGIN_DATA | CLEAR_DOWNLOADS | CLEAR_PASSWORDS |
     CLEAR_PERMISSIONS | CLEAR_DOM_STORAGES | CLEAR_CONTENT_PREFERENCES |
     CLEAR_PREDICTOR_NETWORK_DATA | CLEAR_DOM_PUSH_NOTIFICATIONS |
-    CLEAR_SECURITY_SETTINGS | CLEAR_REPORTS;
+    CLEAR_SECURITY_SETTINGS | CLEAR_REPORTS | CLEAR_CERT_EXCEPTIONS;
 };
 
 /**
