@@ -1900,7 +1900,6 @@ void MediaStream::IncrementSuspendCount() {
 void MediaStream::DecrementSuspendCount() {
   NS_ASSERTION(mSuspendedCount > 0, "Suspend count underrun");
   --mSuspendedCount;
-
   if (mSuspendedCount == 0) {
     for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
       mConsumers[i]->Resumed();
@@ -3574,13 +3573,14 @@ void MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream) {
 
 void MediaStreamGraphImpl::IncrementSuspendCount(MediaStream* aStream) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  if (!aStream->IsSuspended()) {
+  bool wasSuspended = aStream->IsSuspended();
+  aStream->IncrementSuspendCount();
+  if (!wasSuspended && aStream->IsSuspended()) {
     MOZ_ASSERT(mStreams.Contains(aStream));
     mStreams.RemoveElement(aStream);
     mSuspendedStreams.AppendElement(aStream);
     SetStreamOrderDirty();
   }
-  aStream->IncrementSuspendCount();
 }
 
 void MediaStreamGraphImpl::DecrementSuspendCount(MediaStream* aStream) {
