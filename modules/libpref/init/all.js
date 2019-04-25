@@ -729,6 +729,9 @@ pref("apz.danger_zone_y", 100);
 pref("apz.disable_for_scroll_linked_effects", false);
 pref("apz.displayport_expiry_ms", 15000);
 pref("apz.enlarge_displayport_when_clipped", false);
+pref("apz.fixed-margin-override.enabled", false);  // test only
+pref("apz.fixed-margin-override.bottom", 0);       // test only
+pref("apz.fixed-margin-override.top", 0);          // test only
 pref("apz.fling_accel_base_mult", "1.0");
 pref("apz.fling_accel_interval_ms", 500);
 pref("apz.fling_accel_min_velocity", "1.5");

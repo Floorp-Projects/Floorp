@@ -1084,7 +1084,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                         metrics);
                   }
                 }
-                fixedLayerMargins = mFixedLayerMargins;
+                fixedLayerMargins = GetFixedLayerMargins();
               }
             }
 #else
@@ -1407,9 +1407,9 @@ bool AsyncCompositionManager::TransformShadowTree(
     if (ApplyAsyncContentTransformToTree(root, &foundRoot)) {
 #if defined(MOZ_WIDGET_ANDROID)
       MOZ_ASSERT(foundRoot);
-      if (foundRoot && mFixedLayerMargins != ScreenMargin()) {
+      if (foundRoot && GetFixedLayerMargins() != ScreenMargin()) {
         MoveScrollbarForLayerMargin(root, mRootScrollableId,
-                                    mFixedLayerMargins);
+                                    GetFixedLayerMargins());
       }
 #endif
     }
@@ -1440,6 +1440,14 @@ void AsyncCompositionManager::SetFixedLayerMargins(ScreenIntCoord aTop,
                                                    ScreenIntCoord aBottom) {
   mFixedLayerMargins.top = aTop;
   mFixedLayerMargins.bottom = aBottom;
+}
+ScreenMargin AsyncCompositionManager::GetFixedLayerMargins() const {
+  ScreenMargin result = mFixedLayerMargins;
+  if (gfxPrefs::APZFixedMarginOverrideEnabled()) {
+    result.top = gfxPrefs::APZFixedMarginOverrideTop();
+    result.bottom = gfxPrefs::APZFixedMarginOverrideBottom();
+  }
+  return result;
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
