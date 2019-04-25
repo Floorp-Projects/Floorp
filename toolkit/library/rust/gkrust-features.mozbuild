@@ -11,6 +11,8 @@ if CONFIG['MOZ_DEBUG']:
 
 if CONFIG['MOZ_BUILD_WEBRENDER']:
     gkrust_features += ['quantum_render']
+    if CONFIG['MOZ_WEBRENDER_DEBUGGER']:
+        gkrust_features += ['webrender_debugger']
 
 if CONFIG['MOZ_PULSEAUDIO']:
     gkrust_features += ['cubeb_pulse_rust']

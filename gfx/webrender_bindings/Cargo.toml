@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
+[features]
+webrender_debugger = ["webrender/debugger"]
+
 [dependencies]
 rayon = "1"
 num_cpus = "1.7.0"
