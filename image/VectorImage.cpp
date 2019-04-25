@@ -625,13 +625,12 @@ VectorImage::GetIntrinsicSize(nsSize* aSize) {
 
   *aSize = nsSize(-1, -1);
   IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
-  if (rfSize.width.GetUnit() == eStyleUnit_Coord) {
-    aSize->width = rfSize.width.GetCoordValue();
+  if (rfSize.width) {
+    aSize->width = *rfSize.width;
   }
-  if (rfSize.height.GetUnit() == eStyleUnit_Coord) {
-    aSize->height = rfSize.height.GetCoordValue();
+  if (rfSize.height) {
+    aSize->height = *rfSize.height;
   }
-
   return NS_OK;
 }
 

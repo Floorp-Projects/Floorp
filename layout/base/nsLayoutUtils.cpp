@@ -4456,15 +4456,8 @@ static Maybe<nsSize> MaybeComputeObjectFitNoneSize(
   // if its intrinsic dimensions were given as the specified size."
   //
   // So, first we check if we have an intrinsic height and/or width:
-  Maybe<nscoord> specifiedWidth;
-  if (aIntrinsicSize.width.GetUnit() == eStyleUnit_Coord) {
-    specifiedWidth.emplace(aIntrinsicSize.width.GetCoordValue());
-  }
-
-  Maybe<nscoord> specifiedHeight;
-  if (aIntrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
-    specifiedHeight.emplace(aIntrinsicSize.height.GetCoordValue());
-  }
+  const Maybe<nscoord>& specifiedWidth = aIntrinsicSize.width;
+  const Maybe<nscoord>& specifiedHeight = aIntrinsicSize.height;
 
   Maybe<nsSize> noneSize;  // (the value we'll return)
   if (specifiedWidth || specifiedHeight) {
@@ -5380,10 +5373,10 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
 #endif
     if (MOZ_UNLIKELY(!isInlineAxis)) {
       IntrinsicSize intrinsicSize = aFrame->GetIntrinsicSize();
-      const nsStyleCoord intrinsicBCoord =
+      const auto& intrinsicBSize =
           horizontalAxis ? intrinsicSize.width : intrinsicSize.height;
-      if (intrinsicBCoord.GetUnit() == eStyleUnit_Coord) {
-        result = intrinsicBCoord.GetCoordValue();
+      if (intrinsicBSize) {
+        result = *intrinsicBSize;
       } else {
         // We don't have an intrinsic bsize and we need aFrame's block-dir size.
         if (aFlags & BAIL_IF_REFLOW_NEEDED) {
