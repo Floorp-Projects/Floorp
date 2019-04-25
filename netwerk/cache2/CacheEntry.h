@@ -74,6 +74,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult GetOnStopTime(uint64_t *aOnStopTime);
   nsresult SetNetworkTimes(uint64_t onStartTime, uint64_t onStopTime);
   nsresult SetContentType(uint8_t aContentType);
+  nsresult AddBaseDomainAccess(uint32_t aSiteID);
   nsresult ForceValidFor(uint32_t aSecondsToTheFuture);
   nsresult GetIsForcedValid(bool *aIsForcedValid);
   nsresult OpenInputStream(int64_t offset, nsIInputStream **_retval);
@@ -467,6 +468,9 @@ class CacheEntryHandle final : public nsICacheEntry {
   }
   NS_IMETHOD SetContentType(uint8_t contentType) override {
     return mEntry->SetContentType(contentType);
+  }
+  NS_IMETHOD AddBaseDomainAccess(uint32_t aSiteID) override {
+    return mEntry->AddBaseDomainAccess(aSiteID);
   }
   NS_IMETHOD ForceValidFor(uint32_t aSecondsToTheFuture) override {
     return mEntry->ForceValidFor(aSecondsToTheFuture);

@@ -102,6 +102,7 @@ class CacheFile final : public CacheFileChunkListener,
   nsresult GetFrecency(uint32_t *_retval);
   nsresult SetNetworkTimes(uint64_t aOnStartTime, uint64_t aOnStopTime);
   nsresult SetContentType(uint8_t aContentType);
+  nsresult AddBaseDomainAccess(uint32_t aSiteID);
   nsresult GetOnStartTime(uint64_t *_retval);
   nsresult GetOnStopTime(uint64_t *_retval);
   nsresult GetLastModified(uint32_t *_retval);
