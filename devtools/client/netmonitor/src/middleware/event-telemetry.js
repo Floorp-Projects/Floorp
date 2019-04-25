@@ -12,6 +12,7 @@ const {
   SET_REQUEST_FILTER_TEXT,
   SELECT_DETAILS_PANEL_TAB,
   SEND_CUSTOM_REQUEST,
+  ENABLE_PERSISTENT_LOGS,
 } = require("../constants");
 
 const {
@@ -29,6 +30,10 @@ function eventTelemetryMiddleware(connector, telemetry) {
     const res = next(action);
     const toolbox = gDevTools.getToolbox(connector.getTabTarget());
     if (!toolbox) {
+      return res;
+    }
+
+    if (action.skipTelemetry) {
       return res;
     }
 
@@ -75,6 +80,15 @@ function eventTelemetryMiddleware(connector, telemetry) {
       throttlingChange({
         action,
         telemetry,
+        sessionId,
+      });
+    }
+
+    // Record telemetry event when log persistence changes
+    if (action.type == ENABLE_PERSISTENT_LOGS) {
+      persistenceChange({
+        telemetry,
+        state,
         sessionId,
       });
     }
@@ -154,6 +168,18 @@ function throttlingChange({action, telemetry, sessionId}) {
     "mode": action.profile,
     "session_id": sessionId,
   });
+}
+
+/**
+ * This helper function is executed when log persistence is changed.
+ * It's responsible for recording "persist_changed" telemetry event.
+ */
+function persistenceChange({telemetry, state, sessionId}) {
+  telemetry.recordEvent("persist_changed", "netmonitor",
+    String(state.ui.persistentLogsEnabled),
+    {
+      "session_id": sessionId,
+    });
 }
 
 module.exports = eventTelemetryMiddleware;

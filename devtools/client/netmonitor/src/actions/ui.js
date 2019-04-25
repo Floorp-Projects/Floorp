@@ -61,10 +61,11 @@ function resizeNetworkDetails(width, height) {
  *
  * @param {boolean} enabled - expected persistent logs enabled state
  */
-function enablePersistentLogs(enabled) {
+function enablePersistentLogs(enabled, skipTelemetry = false) {
   return {
     type: ENABLE_PERSISTENT_LOGS,
     enabled,
+    skipTelemetry,
   };
 }
 
