@@ -7,8 +7,9 @@
 #include "Zip.h"
 #include "mozilla/RefPtr.h"
 
-extern "C" void report_mapping() {}
-extern "C" void delete_mapping() {}
+#include "gtest/gtest.h"
+
+Logging Logging::Singleton;
 
 /**
  * ZIP_DATA(FOO, "foo") defines the variables FOO and FOO_SIZE.
@@ -60,33 +61,23 @@ const char *test_entries[] = {"baz", "foo", "bar", "qux"};
 ZIP_DATA(NO_CENTRAL_DIR_ZIP, "no_central_dir.zip");
 const char *no_central_dir_entries[] = {"a", "b", "c", "d"};
 
-int main(int argc, char *argv[]) {
+TEST(Zip, TestZip)
+{
   Zip::Stream s;
   RefPtr<Zip> z = Zip::Create((void *)TEST_ZIP, TEST_ZIP_SIZE);
   for (auto& entry : test_entries) {
-    if (!z->GetStream(entry, &s)) {
-      fprintf(stderr,
-              "TEST-UNEXPECTED-FAIL | TestZip | test.zip: Couldn't get entry "
-              "\"%s\"\n",
-              entry);
-      return 1;
-    }
+    ASSERT_TRUE(z->GetStream(entry, &s))
+    << "Could not get entry \"" << entry << "\"";
   }
-  fprintf(stderr, "TEST-PASS | TestZip | test.zip could be accessed fully\n");
+}
 
-  z = Zip::Create((void *)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
+TEST(Zip, NoCentralDir)
+{
+  Zip::Stream s;
+  RefPtr<Zip> z =
+      Zip::Create((void *)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
   for (auto& entry : no_central_dir_entries) {
-    if (!z->GetStream(entry, &s)) {
-      fprintf(stderr,
-              "TEST-UNEXPECTED-FAIL | TestZip | no_central_dir.zip: Couldn't "
-              "get entry \"%s\"\n",
-              entry);
-      return 1;
-    }
+    ASSERT_TRUE(z->GetStream(entry, &s))
+    << "Could not get entry \"" << entry << "\"";
   }
-  fprintf(
-      stderr,
-      "TEST-PASS | TestZip | no_central_dir.zip could be accessed in order\n");
-
-  return 0;
 }
