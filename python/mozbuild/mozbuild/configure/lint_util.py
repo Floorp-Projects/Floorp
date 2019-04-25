@@ -46,7 +46,7 @@ def disassemble_as_iter(co):
         c = code[i]
         op = ord(c)
         opname = dis.opname[op]
-        i += 1;
+        i += 1
         if op >= dis.HAVE_ARGUMENT:
             arg = ord(code[i]) + ord(code[i + 1]) * 256 + extended_arg
             extended_arg = 0

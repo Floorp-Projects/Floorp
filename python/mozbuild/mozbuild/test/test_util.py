@@ -108,6 +108,7 @@ class TestFileAvoidWrite(unittest.TestCase):
             '''MockedOpen extension to raise an exception if something
             attempts to write in an opened file.
             '''
+
             def __call__(self, name, mode):
                 if 'w' in mode:
                     raise Exception('Unexpected open with write mode')
@@ -161,6 +162,7 @@ class TestFileAvoidWrite(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
+
 class TestResolveTargetToMake(unittest.TestCase):
     def setUp(self):
         self.topobjdir = data_path
@@ -195,20 +197,25 @@ class TestResolveTargetToMake(unittest.TestCase):
     def test_regular_file(self):
         self.assertResolve('test-dir/with/file', ('test-dir/with', 'file'))
         self.assertResolve('test-dir/with/without/file', ('test-dir/with', 'without/file'))
-        self.assertResolve('test-dir/with/without/with/file', ('test-dir/with/without/with', 'file'))
+        self.assertResolve('test-dir/with/without/with/file',
+                           ('test-dir/with/without/with', 'file'))
 
         self.assertResolve('test-dir/without/file', ('test-dir', 'without/file'))
         self.assertResolve('test-dir/without/with/file', ('test-dir/without/with', 'file'))
-        self.assertResolve('test-dir/without/with/without/file', ('test-dir/without/with', 'without/file'))
+        self.assertResolve('test-dir/without/with/without/file',
+                           ('test-dir/without/with', 'without/file'))
 
     def test_Makefile(self):
         self.assertResolve('test-dir/with/Makefile', ('test-dir', 'with/Makefile'))
         self.assertResolve('test-dir/with/without/Makefile', ('test-dir/with', 'without/Makefile'))
-        self.assertResolve('test-dir/with/without/with/Makefile', ('test-dir/with', 'without/with/Makefile'))
+        self.assertResolve('test-dir/with/without/with/Makefile',
+                           ('test-dir/with', 'without/with/Makefile'))
 
         self.assertResolve('test-dir/without/Makefile', ('test-dir', 'without/Makefile'))
         self.assertResolve('test-dir/without/with/Makefile', ('test-dir', 'without/with/Makefile'))
-        self.assertResolve('test-dir/without/with/without/Makefile', ('test-dir/without/with', 'without/Makefile'))
+        self.assertResolve('test-dir/without/with/without/Makefile',
+                           ('test-dir/without/with', 'without/Makefile'))
+
 
 class TestHierarchicalStringList(unittest.TestCase):
     def setUp(self):
@@ -224,18 +231,18 @@ class TestHierarchicalStringList(unittest.TestCase):
     def test_exports_subdir(self):
         self.assertEqual(self.EXPORTS._children, {})
         self.EXPORTS.foo += ["foo.h"]
-        self.assertItemsEqual(self.EXPORTS._children, {"foo" : True})
+        self.assertItemsEqual(self.EXPORTS._children, {"foo": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.EXPORTS.bar += ["bar.h"]
         self.assertItemsEqual(self.EXPORTS._children,
-                              {"foo" : True, "bar" : True})
+                              {"foo": True, "bar": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.assertEqual(self.EXPORTS.bar._strings, ["bar.h"])
 
     def test_exports_multiple_subdir(self):
         self.EXPORTS.foo.bar = ["foobar.h"]
-        self.assertItemsEqual(self.EXPORTS._children, {"foo" : True})
-        self.assertItemsEqual(self.EXPORTS.foo._children, {"bar" : True})
+        self.assertItemsEqual(self.EXPORTS._children, {"foo": True})
+        self.assertItemsEqual(self.EXPORTS.foo._children, {"bar": True})
         self.assertItemsEqual(self.EXPORTS.foo.bar._children, {})
         self.assertEqual(self.EXPORTS._strings, [])
         self.assertEqual(self.EXPORTS.foo._strings, [])
@@ -865,6 +872,7 @@ class TestMisc(unittest.TestCase):
             }),
             'before abc between a b c after'
         )
+
 
 class TestEnumString(unittest.TestCase):
     def test_string(self):

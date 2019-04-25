@@ -7,8 +7,10 @@ from __future__ import print_function
 import sys
 import subprocess
 
+
 def make_unzip(package):
     subprocess.check_call(['unzip', package])
+
 
 def main(args):
     if len(args) != 1:
@@ -18,6 +20,7 @@ def main(args):
     else:
         make_unzip(args[0])
         return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

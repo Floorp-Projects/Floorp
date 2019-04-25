@@ -34,6 +34,7 @@ hour. Backup programs that rely on this feature may be affected.
 https://technet.microsoft.com/en-us/library/cc785435.aspx
 '''
 
+
 class Doctor(object):
     def __init__(self, srcdir, objdir, fix):
         self.srcdir = mozpath.normpath(srcdir)
@@ -69,7 +70,7 @@ class Doctor(object):
                 denied = True
         if denied:
             print('run "mach doctor --fix" AS ADMIN to re-attempt fixing your system')
-        elif False: # elif fixable:
+        elif False:  # elif fixable:
             print('run "mach doctor --fix" as admin to attempt fixing your system')
         return int(not good)
 
@@ -202,7 +203,7 @@ class Doctor(object):
                 status = 'GOOD'
                 desc = 'lastaccess disabled systemwide'
             elif disablelastaccess == 0:
-                if False: # if self.fix:
+                if False:  # if self.fix:
                     choice = self.prompt_bool(DISABLE_LASTACCESS_WIN)
                     if not choice:
                         return {'status': 'BAD, NOT FIXED',

@@ -82,7 +82,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             self.assertEqual(get_value(environ={'MOZILLA_OFFICIAL': 1}), None)
 
             self.assertEqual(get_value(['--enable-release'],
-                             environ={'MOZILLA_OFFICIAL': 1}), None)
+                                       environ={'MOZILLA_OFFICIAL': 1}), None)
 
             with self.assertRaises(InvalidOptionError):
                 get_value(['--disable-release'],

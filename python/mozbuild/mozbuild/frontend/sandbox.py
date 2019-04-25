@@ -53,6 +53,7 @@ class SandboxExecutionError(SandboxError):
     This is a simple container exception. It's purpose is to capture state
     so something else can report on it.
     """
+
     def __init__(self, file_stack, exc_type, exc_value, trace):
         SandboxError.__init__(self, file_stack)
 
@@ -69,6 +70,7 @@ class SandboxLoadError(SandboxError):
     a file. If so, the file_stack will be non-empty and the file that caused
     the load will be on top of the stack.
     """
+
     def __init__(self, file_stack, trace, illegal_path=None, read_error=None):
         SandboxError.__init__(self, file_stack)
 
@@ -155,7 +157,7 @@ class Sandbox(dict):
             source = self._finder.get(path).read()
         except Exception as e:
             raise SandboxLoadError(self._context.source_stack,
-                sys.exc_info()[2], read_error=path)
+                                   sys.exc_info()[2], read_error=path)
 
         self.exec_source(source, path)
 
@@ -288,7 +290,7 @@ class Sandbox(dict):
                 raise KeyError('global_ns', 'reassign', key)
 
             if (key not in self._context and isinstance(value, (list, dict))
-               and not value):
+                and not value):
                 raise KeyError('Variable %s assigned an empty value.' % key)
 
             self._context[key] = value

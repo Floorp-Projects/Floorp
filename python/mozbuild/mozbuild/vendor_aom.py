@@ -19,6 +19,7 @@ import sys
 import tarfile
 from urlparse import urlparse
 
+
 class VendorAOM(MozbuildObject):
     def upstream_snapshot(self, revision):
         '''Construct a url for a tarball snapshot of the given revision.'''
@@ -137,7 +138,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         mozfile.remove(mozpath.join(target, '.gitattributes'))
         mozfile.remove(mozpath.join(target, '.gitignore'))
         mozfile.remove(mozpath.join(target, 'build', '.gitattributes'))
-        mozfile.remove(mozpath.join(target, 'build' ,'.gitignore'))
+        mozfile.remove(mozpath.join(target, 'build', '.gitignore'))
 
     def generate_sources(self, target):
         '''

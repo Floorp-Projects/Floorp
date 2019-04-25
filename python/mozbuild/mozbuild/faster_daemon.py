@@ -108,8 +108,8 @@ class Daemon(object):
                   ['name', '.hg', 'wholename'],
                   ['dirname', '.git'],
                   ['name', '.git', 'wholename'],
+                  ],
                  ],
-                ],
             ],
             'fields': ['name'],
         }
