@@ -832,10 +832,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   enum : uint32_t {
     blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
   };
-  if ((aReason != eOpenerAfterUserInteraction ||
-       nsContentUtils::IsURIInPrefList(trackingURI,
-                                       "privacy.restrict3rdpartystorage."
-                                       "userInteractionRequiredForHosts")) &&
+  if (nsContentUtils::IsURIInPrefList(trackingURI,
+                                      "privacy.restrict3rdpartystorage."
+                                      "userInteractionRequiredForHosts") &&
       !HasUserInteraction(trackingPrincipal)) {
     LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
