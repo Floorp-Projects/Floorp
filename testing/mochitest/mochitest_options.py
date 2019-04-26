@@ -824,6 +824,11 @@ class MochitestArguments(ArgumentContainer):
         if options.nested_oop:
             options.e10s = True
 
+        # The a11y and chrome flavors can't run with e10s.
+        if options.flavor in ('a11y', 'chrome') and options.e10s:
+            parser.error("mochitest-{} does not support e10s, try again with "
+                         "--disable-e10s.".format(options.flavor))
+
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
             "tab": options.defaultLeakThreshold,

@@ -1066,7 +1066,6 @@ class MochitestDesktop(object):
     def setTestRoot(self, options):
         if options.flavor != 'plain':
             self.testRoot = options.flavor
-
         else:
             self.testRoot = self.TEST_PATH
         self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
@@ -2569,11 +2568,6 @@ toolbar#nav-bar {
     def runTests(self, options):
         """ Prepare, configure, run tests and cleanup """
         self.extraPrefs = parse_preferences(options.extraPrefs)
-
-        # a11y and chrome tests don't run with e10s enabled in CI. Need to set
-        # this here since |mach mochitest| sets the flavor after argument parsing.
-        if options.flavor in ('a11y', 'chrome'):
-            options.e10s = False
 
         # for test manifest parsing.
         mozinfo.update({
