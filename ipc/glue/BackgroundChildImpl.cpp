@@ -25,12 +25,12 @@
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/PendingIPCBlobChild.h"
 #include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
@@ -394,20 +394,21 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
   return true;
 }
 
-PIPCBlobInputStreamChild* BackgroundChildImpl::AllocPIPCBlobInputStreamChild(
-    const nsID& aID, const uint64_t& aSize) {
+dom::PIPCBlobInputStreamChild*
+BackgroundChildImpl::AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                                   const uint64_t& aSize) {
   // IPCBlobInputStreamChild is refcounted. Here it's created and in
   // DeallocPIPCBlobInputStreamChild is released.
 
-  RefPtr<mozilla::dom::IPCBlobInputStreamChild> actor =
-      new mozilla::dom::IPCBlobInputStreamChild(aID, aSize);
+  RefPtr<dom::IPCBlobInputStreamChild> actor =
+      new dom::IPCBlobInputStreamChild(aID, aSize);
   return actor.forget().take();
 }
 
 bool BackgroundChildImpl::DeallocPIPCBlobInputStreamChild(
-    PIPCBlobInputStreamChild* aActor) {
-  RefPtr<mozilla::dom::IPCBlobInputStreamChild> actor =
-      dont_AddRef(static_cast<mozilla::dom::IPCBlobInputStreamChild*>(aActor));
+    dom::PIPCBlobInputStreamChild* aActor) {
+  RefPtr<dom::IPCBlobInputStreamChild> actor =
+      dont_AddRef(static_cast<dom::IPCBlobInputStreamChild*>(aActor));
   return true;
 }
 
