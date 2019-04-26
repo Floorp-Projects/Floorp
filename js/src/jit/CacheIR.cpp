@@ -6136,12 +6136,12 @@ void GetIntrinsicIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool GetIntrinsicIRGenerator::tryAttachStub() {
+AttachDecision GetIntrinsicIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
   writer.loadValueResult(val_);
   writer.returnFromIC();
   trackAttached("GetIntrinsic");
-  return true;
+  return AttachDecision::Attach;
 }
 
 UnaryArithIRGenerator::UnaryArithIRGenerator(JSContext* cx, HandleScript script,
