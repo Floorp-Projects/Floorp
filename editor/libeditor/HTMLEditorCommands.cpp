@@ -3,13 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdio.h>  // for printf
+#include "mozilla/EditorCommands.h"
 
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/EditorBase.h"  // for EditorBase
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditor.h"  // for HTMLEditor
-#include "mozilla/HTMLEditorCommands.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCommandParams.h"          // for nsCommandParams, etc
@@ -602,13 +601,8 @@ MultiStateCommandBase::IsCommandEnabled(const char* aCommandName,
 NS_IMETHODIMP
 MultiStateCommandBase::DoCommand(const char* aCommandName,
                                  nsISupports* refCon) {
-#ifdef DEBUG
-  printf(
-      "who is calling MultiStateCommandBase::DoCommand \
-          (no implementation)? %s\n",
-      aCommandName);
-#endif
-
+  NS_WARNING(
+      "who is calling MultiStateCommandBase::DoCommand (no implementation)?");
   return NS_OK;
 }
 
