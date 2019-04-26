@@ -104,7 +104,7 @@ class NeckoParent : public PNeckoParent {
   bool DeallocPStunAddrsRequestParent(PStunAddrsRequestParent* aActor);
 
   PWebrtcProxyChannelParent* AllocPWebrtcProxyChannelParent(
-      const PBrowserOrId& aBrowser);
+      const TabId& aTabId);
   bool DeallocPWebrtcProxyChannelParent(PWebrtcProxyChannelParent* aActor);
 
   PAltDataOutputStreamParent* AllocPAltDataOutputStreamParent(

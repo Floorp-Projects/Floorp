@@ -8,12 +8,9 @@
 #define mozilla_net_WebrtcProxyChannelChild_h
 
 #include "mozilla/net/PWebrtcProxyChannelChild.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
-
-namespace dom {
-class PBrowserOrId;
-}  // namespace dom
 
 namespace net {
 
@@ -32,8 +29,8 @@ class WebrtcProxyChannelChild : public PWebrtcProxyChannelChild {
   explicit WebrtcProxyChannelChild(WebrtcProxyChannelCallback* aProxyCallbacks);
 
   void AsyncOpen(const nsCString& aHost, const int& aPort,
-                 const dom::PBrowserOrId& aBrowser,
-                 nsIPrincipal* aLoadingPrincipal, const nsCString& aAlpn);
+                 const net::LoadInfoArgs& aArgs, const nsCString& aAlpn,
+                 const dom::TabId& aTabId);
 
   void AddIPDLReference() { AddRef(); }
   void ReleaseIPDLReference() { Release(); }

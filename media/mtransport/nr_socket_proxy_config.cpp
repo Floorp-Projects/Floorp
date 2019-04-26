@@ -6,31 +6,36 @@
 
 #include "nr_socket_proxy_config.h"
 
-#include "mozilla/dom/PBrowserOrId.h"
+#include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 namespace mozilla {
 
 class NrSocketProxyConfig::Private {
  public:
-  dom::PBrowserOrId mBrowser;
+  uint64_t mTabId;
   nsCString mAlpn;
+  net::LoadInfoArgs mLoadInfoArgs;
 };
 
-NrSocketProxyConfig::NrSocketProxyConfig(const dom::PBrowserOrId& aBrowser,
-                                         const nsCString& aAlpn)
-    : mPrivate(new Private({aBrowser, aAlpn})) {}
+NrSocketProxyConfig::NrSocketProxyConfig(uint64_t aTabId,
+                                         const nsCString& aAlpn,
+                                         const net::LoadInfoArgs& aArgs)
+    : mPrivate(new Private({aTabId, aAlpn, aArgs})) {}
 
 NrSocketProxyConfig::NrSocketProxyConfig(NrSocketProxyConfig&& aOrig)
     : mPrivate(std::move(aOrig.mPrivate)) {}
 
 NrSocketProxyConfig::~NrSocketProxyConfig() {}
 
-const dom::PBrowserOrId& NrSocketProxyConfig::GetBrowser() const {
-  return mPrivate->mBrowser;
-}
+uint64_t NrSocketProxyConfig::GetTabId() const { return mPrivate->mTabId; }
 
 const nsCString& NrSocketProxyConfig::GetAlpn() const {
   return mPrivate->mAlpn;
+}
+
+const net::LoadInfoArgs& NrSocketProxyConfig::GetLoadInfoArgs() const {
+  return mPrivate->mLoadInfoArgs;
 }
 
 }  // namespace mozilla

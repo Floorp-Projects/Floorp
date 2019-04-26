@@ -33,8 +33,7 @@ class NeckoChild : public PNeckoChild {
   PStunAddrsRequestChild* AllocPStunAddrsRequestChild();
   bool DeallocPStunAddrsRequestChild(PStunAddrsRequestChild* aActor);
 
-  PWebrtcProxyChannelChild* AllocPWebrtcProxyChannelChild(
-      const PBrowserOrId& browser);
+  PWebrtcProxyChannelChild* AllocPWebrtcProxyChannelChild(const TabId& tabId);
   bool DeallocPWebrtcProxyChannelChild(PWebrtcProxyChannelChild* aActor);
 
   PAltDataOutputStreamChild* AllocPAltDataOutputStreamChild(

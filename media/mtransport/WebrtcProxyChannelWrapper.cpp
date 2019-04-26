@@ -7,6 +7,8 @@
 #include "WebrtcProxyChannelWrapper.h"
 
 #include "mozilla/net/WebrtcProxyChannelChild.h"
+#include "ipc/WebrtcProxyChannel.h"
+#include "mozilla/LoadInfo.h"
 
 #include "nsIEventTarget.h"
 #include "nsNetCID.h"
@@ -54,9 +56,9 @@ void WebrtcProxyChannelWrapper::AsyncOpen(
 
   MOZ_ASSERT(!mWebrtcProxyChannel, "wrapper already open");
   mWebrtcProxyChannel = new WebrtcProxyChannelChild(this);
-  mWebrtcProxyChannel->AsyncOpen(aHost, aPort, aConfig->GetBrowser(),
-                                 nsContentUtils::GetSystemPrincipal(),
-                                 aConfig->GetAlpn());
+  mWebrtcProxyChannel->AsyncOpen(aHost, aPort, aConfig->GetLoadInfoArgs(),
+                                 aConfig->GetAlpn(),
+                                 dom::TabId(aConfig->GetTabId()));
 }
 
 void WebrtcProxyChannelWrapper::SendWrite(nsTArray<uint8_t>&& aReadData) {

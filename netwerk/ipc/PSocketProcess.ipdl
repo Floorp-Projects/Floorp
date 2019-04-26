@@ -39,7 +39,7 @@ parent:
   async RecordChildEvents(ChildEventData[] events);
   async RecordDiscardedData(DiscardedData data);
 
-  async PWebrtcProxyChannel(PBrowserOrId browser);
+  async PWebrtcProxyChannel(TabId tabId);
 
 child:
   async PreferenceUpdate(Pref pref);

@@ -134,7 +134,7 @@ parent:
 
   async PStunAddrsRequest();
 
-  async PWebrtcProxyChannel(PBrowserOrId browser);
+  async PWebrtcProxyChannel(TabId tabId);
 
   /**
    * WebExtension-specific remote resource loading

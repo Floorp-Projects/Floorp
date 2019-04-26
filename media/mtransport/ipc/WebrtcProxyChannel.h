@@ -18,12 +18,13 @@
 #include "nsIStreamListener.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "mozilla/dom/ipc/IdType.h"  // TabId
 
-class nsILoadInfo;
 class nsISocketTransport;
 
 namespace mozilla {
 namespace net {
+class LoadInfoArgs;
 
 class WebrtcProxyChannelCallback;
 class WebrtcProxyData;
@@ -44,11 +45,11 @@ class WebrtcProxyChannel : public nsIHttpUpgradeListener,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSIAUTHPROMPTPROVIDER(mAuthProvider)
 
-  WebrtcProxyChannel(nsIAuthPromptProvider* aAuthProvider,
-                     WebrtcProxyChannelCallback* aProxyCallbacks);
+  explicit WebrtcProxyChannel(WebrtcProxyChannelCallback* aCallbacks);
 
+  void SetTabId(dom::TabId aTabId);
   nsresult Open(const nsCString& aHost, const int& aPort,
-                nsILoadInfo* aLoadInfo, const nsCString& aAlpn);
+                const net::LoadInfoArgs& aArgs, const nsCString& aAlpn);
   nsresult Write(nsTArray<uint8_t>&& aBytes);
   nsresult Close();
 

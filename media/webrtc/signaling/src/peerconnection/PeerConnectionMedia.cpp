@@ -22,11 +22,11 @@
 #include "nsIProxyInfo.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIPrincipal.h"
+#include "mozilla/LoadInfo.h"
 #include "nsProxyRelease.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "MediaManager.h"
 #include "WebrtcGmpVideoCodec.h"
@@ -66,8 +66,19 @@ void PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
   CSFLogInfo(LOGTAG, "%s: Had proxyinfo", __FUNCTION__);
 
   nsCString alpn = NS_LITERAL_CSTRING("webrtc,c-webrtc");
-  PBrowserOrId browser = BrowserChild::GetFrom(pcm_->GetWindow());
-  pcm_->mProxyConfig.reset(new NrSocketProxyConfig(browser, alpn));
+  auto browserChild = BrowserChild::GetFrom(pcm_->GetWindow());
+  if (!browserChild) {
+    // Android doesn't have browser child apparently...
+    return;
+  }
+  TabId id = browserChild->GetTabId();
+  nsCOMPtr<nsILoadInfo> loadInfo = new net::LoadInfo(
+      nsContentUtils::GetSystemPrincipal(), nullptr, nullptr, 0, 0);
+
+  Maybe<net::LoadInfoArgs> loadInfoArgs;
+  MOZ_ALWAYS_SUCCEEDS(
+      mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
+  pcm_->mProxyConfig.reset(new NrSocketProxyConfig(id, alpn, *loadInfoArgs));
 }
 
 NS_IMPL_ISUPPORTS(PeerConnectionMedia::ProtocolProxyQueryHandler,
