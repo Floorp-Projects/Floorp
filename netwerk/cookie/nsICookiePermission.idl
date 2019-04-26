@@ -14,7 +14,7 @@ typedef long nsCookieAccess;
 /**
  * An interface to test for cookie permissions
  */
-[scriptable, uuid(11ddd4ed-8f5b-40b3-b2a0-27c20ea1c88d)]
+[uuid(11ddd4ed-8f5b-40b3-b2a0-27c20ea1c88d)]
 interface nsICookiePermission : nsISupports
 {
   /**
