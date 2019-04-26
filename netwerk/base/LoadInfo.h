@@ -125,7 +125,7 @@ class LoadInfo final : public nsILoadInfo {
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
-           const nsAString& aCspNonce);
+           const nsAString& aCspNonce, uint32_t aRequestBlockingReason);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -198,6 +198,7 @@ class LoadInfo final : public nsILoadInfo {
   nsTArray<nsCOMPtr<nsIPrincipal>> mAncestorPrincipals;
   nsTArray<uint64_t> mAncestorOuterWindowIDs;
   nsTArray<nsCString> mCorsUnsafeHeaders;
+  uint32_t mRequestBlockingReason;
   bool mForcePreflight;
   bool mIsPreflight;
   bool mLoadTriggeredFromExternal;

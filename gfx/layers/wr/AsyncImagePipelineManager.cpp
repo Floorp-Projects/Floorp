@@ -291,6 +291,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     return UpdateWithoutExternalImage(texture, aKeys[0], op, aMaybeFastTxn);
   }
 
+  wrTexture->MaybeNofityForUse(aMaybeFastTxn);
+
   if (useWrTextureWrapper && aPipeline->mWrTextureWrapper) {
     MOZ_ASSERT(canUpdate);
     // Reuse WebRenderTextureHostWrapper. With it, rendered frame could be

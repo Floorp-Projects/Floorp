@@ -158,6 +158,9 @@ UrlClassifierFeatureTrackingProtection::ProcessChannel(
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_TRACKING_URI, list,
                                          EmptyCString(), EmptyCString());
 
+  NS_SetRequestBlockingReason(
+      aChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_TRACKING_URI);
+
   UC_LOG(
       ("UrlClassifierFeatureTrackingProtection::ProcessChannel, cancelling "
        "channel[%p]",

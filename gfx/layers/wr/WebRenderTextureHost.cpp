@@ -9,6 +9,7 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/layers/TextureHostOGL.h"
@@ -16,6 +17,24 @@
 
 namespace mozilla {
 namespace layers {
+
+class ScheduleNofityForUse : public wr::NotificationHandler {
+ public:
+  explicit ScheduleNofityForUse(uint64_t aExternalImageId)
+      : mExternalImageId(aExternalImageId) {}
+
+  virtual void Notify(wr::Checkpoint aCheckpoint) override {
+    if (aCheckpoint == wr::Checkpoint::FrameTexturesUpdated) {
+      MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
+      wr::RenderThread::Get()->NofityForUse(mExternalImageId);
+    } else {
+      MOZ_ASSERT(aCheckpoint == wr::Checkpoint::TransactionDropped);
+    }
+  }
+
+ protected:
+  uint64_t mExternalImageId;
+};
 
 WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
@@ -180,6 +199,18 @@ bool WebRenderTextureHost::NeedsYFlip() const {
     yFlip = false;
   }
   return yFlip;
+}
+
+void WebRenderTextureHost::MaybeNofityForUse(wr::TransactionBuilder& aTxn) {
+#if defined(MOZ_WIDGET_ANDROID)
+  if (!mWrappedTextureHost->AsSurfaceTextureHost()) {
+    return;
+  }
+  // SurfaceTexture of video needs NofityForUse() to detect if it is rendered
+  // on WebRender.
+  aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
+              MakeUnique<ScheduleNofityForUse>(wr::AsUint64(mExternalImageId)));
+#endif
 }
 
 }  // namespace layers

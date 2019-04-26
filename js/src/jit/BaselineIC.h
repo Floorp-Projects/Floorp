@@ -310,8 +310,6 @@ class ICScript {
     return (ICEntry*)(reinterpret_cast<uint8_t*>(this) + sizeof(ICScript));
   }
 
-  void initICEntries(JSScript* script, const ICEntry* entries);
-
  public:
   static MOZ_MUST_USE js::UniquePtr<ICScript> create(JSContext* cx,
                                                      JSScript* script);

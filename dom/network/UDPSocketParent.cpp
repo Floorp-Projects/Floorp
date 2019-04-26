@@ -36,7 +36,7 @@ UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
 
 UDPSocketParent::~UDPSocketParent() {}
 
-bool UDPSocketParent::Init(const IPC::Principal& aPrincipal,
+bool UDPSocketParent::Init(nsIPrincipal* aPrincipal,
                            const nsACString& aFilter) {
   MOZ_ASSERT_IF(mBackgroundManager, !aPrincipal);
   // will be used once we move all UDPSocket to PBackground, or

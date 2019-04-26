@@ -3006,6 +3006,32 @@ uint32_t NS_GetDefaultReferrerPolicy(nsIHttpChannel *aChannel, nsIURI *aURI,
   return nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE;
 }
 
+nsresult NS_SetRequestBlockingReason(nsIChannel *channel, uint32_t reason) {
+  NS_ENSURE_ARG(channel);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  return NS_SetRequestBlockingReason(loadInfo, reason);
+}
+
+nsresult NS_SetRequestBlockingReason(nsILoadInfo *loadInfo, uint32_t reason) {
+  NS_ENSURE_ARG(loadInfo);
+
+  return loadInfo->SetRequestBlockingReason(reason);
+}
+
+nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo *loadInfo,
+                                           uint32_t reason) {
+  NS_ENSURE_ARG(loadInfo);
+
+  uint32_t existingReason;
+  if (NS_SUCCEEDED(loadInfo->GetRequestBlockingReason(&existingReason)) &&
+      existingReason != nsILoadInfo::BLOCKING_REASON_NONE) {
+    return NS_OK;
+  }
+
+  return loadInfo->SetRequestBlockingReason(reason);
+}
+
 bool NS_IsOffline() {
   bool offline = true;
   bool connectivity = true;

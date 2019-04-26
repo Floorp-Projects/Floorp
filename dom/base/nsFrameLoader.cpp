@@ -305,10 +305,8 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
 
   RefPtr<BrowsingContext> parentContext = parentDocShell->GetBrowsingContext();
 
-  MOZ_DIAGNOSTIC_ASSERT(parentContext, "docShell must have BrowsingContext");
-
   // Don't create a child docshell for a closed browsing context.
-  if (parentContext->GetClosed()) {
+  if (NS_WARN_IF(!parentContext) || parentContext->GetClosed()) {
     return nullptr;
   }
 

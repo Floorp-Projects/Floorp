@@ -10,7 +10,7 @@ include protocol PPresentationBuilder;
 
 include InputStreamParams;
 
-using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
@@ -24,7 +24,7 @@ struct StartSessionRequest
   nsString deviceId;
   uint64_t windowId;
   TabId tabId;
-  Principal principal;
+  nsIPrincipal principal;
 };
 
 struct SendSessionMessageRequest

@@ -133,39 +133,81 @@ bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
   return true;
 }
 
+bool RenderAndroidSurfaceTextureHostOGL::CheckIfAttachedToGLContext() {
+  if (mAttachedToGLContext) {
+    return true;
+  }
+
+  if (!mGL) {
+    mGL = RenderThread::Get()->SharedGL();
+  }
+
+  if (!mSurfTex || !mGL || !mGL->MakeCurrent()) {
+    return false;
+  }
+
+  if (!mSurfTex->IsAttachedToGLContext((int64_t)mGL.get())) {
+    return false;
+  }
+
+  mAttachedToGLContext = true;
+  return true;
+}
+
 void RenderAndroidSurfaceTextureHostOGL::PrepareForUse() {
   // When SurfaceTexture is single buffer mode, UpdateTexImage needs to be
   // called only once for each publish. If UpdateTexImage is called more
   // than once, it causes hang on puglish side. And UpdateTexImage needs to
   // be called on render thread, since the SurfaceTexture is consumed on render
   // thread.
-
   MOZ_ASSERT(RenderThread::IsInRenderThread());
   MOZ_ASSERT(mPrepareStatus == STATUS_NONE);
-
-  EnsureAttachedToGLContext();
 
   if (mContinuousUpdate) {
     return;
   }
 
-  mPrepareStatus = STATUS_PREPARE_NEEDED;
+  mPrepareStatus = STATUS_MIGHT_BE_USED;
 
   if (mSurfTex && mSurfTex->IsSingleBuffer()) {
     // When SurfaceTexture is single buffer mode, it is OK to call
     // UpdateTexImage() here.
+    EnsureAttachedToGLContext();
     mSurfTex->UpdateTexImage();
     mPrepareStatus = STATUS_PREPARED;
+  } else {
+    // If SurfaceTexture is already bound to gl texture, it is already used for
+    // rendering to WebRender.
+    // During video playback, there is a case that rendering is skipped. In this
+    // case, NofityForUse() is not called. But we want to call UpdateTexImage()
+    // for adjusting SurfaceTexture's buffer status.
+    if (CheckIfAttachedToGLContext()) {
+      mPrepareStatus = STATUS_PREPARE_NEEDED;
+    }
+  }
+}
+
+void RenderAndroidSurfaceTextureHostOGL::NofityForUse() {
+  MOZ_ASSERT(RenderThread::IsInRenderThread());
+
+  if (mPrepareStatus == STATUS_MIGHT_BE_USED) {
+    // This happens when SurfaceTexture of video is rendered on WebRender and
+    // SurfaceTexture is not bounded to gl context yet.
+    // It is necessary to handle a case that SurfaceTexture is not rendered on
+    // WebRender, instead rendered to WebGL.
+    // It is not a good way. But it is same to Compositor rendering.
+    MOZ_ASSERT(!mSurfTex || !mSurfTex->IsSingleBuffer());
+    EnsureAttachedToGLContext();
+    mPrepareStatus = STATUS_PREPARE_NEEDED;
   }
 }
 
 void RenderAndroidSurfaceTextureHostOGL::NotifyNotUsed() {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
 
-  EnsureAttachedToGLContext();
-
   if (mSurfTex && mSurfTex->IsSingleBuffer() &&
       mPrepareStatus == STATUS_PREPARED) {
+    EnsureAttachedToGLContext();
     // Release SurfaceTexture's buffer to client side.
     mGL->MakeCurrent();
     mSurfTex->ReleaseTexImage();
@@ -173,6 +215,7 @@ void RenderAndroidSurfaceTextureHostOGL::NotifyNotUsed() {
     // This could happen when video frame was skipped. UpdateTexImage() neeeds
     // to be called for adjusting SurfaceTexture's buffer status.
     MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
+    EnsureAttachedToGLContext();
     mSurfTex->UpdateTexImage();
   }
 

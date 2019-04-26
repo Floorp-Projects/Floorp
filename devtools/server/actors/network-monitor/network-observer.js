@@ -132,6 +132,8 @@ function NetworkObserver(filters, owner) {
     DevToolsUtils.makeInfallible(this._httpResponseExaminer).bind(this);
   this._httpModifyExaminer =
     DevToolsUtils.makeInfallible(this._httpModifyExaminer).bind(this);
+  this._httpFailedOpening =
+    DevToolsUtils.makeInfallible(this._httpFailedOpening).bind(this);
   this._serviceWorkerRequest = this._serviceWorkerRequest.bind(this);
 
   this._throttleData = null;
@@ -207,6 +209,9 @@ NetworkObserver.prototype = {
                                "http-on-examine-cached-response");
       Services.obs.addObserver(this._httpModifyExaminer,
                                "http-on-modify-request");
+    } else {
+      Services.obs.addObserver(this._httpFailedOpening,
+                               "http-on-failed-opening-request");
     }
     // In child processes, only watch for service worker requests
     // everything else only happens in the parent process
@@ -242,6 +247,27 @@ NetworkObserver.prototype = {
 
     // Service workers never fire http-on-examine-cached-response, so fake one.
     this._httpResponseExaminer(channel, "http-on-examine-cached-response");
+  },
+
+  /**
+   * Observes for http-on-failed-opening-request notification to catch any
+   * channels for which asyncOpen has synchronously failed.  This is the only
+   * place to catch early security check failures.
+   */
+  _httpFailedOpening: function(subject, topic) {
+    if (!this.owner ||
+        (topic != "http-on-failed-opening-request") ||
+        !(subject instanceof Ci.nsIHttpChannel)) {
+      return;
+    }
+
+    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
+
+    if (!matchRequest(channel, this.filters)) {
+      return;
+    }
+
+    "add your handling code here";
   },
 
   /**
@@ -1131,6 +1157,9 @@ NetworkObserver.prototype = {
                                   "http-on-examine-cached-response");
       Services.obs.removeObserver(this._httpModifyExaminer,
                                   "http-on-modify-request");
+    } else {
+      Services.obs.removeObserver(this._httpFailedOpening,
+                                  "http-on-failed-opening-request");
     }
 
     Services.obs.removeObserver(this._serviceWorkerRequest,
