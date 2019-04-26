@@ -725,37 +725,6 @@ void ICStub::trace(JSTracer* trc) {
 // This helper handles ICState updates/transitions while attaching CacheIR
 // stubs.
 template <typename IRGenerator, typename... Args>
-static void TryAttachStubOld(const char* name, JSContext* cx,
-                             BaselineFrame* frame, ICFallbackStub* stub,
-                             BaselineCacheIRStubKind kind, Args&&... args) {
-  if (stub->state().maybeTransition()) {
-    stub->discardStubs(cx);
-  }
-
-  if (stub->state().canAttachStub()) {
-    RootedScript script(cx, frame->script());
-    jsbytecode* pc = stub->icEntry()->pc(script);
-
-    bool attached = false;
-    IRGenerator gen(cx, script, pc, stub->state().mode(),
-                    std::forward<Args>(args)...);
-    if (gen.tryAttachStub()) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(), kind, script, stub, &attached);
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  %s %s CacheIR stub",
-                attached ? "Attached" : "Failed to attach", name);
-      }
-    }
-    if (!attached) {
-      stub->state().trackNotAttached();
-    }
-  }
-}
-
-// This helper handles ICState updates/transitions while attaching CacheIR
-// stubs.
-template <typename IRGenerator, typename... Args>
 static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
                           ICFallbackStub* stub, BaselineCacheIRStubKind kind,
                           Args&&... args) {
@@ -5999,9 +5968,9 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
         return false;
       }
 
-      TryAttachStubOld<NewObjectIRGenerator>("NewObject", cx, frame, stub,
-                                             BaselineCacheIRStubKind::Regular,
-                                             JSOp(*pc), templateObject);
+      TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub,
+                                          BaselineCacheIRStubKind::Regular,
+                                          JSOp(*pc), templateObject);
 
       stub->setTemplateObject(templateObject);
     }
