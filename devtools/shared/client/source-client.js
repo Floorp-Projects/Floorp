@@ -21,14 +21,8 @@ function SourceClient(client, form) {
 }
 
 SourceClient.prototype = {
-  get _transport() {
-    return this._client._transport;
-  },
   get actor() {
     return this._form.actor;
-  },
-  get request() {
-    return this._client.request;
   },
   get url() {
     return this._form.url;
