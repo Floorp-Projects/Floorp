@@ -4,10 +4,12 @@ basepath = "."
 locales = [
     "de",
     "es",
+    "es-ES",
     "fr",
     "it",
     "ja",
     "ko",
+    "ru",
     "zh-CN",
     "zh-TW",
 ]
@@ -67,7 +69,3 @@ branches = [
 [[paths]]
   reference = "components/support/ktx/src/main/res/values/strings.xml"
   l10n = "components/support/ktx/src/main/res/values-{android_locale}/strings.xml"
-
-[[paths]]
-  reference = "components/ui/tabcounter/src/main/res/values/strings.xml"
-  l10n = "components/ui/tabcounter/src/main/res/values-{android_locale}/strings.xml"
