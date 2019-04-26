@@ -318,8 +318,6 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
   HighlightColorStateCommand() = default;
   virtual ~HighlightColorStateCommand() = default;
 
-  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon, bool* _retval) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;

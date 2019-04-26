@@ -915,21 +915,6 @@ nsresult HighlightColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HighlightColorStateCommand::IsCommandEnabled(const char* aCommandName,
-                                             nsISupports* refCon,
-                                             bool* outCmdEnabled) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    *outCmdEnabled = false;
-    return NS_OK;
-  }
-  mozilla::EditorBase* editorBase = editor->AsEditorBase();
-  MOZ_ASSERT(editorBase);
-  *outCmdEnabled = editorBase->IsSelectionEditable();
-  return NS_OK;
-}
-
 /*****************************************************************************
  * mozilla::BackgroundColorStateCommand
  *****************************************************************************/
