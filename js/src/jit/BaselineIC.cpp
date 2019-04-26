@@ -5513,8 +5513,8 @@ bool DoTypeOfFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "TypeOf");
 
-  TryAttachStubOld<TypeOfIRGenerator>("TypeOf", cx, frame, stub,
-                                      BaselineCacheIRStubKind::Regular, val);
+  TryAttachStub<TypeOfIRGenerator>("TypeOf", cx, frame, stub,
+                                   BaselineCacheIRStubKind::Regular, val);
 
   JSType type = js::TypeOfValue(val);
   RootedString string(cx, TypeName(type, cx->names()));
