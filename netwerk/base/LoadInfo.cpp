@@ -72,8 +72,6 @@ LoadInfo::LoadInfo(
       mUpgradeInsecureRequests(false),
       mBrowserUpgradeInsecureRequests(false),
       mBrowserWouldUpgradeInsecureRequests(false),
-      mVerifySignedContent(false),
-      mEnforceSRI(false),
       mForceAllowDataURI(false),
       mAllowInsecureRedirectToDataURI(false),
       mSkipContentPolicyCheckForWebRequest(false),
@@ -280,12 +278,6 @@ LoadInfo::LoadInfo(
         }
       }
     }
-    // if owner doc has content signature, we enforce SRI
-    nsCOMPtr<nsIChannel> channel = aLoadingContext->OwnerDoc()->GetChannel();
-    if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-      mEnforceSRI = loadInfo->GetVerifySignedContent();
-    }
   }
 
   mOriginAttributes = mLoadingPrincipal->OriginAttributesRef();
@@ -338,8 +330,6 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mUpgradeInsecureRequests(false),
       mBrowserUpgradeInsecureRequests(false),
       mBrowserWouldUpgradeInsecureRequests(false),
-      mVerifySignedContent(false),
-      mEnforceSRI(false),
       mForceAllowDataURI(false),
       mAllowInsecureRedirectToDataURI(false),
       mSkipContentPolicyCheckForWebRequest(false),
@@ -442,8 +432,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mBrowserUpgradeInsecureRequests(rhs.mBrowserUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
           rhs.mBrowserWouldUpgradeInsecureRequests),
-      mVerifySignedContent(rhs.mVerifySignedContent),
-      mEnforceSRI(rhs.mEnforceSRI),
       mForceAllowDataURI(rhs.mForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(rhs.mAllowInsecureRedirectToDataURI),
       mSkipContentPolicyCheckForWebRequest(
@@ -492,8 +480,7 @@ LoadInfo::LoadInfo(
     nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
     LoadTainting aTainting, bool aUpgradeInsecureRequests,
     bool aBrowserUpgradeInsecureRequests,
-    bool aBrowserWouldUpgradeInsecureRequests, bool aVerifySignedContent,
-    bool aEnforceSRI, bool aForceAllowDataURI,
+    bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
     bool aAllowInsecureRedirectToDataURI,
     bool aSkipContentPolicyCheckForWebRequest,
     bool aForceInheritPrincipalDropped, uint64_t aInnerWindowID,
@@ -530,8 +517,6 @@ LoadInfo::LoadInfo(
       mBrowserUpgradeInsecureRequests(aBrowserUpgradeInsecureRequests),
       mBrowserWouldUpgradeInsecureRequests(
           aBrowserWouldUpgradeInsecureRequests),
-      mVerifySignedContent(aVerifySignedContent),
-      mEnforceSRI(aEnforceSRI),
       mForceAllowDataURI(aForceAllowDataURI),
       mAllowInsecureRedirectToDataURI(aAllowInsecureRedirectToDataURI),
       mSkipContentPolicyCheckForWebRequest(
@@ -912,32 +897,6 @@ LoadInfo::GetBrowserUpgradeInsecureRequests(bool* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetBrowserWouldUpgradeInsecureRequests(bool* aResult) {
   *aResult = mBrowserWouldUpgradeInsecureRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetVerifySignedContent(bool aVerifySignedContent) {
-  MOZ_ASSERT(mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT,
-             "can only verify content for TYPE_DOCUMENT");
-  mVerifySignedContent = aVerifySignedContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetVerifySignedContent(bool* aResult) {
-  *aResult = mVerifySignedContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetEnforceSRI(bool aEnforceSRI) {
-  mEnforceSRI = aEnforceSRI;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetEnforceSRI(bool* aResult) {
-  *aResult = mEnforceSRI;
   return NS_OK;
 }
 
