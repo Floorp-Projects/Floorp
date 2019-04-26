@@ -362,6 +362,7 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
   *offer = sdp->ToString();
   mGeneratedOffer = std::move(sdp);
   ++mSessionVersion;
+  MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: CreateOffer \nSDP=\n" << *offer);
 
   return Result();
 }
@@ -492,6 +493,7 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
   *answer = sdp->ToString();
   mGeneratedAnswer = std::move(sdp);
   ++mSessionVersion;
+  MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: CreateAnswer \nSDP=\n" << *answer);
 
   return Result();
 }
