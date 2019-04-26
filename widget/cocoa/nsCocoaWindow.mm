@@ -3181,23 +3181,14 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect {
-  [self setTitlebarNeedsDisplayInRect:aRect sync:NO];
-}
-
-- (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect sync:(BOOL)aSync {
-  NSRect titlebarRect = [self titlebarRect];
-  NSRect rect = NSIntersectionRect(titlebarRect, aRect);
+- (void)setTitlebarNeedsDisplay {
+  NSRect rect = [self titlebarRect];
   if (NSIsEmptyRect(rect)) return;
 
   NSView* borderView = [[self contentView] superview];
   if (!borderView) return;
 
-  if (aSync) {
-    [borderView displayRect:rect];
-  } else {
-    [borderView setNeedsDisplayInRect:rect];
-  }
+  [borderView setNeedsDisplayInRect:rect];
 }
 
 - (NSRect)titlebarRect {
@@ -3228,10 +3219,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   mUnifiedToolbarHeight = aHeight;
 
   if (![self drawsContentsIntoWindowFrame]) {
-    // Redraw the title bar. If we're inside painting, we'll do it right now,
-    // otherwise we'll just invalidate it.
-    BOOL needSyncRedraw = ([NSView focusView] != nil);
-    [self setTitlebarNeedsDisplayInRect:[self titlebarRect] sync:needSyncRedraw];
+    [self setTitlebarNeedsDisplay];
   }
 }
 
@@ -3263,7 +3251,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle {
   [super setWantsTitleDrawn:aDrawTitle];
-  [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
+  [self setTitlebarNeedsDisplay];
 }
 
 - (void)setSheetAttachmentPosition:(CGFloat)aY {
