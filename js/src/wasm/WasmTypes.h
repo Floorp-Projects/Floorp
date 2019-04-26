@@ -1890,6 +1890,7 @@ enum class SymbolicAddress {
   MemInit,
   TableCopy,
   ElemDrop,
+  TableFill,
   TableGet,
   TableGrow,
   TableInit,

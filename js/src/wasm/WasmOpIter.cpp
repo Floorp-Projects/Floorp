@@ -296,6 +296,8 @@ OpKind wasm::Classify(OpBytes op) {
         case MiscOp::MemInit:
         case MiscOp::TableInit:
           WASM_BULK_OP(OpKind::MemOrTableInit);
+        case MiscOp::TableFill:
+          WASM_REF_OP(OpKind::TableFill);
         case MiscOp::TableGrow:
           WASM_REF_OP(OpKind::TableGrow);
         case MiscOp::TableSize:
