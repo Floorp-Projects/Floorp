@@ -19,7 +19,7 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 showSystemAddons = false) {
+                 showHiddenAddons = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
@@ -28,7 +28,7 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
     networkLocations: locations,
     selectedPage: null,
     showProfilerDialog: false,
-    showSystemAddons,
+    showHiddenAddons,
     temporaryInstallError: null,
   };
 }
