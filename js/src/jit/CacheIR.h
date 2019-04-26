@@ -2460,8 +2460,8 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue res_;
 
-  bool tryAttachInt32();
-  bool tryAttachNumber();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachNumber();
 
   void trackAttached(const char* name);
 
@@ -2470,7 +2470,7 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
                         ICState::Mode mode, JSOp op, HandleValue val,
                         HandleValue res);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
