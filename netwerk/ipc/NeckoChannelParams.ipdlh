@@ -80,8 +80,6 @@ struct LoadInfoArgs
   bool                        upgradeInsecureRequests;
   bool                        browserUpgradeInsecureRequests;
   bool                        browserWouldUpgradeInsecureRequests;
-  bool                        verifySignedContent;
-  bool                        enforceSRI;
   bool                        forceAllowDataURI;
   bool                        allowInsecureRedirectToDataURI;
   bool                        skipContentPolicyCheckForWebRequest;
