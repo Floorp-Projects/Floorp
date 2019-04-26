@@ -140,6 +140,8 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
       aList, sClassificationData,
       nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
 
+  UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
+
   UrlClassifierCommon::AnnotateChannel(
       aChannel, AntiTrackingCommon::eTrackingAnnotations, flags,
       nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
