@@ -48,7 +48,7 @@
                   "*://*.youtube.com/*",
                   "*://*.yandex.ru/*"
                   ],
-      "js": ["measure.js"],
+      "js": ["pageload.js"],
       "run_at": "document_end"
     },
     {
@@ -61,7 +61,7 @@
                   "*://*/wasm-misc/index.html*",
                   "*://*/wasm-godot/index.html*",
                   "*://*/assorted-dom/assorted/results.html*"],
-      "js": ["benchmark-relay.js"],
+      "js": ["benchmark.js"],
       "run_at": "document_end"
     }
   ],
