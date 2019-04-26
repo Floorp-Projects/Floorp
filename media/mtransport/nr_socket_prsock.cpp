@@ -2098,8 +2098,14 @@ int NrSocketBase::CreateSocket(
   }
 
   // create IPC bridge for content process
-  if (XRE_IsParentProcess() || XRE_IsSocketProcess()) {
+  if (XRE_IsParentProcess()) {
     *sock = new NrSocket();
+  } else if (XRE_IsSocketProcess()) {
+    if (addr->protocol == IPPROTO_TCP && config) {
+      *sock = new NrSocketProxy(config);
+    } else {
+      *sock = new NrSocket();
+    }
   } else {
     switch (addr->protocol) {
       case IPPROTO_UDP:
