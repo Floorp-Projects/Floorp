@@ -8591,6 +8591,20 @@ void nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
   }
 }
 
+void nsLayoutUtils::LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
+                                          const std::string& aKey,
+                                          const std::string& aValue) {
+  LayerManager* manager = aBuilder->GetWidgetLayerManager(nullptr);
+  if (!manager) {
+    return;
+  }
+  if (ClientLayerManager* clm = manager->AsClientLayerManager()) {
+    clm->LogAdditionalTestData(aKey, aValue);
+  } else if (WebRenderLayerManager* wrlm = manager->AsWebRenderLayerManager()) {
+    wrlm->LogAdditionalTestData(aKey, aValue);
+  }
+}
+
 /* static */
 bool nsLayoutUtils::IsAPZTestLoggingEnabled() {
   return gfxPrefs::APZTestLoggingEnabled();

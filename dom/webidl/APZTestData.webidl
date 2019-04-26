@@ -55,11 +55,17 @@ dictionary APZHitResult {
   unsigned long long scrollId;
 };
 
+dictionary AdditionalDataEntry {
+  DOMString key;
+  DOMString value;
+};
+
 // All the paints and repaint requests. This is the top-level data structure.
 dictionary APZTestData {
   sequence<APZBucket> paints;
   sequence<APZBucket> repaintRequests;
   sequence<APZHitResult> hitResults;
+  sequence<AdditionalDataEntry> additionalData;
 };
 
 // A frame uniformity measurement for every scrollable layer
