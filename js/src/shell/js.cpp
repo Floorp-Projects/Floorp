@@ -9915,7 +9915,7 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
                "having its [[Prototype]] be immutable");
 
 #ifdef JS_HAS_CTYPES
-    if (!JS_InitCTypesClass(cx, glob)) {
+    if (!fuzzingSafe && !JS_InitCTypesClass(cx, glob)) {
       return nullptr;
     }
 #endif
