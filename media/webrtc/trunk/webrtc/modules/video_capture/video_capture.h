@@ -26,11 +26,10 @@ namespace webrtc {
 
 // Mozilla addition
 enum class CaptureDeviceType {
-  Camera = 0,
-  Screen = 1,
-  Application = 2,
-  Window = 3,
-  Browser = 4
+  Camera,
+  Screen,
+  Window,
+  Browser
 };
 // Mozilla addition
 
@@ -49,9 +48,6 @@ struct CaptureDeviceInfo {
     }
     case CaptureDeviceType::Screen: {
       return "Screen";
-    }
-    case CaptureDeviceType::Application: {
-      return "Application";
     }
     case CaptureDeviceType::Window: {
       return "Window";

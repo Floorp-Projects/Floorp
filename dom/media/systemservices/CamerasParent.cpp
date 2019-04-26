@@ -355,10 +355,6 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
         captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
             webrtc::CaptureDeviceType::Window);
         break;
-      case AppEngine:
-        captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
-            webrtc::CaptureDeviceType::Application);
-        break;
       case CameraEngine:
         captureDeviceInfo = MakeUnique<webrtc::CaptureDeviceInfo>(
             webrtc::CaptureDeviceType::Camera);
@@ -908,7 +904,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
                   }
                 } else if (aCapEngine == ScreenEngine ||
                            aCapEngine == BrowserEngine ||
-                           aCapEngine == WinEngine || aCapEngine == AppEngine) {
+                           aCapEngine == WinEngine) {
                   for (const auto& it : sDeviceUniqueIDs) {
                     if (strcmp(it.second,
                                cap.VideoCapture()->CurrentDeviceName()) == 0) {
