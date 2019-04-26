@@ -39,6 +39,7 @@ class UiCompositorControllerChild final
                        const int32_t& aHeight, const int32_t& aWidth);
   bool InvalidateAndRender();
   bool SetMaxToolbarHeight(const int32_t& aHeight);
+  bool SetFixedBottomOffset(int32_t aOffset);
   bool SetPinned(const bool& aPinned, const int32_t& aReason);
   bool ToolbarAnimatorMessageFromUI(const int32_t& aMessage);
   bool SetDefaultClearColor(const uint32_t& aColor);
