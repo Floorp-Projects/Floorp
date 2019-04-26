@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Source, SourceLocation, Context } from "../../types";
+import type { SourceId, Source, SourceLocation, Context } from "../../types";
 import type { PromiseAction } from "../utils/middleware/promise";
 
 export type LoadSourceAction = PromiseAction<
@@ -32,9 +32,9 @@ export type SourceAction =
       +sources: Array<Source>
     |}
   | {|
-      +type: "UPDATE_SOURCE",
+      +type: "CLEAR_SOURCE_MAP_URL",
       +cx: Context,
-      +source: Source
+      +sourceId: SourceId
     |}
   | {|
       +type: "SET_SELECTED_LOCATION",
