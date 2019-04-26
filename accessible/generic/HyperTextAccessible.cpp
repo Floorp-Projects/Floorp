@@ -1873,7 +1873,7 @@ nsresult HyperTextAccessible::RenderedToContentOffset(
 
   nsIFrame::RenderedText text = aFrame->GetRenderedText(
       aRenderedOffset, aRenderedOffset + 1,
-      nsIFrame::TextOffsetType::OffsetsInContentText,
+      nsIFrame::TextOffsetType::OffsetsInRenderedText,
       nsIFrame::TrailingWhitespace::DontTrim);
   *aContentOffset = text.mOffsetWithinNodeText;
 
