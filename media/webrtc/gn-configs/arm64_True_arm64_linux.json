@@ -10923,7 +10923,6 @@
                 "//modules/desktop_capture/mouse_cursor_monitor_linux.cc",
                 "//modules/desktop_capture/screen_capturer_linux.cc",
                 "//modules/desktop_capture/window_capturer_linux.cc",
-                "//modules/desktop_capture/app_capturer_linux.cc",
                 "//modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
                 "//modules/desktop_capture/linux/mouse_cursor_monitor_x11.h",
                 "//modules/desktop_capture/linux/screen_capturer_x11.cc",

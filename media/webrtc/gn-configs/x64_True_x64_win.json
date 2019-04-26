@@ -10304,7 +10304,6 @@
                 "//modules/desktop_capture/window_finder.h",
                 "//modules/desktop_capture/window_finder_win.cc",
                 "//modules/desktop_capture/window_finder_win.h",
-                "//modules/desktop_capture/app_capturer_win.cc",
                 "//modules/desktop_capture/desktop_device_info.cc",
                 "//modules/desktop_capture/desktop_device_info.h",
                 "//modules/desktop_capture/win/desktop_device_info_win.cc",
