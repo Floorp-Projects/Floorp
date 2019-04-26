@@ -2452,7 +2452,7 @@ class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator {
   GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                           ICState::Mode, HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {

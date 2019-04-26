@@ -2797,8 +2797,8 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
 
   TypeScript::Monitor(cx, script, pc, res);
 
-  TryAttachStubOld<GetIntrinsicIRGenerator>(
-      "GetIntrinsic", cx, frame, stub, BaselineCacheIRStubKind::Regular, res);
+  TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub,
+                                         BaselineCacheIRStubKind::Regular, res);
 
   return true;
 }
