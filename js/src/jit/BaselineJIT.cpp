@@ -205,7 +205,9 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
   MOZ_ASSERT(!script->hasBaselineScript());
   MOZ_ASSERT(script->canBaselineCompile());
   MOZ_ASSERT(IsBaselineEnabled(cx));
-  AutoGeckoProfilerEntry pseudoFrame(cx, "Baseline script compilation");
+  AutoGeckoProfilerEntry pseudoFrame(
+      cx, "Baseline script compilation",
+      JS::ProfilingCategoryPair::JS_BaselineCompilation);
 
   script->ensureNonLazyCanonicalFunction();
 
