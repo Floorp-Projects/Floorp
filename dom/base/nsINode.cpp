@@ -61,6 +61,7 @@
 #include "nsIContentInlines.h"
 #include "nsIControllers.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrameInlines.h"
 #include "nsILinkHandler.h"
