@@ -1020,21 +1020,33 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
 #ifdef MOZ_WIDGET_ANDROID
   if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       aBuilder->IsPaintingToWindow()) {
-    // We want to ensure that fixed position elements are visible when
-    // being async scrolled, so we paint them at the size of the larger
-    // viewport.
     dirtyRectRelativeToDirtyFrame =
         nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
 
-    nsIPresShell* ps = aFrame->PresShell();
-    if (ps->IsVisualViewportSizeSet() &&
-        dirtyRectRelativeToDirtyFrame.Size() < ps->GetVisualViewportSize()) {
-      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetVisualViewportSize());
-    }
-    // Expand the size to the layout viewport size if necessary.
-    const nsSize layoutViewportSize = ps->GetLayoutViewportSize();
-    if (dirtyRectRelativeToDirtyFrame.Size() < layoutViewportSize) {
-      dirtyRectRelativeToDirtyFrame.SizeTo(layoutViewportSize);
+    // If there's a visual viewport size set, restrict the amount of the
+    // fixed-position element we paint to the visual viewport. (In general
+    // the fixed-position element can be as large as the layout viewport,
+    // which at a high zoom level can cause us to paint too large of an
+    // area.)
+    nsIPresShell* presShell = aFrame->PresShell();
+    if (presShell->IsVisualViewportSizeSet()) {
+      dirtyRectRelativeToDirtyFrame =
+          nsRect(presShell->GetVisualViewportOffset(),
+                 presShell->GetVisualViewportSize());
+      // But if we have a displayport, expand it to the displayport, so
+      // that async-scrolling the visual viewport within the layout viewport
+      // will not checkerboard.
+      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+        nsRect displayport;
+        // Note that the displayport here is already in the right coordinate
+        // space: it's relative to the scroll port (= layout viewport), but
+        // covers the visual viewport with some margins around it, which is
+        // exactly what we want.
+        if (nsLayoutUtils::GetHighResolutionDisplayPort(
+                rootScrollFrame->GetContent(), &displayport)) {
+          dirtyRectRelativeToDirtyFrame = displayport;
+        }
+      }
     }
     visible = dirtyRectRelativeToDirtyFrame;
   }
