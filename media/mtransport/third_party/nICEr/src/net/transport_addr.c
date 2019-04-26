@@ -397,7 +397,7 @@ int nr_transport_addr_is_loopback(nr_transport_addr *addr)
               return 1;
             break;
           default:
-            UNIMPLEMENTED;
+            NR_UNIMPLEMENTED;
             break;
         }
         break;
@@ -407,7 +407,7 @@ int nr_transport_addr_is_loopback(nr_transport_addr *addr)
           return(1);
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
 
     return(0);
@@ -429,7 +429,7 @@ int nr_transport_addr_is_link_local(nr_transport_addr *addr)
         }
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
 
     return(0);
@@ -454,7 +454,7 @@ int nr_transport_addr_is_mac_based(nr_transport_addr *addr)
         }
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
     return(0);
   }
@@ -472,7 +472,7 @@ int nr_transport_addr_is_teredo(nr_transport_addr *addr)
         }
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
 
     return(0);
@@ -509,7 +509,7 @@ int nr_transport_addr_is_wildcard(nr_transport_addr *addr)
           return(1);
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
 
     return(0);
@@ -541,7 +541,7 @@ int nr_transport_addr_get_private_addr_range(nr_transport_addr *addr)
       case NR_IPV6:
         return(0);
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
 
     return(0);

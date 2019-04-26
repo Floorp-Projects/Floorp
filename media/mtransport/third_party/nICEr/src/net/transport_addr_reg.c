@@ -178,7 +178,7 @@ nr_reg_set_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr)
           ABORT(r);
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
         break;
     }
 
