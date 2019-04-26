@@ -1852,16 +1852,6 @@ inline bool OpIter<Policy>::readDataOrElemDrop(bool isData,
                                                uint32_t* segIndex) {
   MOZ_ASSERT(Classify(op_) == OpKind::DataOrElemDrop);
 
-  if (isData) {
-    if (!env_.usesMemory()) {
-      return fail("can't touch memory without memory");
-    }
-  } else {
-    if (env_.tables.length() == 0) {
-      return fail("can't elem.drop without a table");
-    }
-  }
-
   if (!readVarU32(segIndex)) {
     return false;
   }
