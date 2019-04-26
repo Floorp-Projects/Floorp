@@ -385,7 +385,7 @@ enum class MiscOp {
   // Reftypes, per proposal as of February 2019.
   TableGrow = 0x0f,
   TableSize = 0x10,
-  // TableFill = 0x11, // reserved
+  TableFill = 0x11,
 
   // Structure operations.  Note, these are unofficial.
   StructNew = 0x50,
