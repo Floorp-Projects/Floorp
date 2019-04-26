@@ -58,6 +58,13 @@ makePrefTrackedFlag(exports, "wantLogging", "devtools.debugger.log");
 makePrefTrackedFlag(exports, "wantVerbose", "devtools.debugger.log.verbose");
 
 /**
+ * Setting the "devtools.debugger.quiet" preference to true will turn off
+ * logging for protocol errors that were caught and handled. These errors can
+ * happen in normal operation when threads shut down.
+ */
+makePrefTrackedFlag(exports, "quiet", "devtools.debugger.quiet");
+
+/**
  * Setting the "devtools.testing" preference to true will toggle on certain
  * behaviors that can differ from the production version of the code. These
  * behaviors typically enable easier testing or enhanced debugging features.
