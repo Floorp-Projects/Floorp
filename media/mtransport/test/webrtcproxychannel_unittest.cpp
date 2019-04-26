@@ -454,7 +454,7 @@ const std::string WebrtcProxyChannelTestOutputStream::DataString() {
 class FakeWebrtcProxyChannel : public WebrtcProxyChannel {
  public:
   explicit FakeWebrtcProxyChannel(WebrtcProxyChannelCallback *aCallback)
-      : WebrtcProxyChannel(nullptr, aCallback) {}
+      : WebrtcProxyChannel(aCallback) {}
 
  protected:
   virtual ~FakeWebrtcProxyChannel() = default;

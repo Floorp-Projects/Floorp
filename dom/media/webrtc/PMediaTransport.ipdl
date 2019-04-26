@@ -5,7 +5,7 @@
 include protocol PSocketProcessBridge;
 
 #ifdef MOZ_WEBRTC
-include PBrowserOrId;
+include NeckoChannelParams;
 
 // ParamTraits stuff for generated code and other classes we don't want to change
 include "mozilla/net/NrIceStunAddrMessageUtils.h";
@@ -19,6 +19,7 @@ using struct mozilla::dom::MovableRTCStatsReportInternal from "mozilla/media/web
 using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
 using mozilla::dom::RTCIceServer from "mozilla/dom/RTCConfigurationBinding.h";
 using mozilla::dom::RTCIceTransportPolicy from "mozilla/dom/RTCConfigurationBinding.h";
+using TabId from "mozilla/dom/ipc/IdType.h";
 
 // ParamTraits stuff for our own classes
 using MediaPacket from "mtransport/mediapacket.h";
@@ -44,7 +45,8 @@ parent:
                      RTCIceServer[] iceServers,
                      RTCIceTransportPolicy icePolicy);
 
-  async SetProxyServer(PBrowserOrId browserOrId,
+  async SetProxyServer(TabId id,
+                       LoadInfoArgs args, // Does this have the id?
                        nsCString alpn);
 
   async EnsureProvisionalTransport(string transportId,

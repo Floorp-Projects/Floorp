@@ -23,10 +23,10 @@ class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcProxyChannelParent, override)
 
-  mozilla::ipc::IPCResult RecvAsyncOpen(
-      const nsCString& aHost, const int& aPort,
-      const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-      const nsCString& aAlpn) override;
+  mozilla::ipc::IPCResult RecvAsyncOpen(const nsCString& aHost,
+                                        const int& aPort,
+                                        const LoadInfoArgs& aLoadInfoArgs,
+                                        const nsCString& aAlpn) override;
 
   mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;
 
@@ -34,7 +34,7 @@ class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  explicit WebrtcProxyChannelParent(nsIAuthPromptProvider* aAuthProvider);
+  explicit WebrtcProxyChannelParent(dom::TabId aTabId);
 
   // WebrtcProxyChannelCallback
   void OnClose(nsresult aReason) override;
