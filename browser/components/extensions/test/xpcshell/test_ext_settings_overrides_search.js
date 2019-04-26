@@ -96,6 +96,7 @@ add_task(async function test_extension_adding_engine_with_spaces() {
   ok(!engine, "Engine should not exist");
 });
 
+
 add_task(async function test_upgrade_default_position_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -191,64 +192,6 @@ add_task(async function test_extension_post_params() {
   let submissionSuggest = engine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
   equal(submissionSuggest.uri.spec, expectedSuggestURL, "Suggest URLs should match");
   equal(submissionSuggest.postData.data.data, "foo=bar&bar=foo", "Suggest postData should match");
-
-  await ext1.unload();
-});
-
-// Test that an upgrade changing the search engine url will work.
-add_task(async function test_upgrade_searchengine_url() {
-  let ext1 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.com/?q={searchTerms}",
-        },
-      },
-      "applications": {
-        "gecko": {
-          "id": "testengine@mozilla.com",
-        },
-      },
-      "version": "0.1",
-    },
-    useAddonManager: "temporary",
-  });
-
-  await ext1.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(ext1);
-  let engine = await Services.search.getDefault();
-  equal(engine.name, "MozSearch", "engine is default");
-  let url = engine._getURLOfType("text/html").template;
-  equal(url, "https://example.com/?q={searchTerms}",
-        "engine url is correct");
-
-  await ext1.upgrade({
-    manifest: {
-      "chrome_settings_overrides": {
-        "search_provider": {
-          "name": "MozSearch",
-          "keyword": "MozSearch",
-          "search_url": "https://example.org/?q={searchTerms}",
-        },
-      },
-      "applications": {
-        "gecko": {
-          "id": "testengine@mozilla.com",
-        },
-      },
-      "version": "0.2",
-    },
-    useAddonManager: "temporary",
-  });
-  await AddonTestUtils.waitForSearchProviderStartup(ext1);
-
-  engine = await Services.search.getDefault();
-  equal(engine.name, "MozSearch", "engine is default");
-  url = engine._getURLOfType("text/html").template;
-  equal(url, "https://example.org/?q={searchTerms}",
-        "engine url is correct");
 
   await ext1.unload();
 });
