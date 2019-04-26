@@ -2936,7 +2936,6 @@ var AddonManager = {
   _installHostSource: new Map([
     ["addons.mozilla.org", "amo"],
     ["discovery.addons.mozilla.org", "disco"],
-    ["testpilot.firefox.com", "testpilot"],
   ]),
 
   // Constants for the AddonInstall.state property
