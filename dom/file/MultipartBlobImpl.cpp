@@ -274,22 +274,6 @@ void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
   }
 }
 
-void MultipartBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
-                                               ErrorResult& aRv) const {
-  if (!mIsFromNsIFile || mBlobImpls.Length() == 0) {
-    BaseBlobImpl::GetMozFullPathInternal(aFilename, aRv);
-    return;
-  }
-
-  BlobImpl* blobImpl = mBlobImpls.ElementAt(0).get();
-  if (!blobImpl) {
-    BaseBlobImpl::GetMozFullPathInternal(aFilename, aRv);
-    return;
-  }
-
-  blobImpl->GetMozFullPathInternal(aFilename, aRv);
-}
-
 nsresult MultipartBlobImpl::SetMutable(bool aMutable) {
   nsresult rv;
 
@@ -313,82 +297,6 @@ nsresult MultipartBlobImpl::SetMutable(bool aMutable) {
   }
 
   MOZ_ASSERT_IF(!aMutable, mImmutable);
-
-  return NS_OK;
-}
-
-nsresult MultipartBlobImpl::InitializeChromeFile(
-    nsIFile* aFile, const nsAString& aType, const nsAString& aName,
-    bool aLastModifiedPassed, int64_t aLastModified, bool aIsFromNsIFile) {
-  MOZ_ASSERT(!mImmutable, "Something went wrong ...");
-  if (mImmutable) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  mName = aName;
-  mContentType = aType;
-  mIsFromNsIFile = aIsFromNsIFile;
-
-  bool exists;
-  nsresult rv = aFile->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!exists) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-
-  bool isDir;
-  rv = aFile->IsDirectory(&isDir);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (isDir) {
-    return NS_ERROR_FILE_IS_DIRECTORY;
-  }
-
-  if (mName.IsEmpty()) {
-    aFile->GetLeafName(mName);
-  }
-
-  RefPtr<File> blob = File::CreateFromFile(nullptr, aFile);
-
-  // Pre-cache size.
-  ErrorResult error;
-  blob->GetSize(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  // Pre-cache modified date.
-  blob->GetLastModified(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  // XXXkhuey this is terrible
-  if (mContentType.IsEmpty()) {
-    blob->GetType(mContentType);
-  }
-
-  BlobSet blobSet;
-  rv = blobSet.AppendBlobImpl(static_cast<File*>(blob.get())->Impl());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  mBlobImpls = blobSet.GetBlobImpls();
-
-  SetLengthAndModifiedDate(error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  if (aLastModifiedPassed) {
-    SetLastModified(aLastModified);
-  }
 
   return NS_OK;
 }
