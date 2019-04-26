@@ -4,88 +4,58 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const { sourceSpec } = require("devtools/shared/specs/source");
+const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
 
 /**
- * A SourceClient provides a way to access the source text of a script.
+ * A SourceFront provides a way to access the source text of a script.
  *
- * @param client ThreadClient
- *        The thread client parent.
+ * @param client DebuggerClient
+ *        The Debugger Client instance.
  * @param form Object
  *        The form sent across the remote debugging protocol.
+ * @param activeThread ThreadClient
+ *        The thread client parent. Used until the SourceFront marshalls LongStringFront
+ *        and ArrayBuffer.
  */
-function SourceClient(client, form) {
-  this._form = form;
-  this._activeThread = client;
-  this._client = client.client;
-}
+class SourceClient extends FrontClassWithSpec(sourceSpec) {
+  constructor(client, form, activeThread) {
+    super(client);
+    this._url = form.url;
+    this._activeThread = activeThread;
+    // this is here for the time being, until the source front is managed
+    // via protocol.js marshalling
+    this.actorID = form.actor;
+    this.manage(this);
+  }
 
-SourceClient.prototype = {
   get actor() {
-    return this._form.actor;
-  },
+    return this.actorID;
+  }
+
   get url() {
-    return this._form.url;
-  },
+    return this._url;
+  }
 
-  /**
-   * Black box this SourceClient's source.
-   */
-  blackBox: DebuggerClient.requester(
-    {
-      type: "blackbox",
-      range: arg(0),
-    },
-    {
-      telemetry: "BLACKBOX",
-    },
-  ),
+  // Alias for source.blackbox to avoid changing protocol.js packets
+  blackBox(range) {
+    return this.blackbox(range);
+  }
 
-  /**
-   * Un-black box this SourceClient's source.
-   */
-  unblackBox: DebuggerClient.requester(
-    {
-      type: "unblackbox",
-      range: arg(0),
-    },
-    {
-      telemetry: "UNBLACKBOX",
-    },
-  ),
-
-  getBreakpointPositions: function(query) {
-    const packet = {
-      to: this._form.actor,
-      type: "getBreakpointPositions",
-      query,
-    };
-    return this._client.request(packet);
-  },
-
-  getBreakpointPositionsCompressed: function(query) {
-    const packet = {
-      to: this._form.actor,
-      type: "getBreakpointPositionsCompressed",
-      query,
-    };
-    return this._client.request(packet);
-  },
+  // Alias for source.unblackbox to avoid changing protocol.js packets
+  unblackBox() {
+    return this.unblackbox();
+  }
 
   /**
    * Get a long string grip for this SourceClient's source.
    */
-  source: function() {
-    const packet = {
-      to: this._form.actor,
-      type: "source",
-    };
-    return this._client.request(packet).then(response => {
-      return this._onSourceResponse(response);
-    });
-  },
+  async source() {
+    const response = await this.onSource();
+    return this._onSourceResponse(response);
+  }
 
-  _onSourceResponse: function(response) {
+  _onSourceResponse(response) {
     if (typeof response.source === "string") {
       return response;
     }
@@ -123,16 +93,8 @@ SourceClient.prototype = {
       };
       return newResponse;
     });
-  },
+  }
+}
 
-  setPausePoints: function(pausePoints) {
-    const packet = {
-      to: this._form.actor,
-      type: "setPausePoints",
-      pausePoints,
-    };
-    return this._client.request(packet);
-  },
-};
-
-module.exports = SourceClient;
+exports.SourceClient = SourceClient;
+registerFront(SourceClient);

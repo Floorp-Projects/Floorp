@@ -71,7 +71,7 @@ function test_black_box_paused() {
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
-    const {pausedInSource} = await blackBox(sourceClient);
+    const pausedInSource = await blackBox(sourceClient);
     Assert.ok(pausedInSource,
       "We should be notified that we are currently paused in this source");
     finishClient(gClient);
