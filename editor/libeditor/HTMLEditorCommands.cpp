@@ -69,14 +69,9 @@ bool StateUpdatingCommandBase::IsCommandEnabled(const char* aCommandName,
   return true;
 }
 
-NS_IMETHODIMP
-StateUpdatingCommandBase::DoCommand(const char* aCommandName,
-                                    nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult StateUpdatingCommandBase::DoCommand(const char* aCommandName,
+                                             TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -135,14 +130,9 @@ bool PasteNoFormattingCommand::IsCommandEnabled(const char* aCommandName,
   return htmlEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
-NS_IMETHODIMP
-PasteNoFormattingCommand::DoCommand(const char* aCommandName,
-                                    nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult PasteNoFormattingCommand::DoCommand(const char* aCommandName,
+                                             TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -177,9 +167,9 @@ PasteNoFormattingCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<StyleUpdatingCommand> StyleUpdatingCommand::sInstance;
 
-nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
-                                               HTMLEditor* aHTMLEditor,
-                                               nsICommandParams* aParams) {
+nsresult StyleUpdatingCommand::GetCurrentState(
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+    nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -203,7 +193,7 @@ nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
 }
 
 nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
-                                           HTMLEditor* aHTMLEditor) {
+                                           HTMLEditor* aHTMLEditor) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -276,7 +266,7 @@ nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
 StaticRefPtr<ListCommand> ListCommand::sInstance;
 
 nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
-                                      nsICommandParams* aParams) {
+                                      nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -294,7 +284,8 @@ nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
   return NS_OK;
 }
 
-nsresult ListCommand::ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) {
+nsresult ListCommand::ToggleState(nsAtom* aTagName,
+                                  HTMLEditor* aHTMLEditor) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -330,7 +321,7 @@ StaticRefPtr<ListItemCommand> ListItemCommand::sInstance;
 
 nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
                                           HTMLEditor* aHTMLEditor,
-                                          nsICommandParams* aParams) {
+                                          nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -358,7 +349,7 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
 }
 
 nsresult ListItemCommand::ToggleState(nsAtom* aTagName,
-                                      HTMLEditor* aHTMLEditor) {
+                                      HTMLEditor* aHTMLEditor) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -424,13 +415,9 @@ bool RemoveListCommand::IsCommandEnabled(const char* aCommandName,
   return bMixed || !localName.IsEmpty();
 }
 
-NS_IMETHODIMP
-RemoveListCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult RemoveListCommand::DoCommand(const char* aCommandName,
+                                      TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -468,13 +455,9 @@ bool IndentCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-IndentCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult IndentCommand::DoCommand(const char* aCommandName,
+                                  TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -514,13 +497,9 @@ bool OutdentCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-OutdentCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult OutdentCommand::DoCommand(const char* aCommandName,
+                                   TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -560,9 +539,8 @@ bool MultiStateCommandBase::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-MultiStateCommandBase::DoCommand(const char* aCommandName,
-                                 nsISupports* refCon) {
+nsresult MultiStateCommandBase::DoCommand(const char* aCommandName,
+                                          TextEditor& aTextEditor) const {
   NS_WARNING(
       "who is calling MultiStateCommandBase::DoCommand (no implementation)?");
   return NS_OK;
@@ -616,8 +594,8 @@ MultiStateCommandBase::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<ParagraphStateCommand> ParagraphStateCommand::sInstance;
 
-nsresult ParagraphStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                                nsICommandParams* aParams) {
+nsresult ParagraphStateCommand::GetCurrentState(
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -649,8 +627,8 @@ nsresult ParagraphStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
 StaticRefPtr<FontFaceStateCommand> FontFaceStateCommand::sInstance;
 
-nsresult FontFaceStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                               nsICommandParams* aParams) {
+nsresult FontFaceStateCommand::GetCurrentState(
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -718,8 +696,8 @@ nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
 StaticRefPtr<FontSizeStateCommand> FontSizeStateCommand::sInstance;
 
-nsresult FontSizeStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                               nsICommandParams* aParams) {
+nsresult FontSizeStateCommand::GetCurrentState(
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -791,8 +769,8 @@ nsresult FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
 StaticRefPtr<FontColorStateCommand> FontColorStateCommand::sInstance;
 
-nsresult FontColorStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                                nsICommandParams* aParams) {
+nsresult FontColorStateCommand::GetCurrentState(
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -842,7 +820,7 @@ nsresult FontColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<HighlightColorStateCommand> HighlightColorStateCommand::sInstance;
 
 nsresult HighlightColorStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) {
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -891,7 +869,7 @@ StaticRefPtr<BackgroundColorStateCommand>
     BackgroundColorStateCommand::sInstance;
 
 nsresult BackgroundColorStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) {
+    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -924,7 +902,7 @@ nsresult BackgroundColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<AlignCommand> AlignCommand::sInstance;
 
 nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                       nsICommandParams* aParams) {
+                                       nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -977,7 +955,8 @@ nsresult AlignCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<AbsolutePositioningCommand> AbsolutePositioningCommand::sInstance;
 
 nsresult AbsolutePositioningCommand::GetCurrentState(
-    nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsICommandParams* aParams) {
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+    nsICommandParams* aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -997,8 +976,8 @@ nsresult AbsolutePositioningCommand::GetCurrentState(
   return NS_OK;
 }
 
-nsresult AbsolutePositioningCommand::ToggleState(nsAtom* aTagName,
-                                                 HTMLEditor* aHTMLEditor) {
+nsresult AbsolutePositioningCommand::ToggleState(
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1033,14 +1012,9 @@ bool DecreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
   return htmlEditor->GetZIndex(*positionedElement) > 0;
 }
 
-NS_IMETHODIMP
-DecreaseZIndexCommand::DoCommand(const char* aCommandName,
-                                 nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult DecreaseZIndexCommand::DoCommand(const char* aCommandName,
+                                          TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1088,14 +1062,9 @@ bool IncreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
   return !!htmlEditor->GetPositionedElement();
 }
 
-NS_IMETHODIMP
-IncreaseZIndexCommand::DoCommand(const char* aCommandName,
-                                 nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult IncreaseZIndexCommand::DoCommand(const char* aCommandName,
+                                          TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1137,13 +1106,9 @@ bool RemoveStylesCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-RemoveStylesCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult RemoveStylesCommand::DoCommand(const char* aCommandName,
+                                        TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -1181,14 +1146,9 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-IncreaseFontSizeCommand::DoCommand(const char* aCommandName,
-                                   nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult IncreaseFontSizeCommand::DoCommand(const char* aCommandName,
+                                            TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -1226,14 +1186,9 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-DecreaseFontSizeCommand::DoCommand(const char* aCommandName,
-                                   nsISupports* refCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult DecreaseFontSizeCommand::DoCommand(const char* aCommandName,
+                                            TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;
   }
@@ -1270,18 +1225,12 @@ bool InsertHTMLCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-InsertHTMLCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
+nsresult InsertHTMLCommand::DoCommand(const char* aCommandName,
+                                      TextEditor& aTextEditor) const {
   // If nsInsertHTMLCommand is called with no parameters, it was probably called
   // with an empty string parameter ''. In this case, it should act the same as
   // the delete command
-  NS_ENSURE_ARG_POINTER(refCon);
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1342,21 +1291,14 @@ bool InsertTagCommand::IsCommandEnabled(const char* aCommandName,
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)
-NS_IMETHODIMP
-InsertTagCommand::DoCommand(const char* aCmdName, nsISupports* refCon) {
-  if (NS_WARN_IF(!aCmdName) || NS_WARN_IF(!refCon)) {
-    return NS_ERROR_INVALID_ARG;
-  }
+nsresult InsertTagCommand::DoCommand(const char* aCmdName,
+                                     TextEditor& aTextEditor) const {
   RefPtr<nsAtom> tagName = TagName(aCmdName);
   if (NS_WARN_IF(tagName != nsGkAtoms::hr)) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
