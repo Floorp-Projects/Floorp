@@ -51,6 +51,9 @@ function checkPingStructure(ping, type, reason) {
   Assert.ok("keyedScalars" in payload, "Payload must contain keyed scalars");
   Assert.ok("histograms" in payload, "Payload must contain histograms");
   Assert.ok("keyedHistograms" in payload, "Payload must contain keyed histograms");
+
+  Assert.ok("telemetry.ecosystem_old_send_time" in payload.scalars.parent, "Old send time should be set");
+  Assert.ok("telemetry.ecosystem_new_send_time" in payload.scalars.parent, "New send time should be set");
 }
 
 function sendPing() {

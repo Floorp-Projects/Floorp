@@ -2144,6 +2144,36 @@ telemetry:
       - 'main'
       - 'content'
 
+  ecosystem_old_send_time:
+    bug_numbers:
+      - 1545365
+    description: >
+      The timestamp im milliseconds of the last time we tried to send an Ecosystem ping
+    expires: "73"
+    kind: string
+    notification_emails:
+      - jrediger@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'pre-account'
+
+  ecosystem_new_send_time:
+    bug_numbers:
+      - 1545365
+    description: >
+      The timestamp im milliseconds of the last time we tried to send an Ecosystem ping
+    expires: "73"
+    kind: string
+    notification_emails:
+      - jrediger@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'pre-account'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
