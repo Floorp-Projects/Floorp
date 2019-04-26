@@ -3444,7 +3444,12 @@ public class GeckoSession implements Parcelable {
             public final @TargetWindow int target;
 
             /**
-             * True if and only if the request was triggered by user interaction.
+             * True if and only if the request was triggered by an HTTP redirect.
+             *
+             * If the user loads URI "a", which redirects to URI "b", then
+             * <code>onLoadRequest</code> will be called twice, first with uri "a" and
+             * <code>isRedirect = false</code>, then with uri "b" and
+             * <code>isRedirect = true</code>.
              */
             public final boolean isRedirect;
         }
