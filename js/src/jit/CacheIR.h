@@ -2427,12 +2427,12 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
 class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachInt32();
-  bool tryAttachDouble();
-  bool tryAttachString();
-  bool tryAttachSymbol();
-  bool tryAttachNullOrUndefined();
-  bool tryAttachObject();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachDouble();
+  AttachDecision tryAttachString();
+  AttachDecision tryAttachSymbol();
+  AttachDecision tryAttachNullOrUndefined();
+  AttachDecision tryAttachObject();
 
   void trackAttached(const char* name);
 
@@ -2440,7 +2440,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   ToBoolIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                     ICState::Mode mode, HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator {

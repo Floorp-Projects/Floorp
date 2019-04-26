@@ -6029,35 +6029,23 @@ void ToBoolIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool ToBoolIRGenerator::tryAttachStub() {
+AttachDecision ToBoolIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
-  if (tryAttachInt32()) {
-    return true;
-  }
-  if (tryAttachDouble()) {
-    return true;
-  }
-  if (tryAttachString()) {
-    return true;
-  }
-  if (tryAttachNullOrUndefined()) {
-    return true;
-  }
-  if (tryAttachObject()) {
-    return true;
-  }
-  if (tryAttachSymbol()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachInt32());
+  TRY_ATTACH(tryAttachDouble());
+  TRY_ATTACH(tryAttachString());
+  TRY_ATTACH(tryAttachNullOrUndefined());
+  TRY_ATTACH(tryAttachObject());
+  TRY_ATTACH(tryAttachSymbol());
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool ToBoolIRGenerator::tryAttachInt32() {
+AttachDecision ToBoolIRGenerator::tryAttachInt32() {
   if (!val_.isInt32()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6065,12 +6053,12 @@ bool ToBoolIRGenerator::tryAttachInt32() {
   writer.loadInt32TruthyResult(valId);
   writer.returnFromIC();
   trackAttached("ToBoolInt32");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool ToBoolIRGenerator::tryAttachDouble() {
+AttachDecision ToBoolIRGenerator::tryAttachDouble() {
   if (!val_.isDouble()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6078,12 +6066,12 @@ bool ToBoolIRGenerator::tryAttachDouble() {
   writer.loadDoubleTruthyResult(valId);
   writer.returnFromIC();
   trackAttached("ToBoolDouble");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool ToBoolIRGenerator::tryAttachSymbol() {
+AttachDecision ToBoolIRGenerator::tryAttachSymbol() {
   if (!val_.isSymbol()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6091,12 +6079,12 @@ bool ToBoolIRGenerator::tryAttachSymbol() {
   writer.loadBooleanResult(true);
   writer.returnFromIC();
   trackAttached("ToBoolSymbol");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool ToBoolIRGenerator::tryAttachString() {
+AttachDecision ToBoolIRGenerator::tryAttachString() {
   if (!val_.isString()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6104,12 +6092,12 @@ bool ToBoolIRGenerator::tryAttachString() {
   writer.loadStringTruthyResult(strId);
   writer.returnFromIC();
   trackAttached("ToBoolString");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool ToBoolIRGenerator::tryAttachNullOrUndefined() {
+AttachDecision ToBoolIRGenerator::tryAttachNullOrUndefined() {
   if (!val_.isNullOrUndefined()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6117,12 +6105,12 @@ bool ToBoolIRGenerator::tryAttachNullOrUndefined() {
   writer.loadBooleanResult(false);
   writer.returnFromIC();
   trackAttached("ToBoolNullOrUndefined");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool ToBoolIRGenerator::tryAttachObject() {
+AttachDecision ToBoolIRGenerator::tryAttachObject() {
   if (!val_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6130,7 +6118,7 @@ bool ToBoolIRGenerator::tryAttachObject() {
   writer.loadObjectTruthyResult(objId);
   writer.returnFromIC();
   trackAttached("ToBoolObject");
-  return true;
+  return AttachDecision::Attach;
 }
 
 GetIntrinsicIRGenerator::GetIntrinsicIRGenerator(JSContext* cx,
