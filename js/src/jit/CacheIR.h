@@ -1966,59 +1966,71 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
   HandleValue receiver_;
-  bool* isTemporarilyUnoptimizable_;
   GetPropertyResultFlags resultFlags_;
 
   enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
   PreliminaryObjectAction preliminaryObjectAction_;
 
-  bool tryAttachNative(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId,
-                               HandleId id);
-  bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
-                                HandleId id);
-  bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperandId objId,
-                                        HandleId id);
-  bool tryAttachXrayCrossCompartmentWrapper(HandleObject obj,
-                                            ObjOperandId objId, HandleId id);
-  bool tryAttachFunction(HandleObject obj, ObjOperandId objId, HandleId id);
-
-  bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                             bool handleDOMProxies);
-  bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
-                                HandleId id);
-  bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachNative(HandleObject obj, ObjOperandId objId,
                                  HandleId id);
-  bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachUnboxed(HandleObject obj, ObjOperandId objId,
+                                  HandleId id);
+  AttachDecision tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId,
+                                         HandleId id);
+  AttachDecision tryAttachTypedObject(HandleObject obj, ObjOperandId objId,
+                                      HandleId id);
+  AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
+                                       HandleId id);
+  AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
+                                          HandleId id);
+  AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
+                                      HandleId id);
+  AttachDecision tryAttachCrossCompartmentWrapper(HandleObject obj,
+                                                  ObjOperandId objId,
+                                                  HandleId id);
+  AttachDecision tryAttachXrayCrossCompartmentWrapper(HandleObject obj,
+                                                      ObjOperandId objId,
+                                                      HandleId id);
+  AttachDecision tryAttachFunction(HandleObject obj, ObjOperandId objId,
                                    HandleId id);
-  bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-  bool tryAttachPrimitive(ValOperandId valId, HandleId id);
-  bool tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
-  bool tryAttachStringLength(ValOperandId valId, HandleId id);
-  bool tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
+                                       HandleId id, bool handleDOMProxies);
+  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+                                          HandleId id);
+  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+                                           HandleId id);
+  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+                                             ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
+                                HandleId id);
 
-  bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
-  bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                   Int32OperandId indexId);
+  AttachDecision tryAttachPrimitive(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
+  AttachDecision tryAttachStringLength(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
 
-  bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
-  bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
-                                 uint32_t index, Int32OperandId indexId);
-  bool tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
-                              uint32_t index, Int32OperandId indexId);
-  bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachMagicArgument(ValOperandId valId,
+                                        ValOperandId indexId);
+  AttachDecision tryAttachArgumentsObjectArg(HandleObject obj,
+                                             ObjOperandId objId,
+                                             Int32OperandId indexId);
 
-  bool tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
-                               uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                                       uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
+                                           uint32_t index,
+                                           Int32OperandId indexId);
+  AttachDecision tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
+                                        uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                                       uint32_t index, Int32OperandId indexId);
 
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
+  AttachDecision tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
+                                         uint32_t index,
+                                         Int32OperandId indexId);
+
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 
   void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id,
                                    bool handleMissing);
@@ -2055,13 +2067,12 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 
  public:
   GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                     CacheKind cacheKind, ICState::Mode mode,
-                     bool* isTemporarilyUnoptimizable, HandleValue val,
+                     ICState::Mode mode, CacheKind cacheKind, HandleValue val,
                      HandleValue idVal, HandleValue receiver,
                      GetPropertyResultFlags resultFlags);
 
-  bool tryAttachStub();
-  bool tryAttachIdempotentStub();
+  AttachDecision tryAttachStub();
+  AttachDecision tryAttachIdempotentStub();
 
   bool shouldUnlinkPreliminaryObjectStubs() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;

@@ -192,22 +192,25 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   bool attached = false;
   if (ic->state().canAttachStub()) {
-    // IonBuilder calls PropertyReadNeedsTypeBarrier to determine if it
-    // needs a type barrier. Unfortunately, PropertyReadNeedsTypeBarrier
-    // does not account for getters, so we should only attach a getter
-    // stub if we inserted a type barrier.
     jsbytecode* pc = ic->idempotent() ? nullptr : ic->pc();
-    bool isTemporarilyUnoptimizable = false;
-    GetPropIRGenerator gen(cx, outerScript, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, val, idVal, val,
-                           ic->resultFlags());
-    if (ic->idempotent() ? gen.tryAttachIdempotentStub()
-                         : gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
+    GetPropIRGenerator gen(cx, outerScript, pc, ic->state().mode(), ic->kind(),
+                           val, idVal, val, ic->resultFlags());
+    switch (ic->idempotent() ? gen.tryAttachIdempotentStub()
+                             : gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached);
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("No deferred GetProp stubs");
+        break;
     }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
+    if (!attached) {
       ic->state().trackNotAttached();
     }
   }
@@ -269,22 +272,10 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
     ic->discardStubs(cx->zone());
   }
 
-  bool attached = false;
-  if (ic->state().canAttachStub()) {
-    RootedValue val(cx, ObjectValue(*obj));
-    bool isTemporarilyUnoptimizable = false;
-    GetPropIRGenerator gen(cx, outerScript, ic->pc(), ic->kind(),
-                           ic->state().mode(), &isTemporarilyUnoptimizable, val,
-                           idVal, receiver, GetPropertyResultFlags::All);
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
-    }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
-      ic->state().trackNotAttached();
-    }
-  }
+  RootedValue val(cx, ObjectValue(*obj));
+  TryAttachIonStub<GetPropIRGenerator, IonGetPropSuperIC>(
+      cx, ic, ionScript, ic->kind(), val, idVal, receiver,
+      GetPropertyResultFlags::All);
 
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, idVal, &id)) {
