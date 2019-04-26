@@ -72,12 +72,12 @@ class BlobImplSnapshot final : public BlobImpl, public PIBlobImplSnapshot {
 
   virtual void GetMozFullPath(nsAString& aName,
                               SystemCallerGuarantee aGuarantee,
-                              ErrorResult& aRv) const override {
+                              ErrorResult& aRv) override {
     mBlobImpl->GetMozFullPath(aName, aGuarantee, aRv);
   }
 
   virtual void GetMozFullPathInternal(nsAString& aFileName,
-                                      ErrorResult& aRv) const override {
+                                      ErrorResult& aRv) override {
     mBlobImpl->GetMozFullPathInternal(aFileName, aRv);
   }
 
