@@ -2,7 +2,7 @@
 
 # AccessTokenInfo
 
-`data class AccessTokenInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L114)
+`data class AccessTokenInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L125)
 
 The result of authentication with FxA via an OAuth flow.
 

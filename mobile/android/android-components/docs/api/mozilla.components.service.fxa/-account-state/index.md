@@ -2,7 +2,7 @@
 
 # AccountState
 
-`enum class AccountState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L28)
+`enum class AccountState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L31)
 
 ### Enum Values
 

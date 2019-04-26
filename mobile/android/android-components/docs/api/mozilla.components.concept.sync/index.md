@@ -14,6 +14,7 @@
 | [OAuthAccount](-o-auth-account/index.md) | `interface OAuthAccount : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>Facilitates testing consumers of FirefoxAccount. |
 | [OAuthScopedKey](-o-auth-scoped-key/index.md) | `data class OAuthScopedKey`<br>Scoped key data. |
 | [Profile](-profile/index.md) | `data class Profile` |
+| [StatePersistenceCallback](-state-persistence-callback/index.md) | `interface StatePersistenceCallback`<br>Describes a delegate object that is used by [OAuthAccount](-o-auth-account/index.md) to persist its internal state as it changes. |
 | [StoreSyncStatus](-store-sync-status/index.md) | `data class StoreSyncStatus` |
 | [SyncManager](-sync-manager/index.md) | `interface SyncManager : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>`<br>Describes a "sync" entry point for an application. |
 | [SyncStatus](-sync-status/index.md) | `sealed class SyncStatus`<br>Results of running a sync via [SyncableStore.sync](-syncable-store/sync.md). |

@@ -21,3 +21,9 @@ http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patt
 | Name | Summary |
 |---|---|
 | [bestWebURL](best-web-u-r-l.md) | `fun bestWebURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Return best Web URL. |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [isWebURL](is-web-u-r-l.md) | `fun isWebURL(string: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Check if string is a Web URL. |

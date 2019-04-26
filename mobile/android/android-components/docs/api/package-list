@@ -86,6 +86,7 @@ mozilla.components.browser.engine.gecko.fetch
 mozilla.components.browser.engine.gecko.integration
 mozilla.components.browser.engine.gecko.permission
 mozilla.components.browser.engine.gecko.prompt
+mozilla.components.browser.engine.gecko.webextension
 mozilla.components.browser.engine.servo
 mozilla.components.browser.engine.system
 mozilla.components.browser.engine.system.matcher

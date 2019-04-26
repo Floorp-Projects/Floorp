@@ -2,7 +2,7 @@
 
 # AuthInfo
 
-`data class AuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L47)
+`data class AuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L58)
 
 A Firefox Sync friendly auth object which can be obtained from [OAuthAccount](../-o-auth-account/index.md).
 

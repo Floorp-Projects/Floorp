@@ -17,6 +17,7 @@ Facilitates testing consumers of FirefoxAccount.
 | [getAccessToken](get-access-token.md) | `abstract fun getAccessToken(singleScope: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`AccessTokenInfo`](../-access-token-info/index.md)`>` |
 | [getProfile](get-profile.md) | `abstract fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../-profile/index.md)`>`<br>`abstract fun getProfile(): Deferred<`[`Profile`](../-profile/index.md)`>` |
 | [getTokenServerEndpointURL](get-token-server-endpoint-u-r-l.md) | `abstract fun getTokenServerEndpointURL(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [registerPersistenceCallback](register-persistence-callback.md) | `abstract fun registerPersistenceCallback(callback: `[`StatePersistenceCallback`](../-state-persistence-callback/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [toJSONString](to-j-s-o-n-string.md) | `abstract fun toJSONString(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Inheritors

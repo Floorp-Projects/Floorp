@@ -6,5 +6,5 @@
 
 Feature implementation that provides a reader view for the selected
 session. This feature is implemented as a web extension and
-needs to be installed prior to use see [ReaderViewFeature.install](install.md).
+needs to be installed prior to use (see [ReaderViewFeature.install](install.md)).
 
