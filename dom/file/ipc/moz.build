@@ -19,6 +19,8 @@ EXPORTS.mozilla.dom += [
     'IPCBlobUtils.h',
     'PendingIPCBlobChild.h',
     'PendingIPCBlobParent.h',
+    'TemporaryIPCBlobChild.h',
+    'TemporaryIPCBlobParent.h',
 ]
 
 EXPORTS.mozilla.dom.ipc += [
@@ -26,8 +28,6 @@ EXPORTS.mozilla.dom.ipc += [
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
     'IPCBlobInputStreamStorage.h',
-    'TemporaryIPCBlobChild.h',
-    'TemporaryIPCBlobParent.h',
 ]
 
 UNIFIED_SOURCES += [
