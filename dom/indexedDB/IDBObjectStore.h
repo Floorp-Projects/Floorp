@@ -94,15 +94,17 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   static already_AddRefed<IDBObjectStore> Create(IDBTransaction* aTransaction,
                                                  const ObjectStoreSpec& aSpec);
 
-  static nsresult AppendIndexUpdateInfo(
-      int64_t aIndexID, const KeyPath& aKeyPath, bool aUnique, bool aMultiEntry,
-      const nsCString& aLocale, JSContext* aCx, JS::Handle<JS::Value> aObject,
-      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+  static void AppendIndexUpdateInfo(int64_t aIndexID, const KeyPath& aKeyPath,
+                                    bool aUnique, bool aMultiEntry,
+                                    const nsCString& aLocale, JSContext* aCx,
+                                    JS::Handle<JS::Value> aVal,
+                                    nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
+                                    ErrorResult& aRv);
 
-  static nsresult DeserializeIndexValueToUpdateInfos(
+  static void DeserializeIndexValueToUpdateInfos(
       int64_t aIndexID, const KeyPath& aKeyPath, bool aUnique, bool aMultiEntry,
-      const nsCString& aLocale, StructuredCloneReadInfo& aCloneInfo,
-      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+      const nsCString& aLocale, StructuredCloneReadInfo& aCloneReadInfo,
+      nsTArray<IndexUpdateInfo>& aUpdateInfoArray, ErrorResult& aRv);
 
   static void ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo);
 
@@ -287,10 +289,11 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
 
   ~IDBObjectStore();
 
-  nsresult GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
-                      JS::Handle<JS::Value> aKeyVal,
-                      StructuredCloneWriteInfo& aCloneWriteInfo, Key& aKey,
-                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+  void GetAddInfo(JSContext* aCx, ValueWrapper& aValueWrapper,
+                  JS::Handle<JS::Value> aKeyVal,
+                  StructuredCloneWriteInfo& aCloneWriteInfo, Key& aKey,
+                  nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
+                  ErrorResult& aRv);
 
   already_AddRefed<IDBRequest> AddOrPut(JSContext* aCx,
                                         ValueWrapper& aValueWrapper,

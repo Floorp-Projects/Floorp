@@ -287,7 +287,7 @@ already_AddRefed<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly,
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -360,7 +360,7 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -436,7 +436,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  aRv = IDBKeyRange::FromJSVal(aCx, aRange, getter_AddRefs(keyRange));
+  IDBKeyRange::FromJSVal(aCx, aRange, getter_AddRefs(keyRange), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -529,7 +529,7 @@ already_AddRefed<IDBRequest> IDBIndex::Count(JSContext* aCx,
   }
 
   RefPtr<IDBKeyRange> keyRange;
-  aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
+  IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

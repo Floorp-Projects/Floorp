@@ -21,6 +21,9 @@ struct ParamTraits;
 }  // namespace IPC
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 namespace indexedDB {
 
@@ -142,7 +145,8 @@ class Key {
     TrimBuffer();
   }
 
-  nsresult SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal);
+  void SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
+                    ErrorResult& aRv);
 
   nsresult ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) const;
 

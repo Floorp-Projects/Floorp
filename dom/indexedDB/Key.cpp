@@ -760,22 +760,21 @@ nsresult Key::SetFromValueArray(mozIStorageValueArray* aValues,
   return SetFromSource(aValues, aIndex);
 }
 
-nsresult Key::SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal) {
+void Key::SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
+                       ErrorResult& aRv) {
   mBuffer.Truncate();
 
   if (aVal.isNull() || aVal.isUndefined()) {
     Unset();
-    return NS_OK;
+    return;
   }
 
-  nsresult rv = EncodeJSVal(aCx, aVal, 0);
-  if (NS_FAILED(rv)) {
+  aRv = EncodeJSVal(aCx, aVal, 0);
+  if (aRv.Failed()) {
     Unset();
-    return rv;
+    return;
   }
   TrimBuffer();
-
-  return NS_OK;
 }
 
 nsresult Key::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) const {
