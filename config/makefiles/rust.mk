@@ -126,11 +126,13 @@ export PKG_CONFIG_ALLOW_CROSS=1
 export RUST_BACKTRACE=full
 export MOZ_TOPOBJDIR=$(topobjdir)
 
-TARGET_RECIPES := \
-  force-cargo-test-run \
-  $(foreach a,library program,$(foreach b,build check,force-cargo-$(a)-$(b)))
+target_rust_ltoable := force-cargo-library-build
+target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
 
-$(TARGET_RECIPES): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS)
+$(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST),-Clinker-plugin-lto)
+$(target_rust_nonltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS)
+
+TARGET_RECIPES := $(target_rust_ltoable) $(target_rust_nonltoable)
 
 HOST_RECIPES := \
   $(foreach a,library program,$(foreach b,build check,force-cargo-host-$(a)-$(b)))
