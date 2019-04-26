@@ -25,53 +25,53 @@ class HTMLEditor;
  * stateless. Any state must be stored via the refCon (an nsIEditor).
  */
 
-class EditorCommandBase : public nsIControllerCommand {
+class EditorCommand : public nsIControllerCommand {
  public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon,
-                              bool* aIsEnabled) override = 0;
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD DoCommand(const char* aCommandName,
-                       nsISupports* aCommandRefCon) override = 0;
-
  protected:
-  EditorCommandBase();
-  virtual ~EditorCommandBase() {}
+  EditorCommand() = default;
+  virtual ~EditorCommand() = default;
 };
 
-#define NS_DECL_EDITOR_COMMAND(_cmd)                                        \
-  class _cmd final : public EditorCommandBase {                             \
-   public:                                                                  \
-    NS_IMETHOD IsCommandEnabled(const char* aCommandName,                   \
-                                nsISupports* aCommandRefCon,                \
-                                bool* aIsEnabled) override;                 \
-    MOZ_CAN_RUN_SCRIPT                                                      \
-    NS_IMETHOD DoCommand(const char* aCommandName,                          \
-                         nsISupports* aCommandRefCon) override;             \
-    MOZ_CAN_RUN_SCRIPT                                                      \
-    NS_IMETHOD DoCommandParams(const char* aCommandName,                    \
-                               nsICommandParams* aParams,                   \
-                               nsISupports* aCommandRefCon) override;       \
-    NS_IMETHOD GetCommandStateParams(const char* aCommandName,              \
-                                     nsICommandParams* aParams,             \
-                                     nsISupports* aCommandRefCon) override; \
-    static _cmd* GetInstance() {                                            \
-      if (!sInstance) {                                                     \
-        sInstance = new _cmd();                                             \
-      }                                                                     \
-      return sInstance;                                                     \
-    }                                                                       \
-                                                                            \
-    static void Shutdown() { sInstance = nullptr; }                         \
-                                                                            \
-   protected:                                                               \
-    _cmd() = default;                                                       \
-    virtual ~_cmd() = default;                                              \
-                                                                            \
-   private:                                                                 \
-    static StaticRefPtr<_cmd> sInstance;                                    \
+#define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                                  \
+ public:                                                                      \
+  NS_IMETHOD IsCommandEnabled(const char* aCommandName,                       \
+                              nsISupports* aCommandRefCon, bool* aIsEnabled)  \
+      override;                                                               \
+  MOZ_CAN_RUN_SCRIPT                                                          \
+  NS_IMETHOD DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) \
+      override;                                                               \
+  MOZ_CAN_RUN_SCRIPT                                                          \
+  NS_IMETHOD DoCommandParams(const char* aCommandName,                        \
+                             nsICommandParams* aParams,                       \
+                             nsISupports* aCommandRefCon) override;           \
+  NS_IMETHOD GetCommandStateParams(const char* aCommandName,                  \
+                                   nsICommandParams* aParams,                 \
+                                   nsISupports* aCommandRefCon) override;
+
+#define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
+ public:                                                   \
+  static _cmd* GetInstance() {                             \
+    if (!sInstance) {                                      \
+      sInstance = new _cmd();                              \
+    }                                                      \
+    return sInstance;                                      \
+  }                                                        \
+                                                           \
+  static void Shutdown() { sInstance = nullptr; }          \
+                                                           \
+ private:                                                  \
+  static StaticRefPtr<_cmd> sInstance;
+
+#define NS_DECL_EDITOR_COMMAND(_cmd)                   \
+  class _cmd final : public EditorCommand {            \
+    NS_DECL_EDITOR_COMMAND_METHODS(_cmd)               \
+    NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
+                                                       \
+   protected:                                          \
+    _cmd() = default;                                  \
+    virtual ~_cmd() = default;                         \
   };
 
 // basic editor commands
@@ -100,65 +100,13 @@ NS_DECL_EDITOR_COMMAND(PasteQuotationCommand)
  * Commands for HTML editor
  ******************************************************************************/
 
-// This is a base class for commands registered with window which includes
-// HTMLEditor.  Like editor commands, these command classes are also designed
-// as singleton classes.  So, MUST be stateless.  Also note that
-// IsCommandEnabled can be called with an editor that may not have an editor
-// yet (because the document is loading).  Most commands will want to return
-// false in this case.  Don't hold on to any references to the editor or
-// document from your command.  This will cause leaks.  Also, be aware that
-// the document the editor is editing can change under you (if the user
-// Reverts the file, for instance).
-class HTMLEditorCommandBase : public nsIControllerCommand {
- public:
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
- protected:
-  HTMLEditorCommandBase() = default;
-  virtual ~HTMLEditorCommandBase() = default;
-};
-
-#define NS_DECL_HTML_EDITOR_COMMAND(_cmd)           \
-  class _cmd final : public HTMLEditorCommandBase { \
-   public:                                          \
-    NS_DECL_NSICONTROLLERCOMMAND                    \
-                                                    \
-    static _cmd* GetInstance() {                    \
-      if (!sInstance) {                             \
-        sInstance = new _cmd();                     \
-      }                                             \
-      return sInstance;                             \
-    }                                               \
-                                                    \
-    static void Shutdown() { sInstance = nullptr; } \
-                                                    \
-   private:                                         \
-    static StaticRefPtr<_cmd> sInstance;            \
-  };
-
-#define NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(_cmd) \
- public:                                            \
-  static _cmd* GetInstance() {                      \
-    if (!sInstance) {                               \
-      sInstance = new _cmd();                       \
-    }                                               \
-    return sInstance;                               \
-  }                                                 \
-                                                    \
-  static void Shutdown() { sInstance = nullptr; }   \
-                                                    \
- private:                                           \
-  static StaticRefPtr<_cmd> sInstance;
-
 // virtual base class for commands that need to save and update Boolean state
 // (like styles etc)
-class StateUpdatingCommandBase : public HTMLEditorCommandBase {
+class StateUpdatingCommandBase : public EditorCommand {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(StateUpdatingCommandBase,
-                                       HTMLEditorCommandBase)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(StateUpdatingCommandBase, EditorCommand)
 
-  NS_DECL_NSICONTROLLERCOMMAND
+  NS_DECL_EDITOR_COMMAND_METHODS(StateUpdatingCommandBase)
 
  protected:
   StateUpdatingCommandBase() = default;
@@ -215,7 +163,7 @@ class StateUpdatingCommandBase : public HTMLEditorCommandBase {
 // Suitable for commands whose state is either 'on' or 'off'.
 class StyleUpdatingCommand final : public StateUpdatingCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(StyleUpdatingCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(StyleUpdatingCommand)
 
  protected:
   StyleUpdatingCommand() = default;
@@ -232,12 +180,12 @@ class StyleUpdatingCommand final : public StateUpdatingCommandBase {
   nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) final;
 };
 
-class InsertTagCommand final : public HTMLEditorCommandBase {
+class InsertTagCommand final : public EditorCommand {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(InsertTagCommand, HTMLEditorCommandBase)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(InsertTagCommand, EditorCommand)
 
-  NS_DECL_NSICONTROLLERCOMMAND
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(InsertTagCommand)
+  NS_DECL_EDITOR_COMMAND_METHODS(InsertTagCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(InsertTagCommand)
 
  protected:
   InsertTagCommand() = default;
@@ -263,7 +211,7 @@ class InsertTagCommand final : public HTMLEditorCommandBase {
 
 class ListCommand final : public StateUpdatingCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ListCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(ListCommand)
 
  protected:
   ListCommand() = default;
@@ -282,7 +230,7 @@ class ListCommand final : public StateUpdatingCommandBase {
 
 class ListItemCommand final : public StateUpdatingCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ListItemCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(ListItemCommand)
 
  protected:
   ListItemCommand() = default;
@@ -300,11 +248,10 @@ class ListItemCommand final : public StateUpdatingCommandBase {
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
-class MultiStateCommandBase : public HTMLEditorCommandBase {
+class MultiStateCommandBase : public EditorCommand {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(MultiStateCommandBase,
-                                       HTMLEditorCommandBase)
-  NS_DECL_NSICONTROLLERCOMMAND
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(MultiStateCommandBase, EditorCommand)
+  NS_DECL_EDITOR_COMMAND_METHODS(MultiStateCommandBase)
 
  protected:
   MultiStateCommandBase() = default;
@@ -320,7 +267,7 @@ class MultiStateCommandBase : public HTMLEditorCommandBase {
 
 class ParagraphStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ParagraphStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(ParagraphStateCommand)
 
  protected:
   ParagraphStateCommand() = default;
@@ -335,7 +282,7 @@ class ParagraphStateCommand final : public MultiStateCommandBase {
 
 class FontFaceStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontFaceStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(FontFaceStateCommand)
 
  protected:
   FontFaceStateCommand() = default;
@@ -350,7 +297,7 @@ class FontFaceStateCommand final : public MultiStateCommandBase {
 
 class FontSizeStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontSizeStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(FontSizeStateCommand)
 
  protected:
   FontSizeStateCommand() = default;
@@ -365,7 +312,7 @@ class FontSizeStateCommand final : public MultiStateCommandBase {
 
 class HighlightColorStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(HighlightColorStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(HighlightColorStateCommand)
 
  protected:
   HighlightColorStateCommand() = default;
@@ -382,7 +329,7 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
 
 class FontColorStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontColorStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(FontColorStateCommand)
 
  protected:
   FontColorStateCommand() = default;
@@ -397,7 +344,7 @@ class FontColorStateCommand final : public MultiStateCommandBase {
 
 class AlignCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(AlignCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(AlignCommand)
 
  protected:
   AlignCommand() = default;
@@ -412,7 +359,7 @@ class AlignCommand final : public MultiStateCommandBase {
 
 class BackgroundColorStateCommand final : public MultiStateCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(BackgroundColorStateCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(BackgroundColorStateCommand)
 
  protected:
   BackgroundColorStateCommand() = default;
@@ -427,7 +374,7 @@ class BackgroundColorStateCommand final : public MultiStateCommandBase {
 
 class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
  public:
-  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(AbsolutePositioningCommand)
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(AbsolutePositioningCommand)
 
  protected:
   AbsolutePositioningCommand() = default;
@@ -445,32 +392,32 @@ class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
 
 // composer commands
 
-NS_DECL_HTML_EDITOR_COMMAND(DocumentStateCommand)
-NS_DECL_HTML_EDITOR_COMMAND(SetDocumentStateCommand)
+NS_DECL_EDITOR_COMMAND(DocumentStateCommand)
+NS_DECL_EDITOR_COMMAND(SetDocumentStateCommand)
 
-NS_DECL_HTML_EDITOR_COMMAND(DecreaseZIndexCommand)
-NS_DECL_HTML_EDITOR_COMMAND(IncreaseZIndexCommand)
+NS_DECL_EDITOR_COMMAND(DecreaseZIndexCommand)
+NS_DECL_EDITOR_COMMAND(IncreaseZIndexCommand)
 
 // Generic commands
 
 // Edit menu
-NS_DECL_HTML_EDITOR_COMMAND(PasteNoFormattingCommand)
+NS_DECL_EDITOR_COMMAND(PasteNoFormattingCommand)
 
 // Block transformations
-NS_DECL_HTML_EDITOR_COMMAND(IndentCommand)
-NS_DECL_HTML_EDITOR_COMMAND(OutdentCommand)
+NS_DECL_EDITOR_COMMAND(IndentCommand)
+NS_DECL_EDITOR_COMMAND(OutdentCommand)
 
-NS_DECL_HTML_EDITOR_COMMAND(RemoveListCommand)
-NS_DECL_HTML_EDITOR_COMMAND(RemoveStylesCommand)
-NS_DECL_HTML_EDITOR_COMMAND(IncreaseFontSizeCommand)
-NS_DECL_HTML_EDITOR_COMMAND(DecreaseFontSizeCommand)
+NS_DECL_EDITOR_COMMAND(RemoveListCommand)
+NS_DECL_EDITOR_COMMAND(RemoveStylesCommand)
+NS_DECL_EDITOR_COMMAND(IncreaseFontSizeCommand)
+NS_DECL_EDITOR_COMMAND(DecreaseFontSizeCommand)
 
 // Insert content commands
-NS_DECL_HTML_EDITOR_COMMAND(InsertHTMLCommand)
+NS_DECL_EDITOR_COMMAND(InsertHTMLCommand)
 
 #undef NS_DECL_EDITOR_COMMAND
-#undef NS_DECL_HTML_EDITOR_COMMAND
-#undef NS_DECL_HTML_EDITOR_COMMAND_SINGLETON
+#undef NS_DECL_EDITOR_COMMAND_METHODS
+#undef NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON
 
 }  // namespace mozilla
 

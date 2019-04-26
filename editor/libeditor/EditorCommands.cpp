@@ -32,12 +32,10 @@ class nsISupports;
 namespace mozilla {
 
 /******************************************************************************
- * mozilla::EditorCommandBase
+ * mozilla::EditorCommand
  ******************************************************************************/
 
-EditorCommandBase::EditorCommandBase() {}
-
-NS_IMPL_ISUPPORTS(EditorCommandBase, nsIControllerCommand)
+NS_IMPL_ISUPPORTS(EditorCommand, nsIControllerCommand)
 
 /******************************************************************************
  * mozilla::UndoCommand
