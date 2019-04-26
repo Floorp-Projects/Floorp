@@ -19,6 +19,8 @@ import {
   getPlainUrl
 } from "../utils/source";
 
+import { findBreakableLines } from "../utils/breakable-lines";
+import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import * as asyncValue from "../utils/async-value";
 import type { AsyncValue, SettledValue } from "../utils/async-value";
 import { originalToGeneratedId } from "devtools-source-map";
@@ -39,7 +41,9 @@ import type {
   SourceLocation,
   SourceContent,
   SourceWithContent,
-  ThreadId
+  ThreadId,
+  MappedLocation,
+  BreakpointPositions
 } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
@@ -48,6 +52,7 @@ import { uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
 type SourcesContentMap = { [SourceId]: SettledValue<SourceContent> | null };
+export type BreakpointPositionsMap = { [SourceId]: BreakpointPositions };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 
@@ -62,6 +67,9 @@ export type SourcesState = {
   sources: SourcesMap,
 
   content: SourcesContentMap,
+
+  breakpointPositions: BreakpointPositionsMap,
+  breakableLines: { [SourceId]: Array<number> },
 
   // A link between each source object and the source actor they wrap over.
   actors: SourceActorMap,
@@ -94,6 +102,8 @@ export function initialSourcesState(): SourcesState {
     plainUrls: {},
     content: {},
     actors: {},
+    breakpointPositions: {},
+    breakableLines: {},
     epoch: 1,
     selectedLocation: undefined,
     pendingSelectedLocation: prefs.pendingSelectedLocation,
@@ -177,6 +187,22 @@ function update(
     case "SET_PROJECT_DIRECTORY_ROOT":
       return updateProjectDirectoryRoot(state, action.url);
 
+    case "ADD_BREAKPOINT_POSITIONS": {
+      const { source, positions } = action;
+      const breakableLines = findBreakableLines(source, positions);
+
+      return {
+        ...state,
+        breakpointPositions: {
+          ...state.breakpointPositions,
+          [source.id]: positions
+        },
+        breakableLines: {
+          ...state.breakableLines,
+          [source.id]: breakableLines
+        }
+      };
+    }
     case "NAVIGATE":
       return {
         ...initialSourcesState(),
@@ -242,6 +268,21 @@ function insertSourceActors(state: SourcesState, action): SourcesState {
       ...(state.actors[sourceActor.source] || []),
       sourceActor.id
     ];
+  }
+
+  const scriptActors = items.filter(
+    item => item.introductionType === "scriptElement"
+  );
+  if (scriptActors.length > 0) {
+    const { ...breakpointPositions } = state.breakpointPositions;
+
+    // If new HTML sources are being added, we need to clear the breakpoint
+    // positions since the new source is a <script> with new breakpoints.
+    for (const { source } of scriptActors) {
+      delete breakpointPositions[source];
+    }
+
+    state = { ...state, breakpointPositions };
   }
 
   return state;
@@ -800,6 +841,44 @@ export function getSourceActorsForSource(
   }
 
   return getSourceActors(state, actors);
+}
+
+export function getBreakpointPositions(
+  state: OuterState
+): BreakpointPositionsMap {
+  return state.sources.breakpointPositions;
+}
+
+export function getBreakpointPositionsForSource(
+  state: OuterState,
+  sourceId: string
+): ?BreakpointPositions {
+  const positions = getBreakpointPositions(state);
+  return positions && positions[sourceId];
+}
+
+export function hasBreakpointPositions(
+  state: OuterState,
+  sourceId: string
+): boolean {
+  return !!getBreakpointPositionsForSource(state, sourceId);
+}
+
+export function getBreakpointPositionsForLocation(
+  state: OuterState,
+  location: SourceLocation
+): ?MappedLocation {
+  const { sourceId } = location;
+  const positions = getBreakpointPositionsForSource(state, sourceId);
+  return findPosition(positions, location);
+}
+
+export function getBreakableLines(state: OuterState, sourceId: string) {
+  if (!sourceId) {
+    return null;
+  }
+
+  return state.sources.breakableLines[sourceId];
 }
 
 export default update;
