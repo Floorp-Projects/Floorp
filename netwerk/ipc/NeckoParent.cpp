@@ -980,8 +980,9 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
   auto callback = [aResolver{std::move(aResolver)}](bool aResult) {
     aResolver(aResult);
   };
-  gHttpHandler->EnsureHSTSDataReadyNative(
-      new HSTSDataCallbackWrapper(std::move(callback)));
+  RefPtr<HSTSDataCallbackWrapper> wrapper =
+      new HSTSDataCallbackWrapper(std::move(callback));
+  gHttpHandler->EnsureHSTSDataReadyNative(wrapper.forget());
   return IPC_OK();
 }
 
