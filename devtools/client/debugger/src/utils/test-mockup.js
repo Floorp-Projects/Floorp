@@ -18,8 +18,6 @@ import type {
   Frame,
   FrameId,
   Scope,
-  JsSource,
-  WasmSource,
   Source,
   SourceId,
   SourceWithContentAndType,
@@ -30,10 +28,7 @@ import type {
 } from "../types";
 import * as asyncValue from "./async-value";
 
-function makeMockSource(
-  url: string = "url",
-  id: SourceId = "source"
-): JsSource {
+function makeMockSource(url: string = "url", id: SourceId = "source"): Source {
   return {
     id,
     url,
@@ -85,7 +80,7 @@ function makeMockSourceAndContent(
   };
 }
 
-function makeMockWasmSource(): WasmSource {
+function makeMockWasmSource(): Source {
   return {
     id: "wasm-source-id",
     url: "url",

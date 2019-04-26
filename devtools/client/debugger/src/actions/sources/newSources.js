@@ -117,7 +117,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
         // it is not collapsed into other sources from the same place. The
         // introduction URL will include the point it was constructed at,
         // however, so use that for resolving any source maps in the source.
-        urlInfo.url = urlInfo.introductionUrl;
+        (urlInfo: any).url = urlInfo.introductionUrl;
       }
       urls = await sourceMaps.getOriginalURLs(urlInfo);
     } catch (e) {
