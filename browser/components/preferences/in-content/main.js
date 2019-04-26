@@ -2203,9 +2203,11 @@ var gMainPane = {
   readUseDownloadDir() {
     var downloadFolder = document.getElementById("downloadFolder");
     var chooseFolder = document.getElementById("chooseFolder");
-    var preference = Preferences.get("browser.download.useDownloadDir");
-    downloadFolder.disabled = !preference.value || preference.locked;
-    chooseFolder.disabled = !preference.value || preference.locked;
+    var useDownloadDirPreference = Preferences.get("browser.download.useDownloadDir");
+    var dirPreference = Preferences.get("browser.download.dir");
+
+    downloadFolder.disabled = !useDownloadDirPreference.value || dirPreference.locked;
+    chooseFolder.disabled = !useDownloadDirPreference.value || dirPreference.locked;
 
     this.readCloudStorage().catch(Cu.reportError);
     // don't override the preference's value in UI
