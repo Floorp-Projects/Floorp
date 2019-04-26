@@ -146,6 +146,7 @@ class WasmToken {
     TableInit,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+    TableFill,
     TableGet,
     TableGrow,
     TableSet,
@@ -346,6 +347,7 @@ class WasmToken {
       case TableInit:
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+      case TableFill:
       case TableGet:
       case TableGrow:
       case TableSet:
@@ -2260,6 +2262,9 @@ WasmToken WasmTokenStream::next() {
         }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+        if (consume(u"fill")) {
+          return WasmToken(WasmToken::TableFill, begin, cur_);
+        }
         if (consume(u"get")) {
           return WasmToken(WasmToken::TableGet, begin, cur_);
         }
@@ -3791,6 +3796,31 @@ static AstMemOrTableInit* ParseMemOrTableInit(WasmParseContext& c,
 #endif
 
 #ifdef ENABLE_WASM_REFTYPES
+static AstTableFill* ParseTableFill(WasmParseContext& c, bool inParens) {
+  // (table.fill table start val len)
+  // (table.fill start val len)
+
+  AstRef targetTable = AstRef(0);
+  c.ts.getIfRef(&targetTable);
+
+  AstExpr* start = ParseExpr(c, inParens);
+  if (!start) {
+    return nullptr;
+  }
+
+  AstExpr* val = ParseExpr(c, inParens);
+  if (!val) {
+    return nullptr;
+  }
+
+  AstExpr* len = ParseExpr(c, inParens);
+  if (!len) {
+    return nullptr;
+  }
+
+  return new (c.lifo) AstTableFill(targetTable, start, val, len);
+}
+
 static AstTableGet* ParseTableGet(WasmParseContext& c, bool inParens) {
   // (table.get table index)
   // (table.get index)
@@ -4046,6 +4076,8 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseMemOrTableInit(c, inParens, /*isMem=*/false);
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+    case WasmToken::TableFill:
+      return ParseTableFill(c, inParens);
     case WasmToken::TableGet:
       return ParseTableGet(c, inParens);
     case WasmToken::TableGrow:
@@ -5659,6 +5691,11 @@ static bool ResolveMemOrTableInit(Resolver& r, AstMemOrTableInit& s) {
 #endif
 
 #ifdef ENABLE_WASM_REFTYPES
+static bool ResolveTableFill(Resolver& r, AstTableFill& s) {
+  return ResolveExpr(r, s.start()) && ResolveExpr(r, s.val()) &&
+         ResolveExpr(r, s.len()) && r.resolveTable(s.targetTable());
+}
+
 static bool ResolveTableGet(Resolver& r, AstTableGet& s) {
   return ResolveExpr(r, s.index()) && r.resolveTable(s.targetTable());
 }
@@ -5811,6 +5848,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return ResolveMemOrTableInit(r, expr.as<AstMemOrTableInit>());
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+    case AstExprKind::TableFill:
+      return ResolveTableFill(r, expr.as<AstTableFill>());
     case AstExprKind::TableGet:
       return ResolveTableGet(r, expr.as<AstTableGet>());
     case AstExprKind::TableGrow:
@@ -6433,6 +6472,12 @@ static bool EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s) {
 #endif
 
 #ifdef ENABLE_WASM_REFTYPES
+static bool EncodeTableFill(Encoder& e, AstTableFill& s) {
+  return EncodeExpr(e, s.start()) && EncodeExpr(e, s.val()) &&
+         EncodeExpr(e, s.len()) && e.writeOp(MiscOp::TableFill) &&
+         e.writeVarU32(s.targetTable().index());
+}
+
 static bool EncodeTableGet(Encoder& e, AstTableGet& s) {
   return EncodeExpr(e, s.index()) && e.writeOp(Op::TableGet) &&
          e.writeVarU32(s.targetTable().index());
@@ -6610,6 +6655,8 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeMemOrTableInit(e, expr.as<AstMemOrTableInit>());
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+    case AstExprKind::TableFill:
+      return EncodeTableFill(e, expr.as<AstTableFill>());
     case AstExprKind::TableGet:
       return EncodeTableGet(e, expr.as<AstTableGet>());
     case AstExprKind::TableGrow:
