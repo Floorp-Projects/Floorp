@@ -43,8 +43,8 @@ typedef uint32_t SequenceNumber;
 // TODO(botond):
 //  - Improve warnings/asserts.
 //  - Add ability to associate a repaint request triggered during a layers
-//  update
-//    with the sequence number of the paint that caused the layers update.
+//    update with the sequence number of the paint that caused the layers
+//    update.
 class APZTestData {
   typedef ScrollableLayerGuid::ViewID ViewID;
   friend struct IPC::ParamTraits<APZTestData>;
@@ -78,11 +78,15 @@ class APZTestData {
                        const ViewID& aScrollId) {
     mHitResults.AppendElement(HitResult{aPoint, aResult, aScrollId});
   }
+  void RecordAdditionalData(const std::string& aKey,
+                            const std::string& aValue) {
+    mAdditionalData[aKey] = aValue;
+  }
 
   // Convert this object to a JS representation.
   bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext) const;
 
-  // Use dummy derived structures wrapping the tyepdefs to work around a type
+  // Use dummy derived structures wrapping the typedefs to work around a type
   // name length limit in MSVC.
   typedef std::map<std::string, std::string> ScrollFrameDataBase;
   struct ScrollFrameData : ScrollFrameDataBase {};
@@ -100,6 +104,8 @@ class APZTestData {
   DataStore mPaints;
   DataStore mRepaintRequests;
   nsTArray<HitResult> mHitResults;
+  // Additional free-form data that's not grouped paint or scroll frame.
+  std::map<std::string, std::string> mAdditionalData;
 
   void LogTestDataImpl(DataStore& aDataStore, SequenceNumber aSequenceNumber,
                        ViewID aScrollId, const std::string& aKey,

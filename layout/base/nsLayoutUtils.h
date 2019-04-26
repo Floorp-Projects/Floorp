@@ -2729,6 +2729,21 @@ class nsLayoutUtils {
   static bool ShouldDisableApzForElement(nsIContent* aContent);
 
   /**
+   * Log a key/value pair as "additional data" (not associated with a paint)
+   * for APZ testing.
+   * While the data is not associated with a paint, the APZTestData object
+   * is still owned by {Client,WebRender}LayerManager, so we need to be passed
+   * something from which we can derive the layer manager.
+   * This function takes a display list builder as the object to derive the
+   * layer manager from, to facilitate logging test data during display list
+   * building, but other overloads that take other objects could be added if
+   * desired.
+   */
+  static void LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
+                                    const std::string& aKey,
+                                    const std::string& aValue);
+
+  /**
    * Log a key/value pair for APZ testing during a paint.
    * @param aManager   The data will be written to the APZTestData associated
    *                   with this layer manager.

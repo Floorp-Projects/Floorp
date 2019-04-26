@@ -41,6 +41,8 @@ struct APZTestDataToJSConverter {
                ConvertBucket);
     ConvertList(aFrom.mHitResults, aOutTo.mHitResults.Construct(),
                 ConvertHitResult);
+    ConvertMap(aFrom.mAdditionalData, aOutTo.mAdditionalData.Construct(),
+               ConvertAdditionalDataEntry);
   }
 
   static void ConvertBucket(const SequenceNumber& aKey,
@@ -60,6 +62,13 @@ struct APZTestDataToJSConverter {
 
   static void ConvertEntry(const std::string& aKey, const std::string& aValue,
                            dom::ScrollFrameDataEntry& aOutKeyValuePair) {
+    ConvertString(aKey, aOutKeyValuePair.mKey.Construct());
+    ConvertString(aValue, aOutKeyValuePair.mValue.Construct());
+  }
+
+  static void ConvertAdditionalDataEntry(
+      const std::string& aKey, const std::string& aValue,
+      dom::AdditionalDataEntry& aOutKeyValuePair) {
     ConvertString(aKey, aOutKeyValuePair.mKey.Construct());
     ConvertString(aValue, aOutKeyValuePair.mValue.Construct());
   }
