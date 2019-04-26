@@ -86,16 +86,12 @@ export type SourcesState = {
   focusedItem: ?FocusItem
 };
 
-const emptySources = {
-  sources: {},
-  displayed: new Set(),
-  urls: {},
-  plainUrls: {}
-};
-
 export function initialSourcesState(): SourcesState {
   return {
-    ...emptySources,
+    sources: {},
+    displayed: new Set(),
+    urls: {},
+    plainUrls: {},
     content: {},
     actors: {},
     epoch: 1,
@@ -195,19 +191,6 @@ function update(
 }
 
 /*
- * Update all of the sources when an event occurs.
- * e.g. workers are updated, project directory root changes
- */
-function updateAllSources(state: SourcesState, callback: any) {
-  const updatedSources = Object.values(state.sources).map(source => ({
-    ...source,
-    ...callback(source)
-  }));
-
-  return addSources({ ...state, ...emptySources }, updatedSources);
-}
-
-/*
  * Add sources to the sources store
  * - Add the source to the sources store
  * - Add the source URL to the urls map
@@ -217,15 +200,14 @@ function addSources(state: SourcesState, sources: Source[]): SourcesState {
     ...state,
     content: { ...state.content },
     sources: { ...state.sources },
-    displayed: new Set(state.displayed),
     urls: { ...state.urls },
     plainUrls: { ...state.plainUrls }
   };
 
   for (const source of sources) {
     // 1. Add the source to the sources map
-    state.sources[source.id] = state.sources[source.id] || source;
-    state.content[source.id] = state.content[source.id] || null;
+    state.sources[source.id] = source;
+    state.content[source.id] = null;
 
     // 2. Update the source url map
     const existing = state.urls[source.url] || [];
@@ -241,16 +223,9 @@ function addSources(state: SourcesState, sources: Source[]): SourcesState {
         state.plainUrls[plainUrl] = [...existingPlainUrls, source.url];
       }
     }
-
-    // 4. Update the displayed actor map
-    if (
-      underRoot(source, state.projectDirectoryRoot) &&
-      (!source.isExtension ||
-        getChromeAndExtenstionsEnabled({ sources: state }))
-    ) {
-      state.displayed.add(source.id);
-    }
   }
+
+  state = updateRootRelativeValues(state, sources);
 
   return state;
 }
@@ -301,9 +276,46 @@ function removeSourceActors(state: SourcesState, action) {
 function updateProjectDirectoryRoot(state: SourcesState, root: string) {
   prefs.projectDirectoryRoot = root;
 
-  return updateAllSources({ ...state, projectDirectoryRoot: root }, source => ({
-    relativeUrl: getRelativeUrl(source, root)
-  }));
+  return updateRootRelativeValues({
+    ...state,
+    projectDirectoryRoot: root
+  });
+}
+
+function updateRootRelativeValues(
+  state: SourcesState,
+  sources?: Array<Source>
+) {
+  const ids = sources
+    ? sources.map(source => source.id)
+    : Object.keys(state.sources);
+
+  state = {
+    ...state,
+    sources: { ...state.sources },
+    displayed: new Set(state.displayed)
+  };
+
+  for (const id of ids) {
+    const source = state.sources[id];
+
+    state.displayed.delete(source.id);
+
+    if (
+      underRoot(source, state.projectDirectoryRoot) &&
+      (!source.isExtension ||
+        getChromeAndExtenstionsEnabled({ sources: state }))
+    ) {
+      state.displayed.add(source.id);
+    }
+
+    state.sources[id] = {
+      ...source,
+      relativeUrl: getRelativeUrl(source, state.projectDirectoryRoot)
+    };
+  }
+
+  return state;
 }
 
 /*
