@@ -21,6 +21,8 @@ import android.widget.ImageButton
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import org.mozilla.fenix.utils.Settings
 
+const val POSITION_SNAP_BUFFER = 1f
+
 class QuickActionSheet @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -143,19 +145,6 @@ class QuickActionSheetBehavior(
     attrs: AttributeSet
 ) : BottomSheetBehavior<NestedScrollView>(context, attrs) {
 
-    override fun onNestedPreScroll(
-        coordinatorLayout: CoordinatorLayout,
-        child: NestedScrollView,
-        target: View,
-        dx: Int,
-        dy: Int,
-        consumed: IntArray,
-        type: Int
-    ) {
-        if (dy < 0) { state = STATE_COLLAPSED }
-        super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
-    }
-
     override fun layoutDependsOn(parent: CoordinatorLayout, child: NestedScrollView, dependency: View): Boolean {
         if (dependency is BrowserToolbar) {
             return true
@@ -178,7 +167,12 @@ class QuickActionSheetBehavior(
     }
 
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
-        if (toolbar.translationY == toolbar.height.toFloat()) { state = STATE_HIDDEN }
+        if (toolbar.translationY >= toolbar.height.toFloat() - POSITION_SNAP_BUFFER) {
+            state = STATE_HIDDEN
+        } else if (state == STATE_HIDDEN || state == STATE_SETTLING) {
+            state = STATE_COLLAPSED
+        }
+
         quickActionSheetContainer.translationY = (toolbar.translationY + toolbar.height * -1.0).toFloat()
     }
 }
