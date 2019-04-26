@@ -5,7 +5,7 @@
 // receives result from benchmark and relays onto our background runner
 
 function receiveMessage(event) {
-  console.log("raptor benchmark-relay received message");
+  console.log("raptor benchmark received message");
   console.log(event.data);
   // raptor benchmark message data [0] is raptor tag, [1] is benchmark
   // name, and the rest is actual benchmark results that we want to fw
@@ -22,5 +22,5 @@ function sendResult(_type, _value) {
   });
 }
 
-console.log("raptor benchmark-relay content loaded");
+console.log("raptor benchmark content loaded");
 window.addEventListener("message", receiveMessage);
