@@ -743,28 +743,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
 
   SRIMetadata sriMetadata;
   mSheet->GetIntegrity(sriMetadata);
-  if (sriMetadata.IsEmpty()) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    if (loadInfo->GetEnforceSRI()) {
-      LOG(("  Load was blocked by SRI"));
-      MOZ_LOG(gSriPRLog, mozilla::LogLevel::Debug,
-              ("css::Loader::OnStreamComplete, required SRI not found"));
-      mLoader->SheetComplete(this, NS_ERROR_SRI_CORRUPT);
-      // log the failed load to web console
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
-      loadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(csp));
-      nsAutoCString spec;
-      mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(spec);
-      // line number unknown. mRequestingNode doesn't bear this info.
-      csp->LogViolationDetails(
-          nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE,
-          nullptr,  // triggering element
-          nullptr,  // nsICSPEventListener
-          NS_ConvertUTF8toUTF16(spec), EmptyString(), 0, 0, EmptyString(),
-          EmptyString());
-      return NS_OK;
-    }
-  } else {
+  if (!sriMetadata.IsEmpty()) {
     nsAutoCString sourceUri;
     if (mLoader->mDocument && mLoader->mDocument->GetDocumentURI()) {
       mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);

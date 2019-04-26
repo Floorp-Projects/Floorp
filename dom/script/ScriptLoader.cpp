@@ -3215,29 +3215,6 @@ nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_SRI_CORRUPT;
     }
-  } else {
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-
-    if (loadInfo->GetEnforceSRI()) {
-      MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-              ("ScriptLoader::OnStreamComplete, required SRI not found"));
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
-      loadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(csp));
-      nsAutoCString violationURISpec;
-      mDocument->GetDocumentURI()->GetAsciiSpec(violationURISpec);
-      uint32_t lineNo =
-          aRequest->Element() ? aRequest->Element()->GetScriptLineNumber() : 0;
-      uint32_t columnNo = aRequest->Element()
-                              ? aRequest->Element()->GetScriptColumnNumber()
-                              : 0;
-      csp->LogViolationDetails(
-          nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT,
-          nullptr,  // triggering element
-          nullptr,  // nsICSPEventListener
-          NS_ConvertUTF8toUTF16(violationURISpec), EmptyString(), lineNo,
-          columnNo, EmptyString(), EmptyString());
-      rv = NS_ERROR_SRI_CORRUPT;
-    }
   }
 
   return rv;

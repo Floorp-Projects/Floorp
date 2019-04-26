@@ -12,7 +12,6 @@ TEST_DIRS += ['test']
 DIRS += [ 'featurepolicy' ]
 
 EXPORTS.mozilla.dom += [
-    'ContentVerifier.h',
     'CSPEvalChecker.h',
     'FramingChecker.h',
     'nsContentSecurityManager.h',
@@ -34,7 +33,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'ContentVerifier.cpp',
     'CSPEvalChecker.cpp',
     'FramingChecker.cpp',
     'nsContentSecurityManager.cpp',

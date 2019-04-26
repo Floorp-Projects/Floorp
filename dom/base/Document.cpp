@@ -2835,16 +2835,8 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   rv = principal->EnsureCSP(this, getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check if this is a signed content to apply default CSP.
-  bool applySignedContentCSP = false;
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->GetVerifySignedContent()) {
-    applySignedContentCSP = true;
-  }
-
   // If there's no CSP to apply, go ahead and return early
-  if (!addonPolicy && !applySignedContentCSP && cspHeaderValue.IsEmpty() &&
-      cspROHeaderValue.IsEmpty()) {
+  if (!addonPolicy && cspHeaderValue.IsEmpty() && cspROHeaderValue.IsEmpty()) {
     if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
       nsCOMPtr<nsIURI> chanURI;
       aChannel->GetURI(getter_AddRefs(chanURI));
@@ -2870,16 +2862,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     csp->AppendPolicy(addonCSP, false, false);
 
     csp->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
-  }
-
-  // ----- if the doc is a signed content, apply the default CSP.
-  // Note that when the content signing becomes a standard, we might have
-  // to restrict this enforcement to "remote content" only.
-  if (applySignedContentCSP) {
-    nsAutoString signedContentCSP;
-    Preferences::GetString("security.signed_content.CSP.default",
-                           signedContentCSP);
-    csp->AppendPolicy(signedContentCSP, false, false);
   }
 
   // ----- if there's a full-strength CSP header, apply it.
