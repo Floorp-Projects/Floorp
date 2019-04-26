@@ -2369,7 +2369,7 @@ GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script,
       env_(env),
       name_(name) {}
 
-bool GetNameIRGenerator::tryAttachStub() {
+AttachDecision GetNameIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::GetName);
 
   AutoAssertNoPendingException aanpe(cx_);
@@ -2377,18 +2377,12 @@ bool GetNameIRGenerator::tryAttachStub() {
   ObjOperandId envId(writer.setInputOperandId(0));
   RootedId id(cx_, NameToId(name_));
 
-  if (tryAttachGlobalNameValue(envId, id)) {
-    return true;
-  }
-  if (tryAttachGlobalNameGetter(envId, id)) {
-    return true;
-  }
-  if (tryAttachEnvironmentName(envId, id)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachGlobalNameValue(envId, id));
+  TRY_ATTACH(tryAttachGlobalNameGetter(envId, id));
+  TRY_ATTACH(tryAttachEnvironmentName(envId, id));
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
 bool CanAttachGlobalName(JSContext* cx,
@@ -2424,10 +2418,10 @@ bool CanAttachGlobalName(JSContext* cx,
   return true;
 }
 
-bool GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
-                                                  HandleId id) {
+AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
+                                                            HandleId id) {
   if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Handle<LexicalEnvironmentObject*> globalLexical =
@@ -2437,17 +2431,17 @@ bool GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
   RootedNativeObject holder(cx_);
   RootedShape shape(cx_);
   if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // The property must be found, and it must be found as a normal data property.
   if (!shape->isDataProperty()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // This might still be an uninitialized lexical.
   if (holder->getSlot(shape->slot()).isMagic()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Instantiate this global property, for use during Ion compilation.
@@ -2468,7 +2462,7 @@ bool GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     // scope's shape independently.
     if (!IsCacheableGetPropReadSlot(&globalLexical->global(), holder,
                                     PropertyResult(shape))) {
-      return false;
+      return AttachDecision::NoAction;
     }
 
     // Shape guard for global lexical.
@@ -2491,13 +2485,13 @@ bool GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
   writer.typeMonitorResult();
 
   trackAttached("GlobalNameValue");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
-                                                   HandleId id) {
+AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
+                                                             HandleId id) {
   if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Handle<LexicalEnvironmentObject*> globalLexical =
@@ -2507,15 +2501,15 @@ bool GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
   RootedNativeObject holder(cx_);
   RootedShape shape(cx_);
   if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (holder == globalLexical) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!IsCacheableGetPropCallNative(&globalLexical->global(), holder, shape)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (IsIonEnabled(cx_)) {
@@ -2539,7 +2533,7 @@ bool GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
                                globalId);
 
   trackAttached("GlobalNameGetter");
-  return true;
+  return AttachDecision::Attach;
 }
 
 static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
@@ -2560,10 +2554,10 @@ static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
   return false;
 }
 
-bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
-                                                  HandleId id) {
+AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
+                                                            HandleId id) {
   if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject env(cx_, env_);
@@ -2576,11 +2570,11 @@ bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
       if (shape) {
         break;
       }
-      return false;
+      return AttachDecision::NoAction;
     }
 
     if (!env->is<EnvironmentObject>() || env->is<WithEnvironmentObject>()) {
-      return false;
+      return AttachDecision::NoAction;
     }
 
     MOZ_ASSERT(!env->hasUncacheableProto());
@@ -2598,10 +2592,10 @@ bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
 
   holder = &env->as<NativeObject>();
   if (!IsCacheableGetPropReadSlot(holder, holder, PropertyResult(shape))) {
-    return false;
+    return AttachDecision::NoAction;
   }
   if (holder->getSlot(shape->slot()).isMagic()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ObjOperandId lastObjId = objId;
@@ -2630,7 +2624,7 @@ bool GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.typeMonitorResult();
 
   trackAttached("EnvironmentName");
-  return true;
+  return AttachDecision::Attach;
 }
 
 void GetNameIRGenerator::trackAttached(const char* name) {

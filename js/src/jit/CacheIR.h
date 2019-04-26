@@ -2087,9 +2087,9 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
   HandleObject env_;
   HandlePropertyName name_;
 
-  bool tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
-  bool tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
-  bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   void trackAttached(const char* name);
 
@@ -2098,7 +2098,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
                      ICState::Mode mode, HandleObject env,
                      HandlePropertyName name);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 // BindNameIRGenerator generates CacheIR for a BindName IC.
