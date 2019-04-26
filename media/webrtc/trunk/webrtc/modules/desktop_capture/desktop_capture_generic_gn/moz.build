@@ -74,7 +74,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_mac.mm",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_device_info_mac.mm",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.cc",
@@ -103,7 +102,6 @@ if CONFIG["OS_TARGET"] == "DragonFly":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_linux.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
@@ -141,7 +139,6 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_linux.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
@@ -181,7 +178,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_linux.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
@@ -219,7 +215,6 @@ if CONFIG["OS_TARGET"] == "NetBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_linux.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
@@ -257,7 +252,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_linux.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/desktop_device_info_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
@@ -310,7 +304,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_win.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/cropping_window_capturer_win.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_frame_win.cc",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_win.cc",
