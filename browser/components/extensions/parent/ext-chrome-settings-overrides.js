@@ -181,14 +181,14 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let homepageUrl = manifest.chrome_settings_overrides.homepage;
 
     if (homepageUrl) {
-      let inControl;
-      if (extension.startupReason == "ADDON_INSTALL" ||
-          extension.startupReason == "ADDON_ENABLE") {
+      // Determine inControl before applying any update so that if a controlling extension
+      // updates its homepage url, the pref will get updated properly.
+      let item = await ExtensionPreferencesManager.getSetting("homepage_override");
+      let inControl = item && (item.id == extension.id);
+      if (["ADDON_INSTALL", "ADDON_ENABLE", "ADDON_UPGRADE"].includes(extension.startupReason)) {
+        const setAsCurrentHomepage = inControl || extension.startupReason === "ADDON_INSTALL";
         inControl = await ExtensionPreferencesManager.setSetting(
-          extension.id, "homepage_override", homepageUrl);
-      } else {
-        let item = await ExtensionPreferencesManager.getSetting("homepage_override");
-        inControl = item.id == extension.id;
+          extension.id, "homepage_override", homepageUrl, setAsCurrentHomepage);
       }
       // We need to add the listener here too since onPrefsChanged won't trigger on a
       // restart (the prefs are already set).
