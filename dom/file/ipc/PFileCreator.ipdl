@@ -11,7 +11,7 @@ include protocol PParentToChildStream;
 include IPCBlob;
 
 namespace mozilla {
-namespace ipc {
+namespace dom {
 
 struct FileCreationSuccessResult
 {
@@ -37,5 +37,5 @@ child:
   async __delete__(FileCreationResult aResult);
 };
 
-} // namespace ipc
+} // namespace dom 
 } // namespace mozilla

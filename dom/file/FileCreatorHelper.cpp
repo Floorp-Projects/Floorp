@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/FileBinding.h"
-#include "mozilla/dom/ipc/FileCreatorChild.h"
+#include "mozilla/dom/FileCreatorChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/dom/File.h"
@@ -58,10 +58,9 @@ already_AddRefed<Promise> FileCreatorHelper::CreateFile(
     lastModified.emplace(aBag.mLastModified.Value());
   }
 
-  mozilla::ipc::PFileCreatorChild* actor =
-      actorChild->SendPFileCreatorConstructor(
-          path, aBag.mType, aBag.mName, lastModified, aBag.mExistenceCheck,
-          aIsFromNsIFile);
+  PFileCreatorChild* actor = actorChild->SendPFileCreatorConstructor(
+      path, aBag.mType, aBag.mName, lastModified, aBag.mExistenceCheck,
+      aIsFromNsIFile);
 
   static_cast<FileCreatorChild*>(actor)->SetPromise(promise);
   return promise.forget();
