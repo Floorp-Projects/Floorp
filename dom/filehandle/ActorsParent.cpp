@@ -16,7 +16,7 @@
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/ipc/PendingIPCBlobParent.h"
+#include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
