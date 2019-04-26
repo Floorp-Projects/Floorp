@@ -1859,6 +1859,19 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
 }
 
 NS_IMETHODIMP
+HttpChannelParent::SetClassifierMatchedTrackingInfo(
+    const nsACString& aLists, const nsACString& aFullHashes) {
+  LOG(("HttpChannelParent::SetClassifierMatchedTrackingInfo [this=%p]\n",
+       this));
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnSetClassifierMatchedTrackingInfo(aLists,
+                                                            aFullHashes);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                              bool aIsThirdParty) {
   LOG(

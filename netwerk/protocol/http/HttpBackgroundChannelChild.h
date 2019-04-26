@@ -79,6 +79,8 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info);
 
+  IPCResult RecvSetClassifierMatchedTrackingInfo(const ClassifierInfo& info);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

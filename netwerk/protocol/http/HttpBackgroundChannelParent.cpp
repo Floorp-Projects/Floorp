@@ -498,6 +498,40 @@ bool HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
   return SendSetClassifierMatchedInfo(info);
 }
 
+bool HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo(
+    const nsACString& aLists, const nsACString& aFullHashes) {
+  LOG(
+      ("HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo "
+       "[this=%p]\n",
+       this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
+    nsresult rv = mBackgroundThread->Dispatch(
+        NewRunnableMethod<const nsCString, const nsCString>(
+            "net::HttpBackgroundChannelParent::"
+            "OnSetClassifierMatchedTrackingInfo",
+            this,
+            &HttpBackgroundChannelParent::OnSetClassifierMatchedTrackingInfo,
+            aLists, aFullHashes),
+        NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  ClassifierInfo info;
+  info.list() = aLists;
+  info.fullhash() = aFullHashes;
+
+  return SendSetClassifierMatchedTrackingInfo(info);
+}
 void HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("HttpBackgroundChannelParent::ActorDestroy [this=%p]\n", this));
   AssertIsInMainProcess();

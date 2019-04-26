@@ -85,6 +85,10 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
                                   const nsACString& aProvider,
                                   const nsACString& aFullHash);
 
+  // To send SetClassifierMatchedTrackingInfo message over background channel.
+  bool OnSetClassifierMatchedTrackingInfo(const nsACString& aLists,
+                                          const nsACString& aFullHashes);
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

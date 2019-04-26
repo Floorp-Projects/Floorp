@@ -3781,6 +3781,30 @@ HttpBaseChannel::SetMatchedInfo(const nsACString& aList,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedTrackingLists(nsTArray<nsCString>& aLists) {
+  aLists = mMatchedTrackingLists;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedTrackingFullHashes(
+    nsTArray<nsCString>& aFullHashes) {
+  aFullHashes = mMatchedTrackingFullHashes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetMatchedTrackingInfo(
+    const nsTArray<nsCString>& aLists, const nsTArray<nsCString>& aFullHashes) {
+  NS_ENSURE_ARG(!aLists.IsEmpty());
+  // aFullHashes can be empty for non hash-matching algorithm, for example,
+  // host based test entries in preference.
+
+  mMatchedTrackingLists = aLists;
+  mMatchedTrackingFullHashes = aFullHashes;
+  return NS_OK;
+}
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsITimedChannel
 //-----------------------------------------------------------------------------

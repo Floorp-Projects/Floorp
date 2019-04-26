@@ -70,6 +70,13 @@ FileChannelParent::SetClassifierMatchedInfo(const nsACString &aList,
 }
 
 NS_IMETHODIMP
+FileChannelParent::SetClassifierMatchedTrackingInfo(
+    const nsACString &aLists, const nsACString &aFullHashes) {
+  // nothing to do
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FileChannelParent::Delete() {
   // Nothing to do.
   return NS_OK;
