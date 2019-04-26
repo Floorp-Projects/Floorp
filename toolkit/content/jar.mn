@@ -83,6 +83,7 @@ toolkit.jar:
    content/global/elements/autocomplete-popup.js              (widgets/autocomplete-popup.js)
    content/global/elements/autocomplete-richlistitem.js       (widgets/autocomplete-richlistitem.js)
    content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
+   content/global/elements/button.js           (widgets/button.js)
    content/global/elements/checkbox.js         (widgets/checkbox.js)
    content/global/elements/datetimebox.js      (widgets/datetimebox.js)
    content/global/elements/findbar.js          (widgets/findbar.js)

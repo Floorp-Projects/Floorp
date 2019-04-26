@@ -399,17 +399,32 @@ test! {
         // Start the timer now, the initial job creation may be delayed by BITS service startup.
         let start = Instant::now();
 
-        // First immediate report
-        monitor.get_status(timeout).expect("should initially be ok").unwrap();
+        // First report, immediate
+        let report_1 = monitor.get_status(timeout);
+        let elapsed_to_report_1 = start.elapsed();
+        report_1.as_ref().expect("should initially be ok").as_ref().unwrap();
 
         // Transferred notification should come when the job completes in ~250 ms, otherwise we
         // will be stuck until timeout.
-        let status = monitor.get_status(timeout).expect("should get status update").unwrap();
-        assert!(start.elapsed() < Duration::from_millis(9_000));
-        assert_eq!(status.state, BitsJobState::Transferred);
+        let report_2 = monitor.get_status(timeout).expect("should get status update").unwrap();
+        let elapsed_to_report_2 = start.elapsed();
+        assert!(elapsed_to_report_2 < Duration::from_millis(9_000));
+        assert_eq!(report_2.state, BitsJobState::Transferred);
 
         let short_timeout = 500;
-        monitor.get_status(short_timeout).expect_err("should be disconnected");
+        let report_3 = monitor.get_status(short_timeout);
+        let elapsed_to_report_3 = start.elapsed();
+
+        if let Ok(report_3) = report_3 {
+          panic!("should be disconnected\n\
+                  report_1 ({}.{:03}): {:?}\n\
+                  report_2 ({}.{:03}): {:?}\n\
+                  report_3 ({}.{:03}): {:?}",
+                  elapsed_to_report_1.as_secs(), elapsed_to_report_1.subsec_millis(), report_1,
+                  elapsed_to_report_2.as_secs(), elapsed_to_report_2.subsec_millis(), report_2,
+                  elapsed_to_report_3.as_secs(), elapsed_to_report_3.subsec_millis(), report_3,
+                  );
+        }
 
         server.shutdown();
 

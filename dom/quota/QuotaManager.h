@@ -425,7 +425,25 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeRemoveLocalStorageDirectories();
 
-  nsresult MaybeCreateLocalStorageArchive();
+  nsresult CreateLocalStorageArchiveConnectionFromWebAppsStore(
+      mozIStorageConnection** aConnection);
+
+  nsresult CreateLocalStorageArchiveConnection(
+      mozIStorageConnection** aConnection, bool& aNewlyCreated);
+
+  nsresult RecreateLocalStorageArchive(
+      nsCOMPtr<mozIStorageConnection>& aConnection);
+
+  nsresult DowngradeLocalStorageArchive(
+      nsCOMPtr<mozIStorageConnection>& aConnection);
+
+  nsresult UpgradeLocalStorageArchiveFrom0To1(
+      nsCOMPtr<mozIStorageConnection>& aConnection);
+
+/*
+  nsresult UpgradeLocalStorageArchiveFrom1To2(
+      nsCOMPtr<mozIStorageConnection>& aConnection);
+*/
 
   nsresult InitializeRepository(PersistenceType aPersistenceType);
 
