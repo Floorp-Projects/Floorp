@@ -511,11 +511,36 @@ class CallFlags {
 };
 
 enum class AttachDecision {
+  // We cannot attach a stub.
   NoAction,
+
+  // We can attach a stub.
   Attach,
+
+  // We cannot currently attach a stub, but we expect to be able to do so in the
+  // future. In this case, we do not call trackNotAttached().
   TemporarilyUnoptimizable,
+
+  // We want to attach a stub, but the result of the operation is
+  // needed to generate that stub. For example, AddSlot needs to know
+  // the resulting shape. Note: the attached stub will inspect the
+  // inputs to the operation, so most input checks should be done
+  // before the actual operation, with only minimal checks remaining
+  // for the deferred portion. This prevents arbitrary scripted code
+  // run by the operation from interfering with the conditions being
+  // checked.
   Deferred
 };
+
+// If the input expression evaluates to an AttachDecision other than NoAction,
+// return that AttachDecision. If it is NoAction, do nothing.
+#define TRY_ATTACH(expr)                      \
+  do {                                        \
+    AttachDecision result = expr;             \
+    if (result != AttachDecision::NoAction) { \
+      return result;                          \
+    }                                         \
+  } while (0)
 
 // Set of arguments supported by GetIndexOfArgument.
 // Support for Arg2 and up can be added easily, but is currently unneeded.

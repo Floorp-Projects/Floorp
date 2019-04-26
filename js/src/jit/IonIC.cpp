@@ -115,6 +115,64 @@ void IonIC::trace(JSTracer* trc) {
   MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
 }
 
+// This helper handles ICState updates/transitions while attaching CacheIR
+// stubs.
+template <typename IRGenerator, typename IC, typename... Args>
+static void TryAttachIonStubOld(JSContext* cx, IC* ic, IonScript* ionScript,
+                                Args&&... args) {
+  if (ic->state().maybeTransition()) {
+    ic->discardStubs(cx->zone());
+  }
+
+  if (ic->state().canAttachStub()) {
+    RootedScript script(cx, ic->script());
+    bool attached = false;
+    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
+                    std::forward<Args>(args)...);
+    if (gen.tryAttachStub()) {
+      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                            &attached);
+    }
+    if (!attached) {
+      ic->state().trackNotAttached();
+    }
+  }
+}
+
+// This helper handles ICState updates/transitions while attaching CacheIR
+// stubs.
+template <typename IRGenerator, typename IC, typename... Args>
+static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
+                             Args&&... args) {
+  if (ic->state().maybeTransition()) {
+    ic->discardStubs(cx->zone());
+  }
+
+  if (ic->state().canAttachStub()) {
+    RootedScript script(cx, ic->script());
+    bool attached = false;
+    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
+                    std::forward<Args>(args)...);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached);
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Not expected in generic TryAttachIonStub");
+        break;
+    }
+    if (!attached) {
+      ic->state().trackNotAttached();
+    }
+  }
+}
+
 /* static */
 bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               IonGetPropertyIC* ic, HandleValue val,
@@ -352,30 +410,6 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   return true;
 }
 
-// This helper handles ICState updates/transitions while attaching CacheIR
-// stubs.
-template <typename IRGenerator, typename IC, typename... Args>
-static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
-                             Args&&... args) {
-  if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
-  }
-
-  if (ic->state().canAttachStub()) {
-    RootedScript script(cx, ic->script());
-    bool attached = false;
-    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
-                    std::forward<Args>(args)...);
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
-    }
-    if (!attached) {
-      ic->state().trackNotAttached();
-    }
-  }
-}
-
 /* static */
 bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
                           IonGetNameIC* ic, HandleObject envChain,
@@ -384,8 +418,8 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   RootedPropertyName name(cx, ic->script()->getName(pc));
 
-  TryAttachIonStub<GetNameIRGenerator, IonGetNameIC>(cx, ic, ionScript,
-                                                     envChain, name);
+  TryAttachIonStubOld<GetNameIRGenerator, IonGetNameIC>(cx, ic, ionScript,
+                                                        envChain, name);
 
   RootedObject obj(cx);
   RootedObject holder(cx);
@@ -417,8 +451,8 @@ JSObject* IonBindNameIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   RootedPropertyName name(cx, ic->script()->getName(pc));
 
-  TryAttachIonStub<BindNameIRGenerator, IonBindNameIC>(cx, ic, ionScript,
-                                                       envChain, name);
+  TryAttachIonStubOld<BindNameIRGenerator, IonBindNameIC>(cx, ic, ionScript,
+                                                          envChain, name);
 
   RootedObject holder(cx);
   if (!LookupNameUnqualified(cx, name, envChain, &holder)) {
@@ -433,8 +467,8 @@ JSObject* IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript,
                                    IonGetIteratorIC* ic, HandleValue value) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStub<GetIteratorIRGenerator, IonGetIteratorIC>(cx, ic, ionScript,
-                                                             value);
+  TryAttachIonStubOld<GetIteratorIRGenerator, IonGetIteratorIC>(
+      cx, ic, ionScript, value);
 
   return ValueToIterator(cx, value);
 }
@@ -445,7 +479,7 @@ bool IonHasOwnIC::update(JSContext* cx, HandleScript outerScript,
                          int32_t* res) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStub<HasPropIRGenerator, IonHasOwnIC>(
+  TryAttachIonStubOld<HasPropIRGenerator, IonHasOwnIC>(
       cx, ic, ionScript, CacheKind::HasOwn, idVal, val);
 
   bool found;
@@ -463,8 +497,8 @@ bool IonInIC::update(JSContext* cx, HandleScript outerScript, IonInIC* ic,
   IonScript* ionScript = outerScript->ionScript();
   RootedValue objV(cx, ObjectValue(*obj));
 
-  TryAttachIonStub<HasPropIRGenerator, IonInIC>(cx, ic, ionScript,
-                                                CacheKind::In, key, objV);
+  TryAttachIonStubOld<HasPropIRGenerator, IonInIC>(cx, ic, ionScript,
+                                                   CacheKind::In, key, objV);
 
   return OperatorIn(cx, key, obj, res);
 }
@@ -474,8 +508,8 @@ bool IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript,
                              HandleObject rhs, bool* res) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStub<InstanceOfIRGenerator, IonInstanceOfIC>(cx, ic, ionScript,
-                                                           lhs, rhs);
+  TryAttachIonStubOld<InstanceOfIRGenerator, IonInstanceOfIC>(cx, ic, ionScript,
+                                                              lhs, rhs);
 
   return HasInstance(cx, rhs, lhs, res);
 }
@@ -521,8 +555,8 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
       MOZ_CRASH("Unexpected op");
   }
 
-  TryAttachIonStub<UnaryArithIRGenerator, IonUnaryArithIC>(cx, ic, ionScript,
-                                                           op, val, res);
+  TryAttachIonStubOld<UnaryArithIRGenerator, IonUnaryArithIC>(cx, ic, ionScript,
+                                                              op, val, res);
 
   return true;
 }
@@ -591,8 +625,8 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
       MOZ_CRASH("Unhandled binary arith op");
   }
 
-  TryAttachIonStub<BinaryArithIRGenerator, IonBinaryArithIC>(cx, ic, ionScript,
-                                                             op, lhs, rhs, ret);
+  TryAttachIonStubOld<BinaryArithIRGenerator, IonBinaryArithIC>(
+      cx, ic, ionScript, op, lhs, rhs, ret);
 
   return true;
 }
@@ -658,8 +692,8 @@ bool IonCompareIC::update(JSContext* cx, HandleScript outerScript,
       return false;
   }
 
-  TryAttachIonStub<CompareIRGenerator, IonCompareIC>(cx, ic, ionScript, op, lhs,
-                                                     rhs);
+  TryAttachIonStubOld<CompareIRGenerator, IonCompareIC>(cx, ic, ionScript, op,
+                                                        lhs, rhs);
 
   return true;
 }
