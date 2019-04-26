@@ -22,7 +22,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
       threadClient.addOneTimeListener("paused", function(event, packet) {
         // Check the return value.
         Assert.equal(packet.type, "paused");
-        Assert.equal(packet.frame.where.actor, source.actor);
+        Assert.equal(packet.frame.where.actor, source.actorID);
         Assert.equal(packet.frame.where.line, location.line);
         Assert.equal(packet.why.type, "breakpoint");
         // Check that the breakpoint worked.

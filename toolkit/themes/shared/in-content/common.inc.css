@@ -10,12 +10,13 @@
   --in-content-page-color: #0c0c0d;
   --in-content-page-background: #f9f9fa;
   --in-content-text-color: var(--grey-90);
+  --in-content-deemphasized-text: var(--grey-60);
   --in-content-selected-text: #fff;
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-background-hover: #ededf0; /* grey 20 */
   --in-content-box-background-active: #d7d7db; /* grey 30 */
-  --in-content-box-border-color: var(--grey-90-a40);
+  --in-content-box-border-color: var(--grey-90-a30);
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #0a84ff;
@@ -48,7 +49,6 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
 
-  --panel-border-color: var(--grey-90-a20);
   --panel-border-radius: 2px; /* This is overridden on Windows */
 
   /* The photon animation curve */
@@ -63,13 +63,13 @@
   --blue-80: #002275;
   --grey-20: #ededf0;
   --grey-30: #d7d7db;
+  --grey-40: #b1b1b3;
   --grey-50: #737373;
   --grey-60: #4a4a4f;
   --grey-90: #0c0c0d;
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
-  --grey-90-a40: rgba(12, 12, 13, 0.4);
   --grey-90-a50: rgba(12, 12, 13, 0.5);
   --purple-70: #6200a4;
   --purple-70-a40: rgba(98, 0, 164, 0.4);
@@ -95,6 +95,7 @@
     --in-content-page-background: #2A2A2E;
     --in-content-page-color: rgb(249, 249, 250);
     --in-content-text-color: var(--in-content-page-color);
+    --in-content-deemphasized-text: var(--grey-40);
     --in-content-box-background: #202023;
     --in-content-box-background-hover: rgba(249,249,250,0.15);
     --in-content-box-background-active: rgba(249,249,250,0.2);

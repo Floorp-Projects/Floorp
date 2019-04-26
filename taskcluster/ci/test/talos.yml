@@ -41,6 +41,7 @@ talos-bcv:
             default: ['mozilla-beta', 'trunk', 'try']
     tier:
         by-test-platform:
+            windows10-aarch64/.*: 2
             .*-qr/.*: 3  # this should be disabled but might run via try syntax anyway, so explicitly downgrade to tier-3
             default: default
     max-run-time: 1800

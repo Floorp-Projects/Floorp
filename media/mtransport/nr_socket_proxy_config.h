@@ -13,14 +13,14 @@
 class nsIPrincipal;
 
 namespace mozilla {
-namespace dom {
-class PBrowserOrId;
+namespace net {
+class LoadInfoArgs;
 }
 
 class NrSocketProxyConfig {
  public:
-  NrSocketProxyConfig(const dom::PBrowserOrId& aBrowser,
-                      const nsCString& aAlpn);
+  NrSocketProxyConfig(uint64_t aTabId, const nsCString& aAlpn,
+                      const net::LoadInfoArgs& aArgs);
   // We need to actually write the default impl ourselves, because the compiler
   // needs to know how to destroy mPrivate in case an exception is thrown, even
   // though we disable exceptions in our build.
@@ -28,11 +28,12 @@ class NrSocketProxyConfig {
 
   ~NrSocketProxyConfig();
 
-  const dom::PBrowserOrId& GetBrowser() const;
+  uint64_t GetTabId() const;
   const nsCString& GetAlpn() const;
+  const net::LoadInfoArgs& GetLoadInfoArgs() const;
 
  private:
-  // PBrowserOrId includes stuff that conflicts with nICEr includes.
+  // LoadInfoArgs includes stuff that conflicts with nICEr includes.
   // Make it possible to include this header file without tripping over this
   // problem.
   class Private;

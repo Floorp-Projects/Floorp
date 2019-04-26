@@ -93,3 +93,7 @@ skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-3.ht
 skip-if(!Android) pref(apz.allow_zooming,true) == position-fixed-async-zoom-4.html position-fixed-async-zoom-4-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-1.html position-sticky-async-zoom-1-ref.html
 skip-if(!Android) pref(apz.allow_zooming,true) == position-sticky-async-zoom-2.html position-sticky-async-zoom-2-ref.html
+
+# for this test, apz.allow_zooming is needed to ensure we take the containerless scrolling codepath that creates
+# an async zoom container (since we are testing a regression in that codepath)
+skip-if(!Android) pref(apz.allow_zooming,true) test-pref(apz.fixed-margin-override.enabled,true) test-pref(apz.fixed-margin-override.bottom,50) == dynamic-toolbar-fixed-bottom-1.html dynamic-toolbar-fixed-bottom-1-ref.html

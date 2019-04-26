@@ -9,8 +9,7 @@
 #include <vector>
 #include <numeric>
 
-#include "mozilla/dom/PBrowserOrId.h"
-
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nr_socket_proxy.h"
 #include "nr_socket_proxy_config.h"
 #include "WebrtcProxyChannelWrapper.h"
@@ -23,8 +22,6 @@ using namespace mozilla;
 
 // update TestReadMultipleSizes if you change this
 const std::string kHelloMessage = "HELLO IS IT ME YOU'RE LOOKING FOR?";
-
-typedef mozilla::dom::PBrowserOrId PBrowserOrId;
 
 class NrSocketProxyTest : public MtransportTest {
  public:
@@ -40,7 +37,7 @@ class NrSocketProxyTest : public MtransportTest {
   void SetUp() override {
     nsCString alpn = NS_LITERAL_CSTRING("webrtc");
     std::shared_ptr<NrSocketProxyConfig> config;
-    config.reset(new NrSocketProxyConfig(PBrowserOrId(), alpn));
+    config.reset(new NrSocketProxyConfig(0, alpn, net::LoadInfoArgs()));
     // config is never used but must be non-null
     mSProxy = new NrSocketProxy(config);
     int r = nr_socket_create_int((void *)mSProxy.get(), mSProxy->vtbl(),

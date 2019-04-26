@@ -202,6 +202,17 @@ button > hbox > label {
   display: none;
 }
 
+/* All panes */
+
+.info-icon,
+.androidIcon,
+.iOSIcon,
+#updateSettingCrossUserWarning,
+.extension-controlled > description {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 /* General Pane */
 
 #isDefaultLabel {
@@ -212,7 +223,7 @@ button > hbox > label {
 .extension-controlled {
   margin-top: 18px !important;
   margin-bottom: 18px !important;
-  background: var(--grey-20);
+  background: var(--in-content-warning-container);
   border-radius: 5px;
   padding-inline-end: 10px;
 }
@@ -439,6 +450,11 @@ button > hbox > label {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+#sanitizeEverythingWarningBox {
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
 }
 
 #blockCookies,
@@ -668,8 +684,6 @@ button > hbox > label {
   width: 20px;
   height: 20px;
   vertical-align: text-bottom;
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 #updateDeck > hbox > label {
@@ -728,7 +742,7 @@ image.update-throbber {
 }
 
 #policies-container {
-  background-color: #ededf0;
+  background-color: var(--in-content-warning-container);
   padding: 0px 8px;
   margin-inline-end: 16px;
   border-radius: 2px;
@@ -736,8 +750,6 @@ image.update-throbber {
 
 .info-icon {
   list-style-image: url("chrome://browser/skin/identity-icon.svg");
-  fill: currentColor;
-  -moz-context-properties: fill;
   width: 16px;
   height: 16px;
   margin-top: calc((32px - 16px) / 2);
@@ -928,7 +940,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   padding-inline-start: 30px;
   margin-block-start: 20px;
   line-height: 20px;
-  background-image: url("chrome://global/skin/icons/info.svg");
+  background-image: url("chrome://browser/skin/identity-icon.svg");
   background-position-x: left 2px;
   background-position-y: top 2px;
   background-size: 16px 16px;
