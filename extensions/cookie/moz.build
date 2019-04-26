@@ -6,12 +6,7 @@
 
 TEST_DIRS += ['test']
 
-EXPORTS += [
-    'nsCookiePermission.h',
-]
-
 UNIFIED_SOURCES += [
-    'nsCookiePermission.cpp',
     'nsPermission.cpp',
     'nsPermissionManager.cpp',
 ]
