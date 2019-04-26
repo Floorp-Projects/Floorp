@@ -203,10 +203,14 @@ NS_IMETHODIMP
 BaseWebSocketChannel::InitLoadInfo(nsINode *aLoadingNode,
                                    nsIPrincipal *aLoadingPrincipal,
                                    nsIPrincipal *aTriggeringPrincipal,
+                                   nsICookieSettings* aCookieSettings,
                                    uint32_t aSecurityFlags,
                                    uint32_t aContentPolicyType) {
   mLoadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
                            aLoadingNode, aSecurityFlags, aContentPolicyType);
+  if (aCookieSettings) {
+    mLoadInfo->SetCookieSettings(aCookieSettings);
+  }
   return NS_OK;
 }
 

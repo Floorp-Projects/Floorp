@@ -56,6 +56,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD InitLoadInfo(nsINode *aLoadingNode,
                           nsIPrincipal *aLoadingPrincipal,
                           nsIPrincipal *aTriggeringPrincipal,
+                          nsICookieSettings* aCookieSettings,
                           uint32_t aSecurityFlags,
                           uint32_t aContentPolicyType) override;
   NS_IMETHOD GetSerial(uint32_t *aSerial) override;
