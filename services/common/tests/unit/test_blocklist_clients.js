@@ -40,6 +40,12 @@ function run_test() {
   // with basic certificate sync tests
   Services.prefs.setBoolPref("services.settings.verify_signature", false);
 
+  // Unfortunately security settings are coupled with blocklists clients,
+  // this will be fixed in Bug 1526018
+  // We disable intermediate preloading because it runs when polling ends, and
+  // interferes with `clear_state()` from this test suite.
+  Services.prefs.setBoolPref("security.remote_settings.intermediates.enabled", false);
+
   // This will initialize the remote settings clients for blocklists.
   BlocklistClients.initialize();
 
