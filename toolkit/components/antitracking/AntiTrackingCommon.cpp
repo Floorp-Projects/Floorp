@@ -18,7 +18,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
-#include "nsCookiePermission.h"
+#include "nsICookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannelInternal.h"
@@ -1528,10 +1528,13 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aPrincipal);
 
-  nsCookieAccess access = nsICookiePermission::ACCESS_DEFAULT;
+  uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
   if (aPrincipal->GetIsCodebasePrincipal()) {
-    nsCOMPtr<nsICookiePermission> cps = nsCookiePermission::GetOrCreate();
-    Unused << NS_WARN_IF(NS_FAILED(cps->CanAccess(aPrincipal, &access)));
+    nsPermissionManager* permManager = nsPermissionManager::GetInstance();
+    if (permManager) {
+      Unused << NS_WARN_IF(NS_FAILED(permManager->TestPermissionFromPrincipal(
+          aPrincipal, NS_LITERAL_CSTRING("cookie"), &access)));
+    }
   }
 
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
