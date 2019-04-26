@@ -6,16 +6,14 @@
 
 #include "nsCookiePermission.h"
 
-#include "mozIThirdPartyUtil.h"
 #include "nsICookie2.h"
 #include "nsIServiceManager.h"
 #include "nsICookieManager.h"
+#include "nsICookieService.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProtocolHandler.h"
 #include "nsIURI.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIDOMWindow.h"
@@ -27,20 +25,13 @@
 #include "nsNetCID.h"
 #include "prtime.h"
 #include "mozilla/StaticPtr.h"
+#include "nsContentUtils.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
  ****************************************************************/
 
-// values for mCookiesLifetimePolicy
-// 0 == accept normally
-// 1 == ask before accepting, no more supported, treated like ACCEPT_NORMALLY
-// (Bug 606655). 2 == downgrade to session 3 == limit lifetime to N days
-static const uint32_t ACCEPT_NORMALLY = 0;
-static const uint32_t ACCEPT_SESSION = 2;
-
 static const bool kDefaultPolicy = true;
-static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 
 static const nsLiteralCString kPermissionType(NS_LITERAL_CSTRING("cookie"));
 
@@ -48,7 +39,7 @@ namespace {
 mozilla::StaticRefPtr<nsCookiePermission> gSingleton;
 }
 
-NS_IMPL_ISUPPORTS(nsCookiePermission, nsICookiePermission, nsIObserver)
+NS_IMPL_ISUPPORTS(nsCookiePermission, nsICookiePermission)
 
 // static
 already_AddRefed<nsICookiePermission> nsCookiePermission::GetOrCreate() {
@@ -68,32 +59,8 @@ bool nsCookiePermission::Init() {
   nsresult rv;
   mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return false;
-  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return false;
-
-  // failure to access the pref service is non-fatal...
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefBranch) {
-    prefBranch->AddObserver(kCookiesLifetimePolicy, this, false);
-    PrefChanged(prefBranch, nullptr);
-  }
 
   return true;
-}
-
-void nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
-                                     const char *aPref) {
-  int32_t val;
-
-#define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
-
-  if (PREF_CHANGED(kCookiesLifetimePolicy) &&
-      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimePolicy, &val))) {
-    if (val != static_cast<int32_t>(ACCEPT_SESSION)) {
-      val = ACCEPT_NORMALLY;
-    }
-    mCookiesLifetimePolicy = val;
-  }
 }
 
 NS_IMETHODIMP
@@ -119,23 +86,6 @@ nsCookiePermission::CanAccess(nsIPrincipal *aPrincipal,
   // finally, check with permission manager...
   nsresult rv = mPermMgr->TestPermissionFromPrincipal(
       aPrincipal, kPermissionType, (uint32_t *)aResult);
-  if (NS_SUCCEEDED(rv)) {
-    if (*aResult == nsICookiePermission::ACCESS_SESSION) {
-      *aResult = nsICookiePermission::ACCESS_ALLOW;
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsCookiePermission::CanAccessURI(nsIURI *aURI, nsCookieAccess *aResult) {
-  // Lazily initialize ourselves
-  if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
-
-  // finally, check with permission manager...
-  nsresult rv =
-      mPermMgr->TestPermission(aURI, kPermissionType, (uint32_t *)aResult);
   if (NS_SUCCEEDED(rv)) {
     if (*aResult == nsICookiePermission::ACCESS_SESSION) {
       *aResult = nsICookiePermission::ACCESS_ALLOW;
@@ -176,7 +126,8 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
 
       // now we need to figure out what type of accept policy we're dealing with
       // if we accept cookies normally, just bail and return
-      if (mCookiesLifetimePolicy == ACCEPT_NORMALLY) {
+      if (nsContentUtils::GetCookieLifetimePolicy() ==
+          nsICookieService::ACCEPT_NORMALLY) {
         *aResult = true;
         return NS_OK;
       }
@@ -188,24 +139,13 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
       // We are accepting the cookie, but,
       // if it's not a session cookie, we may have to limit its lifetime.
       if (!*aIsSession && delta > 0) {
-        if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
+        if (nsContentUtils::GetCookieLifetimePolicy() ==
+            nsICookieService::ACCEPT_SESSION) {
           // limit lifetime to session
           *aIsSession = true;
         }
       }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookiePermission::Observe(nsISupports *aSubject, const char *aTopic,
-                            const char16_t *aData) {
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
-  NS_ASSERTION(!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
-               "unexpected topic - we only deal with pref changes!");
-
-  if (prefBranch)
-    PrefChanged(prefBranch, NS_LossyConvertUTF16toASCII(aData).get());
   return NS_OK;
 }

@@ -49,9 +49,9 @@ function configureStore() {
 function getUiState() {
   const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  const showSystemAddons = Services.prefs.getBoolPref(PREFERENCES.SHOW_SYSTEM_ADDONS,
+  const showHiddenAddons = Services.prefs.getBoolPref(PREFERENCES.SHOW_HIDDEN_ADDONS,
     false);
-  return new UiState(locations, collapsibilities, showSystemAddons);
+  return new UiState(locations, collapsibilities, showHiddenAddons);
 }
 
 exports.configureStore = configureStore;

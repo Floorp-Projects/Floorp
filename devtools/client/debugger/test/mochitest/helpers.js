@@ -524,7 +524,7 @@ function isSelectedFrameSelected(dbg, state) {
 /**
  * Clear all the debugger related preferences.
  */
-function clearDebuggerPreferences() {
+async function clearDebuggerPreferences() {
   asyncStorage.clear();
   Services.prefs.clearUserPref("devtools.recordreplay.enabled");
   Services.prefs.clearUserPref("devtools.debugger.pause-on-exceptions");
@@ -536,6 +536,7 @@ function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
   Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
+  await pushPref("devtools.debugger.log-actions", true);
 }
 
 /**
@@ -547,7 +548,7 @@ function clearDebuggerPreferences() {
  * @static
  */
 async function initDebugger(url, ...sources) {
-  clearDebuggerPreferences();
+  await clearDebuggerPreferences();
   const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
   const dbg = createDebuggerContext(toolbox);
   dbg.client.waitForWorkers(false);
@@ -557,7 +558,7 @@ async function initDebugger(url, ...sources) {
 }
 
 async function initPane(url, pane) {
-  clearDebuggerPreferences();
+  await clearDebuggerPreferences();
   return openNewTabAndToolbox(EXAMPLE_URL + url, pane);
 }
 

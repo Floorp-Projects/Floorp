@@ -53,7 +53,7 @@ class SocketProcessParent final : public PSocketProcessParent {
       const DiscardedData& aDiscardedData);
 
   PWebrtcProxyChannelParent* AllocPWebrtcProxyChannelParent(
-      const PBrowserOrId& aBrowser);
+      const TabId& aTabId);
   bool DeallocPWebrtcProxyChannelParent(PWebrtcProxyChannelParent* aActor);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

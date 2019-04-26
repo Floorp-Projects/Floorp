@@ -9,7 +9,7 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-// This test ensures that we can create SourceActors and SourceClients properly,
+// This test ensures that we can create SourceActors and SourceFronts properly,
 // and that they can communicate over the protocol to fetch the source text for
 // a given script.
 
@@ -53,8 +53,8 @@ function test_source() {
 
       Assert.ok(!!source);
 
-      const sourceClient = gThreadClient.source(source);
-      sourceClient.source().then(function(response) {
+      const sourceFront = gThreadClient.source(source);
+      sourceFront.source().then(function(response) {
         Assert.ok(!!response);
         Assert.ok(!!response.contentType);
         Assert.ok(response.contentType.includes("javascript"));
