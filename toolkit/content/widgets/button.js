@@ -215,11 +215,6 @@
   MozXULElement.implementCustomInterface(MozButtonBase, [Ci.nsIDOMXULButtonElement]);
 
   class MozButton extends MozButtonBase {
-    constructor() {
-      super();
-      this.hasConnected = false;
-    }
-
     static get inheritedAttributes() {
       return {
         ".box-inherit": "align,dir,pack,orient",
@@ -256,12 +251,14 @@
       return frag;
     }
 
+    get _hasConnected() {
+      return (this.querySelector(":scope > .button-box") != null);
+    }
+
     connectedCallback() {
-      if (this.delayConnectedCallback() || this.hasConnected) {
+      if (this.delayConnectedCallback() || this._hasConnected) {
         return;
       }
-
-      this.hasConnected = true;
 
       let fragment;
       if (this.type === "menu") {
