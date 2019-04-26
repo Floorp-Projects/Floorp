@@ -2686,9 +2686,9 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedPropertyName name(cx, script->getName(pc));
 
-  TryAttachStubOld<GetNameIRGenerator>("GetName", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Monitored,
-                                       envChain, name);
+  TryAttachStub<GetNameIRGenerator>("GetName", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Monitored,
+                                    envChain, name);
 
   static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
                 "Otherwise our check for JSOP_TYPEOF isn't ok");

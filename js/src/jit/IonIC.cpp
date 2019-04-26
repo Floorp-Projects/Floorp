@@ -409,8 +409,8 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   RootedPropertyName name(cx, ic->script()->getName(pc));
 
-  TryAttachIonStubOld<GetNameIRGenerator, IonGetNameIC>(cx, ic, ionScript,
-                                                        envChain, name);
+  TryAttachIonStub<GetNameIRGenerator, IonGetNameIC>(cx, ic, ionScript,
+                                                     envChain, name);
 
   RootedObject obj(cx);
   RootedObject holder(cx);
