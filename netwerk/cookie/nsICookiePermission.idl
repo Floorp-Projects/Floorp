@@ -54,21 +54,6 @@ interface nsICookiePermission : nsISupports
                  in nsCookieAccess aAccess);
 
   /**
-   * canAccess
-   *
-   * this method is called to test whether or not the given principal may
-   * access the cookie database, either to set or get cookies.
-   *
-   * @param aPrincipal
-   *        the principal trying to access cookies.
-   *
-   * @return one of the following nsCookieAccess values:
-   *         ACCESS_DEFAULT, ACCESS_ALLOW, ACCESS_DENY, or
-   *         ACCESS_ALLOW_FIRST_PARTY_ONLY
-   */
-  nsCookieAccess canAccess(in nsIPrincipal aPrincipal);
-
-  /**
    * canSetCookie
    *
    * this method is called to test whether or not the given URI/channel may
