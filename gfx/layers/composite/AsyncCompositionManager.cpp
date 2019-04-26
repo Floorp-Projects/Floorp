@@ -1246,10 +1246,25 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                 CompleteAsyncTransform(
                     sampler->GetCurrentAsyncViewportRelativeTransform(
                         *zoomedMetrics));
+            // Correct positioning of fixed content during dynamic toolbar
+            // transitions requires passing mFixedLayerMargins to
+            // AdjustFixedOrStickyLayer(). There is logic above to set the
+            // local |fixedLayerMargins| variable to mFixedLayerMargins for
+            // the root content layer, but here we need it while processing
+            // the fixed layers themselves, so set it again.
+            // We do not reuse the |fixedLayerMargins| variable itself so that
+            // the ExpandRootClipRect() call below (which expects it to be
+            // populated only for the root content layer) does not pick it up.
+            // We can't just pass mFixedLayerMargins directly because it's
+            // an #ifdef MOZ_WIDGET_ANDROID field.
+            ScreenMargin marginsForFixedLayer;
+#ifdef MOZ_WIDGET_ANDROID
+            marginsForFixedLayer = mFixedLayerMargins;
+#endif
             AdjustFixedOrStickyLayer(zoomContainer, layer,
                                      sampler->GetGuid(*zoomedMetrics).mScrollId,
                                      previousTransform, currentTransform,
-                                     fixedLayerMargins, clipPartsCache);
+                                     marginsForFixedLayer, clipPartsCache);
           }
         }
 
