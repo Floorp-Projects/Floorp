@@ -18,6 +18,7 @@ add_task(async function test_bookmarks() {
       menuGuid:    "menu________",
       toolbarGuid: "toolbar_____",
       unfiledGuid: "unfiled_____",
+      rootGuid:    "root________",
     };
 
     function checkOurBookmark(bookmark) {
@@ -601,6 +602,60 @@ add_task(async function test_bookmarks() {
           "Expected error thrown when calling move with a non-existent bookmark"
         );
       });
+    }).then(() => {
+      return browser.test.assertRejects(
+        browser.bookmarks.create({title: "test root folder", parentId: bookmarkGuids.rootGuid}),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when creating bookmark folder at the root"
+      );
+    }).then(() => {
+      return browser.test.assertRejects(
+        browser.bookmarks.update(bookmarkGuids.rootGuid, {title: "test update title"}),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when updating root"
+      );
+    }).then(() => {
+      return browser.test.assertRejects(
+        browser.bookmarks.remove(bookmarkGuids.rootGuid),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when removing root"
+      );
+    }).then(() => {
+      return browser.test.assertRejects(
+        browser.bookmarks.removeTree(bookmarkGuids.rootGuid),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when removing root tree"
+      );
+    }).then(() => {
+      return browser.bookmarks.create({title: "Empty Folder"});
+    }).then(async result => {
+      createdFolderId = result.id;
+
+      browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
+      checkOnCreated(createdFolderId, bookmarkGuids.unfiledGuid, 3, "Empty Folder", undefined, result.dateAdded, "folder");
+
+      await browser.test.assertRejects(
+        browser.bookmarks.move(createdFolderId, {parentId: bookmarkGuids.rootGuid}),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when moving bookmark folder to the root"
+      );
+
+      return browser.bookmarks.remove(createdFolderId);
+    }).then(() => {
+      browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
+      checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 3, undefined, "folder");
+
+      return browser.test.assertRejects(
+        browser.bookmarks.get(createdFolderId),
+        "Bookmark not found",
+        "Expected error thrown when trying to get a removed folder"
+      );
+    }).then(() => {
+      return browser.test.assertRejects(
+        browser.bookmarks.move(bookmarkGuids.rootGuid, {parentId: bookmarkGuids.unfiledGuid}),
+        "The bookmark root cannot be modified",
+        "Expected error thrown when moving root"
+      );
     }).then(() => {
       // remove all created bookmarks
       let promises = Array.from(createdBookmarks, guid => browser.bookmarks.remove(guid));

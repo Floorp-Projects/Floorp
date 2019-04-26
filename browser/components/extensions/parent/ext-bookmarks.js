@@ -4,6 +4,10 @@
 
 var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
 
+var {
+  ExtensionError,
+} = ExtensionUtils;
+
 const {
   TYPE_BOOKMARK,
   TYPE_FOLDER,
@@ -99,6 +103,12 @@ const convertBookmarks = result => {
   }
 
   return node;
+};
+
+const throwIfRootId = id => {
+  if (id == PlacesUtils.bookmarks.rootGuid) {
+    throw new ExtensionError("The bookmark root cannot be modified");
+  }
 };
 
 let observer = new class extends EventEmitter {
@@ -259,6 +269,7 @@ this.bookmarks = class extends ExtensionAPI {
           }
 
           if (bookmark.parentId !== null) {
+            throwIfRootId(bookmark.parentId);
             info.parentGuid = bookmark.parentId;
           } else {
             info.parentGuid = PlacesUtils.bookmarks.unfiledGuid;
@@ -273,11 +284,13 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         move: function(id, destination) {
+          throwIfRootId(id);
           let info = {
             guid: id,
           };
 
           if (destination.parentId !== null) {
+            throwIfRootId(destination.parentId);
             info.parentGuid = destination.parentId;
           }
           info.index = (destination.index === null) ?
@@ -292,6 +305,7 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         update: function(id, changes) {
+          throwIfRootId(id);
           let info = {
             guid: id,
           };
@@ -312,6 +326,7 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         remove: function(id) {
+          throwIfRootId(id);
           let info = {
             guid: id,
           };
@@ -326,6 +341,7 @@ this.bookmarks = class extends ExtensionAPI {
         },
 
         removeTree: function(id) {
+          throwIfRootId(id);
           let info = {
             guid: id,
           };
