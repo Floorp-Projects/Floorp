@@ -190,6 +190,7 @@
   padding-bottom: 1px;
   display: flex;
   justify-content: center;
+  max-width: 768px;
 }
 
 :-moz-native-anonymous .box-model-infobar-tagname {
