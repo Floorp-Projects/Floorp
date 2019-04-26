@@ -451,7 +451,8 @@ function* getRawDataChunked(outerStream, maxRead = WebRequestUpload.MAX_RAW_BYTE
 
     // For file fields, we return an object containing the full path of
     // the file, rather than its data.
-    if (unbuffered instanceof Ci.nsIFileInputStream) {
+    if ((unbuffered instanceof Ci.nsIFileInputStream) ||
+        (unbuffered instanceof Ci.mozIIPCBlobInputStream)) {
       // But this is not actually supported yet.
       yield {file: "<file>"};
       continue;
