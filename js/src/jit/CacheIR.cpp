@@ -6162,22 +6162,18 @@ void UnaryArithIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool UnaryArithIRGenerator::tryAttachStub() {
+AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
-  if (tryAttachInt32()) {
-    return true;
-  }
-  if (tryAttachNumber()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachInt32());
+  TRY_ATTACH(tryAttachNumber());
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool UnaryArithIRGenerator::tryAttachInt32() {
+AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   if (!val_.isInt32() || !res_.isInt32()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6205,12 +6201,12 @@ bool UnaryArithIRGenerator::tryAttachInt32() {
   }
 
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool UnaryArithIRGenerator::tryAttachNumber() {
+AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   if (!val_.isNumber() || !res_.isNumber()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
@@ -6239,7 +6235,7 @@ bool UnaryArithIRGenerator::tryAttachNumber() {
   }
 
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
 BinaryArithIRGenerator::BinaryArithIRGenerator(

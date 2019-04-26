@@ -546,8 +546,8 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
       MOZ_CRASH("Unexpected op");
   }
 
-  TryAttachIonStubOld<UnaryArithIRGenerator, IonUnaryArithIC>(cx, ic, ionScript,
-                                                              op, val, res);
+  TryAttachIonStub<UnaryArithIRGenerator, IonUnaryArithIC>(cx, ic, ionScript,
+                                                           op, val, res);
 
   return true;
 }
