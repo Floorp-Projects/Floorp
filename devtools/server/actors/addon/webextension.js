@@ -71,6 +71,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
     return {
       actor: this.actorID,
       debuggable: this.addon.isDebuggable,
+      hidden: this.addon.hidden,
       // iconDataURL is available after calling loadIconDataURL
       iconDataURL: this._iconDataURL,
       iconURL: this.addon.iconURL,
