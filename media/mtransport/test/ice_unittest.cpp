@@ -2969,7 +2969,7 @@ void AddNonPairableCandidates(
             test_utils_));
         break;
       default:
-        UNIMPLEMENTED;
+        NR_UNIMPLEMENTED;
     }
   }
 
