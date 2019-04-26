@@ -7,8 +7,10 @@
 package mozilla.components.feature.readerview.internal
 
 import mozilla.components.feature.readerview.ReaderViewFeature
-import mozilla.components.feature.readerview.ReaderViewFeature.Config.ColorScheme
-import mozilla.components.feature.readerview.ReaderViewFeature.Config.FontType
+import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme
+import mozilla.components.feature.readerview.ReaderViewFeature.FontType
+import mozilla.components.feature.readerview.view.MAX_TEXT_SIZE
+import mozilla.components.feature.readerview.view.MIN_TEXT_SIZE
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 
 /**
@@ -31,12 +33,18 @@ internal class ReaderViewControlsInteractor(
         config.fontType = font
     }
 
-    override fun onFontSizeIncreased() {
-        config.fontSize += 1
+    override fun onFontSizeIncreased(): Int {
+        if (config.fontSize < MAX_TEXT_SIZE) {
+            config.fontSize += 1
+        }
+        return config.fontSize
     }
 
-    override fun onFontSizeDecreased() {
-        config.fontSize -= 1
+    override fun onFontSizeDecreased(): Int {
+        if (config.fontSize > MIN_TEXT_SIZE) {
+            config.fontSize -= 1
+        }
+        return config.fontSize
     }
 
     override fun onColorSchemeChanged(scheme: ColorScheme) {

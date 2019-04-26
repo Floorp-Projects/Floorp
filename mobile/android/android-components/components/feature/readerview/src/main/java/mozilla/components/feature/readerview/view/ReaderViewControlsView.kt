@@ -7,8 +7,8 @@
 package mozilla.components.feature.readerview.view
 
 import android.view.View
-import mozilla.components.feature.readerview.ReaderViewFeature.Config.ColorScheme
-import mozilla.components.feature.readerview.ReaderViewFeature.Config.FontType
+import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme
+import mozilla.components.feature.readerview.ReaderViewFeature.FontType
 
 /**
  * An interface for views that can display ReaderView appearance controls (e.g. font size, font type).
@@ -49,8 +49,8 @@ interface ReaderViewControlsView {
 
     interface Listener {
         fun onFontChanged(font: FontType)
-        fun onFontSizeIncreased()
-        fun onFontSizeDecreased()
+        fun onFontSizeIncreased(): Int
+        fun onFontSizeDecreased(): Int
         fun onColorSchemeChanged(scheme: ColorScheme)
     }
 }

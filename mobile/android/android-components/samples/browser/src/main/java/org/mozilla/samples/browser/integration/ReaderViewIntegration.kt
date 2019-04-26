@@ -7,26 +7,70 @@
 package org.mozilla.samples.browser.integration
 
 import android.content.Context
+import android.support.design.widget.FloatingActionButton
+import android.support.v4.content.ContextCompat
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.samples.browser.R
 
 class ReaderViewIntegration(
     context: Context,
     engine: Engine,
     sessionManager: SessionManager,
-    private val view: ReaderViewControlsView
+    toolbar: BrowserToolbar,
+    view: ReaderViewControlsView,
+    readerViewAppearanceButton: FloatingActionButton
 ) : LifecycleAwareFeature, BackHandler {
 
-    private val feature = ReaderViewFeature(context, engine, sessionManager, view)
+    private var readerViewButtonVisible = false
+
+    private val readerViewButton: BrowserToolbar.ToggleButton = BrowserToolbar.ToggleButton(
+        image = context.getDrawable(R.drawable.mozac_ic_reader_mode)!!,
+        imageSelected = context.getDrawable(R.drawable.mozac_ic_reader_mode)!!.mutate().apply {
+            setTint(ContextCompat.getColor(context, R.color.photonBlue40))
+        },
+        contentDescription = context.getString(R.string.mozac_reader_view_description),
+        contentDescriptionSelected = context.getString(R.string.mozac_reader_view_description_selected),
+        selected = sessionManager.selectedSession?.readerMode ?: false,
+        visible = { readerViewButtonVisible }
+    ) { enabled ->
+        if (enabled) {
+            feature.showReaderView()
+            readerViewAppearanceButton.show()
+        } else {
+            feature.hideReaderView()
+            feature.hideControls()
+            readerViewAppearanceButton.hide()
+        }
+    }
+
+    init {
+        toolbar.addPageAction(readerViewButton)
+        readerViewAppearanceButton.setOnClickListener { feature.showControls() }
+    }
+
+    private val feature = ReaderViewFeature(context, engine, sessionManager, view) { available ->
+        readerViewButtonVisible = available
+
+        // We've got an update on reader view availability e.g. because the page
+        // was refreshed or a new session selected. Let's make sure to also update
+        // the selected state of the reader mode toolbar button and show the
+        // appearance controls button if needed.
+        val readerModeActive = sessionManager.selectedSession?.readerMode ?: false
+        readerViewButton.setSelected(readerModeActive)
+
+        if (readerModeActive) readerViewAppearanceButton.show() else readerViewAppearanceButton.hide()
+
+        toolbar.invalidateActions()
+    }
 
     override fun start() {
         feature.start()
-
-        ReaderViewIntegration.launch = this::launch
     }
 
     override fun stop() {
@@ -34,15 +78,7 @@ class ReaderViewIntegration(
     }
 
     override fun onBackPressed(): Boolean {
+        readerViewButton.setSelected(false)
         return feature.onBackPressed()
-    }
-
-    private fun launch() {
-        view.showControls()
-    }
-
-    companion object {
-        var launch: (() -> Unit)? = null
-            private set
     }
 }

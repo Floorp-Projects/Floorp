@@ -11,7 +11,6 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
@@ -43,29 +42,50 @@ class ReaderViewControlsInteractorTest {
         val config: ReaderViewFeature.Config = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
-        interactor.onFontChanged(ReaderViewFeature.Config.FontType.SANS_SERIF)
+        interactor.onFontChanged(ReaderViewFeature.FontType.SANSSERIF)
 
-        verify(config).fontType = ReaderViewFeature.Config.FontType.SANS_SERIF
+        verify(config).fontType = ReaderViewFeature.FontType.SANSSERIF
 
-        interactor.onColorSchemeChanged(ReaderViewFeature.Config.ColorScheme.SEPIA)
+        interactor.onColorSchemeChanged(ReaderViewFeature.ColorScheme.SEPIA)
 
-        verify(config).colorScheme = ReaderViewFeature.Config.ColorScheme.SEPIA
+        verify(config).colorScheme = ReaderViewFeature.ColorScheme.SEPIA
     }
 
     @Test
-    fun `update config font size on change`() {
+    fun `update config when font size increased`() {
         val config: ReaderViewFeature.Config = mock()
         val interactor = ReaderViewControlsInteractor(mock(), config)
 
-        `when`(config.fontSize).thenReturn(5)
+        `when`(config.fontSize).thenReturn(7)
         interactor.onFontSizeIncreased()
+        verify(config).fontSize = 8
 
-        verify(config).fontSize += 1
+        `when`(config.fontSize).thenReturn(8)
+        interactor.onFontSizeIncreased()
+        verify(config).fontSize = 9
 
-        reset(config)
+        // Can't increase past MAX_FONT_SIZE
+        `when`(config.fontSize).thenReturn(9)
+        interactor.onFontSizeIncreased()
+        verify(config).fontSize = 9
+    }
 
+    @Test
+    fun `update config when font size decreased`() {
+        val config: ReaderViewFeature.Config = mock()
+        val interactor = ReaderViewControlsInteractor(mock(), config)
+
+        `when`(config.fontSize).thenReturn(3)
         interactor.onFontSizeDecreased()
+        verify(config).fontSize = 2
 
-        verify(config).fontSize -= 1
+        `when`(config.fontSize).thenReturn(2)
+        interactor.onFontSizeDecreased()
+        verify(config).fontSize = 1
+
+        // Can't decrease below MIN_FONT_SIZE
+        `when`(config.fontSize).thenReturn(1)
+        interactor.onFontSizeDecreased()
+        verify(config).fontSize = 1
     }
 }

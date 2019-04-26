@@ -958,4 +958,21 @@ class SessionTest {
 
         assertTrue(session.readerable)
     }
+
+    @Test
+    fun `observer is notified when reader mode state changes`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+        assertFalse(session.readerMode)
+
+        session.readerMode = true
+
+        verify(observer).onReaderModeChanged(
+                eq(session),
+                eq(true))
+
+        assertTrue(session.readerMode)
+    }
 }

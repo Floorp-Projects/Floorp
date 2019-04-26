@@ -75,6 +75,7 @@ internal fun serializeSession(session: Session): JSONObject {
         put(Keys.SESSION_UUID_KEY, session.id)
         put(Keys.SESSION_PARENT_UUID_KEY, session.parentId ?: "")
         put(Keys.SESSION_TITLE, session.title)
+        put(Keys.SESSION_READER_MODE_KEY, session.readerMode)
     }
 }
 
@@ -95,6 +96,7 @@ internal fun deserializeSession(json: JSONObject): Session {
     )
     session.parentId = json.getString(Keys.SESSION_PARENT_UUID_KEY).takeIf { it != "" }
     session.title = if (json.has(Keys.SESSION_TITLE)) json.getString(Keys.SESSION_TITLE) else ""
+    session.readerMode = json.optBoolean(Keys.SESSION_READER_MODE_KEY, false)
     return session
 }
 
@@ -106,6 +108,7 @@ private object Keys {
     const val SESSION_URL_KEY = "url"
     const val SESSION_UUID_KEY = "uuid"
     const val SESSION_PARENT_UUID_KEY = "parentUuid"
+    const val SESSION_READER_MODE_KEY = "readerMode"
     const val SESSION_TITLE = "title"
 
     const val SESSION_KEY = "session"

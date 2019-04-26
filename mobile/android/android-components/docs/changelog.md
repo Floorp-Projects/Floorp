@@ -12,6 +12,27 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-readerview**
+  * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+  ```kotlin
+      val readerViewFeature = ReaderViewFeature(context, engine, sessionManager, controlsView) { available ->
+          // This lambda is invoked to indicate whether or not reader view is available 
+          // for the page loaded by the selected session (for the current tab)
+      }
+
+      // To activate reader view
+      readerViewFeature.showReaderView()
+
+      // To deactivate reader view
+      readerViewFeature.hideReaderView()
+
+      // To show the appearance (font, color scheme) controls
+      readerViewFeature.showControls()
+
+      // To hide the appearance (font, color scheme) controls
+      readerViewFeature.hideControls()
+  ```
+
 * **feature-sitepermissions**
   * Do not save new site permissions in private sessions.
 

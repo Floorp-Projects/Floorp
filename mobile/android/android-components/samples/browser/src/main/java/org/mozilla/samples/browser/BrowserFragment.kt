@@ -157,7 +157,9 @@ class BrowserFragment : Fragment(), BackHandler {
                 requireContext(),
                 components.engine,
                 components.sessionManager,
-                layout.readerViewBar
+                layout.toolbar,
+                layout.readerViewBar,
+                layout.readerViewAppearanceButton
             ),
             owner = this,
             view = layout
@@ -190,11 +192,11 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean {
         return when {
+            readerViewFeature.onBackPressed() -> true
             findInPageIntegration.onBackPressed() -> true
             toolbarFeature.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
             customTabsToolbarFeature.onBackPressed() -> true
-            readerViewFeature.onBackPressed() -> true
             else -> false
         }
     }

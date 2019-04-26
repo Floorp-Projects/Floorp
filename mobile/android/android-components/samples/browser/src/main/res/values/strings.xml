@@ -6,4 +6,6 @@
     <string name="app_name">Sample Browser</string>
 
     <string name="menu_action_add_tab">Add New Tab</string>
+    <string name="mozac_reader_view_description">Enable Reader View</string>
+    <string name="mozac_reader_view_description_selected">Disable Reader View</string>
 </resources>

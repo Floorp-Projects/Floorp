@@ -29,12 +29,12 @@
   color: #eeeeee;
 }
 
-.mozac-readerview-body.sans-serif {
-  font-family: sans-serif;
+.mozac-readerview-body.sans-serif * {
+  font-family: sans-serif !important;
 }
 
-.mozac-readerview-body.serif {
-  font-family: serif;
+.mozac-readerview-body.serif * {
+  font-family: serif !important;
 }
 
 /* Override some controls and content styles based on color scheme */
@@ -106,7 +106,6 @@
 
 .mozac-readerview-body > .container > .header > .credits {
   font-size: 0.9em;
-  font-family: sans-serif;
 }
 
 .mozac-readerview-body > .container > .header > .domain {
@@ -139,6 +138,11 @@
   margin-bottom: 32px;
 }
 
+.mozac-readerview-body > .container > .header > .meta-data {
+  font-size: 0.65em;
+  margin: 0 0 15px 0;
+}
+
 .mozac-readerview-body > .container > .content {
   padding-left: 0px;
   padding-right: 0px;
@@ -161,8 +165,25 @@
   color: #00acff !important;
 }
 
+.mozac-readerview-content h1 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.6em;
+}
+
 .mozac-readerview-content h2 {
-  margin-bottom: 20px !important;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.mozac-readerview-content h3 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1em;
 }
 
 .mozac-readerview-content * {
@@ -171,6 +192,7 @@
 }
 
 .mozac-readerview-content p {
+  font-size: 1em !important;
   line-height: 1.4em !important;
   margin: 0px !important;
   margin-bottom: 20px !important;

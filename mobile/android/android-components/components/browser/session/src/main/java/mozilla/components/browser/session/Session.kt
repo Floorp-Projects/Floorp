@@ -73,6 +73,7 @@ class Session(
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
         fun onIconChanged(session: Session, icon: Bitmap?) = Unit
         fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
+        fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
     }
 
     /**
@@ -377,6 +378,13 @@ class Session(
      */
     var readerable: Boolean by Delegates.observable(false) { _, _, new ->
         notifyObservers { onReaderableStateUpdated(this@Session, new) }
+    }
+
+    /**
+     * Reader mode state, whether or not reader view is enabled, otherwise false.
+     */
+    var readerMode: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) { onReaderModeChanged(this@Session, new) }
     }
 
     /**

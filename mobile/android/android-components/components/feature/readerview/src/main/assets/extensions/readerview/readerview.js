@@ -26,7 +26,7 @@ class ReaderView {
       return false;
     }
 
-    return isProbablyReaderable(document);
+    return isProbablyReaderable(document, ReaderView._isNodeVisible);
   }
 
   static get MIN_FONT_SIZE() {
@@ -35,6 +35,10 @@ class ReaderView {
 
   static get MAX_FONT_SIZE() {
     return 9;
+  }
+
+  static _isNodeVisible(node) {
+    return node.clientHeight > 0 && node.clientWidth > 0;
   }
 
   constructor(document) {
@@ -63,6 +67,7 @@ class ReaderView {
 
   hide() {
     document.body.outerHTML = this.originalBody;
+    location.reload(false)
   }
 
   /**
@@ -95,10 +100,6 @@ class ReaderView {
    * @param fontType the font type to use.
    */
   setFontType(fontType) {
-    if (this.fontType === fontType) {
-      return;
-    }
-
     let bodyClasses = document.body.classList;
 
     if (this.fontType) {
@@ -118,10 +119,6 @@ class ReaderView {
   setColorScheme(colorScheme) {
     if(!['light', 'sepia', 'dark'].includes(colorScheme)) {
       console.error(`Invalid color scheme specified: ${colorScheme}`)
-      return;
-    }
-
-    if (this.colorScheme === colorScheme) {
       return;
     }
 
@@ -279,15 +276,25 @@ class ReaderView {
    }
 }
 
-let port = browser.runtime.connectNative("mozacReaderview");
+let readerView = new ReaderView(document);
 
+let port = browser.runtime.connectNative("mozacReaderview");
 port.onMessage.addListener((message) => {
     switch (message.action) {
       case 'show':
-        readerView.show({fontSize: 3, fontType: "serif", colorScheme: "light"});
+        readerView.show(message.value);
         break;
       case 'hide':
         readerView.hide();
+        break;
+      case 'setColorScheme':
+        readerView.setColorScheme(message.value.toLowerCase());
+        break;
+      case 'changeFontSize':
+        readerView.changeFontSize(message.value);
+        break;
+      case 'setFontType':
+        readerView.setFontType(message.value.toLowerCase());
         break;
       case 'checkReaderable':
         port.postMessage({readerable: ReaderView.isReaderable()});
@@ -297,12 +304,4 @@ port.onMessage.addListener((message) => {
     }
 });
 
-// TODO remove hostname check (for testing purposes only)
-// e.g. https://blog.mozilla.org/firefox/reader-view
-if (ReaderView.isReaderable() && location.hostname.endsWith("blog.mozilla.org")) {
-  // TODO send message to app to inform that readerview is available
-  // For now we show reader view for every page on blog.mozilla.org
-  let readerView = new ReaderView(document);
-  // TODO Parameters need to be passed down in message to display readerview
-  readerView.show({fontSize: 3, fontType: "serif", colorScheme: "light"});
-}
+window.addEventListener("unload", (event) => { port.disconnect() }, false);

@@ -57,7 +57,19 @@
             android:visibility="gone"
             android:layout_gravity="bottom"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:paddingBottom="55dp" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/readerViewAppearanceButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:src="@drawable/mozac_ic_font"
+            android:visibility="gone"
+            android:layout_marginRight="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginBottom="72dp" />
 
     </FrameLayout>
 

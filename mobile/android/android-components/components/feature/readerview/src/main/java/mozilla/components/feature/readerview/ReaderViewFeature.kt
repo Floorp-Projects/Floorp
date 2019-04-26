@@ -18,13 +18,14 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.readerview.internal.ReaderViewControlsInteractor
 import mozilla.components.feature.readerview.internal.ReaderViewControlsPresenter
 import mozilla.components.feature.readerview.view.ReaderViewControlsView
+import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme.LIGHT
+import mozilla.components.feature.readerview.ReaderViewFeature.FontType.SERIF
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
-import java.lang.IllegalStateException
 import java.util.WeakHashMap
-import kotlin.properties.Delegates
+import kotlin.properties.Delegates.observable
 
 typealias OnReaderViewAvailableChange = (available: Boolean) -> Unit
 
@@ -51,39 +52,38 @@ class ReaderViewFeature(
     private val onReaderViewAvailableChange: OnReaderViewAvailableChange = { }
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, BackHandler {
 
-    private val config = Config(context.getSharedPreferences("mozac_feature_reader_view", Context.MODE_PRIVATE))
+    @VisibleForTesting
+    internal val config = Config(context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE))
     private val controlsPresenter = ReaderViewControlsPresenter(controlsView, config)
     private val controlsInteractor = ReaderViewControlsInteractor(controlsView, config)
 
-    class Config(prefs: SharedPreferences) {
-        enum class FontType { SANS_SERIF, SERIF }
-        enum class ColorScheme { LIGHT, SEPIA, DARK }
+    enum class FontType(val value: String) { SANSSERIF("sans-serif"), SERIF("serif") }
+    enum class ColorScheme { LIGHT, SEPIA, DARK }
 
-        var colorScheme by Delegates.observable(ColorScheme.valueOf(prefs.getString(COLOR_SCHEME_KEY, "LIGHT")!!)) {
-            _, old, new -> saveAndSendMessage(old, new, COLOR_SCHEME_KEY)
-        }
+    inner class Config(private val prefs: SharedPreferences) {
 
-        @Suppress("MagicNumber")
-        var fontSize by Delegates.observable(prefs.getInt(FONT_SIZE_KEY, 3)) {
-            _, old, new -> saveAndSendMessage(old, new, FONT_SIZE_KEY)
-        }
-
-        var fontType by Delegates.observable(FontType.valueOf(prefs.getString(FONT_TYPE_KEY, "SANS_SERIF")!!)) {
-            _, old, new -> saveAndSendMessage(old, new, FONT_TYPE_KEY)
-        }
-
-        @Suppress("UNUSED_PARAMETER")
-        private fun saveAndSendMessage(old: Any, new: Any, key: String) {
-            if (old != new) {
-                // TODO save shared preference
-                // TODO send message to reader view web extension
+        var colorScheme by observable(ColorScheme.valueOf(prefs.getString(COLOR_SCHEME_KEY, LIGHT.name)!!)) {
+            _, old, new -> if (old != new) {
+                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SET_COLOR_SCHEME).put(ACTION_VALUE, new.name)
+                sendContentMessage(message)
+                prefs.edit().putString(COLOR_SCHEME_KEY, new.name).apply()
             }
         }
 
-        companion object {
-            const val COLOR_SCHEME_KEY = "mozac-readerview-colorscheme"
-            const val FONT_TYPE_KEY = "mozac-readerview-fonttype"
-            const val FONT_SIZE_KEY = "mozac-readerview-fontsize"
+        var fontType by observable(FontType.valueOf(prefs.getString(FONT_TYPE_KEY, SERIF.name)!!)) {
+            _, old, new -> if (old != new) {
+                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SET_FONT_TYPE).put(ACTION_VALUE, new.value)
+                sendContentMessage(message)
+                prefs.edit().putString(FONT_TYPE_KEY, new.name).apply()
+            }
+        }
+
+        var fontSize by observable(prefs.getInt(FONT_SIZE_KEY, FONT_SIZE_DEFAULT)) {
+            _, old, new -> if (old != new) {
+                val message = JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHANGE_FONT_SIZE).put(ACTION_VALUE, new - old)
+                sendContentMessage(message)
+                prefs.edit().putInt(FONT_SIZE_KEY, new).apply()
+            }
         }
     }
 
@@ -96,9 +96,110 @@ class ReaderViewFeature(
             ReaderViewFeature.install(engine)
         }
 
-        checkReaderable()
+        if (portConnected()) {
+            checkReaderable()
+            if (activeSession?.readerMode == true) {
+                showReaderView()
+            }
+        }
 
         controlsInteractor.start()
+    }
+
+    override fun stop() {
+        controlsInteractor.stop()
+        super.stop()
+    }
+
+    override fun onBackPressed(): Boolean {
+        activeSession?.let {
+            if (it.readerMode) {
+                hideReaderView()
+                return true
+            }
+        }
+        return false
+    }
+
+    override fun onSessionSelected(session: Session) {
+        registerContentMessageHandler(activeSession)
+        checkReaderable()
+        super.onSessionSelected(session)
+    }
+
+    override fun onSessionRemoved(session: Session) {
+        ports.remove(sessionManager.getEngineSession(session))
+    }
+
+    override fun onUrlChanged(session: Session, url: String) {
+        session.readerable = false
+        session.readerMode = false
+        checkReaderable()
+    }
+
+    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+        // If the page was refreshed and reader mode was turned on before,
+        // make sure it is still turned on.
+        if (!loading && activeSession?.readerMode == true) {
+            showReaderView()
+        }
+    }
+
+    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
+        onReaderViewAvailableChange(readerable)
+    }
+
+    /**
+     * Shows the reader view UI.
+     */
+    fun showReaderView() {
+        activeSession?.let {
+            val config = JSONObject()
+                .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
+                .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase())
+                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase())
+
+            val message = JSONObject()
+                .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
+                .put(ACTION_VALUE, config)
+
+            sendContentMessage(message, it)
+            it.readerMode = true
+        }
+    }
+
+    /**
+     * Hides the reader view UI.
+     */
+    fun hideReaderView() {
+        activeSession?.let {
+            it.readerMode = false
+            // We will re-determine if the original page is readerable when it's loaded.
+            it.readerable = false
+            sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE), it)
+        }
+    }
+
+    /**
+     * Shows the reader view appearance controls.
+     */
+    fun showControls() {
+        controlsPresenter.show()
+    }
+
+    /**
+     * Hides the reader view appearance controls.
+     */
+    fun hideControls() {
+        controlsPresenter.hide()
+    }
+
+    internal fun checkReaderable() {
+        activeSession?.let {
+            if (portConnected()) {
+                sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
+            }
+        }
     }
 
     private fun registerContentMessageHandler(session: Session?) {
@@ -126,98 +227,49 @@ class ReaderViewFeature(
         registerMessageHandler(sessionManager.getOrCreateEngineSession(session), messageHandler)
     }
 
-    override fun stop() {
-        controlsInteractor.stop()
-        super.stop()
-    }
-
-    override fun onBackPressed(): Boolean {
-        // TODO send message to exit reader view (-> see ReaderView.hide())
-        return true
-    }
-
-    override fun onSessionSelected(session: Session) {
-        // TODO restore selected state of whether the controls are open or not
-        registerContentMessageHandler(activeSession)
-        checkReaderable()
-        super.onSessionSelected(session)
-    }
-
-    override fun onSessionRemoved(session: Session) {
-        ports.remove(sessionManager.getEngineSession(session))
-    }
-
-    override fun onUrlChanged(session: Session, url: String) {
-        checkReaderable()
-    }
-
-    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
-        onReaderViewAvailableChange(readerable)
-    }
-
-    fun showReaderView() {
-        activeSession?.let {
-            sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_SHOW), it)
+    private fun sendContentMessage(msg: Any, session: Session? = activeSession) {
+        session?.let {
+            val port = ports[sessionManager.getEngineSession(session)]
+            port?.postMessage(msg) ?: logger.error("No port connected for provided session. Message $msg not sent.")
         }
     }
 
-    fun hideReaderView() {
-        activeSession?.let {
-            sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE), it)
-        }
+    @VisibleForTesting
+    internal fun portConnected(session: Session? = activeSession): Boolean {
+        return session?.let { ports.containsKey(sessionManager.getEngineSession(session)) } ?: false
     }
 
-    /**
-     * Show ReaderView appearance controls.
-     */
-    fun showControls() {
-        controlsPresenter.show()
-    }
-
-    /**
-     * Hide ReaderView appearance controls.
-     */
-    fun hideControls() {
-        controlsPresenter.hide()
-    }
-
-    internal fun checkReaderable() {
-        activeSession?.let {
-            if (ports.containsKey(sessionManager.getEngineSession(it))) {
-                sendMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
-            }
-        }
-    }
-
-    private fun sendMessage(msg: Any, session: Session) {
-        val port = ports[sessionManager.getEngineSession(session)]
-        port?.postMessage(msg) ?: throw IllegalStateException("No port connected for the provided session")
-    }
-
+    @VisibleForTesting
     companion object {
-        @VisibleForTesting
-        internal const val READER_VIEW_EXTENSION_ID = "mozacReaderview"
+        private val logger = Logger("mozac-readerview")
 
-        @VisibleForTesting
+        internal const val READER_VIEW_EXTENSION_ID = "mozacReaderview"
         internal const val READER_VIEW_EXTENSION_URL = "resource://android/assets/extensions/readerview/"
 
-        @VisibleForTesting
+        // Constants for building messages sent to the web extension:
+        // Change the font type: {"action": "setFontType", "value": "sans-serif"}
+        // Show reader view: {"action": "show", "value": {"fontSize": 3, "fontType": "serif", "colorScheme": "dark"}}
         internal const val ACTION_MESSAGE_KEY = "action"
-
-        @VisibleForTesting
         internal const val ACTION_SHOW = "show"
-
-        @VisibleForTesting
         internal const val ACTION_HIDE = "hide"
-
-        @VisibleForTesting
         internal const val ACTION_CHECK_READERABLE = "checkReaderable"
-
-        @VisibleForTesting
+        internal const val ACTION_SET_COLOR_SCHEME = "setColorScheme"
+        internal const val ACTION_CHANGE_FONT_SIZE = "changeFontSize"
+        internal const val ACTION_SET_FONT_TYPE = "setFontType"
+        internal const val ACTION_VALUE = "value"
+        internal const val ACTION_VALUE_SHOW_FONT_SIZE = "fontSize"
+        internal const val ACTION_VALUE_SHOW_FONT_TYPE = "fontType"
+        internal const val ACTION_VALUE_SHOW_COLOR_SCHEME = "colorScheme"
         internal const val READERABLE_RESPONSE_MESSAGE_KEY = "readerable"
 
+        // Constants for storing the reader mode config in shared preferences
+        internal const val SHARED_PREF_NAME = "mozac_feature_reader_view"
+        internal const val COLOR_SCHEME_KEY = "mozac-readerview-colorscheme"
+        internal const val FONT_TYPE_KEY = "mozac-readerview-fonttype"
+        internal const val FONT_SIZE_KEY = "mozac-readerview-fontsize"
+        internal const val FONT_SIZE_DEFAULT = 3
+
         @Volatile
-        @VisibleForTesting
         internal var installedWebExt: WebExtension? = null
 
         @Volatile
@@ -233,12 +285,12 @@ class ReaderViewFeature(
         fun install(engine: Engine) {
             engine.installWebExtension(READER_VIEW_EXTENSION_ID, READER_VIEW_EXTENSION_URL,
                 onSuccess = {
-                    Logger.debug("Installed extension: ${it.id}")
+                    logger.debug("Installed extension: ${it.id}")
                     registerContentMessageHandler(it)
                     installedWebExt = it
                 },
                 onError = { ext, throwable ->
-                    Logger.error("Failed to install extension: $ext", throwable)
+                    logger.error("Failed to install extension: $ext", throwable)
                 }
             )
         }
