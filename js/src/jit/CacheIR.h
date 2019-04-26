@@ -2398,17 +2398,21 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleValue rhsVal_;
 
-  bool tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachStrictDifferentTypes(ValOperandId lhsId,
+                                               ValOperandId rhsId);
+  AttachDecision tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachNumberUndefined(ValOperandId lhsId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachPrimitiveUndefined(ValOperandId lhsId,
+                                             ValOperandId rhsId);
+  AttachDecision tryAttachObjectUndefined(ValOperandId lhsId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
 
   void trackAttached(const char* name);
 
@@ -2417,7 +2421,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
                      ICState::Mode mode, JSOp op, HandleValue lhsVal,
                      HandleValue rhsVal);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
