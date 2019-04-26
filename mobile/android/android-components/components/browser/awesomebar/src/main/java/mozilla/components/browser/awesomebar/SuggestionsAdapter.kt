@@ -63,6 +63,11 @@ internal class SuggestionsAdapter(
         updatedSuggestions.addAll(providerSuggestions)
 
         updateTo(updatedSuggestions.sortedByDescending { it.score })
+
+        // Make sure we're always displaying first suggestions at the top of the screen after input
+        // changes. Without this manual scroll, we might end with UI "scrolled" to a middle of the
+        // suggestions list.
+        awesomeBar.scrollToPosition(0)
     }
 
     fun removeSuggestions(provider: AwesomeBar.SuggestionProvider) = synchronized(suggestions) {

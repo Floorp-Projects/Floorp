@@ -87,7 +87,6 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     override fun addProviders(vararg providers: AwesomeBar.SuggestionProvider) {
         this.providers.addAll(providers)
         this.resizeUniqueSuggestionIdCache(this.providers.size)
-        scrollToPosition(0)
     }
 
     @Synchronized
@@ -115,22 +114,12 @@ class BrowserAwesomeBar @JvmOverloads constructor(
 
     @Synchronized
     override fun onInputStarted() {
-        // Make sure we're always displaying first suggestions at the top of the screen after input
-        // changes. Without this manual scroll, we might end with UI "scrolled" to a middle of the
-        // suggestions list.
-        scrollToPosition(0)
-
         providers.forEach { provider -> provider.onInputStarted() }
     }
 
     @Synchronized
     override fun onInputChanged(text: String) {
         job?.cancel()
-
-        // Make sure we're always displaying first suggestions at the top of the screen after input
-        // changes. Without this manual scroll, we might end with UI "scrolled" to a middle of the
-        // suggestions list.
-        scrollToPosition(0)
 
         suggestionsAdapter.optionallyClearSuggestions()
 
