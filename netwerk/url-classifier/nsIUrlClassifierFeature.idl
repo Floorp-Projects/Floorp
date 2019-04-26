@@ -64,7 +64,8 @@ interface nsIUrlClassifierFeature : nsISupports
    * processing other features.
    */
   [noscript] boolean processChannel(in nsIChannel aChannel,
-                                    in ConstStringArrayRef aList);
+                                    in ConstStringArrayRef aList,
+                                    in ConstStringArrayRef aHashes);
 
   /**
    * Features can work with different URLs from a channel (channel url, or
