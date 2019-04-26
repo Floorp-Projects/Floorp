@@ -478,12 +478,6 @@ struct IntrinsicSize {
   IntrinsicSize(nscoord aWidth, nscoord aHeight)
       : width(Some(aWidth)), height(Some(aHeight)) {}
 
-  IntrinsicSize(const IntrinsicSize& rhs) = default;
-  IntrinsicSize& operator=(const IntrinsicSize& rhs) {
-    width = rhs.width;
-    height = rhs.height;
-    return *this;
-  }
   bool operator==(const IntrinsicSize& rhs) {
     return width == rhs.width && height == rhs.height;
   }
