@@ -534,7 +534,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(), cspNonce,
-      aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieSettingsArgs));
+      aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieSettingsArgs,
+      aLoadInfo->GetRequestBlockingReason()));
 
   return NS_OK;
 }
@@ -685,7 +686,8 @@ nsresult LoadInfoArgsToLoadInfo(
       loadInfoArgs.isPreflight(), loadInfoArgs.loadTriggeredFromExternal(),
       loadInfoArgs.serviceWorkerTaintingSynthesized(),
       loadInfoArgs.documentHasUserInteracted(),
-      loadInfoArgs.documentHasLoaded(), loadInfoArgs.cspNonce());
+      loadInfoArgs.documentHasLoaded(), loadInfoArgs.cspNonce(),
+      loadInfoArgs.requestBlockingReason());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
@@ -703,7 +705,8 @@ void LoadInfoToParentLoadInfoForwarder(
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
-        Maybe<CookieSettingsArgs>());
+        Maybe<CookieSettingsArgs>(),
+        nsILoadInfo::BLOCKING_REASON_NONE);  // requestBlockingReason
     return;
   }
 
@@ -731,7 +734,8 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded(), cookieSettingsArgs);
+      aLoadInfo->GetDocumentHasLoaded(), cookieSettingsArgs,
+      aLoadInfo->GetRequestBlockingReason());
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -763,6 +767,8 @@ nsresult MergeParentLoadInfoForwarder(
       aForwarderArgs.documentHasUserInteracted()));
   MOZ_ALWAYS_SUCCEEDS(
       aLoadInfo->SetDocumentHasLoaded(aForwarderArgs.documentHasLoaded()));
+  MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetRequestBlockingReason(
+      aForwarderArgs.requestBlockingReason()));
 
   const Maybe<CookieSettingsArgs>& cookieSettingsArgs =
       aForwarderArgs.cookieSettings();

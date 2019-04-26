@@ -361,6 +361,12 @@ nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
       ShouldLoad(false,  // aHadInsecureImageRedirect
                  contentType, aContentLocation, requestingLocation,
                  requestingContext, aMimeGuess, requestPrincipal, aDecision);
+
+  if (*aDecision == nsIContentPolicy::REJECT_REQUEST) {
+    NS_SetRequestBlockingReason(aLoadInfo,
+                                nsILoadInfo::BLOCKING_REASON_MIXED_BLOCKED);
+  }
+
   return rv;
 }
 
@@ -1089,6 +1095,8 @@ nsMixedContentBlocker::ShouldProcess(nsIURI* aContentLocation,
       return NS_OK;
     }
 
+    NS_SetRequestBlockingReason(aLoadInfo,
+                                nsILoadInfo::BLOCKING_REASON_MIXED_BLOCKED);
     *aDecision = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }
