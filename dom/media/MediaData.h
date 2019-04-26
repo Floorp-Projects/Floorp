@@ -300,6 +300,9 @@ class MediaData {
   // the result is invalid.
   virtual bool AdjustForStartTime(const media::TimeUnit& aStartTime) {
     mTime -= aStartTime;
+    if (mTime.IsNegative()) {
+      NS_WARNING("Negative start time after time-adjustment!");
+    }
     return mTime.IsValid();
   }
 
