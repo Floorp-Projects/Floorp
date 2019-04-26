@@ -175,8 +175,7 @@ CustomizeMode.prototype = {
 
   async _updateThemeButtonIcon() {
     let lwthemeButton = this.$("customization-lwtheme-button");
-    let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
-                        "class", "button-icon");
+    let lwthemeIcon = lwthemeButton.icon;
     let theme = (await AddonManager.getAddonsByTypes(["theme"])).find(addon => addon.isActive);
     lwthemeIcon.style.backgroundImage = theme ? "url(" + theme.iconURL + ")" : "";
   },
