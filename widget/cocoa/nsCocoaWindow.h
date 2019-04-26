@@ -99,13 +99,6 @@ typedef struct _nsCocoaWindowList {
 // original value.
 - (void)_setWindowNumber:(NSInteger)aNumber;
 
-// If we set the window's stylemask to be textured, the corners on the bottom of
-// the window are rounded by default. We use this private method to make
-// the corners square again, a la Safari. Starting with 10.7, all windows have
-// rounded bottom corners, so this call doesn't have any effect there.
-- (void)setBottomCornerRounded:(BOOL)rounded;
-- (BOOL)bottomCornerRounded;
-
 // Present in the same form on OS X since at least OS X 10.5.
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame styleMask:(NSUInteger)windowStyle;
 - (NSRect)frameRectForContentRect:(NSRect)windowContentRect styleMask:(NSUInteger)windowStyle;
