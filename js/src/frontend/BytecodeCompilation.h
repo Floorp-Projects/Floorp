@@ -100,7 +100,9 @@ class MOZ_STACK_CLASS BytecodeCompiler {
   // This function lives here, not in SourceAwareCompiler, because it mostly
   // uses fields in *this* class.
   template <typename Unit>
-  MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer);
+  MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
+    return scriptSource->assignSource(cx, options, sourceBuffer);
+  }
 
   bool canLazilyParse() const;
 

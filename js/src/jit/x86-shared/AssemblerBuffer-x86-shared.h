@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "jit/ExecutableAllocator.h"
+#include "jit/Ion.h"
 #include "jit/JitSpewer.h"
 
 // Spew formatting helpers.
@@ -193,6 +194,12 @@ class AssemblerBuffer {
   void oomDetected() {
     m_oom = true;
     m_buffer.clear();
+#ifdef DEBUG
+    JitContext* context = MaybeGetJitContext();
+    if (context) {
+      context->setOOM();
+    }
+#endif
   }
 
   mozilla::Vector<unsigned char, 256, AssemblerBufferAllocPolicy> m_buffer;
