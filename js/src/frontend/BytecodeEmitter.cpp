@@ -244,6 +244,13 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   }
 
   if (BytecodeOpHasIC(op)) {
+    // Because numICEntries also includes entries for formal arguments, we have
+    // to check for overflow here.
+    if (MOZ_UNLIKELY(bytecodeSection().numICEntries() == UINT32_MAX)) {
+      reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
+      return false;
+    }
+
     bytecodeSection().incrementNumICEntries();
   }
 
@@ -356,11 +363,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
 bool BytecodeEmitter::emitJumpTargetOp(JSOp op, ptrdiff_t* off) {
   MOZ_ASSERT(BytecodeIsJumpTarget(op));
 
-  size_t numEntries = bytecodeSection().numICEntries();
-  if (MOZ_UNLIKELY(numEntries > UINT32_MAX)) {
-    reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
-    return false;
-  }
+  uint32_t numEntries = bytecodeSection().numICEntries();
 
   if (!emitN(op, CodeSpec[op].length - 1, off)) {
     return false;
@@ -1771,7 +1774,7 @@ bool BytecodeEmitter::emitGetName(NameNode* name) {
   return emitGetName(name->name());
 }
 
-bool BytecodeEmitter::emitTDZCheckIfNeeded(JSAtom* name,
+bool BytecodeEmitter::emitTDZCheckIfNeeded(HandleAtom name,
                                            const NameLocation& loc) {
   // Dynamic accesses have TDZ checks built into their VM code and should
   // never emit explicit TDZ checks.
@@ -7605,7 +7608,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec) {
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitLabeledStatement(
     const LabeledStatement* labeledStmt) {
   LabelEmitter label(this);
-  if (!label.emitLabel(labeledStmt->label())) {
+  RootedAtom name(cx, labeledStmt->label());
+  if (!label.emitLabel(name)) {
     return false;
   }
   if (!emitTree(labeledStmt->statement())) {

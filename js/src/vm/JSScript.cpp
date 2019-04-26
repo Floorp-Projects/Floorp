@@ -775,6 +775,7 @@ XDRResult SharedScriptData::XDR(XDRState<mode>* xdr, HandleScript script) {
   MOZ_TRY(xdr->codeUint32(&ssd->nfixed));
   MOZ_TRY(xdr->codeUint32(&ssd->nslots));
   MOZ_TRY(xdr->codeUint32(&ssd->bodyScopeIndex));
+  MOZ_TRY(xdr->codeUint32(&ssd->numICEntries));
   MOZ_TRY(xdr->codeUint16(&ssd->funLength));
   MOZ_TRY(xdr->codeUint16(&ssd->numBytecodeTypeSets));
 
@@ -4525,6 +4526,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   data->nfixed = bce->maxFixedSlots;
   data->nslots = nslots;
   data->bodyScopeIndex = bce->bodyScopeIndex;
+  data->numICEntries = bce->bytecodeSection().numICEntries();
   data->numBytecodeTypeSets =
       std::min<uint32_t>(uint32_t(JSScript::MaxBytecodeTypeSets),
                          bce->bytecodeSection().numTypeSets());
