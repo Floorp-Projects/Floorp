@@ -91,16 +91,16 @@ class CustomTabToolbarMenu(
 
     private val menuItems by lazy {
         listOf(
-            SimpleBrowserMenuItem(
-                {
-                    val appName = context.getString(R.string.app_name)
-                    context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
-                }(),
-                ToolbarMenu.CAPTION_TEXT_SIZE,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ),
+            menuToolbar,
 
             BrowserMenuDivider(),
+
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_share),
+                R.drawable.mozac_ic_share
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.Share)
+            },
 
             SimpleBrowserMenuItem(
                 {
@@ -115,14 +115,16 @@ class CustomTabToolbarMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
             },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_share),
-                R.drawable.mozac_ic_share,
+            BrowserMenuDivider(),
+
+            SimpleBrowserMenuItem(
+                {
+                    val appName = context.getString(R.string.app_name)
+                    context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
+                }(),
+                ToolbarMenu.CAPTION_TEXT_SIZE,
                 DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.Share)
-            },
-            menuToolbar
+            )
         )
     }
 }

@@ -34,6 +34,7 @@ class CustomTabsIntegration(
         toolbar,
         sessionId,
         customTabToolbarMenu.menuBuilder,
+        START_OF_MENU_ITEMS_INDEX,
         closeListener = { activity?.finish() })
 
     override fun start() {
@@ -46,5 +47,9 @@ class CustomTabsIntegration(
 
     override fun onBackPressed(): Boolean {
         return feature.onBackPressed()
+    }
+
+    companion object {
+        const val START_OF_MENU_ITEMS_INDEX = 2
     }
 }
