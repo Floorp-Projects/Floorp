@@ -2106,8 +2106,8 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
   HandleObject env_;
   HandlePropertyName name_;
 
-  bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
-  bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   void trackAttached(const char* name);
 
@@ -2116,7 +2116,7 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
                       ICState::Mode mode, HandleObject env,
                       HandlePropertyName name);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 // Information used by SetProp/SetElem stubs to check/update property types.

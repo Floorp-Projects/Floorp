@@ -2644,7 +2644,7 @@ BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script,
       env_(env),
       name_(name) {}
 
-bool BindNameIRGenerator::tryAttachStub() {
+AttachDecision BindNameIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::BindName);
 
   AutoAssertNoPendingException aanpe(cx_);
@@ -2652,20 +2652,17 @@ bool BindNameIRGenerator::tryAttachStub() {
   ObjOperandId envId(writer.setInputOperandId(0));
   RootedId id(cx_, NameToId(name_));
 
-  if (tryAttachGlobalName(envId, id)) {
-    return true;
-  }
-  if (tryAttachEnvironmentName(envId, id)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachGlobalName(envId, id));
+  TRY_ATTACH(tryAttachEnvironmentName(envId, id));
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id) {
+AttachDecision BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId,
+                                                        HandleId id) {
   if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Handle<LexicalEnvironmentObject*> globalLexical =
@@ -2677,7 +2674,7 @@ bool BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id) {
     // If this is an uninitialized lexical or a const, we need to return a
     // RuntimeLexicalErrorObject.
     if (globalLexical->getSlot(shape->slot()).isMagic() || !shape->writable()) {
-      return false;
+      return AttachDecision::NoAction;
     }
     result = globalLexical;
   } else {
@@ -2702,23 +2699,23 @@ bool BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id) {
   writer.returnFromIC();
 
   trackAttached("GlobalName");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
-                                                   HandleId id) {
+AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
+                                                             HandleId id) {
   if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject env(cx_, env_);
   RootedShape shape(cx_);
   while (true) {
     if (!env->is<GlobalObject>() && !env->is<EnvironmentObject>()) {
-      return false;
+      return AttachDecision::NoAction;
     }
     if (env->is<WithEnvironmentObject>()) {
-      return false;
+      return AttachDecision::NoAction;
     }
 
     MOZ_ASSERT(!env->hasUncacheableProto());
@@ -2745,7 +2742,7 @@ bool BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   RootedNativeObject holder(cx_, &env->as<NativeObject>());
   if (shape && holder->is<EnvironmentObject>() &&
       (holder->getSlot(shape->slot()).isMagic() || !shape->writable())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ObjOperandId lastObjId = objId;
@@ -2766,7 +2763,7 @@ bool BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("EnvironmentName");
-  return true;
+  return AttachDecision::Attach;
 }
 
 void BindNameIRGenerator::trackAttached(const char* name) {
