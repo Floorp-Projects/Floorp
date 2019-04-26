@@ -4540,39 +4540,36 @@ GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx,
                                                HandleValue value)
     : IRGenerator(cx, script, pc, CacheKind::GetIterator, mode), val_(value) {}
 
-bool GetIteratorIRGenerator::tryAttachStub() {
+AttachDecision GetIteratorIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::GetIterator);
 
   AutoAssertNoPendingException aanpe(cx_);
 
   if (mode_ == ICState::Mode::Megamorphic) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
   if (!val_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject obj(cx_, &val_.toObject());
 
   ObjOperandId objId = writer.guardIsObject(valId);
-  if (tryAttachNativeIterator(objId, obj)) {
-    trackAttached("GetIterator");
-    return true;
-  }
+  TRY_ATTACH(tryAttachNativeIterator(objId, obj));
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId,
-                                                     HandleObject obj) {
+AttachDecision GetIteratorIRGenerator::tryAttachNativeIterator(
+    ObjOperandId objId, HandleObject obj) {
   MOZ_ASSERT(JSOp(*pc_) == JSOP_ITER);
 
   PropertyIteratorObject* iterobj = LookupInIteratorCache(cx_, obj);
   if (!iterobj) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   MOZ_ASSERT(obj->isNative());
@@ -4592,7 +4589,8 @@ bool GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId,
   writer.loadObjectResult(iterId);
   writer.returnFromIC();
 
-  return true;
+  trackAttached("GetIterator");
+  return AttachDecision::Attach;
 }
 
 void GetIteratorIRGenerator::trackAttached(const char* name) {

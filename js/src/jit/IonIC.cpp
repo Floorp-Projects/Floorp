@@ -458,8 +458,8 @@ JSObject* IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript,
                                    IonGetIteratorIC* ic, HandleValue value) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStubOld<GetIteratorIRGenerator, IonGetIteratorIC>(
-      cx, ic, ionScript, value);
+  TryAttachIonStub<GetIteratorIRGenerator, IonGetIteratorIC>(cx, ic, ionScript,
+                                                             value);
 
   return ValueToIterator(cx, value);
 }

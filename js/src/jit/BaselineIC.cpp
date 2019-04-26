@@ -5416,7 +5416,7 @@ bool DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "GetIterator");
 
-  TryAttachStubOld<GetIteratorIRGenerator>(
+  TryAttachStub<GetIteratorIRGenerator>(
       "GetIterator", cx, frame, stub, BaselineCacheIRStubKind::Regular, value);
 
   JSObject* iterobj = ValueToIterator(cx, value);
