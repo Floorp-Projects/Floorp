@@ -271,13 +271,14 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
 bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               IonSetPropertyIC* ic, HandleObject obj,
                               HandleValue idVal, HandleValue rhs) {
+  using DeferType = SetPropIRGenerator::DeferType;
+
   RootedShape oldShape(cx);
   RootedObjectGroup oldGroup(cx);
   IonScript* ionScript = outerScript->ionScript();
 
   bool attached = false;
-  bool isTemporarilyUnoptimizable = false;
-  bool canAddSlot = false;
+  DeferType deferType = DeferType::None;
 
   if (ic->state().maybeTransition()) {
     ic->discardStubs(cx->zone());
@@ -293,13 +294,23 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, &canAddSlot, objv,
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
                            idVal, rhs, ic->needsTypeBarrier(),
                            ic->guardHoles());
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached, gen.typeCheckInfo());
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached, gen.typeCheckInfo());
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        deferType = gen.deferType();
+        MOZ_ASSERT(deferType != DeferType::None);
+        break;
     }
   }
 
@@ -354,24 +365,33 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     ic->discardStubs(cx->zone());
   }
 
-  if (ic->state().canAttachStub()) {
+  bool canAttachStub = ic->state().canAttachStub();
+  if (deferType != DeferType::None && canAttachStub) {
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, &canAddSlot, objv,
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
                            idVal, rhs, ic->needsTypeBarrier(),
                            ic->guardHoles());
-    if (canAddSlot && gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached, gen.typeCheckInfo());
-    } else {
-      gen.trackAttached(nullptr);
-    }
+    MOZ_ASSERT(deferType == DeferType::AddSlot);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 
-    if (!attached && !isTemporarilyUnoptimizable) {
-      ic->state().trackNotAttached();
+    switch (decision) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached, gen.typeCheckInfo());
+        break;
+      case AttachDecision::NoAction:
+        gen.trackAttached(IRGenerator::NotAttached);
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Invalid attach result");
+        break;
     }
+  }
+  if (!attached && canAttachStub) {
+    ic->state().trackNotAttached();
   }
 
   return true;
