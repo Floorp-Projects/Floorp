@@ -33,6 +33,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/layers/KeyboardMap.h"
 
@@ -484,7 +485,7 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
 
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-  RefPtr<Document> doc = window->GetExtantDoc();
+  RefPtr<dom::Document> doc = window->GetExtantDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (doc->IsHTMLOrXHTML()) {
