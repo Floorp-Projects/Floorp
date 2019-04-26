@@ -16,7 +16,6 @@ import {
   getRelativeUrl,
   isGenerated,
   isOriginal as isOriginalSource,
-  isUrlExtension,
   getPlainUrl
 } from "../utils/source";
 
@@ -105,21 +104,6 @@ export function initialSourcesState(): SourcesState {
     projectDirectoryRoot: prefs.projectDirectoryRoot,
     chromeAndExtenstionsEnabled: prefs.chromeAndExtenstionsEnabled,
     focusedItem: null
-  };
-}
-
-export function createSource(state: SourcesState, source: Object): Source {
-  const root = state.projectDirectoryRoot;
-  return {
-    id: undefined,
-    url: undefined,
-    sourceMapURL: undefined,
-    isBlackBoxed: false,
-    isPrettyPrinted: false,
-    isWasm: false,
-    isExtension: (source.url && isUrlExtension(source.url)) || false,
-    relativeUrl: getRelativeUrl(source, root),
-    ...source
   };
 }
 
