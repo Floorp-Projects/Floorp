@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
+#include "mozilla/dom/FileCreatorChild.h"
 #include "mozilla/dom/PBackgroundLSDatabaseChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
@@ -27,7 +28,6 @@
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
-#include "mozilla/dom/ipc/FileCreatorChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
@@ -381,15 +381,15 @@ bool BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(
   return true;
 }
 
-PFileCreatorChild* BackgroundChildImpl::AllocPFileCreatorChild(
+dom::PFileCreatorChild* BackgroundChildImpl::AllocPFileCreatorChild(
     const nsString& aFullPath, const nsString& aType, const nsString& aName,
     const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
     const bool& aIsFromNsIFile) {
-  return new mozilla::dom::FileCreatorChild();
+  return new dom::FileCreatorChild();
 }
 
 bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
-  delete static_cast<mozilla::dom::FileCreatorChild*>(aActor);
+  delete static_cast<dom::FileCreatorChild*>(aActor);
   return true;
 }
 
