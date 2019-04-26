@@ -240,13 +240,11 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
   // reserve a type set to store its result.
   if (CodeSpec[op].format & JOF_TYPESET) {
-    if (bytecodeSection().typesetCount() < JSScript::MaxBytecodeTypeSets) {
-      bytecodeSection().addTypesetCount();
-    }
+    bytecodeSection().incrementNumTypeSets();
   }
 
   if (BytecodeOpHasIC(op)) {
-    bytecodeSection().addNumICEntries();
+    bytecodeSection().incrementNumICEntries();
   }
 
   return true;

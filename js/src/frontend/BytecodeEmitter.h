@@ -224,11 +224,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     // ---- JIT ----
 
     size_t numICEntries() const { return numICEntries_; }
-    void addNumICEntries() { numICEntries_++; }
+    void incrementNumICEntries() { numICEntries_++; }
     void setNumICEntries(size_t entries) { numICEntries_ = entries; }
 
-    uint16_t typesetCount() const { return typesetCount_; }
-    void addTypesetCount() { typesetCount_++; }
+    uint32_t numTypeSets() const { return numTypeSets_; }
+    void incrementNumTypeSets() { numTypeSets_++; }
 
    private:
     // ---- Bytecode ----
@@ -306,7 +306,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     size_t numICEntries_ = 0;
 
     // Number of JOF_TYPESET opcodes generated.
-    uint16_t typesetCount_ = 0;
+    uint32_t numTypeSets_ = 0;
   };
 
   BytecodeSection bytecodeSection_;
