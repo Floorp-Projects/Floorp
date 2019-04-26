@@ -68,6 +68,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.windowless-workers", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
+  pref("devtools.debugger.log-actions", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
@@ -102,7 +103,8 @@ export const prefs = new PrefsHelper("devtools", {
   debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"],
   projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""],
   skipPausing: ["Bool", "debugger.skip-pausing"],
-  mapScopes: ["Bool", "debugger.map-scopes-enabled"]
+  mapScopes: ["Bool", "debugger.map-scopes-enabled"],
+  logActions: ["Bool", "debugger.log-actions"]
 });
 
 export const features = new PrefsHelper("devtools.debugger.features", {
