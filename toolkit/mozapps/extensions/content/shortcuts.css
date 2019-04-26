@@ -20,8 +20,6 @@
   width: 24px;
   height: 24px;
   margin-inline-end: 16px;
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .card-heading {
