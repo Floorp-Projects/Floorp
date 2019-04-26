@@ -944,6 +944,14 @@ uint32_t NS_GetDefaultReferrerPolicy(nsIHttpChannel *aChannel = nullptr,
  */
 bool NS_ShouldClassifyChannel(nsIChannel *aChannel);
 
+/**
+ * Helper to set the blocking reason on loadinfo of the channel.
+ */
+nsresult NS_SetRequestBlockingReason(nsIChannel *channel, uint32_t reason);
+nsresult NS_SetRequestBlockingReason(nsILoadInfo *loadInfo, uint32_t reason);
+nsresult NS_SetRequestBlockingReasonIfNull(nsILoadInfo *loadInfo,
+                                           uint32_t reason);
+
 namespace mozilla {
 namespace net {
 

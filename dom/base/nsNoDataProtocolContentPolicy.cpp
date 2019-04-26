@@ -56,6 +56,9 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
         aContentLocation, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
         &shouldBlock);
     if (NS_SUCCEEDED(rv) && shouldBlock) {
+      NS_SetRequestBlockingReason(
+          aLoadInfo,
+          nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_NO_DATA_PROTOCOL);
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
     }
   }

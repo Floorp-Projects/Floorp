@@ -429,6 +429,35 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
         SendThreatHitReport(mChannel, aProvider, aList, aFullHash);
       }
 
+      switch (aErrorCode) {
+        case NS_ERROR_MALWARE_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_MALWARE_URI);
+          break;
+        case NS_ERROR_PHISHING_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_PHISHING_URI);
+          break;
+        case NS_ERROR_UNWANTED_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_UNWANTED_URI);
+          break;
+        case NS_ERROR_TRACKING_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_TRACKING_URI);
+          break;
+        case NS_ERROR_BLOCKED_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_BLOCKED_URI);
+          break;
+        case NS_ERROR_HARMFUL_URI:
+          NS_SetRequestBlockingReason(
+              mChannel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_HARMFUL_URI);
+          break;
+        default:
+          break;
+      }
+
       mChannel->Cancel(aErrorCode);
     }
     LOG_DEBUG(

@@ -16,6 +16,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsScriptSecurityManager.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/ScopeExit.h"
 #include "nsINode.h"
 #include "nsIDOMWindow.h"
 #include "nsIURI.h"
@@ -39,6 +40,13 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
                                         nsILoadInfo *aLoadInfo,
                                         const nsACString &aMimeGuess,
                                         int16_t *aDecision) {
+  auto setBlockingReason = MakeScopeExit([&]() {
+    if (NS_CP_REJECTED(*aDecision)) {
+      NS_SetRequestBlockingReason(
+          aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_DATA_DOCUMENT);
+    }
+  });
+
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
 

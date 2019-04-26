@@ -15,6 +15,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsContentUtils.h"
+#include "nsNetUtil.h"
 
 // Possible behavior pref values
 // Those map to the nsIPermissionManager values where possible
@@ -190,6 +191,9 @@ nsContentBlocker::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
                       &shouldLoad, &fromPrefs);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!shouldLoad) {
+    NS_SetRequestBlockingReason(
+        aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_CONTENT_BLOCKED);
+
     if (fromPrefs) {
       *aDecision = nsIContentPolicy::REJECT_TYPE;
     } else {
@@ -242,6 +246,10 @@ nsContentBlocker::ShouldProcess(nsIURI *aContentLocation,
                                  contentType, &shouldLoad, &fromPrefs);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!shouldLoad) {
+      NS_SetRequestBlockingReason(
+          aLoadInfo,
+          nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_CONTENT_BLOCKED);
+
       if (fromPrefs) {
         *aDecision = nsIContentPolicy::REJECT_TYPE;
       } else {

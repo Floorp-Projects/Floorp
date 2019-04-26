@@ -90,6 +90,13 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_STARTUP_TOPIC "http-startup"
 
 /**
+ * Called when asyncOpen synchronously failes e.g. because of any synchronously
+ * performed security checks.  This only fires on the child process, but if
+ * needed can be implemented also on the parent process.
+ */
+#define NS_HTTP_ON_FAILED_OPENING_REQUEST_TOPIC "http-on-failed-opening-request"
+
+ /**
  * This observer topic is notified when an HTTP channel is opened.
  * It is similar to http-on-modify-request, except that
  * 1) The notification is guaranteed to occur before on-modify-request, during
