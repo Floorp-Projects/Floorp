@@ -2409,13 +2409,6 @@ pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 pref("network.cookie.same-site.enabled",    true); // Honor the SameSite cookie attribute
 
-// Cookie lifetime policy. Possible values:
-// 0 - accept all cookies
-// 1 - deprecated. don't use it.
-// 2 - accept as session cookies
-// 3 - deprecated. don't use it.
-pref("network.cookie.lifetimePolicy",       0);
-
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.
 pref("network.cookie.move.interval_sec",    10);

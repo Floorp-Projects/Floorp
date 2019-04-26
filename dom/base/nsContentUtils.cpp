@@ -344,9 +344,6 @@ nsContentUtils::UserInteractionObserver*
 
 uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
-uint32_t nsContentUtils::sCookiesLifetimePolicy =
-    nsICookieService::ACCEPT_NORMALLY;
-
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
@@ -678,10 +675,6 @@ nsresult nsContentUtils::Init() {
   Preferences::AddBoolVarCache(
       &sSendPerformanceTimingNotifications,
       "dom.performance.enable_notify_performance_timing", false);
-
-  Preferences::AddUintVarCache(&sCookiesLifetimePolicy,
-                               "network.cookie.lifetimePolicy",
-                               nsICookieService::ACCEPT_NORMALLY);
 
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled", false);
@@ -8284,7 +8277,7 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForServiceWorker(
 void nsContentUtils::GetCookieLifetimePolicyFromCookieSettings(
     nsICookieSettings* aCookieSettings, nsIPrincipal* aPrincipal,
     uint32_t* aLifetimePolicy) {
-  *aLifetimePolicy = sCookiesLifetimePolicy;
+  *aLifetimePolicy = StaticPrefs::network_cookie_lifetimePolicy();
 
   if (aCookieSettings) {
     uint32_t cookiePermission = 0;
