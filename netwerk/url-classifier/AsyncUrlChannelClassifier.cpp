@@ -165,6 +165,8 @@ class TableData {
 
   const nsACString& Table() const;
 
+  const LookupResultArray& Result() const;
+
   State MatchState() const;
 
   bool IsEqual(URIData* aURIData, const nsACString& aTable) const;
@@ -202,6 +204,11 @@ nsIURI* TableData::URI() const {
 const nsACString& TableData::Table() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mTable;
+}
+
+const LookupResultArray& TableData::Result() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResults;
 }
 
 TableData::State TableData::MatchState() const {
@@ -425,11 +432,17 @@ bool FeatureData::MaybeCompleteClassification(nsIChannel* aChannel) {
   }
 
   nsTArray<nsCString> list;
+  nsTArray<nsCString> hashes;
   list.AppendElement(mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
 
   for (TableData* tableData : mBlacklistTables) {
     if (tableData->MatchState() == TableData::eMatch) {
       list.AppendElement(tableData->Table());
+
+      for (const auto& r : tableData->Result()) {
+        nsCString* hash = hashes.AppendElement();
+        r->hash.complete.ToString(*hash);
+      }
     }
   }
 
@@ -437,7 +450,7 @@ bool FeatureData::MaybeCompleteClassification(nsIChannel* aChannel) {
           this, aChannel));
 
   bool shouldContinue = false;
-  rv = mFeature->ProcessChannel(aChannel, list, &shouldContinue);
+  rv = mFeature->ProcessChannel(aChannel, list, hashes, &shouldContinue);
   Unused << NS_WARN_IF(NS_FAILED(rv));
 
   return shouldContinue;
