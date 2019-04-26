@@ -243,6 +243,8 @@ namespace dom {
 
 class Document;
 class DOMStyleSheetSetList;
+class ResizeObserver;
+class ResizeObserverController;
 
 // Document states
 
@@ -3535,6 +3537,10 @@ class Document : public nsINode,
   // toolkit/components/url-classifier/flash-block-lists.rst
   FlashClassification DocumentFlashClassification();
 
+  // ResizeObserver usage.
+  void AddResizeObserver(ResizeObserver* aResizeObserver);
+  void ScheduleResizeObserversNotification() const;
+
   /**
    * Localization
    *
@@ -4023,6 +4029,8 @@ class Document : public nsINode,
   RefPtr<Promise> mReadyForIdle;
 
   RefPtr<FeaturePolicy> mFeaturePolicy;
+
+  UniquePtr<ResizeObserverController> mResizeObserverController;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
