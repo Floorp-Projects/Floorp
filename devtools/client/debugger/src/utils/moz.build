@@ -41,6 +41,7 @@ CompiledModules(
     'project-search.js',
     'quick-open.js',
     'result-list.js',
+    'selected-location.js',
     'source-maps.js',
     'source-queue.js',
     'source.js',

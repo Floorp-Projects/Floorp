@@ -19,7 +19,7 @@ import {
   getSelectedText,
   makeBreakpointId
 } from "../../../utils/breakpoint";
-import { getSelectedLocation } from "../../../utils/source-maps";
+import { getSelectedLocation } from "../../../utils/selected-location";
 import { features } from "../../../utils/prefs";
 
 import type {

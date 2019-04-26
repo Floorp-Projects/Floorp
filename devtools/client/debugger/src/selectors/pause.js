@@ -7,7 +7,7 @@ import { getCurrentThread } from "../reducers/pause";
 import { getSelectedLocation } from "../reducers/sources";
 
 // eslint-disable-next-line
-import { getSelectedLocation as _getSelectedLocation } from "../utils/source-maps";
+import { getSelectedLocation as _getSelectedLocation } from "../utils/selected-location";
 import { createSelector } from "reselect";
 
 import type { Frame, SourceLocation, ThreadId } from "../types";

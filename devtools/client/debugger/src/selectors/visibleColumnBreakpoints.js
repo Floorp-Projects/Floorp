@@ -14,7 +14,7 @@ import {
   getBreakpointPositionsForSource
 } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
-import { getSelectedLocation } from "../utils/source-maps";
+import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedLocations } from "../utils/location";
 
 import type { Selector, State } from "../reducers/types";

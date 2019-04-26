@@ -11,7 +11,7 @@ import { getBreakpointsList } from "../reducers/breakpoints";
 import { getSelectedSource } from "../reducers/sources";
 
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
-import { getSelectedLocation } from "../utils/source-maps";
+import { getSelectedLocation } from "../utils/selected-location";
 
 import type { Breakpoint, Source } from "../types";
 import type { Selector } from "../reducers/types";

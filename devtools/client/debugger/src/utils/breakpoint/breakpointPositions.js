@@ -5,7 +5,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { comparePosition } from "../location";
-import { getSelectedLocation } from "../source-maps";
+import { getSelectedLocation } from "../selected-location";
 import type { BreakpointPositions, SourceLocation } from "../../types";
 
 export function findPosition(

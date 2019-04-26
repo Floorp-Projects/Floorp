@@ -12,7 +12,7 @@ import {
   getSelectedSource
 } from "../selectors";
 import { getFilename } from "../utils/source";
-import { getSelectedLocation } from "../utils/source-maps";
+import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
 
 import type { Source, Breakpoint } from "../types";

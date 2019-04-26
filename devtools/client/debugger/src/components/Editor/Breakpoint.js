@@ -8,7 +8,7 @@ import { PureComponent } from "react";
 import classnames from "classnames";
 
 import { getDocument, toEditorLine } from "../../utils/editor";
-import { getSelectedLocation } from "../../utils/source-maps";
+import { getSelectedLocation } from "../../utils/selected-location";
 import { features } from "../../utils/prefs";
 import { showMenu } from "devtools-contextmenu";
 import { breakpointItems } from "./menus/breakpoints";
