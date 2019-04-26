@@ -17,10 +17,6 @@ add_task(function test_getInstallSourceFromHost_helpers() {
       installSourceFromHost: "disco",
     },
     {
-      host: "testpilot.firefox.com",
-      installSourceFromHost: "testpilot",
-    },
-    {
       host: "about:blank",
       installSourceFromHost: "unknown",
     },
