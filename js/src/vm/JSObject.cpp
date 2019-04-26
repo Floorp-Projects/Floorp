@@ -1183,16 +1183,18 @@ bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,
     proto.set(nullptr);
   } else {
     // Step 4.a: Let realm be ? GetFunctionRealm(constructor);
-    JSObject* unwrappedConstructor = CheckedUnwrapStatic(newTarget);
-    if (!unwrappedConstructor) {
-      ReportAccessDenied(cx);
+    Realm* realm = JS::GetFunctionRealm(cx, newTarget);
+    if (!realm) {
       return false;
     }
 
     // Step 4.b: Set proto to realm's intrinsic object named
     //           intrinsicDefaultProto.
     {
-      AutoRealm ar(cx, unwrappedConstructor);
+      mozilla::Maybe<AutoRealm> ar;
+      if (cx->realm() != realm) {
+        ar.emplace(cx, realm->maybeGlobal());
+      }
       proto.set(GlobalObject::getOrCreatePrototype(cx, intrinsicDefaultProto));
     }
     if (!proto) {
@@ -1209,7 +1211,7 @@ JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
                                     HandleObject newTarget,
                                     NewObjectKind newKind) {
   RootedObject proto(cx);
-  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Null, &proto)) {
+  if (!GetPrototypeFromConstructor(cx, newTarget, JSProto_Object, &proto)) {
     return nullptr;
   }
 

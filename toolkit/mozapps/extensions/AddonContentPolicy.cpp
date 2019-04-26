@@ -86,6 +86,8 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
                                const nsACString& aMimeTypeGuess,
                                int16_t* aShouldLoad) {
   if (!aContentLocation || !aLoadInfo) {
+    NS_SetRequestBlockingReason(
+        aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_WEBEXT);
     *aShouldLoad = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }
@@ -126,6 +128,8 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
     if (NS_SUCCEEDED(mimeParser.GetType(mimeType)) &&
         nsContentUtils::IsJavascriptMIMEType(mimeType) &&
         NS_SUCCEEDED(mimeParser.GetParameter("version", version))) {
+      NS_SetRequestBlockingReason(
+          aLoadInfo, nsILoadInfo::BLOCKING_REASON_CONTENT_POLICY_WEBEXT);
       *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
 
       nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();

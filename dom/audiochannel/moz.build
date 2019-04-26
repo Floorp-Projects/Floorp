@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
 XPIDL_SOURCES += [
     'nsIAudioChannelAgent.idl',

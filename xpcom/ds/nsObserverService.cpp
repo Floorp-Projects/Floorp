@@ -186,6 +186,7 @@ nsresult nsObserverService::FilterHttpOnTopics(const char* aTopic) {
   // Specifically allow http-on-opening-request and http-on-stop-request in the
   // child process; see bug 1269765.
   if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8) &&
+      strcmp(aTopic, "http-on-failed-opening-request") &&
       strcmp(aTopic, "http-on-opening-request") &&
       strcmp(aTopic, "http-on-stop-request")) {
     nsCOMPtr<nsIConsoleService> console(

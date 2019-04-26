@@ -11,8 +11,6 @@
   --icon-background-color-6: #FF0039;
   --icon-background-disabled-color: #737373;
   --body-text-disabled-color: #737373;
-  --info-box-background-color: #D7D7DB;
-  --info-box-border-color: #98979C;
   --study-status-active-color: #058B00;
   --study-status-disabled-color: #737373;
 }
@@ -42,8 +40,8 @@ button > .button-box {
 
 .info-box-content {
   align-items: center;
-  background: var(--info-box-background-color);
-  border: 1px solid var(--info-box-border-color);
+  background: var(--in-content-box-background-hover);
+  border: 1px solid var(--in-content-border-color);
   display: inline-flex;
   padding: 10px 15px;
 }
@@ -156,13 +154,13 @@ button > .button-box {
 }
 
 .study-description code {
-  background-color: var(--grey-20);
+  background-color: rgb(128, 128, 128, 0.1);
   border-radius: 3px;
   box-sizing: border-box;
   color: var(--in-content-text-color);
   font-size: 85%;
   font-family: 'Fira Mono', 'mono', monospace;
-  padding: .2em .4em;
+  padding: .05em .4em;
 }
 
 .study-actions {
