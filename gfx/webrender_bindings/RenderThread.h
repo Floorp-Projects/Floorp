@@ -198,6 +198,9 @@ class RenderThread final {
                                uint64_t aWrappedExternalImageId);
 
   /// Can only be called from the render thread.
+  void NofityForUse(uint64_t aExternalImageId);
+
+  /// Can only be called from the render thread.
   void UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
