@@ -103,11 +103,12 @@ add_task(async function testRevoked() {
   let certBlocklist = Cc["@mozilla.org/security/certstorage;1"]
                         .getService(Ci.nsICertStorage);
   let result = await new Promise((resolve) =>
-    certBlocklist.setRevocationBySubjectAndPubKey(
-      "MBIxEDAOBgNVBAMMB3Jldm9rZWQ=", // CN=revoked
-      "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=", // hash of the shared key
-      Ci.nsICertStorage.STATE_ENFORCE, // yes, we want this to be revoked
-      resolve));
+    certBlocklist.setRevocations([{
+      QueryInterface: ChromeUtils.generateQI([Ci.nsISubjectAndPubKeyRevocationState]),
+      subject: "MBIxEDAOBgNVBAMMB3Jldm9rZWQ=", // CN=revoked
+      pubKey: "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=", // hash of the shared key
+      state: Ci.nsICertStorage.STATE_ENFORCE, // yes, we want this to be revoked
+    }], resolve));
   Assert.equal(result, Cr.NS_OK, "setting revocation state should succeed");
   let cert = await readCertificate("revoked.pem", ",,");
   let win = await displayCertificate(cert);

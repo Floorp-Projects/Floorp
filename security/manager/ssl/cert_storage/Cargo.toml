@@ -7,6 +7,7 @@ authors = ["Dana Keeler <dkeeler@mozilla.com>", "Mark Goodwin <mgoodwin@mozilla.
 base64 = "0.10"
 crossbeam-utils = "0.6.3"
 lmdb-rkv = "0.11"
+log = "0.4"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }

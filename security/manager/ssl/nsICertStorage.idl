@@ -20,41 +20,54 @@ interface nsICertStorageCallback : nsISupports {
   void done(in nsresult result);
 };
 
+/**
+ * A base interface for representing the revocation state of a certificate.
+ * Implementing this interface by itself is insufficient; your type must
+ * implement an inheriting interface that specifies the certificate by issuer
+ * and serial number or by subject and public key hash.
+ * Set state to nsICertStorage.STATE_UNSET to mark the certificate as not revoked.
+ * Set state to nsICertStorage.STATE_ENFORCE to mark the certificate as revoked.
+ */
+[scriptable, uuid(96db6fd7-6b64-4a5a-955d-310bd9ca4234)]
+interface nsIRevocationState : nsISupports {
+  readonly attribute short state;
+};
+
+/**
+ * An interface representing the revocation state of a certificate by issuer
+ * and serial number. Both issuer name and serial number are base64-encoded.
+ */
+[scriptable, uuid(23ce3546-f1b9-46f6-8de3-77704da5702f)]
+interface nsIIssuerAndSerialRevocationState : nsIRevocationState {
+    readonly attribute ACString issuer;
+    readonly attribute ACString serial;
+};
+
+/**
+ * An interface representing the revocation state of a certificate by subject
+ * and pub key hash (the hash algorithm should be SHA-256). Both subject name
+ * and public key hash are base64-encoded.
+ */
+[scriptable, uuid(e78b51b4-6fa4-41e2-92ce-e9404f541e96)]
+interface nsISubjectAndPubKeyRevocationState : nsIRevocationState {
+    readonly attribute ACString subject;
+    readonly attribute ACString pubKey;
+};
+
 [scriptable, uuid(327100a7-3401-45ef-b160-bf880f1016fd)]
 interface nsICertStorage : nsISupports {
   const short STATE_UNSET = 0;
   const short STATE_ENFORCE = 1;
 
   /**
-   * Asynchronously set the revocation state of a certificate by issuer and
-   * serial number. Both issuer name and serial number are base64-encoded.
-   * Pass STATE_UNSET to mark the certificate as not revoked.
-   * Pass STATE_ENFORCE to mark the certificate as revoked.
+   * Asynchronously set the revocation states of a set of certificates.
    * The given callback is called with the result of the operation when it
    * completes.
    * Must only be called from the main thread.
    */
   [must_use]
-  void setRevocationByIssuerAndSerial(in ACString issuer,
-                                      in ACString serialNumber,
-                                      in short state,
-                                      in nsICertStorageCallback callback);
-
-  /**
-   * Asynchronously set the revocation state of a certificate by subject and
-   * public key hash (the hash algorithm should be SHA-256). Both subject name
-   * and public key hash are base64-encoded.
-   * Pass STATE_UNSET to mark the certificate as not revoked.
-   * Pass STATE_ENFORCE to mark the certificate as revoked.
-   * The given callback is called with the result of the operation when it
-   * completes.
-   * Must only be called from the main thread.
-   */
-  [must_use]
-  void setRevocationBySubjectAndPubKey(in ACString subject,
-                                       in ACString pubKeyHash,
-                                       in short state,
-                                       in nsICertStorageCallback callback);
+  void setRevocations(in Array<nsIRevocationState> revocations,
+                      in nsICertStorageCallback callback);
 
   /**
    * Asynchronously set the whitelist state of an intermediate certificate by

@@ -36,15 +36,35 @@ const PREF_BLOCKLIST_GFX_COLLECTION          = "services.blocklist.gfx.collectio
 const PREF_BLOCKLIST_GFX_CHECKED_SECONDS     = "services.blocklist.gfx.checked";
 const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
 
-function setRevocationByIssuerAndSerial(certStorage, issuer, serial, state) {
-  return new Promise((resolve) =>
-    certStorage.setRevocationByIssuerAndSerial(issuer, serial, state, resolve)
-  );
+class RevocationState {
+  constructor(state) {
+    this.state = state;
+  }
 }
 
-function setRevocationBySubjectAndPubKey(certStorage, subject, pubKey, state) {
+class IssuerAndSerialRevocationState extends RevocationState {
+  constructor(issuer, serial, state) {
+    super(state);
+    this.issuer = issuer;
+    this.serial = serial;
+  }
+}
+IssuerAndSerialRevocationState.prototype.QueryInterface =
+  ChromeUtils.generateQI([Ci.nsIIssuerAndSerialRevocationState]);
+
+class SubjectAndPubKeyRevocationState extends RevocationState {
+  constructor(subject, pubKey, state) {
+    super(state);
+    this.subject = subject;
+    this.pubKey = pubKey;
+  }
+}
+SubjectAndPubKeyRevocationState.prototype.QueryInterface =
+  ChromeUtils.generateQI([Ci.nsISubjectAndPubKeyRevocationState]);
+
+function setRevocations(certStorage, revocations) {
   return new Promise((resolve) =>
-    certStorage.setRevocationBySubjectAndPubKey(subject, pubKey, state, resolve)
+    certStorage.setRevocations(revocations, resolve)
   );
 }
 
@@ -56,33 +76,34 @@ function setRevocationBySubjectAndPubKey(certStorage, subject, pubKey, state) {
 async function updateCertBlocklist({ data: { created, updated, deleted } }) {
   const certList = Cc["@mozilla.org/security/certstorage;1"]
                      .getService(Ci.nsICertStorage);
+  let items = [];
+
   for (let item of deleted) {
     if (item.issuerName && item.serialNumber) {
-      await setRevocationByIssuerAndSerial(certList, item.issuerName, item.serialNumber,
-                                           Ci.nsICertStorage.STATE_UNSET);
+      items.push(new IssuerAndSerialRevocationState(item.issuerName,
+        item.serialNumber, Ci.nsICertStorage.STATE_UNSET));
     } else if (item.subject && item.pubKeyHash) {
-      await setRevocationBySubjectAndPubKey(certList, item.subject, item.pubKeyHash,
-                                            Ci.nsICertStorage.STATE_UNSET);
+      items.push(new SubjectAndPubKeyRevocationState(item.subject,
+        item.pubKeyHash, Ci.nsICertStorage.STATE_UNSET));
     }
   }
 
   const toAdd = created.concat(updated.map(u => u.new));
 
   for (let item of toAdd) {
-    try {
-      if (item.issuerName && item.serialNumber) {
-        await setRevocationByIssuerAndSerial(certList, item.issuerName, item.serialNumber,
-                                             Ci.nsICertStorage.STATE_ENFORCE);
-      } else if (item.subject && item.pubKeyHash) {
-        await setRevocationBySubjectAndPubKey(certList, item.subject, item.pubKeyHash,
-                                             Ci.nsICertStorage.STATE_ENFORCE);
-      }
-    } catch (e) {
-      // prevent errors relating to individual blocklist entries from
-      // causing sync to fail. We will accumulate telemetry on these failures in
-      // bug 1254099.
-      Cu.reportError(e);
+    if (item.issuerName && item.serialNumber) {
+      items.push(new IssuerAndSerialRevocationState(item.issuerName,
+        item.serialNumber, Ci.nsICertStorage.STATE_ENFORCE));
+    } else if (item.subject && item.pubKeyHash) {
+      items.push(new SubjectAndPubKeyRevocationState(item.subject,
+        item.pubKeyHash, Ci.nsICertStorage.STATE_ENFORCE));
     }
+  }
+
+  try {
+    await setRevocations(certList, items);
+  } catch (e) {
+    Cu.reportError(e);
   }
 }
 
