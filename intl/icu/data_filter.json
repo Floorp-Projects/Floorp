@@ -19,7 +19,8 @@
             "filterType": "exclude"
         },
         "rbnf_tree": {
-            "filterType": "exclude"
+            "filterType": "locale",
+            "whitelist": [ "ja" ]
         },
         "region_tree": {
             "filterType": "exclude"
