@@ -2023,8 +2023,8 @@ bool DoToBoolFallback(JSContext* cx, BaselineFrame* frame,
 
   MOZ_ASSERT(!arg.isBoolean());
 
-  TryAttachStubOld<ToBoolIRGenerator>("ToBool", cx, frame, stub,
-                                      BaselineCacheIRStubKind::Regular, arg);
+  TryAttachStub<ToBoolIRGenerator>("ToBool", cx, frame, stub,
+                                   BaselineCacheIRStubKind::Regular, arg);
 
   bool cond = ToBoolean(arg);
   ret.setBoolean(cond);
