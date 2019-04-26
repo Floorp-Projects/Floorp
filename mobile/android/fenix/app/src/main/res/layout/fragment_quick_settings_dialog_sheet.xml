@@ -10,8 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?foundation"
-    android:contentDescription="@string/quick_settings_sheet"
-    android:orientation="vertical">
+    android:contentDescription="@string/quick_settings_sheet">
 
     <TextView
         android:id="@+id/url"
