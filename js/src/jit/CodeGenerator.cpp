@@ -1458,15 +1458,18 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
     LBlock* target = skipTrivialBlocks(mir->getCaseBlock(i))->lir();
 
     DebugOnly<bool> found = false;
+    // Find the function in the prop table.
     for (size_t j = 0; j < propTable->numEntries(); j++) {
       if (propTable->getFunction(j) != func) {
         continue;
       }
 
+      // Emit the previous prop's jump.
       if (lastBranch.isInitialized()) {
         lastBranch.emit(masm);
       }
 
+      // Setup jump for next iteration.
       ObjectGroup* group = propTable->getObjectGroup(j);
       lastBranch = MacroAssembler::BranchGCPtr(
           Assembler::Equal, temp, ImmGCPtr(group), target->label());
@@ -1476,18 +1479,22 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
     MOZ_ASSERT(found);
   }
 
+  // At this point the final case branch hasn't been emitted.
+
   // Jump to fallback block if we have an unknown ObjectGroup. If there's no
   // fallback block, we should have handled all cases.
-
   if (!mir->hasFallback()) {
     MOZ_ASSERT(lastBranch.isInitialized());
 
     Label ok;
+    // Change the target of the branch to OK.
     lastBranch.relink(&ok);
     lastBranch.emit(masm);
     masm.assumeUnreachable("Unexpected ObjectGroup");
     masm.bind(&ok);
 
+    // If we don't naturally fall through to the target,
+    // then jump to the target.
     if (!isNextBlock(lastBlock)) {
       masm.jump(lastBlock->label());
     }
@@ -1495,6 +1502,7 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
   }
 
   LBlock* fallback = skipTrivialBlocks(mir->getFallback())->lir();
+  // This should only happen if we have zero cases. We're done then.
   if (!lastBranch.isInitialized()) {
     if (!isNextBlock(fallback)) {
       masm.jump(fallback->label());
@@ -1502,6 +1510,8 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
     return;
   }
 
+  // If we don't match the last object group and we have a fallback,
+  // we should jump to it.
   lastBranch.invertCondition();
   lastBranch.relink(fallback->label());
   lastBranch.emit(masm);
