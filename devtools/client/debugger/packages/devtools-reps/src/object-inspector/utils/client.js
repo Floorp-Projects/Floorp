@@ -117,6 +117,12 @@ async function getFullText(
   });
 }
 
+async function getProxySlots(
+  objectClient: ObjectClient
+): Promise<{ proxyTarget?: Object, proxyHandler?: Object }> {
+  return objectClient.getProxySlots();
+}
+
 function iteratorSlice(
   iterator: PropertiesIterator,
   start: ?number,
@@ -137,5 +143,6 @@ module.exports = {
   enumNonIndexedProperties,
   enumSymbols,
   getPrototype,
-  getFullText
+  getFullText,
+  getProxySlots
 };
