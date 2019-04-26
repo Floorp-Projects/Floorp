@@ -48,12 +48,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
 #define STATE_DATA "state_data"
 
 /*****************************************************************************
- * mozilla::HTMLEditorCommandBase
- *****************************************************************************/
-
-NS_IMPL_ISUPPORTS(HTMLEditorCommandBase, nsIControllerCommand)
-
-/*****************************************************************************
  * mozilla::StateUpdatingCommandBase
  *****************************************************************************/
 
