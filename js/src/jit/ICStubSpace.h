@@ -57,10 +57,6 @@ struct FallbackICStubSpace : public ICStubSpace {
 
  public:
   FallbackICStubSpace() : ICStubSpace(STUB_DEFAULT_CHUNK_SIZE) {}
-
-  inline void adoptFrom(FallbackICStubSpace* other) {
-    allocator_.steal(&(other->allocator_));
-  }
 };
 
 }  // namespace jit

@@ -60,7 +60,7 @@ class MOZ_STACK_CLASS LabelEmitter {
  public:
   explicit LabelEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
-  MOZ_MUST_USE bool emitLabel(JSAtom* name);
+  MOZ_MUST_USE bool emitLabel(HandleAtom name);
   MOZ_MUST_USE bool emitEnd();
 };
 

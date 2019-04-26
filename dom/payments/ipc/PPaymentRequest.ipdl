@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
-using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -73,7 +73,7 @@ struct IPCPaymentCreateActionRequest
 {
   uint64_t topOuterWindowId;
   nsString requestId;
-  Principal topLevelPrincipal;
+  nsIPrincipal topLevelPrincipal;
   IPCPaymentMethodData[] methodData;
   IPCPaymentDetails details;
   IPCPaymentOptions options;

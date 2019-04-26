@@ -29,14 +29,21 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
   virtual void PrepareForUse() override;
+  virtual void NofityForUse() override;
   virtual void NotifyNotUsed() override;
 
  private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
   void DeleteTextureHandle();
   bool EnsureAttachedToGLContext();
+  bool CheckIfAttachedToGLContext();
 
-  enum PrepareStatus { STATUS_NONE, STATUS_PREPARE_NEEDED, STATUS_PREPARED };
+  enum PrepareStatus {
+    STATUS_NONE,
+    STATUS_MIGHT_BE_USED,
+    STATUS_PREPARE_NEEDED,
+    STATUS_PREPARED
+  };
 
   const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;

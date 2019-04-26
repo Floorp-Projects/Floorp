@@ -215,6 +215,10 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsAString& aContentType) override;
 
  private:
+  // We want to handle failure result of AsyncOpen, hence AsyncOpen calls the
+  // Internal method
+  nsresult AsyncOpenInternal(nsIStreamListener* aListener);
+
   nsresult AsyncCallImpl(void (HttpChannelChild::*funcPtr)(),
                          nsRunnableMethod<HttpChannelChild>** retval);
 

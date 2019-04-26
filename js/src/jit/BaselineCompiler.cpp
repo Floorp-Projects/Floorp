@@ -429,6 +429,21 @@ void BaselineInterpreterCodeGen::loadScript(Register dest) {
 }
 
 template <>
+void BaselineCompilerCodeGen::loadScriptAtom(Register index, Register dest) {
+  MOZ_CRASH("BaselineCompiler shouldn't call loadScriptAtom");
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadScriptAtom(Register index, Register dest) {
+  MOZ_ASSERT(index != dest);
+  loadScript(dest);
+  masm.loadPtr(Address(dest, JSScript::offsetOfScriptData()), dest);
+  masm.loadPtr(
+      BaseIndex(dest, index, ScalePointer, SharedScriptData::offsetOfAtoms()),
+      dest);
+}
+
+template <>
 void BaselineCompilerCodeGen::emitInitializeLocals() {
   // Initialize all locals to |undefined|. Lexical bindings are temporal
   // dead zoned in bytecode.
@@ -848,13 +863,21 @@ void BaselineInterpreterCodeGen::pushBytecodePCArg() {
 }
 
 template <>
-void BaselineCompilerCodeGen::pushScriptNameArg() {
+void BaselineCompilerCodeGen::pushScriptNameArg(Register scratch1,
+                                                Register scratch2) {
   pushArg(ImmGCPtr(handler.script()->getName(handler.pc())));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushScriptNameArg() {
-  MOZ_CRASH("NYI: interpreter pushScriptNameArg");
+void BaselineInterpreterCodeGen::pushScriptNameArg(Register scratch1,
+                                                   Register scratch2) {
+  MOZ_ASSERT(scratch1 != scratch2);
+
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch1);
+  LoadInt32Operand(masm, scratch1, scratch1);
+
+  loadScriptAtom(scratch1, scratch2);
+  pushArg(scratch2);
 }
 
 template <>
@@ -1230,7 +1253,50 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
-  MOZ_CRASH("NYI: interpreter emitWarmUpCounterIncrement");
+  Register scriptReg = R2.scratchReg();
+  Register countReg = R0.scratchReg();
+
+  // Bump warm-up counter.
+  Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
+  loadScript(scriptReg);
+  masm.load32(warmUpCounterAddr, countReg);
+  masm.add32(Imm32(1), countReg);
+  masm.store32(countReg, warmUpCounterAddr);
+
+  // If the script is warm enough for Baseline compilation, call into the VM to
+  // compile it.
+  Label done;
+  masm.branch32(Assembler::BelowOrEqual, countReg,
+                Imm32(JitOptions.baselineWarmUpThreshold), &done);
+  masm.branchPtr(Assembler::Equal,
+                 Address(scriptReg, JSScript::offsetOfBaselineScript()),
+                 ImmPtr(BASELINE_DISABLED_SCRIPT), &done);
+  {
+    prepareVMCall();
+
+    masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, uint8_t**);
+    if (!callVM<Fn, BaselineCompileFromBaselineInterpreter>()) {
+      return false;
+    }
+
+    // If the function returned nullptr we either skipped compilation or were
+    // unable to compile the script. Continue running in the interpreter.
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &done);
+
+    // Success! Switch from interpreter to JIT code by jumping to the
+    // corresponding code in the BaselineScript.
+    //
+    // This works because BaselineCompiler uses the same frame layout (stack is
+    // synced at OSR points) and BaselineCompileFromBaselineInterpreter has
+    // already cleared the RUNNING_IN_INTERPRETER flag for us.
+    // See BaselineFrame::prepareForBaselineInterpreterToJitOSR.
+    masm.jump(ReturnReg);
+  }
+
+  masm.bind(&done);
+  return true;
 }
 
 template <>
@@ -2275,7 +2341,15 @@ bool BaselineCompilerCodeGen::emit_JSOP_STRING() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_STRING() {
-  MOZ_CRASH("NYI: interpreter JSOP_STRING");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+  LoadInt32Operand(masm, PCRegAtStart, scratch1);
+
+  loadScriptAtom(scratch1, scratch2);
+
+  masm.tagValue(JSVAL_TYPE_STRING, scratch2, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
@@ -2288,7 +2362,16 @@ bool BaselineCompilerCodeGen::emit_JSOP_SYMBOL() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_SYMBOL() {
-  MOZ_CRASH("NYI: interpreter JSOP_SYMBOL");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+  LoadUint8Operand(masm, PCRegAtStart, scratch1);
+
+  masm.movePtr(ImmPtr(cx->runtime()->wellKnownSymbols), scratch2);
+  masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch1);
+
+  masm.tagValue(JSVAL_TYPE_SYMBOL, scratch1, R0);
+  frame.push(R0);
+  return true;
 }
 
 JSObject* BaselineCompilerHandler::maybeNoCloneSingletonObject() {
@@ -3163,7 +3246,7 @@ bool BaselineCodeGen<Handler>::emitSetPropSuper(bool strict) {
 
   pushArg(Imm32(strict));
   pushArg(R0);  // rval
-  pushScriptNameArg();
+  pushScriptNameArg(R0.scratchReg(), R2.scratchReg());
   pushArg(R1);  // receiver
   masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
   pushArg(R0.scratchReg());  // obj
@@ -3241,7 +3324,7 @@ bool BaselineCodeGen<Handler>::emitDelProp(bool strict) {
 
   prepareVMCall();
 
-  pushScriptNameArg();
+  pushScriptNameArg(R1.scratchReg(), R2.scratchReg());
   pushArg(R0);
 
   using Fn = bool (*)(JSContext*, HandleValue, HandlePropertyName, bool*);
@@ -3553,7 +3636,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DELNAME() {
   prepareVMCall();
 
   pushArg(R0.scratchReg());
-  pushScriptNameArg();
+  pushScriptNameArg(R1.scratchReg(), R2.scratchReg());
 
   using Fn = bool (*)(JSContext*, HandlePropertyName, HandleObject,
                       MutableHandleValue);
@@ -3737,7 +3820,7 @@ bool BaselineCodeGen<Handler>::emitInitPropGetterSetter() {
   masm.unboxObject(frame.addressOfStackValue(-2), R1.scratchReg());
 
   pushArg(R0.scratchReg());
-  pushScriptNameArg();
+  pushScriptNameArg(R0.scratchReg(), R2.scratchReg());
   pushArg(R1.scratchReg());
   pushBytecodePCArg();
 
@@ -4403,7 +4486,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_IMPLICITTHIS() {
 
   prepareVMCall();
 
-  pushScriptNameArg();
+  pushScriptNameArg(R1.scratchReg(), R2.scratchReg());
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, HandleObject, HandlePropertyName,

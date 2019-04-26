@@ -223,12 +223,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // ---- JIT ----
 
-    size_t numICEntries() const { return numICEntries_; }
-    void addNumICEntries() { numICEntries_++; }
-    void setNumICEntries(size_t entries) { numICEntries_ = entries; }
+    uint32_t numICEntries() const { return numICEntries_; }
+    void incrementNumICEntries() {
+      MOZ_ASSERT(numICEntries_ != UINT32_MAX, "Shouldn't overflow");
+      numICEntries_++;
+    }
+    void setNumICEntries(uint32_t entries) { numICEntries_ = entries; }
 
-    uint16_t typesetCount() const { return typesetCount_; }
-    void addTypesetCount() { typesetCount_++; }
+    uint32_t numTypeSets() const { return numTypeSets_; }
+    void incrementNumTypeSets() {
+      MOZ_ASSERT(numTypeSets_ != UINT32_MAX, "Shouldn't overflow");
+      numTypeSets_++;
+    }
 
    private:
     // ---- Bytecode ----
@@ -302,11 +308,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // ---- JIT ----
 
-    // Number of JOF_IC opcodes emitted.
-    size_t numICEntries_ = 0;
+    // Number of ICEntries in the script. There's one ICEntry for each JOF_IC op
+    // and, if the script is a function, for |this| and each formal argument.
+    uint32_t numICEntries_ = 0;
 
     // Number of JOF_TYPESET opcodes generated.
-    uint16_t typesetCount_ = 0;
+    uint32_t numTypeSets_ = 0;
   };
 
   BytecodeSection bytecodeSection_;
@@ -800,7 +807,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
 
-  MOZ_MUST_USE bool emitTDZCheckIfNeeded(JSAtom* name, const NameLocation& loc);
+  MOZ_MUST_USE bool emitTDZCheckIfNeeded(HandleAtom name,
+                                         const NameLocation& loc);
 
   MOZ_MUST_USE bool emitNameIncDec(UnaryNode* incDec);
 
