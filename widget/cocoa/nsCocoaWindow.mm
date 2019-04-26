@@ -1209,10 +1209,12 @@ void nsCocoaWindow::HideWindowChrome(bool aShouldHide) {
     [mWindow removeChildWindow:child];
   }
 
-  // Remove the content view.
-  NSView* contentView = [mWindow contentView];
-  [contentView retain];
-  [contentView removeFromSuperviewWithoutNeedingDisplay];
+  // Remove the views in the old window's content view.
+  // The NSArray is autoreleased and retains its NSViews.
+  NSArray<NSView*>* contentViewContents = [mWindow contentViewContents];
+  for (NSView* view in contentViewContents) {
+    [view removeFromSuperviewWithoutNeedingDisplay];
+  }
 
   // Save state (like window title).
   NSMutableDictionary* state = [mWindow exportState];
@@ -1226,9 +1228,10 @@ void nsCocoaWindow::HideWindowChrome(bool aShouldHide) {
   // Re-import state.
   [mWindow importState:state];
 
-  // Reparent the content view.
-  [mWindow setContentView:contentView];
-  [contentView release];
+  // Add the old content view subviews to the new window's content view.
+  for (NSView* view in contentViewContents) {
+    [[mWindow contentView] addSubview:view];
+  }
 
   // Reparent child windows.
   enumerator = [childWindows objectEnumerator];
@@ -2906,6 +2909,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return [contentView superview] ? [contentView superview] : contentView;
 }
 
+- (NSArray<NSView*>*)contentViewContents {
+  return [[[[self contentView] subviews] copy] autorelease];
+}
+
 - (ChildView*)mainChildView {
   NSView* contentView = [self contentView];
   NSView* lastView = [[contentView subviews] lastObject];
@@ -3137,10 +3144,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return YES;
 }
 
-- (BOOL)mouseDownCanMoveWindow {
-  return YES;
-}
-
 - (NSView*)hitTest:(NSPoint)aPoint {
   return nil;
 }
@@ -3222,6 +3225,15 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (void)dealloc {
   [mTitlebarGradientView release];
   [super dealloc];
+}
+
+- (NSArray<NSView*>*)contentViewContents {
+  NSMutableArray<NSView*>* contents = [[[self contentView] subviews] mutableCopy];
+  if (mTitlebarGradientView) {
+    // Do not include the titlebar gradient view in the returned array.
+    [contents removeObject:mTitlebarGradientView];
+  }
+  return [contents autorelease];
 }
 
 - (void)updateTitlebarGradientViewPresence {
