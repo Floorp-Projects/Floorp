@@ -25,6 +25,7 @@
 #include "nsNetCID.h"
 #include "prtime.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "nsContentUtils.h"
 
 /****************************************************************
@@ -47,12 +48,10 @@ NS_IMPL_ISUPPORTS(nsCookiePermission, nsICookiePermission)
 already_AddRefed<nsICookiePermission> nsCookiePermission::GetOrCreate() {
   if (!gSingleton) {
     gSingleton = new nsCookiePermission();
+    ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);
 }
-
-// static
-void nsCookiePermission::Shutdown() { gSingleton = nullptr; }
 
 bool nsCookiePermission::Init() {
   // Initialize nsIPermissionManager and fetch relevant prefs. This is only
