@@ -7,6 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
+XPIDL_SOURCES += [
+    'mozIIPCBlobInputStream.idl',
+]
+
+XPIDL_MODULE = 'dom'
+
 EXPORTS.mozilla.dom.ipc += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
