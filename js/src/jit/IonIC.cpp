@@ -683,8 +683,8 @@ bool IonCompareIC::update(JSContext* cx, HandleScript outerScript,
       return false;
   }
 
-  TryAttachIonStubOld<CompareIRGenerator, IonCompareIC>(cx, ic, ionScript, op,
-                                                        lhs, rhs);
+  TryAttachIonStub<CompareIRGenerator, IonCompareIC>(cx, ic, ionScript, op, lhs,
+                                                     rhs);
 
   return true;
 }

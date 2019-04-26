@@ -5674,10 +5674,10 @@ CompareIRGenerator::CompareIRGenerator(JSContext* cx, HandleScript script,
       lhsVal_(lhsVal),
       rhsVal_(rhsVal) {}
 
-bool CompareIRGenerator::tryAttachString(ValOperandId lhsId,
-                                         ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachString(ValOperandId lhsId,
+                                                   ValOperandId rhsId) {
   if (!lhsVal_.isString() || !rhsVal_.isString()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   StringOperandId lhsStrId = writer.guardIsString(lhsId);
@@ -5686,15 +5686,15 @@ bool CompareIRGenerator::tryAttachString(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("String");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachObject(ValOperandId lhsId,
-                                         ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachObject(ValOperandId lhsId,
+                                                   ValOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op_));
 
   if (!lhsVal_.isObject() || !rhsVal_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ObjOperandId lhsObjId = writer.guardIsObject(lhsId);
@@ -5703,15 +5703,15 @@ bool CompareIRGenerator::tryAttachObject(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("Object");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId,
-                                         ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId,
+                                                   ValOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op_));
 
   if (!lhsVal_.isSymbol() || !rhsVal_.isSymbol()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   SymbolOperandId lhsSymId = writer.guardIsSymbol(lhsId);
@@ -5720,21 +5720,21 @@ bool CompareIRGenerator::tryAttachSymbol(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("Symbol");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId,
-                                                       ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachStrictDifferentTypes(
+    ValOperandId lhsId, ValOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op_));
 
   if (op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Probably can't hit some of these.
   if (SameType(lhsVal_, rhsVal_) ||
       (lhsVal_.isNumber() && rhsVal_.isNumber())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Compare tags
@@ -5748,14 +5748,14 @@ bool CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("StrictDifferentTypes");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
-                                        ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
+                                                  ValOperandId rhsId) {
   if ((!lhsVal_.isInt32() && !lhsVal_.isBoolean()) ||
       (!rhsVal_.isInt32() && !rhsVal_.isBoolean())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Int32OperandId lhsIntId = lhsVal_.isBoolean() ? writer.guardIsBoolean(lhsId)
@@ -5772,13 +5772,13 @@ bool CompareIRGenerator::tryAttachInt32(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached(lhsVal_.isBoolean() ? "Boolean" : "Int32");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
-                                         ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
+                                                   ValOperandId rhsId) {
   if (!lhsVal_.isNumber() || !rhsVal_.isNumber()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.guardIsNumber(lhsId);
@@ -5787,17 +5787,17 @@ bool CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("Number");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachObjectUndefined(ValOperandId lhsId,
-                                                  ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachObjectUndefined(
+    ValOperandId lhsId, ValOperandId rhsId) {
   if (!(lhsVal_.isNullOrUndefined() && rhsVal_.isObject()) &&
       !(rhsVal_.isNullOrUndefined() && lhsVal_.isObject()))
-    return false;
+    return AttachDecision::NoAction;
 
   if (op_ != JSOP_EQ && op_ != JSOP_NE) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId obj = rhsVal_.isObject() ? rhsId : lhsId;
@@ -5809,15 +5809,15 @@ bool CompareIRGenerator::tryAttachObjectUndefined(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("ObjectUndefined");
-  return true;
+  return AttachDecision::Attach;
 }
 
 // Handle NumberUndefined comparisons
-bool CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId,
-                                                  ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachNumberUndefined(
+    ValOperandId lhsId, ValOperandId rhsId) {
   if (!(lhsVal_.isUndefined() && rhsVal_.isNumber()) &&
       !(rhsVal_.isUndefined() && lhsVal_.isNumber())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   lhsVal_.isNumber() ? writer.guardIsNumber(lhsId)
@@ -5831,12 +5831,12 @@ bool CompareIRGenerator::tryAttachNumberUndefined(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("NumberUndefined");
-  return true;
+  return AttachDecision::Attach;
 }
 
 // Handle Primitive x {undefined,null} equality comparisons
-bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
-                                                     ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachPrimitiveUndefined(
+    ValOperandId lhsId, ValOperandId rhsId) {
   MOZ_ASSERT(IsEqualityOp(op_));
 
   // The set of primitive cases we want to handle here (excluding null,
@@ -5848,7 +5848,7 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
 
   if (!(lhsVal_.isNullOrUndefined() && isPrimitive(rhsVal_)) &&
       !(rhsVal_.isNullOrUndefined() && isPrimitive(lhsVal_))) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   auto guardPrimitive = [&](HandleValue v, ValOperandId id) {
@@ -5886,14 +5886,14 @@ bool CompareIRGenerator::tryAttachPrimitiveUndefined(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("PrimitiveUndefined");
-  return true;
+  return AttachDecision::Attach;
 }
 
 // Handle {null/undefined} x {null,undefined} equality comparisons
-bool CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId,
-                                                ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId,
+                                                          ValOperandId rhsId) {
   if (!lhsVal_.isNullOrUndefined() || !rhsVal_.isNullOrUndefined()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (op_ == JSOP_EQ || op_ == JSOP_NE) {
@@ -5916,15 +5916,15 @@ bool CompareIRGenerator::tryAttachNullUndefined(ValOperandId lhsId,
   }
 
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
-                                               ValOperandId rhsId) {
+AttachDecision CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
+                                                         ValOperandId rhsId) {
   // Ensure String x Number
   if (!(lhsVal_.isString() && rhsVal_.isNumber()) &&
       !(rhsVal_.isString() && lhsVal_.isNumber())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Case should have been handled by tryAttachStrictlDifferentTypes
@@ -5946,10 +5946,10 @@ bool CompareIRGenerator::tryAttachStringNumber(ValOperandId lhsId,
   writer.returnFromIC();
 
   trackAttached("StringNumber");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CompareIRGenerator::tryAttachStub() {
+AttachDecision CompareIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
   MOZ_ASSERT(IsEqualityOp(op_) || IsRelationalOp(op_));
 
@@ -5970,62 +5970,40 @@ bool CompareIRGenerator::tryAttachStub() {
   // - {Bool} x {Double}.
   // - {Object} x {String, Symbol, Bool, Number}.
   if (IsEqualityOp(op_)) {
-    if (tryAttachObject(lhsId, rhsId)) {
-      return true;
-    }
-    if (tryAttachSymbol(lhsId, rhsId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachObject(lhsId, rhsId));
+    TRY_ATTACH(tryAttachSymbol(lhsId, rhsId));
 
     // Handle the special case of Object compared to null/undefined.
-    // This is special due to the IsHTMLDDA internal slot semantic,
-    if (tryAttachObjectUndefined(lhsId, rhsId)) {
-      return true;
-    }
+    // This is special due to the IsHTMLDDA internal slot semantics.
+    TRY_ATTACH(tryAttachObjectUndefined(lhsId, rhsId));
 
     // This covers -strict- equality/inequality using a type tag check, so
     // catches all different type pairs outside of Numbers, which cannot be
     // checked on tags alone.
-    if (tryAttachStrictDifferentTypes(lhsId, rhsId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachStrictDifferentTypes(lhsId, rhsId));
 
     // These checks should come after tryAttachStrictDifferentTypes since it
     // handles strict inequality with a more generic IC.
-    if (tryAttachPrimitiveUndefined(lhsId, rhsId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachPrimitiveUndefined(lhsId, rhsId));
 
-    if (tryAttachNullUndefined(lhsId, rhsId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachNullUndefined(lhsId, rhsId));
   }
 
   // This should preceed the Int32/Number cases to allow
   // them to not concern themselves with handling undefined
   // or null.
-  if (tryAttachNumberUndefined(lhsId, rhsId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachNumberUndefined(lhsId, rhsId));
 
   // We want these to be last, to allow us to bypass the
   // strictly-different-types cases in the below attachment code
-  if (tryAttachInt32(lhsId, rhsId)) {
-    return true;
-  }
-  if (tryAttachNumber(lhsId, rhsId)) {
-    return true;
-  }
-  if (tryAttachString(lhsId, rhsId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachInt32(lhsId, rhsId));
+  TRY_ATTACH(tryAttachNumber(lhsId, rhsId));
+  TRY_ATTACH(tryAttachString(lhsId, rhsId));
 
-  if (tryAttachStringNumber(lhsId, rhsId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachStringNumber(lhsId, rhsId));
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
 void CompareIRGenerator::trackAttached(const char* name) {

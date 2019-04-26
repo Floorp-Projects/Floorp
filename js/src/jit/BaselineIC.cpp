@@ -5893,9 +5893,9 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
 
   ret.setBoolean(out);
 
-  TryAttachStubOld<CompareIRGenerator>("Compare", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Regular, op,
-                                       lhs, rhs);
+  TryAttachStub<CompareIRGenerator>("Compare", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Regular, op, lhs,
+                                    rhs);
   return true;
 }
 
