@@ -63,9 +63,22 @@ StateUpdatingCommandBase::IsCommandEnabled(const char* aCommandName,
     *outCmdEnabled = false;
     return NS_OK;
   }
-  mozilla::EditorBase* editorBase = editor->AsEditorBase();
-  MOZ_ASSERT(editorBase);
-  *outCmdEnabled = editorBase->IsSelectionEditable();
+  TextEditor* textEditor = editor->AsTextEditor();
+  if (!textEditor) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  if (!textEditor->IsSelectionEditable()) {
+    *outCmdEnabled = false;
+    return NS_OK;
+  }
+  if (!nsCRT::strcmp(aCommandName, "cmd_absPos")) {
+    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+    *outCmdEnabled =
+        htmlEditor && htmlEditor->IsAbsolutePositionEditorEnabled();
+    return NS_OK;
+  }
+  *outCmdEnabled = true;
   return NS_OK;
 }
 
@@ -1007,27 +1020,6 @@ nsresult AlignCommand::SetState(HTMLEditor* aHTMLEditor,
  *****************************************************************************/
 
 StaticRefPtr<AbsolutePositioningCommand> AbsolutePositioningCommand::sInstance;
-
-NS_IMETHODIMP
-AbsolutePositioningCommand::IsCommandEnabled(const char* aCommandName,
-                                             nsISupports* aCommandRefCon,
-                                             bool* aOutCmdEnabled) {
-  *aOutCmdEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  mozilla::HTMLEditor* htmlEditor = editor->AsHTMLEditor();
-  if (!htmlEditor) {
-    return NS_OK;
-  }
-  if (!htmlEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aOutCmdEnabled = htmlEditor->IsAbsolutePositionEditorEnabled();
-  return NS_OK;
-}
 
 nsresult AbsolutePositioningCommand::GetCurrentState(
     nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsICommandParams* aParams) {

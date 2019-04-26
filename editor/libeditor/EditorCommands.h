@@ -38,17 +38,17 @@ class EditorCommand : public nsIControllerCommand {
  public:                                                                      \
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,                       \
                               nsISupports* aCommandRefCon, bool* aIsEnabled)  \
-      override;                                                               \
+      final;                                                                  \
   MOZ_CAN_RUN_SCRIPT                                                          \
   NS_IMETHOD DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) \
-      override;                                                               \
+      final;                                                                  \
   MOZ_CAN_RUN_SCRIPT                                                          \
   NS_IMETHOD DoCommandParams(const char* aCommandName,                        \
                              nsICommandParams* aParams,                       \
-                             nsISupports* aCommandRefCon) override;           \
+                             nsISupports* aCommandRefCon) final;              \
   NS_IMETHOD GetCommandStateParams(const char* aCommandName,                  \
                                    nsICommandParams* aParams,                 \
-                                   nsISupports* aCommandRefCon) override;
+                                   nsISupports* aCommandRefCon) final;
 
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
  public:                                                   \
@@ -378,8 +378,6 @@ class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
   AbsolutePositioningCommand() = default;
   virtual ~AbsolutePositioningCommand() = default;
 
-  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon, bool* _retval) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
