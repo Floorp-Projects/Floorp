@@ -746,9 +746,9 @@ function getFrames(threadClient, first, count) {
  */
 async function blackBox(sourceClient, range = null) {
   dumpn("Black boxing source: " + sourceClient.actor);
-  const { error, pausedInSource } = await sourceClient.blackBox(range);
-  Assert.ok(!error, "Should not get an error: " + error);
-  return {error, pausedInSource};
+  const pausedInSource = await sourceClient.blackBox(range);
+  ok(true, "blackBox didn't throw");
+  return pausedInSource;
 }
 
 /**
@@ -759,8 +759,8 @@ async function blackBox(sourceClient, range = null) {
  */
 async function unBlackBox(sourceClient, range = null) {
   dumpn("Un-black boxing source: " + sourceClient.actor);
-  const {error} = await sourceClient.unblackBox(range);
-  Assert.ok(!error, "Should not get an error: " + error);
+  await sourceClient.unblackBox(range);
+  ok(true, "unblackBox didn't throw");
 }
 
 /**

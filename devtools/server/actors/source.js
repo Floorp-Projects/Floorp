@@ -324,7 +324,11 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   /**
-   * Handler for the "source" packet.
+   * Handler for the "onSource" packet.
+   * @return Object
+   *         The return of this function contains a field `contentType`, and
+   *         a field `source`. `source` can either be an arrayBufferActor grip,
+   *         or a LongStringActor grip.
    */
   onSource: function() {
     return Promise.resolve(this._init)

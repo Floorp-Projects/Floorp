@@ -465,7 +465,7 @@ async function getBreakpointPositions(
   for (const { thread, actor } of actors) {
     const sourceThreadClient = lookupThreadClient(thread);
     const sourceClient = sourceThreadClient.source({ actor });
-    const { positions } = await sourceClient.getBreakpointPositionsCompressed(
+    const positions = await sourceClient.getBreakpointPositionsCompressed(
       range
     );
 
