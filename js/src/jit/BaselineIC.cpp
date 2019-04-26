@@ -5672,9 +5672,9 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
     stub->setSawDoubleResult();
   }
 
-  TryAttachStubOld<UnaryArithIRGenerator>("UniaryArith", cx, frame, stub,
-                                          BaselineCacheIRStubKind::Regular, op,
-                                          val, res);
+  TryAttachStub<UnaryArithIRGenerator>("UniryArith", cx, frame, stub,
+                                       BaselineCacheIRStubKind::Regular, op,
+                                       val, res);
   return true;
 }
 
