@@ -225,7 +225,7 @@ class Doctor(object):
                     fixable = True
             results.append({'status': status, 'desc': desc, 'fixable': fixable,
                             'denied': denied})
-        elif self.platform in ['darwin', 'freebsd', 'linux', 'openbsd']:
+        elif self.platform in ['freebsd', 'linux', 'openbsd']:
             common_mountpoint = self.srcdir_mount == self.objdir_mount
             for (purpose, path, mount) in self.path_mounts:
                 results.append(self.check_mount_lastaccess(mount))
