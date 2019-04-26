@@ -11,7 +11,7 @@ const osString = Services.appinfo.OS;
 loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework/toolbox-options").OptionsPanel);
 loader.lazyGetter(this, "InspectorPanel", () => require("devtools/client/inspector/panel").InspectorPanel);
 loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webconsole/panel").WebConsolePanel);
-loader.lazyGetter(this, "NewDebuggerPanel", () => require("devtools/client/debugger/panel").DebuggerPanel);
+loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/client/debugger/panel").DebuggerPanel);
 loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/panel").StyleEditorPanel);
 loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
 loader.lazyGetter(this, "PerformancePanel", () => require("devtools/client/performance/panel").PerformancePanel);
@@ -144,7 +144,7 @@ Tools.jsdebugger = {
     return true;
   },
   build: function(iframeWindow, toolbox) {
-    return new NewDebuggerPanel(iframeWindow, toolbox);
+    return new DebuggerPanel(iframeWindow, toolbox);
   },
 };
 
