@@ -80,7 +80,7 @@ already_AddRefed<ResizeObserver> ResizeObserver::Constructor(
   }
 
   RefPtr<ResizeObserver> observer = new ResizeObserver(window.forget(), aCb);
-  // TODO: Add the new ResizeObserver to document here in the later patch.
+  document->AddResizeObserver(observer);
 
   return observer.forget();
 }
@@ -106,7 +106,7 @@ void ResizeObserver::Observe(Element& aTarget, ErrorResult& aRv) {
   // Per the spec, we need to trigger notification in event loop that
   // contains ResizeObserver observe call even when resize/reflow does
   // not happen.
-  // TODO: Implement the notification scheduling in the later patch.
+  aTarget.OwnerDoc()->ScheduleResizeObserversNotification();
 }
 
 void ResizeObserver::Unobserve(Element& aTarget, ErrorResult& aRv) {
