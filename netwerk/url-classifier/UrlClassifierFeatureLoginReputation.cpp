@@ -78,7 +78,7 @@ UrlClassifierFeatureLoginReputation::GetIfNameMatches(const nsACString& aName) {
 NS_IMETHODIMP
 UrlClassifierFeatureLoginReputation::ProcessChannel(
     nsIChannel* aChannel, const nsTArray<nsCString>& aList,
-    bool* aShouldContinue) {
+    const nsTArray<nsCString>& aHashes, bool* aShouldContinue) {
   MOZ_CRASH(
       "UrlClassifierFeatureLoginReputation::ProcessChannel should never be "
       "called");
