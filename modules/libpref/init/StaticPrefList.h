@@ -1154,6 +1154,18 @@ VARCACHE_PREF(
   bool, false
 )
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "layout.css.resizeobserver.enabled",
+   layout_css_resizeobserver_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
 // Pref to control whether arrow-panel animations are enabled or not.
 // Transitions are currently disabled on Linux due to rendering issues on
 // certain configurations.
