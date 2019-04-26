@@ -369,19 +369,22 @@ impl InProcessMonitor {
         let timeout = Duration::from_millis(u64::from(timeout_millis));
 
         let started = Instant::now();
+        let timeout_end = started + timeout;
 
         {
             let mut s = self.vars.1.lock().unwrap();
             loop {
+                let wait_start = Instant::now();
+
                 if s.shutdown {
                     // Disconnected, immediately return error.
                     // Note: Shutdown takes priority over simultaneous notification.
                     return Err(Error::NotConnected);
                 }
 
-                if started.elapsed() > timeout {
+                if wait_start >= timeout_end {
                     // Timed out, immediately return timeout error.
-                    // This should not normally happen with the in-process monitor, but e.g. the
+                    // This should not normally happen with the in-process monitor, but the
                     // monitor interval could be longer than the timeout.
                     s.shutdown = true;
                     return Err(Error::Timeout);
@@ -390,9 +393,9 @@ impl InProcessMonitor {
                 // Get the interval every pass through the loop, in case it has changed.
                 let interval = Duration::from_millis(u64::from(s.interval_millis));
 
-                let wait_until = self.last_status_time.map(|last_status_time| {
-                    cmp::min(last_status_time + interval, started + timeout)
-                });
+                let wait_until = self
+                    .last_status_time
+                    .map(|last_status_time| cmp::min(last_status_time + interval, timeout_end));
 
                 if s.notified {
                     // Notified, exit loop to get status.
@@ -406,9 +409,10 @@ impl InProcessMonitor {
                 }
 
                 let wait_until = wait_until.unwrap();
-                let wait_start = Instant::now();
 
                 if wait_until <= wait_start {
+                    // No time left to wait. This can't be due to timeout because
+                    // `wait_until <= wait_start < timeout_end`.
                     // Status report due, exit loop to get status.
                     break;
                 }

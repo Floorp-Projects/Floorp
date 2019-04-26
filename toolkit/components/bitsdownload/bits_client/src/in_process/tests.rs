@@ -400,9 +400,8 @@ test! {
         let start = Instant::now();
 
         // First report, immediate
-        let report_1 = monitor.get_status(timeout);
+        let report_1 = monitor.get_status(timeout).expect("should initially be ok").unwrap();
         let elapsed_to_report_1 = start.elapsed();
-        report_1.as_ref().expect("should initially be ok").as_ref().unwrap();
 
         // Transferred notification should come when the job completes in ~250 ms, otherwise we
         // will be stuck until timeout.
