@@ -76,7 +76,7 @@ TEST_SUITES = {
     'mochitest-a11y': {
         'aliases': ('a11y', 'ally'),
         'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'a11y', 'test_paths': None},
+        'kwargs': {'flavor': 'a11y', 'test_paths': None, 'e10s': False},
         'task_regex': ['mochitest-a11y($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
@@ -103,21 +103,21 @@ TEST_SUITES = {
     'mochitest-chrome': {
         'aliases': ('mc',),
         'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'test_paths': None},
+        'kwargs': {'flavor': 'chrome', 'test_paths': None, 'e10s': False},
         'task_regex': ['mochitest-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-chrome-clipboard': {
         'aliases': ('cl', 'clipboard',),
         'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'subsuite': 'clipboard', 'test_paths': None},
+        'kwargs': {'flavor': 'chrome', 'subsuite': 'clipboard', 'test_paths': None, 'e10s': False},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-chrome-gpu': {
         'aliases': ('gpu',),
         'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'subsuite': 'gpu', 'test_paths': None},
+        'kwargs': {'flavor': 'chrome', 'subsuite': 'gpu', 'test_paths': None, 'e10s': False},
         'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
