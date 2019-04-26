@@ -616,8 +616,8 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
       MOZ_CRASH("Unhandled binary arith op");
   }
 
-  TryAttachIonStubOld<BinaryArithIRGenerator, IonBinaryArithIC>(
-      cx, ic, ionScript, op, lhs, rhs, ret);
+  TryAttachIonStub<BinaryArithIRGenerator, IonBinaryArithIC>(cx, ic, ionScript,
+                                                             op, lhs, rhs, ret);
 
   return true;
 }

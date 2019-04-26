@@ -2481,20 +2481,20 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
 
   void trackAttached(const char* name);
 
-  bool tryAttachInt32();
-  bool tryAttachDouble();
-  bool tryAttachBitwise();
-  bool tryAttachStringConcat();
-  bool tryAttachStringObjectConcat();
-  bool tryAttachStringNumberConcat();
-  bool tryAttachStringBooleanConcat();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachDouble();
+  AttachDecision tryAttachBitwise();
+  AttachDecision tryAttachStringConcat();
+  AttachDecision tryAttachStringObjectConcat();
+  AttachDecision tryAttachStringNumberConcat();
+  AttachDecision tryAttachStringBooleanConcat();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                          ICState::Mode, JSOp op, HandleValue lhs,
                          HandleValue rhs, HandleValue res);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII NewObjectIRGenerator : public IRGenerator {

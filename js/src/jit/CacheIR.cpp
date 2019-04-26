@@ -6257,58 +6257,45 @@ void BinaryArithIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool BinaryArithIRGenerator::tryAttachStub() {
+AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
   // Arithmetic operations with Int32 operands
-  if (tryAttachInt32()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachInt32());
+
   // Bitwise operations with Int32 operands
-  if (tryAttachBitwise()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachBitwise());
 
   // Arithmetic operations with Double operands. This needs to come after
   // tryAttachInt32, as the guards overlap, and we'd prefer to attach the
   // more specialized Int32 IC if it is possible.
-  if (tryAttachDouble()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachDouble());
 
   // String x String
-  if (tryAttachStringConcat()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachStringConcat());
 
   // String x Object
-  if (tryAttachStringObjectConcat()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachStringObjectConcat());
 
-  if (tryAttachStringNumberConcat()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachStringNumberConcat());
 
   // String + Boolean
-  if (tryAttachStringBooleanConcat()) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachStringBooleanConcat());
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool BinaryArithIRGenerator::tryAttachBitwise() {
+AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
   // Only bit-wise and shifts.
   if (op_ != JSOP_BITOR && op_ != JSOP_BITXOR && op_ != JSOP_BITAND &&
       op_ != JSOP_LSH && op_ != JSOP_RSH && op_ != JSOP_URSH) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check guard conditions
   if (!(lhs_.isNumber() || lhs_.isBoolean()) ||
       !(rhs_.isNumber() || rhs_.isBoolean())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // All ops, with the exception of URSH produce Int32 values.
@@ -6363,19 +6350,19 @@ bool BinaryArithIRGenerator::tryAttachBitwise() {
   }
 
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachDouble() {
+AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
   // Check valid opcodes
   if (op_ != JSOP_ADD && op_ != JSOP_SUB && op_ != JSOP_MUL &&
       op_ != JSOP_DIV && op_ != JSOP_MOD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check guard conditions
   if (!lhs_.isNumber() || !rhs_.isNumber()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
@@ -6409,25 +6396,25 @@ bool BinaryArithIRGenerator::tryAttachDouble() {
       MOZ_CRASH("Unhandled Op");
   }
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachInt32() {
+AttachDecision BinaryArithIRGenerator::tryAttachInt32() {
   // Check guard conditions
   if (!(lhs_.isInt32() || lhs_.isBoolean()) ||
       !(rhs_.isInt32() || rhs_.isBoolean())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // These ICs will failure() if result can't be encoded in an Int32:
   // If sample result is not Int32, we should avoid IC.
   if (!res_.isInt32()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (op_ != JSOP_ADD && op_ != JSOP_SUB && op_ != JSOP_MUL &&
       op_ != JSOP_DIV && op_ != JSOP_MOD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
@@ -6470,18 +6457,18 @@ bool BinaryArithIRGenerator::tryAttachInt32() {
   }
 
   writer.returnFromIC();
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachStringNumberConcat() {
+AttachDecision BinaryArithIRGenerator::tryAttachStringNumberConcat() {
   // Only Addition
   if (op_ != JSOP_ADD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!(lhs_.isString() && rhs_.isNumber()) &&
       !(lhs_.isNumber() && rhs_.isString())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
@@ -6509,18 +6496,18 @@ bool BinaryArithIRGenerator::tryAttachStringNumberConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringNumberConcat");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachStringBooleanConcat() {
+AttachDecision BinaryArithIRGenerator::tryAttachStringBooleanConcat() {
   // Only Addition
   if (op_ != JSOP_ADD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if ((!lhs_.isString() || !rhs_.isBoolean()) &&
       (!lhs_.isBoolean() || !rhs_.isString())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
@@ -6542,18 +6529,18 @@ bool BinaryArithIRGenerator::tryAttachStringBooleanConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringBooleanConcat");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachStringConcat() {
+AttachDecision BinaryArithIRGenerator::tryAttachStringConcat() {
   // Only Addition
   if (op_ != JSOP_ADD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check guards
   if (!lhs_.isString() || !rhs_.isString()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
@@ -6566,19 +6553,19 @@ bool BinaryArithIRGenerator::tryAttachStringConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringConcat");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool BinaryArithIRGenerator::tryAttachStringObjectConcat() {
+AttachDecision BinaryArithIRGenerator::tryAttachStringObjectConcat() {
   // Only Addition
   if (op_ != JSOP_ADD) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check Guards
   if (!(lhs_.isObject() && rhs_.isString()) &&
       !(lhs_.isString() && rhs_.isObject()))
-    return false;
+    return AttachDecision::NoAction;
 
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
@@ -6598,7 +6585,7 @@ bool BinaryArithIRGenerator::tryAttachStringObjectConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringObjectConcat");
-  return true;
+  return AttachDecision::Attach;
 }
 
 NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
