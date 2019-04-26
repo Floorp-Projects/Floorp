@@ -614,6 +614,10 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 nscoord nsSubDocumentFrame::GetIntrinsicISize() {
+  if (StyleDisplay()->IsContainSize()) {
+    return 0;  // Intrinsic size of 'contain:size' replaced elements is 0,0.
+  }
+
   if (!IsInline()) {
     return 0;  // HTML <frame> has no useful intrinsic isize
   }
@@ -634,6 +638,10 @@ nscoord nsSubDocumentFrame::GetIntrinsicISize() {
 nscoord nsSubDocumentFrame::GetIntrinsicBSize() {
   // <frame> processing does not use this routine, only <iframe>
   NS_ASSERTION(IsInline(), "Shouldn't have been called");
+
+  if (StyleDisplay()->IsContainSize()) {
+    return 0;  // Intrinsic size of 'contain:size' replaced elements is 0,0.
+  }
 
   if (mContent->IsXULElement()) {
     return 0;
@@ -702,6 +710,11 @@ nscoord nsSubDocumentFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 IntrinsicSize nsSubDocumentFrame::GetIntrinsicSize() {
+  if (StyleDisplay()->IsContainSize()) {
+    // Intrinsic size of 'contain:size' replaced elements is 0,0.
+    return IntrinsicSize(0, 0);
+  }
+
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();
   if (subDocRoot) {
     return subDocRoot->GetIntrinsicSize();
@@ -1242,6 +1255,12 @@ nsView* nsSubDocumentFrame::EnsureInnerView() {
 }
 
 nsIFrame* nsSubDocumentFrame::ObtainIntrinsicSizeFrame() {
+  if (StyleDisplay()->IsContainSize()) {
+    // Intrinsic size of 'contain:size' replaced elements is 0,0. So, don't use
+    // internal frames to provide intrinsic size at all.
+    return nullptr;
+  }
+
   nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(GetContent());
   if (olc) {
     // We are an HTML <object> or <embed> (a replaced element).
