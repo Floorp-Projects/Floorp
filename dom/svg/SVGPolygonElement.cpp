@@ -46,7 +46,8 @@ void SVGPolygonElement::GetMarkPoints(nsTArray<SVGMark> *aMarks) {
 
   SVGMark *endMark = &aMarks->LastElement();
   SVGMark *startMark = &aMarks->ElementAt(0);
-  float angle = atan2(startMark->y - endMark->y, startMark->x - endMark->x);
+  float angle =
+      std::atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
   endMark->type = SVGMark::eMid;
   endMark->angle = SVGContentUtils::AngleBisect(angle, endMark->angle);

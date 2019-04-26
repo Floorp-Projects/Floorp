@@ -189,44 +189,4 @@
       </handler>
     </handlers>
   </binding>
-
-  <binding id="button"
-           extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
-                align="center" pack="center" flex="1" anonid="button-box">
-        <xul:image class="button-icon" xbl:inherits="src=image"/>
-        <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop,highlightable"/>
-        <xul:label class="button-highlightable-text" xbl:inherits="xbl:text=label,accesskey,crop,highlightable"/>
-      </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="menu"
-           extends="chrome://global/content/bindings/button.xml#button">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
-                align="center" pack="center" flex="1">
-        <xul:hbox class="box-inherit" xbl:inherits="align,dir,pack,orient"
-                  align="center" pack="center" flex="1">
-          <xul:image class="button-icon" xbl:inherits="src=image"/>
-          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop"/>
-        </xul:hbox>
-        <xul:dropmarker class="button-menu-dropmarker" xbl:inherits="open,disabled,label"/>
-      </xul:hbox>
-    </content>
-
-    <handlers>
-      <handler event="keypress" keycode="VK_RETURN" action="this.open = true;"/>
-      <handler event="keypress" key=" ">
-      <![CDATA[
-        this.open = true;
-        // Prevent page from scrolling on the space key.
-        event.preventDefault();
-      ]]>
-      </handler>
-    </handlers>
-  </binding>
 </bindings>

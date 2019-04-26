@@ -546,7 +546,7 @@ class ScriptSource {
                        Uncompressed<char16_t>, Missing, BinAST>;
   SourceType data;
 
-  // If the GC attempts to call setCompressedSource with PinnedUnits
+  // If the GC attempts to call convertToCompressedSource with PinnedUnits
   // present, the first PinnedUnits (that is, bottom of the stack) will set
   // the compressed chars upon destruction.
   PinnedUnitsBase* pinnedUnitsStack_;
@@ -691,10 +691,22 @@ class ScriptSource {
    */
   static constexpr size_t MinimumCompressibleLength = 256;
 
-  template <typename Unit>
-  MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceText<Unit>& srcBuf);
+ private:
+  class LoadSourceMatcher;
 
-  void setSourceRetrievable() { sourceRetrievable_ = true; }
+ public:
+  // Attempt to load usable source for |ss| -- source text on which substring
+  // operations and the like can be performed.  On success return true and set
+  // |*loaded| to indicate whether usable source could be loaded; otherwise
+  // return false.
+  static bool loadSource(JSContext* cx, ScriptSource* ss, bool* loaded);
+
+  // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
+  template <typename Unit>
+  MOZ_MUST_USE bool assignSource(JSContext* cx,
+                                 const JS::ReadOnlyCompileOptions& options,
+                                 JS::SourceText<Unit>& srcBuf);
+
   bool sourceRetrievable() const { return sourceRetrievable_; }
   bool hasSourceText() const {
     return hasUncompressedSource() || hasCompressedSource();
@@ -946,25 +958,45 @@ class ScriptSource {
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ScriptSourceInfo* info) const;
 
+ private:
+  // Overwrites |data| with the uncompressed data from |source|.  (This function
+  // currently asserts |data.is<Missing>()|, but callers should assert it as
+  // well, because this function shortly will be used in other cases and the
+  // assertion will have to be removed.)
   template <typename Unit>
-  MOZ_MUST_USE bool setSource(JSContext* cx, EntryUnits<Unit>&& source,
-                              size_t length);
+  MOZ_MUST_USE bool setUncompressedSourceHelper(JSContext* cx,
+                                                EntryUnits<Unit>&& source,
+                                                size_t length);
 
+ public:
+  // Initialize a fresh |ScriptSource| with uncompressed source.
   template <typename Unit>
-  void setSource(
-      typename SourceTypeTraits<Unit>::SharedImmutableString uncompressed);
+  MOZ_MUST_USE bool initializeUncompressedSource(JSContext* cx,
+                                                 EntryUnits<Unit>&& source,
+                                                 size_t length);
+
+  // Set the retrieved source for a |ScriptSource| whose source was recorded as
+  // missing but retrievable.
+  template <typename Unit>
+  MOZ_MUST_USE bool setRetrievedSource(JSContext* cx, EntryUnits<Unit>&& source,
+                                       size_t length);
 
   MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
 
-  // The Unit parameter determines which type of compressed source is
-  // recorded, but raw compressed source is always single-byte.
+  // Convert this ScriptSource from storing uncompressed source of the given
+  // type, to storing compressed source.  (Raw compressed source is always
+  // single-byte; |Unit| just records the encoding of the uncompressed source.)
   template <typename Unit>
-  void setCompressedSource(SharedImmutableString compressed,
-                           size_t sourceLength);
+  void convertToCompressedSource(SharedImmutableString compressed,
+                                 size_t sourceLength);
 
+  // Initialize a fresh ScriptSource as containing compressed source of the
+  // indicated original encoding.
   template <typename Unit>
-  MOZ_MUST_USE bool setCompressedSource(JSContext* cx, UniqueChars&& raw,
-                                        size_t rawLength, size_t sourceLength);
+  MOZ_MUST_USE bool initializeWithCompressedSource(JSContext* cx,
+                                                   UniqueChars&& raw,
+                                                   size_t rawLength,
+                                                   size_t sourceLength);
 
 #if defined(JS_BUILD_BINAST)
 
@@ -990,18 +1022,18 @@ class ScriptSource {
  private:
   void performTaskWork(SourceCompressionTask* task);
 
-  struct SetCompressedSourceFromTask {
+  struct ConvertToCompressedSourceFromTask {
     ScriptSource* const source_;
     SharedImmutableString& compressed_;
 
-    SetCompressedSourceFromTask(ScriptSource* source,
-                                SharedImmutableString& compressed)
+    ConvertToCompressedSourceFromTask(ScriptSource* source,
+                                      SharedImmutableString& compressed)
         : source_(source), compressed_(compressed) {}
 
     template <typename Unit>
     void operator()(const Uncompressed<Unit>&) {
-      source_->setCompressedSource<Unit>(std::move(compressed_),
-                                         source_->length());
+      source_->convertToCompressedSource<Unit>(std::move(compressed_),
+                                               source_->length());
     }
 
     template <typename Unit>
@@ -1026,7 +1058,7 @@ class ScriptSource {
     }
   };
 
-  void setCompressedSourceFromTask(SharedImmutableString compressed);
+  void convertToCompressedSourceFromTask(SharedImmutableString compressed);
 
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both
@@ -2493,8 +2525,6 @@ class JSScript : public js::gc::TenuredCell {
 
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
-
-  static bool loadSource(JSContext* cx, js::ScriptSource* ss, bool* worked);
 
   void setSourceObject(js::ScriptSourceObject* object);
   js::ScriptSourceObject* sourceObject() const { return sourceObject_; }

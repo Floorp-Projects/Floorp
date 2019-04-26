@@ -207,7 +207,7 @@ nsresult SVGTransformListSMILType::ComputeDistance(const SMILValue& aFrom,
     case SVG_TRANSFORM_SKEWY: {
       const float& a = fromTransform.mParams[0];
       const float& b = toTransform.mParams[0];
-      aDistance = fabs(a - b);
+      aDistance = std::fabs(a - b);
     } break;
 
     default:
