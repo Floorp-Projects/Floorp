@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
 const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const MIN_ZOOM = 0.5;
@@ -18,13 +17,12 @@ const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties"
  * Register generic keys to control zoom level of the given document.
  * Used by both the toolboxes and the browser console.
  *
- * @param {DOMWindow} The window on which we should listent to key strokes and
- *                    modify the zoom factor.
+ * @param {DOMWindow}
+ *        The window on which we should listent to key strokes and modify the zoom factor.
+ * @param {KeyShortcuts}
+ *        KeyShortcuts instance where the zoom keys should be added.
  */
-exports.register = function(window) {
-  const shortcuts = new KeyShortcuts({
-    window,
-  });
+exports.register = function(window, shortcuts) {
   const docShell = window.docShell;
   const contViewer = docShell.contentViewer;
   let zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_PREF));

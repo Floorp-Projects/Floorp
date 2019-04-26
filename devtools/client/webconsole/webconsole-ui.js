@@ -284,7 +284,7 @@ class WebConsoleUI {
       shortcuts.on(l10n.getStr("webconsole.close.key"),
                    this.window.top.close.bind(this.window.top));
 
-      ZoomKeys.register(this.window);
+      ZoomKeys.register(this.window, shortcuts);
       shortcuts.on("CmdOrCtrl+Alt+R", quickRestart);
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
       shortcuts.on("Esc", event => {
