@@ -851,6 +851,53 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   return -1;
 }
 
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
+Instance::tableFill(Instance* instance, uint32_t start, void* value,
+                    uint32_t len, uint32_t tableIndex)
+{
+  Table& table = *instance->tables()[tableIndex];
+  MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+
+  if (len == 0) {
+    // Even though the length is zero, we must check for a valid offset.  But
+    // zero-length operations at the edge of the table are allowed.
+    if (start <= table.length()) {
+      return 0;
+    }
+  } else {
+    // Here, we know that |len - 1| cannot underflow.
+
+    bool mustTrap = false;
+
+    // We must write the table until we trap, so we have to deal with
+    // arithmetic overflow in the limit calculation.
+    uint64_t highestOffset = uint64_t(start) + uint64_t(len - 1);
+    if (highestOffset >= table.length()) {
+      // We would write past the end.  Compute what we have space for in the
+      // target and make that the new len.
+      uint64_t avail = table.length() < start ? 0 : table.length() - start;
+      MOZ_ASSERT(len > avail);
+      len = uint32_t(avail);
+      mustTrap = true;
+    }
+
+    for (uint32_t i = 0; i < len; i++) {
+      uint32_t index = start + i;
+      MOZ_ASSERT(index < table.length());
+      table.setAnyRef(index, AnyRef::fromCompiledCode(value));
+    }
+
+    if (!mustTrap) {
+      return 0;
+    }
+  }
+
+  JSContext* cx = TlsContext.get();
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+  return -1;
+}
+
 // The return convention for tableGet() is awkward but avoids a situation where
 // Ion code has to hold a value that may or may not be a pointer to GC'd
 // storage, or where Ion has to pass in a pointer to storage where a return
