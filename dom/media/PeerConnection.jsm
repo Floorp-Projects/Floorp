@@ -1628,7 +1628,7 @@ class RTCPeerConnection {
     if (maxPacketLifeTime !== undefined && maxRetransmits !== undefined) {
       throw new this._win.DOMException(
           "Both maxPacketLifeTime and maxRetransmits cannot be provided",
-          "TypeError");
+          "InvalidParameterError");
     }
     if (id == 65535) {
       throw new this._win.DOMException(
