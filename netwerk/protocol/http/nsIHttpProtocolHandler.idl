@@ -68,8 +68,10 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     /**
      * A C++ friendly version of EnsureHSTSDataReady
      */
-    [noscript]
-    void EnsureHSTSDataReadyNative(in HSTSDataCallbackWrapperPtr aCallback);
+    %{C++
+        virtual nsresult EnsureHSTSDataReadyNative(
+            already_AddRefed<mozilla::net::HSTSDataCallbackWrapper> aCallback) = 0;
+    %}
 };
 
 %{C++
