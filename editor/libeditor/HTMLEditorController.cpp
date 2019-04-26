@@ -5,7 +5,7 @@
 
 #include "mozilla/HTMLEditorController.h"
 
-#include "mozilla/HTMLEditorCommands.h"  // for StyleUpdatingCommand, etc
+#include "mozilla/EditorCommands.h"      // for StyleUpdatingCommand, etc
 #include "mozilla/mozalloc.h"            // for operator new
 #include "nsControllerCommandTable.h"    // for nsControllerCommandTable
 #include "nsError.h"                     // for NS_OK
