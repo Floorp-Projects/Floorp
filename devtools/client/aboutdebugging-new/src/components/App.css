@@ -51,7 +51,7 @@
 
   /* padding will give space for card shadow to appear and
      margin will correct the alignment */
-  margin-inline: calc(var(--card-shadow-blur-radius) * -1);
+  margin-inline-start: calc(var(--card-shadow-blur-radius) * -1);
   padding-inline: var(--card-shadow-blur-radius);
 }
 
