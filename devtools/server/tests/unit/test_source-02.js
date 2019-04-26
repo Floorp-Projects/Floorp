@@ -61,9 +61,8 @@ function test_source() {
       const sourceClient = gThreadClient.source(source);
       response = await sourceClient.getBreakpointPositions();
       Assert.ok(!!response);
-      Assert.ok(!!response.positions);
       Assert.deepEqual(
-        response.positions,
+        response,
         [{
           line: 2,
           column: 2,
@@ -87,9 +86,8 @@ function test_source() {
 
       response = await sourceClient.getBreakpointPositionsCompressed();
       Assert.ok(!!response);
-      Assert.ok(!!response.positions);
       Assert.deepEqual(
-        response.positions,
+        response,
         {
           2: [2],
           3: [14, 17, 24],
