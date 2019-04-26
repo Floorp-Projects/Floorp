@@ -26,11 +26,11 @@
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/PendingIPCBlobChild.h"
+#include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
-#include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
@@ -369,15 +369,16 @@ bool BackgroundChildImpl::DeallocPSharedWorkerChild(
   return true;
 }
 
-PTemporaryIPCBlobChild* BackgroundChildImpl::AllocPTemporaryIPCBlobChild() {
+dom::PTemporaryIPCBlobChild*
+BackgroundChildImpl::AllocPTemporaryIPCBlobChild() {
   MOZ_CRASH("This is not supposed to be called.");
   return nullptr;
 }
 
 bool BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(
-    PTemporaryIPCBlobChild* aActor) {
-  RefPtr<mozilla::dom::TemporaryIPCBlobChild> actor =
-      dont_AddRef(static_cast<mozilla::dom::TemporaryIPCBlobChild*>(aActor));
+    dom::PTemporaryIPCBlobChild* aActor) {
+  RefPtr<dom::TemporaryIPCBlobChild> actor =
+      dont_AddRef(static_cast<dom::TemporaryIPCBlobChild*>(aActor));
   return true;
 }
 
