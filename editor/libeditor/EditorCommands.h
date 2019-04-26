@@ -18,6 +18,7 @@ class nsICommandParams;
 namespace mozilla {
 
 class HTMLEditor;
+class TextEditor;
 
 /**
  * This is a base class for commands registered with the editor controller.
@@ -29,6 +30,15 @@ class EditorCommand : public nsIControllerCommand {
  public:
   NS_DECL_ISUPPORTS
 
+  // nsIControllerCommand methods.  Use EditorCommand specific methods instead
+  // for internal use.
+  NS_IMETHOD IsCommandEnabled(const char* aCommandName,
+                              nsISupports* aCommandRefCon,
+                              bool* aIsEnabled) final;
+
+  virtual bool IsCommandEnabled(const char* aCommandName,
+                                TextEditor* aTextEditor) const = 0;
+
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
@@ -36,9 +46,9 @@ class EditorCommand : public nsIControllerCommand {
 
 #define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                                  \
  public:                                                                      \
-  NS_IMETHOD IsCommandEnabled(const char* aCommandName,                       \
-                              nsISupports* aCommandRefCon, bool* aIsEnabled)  \
-      final;                                                                  \
+  virtual bool IsCommandEnabled(const char* aCommandName,                     \
+                                TextEditor* aTextEditor) const final;         \
+  using EditorCommand::IsCommandEnabled;                                      \
   MOZ_CAN_RUN_SCRIPT                                                          \
   NS_IMETHOD DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) \
       final;                                                                  \

@@ -37,32 +37,31 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(EditorCommand, nsIControllerCommand)
 
+NS_IMETHODIMP
+EditorCommand::IsCommandEnabled(const char* aCommandName,
+                                nsISupports* aCommandRefCon, bool* aIsEnabled) {
+  if (NS_WARN_IF(!aCommandName) || NS_WARN_IF(!aIsEnabled)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  TextEditor* textEditor = editor ? editor->AsTextEditor() : nullptr;
+  *aIsEnabled = IsCommandEnabled(aCommandName, textEditor);
+  return NS_OK;
+}
+
 /******************************************************************************
  * mozilla::UndoCommand
  ******************************************************************************/
 
 StaticRefPtr<UndoCommand> UndoCommand::sInstance;
 
-NS_IMETHODIMP
-UndoCommand::IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool UndoCommand::IsCommandEnabled(const char* aCommandName,
+                                   TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (!textEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanUndo();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable() && aTextEditor->CanUndo();
 }
 
 NS_IMETHODIMP
@@ -99,26 +98,12 @@ UndoCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<RedoCommand> RedoCommand::sInstance;
 
-NS_IMETHODIMP
-RedoCommand::IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool RedoCommand::IsCommandEnabled(const char* aCommandName,
+                                   TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (!textEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanRedo();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable() && aTextEditor->CanRedo();
 }
 
 NS_IMETHODIMP
@@ -155,26 +140,12 @@ RedoCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<CutCommand> CutCommand::sInstance;
 
-NS_IMETHODIMP
-CutCommand::IsCommandEnabled(const char* aCommandName,
-                             nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool CutCommand::IsCommandEnabled(const char* aCommandName,
+                                  TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (!textEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanCut();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable() && aTextEditor->CanCut();
 }
 
 NS_IMETHODIMP
@@ -209,22 +180,12 @@ CutCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<CutOrDeleteCommand> CutOrDeleteCommand::sInstance;
 
-NS_IMETHODIMP
-CutOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
-                                     nsISupports* aCommandRefCon,
-                                     bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool CutOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
+                                          TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -270,21 +231,12 @@ CutOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<CopyCommand> CopyCommand::sInstance;
 
-NS_IMETHODIMP
-CopyCommand::IsCommandEnabled(const char* aCommandName,
-                              nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool CopyCommand::IsCommandEnabled(const char* aCommandName,
+                                   TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->CanCopy();
-  return NS_OK;
+  return aTextEditor->CanCopy();
 }
 
 NS_IMETHODIMP
@@ -320,23 +272,12 @@ CopyCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<CopyOrDeleteCommand> CopyOrDeleteCommand::sInstance;
 
-NS_IMETHODIMP
-CopyOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
-                                      nsISupports* aCommandRefCon,
-                                      bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool CopyOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
+                                           TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -382,26 +323,13 @@ CopyOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<PasteCommand> PasteCommand::sInstance;
 
-NS_IMETHODIMP
-PasteCommand::IsCommandEnabled(const char* aCommandName,
-                               nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool PasteCommand::IsCommandEnabled(const char* aCommandName,
+                                    TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (!textEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanPaste(nsIClipboard::kGlobalClipboard);
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable() &&
+         aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
@@ -439,27 +367,13 @@ PasteCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<PasteTransferableCommand> PasteTransferableCommand::sInstance;
 
-NS_IMETHODIMP
-PasteTransferableCommand::IsCommandEnabled(const char* aCommandName,
-                                           nsISupports* aCommandRefCon,
-                                           bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool PasteTransferableCommand::IsCommandEnabled(const char* aCommandName,
+                                                TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (!textEditor->IsSelectionEditable()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanPasteTransferable(nullptr);
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable() &&
+         aTextEditor->CanPasteTransferable(nullptr);
 }
 
 NS_IMETHODIMP
@@ -533,22 +447,12 @@ PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<SwitchTextDirectionCommand> SwitchTextDirectionCommand::sInstance;
 
-NS_IMETHODIMP
-SwitchTextDirectionCommand::IsCommandEnabled(const char* aCommandName,
-                                             nsISupports* aCommandRefCon,
-                                             bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool SwitchTextDirectionCommand::IsCommandEnabled(
+    const char* aCommandName, TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -587,32 +491,20 @@ SwitchTextDirectionCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<DeleteCommand> DeleteCommand::sInstance;
 
-NS_IMETHODIMP
-DeleteCommand::IsCommandEnabled(const char* aCommandName,
-                                nsISupports* aCommandRefCon, bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool DeleteCommand::IsCommandEnabled(const char* aCommandName,
+                                     TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-
   // We can generally delete whenever the selection is editable.  However,
   // cmd_delete doesn't make sense if the selection is collapsed because it's
   // directionless, which is the same condition under which we can't cut.
-  *aIsEnabled = textEditor->IsSelectionEditable();
+  bool isEnabled = aTextEditor->IsSelectionEditable();
 
-  if (!nsCRT::strcmp("cmd_delete", aCommandName) && *aIsEnabled) {
-    *aIsEnabled = textEditor->CanDelete();
+  if (!nsCRT::strcmp("cmd_delete", aCommandName) && isEnabled) {
+    return aTextEditor->CanDelete();
   }
-  return NS_OK;
+  return isEnabled;
 }
 
 NS_IMETHODIMP
@@ -678,32 +570,20 @@ DeleteCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<SelectAllCommand> SelectAllCommand::sInstance;
 
-NS_IMETHODIMP
-SelectAllCommand::IsCommandEnabled(const char* aCommandName,
-                                   nsISupports* aCommandRefCon,
-                                   bool* aIsEnabled) {
-  NS_ENSURE_ARG_POINTER(aIsEnabled);
-
-  nsresult rv = NS_OK;
+bool SelectAllCommand::IsCommandEnabled(const char* aCommandName,
+                                        TextEditor* aTextEditor) const {
   // You can always select all, unless the selection is editable,
   // and the editable region is empty!
-  *aIsEnabled = true;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
+  if (!aTextEditor) {
+    return true;
   }
 
   // You can select all if there is an editor which is non-empty
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
   bool isEmpty = false;
-  rv = textEditor->IsEmpty(&isEmpty);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(aTextEditor->IsEmpty(&isEmpty)))) {
+    return false;
   }
-  *aIsEnabled = !isEmpty;
-  return NS_OK;
+  return !isEmpty;
 }
 
 NS_IMETHODIMP
@@ -740,20 +620,12 @@ SelectAllCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<SelectionMoveCommands> SelectionMoveCommands::sInstance;
 
-NS_IMETHODIMP
-SelectionMoveCommands::IsCommandEnabled(const char* aCommandName,
-                                        nsISupports* aCommandRefCon,
-                                        bool* aIsEnabled) {
-  NS_ENSURE_ARG_POINTER(aIsEnabled);
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    *aIsEnabled = false;
-    return NS_OK;
+bool SelectionMoveCommands::IsCommandEnabled(const char* aCommandName,
+                                             TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 static const struct ScrollCommand {
@@ -886,22 +758,12 @@ SelectionMoveCommands::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<InsertPlaintextCommand> InsertPlaintextCommand::sInstance;
 
-NS_IMETHODIMP
-InsertPlaintextCommand::IsCommandEnabled(const char* aCommandName,
-                                         nsISupports* aCommandRefCon,
-                                         bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool InsertPlaintextCommand::IsCommandEnabled(const char* aCommandName,
+                                              TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    *aIsEnabled = false;
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -977,23 +839,12 @@ InsertPlaintextCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<InsertParagraphCommand> InsertParagraphCommand::sInstance;
 
-NS_IMETHODIMP
-InsertParagraphCommand::IsCommandEnabled(const char* aCommandName,
-                                         nsISupports* aCommandRefCon,
-                                         bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool InsertParagraphCommand::IsCommandEnabled(const char* aCommandName,
+                                              TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    *aIsEnabled = false;
-    return NS_ERROR_FAILURE;
-  }
-
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -1037,23 +888,12 @@ InsertParagraphCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<InsertLineBreakCommand> InsertLineBreakCommand::sInstance;
 
-NS_IMETHODIMP
-InsertLineBreakCommand::IsCommandEnabled(const char* aCommandName,
-                                         nsISupports* aCommandRefCon,
-                                         bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool InsertLineBreakCommand::IsCommandEnabled(const char* aCommandName,
+                                              TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    *aIsEnabled = false;
-    return NS_ERROR_FAILURE;
-  }
-
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  *aIsEnabled = textEditor->IsSelectionEditable();
-  return NS_OK;
+  return aTextEditor->IsSelectionEditable();
 }
 
 NS_IMETHODIMP
@@ -1097,27 +937,13 @@ InsertLineBreakCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<PasteQuotationCommand> PasteQuotationCommand::sInstance;
 
-NS_IMETHODIMP
-PasteQuotationCommand::IsCommandEnabled(const char* aCommandName,
-                                        nsISupports* aCommandRefCon,
-                                        bool* aIsEnabled) {
-  if (NS_WARN_IF(!aIsEnabled)) {
-    return NS_ERROR_INVALID_ARG;
+bool PasteQuotationCommand::IsCommandEnabled(const char* aCommandName,
+                                             TextEditor* aTextEditor) const {
+  if (!aTextEditor) {
+    return false;
   }
-
-  *aIsEnabled = false;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_OK;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  if (textEditor->IsSingleLineEditor()) {
-    return NS_OK;
-  }
-  *aIsEnabled = textEditor->CanPaste(nsIClipboard::kGlobalClipboard);
-  return NS_OK;
+  return !aTextEditor->IsSingleLineEditor() &&
+         aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP
