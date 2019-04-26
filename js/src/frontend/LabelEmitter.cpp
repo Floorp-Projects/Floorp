@@ -14,7 +14,7 @@
 using namespace js;
 using namespace js::frontend;
 
-bool LabelEmitter::emitLabel(JSAtom* name) {
+bool LabelEmitter::emitLabel(HandleAtom name) {
   MOZ_ASSERT(state_ == State::Start);
 
   // Emit a JSOP_LABEL instruction. The operand is the offset to the statement

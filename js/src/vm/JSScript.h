@@ -1520,9 +1520,8 @@ class alignas(uintptr_t) SharedScriptData final {
   // Index into the scopes array of the body scope.
   uint32_t bodyScopeIndex = 0;
 
-#if JS_BITS_PER_WORD == 64
-  uint32_t padding_ = 0;
-#endif
+  // Number of IC entries to allocate in ICScript for Baseline ICs.
+  uint32_t numICEntries = 0;
 
   // ES6 function length.
   uint16_t funLength = 0;
@@ -2161,6 +2160,8 @@ class JSScript : public js::gc::TenuredCell {
   size_t numBytecodeTypeSets() const {
     return scriptData_->numBytecodeTypeSets;
   }
+
+  size_t numICEntries() const { return scriptData_->numICEntries; }
 
   size_t funLength() const { return scriptData_->funLength; }
 
