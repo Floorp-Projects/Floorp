@@ -217,7 +217,7 @@ class CustomTabsToolbarFeature(
     }
 
     companion object {
-        const val TITLE_TEXT_SIZE = 16f
+        const val TITLE_TEXT_SIZE = 15f
         const val URL_TEXT_SIZE = 12f
         @Suppress("MagicNumber")
         internal fun getReadableTextColor(backgroundColor: Int): Int {
