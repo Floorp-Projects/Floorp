@@ -748,6 +748,7 @@ WEBIDL_FILES = [
     'Range.webidl',
     'Reporting.webidl',
     'Request.webidl',
+    'ResizeObserver.webidl',
     'Response.webidl',
     'RTCStatsReport.webidl',
     'Screen.webidl',
