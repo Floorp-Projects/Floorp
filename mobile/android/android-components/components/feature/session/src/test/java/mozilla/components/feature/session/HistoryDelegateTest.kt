@@ -17,13 +17,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Assert.fail
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class HistoryDelegateTest {
     @Test
     fun `history delegate passes through onVisited calls`() = runBlocking {
         val storage: HistoryStorage = mock()
         val delegate = HistoryDelegate(storage)
+
+        delegate.onVisited("about:blank", VisitType.TYPED)
+        verify(storage, never()).recordVisit("about:blank", VisitType.TYPED)
 
         delegate.onVisited("http://www.mozilla.org", false)
         verify(storage).recordVisit("http://www.mozilla.org", VisitType.LINK)
@@ -39,6 +46,9 @@ class HistoryDelegateTest {
 
         delegate.onTitleChanged("http://www.mozilla.org", "Mozilla")
         verify(storage).recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+
+        delegate.onTitleChanged("about:blank", "Blank!")
+        verify(storage, never()).recordObservation("about:blank", PageObservation("Blank!"))
     }
 
     @Test
@@ -130,5 +140,30 @@ class HistoryDelegateTest {
 
         delegate.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
         assertTrue(storage.getVisitedListCalled)
+    }
+
+    @Test
+    fun `history delegate's shouldStoreUri works as expected`() {
+        val delegate = HistoryDelegate(mock())
+
+        // Not an excessive list of allowed schemes.
+        assertTrue(delegate.shouldStoreUri("http://www.mozilla.com"))
+        assertTrue(delegate.shouldStoreUri("https://www.mozilla.com"))
+        assertTrue(delegate.shouldStoreUri("ftp://files.mozilla.com/stuff/fenix.apk"))
+        assertTrue(delegate.shouldStoreUri("about:reader?url=http://www.mozilla.com/interesting-article.html"))
+        assertTrue(delegate.shouldStoreUri("https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top"))
+        assertTrue(delegate.shouldStoreUri("ldap://2001:db8::7/c=GB?objectClass?one"))
+        assertTrue(delegate.shouldStoreUri("telnet://192.0.2.16:80/"))
+
+        assertFalse(delegate.shouldStoreUri("withoutSchema.html"))
+        assertFalse(delegate.shouldStoreUri("about:blank"))
+        assertFalse(delegate.shouldStoreUri("news:comp.infosystems.www.servers.unix"))
+        assertFalse(delegate.shouldStoreUri("imap://mail.example.com/~mozilla"))
+        assertFalse(delegate.shouldStoreUri("chrome://config"))
+        assertFalse(delegate.shouldStoreUri("data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D"))
+        assertFalse(delegate.shouldStoreUri("data:text/html,<script>alert('hi');</script>"))
+        assertFalse(delegate.shouldStoreUri("resource://internal-thingy-js-inspector/script.js"))
+        assertFalse(delegate.shouldStoreUri("javascript:alert('hello!');"))
+        assertFalse(delegate.shouldStoreUri("blob:https://api.mozilla.com/resource.png"))
     }
 }

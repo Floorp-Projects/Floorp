@@ -31,4 +31,10 @@ interface HistoryTrackingDelegate {
      * An engine needs to know a list of all visited URIs.
      */
     suspend fun getVisited(): List<String>
+
+    /**
+     * Allows an engine to check if this URI is going to be accepted by the delegate.
+     * This helps avoid unnecessary coroutine overhead for URIs which won't be accepted.
+     */
+    fun shouldStoreUri(uri: String): Boolean
 }

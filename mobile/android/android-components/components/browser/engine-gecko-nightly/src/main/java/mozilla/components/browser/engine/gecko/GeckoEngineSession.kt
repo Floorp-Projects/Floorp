@@ -393,6 +393,7 @@ class GeckoEngineSession(
 
     @Suppress("ComplexMethod")
     internal fun createHistoryDelegate() = object : GeckoSession.HistoryDelegate {
+        @SuppressWarnings("ReturnCount")
         override fun onVisited(
             session: GeckoSession,
             url: String,
@@ -409,6 +410,11 @@ class GeckoEngineSession(
             }
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
+
+            // Check if the delegate wants this type of url.
+            if (!delegate.shouldStoreUri(url)) {
+                return GeckoResult.fromValue(false)
+            }
 
             val isReload = lastVisitedURL?.let { it == url } ?: false
             val result = GeckoResult<Boolean>()

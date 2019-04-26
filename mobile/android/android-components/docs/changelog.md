@@ -46,6 +46,11 @@ permalink: /changelog/
 
 * **concept-engine**
   * Add boolean `allowAutoplayMedia` setting.
+  * ⚠️ **This is a breaking API change:**
+  * Added new method to `HistoryTrackingDelegate` interface: `shouldStoreUri(uri: String): Boolean`.
+
+* **feature-session**
+  * `HistoryDelegate` now implements a blacklist of URI schemas.
 
 * **browser-engine-gecko-nightly**
   * Implement `allowAutoplayMedia` in terms of `autoplayDefault`.
