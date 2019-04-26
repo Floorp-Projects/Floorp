@@ -7,7 +7,7 @@
 import React from "react";
 import { shallow } from "enzyme";
 import Editor from "../index";
-import type { JsSource, Source, SourceWithContent } from "../../../types";
+import type { Source, SourceWithContent } from "../../../types";
 import { getDocument } from "../../../utils/editor/source-documents";
 import * as asyncValue from "../../../utils/async-value";
 
@@ -74,7 +74,7 @@ function createMockSourceWithContent(
     ...otherOverrides
   } = overrides;
 
-  const source: JsSource = ({
+  const source: Source = ({
     id: "foo",
     url: "foo",
     ...otherOverrides
