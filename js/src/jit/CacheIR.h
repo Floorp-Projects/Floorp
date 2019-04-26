@@ -2329,13 +2329,13 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
 class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachNativeIterator(ObjOperandId objId, HandleObject obj);
+  AttachDecision tryAttachNativeIterator(ObjOperandId objId, HandleObject obj);
 
  public:
   GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                          ICState::Mode mode, HandleValue value);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 
   void trackAttached(const char* name);
 };
