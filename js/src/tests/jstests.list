@@ -355,17 +355,11 @@ skip script test262/language/expressions/prefix-increment/S11.4.4_A5_T5.js
 skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T1.js
 skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
-skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=944846
 skip script test262/built-ins/Number/prototype/toExponential/return-values.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
 skip script test262/built-ins/Function/internals/Call/class-ctor-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1288457
-skip script test262/built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
 skip script test262/built-ins/Proxy/apply/arguments-realm.js
@@ -399,9 +393,7 @@ skip script test262/built-ins/Function/internals/Construct/derived-return-val-re
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317416
-skip script test262/language/expressions/super/realm.js
 skip script test262/built-ins/GeneratorFunction/proto-from-ctor-realm.js
-skip script test262/built-ins/Function/prototype/bind/proto-from-ctor-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js

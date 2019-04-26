@@ -1037,3 +1037,53 @@ JS_PUBLIC_API JSObject* JS::GetRealmIteratorPrototype(JSContext* cx) {
   CHECK_THREAD(cx);
   return GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
 }
+
+JS_PUBLIC_API Realm* JS::GetFunctionRealm(JSContext* cx, HandleObject objArg) {
+  // https://tc39.github.io/ecma262/#sec-getfunctionrealm
+  // 7.3.22 GetFunctionRealm ( obj )
+
+  CHECK_THREAD(cx);
+  cx->check(objArg);
+
+  RootedObject obj(cx, objArg);
+  while (true) {
+    obj = CheckedUnwrapStatic(obj);
+    if (!obj) {
+      ReportAccessDenied(cx);
+      return nullptr;
+    }
+
+    // Step 1.
+    MOZ_ASSERT(IsCallable(obj));
+
+    // Steps 2 and 3. We use a loop instead of recursion to unwrap bound
+    // functions.
+    if (obj->is<JSFunction>()) {
+      JSFunction* fun = &obj->as<JSFunction>();
+      if (!fun->isBoundFunction()) {
+        return fun->realm();
+      }
+
+      obj = fun->getBoundFunctionTarget();
+      continue;
+    }
+
+    // Step 4.
+    if (IsScriptedProxy(obj)) {
+      // Steps 4.a-b.
+      JSObject* proxyTarget = GetProxyTargetObject(obj);
+      if (!proxyTarget) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_PROXY_REVOKED);
+        return nullptr;
+      }
+
+      // Step 4.c.
+      obj = proxyTarget;
+      continue;
+    }
+
+    // Step 5.
+    return cx->realm();
+  }
+}
