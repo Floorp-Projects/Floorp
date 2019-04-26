@@ -19,6 +19,7 @@
 #include "js/CallArgs.h"            // JSNative
 #include "js/PropertyDescriptor.h"  // JSPROP_*
 #include "js/RootingAPI.h"          // JS::MutableHandle
+#include "js/Symbol.h"              // JS::SymbolCode
 #include "js/Value.h"               // JS::Value
 
 struct JSContext;
@@ -30,18 +31,16 @@ struct JSJitInfo;
  * without additional field overhead.
  */
 struct JSNativeWrapper {
-  JSNative op;
-  const JSJitInfo* info;
-};
+  JSNative op = nullptr;
+  const JSJitInfo* info = nullptr;
 
-/**
- * Macro static initializers which make it easy to pass no JSJitInfo as part of
- * a JSPropertySpec or JSFunctionSpec.
- */
-#define JSNATIVE_WRAPPER(native) \
-  {                              \
-    { native, nullptr }          \
-  }
+  JSNativeWrapper() = default;
+
+  JSNativeWrapper(const JSNativeWrapper& other) = default;
+
+  constexpr JSNativeWrapper(JSNative op, const JSJitInfo* info)
+      : op(op), info(info) {}
+};
 
 /**
  * Description of a property. JS_DefineProperties and JS_InitClass take arrays
@@ -50,8 +49,16 @@ struct JSNativeWrapper {
  */
 struct JSPropertySpec {
   struct SelfHostedWrapper {
-    void* unused;
+    // The same type as JSNativeWrapper's first field, so that the access in
+    // JSPropertySpec::checkAccessorsAreSelfHosted become valid.
+    JSNative unused = nullptr;
+
     const char* funname;
+
+    SelfHostedWrapper() = delete;
+
+    explicit constexpr SelfHostedWrapper(const char* funname)
+        : funname(funname) {}
   };
 
   struct ValueWrapper {
@@ -60,23 +67,149 @@ struct JSPropertySpec {
       const char* string;
       int32_t int32;
     };
+
+   private:
+    ValueWrapper() = delete;
+
+    explicit constexpr ValueWrapper(int32_t n)
+        : type(JSVAL_TYPE_INT32), int32(n) {}
+
+    explicit constexpr ValueWrapper(const char* s)
+        : type(JSVAL_TYPE_STRING), string(s) {}
+
+   public:
+    ValueWrapper(const ValueWrapper& other) = default;
+
+    static constexpr ValueWrapper int32Value(int32_t n) {
+      return ValueWrapper(n);
+    }
+
+    static constexpr ValueWrapper stringValue(const char* s) {
+      return ValueWrapper(s);
+    }
+  };
+
+  union Accessor {
+    JSNativeWrapper native;
+    SelfHostedWrapper selfHosted;
+
+   private:
+    Accessor() = delete;
+
+    constexpr Accessor(JSNative op, const JSJitInfo* info) : native(op, info) {}
+
+    explicit constexpr Accessor(const char* funname) : selfHosted(funname) {}
+
+   public:
+    Accessor(const Accessor& other) = default;
+
+    static constexpr Accessor nativeAccessor(JSNative op,
+                                             const JSJitInfo* info = nullptr) {
+      return Accessor(op, info);
+    }
+
+    static constexpr Accessor selfHostedAccessor(const char* funname) {
+      return Accessor(funname);
+    }
+
+    static constexpr Accessor noAccessor() {
+      return Accessor(nullptr, nullptr);
+    }
+  };
+
+  union AccessorsOrValue {
+    struct Accessors {
+      Accessor getter;
+      Accessor setter;
+
+      constexpr Accessors(Accessor getter, Accessor setter)
+          : getter(getter), setter(setter) {}
+    } accessors;
+    ValueWrapper value;
+
+   private:
+    AccessorsOrValue() = delete;
+
+    constexpr AccessorsOrValue(Accessor getter, Accessor setter)
+        : accessors(getter, setter) {}
+
+    explicit constexpr AccessorsOrValue(ValueWrapper value) : value(value) {}
+
+   public:
+    AccessorsOrValue(const AccessorsOrValue& other) = default;
+
+    static constexpr AccessorsOrValue fromAccessors(Accessor getter,
+                                                    Accessor setter) {
+      return AccessorsOrValue(getter, setter);
+    }
+
+    static constexpr AccessorsOrValue fromValue(ValueWrapper value) {
+      return AccessorsOrValue(value);
+    }
   };
 
   const char* name;
   uint8_t flags;
-  union {
-    struct {
-      union {
-        JSNativeWrapper native;
-        SelfHostedWrapper selfHosted;
-      } getter;
-      union {
-        JSNativeWrapper native;
-        SelfHostedWrapper selfHosted;
-      } setter;
-    } accessors;
-    ValueWrapper value;
-  };
+  AccessorsOrValue u;
+
+ private:
+  JSPropertySpec() = delete;
+
+  constexpr JSPropertySpec(const char* name, uint8_t flags, AccessorsOrValue u)
+      : name(name), flags(flags), u(u) {}
+
+ public:
+  JSPropertySpec(const JSPropertySpec& other) = default;
+
+  static constexpr JSPropertySpec nativeAccessors(
+      const char* name, uint8_t flags, JSNative getter,
+      const JSJitInfo* getterInfo, JSNative setter = nullptr,
+      const JSJitInfo* setterInfo = nullptr) {
+    return JSPropertySpec(
+        name, flags,
+        AccessorsOrValue::fromAccessors(
+            JSPropertySpec::Accessor::nativeAccessor(getter, getterInfo),
+            JSPropertySpec::Accessor::nativeAccessor(setter, setterInfo)));
+  }
+
+  static constexpr JSPropertySpec selfHostedAccessors(
+      const char* name, uint8_t flags, const char* getterName,
+      const char* setterName = nullptr) {
+    return JSPropertySpec(
+        name, flags | JSPROP_GETTER | (setterName ? JSPROP_SETTER : 0),
+        AccessorsOrValue::fromAccessors(
+            JSPropertySpec::Accessor::selfHostedAccessor(getterName),
+            setterName ? JSPropertySpec::Accessor::selfHostedAccessor(setterName)
+                       : JSPropertySpec::Accessor::noAccessor()));
+  }
+
+  static constexpr JSPropertySpec int32Value(const char* name, uint8_t flags,
+                                             int32_t n) {
+    return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
+                          AccessorsOrValue::fromValue(
+                              JSPropertySpec::ValueWrapper::int32Value(n)));
+  }
+
+  static constexpr JSPropertySpec stringValue(const char* name, uint8_t flags,
+                                              const char* s) {
+    return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
+                          AccessorsOrValue::fromValue(
+                              JSPropertySpec::ValueWrapper::stringValue(s)));
+  }
+
+  static constexpr JSPropertySpec sentinel() {
+    return JSPropertySpec(nullptr, 0,
+                          AccessorsOrValue::fromAccessors(
+                              JSPropertySpec::Accessor::noAccessor(),
+                              JSPropertySpec::Accessor::noAccessor()));
+  }
+
+  // Because reinterpret_cast cannot be used in constexpr, expose the
+  // static method to convert JS::SymbolCode to `name` parameter for
+  // {nativeAccessors, selfHostedAccessors,int32Value,stringValue}.
+  static const char* symbolToName(JS::SymbolCode symbol) {
+    return reinterpret_cast<const char*>(uint32_t(symbol) + 1);
+  }
 
   bool isAccessor() const { return !(flags & JSPROP_INTERNAL_USE_BIT); }
   JS_PUBLIC_API bool getValue(JSContext* cx,
@@ -98,122 +231,63 @@ struct JSPropertySpec {
 
   static_assert(sizeof(SelfHostedWrapper) == sizeof(JSNativeWrapper),
                 "JSPropertySpec::getter/setter must be compact");
-  static_assert(offsetof(SelfHostedWrapper, funname) ==
+  static_assert(offsetof(SelfHostedWrapper, unused) ==
+                    offsetof(JSNativeWrapper, op) &&
+                offsetof(SelfHostedWrapper, funname) ==
                     offsetof(JSNativeWrapper, info),
-                "JS_SELF_HOSTED* macros below require that "
+                "checkAccessorsAreNative below require that "
                 "SelfHostedWrapper::funname overlay "
-                "JSNativeWrapper::info");
+                "JSNativeWrapper::info and "
+                "SelfHostedWrapper::unused overlay "
+                "JSNativeWrapper::op");
 
  private:
   void checkAccessorsAreNative() const {
     // We may have a getter or a setter or both.  And whichever ones we have
     // should not have a SelfHostedWrapper for the accessor.
-    MOZ_ASSERT_IF(accessors.getter.native.info, accessors.getter.native.op);
-    MOZ_ASSERT_IF(accessors.setter.native.info, accessors.setter.native.op);
+    MOZ_ASSERT_IF(u.accessors.getter.native.info, u.accessors.getter.native.op);
+    MOZ_ASSERT_IF(u.accessors.setter.native.info, u.accessors.setter.native.op);
   }
 
   void checkAccessorsAreSelfHosted() const {
-    MOZ_ASSERT(!accessors.getter.selfHosted.unused);
-    MOZ_ASSERT(!accessors.setter.selfHosted.unused);
+    MOZ_ASSERT(!u.accessors.getter.selfHosted.unused);
+    MOZ_ASSERT(!u.accessors.setter.selfHosted.unused);
   }
 };
-
-namespace JS {
-namespace detail {
-
-/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_STRING_TO only. */
-template <size_t N>
-inline int CheckIsCharacterLiteral(const char (&arr)[N]);
-
-/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_INT32_TO only. */
-inline int CheckIsInt32(int32_t value);
-
-}  // namespace detail
-}  // namespace JS
-
-#define JS_CAST_STRING_TO(s, To)                                      \
-  (static_cast<void>(sizeof(JS::detail::CheckIsCharacterLiteral(s))), \
-   reinterpret_cast<To>(s))
-
-#define JS_CAST_INT32_TO(s, To)                            \
-  (static_cast<void>(sizeof(JS::detail::CheckIsInt32(s))), \
-   reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags)                                         \
   (static_cast<std::enable_if<((flags) & ~(JSPROP_ENUMERATE |                  \
                                            JSPROP_PERMANENT)) == 0>::type>(0), \
    (flags))
 
-#define JS_PS_ACCESSOR_SPEC(name, getter, setter, flags, extraFlags) \
-  {                                                                  \
-    name, uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | extraFlags), {    \
-      { getter, setter }                                             \
-    }                                                                \
-  }
-#define JS_PS_VALUE_SPEC(name, value, flags)          \
-  {                                                   \
-    name, uint8_t(flags | JSPROP_INTERNAL_USE_BIT), { \
-      { value, JSNATIVE_WRAPPER(nullptr) }            \
-    }                                                 \
-  }
-
-#define SELFHOSTED_WRAPPER(name)                           \
-  {                                                        \
-    { nullptr, JS_CAST_STRING_TO(name, const JSJitInfo*) } \
-  }
-#define STRINGVALUE_WRAPPER(value)                   \
-  {                                                  \
-    {                                                \
-      reinterpret_cast<JSNative>(JSVAL_TYPE_STRING), \
-          JS_CAST_STRING_TO(value, const JSJitInfo*) \
-    }                                                \
-  }
-#define INT32VALUE_WRAPPER(value)                   \
-  {                                                 \
-    {                                               \
-      reinterpret_cast<JSNative>(JSVAL_TYPE_INT32), \
-          JS_CAST_INT32_TO(value, const JSJitInfo*) \
-    }                                               \
-  }
-
-/*
- * JSPropertySpec uses JSNativeWrapper.  These macros encapsulate the definition
- * of JSNative-backed JSPropertySpecs, by defining the JSNativeWrappers for
- * them.
- */
-#define JS_PSG(name, getter, flags)                   \
-  JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), \
-                      JSNATIVE_WRAPPER(nullptr), flags, 0)
-#define JS_PSGS(name, getter, setter, flags)          \
-  JS_PS_ACCESSOR_SPEC(name, JSNATIVE_WRAPPER(getter), \
-                      JSNATIVE_WRAPPER(setter), flags, 0)
-#define JS_SYM_GET(symbol, getter, flags)                                    \
-  JS_PS_ACCESSOR_SPEC(                                                       \
-      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-      JSNATIVE_WRAPPER(getter), JSNATIVE_WRAPPER(nullptr), flags, 0)
-#define JS_SELF_HOSTED_GET(name, getterName, flags)         \
-  JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName), \
-                      JSNATIVE_WRAPPER(nullptr), flags, JSPROP_GETTER)
-#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
-  JS_PS_ACCESSOR_SPEC(name, SELFHOSTED_WRAPPER(getterName),        \
-                      SELFHOSTED_WRAPPER(setterName), flags,       \
-                      JSPROP_GETTER | JSPROP_SETTER)
-#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags)                    \
-  JS_PS_ACCESSOR_SPEC(                                                       \
-      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-      SELFHOSTED_WRAPPER(getterName), JSNATIVE_WRAPPER(nullptr), flags,      \
-      JSPROP_GETTER)
+#define JS_PSG(name, getter, flags)                                     \
+  JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
+                                  getter, nullptr)
+#define JS_PSGS(name, getter, setter, flags)                            \
+  JSPropertySpec::nativeAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
+                                  getter, nullptr, setter, nullptr)
+#define JS_SYM_GET(symbol, getter, flags)                     \
+  JSPropertySpec::nativeAccessors(                            \
+      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), \
+      JS_CHECK_ACCESSOR_FLAGS(flags), getter, nullptr)
+#define JS_SELF_HOSTED_GET(name, getterName, flags)                         \
+  JSPropertySpec::selfHostedAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
+                                      getterName)
+#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags)          \
+  JSPropertySpec::selfHostedAccessors(name, JS_CHECK_ACCESSOR_FLAGS(flags), \
+                                      getterName, setterName)
+#define JS_SELF_HOSTED_SYM_GET(symbol, getterName, flags)     \
+  JSPropertySpec::selfHostedAccessors(                        \
+      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), \
+      JS_CHECK_ACCESSOR_FLAGS(flags), getterName)
 #define JS_STRING_PS(name, string, flags) \
-  JS_PS_VALUE_SPEC(name, STRINGVALUE_WRAPPER(string), flags)
-#define JS_STRING_SYM_PS(symbol, string, flags)                              \
-  JS_PS_VALUE_SPEC(                                                          \
-      reinterpret_cast<const char*>(uint32_t(::JS::SymbolCode::symbol) + 1), \
-      STRINGVALUE_WRAPPER(string), flags)
+  JSPropertySpec::stringValue(name, flags, string)
+#define JS_STRING_SYM_PS(symbol, string, flags) \
+  JSPropertySpec::stringValue(                  \
+      JSPropertySpec::symbolToName(::JS::SymbolCode::symbol), flags, string)
 #define JS_INT32_PS(name, value, flags) \
-  JS_PS_VALUE_SPEC(name, INT32VALUE_WRAPPER(value), flags)
-#define JS_PS_END                                         \
-  JS_PS_ACCESSOR_SPEC(nullptr, JSNATIVE_WRAPPER(nullptr), \
-                      JSNATIVE_WRAPPER(nullptr), 0, 0)
+  JSPropertySpec::int32Value(name, flags, value)
+#define JS_PS_END JSPropertySpec::sentinel()
 
 /**
  * To define a native function, set call to a JSNativeWrapper. To define a

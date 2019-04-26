@@ -2724,7 +2724,7 @@ class AttrDefiner(PropertyDefiner):
 
     @staticmethod
     def formatSpec(fields):
-        return '  { "%s", %s, %s, %s }' % fields
+        return '  JSPropertySpec::nativeAccessors("%s", %s, %s, %s)' % fields
 
     def generateArray(self, array, name):
         if len(array) == 0:
