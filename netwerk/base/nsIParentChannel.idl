@@ -65,6 +65,16 @@ interface nsIParentChannel : nsIStreamListener
                                            in ACString aProvider,
                                            in ACString aFullHash);
 
+   /**
+   * Called to set matched tracking information when URL matches tracking annotation list.
+   * @param aList
+   *        Comma-separated list of tables that matched
+   * @param aFullHashes
+   *        Comma-separated list of base64 encoded full hashes that matched
+   */
+  [noscript] void setClassifierMatchedTrackingInfo(in ACString aLists,
+                                                   in ACString aFullHashes);
+
   /**
    * Called to notify the HttpChannelChild that the resource being loaded
    * has been classified.
