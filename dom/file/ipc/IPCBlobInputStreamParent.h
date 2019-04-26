@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_ipc_IPCBlobInputStreamParent_h
-#define mozilla_dom_ipc_IPCBlobInputStreamParent_h
+#ifndef mozilla_dom_IPCBlobInputStreamParent_h
+#define mozilla_dom_IPCBlobInputStreamParent_h
 
-#include "mozilla/ipc/PIPCBlobInputStreamParent.h"
+#include "mozilla/dom/PIPCBlobInputStreamParent.h"
 
 class nsIInputStream;
 
@@ -24,8 +24,7 @@ class NS_NO_VTABLE IPCBlobInputStreamParentCallback {
   virtual ~IPCBlobInputStreamParentCallback() {}
 };
 
-class IPCBlobInputStreamParent final
-    : public mozilla::ipc::PIPCBlobInputStreamParent {
+class IPCBlobInputStreamParent final : public PIPCBlobInputStreamParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamParent)
 
@@ -84,4 +83,4 @@ class IPCBlobInputStreamParent final
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_ipc_IPCBlobInputStreamParent_h
+#endif  // mozilla_dom_IPCBlobInputStreamParent_h

@@ -10,8 +10,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ipc/IPCBlobInputStream.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
+#include "mozilla/dom/IPCBlobInputStream.h"
+#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/InputStreamLengthHelper.h"
