@@ -67,6 +67,26 @@ EditorCommand::DoCommand(const char* aCommandName,
   return rv;
 }
 
+NS_IMETHODIMP
+EditorCommand::DoCommandParams(const char* aCommandName,
+                               nsICommandParams* aParams,
+                               nsISupports* aCommandRefCon) {
+  if (NS_WARN_IF(!aCommandName) || NS_WARN_IF(!aCommandRefCon)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult rv =
+      DoCommandParams(aCommandName, MOZ_KnownLive(aParams->AsCommandParams()),
+                      MOZ_KnownLive(*editor->AsTextEditor()));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "Failed to do command from nsIControllerCommand::DoCommandParams()");
+  return rv;
+}
+
 /******************************************************************************
  * mozilla::UndoCommand
  ******************************************************************************/
@@ -86,11 +106,10 @@ nsresult UndoCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Undo(1);
 }
 
-NS_IMETHODIMP
-UndoCommand::DoCommandParams(const char* aCommandName,
-                             nsICommandParams* aParams,
-                             nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult UndoCommand::DoCommandParams(const char* aCommandName,
+                                      nsCommandParams* aParams,
+                                      TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -121,11 +140,10 @@ nsresult RedoCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Redo(1);
 }
 
-NS_IMETHODIMP
-RedoCommand::DoCommandParams(const char* aCommandName,
-                             nsICommandParams* aParams,
-                             nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult RedoCommand::DoCommandParams(const char* aCommandName,
+                                      nsCommandParams* aParams,
+                                      TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -156,10 +174,10 @@ nsresult CutCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Cut();
 }
 
-NS_IMETHODIMP
-CutCommand::DoCommandParams(const char* aCommandName, nsICommandParams* aParams,
-                            nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult CutCommand::DoCommandParams(const char* aCommandName,
+                                     nsCommandParams* aParams,
+                                     TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -199,11 +217,10 @@ nsresult CutOrDeleteCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Cut();
 }
 
-NS_IMETHODIMP
-CutOrDeleteCommand::DoCommandParams(const char* aCommandName,
-                                    nsICommandParams* aParams,
-                                    nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult CutOrDeleteCommand::DoCommandParams(const char* aCommandName,
+                                             nsCommandParams* aParams,
+                                             TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -234,11 +251,10 @@ nsresult CopyCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Copy();
 }
 
-NS_IMETHODIMP
-CopyCommand::DoCommandParams(const char* aCommandName,
-                             nsICommandParams* aParams,
-                             nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult CopyCommand::DoCommandParams(const char* aCommandName,
+                                      nsCommandParams* aParams,
+                                      TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -278,11 +294,10 @@ nsresult CopyOrDeleteCommand::DoCommand(const char* aCommandName,
   return aTextEditor.Copy();
 }
 
-NS_IMETHODIMP
-CopyOrDeleteCommand::DoCommandParams(const char* aCommandName,
-                                     nsICommandParams* aParams,
-                                     nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult CopyOrDeleteCommand::DoCommandParams(const char* aCommandName,
+                                              nsCommandParams* aParams,
+                                              TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -314,11 +329,10 @@ nsresult PasteCommand::DoCommand(const char* aCommandName,
   return aTextEditor.PasteAsAction(nsIClipboard::kGlobalClipboard, true);
 }
 
-NS_IMETHODIMP
-PasteCommand::DoCommandParams(const char* aCommandName,
-                              nsICommandParams* aParams,
-                              nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult PasteCommand::DoCommandParams(const char* aCommandName,
+                                       nsCommandParams* aParams,
+                                       TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -350,17 +364,14 @@ nsresult PasteTransferableCommand::DoCommand(const char* aCommandName,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-PasteTransferableCommand::DoCommandParams(const char* aCommandName,
-                                          nsICommandParams* aParams,
-                                          nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
+nsresult PasteTransferableCommand::DoCommandParams(
+    const char* aCommandName, nsCommandParams* aParams,
+    TextEditor& aTextEditor) const {
+  if (NS_WARN_IF(!aParams)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsISupports> supports =
-      aParams->AsCommandParams()->GetISupports("transferable");
+  nsCOMPtr<nsISupports> supports = aParams->GetISupports("transferable");
   if (NS_WARN_IF(!supports)) {
     return NS_ERROR_FAILURE;
   }
@@ -370,11 +381,9 @@ PasteTransferableCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
   // We know textEditor is known-live here because we are holding a ref to it
   // via "editor".
-  nsresult rv = MOZ_KnownLive(textEditor)->PasteTransferable(trans);
+  nsresult rv = aTextEditor.PasteTransferable(trans);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -428,11 +437,10 @@ nsresult SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
   return aTextEditor.ToggleTextDirection();
 }
 
-NS_IMETHODIMP
-SwitchTextDirectionCommand::DoCommandParams(const char* aCommandName,
-                                            nsICommandParams* aParams,
-                                            nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult SwitchTextDirectionCommand::DoCommandParams(
+    const char* aCommandName, nsCommandParams* aParams,
+    TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -498,11 +506,10 @@ nsresult DeleteCommand::DoCommand(const char* aCommandName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DeleteCommand::DoCommandParams(const char* aCommandName,
-                               nsICommandParams* aParams,
-                               nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult DeleteCommand::DoCommandParams(const char* aCommandName,
+                                        nsCommandParams* aParams,
+                                        TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -541,11 +548,10 @@ nsresult SelectAllCommand::DoCommand(const char* aCommandName,
   return aTextEditor.SelectAll();
 }
 
-NS_IMETHODIMP
-SelectAllCommand::DoCommandParams(const char* aCommandName,
-                                  nsICommandParams* aParams,
-                                  nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult SelectAllCommand::DoCommandParams(const char* aCommandName,
+                                           nsCommandParams* aParams,
+                                           TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -671,11 +677,10 @@ nsresult SelectionMoveCommands::DoCommand(const char* aCommandName,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-SelectionMoveCommands::DoCommandParams(const char* aCommandName,
-                                       nsICommandParams* aParams,
-                                       nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult SelectionMoveCommands::DoCommandParams(const char* aCommandName,
+                                                nsCommandParams* aParams,
+                                                TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -714,35 +719,27 @@ nsresult InsertPlaintextCommand::DoCommand(const char* aCommandName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InsertPlaintextCommand::DoCommandParams(const char* aCommandName,
-                                        nsICommandParams* aParams,
-                                        nsISupports* aCommandRefCon) {
+nsresult InsertPlaintextCommand::DoCommandParams(
+    const char* aCommandName, nsCommandParams* aParams,
+    TextEditor& aTextEditor) const {
   if (NS_WARN_IF(!aParams)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // Get text to insert from command params
   nsAutoString text;
-  nsresult rv = aParams->AsCommandParams()->GetString(STATE_DATA, text);
+  nsresult rv = aParams->GetString(STATE_DATA, text);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
   // XXX InsertTextAsAction() is not same as OnInputText().  However, other
   //     commands to insert line break or paragraph separator use OnInput*().
   //     According to the semantics of those methods, using *AsAction() is
   //     better, however, this may not cause two or more placeholder
   //     transactions to the top transaction since its name may not be
   //     nsGkAtoms::TypingTxnName.
-  rv = textEditor->InsertTextAsAction(text);
+  rv = aTextEditor.InsertTextAsAction(text);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the text");
   return NS_OK;
 }
@@ -783,11 +780,10 @@ nsresult InsertParagraphCommand::DoCommand(const char* aCommandName,
   return htmlEditor->InsertParagraphSeparatorAsAction();
 }
 
-NS_IMETHODIMP
-InsertParagraphCommand::DoCommandParams(const char* aCommandName,
-                                        nsICommandParams* aParams,
-                                        nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult InsertParagraphCommand::DoCommandParams(
+    const char* aCommandName, nsCommandParams* aParams,
+    TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -826,11 +822,10 @@ nsresult InsertLineBreakCommand::DoCommand(const char* aCommandName,
   return htmlEditor->InsertLineBreakAsAction();
 }
 
-NS_IMETHODIMP
-InsertLineBreakCommand::DoCommandParams(const char* aCommandName,
-                                        nsICommandParams* aParams,
-                                        nsISupports* aCommandRefCon) {
-  return DoCommand(aCommandName, aCommandRefCon);
+nsresult InsertLineBreakCommand::DoCommandParams(
+    const char* aCommandName, nsCommandParams* aParams,
+    TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
@@ -871,24 +866,10 @@ nsresult PasteQuotationCommand::DoCommand(const char* aCommandName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PasteQuotationCommand::DoCommandParams(const char* aCommandName,
-                                       nsICommandParams* aParams,
-                                       nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  nsresult rv =
-      MOZ_KnownLive(textEditor)
-          ->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+nsresult PasteQuotationCommand::DoCommandParams(const char* aCommandName,
+                                                nsCommandParams* aParams,
+                                                TextEditor& aTextEditor) const {
+  return DoCommand(aCommandName, aTextEditor);
 }
 
 NS_IMETHODIMP
