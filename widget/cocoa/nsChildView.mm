@@ -186,6 +186,7 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 - (LayoutDeviceIntRegion)nativeDirtyRegionWithBoundingRect:(NSRect)aRect;
 - (BOOL)isUsingOpenGL;
 
+- (BOOL)hasRoundedBottomCorners;
 - (CGFloat)cornerRadius;
 - (void)clearCorners;
 
@@ -323,6 +324,7 @@ nsChildView::nsChildView()
       mViewTearDownLock("ChildViewTearDown"),
       mEffectsLock("WidgetEffects"),
       mShowsResizeIndicator(false),
+      mHasRoundedBottomCorners(false),
       mDevPixelCornerRadius{0},
       mIsCoveringTitlebar(false),
       mIsFullscreen(false),
@@ -1739,6 +1741,7 @@ void nsChildView::PrepareWindowEffects() {
   {
     MutexAutoLock lock(mEffectsLock);
     mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
+    mHasRoundedBottomCorners = [mView hasRoundedBottomCorners];
     CGFloat cornerRadius = [mView cornerRadius];
     mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
     mIsCoveringTitlebar = [mView isCoveringTitlebar];
@@ -2131,7 +2134,7 @@ void nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const LayoutDevic
     mCornerMaskImage->Draw(aManager, aRect.TopRight(), flipX);
   }
 
-  if (!mIsFullscreen) {
+  if (mHasRoundedBottomCorners && !mIsFullscreen) {
     // Mask the bottom corners.
     mCornerMaskImage->Draw(aManager, aRect.BottomLeft(), flipY);
     mCornerMaskImage->Draw(aManager, aRect.BottomRight(), flipY * flipX);
@@ -3339,6 +3342,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return mGLContext || mUsingOMTCompositor;
 }
 
+- (BOOL)hasRoundedBottomCorners {
+  return [[self window] respondsToSelector:@selector(bottomCornerRounded)] &&
+         [[self window] bottomCornerRounded];
+}
+
 - (CGFloat)cornerRadius {
   NSView* frameView = [[[self window] contentView] superview];
   if (!frameView || ![frameView respondsToSelector:@selector(roundedCornerRadius)]) return 4.0f;
@@ -3381,13 +3389,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
     NSRectFill(NSMakeRect(w - radius, 0, radius, radius));
   }
 
-  NSRectFill(NSMakeRect(0, h - radius, radius, radius));
-  NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
+  if ([self hasRoundedBottomCorners]) {
+    NSRectFill(NSMakeRect(0, h - radius, radius, radius));
+    NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
+  }
 }
 
 // This is the analog of nsChildView::MaybeDrawRoundedCorners for CGContexts.
 // We only need to mask the top corners here because Cocoa does the masking
-// for the window's bottom corners automatically.
+// for the window's bottom corners automatically (starting with 10.7).
 - (void)maskTopCornersInContext:(CGContextRef)aContext {
   CGFloat radius = [self cornerRadius];
   int32_t devPixelCornerRadius = mGeckoChild->CocoaPointsToDevPixels(radius);
