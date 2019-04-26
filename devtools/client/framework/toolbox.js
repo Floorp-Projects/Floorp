@@ -536,6 +536,7 @@ Toolbox.prototype = {
       this._addShortcuts();
       this._addKeysToWindow();
       this._addHostListeners();
+      this._addChromeEventHandlerEvents();
       this._registerOverlays();
 
       this._componentMount.addEventListener("keypress", this._onToolbarArrowKeypress);
@@ -1013,8 +1014,6 @@ Toolbox.prototype = {
   },
 
   _addHostListeners: function() {
-    this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
-    this.doc.addEventListener("focus", this._onFocus, true);
     this.win.addEventListener("unload", this.destroy);
     this.win.addEventListener("message", this._onBrowserMessage, true);
   },
@@ -1022,8 +1021,6 @@ Toolbox.prototype = {
   _removeHostListeners: function() {
     // The host iframe's contentDocument may already be gone.
     if (this.doc) {
-      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress);
-      this.doc.removeEventListener("focus", this._onFocus, true);
       this.win.removeEventListener("unload", this.destroy);
       this.win.removeEventListener("message", this._onBrowserMessage, true);
     }
@@ -2649,6 +2646,9 @@ Toolbox.prototype = {
       return null;
     }
 
+    // chromeEventHandler will change after swapping hosts, remove events relying on it.
+    this._removeChromeEventHandlerEvents();
+
     this.emit("host-will-change", hostType);
 
     // ToolboxHostManager is going to call swapFrameLoaders which mess up with
@@ -2672,6 +2672,9 @@ Toolbox.prototype = {
     this._buildDockOptions();
     this._addKeysToWindow();
 
+    // chromeEventHandler changed after swapping hosts, add again events relying on it.
+    this._addChromeEventHandlerEvents();
+
     // We blurred the tools at start of switchHost, but also when clicking on
     // host switching button. We now have to restore the focus.
     this.focusTool(this.currentToolId, true);
@@ -2680,6 +2683,43 @@ Toolbox.prototype = {
     this.telemetry.getHistogramById(HOST_HISTOGRAM).add(this._getTelemetryHostId());
 
     this.component.setCurrentHostType(hostType);
+  },
+
+  /**
+   * Attach events on the chromeEventHandler for the current window. When loaded in a
+   * frame with type set to "content", events will not bubble across frames. The
+   * chromeEventHandler does not have this limitation and will catch all events triggered
+   * on any of the frames under the devtools document.
+   *
+   * Events relying on the chromeEventHandler need to be added and removed at specific
+   * moments in the lifecycle of the toolbox, so all the events relying on it should be
+   * grouped here.
+   */
+  _addChromeEventHandlerEvents: function() {
+    if (!this.win || !this.win.docShell) {
+      return;
+    }
+
+    // win.docShell.chromeEventHandler might not be accessible anymore when removing the
+    // events, so we can't rely on a dynamic getter here.
+    // Keep a reference on the chromeEventHandler used to addEventListener to be sure we
+    // can remove the listeners afterwards.
+    this._chromeEventHandler = this.win.docShell.chromeEventHandler;
+
+    this._chromeEventHandler.addEventListener("keypress", this._splitConsoleOnKeypress);
+    this._chromeEventHandler.addEventListener("focus", this._onFocus, true);
+  },
+
+  _removeChromeEventHandlerEvents: function() {
+    if (!this._chromeEventHandler) {
+      return;
+    }
+
+    this._chromeEventHandler.removeEventListener("keypress",
+      this._splitConsoleOnKeypress);
+    this._chromeEventHandler.removeEventListener("focus", this._onFocus, true);
+
+    this._chromeEventHandler = null;
   },
 
   /**
@@ -3090,6 +3130,7 @@ Toolbox.prototype = {
         }, console.error)
         .then(() => {
           this._removeHostListeners();
+          this._removeChromeEventHandlerEvents();
 
           // `location` may already be 'invalid' if the toolbox document is
           // already in process of destruction. Otherwise if it is still
