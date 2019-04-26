@@ -32,7 +32,6 @@
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
-#include "nsICookieSettings.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"
 #include "nsThreadUtils.h"
@@ -127,8 +126,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
                      const nsACString& aNegotiatedExtensions);
 
   nsresult ParseURL(const nsAString& aURL);
-  nsresult InitializeConnection(nsIPrincipal* aPrincipal,
-                                nsICookieSettings* aCookieSettings);
+  nsresult InitializeConnection(nsIPrincipal* aPrincipal);
 
   // These methods when called can release the WebSocket object
   void FailConnection(uint16_t reasonCode,
@@ -1095,8 +1093,8 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
       return true;
     }
 
-    mConnectionFailed = NS_FAILED(mImpl->InitializeConnection(
-        doc->NodePrincipal(), mWorkerPrivate->CookieSettings()));
+    mConnectionFailed =
+        NS_FAILED(mImpl->InitializeConnection(doc->NodePrincipal()));
     return true;
   }
 
@@ -1105,8 +1103,7 @@ class ConnectRunnable final : public WebSocketMainThreadRunnable {
     MOZ_ASSERT(aTopLevelWorkerPrivate && !aTopLevelWorkerPrivate->GetWindow());
 
     mConnectionFailed = NS_FAILED(
-        mImpl->InitializeConnection(aTopLevelWorkerPrivate->GetPrincipal(),
-                                    mWorkerPrivate->CookieSettings()));
+        mImpl->InitializeConnection(aTopLevelWorkerPrivate->GetPrincipal()));
     return true;
   }
 
@@ -1261,13 +1258,11 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
       return nullptr;
     }
 
-    nsCOMPtr<Document> doc = webSocket->GetDocumentIfCurrent();
-
     // the constructor should throw a SYNTAX_ERROR only if it fails to parse the
     // url parameter, so don't throw if InitializeConnection fails, and call
     // onerror/onclose asynchronously
-    connectionFailed = NS_FAILED(webSocketImpl->InitializeConnection(
-        principal, doc ? doc->CookieSettings() : nullptr));
+    connectionFailed =
+        NS_FAILED(webSocketImpl->InitializeConnection(principal));
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1683,8 +1678,7 @@ class nsAutoCloseWS final {
   RefPtr<WebSocketImpl> mWebSocketImpl;
 };
 
-nsresult WebSocketImpl::InitializeConnection(
-    nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings) {
+nsresult WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mChannel, "mChannel should be null");
 
@@ -1728,7 +1722,7 @@ nsresult WebSocketImpl::InitializeConnection(
   MOZ_ASSERT(!doc || doc->NodePrincipal()->Equals(aPrincipal));
 
   rv = wsChannel->InitLoadInfo(doc, doc ? doc->NodePrincipal() : aPrincipal,
-                               aPrincipal, aCookieSettings,
+                               aPrincipal,
                                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                nsIContentPolicy::TYPE_WEBSOCKET);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
