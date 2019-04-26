@@ -26,7 +26,6 @@
 #include "video_engine/desktop_capture_impl.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_device_info.h"
-#include "modules/desktop_capture/app_capturer.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/video_capture/video_capture.h"
 
@@ -302,14 +301,7 @@ int32_t WindowDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
 
 VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(
     const int32_t id, const CaptureDeviceType type) {
-  if (type == CaptureDeviceType::Application) {
-    AppDeviceInfoImpl* pAppDeviceInfoImpl = new AppDeviceInfoImpl(id);
-    if (!pAppDeviceInfoImpl || pAppDeviceInfoImpl->Init()) {
-      delete pAppDeviceInfoImpl;
-      pAppDeviceInfoImpl = NULL;
-    }
-    return pAppDeviceInfoImpl;
-  } else if (type == CaptureDeviceType::Screen) {
+  if (type == CaptureDeviceType::Screen) {
     ScreenDeviceInfoImpl* pScreenDeviceInfoImpl = new ScreenDeviceInfoImpl(id);
     if (!pScreenDeviceInfoImpl || pScreenDeviceInfoImpl->Init()) {
       delete pScreenDeviceInfoImpl;
@@ -341,23 +333,7 @@ int32_t DesktopCaptureImpl::Init() {
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
 
-  if (_deviceType == CaptureDeviceType::Application) {
-    std::unique_ptr<DesktopCapturer> pAppCapturer =
-        DesktopCapturer::CreateAppCapturer(options);
-    if (!pAppCapturer) {
-      return -1;
-    }
-
-    DesktopCapturer::SourceId sourceId = atoi(_deviceUniqueId.c_str());
-    pAppCapturer->SelectSource(sourceId);
-
-    MouseCursorMonitor* pMouseCursorMonitor =
-        MouseCursorMonitor::CreateForScreen(options,
-                                            webrtc::kFullDesktopScreenId);
-    desktop_capturer_cursor_composer_ =
-        std::unique_ptr<DesktopAndCursorComposer>(new DesktopAndCursorComposer(
-            pAppCapturer.release(), pMouseCursorMonitor));
-  } else if (_deviceType == CaptureDeviceType::Screen) {
+  if (_deviceType == CaptureDeviceType::Screen) {
     std::unique_ptr<DesktopCapturer> pScreenCapturer =
         DesktopCapturer::CreateScreenCapturer(options);
     if (!pScreenCapturer.get()) {

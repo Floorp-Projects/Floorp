@@ -887,7 +887,6 @@ nsresult TransceiverImpl::ConfigureVideoCodecMode(
   switch (source) {
     case dom::MediaSourceEnum::Browser:
     case dom::MediaSourceEnum::Screen:
-    case dom::MediaSourceEnum::Application:
     case dom::MediaSourceEnum::Window:
       mode = webrtc::kScreensharing;
       break;

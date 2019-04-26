@@ -310,7 +310,6 @@ rtc_static_library("desktop_capture_generic") {
     defines = [ "MULTI_MONITOR_SCREENSHARE" ]
 
     sources += [
-      "app_capturer_win.cc",
       "desktop_device_info.cc",
       "desktop_device_info.h",
       "win/desktop_device_info_win.cc",
@@ -319,7 +318,6 @@ rtc_static_library("desktop_capture_generic") {
 
     if (is_mac) {
       sources += [
-        "app_capturer_mac.mm",
         "mac/desktop_device_info_mac.mm",
       ]
     }
@@ -338,10 +336,6 @@ rtc_static_library("desktop_capture_generic") {
       "screen_capturer_linux.cc",
       "window_capturer_linux.cc",
     ]
-
-    if (build_with_mozilla) {
-      sources += [ "app_capturer_linux.cc" ]
-    }
   }
 
   if (use_x11) {

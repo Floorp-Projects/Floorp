@@ -18,7 +18,6 @@ enum CaptureEngine : int {
   ScreenEngine,
   BrowserEngine,
   WinEngine,
-  AppEngine,
   CameraEngine,
   MaxEngine
 };
