@@ -525,26 +525,18 @@ Toolbox.prototype = {
           this.openTextBoxContextMenu(e.screenX, e.screenY);
         }
       });
-
-      this.shortcuts = new KeyShortcuts({
-        window: this.doc.defaultView,
-      });
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
       this._mountReactComponent();
       this._buildDockOptions();
-      this._buildOptions();
       this._buildTabs();
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
+      this._addShortcuts();
       this._addKeysToWindow();
-      this._addReloadKeys();
       this._addHostListeners();
       this._registerOverlays();
-      if (!this._hostOptions || this._hostOptions.zoom === true) {
-        ZoomKeys.register(this.win);
-      }
 
       this._componentMount.addEventListener("keypress", this._onToolbarArrowKeypress);
       this._componentMount.setAttribute("aria-label", L10N.getStr("toolbox.label"));
@@ -615,6 +607,72 @@ Toolbox.prototype = {
       // While the exception stack is correctly printed in the Browser console when
       // passing `e` to console.error, it is not on the stdout, so print it via dump.
       dump(e.stack + "\n");
+    });
+  },
+
+  _addShortcuts: function() {
+    // Create shortcuts instance for the toolbox
+    this.shortcuts = new KeyShortcuts({
+      window: this.doc.defaultView,
+    });
+
+    // Add specialized shortcuts.
+    this._addFrameButtonShortcut();
+    this._addNavigationShortcuts();
+    this._addOptionsShortcut();
+    this._addReloadShortcuts();
+
+    // Add zoom-related shortcuts.
+    if (!this._hostOptions || this._hostOptions.zoom === true) {
+      ZoomKeys.register(this.win);
+    }
+  },
+
+  _addFrameButtonShortcut: function() {
+    // Listen for the shortcut key to show the frame list
+    this.shortcuts.on(L10N.getStr("toolbox.showFrames.key"), event => {
+      if (event.target.id === "command-button-frames") {
+        event.target.click();
+      }
+    });
+  },
+
+  _addNavigationShortcuts: function() {
+    this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
+                 event => {
+                   this.selectNextTool();
+                   event.preventDefault();
+                 });
+    this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
+                 event => {
+                   this.selectPreviousTool();
+                   event.preventDefault();
+                 });
+    this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
+                 event => {
+                   this.switchToPreviousHost();
+                   event.preventDefault();
+                 });
+  },
+
+  _addOptionsShortcut: function() {
+    this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
+  },
+
+  _addReloadShortcuts: function() {
+    [
+      ["reload", false],
+      ["reload2", false],
+      ["forceReload", true],
+      ["forceReload2", true],
+    ].forEach(([id, force]) => {
+      const key = L10N.getStr("toolbox." + id + ".key");
+      this.shortcuts.on(key, event => {
+        this.reloadTarget(force);
+
+        // Prevent Firefox shortcuts from reloading the page
+        event.preventDefault();
+      });
     });
   },
 
@@ -922,10 +980,6 @@ Toolbox.prototype = {
     return button;
   },
 
-  _buildOptions: function() {
-    this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
-  },
-
   _splitConsoleOnKeypress: function(e) {
     if (e.keyCode === KeyCodes.DOM_VK_ESCAPE) {
       this.toggleSplitConsole();
@@ -958,42 +1012,7 @@ Toolbox.prototype = {
     });
   },
 
-  _addReloadKeys: function() {
-    [
-      ["reload", false],
-      ["reload2", false],
-      ["forceReload", true],
-      ["forceReload2", true],
-    ].forEach(([id, force]) => {
-      const key = L10N.getStr("toolbox." + id + ".key");
-      this.shortcuts.on(key, event => {
-        this.reloadTarget(force);
-
-        // Prevent Firefox shortcuts from reloading the page
-        event.preventDefault();
-      });
-    });
-  },
-
   _addHostListeners: function() {
-    // Add navigation keys
-    this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
-                 event => {
-                   this.selectNextTool();
-                   event.preventDefault();
-                 });
-    this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
-                 event => {
-                   this.selectPreviousTool();
-                   event.preventDefault();
-                 });
-    this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
-                 event => {
-                   this.switchToPreviousHost();
-                   event.preventDefault();
-                 });
-
-    // Add event listeners
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
     this.doc.addEventListener("focus", this._onFocus, true);
     this.win.addEventListener("unload", this.destroy);
@@ -1327,13 +1346,6 @@ Toolbox.prototype = {
         const isOnOptionsPanel = this.currentToolId === "options";
         return hasFrames || isOnOptionsPanel;
       },
-    });
-
-    // Listen for the shortcut key to show the frame list
-    this.shortcuts.on(L10N.getStr("toolbox.showFrames.key"), event => {
-      if (event.target.id === "command-button-frames") {
-        event.target.click();
-      }
     });
 
     return this.frameButton;
