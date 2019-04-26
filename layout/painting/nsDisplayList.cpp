@@ -1066,8 +1066,8 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
   nsRect visible = aVisibleRect;
   nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
 
-#ifdef MOZ_WIDGET_ANDROID
-  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+  if (gfxPrefs::APZAllowZooming() &&
+      nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       aBuilder->IsPaintingToWindow()) {
     // We want to ensure that fixed position elements are visible when
     // being async scrolled, so we paint them at the size of the larger
@@ -1088,7 +1088,6 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
     }
     visible = dirtyRectRelativeToDirtyFrame;
   }
-#endif
 
   *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
   visible -= aFrame->GetPosition();
