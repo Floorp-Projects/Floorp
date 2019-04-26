@@ -811,12 +811,6 @@ std::vector<uint16_t> TransportLayerDtls::GetDefaultSrtpCiphers() {
 }
 
 void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
-  if (state <= state_) {
-    MOZ_MTLOG(ML_ERROR, "Lower layer state is going backwards from ours");
-    TL_SET_STATE(TS_ERROR);
-    return;
-  }
-
   switch (state) {
     case TS_NONE:
       MOZ_ASSERT(false);  // Can't happen
@@ -833,15 +827,22 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
       break;
 
     case TS_OPEN:
-      MOZ_MTLOG(ML_INFO, LAYER_INFO << "Lower layer is now open; starting TLS");
-      // Async, since the ICE layer might need to send a STUN response, and we
-      // don't want the handshake to start until that is sent.
-      TL_SET_STATE(TS_CONNECTING);
-      timer_->Cancel();
-      timer_->SetTarget(target_);
-      timer_->InitWithNamedFuncCallback(TimerCallback, this, 0,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "TransportLayerDtls::TimerCallback");
+      if (timer_) {
+        MOZ_MTLOG(ML_INFO,
+                  LAYER_INFO << "Lower layer is now open; starting TLS");
+        timer_->Cancel();
+        timer_->SetTarget(target_);
+        // Async, since the ICE layer might need to send a STUN response, and we
+        // don't want the handshake to start until that is sent.
+        timer_->InitWithNamedFuncCallback(TimerCallback, this, 0,
+                                          nsITimer::TYPE_ONE_SHOT,
+                                          "TransportLayerDtls::TimerCallback");
+        TL_SET_STATE(TS_CONNECTING);
+      } else {
+        // We have already completed DTLS. Can happen if the ICE layer failed
+        // due to a loss of network, and then recovered.
+        TL_SET_STATE(TS_OPEN);
+      }
       break;
 
     case TS_CLOSED:
@@ -857,6 +858,11 @@ void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
 }
 
 void TransportLayerDtls::Handshake() {
+  if (!timer_) {
+    // We are done with DTLS, regardless of the state changes of lower layers
+    return;
+  }
+
   // Clear the retransmit timer
   timer_->Cancel();
 
@@ -883,6 +889,7 @@ void TransportLayerDtls::Handshake() {
     TL_SET_STATE(TS_OPEN);
 
     RecordTlsTelemetry();
+    timer_ = nullptr;
   } else {
     int32_t err = PR_GetError();
     switch (err) {
@@ -1043,7 +1050,7 @@ void TransportLayerDtls::GetDecryptedPackets() {
 
 void TransportLayerDtls::SetState(State state, const char *file,
                                   unsigned line) {
-  if (state > state_) {
+  if (timer_) {
     switch (state) {
       case TS_NONE:
       case TS_INIT:
@@ -1061,8 +1068,6 @@ void TransportLayerDtls::SetState(State state, const char *file,
         }
         break;
     }
-  } else {
-    MOZ_ASSERT(false, "Invalid state transition");
   }
 
   TransportLayer::SetState(state, file, line);
