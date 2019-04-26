@@ -354,6 +354,9 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
   (allow user-preference-read (preference-domain "com.nvidia.OpenGL"))
   (allow mach-lookup
       (global-name "com.apple.cvmsServ"))
+  (if (>= macosMinorVersion 14)
+    (allow mach-lookup
+      (global-name "com.apple.MTLCompilerService")))
   (allow iokit-open
       (iokit-connection "IOAccelerator")
       (iokit-user-client-class "IOAccelerationUserClient")
