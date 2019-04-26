@@ -164,10 +164,12 @@ nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
        "sb=%" PRIu64 " [this=%p]\n",
        gKeyName[aCategory].get(), aBytesRead, aBytesSent, this));
 
-  // Telemetry supports uint32_t only.
-  auto total = CLAMP_U32(CLAMP_U32(aBytesRead) + CLAMP_U32(aBytesSent));
-  Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED,
-                       NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
+  // Telemetry supports uint32_t only, and we send KB here.
+  auto total = CLAMP_U32((aBytesRead >> 10) + (aBytesSent >> 10));
+  if (aBytesRead || aBytesSent) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_KB,
+                         NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
+  }
   return NS_OK;
 }
 
