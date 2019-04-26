@@ -17,6 +17,8 @@
 use std::error;
 use std::fmt;
 
+use cranelift_wasm::WasmError;
+
 type DashError = Box<error::Error>;
 pub type DashResult<T> = Result<T, DashError>;
 
@@ -43,5 +45,11 @@ impl fmt::Display for BasicError {
 impl error::Error for BasicError {
     fn description(&self) -> &str {
         &self.msg
+    }
+}
+
+impl Into<WasmError> for BasicError {
+    fn into(self) -> WasmError {
+        WasmError::User(self.msg)
     }
 }
