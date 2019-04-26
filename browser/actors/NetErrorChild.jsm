@@ -59,6 +59,10 @@ const PREF_SERVICES_SETTINGS_LAST_FETCHED       = "services.settings.last_update
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
+let formatter = new Services.intl.DateTimeFormat(undefined, {
+  dateStyle: "long",
+});
+
 function getSerializedSecurityInfo(docShell) {
   let serhelper = Cc["@mozilla.org/network/serialization-helper;1"]
                     .getService(Ci.nsISerializationHelper);
@@ -273,23 +277,25 @@ class NetErrorChild extends ActorChild {
     if (input.data.isNotValidAtThisTime) {
       let nowTime = new Date().getTime() * 1000;
       let msg = "";
+      let notAfterLocalTime = formatter.format(new Date(input.data.validity.notAfterLocalTime));
       if (input.data.validity.notBefore) {
+        let notBeforeLocalTime = formatter.format(new Date(input.data.validity.notBeforeLocalTime));
         if (nowTime > input.data.validity.notAfter) {
           technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
-                                                  [hostString], 1);
+          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
+                                                  [hostString, notAfterLocalTime], 2);
           msg += "\n";
         } else {
           technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow2",
-                                                    [hostString], 1);
+          msg += gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow3",
+                                                    [hostString, notBeforeLocalTime], 2);
           msg += "\n";
          }
         } else {
           // If something goes wrong, we assume the cert expired.
           technicalInfo.textContent = "";
-          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow2",
-                                                    [hostString], 1);
+          msg += gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
+                                                    [hostString, notAfterLocalTime], 2);
           msg += "\n";
       }
       technicalInfo.append(msg);
@@ -480,9 +486,6 @@ class NetErrorChild extends ActorChild {
 
         let now = Date.now();
         let certRange = this._getCertValidityRange(docShell);
-        let formatter = new Services.intl.DateTimeFormat(undefined, {
-          dateStyle: "short",
-        });
 
         let approximateDate = now - difference * 1000;
         // If the difference is more than a day, we last fetched the date in the last 5 days,
