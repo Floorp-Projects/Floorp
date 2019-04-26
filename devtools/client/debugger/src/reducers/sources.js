@@ -190,7 +190,7 @@ function update(
         const { id, url } = action.source;
         const { isBlackBoxed } = ((action: any): DonePromiseAction).value;
         updateBlackBoxList(url, isBlackBoxed);
-        return updateSource(state, { id, isBlackBoxed });
+        return updateBlackboxFlag(state, id, isBlackBoxed);
       }
       break;
 
@@ -208,30 +208,6 @@ function update(
   }
 
   return state;
-}
-
-/*
- * Update a source when its state changes
- * e.g. the text was loaded, it was blackboxed
- */
-function updateSource(state: SourcesState, source: Object) {
-  const existingSource = state.sources[source.id];
-
-  // If there is no existing version of the source, it means that we probably
-  // ended up here as a result of an async action, and the sources were cleared
-  // between the action starting and the source being updated.
-  if (!existingSource) {
-    // TODO: We may want to consider throwing here once we have a better
-    // handle on async action flow control.
-    return state;
-  }
-  return {
-    ...state,
-    sources: {
-      ...state.sources,
-      [source.id]: { ...existingSource, ...source }
-    }
-  };
 }
 
 /*
@@ -407,6 +383,37 @@ function clearSourceMaps(
   }
 
   return state;
+}
+
+/*
+ * Update a source when its state changes
+ * e.g. the text was loaded, it was blackboxed
+ */
+function updateBlackboxFlag(
+  state: SourcesState,
+  sourceId: SourceId,
+  isBlackBoxed: boolean
+): SourcesState {
+  const existingSource = state.sources[sourceId];
+
+  // If there is no existing version of the source, it means that we probably
+  // ended up here as a result of an async action, and the sources were cleared
+  // between the action starting and the source being updated.
+  if (!existingSource) {
+    // TODO: We may want to consider throwing here once we have a better
+    // handle on async action flow control.
+    return state;
+  }
+  return {
+    ...state,
+    sources: {
+      ...state.sources,
+      [sourceId]: {
+        ...existingSource,
+        isBlackBoxed
+      }
+    }
+  };
 }
 
 function updateBlackBoxList(url, isBlackBoxed) {
