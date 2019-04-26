@@ -499,8 +499,8 @@ bool IonInstanceOfIC::update(JSContext* cx, HandleScript outerScript,
                              HandleObject rhs, bool* res) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStubOld<InstanceOfIRGenerator, IonInstanceOfIC>(cx, ic, ionScript,
-                                                              lhs, rhs);
+  TryAttachIonStub<InstanceOfIRGenerator, IonInstanceOfIC>(cx, ic, ionScript,
+                                                           lhs, rhs);
 
   return HasInstance(cx, rhs, lhs, res);
 }

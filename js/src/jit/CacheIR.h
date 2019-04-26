@@ -2309,7 +2309,7 @@ class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
   InstanceOfIRGenerator(JSContext*, HandleScript, jsbytecode*, ICState::Mode,
                         HandleValue, HandleObject);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII TypeOfIRGenerator : public IRGenerator {

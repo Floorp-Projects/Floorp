@@ -5480,9 +5480,9 @@ bool DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame,
   // for use during Ion compilation.
   EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
 
-  TryAttachStubOld<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub,
-                                          BaselineCacheIRStubKind::Regular, lhs,
-                                          obj);
+  TryAttachStub<InstanceOfIRGenerator>("InstanceOf", cx, frame, stub,
+                                       BaselineCacheIRStubKind::Regular, lhs,
+                                       obj);
   return true;
 }
 
