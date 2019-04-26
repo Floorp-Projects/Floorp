@@ -7,7 +7,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
 <window title="Mozilla Bug 683852"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <button value="testbutton" id="testbutton"/>
+  <xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl"
+                xmlns:xul="http://www.mozilla.org/keymaster/gaktekeeper/there.is.only.xul">
+    <xbl:binding id="test">
+      <xbl:content><xul:box anonid="xbl-anon">Anonymous</xul:box></xbl:content>
+    </xbl:binding>
+  </xbl:bindings>
+  <box id="xbl-host" style="-moz-binding: url(#test)"/>
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=683852"
@@ -25,14 +32,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
   function startTest() {
     is(document.contains(document), true, "Document should contain itself!");
 
-    var tb = document.getElementById("testbutton");
-    is(document.contains(tb), true, "Document should contain element in it!");
-    is(tb.contains(tb), true, "Element should contain itself.")
-    var anon = document.getAnonymousElementByAttribute(tb, "anonid", "button-box");
+    let box = document.getElementById("xbl-host");
+    is(document.contains(box), true, "Document should contain element in it!");
+    is(box.contains(box), true, "Element should contain itself.")
+    let anon = document.getAnonymousElementByAttribute(box, "anonid", "xbl-anon");
     is(document.contains(anon), false, "Document should not contain anonymous element in it!");
-    is(tb.contains(anon), false, "Element should not contain anonymous element in it!");
+    is(box.contains(anon), false, "Element should not contain anonymous element in it!");
     is(anon.contains(anon), true, "Anonymous element should contain itself.")
-    is(document.documentElement.contains(tb), true, "Element should contain element in it!");
+    is(document.documentElement.contains(box), true, "Element should contain element in it!");
     is(document.contains(document.createElement("foo")), false, "Document shouldn't contain element which is't in the document");
     is(document.contains(document.createTextNode("foo")), false, "Document shouldn't contain text node which is't in the document");
 

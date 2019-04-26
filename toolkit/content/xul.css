@@ -105,16 +105,6 @@ label html|span.accesskey {
   text-decoration: underline;
 }
 
-/********** button **********/
-
-button {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button");
-}
-
-button[type="menu"] {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
-}
-
 /********** toolbarbutton **********/
 
 toolbarbutton {
@@ -664,8 +654,6 @@ tabmodalprompt {
   text-shadow: none;
 }
 
-.button-highlightable-text:not([highlightable="true"]),
-.button-text[highlightable="true"],
 .menulist-highlightable-label:not([highlightable="true"]),
 .menulist-label[highlightable="true"],
 .menu-iconic-highlightable-text:not([highlightable="true"]),
