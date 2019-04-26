@@ -197,15 +197,33 @@ var Policies = {
                 log.error(`Unable to read certificate - ${certfile.path}`);
                 return;
               }
-              let cert = reader.result;
+              let certFile = reader.result;
+              let cert;
               try {
-                if (/-----BEGIN CERTIFICATE-----/.test(cert)) {
-                  gCertDB.addCertFromBase64(pemToBase64(cert), "CTu,CTu,");
-                } else {
-                  gCertDB.addCert(cert, "CTu,CTu,");
-                }
+                cert = gCertDB.constructX509(certFile);
               } catch (e) {
-                log.error(`Unable to add certificate - ${certfile.path}`);
+                try {
+                  // It might be PEM instead of DER.
+                  cert = gCertDB.constructX509FromBase64(pemToBase64(certFile));
+                } catch (ex) {
+                  log.error(`Unable to add certificate - ${certfile.path}`);
+                }
+              }
+              let now = Date.now() / 1000;
+              if (cert) {
+                gCertDB.asyncVerifyCertAtTime(cert, 0x0008 /* certificateUsageSSLCA */,
+                                              0, null, now, (aPRErrorCode, aVerifiedChain, aHasEVPolicy) => {
+                  if (aPRErrorCode == Cr.NS_OK) {
+                    // Certificate is already installed.
+                    return;
+                  }
+                  try {
+                    gCertDB.addCert(certFile, "CT,CT,");
+                  } catch (e) {
+                    // It might be PEM instead of DER.
+                    gCertDB.addCertFromBase64(pemToBase64(certFile), "CT,CT,");
+                  }
+                });
               }
             };
             reader.readAsBinaryString(file);
