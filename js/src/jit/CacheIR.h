@@ -2509,7 +2509,7 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
   NewObjectIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                        ICState::Mode, JSOp op, HandleObject templateObj);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 static inline uint32_t SimpleTypeDescrKey(SimpleTypeDescr* descr) {

@@ -118,30 +118,6 @@ void IonIC::trace(JSTracer* trc) {
 // This helper handles ICState updates/transitions while attaching CacheIR
 // stubs.
 template <typename IRGenerator, typename IC, typename... Args>
-static void TryAttachIonStubOld(JSContext* cx, IC* ic, IonScript* ionScript,
-                                Args&&... args) {
-  if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
-  }
-
-  if (ic->state().canAttachStub()) {
-    RootedScript script(cx, ic->script());
-    bool attached = false;
-    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
-                    std::forward<Args>(args)...);
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
-    }
-    if (!attached) {
-      ic->state().trackNotAttached();
-    }
-  }
-}
-
-// This helper handles ICState updates/transitions while attaching CacheIR
-// stubs.
-template <typename IRGenerator, typename IC, typename... Args>
 static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
                              Args&&... args) {
   if (ic->state().maybeTransition()) {

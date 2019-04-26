@@ -6607,11 +6607,11 @@ void NewObjectIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool NewObjectIRGenerator::tryAttachStub() {
+AttachDecision NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
   if (templateObject_->as<PlainObject>().hasDynamicSlots()) {
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Don't attach stub if group is pretenured, as the stub
@@ -6619,12 +6619,12 @@ bool NewObjectIRGenerator::tryAttachStub() {
   AutoSweepObjectGroup sweep(templateObject_->group());
   if (templateObject_->group()->shouldPreTenure(sweep)) {
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
   // Stub doesn't support metadata builder
   if (cx_->realm()->hasAllocationMetadataBuilder()) {
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.guardNoAllocationMetadataBuilder();
@@ -6633,7 +6633,7 @@ bool NewObjectIRGenerator::tryAttachStub() {
   writer.returnFromIC();
 
   trackAttached("NewObjectWithTemplate");
-  return true;
+  return AttachDecision::Attach;
 }
 
 #ifdef JS_SIMULATOR
