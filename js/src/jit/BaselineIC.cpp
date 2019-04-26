@@ -2594,9 +2594,9 @@ bool DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub,
     return false;
   }
 
-  TryAttachStubOld<HasPropIRGenerator>("In", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Regular,
-                                       CacheKind::In, key, objValue);
+  TryAttachStub<HasPropIRGenerator>("In", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Regular,
+                                    CacheKind::In, key, objValue);
 
   RootedObject obj(cx, &objValue.toObject());
   bool cond = false;
@@ -2637,9 +2637,9 @@ bool DoHasOwnFallback(JSContext* cx, BaselineFrame* frame,
 
   FallbackICSpew(cx, stub, "HasOwn");
 
-  TryAttachStubOld<HasPropIRGenerator>("HasOwn", cx, frame, stub,
-                                       BaselineCacheIRStubKind::Regular,
-                                       CacheKind::HasOwn, keyValue, objValue);
+  TryAttachStub<HasPropIRGenerator>("HasOwn", cx, frame, stub,
+                                    BaselineCacheIRStubKind::Regular,
+                                    CacheKind::HasOwn, keyValue, objValue);
 
   bool found;
   if (!HasOwnProperty(cx, objValue, keyValue, &found)) {

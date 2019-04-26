@@ -2781,16 +2781,17 @@ HasPropIRGenerator::HasPropIRGenerator(JSContext* cx, HandleScript script,
                                        HandleValue val)
     : IRGenerator(cx, script, pc, cacheKind, mode), val_(val), idVal_(idVal) {}
 
-bool HasPropIRGenerator::tryAttachDense(HandleObject obj, ObjOperandId objId,
-                                        uint32_t index,
-                                        Int32OperandId indexId) {
+AttachDecision HasPropIRGenerator::tryAttachDense(HandleObject obj,
+                                                  ObjOperandId objId,
+                                                  uint32_t index,
+                                                  Int32OperandId indexId) {
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (!nobj->containsDenseElement(index)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Guard shape to ensure object class is NativeObject.
@@ -2799,24 +2800,25 @@ bool HasPropIRGenerator::tryAttachDense(HandleObject obj, ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("DenseHasProp");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
-                                            ObjOperandId objId, uint32_t index,
-                                            Int32OperandId indexId) {
+AttachDecision HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
+                                                      ObjOperandId objId,
+                                                      uint32_t index,
+                                                      Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (nobj->containsDenseElement(index)) {
-    return false;
+    return AttachDecision::NoAction;
   }
   if (!CanAttachDenseElementHole(nobj, hasOwn)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Guard shape to ensure class is NativeObject and to prevent non-dense
@@ -2835,22 +2837,23 @@ bool HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("DenseHasPropHole");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                                         Int32OperandId indexId) {
+AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
+                                                   ObjOperandId objId,
+                                                   Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
   if (!obj->as<NativeObject>().isIndexed()) {
-    return false;
+    return AttachDecision::NoAction;
   }
   if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), hasOwn,
                                  /* allowIndexedReceiver = */ true)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Guard that this is a native object.
@@ -2869,12 +2872,13 @@ bool HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("Sparse");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
-                                            ObjOperandId objId, HandleId key,
-                                            ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
+                                                      ObjOperandId objId,
+                                                      HandleId key,
+                                                      ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   JSObject* holder = nullptr;
@@ -2882,56 +2886,51 @@ bool HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
 
   if (hasOwn) {
     if (!LookupOwnPropertyPure(cx_, obj, key, &prop)) {
-      return false;
+      return AttachDecision::NoAction;
     }
 
     holder = obj;
   } else {
     if (!LookupPropertyPure(cx_, obj, key, &holder, &prop)) {
-      return false;
+      return AttachDecision::NoAction;
     }
   }
   if (!prop) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
-  if (tryAttachMegamorphic(objId, keyId)) {
-    return true;
-  }
-  if (tryAttachNative(obj, objId, key, keyId, prop, holder)) {
-    return true;
-  }
-  if (tryAttachTypedObject(obj, objId, key, keyId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
+  TRY_ATTACH(tryAttachNative(obj, objId, key, keyId, prop, holder));
+  TRY_ATTACH(tryAttachTypedObject(obj, objId, key, keyId));
 
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId,
-                                              ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId,
+                                                        ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   if (mode_ != ICState::Mode::Megamorphic) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.megamorphicHasPropResult(objId, keyId, hasOwn);
   writer.returnFromIC();
   trackAttached("MegamorphicHasProp");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachNative(JSObject* obj, ObjOperandId objId,
-                                         jsid key, ValOperandId keyId,
-                                         PropertyResult prop,
-                                         JSObject* holder) {
+AttachDecision HasPropIRGenerator::tryAttachNative(JSObject* obj,
+                                                   ObjOperandId objId, jsid key,
+                                                   ValOperandId keyId,
+                                                   PropertyResult prop,
+                                                   JSObject* holder) {
   if (!prop.isNativeProperty()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!IsCacheableProtoChain(obj, holder)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Maybe<ObjOperandId> tempId;
@@ -2941,14 +2940,14 @@ bool HasPropIRGenerator::tryAttachNative(JSObject* obj, ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("NativeHasProp");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
-                                             ObjOperandId objId,
-                                             Int32OperandId indexId) {
+AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
+                                                       ObjOperandId objId,
+                                                       Int32OperandId indexId) {
   if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
@@ -2964,17 +2963,19 @@ bool HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("TypedArrayObject");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
-                                              jsid key, ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachTypedObject(JSObject* obj,
+                                                        ObjOperandId objId,
+                                                        jsid key,
+                                                        ValOperandId keyId) {
   if (!obj->is<TypedObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!obj->as<TypedObject>().typeDescr().hasProperty(cx_->names(), key)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   emitIdGuard(keyId, key);
@@ -2983,12 +2984,11 @@ bool HasPropIRGenerator::tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
   writer.returnFromIC();
 
   trackAttached("TypedObjectHasProp");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachSlotDoesNotExist(JSObject* obj,
-                                                   ObjOperandId objId, jsid key,
-                                                   ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachSlotDoesNotExist(
+    JSObject* obj, ObjOperandId objId, jsid key, ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   emitIdGuard(keyId, key);
@@ -3002,44 +3002,41 @@ bool HasPropIRGenerator::tryAttachSlotDoesNotExist(JSObject* obj,
   writer.returnFromIC();
 
   trackAttached("DoesNotExist");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj,
-                                               ObjOperandId objId, HandleId key,
-                                               ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj,
+                                                         ObjOperandId objId,
+                                                         HandleId key,
+                                                         ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   // Check that property doesn't exist on |obj| or it's prototype chain. These
   // checks allow Native/Typed objects with a NativeObject prototype
-  // chain. They return false if unknown such as resolve hooks or proxies.
+  // chain. They return NoAction if unknown such as resolve hooks or proxies.
   if (hasOwn) {
     if (!CheckHasNoSuchOwnProperty(cx_, obj, key)) {
-      return false;
+      return AttachDecision::NoAction;
     }
   } else {
     if (!CheckHasNoSuchProperty(cx_, obj, key)) {
-      return false;
+      return AttachDecision::NoAction;
     }
   }
 
-  if (tryAttachMegamorphic(objId, keyId)) {
-    return true;
-  }
-  if (tryAttachSlotDoesNotExist(obj, objId, key, keyId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
+  TRY_ATTACH(tryAttachSlotDoesNotExist(obj, objId, key, keyId));
 
-  return false;
+  return AttachDecision::NoAction;
 }
 
-bool HasPropIRGenerator::tryAttachProxyElement(HandleObject obj,
-                                               ObjOperandId objId,
-                                               ValOperandId keyId) {
+AttachDecision HasPropIRGenerator::tryAttachProxyElement(HandleObject obj,
+                                                         ObjOperandId objId,
+                                                         ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   if (!obj->is<ProxyObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.guardIsProxy(objId);
@@ -3047,10 +3044,10 @@ bool HasPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("ProxyHasProp");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool HasPropIRGenerator::tryAttachStub() {
+AttachDecision HasPropIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::In || cacheKind_ == CacheKind::HasOwn);
 
   AutoAssertNoPendingException aanpe(cx_);
@@ -3061,57 +3058,43 @@ bool HasPropIRGenerator::tryAttachStub() {
 
   if (!val_.isObject()) {
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
   RootedObject obj(cx_, &val_.toObject());
   ObjOperandId objId = writer.guardIsObject(valId);
 
   // Optimize Proxies
-  if (tryAttachProxyElement(obj, objId, keyId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachProxyElement(obj, objId, keyId));
 
   RootedId id(cx_);
   bool nameOrSymbol;
   if (!ValueToNameOrSymbolId(cx_, idVal_, &id, &nameOrSymbol)) {
     cx_->clearPendingException();
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (nameOrSymbol) {
-    if (tryAttachNamedProp(obj, objId, id, keyId)) {
-      return true;
-    }
-    if (tryAttachDoesNotExist(obj, objId, id, keyId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachNamedProp(obj, objId, id, keyId));
+    TRY_ATTACH(tryAttachDoesNotExist(obj, objId, id, keyId));
 
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
 
   uint32_t index;
   Int32OperandId indexId;
   if (maybeGuardInt32Index(idVal_, keyId, &index, &indexId)) {
-    if (tryAttachDense(obj, objId, index, indexId)) {
-      return true;
-    }
-    if (tryAttachDenseHole(obj, objId, index, indexId)) {
-      return true;
-    }
-    if (tryAttachTypedArray(obj, objId, indexId)) {
-      return true;
-    }
-    if (tryAttachSparse(obj, objId, indexId)) {
-      return true;
-    }
+    TRY_ATTACH(tryAttachDense(obj, objId, index, indexId));
+    TRY_ATTACH(tryAttachDenseHole(obj, objId, index, indexId));
+    TRY_ATTACH(tryAttachTypedArray(obj, objId, indexId));
+    TRY_ATTACH(tryAttachSparse(obj, objId, indexId));
 
     trackAttached(IRGenerator::NotAttached);
-    return false;
+    return AttachDecision::NoAction;
   }
 
   trackAttached(IRGenerator::NotAttached);
-  return false;
+  return AttachDecision::NoAction;
 }
 
 void HasPropIRGenerator::trackAttached(const char* name) {

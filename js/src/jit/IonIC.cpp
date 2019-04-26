@@ -470,7 +470,7 @@ bool IonHasOwnIC::update(JSContext* cx, HandleScript outerScript,
                          int32_t* res) {
   IonScript* ionScript = outerScript->ionScript();
 
-  TryAttachIonStubOld<HasPropIRGenerator, IonHasOwnIC>(
+  TryAttachIonStub<HasPropIRGenerator, IonHasOwnIC>(
       cx, ic, ionScript, CacheKind::HasOwn, idVal, val);
 
   bool found;
@@ -488,8 +488,8 @@ bool IonInIC::update(JSContext* cx, HandleScript outerScript, IonInIC* ic,
   IonScript* ionScript = outerScript->ionScript();
   RootedValue objV(cx, ObjectValue(*obj));
 
-  TryAttachIonStubOld<HasPropIRGenerator, IonInIC>(cx, ic, ionScript,
-                                                   CacheKind::In, key, objV);
+  TryAttachIonStub<HasPropIRGenerator, IonInIC>(cx, ic, ionScript,
+                                                CacheKind::In, key, objV);
 
   return OperatorIn(cx, key, obj, res);
 }
