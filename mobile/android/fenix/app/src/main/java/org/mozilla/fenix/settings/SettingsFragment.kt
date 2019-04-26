@@ -48,6 +48,8 @@ import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
 import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @SuppressWarnings("TooManyFunctions")
@@ -60,6 +62,17 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         super.onCreate(savedInstanceState)
         job = Job()
         updateSignInVisibility()
+
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
+            try {
+                context?.let {
+                    it.components.analytics.metrics.track(Event.PreferenceToggled
+                    (key, sharedPreferences.getBoolean(key, false), it))
+                }
+            } catch (e: IllegalArgumentException) {
+                // The event is not tracked
+            }
+        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

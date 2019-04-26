@@ -580,3 +580,23 @@ custom_tab:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+
+preferences:
+  preference_toggled:
+    type: event
+    description: >
+      A user toggled a preference switch in settings
+    extra_keys:
+      preference_key:
+        description: "The preference key for the switch preference the user toggled. We currently track: leakcanary,
+        make_default_browser, show_search_suggestions, show_visited_sites_bookmarks, remote_debugging, telemetry,
+        tracking_protection"
+      enabled:
+        description: "Whether or not the preference is *now* enabled"
+    bugs:
+    - 975
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1896
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"

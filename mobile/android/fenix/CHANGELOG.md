@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1312 - Added a missing edit action for bookmark selections
 - #974 - Added telemetry for bookmarks
 - #113 - Added QR code scanner
+- #975 - Added telemetry for preference switches
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP
