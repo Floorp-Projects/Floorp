@@ -150,6 +150,9 @@ private val Event.wrapper
         is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
             { CustomTab.closed.record(it) }
         )
+        is Event.UriOpened -> EventWrapper<NoExtraKeys>(
+            { Events.totalUriCount.add(1) }
+        )
 
         // Don't track other events with Glean
         else -> null

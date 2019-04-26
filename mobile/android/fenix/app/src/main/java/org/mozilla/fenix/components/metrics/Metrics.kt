@@ -70,6 +70,7 @@ sealed class Event {
     object CustomTabsClosed : Event()
     object CustomTabsActionTapped : Event()
     object CustomTabsMenuOpened : Event()
+    object UriOpened : Event()
 
     // Interaction Events
     data class SearchBarTapped(val source: Source) : Event() {

@@ -17,6 +17,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.lib.crash.Crash
@@ -36,6 +37,7 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 @SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
     open val isCustomTab = false
+    private var sessionObserver: SessionManager.Observer? = null
 
     val themeManager = DefaultThemeManager().also {
         it.onThemeChange = { theme ->
@@ -83,6 +85,11 @@ open class HomeActivity : AppCompatActivity() {
             ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
 
         handleOpenedFromExternalSourceIfNecessary(intent)
+    }
+
+    override fun onDestroy() {
+        sessionObserver?.let { components.core.sessionManager.unregister(it) }
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -168,6 +175,8 @@ open class HomeActivity : AppCompatActivity() {
             BrowserDirection.FromHistory ->
                 HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(externalSessionId)
         }
+        if (sessionObserver == null)
+            sessionObserver = subscribeToSessions()
 
         navHost.navController.navigate(directions)
     }
@@ -195,6 +204,47 @@ open class HomeActivity : AppCompatActivity() {
         } else {
             searchUseCase.invoke(searchTermOrURL)
         }
+    }
+
+    private val singleSessionObserver = object : Session.Observer {
+        var urlLoading: String? = null
+
+        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+            super.onLoadingStateChanged(session, loading)
+
+            if (loading) urlLoading = session.url
+            else if (urlLoading != null && !session.private)
+                components.analytics.metrics.track(Event.UriOpened)
+        }
+    }
+
+    private fun subscribeToSessions(): SessionManager.Observer {
+
+        return object : SessionManager.Observer {
+            override fun onAllSessionsRemoved() {
+                super.onAllSessionsRemoved()
+                components.core.sessionManager.sessions.forEach {
+                    it.unregister(singleSessionObserver)
+                }
+            }
+
+            override fun onSessionAdded(session: Session) {
+                super.onSessionAdded(session)
+                session.register(singleSessionObserver)
+            }
+
+            override fun onSessionRemoved(session: Session) {
+                super.onSessionRemoved(session)
+                session.unregister(singleSessionObserver)
+            }
+
+            override fun onSessionsRestored() {
+                super.onSessionsRestored()
+                components.core.sessionManager.sessions.forEach {
+                    it.register(singleSessionObserver)
+                }
+            }
+        }.also { components.core.sessionManager.register(it) }
     }
 
     companion object {

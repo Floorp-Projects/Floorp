@@ -123,6 +123,19 @@ events:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+  total_uri_count:
+    type: counter
+    description: >
+      A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.
+    send_in_pings:
+    - metrics
+    bugs:
+    - 1301
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1785
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 crash_reporter:
     opened:
