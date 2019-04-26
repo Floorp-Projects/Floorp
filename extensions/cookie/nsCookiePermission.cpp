@@ -31,6 +31,8 @@
  ************************ nsCookiePermission ********************
  ****************************************************************/
 
+using namespace mozilla;
+
 static const bool kDefaultPolicy = true;
 
 static const nsLiteralCString kPermissionType(NS_LITERAL_CSTRING("cookie"));
@@ -108,7 +110,7 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
 
       // now we need to figure out what type of accept policy we're dealing with
       // if we accept cookies normally, just bail and return
-      if (nsContentUtils::GetCookieLifetimePolicy() ==
+      if (StaticPrefs::network_cookie_lifetimePolicy() ==
           nsICookieService::ACCEPT_NORMALLY) {
         *aResult = true;
         return NS_OK;
@@ -121,7 +123,7 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
       // We are accepting the cookie, but,
       // if it's not a session cookie, we may have to limit its lifetime.
       if (!*aIsSession && delta > 0) {
-        if (nsContentUtils::GetCookieLifetimePolicy() ==
+        if (StaticPrefs::network_cookie_lifetimePolicy() ==
             nsICookieService::ACCEPT_SESSION) {
           // limit lifetime to session
           *aIsSession = true;
