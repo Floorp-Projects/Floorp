@@ -1087,6 +1087,12 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
       dirtyRectRelativeToDirtyFrame.SizeTo(layoutViewportSize);
     }
     visible = dirtyRectRelativeToDirtyFrame;
+    if (gfxPrefs::APZTestLoggingEnabled() &&
+        presShell->GetDocument()->IsContentDocument()) {
+      nsLayoutUtils::LogAdditionalTestData(
+          aBuilder, "fixedPosDisplayport",
+          ToString(CSSSize::FromAppUnits(visible)));
+    }
   }
 
   *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();

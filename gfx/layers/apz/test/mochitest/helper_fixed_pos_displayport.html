@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; minimum-scale=1.0; initial-scale=8.0">
+  <title>position:fixed display port sizing</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      /* This makes sure the `height: 1000%` on #scrolled actually has an effect. */
+      height: 100%;
+    }
+    #fixed {
+      position: fixed;
+      left: 0;
+      height: 100%;
+      width: 300px;
+      background: linear-gradient(135deg, white, black);
+    }
+    /* This makes sure we have a layout scroll range. */
+    #scrolled {
+      width: 300px;
+      height: 1000%;
+    }
+  </style>
+</head>
+<body>
+  <div id="fixed"></div>
+  <div id="scrolled"></div>
+  <script>
+    let utils = SpecialPowers.getDOMWindowUtils(window);
+    let vv = window.visualViewport;
+
+    // Get the displayport of the fixed-position element as of the last paint.
+    function getCurrentFixedPosDisplayport() {
+      let data = convertEntries(utils.getContentAPZTestData().additionalData);
+      let key = "fixedPosDisplayport";
+      ok(key in data, "should have computed a fixed-pos display port");
+      return parseRect(data[key]);
+    }
+
+    function* scrollToVisual(targetX, targetY, testDriver) {
+      vv.addEventListener("scroll", testDriver, { once: true });
+      utils.scrollToVisual(targetX, targetY, utils.UPDATE_TYPE_MAIN_THREAD,
+                           utils.SCROLL_MODE_INSTANT);
+      yield; // wait for visual viewport "scroll" event
+      yield waitForApzFlushedRepaints(testDriver);
+      // Allow up to 1 pixel discrepancy due to floating-point error.
+      isfuzzy(vv.pageLeft, targetX, 1, "visual-scrolled horizontally as expected");
+      isfuzzy(vv.pageTop, targetY, 1, "visual-scrolled vertically as expected");
+    }
+
+    // Check that the size and position of the fixed-pos displayport matches
+    // our expectations.
+    function checkFixedPosDisplayport() {
+      let fixedPosDisplayport = getCurrentFixedPosDisplayport();
+
+      // First, check the size. We allow it to be 4x the size of the visual
+      // viewport, which should accommodate displayport multipliers while still
+      // being significantly smaller than the entire layout viewport at 8x zoom.
+      ok(fixedPosDisplayport.w < (vv.width * 4), "fixed-pos displayport is too wide");
+      ok(fixedPosDisplayport.h < (vv.height * 4), "fixed-pos displayport is too tall");
+
+      // Now, check the position. We want it to track the visual scroll position
+      // relative to the layout viewport (but not relative to the page), since
+      // fixed-position elements are attached to the layout viewport.
+      // This is accomplished by checking the fixed-pos display port contains
+      // the visual viewport rect as expressed relative to the layout viewport.
+      let vvRect = { x: vv.offsetLeft,  // offsets relative to layout viewport
+                     y: vv.offsetTop,
+                     w: vv.width,
+                     h: vv.height };
+      ok(rectContains(fixedPosDisplayport, vvRect),
+         "fixed-pos displayport " + rectToString(fixedPosDisplayport) +
+         " should contain visual viewport " + rectToString(vvRect));
+    }
+
+    function* test(testDriver) {
+      // First, check size and position on page load.
+      checkFixedPosDisplayport();
+
+      // Scroll the visual viewport within the layout viewport, without
+      // scrolling the layout viewport itself, and check the size and
+      // position again.
+      yield* scrollToVisual(vv.width * 3, vv.height * 3, testDriver);
+      checkFixedPosDisplayport();
+
+      // Finally, scroll the visual viewport farther so as to cause the
+      // layout viewport to scroll as well, and check the size and position
+      // once more.
+      yield* scrollToVisual(vv.width * 3, vv.height * 30, testDriver);
+      checkFixedPosDisplayport();
+    }
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  </script>
+</body>
+</html>
+
