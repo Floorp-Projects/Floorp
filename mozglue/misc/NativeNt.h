@@ -17,6 +17,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LauncherResult.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Span.h"
 
 // The declarations within this #if block are intended to be used for initial
 // process initialization ONLY. You probably don't want to be using these in
@@ -294,7 +296,7 @@ class MOZ_RAII PEHeaders final {
    * address of the binary.
    */
   template <typename T, typename R>
-  T RVAToPtr(R aRva) {
+  T RVAToPtr(R aRva) const {
     return RVAToPtr<T>(mMzHeader, aRva);
   }
 
@@ -304,7 +306,7 @@ class MOZ_RAII PEHeaders final {
    * mapping.
    */
   template <typename T, typename R>
-  T RVAToPtr(void* aBase, R aRva) {
+  T RVAToPtr(void* aBase, R aRva) const {
     if (!mImageLimit) {
       return nullptr;
     }
@@ -477,6 +479,53 @@ class MOZ_RAII PEHeaders final {
     return RVAToPtr<T>(dataEntry->OffsetToData);
   }
 
+  template <size_t N>
+  Maybe<Span<const uint8_t>> FindSection(const char (&aSecName)[N],
+                                         DWORD aCharacteristicsMask) const {
+    static_assert((N - 1) <= IMAGE_SIZEOF_SHORT_NAME,
+                  "Section names must be at most 8 characters excluding null "
+                  "terminator");
+
+    if (!(*this)) {
+      return Nothing();
+    }
+
+    Span<IMAGE_SECTION_HEADER> sectionTable = GetSectionTable();
+    for (auto&& sectionHeader : sectionTable) {
+      if (strncmp(reinterpret_cast<const char*>(sectionHeader.Name), aSecName,
+                  IMAGE_SIZEOF_SHORT_NAME)) {
+        continue;
+      }
+
+      if (!(sectionHeader.Characteristics & aCharacteristicsMask)) {
+        // We found the section but it does not have the expected
+        // characteristics
+        return Nothing();
+      }
+
+      DWORD rva = sectionHeader.VirtualAddress;
+      if (!rva) {
+        return Nothing();
+      }
+
+      DWORD size = sectionHeader.Misc.VirtualSize;
+      if (!size) {
+        return Nothing();
+      }
+
+      auto base = RVAToPtr<const uint8_t*>(rva);
+      return Some(MakeSpan(base, size));
+    }
+
+    return Nothing();
+  }
+
+  // There may be other code sections in the binary besides .text
+  Maybe<Span<const uint8_t>> GetTextSectionInfo() const {
+    return FindSection(".text", IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE |
+                                IMAGE_SCN_MEM_READ);
+  }
+
   static bool IsValid(PIMAGE_IMPORT_DESCRIPTOR aImpDesc) {
     return aImpDesc && aImpDesc->OriginalFirstThunk != 0;
   }
@@ -499,8 +548,18 @@ class MOZ_RAII PEHeaders final {
   // This private variant does not have bounds checks, because we need to be
   // able to resolve the bounds themselves.
   template <typename T, typename R>
-  T RVAToPtrUnchecked(R aRva) {
+  T RVAToPtrUnchecked(R aRva) const {
     return reinterpret_cast<T>(reinterpret_cast<char*>(mMzHeader) + aRva);
+  }
+
+  Span<IMAGE_SECTION_HEADER> GetSectionTable() const {
+    MOZ_ASSERT(*this);
+    auto base = RVAToPtr<PIMAGE_SECTION_HEADER>(&mPeHeader->OptionalHeader,
+                         mPeHeader->FileHeader.SizeOfOptionalHeader);
+    // The Windows loader has an internal limit of 96 sections (per PE spec)
+    auto numSections = std::min(mPeHeader->FileHeader.NumberOfSections,
+                                WORD(96));
+    return MakeSpan(base, numSections);
   }
 
   PIMAGE_RESOURCE_DIRECTORY_ENTRY
