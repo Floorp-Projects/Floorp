@@ -20,7 +20,7 @@ var asyncStorage = require("devtools/shared/async-storage");
 
 const {
   getSelectedLocation
-} = require("devtools/client/debugger/src/utils/source-maps");
+} = require("devtools/client/debugger/src/utils/selected-location");
 
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
