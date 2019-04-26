@@ -80,19 +80,16 @@ class RemoteClientManager {
     }
 
     const key = decodeURIComponent(remoteId);
-    const type = this._getType(key);
-    return Object.values(CONNECTION_TYPES).includes(type)
-      ? type
-      : CONNECTION_TYPES.UNKNOWN;
+    for (const type of Object.values(CONNECTION_TYPES)) {
+      if (key.endsWith(type)) {
+        return type;
+      }
+    }
+    return CONNECTION_TYPES.UNKNOWN;
   }
 
   _getKey(id, type) {
     return id + "-" + type;
-  }
-
-  _getType(key) {
-    const chunks = key.split("-");
-    return chunks[chunks.length - 1];
   }
 
   _removeClientByKey(key) {
