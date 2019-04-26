@@ -42,7 +42,8 @@
 #endif
 
 // 64-bit atomics are not required by the JS spec, and you can compile
-// SpiderMonkey without them.
+// SpiderMonkey without them. 64-bit atomics are required for BigInt
+// support.
 //
 // 64-bit lock-free atomics are required for WebAssembly, but gating in the
 // WebAssembly subsystem ensures that no WebAssembly-supporting platforms need
@@ -64,6 +65,13 @@
 
 #ifdef __sparc__
 #  ifdef __LP64__
+#    define HAS_64BIT_ATOMICS
+#    define HAS_64BIT_LOCKFREE
+#  endif
+#endif
+
+#ifdef JS_CODEGEN_NONE
+#  ifdef JS_64BIT
 #    define HAS_64BIT_ATOMICS
 #    define HAS_64BIT_LOCKFREE
 #  endif
