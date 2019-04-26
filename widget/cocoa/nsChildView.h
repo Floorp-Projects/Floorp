@@ -601,6 +601,7 @@ class nsChildView final : public nsBaseWidget {
   // by mEffectsLock.
   bool mShowsResizeIndicator;
   LayoutDeviceIntRect mResizeIndicatorRect;
+  bool mHasRoundedBottomCorners;
   int mDevPixelCornerRadius;
   bool mIsCoveringTitlebar;
   bool mIsFullscreen;
