@@ -59,7 +59,7 @@ export function updateActiveFileSearch(cx: Context) {
     const fileSearchQuery = getFileSearchQuery(getState());
     if (isFileSearchOpen && fileSearchQuery) {
       const editor = getEditor();
-      dispatch(searchContents(cx, fileSearchQuery, editor));
+      dispatch(searchContents(cx, fileSearchQuery, editor, false));
     }
   };
 }

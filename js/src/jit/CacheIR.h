@@ -511,11 +511,36 @@ class CallFlags {
 };
 
 enum class AttachDecision {
+  // We cannot attach a stub.
   NoAction,
+
+  // We can attach a stub.
   Attach,
+
+  // We cannot currently attach a stub, but we expect to be able to do so in the
+  // future. In this case, we do not call trackNotAttached().
   TemporarilyUnoptimizable,
+
+  // We want to attach a stub, but the result of the operation is
+  // needed to generate that stub. For example, AddSlot needs to know
+  // the resulting shape. Note: the attached stub will inspect the
+  // inputs to the operation, so most input checks should be done
+  // before the actual operation, with only minimal checks remaining
+  // for the deferred portion. This prevents arbitrary scripted code
+  // run by the operation from interfering with the conditions being
+  // checked.
   Deferred
 };
+
+// If the input expression evaluates to an AttachDecision other than NoAction,
+// return that AttachDecision. If it is NoAction, do nothing.
+#define TRY_ATTACH(expr)                      \
+  do {                                        \
+    AttachDecision result = expr;             \
+    if (result != AttachDecision::NoAction) { \
+      return result;                          \
+    }                                         \
+  } while (0)
 
 // Set of arguments supported by GetIndexOfArgument.
 // Support for Arg2 and up can be added easily, but is currently unneeded.
@@ -1941,59 +1966,71 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
   HandleValue receiver_;
-  bool* isTemporarilyUnoptimizable_;
   GetPropertyResultFlags resultFlags_;
 
   enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
   PreliminaryObjectAction preliminaryObjectAction_;
 
-  bool tryAttachNative(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId,
-                               HandleId id);
-  bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
-                                HandleId id);
-  bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
-  bool tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperandId objId,
-                                        HandleId id);
-  bool tryAttachXrayCrossCompartmentWrapper(HandleObject obj,
-                                            ObjOperandId objId, HandleId id);
-  bool tryAttachFunction(HandleObject obj, ObjOperandId objId, HandleId id);
-
-  bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                             bool handleDOMProxies);
-  bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
-                                HandleId id);
-  bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachNative(HandleObject obj, ObjOperandId objId,
                                  HandleId id);
-  bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachUnboxed(HandleObject obj, ObjOperandId objId,
+                                  HandleId id);
+  AttachDecision tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId,
+                                         HandleId id);
+  AttachDecision tryAttachTypedObject(HandleObject obj, ObjOperandId objId,
+                                      HandleId id);
+  AttachDecision tryAttachObjectLength(HandleObject obj, ObjOperandId objId,
+                                       HandleId id);
+  AttachDecision tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId,
+                                          HandleId id);
+  AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
+                                      HandleId id);
+  AttachDecision tryAttachCrossCompartmentWrapper(HandleObject obj,
+                                                  ObjOperandId objId,
+                                                  HandleId id);
+  AttachDecision tryAttachXrayCrossCompartmentWrapper(HandleObject obj,
+                                                      ObjOperandId objId,
+                                                      HandleId id);
+  AttachDecision tryAttachFunction(HandleObject obj, ObjOperandId objId,
                                    HandleId id);
-  bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
-  bool tryAttachPrimitive(ValOperandId valId, HandleId id);
-  bool tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
-  bool tryAttachStringLength(ValOperandId valId, HandleId id);
-  bool tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
+                                       HandleId id, bool handleDOMProxies);
+  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+                                          HandleId id);
+  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+                                           HandleId id);
+  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+                                             ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
+                                HandleId id);
 
-  bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
-  bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
-                                   Int32OperandId indexId);
+  AttachDecision tryAttachPrimitive(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachStringChar(ValOperandId valId, ValOperandId indexId);
+  AttachDecision tryAttachStringLength(ValOperandId valId, HandleId id);
+  AttachDecision tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
 
-  bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
-  bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
-                                 uint32_t index, Int32OperandId indexId);
-  bool tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
-                              uint32_t index, Int32OperandId indexId);
-  bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
-                             uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachMagicArgument(ValOperandId valId,
+                                        ValOperandId indexId);
+  AttachDecision tryAttachArgumentsObjectArg(HandleObject obj,
+                                             ObjOperandId objId,
+                                             Int32OperandId indexId);
 
-  bool tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
-                               uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                                       uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
+                                           uint32_t index,
+                                           Int32OperandId indexId);
+  AttachDecision tryAttachSparseElement(HandleObject obj, ObjOperandId objId,
+                                        uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                                       uint32_t index, Int32OperandId indexId);
 
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
+  AttachDecision tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
+                                         uint32_t index,
+                                         Int32OperandId indexId);
+
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 
   void attachMegamorphicNativeSlot(ObjOperandId objId, jsid id,
                                    bool handleMissing);
@@ -2030,13 +2067,12 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
 
  public:
   GetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
-                     CacheKind cacheKind, ICState::Mode mode,
-                     bool* isTemporarilyUnoptimizable, HandleValue val,
+                     ICState::Mode mode, CacheKind cacheKind, HandleValue val,
                      HandleValue idVal, HandleValue receiver,
                      GetPropertyResultFlags resultFlags);
 
-  bool tryAttachStub();
-  bool tryAttachIdempotentStub();
+  AttachDecision tryAttachStub();
+  AttachDecision tryAttachIdempotentStub();
 
   bool shouldUnlinkPreliminaryObjectStubs() const {
     return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
@@ -2051,9 +2087,9 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
   HandleObject env_;
   HandlePropertyName name_;
 
-  bool tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
-  bool tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
-  bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   void trackAttached(const char* name);
 
@@ -2062,7 +2098,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator {
                      ICState::Mode mode, HandleObject env,
                      HandlePropertyName name);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 // BindNameIRGenerator generates CacheIR for a BindName IC.
@@ -2070,8 +2106,8 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
   HandleObject env_;
   HandlePropertyName name_;
 
-  bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
-  bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachGlobalName(ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   void trackAttached(const char* name);
 
@@ -2080,7 +2116,7 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator {
                       ICState::Mode mode, HandleObject env,
                       HandlePropertyName name);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 // Information used by SetProp/SetElem stubs to check/update property types.
@@ -2122,8 +2158,6 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleValue idVal_;
   HandleValue rhsVal_;
-  bool* isTemporarilyUnoptimizable_;
-  bool* canAddSlot_;
   PropertyTypeCheckInfo typeCheckInfo_;
 
   enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -2131,6 +2165,12 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   bool attachedTypedArrayOOBStub_;
 
   bool maybeHasExtraIndexedProps_;
+
+ public:
+  enum class DeferType { None, AddSlot };
+
+ private:
+  DeferType deferType_ = DeferType::None;
 
   ValOperandId setElemKeyValueId() const {
     MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
@@ -2148,63 +2188,74 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   // matches |id|.
   void maybeEmitIdGuard(jsid id);
 
-  bool tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
-                              ValOperandId rhsId);
-  bool tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandId objId,
-                                      HandleId id, ValOperandId rhsId);
-  bool tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId,
-                                HandleId id, ValOperandId rhsId);
-  bool tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId,
-                                    HandleId id, ValOperandId rhsId);
-  bool tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
-                       ValOperandId rhsId);
-  bool tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId,
-                               HandleId id, ValOperandId rhsId);
-  bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                            ValOperandId rhsId);
-
-  bool tryAttachSetDenseElement(HandleObject obj, ObjOperandId objId,
-                                uint32_t index, Int32OperandId indexId,
-                                ValOperandId rhsId);
-  bool tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
-                                uint32_t index, Int32OperandId indexId,
-                                ValOperandId rhsId);
-
-  bool tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId,
-                                    uint32_t index, Int32OperandId indexId,
-                                    ValOperandId rhsId);
-
-  bool tryAttachAddOrUpdateSparseElement(HandleObject obj, ObjOperandId objId,
-                                         uint32_t index, Int32OperandId indexId,
-                                         ValOperandId rhsId);
-
-  bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                             ValOperandId rhsId, bool handleDOMProxies);
-  bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
+                                        HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachUnboxedExpandoSetSlot(HandleObject obj,
+                                                ObjOperandId objId, HandleId id,
+                                                ValOperandId rhsId);
+  AttachDecision tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId,
+                                          HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachTypedObjectProperty(HandleObject obj,
+                                              ObjOperandId objId, HandleId id,
+                                              ValOperandId rhsId);
+  AttachDecision tryAttachSetter(HandleObject obj, ObjOperandId objId,
                                  HandleId id, ValOperandId rhsId);
-  bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId,
-                                   HandleId id, ValOperandId rhsId);
-  bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId,
+                                         HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
+                                      HandleId id, ValOperandId rhsId);
+
+  AttachDecision tryAttachSetDenseElement(HandleObject obj, ObjOperandId objId,
+                                          uint32_t index,
+                                          Int32OperandId indexId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
+                                          uint32_t index,
+                                          Int32OperandId indexId,
+                                          ValOperandId rhsId);
+
+  AttachDecision tryAttachSetDenseElementHole(HandleObject obj,
+                                              ObjOperandId objId,
+                                              uint32_t index,
+                                              Int32OperandId indexId,
+                                              ValOperandId rhsId);
+
+  AttachDecision tryAttachAddOrUpdateSparseElement(HandleObject obj,
+                                                   ObjOperandId objId,
+                                                   uint32_t index,
+                                                   Int32OperandId indexId,
+                                                   ValOperandId rhsId);
+
+  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
+                                       HandleId id, ValOperandId rhsId,
+                                       bool handleDOMProxies);
+  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+                                           HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+                                             ObjOperandId objId, HandleId id,
+                                             ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+                                          HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
                                 HandleId id, ValOperandId rhsId);
-  bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                      ValOperandId rhsId);
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
-                             ValOperandId rhsId);
-  bool tryAttachMegamorphicSetElement(HandleObject obj, ObjOperandId objId,
-                                      ValOperandId rhsId);
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
+                                       ValOperandId rhsId);
+  AttachDecision tryAttachMegamorphicSetElement(HandleObject obj,
+                                                ObjOperandId objId,
+                                                ValOperandId rhsId);
 
   bool canAttachAddSlotStub(HandleObject obj, HandleId id);
 
  public:
   SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                      CacheKind cacheKind, ICState::Mode mode,
-                     bool* isTemporarilyUnoptimizable, bool* canAddSlot,
                      HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal,
                      bool needsTypeBarrier = true,
                      bool maybeHasExtraIndexedProps = true);
 
-  bool tryAttachStub();
-  bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
+  AttachDecision tryAttachStub();
+  AttachDecision tryAttachAddSlotStub(HandleObjectGroup oldGroup,
+                                      HandleShape oldShape);
   void trackAttached(const char* name);
 
   bool shouldUnlinkPreliminaryObjectStubs() const {
@@ -2217,6 +2268,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 
   bool attachedTypedArrayOOBStub() const { return attachedTypedArrayOOBStub_; }
+
+  DeferType deferType() const { return deferType_; }
 };
 
 // HasPropIRGenerator generates CacheIR for a HasProp IC. Used for
@@ -2225,32 +2278,32 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
 
-  bool tryAttachDense(HandleObject obj, ObjOperandId objId, uint32_t index,
-                      Int32OperandId indexId);
-  bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId, uint32_t index,
-                          Int32OperandId indexId);
-  bool tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                           Int32OperandId indexId);
-  bool tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                       Int32OperandId indexId);
-  bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId, HandleId key,
-                          ValOperandId keyId);
-  bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
-  bool tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
-                       ValOperandId keyId, PropertyResult prop,
-                       JSObject* holder);
-  bool tryAttachUnboxed(JSObject* obj, ObjOperandId objId, jsid key,
-                        ValOperandId keyId);
-  bool tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId, jsid key,
-                               ValOperandId keyId);
-  bool tryAttachTypedObject(JSObject* obj, ObjOperandId objId, jsid key,
-                            ValOperandId keyId);
-  bool tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId, jsid key,
-                                 ValOperandId keyId);
-  bool tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId, HandleId key,
-                             ValOperandId keyId);
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
-                             ValOperandId keyId);
+  AttachDecision tryAttachDense(HandleObject obj, ObjOperandId objId,
+                                uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
+                                    uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
+                                     Int32OperandId indexId);
+  AttachDecision tryAttachSparse(HandleObject obj, ObjOperandId objId,
+                                 Int32OperandId indexId);
+  AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
+                                    HandleId key, ValOperandId keyId);
+  AttachDecision tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
+  AttachDecision tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
+                                 ValOperandId keyId, PropertyResult prop,
+                                 JSObject* holder);
+  AttachDecision tryAttachUnboxed(JSObject* obj, ObjOperandId objId, jsid key,
+                                  ValOperandId keyId);
+  AttachDecision tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
+                                         jsid key, ValOperandId keyId);
+  AttachDecision tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
+                                      jsid key, ValOperandId keyId);
+  AttachDecision tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId,
+                                           jsid key, ValOperandId keyId);
+  AttachDecision tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId,
+                                       HandleId key, ValOperandId keyId);
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
+                                       ValOperandId keyId);
 
   void trackAttached(const char* name);
 
@@ -2260,7 +2313,7 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
                      ICState::Mode mode, CacheKind cacheKind, HandleValue idVal,
                      HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
@@ -2273,33 +2326,33 @@ class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
   InstanceOfIRGenerator(JSContext*, HandleScript, jsbytecode*, ICState::Mode,
                         HandleValue, HandleObject);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachPrimitive(ValOperandId valId);
-  bool tryAttachObject(ValOperandId valId);
+  AttachDecision tryAttachPrimitive(ValOperandId valId);
+  AttachDecision tryAttachObject(ValOperandId valId);
   void trackAttached(const char* name);
 
  public:
   TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                     ICState::Mode mode, HandleValue value);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachNativeIterator(ObjOperandId objId, HandleObject obj);
+  AttachDecision tryAttachNativeIterator(ObjOperandId objId, HandleObject obj);
 
  public:
   GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                          ICState::Mode mode, HandleValue value);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 
   void trackAttached(const char* name);
 };
@@ -2362,17 +2415,21 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleValue rhsVal_;
 
-  bool tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNumberUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachPrimitiveUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachObjectUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
-  bool tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachString(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachStrictDifferentTypes(ValOperandId lhsId,
+                                               ValOperandId rhsId);
+  AttachDecision tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachNumberUndefined(ValOperandId lhsId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachPrimitiveUndefined(ValOperandId lhsId,
+                                             ValOperandId rhsId);
+  AttachDecision tryAttachObjectUndefined(ValOperandId lhsId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
 
   void trackAttached(const char* name);
 
@@ -2381,18 +2438,18 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
                      ICState::Mode mode, JSOp op, HandleValue lhsVal,
                      HandleValue rhsVal);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachInt32();
-  bool tryAttachDouble();
-  bool tryAttachString();
-  bool tryAttachSymbol();
-  bool tryAttachNullOrUndefined();
-  bool tryAttachObject();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachDouble();
+  AttachDecision tryAttachString();
+  AttachDecision tryAttachSymbol();
+  AttachDecision tryAttachNullOrUndefined();
+  AttachDecision tryAttachObject();
 
   void trackAttached(const char* name);
 
@@ -2400,7 +2457,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   ToBoolIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                     ICState::Mode mode, HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator {
@@ -2412,7 +2469,7 @@ class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator {
   GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                           ICState::Mode, HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
@@ -2420,8 +2477,8 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue res_;
 
-  bool tryAttachInt32();
-  bool tryAttachNumber();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachNumber();
 
   void trackAttached(const char* name);
 
@@ -2430,7 +2487,7 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
                         ICState::Mode mode, JSOp op, HandleValue val,
                         HandleValue res);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
@@ -2441,20 +2498,20 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
 
   void trackAttached(const char* name);
 
-  bool tryAttachInt32();
-  bool tryAttachDouble();
-  bool tryAttachBitwise();
-  bool tryAttachStringConcat();
-  bool tryAttachStringObjectConcat();
-  bool tryAttachStringNumberConcat();
-  bool tryAttachStringBooleanConcat();
+  AttachDecision tryAttachInt32();
+  AttachDecision tryAttachDouble();
+  AttachDecision tryAttachBitwise();
+  AttachDecision tryAttachStringConcat();
+  AttachDecision tryAttachStringObjectConcat();
+  AttachDecision tryAttachStringNumberConcat();
+  AttachDecision tryAttachStringBooleanConcat();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                          ICState::Mode, JSOp op, HandleValue lhs,
                          HandleValue rhs, HandleValue res);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
@@ -2469,7 +2526,7 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
   NewObjectIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                        ICState::Mode, JSOp op, HandleObject templateObj);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 static inline uint32_t SimpleTypeDescrKey(SimpleTypeDescr* descr) {

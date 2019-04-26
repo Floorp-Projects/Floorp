@@ -13,8 +13,15 @@
 namespace mozilla {
 namespace net {
 
-#define DEFINE_CATEGORY(_name, _idx) NS_LITERAL_CSTRING("Y=" #_idx "|" #_name),
+#define DEFINE_CATEGORY(_name, _idx) NS_LITERAL_CSTRING("Y" #_idx "_" #_name),
 static const nsCString gKeyName[] = {
+#include "HttpTrafficAnalyzer.inc"
+};
+#undef DEFINE_CATEGORY
+
+#define DEFINE_CATEGORY(_name, _idx) \
+  Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS_2::Y##_idx##_##_name,
+static const Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS_2 gTelemetryLabel[] = {
 #include "HttpTrafficAnalyzer.inc"
 };
 #undef DEFINE_CATEGORY
@@ -28,8 +35,8 @@ static const nsCString gKeyName[] = {
 // ----------------------------------------------------
 // | Category                        | List Category  |
 // ----------------------------------------------------
-// | Content                         |       I        |
-// | Basic Disconnected List         |      II        |
+// | Basic Disconnected List         |       I        |
+// | Content                         |      II        |
 // | Fingerprinting                  |     III        |
 // ----------------------------------------------------
 // ====================================================
@@ -103,9 +110,8 @@ nsresult HttpTrafficAnalyzer::IncrementHttpTransaction(
   LOG(("HttpTrafficAnalyzer::IncrementHttpTransaction [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
-  Telemetry::AccumulateCategoricalKeyed(
-      gKeyName[aCategory],
-      Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS::Transaction);
+  Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("Transaction"),
+                                        gTelemetryLabel[aCategory]);
   return NS_OK;
 }
 
@@ -118,8 +124,8 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
   LOG(("HttpTrafficAnalyzer::IncrementHttpConnection [%s] [this=%p]\n",
        gKeyName[aCategory].get(), this));
 
-  Telemetry::AccumulateCategoricalKeyed(
-      gKeyName[aCategory], Telemetry::LABELS_HTTP_TRAFFIC_ANALYSIS::Connection);
+  Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("Connection"),
+                                        gTelemetryLabel[aCategory]);
   return NS_OK;
 }
 
@@ -164,10 +170,12 @@ nsresult HttpTrafficAnalyzer::AccumulateHttpTransferredSize(
        "sb=%" PRIu64 " [this=%p]\n",
        gKeyName[aCategory].get(), aBytesRead, aBytesSent, this));
 
-  // Telemetry supports uint32_t only.
-  auto total = CLAMP_U32(CLAMP_U32(aBytesRead) + CLAMP_U32(aBytesSent));
-  Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED,
-                       NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
+  // Telemetry supports uint32_t only, and we send KB here.
+  auto total = CLAMP_U32((aBytesRead >> 10) + (aBytesSent >> 10));
+  if (aBytesRead || aBytesSent) {
+    Telemetry::ScalarAdd(Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_KB,
+                         NS_ConvertUTF8toUTF16(gKeyName[aCategory]), total);
+  }
   return NS_OK;
 }
 

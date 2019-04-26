@@ -54,7 +54,10 @@
 .permission-icon,
 .content-blocking-category .checkbox-label-box,
 .extra-information-label > image,
-.arrowhead {
+.arrowhead,
+.content-blocking-info-image,
+.reload-tabs-button,
+.content-blocking-warning-image {
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -181,8 +184,6 @@
 }
 
 .reload-tabs-button {
-  -moz-context-properties: fill;
-  fill: currentColor;
   max-height: 30px;
   min-height: 30px;
   padding: 0 20px;
@@ -279,8 +280,6 @@
 
 .content-blocking-warning-image {
   list-style-image: url("chrome://global/skin/icons/warning.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
   margin-inline-end: 8px;
   margin-inline-start: 4px;
 }

@@ -115,6 +115,40 @@ void IonIC::trace(JSTracer* trc) {
   MOZ_ASSERT(nextCodeRaw == fallbackLabel_.raw());
 }
 
+// This helper handles ICState updates/transitions while attaching CacheIR
+// stubs.
+template <typename IRGenerator, typename IC, typename... Args>
+static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
+                             Args&&... args) {
+  if (ic->state().maybeTransition()) {
+    ic->discardStubs(cx->zone());
+  }
+
+  if (ic->state().canAttachStub()) {
+    RootedScript script(cx, ic->script());
+    bool attached = false;
+    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
+                    std::forward<Args>(args)...);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached);
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Not expected in generic TryAttachIonStub");
+        break;
+    }
+    if (!attached) {
+      ic->state().trackNotAttached();
+    }
+  }
+}
+
 /* static */
 bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               IonGetPropertyIC* ic, HandleValue val,
@@ -134,22 +168,25 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   bool attached = false;
   if (ic->state().canAttachStub()) {
-    // IonBuilder calls PropertyReadNeedsTypeBarrier to determine if it
-    // needs a type barrier. Unfortunately, PropertyReadNeedsTypeBarrier
-    // does not account for getters, so we should only attach a getter
-    // stub if we inserted a type barrier.
     jsbytecode* pc = ic->idempotent() ? nullptr : ic->pc();
-    bool isTemporarilyUnoptimizable = false;
-    GetPropIRGenerator gen(cx, outerScript, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, val, idVal, val,
-                           ic->resultFlags());
-    if (ic->idempotent() ? gen.tryAttachIdempotentStub()
-                         : gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
+    GetPropIRGenerator gen(cx, outerScript, pc, ic->state().mode(), ic->kind(),
+                           val, idVal, val, ic->resultFlags());
+    switch (ic->idempotent() ? gen.tryAttachIdempotentStub()
+                             : gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached);
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("No deferred GetProp stubs");
+        break;
     }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
+    if (!attached) {
       ic->state().trackNotAttached();
     }
   }
@@ -211,22 +248,10 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
     ic->discardStubs(cx->zone());
   }
 
-  bool attached = false;
-  if (ic->state().canAttachStub()) {
-    RootedValue val(cx, ObjectValue(*obj));
-    bool isTemporarilyUnoptimizable = false;
-    GetPropIRGenerator gen(cx, outerScript, ic->pc(), ic->kind(),
-                           ic->state().mode(), &isTemporarilyUnoptimizable, val,
-                           idVal, receiver, GetPropertyResultFlags::All);
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
-    }
-
-    if (!attached && !isTemporarilyUnoptimizable) {
-      ic->state().trackNotAttached();
-    }
-  }
+  RootedValue val(cx, ObjectValue(*obj));
+  TryAttachIonStub<GetPropIRGenerator, IonGetPropSuperIC>(
+      cx, ic, ionScript, ic->kind(), val, idVal, receiver,
+      GetPropertyResultFlags::All);
 
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, idVal, &id)) {
@@ -246,13 +271,14 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
 bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
                               IonSetPropertyIC* ic, HandleObject obj,
                               HandleValue idVal, HandleValue rhs) {
+  using DeferType = SetPropIRGenerator::DeferType;
+
   RootedShape oldShape(cx);
   RootedObjectGroup oldGroup(cx);
   IonScript* ionScript = outerScript->ionScript();
 
   bool attached = false;
-  bool isTemporarilyUnoptimizable = false;
-  bool canAddSlot = false;
+  DeferType deferType = DeferType::None;
 
   if (ic->state().maybeTransition()) {
     ic->discardStubs(cx->zone());
@@ -268,13 +294,23 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, &canAddSlot, objv,
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
                            idVal, rhs, ic->needsTypeBarrier(),
                            ic->guardHoles());
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached, gen.typeCheckInfo());
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached, gen.typeCheckInfo());
+        break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        deferType = gen.deferType();
+        MOZ_ASSERT(deferType != DeferType::None);
+        break;
     }
   }
 
@@ -329,51 +365,36 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
     ic->discardStubs(cx->zone());
   }
 
-  if (ic->state().canAttachStub()) {
+  bool canAttachStub = ic->state().canAttachStub();
+  if (deferType != DeferType::None && canAttachStub) {
     RootedValue objv(cx, ObjectValue(*obj));
     RootedScript script(cx, ic->script());
     jsbytecode* pc = ic->pc();
-    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(),
-                           &isTemporarilyUnoptimizable, &canAddSlot, objv,
+    SetPropIRGenerator gen(cx, script, pc, ic->kind(), ic->state().mode(), objv,
                            idVal, rhs, ic->needsTypeBarrier(),
                            ic->guardHoles());
-    if (canAddSlot && gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached, gen.typeCheckInfo());
-    } else {
-      gen.trackAttached(nullptr);
-    }
+    MOZ_ASSERT(deferType == DeferType::AddSlot);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 
-    if (!attached && !isTemporarilyUnoptimizable) {
-      ic->state().trackNotAttached();
+    switch (decision) {
+      case AttachDecision::Attach:
+        ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
+                              &attached, gen.typeCheckInfo());
+        break;
+      case AttachDecision::NoAction:
+        gen.trackAttached(IRGenerator::NotAttached);
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Invalid attach result");
+        break;
     }
+  }
+  if (!attached && canAttachStub) {
+    ic->state().trackNotAttached();
   }
 
   return true;
-}
-
-// This helper handles ICState updates/transitions while attaching CacheIR
-// stubs.
-template <typename IRGenerator, typename IC, typename... Args>
-static void TryAttachIonStub(JSContext* cx, IC* ic, IonScript* ionScript,
-                             Args&&... args) {
-  if (ic->state().maybeTransition()) {
-    ic->discardStubs(cx->zone());
-  }
-
-  if (ic->state().canAttachStub()) {
-    RootedScript script(cx, ic->script());
-    bool attached = false;
-    IRGenerator gen(cx, script, ic->pc(), ic->state().mode(),
-                    std::forward<Args>(args)...);
-    if (gen.tryAttachStub()) {
-      ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript,
-                            &attached);
-    }
-    if (!attached) {
-      ic->state().trackNotAttached();
-    }
-  }
 }
 
 /* static */

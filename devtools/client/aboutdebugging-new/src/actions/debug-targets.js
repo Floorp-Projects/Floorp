@@ -187,9 +187,12 @@ function requestExtensions() {
         await clientWrapper.listAddons({ iconDataURL: isIconDataURLRequired });
       let extensions = addons.filter(a => a.debuggable);
 
-      // Filter out system addons unless the dedicated preference is set to true.
-      if (!getState().ui.showSystemAddons) {
-        extensions = extensions.filter(e => !e.isSystem);
+      // Filter out hidden & system addons unless the dedicated preference is set to true.
+      if (!getState().ui.showHiddenAddons) {
+        // System addons should normally also have the hidden flag. However on DevTools
+        // side, `hidden` is not available on FF67 servers or older. Check both flags for
+        // backward compatibility.
+        extensions = extensions.filter(e => !e.isSystem && !e.hidden);
       }
 
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {

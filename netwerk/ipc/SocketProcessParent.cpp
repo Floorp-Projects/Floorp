@@ -133,23 +133,9 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvRecordDiscardedData(
 }
 
 PWebrtcProxyChannelParent* SocketProcessParent::AllocPWebrtcProxyChannelParent(
-    const PBrowserOrId& aBrowser) {
+    const TabId& aTabId) {
 #ifdef MOZ_WEBRTC
-  if (aBrowser.type() != PBrowserOrId::TTabId) {
-    MOZ_ASSERT(false, "We only allow TabId here.");
-    return nullptr;
-  }
-
-  dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
-  dom::TabId tabId = aBrowser.get_TabId();
-  dom::ContentParentId cpId = cpm->GetTabProcessId(tabId);
-  RefPtr<dom::BrowserParent> tab = cpm->GetBrowserParentByProcessAndTabId(cpId, tabId);
-  if (!tab) {
-    MOZ_ASSERT(false, "Cannot find the BrowserParent!");
-    return nullptr;
-  }
-
-  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(tab);
+  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(aTabId);
   parent->AddRef();
   return parent;
 #else

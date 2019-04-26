@@ -6,8 +6,8 @@
 
 #include "WebrtcProxyChannelChild.h"
 
-#include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/SocketProcessChild.h"
 
 #include "LoadInfo.h"
 
@@ -15,8 +15,6 @@
 #include "WebrtcProxyChannelCallback.h"
 
 using namespace mozilla::ipc;
-
-using mozilla::dom::PBrowserOrId;
 
 namespace mozilla {
 namespace net {
@@ -67,9 +65,9 @@ WebrtcProxyChannelChild::~WebrtcProxyChannelChild() {
 
 void WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
                                         const int& aPort,
-                                        const PBrowserOrId& aBrowser,
-                                        nsIPrincipal* aLoadingPrincipal,
-                                        const nsCString& aAlpn) {
+                                        const net::LoadInfoArgs& aArgs,
+                                        const nsCString& aAlpn,
+                                        const dom::TabId& aTabId) {
   LOG(("WebrtcProxyChannelChild::AsyncOpen %p %s:%d\n", this, aHost.get(),
        aPort));
 
@@ -77,16 +75,19 @@ void WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
 
   AddIPDLReference();
 
-  gNeckoChild->SetEventTargetForActor(this, GetMainThreadEventTarget());
-  gNeckoChild->SendPWebrtcProxyChannelConstructor(this, aBrowser);
+  if (IsNeckoChild()) {
+    // We're on a content process
+    gNeckoChild->SetEventTargetForActor(this, GetMainThreadEventTarget());
+    gNeckoChild->SendPWebrtcProxyChannelConstructor(this, aTabId);
+  } else if (IsSocketProcessChild()) {
+    // We're on a socket process
+    SocketProcessChild::GetSingleton()->SetEventTargetForActor(
+        this, GetMainThreadEventTarget());
+    SocketProcessChild::GetSingleton()->SendPWebrtcProxyChannelConstructor(
+        this, aTabId);
+  }
 
-  nsCOMPtr<nsILoadInfo> loadInfo =
-      new LoadInfo(aLoadingPrincipal, nullptr, nullptr, 0, 0);
-
-  Maybe<LoadInfoArgs> loadInfoArgs;
-  MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
-
-  SendAsyncOpen(aHost, aPort, loadInfoArgs, aAlpn);
+  SendAsyncOpen(aHost, aPort, aArgs, aAlpn);
 }
 
 }  // namespace net

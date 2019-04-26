@@ -18,24 +18,13 @@ namespace mozilla {
 namespace net {
 
 mozilla::ipc::IPCResult WebrtcProxyChannelParent::RecvAsyncOpen(
-    const nsCString& aHost, const int& aPort,
-    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const nsCString& aAlpn) {
+    const nsCString& aHost, const int& aPort, const LoadInfoArgs& aLoadInfoArgs,
+    const nsCString& aAlpn) {
   LOG(("WebrtcProxyChannelParent::RecvAsyncOpen %p to %s:%d\n", this,
        aHost.get(), aPort));
 
-  nsresult rv;
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
-
-  rv = LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv)) {
-    IProtocol* mgr = Manager();
-    OnClose(rv);
-    return IPC_FAIL_NO_REASON(mgr);
-  }
-
   MOZ_ASSERT(mChannel, "webrtc proxy channel should be non-null");
-  mChannel->Open(aHost, aPort, loadInfo, aAlpn);
+  mChannel->Open(aHost, aPort, aLoadInfoArgs, aAlpn);
 
   return IPC_OK();
 }
@@ -72,13 +61,13 @@ void WebrtcProxyChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   CleanupChannel();
 }
 
-WebrtcProxyChannelParent::WebrtcProxyChannelParent(
-    nsIAuthPromptProvider* aAuthProvider) {
+WebrtcProxyChannelParent::WebrtcProxyChannelParent(dom::TabId aTabId) {
   MOZ_COUNT_CTOR(WebrtcProxyChannelParent);
 
   LOG(("WebrtcProxyChannelParent::WebrtcProxyChannelParent %p\n", this));
 
-  mChannel = new WebrtcProxyChannel(aAuthProvider, this);
+  mChannel = new WebrtcProxyChannel(this);
+  mChannel->SetTabId(aTabId);
 }
 
 WebrtcProxyChannelParent::~WebrtcProxyChannelParent() {

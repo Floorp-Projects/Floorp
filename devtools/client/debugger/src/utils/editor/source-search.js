@@ -132,8 +132,15 @@ export function getMatchIndex(
  * @memberof utils/source-search
  * @static
  */
-function doSearch(ctx, rev, query, keepSelection, modifiers: SearchModifiers) {
-  const { cm } = ctx;
+function doSearch(
+  ctx,
+  rev,
+  query,
+  keepSelection,
+  modifiers: SearchModifiers,
+  focusFirstResult?: boolean = true
+) {
+  const { cm, ed } = ctx;
   if (!cm) {
     return;
   }
@@ -152,6 +159,13 @@ function doSearch(ctx, rev, query, keepSelection, modifiers: SearchModifiers) {
     updateOverlay(cm, state, query, modifiers);
     updateCursor(cm, state, keepSelection);
     const searchLocation = searchNext(ctx, rev, query, isNewQuery, modifiers);
+
+    // We don't want to jump the editor
+    // when we're selecting text
+    if (!cm.state.selectingText && searchLocation && focusFirstResult) {
+      ed.alignLine(searchLocation.from.line, "center");
+      cm.setSelection(searchLocation.from, searchLocation.to);
+    }
 
     return searchLocation ? searchLocation.from : defaultIndex;
   });
@@ -197,7 +211,7 @@ function getCursorPos(newQuery, rev, state) {
  * @static
  */
 function searchNext(ctx, rev, query, newQuery, modifiers) {
-  const { cm, ed } = ctx;
+  const { cm } = ctx;
   let nextMatch;
   cm.operation(function() {
     const state = getSearchState(cm, query);
@@ -218,13 +232,6 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
       if (!cursor.find(rev)) {
         return;
       }
-    }
-
-    // We don't want to jump the editor
-    // when we're selecting text
-    if (!cm.state.selectingText) {
-      ed.alignLine(cursor.from().line, "center");
-      cm.setSelection(cursor.from(), cursor.to());
     }
 
     nextMatch = { from: cursor.from(), to: cursor.to() };
@@ -296,10 +303,18 @@ export function find(
   ctx: any,
   query: string,
   keepSelection: boolean,
-  modifiers: SearchModifiers
+  modifiers: SearchModifiers,
+  focusFirstResult?: boolean
 ) {
   clearSearch(ctx.cm, query);
-  return doSearch(ctx, false, query, keepSelection, modifiers);
+  return doSearch(
+    ctx,
+    false,
+    query,
+    keepSelection,
+    modifiers,
+    focusFirstResult
+  );
 }
 
 /**

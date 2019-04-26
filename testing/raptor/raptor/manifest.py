@@ -15,11 +15,21 @@ raptor_ini = os.path.join(here, 'raptor.ini')
 tests_dir = os.path.join(here, 'tests')
 LOG = get_proxy_logger(component="raptor-manifest")
 
-required_settings = ['apps', 'type', 'page_cycles', 'test_url', 'measure',
-                     'unit', 'lower_is_better', 'alert_threshold']
+required_settings = [
+    'alert_threshold',
+    'apps',
+    'lower_is_better',
+    'measure',
+    'page_cycles',
+    'test_url',
+    'type',
+    'unit',
+]
 
-playback_settings = ['playback_pageset_manifest',
-                     'playback_recordings']
+playback_settings = [
+    'playback_pageset_manifest',
+    'playback_recordings',
+]
 
 
 def filter_app(tests, values):
@@ -62,7 +72,7 @@ def validate_test_ini(test_details):
         # measure setting not required for benchmark type tests
         if setting == 'measure' and test_details['type'] == 'benchmark':
             continue
-        if setting not in test_details:
+        if test_details.get(setting) is None:
             # if page-cycles is not specified, it's ok as long as browser-cycles is there
             if setting == "page-cycles" and test_details.get('browser_cycles') is not None:
                 continue
@@ -73,16 +83,16 @@ def validate_test_ini(test_details):
     test_details.setdefault("page_timeout", 30000)
 
     # if playback is specified, we need more playback settings
-    if 'playback' in test_details:
+    if test_details.get('playback') is not None:
         for setting in playback_settings:
-            if setting not in test_details:
+            if test_details.get(setting) is None:
                 valid_settings = False
                 LOG.error("ERROR: setting '%s' is required but not found in %s"
                           % (setting, test_details['manifest']))
 
     # if 'alert-on' is specified, we need to make sure that the value given is valid
     # i.e. any 'alert_on' values must be values that exist in the 'measure' ini setting
-    if 'alert_on' in test_details:
+    if test_details.get('alert_on') is not None:
 
         # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
         # convert to a list; and remove any spaces
@@ -95,6 +105,7 @@ def validate_test_ini(test_details):
                           "it doesn't exist in the 'measure' test setting!"
                           % alert_on_value)
                 valid_settings = False
+
     return valid_settings
 
 

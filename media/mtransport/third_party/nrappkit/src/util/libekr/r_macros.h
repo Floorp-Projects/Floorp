@@ -130,7 +130,7 @@ int debug(int cls, char *format,...);
 #define DBG(a)
 #endif
 
-#define UNIMPLEMENTED do { fprintf(stderr,"%s:%d Function %s unimplemented\n",__FILE__,__LINE__,__FUNCTION__); abort(); } while(0)
+#define NR_UNIMPLEMENTED do { fprintf(stderr,"%s:%d Function %s unimplemented\n",__FILE__,__LINE__,__FUNCTION__); abort(); } while(0)
 
 #include "r_memory.h"
 

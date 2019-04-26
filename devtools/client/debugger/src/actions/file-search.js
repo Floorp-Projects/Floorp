@@ -97,7 +97,12 @@ export function updateSearchResults(
   };
 }
 
-export function searchContents(cx: Context, query: string, editor: Object) {
+export function searchContents(
+  cx: Context,
+  query: string,
+  editor: Object,
+  focusFirstResult?: boolean = true
+) {
   return async ({ getState, dispatch }: ThunkArgs) => {
     const modifiers = getFileSearchModifiers(getState());
     const selectedSourceWithContent = getSelectedSourceWithContent(getState());
@@ -131,7 +136,7 @@ export function searchContents(cx: Context, query: string, editor: Object) {
 
     const matches = await getMatches(query, text, _modifiers);
 
-    const res = find(ctx, query, true, _modifiers);
+    const res = find(ctx, query, true, _modifiers, focusFirstResult);
     if (!res) {
       return;
     }
