@@ -1259,7 +1259,6 @@ class GetUserMediaStreamRunnable : public Runnable {
         switch (source) {
           case MediaSourceEnum::Browser:
           case MediaSourceEnum::Screen:
-          case MediaSourceEnum::Application:
           case MediaSourceEnum::Window:
             // Wait for first frame for screen-sharing devices, to ensure
             // with and height settings are available immediately, to pass wpt.
@@ -2465,7 +2464,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
         }
         MOZ_FALLTHROUGH;
       case MediaSourceEnum::Screen:
-      case MediaSourceEnum::Application:
       case MediaSourceEnum::Window:
         // Deny screensharing request if support is disabled, or
         // the requesting document is not from a host on the whitelist.
@@ -2524,7 +2522,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
       // privacy reasons.
 
       if (videoType == MediaSourceEnum::Screen ||
-          videoType == MediaSourceEnum::Application ||
           videoType == MediaSourceEnum::Browser) {
         videoType = MediaSourceEnum::Window;
         vc.mMediaSource.AssignASCII(
@@ -4464,8 +4461,6 @@ void SourceListener::StopSharing() {
 
   if (mVideoDeviceState && (mVideoDeviceState->mDevice->GetMediaSource() ==
                                 MediaSourceEnum::Screen ||
-                            mVideoDeviceState->mDevice->GetMediaSource() ==
-                                MediaSourceEnum::Application ||
                             mVideoDeviceState->mDevice->GetMediaSource() ==
                                 MediaSourceEnum::Window)) {
     // We want to stop the whole stream if there's no audio;

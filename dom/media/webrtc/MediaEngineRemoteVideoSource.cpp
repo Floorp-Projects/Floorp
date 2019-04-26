@@ -60,8 +60,6 @@ dom::MediaSourceEnum MediaEngineRemoteVideoSource::GetMediaSource() const {
       return MediaSourceEnum::Camera;
     case camera::ScreenEngine:
       return MediaSourceEnum::Screen;
-    case camera::AppEngine:
-      return MediaSourceEnum::Application;
     case camera::WinEngine:
       return MediaSourceEnum::Window;
     default:
@@ -324,7 +322,6 @@ nsresult MediaEngineRemoteVideoSource::Start() {
         switch (capEngine) {
           case camera::ScreenEngine:
           case camera::WinEngine:
-          case camera::AppEngine:
             // Undo the hack where ideal and max constraints are crammed
             // together in mCapability for consumption by low-level code. We
             // don't actually know the real resolution yet, so report min(ideal,
@@ -518,8 +515,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   // Apply scaling for screen sharing, see bug 1453269.
   switch (mCapEngine) {
     case camera::ScreenEngine:
-    case camera::WinEngine:
-    case camera::AppEngine: {
+    case camera::WinEngine: {
       // scale to average of portrait and landscape
       float scale_width = (float)dst_width / (float)aProps.width();
       float scale_height = (float)dst_height / (float)aProps.height();
@@ -783,8 +779,7 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
 
   switch (mCapEngine) {
     case camera::ScreenEngine:
-    case camera::WinEngine:
-    case camera::AppEngine: {
+    case camera::WinEngine: {
       FlattenedConstraints c(aConstraints);
       // The actual resolution to constrain around is not easy to find ahead of
       // time (and may in fact change over time), so as a hack, we push ideal
