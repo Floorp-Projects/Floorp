@@ -71,10 +71,17 @@ function handleRequest(aRequest, aResponse) {
   // mar will be downloaded asynchronously which will allow the ui to load
   // before the download completes.
   if (params.slowDownloadMar) {
-    let retries = 0;
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "binary/octet-stream");
     aResponse.setHeader("Content-Length", SIZE_SIMPLE_MAR);
+
+    // BITS will first make a HEAD request followed by a GET request.
+    if (aRequest.method == "HEAD") {
+      aResponse.finish();
+      return;
+    }
+
+    let retries = 0;
     gSlowDownloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowDownloadTimer.initWithCallback(function(aTimer) {
       let continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
