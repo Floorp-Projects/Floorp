@@ -1417,14 +1417,14 @@ static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
   desc.setAttributes(attrSpec.flags);
   // They all have getters, so we can just make it.
   JS::Rooted<JSObject*> funobj(
-      cx,
-      XrayCreateFunction(cx, wrapper, attrSpec.accessors.getter.native, 0, id));
+      cx, XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.getter.native, 0,
+                             id));
   if (!funobj) return false;
   desc.setGetterObject(funobj);
   desc.attributesRef() |= JSPROP_GETTER;
-  if (attrSpec.accessors.setter.native.op) {
+  if (attrSpec.u.accessors.setter.native.op) {
     // We have a setter! Make it.
-    funobj = XrayCreateFunction(cx, wrapper, attrSpec.accessors.setter.native,
+    funobj = XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.setter.native,
                                 1, id);
     if (!funobj) return false;
     desc.setSetterObject(funobj);
@@ -4081,7 +4081,7 @@ bool IsGetterEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
           // It won't have a JSJitGetterOp.
           continue;
         }
-        const JSJitInfo* info = specs->accessors.getter.native.info;
+        const JSJitInfo* info = specs->u.accessors.getter.native.info;
         if (!info) {
           continue;
         }

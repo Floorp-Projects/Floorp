@@ -436,16 +436,16 @@ static bool TryResolvePropertyFromSpecs(
     if (psMatch->isAccessor()) {
       if (psMatch->isSelfHosted()) {
         JSFunction* getterFun = JS::GetSelfHostedFunction(
-            cx, psMatch->accessors.getter.selfHosted.funname, id, 0);
+            cx, psMatch->u.accessors.getter.selfHosted.funname, id, 0);
         if (!getterFun) {
           return false;
         }
         RootedObject getterObj(cx, JS_GetFunctionObject(getterFun));
         RootedObject setterObj(cx);
-        if (psMatch->accessors.setter.selfHosted.funname) {
+        if (psMatch->u.accessors.setter.selfHosted.funname) {
           MOZ_ASSERT(flags & JSPROP_SETTER);
           JSFunction* setterFun = JS::GetSelfHostedFunction(
-              cx, psMatch->accessors.setter.selfHosted.funname, id, 0);
+              cx, psMatch->u.accessors.setter.selfHosted.funname, id, 0);
           if (!setterFun) {
             return false;
           }
@@ -457,8 +457,8 @@ static bool TryResolvePropertyFromSpecs(
         }
       } else {
         if (!JS_DefinePropertyById(
-                cx, holder, id, psMatch->accessors.getter.native.op,
-                psMatch->accessors.setter.native.op, flags)) {
+                cx, holder, id, psMatch->u.accessors.getter.native.op,
+                psMatch->u.accessors.setter.native.op, flags)) {
           return false;
         }
       }
