@@ -41,6 +41,14 @@ class GleanDebugActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (!Glean.isInitialized()) {
+            logger.error(
+                "Glean is not initialized. " +
+                "It may be disabled by the application."
+            )
+            return
+        }
+
         // Enable debugging options and start the application.
         intent.extras?.let {
             // Check for ping debug view tag to apply to the X-Debug-ID header when uploading the
