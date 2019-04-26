@@ -109,7 +109,7 @@ TransportResult TransportLayerSrtp::SendPacket(MediaPacket& packet) {
 }
 
 void TransportLayerSrtp::StateChange(TransportLayer* layer, State state) {
-  if (state == TS_OPEN) {
+  if (state == TS_OPEN && !mSendSrtp) {
     TransportLayerDtls* dtls = static_cast<TransportLayerDtls*>(layer);
     MOZ_ASSERT(dtls);  // DTLS is mandatory
 
