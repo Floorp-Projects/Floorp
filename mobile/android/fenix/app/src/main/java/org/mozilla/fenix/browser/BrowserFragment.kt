@@ -279,18 +279,20 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
 
-        externalSessionId?.let {
-            customTabsIntegration.set(
-                feature = CustomTabsIntegration(
-                    requireContext(),
-                    requireComponents.core.sessionManager,
-                    toolbar,
-                    it,
-                    activity,
-                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
-                ),
-                owner = this,
-                view = view)
+        if (getSessionById()?.isCustomTabSession() == true) {
+            externalSessionId?.let {
+                customTabsIntegration.set(
+                    feature = CustomTabsIntegration(
+                        requireContext(),
+                        requireComponents.core.sessionManager,
+                        toolbar,
+                        it,
+                        activity,
+                        onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                    ),
+                    owner = this,
+                    view = view)
+            }
         }
 
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
