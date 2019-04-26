@@ -528,7 +528,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
   for (;;) {
     ParseNode* pn;
     {
-      AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing");
+      AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing",
+                                         JS::ProfilingCategoryPair::JS_Parsing);
       if (sc->isEvalContext()) {
         pn = parser->evalBody(sc->asEvalContext());
       } else {
@@ -537,7 +538,8 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     }
 
     // Successfully parsed. Emit the script.
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
     if (pn) {
       if (sc->isEvalContext() && sc->hasDebuggerStatement() &&
           !cx->helperThread()) {

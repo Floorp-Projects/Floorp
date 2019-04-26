@@ -47,6 +47,9 @@
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(JS, "JavaScript", "yellow")                                  \
     SUBCATEGORY(JS, JS, "Other")                                              \
+    SUBCATEGORY(JS, JS_Parsing, "JS Parsing")                                 \
+    SUBCATEGORY(JS, JS_IonCompilation, "Ion JIT Compilation")                 \
+    SUBCATEGORY(JS, JS_BaselineCompilation, "Baseline JIT Compilation")       \
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(GCCC, "GC / CC", "orange")                                   \
     SUBCATEGORY(GCCC, GCCC, "Other")                                          \
