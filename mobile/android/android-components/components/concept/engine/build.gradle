@@ -34,6 +34,7 @@ dependencies {
     // consumer to have to manually import "base".
     api project(':support-base')
     api project(':browser-errorpages')
+    api project(':concept-storage')
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit

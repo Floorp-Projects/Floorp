@@ -48,6 +48,7 @@ permalink: /changelog/
   * Add boolean `allowAutoplayMedia` setting.
   * ⚠️ **This is a breaking API change:**
   * Added new method to `HistoryTrackingDelegate` interface: `shouldStoreUri(uri: String): Boolean`.
+  * `VisitType` is now part of `HistoryTrackingDelegate`'s `onVisited` method signature
 
 * **feature-session**
   * `HistoryDelegate` now implements a blacklist of URI schemas.

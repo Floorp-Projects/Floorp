@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
@@ -404,9 +405,22 @@ class GeckoEngineSession(
                 (flags and GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL) == 0 ||
                 (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0) {
 
-                // Don't track visits in private mode, redirects, or error
-                // pages, even if they're top-level visits.
+                // Don't track visits in private mode, or error pages, even if they're top-level visits.
                 return GeckoResult.fromValue(false)
+            }
+
+            val isReload = lastVisitedURL?.let { it == url } ?: false
+
+            val visitType = if (isReload) {
+                VisitType.RELOAD
+            } else {
+                if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT != 0) {
+                    VisitType.REDIRECT_PERMANENT
+                } else if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE != 0) {
+                    VisitType.REDIRECT_TEMPORARY
+                } else {
+                    VisitType.LINK
+                }
             }
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
@@ -416,10 +430,9 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(false)
             }
 
-            val isReload = lastVisitedURL?.let { it == url } ?: false
             val result = GeckoResult<Boolean>()
             launch {
-                delegate.onVisited(url, isReload)
+                delegate.onVisited(url, visitType)
                 result.complete(true)
             }
             return result

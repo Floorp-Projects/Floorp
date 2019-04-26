@@ -32,11 +32,14 @@ class HistoryDelegateTest {
         delegate.onVisited("about:blank", VisitType.TYPED)
         verify(storage, never()).recordVisit("about:blank", VisitType.TYPED)
 
-        delegate.onVisited("http://www.mozilla.org", false)
+        delegate.onVisited("http://www.mozilla.org", VisitType.LINK)
         verify(storage).recordVisit("http://www.mozilla.org", VisitType.LINK)
 
-        delegate.onVisited("http://www.firefox.com", true)
+        delegate.onVisited("http://www.firefox.com", VisitType.RELOAD)
         verify(storage).recordVisit("http://www.firefox.com", VisitType.RELOAD)
+
+        delegate.onVisited("http://www.firefox.com", VisitType.BOOKMARK)
+        verify(storage).recordVisit("http://www.firefox.com", VisitType.BOOKMARK)
     }
 
     @Test

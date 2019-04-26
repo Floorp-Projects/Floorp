@@ -48,6 +48,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.DownloadUtils
 import java.util.Date
 
@@ -136,8 +137,13 @@ class SystemEngineView @JvmOverloads constructor(
                 return
             }
 
+            val visitType = when (isReload) {
+                true -> VisitType.RELOAD
+                false -> VisitType.LINK
+            }
+
             runBlocking {
-                session?.settings?.historyTrackingDelegate?.onVisited(url, isReload)
+                session?.settings?.historyTrackingDelegate?.onVisited(url, visitType)
             }
         }
 

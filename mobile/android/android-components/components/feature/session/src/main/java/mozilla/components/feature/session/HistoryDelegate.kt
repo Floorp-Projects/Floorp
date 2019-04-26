@@ -14,15 +14,11 @@ import mozilla.components.concept.storage.VisitType
  * Implementation of the [HistoryTrackingDelegate] which delegates work to an instance of [HistoryStorage].
  */
 class HistoryDelegate(private val historyStorage: HistoryStorage) : HistoryTrackingDelegate {
-    override suspend fun onVisited(uri: String, isReload: Boolean) {
+    override suspend fun onVisited(uri: String, type: VisitType) {
         // While we expect engine implementations to check URIs against `shouldStoreUri`, we don't
         // depend on them to actually do this check.
-        val visitType = when (isReload) {
-            true -> VisitType.RELOAD
-            false -> VisitType.LINK
-        }
         if (shouldStoreUri(uri)) {
-            historyStorage.recordVisit(uri, visitType)
+            historyStorage.recordVisit(uri, type)
         }
     }
 
