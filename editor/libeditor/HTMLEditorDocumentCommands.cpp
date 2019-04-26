@@ -46,17 +46,10 @@ namespace mozilla {
 
 StaticRefPtr<SetDocumentStateCommand> SetDocumentStateCommand::sInstance;
 
-NS_IMETHODIMP
-SetDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
-                                          nsISupports* refCon,
-                                          bool* outCmdEnabled) {
-  if (NS_WARN_IF(!outCmdEnabled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+bool SetDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
+                                               TextEditor* aTextEditor) const {
   // These commands are always enabled
-  *outCmdEnabled = true;
-  return NS_OK;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -448,17 +441,10 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
 StaticRefPtr<DocumentStateCommand> DocumentStateCommand::sInstance;
 
-NS_IMETHODIMP
-DocumentStateCommand::IsCommandEnabled(const char* aCommandName,
-                                       nsISupports* refCon,
-                                       bool* outCmdEnabled) {
-  if (NS_WARN_IF(!outCmdEnabled)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+bool DocumentStateCommand::IsCommandEnabled(const char* aCommandName,
+                                            TextEditor* aTextEditor) const {
   // Always return false to discourage callers from using DoCommand()
-  *outCmdEnabled = false;
-  return NS_OK;
+  return false;
 }
 
 NS_IMETHODIMP
