@@ -331,11 +331,9 @@ bool NeckoParent::DeallocPStunAddrsRequestParent(
 }
 
 PWebrtcProxyChannelParent* NeckoParent::AllocPWebrtcProxyChannelParent(
-    const PBrowserOrId& aBrowser) {
+    const TabId& aTabId) {
 #ifdef MOZ_WEBRTC
-  RefPtr<BrowserParent> tab =
-      BrowserParent::GetFrom(aBrowser.get_PBrowserParent());
-  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(tab);
+  WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(aTabId);
   parent->AddRef();
   return parent;
 #else

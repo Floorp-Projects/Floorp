@@ -9,6 +9,7 @@ include protocol PNecko;
 include protocol PSocketProcess;
 
 include NeckoChannelParams;
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace net {
@@ -20,7 +21,7 @@ async protocol PWebrtcProxyChannel
 parent:
   async AsyncOpen(nsCString aHost,
                   int32_t aPort,
-                  LoadInfoArgs? aLoadInfoArgs,
+                  LoadInfoArgs aLoadInfoArgs,
                   nsCString aAlpn);
   async Write(uint8_t[] aWriteData);
   async Close();
