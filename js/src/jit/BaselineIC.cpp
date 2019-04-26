@@ -5796,9 +5796,9 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
     stub->setSawDoubleResult();
   }
 
-  TryAttachStubOld<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub,
-                                           BaselineCacheIRStubKind::Regular, op,
-                                           lhs, rhs, ret);
+  TryAttachStub<BinaryArithIRGenerator>("BinaryArith", cx, frame, stub,
+                                        BaselineCacheIRStubKind::Regular, op,
+                                        lhs, rhs, ret);
   return true;
 }
 
