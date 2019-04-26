@@ -145,6 +145,10 @@ let propNameWhitelist = [
    isFromDevTools: true},
   {propName: "--bezier-grid-color",
    isFromDevTools: true},
+
+  // This is currently only used with @media (prefers-color-scheme: dark)
+  {propName: "--grey-40",
+   isFromDevTools: false},
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and
