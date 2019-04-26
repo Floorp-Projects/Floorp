@@ -6,7 +6,6 @@
 
 #include "nsCookiePermission.h"
 
-#include "mozIThirdPartyUtil.h"
 #include "nsICookie2.h"
 #include "nsIServiceManager.h"
 #include "nsICookieManager.h"
@@ -59,8 +58,6 @@ bool nsCookiePermission::Init() {
   // lazily.
   nsresult rv;
   mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return false;
-  mThirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return false;
 
   return true;
