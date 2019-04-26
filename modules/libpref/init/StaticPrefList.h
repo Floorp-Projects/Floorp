@@ -1964,6 +1964,17 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 0
 )
 
+// Cookie lifetime policy. Possible values:
+// 0 - accept all cookies
+// 1 - deprecated. don't use it.
+// 2 - accept as session cookies
+// 3 - deprecated. don't use it.
+VARCACHE_PREF(
+  "network.cookie.lifetimePolicy",
+  network_cookie_lifetimePolicy,
+  RelaxedAtomicInt32, 0
+)
+
 // Enables the predictive service.
 VARCACHE_PREF(
   "network.predictor.enabled",
