@@ -5104,6 +5104,13 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             let mut maybe_append_animation_value =
                 |property: LonghandId, value: Option<AnimationValue>| {
                     debug_assert!(!property.is_logical());
+                    debug_assert!(property.is_animatable());
+
+                    // 'display' is only animatable from SMIL
+                    if property == LonghandId::Display {
+                        return;
+                    }
+
                     if seen.contains(property) {
                         return;
                     }
