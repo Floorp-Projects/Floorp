@@ -262,8 +262,13 @@ nscoord nsHTMLCanvasFrame::GetMinISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
-  nscoord result = nsPresContext::CSSPixelsToAppUnits(
-      vertical ? GetCanvasSize().height : GetCanvasSize().width);
+  nscoord result;
+  if (StyleDisplay()->IsContainSize()) {
+    result = 0;
+  } else {
+    result = nsPresContext::CSSPixelsToAppUnits(
+        vertical ? GetCanvasSize().height : GetCanvasSize().width);
+  }
   DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
@@ -273,19 +278,30 @@ nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
-  nscoord result = nsPresContext::CSSPixelsToAppUnits(
-      vertical ? GetCanvasSize().height : GetCanvasSize().width);
+  nscoord result;
+  if (StyleDisplay()->IsContainSize()) {
+    result = 0;
+  } else {
+    result = nsPresContext::CSSPixelsToAppUnits(
+        vertical ? GetCanvasSize().height : GetCanvasSize().width);
+  }
   DISPLAY_PREF_INLINE_SIZE(this, result);
   return result;
 }
 
 /* virtual */
 IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
+  if (StyleDisplay()->IsContainSize()) {
+    return IntrinsicSize(0, 0);
+  }
   return IntrinsicSizeFromCanvasSize(GetCanvasSize());
 }
 
 /* virtual */
 nsSize nsHTMLCanvasFrame::GetIntrinsicRatio() {
+  if (StyleDisplay()->IsContainSize()) {
+    return nsSize(0, 0);
+  }
   return IntrinsicRatioFromCanvasSize(GetCanvasSize());
 }
 
@@ -295,10 +311,16 @@ LogicalSize nsHTMLCanvasFrame::ComputeSize(
     nscoord aAvailableISize, const LogicalSize& aMargin,
     const LogicalSize& aBorder, const LogicalSize& aPadding,
     ComputeSizeFlags aFlags) {
-  nsIntSize canvasSizeInPx = GetCanvasSize();
-
-  IntrinsicSize intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
-  nsSize intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+  IntrinsicSize intrinsicSize;
+  nsSize intrinsicRatio;
+  if (StyleDisplay()->IsContainSize()) {
+    intrinsicSize = IntrinsicSize(0, 0);
+    // intrinsicRatio is already implicitly 0,0 via default ctor.
+  } else {
+    nsIntSize canvasSizeInPx = GetCanvasSize();
+    intrinsicSize = IntrinsicSizeFromCanvasSize(canvasSizeInPx);
+    intrinsicRatio = IntrinsicRatioFromCanvasSize(canvasSizeInPx);
+  }
 
   return ComputeSizeWithIntrinsicDimensions(
       aRenderingContext, aWM, intrinsicSize, intrinsicRatio, aCBSize, aMargin,
