@@ -57,8 +57,12 @@ function test({ threadClient, debuggee }, testOptions) {
       // Check the grip of the proxy object.
       check_proxy_grip(debuggee, testOptions, proxyGrip);
 
-      // Check the prototype and properties of the proxy object.
+      // Check the target and handler slots of the proxy object.
       const proxyClient = threadClient.pauseGrip(proxyGrip);
+      const proxySlots = await proxyClient.getProxySlots();
+      check_proxy_slots(debuggee, testOptions, proxyGrip, proxySlots);
+
+      // Check the prototype and properties of the proxy object.
       const proxyResponse = await proxyClient.getPrototypeAndProperties();
       check_properties(testOptions, proxyResponse.ownProperties, true, false);
       check_prototype(debuggee, testOptions, proxyResponse.prototype, true, false);
@@ -117,20 +121,17 @@ function check_proxy_grip(debuggee, testOptions, grip) {
   if (global === debuggee) {
     // The proxy has no security wrappers.
     strictEqual(grip.class, "Proxy", "The grip has a Proxy class.");
-    ok(grip.proxyTarget, "There is a [[ProxyTarget]] grip.");
-    ok(grip.proxyHandler, "There is a [[ProxyHandler]] grip.");
     strictEqual(preview.ownPropertiesLength, 2, "The preview has 2 properties.");
-    const target = preview.ownProperties["<target>"].value;
-    strictEqual(target, grip.proxyTarget, "<target> contains the [[ProxyTarget]].");
-    const handler = preview.ownProperties["<handler>"].value;
-    strictEqual(handler, grip.proxyHandler, "<handler> contains the [[ProxyHandler]].");
+    const props = preview.ownProperties;
+    ok(props["<target>"].value, "<target> contains the [[ProxyTarget]].");
+    ok(props["<handler>"].value, "<handler> contains the [[ProxyHandler]].");
   } else if (isOpaque) {
     // The proxy has opaque security wrappers.
     strictEqual(grip.class, "Opaque", "The grip has an Opaque class.");
     strictEqual(grip.ownPropertyLength, 0, "The grip has no properties.");
   } else if (!subsumes) {
     // The proxy belongs to compartment not subsumed by the debuggee.
-    strictEqual(grip.class, "Restricted", "The grip has an Restricted class.");
+    strictEqual(grip.class, "Restricted", "The grip has a Restricted class.");
     ok(!("ownPropertyLength" in grip), "The grip doesn't know the number of properties.");
   } else if (globalIsInvisible) {
     // The proxy belongs to an invisible-to-debugger compartment.
@@ -140,11 +141,25 @@ function check_proxy_grip(debuggee, testOptions, grip) {
   } else {
     // The proxy has non-opaque security wrappers.
     strictEqual(grip.class, "Proxy", "The grip has a Proxy class.");
-    ok(!("proxyTarget" in grip), "There is no [[ProxyTarget]] grip.");
-    ok(!("proxyHandler" in grip), "There is no [[ProxyHandler]] grip.");
     strictEqual(preview.ownPropertiesLength, 0, "The preview has no properties.");
     ok(!("<target>" in preview), "The preview has no <target> property.");
     ok(!("<handler>" in preview), "The preview has no <handler> property.");
+  }
+}
+
+function check_proxy_slots(debuggee, testOptions, grip, proxySlots) {
+  const { global } = testOptions;
+
+  if (grip.class !== "Proxy") {
+    strictEqual(proxySlots, undefined, "Slots can only be retrived for Proxy grips.");
+  } else if (global === debuggee) {
+    const { proxyTarget, proxyHandler } = proxySlots;
+    strictEqual(proxyTarget.type, "object", "There is a [[ProxyTarget]] grip.");
+    strictEqual(proxyHandler.type, "object", "There is a [[ProxyHandler]] grip.");
+  } else {
+    const { proxyTarget, proxyHandler } = proxySlots;
+    strictEqual(proxyTarget.type, "undefined", "There is no [[ProxyTarget]] grip.");
+    strictEqual(proxyHandler.type, "undefined", "There is no [[ProxyHandler]] grip.");
   }
 }
 
