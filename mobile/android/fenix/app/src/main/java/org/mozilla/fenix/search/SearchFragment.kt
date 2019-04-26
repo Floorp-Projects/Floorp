@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.search
 
+import android.Manifest
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -47,6 +49,7 @@ class SearchFragment : Fragment(), BackHandler {
     private var sessionId: String? = null
     private var isPrivate = false
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
+    private var permissionDidUpdate = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -119,7 +122,10 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
-        getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarRequestedFocus)
+        if (!permissionDidUpdate) {
+            getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarRequestedFocus)
+        }
+        permissionDidUpdate = false
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
@@ -250,6 +256,10 @@ class SearchFragment : Fragment(), BackHandler {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
+
+                if (context!!.isPermissionGranted(Manifest.permission.CAMERA)) {
+                    permissionDidUpdate = true
+                }
             }
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
