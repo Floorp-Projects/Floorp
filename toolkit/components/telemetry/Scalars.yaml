@@ -3581,6 +3581,7 @@ networking:
     bug_numbers:
       - 1533363
       - 1546903
+      - 1546796
     description: >
       How many KB of HTTP data transferred by type, there are some categories
       separated by keys based on 4 parameters:
@@ -3590,28 +3591,28 @@ networking:
         4. tracking classification
 
       Available keys are:
-        Y=0|NormalFirstParty
-        Y=1|NormalThirdPartyOther
-        Y=2|NormalThirdPartyContentLeader
-        Y=3|NormalThirdPartyContentBackground
-        Y=4|NormalThirdPartyContentOther
-        Y=5|NormalThirdPartyBasicLeader
-        Y=6|NormalThirdPartyBasicBackground
-        Y=7|NormalThirdPartyBasicOther
-        Y=8|NormalThirdPartyFingerprintingLeader
-        Y=9|NormalThirdPartyFingerprintingBackground
-        Y=10|NormalThirdPartyFingerprintingOther
-        Y=11|PrivateFirstParty
-        Y=12|PrivateThirdPartyOther
-        Y=13|PrivateThirdPartyContentLeader
-        Y=14|PrivateThirdPartyContentBackground
-        Y=15|PrivateThirdPartyContentOther
-        Y=16|PrivateThirdPartyBasicLeader
-        Y=17|PrivateThirdPartyBasicBackground
-        Y=18|PrivateThirdPartyBasicOther
-        Y=19|PrivateThirdPartyFingerprintingLeader
-        Y=20|PrivateThirdPartyFingerprintingBackground
-        Y=21|PrivateThirdPartyFingerprintingOther
+        "Y0_N1",
+        "Y1_N3Oth",
+        "Y2_N3BasicLead",
+        "Y3_N3BasicBg",
+        "Y4_N3BasicOth",
+        "Y5_N3ContentLead",
+        "Y6_N3ContentBg",
+        "Y7_N3ContentOth",
+        "Y8_N3FpLead",
+        "Y9_N3FpBg",
+        "Y10_N3FpOth",
+        "Y11_P1",
+        "Y12_P3Oth",
+        "Y13_P3ContentLead",
+        "Y14_P3ContentBg",
+        "Y15_P3ContentOth",
+        "Y16_P3BasicLead",
+        "Y17_P3BasicBg",
+        "Y18_P3BasicOth",
+        "Y19_P3FpLead",
+        "Y20_P3FpBg",
+        "Y21_P3FpOth"
     expires: "73"
     keyed: true
     kind: uint
