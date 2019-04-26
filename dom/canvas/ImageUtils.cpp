@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageUtils.h"
-#include "ImageBitmapUtils.h"
 #include "ImageContainer.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
