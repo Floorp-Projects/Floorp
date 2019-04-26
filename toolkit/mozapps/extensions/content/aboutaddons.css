@@ -53,8 +53,6 @@ addon-list .addon.card {
   width: var(--addon-icon-size);
   height: var(--addon-icon-size);
   margin-inline-end: 16px;
-  -moz-context-properties: fill;
-  fill: currentColor;
 }
 
 .card-contents {
@@ -70,6 +68,7 @@ addon-list .addon.card {
 .addon-name {
   font-size: 16px;
   font-weight: 600;
+  color: var(--grey-90);
   line-height: 22px;
   /* Subtract the top line-height so the text and icon align at the top. */
   margin-top: -3px;
@@ -78,7 +77,7 @@ addon-list .addon.card {
 .addon-description {
   font-size: 14px;
   line-height: 20px;
-  color: var(--in-content-deemphasized-text);
+  color: var(--grey-60);
   font-weight: 400;
 }
 
@@ -102,6 +101,10 @@ addon-card:not([expanded]) .addon-description {
   /* Add some negative margin to account for the button's padding */
   margin-top: -10px;
   margin-inline-end: -8px;
+}
+
+addon-details {
+  color: var(--grey-60);
 }
 
 .addon-detail-description {
@@ -191,8 +194,6 @@ button[action="more-options"] {
   width: 24px;
   height: 24px;
   margin: 0;
-  -moz-context-properties: fill;
-  fill: currentColor;
   background: url("chrome://global/skin/icons/more.svg") no-repeat center center;
 }
 
@@ -205,7 +206,7 @@ panel-item[action="remove"] {
 panel-item-separator {
   display: block;
   height: 1px;
-  background: var(--in-content-box-border-color);
+  background: var(--panel-border-color);
   padding: 0;
   margin: 6px 0;
 }
