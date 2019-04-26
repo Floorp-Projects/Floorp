@@ -5,6 +5,20 @@
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 
+// A tweak to the standard <button> CE to use textContent on the <label>
+// inside the button, which allows the text to be highlighted when the user
+// is searching.
+
+const MozButton = customElements.get("button");
+class HighlightableButton extends MozButton {
+  static get inheritedAttributes() {
+    return Object.assign({}, super.inheritedAttributes, {
+      ".button-text": "text=label,accesskey,crop",
+    });
+  }
+}
+customElements.define("highlightable-button", HighlightableButton, {extends: "button"});
+
 var gSearchResultsPane = {
   listSearchTooltips: new Set(),
   listSearchMenuitemIndicators: new Set(),
@@ -332,6 +346,7 @@ var gSearchResultsPane = {
   async searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
     if (nodeObject.childElementCount == 0 ||
+        nodeObject.tagName == "button" ||
         nodeObject.tagName == "label" ||
         nodeObject.tagName == "description" ||
         nodeObject.tagName == "menulist") {
@@ -404,8 +419,7 @@ var gSearchResultsPane = {
         this.listSearchMenuitemIndicators.add(menulist);
       }
 
-      if ((nodeObject.tagName == "button" ||
-           nodeObject.tagName == "menulist" ||
+      if ((nodeObject.tagName == "menulist" ||
            nodeObject.tagName == "menuitem") &&
            (labelResult || valueResult || keywordsResult)) {
         nodeObject.setAttribute("highlightable", "true");

@@ -400,19 +400,6 @@ bool BytecodeCompiler::createScriptSource(
   return true;
 }
 
-template <typename Unit>
-bool BytecodeCompiler::assignSource(SourceText<Unit>& sourceBuffer) {
-  if (!cx->realm()->behaviors().discardSource()) {
-    if (options.sourceIsLazy) {
-      scriptSource->setSourceRetrievable();
-    } else if (!scriptSource->setSourceCopy(cx, sourceBuffer)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 bool BytecodeCompiler::canLazilyParse() const {
   return options.canLazilyParse &&
          !cx->realm()->behaviors().disableLazyParsing() &&

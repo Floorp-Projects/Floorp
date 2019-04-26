@@ -195,7 +195,7 @@ static void TraverseLinetoHorizontalAbs(const float* aArgs,
                                         SVGPathTraversalState& aState) {
   Point to(aArgs[0], aState.pos.y);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
-    aState.length += fabs(to.x - aState.pos.x);
+    aState.length += std::fabs(to.x - aState.pos.x);
     aState.cp1 = aState.cp2 = to;
   }
   aState.pos = to;
@@ -205,7 +205,7 @@ static void TraverseLinetoHorizontalRel(const float* aArgs,
                                         SVGPathTraversalState& aState) {
   aState.pos.x += aArgs[0];
   if (aState.ShouldUpdateLengthAndControlPoints()) {
-    aState.length += fabs(aArgs[0]);
+    aState.length += std::fabs(aArgs[0]);
     aState.cp1 = aState.cp2 = aState.pos;
   }
 }
@@ -214,7 +214,7 @@ static void TraverseLinetoVerticalAbs(const float* aArgs,
                                       SVGPathTraversalState& aState) {
   Point to(aState.pos.x, aArgs[0]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
-    aState.length += fabs(to.y - aState.pos.y);
+    aState.length += std::fabs(to.y - aState.pos.y);
     aState.cp1 = aState.cp2 = to;
   }
   aState.pos = to;
@@ -224,7 +224,7 @@ static void TraverseLinetoVerticalRel(const float* aArgs,
                                       SVGPathTraversalState& aState) {
   aState.pos.y += aArgs[0];
   if (aState.ShouldUpdateLengthAndControlPoints()) {
-    aState.length += fabs(aArgs[0]);
+    aState.length += std::fabs(aArgs[0]);
     aState.cp1 = aState.cp2 = aState.pos;
   }
 }

@@ -35,6 +35,7 @@
             <label id="signedOutAccountBoxTitle"><html:h2 data-l10n-id="sync-signedout-account-title"/></label>
           </hbox>
           <button id="noFxaSignIn"
+                  is="highlightable-button"
                   class="accessory-button"
                   data-l10n-id="sync-signedout-account-signin"/>
         </hbox>
@@ -87,6 +88,7 @@
                   </label>
                   <label id="fxaEmailAddress" flex="1" crop="end"/>
                   <button id="fxaUnlinkButton"
+                          is="highlightable-button"
                           class="accessory-button"
                           data-l10n-id="sync-disconnect"/>
                 </hbox>
@@ -112,8 +114,12 @@
                     data-l10n-args='{"email": ""}'/>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="verifyFxaAccount" data-l10n-id="sync-resend-verification"/>
-                  <button id="unverifiedUnlinkFxaAccount" data-l10n-id="sync-remove-account"/>
+                  <button id="verifyFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-resend-verification"/>
+                  <button id="unverifiedUnlinkFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-remove-account"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -132,8 +138,12 @@
                     data-l10n-args='{"email": ""}'/>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="rejectReSignIn" data-l10n-id="sync-sign-in"/>
-                  <button id="rejectUnlinkFxaAccount" data-l10n-id="sync-remove-account"/>
+                  <button id="rejectReSignIn"
+                          is="highlightable-button"
+                          data-l10n-id="sync-sign-in"/>
+                  <button id="rejectUnlinkFxaAccount"
+                          is="highlightable-button"
+                          data-l10n-id="sync-remove-account"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -174,11 +184,14 @@
       <hbox id="fxaDeviceName">
         <textbox id="fxaSyncComputerName" flex="1" disabled="true"/>
         <button id="fxaChangeDeviceName"
+                is="highlightable-button"
                 data-l10n-id="sync-device-name-change"/>
         <button id="fxaCancelChangeDeviceName"
+                is="highlightable-button"
                 data-l10n-id="sync-device-name-cancel"
                 hidden="true"/>
         <button id="fxaSaveChangeDeviceName"
+                is="highlightable-button"
                 data-l10n-id="sync-device-name-save"
                 hidden="true"/>
       </hbox>

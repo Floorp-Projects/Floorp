@@ -577,13 +577,13 @@ already_AddRefed<gfxPattern> nsSVGRadialGradientFrame::CreateGradient() {
     // representation divided by 2 to ensure that we get different cairo
     // fractions
     double dMax = std::max(0.0, r - 1.0 / 128);
-    float dx = fx - cx;
-    float dy = fy - cy;
-    double d = sqrt((dx * dx) + (dy * dy));
+    double dx = fx - cx;
+    double dy = fy - cy;
+    double d = std::sqrt((dx * dx) + (dy * dy));
     if (d > dMax) {
-      double angle = atan2(dy, dx);
-      fx = (float)(dMax * cos(angle)) + cx;
-      fy = (float)(dMax * sin(angle)) + cy;
+      double angle = std::atan2(dy, dx);
+      fx = float(dMax * std::cos(angle)) + cx;
+      fy = float(dMax * std::sin(angle)) + cy;
     }
   }
 

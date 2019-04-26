@@ -1653,30 +1653,67 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
   rt->addRefScriptPrivate(value);
 }
 
+class ScriptSource::LoadSourceMatcher {
+  JSContext* const cx_;
+  ScriptSource* const ss_;
+  bool* const loaded_;
+
+ public:
+  explicit LoadSourceMatcher(JSContext* cx, ScriptSource* ss, bool* loaded)
+      : cx_(cx), ss_(ss), loaded_(loaded) {}
+
+  template <typename Unit>
+  bool operator()(const Compressed<Unit>&) const {
+    return sourceAlreadyLoaded();
+  }
+
+  template <typename Unit>
+  bool operator()(const Uncompressed<Unit>&) const {
+    return sourceAlreadyLoaded();
+  }
+
+  bool operator()(const Missing&) const { return tryLoadingSource(); }
+
+  bool operator()(const BinAST&) const { return tryLoadingSource(); }
+
+ private:
+  bool sourceAlreadyLoaded() const {
+    *loaded_ = true;
+    return true;
+  }
+
+  bool tryLoadingSource() const {
+    // Establish the default outcome first.
+    *loaded_ = false;
+
+    if (!cx_->runtime()->sourceHook.ref() || !ss_->sourceRetrievable()) {
+      return true;
+    }
+
+    char16_t* src = nullptr;
+    size_t length;
+    if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &src,
+                                          &length)) {
+      return false;
+    }
+    if (!src) {
+      return true;
+    }
+
+    // XXX On-demand source is currently only UTF-16.  Perhaps it should be
+    //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
+    if (!ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(src), length)) {
+      return false;
+    }
+
+    *loaded_ = true;
+    return true;
+  }
+};
+
 /* static */
-bool JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked) {
-  MOZ_ASSERT(!ss->hasSourceText());
-  *worked = false;
-  if (!cx->runtime()->sourceHook.ref() || !ss->sourceRetrievable()) {
-    return true;
-  }
-  char16_t* src = nullptr;
-  size_t length;
-  if (!cx->runtime()->sourceHook->load(cx, ss->filename(), &src, &length)) {
-    return false;
-  }
-  if (!src) {
-    return true;
-  }
-
-  // XXX On-demand source is currently only UTF-16.  Perhaps it should be
-  //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
-  if (!ss->setSource(cx, EntryUnits<char16_t>(src), length)) {
-    return false;
-  }
-
-  *worked = true;
-  return true;
+bool ScriptSource::loadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
+  return ss->data.match(LoadSourceMatcher(cx, ss, loaded));
 }
 
 /* static */
@@ -2057,16 +2094,10 @@ JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
 }
 
 template <typename Unit>
-void ScriptSource::setSource(
-    typename SourceTypeTraits<Unit>::SharedImmutableString uncompressed) {
+MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
+    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
   MOZ_ASSERT(data.is<Missing>());
-  data = SourceType(Uncompressed<Unit>(std::move(uncompressed)));
-}
 
-template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
-                                          EntryUnits<Unit>&& source,
-                                          size_t length) {
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
@@ -2076,8 +2107,18 @@ MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
     return false;
   }
 
-  setSource<Unit>(std::move(*deduped));
+  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
   return true;
+}
+
+template <typename Unit>
+MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
+                                                   EntryUnits<Unit>&& source,
+                                                   size_t length) {
+  MOZ_ASSERT(sourceRetrievable_);
+  MOZ_ASSERT(data.is<Missing>(),
+             "retrievable source must be indicated as missing");
+  return setUncompressedSourceHelper(cx, std::move(source), length);
 }
 
 #if defined(JS_BUILD_BINAST)
@@ -2162,26 +2203,29 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
 }
 
 template <typename Unit>
-void ScriptSource::setCompressedSource(SharedImmutableString raw,
-                                       size_t uncompressedLength) {
-  MOZ_ASSERT(data.is<Missing>() || hasUncompressedSource());
-  MOZ_ASSERT_IF(hasUncompressedSource(), length() == uncompressedLength);
+void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
+                                             size_t uncompressedLength) {
+  MOZ_ASSERT(data.is<Uncompressed<Unit>>(),
+             "should only be converting uncompressed source to compressed "
+             "source identically encoded");
+  MOZ_ASSERT(length() == uncompressedLength);
 
   if (pinnedUnitsStack_) {
     MOZ_ASSERT(pendingCompressed_.empty());
-    pendingCompressed_.construct<Compressed<Unit>>(std::move(raw),
+    pendingCompressed_.construct<Compressed<Unit>>(std::move(compressed),
                                                    uncompressedLength);
   } else {
-    data = SourceType(Compressed<Unit>(std::move(raw), uncompressedLength));
+    data =
+        SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
   }
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setCompressedSource(JSContext* cx,
-                                                    UniqueChars&& compressed,
-                                                    size_t rawLength,
-                                                    size_t sourceLength) {
-  MOZ_ASSERT(compressed);
+MOZ_MUST_USE bool ScriptSource::initializeWithCompressedSource(
+    JSContext* cx, UniqueChars&& compressed, size_t rawLength,
+    size_t sourceLength) {
+  MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
+  MOZ_ASSERT(compressed != nullptr);
 
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
@@ -2190,13 +2234,30 @@ MOZ_MUST_USE bool ScriptSource::setCompressedSource(JSContext* cx,
     return false;
   }
 
-  setCompressedSource<Unit>(std::move(*deduped), sourceLength);
+  MOZ_ASSERT(pinnedUnitsStack_ == nullptr,
+             "shouldn't be initializing a ScriptSource while its characters "
+             "are pinned -- that only makes sense with a ScriptSource actively "
+             "being inspected");
+  data = SourceType(Compressed<Unit>(std::move(*deduped), sourceLength));
+
   return true;
 }
 
 template <typename Unit>
-bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf) {
-  MOZ_ASSERT(!hasSourceText());
+bool ScriptSource::assignSource(JSContext* cx,
+                                const ReadOnlyCompileOptions& options,
+                                SourceText<Unit>& srcBuf) {
+  MOZ_ASSERT(data.is<Missing>(),
+             "source assignment should only occur on fresh ScriptSources");
+
+  if (cx->realm()->behaviors().discardSource()) {
+    return true;
+  }
+
+  if (options.sourceIsLazy) {
+    sourceRetrievable_ = true;
+    return true;
+  }
 
   JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
   auto& cache = runtime->sharedImmutableStrings();
@@ -2211,14 +2272,16 @@ bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf) {
     return false;
   }
 
-  setSource<Unit>(std::move(*deduped));
+  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
   return true;
 }
 
-template bool ScriptSource::setSourceCopy(JSContext* cx,
-                                          SourceText<char16_t>& srcBuf);
-template bool ScriptSource::setSourceCopy(JSContext* cx,
-                                          SourceText<Utf8Unit>& srcBuf);
+template bool ScriptSource::assignSource(JSContext* cx,
+                                         const ReadOnlyCompileOptions& options,
+                                         SourceText<char16_t>& srcBuf);
+template bool ScriptSource::assignSource(JSContext* cx,
+                                         const ReadOnlyCompileOptions& options,
+                                         SourceText<Utf8Unit>& srcBuf);
 
 void ScriptSource::trace(JSTracer* trc) {
 #ifdef JS_BUILD_BINAST
@@ -2350,15 +2413,15 @@ void SourceCompressionTask::runTask() {
   source->performTaskWork(this);
 }
 
-void ScriptSource::setCompressedSourceFromTask(
+void ScriptSource::convertToCompressedSourceFromTask(
     SharedImmutableString compressed) {
-  data.match(SetCompressedSourceFromTask(this, compressed));
+  data.match(ConvertToCompressedSourceFromTask(this, compressed));
 }
 
 void SourceCompressionTask::complete() {
   if (!shouldCancel() && resultString_.isSome()) {
     ScriptSource* source = sourceHolder_.get();
-    source->setCompressedSourceFromTask(std::move(*resultString_));
+    source->convertToCompressedSourceFromTask(std::move(*resultString_));
   }
 }
 
@@ -2435,6 +2498,13 @@ bool ScriptSource::xdrFinalizeEncoder(JS::TranscodeBuffer& buffer) {
 }
 
 template <typename Unit>
+MOZ_MUST_USE bool ScriptSource::initializeUncompressedSource(
+    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
+  MOZ_ASSERT(data.is<Missing>(), "must be initializing a fresh ScriptSource");
+  return setUncompressedSourceHelper(cx, std::move(source), length);
+}
+
+template <typename Unit>
 struct SourceDecoder {
   XDRState<XDR_DECODE>* const xdr_;
   ScriptSource* const scriptSource_;
@@ -2456,8 +2526,8 @@ struct SourceDecoder {
 
     MOZ_TRY(xdr_->codeChars(sourceUnits.get(), uncompressedLength_));
 
-    if (!scriptSource_->setSource(xdr_->cx(), std::move(sourceUnits),
-                                  uncompressedLength_)) {
+    if (!scriptSource_->initializeUncompressedSource(
+            xdr_->cx(), std::move(sourceUnits), uncompressedLength_)) {
       return xdr_->fail(JS::TranscodeResult_Throw);
     }
 
@@ -2617,10 +2687,10 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
           }
           MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
-          if (!(srcCharSize == 1 ? ss->setCompressedSource<Utf8Unit>(
+          if (!(srcCharSize == 1 ? ss->initializeWithCompressedSource<Utf8Unit>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength)
-                                 : ss->setCompressedSource<char16_t>(
+                                 : ss->initializeWithCompressedSource<char16_t>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength))) {
             return xdr->fail(JS::TranscodeResult_Throw);

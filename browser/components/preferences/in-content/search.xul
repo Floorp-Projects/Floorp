@@ -67,10 +67,12 @@
 
       <hbox>
         <button id="restoreDefaultSearchEngines"
+                is="highlightable-button"
                 data-l10n-id="search-restore-default"
                 />
         <spacer flex="1"/>
         <button id="removeEngineButton"
+                is="highlightable-button"
                 class="searchEngineAction"
                 data-l10n-id="search-remove-engine"
                 disabled="true"

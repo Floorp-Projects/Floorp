@@ -485,16 +485,12 @@ public:
     XASSERT(cubeb_context->output_collection_changed_callback ||
             cubeb_context->input_collection_changed_callback);
     LOG("collection: Audio device state changed, id = %S, state = %lu.", device_id, new_state);
-    if (new_state == DEVICE_STATE_ACTIVE ||
-        new_state == DEVICE_STATE_NOTPRESENT ||
-        new_state == DEVICE_STATE_UNPLUGGED) {
-      EDataFlow flow;
-      HRESULT hr = GetDataFlow(device_id, &flow);
-      if (FAILED(hr)) {
-        return hr;
-      }
-      monitor_notifications.notify(flow);
+    EDataFlow flow;
+    HRESULT hr = GetDataFlow(device_id, &flow);
+    if (FAILED(hr)) {
+      return hr;
     }
+    monitor_notifications.notify(flow);
     return S_OK;
   }
 
