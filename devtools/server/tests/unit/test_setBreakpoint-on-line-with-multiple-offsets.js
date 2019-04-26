@@ -6,9 +6,9 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
   loadSubScript(SOURCE_URL, debuggee);
   const { source } = await promise;
-  const sourceClient = threadClient.source(source);
+  const sourceFront = threadClient.source(source);
 
-  const location = { sourceUrl: sourceClient.url, line: 4 };
+  const location = { sourceUrl: sourceFront.url, line: 4 };
   setBreakpoint(threadClient, location);
 
   let packet = await executeOnNextTickAndWaitForPause(function() {
@@ -25,7 +25,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   let variables = frame.environment.bindings.variables;
   Assert.equal(variables.i.value.type, "undefined");
 
-  const location2 = { sourceUrl: sourceClient.url, line: 7 };
+  const location2 = { sourceUrl: sourceFront.url, line: 7 };
   setBreakpoint(threadClient, location2);
 
   packet = await executeOnNextTickAndWaitForPause(

@@ -181,8 +181,8 @@ async function sourceContents({
   thread
 }: SourceActor): Promise<{| source: any, contentType: ?string |}> {
   const sourceThreadClient = lookupThreadClient(thread);
-  const sourceClient = sourceThreadClient.source({ actor });
-  const { source, contentType } = await sourceClient.source();
+  const sourceFront = sourceThreadClient.source({ actor });
+  const { source, contentType } = await sourceFront.source();
   return { source, contentType };
 }
 
@@ -365,11 +365,11 @@ async function blackBox(
   isBlackBoxed: boolean,
   range?: Range
 ): Promise<*> {
-  const sourceClient = threadClient.source({ actor: sourceActor.actor });
+  const sourceFront = threadClient.source({ actor: sourceActor.actor });
   if (isBlackBoxed) {
-    await sourceClient.unblackBox(range);
+    await sourceFront.unblackBox(range);
   } else {
-    await sourceClient.blackBox(range);
+    await sourceFront.blackBox(range);
   }
 }
 
@@ -464,8 +464,8 @@ async function getBreakpointPositions(
 
   for (const { thread, actor } of actors) {
     const sourceThreadClient = lookupThreadClient(thread);
-    const sourceClient = sourceThreadClient.source({ actor });
-    const positions = await sourceClient.getBreakpointPositionsCompressed(
+    const sourceFront = sourceThreadClient.source({ actor });
+    const positions = await sourceFront.getBreakpointPositionsCompressed(
       range
     );
 

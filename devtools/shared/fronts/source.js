@@ -18,7 +18,7 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
  *        The thread client parent. Used until the SourceFront marshalls LongStringFront
  *        and ArrayBuffer.
  */
-class SourceClient extends FrontClassWithSpec(sourceSpec) {
+class SourceFront extends FrontClassWithSpec(sourceSpec) {
   constructor(client, form, activeThread) {
     super(client);
     this._url = form.url;
@@ -48,7 +48,7 @@ class SourceClient extends FrontClassWithSpec(sourceSpec) {
   }
 
   /**
-   * Get a long string grip for this SourceClient's source.
+   * Get a long string grip for this SourceFront's source.
    */
   async source() {
     const response = await this.onSource();
@@ -96,5 +96,5 @@ class SourceClient extends FrontClassWithSpec(sourceSpec) {
   }
 }
 
-exports.SourceClient = SourceClient;
-registerFront(SourceClient);
+exports.SourceFront = SourceFront;
+registerFront(SourceFront);
