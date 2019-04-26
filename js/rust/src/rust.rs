@@ -1189,15 +1189,15 @@ impl JSPropertySpec {
         JSPropertySpec {
             name: name,
             flags: flags,
-            __bindgen_anon_1: JSPropertySpec__bindgen_ty_1 {
-                accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
-                    getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+            u: JSPropertySpec_AccessorsOrValue {
+                accessors: JSPropertySpec_AccessorsOrValue_Accessors {
+                    getter: JSPropertySpec_Accessor {
                         native: JSNativeWrapper {
                             op: func,
                             info: ptr::null(),
                         },
                     },
-                    setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                    setter: JSPropertySpec_Accessor {
                         native: JSNativeWrapper {
                             op: None,
                             info: ptr::null(),
@@ -1217,15 +1217,15 @@ impl JSPropertySpec {
         JSPropertySpec {
             name: name,
             flags: flags,
-            __bindgen_anon_1: JSPropertySpec__bindgen_ty_1 {
-                accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
-                    getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+            u: JSPropertySpec_AccessorsOrValue {
+                accessors: JSPropertySpec_AccessorsOrValue_Accessors {
+                    getter: JSPropertySpec_Accessor {
                         native: JSNativeWrapper {
                             op: g_f,
                             info: ptr::null(),
                         },
                     },
-                    setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                    setter: JSPropertySpec_Accessor {
                         native: JSNativeWrapper {
                             op: s_f,
                             info: ptr::null(),
@@ -1239,15 +1239,15 @@ impl JSPropertySpec {
     pub const NULL: JSPropertySpec = JSPropertySpec {
         name: 0 as *const _,
         flags: 0,
-        __bindgen_anon_1: JSPropertySpec__bindgen_ty_1{
-            accessors: JSPropertySpec__bindgen_ty_1__bindgen_ty_1 {
-                getter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
+        u: JSPropertySpec_AccessorsOrValue{
+            accessors: JSPropertySpec_AccessorsOrValue_Accessors {
+                getter: JSPropertySpec_Accessor {
                     native: JSNativeWrapper {
                         op: None,
                         info: 0 as *const _,
                     },
                 },
-                setter: JSPropertySpec__bindgen_ty_1__bindgen_ty_1__bindgen_ty_2 {
+                setter: JSPropertySpec_Accessor {
                     native: JSNativeWrapper {
                         op: None,
                         info: 0 as *const _,

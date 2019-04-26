@@ -2889,15 +2889,15 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
                                             MutableHandleValue vp) const {
   MOZ_ASSERT(!isAccessor());
 
-  if (value.type == JSVAL_TYPE_STRING) {
-    RootedAtom atom(cx, Atomize(cx, value.string, strlen(value.string)));
+  if (u.value.type == JSVAL_TYPE_STRING) {
+    RootedAtom atom(cx, Atomize(cx, u.value.string, strlen(u.value.string)));
     if (!atom) {
       return false;
     }
     vp.setString(atom);
   } else {
-    MOZ_ASSERT(value.type == JSVAL_TYPE_INT32);
-    vp.setInt32(value.int32);
+    MOZ_ASSERT(u.value.type == JSVAL_TYPE_INT32);
+    vp.setInt32(u.value.int32);
   }
 
   return true;
@@ -2947,14 +2947,14 @@ JS_PUBLIC_API bool JS_DefineProperties(JSContext* cx, HandleObject obj,
     if (ps->isAccessor()) {
       if (ps->isSelfHosted()) {
         if (!DefineSelfHostedProperty(
-                cx, obj, id, ps->accessors.getter.selfHosted.funname,
-                ps->accessors.setter.selfHosted.funname, ps->flags)) {
+                cx, obj, id, ps->u.accessors.getter.selfHosted.funname,
+                ps->u.accessors.setter.selfHosted.funname, ps->flags)) {
           return false;
         }
       } else {
         if (!DefineAccessorPropertyById(
-                cx, obj, id, ps->accessors.getter.native,
-                ps->accessors.setter.native, ps->flags)) {
+                cx, obj, id, ps->u.accessors.getter.native,
+                ps->u.accessors.setter.native, ps->flags)) {
           return false;
         }
       }
