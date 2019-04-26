@@ -40,6 +40,11 @@ class DefaultThemeManager : ThemeManager {
     override val currentTheme: ThemeManager.Theme
         get() = temporaryThemeManagerStorage
 
+    val currentThemeResource: Int = when (currentTheme) {
+        ThemeManager.Theme.Normal -> R.style.NormalTheme
+        ThemeManager.Theme.Private -> R.style.PrivateTheme
+    }
+
     override fun setTheme(theme: ThemeManager.Theme) {
         if (temporaryThemeManagerStorage != theme) {
             temporaryThemeManagerStorage = theme

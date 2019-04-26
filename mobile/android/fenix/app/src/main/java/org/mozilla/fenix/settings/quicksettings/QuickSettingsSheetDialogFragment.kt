@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
-import org.mozilla.fenix.R
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
@@ -26,6 +26,8 @@ import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.PhoneFeature
 import kotlin.coroutines.CoroutineContext
+import androidx.appcompat.view.ContextThemeWrapper
+import org.mozilla.fenix.R
 
 private const val KEY_URL = "KEY_URL"
 private const val KEY_IS_SECURED = "KEY_IS_SECURED"
@@ -55,8 +57,21 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
         job = Job()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_quick_settings_dialog_sheet, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val contextThemeWrapper = ContextThemeWrapper(
+            activity,
+            (activity as HomeActivity).themeManager.currentThemeResource
+        )
+        val localInflater = inflater.cloneInContext(contextThemeWrapper)
+        return localInflater.inflate(
+            R.layout.fragment_quick_settings_dialog_sheet,
+            container,
+            false
+        )
     }
 
     override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {
@@ -64,7 +79,12 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
         quickSettingsComponent = QuickSettingsComponent(
             rootView as ConstraintLayout, ActionBusFactory.get(this),
             QuickSettingsState(
-                QuickSettingsState.Mode.Normal(url, isSecured, isTrackingProtectionOn, sitePermissions)
+                QuickSettingsState.Mode.Normal(
+                    url,
+                    isSecured,
+                    isTrackingProtectionOn,
+                    sitePermissions
+                )
             )
         )
     }
@@ -93,7 +113,11 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         if (arePermissionsGranted(requestCode, grantResults)) {
             val feature = requireNotNull(PhoneFeature.findFeatureBy(permissions))
             getManagedEmitter<QuickSettingsChange>()
@@ -168,7 +192,12 @@ class QuickSettingsSheetDialogFragment : BottomSheetDialogFragment(), CoroutineS
 
                             launch(Dispatchers.Main) {
                                 getManagedEmitter<QuickSettingsChange>()
-                                    .onNext(QuickSettingsChange.Stored(it.featurePhone, sitePermissions))
+                                    .onNext(
+                                        QuickSettingsChange.Stored(
+                                            it.featurePhone,
+                                            sitePermissions
+                                        )
+                                    )
 
                                 requireContext().components.useCases.sessionUseCases.reload.invoke()
                             }

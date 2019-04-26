@@ -109,11 +109,19 @@
     <color name="quick_action_read_icon">#8a201f</color>
     <color name="quick_action_read_icon_background">#fce98f</color>
 
+    <!-- Toggle Colors -->
+    <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
+    <color name="toggle_off_track_light_theme">@color/dark_grey_90</color>
+    <color name="toggle_off_knob_dark_theme">@color/light_grey_05</color>
+    <color name="toggle_off_track_dark_theme">@color/light_grey_05</color>
+    <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_light_theme</color>
+    <color name="toggle_off_track_normal_theme">@color/toggle_off_track_light_theme</color>
+
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
-    <!-- <color name="private_browsing_button_accent_color">#722291</color> -->
     <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
     <color name="white_color">#FBFBFE</color>
-
+    <color name="light_grey_05">#FBFBFE</color>
+    <color name="dark_grey_90">#15141A</color>
     <color name="neutral_text">@color/white_color</color>
 </resources>

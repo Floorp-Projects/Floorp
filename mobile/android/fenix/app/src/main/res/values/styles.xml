@@ -12,7 +12,14 @@
         <item name="android:windowBackground">@color/foundation_normal_theme</item>
         <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
-        <item name="android:colorControlActivated">@color/accent_bright_normal_theme</item>
+        <item name="android:textColorPrimary">@color/primary_text_normal_theme</item>
+        <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
+        <!-- Active thumb color & Active track color (30% transparency) -->
+        <item name="android:colorControlActivated">@color/accent_high_contrast_normal_theme</item>
+        <!-- Inactive thumb color -->
+        <item name="colorSwitchThumbNormal">@color/toggle_off_knob_normal_theme</item>
+        <!-- Inactive track color(30% transparency) -->
+        <item name="android:colorForeground">@color/toggle_off_track_normal_theme</item>
 
         <!-- Updated color attributes -->
         <item name="primaryText">@color/primary_text_normal_theme</item>
@@ -38,7 +45,7 @@
         <item name="privateBrowsingButtonAccent">@color/primary_text_normal_theme</item>
     </style>
 
-    <style name="NormalTheme" parent="NormalThemeBase"/>
+    <style name="NormalTheme" parent="NormalThemeBase" />
 
     <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
         <!-- Android system styling -->
@@ -48,7 +55,13 @@
         <item name="android:windowBackground">@color/foundation_private_theme</item>
         <item name="android:colorEdgeEffect">@color/accent_private_theme</item>
         <item name="android:colorAccent">@color/primary_text_private_theme</item>
-        <item name="android:colorControlActivated">@color/accent_bright_private_theme</item>
+        <item name="android:colorControlActivated">@color/accent_high_contrast_private_theme</item>
+        <item name="android:textColorPrimary">@color/primary_text_private_theme</item>
+        <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
+        <!-- Inactive thumb color -->
+        <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
+        <!-- Inactive track color(30% transparency) -->
+        <item name="android:colorForeground">@color/toggle_off_track_dark_theme</item>
 
         <!-- Updated color attributes -->
         <item name="primaryText">@color/primary_text_private_theme</item>
@@ -79,7 +92,7 @@
         <item name="cardBackgroundColor">?above</item>
     </style>
 
-    <style name="PrivateTheme" parent="PrivateThemeBase"/>
+    <style name="PrivateTheme" parent="PrivateThemeBase" />
 
     <!-- Fade animation for theme switching -->
     <style name="WindowAnimationTransition">
