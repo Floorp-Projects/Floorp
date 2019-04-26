@@ -16,18 +16,15 @@ XPIDL_MODULE = 'dom'
 EXPORTS.mozilla.dom += [
     'FileCreatorChild.h',
     'FileCreatorParent.h',
+    'IPCBlobInputStream.h',
+    'IPCBlobInputStreamChild.h',
+    'IPCBlobInputStreamParent.h',
+    'IPCBlobInputStreamStorage.h',
     'IPCBlobUtils.h',
     'PendingIPCBlobChild.h',
     'PendingIPCBlobParent.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
-]
-
-EXPORTS.mozilla.dom.ipc += [
-    'IPCBlobInputStream.h',
-    'IPCBlobInputStreamChild.h',
-    'IPCBlobInputStreamParent.h',
-    'IPCBlobInputStreamStorage.h',
 ]
 
 UNIFIED_SOURCES += [
