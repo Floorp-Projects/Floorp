@@ -69,9 +69,9 @@ function test_black_box() {
 function test_black_box_dbg_statement() {
   gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceClient = await getSource(gThreadClient, BLACK_BOXED_URL);
+    const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
 
-    await blackBox(sourceClient);
+    await blackBox(sourceFront);
 
     gThreadClient.addOneTimeListener("paused", async function(event, packet) {
       Assert.equal(packet.why.type, "breakpoint",
@@ -81,14 +81,14 @@ function test_black_box_dbg_statement() {
       gThreadClient.removeBreakpoint({ sourceUrl: source.url, line: 4 }, {});
 
       await gThreadClient.resume();
-      await test_unblack_box_dbg_statement(sourceClient);
+      await test_unblack_box_dbg_statement(sourceFront);
     });
     gDebuggee.runTest();
   });
 }
 
-async function test_unblack_box_dbg_statement(sourceClient) {
-  await unBlackBox(sourceClient);
+async function test_unblack_box_dbg_statement(sourceFront) {
+  await unBlackBox(sourceFront);
 
   gClient.addOneTimeListener("paused", function(event, packet) {
     Assert.equal(packet.why.type, "debuggerStatement",

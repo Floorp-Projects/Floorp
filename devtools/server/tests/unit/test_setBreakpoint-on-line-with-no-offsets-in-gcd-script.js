@@ -8,10 +8,10 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }
   Cu.forceGC(); Cu.forceGC(); Cu.forceGC();
 
   const { source } = await promise;
-  const sourceClient = threadClient.source(source);
+  const sourceFront = threadClient.source(source);
 
   const location = { line: 7 };
-  let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
+  let [packet, breakpointClient] = await setBreakpoint(sourceFront, location);
   Assert.ok(packet.isPending);
   Assert.equal(false, "actualLocation" in packet);
 

@@ -71,8 +71,8 @@ function test_black_box() {
 function test_black_box_exception() {
   gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceClient = await getSource(gThreadClient, BLACK_BOXED_URL);
-    await blackBox(sourceClient);
+    const sourceFront = await getSource(gThreadClient, BLACK_BOXED_URL);
+    await blackBox(sourceFront);
     gThreadClient.pauseOnExceptions(true, false);
 
     gClient.addOneTimeListener("paused", async function(event, packet) {

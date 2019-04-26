@@ -175,7 +175,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["source"],
     spec: "devtools/shared/specs/source",
-    front: null,
+    front: "devtools/shared/fronts/source",
   },
   {
     types: ["cookies", "localStorage", "sessionStorage", "Cache", "indexedDB", "storage"],

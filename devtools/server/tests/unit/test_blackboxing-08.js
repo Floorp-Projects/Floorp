@@ -29,21 +29,21 @@ function run_test() {
     await invokeAndPause(dbg, `chaining()`);
 
     const { sources } = await getSources(threadClient);
-    const sourceClient = threadClient.source(sources[0]);
+    const sourceFront = threadClient.source(sources[0]);
 
-    await setBreakpoint(threadClient, { sourceUrl: sourceClient.url, line: 7 });
-    await setBreakpoint(threadClient, { sourceUrl: sourceClient.url, line: 11 });
+    await setBreakpoint(threadClient, { sourceUrl: sourceFront.url, line: 7 });
+    await setBreakpoint(threadClient, { sourceUrl: sourceFront.url, line: 11 });
 
     // 1. lets blackbox function a, and assert that we pause in b
     const range = {start: { line: 6, column: 0 }, end: { line: 8, colum: 1 }};
-    blackBox(sourceClient, range);
+    blackBox(sourceFront, range);
     resume(threadClient);
     const paused = await waitForPause(threadClient);
     equal(paused.frame.where.line, 11, "paused inside of b");
     await resume(threadClient);
 
     // 2. lets unblackbox function a, and assert that we pause in a
-    unBlackBox(sourceClient, range);
+    unBlackBox(sourceFront, range);
     await invokeAndPause(dbg, `chaining()`);
     resume(threadClient);
     const paused2 = await waitForPause(threadClient);

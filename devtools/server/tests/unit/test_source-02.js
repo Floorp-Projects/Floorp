@@ -9,7 +9,7 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-// This test ensures that we can create SourceActors and SourceClients properly,
+// This test ensures that we can create SourceActors and SourceFronts properly,
 // and that they can communicate over the protocol to fetch the source text for
 // a given script.
 
@@ -58,8 +58,8 @@ function test_source() {
 
       Assert.ok(!!source);
 
-      const sourceClient = gThreadClient.source(source);
-      response = await sourceClient.getBreakpointPositions();
+      const sourceFront = gThreadClient.source(source);
+      response = await sourceFront.getBreakpointPositions();
       Assert.ok(!!response);
       Assert.deepEqual(
         response,
@@ -84,7 +84,7 @@ function test_source() {
         }]
       );
 
-      response = await sourceClient.getBreakpointPositionsCompressed();
+      response = await sourceFront.getBreakpointPositionsCompressed();
       Assert.ok(!!response);
       Assert.deepEqual(
         response,

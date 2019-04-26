@@ -67,11 +67,11 @@ function test_black_box() {
 function test_black_box_paused() {
   gThreadClient.getSources(async function({error, sources}) {
     Assert.ok(!error, "Should not get an error: " + error);
-    const sourceClient = gThreadClient.source(
+    const sourceFront = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
-    const pausedInSource = await blackBox(sourceClient);
+    const pausedInSource = await blackBox(sourceFront);
     Assert.ok(pausedInSource,
       "We should be notified that we are currently paused in this source");
     finishClient(gClient);

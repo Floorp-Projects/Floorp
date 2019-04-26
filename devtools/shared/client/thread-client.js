@@ -12,7 +12,7 @@ const {ThreadStateTypes} = require("devtools/shared/client/constants");
 loader.lazyRequireGetter(this, "ArrayBufferClient", "devtools/shared/client/array-buffer-client");
 loader.lazyRequireGetter(this, "LongStringClient", "devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
-loader.lazyRequireGetter(this, "SourceClient", "devtools/shared/client/source-client", true);
+loader.lazyRequireGetter(this, "SourceFront", "devtools/shared/fronts/source", true);
 
 /**
  * Creates a thread client for the remote debugging protocol server. This client
@@ -537,14 +537,14 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Return an instance of SourceClient for the given source actor form.
+   * Return an instance of SourceFront for the given source actor form.
    */
   source: function(form) {
     if (form.actor in this._threadGrips) {
       return this._threadGrips[form.actor];
     }
 
-    this._threadGrips[form.actor] = new SourceClient(this.client, form, this);
+    this._threadGrips[form.actor] = new SourceFront(this.client, form, this);
     return this._threadGrips[form.actor];
   },
 

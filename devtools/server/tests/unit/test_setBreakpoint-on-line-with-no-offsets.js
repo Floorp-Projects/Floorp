@@ -6,10 +6,10 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
   loadSubScript(SOURCE_URL, debuggee);
   const { source } = await promise;
-  const sourceClient = threadClient.source(source);
+  const sourceFront = threadClient.source(source);
 
   const location = { line: 5 };
-  let [packet, breakpointClient] = await setBreakpoint(sourceClient, location);
+  let [packet, breakpointClient] = await setBreakpoint(sourceFront, location);
   Assert.ok(!packet.isPending);
   Assert.ok("actualLocation" in packet);
   const actualLocation = packet.actualLocation;

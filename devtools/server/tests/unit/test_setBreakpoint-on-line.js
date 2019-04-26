@@ -6,9 +6,9 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
   loadSubScript(SOURCE_URL, debuggee);
   const { source } = await promise;
-  const sourceClient = threadClient.source(source);
+  const sourceFront = threadClient.source(source);
 
-  const location = { sourceUrl: sourceClient.url, line: 5 };
+  const location = { sourceUrl: sourceFront.url, line: 5 };
   setBreakpoint(threadClient, location);
 
   const packet = await executeOnNextTickAndWaitForPause(function() {

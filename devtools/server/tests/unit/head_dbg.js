@@ -741,12 +741,12 @@ function getFrames(threadClient, first, count) {
 /**
  * Black box the specified source.
  *
- * @param SourceClient sourceClient
+ * @param SourceFront sourceFront
  * @returns Promise
  */
-async function blackBox(sourceClient, range = null) {
-  dumpn("Black boxing source: " + sourceClient.actor);
-  const pausedInSource = await sourceClient.blackBox(range);
+async function blackBox(sourceFront, range = null) {
+  dumpn("Black boxing source: " + sourceFront.actor);
+  const pausedInSource = await sourceFront.blackBox(range);
   ok(true, "blackBox didn't throw");
   return pausedInSource;
 }
@@ -754,25 +754,25 @@ async function blackBox(sourceClient, range = null) {
 /**
  * Stop black boxing the specified source.
  *
- * @param SourceClient sourceClient
+ * @param SourceFront sourceFront
  * @returns Promise
  */
-async function unBlackBox(sourceClient, range = null) {
-  dumpn("Un-black boxing source: " + sourceClient.actor);
-  await sourceClient.unblackBox(range);
+async function unBlackBox(sourceFront, range = null) {
+  dumpn("Un-black boxing source: " + sourceFront.actor);
+  await sourceFront.unblackBox(range);
   ok(true, "unblackBox didn't throw");
 }
 
 /**
- * Perform a "source" RDP request with the given SourceClient to get the source
+ * Perform a "source" RDP request with the given SourceFront to get the source
  * content and content type.
  *
- * @param SourceClient sourceClient
+ * @param SourceFront sourceFront
  * @returns Promise
  */
-function getSourceContent(sourceClient) {
-  dumpn("Getting source content for " + sourceClient.actor);
-  return sourceClient.source();
+function getSourceContent(sourceFront) {
+  dumpn("Getting source content for " + sourceFront.actor);
+  return sourceFront.source();
 }
 
 /**
@@ -780,7 +780,7 @@ function getSourceContent(sourceClient) {
  *
  * @param ThreadClient threadClient
  * @param string url
- * @returns Promise<SourceClient>
+ * @returns Promise<SourceFront>
  */
 async function getSource(threadClient, url) {
   const source = await getSourceForm(threadClient, url);
@@ -872,8 +872,8 @@ async function setupTestFromUrl(url) {
   loadSubScript(sourceUrl, global);
   const { source } = await promise;
 
-  const sourceClient = threadClient.source(source);
-  return { global, debuggerClient, threadClient, sourceClient };
+  const sourceFront = threadClient.source(source);
+  return { global, debuggerClient, threadClient, sourceFront };
 }
 
 /**
