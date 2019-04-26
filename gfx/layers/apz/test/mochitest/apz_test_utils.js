@@ -19,6 +19,27 @@ function convertEntries(entries) {
   return result;
 }
 
+function parseRect(str) {
+  var pieces = str.replace(/[()\s]+/g, "").split(",");
+  SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
+  return { x: parseInt(pieces[0]),
+           y: parseInt(pieces[1]),
+           w: parseInt(pieces[2]),
+           h: parseInt(pieces[3]) };
+}
+
+// These functions expect rects with fields named x/y/w/h, such as
+// that returned by parseRect().
+function rectContains(haystack, needle) {
+  return haystack.x <= needle.x
+      && haystack.y <= needle.y
+      && (haystack.x + haystack.w) >= (needle.x + needle.w)
+      && (haystack.y + haystack.h) >= (needle.y + needle.h);
+}
+function rectToString(rect) {
+  return "(" + rect.x + "," + rect.y + "," + rect.w + "," + rect.h + ")";
+}
+
 function getPropertyAsRect(scrollFrames, scrollId, prop) {
   SimpleTest.ok(scrollId in scrollFrames,
                 "expected scroll frame data for scroll id " + scrollId);
@@ -26,12 +47,7 @@ function getPropertyAsRect(scrollFrames, scrollId, prop) {
   SimpleTest.ok("displayport" in scrollFrameData,
                 "expected a " + prop + " for scroll id " + scrollId);
   var value = scrollFrameData[prop];
-  var pieces = value.replace(/[()\s]+/g, "").split(",");
-  SimpleTest.is(pieces.length, 4, "expected string of form (x,y,w,h)");
-  return { x: parseInt(pieces[0]),
-           y: parseInt(pieces[1]),
-           w: parseInt(pieces[2]),
-           h: parseInt(pieces[3]) };
+  return parseRect(value);
 }
 
 function convertScrollFrameData(scrollFrames) {
@@ -293,6 +309,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.SimpleTest = SimpleTest;
         w.dump = function(msg) { return dump(aFile + " | " + msg); };
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
+        w.isfuzzy = function(a, b, eps, msg) { return isfuzzy(a, b, eps, aFile + " | " + msg); };
         w.ok = function(cond, msg) {
           arguments[1] = aFile + " | " + msg;
           // Forward all arguments to SimpleTest.ok where we will check that ok() was
