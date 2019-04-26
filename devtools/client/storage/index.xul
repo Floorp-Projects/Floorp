@@ -13,7 +13,8 @@
   %storageDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	      xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
@@ -47,15 +48,15 @@
     <splitter class="devtools-side-splitter"/>
     <vbox flex="1">
       <hbox id="storage-toolbar" class="devtools-toolbar">
-        <button id="add-button"
-                class="devtools-button add-button"></button>
-        <button id="refresh-button"
-                class="devtools-button refresh-button"></button>
+        <html:button id="add-button"
+                class="devtools-button add-button"></html:button>
+        <html:button id="refresh-button"
+                class="devtools-button refresh-button"></html:button>
         <spacer flex="1"/>
         <textbox id="storage-searchbox"
                  class="devtools-filterinput"
                  placeholder="&searchBox.placeholder;"/>
-        <button class="devtools-button sidebar-toggle" hidden="true"></button>
+        <html:button class="devtools-button sidebar-toggle" hidden="true"></html:button>
       </hbox>
       <vbox id="storage-table" class="theme-sidebar" flex="1"/>
     </vbox>
