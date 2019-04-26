@@ -1216,14 +1216,16 @@ impl ResourceCache {
                     && (tiles.size.width > MAX_TILES_PER_REQUEST
                         || tiles.size.height > MAX_TILES_PER_REQUEST
                         || tiles.size.width * tiles.size.height > MAX_TILES_PER_REQUEST) {
-                    let diff = tiles.size.width * tiles.size.height - MAX_TILES_PER_REQUEST;
+                    let w = tiles.size.width;
+                    let h = tiles.size.height;
+                    let diff = w * h - MAX_TILES_PER_REQUEST;
                     // Remove tiles in the largest dimension.
                     if tiles.size.width > tiles.size.height {
-                        tiles.size.width -= diff / tiles.size.height + 1;
-                        tiles.origin.x += diff / (2 * tiles.size.height);
+                        tiles.size.width -= diff / h + 1;
+                        tiles.origin.x += diff / (2 * h);
                     } else {
-                        tiles.size.height -= diff / tiles.size.width + 1;
-                        tiles.origin.y += diff / (2 * tiles.size.height);
+                        tiles.size.height -= diff / w + 1;
+                        tiles.origin.y += diff / (2 * w);
                     }
                 }
 
