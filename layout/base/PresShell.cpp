@@ -10648,6 +10648,17 @@ void nsIPresShell::SetPendingVisualScrollUpdate(
   }
 }
 
+void nsIPresShell::ClearPendingVisualScrollUpdate() {
+  if (mPendingVisualScrollUpdate && mPendingVisualScrollUpdate->mAcknowledged) {
+    mPendingVisualScrollUpdate = mozilla::Nothing();
+  }
+}
+
+void nsIPresShell::AcknowledgePendingVisualScrollUpdate() {
+  MOZ_ASSERT(mPendingVisualScrollUpdate);
+  mPendingVisualScrollUpdate->mAcknowledged = true;
+}
+
 nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
   return GetVisualViewportOffset() - GetLayoutViewportOffset();
 }
@@ -11049,5 +11060,20 @@ PresShell::EventHandler::HandlingTimeAccumulator::~HandlingTimeAccumulator() {
       return;
     default:
       return;
+  }
+}
+
+static bool EndPaintHelper(Document* aDocument, void* aData) {
+  if (PresShell* presShell = aDocument->GetPresShell()) {
+    presShell->EndPaint();
+  }
+  return true;
+}
+
+void PresShell::EndPaint() {
+  ClearPendingVisualScrollUpdate();
+
+  if (mDocument) {
+    mDocument->EnumerateSubDocuments(EndPaintHelper, nullptr);
   }
 }

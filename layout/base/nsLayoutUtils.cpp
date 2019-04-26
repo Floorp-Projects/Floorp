@@ -3987,6 +3987,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
       list.PaintRoot(&builder, aRenderingContext, flags);
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_RASTERIZE_TIME, paintStart);
 
+  presShell->EndPaint();
   builder.Check();
 
   if (gfxPrefs::GfxLoggingPaintedPixelCountEnabled()) {
@@ -8932,7 +8933,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         metrics.SetVisualViewportOffset(
             CSSPoint::FromAppUnits(visualUpdate->mVisualScrollOffset));
         metrics.SetVisualScrollUpdateType(visualUpdate->mUpdateType);
-        presShell->ClearPendingVisualScrollUpdate();
+        presShell->AcknowledgePendingVisualScrollUpdate();
       }
     }
 

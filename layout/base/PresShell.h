@@ -499,6 +499,11 @@ class PresShell final : public nsIPresShell,
     PresShell::SetCapturingContent(nullptr, CaptureFlags::None);
   }
 
+  // Called at the end of nsLayoutUtils::PaintFrame().
+  // This is used to clear any pending visual scroll updates that have been
+  // acknowledged, to make sure they don't stick around for the next paint.
+  void EndPaint();
+
  private:
   ~PresShell();
 
