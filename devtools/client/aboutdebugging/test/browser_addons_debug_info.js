@@ -3,7 +3,7 @@
 const { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const UUID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
-const SHOW_SYSTEM_ADDONS_PREF = "devtools.aboutdebugging.showSystemAddons";
+const SHOW_SYSTEM_ADDONS_PREF = "devtools.aboutdebugging.showHiddenAddons";
 
 function testFilePath(container, expectedFilePath) {
   // Verify that the path to the install location is shown next to its label.
