@@ -1,0 +1,43 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1536688 - Test that 'display' is not included in
+  KeyframeEffect.getProperties() when using shorthand 'all'</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1536688"
+  target="_blank">Mozilla Bug 1536688</a>
+<div id="log"></div>
+<script>
+'use strict';
+
+SpecialPowers.pushPrefEnv(
+  {
+    set: [['dom.animations-api.core.enabled', true]],
+  },
+  function() {
+    test(t => {
+      const div = addDiv(t);
+      const animation = div.animate(
+        { all: ['unset', 'unset'] },
+        100 * MS_PER_SEC
+      );
+      // Flush styles since getProperties does not.
+      getComputedStyle(div).opacity;
+
+      const properties = animation.effect.getProperties();
+      assert_false(
+        properties.some(property => property.property === 'display'),
+        'Should not have a property for display'
+      );
+    });
+
+    done();
+  }
+);
+
+</script>
+</body>
