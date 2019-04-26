@@ -3360,11 +3360,6 @@ class nsContentUtils {
   static bool HighPriorityEventPendingForTopLevelDocumentBeforeContentfulPaint(
       Document* aDocument);
 
-  /**
-   * Gets the global cookie lifetime policy.
-   */
-  static uint32_t GetCookieLifetimePolicy() { return sCookiesLifetimePolicy; }
-
  private:
   static bool InitializeEventTable();
 

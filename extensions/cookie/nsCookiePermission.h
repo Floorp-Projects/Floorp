@@ -7,25 +7,40 @@
 
 #include "nsICookiePermission.h"
 #include "nsIPermissionManager.h"
+#include "nsIObserver.h"
 #include "nsCOMPtr.h"
+#include "mozIThirdPartyUtil.h"
 
-class nsCookiePermission final : public nsICookiePermission {
+class nsIPrefBranch;
+
+class nsCookiePermission final : public nsICookiePermission,
+                                 public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIEPERMISSION
+  NS_DECL_NSIOBSERVER
 
   // Singleton accessor
   static already_AddRefed<nsICookiePermission> GetOrCreate();
   static void Shutdown();
 
   bool Init();
+  void PrefChanged(nsIPrefBranch *, const char *);
 
  private:
-  ~nsCookiePermission() = default;
+  nsCookiePermission()
+      : mCookiesLifetimePolicy(0)  // ACCEPT_NORMALLY
+  {}
+  virtual ~nsCookiePermission() {}
 
-  bool EnsureInitialized() { return (mPermMgr != nullptr) || Init(); };
+  bool EnsureInitialized() {
+    return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init();
+  };
 
   nsCOMPtr<nsIPermissionManager> mPermMgr;
+  nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
+
+  uint8_t mCookiesLifetimePolicy;  // pref for how long cookies are stored
 };
 
 #endif

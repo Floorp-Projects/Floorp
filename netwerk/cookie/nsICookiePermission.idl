@@ -14,7 +14,7 @@ typedef long nsCookieAccess;
 /**
  * An interface to test for cookie permissions
  */
-[uuid(11ddd4ed-8f5b-40b3-b2a0-27c20ea1c88d)]
+[scriptable, uuid(11ddd4ed-8f5b-40b3-b2a0-27c20ea1c88d)]
 interface nsICookiePermission : nsISupports
 {
   /**
@@ -67,6 +67,24 @@ interface nsICookiePermission : nsISupports
    *         ACCESS_ALLOW_FIRST_PARTY_ONLY
    */
   nsCookieAccess canAccess(in nsIPrincipal aPrincipal);
+
+  /**
+   * canAccessURI
+   *
+   * this method is called to test whether or not the given principal may
+   * access the cookie database, either to set or get cookies.
+   *
+   * Be careful when calling this function, you probably want the principal
+   * based version instead of this one unless if performance is an issue.
+   *
+   * @param aURI
+   *        the URI trying to access cookies.
+   *
+   * @return one of the following nsCookieAccess values:
+   *         ACCESS_DEFAULT, ACCESS_ALLOW, ACCESS_DENY, or
+   *         ACCESS_ALLOW_FIRST_PARTY_ONLY
+   */
+  nsCookieAccess canAccessURI(in nsIURI aURI);
 
   /**
    * canSetCookie
