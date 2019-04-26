@@ -87,7 +87,7 @@ nsresult SerializeInputStreamParent(nsIInputStream* aInputStream,
   // In case this is a IPCBlobInputStream, we don't want to create a loop:
   // IPCBlobInputStreamParent -> IPCBlobInputStream ->
   // IPCBlobInputStreamParent. Let's use the underlying inputStream instead.
-  nsCOMPtr<nsIIPCBlobInputStream> ipcBlobInputStream =
+  nsCOMPtr<mozIIPCBlobInputStream> ipcBlobInputStream =
       do_QueryInterface(aInputStream);
   if (ipcBlobInputStream) {
     stream = ipcBlobInputStream->GetInternalStream();

@@ -8,6 +8,7 @@
 #define mozilla_dom_ipc_IPCBlobInputStream_h
 
 #include "mozilla/Mutex.h"
+#include "mozIIPCBlobInputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
 #include "nsIFileStreams.h"
@@ -27,15 +28,6 @@ class IPCBlobInputStreamChild;
     }                                                \
   }
 
-class nsIIPCBlobInputStream : public nsISupports {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(IPCBLOBINPUTSTREAM_IID)
-
-  virtual nsIInputStream* GetInternalStream() const = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCBlobInputStream, IPCBLOBINPUTSTREAM_IID)
-
 class IPCBlobInputStream final : public nsIAsyncInputStream,
                                  public nsIInputStreamCallback,
                                  public nsICloneableInputStreamWithRange,
@@ -43,7 +35,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
                                  public nsIAsyncFileMetadata,
                                  public nsIInputStreamLength,
                                  public nsIAsyncInputStreamLength,
-                                 public nsIIPCBlobInputStream {
+                                 public mozIIPCBlobInputStream {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
@@ -65,8 +57,8 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
 
   void SerializeInternal(mozilla::ipc::InputStreamParams& aParams);
 
-  // nsIIPCBlobInputStream
-  nsIInputStream* GetInternalStream() const override {
+  // mozIIPCBlobInputStream
+  NS_IMETHOD_(nsIInputStream*) GetInternalStream() override {
     if (mRemoteStream) {
       return mRemoteStream;
     }

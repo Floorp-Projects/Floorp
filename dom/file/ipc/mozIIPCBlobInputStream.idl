@@ -1,0 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+
+/*
+ * A simple interface to get the underlying stream from an IPCBlobInputStream.
+ */
+[scriptable, builtinclass, uuid(4125585f-b0c2-4964-a83c-4b0d99f26d49)]
+interface mozIIPCBlobInputStream : nsISupports
+{
+  [notxpcom, noscript] nsIInputStream GetInternalStream();
+};
