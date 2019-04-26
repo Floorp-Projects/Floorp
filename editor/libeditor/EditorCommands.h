@@ -13,6 +13,7 @@
 #include "nsStringFwd.h"
 
 class nsAtom;
+class nsCommandParams;
 class nsICommandParams;
 
 namespace mozilla {
@@ -38,33 +39,42 @@ class EditorCommand : public nsIControllerCommand {
   MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD DoCommand(const char* aCommandName,
                        nsISupports* aCommandRefCon) final;
+  MOZ_CAN_RUN_SCRIPT
+  NS_IMETHOD DoCommandParams(const char* aCommandName,
+                             nsICommandParams* aParams,
+                             nsISupports* aCommandRefCon) final;
 
   virtual bool IsCommandEnabled(const char* aCommandName,
                                 TextEditor* aTextEditor) const = 0;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult DoCommand(const char* aCommandName,
                              TextEditor& aTextEditor) const = 0;
+  MOZ_CAN_RUN_SCRIPT
+  virtual nsresult DoCommandParams(const char* aCommandName,
+                                   nsCommandParams* aParams,
+                                   TextEditor& aTextEditor) const = 0;
 
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
 };
 
-#define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                          \
- public:                                                              \
-  virtual bool IsCommandEnabled(const char* aCommandName,             \
-                                TextEditor* aTextEditor) const final; \
-  using EditorCommand::IsCommandEnabled;                              \
-  MOZ_CAN_RUN_SCRIPT                                                  \
-  virtual nsresult DoCommand(const char* aCommandName,                \
-                             TextEditor& aTextEditor) const final;    \
-  using EditorCommand::DoCommand;                                     \
-  MOZ_CAN_RUN_SCRIPT                                                  \
-  NS_IMETHOD DoCommandParams(const char* aCommandName,                \
-                             nsICommandParams* aParams,               \
-                             nsISupports* aCommandRefCon) final;      \
-  NS_IMETHOD GetCommandStateParams(const char* aCommandName,          \
-                                   nsICommandParams* aParams,         \
+#define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                             \
+ public:                                                                 \
+  virtual bool IsCommandEnabled(const char* aCommandName,                \
+                                TextEditor* aTextEditor) const final;    \
+  using EditorCommand::IsCommandEnabled;                                 \
+  MOZ_CAN_RUN_SCRIPT                                                     \
+  virtual nsresult DoCommand(const char* aCommandName,                   \
+                             TextEditor& aTextEditor) const final;       \
+  using EditorCommand::DoCommand;                                        \
+  MOZ_CAN_RUN_SCRIPT                                                     \
+  virtual nsresult DoCommandParams(const char* aCommandName,             \
+                                   nsCommandParams* aParams,             \
+                                   TextEditor& aTextEditor) const final; \
+  using EditorCommand::DoCommandParams;                                  \
+  NS_IMETHOD GetCommandStateParams(const char* aCommandName,             \
+                                   nsICommandParams* aParams,            \
                                    nsISupports* aCommandRefCon) final;
 
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
@@ -281,7 +291,7 @@ class MultiStateCommandBase : public EditorCommand {
                       nsICommandParams* aParams) const = 0;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SetState(HTMLEditor* aHTMLEditor,
-                            const nsString& newState) = 0;
+                            const nsString& newState) const = 0;
 };
 
 class ParagraphStateCommand final : public MultiStateCommandBase {
@@ -297,7 +307,8 @@ class ParagraphStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class FontFaceStateCommand final : public MultiStateCommandBase {
@@ -313,7 +324,8 @@ class FontFaceStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class FontSizeStateCommand final : public MultiStateCommandBase {
@@ -329,7 +341,8 @@ class FontSizeStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class HighlightColorStateCommand final : public MultiStateCommandBase {
@@ -345,7 +358,8 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class FontColorStateCommand final : public MultiStateCommandBase {
@@ -361,7 +375,8 @@ class FontColorStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class AlignCommand final : public MultiStateCommandBase {
@@ -377,7 +392,8 @@ class AlignCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class BackgroundColorStateCommand final : public MultiStateCommandBase {
@@ -393,7 +409,8 @@ class BackgroundColorStateCommand final : public MultiStateCommandBase {
       GetCurrentState(HTMLEditor* aHTMLEditor,
                       nsICommandParams* aParams) const final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult SetState(HTMLEditor* aHTMLEditor, const nsString& newState) final;
+  nsresult SetState(HTMLEditor* aHTMLEditor,
+                    const nsString& newState) const final;
 };
 
 class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
