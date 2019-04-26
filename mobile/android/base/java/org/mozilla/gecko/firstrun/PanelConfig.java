@@ -10,7 +10,7 @@ package org.mozilla.gecko.firstrun;
  */
 public class PanelConfig {
     public enum TYPE {
-        WELCOME, PRIVACY, LAST_PRIVACY, CUSTOMIZE, LAST_CUSTOMIZE, SYNC
+        WELCOME, PRIVACY, CUSTOMIZE, LAST_CUSTOMIZE, SYNC
     }
 
     private final TYPE type;
@@ -35,7 +35,6 @@ public class PanelConfig {
             case PRIVACY:
             case CUSTOMIZE:
                 return FirstrunPanel.class.getName();
-            case LAST_PRIVACY:
             case LAST_CUSTOMIZE:
                 return LastPanel.class.getName();
             case SYNC:
