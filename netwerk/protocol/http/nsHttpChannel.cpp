@@ -1333,7 +1333,8 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
     }
   }
 
-  bool isThirdParty = !!mThirdPartyClassificationFlags;
+  bool isThirdParty =
+      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, this, mURI);
   HttpTrafficAnalyzer::TrackingClassification tc;
   {
     uint32_t flags = isThirdParty ? mThirdPartyClassificationFlags
