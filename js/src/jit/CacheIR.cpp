@@ -3144,23 +3144,22 @@ bool IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
   return false;
 }
 
-SetPropIRGenerator::SetPropIRGenerator(
-    JSContext* cx, HandleScript script, jsbytecode* pc, CacheKind cacheKind,
-    ICState::Mode mode, bool* isTemporarilyUnoptimizable, bool* canAddSlot,
-    HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal,
-    bool needsTypeBarrier, bool maybeHasExtraIndexedProps)
+SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, HandleScript script,
+                                       jsbytecode* pc, CacheKind cacheKind,
+                                       ICState::Mode mode, HandleValue lhsVal,
+                                       HandleValue idVal, HandleValue rhsVal,
+                                       bool needsTypeBarrier,
+                                       bool maybeHasExtraIndexedProps)
     : IRGenerator(cx, script, pc, cacheKind, mode),
       lhsVal_(lhsVal),
       idVal_(idVal),
       rhsVal_(rhsVal),
-      isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
-      canAddSlot_(canAddSlot),
       typeCheckInfo_(cx, needsTypeBarrier),
       preliminaryObjectAction_(PreliminaryObjectAction::None),
       attachedTypedArrayOOBStub_(false),
       maybeHasExtraIndexedProps_(maybeHasExtraIndexedProps) {}
 
-bool SetPropIRGenerator::tryAttachStub() {
+AttachDecision SetPropIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   ValOperandId objValId(writer.setInputOperandId(0));
@@ -3178,7 +3177,7 @@ bool SetPropIRGenerator::tryAttachStub() {
   bool nameOrSymbol;
   if (!ValueToNameOrSymbolId(cx_, idVal_, &id, &nameOrSymbol)) {
     cx_->clearPendingException();
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (lhsVal_.isObject()) {
@@ -3186,64 +3185,42 @@ bool SetPropIRGenerator::tryAttachStub() {
 
     ObjOperandId objId = writer.guardIsObject(objValId);
     if (IsPropertySetOp(JSOp(*pc_))) {
-      if (tryAttachMegamorphicSetElement(obj, objId, rhsValId)) {
-        return true;
-      }
+      TRY_ATTACH(tryAttachMegamorphicSetElement(obj, objId, rhsValId));
     }
     if (nameOrSymbol) {
-      if (tryAttachNativeSetSlot(obj, objId, id, rhsValId)) {
-        return true;
-      }
-      if (tryAttachTypedObjectProperty(obj, objId, id, rhsValId)) {
-        return true;
-      }
+      TRY_ATTACH(tryAttachNativeSetSlot(obj, objId, id, rhsValId));
+      TRY_ATTACH(tryAttachTypedObjectProperty(obj, objId, id, rhsValId));
       if (IsPropertySetOp(JSOp(*pc_))) {
-        if (tryAttachSetArrayLength(obj, objId, id, rhsValId)) {
-          return true;
-        }
-        if (tryAttachSetter(obj, objId, id, rhsValId)) {
-          return true;
-        }
-        if (tryAttachWindowProxy(obj, objId, id, rhsValId)) {
-          return true;
-        }
-        if (tryAttachProxy(obj, objId, id, rhsValId)) {
-          return true;
-        }
+        TRY_ATTACH(tryAttachSetArrayLength(obj, objId, id, rhsValId));
+        TRY_ATTACH(tryAttachSetter(obj, objId, id, rhsValId));
+        TRY_ATTACH(tryAttachWindowProxy(obj, objId, id, rhsValId));
+        TRY_ATTACH(tryAttachProxy(obj, objId, id, rhsValId));
       }
       if (canAttachAddSlotStub(obj, id)) {
-        *canAddSlot_ = true;
+        deferType_ = DeferType::AddSlot;
+        return AttachDecision::Deferred;
       }
-      return false;
+      return AttachDecision::NoAction;
     }
 
     if (IsPropertySetOp(JSOp(*pc_))) {
-      if (tryAttachProxyElement(obj, objId, rhsValId)) {
-        return true;
-      }
+      TRY_ATTACH(tryAttachProxyElement(obj, objId, rhsValId));
     }
 
     uint32_t index;
     Int32OperandId indexId;
     if (maybeGuardInt32Index(idVal_, setElemKeyValueId(), &index, &indexId)) {
-      if (tryAttachSetDenseElement(obj, objId, index, indexId, rhsValId)) {
-        return true;
-      }
-      if (tryAttachSetDenseElementHole(obj, objId, index, indexId, rhsValId)) {
-        return true;
-      }
-      if (tryAttachSetTypedElement(obj, objId, index, indexId, rhsValId)) {
-        return true;
-      }
-      if (tryAttachAddOrUpdateSparseElement(obj, objId, index, indexId,
-                                            rhsValId)) {
-        return true;
-      }
-      return false;
+      TRY_ATTACH(
+          tryAttachSetDenseElement(obj, objId, index, indexId, rhsValId));
+      TRY_ATTACH(
+          tryAttachSetDenseElementHole(obj, objId, index, indexId, rhsValId));
+      TRY_ATTACH(
+          tryAttachSetTypedElement(obj, objId, index, indexId, rhsValId));
+      TRY_ATTACH(tryAttachAddOrUpdateSparseElement(obj, objId, index, indexId,
+                                                   rhsValId));
     }
-    return false;
   }
-  return false;
+  return AttachDecision::NoAction;
 }
 
 static void EmitStoreSlotAndReturn(CacheIRWriter& writer, ObjOperandId objId,
@@ -3308,13 +3285,16 @@ static bool CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj,
   return true;
 }
 
-bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
-                                                ObjOperandId objId, HandleId id,
-                                                ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
+                                                          ObjOperandId objId,
+                                                          HandleId id,
+                                                          ValOperandId rhsId) {
   RootedShape propShape(cx_);
+  bool isTemporarilyUnoptimizable = false;
   if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), obj, id,
-                              isTemporarilyUnoptimizable_, &propShape)) {
-    return false;
+                              &isTemporarilyUnoptimizable, &propShape)) {
+    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
+                                      : AttachDecision::NoAction;
   }
 
   // Don't attach a megamorphic store slot stub for ops like JSOP_INITELEM.
@@ -3324,7 +3304,7 @@ bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                 rhsId, typeCheckInfo_.needsTypeBarrier());
     writer.returnFromIC();
     trackAttached("MegamorphicNativeSlot");
-    return true;
+    return AttachDecision::Attach;
   }
 
   maybeEmitIdGuard(id);
@@ -3348,35 +3328,33 @@ bool SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   EmitStoreSlotAndReturn(writer, objId, nobj, propShape, rhsId);
 
   trackAttached("NativeSlot");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
-                                                      ObjOperandId objId,
-                                                      HandleId id,
-                                                      ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
   if (!obj->is<TypedObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (cx_->zone()->detachedTypedObjects) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   StructTypeDescr* structDescr =
       &obj->as<TypedObject>().typeDescr().as<StructTypeDescr>();
   size_t fieldIndex;
   if (!structDescr->fieldIndex(id, &fieldIndex)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
   if (!fieldDescr->is<SimpleTypeDescr>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (fieldDescr->is<ReferenceTypeDescr>() &&
@@ -3385,7 +3363,7 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
     // TODO/AnyRef-boxing: we can probably do better, in particular, code
     // that stores object pointers and null in an anyref slot should be able
     // to get a fast path.
-    return false;
+    return AttachDecision::NoAction;
   }
 
   uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
@@ -3405,7 +3383,7 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
     writer.returnFromIC();
 
     trackAttached("TypedObject");
-    return true;
+    return AttachDecision::Attach;
   }
 
   // For reference types, guard on the RHS type first, so that
@@ -3429,7 +3407,7 @@ bool SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("TypedObject");
-  return true;
+  return AttachDecision::Attach;
 }
 
 void SetPropIRGenerator::trackAttached(const char* name) {
@@ -3561,13 +3539,17 @@ static void EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj,
   writer.returnFromIC();
 }
 
-bool SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId,
-                                         HandleId id, ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
+                                                   ObjOperandId objId,
+                                                   HandleId id,
+                                                   ValOperandId rhsId) {
   RootedObject holder(cx_);
   RootedShape propShape(cx_);
+  bool isTemporarilyUnoptimizable = false;
   if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape,
-                       isTemporarilyUnoptimizable_)) {
-    return false;
+                       &isTemporarilyUnoptimizable)) {
+    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
+                                      : AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -3592,19 +3574,19 @@ bool SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId,
   EmitCallSetterNoGuards(writer, obj, holder, propShape, objId, rhsId);
 
   trackAttached("Setter");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
-                                                 ObjOperandId objId,
-                                                 HandleId id,
-                                                 ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
+                                                           ObjOperandId objId,
+                                                           HandleId id,
+                                                           ValOperandId rhsId) {
   // Don't attach an array length stub for ops like JSOP_INITELEM.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   if (!obj->is<ArrayObject>() || !JSID_IS_ATOM(id, cx_->names().length) ||
       !obj->as<ArrayObject>().lengthIsWritable()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -3613,22 +3595,20 @@ bool SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("SetArrayLength");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  uint32_t index,
-                                                  Int32OperandId indexId,
-                                                  ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
+    HandleObject obj, ObjOperandId objId, uint32_t index,
+    Int32OperandId indexId, ValOperandId rhsId) {
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (!nobj->containsDenseElement(index) ||
       nobj->getElementsHeader()->isFrozen()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Don't optimize INITELEM (DefineProperty) on non-extensible objects: when
@@ -3636,7 +3616,7 @@ bool SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj,
   // to check !isExtensible instead of denseElementsAreSealed because sealing
   // a (non-extensible) object does not necessarily trigger a Shape change.
   if (IsPropertyInitOp(JSOp(*pc_)) && !nobj->isExtensible()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (typeCheckInfo_.needsTypeBarrier()) {
@@ -3651,7 +3631,7 @@ bool SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj,
   typeCheckInfo_.set(nobj->group(), JSID_VOID);
 
   trackAttached("SetDenseElement");
-  return true;
+  return AttachDecision::Attach;
 }
 
 static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
@@ -3706,25 +3686,23 @@ static bool CanAttachAddElement(NativeObject* obj, bool isInit) {
   return true;
 }
 
-bool SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj,
-                                                      ObjOperandId objId,
-                                                      uint32_t index,
-                                                      Int32OperandId indexId,
-                                                      ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
+    HandleObject obj, ObjOperandId objId, uint32_t index,
+    Int32OperandId indexId, ValOperandId rhsId) {
   if (!obj->isNative() || rhsVal_.isMagic(JS_ELEMENTS_HOLE)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   JSOp op = JSOp(*pc_);
   MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
 
   if (op == JSOP_INITHIDDENELEM) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
   if (!nobj->isExtensible()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   MOZ_ASSERT(!nobj->getElementsHeader()->isFrozen(),
@@ -3741,23 +3719,23 @@ bool SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj,
   bool isHoleInBounds =
       index < initLength && !nobj->containsDenseElement(index);
   if (!isAdd && !isHoleInBounds) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Can't add new elements to arrays with non-writable length.
   if (isAdd && nobj->is<ArrayObject>() &&
       !nobj->as<ArrayObject>().lengthIsWritable()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Typed arrays don't have dense elements.
   if (nobj->is<TypedArrayObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check for other indexed properties or class hooks.
   if (!CanAttachAddElement(nobj, IsPropertyInitOp(op))) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (typeCheckInfo_.needsTypeBarrier()) {
@@ -3778,56 +3756,56 @@ bool SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj,
   typeCheckInfo_.set(nobj->group(), JSID_VOID);
 
   trackAttached(isAdd ? "AddDenseElement" : "StoreDenseElementHole");
-  return true;
+  return AttachDecision::Attach;
 }
 
 // Add an IC for adding or updating a sparse array element.
-bool SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
+AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId, ValOperandId rhsId) {
   JSOp op = JSOp(*pc_);
   MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
 
   if (op != JSOP_SETELEM && op != JSOP_STRICTSETELEM) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
   NativeObject* nobj = &obj->as<NativeObject>();
 
   // We cannot attach a stub to a non-extensible object
   if (!nobj->isExtensible()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Stub doesn't handle negative indices.
   if (index > INT_MAX) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // We also need to be past the end of the dense capacity, to ensure sparse.
   if (index < nobj->getDenseInitializedLength()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Only handle Array objects in this stub.
   if (!nobj->is<ArrayObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
   ArrayObject* aobj = &nobj->as<ArrayObject>();
 
   // Don't attach if we're adding to an array with non-writable length.
   bool isAdd = (index >= aobj->length());
   if (isAdd && !aobj->lengthIsWritable()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Indexed properties on the prototype chain aren't handled by the helper.
   if ((aobj->staticPrototype() != nullptr) &&
       ObjectMayHaveExtraIndexedProperties(aobj->staticPrototype())) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Ensure we are still talking about an array class.
@@ -3864,20 +3842,18 @@ bool SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   writer.returnFromIC();
 
   trackAttached("AddOrUpdateSparseElement");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  uint32_t index,
-                                                  Int32OperandId indexId,
-                                                  ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
+    HandleObject obj, ObjOperandId objId, uint32_t index,
+    Int32OperandId indexId, ValOperandId rhsId) {
   if (!obj->is<TypedArrayObject>() && !IsPrimitiveArrayTypedObject(obj)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!rhsVal_.isNumber()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   bool handleOutOfBounds = false;
@@ -3887,13 +3863,13 @@ bool SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj,
     // Typed objects throw on out of bounds accesses. Don't attach
     // a stub in this case.
     if (index >= obj->as<TypedObject>().length()) {
-      return false;
+      return AttachDecision::NoAction;
     }
 
     // Don't attach stubs if the underlying storage for typed objects
     // in the zone could be detached, as the stub will always bail out.
     if (cx_->zone()->detachedTypedObjects) {
-      return false;
+      return AttachDecision::NoAction;
     }
   }
 
@@ -3916,13 +3892,12 @@ bool SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj,
   }
 
   trackAttached(handleOutOfBounds ? "SetTypedElementOOB" : "SetTypedElement");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachGenericProxy(HandleObject obj,
-                                               ObjOperandId objId, HandleId id,
-                                               ValOperandId rhsId,
-                                               bool handleDOMProxies) {
+AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId,
+    bool handleDOMProxies) {
   MOZ_ASSERT(obj->is<ProxyObject>());
 
   writer.guardIsProxy(objId);
@@ -3949,13 +3924,11 @@ bool SetPropIRGenerator::tryAttachGenericProxy(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("GenericProxy");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj,
-                                                   ObjOperandId objId,
-                                                   HandleId id,
-                                                   ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   maybeEmitIdGuard(id);
@@ -3964,25 +3937,25 @@ bool SetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("DOMProxyShadowed");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj,
-                                                     ObjOperandId objId,
-                                                     HandleId id,
-                                                     ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedObject proto(cx_, obj->staticPrototype());
   if (!proto) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject holder(cx_);
   RootedShape propShape(cx_);
+  bool isTemporarilyUnoptimizable = false;
   if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape,
-                       isTemporarilyUnoptimizable_)) {
-    return false;
+                       &isTemporarilyUnoptimizable)) {
+    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
+                                      : AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -4003,13 +3976,11 @@ bool SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj,
   EmitCallSetterNoGuards(writer, proto, holder, propShape, objId, rhsId);
 
   trackAttached("DOMProxyUnshadowed");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
-                                                  ObjOperandId objId,
-                                                  HandleId id,
-                                                  ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
+    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedValue expandoVal(cx_, GetProxyPrivate(obj));
@@ -4025,9 +3996,11 @@ bool SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
     expandoObj = &expandoAndGeneration->expando.toObject();
   }
 
+  bool isTemporarilyUnoptimizable = false;
+
   RootedShape propShape(cx_);
   if (CanAttachNativeSetSlot(cx_, JSOp(*pc_), expandoObj, id,
-                             isTemporarilyUnoptimizable_, &propShape)) {
+                             &isTemporarilyUnoptimizable, &propShape)) {
     maybeEmitIdGuard(id);
     ObjOperandId expandoObjId =
         guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
@@ -4039,12 +4012,12 @@ bool SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
     EmitStoreSlotAndReturn(writer, expandoObjId, nativeExpandoObj, propShape,
                            rhsId);
     trackAttached("DOMProxyExpandoSlot");
-    return true;
+    return AttachDecision::Attach;
   }
 
   RootedObject holder(cx_);
   if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape,
-                      isTemporarilyUnoptimizable_)) {
+                      &isTemporarilyUnoptimizable)) {
     // Note that we don't actually use the expandoObjId here after the
     // shape guard. The DOM proxy (objId) is passed to the setter as
     // |this|.
@@ -4055,20 +4028,23 @@ bool SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj,
     EmitCallSetterNoGuards(writer, expandoObj, expandoObj, propShape, objId,
                            rhsId);
     trackAttached("DOMProxyExpandoSetter");
-    return true;
+    return AttachDecision::Attach;
   }
 
-  return false;
+  return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
+                                    : AttachDecision::NoAction;
 }
 
-bool SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId,
-                                        HandleId id, ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
+                                                  ObjOperandId objId,
+                                                  HandleId id,
+                                                  ValOperandId rhsId) {
   // Don't attach a proxy stub for ops like JSOP_INITELEM.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   ProxyStubType type = GetProxyStubType(cx_, obj, id);
   if (type == ProxyStubType::None) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (mode_ == ICState::Mode::Megamorphic) {
@@ -4080,24 +4056,12 @@ bool SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId,
     case ProxyStubType::None:
       break;
     case ProxyStubType::DOMExpando:
-      if (tryAttachDOMProxyExpando(obj, objId, id, rhsId)) {
-        return true;
-      }
-      if (*isTemporarilyUnoptimizable_) {
-        // Scripted setter without JIT code. Just wait.
-        return false;
-      }
+      TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id, rhsId));
       MOZ_FALLTHROUGH;  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
       return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
     case ProxyStubType::DOMUnshadowed:
-      if (tryAttachDOMProxyUnshadowed(obj, objId, id, rhsId)) {
-        return true;
-      }
-      if (*isTemporarilyUnoptimizable_) {
-        // Scripted setter without JIT code. Just wait.
-        return false;
-      }
+      TRY_ATTACH(tryAttachDOMProxyUnshadowed(obj, objId, id, rhsId));
       return tryAttachGenericProxy(obj, objId, id, rhsId,
                                    /* handleDOMProxies = */ true);
     case ProxyStubType::Generic:
@@ -4108,14 +4072,14 @@ bool SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId,
   MOZ_CRASH("Unexpected ProxyStubType");
 }
 
-bool SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
-                                               ObjOperandId objId,
-                                               ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
+                                                         ObjOperandId objId,
+                                                         ValOperandId rhsId) {
   // Don't attach a proxy stub for ops like JSOP_INITELEM.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   if (!obj->is<ProxyObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.guardIsProxy(objId);
@@ -4128,21 +4092,20 @@ bool SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("ProxyElement");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachMegamorphicSetElement(HandleObject obj,
-                                                        ObjOperandId objId,
-                                                        ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetElement(
+    HandleObject obj, ObjOperandId objId, ValOperandId rhsId) {
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   if (mode_ != ICState::Mode::Megamorphic || cacheKind_ != CacheKind::SetElem) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // The generic proxy stubs are faster.
   if (obj->is<ProxyObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   writer.megamorphicSetElement(objId, setElemKeyValueId(), rhsId,
@@ -4150,32 +4113,35 @@ bool SetPropIRGenerator::tryAttachMegamorphicSetElement(HandleObject obj,
   writer.returnFromIC();
 
   trackAttached("MegamorphicSetElement");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
-                                              ObjOperandId objId, HandleId id,
-                                              ValOperandId rhsId) {
+AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
+                                                        ObjOperandId objId,
+                                                        HandleId id,
+                                                        ValOperandId rhsId) {
   // Attach a stub when the receiver is a WindowProxy and we can do the set
   // on the Window (the global object).
 
   if (!IsWindowProxyForScriptGlobal(script_, obj)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // If we're megamorphic prefer a generic proxy stub that handles a lot more
   // cases.
   if (mode_ == ICState::Mode::Megamorphic) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Now try to do the set on the Window (the current global).
   Handle<GlobalObject*> windowObj = cx_->global();
 
   RootedShape propShape(cx_);
+  bool isTemporarilyUnoptimizable = false;
   if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), windowObj, id,
-                              isTemporarilyUnoptimizable_, &propShape)) {
-    return false;
+                              &isTemporarilyUnoptimizable, &propShape)) {
+    return isTemporarilyUnoptimizable ? AttachDecision::TemporarilyUnoptimizable
+                                      : AttachDecision::NoAction;
   }
 
   maybeEmitIdGuard(id);
@@ -4189,7 +4155,7 @@ bool SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   EmitStoreSlotAndReturn(writer, windowObjId, windowObj, propShape, rhsId);
 
   trackAttached("WindowProxySlot");
-  return true;
+  return AttachDecision::Attach;
 }
 
 bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
@@ -4265,8 +4231,8 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
   return true;
 }
 
-bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
-                                              HandleShape oldShape) {
+AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(
+    HandleObjectGroup oldGroup, HandleShape oldShape) {
   ValOperandId objValId(writer.setInputOperandId(0));
   ValOperandId rhsValId;
   if (cacheKind_ == CacheKind::SetProp) {
@@ -4282,25 +4248,25 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
   bool nameOrSymbol;
   if (!ValueToNameOrSymbolId(cx_, idVal_, &id, &nameOrSymbol)) {
     cx_->clearPendingException();
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!lhsVal_.isObject() || !nameOrSymbol) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject obj(cx_, &lhsVal_.toObject());
 
   PropertyResult prop;
   if (!LookupOwnPropertyPure(cx_, obj, id, &prop)) {
-    return false;
+    return AttachDecision::NoAction;
   }
   if (!prop) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!obj->isNative()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   Shape* propShape = prop.shape();
@@ -4315,13 +4281,13 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
   // false even for simple data properties. It may be possible to support these
   // transitions in the future, but ignore now for simplicity.
   if (propShape->previous() != oldShape) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Basic shape checks.
   if (propShape->inDictionary() || !propShape->isDataProperty() ||
       !propShape->writable()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ObjOperandId objId = writer.guardIsObject(objValId);
@@ -4383,7 +4349,7 @@ bool SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup,
   writer.returnFromIC();
 
   typeCheckInfo_.set(oldGroup, id);
-  return true;
+  return AttachDecision::Attach;
 }
 
 InstanceOfIRGenerator::InstanceOfIRGenerator(JSContext* cx, HandleScript script,

@@ -2158,8 +2158,6 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   HandleValue lhsVal_;
   HandleValue idVal_;
   HandleValue rhsVal_;
-  bool* isTemporarilyUnoptimizable_;
-  bool* canAddSlot_;
   PropertyTypeCheckInfo typeCheckInfo_;
 
   enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -2167,6 +2165,12 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   bool attachedTypedArrayOOBStub_;
 
   bool maybeHasExtraIndexedProps_;
+
+ public:
+  enum class DeferType { None, AddSlot };
+
+ private:
+  DeferType deferType_ = DeferType::None;
 
   ValOperandId setElemKeyValueId() const {
     MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
@@ -2184,63 +2188,74 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   // matches |id|.
   void maybeEmitIdGuard(jsid id);
 
-  bool tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
-                              ValOperandId rhsId);
-  bool tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandId objId,
-                                      HandleId id, ValOperandId rhsId);
-  bool tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId,
-                                HandleId id, ValOperandId rhsId);
-  bool tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId,
-                                    HandleId id, ValOperandId rhsId);
-  bool tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
-                       ValOperandId rhsId);
-  bool tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId,
-                               HandleId id, ValOperandId rhsId);
-  bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                            ValOperandId rhsId);
-
-  bool tryAttachSetDenseElement(HandleObject obj, ObjOperandId objId,
-                                uint32_t index, Int32OperandId indexId,
-                                ValOperandId rhsId);
-  bool tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
-                                uint32_t index, Int32OperandId indexId,
-                                ValOperandId rhsId);
-
-  bool tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId objId,
-                                    uint32_t index, Int32OperandId indexId,
-                                    ValOperandId rhsId);
-
-  bool tryAttachAddOrUpdateSparseElement(HandleObject obj, ObjOperandId objId,
-                                         uint32_t index, Int32OperandId indexId,
-                                         ValOperandId rhsId);
-
-  bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                             ValOperandId rhsId, bool handleDOMProxies);
-  bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
+                                        HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachUnboxedExpandoSetSlot(HandleObject obj,
+                                                ObjOperandId objId, HandleId id,
+                                                ValOperandId rhsId);
+  AttachDecision tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId,
+                                          HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachTypedObjectProperty(HandleObject obj,
+                                              ObjOperandId objId, HandleId id,
+                                              ValOperandId rhsId);
+  AttachDecision tryAttachSetter(HandleObject obj, ObjOperandId objId,
                                  HandleId id, ValOperandId rhsId);
-  bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId,
-                                   HandleId id, ValOperandId rhsId);
-  bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+  AttachDecision tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId,
+                                         HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachWindowProxy(HandleObject obj, ObjOperandId objId,
+                                      HandleId id, ValOperandId rhsId);
+
+  AttachDecision tryAttachSetDenseElement(HandleObject obj, ObjOperandId objId,
+                                          uint32_t index,
+                                          Int32OperandId indexId,
+                                          ValOperandId rhsId);
+  AttachDecision tryAttachSetTypedElement(HandleObject obj, ObjOperandId objId,
+                                          uint32_t index,
+                                          Int32OperandId indexId,
+                                          ValOperandId rhsId);
+
+  AttachDecision tryAttachSetDenseElementHole(HandleObject obj,
+                                              ObjOperandId objId,
+                                              uint32_t index,
+                                              Int32OperandId indexId,
+                                              ValOperandId rhsId);
+
+  AttachDecision tryAttachAddOrUpdateSparseElement(HandleObject obj,
+                                                   ObjOperandId objId,
+                                                   uint32_t index,
+                                                   Int32OperandId indexId,
+                                                   ValOperandId rhsId);
+
+  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
+                                       HandleId id, ValOperandId rhsId,
+                                       bool handleDOMProxies);
+  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
+                                           HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+                                             ObjOperandId objId, HandleId id,
+                                             ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
+                                          HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
                                 HandleId id, ValOperandId rhsId);
-  bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
-                      ValOperandId rhsId);
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
-                             ValOperandId rhsId);
-  bool tryAttachMegamorphicSetElement(HandleObject obj, ObjOperandId objId,
-                                      ValOperandId rhsId);
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
+                                       ValOperandId rhsId);
+  AttachDecision tryAttachMegamorphicSetElement(HandleObject obj,
+                                                ObjOperandId objId,
+                                                ValOperandId rhsId);
 
   bool canAttachAddSlotStub(HandleObject obj, HandleId id);
 
  public:
   SetPropIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                      CacheKind cacheKind, ICState::Mode mode,
-                     bool* isTemporarilyUnoptimizable, bool* canAddSlot,
                      HandleValue lhsVal, HandleValue idVal, HandleValue rhsVal,
                      bool needsTypeBarrier = true,
                      bool maybeHasExtraIndexedProps = true);
 
-  bool tryAttachStub();
-  bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
+  AttachDecision tryAttachStub();
+  AttachDecision tryAttachAddSlotStub(HandleObjectGroup oldGroup,
+                                      HandleShape oldShape);
   void trackAttached(const char* name);
 
   bool shouldUnlinkPreliminaryObjectStubs() const {
@@ -2253,6 +2268,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
   const PropertyTypeCheckInfo* typeCheckInfo() const { return &typeCheckInfo_; }
 
   bool attachedTypedArrayOOBStub() const { return attachedTypedArrayOOBStub_; }
+
+  DeferType deferType() const { return deferType_; }
 };
 
 // HasPropIRGenerator generates CacheIR for a HasProp IC. Used for

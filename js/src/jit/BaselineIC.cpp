@@ -2301,6 +2301,8 @@ static void SetUpdateStubData(ICCacheIR_Updated* stub,
 bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
                        ICSetElem_Fallback* stub, Value* stack, HandleValue objv,
                        HandleValue index, HandleValue rhs) {
+  using DeferType = SetPropIRGenerator::DeferType;
+
   stub->incrementEnteredCount();
 
   RootedScript script(cx, frame->script());
@@ -2324,8 +2326,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  bool isTemporarilyUnoptimizable = false;
-  bool canAddSlot = false;
+  DeferType deferType = DeferType::None;
   bool attached = false;
 
   if (stub->state().maybeTransition()) {
@@ -2334,27 +2335,37 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   if (stub->state().canAttachStub()) {
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
-                           stub->state().mode(), &isTemporarilyUnoptimizable,
-                           &canAddSlot, objv, index, rhs);
-    if (gen.tryAttachStub()) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(),
-          BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
+                           stub->state().mode(), objv, index, rhs);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(),
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
 
-        SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
 
-        if (gen.shouldNotePreliminaryObjectStub()) {
-          newStub->toCacheIR_Updated()->notePreliminaryObject();
-        } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-          StripPreliminaryObjectStubs(cx, stub);
+          if (gen.shouldNotePreliminaryObjectStub()) {
+            newStub->toCacheIR_Updated()->notePreliminaryObject();
+          } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
+            StripPreliminaryObjectStubs(cx, stub);
+          }
+
+          if (gen.attachedTypedArrayOOBStub()) {
+            stub->noteHasTypedArrayOOB();
+          }
         }
-
-        if (gen.attachedTypedArrayOOBStub()) {
-          stub->noteHasTypedArrayOOB();
-        }
-      }
+      } break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        deferType = gen.deferType();
+        MOZ_ASSERT(deferType != DeferType::None);
+        break;
     }
   }
 
@@ -2402,34 +2413,44 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     stub->discardStubs(cx);
   }
 
-  if (stub->state().canAttachStub()) {
+  bool canAttachStub = stub->state().canAttachStub();
+
+  if (deferType != DeferType::None && canAttachStub) {
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetElem,
-                           stub->state().mode(), &isTemporarilyUnoptimizable,
-                           &canAddSlot, objv, index, rhs);
-    if (canAddSlot && gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(),
-          BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
+                           stub->state().mode(), objv, index, rhs);
 
-        SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+    MOZ_ASSERT(deferType == DeferType::AddSlot);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 
-        if (gen.shouldNotePreliminaryObjectStub()) {
-          newStub->toCacheIR_Updated()->notePreliminaryObject();
-        } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-          StripPreliminaryObjectStubs(cx, stub);
+    switch (decision) {
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(),
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
+
+          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+
+          if (gen.shouldNotePreliminaryObjectStub()) {
+            newStub->toCacheIR_Updated()->notePreliminaryObject();
+          } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
+            StripPreliminaryObjectStubs(cx, stub);
+          }
         }
-        return true;
-      }
-    } else {
-      gen.trackAttached(IRGenerator::NotAttached);
-    }
-    if (!attached && !isTemporarilyUnoptimizable) {
-      stub->state().trackNotAttached();
+      } break;
+      case AttachDecision::NoAction:
+        gen.trackAttached(IRGenerator::NotAttached);
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Invalid attach result");
+        break;
     }
   }
-
+  if (!attached && canAttachStub) {
+    stub->state().trackNotAttached();
+  }
   return true;
 }
 
@@ -2964,6 +2985,8 @@ bool FallbackICCodeCompiler::emit_GetPropSuper() {
 bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
                        ICSetProp_Fallback* stub, Value* stack, HandleValue lhs,
                        HandleValue rhs) {
+  using DeferType = SetPropIRGenerator::DeferType;
+
   stub->incrementEnteredCount();
 
   RootedScript script(cx, frame->script());
@@ -2990,13 +3013,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  // There are some reasons we can fail to attach a stub that are temporary.
-  // We want to avoid calling noteUnoptimizableAccess() if the reason we
-  // failed to attach a stub is one of those temporary reasons, since we might
-  // end up attaching a stub for the exact same access later.
-  bool isTemporarilyUnoptimizable = false;
-  bool canAddSlot = false;
-
+  DeferType deferType = DeferType::None;
   bool attached = false;
   if (stub->state().maybeTransition()) {
     stub->discardStubs(cx);
@@ -3005,23 +3022,33 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   if (stub->state().canAttachStub()) {
     RootedValue idVal(cx, StringValue(name));
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp,
-                           stub->state().mode(), &isTemporarilyUnoptimizable,
-                           &canAddSlot, lhs, idVal, rhs);
-    if (gen.tryAttachStub()) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(),
-          BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
+                           stub->state().mode(), lhs, idVal, rhs);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(),
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
 
-        SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
 
-        if (gen.shouldNotePreliminaryObjectStub()) {
-          newStub->toCacheIR_Updated()->notePreliminaryObject();
-        } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-          StripPreliminaryObjectStubs(cx, stub);
+          if (gen.shouldNotePreliminaryObjectStub()) {
+            newStub->toCacheIR_Updated()->notePreliminaryObject();
+          } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
+            StripPreliminaryObjectStubs(cx, stub);
+          }
         }
-      }
+      } break;
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        attached = true;
+        break;
+      case AttachDecision::Deferred:
+        deferType = gen.deferType();
+        MOZ_ASSERT(deferType != DeferType::None);
+        break;
     }
   }
 
@@ -3070,32 +3097,44 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     stub->discardStubs(cx);
   }
 
-  if (stub->state().canAttachStub()) {
+  bool canAttachStub = stub->state().canAttachStub();
+
+  if (deferType != DeferType::None && canAttachStub) {
     RootedValue idVal(cx, StringValue(name));
     SetPropIRGenerator gen(cx, script, pc, CacheKind::SetProp,
-                           stub->state().mode(), &isTemporarilyUnoptimizable,
-                           &canAddSlot, lhs, idVal, rhs);
-    if (canAddSlot && gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(),
-          BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached SetProp CacheIR stub");
+                           stub->state().mode(), lhs, idVal, rhs);
 
-        SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+    MOZ_ASSERT(deferType == DeferType::AddSlot);
+    AttachDecision decision = gen.tryAttachAddSlotStub(oldGroup, oldShape);
 
-        if (gen.shouldNotePreliminaryObjectStub()) {
-          newStub->toCacheIR_Updated()->notePreliminaryObject();
-        } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
-          StripPreliminaryObjectStubs(cx, stub);
+    switch (decision) {
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(),
+            BaselineCacheIRStubKind::Updated, frame->script(), stub, &attached);
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached SetElem CacheIR stub");
+
+          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+
+          if (gen.shouldNotePreliminaryObjectStub()) {
+            newStub->toCacheIR_Updated()->notePreliminaryObject();
+          } else if (gen.shouldUnlinkPreliminaryObjectStubs()) {
+            StripPreliminaryObjectStubs(cx, stub);
+          }
         }
-      }
-    } else {
-      gen.trackAttached(IRGenerator::NotAttached);
+      } break;
+      case AttachDecision::NoAction:
+        gen.trackAttached(IRGenerator::NotAttached);
+        break;
+      case AttachDecision::TemporarilyUnoptimizable:
+      case AttachDecision::Deferred:
+        MOZ_ASSERT_UNREACHABLE("Invalid attach result");
+        break;
     }
-    if (!attached && !isTemporarilyUnoptimizable) {
-      stub->state().trackNotAttached();
-    }
+  }
+  if (!attached && canAttachStub) {
+    stub->state().trackNotAttached();
   }
 
   return true;
@@ -3892,10 +3931,8 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
     }
   }
 
-  if (!handled) {
-    if (canAttachStub) {
-      stub->state().trackNotAttached();
-    }
+  if (!handled && canAttachStub) {
+    stub->state().trackNotAttached();
   }
   return true;
 }
