@@ -25,11 +25,11 @@
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
+#include "mozilla/dom/PendingIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
-#include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
@@ -310,13 +310,13 @@ bool BackgroundChildImpl::DeallocPBackgroundStorageChild(
   return true;
 }
 
-PPendingIPCBlobChild* BackgroundChildImpl::AllocPPendingIPCBlobChild(
+dom::PPendingIPCBlobChild* BackgroundChildImpl::AllocPPendingIPCBlobChild(
     const IPCBlob& aBlob) {
-  return new mozilla::dom::PendingIPCBlobChild(aBlob);
+  return new dom::PendingIPCBlobChild(aBlob);
 }
 
 bool BackgroundChildImpl::DeallocPPendingIPCBlobChild(
-    PPendingIPCBlobChild* aActor) {
+    dom::PPendingIPCBlobChild* aActor) {
   delete aActor;
   return true;
 }
