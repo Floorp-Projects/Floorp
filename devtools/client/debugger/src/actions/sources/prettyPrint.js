@@ -30,13 +30,7 @@ import {
 
 import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type {
-  JsSource,
-  Source,
-  SourceContent,
-  SourceActor,
-  Context
-} from "../../types";
+import type { Source, SourceContent, SourceActor, Context } from "../../types";
 
 export async function prettyPrintSource(
   sourceMaps: typeof SourceMaps,
@@ -72,7 +66,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
     const url = getPrettySourceURL(source.url);
     const id = generatedToOriginalId(sourceId, url);
 
-    const prettySource: JsSource = {
+    const prettySource: Source = {
       id,
       url,
       relativeUrl: url,

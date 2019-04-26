@@ -194,7 +194,7 @@ describe("Frames", () => {
     it("filters blackboxed frames", () => {
       const source1 = makeMockSource(undefined, "1");
       const source2 = makeMockSource(undefined, "2");
-      source2.isBlackBoxed = true;
+      (source2: any).isBlackBoxed = true;
 
       const frames = [
         makeMockFrame("1", source1),

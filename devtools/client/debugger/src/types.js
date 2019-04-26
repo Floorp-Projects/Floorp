@@ -377,13 +377,13 @@ export type SourceWithContentAndType<+Content: SourceContent> = {|
 |};
 
 /**
- * BaseSource
+ * Source
  *
  * @memberof types
  * @static
  */
 
-type BaseSource = {|
+export type Source = {|
   +id: SourceId,
   +url: string,
   +sourceMapURL?: string,
@@ -392,34 +392,9 @@ type BaseSource = {|
   +relativeUrl: string,
   +introductionUrl: ?string,
   +introductionType: ?string,
-  +isExtension: boolean
+  +isExtension: boolean,
+  +isWasm: boolean
 |};
-
-/**
- * JsSource
- *
- * @memberof types
- * @static
- */
-
-export type JsSource = {|
-  ...BaseSource,
-  +isWasm: false
-|};
-
-/**
- * WasmSource
- *
- * @memberof types
- * @static
- */
-
-export type WasmSource = {|
-  ...BaseSource,
-  +isWasm: true
-|};
-
-export type Source = JsSource | WasmSource;
 
 /**
  * Script
