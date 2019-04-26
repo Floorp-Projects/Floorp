@@ -185,19 +185,17 @@ this.ExtensionPreferencesManager = {
    * @param {any} value
    *        The value to be stored in the settings store for this
    *        group of preferences.
-   * @param {boolean} setPref
-   *        Update the prefs after adding the setting. Defaults to true.
    *
    * @returns {Promise}
    *          Resolves to true if the preferences were changed and to false if
    *          the preferences were not changed.
    */
-  async setSetting(id, name, value, setPref = true) {
+  async setSetting(id, name, value) {
     let setting = settingsMap.get(name);
     await ExtensionSettingsStore.initialize();
     let item = await ExtensionSettingsStore.addSetting(
       id, STORE_TYPE, name, value, initialValueCallback.bind(setting));
-    if (item && setPref) {
+    if (item) {
       setPrefs(setting, item);
       return true;
     }
