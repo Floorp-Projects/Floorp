@@ -2261,32 +2261,32 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
 
-  bool tryAttachDense(HandleObject obj, ObjOperandId objId, uint32_t index,
-                      Int32OperandId indexId);
-  bool tryAttachDenseHole(HandleObject obj, ObjOperandId objId, uint32_t index,
-                          Int32OperandId indexId);
-  bool tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
-                           Int32OperandId indexId);
-  bool tryAttachSparse(HandleObject obj, ObjOperandId objId,
-                       Int32OperandId indexId);
-  bool tryAttachNamedProp(HandleObject obj, ObjOperandId objId, HandleId key,
-                          ValOperandId keyId);
-  bool tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
-  bool tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
-                       ValOperandId keyId, PropertyResult prop,
-                       JSObject* holder);
-  bool tryAttachUnboxed(JSObject* obj, ObjOperandId objId, jsid key,
-                        ValOperandId keyId);
-  bool tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId, jsid key,
-                               ValOperandId keyId);
-  bool tryAttachTypedObject(JSObject* obj, ObjOperandId objId, jsid key,
-                            ValOperandId keyId);
-  bool tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId, jsid key,
-                                 ValOperandId keyId);
-  bool tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId, HandleId key,
-                             ValOperandId keyId);
-  bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
-                             ValOperandId keyId);
+  AttachDecision tryAttachDense(HandleObject obj, ObjOperandId objId,
+                                uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
+                                    uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
+                                     Int32OperandId indexId);
+  AttachDecision tryAttachSparse(HandleObject obj, ObjOperandId objId,
+                                 Int32OperandId indexId);
+  AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
+                                    HandleId key, ValOperandId keyId);
+  AttachDecision tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
+  AttachDecision tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
+                                 ValOperandId keyId, PropertyResult prop,
+                                 JSObject* holder);
+  AttachDecision tryAttachUnboxed(JSObject* obj, ObjOperandId objId, jsid key,
+                                  ValOperandId keyId);
+  AttachDecision tryAttachUnboxedExpando(JSObject* obj, ObjOperandId objId,
+                                         jsid key, ValOperandId keyId);
+  AttachDecision tryAttachTypedObject(JSObject* obj, ObjOperandId objId,
+                                      jsid key, ValOperandId keyId);
+  AttachDecision tryAttachSlotDoesNotExist(JSObject* obj, ObjOperandId objId,
+                                           jsid key, ValOperandId keyId);
+  AttachDecision tryAttachDoesNotExist(HandleObject obj, ObjOperandId objId,
+                                       HandleId key, ValOperandId keyId);
+  AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
+                                       ValOperandId keyId);
 
   void trackAttached(const char* name);
 
@@ -2296,7 +2296,7 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
                      ICState::Mode mode, CacheKind cacheKind, HandleValue idVal,
                      HandleValue val);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
