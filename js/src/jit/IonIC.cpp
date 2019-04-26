@@ -442,8 +442,8 @@ JSObject* IonBindNameIC::update(JSContext* cx, HandleScript outerScript,
   jsbytecode* pc = ic->pc();
   RootedPropertyName name(cx, ic->script()->getName(pc));
 
-  TryAttachIonStubOld<BindNameIRGenerator, IonBindNameIC>(cx, ic, ionScript,
-                                                          envChain, name);
+  TryAttachIonStub<BindNameIRGenerator, IonBindNameIC>(cx, ic, ionScript,
+                                                       envChain, name);
 
   RootedObject holder(cx);
   if (!LookupNameUnqualified(cx, name, envChain, &holder)) {

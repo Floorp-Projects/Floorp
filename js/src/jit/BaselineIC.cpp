@@ -2744,9 +2744,9 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedPropertyName name(cx, frame->script()->getName(pc));
 
-  TryAttachStubOld<BindNameIRGenerator>("BindName", cx, frame, stub,
-                                        BaselineCacheIRStubKind::Regular,
-                                        envChain, name);
+  TryAttachStub<BindNameIRGenerator>("BindName", cx, frame, stub,
+                                     BaselineCacheIRStubKind::Regular, envChain,
+                                     name);
 
   RootedObject scope(cx);
   if (!LookupNameUnqualified(cx, name, envChain, &scope)) {
