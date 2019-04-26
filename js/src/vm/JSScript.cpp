@@ -4525,7 +4525,9 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   data->nfixed = bce->maxFixedSlots;
   data->nslots = nslots;
   data->bodyScopeIndex = bce->bodyScopeIndex;
-  data->numBytecodeTypeSets = bce->bytecodeSection().typesetCount();
+  data->numBytecodeTypeSets =
+      std::min<uint32_t>(uint32_t(JSScript::MaxBytecodeTypeSets),
+                         bce->bytecodeSection().numTypeSets());
 
   if (bce->sc->isFunctionBox()) {
     data->funLength = bce->sc->asFunctionBox()->length;
