@@ -457,7 +457,7 @@
                            class="subviewbutton subviewbutton-iconic"
                            label-checked="&appMenuRemoteTabs.hidesidebar.label;"
                            label-unchecked="&appMenuRemoteTabs.sidebar.label;"
-                           oncommand="SidebarUI.toggle('viewTabsSidebar',this);"/>
+                           oncommand="SidebarUI.toggle('viewTabsSidebar', this);"/>
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
                            class="subviewbutton subviewbutton-iconic"
                            label="&appMenuRemoteTabs.managedevices.label;"
