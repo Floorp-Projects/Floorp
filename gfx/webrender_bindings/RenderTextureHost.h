@@ -46,6 +46,7 @@ class RenderTextureHost {
   }
 
   virtual void PrepareForUse() {}
+  virtual void NofityForUse() {}
   virtual void NotifyNotUsed() {}
 
  protected:

@@ -682,6 +682,20 @@ void RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
   wrapper->UpdateRenderTextureHost(wrapped->second);
 }
 
+void RenderThread::NofityForUse(uint64_t aExternalImageId) {
+  MOZ_ASSERT(RenderThread::IsInRenderThread());
+
+  MutexAutoLock lock(mRenderTextureMapLock);
+  if (mHasShutdown) {
+    return;
+  }
+  auto it = mRenderTextures.find(aExternalImageId);
+  if (it == mRenderTextures.end()) {
+    return;
+  }
+  it->second->NofityForUse();
+}
+
 void RenderThread::UnregisterExternalImageDuringShutdown(
     uint64_t aExternalImageId) {
   MOZ_ASSERT(IsInRenderThread());
