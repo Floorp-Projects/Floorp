@@ -116,6 +116,16 @@ extern JS_PUBLIC_API JSObject* GetRealmErrorPrototype(JSContext* cx);
 
 extern JS_PUBLIC_API JSObject* GetRealmIteratorPrototype(JSContext* cx);
 
+// Implements https://tc39.github.io/ecma262/#sec-getfunctionrealm
+// 7.3.22 GetFunctionRealm ( obj )
+//
+// WARNING: may return a realm in a different compartment!
+//
+// Will throw an exception and return nullptr when a security wrapper or revoked
+// proxy is encountered.
+extern JS_PUBLIC_API Realm* GetFunctionRealm(JSContext* cx,
+                                             HandleObject objArg);
+
 }  // namespace JS
 
 #endif  // js_Realm_h
