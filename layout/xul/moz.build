@@ -74,6 +74,9 @@ if CONFIG['MOZ_XUL']:
 if CONFIG['MOZ_XUL']:
     DIRS += ['tree', 'grid']
 
+CFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
