@@ -2411,9 +2411,29 @@ HttpChannelChild::GetSecurityInfo(nsISupports** aSecurityInfo) {
 
 NS_IMETHODIMP
 HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
+  LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
+
+  nsresult rv = AsyncOpenInternal(aListener);
+  if (NS_FAILED(rv)) {
+    uint32_t blockingReason = 0;
+    if (mLoadInfo) {
+      mLoadInfo->GetRequestBlockingReason(&blockingReason);
+    }
+    LOG(
+        ("HttpChannelChild::AsyncOpen failed [this=%p rv=0x%08x "
+         "blocking-reason=%u]\n",
+         this, static_cast<uint32_t>(rv), blockingReason));
+
+    gHttpHandler->OnFailedOpeningRequest(this);
+  }
+  return rv;
+}
+
+nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
+  nsresult rv;
+
   nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv =
-      nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ReleaseListeners();
     return rv;
@@ -2427,7 +2447,6 @@ HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
            nsContentUtils::IsSystemPrincipal(mLoadInfo->LoadingPrincipal())),
       "security flags in loadInfo but doContentSecurityCheck() not called");
 
-  LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
   LogCallingScriptLocation(this);
 
   if (!mLoadGroup && !mCallbacks) {
@@ -2479,8 +2498,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     mUserSetCookieHeader = cookie;
   }
 
-  rv = AddCookiesToRequest();
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  DebugOnly<nsresult> check = AddCookiesToRequest();
+  MOZ_ASSERT(NS_SUCCEEDED(check));
 
   //
   // NOTE: From now on we must return NS_OK; all errors must be handled via
