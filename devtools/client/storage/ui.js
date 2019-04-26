@@ -196,12 +196,12 @@ class StorageUI {
     this.onRemoveTreeItem = this.onRemoveTreeItem.bind(this);
 
     this._refreshButton = this._panelDoc.getElementById("refresh-button");
-    this._refreshButton.addEventListener("command", this.onRefreshTable);
-    this._refreshButton.setAttribute("tooltiptext",
+    this._refreshButton.addEventListener("click", this.onRefreshTable);
+    this._refreshButton.setAttribute("title",
     L10N.getFormatStr("storage.popupMenu.refreshItemLabel"));
 
     this._addButton = this._panelDoc.getElementById("add-button");
-    this._addButton.addEventListener("command", this.onAddItem);
+    this._addButton.addEventListener("click", this.onAddItem);
 
     this._variableViewPopupCopy = this._panelDoc.getElementById(
       "variable-view-popup-copy");
@@ -262,8 +262,8 @@ class StorageUI {
     this.sidebarToggleBtn = null;
 
     this._treePopup.removeEventListener("popupshowing", this.onTreePopupShowing);
-    this._refreshButton.removeEventListener("command", this.onRefreshTable);
-    this._addButton.removeEventListener("command", this.onAddItem);
+    this._refreshButton.removeEventListener("click", this.onRefreshTable);
+    this._addButton.removeEventListener("click", this.onAddItem);
     this._tablePopupAddItem.removeEventListener("command", this.onAddItem);
     this._treePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
     this._treePopupDeleteAllSessionCookies.removeEventListener("command",
@@ -312,7 +312,7 @@ class StorageUI {
       title = L10N.getStr("storage.collapsePane");
     }
 
-    this.sidebarToggleBtn.setAttribute("tooltiptext", title);
+    this.sidebarToggleBtn.setAttribute("title", title);
   }
 
   /**
@@ -663,7 +663,7 @@ class StorageUI {
 
     if (canAdd) {
       this._addButton.hidden = false;
-      this._addButton.setAttribute("tooltiptext",
+      this._addButton.setAttribute("title",
         L10N.getFormatStr("storage.popupMenu.addItemLabel"));
     }
   }
