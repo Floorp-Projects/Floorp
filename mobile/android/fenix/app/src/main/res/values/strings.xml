@@ -143,6 +143,8 @@
     <string name="preferences_sync_category">Choose what to sync</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">History</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Bookmarks</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
     <!-- Label indicating that sync is in progress -->

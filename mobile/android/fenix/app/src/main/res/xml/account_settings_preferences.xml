@@ -12,6 +12,12 @@
             android:title="@string/preferences_sync_category">
 
         <CheckBoxPreference
+                android:key="@string/pref_key_sync_bookmarks"
+                android:defaultValue="true"
+                android:enabled="false"
+                android:title="@string/preferences_sync_bookmarks" />
+
+        <CheckBoxPreference
                 android:key="@string/pref_key_sync_history"
                 android:defaultValue="true"
                 android:enabled="false"

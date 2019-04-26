@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- #919 - Enabled bookmark synchronization
 - #916 - Added the ability to save and delete bookmarks
 - #356 - Added the ability to delete history
 - #208 - Added normal browsing dark mode (advised to use attrs from now on for most referenced colors)
