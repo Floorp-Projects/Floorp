@@ -595,13 +595,13 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
       tramp.WriteEncodedPointer(nullptr);
     });
 
-    if (PatchIfTargetIsRecognizedTrampoline(tramp, origBytes, aDest,
-                                            aOutTramp)) {
+    tramp.WritePointer(origBytes.AsEncodedPtr());
+    if (!tramp) {
       return;
     }
 
-    tramp.WritePointer(origBytes.AsEncodedPtr());
-    if (!tramp) {
+    if (PatchIfTargetIsRecognizedTrampoline(tramp, origBytes, aDest,
+                                            aOutTramp)) {
       return;
     }
 
