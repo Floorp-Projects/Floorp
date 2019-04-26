@@ -130,9 +130,8 @@ function update(
   let location = null;
 
   switch (action.type) {
-    case "UPDATE_SOURCE":
-      return updateSource(state, action.source);
-
+    case "CLEAR_SOURCE_MAP_URL":
+      return clearSourceMaps(state, action.sourceId);
     case "ADD_SOURCE":
       return addSources(state, [action.source]);
 
@@ -387,6 +386,27 @@ function updateLoadedState(
       [sourceId]: content
     }
   };
+}
+
+function clearSourceMaps(
+  state: SourcesState,
+  sourceId: SourceId
+): SourcesState {
+  const existingSource = state.sources[sourceId];
+  if (existingSource) {
+    state = {
+      ...state,
+      sources: {
+        ...state.sources,
+        [sourceId]: {
+          ...existingSource,
+          sourceMapURL: ""
+        }
+      }
+    };
+  }
+
+  return state;
 }
 
 function updateBlackBoxList(url, isBlackBoxed) {
