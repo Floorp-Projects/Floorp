@@ -4490,24 +4490,23 @@ void TypeOfIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-bool TypeOfIRGenerator::tryAttachStub() {
+AttachDecision TypeOfIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::TypeOf);
 
   AutoAssertNoPendingException aanpe(cx_);
 
   ValOperandId valId(writer.setInputOperandId(0));
 
-  if (tryAttachPrimitive(valId)) {
-    return true;
-  }
+  TRY_ATTACH(tryAttachPrimitive(valId));
+  TRY_ATTACH(tryAttachObject(valId));
 
-  MOZ_ALWAYS_TRUE(tryAttachObject(valId));
-  return true;
+  MOZ_ASSERT_UNREACHABLE("Failed to attach TypeOf");
+  return AttachDecision::NoAction;
 }
 
-bool TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
+AttachDecision TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   if (!val_.isPrimitive()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (val_.isNumber()) {
@@ -4519,19 +4518,19 @@ bool TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId) {
   writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
   writer.returnFromIC();
   trackAttached("Primitive");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
+AttachDecision TypeOfIRGenerator::tryAttachObject(ValOperandId valId) {
   if (!val_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   ObjOperandId objId = writer.guardIsObject(valId);
   writer.loadTypeOfObjectResult(objId);
   writer.returnFromIC();
   trackAttached("Object");
-  return true;
+  return AttachDecision::Attach;
 }
 
 GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx,
