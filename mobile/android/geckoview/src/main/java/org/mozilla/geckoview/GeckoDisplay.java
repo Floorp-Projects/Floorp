@@ -106,6 +106,24 @@ public class GeckoDisplay {
     }
 
     /**
+     * Update the amount of vertical space that is clipped or visibly obscured in the bottom portion
+     * of the display. Tells gecko where to put bottom fixed elements so they are fully visible.
+     *
+     * Optional call. The display's visible vertical space has changed. Must be
+     * called on the application main thread.
+     *
+     * @param clippingHeight The height of the bottom clipped space in screen pixels.
+     */
+    @UiThread
+    public void setVerticalClipping(final int clippingHeight) {
+        ThreadUtils.assertOnUiThread();
+
+        if (mSession != null) {
+            mSession.mCompositor.setFixedBottomOffset(clippingHeight);
+        }
+    }
+
+    /**
      * Return whether the display should be pinned on the screen.
      *
      * When pinned, the display should not be moved on the screen due to animation, scrolling, etc.

@@ -20,8 +20,8 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
-const val SCREEN_HEIGHT = 100
-const val SCREEN_WIDTH = 100
+private const val SCREEN_HEIGHT = 100
+private const val SCREEN_WIDTH = 100
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest

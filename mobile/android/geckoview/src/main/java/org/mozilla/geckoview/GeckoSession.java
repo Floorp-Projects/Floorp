@@ -210,6 +210,9 @@ public class GeckoSession implements Parcelable {
         public native void setMaxToolbarHeight(int height);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+        public native void setFixedBottomOffset(int offset);
+
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         public native void setPinned(boolean pinned, int reason);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")

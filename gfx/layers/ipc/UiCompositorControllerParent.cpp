@@ -110,6 +110,26 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvMaxToolbarHeight(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult UiCompositorControllerParent::RecvFixedBottomOffset(
+    const int32_t& aOffset) {
+#if defined(MOZ_WIDGET_ANDROID)
+  CompositorBridgeParent* parent =
+      CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
+          mRootLayerTreeId);
+  if (parent) {
+    AsyncCompositionManager* manager = parent->GetCompositionManager(nullptr);
+    if (manager) {
+      manager->SetFixedLayerMargins(0, aOffset);
+    }
+
+    parent->Invalidate();
+    parent->ScheduleComposition();
+  }
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult UiCompositorControllerParent::RecvPinned(
     const bool& aPinned, const int32_t& aReason) {
 #if defined(MOZ_WIDGET_ANDROID)

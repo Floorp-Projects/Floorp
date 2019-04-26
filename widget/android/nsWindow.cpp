@@ -1056,6 +1056,15 @@ class nsWindow::LayerViewSupport final
     }
   }
 
+  void SetFixedBottomOffset(int32_t aOffset) {
+    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+
+    if (RefPtr<UiCompositorControllerChild> child =
+            GetUiCompositorControllerChild()) {
+      child->SetFixedBottomOffset(aOffset);
+    }
+  }
+
   void SetPinned(bool aPinned, int32_t aReason) {
     RefPtr<UiCompositorControllerChild> child =
         GetUiCompositorControllerChild();
