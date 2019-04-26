@@ -58,6 +58,7 @@ extern const SymbolicAddressSignature SASigMemFill;
 extern const SymbolicAddressSignature SASigMemInit;
 extern const SymbolicAddressSignature SASigTableCopy;
 extern const SymbolicAddressSignature SASigElemDrop;
+extern const SymbolicAddressSignature SASigTableFill;
 extern const SymbolicAddressSignature SASigTableGet;
 extern const SymbolicAddressSignature SASigTableGrow;
 extern const SymbolicAddressSignature SASigTableInit;

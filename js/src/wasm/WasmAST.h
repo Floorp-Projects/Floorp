@@ -430,6 +430,7 @@ enum class AstExprKind {
   StructNarrow,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
+  TableFill,
   TableGet,
   TableGrow,
   TableSet,
@@ -919,6 +920,25 @@ class AstMemOrTableInit : public AstExpr {
 #endif
 
 #ifdef ENABLE_WASM_REFTYPES
+class AstTableFill : public AstExpr {
+  AstRef targetTable_;
+  AstExpr* start_;
+  AstExpr* val_;
+  AstExpr* len_;
+
+ public:
+  static const AstExprKind Kind = AstExprKind::TableFill;
+  explicit AstTableFill(AstRef targetTable,
+                        AstExpr* start, AstExpr* val, AstExpr* len)
+      : AstExpr(Kind, ExprType::Void), targetTable_(targetTable),
+        start_(start), val_(val), len_(len) {}
+
+  AstRef& targetTable() { return targetTable_; }
+  AstExpr& start() const { return *start_; }
+  AstExpr& val() const { return *val_; }
+  AstExpr& len() const { return *len_; }
+};
+
 class AstTableGet : public AstExpr {
   AstRef targetTable_;
   AstExpr* index_;
