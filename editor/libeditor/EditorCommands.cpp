@@ -50,6 +50,23 @@ EditorCommand::IsCommandEnabled(const char* aCommandName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+EditorCommand::DoCommand(const char* aCommandName,
+                         nsISupports* aCommandRefCon) {
+  if (NS_WARN_IF(!aCommandName) || NS_WARN_IF(!aCommandRefCon)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult rv = DoCommand(aCommandName, MOZ_KnownLive(*editor->AsTextEditor()));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "Failed to do command from nsIControllerCommand::DoCommand()");
+  return rv;
+}
+
 /******************************************************************************
  * mozilla::UndoCommand
  ******************************************************************************/
@@ -64,16 +81,9 @@ bool UndoCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable() && aTextEditor->CanUndo();
 }
 
-NS_IMETHODIMP
-UndoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  return MOZ_KnownLive(textEditor)->Undo(1);
+nsresult UndoCommand::DoCommand(const char* aCommandName,
+                                TextEditor& aTextEditor) const {
+  return aTextEditor.Undo(1);
 }
 
 NS_IMETHODIMP
@@ -106,16 +116,9 @@ bool RedoCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable() && aTextEditor->CanRedo();
 }
 
-NS_IMETHODIMP
-RedoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  return MOZ_KnownLive(textEditor)->Redo(1);
+nsresult RedoCommand::DoCommand(const char* aCommandName,
+                                TextEditor& aTextEditor) const {
+  return aTextEditor.Redo(1);
 }
 
 NS_IMETHODIMP
@@ -148,15 +151,9 @@ bool CutCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable() && aTextEditor->CanCut();
 }
 
-NS_IMETHODIMP
-CutCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  return textEditor->Cut();
+nsresult CutCommand::DoCommand(const char* aCommandName,
+                               TextEditor& aTextEditor) const {
+  return aTextEditor.Cut();
 }
 
 NS_IMETHODIMP
@@ -188,25 +185,18 @@ bool CutOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-CutOrDeleteCommand::DoCommand(const char* aCommandName,
-                              nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  dom::Selection* selection = textEditor->GetSelection();
+nsresult CutOrDeleteCommand::DoCommand(const char* aCommandName,
+                                       TextEditor& aTextEditor) const {
+  dom::Selection* selection = aTextEditor.GetSelection();
   if (selection && selection->IsCollapsed()) {
-    nsresult rv = textEditor->DeleteSelectionAsAction(nsIEditor::eNext,
+    nsresult rv = aTextEditor.DeleteSelectionAsAction(nsIEditor::eNext,
                                                       nsIEditor::eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
-  return textEditor->Cut();
+  return aTextEditor.Cut();
 }
 
 NS_IMETHODIMP
@@ -239,15 +229,9 @@ bool CopyCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->CanCopy();
 }
 
-NS_IMETHODIMP
-CopyCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  return textEditor->Copy();
+nsresult CopyCommand::DoCommand(const char* aCommandName,
+                                TextEditor& aTextEditor) const {
+  return aTextEditor.Copy();
 }
 
 NS_IMETHODIMP
@@ -280,25 +264,18 @@ bool CopyOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-CopyOrDeleteCommand::DoCommand(const char* aCommandName,
-                               nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  dom::Selection* selection = textEditor->GetSelection();
+nsresult CopyOrDeleteCommand::DoCommand(const char* aCommandName,
+                                        TextEditor& aTextEditor) const {
+  dom::Selection* selection = aTextEditor.GetSelection();
   if (selection && selection->IsCollapsed()) {
-    nsresult rv = textEditor->DeleteSelectionAsAction(nsIEditor::eNextWord,
+    nsresult rv = aTextEditor.DeleteSelectionAsAction(nsIEditor::eNextWord,
                                                       nsIEditor::eStrip);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
-  return textEditor->Copy();
+  return aTextEditor.Copy();
 }
 
 NS_IMETHODIMP
@@ -332,17 +309,9 @@ bool PasteCommand::IsCommandEnabled(const char* aCommandName,
          aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
-NS_IMETHODIMP
-PasteCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  return MOZ_KnownLive(textEditor)
-      ->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
+nsresult PasteCommand::DoCommand(const char* aCommandName,
+                                 TextEditor& aTextEditor) const {
+  return aTextEditor.PasteAsAction(nsIClipboard::kGlobalClipboard, true);
 }
 
 NS_IMETHODIMP
@@ -376,9 +345,8 @@ bool PasteTransferableCommand::IsCommandEnabled(const char* aCommandName,
          aTextEditor->CanPasteTransferable(nullptr);
 }
 
-NS_IMETHODIMP
-PasteTransferableCommand::DoCommand(const char* aCommandName,
-                                    nsISupports* aCommandRefCon) {
+nsresult PasteTransferableCommand::DoCommand(const char* aCommandName,
+                                             TextEditor& aTextEditor) const {
   return NS_ERROR_FAILURE;
 }
 
@@ -455,17 +423,9 @@ bool SwitchTextDirectionCommand::IsCommandEnabled(
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
-                                      nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  return MOZ_KnownLive(textEditor)->ToggleTextDirection();
+nsresult SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
+                                               TextEditor& aTextEditor) const {
+  return aTextEditor.ToggleTextDirection();
 }
 
 NS_IMETHODIMP
@@ -507,41 +467,31 @@ bool DeleteCommand::IsCommandEnabled(const char* aCommandName,
   return isEnabled;
 }
 
-NS_IMETHODIMP
-DeleteCommand::DoCommand(const char* aCommandName,
-                         nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-
+nsresult DeleteCommand::DoCommand(const char* aCommandName,
+                                  TextEditor& aTextEditor) const {
   nsIEditor::EDirection deleteDir = nsIEditor::eNone;
-
-  if (!nsCRT::strcmp("cmd_delete", aCommandName)) {
+  if (!strcmp("cmd_delete", aCommandName)) {
     // Really this should probably be eNone, but it only makes a difference if
     // the selection is collapsed, and then this command is disabled.  So let's
     // keep it as it always was to avoid breaking things.
     deleteDir = nsIEditor::ePrevious;
-  } else if (!nsCRT::strcmp("cmd_deleteCharForward", aCommandName)) {
+  } else if (!strcmp("cmd_deleteCharForward", aCommandName)) {
     deleteDir = nsIEditor::eNext;
-  } else if (!nsCRT::strcmp("cmd_deleteCharBackward", aCommandName)) {
+  } else if (!strcmp("cmd_deleteCharBackward", aCommandName)) {
     deleteDir = nsIEditor::ePrevious;
-  } else if (!nsCRT::strcmp("cmd_deleteWordBackward", aCommandName)) {
+  } else if (!strcmp("cmd_deleteWordBackward", aCommandName)) {
     deleteDir = nsIEditor::ePreviousWord;
-  } else if (!nsCRT::strcmp("cmd_deleteWordForward", aCommandName)) {
+  } else if (!strcmp("cmd_deleteWordForward", aCommandName)) {
     deleteDir = nsIEditor::eNextWord;
-  } else if (!nsCRT::strcmp("cmd_deleteToBeginningOfLine", aCommandName)) {
+  } else if (!strcmp("cmd_deleteToBeginningOfLine", aCommandName)) {
     deleteDir = nsIEditor::eToBeginningOfLine;
-  } else if (!nsCRT::strcmp("cmd_deleteToEndOfLine", aCommandName)) {
+  } else if (!strcmp("cmd_deleteToEndOfLine", aCommandName)) {
     deleteDir = nsIEditor::eToEndOfLine;
   } else {
     MOZ_CRASH("Unrecognized nsDeleteCommand");
   }
-
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
   nsresult rv =
-      textEditor->DeleteSelectionAsAction(deleteDir, nsIEditor::eStrip);
+      aTextEditor.DeleteSelectionAsAction(deleteDir, nsIEditor::eStrip);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -586,16 +536,9 @@ bool SelectAllCommand::IsCommandEnabled(const char* aCommandName,
   return !isEmpty;
 }
 
-NS_IMETHODIMP
-SelectAllCommand::DoCommand(const char* aCommandName,
-                            nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  return MOZ_KnownLive(textEditor)->SelectAll();
+nsresult SelectAllCommand::DoCommand(const char* aCommandName,
+                                     TextEditor& aTextEditor) const {
+  return aTextEditor.SelectAll();
 }
 
 NS_IMETHODIMP
@@ -675,60 +618,52 @@ static const struct PhysicalCommand {
     {"cmd_moveUp2", "cmd_selectUp2", nsISelectionController::MOVE_UP, 1},
     {"cmd_moveDown2", "cmd_selectDown2", nsISelectionController::MOVE_DOWN, 1}};
 
-NS_IMETHODIMP
-SelectionMoveCommands::DoCommand(const char* aCommandName,
-                                 nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  RefPtr<Document> doc = textEditor->GetDocument();
-  if (doc) {
+nsresult SelectionMoveCommands::DoCommand(const char* aCommandName,
+                                          TextEditor& aTextEditor) const {
+  RefPtr<Document> document = aTextEditor.GetDocument();
+  if (document) {
     // Most of the commands below (possibly all of them) need layout to
     // be up to date.
-    doc->FlushPendingNotifications(FlushType::Layout);
+    document->FlushPendingNotifications(FlushType::Layout);
   }
 
   nsCOMPtr<nsISelectionController> selectionController =
-      textEditor->GetSelectionController();
+      aTextEditor.GetSelectionController();
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_FAILURE;
   }
 
   // scroll commands
-  for (size_t i = 0; i < mozilla::ArrayLength(scrollCommands); i++) {
+  for (size_t i = 0; i < ArrayLength(scrollCommands); i++) {
     const ScrollCommand& cmd = scrollCommands[i];
-    if (!nsCRT::strcmp(aCommandName, cmd.reverseScroll)) {
+    if (!strcmp(aCommandName, cmd.reverseScroll)) {
       return (selectionController->*(cmd.scroll))(false);
-    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardScroll)) {
+    } else if (!strcmp(aCommandName, cmd.forwardScroll)) {
       return (selectionController->*(cmd.scroll))(true);
     }
   }
 
   // caret movement/selection commands
-  for (size_t i = 0; i < mozilla::ArrayLength(moveCommands); i++) {
+  for (size_t i = 0; i < ArrayLength(moveCommands); i++) {
     const MoveCommand& cmd = moveCommands[i];
-    if (!nsCRT::strcmp(aCommandName, cmd.reverseMove)) {
+    if (!strcmp(aCommandName, cmd.reverseMove)) {
       return (selectionController->*(cmd.move))(false, false);
-    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardMove)) {
+    } else if (!strcmp(aCommandName, cmd.forwardMove)) {
       return (selectionController->*(cmd.move))(true, false);
-    } else if (!nsCRT::strcmp(aCommandName, cmd.reverseSelect)) {
+    } else if (!strcmp(aCommandName, cmd.reverseSelect)) {
       return (selectionController->*(cmd.move))(false, true);
-    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardSelect)) {
+    } else if (!strcmp(aCommandName, cmd.forwardSelect)) {
       return (selectionController->*(cmd.move))(true, true);
     }
   }
 
   // physical-direction movement/selection
-  for (size_t i = 0; i < mozilla::ArrayLength(physicalCommands); i++) {
+  for (size_t i = 0; i < ArrayLength(physicalCommands); i++) {
     const PhysicalCommand& cmd = physicalCommands[i];
-    if (!nsCRT::strcmp(aCommandName, cmd.move)) {
+    if (!strcmp(aCommandName, cmd.move)) {
       return selectionController->PhysicalMove(cmd.direction, cmd.amount,
                                                false);
-    } else if (!nsCRT::strcmp(aCommandName, cmd.select)) {
+    } else if (!strcmp(aCommandName, cmd.select)) {
       return selectionController->PhysicalMove(cmd.direction, cmd.amount, true);
     }
   }
@@ -766,23 +701,15 @@ bool InsertPlaintextCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-InsertPlaintextCommand::DoCommand(const char* aCommandName,
-                                  nsISupports* aCommandRefCon) {
-  // No value is equivalent to empty string
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
+nsresult InsertPlaintextCommand::DoCommand(const char* aCommandName,
+                                           TextEditor& aTextEditor) const {
   // XXX InsertTextAsAction() is not same as OnInputText().  However, other
   //     commands to insert line break or paragraph separator use OnInput*().
   //     According to the semantics of those methods, using *AsAction() is
   //     better, however, this may not cause two or more placeholder
   //     transactions to the top transaction since its name may not be
   //     nsGkAtoms::TypingTxnName.
-  DebugOnly<nsresult> rv = textEditor->InsertTextAsAction(EmptyString());
+  DebugOnly<nsresult> rv = aTextEditor.InsertTextAsAction(EmptyString());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert empty string");
   return NS_OK;
 }
@@ -847,15 +774,9 @@ bool InsertParagraphCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-InsertParagraphCommand::DoCommand(const char* aCommandName,
-                                  nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult InsertParagraphCommand::DoCommand(const char* aCommandName,
+                                           TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_OK;  // Do nothing for now.
   }
@@ -896,15 +817,9 @@ bool InsertLineBreakCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-NS_IMETHODIMP
-InsertLineBreakCommand::DoCommand(const char* aCommandName,
-                                  nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  HTMLEditor* htmlEditor = editor->AsHTMLEditor();
+nsresult InsertLineBreakCommand::DoCommand(const char* aCommandName,
+                                           TextEditor& aTextEditor) const {
+  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
     return NS_ERROR_FAILURE;
   }
@@ -946,19 +861,10 @@ bool PasteQuotationCommand::IsCommandEnabled(const char* aCommandName,
          aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
-NS_IMETHODIMP
-PasteQuotationCommand::DoCommand(const char* aCommandName,
-                                 nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
-  }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  // MOZ_KnownLive because we are holding a stack ref in "editor".
-  nsresult rv =
-      MOZ_KnownLive(textEditor)
-          ->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
+nsresult PasteQuotationCommand::DoCommand(const char* aCommandName,
+                                          TextEditor& aTextEditor) const {
+  nsresult rv = aTextEditor.PasteAsQuotationAsAction(
+      nsIClipboard::kGlobalClipboard, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

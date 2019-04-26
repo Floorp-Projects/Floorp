@@ -52,9 +52,8 @@ bool SetDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
   return true;
 }
 
-NS_IMETHODIMP
-SetDocumentStateCommand::DoCommand(const char* aCommandName,
-                                   nsISupports* refCon) {
+nsresult SetDocumentStateCommand::DoCommand(const char* aCommandName,
+                                            TextEditor& aTextEditor) const {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -447,8 +446,8 @@ bool DocumentStateCommand::IsCommandEnabled(const char* aCommandName,
   return false;
 }
 
-NS_IMETHODIMP
-DocumentStateCommand::DoCommand(const char* aCommandName, nsISupports* refCon) {
+nsresult DocumentStateCommand::DoCommand(const char* aCommandName,
+                                         TextEditor& aTextEditor) const {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
