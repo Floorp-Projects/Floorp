@@ -2315,15 +2315,15 @@ class MOZ_RAII InstanceOfIRGenerator : public IRGenerator {
 class MOZ_RAII TypeOfIRGenerator : public IRGenerator {
   HandleValue val_;
 
-  bool tryAttachPrimitive(ValOperandId valId);
-  bool tryAttachObject(ValOperandId valId);
+  AttachDecision tryAttachPrimitive(ValOperandId valId);
+  AttachDecision tryAttachObject(ValOperandId valId);
   void trackAttached(const char* name);
 
  public:
   TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                     ICState::Mode mode, HandleValue value);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 };
 
 class MOZ_RAII GetIteratorIRGenerator : public IRGenerator {
