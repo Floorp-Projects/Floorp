@@ -34,8 +34,8 @@ are marked accordingly.
 | `ping_type` | String | The name of the ping type (e.g. "baseline", "metrics") |
 | `seq` | Counter | A running counter of the number of times pings of this type have been sent |
 | `experiments` | Object | *Optional*. A dictionary of [active experiments](#the-experiments-object) |
-| `start_time` | Datetime | The time of the start of collection of the data in the ping, in local time and with minute precision. See [note](#a-note-about-time-formats) |
-| `end_time` | Datetime | The time of the end of collection of the data in the ping, in local time and with minute precision. This is also the time this ping was generated and is likely well before ping transmission time. See [note](#a-note-about-time-formats) |
+| `start_time` | Datetime | The time of the start of collection of the data in the ping, in local time and with minute precision, including timezone information. |
+| `end_time` | Datetime | The time of the end of collection of the data in the ping, in local time and with minute precision, including timezone information. This is also the time this ping was generated and is likely well before ping transmission time. |
 
 All the metrics surviving application restarts (e.g. `seq`, ...) are removed once the
 application using glean is uninstalled.
@@ -52,7 +52,7 @@ The following fields are included in the `client_info` section. Optional fields 
 | `client_id` | UUID |  A UUID identifying a profile and allowing user-oriented correlation of data |
 | `device_manufacturer` | String | The manufacturer of the device |
 | `device_model` | String | The model name of the device |
-| `first_run_date` | Datetime | The date of the first run of the application, in local time and with day precision. See [note](#a-note-about-time-formats) |
+| `first_run_date` | Datetime | The date of the first run of the application, in local time and with day precision, including timezone information. |
 | `os` | String | The name of the operating system (e.g. "linux", "Android", "ios") |
 | `os_version` | String | The user visible version of the operating system (e.g. "1.2.3") |
 | `android_sdk_version` | String | *Optional*. The Android specific SDK version of the software running on this hardware device (e.g. "23") |
@@ -61,7 +61,7 @@ The following fields are included in the `client_info` section. Optional fields 
 All the metrics surviving application restarts (e.g. `client_id`, ...) are removed once the
 application using glean is uninstalled.
 
-### The `experiments` object 
+### The `experiments` object
 
 This object (included in the [`ping_info` section](#The-ping_info-section))
 contains experiments keyed by the experiment `id`. Each listed experiment
@@ -85,7 +85,7 @@ The pings that glean generates are submitted to the Mozilla servers at specific 
 additional metadata without the need to unpack the ping payload. A typical submission URL looks like
 
   `"<server-address>/submit/<application-id>/<doc-type>/<glean-schema-version>/<ping-uuid>"`
-  
+
 where:
 
 - `<server-address>`: the address of the server that receives the pings;
@@ -114,10 +114,10 @@ perform this truncation based on the number of UTF8 bytes instead, which is
 ultimately what matters for ping size.
 
 ## Defining background state
-These docs refer to application 'background' state in several places. This specifically means when 
-the activity is no longer visible to the user, it has entered the Stopped state, and the system 
-invokes the [`onStop()`](https://developer.android.com/reference/android/app/Activity.html#onStop()) callback. 
-This may occur, for example, when a newly launched activity covers the entire screen. The system may 
+These docs refer to application 'background' state in several places. This specifically means when
+the activity is no longer visible to the user, it has entered the Stopped state, and the system
+invokes the [`onStop()`](https://developer.android.com/reference/android/app/Activity.html#onStop()) callback.
+This may occur, for example, when a newly launched activity covers the entire screen. The system may
 also call `onStop()` when the activity has finished running, and is about to be terminated.
 
 ## Error reporting

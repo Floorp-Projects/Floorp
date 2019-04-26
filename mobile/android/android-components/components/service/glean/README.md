@@ -6,13 +6,14 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
 - [Before using the library](#before-using-the-library)
 - [Usage](#usage)
     - [Setting up the dependency](#setting-up-the-dependency)
-    - [Setting up the proguard rule](#setting-up-the-proguard-rule)
     - [Integrating with the build system](#integrating-with-the-build-system)
     - [Initializing glean](#initializing-glean)
     - [Adding new metrics](#adding-new-metrics)
     - [Adding custom pings](#adding-custom-pings)
+    - [Testing metrics](#testing-metrics)
     - [Providing UI to enable / disable metrics](#providing-ui-to-enable--disable-metrics)
 - [Debugging products using glean](#debugging-products-using-glean)
+- [Data documentation](#data-documentation)
 - [Contact](#contact)
 - [License](#license)
 
@@ -175,6 +176,10 @@ adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean
 ### Important GleanDebugActivity note!
 
 Options that are set using the adb flags are not immediately reset and will persist until the application is closed or manually reset.
+
+## Data documentation
+
+Further documentation for pings that Glean can send out of the box is available [here](docs/pings/pings.md).
 
 ## Contact
 
