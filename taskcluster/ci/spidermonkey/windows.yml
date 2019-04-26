@@ -30,7 +30,6 @@ sm-plain-win32/debug:
     treeherder:
         platform: windows2012-32/debug
         symbol: SM(p)
-    run-on-projects: []
     run:
         spidermonkey-variant: plaindebug
         spidermonkey-platform: win32
@@ -62,7 +61,6 @@ sm-plain-win32/opt:
     treeherder:
         platform: windows2012-32/opt
         symbol: SM(p)
-    run-on-projects: []
     run:
         spidermonkey-variant: plain
         spidermonkey-platform: win32
