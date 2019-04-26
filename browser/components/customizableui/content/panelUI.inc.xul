@@ -403,7 +403,8 @@
     <panelview id="PanelUI-history" flex="1">
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenuViewHistorySidebar"
-                       label="&appMenuHistory.viewSidebar.label;"
+                       label-checked="&appMenuHistory.hideSidebar.label;"
+                       label-unchecked="&appMenuHistory.viewSidebar.label;"                      
                        type="checkbox"
                        class="subviewbutton subviewbutton-iconic"
                        key="key_gotoHistory"
@@ -454,8 +455,9 @@
           <vbox id="PanelUI-remotetabs-buttons">
             <toolbarbutton id="PanelUI-remotetabs-view-sidebar"
                            class="subviewbutton subviewbutton-iconic"
-                           label="&appMenuRemoteTabs.sidebar.label;"
-                           oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
+                           label-checked="&appMenuRemoteTabs.hidesidebar.label;"
+                           label-unchecked="&appMenuRemoteTabs.sidebar.label;"
+                           oncommand="SidebarUI.toggle('viewTabsSidebar',this);"/>
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
                            class="subviewbutton subviewbutton-iconic"
                            label="&appMenuRemoteTabs.managedevices.label;"
