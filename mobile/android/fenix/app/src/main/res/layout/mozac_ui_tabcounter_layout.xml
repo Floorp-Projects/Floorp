@@ -28,8 +28,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="1dp"
-            android:layout_marginEnd="1dp"
             android:textColor="?primaryText"
             android:textSize="12sp"
             android:textStyle="bold"

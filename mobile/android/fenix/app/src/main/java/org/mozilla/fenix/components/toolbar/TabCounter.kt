@@ -15,7 +15,6 @@ import android.view.ViewTreeObserver
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
-import mozilla.components.support.utils.DrawableUtils
 import mozilla.components.ui.tabcounter.R
 import java.text.NumberFormat
 
@@ -39,16 +38,12 @@ open class TabCounter @JvmOverloads constructor(
         box = findViewById(R.id.counter_box)
         text = findViewById(R.id.counter_text)
         text.text = DEFAULT_TABS_COUNTER_TEXT
-        val shiftOneDpForDefaultText = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, 1f, context.resources.displayMetrics
+        val shiftThreeDp = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, TWO_DIGIT_PADDING, context.resources.displayMetrics
         ).toInt()
-        text.setPadding(0, 0, 0, shiftOneDpForDefaultText)
+        text.setPadding(0, shiftThreeDp, shiftThreeDp, 0)
 
         animationSet = createAnimatorSet()
-    }
-
-    fun getText(): CharSequence {
-        return text.text
     }
 
     fun setCountWithAnimation(count: Int) {
@@ -70,7 +65,6 @@ open class TabCounter @JvmOverloads constructor(
 
         adjustTextSize(count)
 
-        text.setPadding(0, 0, 0, 0)
         text.text = formatForDisplay(count)
         this.count = count
 
@@ -85,19 +79,8 @@ open class TabCounter @JvmOverloads constructor(
     fun setCount(count: Int) {
         adjustTextSize(count)
 
-        text.setPadding(0, 0, 0, 0)
         text.text = formatForDisplay(count)
         this.count = count
-    }
-
-    private fun tintDrawables(tabCounterTint: Int) {
-        val tabCounterBox = DrawableUtils.loadAndTintDrawable(
-            context,
-            R.drawable.mozac_ui_tabcounter_box, tabCounterTint
-        )
-        box.setImageDrawable(tabCounterBox)
-
-        text.setTextColor(tabCounterTint)
     }
 
     private fun createAnimatorSet(): AnimatorSet {
@@ -233,6 +216,12 @@ open class TabCounter @JvmOverloads constructor(
                         // Only apply the size when we calculate a valid value.
                         text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel.toFloat())
                         text.setTypeface(null, Typeface.BOLD)
+                        val shiftDp = TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP,
+                            if (newRatio == TWO_DIGITS_SIZE_RATIO) TWO_DIGIT_PADDING else ONE_DIGIT_PADDING,
+                            context.resources.displayMetrics
+                        ).toInt()
+                        text.setPadding(0, shiftDp, shiftDp, 0)
                     }
                 }
             })
@@ -248,6 +237,8 @@ open class TabCounter @JvmOverloads constructor(
 
         internal const val ONE_DIGIT_SIZE_RATIO = 0.5f
         internal const val TWO_DIGITS_SIZE_RATIO = 0.4f
+        internal const val ONE_DIGIT_PADDING = 2F
+        internal const val TWO_DIGIT_PADDING = 3F
         internal const val TWO_DIGITS_TAB_COUNT_THRESHOLD = 10
 
         // createBoxAnimatorSet
