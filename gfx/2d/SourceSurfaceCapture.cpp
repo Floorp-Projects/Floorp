@@ -91,11 +91,6 @@ RefPtr<SourceSurface> SourceSurfaceCapture::Resolve(BackendType aBackendType) {
     backendType = mRefDT->GetBackendType();
   }
 
-  // If on the paint thread, we require that the owning DrawTarget be detached
-  // from this snapshot. This roughly approximates an assert that nothing can
-  // mutate the snapshot.
-  MOZ_RELEASE_ASSERT(NS_IsMainThread() || !mOwner);
-
   // Note: SurfaceType is not 1:1 with BackendType, so we can't easily decide
   // that they match. Instead we just cache the first thing to be requested.
   // We ensured no mResolved existed before.
