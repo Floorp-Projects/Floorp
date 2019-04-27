@@ -1625,15 +1625,23 @@ class AsyncPanZoomController {
    * The functions in this section are used for CSS scroll snapping.
    */
 
-  // If |aEvent| should trigger scroll snapping, adjust |aDelta| to reflect
-  // the snapping (that is, make it a delta that will take us to the desired
-  // snap point). The delta is interpreted as being relative to
-  // |aStartPosition|, and if a target snap point is found, |aStartPosition|
-  // is also updated, to the value of the snap point.
+  // If moving |aStartPosition| by |aDelta| should trigger scroll snapping,
+  // adjust |aDelta| to reflect the snapping (that is, make it a delta that will
+  // take us to the desired snap point). The delta is interpreted as being
+  // relative to |aStartPosition|, and if a target snap point is found,
+  // |aStartPosition| is also updated, to the value of the snap point.
+  // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
+  // GetSnapPointForDestination).
   // Returns true iff. a target snap point was found.
-  bool MaybeAdjustDeltaForScrollSnapping(const ScrollWheelInput& aEvent,
+  bool MaybeAdjustDeltaForScrollSnapping(nsIScrollableFrame::ScrollUnit aUnit,
                                          ParentLayerPoint& aDelta,
                                          CSSPoint& aStartPosition);
+
+  // A wrapper function of MaybeAdjustDeltaForScrollSnapping for
+  // ScrollWheelInput.
+  bool MaybeAdjustDeltaForScrollSnappingOnWheelInput(
+      const ScrollWheelInput& aEvent, ParentLayerPoint& aDelta,
+      CSSPoint& aStartPosition);
 
   bool MaybeAdjustDestinationForScrollSnapping(const KeyboardInput& aEvent,
                                                CSSPoint& aDestination);
