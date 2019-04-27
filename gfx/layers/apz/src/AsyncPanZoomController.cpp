@@ -5244,18 +5244,20 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
     return;
   }
 
-  CSSPoint predictedDestination =
-      Metrics().GetScrollOffset() + predictedDelta / Metrics().GetZoom();
-  APZC_LOG(
-      "%p fling snapping.  friction: %f velocity: %f, %f "
-      "predictedDelta: %f, %f position: %f, %f "
-      "predictedDestination: %f, %f\n",
-      this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
-      (float)predictedDelta.y, (float)Metrics().GetScrollOffset().x,
-      (float)Metrics().GetScrollOffset().y, (float)predictedDestination.x,
-      (float)predictedDestination.y);
+  CSSPoint startPosition = Metrics().GetScrollOffset();
+  if (MaybeAdjustDeltaForScrollSnapping(nsIScrollableFrame::LINES,
+                                        predictedDelta, startPosition)) {
+    APZC_LOG(
+        "%p fling snapping.  friction: %f velocity: %f, %f "
+        "predictedDelta: %f, %f position: %f, %f "
+        "snapDestination: %f, %f\n",
+        this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
+        (float)predictedDelta.y, (float)Metrics().GetScrollOffset().x,
+        (float)Metrics().GetScrollOffset().y, (float)startPosition.x,
+        (float)startPosition.y);
 
-  ScrollSnapNear(predictedDestination);
+    SmoothScrollTo(startPosition);
+  }
 }
 
 bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
