@@ -371,3 +371,10 @@ addon-detail-reviews-link =
         [one] { $numberOfReviews } review
        *[other] { $numberOfReviews } reviews
     }
+
+addon-detail-updates-label = Allow automatic updates
+addon-detail-updates-radio-default = Default
+addon-detail-updates-radio-on = On
+addon-detail-updates-radio-off = Off
+addon-detail-update-check-label = Check for Updates
+install-update-button = Update
