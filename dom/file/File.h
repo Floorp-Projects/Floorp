@@ -88,9 +88,9 @@ class File final : public Blob {
   void GetRelativePath(nsAString& aPath) const;
 
   void GetMozFullPath(nsAString& aFilename, SystemCallerGuarantee aGuarantee,
-                      ErrorResult& aRv) const;
+                      ErrorResult& aRv);
 
-  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv) const;
+  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv);
 
  protected:
   virtual bool HasFileInterface() const override { return true; }

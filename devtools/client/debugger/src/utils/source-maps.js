@@ -98,18 +98,3 @@ export async function mapLocation(
 export function isOriginalSource(source: ?Source) {
   return source && isOriginalId(source.id);
 }
-
-export function getSelectedLocation(
-  mappedLocation: MappedLocation,
-  context: ?(Source | SourceLocation)
-): SourceLocation {
-  if (!context) {
-    return mappedLocation.location;
-  }
-
-  // $FlowIgnore
-  const sourceId = context.sourceId || context.id;
-  return isOriginalId(sourceId)
-    ? mappedLocation.location
-    : mappedLocation.generatedLocation;
-}

@@ -11,7 +11,7 @@ include protocol PParentToChildStream;
 include IPCBlob;
 
 namespace mozilla {
-namespace ipc {
+namespace dom {
 
 union IPCBlobOrError
 {
@@ -39,5 +39,5 @@ parent:
   async OperationDone(nsCString aContentType, FileDescriptor aFD);
 };
 
-} // namespace dom
+} // namespace dom 
 } // namespace mozilla

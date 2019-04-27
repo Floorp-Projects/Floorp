@@ -224,6 +224,7 @@ package org.mozilla.geckoview {
     ctor protected GeckoDisplay(GeckoSession);
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
     method @UiThread public void screenOriginChanged(int, int);
+    method @UiThread public void setVerticalClipping(int);
     method @UiThread public boolean shouldPinOnScreen();
     method @UiThread public void surfaceChanged(@NonNull Surface, int, int);
     method @UiThread public void surfaceChanged(@NonNull Surface, int, int, int, int);
@@ -836,6 +837,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public GeckoSession releaseSession();
     method @UiThread public void setSession(@NonNull GeckoSession);
     method @UiThread public void setSession(@NonNull GeckoSession, @Nullable GeckoRuntime);
+    method public void setVerticalClipping(int);
     method public boolean shouldPinOnScreen();
     field @NonNull protected final GeckoView.Display mDisplay;
     field @Nullable protected GeckoRuntime mRuntime;

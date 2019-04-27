@@ -117,7 +117,7 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
         // it is not collapsed into other sources from the same place. The
         // introduction URL will include the point it was constructed at,
         // however, so use that for resolving any source maps in the source.
-        urlInfo.url = urlInfo.introductionUrl;
+        (urlInfo: any).url = urlInfo.introductionUrl;
       }
       urls = await sourceMaps.getOriginalURLs(urlInfo);
     } catch (e) {
@@ -125,19 +125,12 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
     }
 
     if (!urls) {
-      // The source might have changed while we looked up the URLs, so we need
-      // to load it again before dispatching. We ran into an issue here because
-      // this was previously using 'source' and was at risk of resetting the
-      // 'loadedState' field to 'loading', putting it in an inconsistent state.
-      const currentSource = getSource(getState(), sourceId);
-
       // If this source doesn't have a sourcemap, enable it for pretty printing
       dispatch(
         ({
-          type: "UPDATE_SOURCE",
+          type: "CLEAR_SOURCE_MAP_URL",
           cx,
-          // NOTE: Flow https://github.com/facebook/flow/issues/6342 issue
-          source: (({ ...currentSource, sourceMapURL: "" }: any): Source)
+          sourceId
         }: Action)
       );
       return [];
@@ -289,27 +282,25 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
     const supportsWasm = client.hasWasmSupport();
 
     const resultIds = [];
-    const newSources: Array<Source> = [];
+    const newSourcesObj = {};
     const newSourceActors: Array<SourceActor> = [];
 
     for (const { thread, source, id } of sourceInfo) {
       const newId = id || makeSourceId(source);
 
-      if (!getSource(getState(), newId)) {
-        newSources.push(
-          ({
-            id: newId,
-            url: source.url,
-            relativeUrl: source.url,
-            isPrettyPrinted: false,
-            sourceMapURL: source.sourceMapURL,
-            introductionUrl: source.introductionUrl,
-            introductionType: source.introductionType,
-            isBlackBoxed: false,
-            isWasm: !!supportsWasm && source.introductionType === "wasm",
-            isExtension: (source.url && isUrlExtension(source.url)) || false
-          }: any)
-        );
+      if (!getSource(getState(), newId) && !newSourcesObj[newId]) {
+        newSourcesObj[newId] = ({
+          id: newId,
+          url: source.url,
+          relativeUrl: source.url,
+          isPrettyPrinted: false,
+          sourceMapURL: source.sourceMapURL,
+          introductionUrl: source.introductionUrl,
+          introductionType: source.introductionType,
+          isBlackBoxed: false,
+          isWasm: !!supportsWasm && source.introductionType === "wasm",
+          isExtension: (source.url && isUrlExtension(source.url)) || false
+        }: any);
       }
 
       const actorId = stringToSourceActorId(source.actor);
@@ -333,6 +324,10 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
 
       resultIds.push(newId);
     }
+
+    const newSources: Array<Source> = (Object.values(newSourcesObj): Array<
+      any
+    >);
 
     const cx = getContext(getState());
     dispatch(addSources(cx, newSources));

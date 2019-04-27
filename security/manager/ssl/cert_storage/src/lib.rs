@@ -5,6 +5,8 @@
 extern crate base64;
 extern crate crossbeam_utils;
 extern crate lmdb;
+#[macro_use]
+extern crate log;
 extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
@@ -39,8 +41,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
-    nsICertStorage, nsICertStorageCallback, nsIFile, nsIObserver, nsIPrefBranch, nsISupports,
-    nsIThread,
+    nsICertStorage, nsICertStorageCallback, nsIFile, nsIIssuerAndSerialRevocationState,
+    nsIObserver, nsIPrefBranch, nsIRevocationState, nsISubjectAndPubKeyRevocationState,
+    nsISupports, nsIThread,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
@@ -263,22 +266,28 @@ impl SecurityState {
         }
     }
 
-    pub fn set_revocation_by_issuer_and_serial(
+    pub fn set_revocations(
         &mut self,
-        issuer: &[u8],
-        serial: &[u8],
-        state: i16,
+        entries: &[(Vec<u8>, i16)],
     ) -> Result<(), SecurityStateError> {
-        self.write_entry(&make_key(PREFIX_REV_IS, issuer, serial), state)
-    }
+        self.reopen_store_read_write()?;
+        {
+            let env_and_store = match self.env_and_store.as_mut() {
+                Some(env_and_store) => env_and_store,
+                None => return Err(SecurityStateError::from("env and store not initialized?")),
+            };
+            let mut writer = env_and_store.env.write()?;
 
-    pub fn set_revocation_by_subject_and_pub_key(
-        &mut self,
-        subject: &[u8],
-        pub_key_hash: &[u8],
-        state: i16,
-    ) -> Result<(), SecurityStateError> {
-        self.write_entry(&make_key(PREFIX_REV_SPK, subject, pub_key_hash), state)
+            for entry in entries {
+                env_and_store
+                    .store
+                    .put(&mut writer, &entry.0, &Value::I64(entry.1 as i64))?;
+            }
+
+            writer.commit()?;
+        }
+        self.reopen_store_read_only()?;
+        Ok(())
     }
 
     pub fn set_enrollment(
@@ -603,16 +612,65 @@ macro_rules! security_state_task {
     };
 }
 
-security_state_task!(
-    SetRevocationByIssuerAndSerialTask,
-    set_revocation_by_issuer_and_serial
-);
-security_state_task!(
-    SetRevocationBySubjectAndPubKeyTask,
-    set_revocation_by_subject_and_pub_key
-);
 security_state_task!(SetEnrollmentTask, set_enrollment);
 security_state_task!(SetWhitelistTask, set_whitelist);
+
+struct SetRevocationsTask {
+    callback: AtomicCell<Option<ThreadBoundRefPtr<nsICertStorageCallback>>>,
+    security_state: Arc<RwLock<SecurityState>>,
+    entries: Vec<(Vec<u8>, i16)>,
+    result: AtomicCell<Option<nserror::nsresult>>,
+}
+impl SetRevocationsTask {
+    fn new(
+        callback: &nsICertStorageCallback,
+        security_state: &Arc<RwLock<SecurityState>>,
+        entries: Vec<(Vec<u8>, i16)>,
+    ) -> SetRevocationsTask {
+        SetRevocationsTask {
+            callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(RefPtr::new(callback)))),
+            security_state: Arc::clone(security_state),
+            entries,
+            result: AtomicCell::new(None),
+        }
+    }
+}
+impl Task for SetRevocationsTask {
+    fn run(&self) {
+        let mut ss = match self.security_state.write() {
+            Ok(ss) => ss,
+            Err(_) => {
+                self.result.store(Some(NS_ERROR_FAILURE));
+                return;
+            }
+        };
+        // this is a no-op if the DB is already open
+        match ss.open_db() {
+            Ok(()) => {}
+            Err(_) => {
+                self.result.store(Some(NS_ERROR_FAILURE));
+                return;
+            }
+        };
+        match ss.set_revocations(&self.entries) {
+            Ok(_) => self.result.store(Some(NS_OK)),
+            Err(_) => self.result.store(Some(NS_ERROR_FAILURE)),
+        };
+    }
+
+    fn done(&self) -> Result<(), nsresult> {
+        let threadbound = self.callback.swap(None).ok_or(NS_ERROR_FAILURE)?;
+        let callback = threadbound.get_ref().ok_or(NS_ERROR_FAILURE)?;
+        let nsrv = match self.result.swap(None) {
+            Some(result) => unsafe { callback.Done(result) },
+            None => unsafe { callback.Done(NS_ERROR_FAILURE) },
+        };
+        match nsrv {
+            NS_OK => Ok(()),
+            e => Err(e),
+        }
+    }
+}
 
 #[no_mangle]
 pub extern "C" fn cert_storage_constructor(
@@ -638,6 +696,15 @@ macro_rules! try_ns {
         match $e {
             Ok(value) => value,
             Err(_) => return NS_ERROR_FAILURE,
+        }
+    };
+    ($e:expr, or continue) => {
+        match $e {
+            Ok(value) => value,
+            Err(err) => {
+                error!("{}", err);
+                continue;
+            }
         }
     };
 }
@@ -692,58 +759,64 @@ impl CertStorage {
         Ok(())
     }
 
-    unsafe fn SetRevocationByIssuerAndSerial(
+    unsafe fn SetRevocations(
         &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        state: i16,
+        revocations: *const ThinVec<RefPtr<nsIRevocationState>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
             return NS_ERROR_NOT_SAME_THREAD;
         }
-        if issuer.is_null() || serial.is_null() || callback.is_null() {
+        if revocations.is_null() || callback.is_null() {
             return NS_ERROR_FAILURE;
         }
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        let task = Box::new(SetRevocationByIssuerAndSerialTask::new(
-            &*callback,
-            &self.security_state,
-            issuer_decoded,
-            serial_decoded,
-            state,
-        ));
-        let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("SetRevocationByIssuerAndSerial", task));
-        try_ns!(runnable.dispatch(&*thread));
-        NS_OK
-    }
 
-    unsafe fn SetRevocationBySubjectAndPubKey(
-        &self,
-        subject: *const nsACString,
-        pub_key_hash: *const nsACString,
-        state: i16,
-        callback: *const nsICertStorageCallback,
-    ) -> nserror::nsresult {
-        if !is_main_thread() {
-            return NS_ERROR_NOT_SAME_THREAD;
+        let revocations = &*revocations;
+        let mut entries = Vec::with_capacity(revocations.len());
+
+        // By continuing when an nsIRevocationState attribute value is invalid,
+        // we prevent errors relating to individual blocklist entries from
+        // causing sync to fail. We will accumulate telemetry on these failures
+        // in bug 1254099.
+
+        for revocation in revocations {
+            let mut state: i16 = 0;
+            try_ns!(revocation.GetState(&mut state).to_result(), or continue);
+
+            if let Some(revocation) =
+                (*revocation).query_interface::<nsIIssuerAndSerialRevocationState>()
+            {
+                let mut issuer = nsCString::new();
+                try_ns!(revocation.GetIssuer(&mut *issuer).to_result(), or continue);
+                let issuer = try_ns!(base64::decode(&issuer), or continue);
+
+                let mut serial = nsCString::new();
+                try_ns!(revocation.GetSerial(&mut *serial).to_result(), or continue);
+                let serial = try_ns!(base64::decode(&serial), or continue);
+
+                entries.push((make_key(PREFIX_REV_IS, &issuer, &serial), state));
+            } else if let Some(revocation) =
+                (*revocation).query_interface::<nsISubjectAndPubKeyRevocationState>()
+            {
+                let mut subject = nsCString::new();
+                try_ns!(revocation.GetSubject(&mut *subject).to_result(), or continue);
+                let subject = try_ns!(base64::decode(&subject), or continue);
+
+                let mut pub_key_hash = nsCString::new();
+                try_ns!(revocation.GetPubKey(&mut *pub_key_hash).to_result(), or continue);
+                let pub_key_hash = try_ns!(base64::decode(&pub_key_hash), or continue);
+
+                entries.push((make_key(PREFIX_REV_SPK, &subject, &pub_key_hash), state));
+            }
         }
-        if subject.is_null() || pub_key_hash.is_null() || callback.is_null() {
-            return NS_ERROR_FAILURE;
-        }
-        let subject_decoded = try_ns!(base64::decode(&*subject));
-        let pub_key_hash_decoded = try_ns!(base64::decode(&*pub_key_hash));
-        let task = Box::new(SetRevocationBySubjectAndPubKeyTask::new(
+
+        let task = Box::new(SetRevocationsTask::new(
             &*callback,
             &self.security_state,
-            subject_decoded,
-            pub_key_hash_decoded,
-            state,
+            entries,
         ));
         let thread = try_ns!(self.thread.lock());
-        let runnable = try_ns!(TaskRunnable::new("SetRevocationBySubjectAndPubKey", task));
+        let runnable = try_ns!(TaskRunnable::new("SetRevocations", task));
         try_ns!(runnable.dispatch(&*thread));
         NS_OK
     }

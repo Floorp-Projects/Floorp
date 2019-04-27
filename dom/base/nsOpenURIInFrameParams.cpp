@@ -6,6 +6,7 @@
 
 #include "nsOpenURIInFrameParams.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
@@ -20,7 +21,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsOpenURIInFrameParams)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsOpenURIInFrameParams)
 
 nsOpenURIInFrameParams::nsOpenURIInFrameParams(
-    const mozilla::OriginAttributes& aOriginAttributes, Element* aOpener)
+    const mozilla::OriginAttributes& aOriginAttributes,
+    mozilla::dom::Element* aOpener)
     : mOpenerOriginAttributes(aOriginAttributes), mOpenerBrowser(aOpener) {}
 
 nsOpenURIInFrameParams::~nsOpenURIInFrameParams() {}
@@ -72,8 +74,9 @@ nsOpenURIInFrameParams::SetCsp(nsIContentSecurityPolicy* aCsp) {
   return NS_OK;
 }
 
-nsresult nsOpenURIInFrameParams::GetOpenerBrowser(Element** aOpenerBrowser) {
-  RefPtr<Element> owner = mOpenerBrowser;
+nsresult nsOpenURIInFrameParams::GetOpenerBrowser(
+    mozilla::dom::Element** aOpenerBrowser) {
+  RefPtr<mozilla::dom::Element> owner = mOpenerBrowser;
   owner.forget(aOpenerBrowser);
   return NS_OK;
 }

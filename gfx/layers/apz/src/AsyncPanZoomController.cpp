@@ -2363,7 +2363,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
       // next snap point. Check for this, and adjust the delta to take into
       // account the snap point.
       CSSPoint startPosition = Metrics().GetScrollOffset();
-      MaybeAdjustDeltaForScrollSnapping(aEvent, delta, startPosition);
+      MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
+                                                    startPosition);
 
       ScreenPoint distance = ToScreenCoordinates(
           ParentLayerPoint(fabs(delta.x), fabs(delta.y)), aEvent.mLocalOrigin);
@@ -2406,7 +2407,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
         startPosition =
             mAnimation->AsKeyboardScrollAnimation()->GetDestination();
       }
-      if (MaybeAdjustDeltaForScrollSnapping(aEvent, delta, startPosition)) {
+      if (MaybeAdjustDeltaForScrollSnappingOnWheelInput(aEvent, delta,
+                                                        startPosition)) {
         // If we're scroll snapping, use a smooth scroll animation to get
         // the desired physics. Note that SmoothScrollTo() will re-use an
         // existing smooth scroll animation if there is one.
@@ -5232,29 +5234,49 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   if (velocity.y != 0.0f) {
     predictedDelta.y = -velocity.y / log(1.0 - friction);
   }
-  CSSPoint predictedDestination =
-      Metrics().GetScrollOffset() + predictedDelta / Metrics().GetZoom();
 
   // If the fling will overscroll, don't scroll snap, because then the user
   // user would not see any overscroll animation.
   bool flingWillOverscroll =
       IsOverscrolled() && ((velocity.x * mX.GetOverscroll() >= 0) ||
                            (velocity.y * mY.GetOverscroll() >= 0));
-  if (!flingWillOverscroll) {
+  if (flingWillOverscroll) {
+    return;
+  }
+
+  CSSPoint startPosition = Metrics().GetScrollOffset();
+  if (MaybeAdjustDeltaForScrollSnapping(nsIScrollableFrame::LINES,
+                                        predictedDelta, startPosition)) {
     APZC_LOG(
         "%p fling snapping.  friction: %f velocity: %f, %f "
         "predictedDelta: %f, %f position: %f, %f "
-        "predictedDestination: %f, %f\n",
+        "snapDestination: %f, %f\n",
         this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
         (float)predictedDelta.y, (float)Metrics().GetScrollOffset().x,
-        (float)Metrics().GetScrollOffset().y, (float)predictedDestination.x,
-        (float)predictedDestination.y);
+        (float)Metrics().GetScrollOffset().y, (float)startPosition.x,
+        (float)startPosition.y);
 
-    ScrollSnapNear(predictedDestination);
+    SmoothScrollTo(startPosition);
   }
 }
 
 bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
+    nsIScrollableFrame::ScrollUnit aUnit, ParentLayerPoint& aDelta,
+    CSSPoint& aStartPosition) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  CSSToParentLayerScale2D zoom = Metrics().GetZoom();
+  CSSPoint destination = Metrics().CalculateScrollRange().ClampPoint(
+      aStartPosition + (aDelta / zoom));
+
+  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(destination, aUnit)) {
+    aDelta = (*snapPoint - aStartPosition) * zoom;
+    aStartPosition = *snapPoint;
+    return true;
+  }
+  return false;
+}
+
+bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnappingOnWheelInput(
     const ScrollWheelInput& aEvent, ParentLayerPoint& aDelta,
     CSSPoint& aStartPosition) {
   // Don't scroll snap for pixel scrolls. This matches the main thread
@@ -5263,19 +5285,9 @@ bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
     return false;
   }
 
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-  CSSToParentLayerScale2D zoom = Metrics().GetZoom();
-  CSSPoint destination = Metrics().CalculateScrollRange().ClampPoint(
-      aStartPosition + (aDelta / zoom));
-  nsIScrollableFrame::ScrollUnit unit =
-      ScrollWheelInput::ScrollUnitForDeltaType(aEvent.mDeltaType);
-
-  if (Maybe<CSSPoint> snapPoint = FindSnapPointNear(destination, unit)) {
-    aDelta = (*snapPoint - aStartPosition) * zoom;
-    aStartPosition = *snapPoint;
-    return true;
-  }
-  return false;
+  return MaybeAdjustDeltaForScrollSnapping(
+      ScrollWheelInput::ScrollUnitForDeltaType(aEvent.mDeltaType), aDelta,
+      aStartPosition);
 }
 
 bool AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(

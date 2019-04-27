@@ -211,7 +211,7 @@ void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
 }
 
 Maybe<NonOwningAnimationTarget> nsNodeUtils::GetTargetForAnimation(
-    const Animation* aAnimation) {
+    const dom::Animation* aAnimation) {
   AnimationEffect* effect = aAnimation->GetEffect();
   if (!effect || !effect->AsKeyframeEffect()) {
     return Nothing();
@@ -219,7 +219,7 @@ Maybe<NonOwningAnimationTarget> nsNodeUtils::GetTargetForAnimation(
   return effect->AsKeyframeEffect()->GetTarget();
 }
 
-void nsNodeUtils::AnimationMutated(Animation* aAnimation,
+void nsNodeUtils::AnimationMutated(dom::Animation* aAnimation,
                                    AnimationMutationType aMutatedType) {
   Maybe<NonOwningAnimationTarget> target = GetTargetForAnimation(aAnimation);
   if (!target) {
@@ -247,15 +247,15 @@ void nsNodeUtils::AnimationMutated(Animation* aAnimation,
   }
 }
 
-void nsNodeUtils::AnimationAdded(Animation* aAnimation) {
+void nsNodeUtils::AnimationAdded(dom::Animation* aAnimation) {
   AnimationMutated(aAnimation, AnimationMutationType::Added);
 }
 
-void nsNodeUtils::AnimationChanged(Animation* aAnimation) {
+void nsNodeUtils::AnimationChanged(dom::Animation* aAnimation) {
   AnimationMutated(aAnimation, AnimationMutationType::Changed);
 }
 
-void nsNodeUtils::AnimationRemoved(Animation* aAnimation) {
+void nsNodeUtils::AnimationRemoved(dom::Animation* aAnimation) {
   AnimationMutated(aAnimation, AnimationMutationType::Removed);
 }
 

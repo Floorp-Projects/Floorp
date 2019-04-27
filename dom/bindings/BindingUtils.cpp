@@ -3435,11 +3435,13 @@ static inline prototypes::ID GetProtoIdForNewtarget(
 }
 
 bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
+                     prototypes::id::ID aProtoId,
+                     CreateInterfaceObjectsMethod aCreator,
                      JS::MutableHandle<JSObject*> aDesiredProto) {
-  if (!aCallArgs.isConstructing()) {
-    aDesiredProto.set(nullptr);
-    return true;
-  }
+  // This basically implements
+  // https://heycam.github.io/webidl/#internally-create-a-new-object-implementing-the-interface
+  // step 3.
+  MOZ_ASSERT(aCallArgs.isConstructing(), "How did we end up here?");
 
   // The desired prototype depends on the actual constructor that was invoked,
   // which is passed to us as the newTarget in the callargs.  We want to do
@@ -3451,6 +3453,7 @@ bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
   // property is non-configurable and non-writable, so we don't have to do the
   // slow JS_GetProperty call.
   JS::Rooted<JSObject*> newTarget(aCx, &aCallArgs.newTarget().toObject());
+  MOZ_ASSERT(JS::IsCallable(newTarget));
   JS::Rooted<JSObject*> originalNewTarget(aCx, newTarget);
   // See whether we have a known DOM constructor here, such that we can take a
   // fast path.
@@ -3477,26 +3480,44 @@ bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
 
   // Slow path.  This basically duplicates the ES6 spec's
   // GetPrototypeFromConstructor except that instead of taking a string naming
-  // the fallback prototype we just fall back to using null and assume that our
-  // caller will then pick the right default.  The actual defaulting behavior
-  // here still needs to be defined in the Web IDL specification.
+  // the fallback prototype we determine the fallback based on the proto id we
+  // were handed.
   //
   // Note that it's very important to do this property get on originalNewTarget,
   // not our unwrapped newTarget, since we want to get Xray behavior here as
   // needed.
   // XXXbz for speed purposes, using a preinterned id here sure would be nice.
+  // We can't use GetJSIDByIndex, because that only works on the main thread,
+  // not workers.
   JS::Rooted<JS::Value> protoVal(aCx);
   if (!JS_GetProperty(aCx, originalNewTarget, "prototype", &protoVal)) {
     return false;
   }
 
-  if (!protoVal.isObject()) {
-    aDesiredProto.set(nullptr);
+  if (protoVal.isObject()) {
+    aDesiredProto.set(&protoVal.toObject());
     return true;
   }
 
-  aDesiredProto.set(&protoVal.toObject());
-  return true;
+  // Fall back to getting the proto for our given proto id in the realm that
+  // GetFunctionRealm(newTarget) returns.
+  JS::Rooted<JS::Realm*> realm(aCx, JS::GetFunctionRealm(aCx, newTarget));
+  if (!realm) {
+    return false;
+  }
+
+  {
+    // JS::GetRealmGlobalOrNull should not be returning null here, because we
+    // have live objects in the Realm.
+    JSAutoRealm ar(aCx, JS::GetRealmGlobalOrNull(realm));
+    aDesiredProto.set(
+        GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true));
+    if (!aDesiredProto) {
+      return false;
+    }
+  }
+
+  return MaybeWrapObject(aCx, aDesiredProto);
 }
 
 namespace {
@@ -3631,7 +3652,7 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
   }
 
-  // Steps 4 and 5 do some sanity checks on our callee.  We add to those a
+  // Steps 4, 5, 6 do some sanity checks on our callee.  We add to those a
   // determination of what sort of element we're planning to construct.
   // Technically, this should happen (implicitly) in step 8, but this
   // determination is side-effect-free, so it's OK.
@@ -3717,35 +3738,13 @@ bool HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     }
   }
 
-  // Step 6.
+  // Steps 7 and 8.
   JS::Rooted<JSObject*> desiredProto(aCx);
-  if (!GetDesiredProto(aCx, args, &desiredProto)) {
+  if (!GetDesiredProto(aCx, args, aProtoId, aCreator, &desiredProto)) {
     return false;
   }
 
-  // Step 7.
-  if (!desiredProto) {
-    // This fallback behavior is designed to match analogous behavior for the
-    // JavaScript built-ins. So we enter the realm of our underlying newTarget
-    // object and fall back to the prototype object from that global.
-    // XXX The spec says to use GetFunctionRealm(), which is not actually
-    // the same thing as what we have here (e.g. in the case of scripted
-    // callable proxies whose target is not same-realm with the proxy, or bound
-    // functions, etc). https://bugzilla.mozilla.org/show_bug.cgi?id=1317658
-    {
-      JSAutoRealm ar(aCx, newTarget);
-      desiredProto = GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true);
-      if (!desiredProto) {
-        return false;
-      }
-    }
-
-    // desiredProto is in the realm of the underlying newTarget object.
-    // Wrap it into the context realm.
-    if (!JS_WrapObject(aCx, &desiredProto)) {
-      return false;
-    }
-  }
+  MOZ_ASSERT(desiredProto, "How could we not have a prototype by now?");
 
   // We need to do some work to actually return an Element, so we do step 8 on
   // one branch and steps 9-12 on another branch, then common up the "return

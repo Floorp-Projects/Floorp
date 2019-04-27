@@ -344,9 +344,6 @@ nsContentUtils::UserInteractionObserver*
 
 uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
 
-uint32_t nsContentUtils::sCookiesLifetimePolicy =
-    nsICookieService::ACCEPT_NORMALLY;
-
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
@@ -678,10 +675,6 @@ nsresult nsContentUtils::Init() {
   Preferences::AddBoolVarCache(
       &sSendPerformanceTimingNotifications,
       "dom.performance.enable_notify_performance_timing", false);
-
-  Preferences::AddUintVarCache(&sCookiesLifetimePolicy,
-                               "network.cookie.lifetimePolicy",
-                               nsICookieService::ACCEPT_NORMALLY);
 
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled", false);
@@ -8284,7 +8277,7 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForServiceWorker(
 void nsContentUtils::GetCookieLifetimePolicyFromCookieSettings(
     nsICookieSettings* aCookieSettings, nsIPrincipal* aPrincipal,
     uint32_t* aLifetimePolicy) {
-  *aLifetimePolicy = sCookiesLifetimePolicy;
+  *aLifetimePolicy = StaticPrefs::network_cookie_lifetimePolicy();
 
   if (aCookieSettings) {
     uint32_t cookiePermission = 0;
@@ -10626,6 +10619,21 @@ bool nsContentUtils::
          topLevel->GetPresShell()->GetPresContext() &&
          !topLevel->GetPresShell()->GetPresContext()->HadContentfulPaint() &&
          nsThreadManager::MainThreadHasPendingHighPriorityEvents();
+}
+
+/* static */
+uint32_t nsContentUtils::GetNodeDepth(nsINode* aNode) {
+  uint32_t depth = 1;
+
+  MOZ_ASSERT(aNode, "Node shouldn't be null");
+
+  // Use GetFlattenedTreeParentNode to bypass the shadow root and cross the
+  // shadow boundary to calculate the node depth without the shadow root.
+  while ((aNode = aNode->GetFlattenedTreeParentNode())) {
+    ++depth;
+  }
+
+  return depth;
 }
 
 /* static */

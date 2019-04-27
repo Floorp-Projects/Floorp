@@ -16,7 +16,6 @@ class nsCookiePermission final : public nsICookiePermission {
 
   // Singleton accessor
   static already_AddRefed<nsICookiePermission> GetOrCreate();
-  static void Shutdown();
 
   bool Init();
 

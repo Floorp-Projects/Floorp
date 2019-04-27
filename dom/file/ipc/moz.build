@@ -7,22 +7,29 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
-EXPORTS.mozilla.dom.ipc += [
+XPIDL_SOURCES += [
+    'mozIIPCBlobInputStream.idl',
+]
+
+XPIDL_MODULE = 'dom'
+
+EXPORTS.mozilla.dom += [
+    'FileCreatorChild.h',
+    'FileCreatorParent.h',
     'IPCBlobInputStream.h',
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
     'IPCBlobInputStreamStorage.h',
+    'IPCBlobUtils.h',
     'PendingIPCBlobChild.h',
     'PendingIPCBlobParent.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]
 
-EXPORTS.mozilla.dom += [
-    'IPCBlobUtils.h',
-]
-
 UNIFIED_SOURCES += [
+    'FileCreatorChild.cpp',
+    'FileCreatorParent.cpp',
     'IPCBlobInputStream.cpp',
     'IPCBlobInputStreamChild.cpp',
     'IPCBlobInputStreamParent.cpp',
@@ -38,6 +45,7 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'BlobTypes.ipdlh',
     'IPCBlob.ipdlh',
+    'PFileCreator.ipdl',
     'PIPCBlobInputStream.ipdl',
     'PPendingIPCBlob.ipdl',
     'PTemporaryIPCBlob.ipdl',

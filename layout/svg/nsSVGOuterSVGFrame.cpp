@@ -168,7 +168,9 @@ nscoord nsSVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
       wm.IsVertical() ? svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT]
                       : svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
 
-  if (isize.IsPercentage()) {
+  if (StyleDisplay()->IsContainSize()) {
+    result = nscoord(0);
+  } else if (isize.IsPercentage()) {
     // It looks like our containing block's isize may depend on our isize. In
     // that case our behavior is undefined according to CSS 2.1 section 10.3.2.
     // As a last resort, we'll fall back to returning zero.
@@ -203,6 +205,11 @@ IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
   // XXXjwatt Note that here we want to return the CSS width/height if they're
   // specified and we're embedded inside an nsIObjectLoadingContent.
 
+  if (StyleDisplay()->IsContainSize()) {
+    // Intrinsic size of 'contain:size' replaced elements is 0,0.
+    return IntrinsicSize(0, 0);
+  }
+
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
   const SVGAnimatedLength& width =
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
@@ -228,6 +235,10 @@ IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
 
 /* virtual */
 nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
+  if (StyleDisplay()->IsContainSize()) {
+    return nsSize(0, 0);
+  }
+
   // We only have an intrinsic size/ratio if our width and height attributes
   // are both specified and set to non-percentage values, or we have a viewBox
   // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing

@@ -598,6 +598,14 @@ VARCACHE_PREF(
 )
 
 
+// Allow the content process to create a File from a path. This is allowed just
+// on parent process, on 'file' Content process, or for testing.
+VARCACHE_PREF(
+  "dom.file.createInChild",
+   dom_file_createInChild,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
@@ -1145,6 +1153,18 @@ VARCACHE_PREF(
    layout_css_shared_memory_ua_sheets_enabled,
   bool, false
 )
+
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "layout.css.resizeobserver.enabled",
+   layout_css_resizeobserver_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 // Pref to control whether arrow-panel animations are enabled or not.
 // Transitions are currently disabled on Linux due to rendering issues on
@@ -1961,6 +1981,17 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "network.cookie.cookieBehavior",
   network_cookie_cookieBehavior,
+  RelaxedAtomicInt32, 0
+)
+
+// Cookie lifetime policy. Possible values:
+// 0 - accept all cookies
+// 1 - deprecated. don't use it.
+// 2 - accept as session cookies
+// 3 - deprecated. don't use it.
+VARCACHE_PREF(
+  "network.cookie.lifetimePolicy",
+  network_cookie_lifetimePolicy,
   RelaxedAtomicInt32, 0
 )
 
