@@ -312,9 +312,44 @@ void Family::SetFacePtrs(FontList* aList, nsTArray<Pointer>& aFaces) {
 }
 
 void Family::SetupFamilyCharMap(FontList* aList) {
-  // XXX TODO: [in patch 6]
   // Set the character map of the family to the union of all the face cmaps,
   // to allow font fallback searches to more rapidly reject the family.
+  if (!XRE_IsParentProcess()) {
+    // |this| could be a Family record in either the Families() or Aliases()
+    // arrays
+    dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(
+        aList->GetGeneration(), aList->ToSharedPointer(this));
+    return;
+  }
+  gfxSparseBitSet familyMap;
+  Pointer firstMapShmPointer;
+  SharedBitSet* firstMap = nullptr;
+  bool merged = false;
+  Pointer* faces = Faces(aList);
+  if (!faces) {
+    return;
+  }
+  for (size_t i = 0; i < NumFaces(); i++) {
+    auto f = static_cast<Face*>(faces[i].ToPtr(aList));
+    auto faceMap = static_cast<SharedBitSet*>(f->mCharacterMap.ToPtr(aList));
+    MOZ_ASSERT(faceMap);
+    if (!firstMap) {
+      firstMap = faceMap;
+      firstMapShmPointer = f->mCharacterMap;
+    } else if (faceMap != firstMap) {
+      if (!merged) {
+        familyMap.Union(*firstMap);
+        merged = true;
+      }
+      familyMap.Union(*faceMap);
+    }
+  }
+  if (merged) {
+    mCharacterMap =
+      gfxPlatformFontList::PlatformFontList()->GetShmemCharMap(&familyMap);
+  } else {
+    mCharacterMap = firstMapShmPointer;
+  }
 }
 
 FontList::FontList(uint32_t aGeneration) {

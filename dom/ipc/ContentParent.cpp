@@ -5028,6 +5028,14 @@ mozilla::ipc::IPCResult ContentParent::RecvInitOtherFamilyNames(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSetupFamilyCharMap(
+    const uint32_t& aGeneration,
+    const mozilla::fontlist::Pointer& aFamilyPtr) {
+  gfxPlatformFontList::PlatformFontList()->SetupFamilyCharMap(aGeneration,
+                                                              aFamilyPtr);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGraphicsError(
     const nsCString& aError) {
   gfx::LogForwarder* lf = gfx::Factory::GetLogForwarder();

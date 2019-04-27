@@ -2147,6 +2147,39 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   }
 }
 
+void gfxPlatformFontList::SetupFamilyCharMap(
+    uint32_t aGeneration, const fontlist::Pointer& aFamilyPtr) {
+  auto list = SharedFontList();
+  MOZ_ASSERT(list);
+  if (!list) {
+    return;
+  }
+  if (list->GetGeneration() != aGeneration) {
+    return;
+  }
+  auto family = static_cast<fontlist::Family*>(aFamilyPtr.ToPtr(list));
+  // validate family pointer before trying to use it
+  if (family >= list->Families() &&
+      family < list->Families() + list->NumFamilies()) {
+    size_t offset = (char*)family - (char*)list->Families();
+    if (offset % sizeof(fontlist::Family) != 0) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "misaligned Family pointer");
+      return;
+    }
+  } else if (family >= list->AliasFamilies() &&
+             family < list->AliasFamilies() + list->NumAliases()) {
+    size_t offset = (char*)family - (char*)list->AliasFamilies();
+    if (offset % sizeof(fontlist::Family) != 0) {
+      MOZ_DIAGNOSTIC_ASSERT(false, "misaligned Family pointer");
+      return;
+    }
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(false, "not a valid Family or AliasFamily pointer");
+    return;
+  }
+  family->SetupFamilyCharMap(list);
+}
+
 void gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
                                                bool aDefer) {
   auto list = SharedFontList();
