@@ -1273,4 +1273,10 @@ void wr_transaction_notification_notified(uintptr_t aHandler,
   delete handler;
 }
 
+void wr_register_thread_local_arena() {
+#ifdef MOZ_MEMORY
+  jemalloc_thread_local_arena(true);
+#endif
+}
+
 }  // extern C

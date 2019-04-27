@@ -987,6 +987,7 @@ impl AsyncPropertySampler for SamplerCallback {
 extern "C" {
     fn gecko_profiler_register_thread(name: *const ::std::os::raw::c_char);
     fn gecko_profiler_unregister_thread();
+    fn wr_register_thread_local_arena();
 }
 
 struct GeckoProfilerThreadListener {}
@@ -1026,6 +1027,7 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
         .thread_name(|idx|{ format!("WRWorker#{}", idx) })
         .num_threads(num_threads)
         .start_handler(|idx| {
+            wr_register_thread_local_arena();
             let name = format!("WRWorker#{}", idx);
             register_thread_with_profiler(name.clone());
             gecko_profiler_register_thread(CString::new(name).unwrap().as_ptr());
