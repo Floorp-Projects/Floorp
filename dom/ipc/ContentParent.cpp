@@ -203,6 +203,7 @@
 #include "nsOpenURIInFrameParams.h"
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "gfxPlatform.h"
+#include "gfxPlatformFontList.h"
 #include "gfxPrefs.h"
 #include "prio.h"
 #include "private/pprio.h"
@@ -4981,6 +4982,37 @@ mozilla::ipc::IPCResult ContentParent::RecvShutdownProfile(
 mozilla::ipc::IPCResult ContentParent::RecvGetGraphicsDeviceInitData(
     ContentDeviceData* aOut) {
   gfxPlatform::GetPlatform()->BuildContentDeviceData(aOut);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvGetFontListShmBlock(
+    const uint32_t& aGeneration, const uint32_t& aIndex,
+    mozilla::ipc::SharedMemoryBasic::Handle* aOut) {
+  gfxPlatformFontList::PlatformFontList()->ShareFontListShmBlockToProcess(
+      aGeneration, aIndex, Pid(), aOut);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvInitializeFamily(
+    const uint32_t& aGeneration, const uint32_t& aFamilyIndex) {
+  gfxPlatformFontList::PlatformFontList()->InitializeFamily(aGeneration,
+                                                            aFamilyIndex);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSetCharacterMap(
+    const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFacePtr,
+    const gfxSparseBitSet& aMap) {
+  gfxPlatformFontList::PlatformFontList()->SetCharacterMap(aGeneration,
+                                                           aFacePtr, aMap);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvInitOtherFamilyNames(
+    const uint32_t& aGeneration, const bool& aDefer, bool* aLoaded) {
+  gfxPlatformFontList::PlatformFontList()->InitOtherFamilyNames(aGeneration,
+                                                                aDefer);
+  *aLoaded = true;
   return IPC_OK();
 }
 
