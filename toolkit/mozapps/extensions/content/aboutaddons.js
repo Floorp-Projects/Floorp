@@ -10,7 +10,15 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this, "allowPrivateBrowsingByDefault",
+  "extensions.allowPrivateBrowsingByDefault", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this, "SUPPORT_URL", "app.support.baseURL",
+  "", null, val => Services.urlFormatter.formatURL(val));
 
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
@@ -19,6 +27,16 @@ const PERMISSION_MASKS = {
   uninstall: AddonManager.PERM_CAN_UNINSTALL,
   upgrade: AddonManager.PERM_CAN_UPGRADE,
 };
+
+const PRIVATE_BROWSING_PERM_NAME = "internal:privateBrowsingAllowed";
+const PRIVATE_BROWSING_PERMS =
+  {permissions: [PRIVATE_BROWSING_PERM_NAME], origins: []};
+
+async function isAllowedInPrivateBrowsing(addon) {
+  // Use the Promise directly so this function stays sync for the other case.
+  let perms = await ExtensionPermissions.get(addon.id);
+  return perms.permissions.includes(PRIVATE_BROWSING_PERM_NAME);
+}
 
 function hasPermission(addon, permission) {
   return !!(addon.permissions & PERMISSION_MASKS[permission]);
@@ -274,7 +292,7 @@ class AddonDetails extends HTMLElement {
     }
   }
 
-  render() {
+  async render() {
     let {addon} = this;
     if (!addon) {
       throw new Error("addon-details must be initialized by setAddon");
@@ -299,6 +317,18 @@ class AddonDetails extends HTMLElement {
     // Auto updates setting.
     if (!hasPermission(addon, "upgrade")) {
       this.querySelector(".addon-detail-row-updates").remove();
+    }
+
+    let pbRow = this.querySelector(".addon-detail-row-private-browsing");
+    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
+        addon.incognito != "not_allowed") {
+      let isAllowed = await isAllowedInPrivateBrowsing(addon);
+      pbRow.querySelector(`[value="${isAllowed ? 1 : 0}"]`).checked = true;
+      let learnMore = pbRow.nextElementSibling
+        .querySelector('a[data-l10n-name="learn-more"]');
+      learnMore.href = SUPPORT_URL + "extensions-pb";
+    } else {
+      pbRow.remove();
     }
 
     // Author.
@@ -417,6 +447,18 @@ class AddonCard extends HTMLElement {
     this._updateInstall = install;
     if (this.children.length > 0) {
       this.update();
+    }
+  }
+
+  get reloading() {
+    return this.hasAttribute("reloading");
+  }
+
+  set reloading(val) {
+    if (val) {
+      this.setAttribute("reloading", "true");
+    } else {
+      this.removeAttribute("reloading");
     }
   }
 
@@ -542,6 +584,27 @@ class AddonCard extends HTMLElement {
       let {name} = e.target;
       if (name == "autoupdate") {
         addon.applyBackgroundUpdates = e.target.value;
+      } else if (name == "private-browsing") {
+        let policy = WebExtensionPolicy.getByID(addon.id);
+        let extension = policy && policy.extension;
+
+        if (e.target.value == "1") {
+          await ExtensionPermissions.add(
+            addon.id, PRIVATE_BROWSING_PERMS, extension);
+        } else {
+          await ExtensionPermissions.remove(
+            addon.id, PRIVATE_BROWSING_PERMS, extension);
+        }
+        // Reload the extension if it is already enabled. This ensures any
+        // change on the private browsing permission is properly handled.
+        if (addon.isActive) {
+          this.reloading = true;
+          // Reloading will trigger an enable and update the card.
+          addon.reload();
+        } else {
+          // Update the card if the add-on isn't active.
+          this.update();
+        }
       }
     } else if (e.type == "mousedown") {
       // Open panel on mousedown when the mouse is used.
@@ -592,13 +655,14 @@ class AddonCard extends HTMLElement {
   }
 
   onDisabled(addon) {
-    if (addon.id == this.addon.id) {
+    if (!this.reloading && addon.id == this.addon.id) {
       this.update();
     }
   }
 
   onEnabled(addon) {
     if (addon.id == this.addon.id) {
+      this.reloading = false;
       this.update();
     }
   }
@@ -652,6 +716,16 @@ class AddonCard extends HTMLElement {
       });
     }
     name.title = `${addon.name} ${addon.version}`;
+
+    // Set the private browsing badge visibility.
+    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
+        addon.incognito != "not_allowed") {
+      // Keep update synchronous, the badge can appear later.
+      isAllowedInPrivateBrowsing(addon).then(isAllowed => {
+        card.querySelector(".addon-badge-private-browsing-allowed")
+          .hidden = !isAllowed;
+      });
+    }
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
@@ -712,12 +786,13 @@ class AddonCard extends HTMLElement {
     // Set the contents.
     this.update();
 
+    let doneRenderPromise = Promise.resolve();
     if (this.expanded) {
       if (!this.details) {
         this.details = document.createElement("addon-details");
       }
       this.details.setAddon(this.addon);
-      this.details.render();
+      doneRenderPromise = this.details.render();
 
       // If we're re-rendering we still need to append the details since the
       // entire card was emptied at the beginning of the render.
@@ -725,6 +800,9 @@ class AddonCard extends HTMLElement {
     }
 
     this.appendChild(this.card);
+
+    // Return the promise of details rendering to wait on in DetailView.
+    return doneRenderPromise;
   }
 
   sendEvent(name, detail) {

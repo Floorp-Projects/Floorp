@@ -67,12 +67,28 @@ addon-list .addon.card {
   flex-shrink: 0;
 }
 
+.addon-name-container {
+  /* Subtract the top line-height so the text and icon align at the top. */
+  margin-top: -3px;
+  display: flex;
+  align-items: center;
+}
+
 .addon-name {
   font-size: 16px;
   font-weight: 600;
   line-height: 22px;
-  /* Subtract the top line-height so the text and icon align at the top. */
-  margin-top: -3px;
+  margin-inline-end: 8px;
+}
+
+.addon-badge {
+  width: 16px;
+  height: 16px;
+  background-size: 16px;
+}
+
+.addon-badge-private-browsing-allowed {
+  background-image: url("chrome://browser/skin/private-browsing.svg");
 }
 
 .addon-description {
@@ -136,18 +152,25 @@ addon-card:not([expanded]) .addon-description {
 .addon-detail-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   border-top: 1px solid var(--grey-90-a20);
   margin: 0 calc(var(--card-padding) * -1);
   padding: var(--card-padding);
+  color: var(--grey-90);
 }
 
+.addon-detail-row-has-help,
 .addon-detail-row:last-of-type {
   padding-bottom: 0;
 }
 
-.addon-detail-row {
-  -moz-context-properties: fill;
-  fill: currentColor;
+.addon-detail-row-help {
+  color: var(--grey-60);
+  padding-bottom: var(--card-padding);
+}
+
+.addon-detail-row input[type="checkbox"] {
+  margin: 0;
 }
 
 .addon-detail-rating {
