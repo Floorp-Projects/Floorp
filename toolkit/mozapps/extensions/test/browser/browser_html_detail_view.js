@@ -47,6 +47,7 @@ add_task(async function enableHtmlViews() {
     reviewURL: "http://example.com/reviews",
     homepageURL: "http://example.com/addon1",
     updateDate: new Date("2019-03-07T01:00:00"),
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
   }, {
     id: "addon2@mochi.test",
     name: "Test add-on 2",
@@ -237,19 +238,44 @@ add_task(async function testFullDetails() {
 
   let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
 
-  // The first row is the author.
+  // Auto updates.
   let row = rows.shift();
+  checkLabel(row, "updates");
+  let expectedOptions = [
+    {value: "1", label: "addon-detail-updates-radio-default", checked: false},
+    {value: "2", label: "addon-detail-updates-radio-on", checked: true},
+    {value: "0", label: "addon-detail-updates-radio-off", checked: false},
+  ];
+  let options = row.lastElementChild.querySelectorAll("label");
+  is(options.length, 3, "There are 3 options");
+  for (let i = 0; i < 3; i++) {
+    let option = options[i];
+    is(option.children.length, 2, "There are 2 children for the option");
+    let input = option.firstElementChild;
+    is(input.tagName, "INPUT", "The input is first");
+    let text = option.lastElementChild;
+    is(text.tagName, "SPAN", "The label text is second");
+    let expected = expectedOptions[i];
+    is(input.value, expected.value, "The value is right");
+    is(input.checked, expected.checked, "The checked property is correct");
+    Assert.deepEqual(
+      doc.l10n.getAttributes(text), {id: expected.label},
+      "The label has the right text");
+  }
+
+  // Author.
+  row = rows.shift();
   checkLabel(row, "author");
   let link = row.querySelector("a");
   checkLink(link, "http://example.com/me", "The creator");
 
-  // The version is next.
+  // Version.
   row = rows.shift();
   checkLabel(row, "version");
   let text = row.lastChild;
   is(text.textContent, "3.1", "The version is set");
 
-  // Last updated is next.
+  // Last updated.
   row = rows.shift();
   checkLabel(row, "last-updated");
   text = row.lastChild;
@@ -301,13 +327,19 @@ add_task(async function testMinimalExtension() {
   ok(!contrib, "There is no contribution element");
 
   let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
+
+  // Automatic updates.
   let row = rows.shift();
+  checkLabel(row, "updates");
+
+  // Author.
+  row = rows.shift();
   checkLabel(row, "author");
   let text = row.lastChild;
   is(text.textContent, "I made it", "The author is set");
   ok(text instanceof Text, "The author is a text node");
 
-  is(rows.length, 0, "There was only 1 row");
+  is(rows.length, 0, "There are no more rows");
 
   await closeView(win);
 });
@@ -390,6 +422,10 @@ add_task(async function testStaticTheme() {
   is(preview.hidden, false, "The preview is visible");
 
   let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
+
+  // Automatic updates.
+  let row = rows.shift();
+  checkLabel(row, "updates");
 
   // Author.
   let author = rows.shift();

@@ -6,12 +6,25 @@ button {
   background-repeat: no-repeat;
   background-size: 16px;
   border: none;
+  position: relative;
   display: block;
   font-size: inherit;
   padding: 4px 40px;
   padding-inline-end: 12px;
   text-align: start;
   width: 100%;
+}
+
+:host([badged]) button::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  position: absolute;
+  top: 4px;
+  left: 28px;
 }
 
 button:focus,

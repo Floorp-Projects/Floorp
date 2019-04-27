@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
 /* exported initialize, hide, show */
-/* import-globals-from ../../../content/contentAreaUtils.js */
+/* import-globals-from aboutaddonsCommon.js */
 /* global windowRoot */
 
 "use strict";
@@ -17,6 +17,7 @@ const PERMISSION_MASKS = {
   enable: AddonManager.PERM_CAN_ENABLE,
   disable: AddonManager.PERM_CAN_DISABLE,
   uninstall: AddonManager.PERM_CAN_UNINSTALL,
+  upgrade: AddonManager.PERM_CAN_UPGRADE,
 };
 
 function hasPermission(addon, permission) {
@@ -245,16 +246,9 @@ class PanelItem extends HTMLElement {
 customElements.define("panel-item", PanelItem);
 
 class AddonDetails extends HTMLElement {
-  constructor() {
-    super();
-    this.hasConnected = false;
-  }
-
   connectedCallback() {
-    if (!this.hasConnected) {
-      this.hasConnected = true;
+    if (this.children.length == 0) {
       this.render();
-      this.addEventListener("click", this);
     }
   }
 
@@ -262,9 +256,21 @@ class AddonDetails extends HTMLElement {
     this.addon = addon;
   }
 
-  handleEvent(e) {
-    if (e.type == "click" && e.target.getAttribute("action") == "contribute") {
-      openURL(this.addon.contributionURL);
+  update() {
+    let {addon} = this;
+
+    // Show the update check button if necessary. The button might not exist if
+    // the add-on doesn't support updates.
+    let updateButton = this.querySelector('[action="update-check"]');
+    if (updateButton) {
+      updateButton.hidden =
+        this.addon.updateInstall || AddonManager.shouldAutoUpdate(this.addon);
+    }
+
+    // Set the value for auto updates.
+    let inputs = this.querySelectorAll(".addon-detail-row-updates input");
+    for (let input of inputs) {
+      input.checked = input.value == addon.applyBackgroundUpdates;
     }
   }
 
@@ -274,6 +280,7 @@ class AddonDetails extends HTMLElement {
       throw new Error("addon-details must be initialized by setAddon");
     }
 
+    this.textContent = "";
     this.appendChild(importTemplate("addon-details"));
 
     // Full description.
@@ -287,6 +294,11 @@ class AddonDetails extends HTMLElement {
     // Contribute.
     if (!addon.contributionURL) {
       this.querySelector(".addon-detail-contribute").remove();
+    }
+
+    // Auto updates setting.
+    if (!hasPermission(addon, "upgrade")) {
+      this.querySelector(".addon-detail-row-updates").remove();
     }
 
     // Author.
@@ -356,6 +368,8 @@ class AddonDetails extends HTMLElement {
     } else {
       ratingRow.remove();
     }
+
+    this.update();
   }
 }
 customElements.define("addon-details", AddonDetails);
@@ -369,23 +383,18 @@ customElements.define("addon-details", AddonDetails);
  *    document.body.appendChild(card);
  */
 class AddonCard extends HTMLElement {
-  constructor() {
-    super();
-    this.hasRendered = false;
-  }
-
   connectedCallback() {
     // If we've already rendered we can just update, otherwise render.
-    if (this.hasRendered) {
+    if (this.children.length > 0) {
       this.update();
     } else {
       this.render();
     }
-    this.registerListener();
+    this.registerListeners();
   }
 
   disconnectedCallback() {
-    this.removeListener();
+    this.removeListeners();
   }
 
   get expanded() {
@@ -400,6 +409,17 @@ class AddonCard extends HTMLElement {
     }
   }
 
+  get updateInstall() {
+    return this._updateInstall;
+  }
+
+  set updateInstall(install) {
+    this._updateInstall = install;
+    if (this.children.length > 0) {
+      this.update();
+    }
+  }
+
   /**
    * Set the add-on for this card. The card will be populated based on the
    * add-on when it is connected to the DOM.
@@ -408,6 +428,13 @@ class AddonCard extends HTMLElement {
    */
   setAddon(addon) {
     this.addon = addon;
+    let install = addon.updateInstall;
+    if (install && install.state == AddonManager.STATE_AVAILABLE) {
+      this.updateInstall = install;
+    }
+    if (this.children.length > 0) {
+      this.render();
+    }
   }
 
   /**
@@ -442,12 +469,126 @@ class AddonCard extends HTMLElement {
     return null;
   }
 
-  registerListener() {
-    AddonManager.addAddonListener(this);
+  async handleEvent(e) {
+    let {addon} = this;
+    let action = e.target.getAttribute("action");
+
+    if (e.type == "click") {
+      switch (action) {
+        case "toggle-disabled":
+          if (addon.userDisabled) {
+            await addon.enable();
+          } else {
+            await addon.disable();
+          }
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            // Refocus the open menu button so it's clear where the focus is.
+            this.querySelector('[action="more-options"]').focus();
+          }
+          break;
+        case "update-check":
+          let listener = {
+            onUpdateAvailable(addon, install) {
+              attachUpdateHandler(install);
+            },
+            onNoUpdateAvailable: () => {
+              this.sendEvent("no-update");
+            },
+          };
+          addon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+          break;
+        case "install-update":
+          this.updateInstall.install().then(() => {
+            // The card will update with the new add-on when it gets installed.
+            this.sendEvent("update-installed");
+          }, () => {
+            // Update our state if the install is cancelled.
+            this.update();
+            this.sendEvent("update-cancelled");
+          });
+          // Clear the install since it will be removed from the global list of
+          // available updates (whether it succeeds or fails).
+          this.updateInstall = null;
+          break;
+        case "contribute":
+          windowRoot.ownerGlobal.openUILinkIn(addon.contributionURL, "tab", {
+            triggeringPrincipal:
+              Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+          break;
+        case "remove":
+          {
+            this.panel.hide();
+            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            if (response == 0) {
+              await addon.uninstall();
+              this.sendEvent("remove");
+            } else {
+              this.sendEvent("remove-cancelled");
+            }
+          }
+          break;
+        case "expand":
+          loadViewFn("detail", this.addon.id);
+          break;
+        case "more-options":
+          // Open panel on click from the keyboard.
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            this.panel.toggle(e);
+          }
+          break;
+      }
+    } else if (e.type == "change") {
+      let {name} = e.target;
+      if (name == "autoupdate") {
+        addon.applyBackgroundUpdates = e.target.value;
+      }
+    } else if (e.type == "mousedown") {
+      // Open panel on mousedown when the mouse is used.
+      if (action == "more-options") {
+        this.panel.toggle(e);
+      }
+    } else if (e.type == "dblclick") {
+      // Don't expand if expanded or a button is double clicked.
+      if (!this.expanded && e.target.tagName != "BUTTON") {
+        loadViewFn("detail", this.addon.id);
+      }
+    }
   }
 
-  removeListener() {
+  get panel() {
+    return this.card.querySelector("panel-list");
+  }
+
+  registerListeners() {
+    AddonManager.addAddonListener(this);
+    AddonManager.addInstallListener(this);
+    this.addEventListener("change", this);
+    this.addEventListener("click", this);
+    this.addEventListener("dblclick", this);
+    this.addEventListener("mousedown", this);
+  }
+
+  removeListeners() {
     AddonManager.removeAddonListener(this);
+    AddonManager.removeInstallListener(this);
+    this.removeEventListener("change", this);
+    this.removeEventListener("click", this);
+    this.removeEventListener("dblclick", this);
+    this.removeEventListener("mousedown", this);
+  }
+
+  onNewInstall(install) {
+    if (install.existingAddon && install.existingAddon.id == this.addon.id) {
+      this.updateInstall = install;
+      this.sendEvent("update-found");
+    }
+  }
+
+  onInstallEnded(install) {
+    if (install.addon.id == this.addon.id) {
+      this.setAddon(install.addon);
+    }
   }
 
   onDisabled(addon) {
@@ -459,6 +600,17 @@ class AddonCard extends HTMLElement {
   onEnabled(addon) {
     if (addon.id == this.addon.id) {
       this.update();
+    }
+  }
+
+  onUpdateModeChanged() {
+    this.update();
+  }
+
+  onPropertyChanged(addon, changed) {
+    if (this.details && addon.id == this.addon.id &&
+        changed.includes("applyBackgroundUpdates")) {
+      this.details.update();
     }
   }
 
@@ -499,6 +651,7 @@ class AddonCard extends HTMLElement {
         name: addon.name,
       });
     }
+    name.title = `${addon.name} ${addon.version}`;
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
@@ -514,6 +667,12 @@ class AddonCard extends HTMLElement {
       disableButton, `${disableAction}-addon-button`);
     disableButton.hidden = !hasPermission(addon, disableAction);
 
+    // Set the update button and badge the menu if there's an update.
+    card.querySelector('[action="install-update"]').hidden =
+      !this.updateInstall;
+    card.querySelector(".more-options-button")
+      .classList.toggle("more-options-button-badged", !!this.updateInstall);
+
     // The separator isn't needed when expanded (nothing under it) or when the
     // remove and disable buttons are hidden (nothing above it).
     let separator = card.querySelector("panel-item-separator");
@@ -523,11 +682,16 @@ class AddonCard extends HTMLElement {
     // Hide the expand button if we're expanded.
     card.querySelector('[action="expand"]').hidden = this.expanded;
 
+    // Update the details if they're shown.
+    if (this.details) {
+      this.details.update();
+    }
+
     this.sendEvent("update");
   }
 
   expand() {
-    if (!this.hasRendered) {
+    if (this.children.length == 0) {
       this.expanded = true;
     } else {
       throw new Error("expand() is only supported before render()");
@@ -548,69 +712,19 @@ class AddonCard extends HTMLElement {
     // Set the contents.
     this.update();
 
-    let panel = this.card.querySelector("panel-list");
-    let moreOptionsButton = this.card.querySelector('[action="more-options"]');
-
-    // Open panel on mousedown when the mouse is used.
-    moreOptionsButton.addEventListener("mousedown", (e) => {
-      panel.toggle(e);
-    });
-
-    // Open panel on click from the keyboard.
-    moreOptionsButton.addEventListener("click", (e) => {
-      if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-        panel.toggle(e);
-      }
-    });
-
-    panel.addEventListener("click", async (e) => {
-      let action = e.target.getAttribute("action");
-      switch (action) {
-        case "toggle-disabled":
-          if (addon.userDisabled) {
-            await addon.enable();
-          } else {
-            await addon.disable();
-          }
-          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-            // Refocus the open menu button so it's clear where the focus is.
-            this.querySelector('[action="more-options"]').focus();
-          }
-          break;
-        case "remove":
-          {
-            panel.hide();
-            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
-            if (response == 0) {
-              await addon.uninstall();
-              this.sendEvent("remove");
-            } else {
-              this.sendEvent("remove-cancelled");
-            }
-          }
-          break;
-        case "expand":
-          loadViewFn("detail", this.addon.id);
-          break;
-      }
-    });
-
     if (this.expanded) {
-      let details = document.createElement("addon-details");
-      details.setAddon(this.addon);
-      this.card.appendChild(details);
-    } else {
-      // Expand on double click.
-      this.addEventListener("dblclick", (e) => {
-        // Don't expand if a button is double clicked.
-        if (e.target.tagName != "BUTTON") {
-          loadViewFn("detail", this.addon.id);
-        }
-      });
+      if (!this.details) {
+        this.details = document.createElement("addon-details");
+      }
+      this.details.setAddon(this.addon);
+      this.details.render();
+
+      // If we're re-rendering we still need to append the details since the
+      // entire card was emptied at the beginning of the render.
+      this.card.appendChild(this.details);
     }
 
     this.appendChild(this.card);
-    this.hasRendered = true;
   }
 
   sendEvent(name, detail) {
@@ -642,8 +756,11 @@ class AddonList extends HTMLElement {
     // Register the listener and get the add-ons, these operations should
     // happpen as close to each other as possible.
     this.registerListener();
-    // Render the initial view.
-    this.render(await this.getAddons());
+    // Don't render again if we were rendered prior to being inserted.
+    if (this.children.length == 0) {
+      // Render the initial view.
+      this.render();
+    }
   }
 
   disconnectedCallback() {
@@ -828,8 +945,10 @@ class AddonList extends HTMLElement {
     return section;
   }
 
-  async render(sectionedAddons) {
+  async render() {
     this.textContent = "";
+
+    let sectionedAddons = await this.getAddons();
 
     // Render the sections.
     let frag = document.createDocumentFragment();
@@ -843,7 +962,6 @@ class AddonList extends HTMLElement {
     // avoid the height changing as strings go from 0 height to having text.
     await document.l10n.translateFragment(frag);
     this.appendChild(frag);
-    this.sendEvent("rendered");
   }
 
   registerListener() {
@@ -863,6 +981,9 @@ class AddonList extends HTMLElement {
   }
 
   onInstalled(addon) {
+    if (this.querySelector(`addon-card[addon-id="${addon.id}"]`)) {
+      return;
+    }
     this.addAddon(addon);
   }
 
@@ -889,12 +1010,9 @@ class ListView {
       filterFn: addon => !addon.hidden && !addon.isActive,
     }]);
 
-    await new Promise(resolve => {
-      list.addEventListener("rendered", resolve, {once: true});
-
-      this.root.textContent = "";
-      this.root.appendChild(list);
-    });
+    await list.render();
+    this.root.textContent = "";
+    this.root.appendChild(list);
   }
 }
 
@@ -907,12 +1025,15 @@ class DetailView {
   async render() {
     let addon = await AddonManager.getAddonByID(this.id);
     let card = document.createElement("addon-card");
-    card.setAddon(addon);
-    card.expand();
 
     // Go back to the list view when the add-on is removed.
     card.addEventListener("remove", () => loadViewFn("list", addon.type));
 
+    card.setAddon(addon);
+    card.expand();
+    await card.render();
+
+    this.root.textContent = "";
     this.root.appendChild(card);
   }
 }

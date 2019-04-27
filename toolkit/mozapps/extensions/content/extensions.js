@@ -5,6 +5,7 @@
 "use strict";
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
+/* import-globals-from aboutaddonsCommon.js */
 /* globals ProcessingInstruction */
 /* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView, gBrowser */
 
@@ -16,8 +17,6 @@ const {AddonSettings} = ChromeUtils.import("resource://gre/modules/addons/AddonS
 ChromeUtils.defineModuleGetter(this, "AMTelemetry",
                                "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionParent",
                                "resource://gre/modules/ExtensionParent.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionPermissions",
@@ -390,10 +389,6 @@ function getMainWindow() {
   return window.docShell.rootTreeItem.domWindow;
 }
 
-function getBrowserElement() {
-  return window.docShell.chromeEventHandler;
-}
-
 /**
  * A wrapper around the HTML5 session history service that allows the browser
  * back/forward controls to work within the manager
@@ -720,49 +715,6 @@ var gEventManager = {
     this.refreshAutoUpdateDefault();
   },
 };
-
-function attachUpdateHandler(install) {
-  if (!WEBEXT_PERMISSION_PROMPTS) {
-    return;
-  }
-
-  install.promptHandler = (info) => {
-    let oldPerms = info.existingAddon.userPermissions;
-    if (!oldPerms) {
-      // Updating from a legacy add-on, let it proceed
-      return Promise.resolve();
-    }
-
-    let newPerms = info.addon.userPermissions;
-
-    let difference = Extension.comparePermissions(oldPerms, newPerms);
-
-    // If there are no new permissions, just proceed
-    if (difference.origins.length == 0 && difference.permissions.length == 0) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      let subject = {
-        wrappedJSObject: {
-          target: getBrowserElement(),
-          info: {
-            type: "update",
-            addon: info.addon,
-            icon: info.addon.icon,
-            // Reference to the related AddonInstall object (used in AMTelemetry to
-            // link the recorded event to the other events from the same install flow).
-            install,
-            permissions: difference,
-            resolve,
-            reject,
-          },
-        },
-      };
-      Services.obs.notifyObservers(subject, "webextension-permission-prompt");
-    });
-  };
-}
 
 var gViewController = {
   viewPort: null,

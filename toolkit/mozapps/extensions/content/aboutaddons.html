@@ -24,10 +24,11 @@
             <span class="addon-description"></span>
           </div>
           <div class="more-options-menu">
-            <button class="ghost-button" action="more-options"></button>
+            <button class="more-options-button ghost-button" action="more-options"></button>
             <panel-list>
               <panel-item action="toggle-disabled"></panel-item>
               <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+              <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
               <panel-item-separator></panel-item-separator>
               <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
             </panel-list>
@@ -46,6 +47,24 @@
           data-l10n-id="detail-contributions-button"
           data-l10n-attrs="accesskey">
         </button>
+      </div>
+      <div class="addon-detail-row addon-detail-row-updates">
+        <label data-l10n-id="addon-detail-updates-label"></label>
+        <div>
+          <button class="button-link" data-l10n-id="addon-detail-update-check-label" action="update-check" hidden></button>
+          <label>
+            <input type="radio" name="autoupdate" value="1"/>
+            <span data-l10n-id="addon-detail-updates-radio-default"></span>
+          </label>
+          <label>
+            <input type="radio" name="autoupdate" value="2"/>
+            <span data-l10n-id="addon-detail-updates-radio-on"></span>
+          </label>
+          <label>
+            <input type="radio" name="autoupdate" value="0"/>
+            <span data-l10n-id="addon-detail-updates-radio-off"></span>
+          </label>
+        </div>
       </div>
       <div class="addon-detail-row addon-detail-row-author">
         <label data-l10n-id="addon-detail-author-label"></label>
