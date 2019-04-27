@@ -69,7 +69,7 @@ class SVGAnimatedTransformList {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGTransformList& aNewAnimValue,
+  nsresult SetAnimValue(const SVGTransformList& aValue,
                         dom::SVGElement* aElement);
 
   void ClearAnimValue(dom::SVGElement* aElement);
@@ -134,7 +134,7 @@ class SVGAnimatedTransformList {
         SMILValue& aValue, bool& aPreventCachingOfSandwich) const override;
     virtual SMILValue GetBaseValue() const override;
     virtual void ClearAnimValue() override;
-    virtual nsresult SetAnimValue(const SMILValue& aValue) override;
+    virtual nsresult SetAnimValue(const SMILValue& aNewAnimValue) override;
 
    protected:
     static void ParseValue(const nsAString& aSpec, const nsAtom* aTransformType,

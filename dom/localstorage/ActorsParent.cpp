@@ -7694,7 +7694,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    MOZ_ASSERT(usage >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(usage >= 0);
 
     if (!aForGetUsage) {
       InitUsageForOrigin(aOrigin, usage);

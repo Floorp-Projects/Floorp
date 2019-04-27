@@ -38,7 +38,7 @@ class SVGAnimatedString {
   }
 
   void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
+  void GetAnimValue(nsAString& aResult, const SVGElement* aSVGElement) const;
 
   // Returns true if the animated value of this string has been explicitly
   // set (either by animation, or by taking on the base value which has been

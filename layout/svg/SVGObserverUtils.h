@@ -251,7 +251,7 @@ class SVGObserverUtils {
    * Get the paint server for aPaintedFrame.
    */
   static nsSVGPaintServerFrame* GetAndObservePaintServer(
-      nsIFrame* aPaintedFrame, nsStyleSVGPaint nsStyleSVG::*aPaint);
+      nsIFrame* aTargetFrame, nsStyleSVGPaint nsStyleSVG::*aPaint);
 
   /**
    * Get the start/mid/end-markers for the given frame, and add the frame as

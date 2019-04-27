@@ -76,9 +76,8 @@ class SVGAElement final : public SVGAElementBase, public Link {
   void SetPing(const nsAString& aPing, mozilla::ErrorResult& rv);
   void GetRel(nsAString& aRel);
   void SetRel(const nsAString& aRel, mozilla::ErrorResult& rv);
-  void SetReferrerPolicy(const nsAString& aReferrerPolicy,
-                         mozilla::ErrorResult& rv);
-  void GetReferrerPolicy(nsAString& aReferrerPolicy);
+  void SetReferrerPolicy(const nsAString& aPolicy, mozilla::ErrorResult& rv);
+  void GetReferrerPolicy(nsAString& aPolicy);
   nsDOMTokenList* RelList();
   void GetHreflang(nsAString& aHreflang);
   void SetHreflang(const nsAString& aHreflang, mozilla::ErrorResult& rv);

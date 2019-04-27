@@ -146,7 +146,7 @@ class nsFilterInstance {
    * @param aPreFilterDirtyRegion [optional] The pre-filter area of
    *   the filtered element that changed, in app units. Only required if you
    *   will call ComputePostFilterDirtyRegion().
-   * @param aOverridePreFilterVisualOverflowRect [optional] Use a different
+   * @param aPreFilterVisualOverflowRectOverride [optional] Use a different
    *   visual overflow rect for the target element.
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
    *   element. Must be non-null if aTargetFrame is null.
@@ -159,7 +159,7 @@ class nsFilterInstance {
                    const gfxMatrix& aPaintTransform,
                    const nsRegion* aPostFilterDirtyRegion = nullptr,
                    const nsRegion* aPreFilterDirtyRegion = nullptr,
-                   const nsRect* aOverridePreFilterVisualOverflowRect = nullptr,
+                   const nsRect* aPreFilterVisualOverflowRectOverride = nullptr,
                    const gfxRect* aOverrideBBox = nullptr);
 
   /**
@@ -227,7 +227,7 @@ class nsFilterInstance {
    * Creates a SourceSurface for either the FillPaint or StrokePaint graph
    * nodes
    */
-  void BuildSourcePaint(SourceInfo* aPrimitive, imgDrawingParams& aImgParams);
+  void BuildSourcePaint(SourceInfo* aSource, imgDrawingParams& aImgParams);
 
   /**
    * Creates a SourceSurface for either the FillPaint and StrokePaint graph

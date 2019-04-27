@@ -41,7 +41,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   virtual already_AddRefed<gfxPattern> GetPaintServerPattern(
       nsIFrame* aSource, const DrawTarget* aDrawTarget,
       const gfxMatrix& aContextMatrix,
-      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke, float aOpacity,
+      nsStyleSVGPaint nsStyleSVG::*aFillOrStroke, float aGraphicOpacity,
       imgDrawingParams& aImgParams, const gfxRect* aOverrideBounds) override;
 
  public:
@@ -111,7 +111,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   nsSVGPatternFrame* GetPatternWithChildren();
 
   gfxRect GetPatternRect(uint16_t aPatternUnits, const gfxRect& bbox,
-                         const Matrix& callerCTM, nsIFrame* aTarget);
+                         const Matrix& aTargetCTM, nsIFrame* aTarget);
   gfxMatrix ConstructCTM(const SVGAnimatedViewBox& aViewBox,
                          uint16_t aPatternContentUnits, uint16_t aPatternUnits,
                          const gfxRect& callerBBox, const Matrix& callerCTM,
