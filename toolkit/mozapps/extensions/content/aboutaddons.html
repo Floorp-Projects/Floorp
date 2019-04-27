@@ -20,7 +20,12 @@
         <div class="addon-card-collapsed">
           <img class="card-heading-icon addon-icon">
           <div class="card-contents">
-            <span class="addon-name"></span>
+            <div class="addon-name-container">
+              <span class="addon-name"></span>
+              <div class="addon-badge addon-badge-private-browsing-allowed"
+                    data-l10n-id="addon-badge-private-browsing-allowed"
+                    hidden></div>
+            </div>
             <span class="addon-description"></span>
           </div>
           <div class="more-options-menu">
@@ -65,6 +70,22 @@
             <span data-l10n-id="addon-detail-updates-radio-off"></span>
           </label>
         </div>
+      </div>
+      <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing">
+        <label data-l10n-id="detail-private-browsing-label"></label>
+        <div>
+          <label>
+            <input type="radio" name="private-browsing" value="1"/>
+            <span data-l10n-id="addon-detail-private-browsing-allow"></span>
+          </label>
+          <label>
+            <input type="radio" name="private-browsing" value="0"/>
+            <span data-l10n-id="addon-detail-private-browsing-disallow"></span>
+          </label>
+        </div>
+      </div>
+      <div class="addon-detail-row-help" data-l10n-id="addon-detail-private-browsing-help">
+        <a target="_blank" data-l10n-name="learn-more"></a>
       </div>
       <div class="addon-detail-row addon-detail-row-author">
         <label data-l10n-id="addon-detail-author-label"></label>
