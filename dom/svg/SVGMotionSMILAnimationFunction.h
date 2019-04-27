@@ -76,7 +76,7 @@ class SVGMotionSMILAnimationFunction final : public SMILAnimationFunction {
 
   // Helpers for GetValues
   void MarkStaleIfAttributeAffectsPath(nsAtom* aAttribute);
-  void RebuildPathAndVertices(const nsIContent* aContextElem);
+  void RebuildPathAndVertices(const nsIContent* aTargetElement);
   void RebuildPathAndVerticesFromMpathElem(dom::SVGMPathElement* aMpathElem);
   void RebuildPathAndVerticesFromPathAttr();
   void RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);

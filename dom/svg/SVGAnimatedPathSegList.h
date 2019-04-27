@@ -65,7 +65,8 @@ class SVGAnimatedPathSegList final {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGPathData& aValue, dom::SVGElement* aElement);
+  nsresult SetAnimValue(const SVGPathData& aNewAnimValue,
+                        dom::SVGElement* aElement);
 
   void ClearAnimValue(dom::SVGElement* aElement);
 

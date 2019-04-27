@@ -105,15 +105,15 @@ class DOMSVGNumberList final : public nsISupports, public nsWrapperCache {
     return LengthNoFlush();
   }
   void Clear(ErrorResult& error);
-  already_AddRefed<DOMSVGNumber> Initialize(DOMSVGNumber& newItem,
+  already_AddRefed<DOMSVGNumber> Initialize(DOMSVGNumber& aItem,
                                             ErrorResult& error);
   already_AddRefed<DOMSVGNumber> GetItem(uint32_t index, ErrorResult& error);
   already_AddRefed<DOMSVGNumber> IndexedGetter(uint32_t index, bool& found,
                                                ErrorResult& error);
-  already_AddRefed<DOMSVGNumber> InsertItemBefore(DOMSVGNumber& newItem,
+  already_AddRefed<DOMSVGNumber> InsertItemBefore(DOMSVGNumber& aItem,
                                                   uint32_t index,
                                                   ErrorResult& error);
-  already_AddRefed<DOMSVGNumber> ReplaceItem(DOMSVGNumber& newItem,
+  already_AddRefed<DOMSVGNumber> ReplaceItem(DOMSVGNumber& aItem,
                                              uint32_t index,
                                              ErrorResult& error);
   already_AddRefed<DOMSVGNumber> RemoveItem(uint32_t index, ErrorResult& error);

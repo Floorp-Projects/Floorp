@@ -66,7 +66,8 @@ class SVGMotionSMILPathUtils {
 
    protected:
     // Helper methods
-    bool ParseCoordinatePair(const nsAString& aStr, float& aXVal, float& aYVal);
+    bool ParseCoordinatePair(const nsAString& aCoordPairStr, float& aXVal,
+                             float& aYVal);
 
     // Member data
     const dom::SVGElement* mSVGElement;  // context for converting to user units

@@ -61,8 +61,8 @@ class SVGAnimatedNumberList {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGNumberList& aValue, dom::SVGElement* aElement,
-                        uint32_t aAttrEnum);
+  nsresult SetAnimValue(const SVGNumberList& aNewAnimValue,
+                        dom::SVGElement* aElement, uint32_t aAttrEnum);
 
   void ClearAnimValue(dom::SVGElement* aElement, uint32_t aAttrEnum);
 

@@ -134,7 +134,7 @@ class DOMSVGPathSeg : public nsWrapperCache {
    * encoded into a float, followed by its arguments in the same order as they
    * are given in the <path> element's 'd' attribute).
    */
-  void ToSVGPathSegEncodedData(float* aData);
+  void ToSVGPathSegEncodedData(float* aRaw);
 
   /**
    * The type of this path segment.
@@ -439,9 +439,9 @@ class DOMSVGPathSegArcAbs : public DOMSVGPathSeg {
   float Angle();
   void SetAngle(float aAngle, ErrorResult& rv);
   bool LargeArcFlag();
-  void SetLargeArcFlag(bool aFlag, ErrorResult& rv);
+  void SetLargeArcFlag(bool aLargeArcFlag, ErrorResult& rv);
   bool SweepFlag();
-  void SetSweepFlag(bool aFlag, ErrorResult& rv);
+  void SetSweepFlag(bool aSweepFlag, ErrorResult& rv);
 
  protected:
   float mArgs[7];
@@ -475,9 +475,9 @@ class DOMSVGPathSegArcRel : public DOMSVGPathSeg {
   float Angle();
   void SetAngle(float aAngle, ErrorResult& rv);
   bool LargeArcFlag();
-  void SetLargeArcFlag(bool aFlag, ErrorResult& rv);
+  void SetLargeArcFlag(bool aLargeArcFlag, ErrorResult& rv);
   bool SweepFlag();
-  void SetSweepFlag(bool aFlag, ErrorResult& rv);
+  void SetSweepFlag(bool aSweepFlag, ErrorResult& rv);
 
  protected:
   float mArgs[7];

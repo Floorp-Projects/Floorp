@@ -633,9 +633,9 @@ gfxMatrix SVGGeometryFrame::GetCanvasTM() {
 }
 
 void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
-                              const gfxMatrix& aNewTransform,
+                              const gfxMatrix& aTransform,
                               imgDrawingParams& aImgParams) {
-  MOZ_ASSERT(!aNewTransform.IsSingular());
+  MOZ_ASSERT(!aTransform.IsSingular());
 
   DrawTarget* drawTarget = aContext->GetDrawTarget();
 
@@ -655,7 +655,7 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
   // set it unnecessarily if we return early (it's an expensive operation for
   // some backends).
   gfxContextMatrixAutoSaveRestore autoRestoreTransform(aContext);
-  aContext->SetMatrixDouble(aNewTransform);
+  aContext->SetMatrixDouble(aTransform);
 
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     // We don't complicate this code with GetAsSimplePath since the cost of

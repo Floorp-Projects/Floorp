@@ -64,7 +64,7 @@ class SVGAnimatedOrient {
                     bool aDoSetAttr);
   nsresult SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement);
   void SetAnimValue(float aValue, uint8_t aUnit, SVGElement* aSVGElement);
-  void SetAnimType(SVGEnumValue aType, SVGElement* aSVGElement);
+  void SetAnimType(SVGEnumValue aValue, SVGElement* aSVGElement);
 
   uint8_t GetBaseValueUnit() const { return mBaseValUnit; }
   uint8_t GetAnimValueUnit() const { return mAnimValUnit; }
@@ -92,7 +92,8 @@ class SVGAnimatedOrient {
   bool mIsAnimated;
 
   void SetBaseValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
-  nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
+  nsresult NewValueSpecifiedUnits(uint16_t aUnitType,
+                                  float aValueInSpecifiedUnits,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
   already_AddRefed<dom::DOMSVGAngle> ToDOMBaseVal(SVGElement* aSVGElement);

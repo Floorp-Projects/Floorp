@@ -175,12 +175,12 @@ class SMILTimedElement {
    * SMILTimeValueSpec object. Used when an ID assignment changes and hence
    * all the previously associated instance times become invalid.
    *
-   * @param aSpec    The SMILTimeValueSpec object whose created
+   * @param aCreator The SMILTimeValueSpec object whose created
    *                 SMILInstanceTime's should be removed.
    * @param aIsBegin true if the times to be removed represent begin
    *                 times or false if they are end times.
    */
-  void RemoveInstanceTimesForCreator(const SMILTimeValueSpec* aSpec,
+  void RemoveInstanceTimesForCreator(const SMILTimeValueSpec* aCreator,
                                      bool aIsBegin);
 
   /**

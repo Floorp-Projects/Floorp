@@ -573,7 +573,7 @@ class SVGFilterObserverList : public nsISupports {
  public:
   SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFilters,
                         nsIContent* aFilteredElement,
-                        nsIFrame* aFiltedFrame = nullptr);
+                        nsIFrame* aFilteredFrame = nullptr);
 
   bool ReferencesValidResources();
   void Invalidate() { OnRenderingChange(); }

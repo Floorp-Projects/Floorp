@@ -123,7 +123,7 @@ class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
    * @param aMatrix The transform that must be multiplied onto aContext to
    *   establish this frame's SVG user space.
    */
-  void PaintMarkers(gfxContext& aContext, const gfxMatrix& aMatrix,
+  void PaintMarkers(gfxContext& aContext, const gfxMatrix& aTransform,
                     imgDrawingParams& aImgParams);
 };
 }  // namespace mozilla
