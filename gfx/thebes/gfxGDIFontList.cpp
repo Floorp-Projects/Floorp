@@ -820,7 +820,8 @@ gfxFontEntry* gfxGDIFontList::MakePlatformFont(const nsACString& aFontName,
   return fe;
 }
 
-bool gfxGDIFontList::FindAndAddFamilies(const nsACString& aFamily,
+bool gfxGDIFontList::FindAndAddFamilies(StyleGenericFontFamily aGeneric,
+                                        const nsACString& aFamily,
                                         nsTArray<FamilyAndGeneric>* aOutput,
                                         FindFamiliesFlags aFlags,
                                         gfxFontStyle* aStyle,
@@ -831,7 +832,7 @@ bool gfxGDIFontList::FindAndAddFamilies(const nsACString& aFamily,
 
   gfxFontFamily* ff = mFontSubstitutes.GetWeak(keyName);
   if (ff) {
-    aOutput->AppendElement(FamilyAndGeneric(ff));
+    aOutput->AppendElement(FamilyAndGeneric(ff, aGeneric));
     return true;
   }
 
@@ -839,13 +840,13 @@ bool gfxGDIFontList::FindAndAddFamilies(const nsACString& aFamily,
     return false;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(aFamily, aOutput, aFlags,
-                                                 aStyle, aDevToCssSize);
+  return gfxPlatformFontList::FindAndAddFamilies(aGeneric, aFamily, aOutput,
+                                                 aFlags, aStyle, aDevToCssSize);
 }
 
 FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
     const gfxFontStyle* aStyle) {
-  gfxFontFamily* ff = nullptr;
+  FontFamily ff;
 
   // this really shouldn't fail to find a font....
   NONCLIENTMETRICSW ncm;
@@ -854,8 +855,8 @@ FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
       ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
   if (status) {
     ff = FindFamily(NS_ConvertUTF16toUTF8(ncm.lfMessageFont.lfFaceName));
-    if (ff) {
-      return FontFamily(ff);
+    if (!ff.IsNull()) {
+      return ff;
     }
   }
 
@@ -866,7 +867,7 @@ FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
     ff = FindFamily(NS_ConvertUTF16toUTF8(logFont.lfFaceName));
   }
 
-  return FontFamily(ff);
+  return ff;
 }
 
 void gfxGDIFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,

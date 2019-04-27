@@ -219,6 +219,8 @@ class ContentParent final : public PContentParent,
 
   static void BroadcastStringBundle(const StringBundleDescriptor&);
 
+  static void BroadcastFontListChanged();
+
   const nsAString& GetRemoteType() const;
 
   virtual void DoGetRemoteType(nsAString& aRemoteType,
@@ -277,6 +279,7 @@ class ContentParent final : public PContentParent,
   static void NotifyUpdatedDictionaries();
 
   static void NotifyUpdatedFonts();
+  static void NotifyRebuildFontList();
 
 #if defined(XP_WIN)
   /**

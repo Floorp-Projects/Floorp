@@ -1251,17 +1251,6 @@ gfxFontFamily* gfxMacPlatformFontList::FindSystemFontFamily(const nsACString& aF
   return nullptr;
 }
 
-bool gfxMacPlatformFontList::GetStandardFamilyName(const nsCString& aFontName,
-                                                   nsACString& aFamilyName) {
-  gfxFontFamily* family = FindFamily(aFontName);
-  if (family) {
-    family->LocalizedName(aFamilyName);
-    return true;
-  }
-
-  return false;
-}
-
 void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
     CFNotificationCenterRef center, void* observer, CFStringRef name, const void* object,
     CFDictionaryRef userInfo) {
@@ -1365,7 +1354,7 @@ FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(const gfxFontStyle*
   nsAutoString familyName;
 
   GetStringForNSString(defaultFamily, familyName);
-  return FontFamily(FindFamily(NS_ConvertUTF16toUTF8(familyName)));
+  return FindFamily(NS_ConvertUTF16toUTF8(familyName));
 }
 
 int32_t gfxMacPlatformFontList::AppleWeightToCSSWeight(int32_t aAppleWeight) {
@@ -1447,7 +1436,8 @@ gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontNa
 // WebCore/platform/graphics/mac/FontCacheMac.mm
 static const char kSystemFont_system[] = "-apple-system";
 
-bool gfxMacPlatformFontList::FindAndAddFamilies(const nsACString& aFamily,
+bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
+                                                const nsACString& aFamily,
                                                 nsTArray<FamilyAndGeneric>* aOutput,
                                                 FindFamiliesFlags aFlags, gfxFontStyle* aStyle,
                                                 gfxFloat aDevToCssSize) {
@@ -1462,7 +1452,8 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(const nsACString& aFamily,
     return true;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(aFamily, aOutput, aFlags, aStyle, aDevToCssSize);
+  return gfxPlatformFontList::FindAndAddFamilies(aGeneric, aFamily, aOutput, aFlags, aStyle,
+                                                 aDevToCssSize);
 }
 
 void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,

@@ -495,6 +495,19 @@ child:
 
     async UpdateFontList(SystemFontListEntry[] fontList);
 
+    /**
+     * The shared font list has been reinitialized by the parent;
+     * child processes must discard and recreate their mappings to it.
+     */
+    async RebuildFontList();
+
+    /**
+     * The shared font list has been modified, potentially adding matches
+     * for src:local() names that were previously not known, so content
+     * may need to be reflowed.
+     */
+    async FontListChanged();
+
     async UpdateAppLocales(nsCString[] appLocales);
     async UpdateRequestedLocales(nsCString[] requestedLocales);
 

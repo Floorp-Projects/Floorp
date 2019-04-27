@@ -201,14 +201,18 @@ class gfxFontEntry {
   }
 
   inline bool HasCmapTable() {
-    if (!mCharacterMap) {
+    if (!mCharacterMap && !mShmemCharacterMap) {
       ReadCMAP();
-      NS_ASSERTION(mCharacterMap, "failed to initialize character map");
+      NS_ASSERTION(mCharacterMap || mShmemCharacterMap,
+                   "failed to initialize character map");
     }
     return mHasCmapTable;
   }
 
   inline bool HasCharacter(uint32_t ch) {
+    if (mShmemCharacterMap) {
+      return mShmemCharacterMap->test(ch);
+    }
     if (mCharacterMap && mCharacterMap->test(ch)) {
       return true;
     }
@@ -400,6 +404,9 @@ class gfxFontEntry {
   nsCString mFamilyName;
 
   RefPtr<gfxCharacterMap> mCharacterMap;
+
+  mozilla::fontlist::Face* mShmemFace = nullptr;
+  const SharedBitSet* mShmemCharacterMap = nullptr;
 
   mozilla::UniquePtr<uint8_t[]> mUVSData;
   mozilla::UniquePtr<gfxUserFontData> mUserFontData;
