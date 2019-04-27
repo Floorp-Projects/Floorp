@@ -301,15 +301,19 @@ this.FirefoxMonitor = {
         DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
                                                  DOMWindowUtils.AUTHOR_SHEET);
 
-        this.notificationsByWindow.get(win).forEach(n => {
-          n.remove();
-        });
-        this.notificationsByWindow.delete(win);
+        if (this.notificationsByWindow.has(win)) {
+          this.notificationsByWindow.get(win).forEach(n => {
+            n.remove();
+          });
+          this.notificationsByWindow.delete(win);
+        }
 
-        let doc = win.document;
-        doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
-        doc.getElementById(`${this.kNotificationID}-notification`).remove();
-        this.panelUIsByWindow.delete(win);
+        if (this.panelUIsByWindow.has(win)) {
+          let doc = win.document;
+          doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
+          doc.getElementById(`${this.kNotificationID}-notification`).remove();
+          this.panelUIsByWindow.delete(win);
+        }
 
         win.gBrowser.removeTabsProgressListener(this);
       },
