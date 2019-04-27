@@ -103,21 +103,70 @@ void Family::AddFaces(FontList* aList, const nsTArray<Face::InitData>& aFaces) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (mFaceCount > 0) {
     // Already initialized!
-    MOZ_ASSERT(mFaceCount == aFaces.Length());
     return;
   }
+
   uint32_t count = aFaces.Length();
-  // Allocate space for the face records, and initialize them
-  Pointer p = aList->Alloc(aFaces.Length() * sizeof(Pointer));
-  auto facePtrs = static_cast<Pointer*>(p.ToPtr(aList));
-  for (size_t i = 0; i < aFaces.Length(); i++) {
-    Pointer fp = aList->Alloc(sizeof(Face));
-    auto face = static_cast<Face*>(fp.ToPtr(aList));
-    (void)new (face) Face(aList, aFaces[i]);
-    facePtrs[i] = fp;
+  bool isSimple = false;
+  // A family is "simple" (i.e. simplified style selection may be used instead
+  // of the full CSS font-matching algorithm) if there is at maximum one normal,
+  // bold, italic, and bold-italic face; in this case, they are stored at known
+  // positions in the mFaces array.
+  const Face::InitData* slots[4] = { nullptr, nullptr, nullptr, nullptr };
+  if (count >= 2 && count <= 4) {
+    // Check if this can be treated as a "simple" family
+    isSimple = true;
+    for (const auto& f : aFaces) {
+      if (!f.mWeight.IsSingle() || !f.mStretch.IsSingle() ||
+          !f.mStyle.IsSingle()) {
+        isSimple = false;
+        break;
+      }
+      if (!f.mStretch.Min().IsNormal()) {
+        isSimple = false;
+        break;
+      }
+      // Figure out which slot (0-3) this face belongs in
+      size_t slot = 0;
+      static_assert((kBoldMask | kItalicMask) == 0b11, "bad bold/italic bits");
+      if (f.mWeight.Min().IsBold()) {
+        slot |= kBoldMask;
+      }
+      if (f.mStyle.Min().IsItalic() || f.mStyle.Min().IsOblique()) {
+        slot |= kItalicMask;
+      }
+      if (slots[slot]) {
+        // More than one face mapped to the same slot - not a simple family!
+        isSimple = false;
+        break;
+      }
+      slots[slot] = &f;
+    }
+    if (isSimple) {
+      // Ensure all 4 slots will exist, even if some are empty.
+      count = 4;
+    }
   }
+
+  // Allocate space for the face records, and initialize them.
+  // coverity[suspicious_sizeof]
+  Pointer p = aList->Alloc(count * sizeof(Pointer));
+  auto facePtrs = static_cast<Pointer*>(p.ToPtr(aList));
+  for (size_t i = 0; i < count; i++) {
+    if (isSimple && !slots[i]) {
+      facePtrs[i] = Pointer::Null();
+    } else {
+      Pointer fp = aList->Alloc(sizeof(Face));
+      auto face = static_cast<Face*>(fp.ToPtr(aList));
+      (void)new (face) Face(aList, isSimple ? *slots[i] : aFaces[i]);
+      facePtrs[i] = fp;
+    }
+  }
+
+  mIsSimple = isSimple;
   mFaces = p;
   mFaceCount.store(count);
+
   if (LOG_FONTLIST_ENABLED()) {
     const nsCString& fam = DisplayName().AsString(aList);
     for (unsigned j = 0; j < aFaces.Length(); j++) {
@@ -172,7 +221,7 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
 
     // if the desired style is available, return it directly
     Face* face = static_cast<Face*>(facePtrs[faceIndex].ToPtr(aList));
-    if (face->HasValidDescriptor()) {
+    if (face && face->HasValidDescriptor()) {
       aFaceList.AppendElement(face);
       return;
     }
@@ -192,7 +241,7 @@ void Family::FindAllFacesForStyle(FontList* aList, const gfxFontStyle& aStyle,
       // check remaining faces in order of preference to find the first that
       // actually exists
       face = static_cast<Face*>(facePtrs[order[trial]].ToPtr(aList));
-      if (face->HasValidDescriptor()) {
+      if (face && face->HasValidDescriptor()) {
         aFaceList.AppendElement(face);
         return;
       }
@@ -263,6 +312,9 @@ void Family::SearchAllFontsForChar(FontList* aList,
   Pointer* facePtrs = Faces(aList);
   for (uint32_t i = 0; i < numFaces; i++) {
     Face* face = static_cast<Face*>(facePtrs[i].ToPtr(aList));
+    if (!face) {
+      continue;
+    }
     MOZ_ASSERT(face->HasValidDescriptor());
     // Get the face's character map, if available (may be null!)
     charmap =
@@ -301,11 +353,49 @@ void Family::SearchAllFontsForChar(FontList* aList,
 }
 
 void Family::SetFacePtrs(FontList* aList, nsTArray<Pointer>& aFaces) {
+  if (aFaces.Length() >= 2 && aFaces.Length() <= 4) {
+    // Check whether the faces meet the criteria for a "simple" family: no more
+    // than one each of Regular, Bold, Italic, BoldItalic styles. If so, store
+    // them at the appropriate slots in mFaces and set the mIsSimple flag to
+    // accelerate font-matching.
+    bool isSimple = true;
+    Pointer slots[4] = {
+      Pointer::Null(), Pointer::Null(), Pointer::Null(), Pointer::Null()
+    };
+    for (const Pointer& fp : aFaces) {
+      const Face* f = static_cast<const Face*>(fp.ToPtr(aList));
+      if (!f->mWeight.IsSingle() || !f->mStyle.IsSingle() ||
+          !f->mStretch.IsSingle()) {
+        isSimple = false;
+        break;
+      }
+      if (!f->mStretch.Min().IsNormal()) {
+        isSimple = false;
+        break;
+      }
+      size_t slot = 0;
+      if (f->mWeight.Min().IsBold()) {
+        slot |= kBoldMask;
+      }
+      if (f->mStyle.Min().IsItalic() || f->mStyle.Min().IsOblique()) {
+        slot |= kItalicMask;
+      }
+      if (!slots[slot].IsNull()) {
+        isSimple = false;
+        break;
+      }
+      slots[slot] = fp;
+    }
+    if (isSimple) {
+      size_t size = 4 * sizeof(Pointer);
+      mFaces = aList->Alloc(size);
+      memcpy(mFaces.ToPtr(aList), slots, size);
+      mFaceCount.store(4);
+      mIsSimple = true;
+      return;
+    }
+  }
   size_t size = aFaces.Length() * sizeof(Pointer);
-  // XXX TODO: [in patch 7]
-  // Check whether the faces meet the criteria for a "simple" family; if so,
-  // store them at the appropriate positions and set the mIsSimple flag to
-  // accelerate font-matching.
   mFaces = aList->Alloc(size);
   memcpy(mFaces.ToPtr(aList), aFaces.Elements(), size);
   mFaceCount.store(aFaces.Length());
@@ -331,6 +421,9 @@ void Family::SetupFamilyCharMap(FontList* aList) {
   }
   for (size_t i = 0; i < NumFaces(); i++) {
     auto f = static_cast<Face*>(faces[i].ToPtr(aList));
+    if (!f) {
+      continue;
+    }
     auto faceMap = static_cast<SharedBitSet*>(f->mCharacterMap.ToPtr(aList));
     MOZ_ASSERT(faceMap);
     if (!firstMap) {
@@ -710,6 +803,9 @@ void FontList::SearchForLocalFace(const nsACString& aName, Family** aFamily,
     Pointer* faces = family->Faces(this);
     for (uint32_t j = 0; j < family->NumFaces(); j++) {
       Face* face = static_cast<Face*>(faces[j].ToPtr(this));
+      if (!face) {
+        continue;
+      }
       nsAutoCString psname, fullname;
       if (gfxPlatformFontList::PlatformFontList()->ReadFaceNames(
               family, face, psname, fullname)) {
