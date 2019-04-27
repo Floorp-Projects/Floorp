@@ -56,10 +56,12 @@ class AccessibilityStartup {
           this._supports.relations,
           this._supports.snapshot,
           this._supports.audit,
+          this._supports.hydration,
         ] = await Promise.all([
           this.target.actorHasMethod("accessible", "getRelations"),
           this.target.actorHasMethod("accessible", "snapshot"),
           this.target.actorHasMethod("accessible", "audit"),
+          this.target.actorHasMethod("accessible", "hydrate"),
         ]));
 
         await this._accessibility.bootstrap();

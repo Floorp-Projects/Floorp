@@ -19,6 +19,14 @@ add_task(async function() {
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
     role: "pushbutton",
+    childCount: 1,
+  });
+
+  await accessibleFront.hydrate();
+
+  checkA11yFront(accessibleFront, {
+    name: "Accessible Button",
+    role: "pushbutton",
     value: "",
     description: "Accessibility Test",
     keyboardShortcut: modifiers + "b",
