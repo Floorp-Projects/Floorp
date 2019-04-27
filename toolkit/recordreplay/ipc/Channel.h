@@ -152,11 +152,16 @@ enum class MessageType {
 struct Message {
   MessageType mType;
 
+  // When simulating message delays, the time this message should be received,
+  // relative to when the channel was opened.
+  uint32_t mReceiveTime;
+
   // Total message size, including the header.
   uint32_t mSize;
 
  protected:
-  Message(MessageType aType, uint32_t aSize) : mType(aType), mSize(aSize) {
+  Message(MessageType aType, uint32_t aSize)
+    : mType(aType), mReceiveTime(0), mSize(aSize) {
     MOZ_RELEASE_ASSERT(mSize >= sizeof(*this));
   }
 
@@ -467,6 +472,16 @@ class Channel {
   // The number of bytes of data already in the message buffer.
   size_t mMessageBytes;
 
+  // Whether this channel is subject to message delays during simulation.
+  bool mSimulateDelays;
+
+  // The time this channel was opened, for use in simulating message delays.
+  TimeStamp mStartTime;
+
+  // When simulating message delays, the time at which old messages will have
+  // finished sending and new messages may be sent.
+  TimeStamp mAvailableTime;
+
   // If spew is enabled, print a message and associated info to stderr.
   void PrintMessage(const char* aPrefix, const Message& aMsg);
 
@@ -486,7 +501,7 @@ class Channel {
 
   // Send a message to the other side of the channel. This must be called on
   // the main thread, except for fatal error messages.
-  void SendMessage(const Message& aMsg);
+  void SendMessage(Message&& aMsg);
 };
 
 // Command line option used to specify the middleman pid for a child process.
