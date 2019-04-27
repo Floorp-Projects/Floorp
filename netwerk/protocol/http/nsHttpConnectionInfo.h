@@ -122,6 +122,11 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
   bool GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
 
+  void SetIsolated(bool aIsolated) {
+    mHashKey.SetCharAt(aIsolated ? 'i' : '.', 7);
+  }
+  bool GetIsolated() const { return mHashKey.CharAt(7) == 'i'; }
+
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
 
