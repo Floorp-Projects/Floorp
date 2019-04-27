@@ -286,22 +286,22 @@ nsresult SVGAnimatedLength::ConvertToSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult SVGAnimatedLength::NewValueSpecifiedUnits(uint16_t unitType,
-                                                   float valueInSpecifiedUnits,
+nsresult SVGAnimatedLength::NewValueSpecifiedUnits(uint16_t aUnitType,
+                                                   float aValueInSpecifiedUnits,
                                                    SVGElement* aSVGElement) {
-  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
-  if (!IsValidUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!IsValidUnitType(aUnitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  if (mIsBaseSet && mBaseVal == valueInSpecifiedUnits &&
-      mSpecifiedUnitType == uint8_t(unitType)) {
+  if (mIsBaseSet && mBaseVal == aValueInSpecifiedUnits &&
+      mSpecifiedUnitType == uint8_t(aUnitType)) {
     return NS_OK;
   }
 
   nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
-  mBaseVal = valueInSpecifiedUnits;
+  mBaseVal = aValueInSpecifiedUnits;
   mIsBaseSet = true;
-  mSpecifiedUnitType = uint8_t(unitType);
+  mSpecifiedUnitType = uint8_t(aUnitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   } else {

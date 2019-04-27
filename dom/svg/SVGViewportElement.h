@@ -64,7 +64,7 @@ class SVGViewportElement : public SVGGraphicsElement {
 
   // SVGViewportElement methods:
 
-  float GetLength(uint8_t mCtxType);
+  float GetLength(uint8_t aCtxType);
 
   // public helpers:
 

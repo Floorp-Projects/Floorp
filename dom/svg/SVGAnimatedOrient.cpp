@@ -184,21 +184,22 @@ nsresult SVGAnimatedOrient::ConvertToSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult SVGAnimatedOrient::NewValueSpecifiedUnits(uint16_t unitType,
-                                                   float valueInSpecifiedUnits,
+nsresult SVGAnimatedOrient::NewValueSpecifiedUnits(uint16_t aUnitType,
+                                                   float aValueInSpecifiedUnits,
                                                    SVGElement* aSVGElement) {
-  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
-  if (!IsValidAngleUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (!IsValidAngleUnitType(aUnitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  if (mBaseVal == valueInSpecifiedUnits && mBaseValUnit == uint8_t(unitType) &&
+  if (mBaseVal == aValueInSpecifiedUnits &&
+      mBaseValUnit == uint8_t(aUnitType) &&
       mBaseType == SVG_MARKER_ORIENT_ANGLE)
     return NS_OK;
 
   AutoChangeOrientNotifier notifier(this, aSVGElement);
 
-  mBaseVal = valueInSpecifiedUnits;
-  mBaseValUnit = uint8_t(unitType);
+  mBaseVal = aValueInSpecifiedUnits;
+  mBaseValUnit = uint8_t(aUnitType);
   mBaseType = SVG_MARKER_ORIENT_ANGLE;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;

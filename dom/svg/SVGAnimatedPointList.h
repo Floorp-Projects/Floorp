@@ -64,7 +64,8 @@ class SVGAnimatedPointList {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
 
-  nsresult SetAnimValue(const SVGPointList& aValue, dom::SVGElement* aElement);
+  nsresult SetAnimValue(const SVGPointList& aNewAnimValue,
+                        dom::SVGElement* aElement);
 
   void ClearAnimValue(dom::SVGElement* aElement);
 

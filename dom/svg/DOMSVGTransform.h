@@ -54,7 +54,7 @@ class DOMSVGTransform final : public nsWrapperCache {
   /**
    * Ctor for creating an unowned copy. Used with Clone().
    */
-  explicit DOMSVGTransform(const SVGTransform& aMatrix);
+  explicit DOMSVGTransform(const SVGTransform& aTransform);
 
   /**
    * Create an unowned copy of an owned transform. The caller is responsible for
