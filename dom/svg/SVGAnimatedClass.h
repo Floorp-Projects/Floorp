@@ -34,7 +34,7 @@ class SVGAnimatedClass {
   void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const;
 
   void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
-  void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
+  void GetAnimValue(nsAString& aResult, const SVGElement* aSVGElement) const;
   bool IsAnimated() const { return !!mAnimVal; }
 
   already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(

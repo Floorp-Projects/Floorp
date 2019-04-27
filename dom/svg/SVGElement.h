@@ -578,8 +578,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   static SVGEnumMapping sSVGUnitTypesMap[];
 
  private:
-  void UnsetAttrInternal(int32_t aNameSpaceID, nsAtom* aAttribute,
-                         bool aNotify);
+  void UnsetAttrInternal(int32_t aNameSpaceID, nsAtom* aName, bool aNotify);
 
   SVGAnimatedClass mClassAttribute;
   nsAutoPtr<nsAttrValue> mClassAnimAttr;
