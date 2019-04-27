@@ -1388,6 +1388,13 @@ void nsLayoutUtils::RemoveDisplayPort(nsIContent* aContent) {
   aContent->DeleteProperty(nsGkAtoms::DisplayPortMargins);
 }
 
+void nsLayoutUtils::NotifyPaintSkipTransaction(ViewID aScrollId) {
+  if (nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
+    scrollFrame->NotifyApzTransaction();
+  }
+}
+
 nsContainerFrame* nsLayoutUtils::LastContinuationWithChild(
     nsContainerFrame* aFrame) {
   MOZ_ASSERT(aFrame, "NULL frame pointer");

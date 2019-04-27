@@ -616,10 +616,12 @@ void Layer::ApplyPendingUpdatesForThisTransaction() {
 
   for (size_t i = 0; i < mScrollMetadata.Length(); i++) {
     FrameMetrics& fm = mScrollMetadata[i].GetMetrics();
+    ScrollableLayerGuid::ViewID scrollId = fm.GetScrollId();
     Maybe<ScrollUpdateInfo> update =
-        Manager()->GetPendingScrollInfoUpdate(fm.GetScrollId());
+        Manager()->GetPendingScrollInfoUpdate(scrollId);
     if (update) {
       fm.UpdatePendingScrollInfo(update.value());
+      nsLayoutUtils::NotifyPaintSkipTransaction(scrollId);
       Mutated();
     }
   }
