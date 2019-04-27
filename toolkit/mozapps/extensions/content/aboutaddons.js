@@ -32,6 +32,67 @@ const PRIVATE_BROWSING_PERM_NAME = "internal:privateBrowsingAllowed";
 const PRIVATE_BROWSING_PERMS =
   {permissions: [PRIVATE_BROWSING_PERM_NAME], origins: []};
 
+const AddonCardListenerHandler = {
+  ADDON_EVENTS: new Set([
+    "onDisabled", "onEnabled", "onInstalled", "onPropertyChanged",
+    "onUninstalled",
+  ]),
+  MANAGER_EVENTS: new Set(["onUpdateModeChanged"]),
+  INSTALL_EVENTS: new Set(["onNewInstall", "onInstallEnded"]),
+
+  delegateAddonEvent(name, args) {
+    this.delegateEvent(name, args[0], args);
+  },
+
+  delegateInstallEvent(name, args) {
+    let addon = args[0].addon || args[0].existingAddon;
+    if (!addon) {
+      return;
+    }
+    this.delegateEvent(name, addon, args);
+  },
+
+  delegateEvent(name, addon, args) {
+    let cards;
+    if (this.MANAGER_EVENTS.has(name)) {
+      cards = document.querySelectorAll("addon-card");
+    } else {
+      let card = document.querySelector(`addon-card[addon-id="${addon.id}"]`);
+      cards = card ? [card] : [];
+    }
+    for (let card of cards) {
+      try {
+        if (name in card) {
+          card[name](...args);
+        }
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  },
+
+  startup() {
+    for (let name of this.ADDON_EVENTS) {
+      this[name] = (...args) => this.delegateAddonEvent(name, args);
+    }
+    for (let name of this.INSTALL_EVENTS) {
+      this[name] = (...args) => this.delegateInstallEvent(name, args);
+    }
+    for (let name of this.MANAGER_EVENTS) {
+      this[name] = (...args) => this.delegateEvent(name, null, args);
+    }
+    AddonManager.addAddonListener(this);
+    AddonManager.addInstallListener(this);
+    AddonManager.addManagerListener(this);
+  },
+
+  shutdown() {
+    AddonManager.removeAddonListener(this);
+    AddonManager.removeInstallListener(this);
+    AddonManager.removeManagerListener(this);
+  },
+};
+
 async function isAllowedInPrivateBrowsing(addon) {
   // Use the Promise directly so this function stays sync for the other case.
   let perms = await ExtensionPermissions.get(addon.id);
@@ -624,8 +685,6 @@ class AddonCard extends HTMLElement {
   }
 
   registerListeners() {
-    AddonManager.addAddonListener(this);
-    AddonManager.addInstallListener(this);
     this.addEventListener("change", this);
     this.addEventListener("click", this);
     this.addEventListener("dblclick", this);
@@ -633,8 +692,6 @@ class AddonCard extends HTMLElement {
   }
 
   removeListeners() {
-    AddonManager.removeAddonListener(this);
-    AddonManager.removeInstallListener(this);
     this.removeEventListener("change", this);
     this.removeEventListener("click", this);
     this.removeEventListener("dblclick", this);
@@ -642,29 +699,23 @@ class AddonCard extends HTMLElement {
   }
 
   onNewInstall(install) {
-    if (install.existingAddon && install.existingAddon.id == this.addon.id) {
-      this.updateInstall = install;
-      this.sendEvent("update-found");
-    }
+    this.updateInstall = install;
+    this.sendEvent("update-found");
   }
 
   onInstallEnded(install) {
-    if (install.addon.id == this.addon.id) {
-      this.setAddon(install.addon);
-    }
+    this.setAddon(install.addon);
   }
 
   onDisabled(addon) {
-    if (!this.reloading && addon.id == this.addon.id) {
+    if (!this.reloading) {
       this.update();
     }
   }
 
   onEnabled(addon) {
-    if (addon.id == this.addon.id) {
-      this.reloading = false;
-      this.update();
-    }
+    this.reloading = false;
+    this.update();
   }
 
   onUpdateModeChanged() {
@@ -672,8 +723,7 @@ class AddonCard extends HTMLElement {
   }
 
   onPropertyChanged(addon, changed) {
-    if (this.details && addon.id == this.addon.id &&
-        changed.includes("applyBackgroundUpdates")) {
+    if (this.details && changed.includes("applyBackgroundUpdates")) {
       this.details.update();
     }
   }
@@ -1125,10 +1175,12 @@ let root = null;
 function initialize(opts) {
   root = document.getElementById("main");
   loadViewFn = opts.loadViewFn;
+  AddonCardListenerHandler.startup();
   window.addEventListener("unload", () => {
     // Clear out the root node so the disconnectedCallback will trigger
     // properly and all of the custom elements can cleanup.
     root.textContent = "";
+    AddonCardListenerHandler.shutdown();
   }, {once: true});
 }
 
