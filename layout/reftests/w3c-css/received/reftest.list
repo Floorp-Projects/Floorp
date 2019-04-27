@@ -102,7 +102,7 @@ fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-10
 fuzzy(0-225,0-920) == css-multicol/multicol-gap-large-002.xht css-multicol/multicol-gap-large-002-ref.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) == css-multicol/multicol-gap-negative-001.xht css-multicol/multicol-gap-002-ref.xht
 == css-multicol/multicol-height-001.xht css-multicol/multicol-height-001-ref.xht
-fails == css-multicol/multicol-height-block-child-001.xht css-multicol/multicol-height-block-child-001-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-height-block-child-001.xht css-multicol/multicol-height-block-child-001-ref.xht
 fuzzy(0-255,0-3762) == css-multicol/multicol-inherit-001.xht css-multicol/multicol-inherit-001-ref.xht
 fuzzy(0-135,0-1893) == css-multicol/multicol-inherit-002.xht css-multicol/multicol-inherit-002-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-inherit-003.xht css-multicol/multicol-inherit-3-ref.xht
@@ -150,19 +150,19 @@ skip == css-multicol/multicol-rule-shorthand-2.xht css-multicol/multicol-rule-sh
 fuzzy(0-106,0-354) == css-multicol/multicol-rule-solid-000.xht css-multicol/multicol-rule-solid-000-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-rule-stacking-001.xht css-multicol/multicol-rule-stacking-ref.xht
 fails-if(!OSX||webrender) random-if(OSX) == css-multicol/multicol-shorthand-001.xht css-multicol/multicol-rule-ref.xht
-fails == css-multicol/multicol-span-000.xht css-multicol/multicol-span-000-ref.xht
-fails == css-multicol/multicol-span-all-001.xht css-multicol/multicol-span-all-001-ref.xht
-fails == css-multicol/multicol-span-all-002.xht css-multicol/multicol-span-all-002-ref.xht
-fails == css-multicol/multicol-span-all-003.xht css-multicol/multicol-count-002-ref.xht
-fails == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
-fails == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht
-fails == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht
-fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht
-fails == css-multicol/multicol-span-all-margin-nested-001.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
-fails == css-multicol/multicol-span-all-margin-nested-002.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
-fails == css-multicol/multicol-span-all-margin-nested-firstchild-001.xht css-multicol/multicol-span-all-margin-nested-firstchild-ref.xht
-fails == css-multicol/multicol-span-float-001.xht css-multicol/multicol-span-float-001-ref.xht
-fails == css-multicol/multicol-span-none-001.xht css-multicol/multicol-span-none-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-000.xht css-multicol/multicol-span-000-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-001.xht css-multicol/multicol-span-all-001-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-002.xht css-multicol/multicol-span-all-002-ref.xht
+pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) == css-multicol/multicol-span-all-003.xht css-multicol/multicol-count-002-ref.xht
+pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) == css-multicol/multicol-span-all-block-sibling-003.xht css-multicol/multicol-span-all-block-sibling-3-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-001.xht css-multicol/multicol-span-all-margin-001-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-002.xht css-multicol/multicol-span-all-margin-002-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-bottom-001.xht css-multicol/multicol-span-all-margin-bottom-001-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-nested-001.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-all-margin-nested-002.xht css-multicol/multicol-span-all-margin-nested-001-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-all-margin-nested-firstchild-001.xht css-multicol/multicol-span-all-margin-nested-firstchild-ref.xht
+pref(layout.css.column-span.enabled,true) == css-multicol/multicol-span-float-001.xht css-multicol/multicol-span-float-001-ref.xht
+pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-span-none-001.xht css-multicol/multicol-span-none-001-ref.xht
 fails == css-multicol/multicol-table-cell-001.xht css-multicol/multicol-table-cell-001-ref.xht
 fails == css-multicol/multicol-table-cell-height-001.xht css-multicol/multicol-table-cell-height-001-ref.xht
 fails == css-multicol/multicol-table-cell-height-002.xht css-multicol/multicol-table-cell-height-001-ref.xht
