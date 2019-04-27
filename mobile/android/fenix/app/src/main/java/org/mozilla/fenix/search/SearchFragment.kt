@@ -257,8 +257,10 @@ class SearchFragment : Fragment(), BackHandler {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
 
-                if (context!!.isPermissionGranted(Manifest.permission.CAMERA)) {
-                    permissionDidUpdate = true
+                context?.let { context: Context ->
+                    if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
+                        permissionDidUpdate = true
+                    }
                 }
             }
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
