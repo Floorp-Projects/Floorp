@@ -352,6 +352,10 @@ expand-addon-button = More Options
 addons-enabled-heading = Enabled
 addons-disabled-heading = Disabled
 
+ask-to-activate-button = Ask to Activate
+always-activate-button = Always Activate
+never-activate-button = Never Activate
+
 addon-detail-author-label = Author
 addon-detail-version-label = Version
 addon-detail-last-updated-label = Last Updated

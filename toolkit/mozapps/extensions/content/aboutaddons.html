@@ -14,6 +14,26 @@
     <div id="main">
     </div>
 
+    <template name="addon-options">
+      <panel-list>
+        <panel-item action="toggle-disabled"></panel-item>
+        <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+        <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+      </panel-list>
+    </template>
+
+    <template name="plugin-options">
+      <panel-list>
+        <panel-item data-l10n-id="ask-to-activate-button" action="ask-to-activate"></panel-item>
+        <panel-item data-l10n-id="always-activate-button" action="always-activate"></panel-item>
+        <panel-item data-l10n-id="never-activate-button" action="never-activate"></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+      </panel-list>
+    </template>
+
     <template name="card">
       <div class="card addon">
         <img class="card-heading-image">
@@ -30,13 +50,6 @@
           </div>
           <div class="more-options-menu">
             <button class="more-options-button ghost-button" action="more-options"></button>
-            <panel-list>
-              <panel-item action="toggle-disabled"></panel-item>
-              <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
-              <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
-              <panel-item-separator></panel-item-separator>
-              <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
-            </panel-list>
           </div>
         </div>
       </div>
