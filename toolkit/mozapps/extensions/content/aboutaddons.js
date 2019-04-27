@@ -22,8 +22,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
+  "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
   enable: AddonManager.PERM_CAN_ENABLE,
+  "always-activate": AddonManager.PERM_CAN_ENABLE,
   disable: AddonManager.PERM_CAN_DISABLE,
+  "never-activate": AddonManager.PERM_CAN_DISABLE,
   uninstall: AddonManager.PERM_CAN_UNINSTALL,
   upgrade: AddonManager.PERM_CAN_UPGRADE,
 };
@@ -320,9 +323,103 @@ class PanelItem extends HTMLElement {
     super();
     this.attachShadow({mode: "open"});
     this.shadowRoot.appendChild(importTemplate("panel-item"));
+    this.button = this.shadowRoot.querySelector("button");
+  }
+
+  get disabled() {
+    return this.button.hasAttribute("disabled");
+  }
+
+  set disabled(val) {
+    if (val) {
+      this.button.setAttribute("disabled", "");
+    } else {
+      this.button.removeAttribute("disabled");
+    }
+  }
+
+  get checked() {
+    return this.hasAttribute("checked");
+  }
+
+  set checked(val) {
+    if (val) {
+      this.setAttribute("checked", "");
+    } else {
+      this.removeAttribute("checked");
+    }
   }
 }
 customElements.define("panel-item", PanelItem);
+
+class AddonOptions extends HTMLElement {
+  connectedCallback() {
+    if (this.children.length == 0) {
+      this.render();
+    }
+  }
+
+  render() {
+    this.appendChild(importTemplate("addon-options"));
+  }
+
+  update(card, addon, updateInstall) {
+    // Hide remove button if not allowed.
+    let removeButton = this.querySelector('[action="remove"]');
+    removeButton.hidden = !hasPermission(addon, "uninstall");
+
+    // Set disable label and hide if not allowed.
+    let toggleDisabledButton = this.querySelector('[action="toggle-disabled"]');
+    let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
+    document.l10n.setAttributes(
+      toggleDisabledButton, `${toggleDisabledAction}-addon-button`);
+    toggleDisabledButton.hidden = !hasPermission(addon, toggleDisabledAction);
+
+    // Set the update button and badge the menu if there's an update.
+    this.querySelector('[action="install-update"]').hidden = !updateInstall;
+
+    // The separator isn't needed when expanded (nothing under it) or when the
+    // remove and disable buttons are hidden (nothing above it).
+    let separator = this.querySelector("panel-item-separator");
+    separator.hidden = card.expanded ||
+      removeButton.hidden && toggleDisabledButton.hidden;
+
+    // Hide the expand button if we're expanded.
+    this.querySelector('[action="expand"]').hidden = card.expanded;
+  }
+}
+customElements.define("addon-options", AddonOptions);
+
+class PluginOptions extends HTMLElement {
+  connectedCallback() {
+    if (this.children.length == 0) {
+      this.render();
+    }
+  }
+
+  render() {
+    this.appendChild(importTemplate("plugin-options"));
+  }
+
+  update(card, addon) {
+    let actions = [{
+      action: "ask-to-activate",
+      userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
+    }, {
+      action: "always-activate",
+      userDisabled: false,
+    }, {
+      action: "never-activate",
+      userDisabled: true,
+    }];
+    for (let {action, userDisabled} of actions) {
+      let el = this.querySelector(`[action="${action}"]`);
+      el.checked = addon.userDisabled === userDisabled;
+      el.disabled = !(el.checked || hasPermission(addon, action));
+    }
+  }
+}
+customElements.define("plugin-options", PluginOptions);
 
 class AddonDetails extends HTMLElement {
   connectedCallback() {
@@ -589,6 +686,17 @@ class AddonCard extends HTMLElement {
             this.querySelector('[action="more-options"]').focus();
           }
           break;
+        case "ask-to-activate":
+          if (hasPermission(addon, "ask-to-activate")) {
+            addon.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
+          }
+          break;
+        case "always-activate":
+          addon.userDisabled = false;
+          break;
+        case "never-activate":
+          addon.userDisabled = true;
+          break;
         case "update-check":
           let listener = {
             onUpdateAvailable(addon, install) {
@@ -725,6 +833,8 @@ class AddonCard extends HTMLElement {
   onPropertyChanged(addon, changed) {
     if (this.details && changed.includes("applyBackgroundUpdates")) {
       this.details.update();
+    } else if (addon.type == "plugin" && changed.includes("userDisabled")) {
+      this.update();
     }
   }
 
@@ -767,6 +877,13 @@ class AddonCard extends HTMLElement {
     }
     name.title = `${addon.name} ${addon.version}`;
 
+    // Set the items in the more options menu.
+    this.options.update(this, addon, this.updateInstall);
+
+    // Badge the more options menu if there's an update.
+    card.querySelector(".more-options-button")
+      .classList.toggle("more-options-button-badged", !!this.updateInstall);
+
     // Set the private browsing badge visibility.
     if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
         addon.incognito != "not_allowed") {
@@ -779,32 +896,6 @@ class AddonCard extends HTMLElement {
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
-
-    // Hide remove button if not allowed.
-    let removeButton = card.querySelector('[action="remove"]');
-    removeButton.hidden = !hasPermission(addon, "uninstall");
-
-    // Set disable label and hide if not allowed.
-    let disableButton = card.querySelector('[action="toggle-disabled"]');
-    let disableAction = addon.userDisabled ? "enable" : "disable";
-    document.l10n.setAttributes(
-      disableButton, `${disableAction}-addon-button`);
-    disableButton.hidden = !hasPermission(addon, disableAction);
-
-    // Set the update button and badge the menu if there's an update.
-    card.querySelector('[action="install-update"]').hidden =
-      !this.updateInstall;
-    card.querySelector(".more-options-button")
-      .classList.toggle("more-options-button-badged", !!this.updateInstall);
-
-    // The separator isn't needed when expanded (nothing under it) or when the
-    // remove and disable buttons are hidden (nothing above it).
-    let separator = card.querySelector("panel-item-separator");
-    separator.hidden = this.expanded ||
-      removeButton.hidden && disableButton.hidden;
-
-    // Hide the expand button if we're expanded.
-    card.querySelector('[action="expand"]').hidden = this.expanded;
 
     // Update the details if they're shown.
     if (this.details) {
@@ -832,6 +923,11 @@ class AddonCard extends HTMLElement {
 
     this.card = importTemplate("card").firstElementChild;
     this.setAttribute("addon-id", addon.id);
+
+    let panelType = addon.type == "plugin" ? "plugin-options" : "addon-options";
+    this.options = document.createElement(panelType);
+    this.options.render();
+    this.card.querySelector(".more-options-menu").appendChild(this.options);
 
     // Set the contents.
     this.update();
