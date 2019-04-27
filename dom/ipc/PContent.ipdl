@@ -102,6 +102,9 @@ using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext
 using mozilla::dom::BrowsingContextFieldEpochs from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 using base::SharedMemoryHandle from "base/shared_memory.h";
+using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using mozilla::fontlist::Pointer from "SharedFontList.h";
+using gfxSparseBitSet from "gfxFontUtils.h";
 
 union ChromeRegistryItem
 {
@@ -1122,6 +1125,148 @@ parent:
      */
     sync GetGraphicsDeviceInitData()
         returns (ContentDeviceData aData);
+
+    /**
+     * A shared font list (see gfx/thebes/SharedFontList.*) contains a list
+     * of shared-memory blocks that are used to store all the font list data.
+     * The font list created in the parent process is the only one that can
+     * create or store objects into the shared memory; content processes font
+     * lists have read-only access to it.
+     *
+     * To minimize the cost of record allocations, the shared font list
+     * bump-allocates new objects that it adds to the shared memory blocks
+     * (i.e. the records stored in the shared memory blocks are only ever
+     * appended, and never freed except when the entire font list is
+     * reconstructed).
+     *
+     * When initially created by the parent process, the font list may contain
+     * nothing except a header, and the list of the system's installed font
+     * family names. Additional data about the families (styled faces available
+     * and character coverage) is appended to the font list during the session
+     * as a given font is considered for use, because loading all data for all
+     * installed fonts during startup is too expensive/slow.
+     *
+     * During content process launch, a content process's first step in
+     * gaining access to the font list is to call GetFontListShmBlock,
+     * passing index zero in order to get access to the first block, which
+     * contains the font list header and the list of font-family records
+     * (which may be virtually all uninitialized at this time, containing
+     * nothing but the family names). Once a content process determines a
+     * font-family name it wants to use (e.g. from a CSS font-family list, or
+     * from preferences), if that Family record has not yet been initialized,
+     * it will call InitializeFamily (below) to have the parent process
+     * populate Face records in the shared memory with the family's styles.
+     * The content process can then pick the face with best style match from
+     * the available faces according to the CSS font matching algorithm, load
+     * its character map, then send the map to the parent process using
+     * SetCharacterMap (so that the parent process can share the map with all
+     * processes to avoid duplication of work).
+     *
+     * At some point, as the parent process adds data to the font list, a new
+     * shared-memory block will probably be needed. At that point the parent
+     * will create a new block and append it to its share memory block list.
+     * The new Block index will start to appear in Pointer records in the
+     * shared memory, and the content process's can then fetch those other
+     * blocks using this function as needed.
+     *
+     * @param aGeneration
+     *   The font list has a Generation ID stored in its Header, and any time
+     *   the parent process needs to reinitialize the list (because of a change
+     *   in the available font repertoire) a new Generation ID is assigned.
+     *   Content processes pass the Generation of the list they're using in
+     *   all messages, so that the parent can recognize if they're out of date
+     *   and safely ignore such messages. (When the parent rebuilds the list,
+     *   it will notify all content processes, but they may still send a few
+     *   messages that relate to the obsolete list before they have processed
+     *   this notification.)
+     * @param aIndex
+     *   (Zero-based) index of the shared-memory block to be mapped.
+     *   In a typical case, there will be a handful of blocks altogether, so
+     *   each content process only needs to make this request a few times.
+     * @returns aHandle
+     *   Handle that can be used to construct a SharedMemoryBasic that maps the
+     *   requested block of memory.
+     *   If aGeneration does not match the parent's font list generation ID, or
+     *   if requesting a block that does not exist (i.e. with aIndex greater
+     *   than or equal to the number of blocks actually in existence), returns
+     *   a null handle.
+     *
+     * This is a sync message because the content process needs font data in
+     * order to perform font-matching (e.g. during reflow), and cannot continue
+     * until it has mapped the font-list memory.
+     */
+    sync GetFontListShmBlock(uint32_t aGeneration, uint32_t aIndex)
+        returns (Handle aHandle);
+
+    /**
+     * Ask the parent to initialize a given font family, so that face metadata
+     * will be available. Content processes will only call this for families
+     * where the Face data has not yet been populated, so it will generally be
+     * called no more than once per family. (It may not be needed at all, if
+     * the parent process has already initialized the families that content
+     * wants to use.)
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aFamilyIndex
+     *   The 0-based index of the Family within the font-list that a content
+     *   process needs to use.
+     *
+     * This is a sync message because the content process cannot complete its
+     * font-matching until the family is fully populated with Face records.
+     * If we make it async, content processes will reflow using fallbacks,
+     * and then have to reflow again once all the font information needed
+     * becomes available.
+     */
+    sync InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex);
+
+    /**
+     * Record the character map of a given Face in the font list.
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aFacePtr
+     *   Font-list shared-memory "pointer" to the Face record to be updated.
+     *   A Pointer is a record of a shared-memory block index and an offset
+     *   within that block, which each process that maps the block can convert
+     *   into a real pointer in its address space.
+     * @param aMap
+     *   The character coverage map of the face. (This will be stored as a
+     *   SharedBitSet record within the shared font list, and the Face record
+     *   will be updated to reference it.)
+     *
+     * This is initially a sync message because the content process needs the
+     * Face record to be updated with its character-map reference before it can
+     * proceed with its font-matching work.
+     *
+     * NOTE: a later patch in the series makes this async.
+     */
+    sync SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
+
+    /**
+     * Ask the parent to try and complete the InitOtherFamilyNames task, because
+     * we're trying to look up a localized font name. This is a sync method so that
+     * the update will be available before the child continues reflow; however, it
+     * is possible the task will have timed-out in the parent and not actually
+     * completed during this call.
+     *
+     * @param aGeneration
+     *   Font-list generation, so requests relating to an obsolete list can be
+     *   ignored (see comments for GetFontListShmBlock).
+     * @param aDefer
+     *   Parameter aDeferOtherFamilyNamesLoading to be passed to
+     *   gfxPlatformFontList::InitOtherFamilyNames, to determine whether name
+     *   loading should be deferred to a background task or run immediately.
+     * @param aLoaded
+     *   Returns whether the font name loading process has completed.
+     *
+     * TODO: This is currently a sync message but can probably be made async,
+     * at the cost of an increased chance of some testcases failing because
+     * they depend on lazily-loaded font names.
+     */
+    sync InitOtherFamilyNames(uint32_t aGeneration, bool aDefer) returns (bool aLoaded);
 
     async CreateWindow(nullable PBrowser aThisTab,
                        PBrowser aNewTab,

@@ -1105,6 +1105,21 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(
       ContentDeviceData* aOut);
 
+  mozilla::ipc::IPCResult RecvGetFontListShmBlock(
+      const uint32_t& aGeneration, const uint32_t& aIndex,
+      mozilla::ipc::SharedMemoryBasic::Handle* aOut);
+
+  mozilla::ipc::IPCResult RecvInitializeFamily(const uint32_t& aGeneration,
+                                               const uint32_t& aFamilyIndex);
+
+  mozilla::ipc::IPCResult RecvSetCharacterMap(
+      const uint32_t& aGeneration, const mozilla::fontlist::Pointer& aFacePtr,
+      const gfxSparseBitSet& aMap);
+
+  mozilla::ipc::IPCResult RecvInitOtherFamilyNames(const uint32_t& aGeneration,
+                                                   const bool& aDefer,
+                                                   bool* aLoaded);
+
   mozilla::ipc::IPCResult RecvNotifyBenchmarkResult(const nsString& aCodecName,
                                                     const uint32_t& aDecodeFPS);
 

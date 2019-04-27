@@ -53,6 +53,7 @@ EXPORTS += [
     'gfxTypes.h',
     'gfxUserFontSet.h',
     'gfxUtils.h',
+    'SharedFontList.h',
     'SoftwareVsyncSource.h',
     'VsyncSource.h',
 ]
@@ -211,6 +212,7 @@ UNIFIED_SOURCES += [
     'gfxTextRun.cpp',
     'gfxUserFontSet.cpp',
     'gfxUtils.cpp',
+    'SharedFontList.cpp',
     'SoftwareVsyncSource.cpp',
     'VsyncSource.cpp',
 ]
