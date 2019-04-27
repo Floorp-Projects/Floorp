@@ -6414,8 +6414,11 @@ class ShellSourceHook : public SourceHook {
  public:
   ShellSourceHook(JSContext* cx, JSFunction& fun) : fun(cx, &fun) {}
 
-  bool load(JSContext* cx, const char* filename, char16_t** src,
-            size_t* length) override {
+  bool load(JSContext* cx, const char* filename, char16_t** twoByteSource,
+            char** utf8Source, size_t* length) override {
+    MOZ_ASSERT((twoByteSource != nullptr) != (utf8Source != nullptr),
+               "must be called requesting only one of UTF-8 or UTF-16 source");
+
     RootedString str(cx, JS_NewStringCopyZ(cx, filename));
     if (!str) {
       return false;
@@ -6433,18 +6436,36 @@ class ShellSourceHook : public SourceHook {
       return false;
     }
 
-    *length = JS_GetStringLength(str);
-    *src = cx->pod_malloc<char16_t>(*length);
-    if (!*src) {
+    Rooted<JSFlatString*> flat(cx, str->ensureFlat(cx));
+    if (!flat) {
       return false;
     }
 
-    JSLinearString* linear = str->ensureLinear(cx);
-    if (!linear) {
-      return false;
+    if (twoByteSource) {
+      *length = JS_GetStringLength(flat);
+
+      *twoByteSource = cx->pod_malloc<char16_t>(*length);
+      if (!*twoByteSource) {
+        return false;
+      }
+
+      CopyChars(*twoByteSource, *flat);
+    } else {
+      MOZ_ASSERT(utf8Source != nullptr);
+
+      *length = JS::GetDeflatedUTF8StringLength(flat);
+
+      *utf8Source = cx->pod_malloc<char>(*length);
+      if (!*utf8Source) {
+        return false;
+      }
+
+      size_t dstLen = *length;
+      JS::DeflateStringToUTF8Buffer(
+          flat, mozilla::RangedPtr<char>(*utf8Source, *length), &dstLen);
+      MOZ_ASSERT(dstLen == *length);
     }
 
-    CopyChars(*src, *linear);
     return true;
   }
 };
