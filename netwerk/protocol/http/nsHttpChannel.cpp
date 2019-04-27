@@ -336,6 +336,7 @@ nsHttpChannel::nsHttpChannel()
       mAsyncResumePending(0),
       mHasBeenIsolatedChecked(0),
       mIsIsolated(0),
+      mTopWindowOriginComputed(0),
       mPushedStream(nullptr),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -3905,6 +3906,31 @@ bool nsHttpChannel::IsIsolated() {
   return mIsIsolated;
 }
 
+const nsCString &nsHttpChannel::GetTopWindowOrigin() {
+  if (mTopWindowOriginComputed) {
+    return mTopWindowOrigin;
+  }
+
+  nsCOMPtr<nsIURI> topWindowURI;
+  nsresult rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
+  bool isDocument = false;
+  if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
+      isDocument) {
+    // For top-level documents, use the document channel's origin to compute
+    // the unique storage space identifier instead of the top Window URI.
+    rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
+    NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
+  }
+
+  rv = nsContentUtils::GetASCIIOrigin(topWindowURI ? topWindowURI : mURI,
+                                      mTopWindowOrigin);
+  NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
+
+  mTopWindowOriginComputed = true;
+
+  return mTopWindowOrigin;
+}
+
 nsresult nsHttpChannel::OpenCacheEntryInternal(
     bool isHttps, nsIApplicationCache *applicationCache,
     bool allowApplicationCache) {
@@ -4025,24 +4051,13 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   }
 
   if (IsIsolated()) {
-    nsCOMPtr<nsIURI> topWindowURI;
-    rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-    bool isDocument = false;
-    if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
-        isDocument) {
-      // For top-level documents, use the document channel's origin to compute
-      // the unique storage space identifier instead of the top Window URI.
-      rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
-      NS_ENSURE_SUCCESS(rv, rv);
+    auto &topWindowOrigin = GetTopWindowOrigin();
+    if (topWindowOrigin.IsEmpty()) {
+      return NS_ERROR_FAILURE;
     }
 
-    nsAutoString topWindowOrigin;
-    rv = nsContentUtils::GetUTFOrigin(topWindowURI ? topWindowURI : mURI,
-                                      topWindowOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     extension.Append("-unique:");
-    extension.Append(NS_ConvertUTF16toUTF8(topWindowOrigin));
+    extension.Append(topWindowOrigin);
   }
 
   mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;

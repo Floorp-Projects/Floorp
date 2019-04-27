@@ -548,6 +548,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   bool IsIsolated();
 
+  const nsCString &GetTopWindowOrigin();
+
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
   // Start an internal redirect to a new InterceptedHttpChannel which will
@@ -727,6 +729,13 @@ class nsHttpChannel final : public HttpBaseChannel,
   // anti-tracking purposes.  Can never ben true unless mHasBeenIsolatedChecked
   // is true.
   uint32_t mIsIsolated : 1;
+
+  // True only when we have computed the value of the top window origin.
+  uint32_t mTopWindowOriginComputed : 1;
+
+  // The origin of the top window, only valid when mTopWindowOriginComputed is
+  // true.
+  nsCString mTopWindowOrigin;
 
   nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
