@@ -8,19 +8,12 @@ const React = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { getContrastRatioScore } = require("./ColorContrastAccessibility");
 const { isFiltered } = require("../utils/audit");
 const { FILTERS } = require("../constants");
-const { accessibility: { AUDIT_TYPE, ColorContrastScores } } =
-  require("devtools/shared/constants");
+const { accessibility: { AUDIT_TYPE, SCORES } } = require("devtools/shared/constants");
 
-function validateContrast({ error, value, min, isLargeText }) {
-  if (error) {
-    return false;
-  }
-
-  const score = getContrastRatioScore(value || min, isLargeText);
-  return score === ColorContrastScores.FAIL;
+function validateContrast({ error, score }) {
+  return !error && score === SCORES.FAIL;
 }
 
 const AUDIT_TYPE_TO_FILTER = {
