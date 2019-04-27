@@ -19,11 +19,13 @@
 #include "mozilla/SVGContextPaint.h"
 #include "mozilla/TextUtils.h"
 #include "nsComputedDOMStyle.h"
+#include "nsContainerFrame.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsIScriptError.h"
 #include "nsLayoutUtils.h"
 #include "nsMathUtils.h"
+#include "nsSVGUtils.h"
 #include "nsWhitespaceTokenizer.h"
 #include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -466,15 +468,37 @@ SVGViewportElement* SVGContentUtils::GetNearestViewportElement(
 
 static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
                                   bool aHaveRecursed) {
-  gfxMatrix matrix = aElement->PrependLocalTransformsTo(
-      gfxMatrix(), aHaveRecursed ? eAllTransforms : eUserSpaceToParent);
+  auto getLocalTransformHelper =
+      [](SVGElement const* e, bool shouldIncludeChildToUserSpace) -> gfxMatrix {
+    gfxMatrix ret;
+
+    if (auto* f = e->GetPrimaryFrame()) {
+      ret = nsSVGUtils::GetTransformMatrixInUserSpace(f);
+    } else {
+      // FIXME: Ideally we should also return the correct matrix
+      // for display:none, but currently transform related code relies
+      // heavily on the present of a frame.
+      // For now we just fall back to |PrependLocalTransformsTo| which
+      // doesn't account for CSS transform.
+      ret = e->PrependLocalTransformsTo({}, eUserSpaceToParent);
+    }
+
+    if (shouldIncludeChildToUserSpace) {
+      ret = e->PrependLocalTransformsTo({}, eChildToUserSpace) * ret;
+    }
+
+    return ret;
+  };
+
+  gfxMatrix matrix = getLocalTransformHelper(aElement, aHaveRecursed);
+
   SVGElement* element = aElement;
   nsIContent* ancestor = aElement->GetFlattenedTreeParent();
 
   while (ancestor && ancestor->IsSVGElement() &&
          !ancestor->IsSVGElement(nsGkAtoms::foreignObject)) {
     element = static_cast<SVGElement*>(ancestor);
-    matrix *= element->PrependLocalTransformsTo(gfxMatrix());  // i.e. *A*ppend
+    matrix *= getLocalTransformHelper(element, true);
     if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
       if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
           !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
@@ -501,7 +525,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     // transforms in this case since that's what we've been doing for
     // a while, and it keeps us consistent with WebKit and Opera (if not
     // really with the ambiguous spec).
-    matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
+    matrix = getLocalTransformHelper(aElement, true);
   }
 
   if (auto* f = element->GetPrimaryFrame()) {

@@ -118,7 +118,7 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
-      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) * m;
+      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * m;
     }
 
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);

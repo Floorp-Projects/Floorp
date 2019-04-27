@@ -156,11 +156,9 @@ function run() {
     var sheeturl = "data:text/css," + escape(sheet);
     var link = "<link rel='stylesheet' href='" + sheeturl + "'>";
     var htmldoc = "<!DOCTYPE HTML>" + link + link  + "<body>";
-    var docurl = "data:text/html," + escape(htmldoc);
-    post_clone_test(docurl, function() {
-      var wrappedFrame = SpecialPowers.wrap(iframe);
-      var clonedoc = wrappedFrame.contentDocument;
-      var clonewin = wrappedFrame.contentWindow;
+    post_clone_test(htmldoc, function() {
+      var clonedoc = iframe.contentDocument;
+      var clonewin = iframe.contentWindow;
       var links = clonedoc.getElementsByTagName("link");
       // cause a clone
       var clonedsheet = links[1].sheet;
@@ -891,9 +889,9 @@ function change_state(func)
   posted_items.push({state: func});
 }
 
-function post_clone_test(docurl, testfunc)
+function post_clone_test(srcdoc, testfunc)
 {
-  posted_items.push({docurl: docurl, testfunc: testfunc});
+  posted_items.push({srcdoc, testfunc});
 }
 
 function handle_posted_items()
@@ -910,9 +908,9 @@ function handle_posted_items()
     return;
   }
 
-  var docurl = posted_items[0].docurl;
+  var srcdoc = posted_items[0].srcdoc;
   iframe.onload = handle_iframe_onload;
-  iframe.src = docurl;
+  iframe.srcdoc = srcdoc;
 }
 
 function handle_iframe_onload(event)

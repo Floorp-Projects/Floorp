@@ -79,8 +79,12 @@ AccessibilityView.prototype = {
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_HIGHLIGHTED);
   },
 
-  async selectNodeAccessible(walker, node) {
+  async selectNodeAccessible(walker, node, supports) {
     let accessible = await walker.getAccessibleFor(node);
+    if (accessible && supports.hydration) {
+      await accessible.hydrate();
+    }
+
     // If node does not have an accessible object, try to find node's child text node and
     // try to retrieve an accessible object for that child instead. This is the best
     // effort approach until there's accessibility API to retrieve accessible object at
@@ -90,7 +94,13 @@ AccessibilityView.prototype = {
       for (const child of children) {
         if (child.nodeType === nodeConstants.TEXT_NODE) {
           accessible = await walker.getAccessibleFor(child);
-          if (accessible && accessible.indexInParent >= 0) {
+          // indexInParent property is only available with additional request
+          // for data (hydration) about the accessible object.
+          if (accessible && supports.hydration) {
+            await accessible.hydrate();
+          }
+
+          if (accessible.indexInParent >= 0) {
             break;
           }
         }

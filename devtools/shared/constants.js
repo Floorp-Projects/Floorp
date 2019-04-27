@@ -17,7 +17,7 @@ exports.accessibility = {
   },
   // Constants associated with WCAG guidelines score system:
   // failing -> AA -> AAA;
-  ColorContrastScores: {
+  SCORES: {
     FAIL: "fail",
     AA: "AA",
     AAA: "AAA",

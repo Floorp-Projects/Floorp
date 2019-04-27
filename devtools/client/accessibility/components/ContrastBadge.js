@@ -9,8 +9,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { L10N } = require("../utils/l10n");
 
-const { getContrastRatioScore } = require("./ColorContrastAccessibility");
-const { accessibility: { ColorContrastScores } } = require("devtools/shared/constants");
+const { accessibility: { SCORES } } = require("devtools/shared/constants");
 
 loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
 
@@ -26,21 +25,18 @@ class ContrastBadge extends Component {
   static get propTypes() {
     return {
       error: PropTypes.string,
-      isLargeText: PropTypes.bool.isRequired,
-      value: PropTypes.number,
-      min: PropTypes.number,
+      score: PropTypes.string,
       walker: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { error, value, min, isLargeText, walker } = this.props;
+    const { error, score, walker } = this.props;
     if (error) {
       return null;
     }
 
-    const score = getContrastRatioScore(value || min, isLargeText);
-    if (score !== ColorContrastScores.FAIL) {
+    if (score !== SCORES.FAIL) {
       return null;
     }
 

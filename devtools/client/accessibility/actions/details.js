@@ -17,5 +17,6 @@ exports.updateDetails = (domWalker, accessible, supports) =>
     domWalker.getNodeFromActor(accessible.actorID, ["rawAccessible", "DOMNode"]),
     supports.relations ? accessible.getRelations() : [],
     supports.audit ? accessible.audit() : {},
+    supports.hydration ? accessible.hydrate() : null,
   ]).then(response => dispatch({ accessible, type: UPDATE_DETAILS, response }))
     .catch(error => dispatch({ accessible, type: UPDATE_DETAILS, error }));

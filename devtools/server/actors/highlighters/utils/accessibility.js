@@ -9,7 +9,7 @@ const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layou
 const { moveInfobar, createNode } = require("./markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
 
-const { accessibility: { ColorContrastScores } } = require("devtools/shared/constants");
+const { accessibility: { SCORES } } = require("devtools/shared/constants");
 
 const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
 loader.lazyRequireGetter(this, "LocalizationHelper", "devtools/shared/l10n", true);
@@ -527,11 +527,10 @@ class ContrastRatio extends AuditReport {
     });
   }
 
-  _fillAndStyleContrastValue(el, { value, isLargeText, color, backgroundColor }) {
+  _fillAndStyleContrastValue(el, { value, className, color, backgroundColor }) {
     value = value.toFixed(2);
-    const style = getContrastRatioScoreStyle(value, isLargeText);
     this.setTextContent(el, value);
-    el.classList.add(style);
+    el.classList.add(className);
     el.setAttribute("style",
       `--accessibility-highlighter-contrast-ratio-color: rgba(${color});` +
       `--accessibility-highlighter-contrast-ratio-bg: rgba(${backgroundColor});`);
@@ -551,7 +550,7 @@ class ContrastRatio extends AuditReport {
     for (const key of ["label", "min", "max", "error", "separator"]) {
       const el = els[key] = this.getElement(`contrast-ratio-${key}`);
       if (["min", "max"].includes(key)) {
-        Object.values(ColorContrastScores).forEach(
+        Object.values(SCORES).forEach(
           className => el.classList.remove(className));
         this.setTextContent(el, "");
       }
@@ -574,18 +573,20 @@ class ContrastRatio extends AuditReport {
     }
 
     if (contrastRatio.value) {
-      const { value, color, backgroundColor } = contrastRatio;
+      const { value, color, score, backgroundColor } = contrastRatio;
       this._fillAndStyleContrastValue(els.min,
-        { value, isLargeText, color, backgroundColor });
+        { value, className: score, color, backgroundColor });
       return true;
     }
 
-    const { min, max, color, backgroundColorMin, backgroundColorMax } = contrastRatio;
+    const {
+      min, max, color, backgroundColorMin, backgroundColorMax, scoreMin, scoreMax,
+    } = contrastRatio;
     this._fillAndStyleContrastValue(els.min,
-      { value: min, isLargeText, color, backgroundColor: backgroundColorMin });
+      { value: min, className: scoreMin, color, backgroundColor: backgroundColorMin });
     els.separator.removeAttribute("hidden");
     this._fillAndStyleContrastValue(els.max,
-      { value: max, isLargeText, color, backgroundColor: backgroundColorMax });
+      { value: max, className: scoreMax, color, backgroundColor: backgroundColorMax });
 
     return true;
   }
@@ -644,29 +645,6 @@ function getBounds(win, { x, y, w, h, zoom }) {
   const height = bottom - top;
 
   return { left, right, top, bottom, width, height };
-}
-
-/**
- * Get contrast ratio score styling to be applied on the element that renders the contrast
- * ratio.
- * @param  {Number} ratio
- *         Value of the contrast ratio for a given accessible object.
- * @param  {Boolean} isLargeText
- *         True if the accessible object contains large text.
- * @return {String}
- *         CSS class that represents the appropriate contrast ratio score styling.
- */
-function getContrastRatioScoreStyle(ratio, isLargeText) {
-  const levels = isLargeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
-
-  let style = ColorContrastScores.FAIL;
-  if (ratio >= levels.AAA) {
-    style = ColorContrastScores.AAA;
-  } else if (ratio >= levels.AA) {
-    style = ColorContrastScores.AA;
-  }
-
-  return style;
 }
 
 exports.MAX_STRING_LENGTH = MAX_STRING_LENGTH;

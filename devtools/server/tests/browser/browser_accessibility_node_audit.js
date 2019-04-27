@@ -37,6 +37,7 @@ add_task(async function() {
       "color": [0, 0, 0, 1],
       "backgroundColor": [255, 255, 255, 1],
       "isLargeText": true,
+      score: "AAA",
     },
   });
 

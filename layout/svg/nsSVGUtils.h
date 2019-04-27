@@ -597,11 +597,13 @@ class nsSVGUtils {
   }
 
   /**
-   * A simple wrapper of nsLayoutUtils::GetTransformToAncestor to avoid
-   * boilerplate code for changing unit and matrix format.
+   * It is a replacement of
+   * SVGElement::PrependLocalTransformsTo(eUserSpaceToParent).
+   * If no CSS transform is involved, they should behave exactly the same;
+   * if there are CSS transforms, this one will take them into account
+   * while SVGElement::PrependLocalTransformsTo won't.
    */
-  static gfxMatrix GetTransformMatrixInUserSpace(const nsIFrame* aFrame,
-                                                 const nsIFrame* aAncestor);
+  static gfxMatrix GetTransformMatrixInUserSpace(const nsIFrame* aFrame);
 };
 
 #endif

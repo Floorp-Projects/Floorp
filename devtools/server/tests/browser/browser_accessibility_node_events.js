@@ -24,6 +24,14 @@ add_task(async function() {
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
     role: "pushbutton",
+    childCount: 1,
+  });
+
+  await accessibleFront.hydrate();
+
+  checkA11yFront(accessibleFront, {
+    name: "Accessible Button",
+    role: "pushbutton",
     value: "",
     description: "Accessibility Test",
     keyboardShortcut: modifiers + "b",
@@ -92,6 +100,7 @@ add_task(async function() {
       content.document.getElementById("button").setAttribute("aria-live", "polite")));
 
   info("Value change event");
+  await accessibleSliderFront.hydrate();
   checkA11yFront(accessibleSliderFront, { value: "5" });
   await emitA11yEvent(accessibleSliderFront, "value-change",
     () => checkA11yFront(accessibleSliderFront, { value: "6" }),
@@ -101,6 +110,7 @@ add_task(async function() {
   info("Reorder event");
   is(accessibleSliderFront.childCount, 1, "Slider has only 1 child");
   const [firstChild ] = await accessibleSliderFront.children();
+  await firstChild.hydrate();
   is(firstChild.indexInParent, 0, "Slider's first child has correct index in parent");
   await emitA11yEvent(accessibleSliderFront, "reorder",
     childCount => {

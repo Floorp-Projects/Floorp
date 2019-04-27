@@ -37,6 +37,8 @@
       iframe.src = `data:text/html,<html><body>hey</body></html>`;
       iframe.onload = () => resolve(iframe.contentDocument);
       document.body.appendChild(iframe);
+      document.body.offsetTop; // We rely on the a11y tree being created
+                               // already, and it's created off layout.
     });
   }
 
@@ -118,7 +120,7 @@
         ];
         break;
       default:
-        ok(false, "Unexpected amount of states");
+        ok(false, "Unexpected amount of states: " + JSON.stringify(anode.states));
     }
     if (states) {
       for (let i = 0; i < states.length; i++) {

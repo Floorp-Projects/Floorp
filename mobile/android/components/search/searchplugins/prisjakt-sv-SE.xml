@@ -9,6 +9,8 @@
 <Url type="application/x-suggestions+json" method="GET" template="https://www.prisjakt.nu/plugins/opensearch/suggestions.php">
   <Param name="search" value="{searchTerms}"/>
 </Url>
-<Url type="text/html" method="GET" template="https://m.prisjakt.nu/search/{searchTerms}"/>
+<Url type="text/html" method="GET" template="https://www.prisjakt.nu/search">
+  <Param name="search" value="{searchTerms}"/>
+</Url>
 <Url type="application/x-moz-tabletsearch" method="GET" template="https://www.prisjakt.nu/#rparams=ss={searchTerms}"/>
 </SearchPlugin>
