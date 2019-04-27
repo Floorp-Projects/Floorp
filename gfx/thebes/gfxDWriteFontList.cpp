@@ -1120,6 +1120,9 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
   // (either localizations or legacy subfamily names)
   for (unsigned i = 0; i < aFamily->NumFaces(); ++i) {
     auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
+    if (!face) {
+      continue;
+    }
     RefPtr<IDWriteFont> dwFont;
     if (FAILED(family->GetFont(face->mIndex, getter_AddRefs(dwFont)))) {
       continue;
