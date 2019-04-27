@@ -154,7 +154,8 @@ AccessibilityPanel.prototype = {
         "devtools.accessibility.select_accessible_for_node", reason, 1);
     }
 
-    this.postContentMessage("selectNodeAccessible", this.walker, nodeFront);
+    this.postContentMessage("selectNodeAccessible", this.walker, nodeFront,
+      this.supports);
   },
 
   highlightAccessible(accessibleFront) {

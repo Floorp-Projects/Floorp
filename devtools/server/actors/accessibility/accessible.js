@@ -366,16 +366,29 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       actor: this.actorID,
       role: this.role,
       name: this.name,
+      childCount: this.childCount,
+      checks: this._lastAudit,
+    };
+  },
+
+  /**
+   * Provide additional (full) information about the accessible object that is
+   * otherwise missing from the form.
+   *
+   * @return {Object}
+   *         Object that contains accessible object information such as states,
+   *         actions, attributes, etc.
+   */
+  hydrate() {
+    return {
       value: this.value,
       description: this.description,
       keyboardShortcut: this.keyboardShortcut,
-      childCount: this.childCount,
       domNodeType: this.domNodeType,
       indexInParent: this.indexInParent,
       states: this.states,
       actions: this.actions,
       attributes: this.attributes,
-      checks: this._lastAudit,
     };
   },
 
