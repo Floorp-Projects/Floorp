@@ -1106,6 +1106,7 @@ class AddonInstall {
       // Inherits the installTelemetryInfo on updates (so that the source of the original
       // installation telemetry data is being preserved across the extension updates).
       this.installTelemetryInfo = this.existingAddon.installTelemetryInfo;
+      this.existingAddon._updateInstall = this;
     }
 
     this.file = null;
@@ -1128,6 +1129,13 @@ class AddonInstall {
         this.addon._install = null;
       } else {
         Cu.reportError(new Error("AddonInstall mismatch"));
+      }
+    }
+    if (this.existingAddon && this.existingAddon._updateInstall) {
+      if (this.existingAddon._updateInstall === this) {
+        this.existingAddon._updateInstall = null;
+      } else {
+        Cu.reportError(new Error("AddonInstall existingAddon mismatch"));
       }
     }
   }

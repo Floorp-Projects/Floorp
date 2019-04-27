@@ -245,6 +245,7 @@ class AddonInternal {
     this._hidden = false;
     this.installTelemetryInfo = null;
     this.rootURI = null;
+    this._updateInstall = null;
 
     this.inDatabase = false;
 
@@ -870,6 +871,11 @@ AddonWrapper = class {
     if (!("_install" in addon) || !addon._install)
       return null;
     return addon._install.wrapper;
+  }
+
+  get updateInstall() {
+    let addon = addonFor(this);
+    return addon._updateInstall ? addon._updateInstall.wrapper : null;
   }
 
   get pendingUpgrade() {
