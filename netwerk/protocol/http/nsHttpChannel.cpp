@@ -3898,8 +3898,9 @@ bool nsHttpChannel::IsIsolated() {
   if (mHasBeenIsolatedChecked) {
     return mIsIsolated;
   }
-  mIsIsolated = !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-      this, mURI, nullptr);
+  mIsIsolated = IsThirdPartyTrackingResource() &&
+                !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+                    this, mURI, nullptr);
   mHasBeenIsolatedChecked = true;
   return mIsIsolated;
 }
@@ -4023,7 +4024,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     extension.Append("TRR");
   }
 
-  if (IsThirdPartyTrackingResource() && IsIsolated()) {
+  if (IsIsolated()) {
     nsCOMPtr<nsIURI> topWindowURI;
     rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
     bool isDocument = false;
