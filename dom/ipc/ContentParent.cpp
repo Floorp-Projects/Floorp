@@ -1247,6 +1247,12 @@ void ContentParent::BroadcastStringBundle(
   }
 }
 
+void ContentParent::BroadcastFontListChanged() {
+  for (auto* cp : AllProcesses(eLive)) {
+    Unused << cp->SendFontListChanged();
+  }
+}
+
 const nsAString& ContentParent::GetRemoteType() const { return mRemoteType; }
 
 void ContentParent::Init() {
@@ -4459,6 +4465,12 @@ void ContentParent::NotifyUpdatedFonts() {
 
   for (auto* cp : AllProcesses(eLive)) {
     Unused << cp->SendUpdateFontList(fontList);
+  }
+}
+
+void ContentParent::NotifyRebuildFontList() {
+  for (auto* cp : AllProcesses(eLive)) {
+    Unused << cp->SendRebuildFontList();
   }
 }
 

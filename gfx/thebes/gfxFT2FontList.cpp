@@ -1507,15 +1507,15 @@ searchDone:
 
 FontFamily gfxFT2FontList::GetDefaultFontForPlatform(
     const gfxFontStyle* aStyle) {
-  gfxFontFamily* ff = nullptr;
+  FontFamily ff;
 #if defined(MOZ_WIDGET_ANDROID)
   ff = FindFamily(NS_LITERAL_CSTRING("Roboto"));
-  if (!ff) {
+  if (ff.IsNull()) {
     ff = FindFamily(NS_LITERAL_CSTRING("Droid Sans"));
   }
 #endif
   /* TODO: what about Qt or other platforms that may use this? */
-  return FontFamily(ff);
+  return ff;
 }
 
 gfxFontEntry* gfxFT2FontList::MakePlatformFont(const nsACString& aFontName,

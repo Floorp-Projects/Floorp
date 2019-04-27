@@ -1788,8 +1788,9 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
 }
 
 bool gfxFcPlatformFontList::FindAndAddFamilies(
-    const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
-    FindFamiliesFlags aFlags, gfxFontStyle* aStyle, gfxFloat aDevToCssSize) {
+    StyleGenericFontFamily aGeneric, const nsACString& aFamily,
+    nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
+    gfxFontStyle* aStyle, gfxFloat aDevToCssSize) {
   nsAutoCString familyName(aFamily);
   ToLowerCase(familyName);
   nsAtom* language = (aStyle ? aStyle->language.get() : nullptr);
@@ -1868,7 +1869,8 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
       break;
     }
     gfxPlatformFontList::FindAndAddFamilies(
-        nsDependentCString(ToCharPtr(substName)), &cachedFamilies, aFlags);
+        aGeneric, nsDependentCString(ToCharPtr(substName)), &cachedFamilies,
+        aFlags);
   }
 
   // Cache the resulting list, so we don't have to do this again.
@@ -1973,7 +1975,7 @@ bool gfxFcPlatformFontList::GetStandardFamilyName(const nsCString& aFontName,
 }
 
 void gfxFcPlatformFontList::AddGenericFonts(
-    mozilla::StyleGenericFontFamily aGenericType, nsAtom* aLanguage,
+    StyleGenericFontFamily aGenericType, nsAtom* aLanguage,
     nsTArray<FamilyAndGeneric>& aFamilyList) {
   bool usePrefFontList = false;
 
@@ -2131,7 +2133,8 @@ gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
       nsAutoCString mappedGenericName(ToCharPtr(mappedGeneric));
       AutoTArray<FamilyAndGeneric, 1> genericFamilies;
       if (gfxPlatformFontList::FindAndAddFamilies(
-              mappedGenericName, &genericFamilies, FindFamiliesFlags(0))) {
+              StyleGenericFontFamily::None, mappedGenericName, &genericFamilies,
+              FindFamiliesFlags(0))) {
         MOZ_ASSERT(genericFamilies.Length() == 1, "expected a single family");
         if (!prefFonts->Contains(genericFamilies[0].mFamily)) {
           prefFonts->AppendElement(genericFamilies[0].mFamily);

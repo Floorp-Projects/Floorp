@@ -250,6 +250,7 @@
 #include "GMPServiceChild.h"
 #include "GfxInfoBase.h"
 #include "gfxPlatform.h"
+#include "gfxPlatformFontList.h"
 #include "nscore.h"  // for NS_FREE_PERMANENT_DATA
 #include "VRManagerChild.h"
 #include "private/pprio.h"
@@ -2460,6 +2461,12 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateSharedData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvFontListChanged() {
+  gfxPlatformFontList::PlatformFontList()->FontListChanged();
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvGeolocationUpdate(
     nsIDOMGeoPosition* aPosition) {
   RefPtr<nsGeolocationService> gs =
@@ -2492,6 +2499,11 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateDictionaryList(
 mozilla::ipc::IPCResult ContentChild::RecvUpdateFontList(
     InfallibleTArray<SystemFontListEntry>&& aFontList) {
   mFontList = std::move(aFontList);
+  gfxPlatform::GetPlatform()->UpdateFontList();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvRebuildFontList() {
   gfxPlatform::GetPlatform()->UpdateFontList();
   return IPC_OK();
 }

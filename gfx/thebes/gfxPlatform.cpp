@@ -1715,11 +1715,17 @@ nsAutoCString gfxPlatform::GetDefaultFontName(
   // this one variable:
   nsAutoCString result;
 
-  gfxFontFamily* fontFamily =
+  FamilyAndGeneric fam =
       gfxPlatformFontList::PlatformFontList()->GetDefaultFontFamily(
           aLangGroup, aGenericFamily);
-  if (fontFamily) {
-    fontFamily->LocalizedName(result);
+  if (fam.mFamily.mIsShared) {
+    if (fam.mFamily.mShared) {
+      fontlist::FontList* fontList =
+          gfxPlatformFontList::PlatformFontList()->SharedFontList();
+      result = fam.mFamily.mShared->DisplayName().AsString(fontList);
+    }
+  } else if (fam.mFamily.mUnshared) {
+    fam.mFamily.mUnshared->LocalizedName(result);
   }  // (else, leave 'result' empty)
 
   return result;

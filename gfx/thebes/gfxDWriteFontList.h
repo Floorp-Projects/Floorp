@@ -382,13 +382,11 @@ class gfxDWriteFontList : public gfxPlatformFontList {
                                          const uint8_t* aFontData,
                                          uint32_t aLength);
 
-  bool GetStandardFamilyName(const nsCString& aFontName,
-                             nsACString& aFamilyName);
-
   IDWriteGdiInterop* GetGDIInterop() { return mGDIInterop; }
   bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
-  bool FindAndAddFamilies(const nsACString& aFamily,
+  bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
+                          const nsACString& aFamily,
                           nsTArray<FamilyAndGeneric>* aOutput,
                           FindFamiliesFlags aFlags,
                           gfxFontStyle* aStyle = nullptr,
