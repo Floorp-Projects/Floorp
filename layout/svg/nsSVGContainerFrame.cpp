@@ -261,7 +261,7 @@ void nsSVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
         continue;  // nothing to paint for kid
       }
 
-      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) * m;
+      m = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * m;
       if (m.IsSingular()) {
         continue;
       }
@@ -392,8 +392,7 @@ SVGBBox nsSVGDisplayContainerFrame::GetBBoxContribution(
       if (content->IsSVGElement()) {
         transform = static_cast<SVGElement*>(content)->PrependLocalTransformsTo(
                         {}, eChildToUserSpace) *
-                    nsSVGUtils::GetTransformMatrixInUserSpace(kid, this) *
-                    transform;
+                    nsSVGUtils::GetTransformMatrixInUserSpace(kid) * transform;
       }
       // We need to include zero width/height vertical/horizontal lines, so we
       // have to use UnionEdges.

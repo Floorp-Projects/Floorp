@@ -361,9 +361,7 @@ already_AddRefed<SourceSurface> nsSVGPatternFrame::PaintPattern(
       nsSVGDisplayableFrame *SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(nsSVGDisplayableFrame::TRANSFORM_CHANGED);
-        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid,
-                                                       patternWithChildren) *
-             tm;
+        tm = nsSVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
       }
 
       nsSVGUtils::PaintFrameWithEffects(kid, *ctx, tm, aImgParams);
