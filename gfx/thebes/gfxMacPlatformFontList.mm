@@ -1849,6 +1849,9 @@ void gfxMacPlatformFontList::ReadFaceNamesForFamily(fontlist::Family* aFamily,
   const fontlist::Pointer* facePtrs = aFamily->Faces(list);
   for (uint32_t i = 0, n = aFamily->NumFaces(); i < n; i++) {
     auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
+    if (!face) {
+      continue;
+    }
     nsAutoCString name(face->mDescriptor.AsString(list));
     // We create a temporary MacOSFontEntry just to read family names from the
     // 'name' table in the font resource. The style attributes here are ignored
