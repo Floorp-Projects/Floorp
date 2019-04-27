@@ -85,7 +85,8 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 
   form(form) {
     this.actorID = form.actor;
-    this._form = form;
+    this._form = this._form || {};
+    Object.assign(this._form, form);
   }
 
   nameChange(name, parent, walker) {
@@ -144,6 +145,12 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 
   audited(checks) {
     this._form.checks = checks;
+  }
+
+  hydrate() {
+    return super.hydrate().then(properties => {
+      Object.assign(this._form, properties);
+    });
   }
 }
 

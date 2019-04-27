@@ -102,6 +102,12 @@ const accessibleSpec = generateActorSpec({
         relations: RetVal("array:accessibleRelation"),
       },
     },
+    hydrate: {
+      request: {},
+      response: {
+        properties: RetVal("json"),
+      },
+    },
     snapshot: {
       request: {},
       response: {
