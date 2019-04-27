@@ -294,10 +294,10 @@ nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
 
 /* virtual */
 LogicalSize nsSVGOuterSVGFrame::ComputeSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorder, const LogicalSize& aPadding,
-    ComputeSizeFlags aFlags) {
+    gfxContext* aRenderingContext, WritingMode aWritingMode,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const LogicalSize& aBorder,
+    const LogicalSize& aPadding, ComputeSizeFlags aFlags) {
   if (IsRootOfImage() || IsRootOfReplacedElementSubDoc()) {
     // The embedding element has sized itself using the CSS replaced element
     // sizing rules, using our intrinsic dimensions as necessary. The SVG spec
@@ -314,13 +314,13 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
     // We're the root of the outermost browsing context, so we need to scale
     // cbSize by the full-zoom so that SVGs with percentage width/height zoom:
 
-    NS_ASSERTION(aCBSize.ISize(aWM) != NS_AUTOHEIGHT &&
-                     aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
+    NS_ASSERTION(aCBSize.ISize(aWritingMode) != NS_AUTOHEIGHT &&
+                     aCBSize.BSize(aWritingMode) != NS_AUTOHEIGHT,
                  "root should not have auto-width/height containing block");
 
     if (!IsContainingWindowElementOfType(nullptr, nsGkAtoms::iframe)) {
-      cbSize.ISize(aWM) *= PresContext()->GetFullZoom();
-      cbSize.BSize(aWM) *= PresContext()->GetFullZoom();
+      cbSize.ISize(aWritingMode) *= PresContext()->GetFullZoom();
+      cbSize.BSize(aWritingMode) *= PresContext()->GetFullZoom();
     }
 
     // We also need to honour the width and height attributes' default values
@@ -337,18 +337,20 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
       MOZ_ASSERT(!intrinsicSize.width,
                  "GetIntrinsicSize should have reported no intrinsic width");
       float val = width.GetAnimValInSpecifiedUnits() / 100.0f;
-      intrinsicSize.width.emplace(std::max(val, 0.0f) * cbSize.Width(aWM));
+      intrinsicSize.width.emplace(std::max(val, 0.0f) *
+                                  cbSize.Width(aWritingMode));
     }
 
     const SVGAnimatedLength& height =
         content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
-    NS_ASSERTION(aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
+    NS_ASSERTION(aCBSize.BSize(aWritingMode) != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
     if (height.IsPercentage()) {
       MOZ_ASSERT(!intrinsicSize.height,
                  "GetIntrinsicSize should have reported no intrinsic height");
       float val = height.GetAnimValInSpecifiedUnits() / 100.0f;
-      intrinsicSize.height.emplace(std::max(val, 0.0f) * cbSize.Height(aWM));
+      intrinsicSize.height.emplace(std::max(val, 0.0f) *
+                                   cbSize.Height(aWritingMode));
     }
     MOZ_ASSERT(intrinsicSize.height && intrinsicSize.width,
                "We should have just handled the only situation where"
@@ -356,8 +358,8 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
   }
 
   return ComputeSizeWithIntrinsicDimensions(
-      aRenderingContext, aWM, intrinsicSize, GetIntrinsicRatio(), cbSize,
-      aMargin, aBorder, aPadding, aFlags);
+      aRenderingContext, aWritingMode, intrinsicSize, GetIntrinsicRatio(),
+      cbSize, aMargin, aBorder, aPadding, aFlags);
 }
 
 void nsSVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
@@ -556,7 +558,8 @@ class nsDisplayOuterSVG final : public nsDisplayItem {
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*>* aOutFrames) override;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     gfxContext* aContext) override;
 
   virtual void ComputeInvalidationRegion(
       nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,

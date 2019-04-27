@@ -176,7 +176,7 @@ class nsSVGUtils {
    * being filtered, this function simply returns aUnfilteredRect.
    */
   static nsRect GetPostFilterVisualOverflowRect(nsIFrame* aFrame,
-                                                const nsRect& aUnfilteredRect);
+                                                const nsRect& aPreFilterRect);
 
   /**
    * Schedules an update of the frame's bounds (which will in turn invalidate
@@ -235,7 +235,8 @@ class nsSVGUtils {
   */
   static float UserSpace(SVGElement* aSVGElement,
                          const SVGAnimatedLength* aLength);
-  static float UserSpace(nsIFrame* aFrame, const SVGAnimatedLength* aLength);
+  static float UserSpace(nsIFrame* aNonSVGContext,
+                         const SVGAnimatedLength* aLength);
   static float UserSpace(const mozilla::dom::UserSpaceMetrics& aMetrics,
                          const SVGAnimatedLength* aLength);
 

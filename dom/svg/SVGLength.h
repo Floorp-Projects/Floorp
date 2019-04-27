@@ -53,7 +53,7 @@ class SVGLength {
    * This method returns true, unless there was a parse failure, in which
    * case it returns false (and the length is left unchanged).
    */
-  bool SetValueFromString(const nsAString &aValue);
+  bool SetValueFromString(const nsAString &aString);
 
   /**
    * This will usually return a valid, finite number. There is one exception
