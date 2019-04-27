@@ -299,7 +299,8 @@ class gfxGDIFontList : public gfxPlatformFontList {
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
-  bool FindAndAddFamilies(const nsACString& aFamily,
+  bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
+                          const nsACString& aFamily,
                           nsTArray<FamilyAndGeneric>* aOutput,
                           FindFamiliesFlags aFlags,
                           gfxFontStyle* aStyle = nullptr,

@@ -6,20 +6,24 @@
 #ifndef GFX_USER_FONT_SET_H
 #define GFX_USER_FONT_SET_H
 
-#include "gfxFont.h"
+#include "gfxFontEntry.h"
 #include "gfxFontFamilyList.h"
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsIURI.h"
+#include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
+#include "nsIRunnable.h"
 #include "nsIScriptError.h"
+#include "nsIURI.h"
 #include "nsURIHashKey.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "gfxFontConstants.h"
+
+class gfxFont;
 
 namespace mozilla {
 class PostTraversalTask;
