@@ -97,7 +97,7 @@ async function doAllTests() {
 
 // This test takes a really long time, especially in debug builds, as it is
 // constant starting and stopping processes, and opens a new window ~144 times.
-requestLongerTimeout(25);
+requestLongerTimeout(30);
 
 add_task(async function prepare() {
   await SpecialPowers.pushPrefEnv({set: [["dom.window.open.noreferrer.enabled", true]]});
