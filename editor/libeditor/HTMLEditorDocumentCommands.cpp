@@ -7,24 +7,15 @@
 
 #include "mozilla/HTMLEditor.h"          // for HTMLEditor
 #include "mozilla/TextEditor.h"          // for TextEditor
-#include "nsCommandParams.h"             // for nsCommandParams
-#include "nsCOMPtr.h"                    // for nsCOMPtr, do_QueryInterface, etc
-#include "nsCRT.h"                       // for nsCRT
-#include "nsDebug.h"                     // for NS_ENSURE_ARG_POINTER, etc
-#include "nsError.h"                     // for NS_ERROR_INVALID_ARG, etc
-#include "nsIDocShell.h"                 // for nsIDocShell
 #include "mozilla/dom/Document.h"        // for Document
+#include "nsCommandParams.h"             // for nsCommandParams
+#include "nsIDocShell.h"                 // for nsIDocShell
 #include "nsIEditingSession.h"           // for nsIEditingSession, etc
-#include "nsIEditor.h"                   // for nsIEditor
-#include "nsIPlaintextEditor.h"          // for nsIPlaintextEditor, etc
 #include "nsISelectionController.h"      // for nsISelectionController
 #include "nsISupportsImpl.h"             // for nsPresContext::Release
 #include "nsISupportsUtils.h"            // for NS_IF_ADDREF
 #include "nsIURI.h"                      // for nsIURI
 #include "nsPresContext.h"               // for nsPresContext
-#include "nscore.h"                      // for NS_IMETHODIMP, nsresult, etc
-
-class nsISupports;
 
 // defines
 #define STATE_ENABLED "state_enabled"
@@ -219,14 +210,9 @@ nsresult SetDocumentStateCommand::DoCommandParams(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
-                                               nsICommandParams* aParams,
-                                               nsISupports* refCon) {
-  if (NS_WARN_IF(!aParams) || NS_WARN_IF(!refCon)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+nsresult SetDocumentStateCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
   // If the result is set to STATE_ALL as bool value, queryCommandState()
   // returns the bool value.
   // If the result is set to STATE_ATTRIBUTE as CString value,
@@ -234,32 +220,25 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   // Otherwise, ignored.
 
   // The base editor owns most state info
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (NS_WARN_IF(!editor)) {
+  if (NS_WARN_IF(!aTextEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-
-  nsCommandParams* params = aParams->AsCommandParams();
-
   // Always get the enabled state
-  bool outCmdEnabled = false;
-  IsCommandEnabled(aCommandName, refCon, &outCmdEnabled);
-  nsresult rv = params->SetBool(STATE_ENABLED, outCmdEnabled);
+  nsresult rv = aParams.SetBool(STATE_ENABLED,
+                                IsCommandEnabled(aCommandName, aTextEditor));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // cmd_setDocumentModified is an internal command.
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentModified")) {
+  if (!strcmp(aCommandName, "cmd_setDocumentModified")) {
     bool modified;
-    rv = textEditor->GetDocumentModified(&modified);
+    rv = aTextEditor->GetDocumentModified(&modified);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     // XXX Nobody refers this result due to wrong type.
-    rv = params->SetBool(STATE_ATTRIBUTE, modified);
+    rv = aParams.SetBool(STATE_ATTRIBUTE, modified);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -267,9 +246,9 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   }
 
   // cmd_setDocumentReadOnly is a Gecko specific command, "contentReadOnly".
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly")) {
+  if (!strcmp(aCommandName, "cmd_setDocumentReadOnly")) {
     // XXX Nobody refers this result due to wrong type.
-    rv = params->SetBool(STATE_ATTRIBUTE, textEditor->IsReadonly());
+    rv = aParams.SetBool(STATE_ATTRIBUTE, aTextEditor->IsReadonly());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -277,12 +256,12 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   }
 
   // cmd_setDocumentUseCSS is a common command, "styleWithCSS".
-  if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS")) {
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_setDocumentUseCSS")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
-    rv = params->SetBool(STATE_ALL, htmlEditor->IsCSSEnabled());
+    rv = aParams.SetBool(STATE_ALL, htmlEditor->IsCSSEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -290,15 +269,15 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   }
 
   // cmd_insertBrOnReturn is a Gecko specific command, "insertBrOrReturn".
-  if (!nsCRT::strcmp(aCommandName, "cmd_insertBrOnReturn")) {
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_insertBrOnReturn")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
     bool createPOnReturn;
     htmlEditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
     // XXX Nobody refers this result due to wrong type.
-    rv = params->SetBool(STATE_ATTRIBUTE, !createPOnReturn);
+    rv = aParams.SetBool(STATE_ATTRIBUTE, !createPOnReturn);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -307,8 +286,8 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
   // cmd_defaultParagraphSeparator is a common command,
   // "defaultParagraphSeparator".
-  if (!nsCRT::strcmp(aCommandName, "cmd_defaultParagraphSeparator")) {
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_defaultParagraphSeparator")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -316,21 +295,21 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
     switch (htmlEditor->GetDefaultParagraphSeparator()) {
       case ParagraphSeparator::div: {
         DebugOnly<nsresult> rv =
-            params->SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("div"));
+            aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("div"));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to set command params to return \"div\"");
         return NS_OK;
       }
       case ParagraphSeparator::p: {
         DebugOnly<nsresult> rv =
-            params->SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("p"));
+            aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("p"));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to set command params to return \"p\"");
         return NS_OK;
       }
       case ParagraphSeparator::br: {
         DebugOnly<nsresult> rv =
-            params->SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("br"));
+            aParams.SetCString(STATE_ATTRIBUTE, NS_LITERAL_CSTRING("br"));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "Failed to set command params to return \"br\"");
         return NS_OK;
@@ -343,15 +322,15 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
   // cmd_enableObjectResizing is a Gecko specific command,
   // "enableObjectResizing".
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_enableObjectResizing")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
     // We returned the result as STATE_ATTRIBUTE with bool value 60 or earlier.
     // So, the result was ignored by both nsHTMLDocument::QueryCommandValue()
     // and nsHTMLDocument::QueryCommandState().
-    rv = params->SetBool(STATE_ALL, htmlEditor->IsObjectResizerEnabled());
+    rv = aParams.SetBool(STATE_ALL, htmlEditor->IsObjectResizerEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -360,15 +339,15 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
   // cmd_enableInlineTableEditing is a Gecko specific command,
   // "enableInlineTableEditing".
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableInlineTableEditing")) {
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_enableInlineTableEditing")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
     // We returned the result as STATE_ATTRIBUTE with bool value 60 or earlier.
     // So, the result was ignored by both nsHTMLDocument::QueryCommandValue()
     // and nsHTMLDocument::QueryCommandState().
-    rv = params->SetBool(STATE_ALL, htmlEditor->IsInlineTableEditorEnabled());
+    rv = aParams.SetBool(STATE_ALL, htmlEditor->IsInlineTableEditorEnabled());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -377,13 +356,12 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
 
   // cmd_enableAbsolutePositionEditing is a Gecko specific command,
   // "cenableAbsolutePositionEditing".
-  if (!nsCRT::strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
-    NS_ENSURE_ARG_POINTER(aParams);
-    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+  if (!strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
+    HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     if (NS_WARN_IF(!htmlEditor)) {
       return NS_ERROR_INVALID_ARG;
     }
-    return params->SetBool(STATE_ALL,
+    return aParams.SetBool(STATE_ALL,
                            htmlEditor->IsAbsolutePositionEditorEnabled());
   }
 
@@ -446,62 +424,45 @@ nsresult DocumentStateCommand::DoCommandParams(const char* aCommandName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-DocumentStateCommand::GetCommandStateParams(const char* aCommandName,
-                                            nsICommandParams* aParams,
-                                            nsISupports* refCon) {
-  if (NS_WARN_IF(!aParams) || NS_WARN_IF(!aCommandName)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCommandParams* params = aParams->AsCommandParams();
-
-  if (!nsCRT::strcmp(aCommandName, "obs_documentCreated")) {
+nsresult DocumentStateCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  if (!strcmp(aCommandName, "obs_documentCreated")) {
     uint32_t editorStatus = nsIEditingSession::eEditorErrorUnknown;
-
-    nsCOMPtr<nsIEditingSession> editingSession = do_QueryInterface(refCon);
-    if (editingSession) {
-      // refCon is initially set to nsIEditingSession until editor
-      //  is successfully created and source doc is loaded
-      // Embedder gets error status if this fails
-      // If called before startup is finished,
-      //    status = eEditorCreationInProgress
-      nsresult rv = editingSession->GetEditorStatus(&editorStatus);
+    if (aEditingSession) {
+      // Current context is initially set to nsIEditingSession until editor is
+      // successfully created and source doc is loaded.  Embedder gets error
+      // status if this fails.  If called before startup is finished,
+      // status will be eEditorCreationInProgress.
+      nsresult rv = aEditingSession->GetEditorStatus(&editorStatus);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else {
-      // If refCon is an editor, then everything started up OK!
-      nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-      if (editor) {
-        editorStatus = nsIEditingSession::eEditorOK;
-      }
+    } else if (aTextEditor) {
+      // If current context is an editor, then everything started up OK!
+      editorStatus = nsIEditingSession::eEditorOK;
     }
 
     // Note that if refCon is not-null, but is neither
     // an nsIEditingSession or nsIEditor, we return "eEditorErrorUnknown"
-    DebugOnly<nsresult> rv = params->SetInt(STATE_DATA, editorStatus);
+    DebugOnly<nsresult> rv = aParams.SetInt(STATE_DATA, editorStatus);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set editor status");
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aCommandName, "obs_documentLocationChanged")) {
-    nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-    if (!editor) {
+  if (!strcmp(aCommandName, "obs_documentLocationChanged")) {
+    if (!aTextEditor) {
       return NS_OK;
     }
-    TextEditor* textEditor = editor->AsTextEditor();
-    MOZ_ASSERT(textEditor);
-
-    RefPtr<Document> doc = textEditor->GetDocument();
-    if (NS_WARN_IF(!doc)) {
+    Document* document = aTextEditor->GetDocument();
+    if (NS_WARN_IF(!document)) {
       return NS_ERROR_FAILURE;
     }
-    nsIURI* uri = doc->GetDocumentURI();
+    nsIURI* uri = document->GetDocumentURI();
     if (NS_WARN_IF(!uri)) {
       return NS_ERROR_FAILURE;
     }
-    nsresult rv = params->SetISupports(STATE_DATA, uri);
+    nsresult rv = aParams.SetISupports(STATE_DATA, uri);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

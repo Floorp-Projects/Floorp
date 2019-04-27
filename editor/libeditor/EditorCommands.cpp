@@ -9,16 +9,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCommandParams.h"
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
-#include "nsDebug.h"
-#include "nsError.h"
 #include "nsIClipboard.h"
-#include "nsID.h"
-#include "mozilla/dom/Document.h"
-#include "nsIEditor.h"
+#include "nsIEditingSession.h"
 #include "nsISelectionController.h"
 #include "nsITransferable.h"
 #include "nsString.h"
@@ -87,6 +82,28 @@ EditorCommand::DoCommandParams(const char* aCommandName,
   return rv;
 }
 
+NS_IMETHODIMP
+EditorCommand::GetCommandStateParams(const char* aCommandName,
+                                     nsICommandParams* aParams,
+                                     nsISupports* aCommandRefCon) {
+  if (NS_WARN_IF(!aCommandName) || NS_WARN_IF(!aParams)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (editor) {
+    return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
+                                 editor->AsTextEditor(), nullptr);
+  }
+  nsCOMPtr<nsIEditingSession> editingSession =
+      do_QueryInterface(aCommandRefCon);
+  if (editingSession) {
+    return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
+                                 nullptr, editingSession);
+  }
+  return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
+                               nullptr, nullptr);
+}
+
 /******************************************************************************
  * mozilla::UndoCommand
  ******************************************************************************/
@@ -112,13 +129,11 @@ nsresult UndoCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-UndoCommand::GetCommandStateParams(const char* aCommandName,
-                                   nsICommandParams* aParams,
-                                   nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult UndoCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -146,13 +161,11 @@ nsresult RedoCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-RedoCommand::GetCommandStateParams(const char* aCommandName,
-                                   nsICommandParams* aParams,
-                                   nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult RedoCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -180,13 +193,11 @@ nsresult CutCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-CutCommand::GetCommandStateParams(const char* aCommandName,
-                                  nsICommandParams* aParams,
-                                  nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult CutCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -223,13 +234,11 @@ nsresult CutOrDeleteCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-CutOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
-                                          nsICommandParams* aParams,
-                                          nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult CutOrDeleteCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -257,13 +266,11 @@ nsresult CopyCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-CopyCommand::GetCommandStateParams(const char* aCommandName,
-                                   nsICommandParams* aParams,
-                                   nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult CopyCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -300,13 +307,11 @@ nsresult CopyOrDeleteCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-CopyOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
-                                           nsICommandParams* aParams,
-                                           nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult CopyOrDeleteCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -335,13 +340,11 @@ nsresult PasteCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-PasteCommand::GetCommandStateParams(const char* aCommandName,
-                                    nsICommandParams* aParams,
-                                    nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult PasteCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -390,17 +393,14 @@ nsresult PasteTransferableCommand::DoCommandParams(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
-                                                nsICommandParams* aParams,
-                                                nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (NS_WARN_IF(!editor)) {
-    return NS_ERROR_FAILURE;
+nsresult PasteTransferableCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  if (NS_WARN_IF(!aTextEditor)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsISupports> supports =
-      aParams->AsCommandParams()->GetISupports("transferable");
+  nsCOMPtr<nsISupports> supports = aParams.GetISupports("transferable");
   if (NS_WARN_IF(!supports)) {
     return NS_ERROR_FAILURE;
   }
@@ -411,11 +411,8 @@ PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-
-  return aParams->AsCommandParams()->SetBool(
-      STATE_ENABLED, textEditor->CanPasteTransferable(trans));
+  return aParams.SetBool(STATE_ENABLED,
+                         aTextEditor->CanPasteTransferable(trans));
 }
 
 /******************************************************************************
@@ -443,14 +440,11 @@ nsresult SwitchTextDirectionCommand::DoCommandParams(
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-SwitchTextDirectionCommand::GetCommandStateParams(const char* aCommandName,
-                                                  nsICommandParams* aParams,
-                                                  nsISupports* aCommandRefCon) {
-  bool canSwitchTextDirection = true;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canSwitchTextDirection);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED,
-                                             canSwitchTextDirection);
+nsresult SwitchTextDirectionCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -512,13 +506,11 @@ nsresult DeleteCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-DeleteCommand::GetCommandStateParams(const char* aCommandName,
-                                     nsICommandParams* aParams,
-                                     nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult DeleteCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -554,13 +546,11 @@ nsresult SelectAllCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-SelectAllCommand::GetCommandStateParams(const char* aCommandName,
-                                        nsICommandParams* aParams,
-                                        nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult SelectAllCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -683,13 +673,11 @@ nsresult SelectionMoveCommands::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-SelectionMoveCommands::GetCommandStateParams(const char* aCommandName,
-                                             nsICommandParams* aParams,
-                                             nsISupports* aCommandRefCon) {
-  bool canUndo;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, canUndo);
+nsresult SelectionMoveCommands::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -744,17 +732,11 @@ nsresult InsertPlaintextCommand::DoCommandParams(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InsertPlaintextCommand::GetCommandStateParams(const char* aCommandName,
-                                              nsICommandParams* aParams,
-                                              nsISupports* aCommandRefCon) {
-  if (NS_WARN_IF(!aParams)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  bool aIsEnabled = false;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
+nsresult InsertPlaintextCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -786,17 +768,11 @@ nsresult InsertParagraphCommand::DoCommandParams(
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-InsertParagraphCommand::GetCommandStateParams(const char* aCommandName,
-                                              nsICommandParams* aParams,
-                                              nsISupports* aCommandRefCon) {
-  if (NS_WARN_IF(!aParams)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  bool aIsEnabled = false;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
+nsresult InsertParagraphCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -828,17 +804,11 @@ nsresult InsertLineBreakCommand::DoCommandParams(
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-InsertLineBreakCommand::GetCommandStateParams(const char* aCommandName,
-                                              nsICommandParams* aParams,
-                                              nsISupports* aCommandRefCon) {
-  if (NS_WARN_IF(!aParams)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  bool aIsEnabled = false;
-  IsCommandEnabled(aCommandName, aCommandRefCon, &aIsEnabled);
-  return aParams->AsCommandParams()->SetBool(STATE_ENABLED, aIsEnabled);
+nsresult InsertLineBreakCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  return aParams.SetBool(STATE_ENABLED,
+                         IsCommandEnabled(aCommandName, aTextEditor));
 }
 
 /******************************************************************************
@@ -872,18 +842,14 @@ nsresult PasteQuotationCommand::DoCommandParams(const char* aCommandName,
   return DoCommand(aCommandName, aTextEditor);
 }
 
-NS_IMETHODIMP
-PasteQuotationCommand::GetCommandStateParams(const char* aCommandName,
-                                             nsICommandParams* aParams,
-                                             nsISupports* aCommandRefCon) {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
-  if (!editor) {
+nsresult PasteQuotationCommand::GetCommandStateParams(
+    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    nsIEditingSession* aEditingSession) const {
+  if (!aTextEditor) {
     return NS_OK;
   }
-  TextEditor* textEditor = editor->AsTextEditor();
-  MOZ_ASSERT(textEditor);
-  aParams->AsCommandParams()->SetBool(
-      STATE_ENABLED, textEditor->CanPaste(nsIClipboard::kGlobalClipboard));
+  aParams.SetBool(STATE_ENABLED,
+                  aTextEditor->CanPaste(nsIClipboard::kGlobalClipboard));
   return NS_OK;
 }
 
