@@ -136,7 +136,6 @@ def run_and_prefix_output(prefix, args, extra_env=None):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          stdin=sys.stdin.fileno(),
-                         cwd='/',
                          env=env)
 
     stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
