@@ -9,6 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366697
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style>
     #padsvg1 { padding-left: 27px; padding-top: 43px; }
+    #transrect1 { transform: scale(2,3); }
   </style>
 </head>
 <body>
@@ -19,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366697
 <iframe id="svg" src="getCTM-helper.svg"></iframe>
 
 <svg id="padsvg1" width="100" height="100">
-  <rect width="10" height="10" />
+  <rect id="transrect1" width="10" height="10" />
 </svg>
 
 <pre id="test">
@@ -33,6 +34,10 @@ function runTest() {
   var buggy = doc.getElementById("buggy");
   is(buggy.getCTM().e, 30, "buggy.getCTM().e");
   is(buggy.getCTM().f, 40, "buggy.getCTM().f");
+
+  var transrect1 = document.getElementById("transrect1");
+  is(transrect1.getCTM().a, 2, "transrect1.getCTM().a");
+  is(transrect1.getCTM().d, 3, "transrect1.getCTM().d");
 
   var padsvg1 = document.getElementById("padsvg1");
   is(padsvg1.getScreenCTM().e - padsvg1.getBoundingClientRect().x, 27, "padsvg1.getScreenCTM().e");
