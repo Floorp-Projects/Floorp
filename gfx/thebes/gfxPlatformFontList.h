@@ -260,6 +260,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
                        const mozilla::fontlist::Pointer& aFacePtr,
                        const gfxSparseBitSet& aMap);
 
+  void SetupFamilyCharMap(uint32_t aGeneration,
+                          const mozilla::fontlist::Pointer& aFamilyPtr);
+
   MOZ_MUST_USE bool InitializeFamily(mozilla::fontlist::Family* aFamily);
   void InitializeFamily(uint32_t aGeneration, uint32_t aFamilyIndex);
 

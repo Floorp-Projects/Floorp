@@ -1259,6 +1259,13 @@ parent:
     sync SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
 
     /**
+     * Ask the parent to set up the merged charmap for a family, to accelerate
+     * future fallback searches.
+     * aFamilyPtr may refer to an element of either the Families() or AliasFamilies().
+     */
+    async SetupFamilyCharMap(uint32_t aGeneration, Pointer aFamilyPtr);
+
+    /**
      * Ask the parent to try and complete the InitOtherFamilyNames task, because
      * we're trying to look up a localized font name. This is a sync method so that
      * the update will be available before the child continues reflow; however, it
