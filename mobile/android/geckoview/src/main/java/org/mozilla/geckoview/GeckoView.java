@@ -102,12 +102,16 @@ public class GeckoView extends FrameLayout {
         private GeckoDisplay mDisplay;
         private boolean mValid;
 
+        private int mClippingHeight;
+
         public void acquire(final GeckoDisplay display) {
             mDisplay = display;
 
             if (!mValid) {
                 return;
             }
+
+            setVerticalClipping(mClippingHeight);
 
             // Tell display there is already a surface.
             onGlobalLayout();
@@ -167,6 +171,14 @@ public class GeckoView extends FrameLayout {
 
         public boolean shouldPinOnScreen() {
             return mDisplay != null ? mDisplay.shouldPinOnScreen() : false;
+        }
+
+        public void setVerticalClipping(final int clippingHeight) {
+            mClippingHeight = clippingHeight;
+
+            if (mDisplay != null) {
+                mDisplay.setVerticalClipping(clippingHeight);
+            }
         }
 
         /**
@@ -252,6 +264,21 @@ public class GeckoView extends FrameLayout {
         ThreadUtils.assertOnUiThread();
 
         return mDisplay.shouldPinOnScreen();
+    }
+
+    /**
+     * Update the amount of vertical space that is clipped or visibly obscured in the bottom portion
+     * of the view. Tells gecko where to put bottom fixed elements so they are fully visible.
+     *
+     * Optional call. The display's visible vertical space has changed. Must be
+     * called on the application main thread.
+     *
+     * @param clippingHeight The height of the bottom clipped space in screen pixels.
+     */
+    public void setVerticalClipping(final int clippingHeight) {
+        ThreadUtils.assertOnUiThread();
+
+        mDisplay.setVerticalClipping(clippingHeight);
     }
 
     /* package */ void setActive(final boolean active) {

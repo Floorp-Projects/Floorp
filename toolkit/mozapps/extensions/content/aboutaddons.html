@@ -14,23 +14,42 @@
     <div id="main">
     </div>
 
+    <template name="addon-options">
+      <panel-list>
+        <panel-item action="toggle-disabled"></panel-item>
+        <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+        <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+      </panel-list>
+    </template>
+
+    <template name="plugin-options">
+      <panel-list>
+        <panel-item data-l10n-id="ask-to-activate-button" action="ask-to-activate"></panel-item>
+        <panel-item data-l10n-id="always-activate-button" action="always-activate"></panel-item>
+        <panel-item data-l10n-id="never-activate-button" action="never-activate"></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+      </panel-list>
+    </template>
+
     <template name="card">
       <div class="card addon">
         <img class="card-heading-image">
         <div class="addon-card-collapsed">
           <img class="card-heading-icon addon-icon">
           <div class="card-contents">
-            <span class="addon-name"></span>
+            <div class="addon-name-container">
+              <span class="addon-name"></span>
+              <div class="addon-badge addon-badge-private-browsing-allowed"
+                    data-l10n-id="addon-badge-private-browsing-allowed"
+                    hidden></div>
+            </div>
             <span class="addon-description"></span>
           </div>
           <div class="more-options-menu">
-            <button class="ghost-button" action="more-options"></button>
-            <panel-list>
-              <panel-item action="toggle-disabled"></panel-item>
-              <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
-              <panel-item-separator></panel-item-separator>
-              <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
-            </panel-list>
+            <button class="more-options-button ghost-button" action="more-options"></button>
           </div>
         </div>
       </div>
@@ -46,6 +65,40 @@
           data-l10n-id="detail-contributions-button"
           data-l10n-attrs="accesskey">
         </button>
+      </div>
+      <div class="addon-detail-row addon-detail-row-updates">
+        <label data-l10n-id="addon-detail-updates-label"></label>
+        <div>
+          <button class="button-link" data-l10n-id="addon-detail-update-check-label" action="update-check" hidden></button>
+          <label>
+            <input type="radio" name="autoupdate" value="1"/>
+            <span data-l10n-id="addon-detail-updates-radio-default"></span>
+          </label>
+          <label>
+            <input type="radio" name="autoupdate" value="2"/>
+            <span data-l10n-id="addon-detail-updates-radio-on"></span>
+          </label>
+          <label>
+            <input type="radio" name="autoupdate" value="0"/>
+            <span data-l10n-id="addon-detail-updates-radio-off"></span>
+          </label>
+        </div>
+      </div>
+      <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing">
+        <label data-l10n-id="detail-private-browsing-label"></label>
+        <div>
+          <label>
+            <input type="radio" name="private-browsing" value="1"/>
+            <span data-l10n-id="addon-detail-private-browsing-allow"></span>
+          </label>
+          <label>
+            <input type="radio" name="private-browsing" value="0"/>
+            <span data-l10n-id="addon-detail-private-browsing-disallow"></span>
+          </label>
+        </div>
+      </div>
+      <div class="addon-detail-row-help" data-l10n-id="addon-detail-private-browsing-help">
+        <a target="_blank" data-l10n-name="learn-more"></a>
       </div>
       <div class="addon-detail-row addon-detail-row-author">
         <label data-l10n-id="addon-detail-author-label"></label>

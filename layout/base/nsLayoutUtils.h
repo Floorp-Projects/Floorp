@@ -322,6 +322,18 @@ class nsLayoutUtils {
   static void RemoveDisplayPort(nsIContent* aContent);
 
   /**
+   * Notify the scroll frame with the given scroll id that its scroll offset
+   * is being sent to APZ as part of a paint-skip transaction.
+   *
+   * Normally, this notification happens during painting, after calls to
+   * ComputeScrollMetadata(). During paint-skipping that code is skipped,
+   * but it's still important for the scroll frame to be notified for
+   * correctness of relative scroll updates, so the code that sends the
+   * empty paint-skip transaction needs to call this.
+   */
+  static void NotifyPaintSkipTransaction(ViewID aScrollId);
+
+  /**
    * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */

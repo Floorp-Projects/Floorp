@@ -525,26 +525,17 @@ Toolbox.prototype = {
           this.openTextBoxContextMenu(e.screenX, e.screenY);
         }
       });
-
-      this.shortcuts = new KeyShortcuts({
-        window: this.doc.defaultView,
-      });
       // Get the DOM element to mount the ToolboxController to.
       this._componentMount = this.doc.getElementById("toolbox-toolbar-mount");
 
       this._mountReactComponent();
       this._buildDockOptions();
-      this._buildOptions();
       this._buildTabs();
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
-      this._addKeysToWindow();
-      this._addReloadKeys();
-      this._addHostListeners();
+      this._addWindowListeners();
+      this._addChromeEventHandlerEvents();
       this._registerOverlays();
-      if (!this._hostOptions || this._hostOptions.zoom === true) {
-        ZoomKeys.register(this.win);
-      }
 
       this._componentMount.addEventListener("keypress", this._onToolbarArrowKeypress);
       this._componentMount.setAttribute("aria-label", L10N.getStr("toolbox.label"));
@@ -616,6 +607,191 @@ Toolbox.prototype = {
       // passing `e` to console.error, it is not on the stdout, so print it via dump.
       dump(e.stack + "\n");
     });
+  },
+
+  /**
+   * Retrieve the ChromeEventHandler associated to the toolbox frame.
+   * When DevTools are loaded in a content frame, this will return the containing chrome
+   * frame. Events from nested frames will bubble up to this chrome frame, which allows to
+   * listen to events from nested frames.
+   */
+  getChromeEventHandler() {
+    if (!this.win || !this.win.docShell) {
+      return null;
+    }
+    return this.win.docShell.chromeEventHandler;
+  },
+
+  /**
+   * Attach events on the chromeEventHandler for the current window. When loaded in a
+   * frame with type set to "content", events will not bubble across frames. The
+   * chromeEventHandler does not have this limitation and will catch all events triggered
+   * on any of the frames under the devtools document.
+   *
+   * Events relying on the chromeEventHandler need to be added and removed at specific
+   * moments in the lifecycle of the toolbox, so all the events relying on it should be
+   * grouped here.
+   */
+  _addChromeEventHandlerEvents: function() {
+    // win.docShell.chromeEventHandler might not be accessible anymore when removing the
+    // events, so we can't rely on a dynamic getter here.
+    // Keep a reference on the chromeEventHandler used to addEventListener to be sure we
+    // can remove the listeners afterwards.
+    this._chromeEventHandler = this.getChromeEventHandler();
+    if (!this._chromeEventHandler) {
+      return;
+    }
+
+    // Add shortcuts and window-host-shortcuts that use the ChromeEventHandler as target.
+    this._addShortcuts();
+    this._addWindowHostShortcuts();
+
+    this._chromeEventHandler.addEventListener("keypress", this._splitConsoleOnKeypress);
+    this._chromeEventHandler.addEventListener("focus", this._onFocus, true);
+  },
+
+  _removeChromeEventHandlerEvents: function() {
+    if (!this._chromeEventHandler) {
+      return;
+    }
+
+    // Remove shortcuts and window-host-shortcuts that use the ChromeEventHandler as
+    // target.
+    this._removeShortcuts();
+    this._removeWindowHostShortcuts();
+
+    this._chromeEventHandler.removeEventListener("keypress",
+      this._splitConsoleOnKeypress);
+    this._chromeEventHandler.removeEventListener("focus", this._onFocus, true);
+
+    this._chromeEventHandler = null;
+  },
+
+  _addShortcuts: function() {
+    // Create shortcuts instance for the toolbox
+    if (!this.shortcuts) {
+      this.shortcuts = new KeyShortcuts({
+        window: this.doc.defaultView,
+        // The toolbox key shortcuts should be triggered from any frame in DevTools.
+        // Use the chromeEventHandler as the target to catch events from all frames.
+        target: this.getChromeEventHandler(),
+      });
+    }
+
+    // Listen for the shortcut key to show the frame list
+    this.shortcuts.on(L10N.getStr("toolbox.showFrames.key"), event => {
+      if (event.target.id === "command-button-frames") {
+        event.target.click();
+      }
+    });
+
+    // Listen for tool navigation shortcuts.
+    this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
+                 event => {
+                   this.selectNextTool();
+                   event.preventDefault();
+                 });
+    this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
+                 event => {
+                   this.selectPreviousTool();
+                   event.preventDefault();
+                 });
+    this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
+                 event => {
+                   this.switchToPreviousHost();
+                   event.preventDefault();
+                 });
+
+    // List for Help/Settings key.
+    this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
+
+    // Listen for Reload shortcuts
+    [
+      ["reload", false],
+      ["reload2", false],
+      ["forceReload", true],
+      ["forceReload2", true],
+    ].forEach(([id, force]) => {
+      const key = L10N.getStr("toolbox." + id + ".key");
+      this.shortcuts.on(key, event => {
+        this.reloadTarget(force);
+
+        // Prevent Firefox shortcuts from reloading the page
+        event.preventDefault();
+      });
+    });
+
+    // Add zoom-related shortcuts.
+    if (!this._hostOptions || this._hostOptions.zoom === true) {
+      ZoomKeys.register(this.win, this.shortcuts);
+    }
+  },
+
+  _removeShortcuts: function() {
+    if (this.shortcuts) {
+      this.shortcuts.destroy();
+      this.shortcuts = null;
+    }
+  },
+
+  /**
+   * Adds the keys and commands to the Toolbox Window in window mode.
+   */
+  _addWindowHostShortcuts: function() {
+    if (this.hostType != Toolbox.HostType.WINDOW) {
+      // Those shortcuts are only valid for host type WINDOW.
+      return;
+    }
+
+    if (!this._windowHostShortcuts) {
+      this._windowHostShortcuts = new KeyShortcuts({
+        window: this.win,
+        // The window host key shortcuts should be triggered from any frame in DevTools.
+        // Use the chromeEventHandler as the target to catch events from all frames.
+        target: this.getChromeEventHandler(),
+      });
+    }
+
+    const shortcuts = this._windowHostShortcuts;
+
+    for (const item of Startup.KeyShortcuts) {
+      const { id, toolId, shortcut, modifiers } = item;
+      const electronKey = KeyShortcuts.parseXulKey(modifiers, shortcut);
+
+      if (id == "browserConsole") {
+        // Add key for toggling the browser console from the detached window
+        shortcuts.on(electronKey, () => {
+          HUDService.toggleBrowserConsole();
+        });
+      } else if (toolId) {
+        // KeyShortcuts contain tool-specific and global key shortcuts,
+        // here we only need to copy shortcut specific to each tool.
+        shortcuts.on(electronKey, () => {
+          this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
+        });
+      }
+    }
+
+    // CmdOrCtrl+W is registered only when the toolbox is running in
+    // detached window. In the other case the entire browser tab
+    // is closed when the user uses this shortcut.
+    shortcuts.on(L10N.getStr("toolbox.closeToolbox.key"), this.closeToolbox);
+
+    // The others are only registered in window host type as for other hosts,
+    // these keys are already registered by devtools-startup.js
+    shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), this.closeToolbox);
+    if (AppConstants.platform == "macosx") {
+      shortcuts.on(L10N.getStr("toolbox.toggleToolboxOSX.key"), this.closeToolbox);
+    } else {
+      shortcuts.on(L10N.getStr("toolbox.toggleToolbox.key"), this.closeToolbox);
+    }
+  },
+
+  _removeWindowHostShortcuts: function() {
+    if (this._windowHostShortcuts) {
+      this._windowHostShortcuts.destroy();
+      this._windowHostShortcuts = null;
+    }
   },
 
   _getDebugTargetData: async function() {
@@ -922,10 +1098,6 @@ Toolbox.prototype = {
     return button;
   },
 
-  _buildOptions: function() {
-    this.shortcuts.on(L10N.getStr("toolbox.help.key"), this.toggleOptions);
-  },
-
   _splitConsoleOnKeypress: function(e) {
     if (e.keyCode === KeyCodes.DOM_VK_ESCAPE) {
       this.toggleSplitConsole();
@@ -958,53 +1130,14 @@ Toolbox.prototype = {
     });
   },
 
-  _addReloadKeys: function() {
-    [
-      ["reload", false],
-      ["reload2", false],
-      ["forceReload", true],
-      ["forceReload2", true],
-    ].forEach(([id, force]) => {
-      const key = L10N.getStr("toolbox." + id + ".key");
-      this.shortcuts.on(key, event => {
-        this.reloadTarget(force);
-
-        // Prevent Firefox shortcuts from reloading the page
-        event.preventDefault();
-      });
-    });
-  },
-
-  _addHostListeners: function() {
-    // Add navigation keys
-    this.shortcuts.on(L10N.getStr("toolbox.nextTool.key"),
-                 event => {
-                   this.selectNextTool();
-                   event.preventDefault();
-                 });
-    this.shortcuts.on(L10N.getStr("toolbox.previousTool.key"),
-                 event => {
-                   this.selectPreviousTool();
-                   event.preventDefault();
-                 });
-    this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
-                 event => {
-                   this.switchToPreviousHost();
-                   event.preventDefault();
-                 });
-
-    // Add event listeners
-    this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
-    this.doc.addEventListener("focus", this._onFocus, true);
+  _addWindowListeners: function() {
     this.win.addEventListener("unload", this.destroy);
     this.win.addEventListener("message", this._onBrowserMessage, true);
   },
 
-  _removeHostListeners: function() {
+  _removeWindowListeners: function() {
     // The host iframe's contentDocument may already be gone.
-    if (this.doc) {
-      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress);
-      this.doc.removeEventListener("focus", this._onFocus, true);
+    if (this.win) {
       this.win.removeEventListener("unload", this.destroy);
       this.win.removeEventListener("message", this._onBrowserMessage, true);
     }
@@ -1057,59 +1190,6 @@ Toolbox.prototype = {
         webconsolePanel.setAttribute("collapsed", "true");
         splitter.setAttribute("hidden", "true");
       }
-    }
-  },
-
-  /**
-   * Adds the keys and commands to the Toolbox Window in window mode.
-   */
-  _addKeysToWindow: function() {
-    if (this.hostType != Toolbox.HostType.WINDOW) {
-      // If we are toggling back to other host type, we should unregister the window
-      // listeners
-      if (this._windowHostShortcuts) {
-        this._windowHostShortcuts.destroy();
-        this._windowHostShortcuts = null;
-      }
-      return;
-    }
-    if (!this._windowHostShortcuts) {
-      this._windowHostShortcuts = new KeyShortcuts({
-        window: this.doc.defaultView,
-      });
-    }
-    const shortcuts = this._windowHostShortcuts;
-
-    for (const item of Startup.KeyShortcuts) {
-      const { id, toolId, shortcut, modifiers } = item;
-      const electronKey = KeyShortcuts.parseXulKey(modifiers, shortcut);
-
-      if (id == "browserConsole") {
-        // Add key for toggling the browser console from the detached window
-        shortcuts.on(electronKey, () => {
-          HUDService.toggleBrowserConsole();
-        });
-      } else if (toolId) {
-        // KeyShortcuts contain tool-specific and global key shortcuts,
-        // here we only need to copy shortcut specific to each tool.
-        shortcuts.on(electronKey, () => {
-          this.selectTool(toolId, "key_shortcut").then(() => this.fireCustomKey(toolId));
-        });
-      }
-    }
-
-    // CmdOrCtrl+W is registered only when the toolbox is running in
-    // detached window. In the other case the entire browser tab
-    // is closed when the user uses this shortcut.
-    shortcuts.on(L10N.getStr("toolbox.closeToolbox.key"), this.closeToolbox);
-
-    // The others are only registered in window host type as for other hosts,
-    // these keys are already registered by devtools-startup.js
-    shortcuts.on(L10N.getStr("toolbox.toggleToolboxF12.key"), this.closeToolbox);
-    if (AppConstants.platform == "macosx") {
-      shortcuts.on(L10N.getStr("toolbox.toggleToolboxOSX.key"), this.closeToolbox);
-    } else {
-      shortcuts.on(L10N.getStr("toolbox.toggleToolbox.key"), this.closeToolbox);
     }
   },
 
@@ -1327,13 +1407,6 @@ Toolbox.prototype = {
         const isOnOptionsPanel = this.currentToolId === "options";
         return hasFrames || isOnOptionsPanel;
       },
-    });
-
-    // Listen for the shortcut key to show the frame list
-    this.shortcuts.on(L10N.getStr("toolbox.showFrames.key"), event => {
-      if (event.target.id === "command-button-frames") {
-        event.target.click();
-      }
     });
 
     return this.frameButton;
@@ -2637,6 +2710,9 @@ Toolbox.prototype = {
       return null;
     }
 
+    // chromeEventHandler will change after swapping hosts, remove events relying on it.
+    this._removeChromeEventHandlerEvents();
+
     this.emit("host-will-change", hostType);
 
     // ToolboxHostManager is going to call swapFrameLoaders which mess up with
@@ -2658,7 +2734,9 @@ Toolbox.prototype = {
     this._hostType = hostType;
 
     this._buildDockOptions();
-    this._addKeysToWindow();
+
+    // chromeEventHandler changed after swapping hosts, add again events relying on it.
+    this._addChromeEventHandlerEvents();
 
     // We blurred the tools at start of switchHost, but also when clicking on
     // host switching button. We now have to restore the focus.
@@ -3077,7 +3155,8 @@ Toolbox.prototype = {
           return api ? api.destroy() : null;
         }, console.error)
         .then(() => {
-          this._removeHostListeners();
+          this._removeWindowListeners();
+          this._removeChromeEventHandlerEvents();
 
           // `location` may already be 'invalid' if the toolbox document is
           // already in process of destruction. Otherwise if it is still

@@ -139,6 +139,15 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
     const mozilla::layers::LayersId& aLayersId) {
   MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
   mLayersId = aLayersId;
+
+  // Invalidate the nsSubdocumentFrame now that we have a layers ID for the
+  // child browser
+  if (RefPtr<Element> owner = mFrameLoader->GetOwnerContent()) {
+    if (nsIFrame* frame = owner->GetPrimaryFrame()) {
+      frame->InvalidateFrame();
+    }
+  }
+
   return IPC_OK();
 }
 

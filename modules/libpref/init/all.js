@@ -2409,13 +2409,6 @@ pref("network.cookie.thirdparty.sessionOnly", false);
 pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 pref("network.cookie.same-site.enabled",    true); // Honor the SameSite cookie attribute
 
-// Cookie lifetime policy. Possible values:
-// 0 - accept all cookies
-// 1 - deprecated. don't use it.
-// 2 - accept as session cookies
-// 3 - deprecated. don't use it.
-pref("network.cookie.lifetimePolicy",       0);
-
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.
 pref("network.cookie.move.interval_sec",    10);
@@ -2730,9 +2723,6 @@ pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.j
 // Disallow web documents loaded with the SystemPrincipal
 pref("security.disallow_non_local_systemprincipal_in_tests", false);
 #endif
-
-// Default Content Security Policy to apply to signed contents.
-pref("security.signed_content.CSP.default", "script-src 'self'; style-src 'self'");
 
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
@@ -5456,7 +5446,7 @@ pref("dom.vr.autoactivate.enabled", false);
 // The threshold value of trigger inputs for VR controllers
 pref("dom.vr.controller_trigger_threshold", "0.1");
 // Enable external XR API integrations
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_WIN)
 pref("dom.vr.external.enabled", true);
 #else
 pref("dom.vr.external.enabled", false);
@@ -5545,8 +5535,10 @@ pref("dom.vr.poseprediction.enabled", true);
 // tests or in a headless kiosk system.
 pref("dom.vr.require-gesture", true);
 // Enable a separate process for VR module.
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_WIN)
 pref("dom.vr.process.enabled", true);
+#else
+pref("dom.vr.process.enabled", false);
 #endif
 // Puppet device, used for simulating VR hardware within tests and dev tools
 pref("dom.vr.puppet.enabled", false);

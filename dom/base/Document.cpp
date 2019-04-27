@@ -76,6 +76,8 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
+#include "mozilla/dom/ResizeObserver.h"
+#include "mozilla/dom/ResizeObserverController.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
@@ -1739,6 +1741,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
       cb.NoteXPCOMChild(mql);
     }
   }
+
+  if (tmp->mResizeObserverController) {
+    tmp->mResizeObserverController->Traverse(cb);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Document)
@@ -1850,6 +1856,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   }
 
   tmp->mInUnlinkOrDeletion = false;
+
+  if (tmp->mResizeObserverController) {
+    tmp->mResizeObserverController->Unlink();
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsresult Document::Init() {
@@ -2825,16 +2835,8 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   rv = principal->EnsureCSP(this, getter_AddRefs(csp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check if this is a signed content to apply default CSP.
-  bool applySignedContentCSP = false;
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo->GetVerifySignedContent()) {
-    applySignedContentCSP = true;
-  }
-
   // If there's no CSP to apply, go ahead and return early
-  if (!addonPolicy && !applySignedContentCSP && cspHeaderValue.IsEmpty() &&
-      cspROHeaderValue.IsEmpty()) {
+  if (!addonPolicy && cspHeaderValue.IsEmpty() && cspROHeaderValue.IsEmpty()) {
     if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
       nsCOMPtr<nsIURI> chanURI;
       aChannel->GetURI(getter_AddRefs(chanURI));
@@ -2860,16 +2862,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     csp->AppendPolicy(addonCSP, false, false);
 
     csp->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
-  }
-
-  // ----- if the doc is a signed content, apply the default CSP.
-  // Note that when the content signing becomes a standard, we might have
-  // to restrict this enforcement to "remote content" only.
-  if (applySignedContentCSP) {
-    nsAutoString signedContentCSP;
-    Preferences::GetString("security.signed_content.CSP.default",
-                           signedContentCSP);
-    csp->AppendPolicy(signedContentCSP, false, false);
   }
 
   // ----- if there's a full-strength CSP header, apply it.
@@ -12441,6 +12433,22 @@ FlashClassification Document::DocumentFlashClassification() {
   }
 
   return mFlashClassification;
+}
+
+void Document::AddResizeObserver(ResizeObserver* aResizeObserver) {
+  if (!mResizeObserverController) {
+    mResizeObserverController = MakeUnique<ResizeObserverController>(this);
+  }
+
+  mResizeObserverController->AddResizeObserver(aResizeObserver);
+}
+
+void Document::ScheduleResizeObserversNotification() const {
+  if (!mResizeObserverController) {
+    return;
+  }
+
+  mResizeObserverController->ScheduleNotification();
 }
 
 /**

@@ -25,11 +25,14 @@
 #include "nsNetCID.h"
 #include "prtime.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "nsContentUtils.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
  ****************************************************************/
+
+using namespace mozilla;
 
 static const bool kDefaultPolicy = true;
 
@@ -45,12 +48,10 @@ NS_IMPL_ISUPPORTS(nsCookiePermission, nsICookiePermission)
 already_AddRefed<nsICookiePermission> nsCookiePermission::GetOrCreate() {
   if (!gSingleton) {
     gSingleton = new nsCookiePermission();
+    ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);
 }
-
-// static
-void nsCookiePermission::Shutdown() { gSingleton = nullptr; }
 
 bool nsCookiePermission::Init() {
   // Initialize nsIPermissionManager and fetch relevant prefs. This is only
@@ -75,24 +76,6 @@ nsCookiePermission::SetAccess(nsIURI *aURI, nsCookieAccess aAccess) {
   //
   return mPermMgr->Add(aURI, kPermissionType, aAccess,
                        nsIPermissionManager::EXPIRE_NEVER, 0);
-}
-
-NS_IMETHODIMP
-nsCookiePermission::CanAccess(nsIPrincipal *aPrincipal,
-                              nsCookieAccess *aResult) {
-  // Lazily initialize ourselves
-  if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
-
-  // finally, check with permission manager...
-  nsresult rv = mPermMgr->TestPermissionFromPrincipal(
-      aPrincipal, kPermissionType, (uint32_t *)aResult);
-  if (NS_SUCCEEDED(rv)) {
-    if (*aResult == nsICookiePermission::ACCESS_SESSION) {
-      *aResult = nsICookiePermission::ACCESS_ALLOW;
-    }
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -126,7 +109,7 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
 
       // now we need to figure out what type of accept policy we're dealing with
       // if we accept cookies normally, just bail and return
-      if (nsContentUtils::GetCookieLifetimePolicy() ==
+      if (StaticPrefs::network_cookie_lifetimePolicy() ==
           nsICookieService::ACCEPT_NORMALLY) {
         *aResult = true;
         return NS_OK;
@@ -139,7 +122,7 @@ nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
       // We are accepting the cookie, but,
       // if it's not a session cookie, we may have to limit its lifetime.
       if (!*aIsSession && delta > 0) {
-        if (nsContentUtils::GetCookieLifetimePolicy() ==
+        if (StaticPrefs::network_cookie_lifetimePolicy() ==
             nsICookieService::ACCEPT_SESSION) {
           // limit lifetime to session
           *aIsSession = true;

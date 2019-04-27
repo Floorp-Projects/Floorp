@@ -289,6 +289,10 @@
           buttons.help = document.getAnonymousElementByAttribute(this, "dlgtype", "help");
           buttons.disclosure = document.getAnonymousElementByAttribute(this, "dlgtype", "disclosure");
 
+          for (let button in buttons) {
+            customElements.upgrade(buttons[button]);
+          }
+
           // look for any overriding explicit button elements
           var exBtns = this.getElementsByAttribute("dlgtype", "*");
           var dlgtype;

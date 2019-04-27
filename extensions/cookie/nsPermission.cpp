@@ -7,6 +7,8 @@
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "mozilla/BasePrincipal.h"
 
 // nsPermission Implementation

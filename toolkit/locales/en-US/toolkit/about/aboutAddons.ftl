@@ -352,6 +352,10 @@ expand-addon-button = More Options
 addons-enabled-heading = Enabled
 addons-disabled-heading = Disabled
 
+ask-to-activate-button = Ask to Activate
+always-activate-button = Always Activate
+never-activate-button = Never Activate
+
 addon-detail-author-label = Author
 addon-detail-version-label = Version
 addon-detail-last-updated-label = Last Updated
@@ -371,3 +375,18 @@ addon-detail-reviews-link =
         [one] { $numberOfReviews } review
        *[other] { $numberOfReviews } reviews
     }
+
+addon-detail-updates-label = Allow automatic updates
+addon-detail-updates-radio-default = Default
+addon-detail-updates-radio-on = On
+addon-detail-updates-radio-off = Off
+addon-detail-update-check-label = Check for Updates
+install-update-button = Update
+
+# This is the tooltip text for the private browsing badge in about:addons. The
+# badge is the private browsing icon included next to the extension's name.
+addon-badge-private-browsing-allowed =
+    .title = Allowed in private windows
+addon-detail-private-browsing-help = When allowed, the extension will have access to your online activities while private browsing. <a data-l10n-name="learn-more">Learn more</a>
+addon-detail-private-browsing-allow = Allow
+addon-detail-private-browsing-disallow = Don’t Allow

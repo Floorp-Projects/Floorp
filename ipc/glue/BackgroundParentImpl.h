@@ -155,6 +155,19 @@ class BackgroundParentImpl : public PBackgroundParent {
   virtual bool DeallocPTemporaryIPCBlobParent(
       PTemporaryIPCBlobParent* aActor) override;
 
+  virtual PFileCreatorParent* AllocPFileCreatorParent(
+      const nsString& aFullPath, const nsString& aType, const nsString& aName,
+      const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+      const bool& aIsFromNsIFile) override;
+
+  virtual mozilla::ipc::IPCResult RecvPFileCreatorConstructor(
+      PFileCreatorParent* actor, const nsString& aFullPath,
+      const nsString& aType, const nsString& aName,
+      const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+      const bool& aIsFromNsIFile) override;
+
+  virtual bool DeallocPFileCreatorParent(PFileCreatorParent* aActor) override;
+
   virtual mozilla::dom::PRemoteWorkerParent* AllocPRemoteWorkerParent(
       const RemoteWorkerData& aData) override;
 

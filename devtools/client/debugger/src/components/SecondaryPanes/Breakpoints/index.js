@@ -15,7 +15,7 @@ import BreakpointHeading from "./BreakpointHeading";
 
 import actions from "../../../actions";
 import { getDisplayPath } from "../../../utils/source";
-import { getSelectedLocation } from "../../../utils/source-maps";
+import { getSelectedLocation } from "../../../utils/selected-location";
 import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
 import {

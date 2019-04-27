@@ -42,21 +42,9 @@ DIRECT_CALL_OVERRIDES = {
     ("PGMPVideoEncoder", "child"): ("GMPVideoEncoderChild", "GMPVideoEncoderChild.h"),
     ("PGMPVideoDecoder", "child"): ("GMPVideoDecoderChild", "GMPVideoDecoderChild.h"),
 
-    ("PIPCBlobInputStream", "child"): (
-        "mozilla::dom::IPCBlobInputStreamChild", "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
-    ),
-    ("PIPCBlobInputStream", "parent"): (
-        "mozilla::dom::IPCBlobInputStreamParent", "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-    ),
-
     ("PLoginReputation", "parent"): ("LoginReputationParent", "mozilla/LoginReputationIPC.h"),
 
     ("PMedia", "child"): ("Child", "mozilla/media/MediaChild.h"),
-
-    ("PPendingIPCBlob", "child"): ("PendingIPCBlobChild", "mozilla/dom/ipc/PendingIPCBlobChild.h"),
-    ("PPendingIPCBlob", "parent"): (
-        "mozilla::dom::PendingIPCBlobParent", "mozilla/dom/ipc/PendingIPCBlobParent.h"
-    ),
 
     ("PPresentationRequest", "child"): (
         "PresentationRequestChild", "mozilla/dom/PresentationChild.h"
@@ -96,13 +84,6 @@ DIRECT_CALL_OVERRIDES = {
     ),
     ("PTCPSocket", "parent"): (
         "mozilla::dom::TCPSocketParent", "mozilla/dom/network/TCPSocketParent.h"
-    ),
-
-    ("PTemporaryIPCBlob", "child"): (
-        "mozilla::dom::TemporaryIPCBlobChild", "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
-    ),
-    ("PTemporaryIPCBlob", "parent"): (
-        "mozilla::dom::TemporaryIPCBlobParent", "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
     ),
 
     ("PTestShellCommand", "parent"): ("TestShellCommandParent", "mozilla/ipc/TestShellParent.h"),

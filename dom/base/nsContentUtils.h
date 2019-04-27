@@ -3361,9 +3361,22 @@ class nsContentUtils {
       Document* aDocument);
 
   /**
-   * Gets the global cookie lifetime policy.
+   * Returns the length of the parent-traversal path (in terms of the number of
+   * nodes) to an unparented/root node from aNode. An unparented/root node is
+   * considered to have a depth of 1, its children have a depth of 2, etc.
+   * aNode is expected to be non-null.
+   * Note: The shadow root is not part of the calculation because the caller,
+   * ResizeObserver, doesn't observe the shadow root, and only needs relative
+   * depths among all the observed targets. In other words, we calculate the
+   * depth of the flattened tree.
+   *
+   * However, these is a spec issue about how to handle shadow DOM case. We
+   * may need to update this function later:
+   *   https://github.com/w3c/csswg-drafts/issues/3840
+   *
+   * https://drafts.csswg.org/resize-observer/#calculate-depth-for-node-h
    */
-  static uint32_t GetCookieLifetimePolicy() { return sCookiesLifetimePolicy; }
+  static uint32_t GetNodeDepth(nsINode* aNode);
 
  private:
   static bool InitializeEventTable();
@@ -3513,7 +3526,6 @@ class nsContentUtils {
 #endif
   static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
-  static uint32_t sCookiesLifetimePolicy;
   static bool sAntiTrackingControlCenterUIEnabled;
 
   static int32_t sPrivacyMaxInnerWidth;

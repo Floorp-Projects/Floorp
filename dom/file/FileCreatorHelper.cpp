@@ -7,13 +7,16 @@
 #include "FileCreatorHelper.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/FileCreatorChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsProxyRelease.h"
 #include "nsIFile.h"
 
 // Undefine the macro of CreateFile to avoid FileCreatorHelper#CreateFile being
@@ -36,167 +39,31 @@ already_AddRefed<Promise> FileCreatorHelper::CreateFile(
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobalObject);
-
-  // Parent process
-
-  if (XRE_IsParentProcess()) {
-    RefPtr<File> file =
-        CreateFileInternal(window, aFile, aBag, aIsFromNsIFile, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-    promise->MaybeResolve(file);
-    return promise.forget();
-  }
-
-  // Content process.
-
-  ContentChild* cc = ContentChild::GetSingleton();
-  if (!cc) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
-  }
-
-  if (!cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE) &&
-      !Preferences::GetBool("dom.file.createInChild", false)) {
-    // If this pref is not set and the request is received by the parent
-    // process, this child is killed for security reason.
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
-  }
-
-  RefPtr<FileCreatorHelper> helper = new FileCreatorHelper(promise, window);
-
-  // The request is sent to the parent process and it's kept alive by
-  // ContentChild.
-  helper->SendRequest(aFile, aBag, aIsFromNsIFile, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  return promise.forget();
-}
-
-/* static */
-already_AddRefed<File> FileCreatorHelper::CreateFileInternal(
-    nsPIDOMWindowInner* aWindow, nsIFile* aFile,
-    const ChromeFilePropertyBag& aBag, bool aIsFromNsIFile, ErrorResult& aRv) {
-  bool lastModifiedPassed = false;
-  int64_t lastModified = 0;
-  if (aBag.mLastModified.WasPassed()) {
-    lastModifiedPassed = true;
-    lastModified = aBag.mLastModified.Value();
-  }
-
-  RefPtr<BlobImpl> blobImpl;
-  aRv = CreateBlobImpl(aFile, aBag.mType, aBag.mName, lastModifiedPassed,
-                       lastModified, aBag.mExistenceCheck, aIsFromNsIFile,
-                       getter_AddRefs(blobImpl));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  RefPtr<File> file = File::Create(aWindow, blobImpl);
-  return file.forget();
-}
-
-FileCreatorHelper::FileCreatorHelper(Promise* aPromise,
-                                     nsPIDOMWindowInner* aWindow)
-    : mPromise(aPromise), mWindow(aWindow) {
-  MOZ_ASSERT(aPromise);
-}
-
-FileCreatorHelper::~FileCreatorHelper() {}
-
-void FileCreatorHelper::SendRequest(nsIFile* aFile,
-                                    const ChromeFilePropertyBag& aBag,
-                                    bool aIsFromNsIFile, ErrorResult& aRv) {
-  MOZ_ASSERT(aFile);
-
-  ContentChild* cc = ContentChild::GetSingleton();
-  if (NS_WARN_IF(!cc)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsID uuid;
-  aRv = nsContentUtils::GenerateUUIDInPlace(uuid);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
   nsAutoString path;
   aRv = aFile->GetPath(path);
   if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    return nullptr;
   }
 
-  cc->FileCreationRequest(uuid, this, path, aBag.mType, aBag.mName,
-                          aBag.mLastModified, aBag.mExistenceCheck,
-                          aIsFromNsIFile);
-}
-
-void FileCreatorHelper::ResponseReceived(BlobImpl* aBlobImpl, nsresult aRv) {
-  if (NS_FAILED(aRv)) {
-    mPromise->MaybeReject(aRv);
-    return;
+  // Register this component to PBackground.
+  mozilla::ipc::PBackgroundChild* actorChild =
+      mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!actorChild)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  RefPtr<File> file = File::Create(mWindow, aBlobImpl);
-  mPromise->MaybeResolve(file);
-}
-
-/* static */
-nsresult FileCreatorHelper::CreateBlobImplForIPC(
-    const nsAString& aPath, const nsAString& aType, const nsAString& aName,
-    bool aLastModifiedPassed, int64_t aLastModified, bool aExistenceCheck,
-    bool aIsFromNsIFile, BlobImpl** aBlobImpl) {
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(aPath, true, getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  Maybe<int64_t> lastModified;
+  if (aBag.mLastModified.WasPassed()) {
+    lastModified.emplace(aBag.mLastModified.Value());
   }
 
-  return CreateBlobImpl(file, aType, aName, aLastModifiedPassed, aLastModified,
-                        aExistenceCheck, aIsFromNsIFile, aBlobImpl);
-}
+  PFileCreatorChild* actor = actorChild->SendPFileCreatorConstructor(
+      path, aBag.mType, aBag.mName, lastModified, aBag.mExistenceCheck,
+      aIsFromNsIFile);
 
-/* static */
-nsresult FileCreatorHelper::CreateBlobImpl(
-    nsIFile* aFile, const nsAString& aType, const nsAString& aName,
-    bool aLastModifiedPassed, int64_t aLastModified, bool aExistenceCheck,
-    bool aIsFromNsIFile, BlobImpl** aBlobImpl) {
-  if (!aExistenceCheck) {
-    RefPtr<FileBlobImpl> impl = new FileBlobImpl(aFile);
-
-    if (!aName.IsEmpty()) {
-      impl->SetName(aName);
-    }
-
-    if (!aType.IsEmpty()) {
-      impl->SetType(aType);
-    }
-
-    if (aLastModifiedPassed) {
-      impl->SetLastModified(aLastModified);
-    }
-
-    impl.forget(aBlobImpl);
-    return NS_OK;
-  }
-
-  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
-  nsresult rv = impl->InitializeChromeFile(
-      aFile, aType, aName, aLastModifiedPassed, aLastModified, aIsFromNsIFile);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_ASSERT(impl->IsFile());
-
-  impl.forget(aBlobImpl);
-  return NS_OK;
+  static_cast<FileCreatorChild*>(actor)->SetPromise(promise);
+  return promise.forget();
 }
 
 }  // namespace dom

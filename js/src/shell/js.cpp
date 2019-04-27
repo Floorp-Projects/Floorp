@@ -10928,13 +10928,12 @@ int main(int argc, char** argv, char** envp) {
           'u', "utf8-file", "PATH",
           "File path to run, directly parsing file contents as UTF-8 "
           "without first inflating to UTF-16") ||
-      !op.addMultiStringOption('m', "module", "PATH", "Module path to run")
+      !op.addMultiStringOption('m', "module", "PATH", "Module path to run") ||
 #if defined(JS_BUILD_BINAST)
-      || !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run")
+      !op.addMultiStringOption('B', "binast", "PATH", "BinAST path to run") ||
 #else
-      || !op.addMultiStringOption('B', "binast", "", "No-op")
+      !op.addMultiStringOption('B', "binast", "", "No-op") ||
 #endif  // JS_BUILD_BINAST
-      ||
       !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run") ||
       !op.addBoolOption('i', "shell", "Enter prompt after running code") ||
       !op.addBoolOption('c', "compileonly",
@@ -10947,13 +10946,13 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('b', "print-timing",
                         "Print sub-ms runtime for each file that's run") ||
       !op.addBoolOption('\0', "code-coverage",
-                        "Enable code coverage instrumentation.")
+                        "Enable code coverage instrumentation.") ||
 #ifdef DEBUG
-      || !op.addBoolOption('O', "print-alloc",
-                           "Print the number of allocations at exit")
+      !op.addBoolOption('O', "print-alloc",
+                        "Print the number of allocations at exit") ||
 #endif
-      || !op.addOptionalStringArg("script",
-                                  "A script to execute (after all options)") ||
+      !op.addOptionalStringArg("script",
+                               "A script to execute (after all options)") ||
       !op.addOptionalMultiStringArg(
           "scriptArgs",
           "String arguments to bind as |scriptArgs| in the "
@@ -10977,15 +10976,15 @@ int main(int argc, char** argv, char** envp) {
                         "Enable WebAssembly verbose logging") ||
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
-                        "instantiation on completion of tier2")
+                        "instantiation on completion of tier2") ||
 #ifdef ENABLE_WASM_GC
-      ||
-      !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
+      !op.addBoolOption('\0', "wasm-gc",
+                        "Enable experimental wasm GC features") ||
 #else
-      || !op.addBoolOption('\0', "wasm-gc", "No-op")
+      !op.addBoolOption('\0', "wasm-gc", "No-op") ||
 #endif
-      || !op.addBoolOption('\0', "no-native-regexp",
-                           "Disable native regexp compilation") ||
+      !op.addBoolOption('\0', "no-native-regexp",
+                        "Disable native regexp compilation") ||
       !op.addBoolOption('\0', "no-unboxed-objects",
                         "Disable creating unboxed plain objects") ||
       !op.addBoolOption('\0', "enable-streams",
@@ -11028,18 +11027,18 @@ int main(int argc, char** argv, char** envp) {
           '\0', "ion-pgo", "on/off",
           "Profile guided optimization (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-range-analysis", "on/off",
-                          "Range analysis (default: on, off to disable)")
+                          "Range analysis (default: on, off to disable)") ||
 #if defined(__APPLE__)
-      || !op.addStringOption(
-             '\0', "ion-sincos", "on/off",
-             "Replace sin(x)/cos(x) to sincos(x) (default: on, off to disable)")
+      !op.addStringOption(
+          '\0', "ion-sincos", "on/off",
+          "Replace sin(x)/cos(x) to sincos(x) (default: on, off to disable)") ||
 #else
-      || !op.addStringOption(
-             '\0', "ion-sincos", "on/off",
-             "Replace sin(x)/cos(x) to sincos(x) (default: off, on to enable)")
+      !op.addStringOption(
+          '\0', "ion-sincos", "on/off",
+          "Replace sin(x)/cos(x) to sincos(x) (default: off, on to enable)") ||
 #endif
-      || !op.addStringOption('\0', "ion-sink", "on/off",
-                             "Sink code motion (default: off, on to enable)") ||
+      !op.addStringOption('\0', "ion-sink", "on/off",
+                          "Sink code motion (default: off, on to enable)") ||
       !op.addStringOption('\0', "ion-optimization-levels", "on/off",
                           "Use multiple Ion optimization levels (default: on, "
                           "off to disable)") ||
@@ -11119,13 +11118,13 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "disable-oom-functions",
                         "Disable functions that cause "
                         "artificial OOMs") ||
-      !op.addBoolOption('\0', "no-threads", "Disable helper threads")
+      !op.addBoolOption('\0', "no-threads", "Disable helper threads") ||
 #ifdef DEBUG
-      || !op.addBoolOption('\0', "dump-entrained-variables",
-                           "Print variables which are "
-                           "unnecessarily entrained by inner functions")
+      !op.addBoolOption('\0', "dump-entrained-variables",
+                        "Print variables which are "
+                        "unnecessarily entrained by inner functions") ||
 #endif
-      || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC") ||
+      !op.addBoolOption('\0', "no-ggc", "Disable Generational GC") ||
       !op.addBoolOption('\0', "no-cgc", "Disable Compacting GC") ||
       !op.addBoolOption('\0', "no-incremental-gc", "Disable Incremental GC") ||
       !op.addStringOption('\0', "nursery-strings", "on/off",
@@ -11159,16 +11158,16 @@ int main(int argc, char** argv, char** envp) {
                        "NUMBER of instructions.",
                        -1) ||
       !op.addIntOption('\0', "nursery-size", "SIZE-MB",
-                       "Set the maximum nursery size in MB", 16)
+                       "Set the maximum nursery size in MB", 16) ||
 #ifdef JS_GC_ZEAL
-      || !op.addStringOption('z', "gc-zeal", "LEVEL(;LEVEL)*[,N]",
-                             gc::ZealModeHelpText)
+      !op.addStringOption('z', "gc-zeal", "LEVEL(;LEVEL)*[,N]",
+                          gc::ZealModeHelpText) ||
 #else
-      || !op.addStringOption('z', "gc-zeal", "LEVEL(;LEVEL)*[,N]",
-                             "option ignored in non-gc-zeal builds")
+      !op.addStringOption('z', "gc-zeal", "LEVEL(;LEVEL)*[,N]",
+                          "option ignored in non-gc-zeal builds") ||
 #endif
-      || !op.addStringOption('\0', "module-load-path", "DIR",
-                             "Set directory to load modules from") ||
+      !op.addStringOption('\0', "module-load-path", "DIR",
+                          "Set directory to load modules from") ||
       !op.addBoolOption('\0', "no-async-stacks", "Disable async stacks") ||
       !op.addMultiStringOption('\0', "dll", "LIBRARY",
                                "Dynamically load LIBRARY") ||
