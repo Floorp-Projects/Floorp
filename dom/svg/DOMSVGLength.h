@@ -165,7 +165,7 @@ class DOMSVGLength final : public nsISupports, public nsWrapperCache {
   // WebIDL
   uint16_t UnitType();
   float GetValue(ErrorResult& aRv);
-  void SetValue(float aValue, ErrorResult& aRv);
+  void SetValue(float aUserUnitValue, ErrorResult& aRv);
   float ValueInSpecifiedUnits();
   void SetValueInSpecifiedUnits(float aValue, ErrorResult& aRv);
   void GetValueAsString(nsAString& aValue);

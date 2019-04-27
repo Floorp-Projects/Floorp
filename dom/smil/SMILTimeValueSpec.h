@@ -71,8 +71,8 @@ class SMILTimeValueSpec {
   void UnregisterFromReferencedElement(Element* aElement);
   SMILTimedElement* GetTimedElement(Element* aElement);
   bool IsWhitelistedEvent();
-  void RegisterEventListener(Element* aElement);
-  void UnregisterEventListener(Element* aElement);
+  void RegisterEventListener(Element* aTarget);
+  void UnregisterEventListener(Element* aTarget);
   void HandleEvent(Event* aEvent);
   bool CheckRepeatEventDetail(Event* aEvent);
   SMILTimeValue ConvertBetweenTimeContainers(
