@@ -10,6 +10,7 @@
 #include "gfxPlatform.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
@@ -25,6 +26,10 @@
 #  undef min
 #  undef max
 #endif
+
+#undef ERROR /* defined by Windows.h, conflicts with some generated bindings \
+                code when this gets indirectly included via shared font list \
+              */
 
 typedef struct hb_blob_t hb_blob_t;
 
@@ -311,9 +316,39 @@ class gfxSparseBitSet {
   }
 
  private:
+  friend struct IPC::ParamTraits<gfxSparseBitSet>;
+  friend struct IPC::ParamTraits<gfxSparseBitSet::Block>;
   nsTArray<uint16_t> mBlockIndex;
   nsTArray<Block> mBlocks;
 };
+
+namespace IPC {
+template <>
+struct ParamTraits<gfxSparseBitSet> {
+  typedef gfxSparseBitSet paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mBlockIndex);
+    WriteParam(aMsg, aParam.mBlocks);
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mBlockIndex) &&
+           ReadParam(aMsg, aIter, &aResult->mBlocks);
+  }
+};
+
+template <>
+struct ParamTraits<gfxSparseBitSet::Block> {
+  typedef gfxSparseBitSet::Block paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  }
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
+  }
+};
+}  // namespace IPC
 
 /**
  * SharedBitSet is a version of gfxSparseBitSet that is intended to be used

@@ -11,6 +11,7 @@
 #include "gfxPlatformFontList.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
+#include "SharedFontList-impl.h"
 
 #include "nsCRT.h"
 #include "nsGkAtoms.h"
@@ -790,6 +791,16 @@ gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
   if (familyEntry) return familyEntry->FindFontForStyle(*aStyle);
 
   return nullptr;
+}
+
+gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
+    fontlist::Face* aFace, const fontlist::Family* aFamily) {
+  gfxFontEntry* fe = mFontEntries.GetWeak(aFace);
+  if (!fe) {
+    fe = CreateFontEntry(aFace, aFamily);
+    mFontEntries.Put(aFace, fe);
+  }
+  return fe;
 }
 
 void gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily* aFamilyEntry,
@@ -1699,6 +1710,50 @@ void gfxPlatformFontList::CancelInitOtherFamilyNamesTask() {
     mPendingOtherFamilyNameTask->Cancel();
     mPendingOtherFamilyNameTask = nullptr;
   }
+}
+
+void gfxPlatformFontList::ShareFontListShmBlockToProcess(
+    uint32_t aGeneration, uint32_t aIndex, /*base::ProcessId*/ uint32_t aPid,
+    /*mozilla::ipc::SharedMemoryBasic::Handle*/ void* aOut) {
+  MOZ_ASSERT(SharedFontList());
+  auto out = static_cast<mozilla::ipc::SharedMemoryBasic::Handle*>(aOut);
+  if (!aGeneration || SharedFontList()->GetGeneration() == aGeneration) {
+    SharedFontList()->ShareShmBlockToProcess(aIndex, aPid, out);
+  } else {
+    *out = mozilla::ipc::SharedMemoryBasic::NULLHandle();
+  }
+}
+
+void gfxPlatformFontList::InitializeFamily(uint32_t aGeneration,
+                                           uint32_t aFamilyIndex) {
+  MOZ_ASSERT(SharedFontList());
+  if (SharedFontList()->GetGeneration() != aGeneration) {
+    return;
+  }
+  if (aFamilyIndex >= SharedFontList()->NumFamilies()) {
+    return;
+  }
+  Unused << InitializeFamily(SharedFontList()->Families() + aFamilyIndex);
+}
+
+void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
+                                          const fontlist::Pointer& aFacePtr,
+                                          const gfxSparseBitSet& aMap) {
+  MOZ_ASSERT(SharedFontList());
+  if (SharedFontList()->GetGeneration() != aGeneration) {
+    return;
+  }
+  fontlist::Face* face =
+      static_cast<fontlist::Face*>(aFacePtr.ToPtr(SharedFontList()));
+  face->SetCharacterMap(SharedFontList(), &aMap);
+}
+
+void gfxPlatformFontList::InitOtherFamilyNames(uint32_t aGeneration,
+                                               bool aDefer) {
+  if (SharedFontList()->GetGeneration() != aGeneration) {
+    return;
+  }
+  InitOtherFamilyNames(aDefer);
 }
 
 #undef LOG
