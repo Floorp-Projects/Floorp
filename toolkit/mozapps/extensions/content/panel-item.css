@@ -27,8 +27,12 @@ button {
   left: 28px;
 }
 
+:host([checked]) {
+  --icon: url("chrome://global/skin/icons/check.svg");
+}
+
 button:focus,
-button:hover {
+button:not([disabled]):hover {
   background-color: var(--in-content-button-background);
 }
 
