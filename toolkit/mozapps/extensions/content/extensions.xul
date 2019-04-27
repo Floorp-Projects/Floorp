@@ -25,8 +25,9 @@
     <xhtml:link rel="localization" href="branding/brand.ftl"/>
     <xhtml:link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
   </linkset>
-
+  
   <script src="chrome://global/content/contentAreaUtils.js"/>
+  <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"/>
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
 
   <popupset>

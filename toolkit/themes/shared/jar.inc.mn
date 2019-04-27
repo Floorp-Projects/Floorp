@@ -54,6 +54,7 @@ toolkit.jar:
   skin/classic/global/icons/twisty-collapsed.svg           (../../shared/icons/twisty-collapsed.svg)
   skin/classic/global/icons/twisty-collapsed-rtl.svg       (../../shared/icons/twisty-collapsed-rtl.svg)
   skin/classic/global/icons/twisty-expanded.svg            (../../shared/icons/twisty-expanded.svg)
+  skin/classic/global/icons/update-icon.svg                (../../shared/icons/update-icon.svg)
   skin/classic/global/icons/arrow-dropdown-12.svg          (../../shared/icons/arrow-dropdown-12.svg)
   skin/classic/global/icons/arrow-dropdown-16.svg          (../../shared/icons/arrow-dropdown-16.svg)
   skin/classic/global/icons/arrow-up-12.svg                (../../shared/icons/arrow-up-12.svg)

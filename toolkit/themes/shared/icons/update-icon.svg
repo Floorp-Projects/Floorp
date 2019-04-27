@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53.2 (72643) - https://sketchapp.com -->
+    <title>update-icon</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M8,0 C3.581722,-2.705415e-16 5.41083001e-16,3.581722 0,8 C-5.41083001e-16,12.418278 3.581722,16 8,16 C12.418278,16 16,12.418278 16,8 C16,5.87826808 15.1571453,3.84343678 13.6568542,2.34314575 C12.1565632,0.842854723 10.1217319,1.2991861e-16 8,0 Z M11.707,6.707 C11.3165001,7.09738194 10.6834999,7.09738194 10.293,6.707 L9,5.414 L9,13 C9,13.5522847 8.55228475,14 8,14 C7.44771525,14 7,13.5522847 7,13 L7,5.414 L5.707,6.707 C5.31462111,7.08597221 4.69091522,7.08055237 4.30518142,6.69481858 C3.91944763,6.30908478 3.91402779,5.68537889 4.293,5.293 L7.293,2.293 C7.68349985,1.90261806 8.31650015,1.90261806 8.707,2.293 L11.707,5.293 C12.0973819,5.68349985 12.0973819,6.31650015 11.707,6.707 Z" id="path-1"></path>
+    </defs>
+    <g id="update-icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Icons-/-Update">
+            <mask id="mask-2" fill="white">
+                <use xlink:href="#path-1"></use>
+            </mask>
+            <g id="Shape" fill-rule="nonzero"></g>
+            <g id="Color-/-Photon-/-Primary---Grey-90-80%" mask="url(#mask-2)" fill="#0C0C0D" fill-opacity="0.8" fill-rule="evenodd">
+                <rect id="Rectangle" x="0" y="0" width="16" height="16"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

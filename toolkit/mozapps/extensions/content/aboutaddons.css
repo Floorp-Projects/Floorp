@@ -185,7 +185,7 @@ addon-card:not([expanded]) .addon-description {
   margin-inline-start: 8px;
 }
 
-button[action="more-options"] {
+.more-options-button {
   min-width: auto;
   min-height: auto;
   width: 24px;
@@ -194,12 +194,36 @@ button[action="more-options"] {
   -moz-context-properties: fill;
   fill: currentColor;
   background: url("chrome://global/skin/icons/more.svg") no-repeat center center;
+  position: relative;
+}
+
+.more-options-button-badged::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  position: absolute;
+  top: 0;
+}
+
+.more-options-button-badged:-moz-locale-dir(ltr)::after {
+  right: 0;
+}
+
+.more-options-button-badged:-moz-locale-dir(rtl)::after {
+  left: 0;
 }
 
 panel-item[action="remove"] {
   -moz-context-properties: fill;
   fill: currentColor;
   --icon: url("chrome://global/skin/icons/delete.svg");
+}
+
+panel-item[action="install-update"] {
+  --icon: url("chrome://global/skin/icons/update-icon.svg");
 }
 
 panel-item-separator {
@@ -212,4 +236,24 @@ panel-item-separator {
 
 panel-item-separator[hidden] {
   display: none;
+}
+
+.button-link {
+  min-height: auto;
+  background: none !important;
+  padding: 0;
+  margin: 0;
+  color: var(--in-content-link-color) !important;
+  cursor: pointer;
+  border: none;
+}
+
+.button-link:hover {
+  color: var(--in-content-link-color-hover) !important;
+  text-decoration: underline;
+}
+
+.button-link:active {
+  color: var(--in-content-link-color-active) !important;
+  text-decoration: none;
 }
