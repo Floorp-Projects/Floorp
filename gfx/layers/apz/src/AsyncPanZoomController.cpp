@@ -5232,26 +5232,28 @@ void AsyncPanZoomController::ScrollSnapToDestination() {
   if (velocity.y != 0.0f) {
     predictedDelta.y = -velocity.y / log(1.0 - friction);
   }
-  CSSPoint predictedDestination =
-      Metrics().GetScrollOffset() + predictedDelta / Metrics().GetZoom();
 
   // If the fling will overscroll, don't scroll snap, because then the user
   // user would not see any overscroll animation.
   bool flingWillOverscroll =
       IsOverscrolled() && ((velocity.x * mX.GetOverscroll() >= 0) ||
                            (velocity.y * mY.GetOverscroll() >= 0));
-  if (!flingWillOverscroll) {
-    APZC_LOG(
-        "%p fling snapping.  friction: %f velocity: %f, %f "
-        "predictedDelta: %f, %f position: %f, %f "
-        "predictedDestination: %f, %f\n",
-        this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
-        (float)predictedDelta.y, (float)Metrics().GetScrollOffset().x,
-        (float)Metrics().GetScrollOffset().y, (float)predictedDestination.x,
-        (float)predictedDestination.y);
-
-    ScrollSnapNear(predictedDestination);
+  if (flingWillOverscroll) {
+    return;
   }
+
+  CSSPoint predictedDestination =
+      Metrics().GetScrollOffset() + predictedDelta / Metrics().GetZoom();
+  APZC_LOG(
+      "%p fling snapping.  friction: %f velocity: %f, %f "
+      "predictedDelta: %f, %f position: %f, %f "
+      "predictedDestination: %f, %f\n",
+      this, friction, velocity.x, velocity.y, (float)predictedDelta.x,
+      (float)predictedDelta.y, (float)Metrics().GetScrollOffset().x,
+      (float)Metrics().GetScrollOffset().y, (float)predictedDestination.x,
+      (float)predictedDestination.y);
+
+  ScrollSnapNear(predictedDestination);
 }
 
 bool AsyncPanZoomController::MaybeAdjustDeltaForScrollSnapping(
