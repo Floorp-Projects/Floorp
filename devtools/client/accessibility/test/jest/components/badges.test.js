@@ -51,6 +51,7 @@ describe("Badges component:", () => {
           "color": [255, 0, 0, 1],
           "backgroundColor": [255, 255, 255, 1],
           "isLargeText": false,
+          "score": "AA",
         },
       },
     })));
@@ -64,6 +65,7 @@ describe("Badges component:", () => {
       "color": [255, 0, 0, 1],
       "backgroundColor": [255, 255, 255, 1],
       "isLargeText": false,
+      "score": "fail",
     };
     const wrapper = mount(Provider({ store }, Badges({ checks: { CONTRAST }})));
 
@@ -81,6 +83,7 @@ describe("Badges component:", () => {
       "backgroundColorMin": [219, 106, 116, 1],
       "backgroundColorMax": [156, 145, 211, 1],
       "isLargeText": false,
+      "score": "fail",
     };
     const wrapper = mount(Provider({ store }, Badges({ checks: { CONTRAST }})));
 

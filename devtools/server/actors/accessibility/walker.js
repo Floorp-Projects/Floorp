@@ -22,6 +22,7 @@ loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/uti
 loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "register", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "removeSheet", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "accessibility", "devtools/shared/constants", true);
 
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
@@ -405,7 +406,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
     const ancestries = [];
     for (const [acc, audit] of report.entries()) {
-      if (audit && Object.values(audit).filter(check => check != null).length > 0) {
+      // Filter out audits that have no failing checks.
+      if (audit &&
+          Object.values(audit).some(check => check != null && !check.error &&
+            check.score === accessibility.SCORES.FAIL)) {
         ancestries.push(this.getAncestry(acc));
       }
     }
