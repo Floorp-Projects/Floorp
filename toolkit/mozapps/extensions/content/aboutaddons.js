@@ -3,21 +3,104 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
 /* exported initialize, hide, show */
-/* import-globals-from ../../../content/contentAreaUtils.js */
+/* import-globals-from aboutaddonsCommon.js */
 /* global windowRoot */
 
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this, "allowPrivateBrowsingByDefault",
+  "extensions.allowPrivateBrowsingByDefault", true);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this, "SUPPORT_URL", "app.support.baseURL",
+  "", null, val => Services.urlFormatter.formatURL(val));
 
 const PLUGIN_ICON_URL = "chrome://global/skin/plugins/pluginGeneric.svg";
 const PERMISSION_MASKS = {
+  "ask-to-activate": AddonManager.PERM_CAN_ASK_TO_ACTIVATE,
   enable: AddonManager.PERM_CAN_ENABLE,
+  "always-activate": AddonManager.PERM_CAN_ENABLE,
   disable: AddonManager.PERM_CAN_DISABLE,
+  "never-activate": AddonManager.PERM_CAN_DISABLE,
   uninstall: AddonManager.PERM_CAN_UNINSTALL,
+  upgrade: AddonManager.PERM_CAN_UPGRADE,
 };
+
+const PRIVATE_BROWSING_PERM_NAME = "internal:privateBrowsingAllowed";
+const PRIVATE_BROWSING_PERMS =
+  {permissions: [PRIVATE_BROWSING_PERM_NAME], origins: []};
+
+const AddonCardListenerHandler = {
+  ADDON_EVENTS: new Set([
+    "onDisabled", "onEnabled", "onInstalled", "onPropertyChanged",
+    "onUninstalled",
+  ]),
+  MANAGER_EVENTS: new Set(["onUpdateModeChanged"]),
+  INSTALL_EVENTS: new Set(["onNewInstall", "onInstallEnded"]),
+
+  delegateAddonEvent(name, args) {
+    this.delegateEvent(name, args[0], args);
+  },
+
+  delegateInstallEvent(name, args) {
+    let addon = args[0].addon || args[0].existingAddon;
+    if (!addon) {
+      return;
+    }
+    this.delegateEvent(name, addon, args);
+  },
+
+  delegateEvent(name, addon, args) {
+    let cards;
+    if (this.MANAGER_EVENTS.has(name)) {
+      cards = document.querySelectorAll("addon-card");
+    } else {
+      let card = document.querySelector(`addon-card[addon-id="${addon.id}"]`);
+      cards = card ? [card] : [];
+    }
+    for (let card of cards) {
+      try {
+        if (name in card) {
+          card[name](...args);
+        }
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  },
+
+  startup() {
+    for (let name of this.ADDON_EVENTS) {
+      this[name] = (...args) => this.delegateAddonEvent(name, args);
+    }
+    for (let name of this.INSTALL_EVENTS) {
+      this[name] = (...args) => this.delegateInstallEvent(name, args);
+    }
+    for (let name of this.MANAGER_EVENTS) {
+      this[name] = (...args) => this.delegateEvent(name, null, args);
+    }
+    AddonManager.addAddonListener(this);
+    AddonManager.addInstallListener(this);
+    AddonManager.addManagerListener(this);
+  },
+
+  shutdown() {
+    AddonManager.removeAddonListener(this);
+    AddonManager.removeInstallListener(this);
+    AddonManager.removeManagerListener(this);
+  },
+};
+
+async function isAllowedInPrivateBrowsing(addon) {
+  // Use the Promise directly so this function stays sync for the other case.
+  let perms = await ExtensionPermissions.get(addon.id);
+  return perms.permissions.includes(PRIVATE_BROWSING_PERM_NAME);
+}
 
 function hasPermission(addon, permission) {
   return !!(addon.permissions & PERMISSION_MASKS[permission]);
@@ -240,21 +323,108 @@ class PanelItem extends HTMLElement {
     super();
     this.attachShadow({mode: "open"});
     this.shadowRoot.appendChild(importTemplate("panel-item"));
+    this.button = this.shadowRoot.querySelector("button");
+  }
+
+  get disabled() {
+    return this.button.hasAttribute("disabled");
+  }
+
+  set disabled(val) {
+    if (val) {
+      this.button.setAttribute("disabled", "");
+    } else {
+      this.button.removeAttribute("disabled");
+    }
+  }
+
+  get checked() {
+    return this.hasAttribute("checked");
+  }
+
+  set checked(val) {
+    if (val) {
+      this.setAttribute("checked", "");
+    } else {
+      this.removeAttribute("checked");
+    }
   }
 }
 customElements.define("panel-item", PanelItem);
 
-class AddonDetails extends HTMLElement {
-  constructor() {
-    super();
-    this.hasConnected = false;
+class AddonOptions extends HTMLElement {
+  connectedCallback() {
+    if (this.children.length == 0) {
+      this.render();
+    }
   }
 
+  render() {
+    this.appendChild(importTemplate("addon-options"));
+  }
+
+  update(card, addon, updateInstall) {
+    // Hide remove button if not allowed.
+    let removeButton = this.querySelector('[action="remove"]');
+    removeButton.hidden = !hasPermission(addon, "uninstall");
+
+    // Set disable label and hide if not allowed.
+    let toggleDisabledButton = this.querySelector('[action="toggle-disabled"]');
+    let toggleDisabledAction = addon.userDisabled ? "enable" : "disable";
+    document.l10n.setAttributes(
+      toggleDisabledButton, `${toggleDisabledAction}-addon-button`);
+    toggleDisabledButton.hidden = !hasPermission(addon, toggleDisabledAction);
+
+    // Set the update button and badge the menu if there's an update.
+    this.querySelector('[action="install-update"]').hidden = !updateInstall;
+
+    // The separator isn't needed when expanded (nothing under it) or when the
+    // remove and disable buttons are hidden (nothing above it).
+    let separator = this.querySelector("panel-item-separator");
+    separator.hidden = card.expanded ||
+      removeButton.hidden && toggleDisabledButton.hidden;
+
+    // Hide the expand button if we're expanded.
+    this.querySelector('[action="expand"]').hidden = card.expanded;
+  }
+}
+customElements.define("addon-options", AddonOptions);
+
+class PluginOptions extends HTMLElement {
   connectedCallback() {
-    if (!this.hasConnected) {
-      this.hasConnected = true;
+    if (this.children.length == 0) {
       this.render();
-      this.addEventListener("click", this);
+    }
+  }
+
+  render() {
+    this.appendChild(importTemplate("plugin-options"));
+  }
+
+  update(card, addon) {
+    let actions = [{
+      action: "ask-to-activate",
+      userDisabled: AddonManager.STATE_ASK_TO_ACTIVATE,
+    }, {
+      action: "always-activate",
+      userDisabled: false,
+    }, {
+      action: "never-activate",
+      userDisabled: true,
+    }];
+    for (let {action, userDisabled} of actions) {
+      let el = this.querySelector(`[action="${action}"]`);
+      el.checked = addon.userDisabled === userDisabled;
+      el.disabled = !(el.checked || hasPermission(addon, action));
+    }
+  }
+}
+customElements.define("plugin-options", PluginOptions);
+
+class AddonDetails extends HTMLElement {
+  connectedCallback() {
+    if (this.children.length == 0) {
+      this.render();
     }
   }
 
@@ -262,18 +432,31 @@ class AddonDetails extends HTMLElement {
     this.addon = addon;
   }
 
-  handleEvent(e) {
-    if (e.type == "click" && e.target.getAttribute("action") == "contribute") {
-      openURL(this.addon.contributionURL);
+  update() {
+    let {addon} = this;
+
+    // Show the update check button if necessary. The button might not exist if
+    // the add-on doesn't support updates.
+    let updateButton = this.querySelector('[action="update-check"]');
+    if (updateButton) {
+      updateButton.hidden =
+        this.addon.updateInstall || AddonManager.shouldAutoUpdate(this.addon);
+    }
+
+    // Set the value for auto updates.
+    let inputs = this.querySelectorAll(".addon-detail-row-updates input");
+    for (let input of inputs) {
+      input.checked = input.value == addon.applyBackgroundUpdates;
     }
   }
 
-  render() {
+  async render() {
     let {addon} = this;
     if (!addon) {
       throw new Error("addon-details must be initialized by setAddon");
     }
 
+    this.textContent = "";
     this.appendChild(importTemplate("addon-details"));
 
     // Full description.
@@ -287,6 +470,23 @@ class AddonDetails extends HTMLElement {
     // Contribute.
     if (!addon.contributionURL) {
       this.querySelector(".addon-detail-contribute").remove();
+    }
+
+    // Auto updates setting.
+    if (!hasPermission(addon, "upgrade")) {
+      this.querySelector(".addon-detail-row-updates").remove();
+    }
+
+    let pbRow = this.querySelector(".addon-detail-row-private-browsing");
+    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
+        addon.incognito != "not_allowed") {
+      let isAllowed = await isAllowedInPrivateBrowsing(addon);
+      pbRow.querySelector(`[value="${isAllowed ? 1 : 0}"]`).checked = true;
+      let learnMore = pbRow.nextElementSibling
+        .querySelector('a[data-l10n-name="learn-more"]');
+      learnMore.href = SUPPORT_URL + "extensions-pb";
+    } else {
+      pbRow.remove();
     }
 
     // Author.
@@ -356,6 +556,8 @@ class AddonDetails extends HTMLElement {
     } else {
       ratingRow.remove();
     }
+
+    this.update();
   }
 }
 customElements.define("addon-details", AddonDetails);
@@ -369,23 +571,18 @@ customElements.define("addon-details", AddonDetails);
  *    document.body.appendChild(card);
  */
 class AddonCard extends HTMLElement {
-  constructor() {
-    super();
-    this.hasRendered = false;
-  }
-
   connectedCallback() {
     // If we've already rendered we can just update, otherwise render.
-    if (this.hasRendered) {
+    if (this.children.length > 0) {
       this.update();
     } else {
       this.render();
     }
-    this.registerListener();
+    this.registerListeners();
   }
 
   disconnectedCallback() {
-    this.removeListener();
+    this.removeListeners();
   }
 
   get expanded() {
@@ -400,6 +597,29 @@ class AddonCard extends HTMLElement {
     }
   }
 
+  get updateInstall() {
+    return this._updateInstall;
+  }
+
+  set updateInstall(install) {
+    this._updateInstall = install;
+    if (this.children.length > 0) {
+      this.update();
+    }
+  }
+
+  get reloading() {
+    return this.hasAttribute("reloading");
+  }
+
+  set reloading(val) {
+    if (val) {
+      this.setAttribute("reloading", "true");
+    } else {
+      this.removeAttribute("reloading");
+    }
+  }
+
   /**
    * Set the add-on for this card. The card will be populated based on the
    * add-on when it is connected to the DOM.
@@ -408,6 +628,13 @@ class AddonCard extends HTMLElement {
    */
   setAddon(addon) {
     this.addon = addon;
+    let install = addon.updateInstall;
+    if (install && install.state == AddonManager.STATE_AVAILABLE) {
+      this.updateInstall = install;
+    }
+    if (this.children.length > 0) {
+      this.render();
+    }
   }
 
   /**
@@ -442,22 +669,171 @@ class AddonCard extends HTMLElement {
     return null;
   }
 
-  registerListener() {
-    AddonManager.addAddonListener(this);
+  async handleEvent(e) {
+    let {addon} = this;
+    let action = e.target.getAttribute("action");
+
+    if (e.type == "click") {
+      switch (action) {
+        case "toggle-disabled":
+          if (addon.userDisabled) {
+            await addon.enable();
+          } else {
+            await addon.disable();
+          }
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            // Refocus the open menu button so it's clear where the focus is.
+            this.querySelector('[action="more-options"]').focus();
+          }
+          break;
+        case "ask-to-activate":
+          if (hasPermission(addon, "ask-to-activate")) {
+            addon.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
+          }
+          break;
+        case "always-activate":
+          addon.userDisabled = false;
+          break;
+        case "never-activate":
+          addon.userDisabled = true;
+          break;
+        case "update-check":
+          let listener = {
+            onUpdateAvailable(addon, install) {
+              attachUpdateHandler(install);
+            },
+            onNoUpdateAvailable: () => {
+              this.sendEvent("no-update");
+            },
+          };
+          addon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+          break;
+        case "install-update":
+          this.updateInstall.install().then(() => {
+            // The card will update with the new add-on when it gets installed.
+            this.sendEvent("update-installed");
+          }, () => {
+            // Update our state if the install is cancelled.
+            this.update();
+            this.sendEvent("update-cancelled");
+          });
+          // Clear the install since it will be removed from the global list of
+          // available updates (whether it succeeds or fails).
+          this.updateInstall = null;
+          break;
+        case "contribute":
+          windowRoot.ownerGlobal.openUILinkIn(addon.contributionURL, "tab", {
+            triggeringPrincipal:
+              Services.scriptSecurityManager.createNullPrincipal({}),
+          });
+          break;
+        case "remove":
+          {
+            this.panel.hide();
+            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            if (response == 0) {
+              await addon.uninstall();
+              this.sendEvent("remove");
+            } else {
+              this.sendEvent("remove-cancelled");
+            }
+          }
+          break;
+        case "expand":
+          loadViewFn("detail", this.addon.id);
+          break;
+        case "more-options":
+          // Open panel on click from the keyboard.
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            this.panel.toggle(e);
+          }
+          break;
+      }
+    } else if (e.type == "change") {
+      let {name} = e.target;
+      if (name == "autoupdate") {
+        addon.applyBackgroundUpdates = e.target.value;
+      } else if (name == "private-browsing") {
+        let policy = WebExtensionPolicy.getByID(addon.id);
+        let extension = policy && policy.extension;
+
+        if (e.target.value == "1") {
+          await ExtensionPermissions.add(
+            addon.id, PRIVATE_BROWSING_PERMS, extension);
+        } else {
+          await ExtensionPermissions.remove(
+            addon.id, PRIVATE_BROWSING_PERMS, extension);
+        }
+        // Reload the extension if it is already enabled. This ensures any
+        // change on the private browsing permission is properly handled.
+        if (addon.isActive) {
+          this.reloading = true;
+          // Reloading will trigger an enable and update the card.
+          addon.reload();
+        } else {
+          // Update the card if the add-on isn't active.
+          this.update();
+        }
+      }
+    } else if (e.type == "mousedown") {
+      // Open panel on mousedown when the mouse is used.
+      if (action == "more-options") {
+        this.panel.toggle(e);
+      }
+    } else if (e.type == "dblclick") {
+      // Don't expand if expanded or a button is double clicked.
+      if (!this.expanded && e.target.tagName != "BUTTON") {
+        loadViewFn("detail", this.addon.id);
+      }
+    }
   }
 
-  removeListener() {
-    AddonManager.removeAddonListener(this);
+  get panel() {
+    return this.card.querySelector("panel-list");
+  }
+
+  registerListeners() {
+    this.addEventListener("change", this);
+    this.addEventListener("click", this);
+    this.addEventListener("dblclick", this);
+    this.addEventListener("mousedown", this);
+  }
+
+  removeListeners() {
+    this.removeEventListener("change", this);
+    this.removeEventListener("click", this);
+    this.removeEventListener("dblclick", this);
+    this.removeEventListener("mousedown", this);
+  }
+
+  onNewInstall(install) {
+    this.updateInstall = install;
+    this.sendEvent("update-found");
+  }
+
+  onInstallEnded(install) {
+    this.setAddon(install.addon);
   }
 
   onDisabled(addon) {
-    if (addon.id == this.addon.id) {
+    if (!this.reloading) {
       this.update();
     }
   }
 
   onEnabled(addon) {
-    if (addon.id == this.addon.id) {
+    this.reloading = false;
+    this.update();
+  }
+
+  onUpdateModeChanged() {
+    this.update();
+  }
+
+  onPropertyChanged(addon, changed) {
+    if (this.details && changed.includes("applyBackgroundUpdates")) {
+      this.details.update();
+    } else if (addon.type == "plugin" && changed.includes("userDisabled")) {
       this.update();
     }
   }
@@ -499,35 +875,38 @@ class AddonCard extends HTMLElement {
         name: addon.name,
       });
     }
+    name.title = `${addon.name} ${addon.version}`;
+
+    // Set the items in the more options menu.
+    this.options.update(this, addon, this.updateInstall);
+
+    // Badge the more options menu if there's an update.
+    card.querySelector(".more-options-button")
+      .classList.toggle("more-options-button-badged", !!this.updateInstall);
+
+    // Set the private browsing badge visibility.
+    if (!allowPrivateBrowsingByDefault && addon.type == "extension" &&
+        addon.incognito != "not_allowed") {
+      // Keep update synchronous, the badge can appear later.
+      isAllowedInPrivateBrowsing(addon).then(isAllowed => {
+        card.querySelector(".addon-badge-private-browsing-allowed")
+          .hidden = !isAllowed;
+      });
+    }
 
     // Update description.
     card.querySelector(".addon-description").textContent = addon.description;
 
-    // Hide remove button if not allowed.
-    let removeButton = card.querySelector('[action="remove"]');
-    removeButton.hidden = !hasPermission(addon, "uninstall");
-
-    // Set disable label and hide if not allowed.
-    let disableButton = card.querySelector('[action="toggle-disabled"]');
-    let disableAction = addon.userDisabled ? "enable" : "disable";
-    document.l10n.setAttributes(
-      disableButton, `${disableAction}-addon-button`);
-    disableButton.hidden = !hasPermission(addon, disableAction);
-
-    // The separator isn't needed when expanded (nothing under it) or when the
-    // remove and disable buttons are hidden (nothing above it).
-    let separator = card.querySelector("panel-item-separator");
-    separator.hidden = this.expanded ||
-      removeButton.hidden && disableButton.hidden;
-
-    // Hide the expand button if we're expanded.
-    card.querySelector('[action="expand"]').hidden = this.expanded;
+    // Update the details if they're shown.
+    if (this.details) {
+      this.details.update();
+    }
 
     this.sendEvent("update");
   }
 
   expand() {
-    if (!this.hasRendered) {
+    if (this.children.length == 0) {
       this.expanded = true;
     } else {
       throw new Error("expand() is only supported before render()");
@@ -545,72 +924,31 @@ class AddonCard extends HTMLElement {
     this.card = importTemplate("card").firstElementChild;
     this.setAttribute("addon-id", addon.id);
 
+    let panelType = addon.type == "plugin" ? "plugin-options" : "addon-options";
+    this.options = document.createElement(panelType);
+    this.options.render();
+    this.card.querySelector(".more-options-menu").appendChild(this.options);
+
     // Set the contents.
     this.update();
 
-    let panel = this.card.querySelector("panel-list");
-    let moreOptionsButton = this.card.querySelector('[action="more-options"]');
-
-    // Open panel on mousedown when the mouse is used.
-    moreOptionsButton.addEventListener("mousedown", (e) => {
-      panel.toggle(e);
-    });
-
-    // Open panel on click from the keyboard.
-    moreOptionsButton.addEventListener("click", (e) => {
-      if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-        panel.toggle(e);
-      }
-    });
-
-    panel.addEventListener("click", async (e) => {
-      let action = e.target.getAttribute("action");
-      switch (action) {
-        case "toggle-disabled":
-          if (addon.userDisabled) {
-            await addon.enable();
-          } else {
-            await addon.disable();
-          }
-          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
-            // Refocus the open menu button so it's clear where the focus is.
-            this.querySelector('[action="more-options"]').focus();
-          }
-          break;
-        case "remove":
-          {
-            panel.hide();
-            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
-            if (response == 0) {
-              await addon.uninstall();
-              this.sendEvent("remove");
-            } else {
-              this.sendEvent("remove-cancelled");
-            }
-          }
-          break;
-        case "expand":
-          loadViewFn("detail", this.addon.id);
-          break;
-      }
-    });
-
+    let doneRenderPromise = Promise.resolve();
     if (this.expanded) {
-      let details = document.createElement("addon-details");
-      details.setAddon(this.addon);
-      this.card.appendChild(details);
-    } else {
-      // Expand on double click.
-      this.addEventListener("dblclick", (e) => {
-        // Don't expand if a button is double clicked.
-        if (e.target.tagName != "BUTTON") {
-          loadViewFn("detail", this.addon.id);
-        }
-      });
+      if (!this.details) {
+        this.details = document.createElement("addon-details");
+      }
+      this.details.setAddon(this.addon);
+      doneRenderPromise = this.details.render();
+
+      // If we're re-rendering we still need to append the details since the
+      // entire card was emptied at the beginning of the render.
+      this.card.appendChild(this.details);
     }
 
     this.appendChild(this.card);
-    this.hasRendered = true;
+
+    // Return the promise of details rendering to wait on in DetailView.
+    return doneRenderPromise;
   }
 
   sendEvent(name, detail) {
@@ -642,8 +980,11 @@ class AddonList extends HTMLElement {
     // Register the listener and get the add-ons, these operations should
     // happpen as close to each other as possible.
     this.registerListener();
-    // Render the initial view.
-    this.render(await this.getAddons());
+    // Don't render again if we were rendered prior to being inserted.
+    if (this.children.length == 0) {
+      // Render the initial view.
+      this.render();
+    }
   }
 
   disconnectedCallback() {
@@ -828,8 +1169,10 @@ class AddonList extends HTMLElement {
     return section;
   }
 
-  async render(sectionedAddons) {
+  async render() {
     this.textContent = "";
+
+    let sectionedAddons = await this.getAddons();
 
     // Render the sections.
     let frag = document.createDocumentFragment();
@@ -843,7 +1186,6 @@ class AddonList extends HTMLElement {
     // avoid the height changing as strings go from 0 height to having text.
     await document.l10n.translateFragment(frag);
     this.appendChild(frag);
-    this.sendEvent("rendered");
   }
 
   registerListener() {
@@ -863,6 +1205,9 @@ class AddonList extends HTMLElement {
   }
 
   onInstalled(addon) {
+    if (this.querySelector(`addon-card[addon-id="${addon.id}"]`)) {
+      return;
+    }
     this.addAddon(addon);
   }
 
@@ -889,12 +1234,9 @@ class ListView {
       filterFn: addon => !addon.hidden && !addon.isActive,
     }]);
 
-    await new Promise(resolve => {
-      list.addEventListener("rendered", resolve, {once: true});
-
-      this.root.textContent = "";
-      this.root.appendChild(list);
-    });
+    await list.render();
+    this.root.textContent = "";
+    this.root.appendChild(list);
   }
 }
 
@@ -907,12 +1249,15 @@ class DetailView {
   async render() {
     let addon = await AddonManager.getAddonByID(this.id);
     let card = document.createElement("addon-card");
-    card.setAddon(addon);
-    card.expand();
 
     // Go back to the list view when the add-on is removed.
     card.addEventListener("remove", () => loadViewFn("list", addon.type));
 
+    card.setAddon(addon);
+    card.expand();
+    await card.render();
+
+    this.root.textContent = "";
     this.root.appendChild(card);
   }
 }
@@ -926,10 +1271,12 @@ let root = null;
 function initialize(opts) {
   root = document.getElementById("main");
   loadViewFn = opts.loadViewFn;
+  AddonCardListenerHandler.startup();
   window.addEventListener("unload", () => {
     // Clear out the root node so the disconnectedCallback will trigger
     // properly and all of the custom elements can cleanup.
     root.textContent = "";
+    AddonCardListenerHandler.shutdown();
   }, {once: true});
 }
 

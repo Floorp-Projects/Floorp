@@ -37,9 +37,7 @@ class ThirdPartyUtil final : public mozIThirdPartyUtil {
                                 nsIURI* aSecondURI, bool* aResult);
 
   nsCString GetBaseDomainFromWindow(nsPIDOMWindowOuter* aWindow) {
-    MOZ_ASSERT(aWindow);
-
-    mozilla::dom::Document* doc = aWindow->GetExtantDoc();
+    mozilla::dom::Document* doc = aWindow ? aWindow->GetExtantDoc() : nullptr;
 
     if (!doc) {
       return EmptyCString();

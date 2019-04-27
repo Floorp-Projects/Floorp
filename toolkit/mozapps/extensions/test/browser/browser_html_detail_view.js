@@ -1,5 +1,8 @@
 /* eslint max-len: ["error", 80] */
 
+const {ExtensionPermissions} =
+  ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm", {});
+
 let gProvider;
 let promptService;
 
@@ -8,8 +11,15 @@ function getAddonCard(doc, addonId) {
 }
 
 function checkLabel(row, name) {
+  let id;
+  if (name == "private-browsing") {
+    // This id is carried over from the old about:addons.
+    id = "detail-private-browsing-label";
+  } else {
+    id = `addon-detail-${name}-label`;
+  }
   is(row.ownerDocument.l10n.getAttributes(row.querySelector("label")).id,
-    `addon-detail-${name}-label`, `The ${name} label is set`);
+    id, `The ${name} label is set`);
 }
 
 function checkLink(link, url, text = url) {
@@ -27,9 +37,34 @@ function checkLink(link, url, text = url) {
   is(link.getAttribute("target"), "_blank", "The link opens in a new tab");
 }
 
+function checkOptions(doc, options, expectedOptions) {
+  let numOptions = expectedOptions.length;
+  is(options.length, numOptions, `There are ${numOptions} options`);
+  for (let i = 0; i < numOptions; i++) {
+    let option = options[i];
+    is(option.children.length, 2, "There are 2 children for the option");
+    let input = option.firstElementChild;
+    is(input.tagName, "INPUT", "The input is first");
+    let text = option.lastElementChild;
+    is(text.tagName, "SPAN", "The label text is second");
+    let expected = expectedOptions[i];
+    is(input.value, expected.value, "The value is right");
+    is(input.checked, expected.checked, "The checked property is correct");
+    Assert.deepEqual(
+      doc.l10n.getAttributes(text), {id: expected.label},
+      "The label has the right text");
+  }
+}
+
+async function hasPrivateAllowed(id) {
+  let perms = await ExtensionPermissions.get(id);
+  return perms.permissions.includes("internal:privateBrowsingAllowed");
+}
+
 add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.htmlaboutaddons.enabled", true]],
+    set: [["extensions.htmlaboutaddons.enabled", true],
+          ["extensions.allowPrivateBrowsingByDefault", false]],
   });
 
   gProvider = new MockProvider();
@@ -47,6 +82,7 @@ add_task(async function enableHtmlViews() {
     reviewURL: "http://example.com/reviews",
     homepageURL: "http://example.com/addon1",
     updateDate: new Date("2019-03-07T01:00:00"),
+    applyBackgroundUpdates: AddonManager.AUTOUPDATE_ENABLE,
   }, {
     id: "addon2@mochi.test",
     name: "Test add-on 2",
@@ -237,19 +273,34 @@ add_task(async function testFullDetails() {
 
   let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
 
-  // The first row is the author.
+  // Auto updates.
   let row = rows.shift();
+  checkLabel(row, "updates");
+  let expectedOptions = [
+    {value: "1", label: "addon-detail-updates-radio-default", checked: false},
+    {value: "2", label: "addon-detail-updates-radio-on", checked: true},
+    {value: "0", label: "addon-detail-updates-radio-off", checked: false},
+  ];
+  let options = row.lastElementChild.querySelectorAll("label");
+  checkOptions(doc, options, expectedOptions);
+
+  // Private browsing, functionality checked in another test.
+  row = rows.shift();
+  checkLabel(row, "private-browsing");
+
+  // Author.
+  row = rows.shift();
   checkLabel(row, "author");
   let link = row.querySelector("a");
   checkLink(link, "http://example.com/me", "The creator");
 
-  // The version is next.
+  // Version.
   row = rows.shift();
   checkLabel(row, "version");
   let text = row.lastChild;
   is(text.textContent, "3.1", "The version is set");
 
-  // Last updated is next.
+  // Last updated.
   row = rows.shift();
   checkLabel(row, "last-updated");
   text = row.lastChild;
@@ -301,13 +352,22 @@ add_task(async function testMinimalExtension() {
   ok(!contrib, "There is no contribution element");
 
   let rows = Array.from(details.querySelectorAll(".addon-detail-row"));
+
+  // Automatic updates.
   let row = rows.shift();
+  checkLabel(row, "updates");
+
+  row = rows.shift();
+  checkLabel(row, "private-browsing");
+
+  // Author.
+  row = rows.shift();
   checkLabel(row, "author");
   let text = row.lastChild;
   is(text.textContent, "I made it", "The author is set");
   ok(text instanceof Text, "The author is a text node");
 
-  is(rows.length, 0, "There was only 1 row");
+  is(rows.length, 0, "There are no more rows");
 
   await closeView(win);
 });
@@ -391,6 +451,10 @@ add_task(async function testStaticTheme() {
 
   let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
 
+  // Automatic updates.
+  let row = rows.shift();
+  checkLabel(row, "updates");
+
   // Author.
   let author = rows.shift();
   checkLabel(author, "author");
@@ -399,5 +463,102 @@ add_task(async function testStaticTheme() {
 
   is(rows.length, 0, "There was only 1 row");
 
+  await closeView(win);
+});
+
+add_task(async function testPrivateBrowsingExtension() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "My PB extension",
+      applications: {gecko: {id: "pb@mochi.test"}},
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // The add-on shouldn't show that it's allowed yet.
+  let card = getAddonCard(doc, "pb@mochi.test");
+  let badge = card.querySelector(".addon-badge-private-browsing-allowed");
+  ok(badge.hidden, "The PB badge is hidden initially");
+  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is not allowed");
+
+  // Load the detail view.
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  // The badge is still hidden on the detail view.
+  card = getAddonCard(doc, "pb@mochi.test");
+  badge = card.querySelector(".addon-badge-private-browsing-allowed");
+  ok(badge.hidden, "The PB badge is hidden on the detail view");
+  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is not allowed");
+
+  let pbRow = card.querySelector(".addon-detail-row-private-browsing");
+
+  // Allow private browsing.
+  let [allow, disallow] = pbRow.querySelectorAll("input");
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
+  allow.click();
+  await updated;
+  ok(!badge.hidden, "The PB badge is now shown");
+  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is allowed");
+
+  // Disable the add-on and change the value.
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  card.querySelector('[action="toggle-disabled"]').click();
+  await updated;
+
+  // It's still allowed in PB.
+  ok(!badge.hidden, "The PB badge is shown");
+  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is allowed");
+
+  // Disallow PB.
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  disallow.click();
+  await updated;
+
+  ok(badge.hidden, "The PB badge is hidden");
+  ok(!await hasPrivateAllowed("pb@mochi.test"), "PB is disallowed");
+
+  // Allow PB.
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  allow.click();
+  await updated;
+
+  ok(!badge.hidden, "The PB badge is hidden");
+  ok(await hasPrivateAllowed("pb@mochi.test"), "PB is disallowed");
+
+  await extension.unload();
+  await closeView(win);
+});
+
+add_task(async function testPrivateBrowsingAllowedListView() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Allowed PB extension",
+      applications: {gecko: {id: "allowed@mochi.test"}},
+    },
+    useAddonManager: "permanent",
+  });
+
+  await extension.startup();
+  let perms = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
+  await ExtensionPermissions.add("allowed@mochi.test", perms);
+  let addon = await AddonManager.getAddonByID("allowed@mochi.test");
+  await addon.reload();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // The allowed extension should have a badge on load.
+  let card = getAddonCard(doc, "allowed@mochi.test");
+  let badge = card.querySelector(".addon-badge-private-browsing-allowed");
+  ok(!badge.hidden, "The PB badge is shown for the allowed add-on");
+
+  await extension.unload();
   await closeView(win);
 });

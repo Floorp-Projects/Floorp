@@ -48,7 +48,6 @@
 #include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
 #include "mozIThirdPartyUtil.h"
-#include "mozilla/dom/ContentVerifier.h"
 #include "mozilla/TimeStamp.h"
 #include "nsError.h"
 #include "nsPrintfCString.h"
@@ -1920,24 +1919,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     }
   }
 
-  // Check for a Content-Signature header and inject mediator if the header is
-  // requested and available.
-  // If requested (mLoadInfo->GetVerifySignedContent), but not present, or
-  // present but not valid, fail this channel and return
-  // NS_ERROR_INVALID_SIGNATURE to indicate a signature error and trigger a
-  // fallback load in nsDocShell.
-  // Note that OnStartRequest has already been called on the target stream
-  // listener at this point. We have to add the listener here that late to
-  // ensure that it's the last listener and can thus block the load in
-  // OnStopRequest.
-  if (!mCanceled) {
-    rv = ProcessContentSignatureHeader(mResponseHead);
-    if (NS_FAILED(rv)) {
-      LOG(("Content-signature verification failed.\n"));
-      return rv;
-    }
-  }
-
   return NS_OK;
 }
 
@@ -2219,51 +2200,6 @@ nsresult nsHttpChannel::ProcessSecurityHeaders() {
   rv = ProcessSingleSecurityHeader(nsISiteSecurityService::HEADER_HPKP,
                                    transSecInfo, flags);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult nsHttpChannel::ProcessContentSignatureHeader(
-    nsHttpResponseHead *aResponseHead) {
-  nsresult rv = NS_OK;
-
-  // we only do this if we require it in loadInfo
-  if (!mLoadInfo || !mLoadInfo->GetVerifySignedContent()) {
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(aResponseHead, NS_ERROR_ABORT);
-  nsAutoCString contentSignatureHeader;
-  nsHttpAtom atom = nsHttp::ResolveAtom("Content-Signature");
-  rv = aResponseHead->GetHeader(atom, contentSignatureHeader);
-  if (NS_FAILED(rv)) {
-    LOG(("Content-Signature header is missing but expected."));
-    DoInvalidateCacheEntry(mURI);
-    return NS_ERROR_INVALID_SIGNATURE;
-  }
-
-  // if we require a signature but it is empty, fail
-  if (contentSignatureHeader.IsEmpty()) {
-    DoInvalidateCacheEntry(mURI);
-    LOG(("An expected content-signature header is missing.\n"));
-    return NS_ERROR_INVALID_SIGNATURE;
-  }
-
-  // we ensure a content type here to avoid running into problems with
-  // content sniffing, which might sniff parts of the content before we can
-  // verify the signature
-  if (!aResponseHead->HasContentType()) {
-    NS_WARNING(
-        "Empty content type can get us in trouble when verifying "
-        "content signatures");
-    return NS_ERROR_INVALID_SIGNATURE;
-  }
-  // create a new listener that meadiates the content
-  RefPtr<ContentVerifier> contentVerifyingMediator =
-      new ContentVerifier(mListener, nullptr);
-  rv = contentVerifyingMediator->Init(contentSignatureHeader, this, nullptr);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_SIGNATURE);
-  mListener = contentVerifyingMediator;
 
   return NS_OK;
 }
@@ -4420,12 +4356,6 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry *entry,
         isForcedValid, mCachedResponseHead, mLoadFlags, mAllowStaleCacheContent,
         isImmutable, mCustomConditionalRequest, mRequestHead, entry,
         cacheControlRequest, fromPreviousSession, &doBackgroundValidation);
-  }
-
-  // If a content signature is expected to be valid in this load,
-  // set doValidation to force a signature check.
-  if (!doValidation && mLoadInfo && mLoadInfo->GetVerifySignedContent()) {
-    doValidation = true;
   }
 
   nsAutoCString requestedETag;

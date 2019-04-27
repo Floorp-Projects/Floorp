@@ -3063,8 +3063,12 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
                              bool* aBackingObjCreated);
 
 // Get the desired prototype object for an object construction from the given
-// CallArgs.  Null is returned if the default prototype should be used.
+// CallArgs.  The CallArgs must be for a constructor call.  The
+// aProtoId/aCreator arguments are used to get a default if we don't find a
+// prototype on the newTarget of the callargs.
 bool GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
+                     prototypes::id::ID aProtoId,
+                     CreateInterfaceObjectsMethod aCreator,
                      JS::MutableHandle<JSObject*> aDesiredProto);
 
 // This function is expected to be called from the constructor function for an

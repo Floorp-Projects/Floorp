@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/ClientManagerActors.h"
+#include "mozilla/dom/FileCreatorChild.h"
 #include "mozilla/dom/PBackgroundLSDatabaseChild.h"
 #include "mozilla/dom/PBackgroundLSObserverChild.h"
 #include "mozilla/dom/PBackgroundLSRequestChild.h"
@@ -24,12 +25,13 @@
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/EndpointForReportChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/PendingIPCBlobChild.h"
+#include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
-#include "mozilla/dom/ipc/PendingIPCBlobChild.h"
-#include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
@@ -308,13 +310,13 @@ bool BackgroundChildImpl::DeallocPBackgroundStorageChild(
   return true;
 }
 
-PPendingIPCBlobChild* BackgroundChildImpl::AllocPPendingIPCBlobChild(
+dom::PPendingIPCBlobChild* BackgroundChildImpl::AllocPPendingIPCBlobChild(
     const IPCBlob& aBlob) {
-  return new mozilla::dom::PendingIPCBlobChild(aBlob);
+  return new dom::PendingIPCBlobChild(aBlob);
 }
 
 bool BackgroundChildImpl::DeallocPPendingIPCBlobChild(
-    PPendingIPCBlobChild* aActor) {
+    dom::PPendingIPCBlobChild* aActor) {
   delete aActor;
   return true;
 }
@@ -367,32 +369,46 @@ bool BackgroundChildImpl::DeallocPSharedWorkerChild(
   return true;
 }
 
-PTemporaryIPCBlobChild* BackgroundChildImpl::AllocPTemporaryIPCBlobChild() {
+dom::PTemporaryIPCBlobChild*
+BackgroundChildImpl::AllocPTemporaryIPCBlobChild() {
   MOZ_CRASH("This is not supposed to be called.");
   return nullptr;
 }
 
 bool BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(
-    PTemporaryIPCBlobChild* aActor) {
-  RefPtr<mozilla::dom::TemporaryIPCBlobChild> actor =
-      dont_AddRef(static_cast<mozilla::dom::TemporaryIPCBlobChild*>(aActor));
+    dom::PTemporaryIPCBlobChild* aActor) {
+  RefPtr<dom::TemporaryIPCBlobChild> actor =
+      dont_AddRef(static_cast<dom::TemporaryIPCBlobChild*>(aActor));
   return true;
 }
 
-PIPCBlobInputStreamChild* BackgroundChildImpl::AllocPIPCBlobInputStreamChild(
-    const nsID& aID, const uint64_t& aSize) {
+dom::PFileCreatorChild* BackgroundChildImpl::AllocPFileCreatorChild(
+    const nsString& aFullPath, const nsString& aType, const nsString& aName,
+    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+    const bool& aIsFromNsIFile) {
+  return new dom::FileCreatorChild();
+}
+
+bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
+  delete static_cast<dom::FileCreatorChild*>(aActor);
+  return true;
+}
+
+dom::PIPCBlobInputStreamChild*
+BackgroundChildImpl::AllocPIPCBlobInputStreamChild(const nsID& aID,
+                                                   const uint64_t& aSize) {
   // IPCBlobInputStreamChild is refcounted. Here it's created and in
   // DeallocPIPCBlobInputStreamChild is released.
 
-  RefPtr<mozilla::dom::IPCBlobInputStreamChild> actor =
-      new mozilla::dom::IPCBlobInputStreamChild(aID, aSize);
+  RefPtr<dom::IPCBlobInputStreamChild> actor =
+      new dom::IPCBlobInputStreamChild(aID, aSize);
   return actor.forget().take();
 }
 
 bool BackgroundChildImpl::DeallocPIPCBlobInputStreamChild(
-    PIPCBlobInputStreamChild* aActor) {
-  RefPtr<mozilla::dom::IPCBlobInputStreamChild> actor =
-      dont_AddRef(static_cast<mozilla::dom::IPCBlobInputStreamChild*>(aActor));
+    dom::PIPCBlobInputStreamChild* aActor) {
+  RefPtr<dom::IPCBlobInputStreamChild> actor =
+      dont_AddRef(static_cast<dom::IPCBlobInputStreamChild*>(aActor));
   return true;
 }
 

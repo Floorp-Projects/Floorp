@@ -109,6 +109,10 @@ bool UiCompositorControllerChild::SetMaxToolbarHeight(const int32_t& aHeight) {
   return SendMaxToolbarHeight(aHeight);
 }
 
+bool UiCompositorControllerChild::SetFixedBottomOffset(int32_t aOffset) {
+  return SendFixedBottomOffset(aOffset);
+}
+
 bool UiCompositorControllerChild::SetPinned(const bool& aPinned,
                                             const int32_t& aReason) {
   if (!mIsOpen) {

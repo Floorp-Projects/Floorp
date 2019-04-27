@@ -210,6 +210,9 @@ public class GeckoSession implements Parcelable {
         public native void setMaxToolbarHeight(int height);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+        public native void setFixedBottomOffset(int offset);
+
+        @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         public native void setPinned(boolean pinned, int reason);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -3444,7 +3447,12 @@ public class GeckoSession implements Parcelable {
             public final @TargetWindow int target;
 
             /**
-             * True if and only if the request was triggered by user interaction.
+             * True if and only if the request was triggered by an HTTP redirect.
+             *
+             * If the user loads URI "a", which redirects to URI "b", then
+             * <code>onLoadRequest</code> will be called twice, first with uri "a" and
+             * <code>isRedirect = false</code>, then with uri "b" and
+             * <code>isRedirect = true</code>.
              */
             public final boolean isRedirect;
         }

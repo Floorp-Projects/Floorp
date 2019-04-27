@@ -9,7 +9,7 @@ Object {
   "isExtension": false,
   "isPrettyPrinted": true,
   "isWasm": false,
-  "relativeUrl": "http://localhost:8000/examples/base.js:formatted",
+  "relativeUrl": "/examples/base.js:formatted",
   "url": "http://localhost:8000/examples/base.js:formatted",
 }
 `;

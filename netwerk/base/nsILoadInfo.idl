@@ -566,21 +566,6 @@ interface nsILoadInfo : nsISupports
    * when *not* upgrading purely for telemetry.
    */
   [infallible] readonly attribute boolean browserWouldUpgradeInsecureRequests;
-  /**
-   * If true, the content of the channel is queued up and checked
-   * if it matches a content signature. Note, setting this flag
-   * to true will negatively impact performance since the preloader
-   * can not start until all of the content is fetched from the
-   * netwerk.
-   *
-   * Only use that in combination with TYPE_DOCUMENT.
-   */
-  [infallible] attribute boolean verifySignedContent;
-
-  /**
-   * If true, this load will fail if it has no SRI integrity
-   */
-  [infallible] attribute boolean enforceSRI;
 
   /**
    * If true, toplevel data: URI navigation is allowed

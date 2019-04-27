@@ -248,6 +248,9 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
                                                   updates->mLargeShmems);
       }
       updates->mScrollUpdates = std::move(mPendingScrollUpdates[renderRoot]);
+      for (const auto& entry : updates->mScrollUpdates) {
+        nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/entry.first);
+      }
     }
   }
 

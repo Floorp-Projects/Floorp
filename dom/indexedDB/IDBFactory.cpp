@@ -501,15 +501,13 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
 int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
                         JS::Handle<JS::Value> aSecond, ErrorResult& aRv) {
   Key first, second;
-  nsresult rv = first.SetFromJSVal(aCx, aFirst);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  first.SetFromJSVal(aCx, aFirst, aRv);
+  if (aRv.Failed()) {
     return 0;
   }
 
-  rv = second.SetFromJSVal(aCx, aSecond);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  second.SetFromJSVal(aCx, aSecond, aRv);
+  if (aRv.Failed()) {
     return 0;
   }
 

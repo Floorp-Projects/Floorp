@@ -56,6 +56,11 @@
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include <algorithm>
+#ifdef MOZ_WAYLAND
+#  include <gdk/gdk.h>
+#  include <gdk/gdkx.h>
+#  include <gdk/gdkwayland.h>
+#endif /* MOZ_WAYLAND */
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -1494,14 +1499,20 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
   nscoord oldAlignmentOffset = mAlignmentOffset;
 
+  bool inWayland = false;
+#ifdef MOZ_WAYLAND
+  inWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#endif
+
   // If a panel is being moved or has flip="none", don't constrain or flip it,
   // in order to avoid visual noise when moving windows between screens.
   // However, if a panel is already constrained or flipped (mIsOffset), then we
   // want to continue to calculate this. Also, always do this for content
   // shells, so that the popup doesn't extend outside the containing frame.
-  if (mInContentShell ||
-      (mFlip != FlipType_None &&
-       (!aIsMove || mIsOffset || mPopupType != ePopupTypePanel))) {
+  if (!inWayland &&
+      (mInContentShell ||
+       (mFlip != FlipType_None &&
+        (!aIsMove || mIsOffset || mPopupType != ePopupTypePanel)))) {
     int32_t appPerDev = presContext->AppUnitsPerDevPixel();
     LayoutDeviceIntRect anchorRectDevPix =
         LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRect, appPerDev);
