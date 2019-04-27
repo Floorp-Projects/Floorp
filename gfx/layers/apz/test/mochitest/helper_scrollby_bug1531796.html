@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that scrollBy() doesn't scroll more than it should</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  if (getPlatform() == "android") {
+    ok(true, "Skipping test on Android (bug 1547435)");
+    return;
+  }
+
+  const maxSteps = 20;
+  let scrollPerStep = 40;
+  for (let step = 0; step < maxSteps; step++) {
+    window.scrollBy(0, scrollPerStep);
+    window.requestAnimationFrame(testDriver);
+    yield;
+  }
+  is(window.scrollY, maxSteps * scrollPerStep, "Scrolled by the expected amount");
+}
+
+waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+
+  </script>
+  <style>
+    body {
+      height: 5000px;
+      background: linear-gradient(red, black);
+    }
+  </style>
+</head>
+<body>
+</body>
+</html>
