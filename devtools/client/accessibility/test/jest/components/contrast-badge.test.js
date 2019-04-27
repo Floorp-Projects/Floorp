@@ -29,6 +29,7 @@ describe("ContrastBadge component:", () => {
     const wrapper = shallow(ContrastBadge({
       value: 5.11,
       isLargeText: false,
+      score: "AA",
     }));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
@@ -39,6 +40,7 @@ describe("ContrastBadge component:", () => {
       min: 5.11,
       max: 6.25,
       isLargeText: false,
+      score: "AA",
     }));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
@@ -48,6 +50,7 @@ describe("ContrastBadge component:", () => {
     const wrapper = shallow(ContrastBadge({
       value: 3.77,
       isLargeText: true,
+      score: "AA",
     }));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
@@ -57,6 +60,7 @@ describe("ContrastBadge component:", () => {
     const wrapper = mount(Provider({ store }, ContrastBadge({
       value: 3.77,
       isLargeText: false,
+      score: "fail",
     })));
 
     expect(wrapper.html()).toMatchSnapshot();
