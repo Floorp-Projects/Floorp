@@ -45,7 +45,7 @@ class nsSVGSwitchFrame final : public nsSVGGFrame {
 
   // nsSVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aPackage,
+                        imgDrawingParams& aImgParams,
                         const nsIntRect* aDirtyRect = nullptr) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   virtual void ReflowSVG() override;

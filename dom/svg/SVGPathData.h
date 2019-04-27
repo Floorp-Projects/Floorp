@@ -135,7 +135,7 @@ class SVGPathData {
 
   float GetPathLength() const;
 
-  uint32_t GetPathSegAtLength(float aLength) const;
+  uint32_t GetPathSegAtLength(float aDistance) const;
 
   void GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const;
 
@@ -148,7 +148,7 @@ class SVGPathData {
    * Returns true, except on OOM, in which case returns false.
    */
   bool GetDistancesFromOriginToEndsOfVisibleSegments(
-      FallibleTArray<double>* aArray) const;
+      FallibleTArray<double>* aOutput) const;
 
   /**
    * This returns a path without the extra little line segments that
@@ -157,7 +157,8 @@ class SVGPathData {
    */
   already_AddRefed<Path> BuildPathForMeasuring() const;
 
-  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder, uint8_t aCapStyle,
+  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder,
+                                   uint8_t aStrokeLineCap,
                                    Float aStrokeWidth) const;
   /**
    * This function tries to build the path by an array of StylePathCommand,
@@ -166,7 +167,7 @@ class SVGPathData {
    */
   static already_AddRefed<Path> BuildPath(
       const nsTArray<StylePathCommand>& aPath, PathBuilder* aBuilder,
-      uint8_t aCapStyle, Float aStrokeWidth, float aZoomFactor = 1.0);
+      uint8_t aStrokeLineCap, Float aStrokeWidth, float aZoomFactor = 1.0);
 
   const_iterator begin() const { return mData.Elements(); }
   const_iterator end() const { return mData.Elements() + mData.Length(); }
