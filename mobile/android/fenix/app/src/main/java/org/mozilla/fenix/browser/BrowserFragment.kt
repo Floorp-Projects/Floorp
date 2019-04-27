@@ -302,6 +302,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
     override fun onResume() {
         super.onResume()
+        getSessionById()?.let {
+            (activity as HomeActivity).updateThemeForSession(it)
+        }
         context?.components?.core?.let {
             val preferredColorScheme = it.getPreferredColorScheme()
             if (it.engine.settings.preferredColorScheme != preferredColorScheme) {

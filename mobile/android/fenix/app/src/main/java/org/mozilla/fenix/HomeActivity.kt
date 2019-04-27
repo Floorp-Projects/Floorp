@@ -218,6 +218,14 @@ open class HomeActivity : AppCompatActivity() {
         }
     }
 
+    fun updateThemeForSession(session: Session) {
+        if (session.private && !themeManager.currentTheme.isPrivate()) {
+            browsingModeManager.mode = BrowsingModeManager.Mode.Private
+        } else if (!session.private && themeManager.currentTheme.isPrivate()) {
+            browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+        }
+    }
+
     private fun subscribeToSessions(): SessionManager.Observer {
 
         return object : SessionManager.Observer {
@@ -243,6 +251,11 @@ open class HomeActivity : AppCompatActivity() {
                 components.core.sessionManager.sessions.forEach {
                     it.register(singleSessionObserver)
                 }
+            }
+
+            override fun onSessionSelected(session: Session) {
+                super.onSessionSelected(session)
+                updateThemeForSession(session)
             }
         }.also { components.core.sessionManager.register(it) }
     }
