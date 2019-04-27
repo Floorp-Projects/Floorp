@@ -97,7 +97,7 @@ nsresult StateUpdatingCommandBase::GetCommandStateParams(
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return GetCurrentState(tagName, htmlEditor, &aParams);
+  return GetCurrentState(tagName, htmlEditor, aParams);
 }
 
 /*****************************************************************************
@@ -152,9 +152,9 @@ nsresult PasteNoFormattingCommand::GetCommandStateParams(
 
 StaticRefPtr<StyleUpdatingCommand> StyleUpdatingCommand::sInstance;
 
-nsresult StyleUpdatingCommand::GetCurrentState(
-    nsAtom* aTagName, HTMLEditor* aHTMLEditor,
-    nsICommandParams* aParams) const {
+nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
+                                               HTMLEditor* aHTMLEditor,
+                                               nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -167,13 +167,12 @@ nsresult StyleUpdatingCommand::GetCurrentState(
       aTagName, nullptr, EmptyString(), &firstOfSelectionHasProp,
       &anyOfSelectionHasProp, &allOfSelectionHasProp);
 
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_ENABLED, NS_SUCCEEDED(rv));
-  params->SetBool(STATE_ALL, allOfSelectionHasProp);
-  params->SetBool(STATE_ANY, anyOfSelectionHasProp);
-  params->SetBool(STATE_MIXED, anyOfSelectionHasProp && !allOfSelectionHasProp);
-  params->SetBool(STATE_BEGIN, firstOfSelectionHasProp);
-  params->SetBool(STATE_END, allOfSelectionHasProp);  // not completely accurate
+  aParams.SetBool(STATE_ENABLED, NS_SUCCEEDED(rv));
+  aParams.SetBool(STATE_ALL, allOfSelectionHasProp);
+  aParams.SetBool(STATE_ANY, anyOfSelectionHasProp);
+  aParams.SetBool(STATE_MIXED, anyOfSelectionHasProp && !allOfSelectionHasProp);
+  aParams.SetBool(STATE_BEGIN, firstOfSelectionHasProp);
+  aParams.SetBool(STATE_END, allOfSelectionHasProp);  // not completely accurate
   return NS_OK;
 }
 
@@ -193,7 +192,7 @@ nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
     doTagRemoval = true;
   } else {
     // check current selection; set doTagRemoval if formatting should be removed
-    nsresult rv = GetCurrentState(aTagName, aHTMLEditor, params);
+    nsresult rv = GetCurrentState(aTagName, aHTMLEditor, *params);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -251,7 +250,7 @@ nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
 StaticRefPtr<ListCommand> ListCommand::sInstance;
 
 nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
-                                      nsICommandParams* aParams) const {
+                                      nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -262,10 +261,9 @@ nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool inList = aTagName->Equals(localName);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_ALL, !bMixed && inList);
-  params->SetBool(STATE_MIXED, bMixed);
-  params->SetBool(STATE_ENABLED, true);
+  aParams.SetBool(STATE_ALL, !bMixed && inList);
+  aParams.SetBool(STATE_MIXED, bMixed);
+  aParams.SetBool(STATE_ENABLED, true);
   return NS_OK;
 }
 
@@ -277,7 +275,7 @@ nsresult ListCommand::ToggleState(nsAtom* aTagName,
 
   nsresult rv;
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  rv = GetCurrentState(aTagName, aHTMLEditor, params);
+  rv = GetCurrentState(aTagName, aHTMLEditor, *params);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -306,7 +304,7 @@ StaticRefPtr<ListItemCommand> ListItemCommand::sInstance;
 
 nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
                                           HTMLEditor* aHTMLEditor,
-                                          nsICommandParams* aParams) const {
+                                          nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -326,9 +324,8 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
     }
   }
 
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_ALL, !bMixed && inList);
-  params->SetBool(STATE_MIXED, bMixed);
+  aParams.SetBool(STATE_ALL, !bMixed && inList);
+  aParams.SetBool(STATE_MIXED, bMixed);
 
   return NS_OK;
 }
@@ -341,7 +338,7 @@ nsresult ListItemCommand::ToggleState(nsAtom* aTagName,
 
   // Need to use aTagName????
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  GetCurrentState(aTagName, aHTMLEditor, params);
+  GetCurrentState(aTagName, aHTMLEditor, *params);
   ErrorResult error;
   bool inList = params->GetBool(STATE_ALL, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -554,7 +551,7 @@ nsresult MultiStateCommandBase::GetCommandStateParams(
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return GetCurrentState(MOZ_KnownLive(htmlEditor), &aParams);
+  return GetCurrentState(MOZ_KnownLive(htmlEditor), aParams);
 }
 
 /*****************************************************************************
@@ -564,7 +561,7 @@ nsresult MultiStateCommandBase::GetCommandStateParams(
 StaticRefPtr<ParagraphStateCommand> ParagraphStateCommand::sInstance;
 
 nsresult ParagraphStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+    HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -575,9 +572,8 @@ nsresult ParagraphStateCommand::GetCurrentState(
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString tOutStateString;
     LossyCopyUTF16toASCII(outStateString, tOutStateString);
-    nsCommandParams* params = aParams->AsCommandParams();
-    params->SetBool(STATE_MIXED, outMixed);
-    params->SetCString(STATE_ATTRIBUTE, tOutStateString);
+    aParams.SetBool(STATE_MIXED, outMixed);
+    aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
   }
   return rv;
 }
@@ -596,8 +592,8 @@ nsresult ParagraphStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
 StaticRefPtr<FontFaceStateCommand> FontFaceStateCommand::sInstance;
 
-nsresult FontFaceStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+nsresult FontFaceStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
+                                               nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -606,9 +602,8 @@ nsresult FontFaceStateCommand::GetCurrentState(
   bool outMixed;
   nsresult rv = aHTMLEditor->GetFontFaceState(&outMixed, outStateString);
   if (NS_SUCCEEDED(rv)) {
-    nsCommandParams* params = aParams->AsCommandParams();
-    params->SetBool(STATE_MIXED, outMixed);
-    params->SetCString(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString));
+    aParams.SetBool(STATE_MIXED, outMixed);
+    aParams.SetCString(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString));
   }
   return rv;
 }
@@ -665,8 +660,8 @@ nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
 
 StaticRefPtr<FontSizeStateCommand> FontSizeStateCommand::sInstance;
 
-nsresult FontSizeStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+nsresult FontSizeStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
+                                               nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -680,10 +675,9 @@ nsresult FontSizeStateCommand::GetCurrentState(
 
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_MIXED, anyHas && !allHas);
-  params->SetCString(STATE_ATTRIBUTE, tOutStateString);
-  params->SetBool(STATE_ENABLED, true);
+  aParams.SetBool(STATE_MIXED, anyHas && !allHas);
+  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_ENABLED, true);
 
   return rv;
 }
@@ -739,7 +733,7 @@ nsresult FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<FontColorStateCommand> FontColorStateCommand::sInstance;
 
 nsresult FontColorStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+    HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -753,9 +747,8 @@ nsresult FontColorStateCommand::GetCurrentState(
 
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_MIXED, outMixed);
-  params->SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_MIXED, outMixed);
+  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -789,7 +782,7 @@ nsresult FontColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<HighlightColorStateCommand> HighlightColorStateCommand::sInstance;
 
 nsresult HighlightColorStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+    HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -801,9 +794,8 @@ nsresult HighlightColorStateCommand::GetCurrentState(
 
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_MIXED, outMixed);
-  params->SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_MIXED, outMixed);
+  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -838,7 +830,7 @@ StaticRefPtr<BackgroundColorStateCommand>
     BackgroundColorStateCommand::sInstance;
 
 nsresult BackgroundColorStateCommand::GetCurrentState(
-    HTMLEditor* aHTMLEditor, nsICommandParams* aParams) const {
+    HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -850,9 +842,8 @@ nsresult BackgroundColorStateCommand::GetCurrentState(
 
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_MIXED, outMixed);
-  params->SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_MIXED, outMixed);
+  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -871,7 +862,7 @@ nsresult BackgroundColorStateCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<AlignCommand> AlignCommand::sInstance;
 
 nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
-                                       nsICommandParams* aParams) const {
+                                       nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -903,9 +894,8 @@ nsresult AlignCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   }
   nsAutoCString tOutStateString;
   LossyCopyUTF16toASCII(outStateString, tOutStateString);
-  nsCommandParams* params = aParams->AsCommandParams();
-  params->SetBool(STATE_MIXED, outMixed);
-  params->SetCString(STATE_ATTRIBUTE, tOutStateString);
+  aParams.SetBool(STATE_MIXED, outMixed);
+  aParams.SetCString(STATE_ATTRIBUTE, tOutStateString);
   return NS_OK;
 }
 
@@ -924,23 +914,21 @@ nsresult AlignCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<AbsolutePositioningCommand> AbsolutePositioningCommand::sInstance;
 
 nsresult AbsolutePositioningCommand::GetCurrentState(
-    nsAtom* aTagName, HTMLEditor* aHTMLEditor,
-    nsICommandParams* aParams) const {
+    nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
   if (NS_WARN_IF(!aHTMLEditor)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCommandParams* params = aParams->AsCommandParams();
   if (!aHTMLEditor->IsAbsolutePositionEditorEnabled()) {
-    params->SetBool(STATE_MIXED, false);
-    params->SetCString(STATE_ATTRIBUTE, EmptyCString());
+    aParams.SetBool(STATE_MIXED, false);
+    aParams.SetCString(STATE_ATTRIBUTE, EmptyCString());
     return NS_OK;
   }
 
   RefPtr<Element> container =
       aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
-  params->SetBool(STATE_MIXED, false);
-  params->SetCString(STATE_ATTRIBUTE, container ? NS_LITERAL_CSTRING("absolute")
+  aParams.SetBool(STATE_MIXED, false);
+  aParams.SetCString(STATE_ATTRIBUTE, container ? NS_LITERAL_CSTRING("absolute")
                                                 : EmptyCString());
   return NS_OK;
 }
