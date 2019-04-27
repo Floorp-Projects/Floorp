@@ -2368,9 +2368,10 @@ void nsHttpChannel::ProcessAltService() {
   OriginAttributes originAttributes;
   NS_GetOriginAttributes(this, originAttributes);
 
-  AltSvcMapping::ProcessHeader(
-      altSvc, scheme, originHost, originPort, mUsername, mPrivateBrowsing,
-      callbacks, proxyInfo, mCaps & NS_HTTP_DISALLOW_SPDY, originAttributes);
+  AltSvcMapping::ProcessHeader(altSvc, scheme, originHost, originPort,
+                               mUsername, GetTopWindowOrigin(),
+                               mPrivateBrowsing, callbacks, proxyInfo,
+                               mCaps & NS_HTTP_DISALLOW_SPDY, originAttributes);
 }
 
 nsresult nsHttpChannel::ProcessResponse() {
@@ -6564,9 +6565,9 @@ nsresult nsHttpChannel::BeginConnect() {
   OriginAttributes originAttributes;
   NS_GetOriginAttributes(this, originAttributes);
 
-  RefPtr<nsHttpConnectionInfo> connInfo =
-      new nsHttpConnectionInfo(host, port, EmptyCString(), mUsername, proxyInfo,
-                               originAttributes, isHttps);
+  RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
+      host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
+      originAttributes, isHttps);
   mAllowAltSvc = (mAllowAltSvc && !gHttpHandler->IsSpdyBlacklisted(connInfo));
 
   RefPtr<AltSvcMapping> mapping;
