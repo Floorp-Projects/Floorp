@@ -1123,6 +1123,10 @@ class ContentParent final : public PContentParent,
                                                    const bool& aDefer,
                                                    bool* aLoaded);
 
+  mozilla::ipc::IPCResult RecvSetupFamilyCharMap(
+      const uint32_t& aGeneration,
+      const mozilla::fontlist::Pointer& aFamilyPtr);
+
   mozilla::ipc::IPCResult RecvNotifyBenchmarkResult(const nsString& aCodecName,
                                                     const uint32_t& aDecodeFPS);
 

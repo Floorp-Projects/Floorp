@@ -33,6 +33,8 @@
 
 typedef struct hb_blob_t hb_blob_t;
 
+class SharedBitSet;
+
 class gfxSparseBitSet {
  private:
   friend class SharedBitSet;
@@ -298,6 +300,8 @@ class gfxSparseBitSet {
     }
   }
 
+  inline void Union(const SharedBitSet& aBitset);
+
   void Compact() {
     // TODO: Discard any empty blocks, and adjust index accordingly.
     // (May not be worth doing, though, because we so rarely clear bits
@@ -444,6 +448,7 @@ class SharedBitSet {
   }
 
  private:
+  friend class gfxSparseBitSet;
   SharedBitSet() = delete;
 
   explicit SharedBitSet(const gfxSparseBitSet& aBitset)
@@ -474,6 +479,37 @@ class SharedBitSet {
   // After the two "header" fields above, we have a block index array
   // of uint16_t[mBlockIndexCount], followed by mBlockCount Block records.
 };
+
+// Union the contents of a SharedBitSet with the target gfxSparseBitSet
+inline void gfxSparseBitSet::Union(const SharedBitSet& aBitset) {
+  // ensure mBlockIndex is large enough
+  while (mBlockIndex.Length() < aBitset.mBlockIndexCount) {
+    mBlockIndex.AppendElement(NO_BLOCK);
+  }
+  auto blockIndex = reinterpret_cast<const uint16_t*>(&aBitset + 1);
+  auto blocks = reinterpret_cast<const Block*>(blockIndex + aBitset.mBlockIndexCount);
+  for (uint32_t i = 0; i < aBitset.mBlockIndexCount; ++i) {
+    // if it is missing (implicitly empty) in source, just skip
+    if (blockIndex[i] == NO_BLOCK) {
+      continue;
+    }
+    // if the block is missing, just copy from source bitset
+    if (mBlockIndex[i] == NO_BLOCK) {
+      mBlocks.AppendElement(blocks[blockIndex[i]]);
+      MOZ_ASSERT(mBlocks.Length() < 0xffff, "block index overflow");
+      mBlockIndex[i] = uint16_t(mBlocks.Length() - 1);
+      continue;
+    }
+    // else set existing target block to the union of both
+    uint32_t* dst = reinterpret_cast<uint32_t*>(
+        &mBlocks[mBlockIndex[i]].mBits);
+    const uint32_t* src = reinterpret_cast<const uint32_t*>(
+        &blocks[blockIndex[i]].mBits);
+    for (uint32_t j = 0; j < BLOCK_SIZE / 4; ++j) {
+      dst[j] |= src[j];
+    }
+  }
+}
 
 #define TRUETYPE_TAG(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
 
