@@ -187,7 +187,8 @@ class SVGAnimatedLength {
                                     bool aDoSetAttr);
   nsresult SetAnimValue(float aValue, SVGElement* aSVGElement);
   void SetAnimValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
-  nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
+  nsresult NewValueSpecifiedUnits(uint16_t aUnitType,
+                                  float aValueInSpecifiedUnits,
                                   SVGElement* aSVGElement);
   nsresult ConvertToSpecifiedUnits(uint16_t aUnitType, SVGElement* aSVGElement);
   already_AddRefed<DOMSVGLength> ToDOMBaseVal(SVGElement* aSVGElement);

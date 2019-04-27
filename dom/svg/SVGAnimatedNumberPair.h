@@ -42,7 +42,8 @@ class SVGAnimatedNumberPair {
   nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement);
   void GetBaseValueString(nsAString& aValue) const;
 
-  void SetBaseValue(float aValue, PairIndex aIndex, SVGElement* aSVGElement);
+  void SetBaseValue(float aValue, PairIndex aPairIndex,
+                    SVGElement* aSVGElement);
   void SetBaseValues(float aValue1, float aValue2, SVGElement* aSVGElement);
   float GetBaseValue(PairIndex aIndex) const {
     return mBaseVal[aIndex == eFirst ? 0 : 1];

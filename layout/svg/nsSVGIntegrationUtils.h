@@ -141,7 +141,7 @@ class nsSVGIntegrationUtils final {
    * repaint
    */
   static nsRect GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
-                                                const nsRect& aDamageRect);
+                                                const nsRect& aDirtyRect);
 
   /**
    * Returns true if the given point is not clipped out by effects.
