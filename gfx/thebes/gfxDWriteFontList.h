@@ -367,20 +367,36 @@ class gfxDWriteFontList : public gfxPlatformFontList {
 
   // initialize font lists
   nsresult InitFontListForPlatform() override;
+  void InitSharedFontListForPlatform() override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 
-  virtual gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
-                                        WeightRange aWeightForEntry,
-                                        StretchRange aStretchForEntry,
-                                        SlantStyleRange aStyleForEntry);
+  gfxFontEntry* CreateFontEntry(
+      mozilla::fontlist::Face* aFace,
+      const mozilla::fontlist::Family* aFamily) override;
 
-  virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
-                                         WeightRange aWeightForEntry,
-                                         StretchRange aStretchForEntry,
-                                         SlantStyleRange aStyleForEntry,
-                                         const uint8_t* aFontData,
-                                         uint32_t aLength);
+  void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
+                              bool aNeedFullnamePostscriptNames) override;
+
+  bool ReadFaceNames(mozilla::fontlist::Family* aFamily,
+                     mozilla::fontlist::Face* aFace, nsCString& aPSName,
+                     nsCString& aFullName) override;
+
+  void GetFacesInitDataForFamily(
+      const mozilla::fontlist::Family* aFamily,
+      nsTArray<mozilla::fontlist::Face::InitData>& aFaces) const override;
+
+  gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
+                                WeightRange aWeightForEntry,
+                                StretchRange aStretchForEntry,
+                                SlantStyleRange aStyleForEntry) override;
+
+  gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
+                                 WeightRange aWeightForEntry,
+                                 StretchRange aStretchForEntry,
+                                 SlantStyleRange aStyleForEntry,
+                                 const uint8_t* aFontData,
+                                 uint32_t aLength) override;
 
   IDWriteGdiInterop* GetGDIInterop() { return mGDIInterop; }
   bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
@@ -422,6 +438,11 @@ class gfxDWriteFontList : public gfxPlatformFontList {
 
   void GetFontsFromCollection(IDWriteFontCollection* aCollection);
 
+  void AppendFamiliesFromCollection(
+      IDWriteFontCollection* aCollection,
+      nsTArray<mozilla::fontlist::Family::InitData>& aFamilies,
+      const nsTArray<nsCString>* aForceClassicFams = nullptr);
+
 #ifdef MOZ_BUNDLED_FONTS
   already_AddRefed<IDWriteFontCollection> CreateBundledFontsCollection(
       IDWriteFactory* aFactory);
@@ -438,6 +459,7 @@ class gfxDWriteFontList : public gfxPlatformFontList {
    * alternative font names.
    */
   FontFamilyTable mFontSubstitutes;
+  nsClassHashtable<nsCStringHashKey, nsCString> mSubstitutions;
 
   virtual already_AddRefed<FontInfoData> CreateFontInfoData();
 
