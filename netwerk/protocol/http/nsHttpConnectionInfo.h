@@ -125,9 +125,10 @@ class nsHttpConnectionInfo final : public ARefBase {
   bool GetBeConservative() const { return mHashKey.CharAt(6) == 'C'; }
 
   void SetIsolated(bool aIsolated) {
-    mHashKey.SetCharAt(aIsolated ? 'i' : '.', 7);
+    mIsolated = aIsolated;
+    BuildHashKey();
   }
-  bool GetIsolated() const { return mHashKey.CharAt(7) == 'i'; }
+  bool GetIsolated() const { return mIsolated; }
 
   void SetTlsFlags(uint32_t aTlsFlags);
   uint32_t GetTlsFlags() const { return mTlsFlags; }
@@ -205,6 +206,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   OriginAttributes mOriginAttributes;
 
   uint32_t mTlsFlags;
+  uint16_t mIsolated : 1;
   uint16_t mTrrUsed : 1;
   uint16_t mTrrDisabled : 1;
   uint16_t mIPv4Disabled : 1;
