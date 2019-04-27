@@ -236,7 +236,7 @@ fuzzy(0-107,0-1823) css-multicol/multicol-gap-fraction-001.xht
 fuzzy-if(winWidget||OSX||gtkWidget,0-204,0-1048) fuzzy-if(skiaContent,0-208,0-1048) css-multicol/multicol-gap-large-001.xht
 fuzzy(0-225,0-920) css-multicol/multicol-gap-large-002.xht
 fuzzy(0-204,0-930) fuzzy-if(skiaContent,0-208,0-930) css-multicol/multicol-gap-negative-001.xht
-fails css-multicol/multicol-height-block-child-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-height-block-child-001.xht
 fuzzy(0-255,0-3762) css-multicol/multicol-inherit-001.xht
 fuzzy(0-135,0-1893) css-multicol/multicol-inherit-002.xht
 fails-if(!OSX) random-if(OSX) css-multicol/multicol-inherit-003.xht
@@ -274,18 +274,21 @@ fuzzy(0-127,0-500) css-multicol/multicol-rule-ridge-000.xht
 fuzzy(0-106,0-354) css-multicol/multicol-rule-solid-000.xht
 fails-if(!OSX) random-if(OSX) css-multicol/multicol-rule-stacking-001.xht
 fails-if(!OSX||webrender) random-if(OSX) css-multicol/multicol-shorthand-001.xht
-fails css-multicol/multicol-span-000.xht
-fails css-multicol/multicol-span-all-001.xht
-fails css-multicol/multicol-span-all-002.xht
-fails css-multicol/multicol-span-all-003.xht
-fails css-multicol/multicol-span-all-margin-001.xht
-fails css-multicol/multicol-span-all-margin-002.xht
-fails css-multicol/multicol-span-all-margin-bottom-001.xht
-fails css-multicol/multicol-span-all-margin-nested-001.xht
-fails css-multicol/multicol-span-all-margin-nested-002.xht
-fails css-multicol/multicol-span-all-margin-nested-firstchild-001.xht
-fails css-multicol/multicol-span-float-001.xht
-fails css-multicol/multicol-span-none-001.xht
+
+# Bug 1547160: Fix existing reftests failure related to column-span
+pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-000.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-002.xht
+pref(layout.css.column-span.enabled,true) fails-if(!OSX) random-if(OSX) css-multicol/multicol-span-all-003.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-002.xht
+pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-all-margin-bottom-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-nested-001.xht
+pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-all-margin-nested-002.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-all-margin-nested-firstchild-001.xht
+pref(layout.css.column-span.enabled,true) css-multicol/multicol-span-float-001.xht
+pref(layout.css.column-span.enabled,true) fails css-multicol/multicol-span-none-001.xht
+
 fails css-multicol/multicol-table-cell-001.xht
 fails css-multicol/multicol-table-cell-height-001.xht
 fails css-multicol/multicol-table-cell-height-002.xht
@@ -308,7 +311,7 @@ fuzzy(0-255,0-2808) css-multicol/multicol-rule-large-001.xht
 # fails because column-span property not implemented (Bug 616436)
 fails css-multicol/multicol-fill-auto-block-children-001.xht
 fails css-multicol/multicol-fill-auto-block-children-002.xht
-fails css-multicol/multicol-span-all-block-sibling-003.xht
+pref(layout.css.column-span.enabled,true) fuzzy-if(winWidget,40-47,8-8) fuzzy-if(OSX,0-27,0-11) css-multicol/multicol-span-all-block-sibling-003.xht
 
 # skip these tests since they haven't been triaged yet.
 # These tests were added to the tree as part of an update for Bug 1430939.
