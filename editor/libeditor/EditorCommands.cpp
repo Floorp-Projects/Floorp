@@ -41,7 +41,7 @@ EditorCommand::IsCommandEnabled(const char* aCommandName,
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   TextEditor* textEditor = editor ? editor->AsTextEditor() : nullptr;
-  *aIsEnabled = IsCommandEnabled(aCommandName, textEditor);
+  *aIsEnabled = IsCommandEnabled(aCommandName, MOZ_KnownLive(textEditor));
   return NS_OK;
 }
 
@@ -91,16 +91,19 @@ EditorCommand::GetCommandStateParams(const char* aCommandName,
   }
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   if (editor) {
-    return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
-                                 editor->AsTextEditor(), nullptr);
+    return GetCommandStateParams(
+        aCommandName, MOZ_KnownLive(*aParams->AsCommandParams()),
+        MOZ_KnownLive(editor->AsTextEditor()), nullptr);
   }
   nsCOMPtr<nsIEditingSession> editingSession =
       do_QueryInterface(aCommandRefCon);
   if (editingSession) {
-    return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
+    return GetCommandStateParams(aCommandName,
+                                 MOZ_KnownLive(*aParams->AsCommandParams()),
                                  nullptr, editingSession);
   }
-  return GetCommandStateParams(aCommandName, *aParams->AsCommandParams(),
+  return GetCommandStateParams(aCommandName,
+                               MOZ_KnownLive(*aParams->AsCommandParams()),
                                nullptr, nullptr);
 }
 
