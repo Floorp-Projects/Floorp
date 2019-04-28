@@ -928,10 +928,13 @@ class AstTableFill : public AstExpr {
 
  public:
   static const AstExprKind Kind = AstExprKind::TableFill;
-  explicit AstTableFill(AstRef targetTable,
-                        AstExpr* start, AstExpr* val, AstExpr* len)
-      : AstExpr(Kind, ExprType::Void), targetTable_(targetTable),
-        start_(start), val_(val), len_(len) {}
+  explicit AstTableFill(AstRef targetTable, AstExpr* start, AstExpr* val,
+                        AstExpr* len)
+      : AstExpr(Kind, ExprType::Void),
+        targetTable_(targetTable),
+        start_(start),
+        val_(val),
+        len_(len) {}
 
   AstRef& targetTable() { return targetTable_; }
   AstExpr& start() const { return *start_; }

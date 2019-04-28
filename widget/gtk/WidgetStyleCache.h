@@ -52,6 +52,6 @@ GtkStyleContext* CreateStyleContextWithStates(
 
 void ResetWidgetCache(void);
 
-void StyleContextSetScale(GtkStyleContext *style, gint aScaleFactor);
+void StyleContextSetScale(GtkStyleContext* style, gint aScaleFactor);
 
 #endif  // WidgetStyleCache_h

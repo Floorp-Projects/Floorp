@@ -796,7 +796,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
 class SystemCairoClipper : public ClipExporter {
  public:
   explicit SystemCairoClipper(cairo_t* aContext, gint aScaleFactor = 1)
-    : mContext(aContext), mScaleFactor(aScaleFactor) {}
+      : mContext(aContext), mScaleFactor(aScaleFactor) {}
 
   void BeginClip(const Matrix& aTransform) override {
     cairo_matrix_t mat;
@@ -818,8 +818,7 @@ class SystemCairoClipper : public ClipExporter {
 
   void BezierTo(const Point& aCP1, const Point& aCP2,
                 const Point& aCP3) override {
-    cairo_curve_to(mContext,
-                   aCP1.x / mScaleFactor, aCP1.y / mScaleFactor,
+    cairo_curve_to(mContext, aCP1.x / mScaleFactor, aCP1.y / mScaleFactor,
                    aCP2.x / mScaleFactor, aCP2.y / mScaleFactor,
                    aCP3.x / mScaleFactor, aCP3.y / mScaleFactor);
     mCurrentPoint = aCP3;
@@ -851,7 +850,7 @@ class SystemCairoClipper : public ClipExporter {
  private:
   cairo_t* mContext;
   Point mCurrentPoint;
-  gint  mScaleFactor;
+  gint mScaleFactor;
 };
 
 static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
@@ -864,11 +863,10 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
                                nsITheme::Transparency aTransparency) {
   bool isX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   static auto sCairoSurfaceSetDeviceScalePtr =
-      (void (*)(cairo_surface_t *, double, double))dlsym(
-            RTLD_DEFAULT, "cairo_surface_set_device_scale");
+      (void (*)(cairo_surface_t*, double, double))dlsym(
+          RTLD_DEFAULT, "cairo_surface_set_device_scale");
   // Support HiDPI widget styles on Wayland only for now.
-  bool useHiDPIWidgets = !isX11Display &&
-                         (aScaleFactor != 1) &&
+  bool useHiDPIWidgets = !isX11Display && (aScaleFactor != 1) &&
                          (sCairoSurfaceSetDeviceScalePtr != nullptr);
 
   Point drawOffsetScaled;
@@ -877,14 +875,14 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   if (!aSnapped) {
     // If we are not snapped, we depend on the DT for translation.
     drawOffsetOriginal = aDrawOrigin;
-    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor :
-                                         drawOffsetOriginal;
+    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor
+                                       : drawOffsetOriginal;
     transform = aDrawTarget->GetTransform().PreTranslate(drawOffsetScaled);
   } else {
     // Otherwise, we only need to take the device offset into account.
     drawOffsetOriginal = aDrawOrigin - aContext->GetDeviceOffset();
-    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor :
-                                         drawOffsetOriginal;
+    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor
+                                       : drawOffsetOriginal;
     transform = Matrix::Translation(drawOffsetScaled);
   }
 
@@ -917,10 +915,9 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
 #  else
       if (!borrow.GetXRenderFormat()) {
 #  endif
-        surf = cairo_xlib_surface_create(borrow.GetDisplay(),
-                                         borrow.GetDrawable(),
-                                         borrow.GetVisual(),
-                                         size.width, size.height);
+        surf = cairo_xlib_surface_create(
+            borrow.GetDisplay(), borrow.GetDrawable(), borrow.GetVisual(),
+            size.width, size.height);
       }
       if (!NS_WARN_IF(!surf)) {
         Point offset = borrow.GetOffset();
@@ -972,7 +969,7 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
       cairo_t* cr = cairo_create(surf);
       if (!NS_WARN_IF(!cr)) {
         RefPtr<SystemCairoClipper> clipper =
-          new SystemCairoClipper(cr, useHiDPIWidgets ? aScaleFactor : 1);
+            new SystemCairoClipper(cr, useHiDPIWidgets ? aScaleFactor : 1);
         aContext->ExportClip(*clipper);
 
         cairo_set_matrix(cr, &mat);
@@ -1028,13 +1025,12 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
         // The widget either needs to be masked or has transparency, so use the
         // slower drawing path.
         aDrawTarget->DrawSurface(
-          dataSurface,
-          Rect(aSnapped
-                 ? drawOffsetOriginal -
-                    aDrawTarget->GetTransform().GetTranslation()
-                 : drawOffsetOriginal,
-               Size(aDrawSize)),
-          Rect(0, 0, aDrawSize.width, aDrawSize.height));
+            dataSurface,
+            Rect(aSnapped ? drawOffsetOriginal -
+                                aDrawTarget->GetTransform().GetTranslation()
+                          : drawOffsetOriginal,
+                 Size(aDrawSize)),
+            Rect(0, 0, aDrawSize.width, aDrawSize.height));
         cairo_destroy(cr);
       }
 

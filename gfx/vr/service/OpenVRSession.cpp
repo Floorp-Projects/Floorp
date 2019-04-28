@@ -219,7 +219,8 @@ bool GenerateTempFileName(nsCString& aPath) {
   umask(prevMask);
   if (fd == -1) {
     NS_WARNING(nsPrintfCString("OpenVR - Creating temp file failed: %s",
-                               strerror(errno)).get());
+                               strerror(errno))
+                   .get());
     return false;
   }
   close(fd);

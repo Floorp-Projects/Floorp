@@ -5518,7 +5518,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
             rv = UpgradeLocalStorageArchiveFrom0To1(connection);
           } /* else if (version == 1) {
             rv = UpgradeLocalStorageArchiveFrom1To2(connection);
-          } */ else {
+          } */
+          else {
             QM_WARNING(
                 "Unable to initialize LocalStorage archive, no upgrade path is "
                 "available!");

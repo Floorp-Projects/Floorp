@@ -1509,10 +1509,9 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   // However, if a panel is already constrained or flipped (mIsOffset), then we
   // want to continue to calculate this. Also, always do this for content
   // shells, so that the popup doesn't extend outside the containing frame.
-  if (!inWayland &&
-      (mInContentShell ||
-       (mFlip != FlipType_None &&
-        (!aIsMove || mIsOffset || mPopupType != ePopupTypePanel)))) {
+  if (!inWayland && (mInContentShell || (mFlip != FlipType_None &&
+                                         (!aIsMove || mIsOffset ||
+                                          mPopupType != ePopupTypePanel)))) {
     int32_t appPerDev = presContext->AppUnitsPerDevPixel();
     LayoutDeviceIntRect anchorRectDevPix =
         LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRect, appPerDev);

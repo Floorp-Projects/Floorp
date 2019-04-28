@@ -2033,8 +2033,8 @@ inline bool OpIter<Policy>::readTableGet(uint32_t* tableIndex, Value* index) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex, Value* initValue,
-                                          Value* delta) {
+inline bool OpIter<Policy>::readTableGrow(uint32_t* tableIndex,
+                                          Value* initValue, Value* delta) {
   MOZ_ASSERT(Classify(op_) == OpKind::TableGrow);
 
   if (!popWithType(ValType::I32, delta)) {

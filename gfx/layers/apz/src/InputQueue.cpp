@@ -36,7 +36,8 @@ nsEventStatus InputQueue::ReceiveInputEvent(
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& event = aEvent.AsMultiTouchInput();
-      return ReceiveTouchInput(aTarget, aFlags, event, aOutInputBlockId, aTouchBehaviors);
+      return ReceiveTouchInput(aTarget, aFlags, event, aOutInputBlockId,
+                               aTouchBehaviors);
     }
 
     case SCROLLWHEEL_INPUT: {
@@ -431,7 +432,8 @@ void InputQueue::MaybeRequestContentResponse(
   } else {
     waitForMainThread = true;
   }
-  if (aBlock->AsTouchBlock() && !aBlock->AsTouchBlock()->HasAllowedTouchBehaviors()) {
+  if (aBlock->AsTouchBlock() &&
+      !aBlock->AsTouchBlock()->HasAllowedTouchBehaviors()) {
     INPQ_LOG("waiting for main thread touch-action info on block %p\n", aBlock);
     waitForMainThread = true;
   }

@@ -1187,7 +1187,7 @@ BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
 
     RefPtr<BrowserParent> browserParent =
         new BrowserParent(constructorSender, tabId, aContext,
-                      aBrowsingContext->Canonical(), chromeFlags);
+                          aBrowsingContext->Canonical(), chromeFlags);
 
     // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
     // releases the ref taken.

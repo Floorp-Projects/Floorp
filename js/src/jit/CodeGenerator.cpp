@@ -14031,8 +14031,8 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
     MOZ_ASSERT(ToRegister(ins->ifTrueExpr()) == out,
                "true expr input is reused for output");
 
-    Assembler::Condition cond = Assembler::InvertCondition(JSOpToCondition(
-                                    ins->compareType(), ins->jsop()));
+    Assembler::Condition cond = Assembler::InvertCondition(
+        JSOpToCondition(ins->compareType(), ins->jsop()));
     const LAllocation* rhs = ins->rightExpr();
     const LAllocation* falseExpr = ins->ifFalseExpr();
     Register lhs = ToRegister(ins->leftExpr());
@@ -14043,7 +14043,8 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
         // happen, since |rhs| and |falseExpr| are marked useAny() by
         // LIRGenerator::visitWasmSelect, and useAny() means "register only"
         // on arm32.
-        masm.cmp32Move32(cond, lhs, ToRegister(rhs), ToRegister(falseExpr), out);
+        masm.cmp32Move32(cond, lhs, ToRegister(rhs), ToRegister(falseExpr),
+                         out);
       } else {
         masm.cmp32Load32(cond, lhs, ToRegister(rhs), ToAddress(falseExpr), out);
       }

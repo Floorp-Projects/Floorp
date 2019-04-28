@@ -473,7 +473,8 @@ nsRect nsImageBoxFrame::GetDestRect(const nsPoint& aOffset,
     nsSize intrinsicRatio;
     if (mIntrinsicSize.width > 0 && mIntrinsicSize.height > 0) {
       // Image has a valid size; use it as intrinsic size & ratio.
-      intrinsicSize = IntrinsicSize(mIntrinsicSize.width, mIntrinsicSize.height);
+      intrinsicSize =
+          IntrinsicSize(mIntrinsicSize.width, mIntrinsicSize.height);
       intrinsicRatio = mIntrinsicSize;
     } else {
       // Image doesn't have a (valid) intrinsic size.
