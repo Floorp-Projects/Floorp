@@ -93,7 +93,7 @@ void WebGLBuffer::BufferData(GLenum target, size_t size, const void* data,
 
   if (!ValidateBufferUsageEnum(mContext, usage)) return;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
   // bug 790879
   if (mContext->gl->WorkAroundDriverBugs() && size > INT32_MAX) {
     mContext->ErrorOutOfMemory("Allocation size too large.");
