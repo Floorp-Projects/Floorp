@@ -2786,7 +2786,12 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     return ss->xdrUncompressedSource(xdr, sizeof(Unit), uncompressedLength);
   };
 
-  auto CodeBinASTData = [xdr, ss]() -> XDRResult {
+  auto CodeBinASTData = [xdr
+#if defined(JS_BUILD_BINAST)
+                         ,
+                         ss
+#endif
+  ]() -> XDRResult {
 #if !defined(JS_BUILD_BINAST)
     return xdr->fail(JS::TranscodeResult_Throw);
 #else
