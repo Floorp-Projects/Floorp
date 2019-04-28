@@ -257,11 +257,11 @@ void ScriptPreloader::Cleanup() {
 void ScriptPreloader::StartCacheWrite() {
   MOZ_ASSERT(!mSaveThread);
 
-  Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread),
-                              this);
+  Unused << NS_NewNamedThread("SaveScripts", getter_AddRefs(mSaveThread), this);
 
   nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-  barrier->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__, EmptyString());
+  barrier->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__,
+                      EmptyString());
 }
 
 void ScriptPreloader::InvalidateCache() {
@@ -1157,7 +1157,8 @@ nsresult ScriptPreloader::GetState(nsIPropertyBag** aState) {
   return NS_OK;
 }
 
-nsresult ScriptPreloader::BlockShutdown(nsIAsyncShutdownClient* aBarrierClient) {
+nsresult ScriptPreloader::BlockShutdown(
+    nsIAsyncShutdownClient* aBarrierClient) {
   // If we're waiting on a timeout to finish saving, interrupt it and just save
   // immediately.
   mSaveMonitor.NotifyAll();

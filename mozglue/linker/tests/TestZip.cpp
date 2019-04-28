@@ -65,7 +65,7 @@ TEST(Zip, TestZip)
 {
   Zip::Stream s;
   RefPtr<Zip> z = Zip::Create((void *)TEST_ZIP, TEST_ZIP_SIZE);
-  for (auto& entry : test_entries) {
+  for (auto &entry : test_entries) {
     ASSERT_TRUE(z->GetStream(entry, &s))
     << "Could not get entry \"" << entry << "\"";
   }
@@ -76,7 +76,7 @@ TEST(Zip, NoCentralDir)
   Zip::Stream s;
   RefPtr<Zip> z =
       Zip::Create((void *)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
-  for (auto& entry : no_central_dir_entries) {
+  for (auto &entry : no_central_dir_entries) {
     ASSERT_TRUE(z->GetStream(entry, &s))
     << "Could not get entry \"" << entry << "\"";
   }

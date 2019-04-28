@@ -459,9 +459,9 @@ void DOMOverlays::TranslateElement(Element& aElement,
       // sanitize it and replace the element's content.
       RefPtr<DocumentFragment> fragment =
           new DocumentFragment(aElement.OwnerDoc()->NodeInfoManager());
-      nsContentUtils::ParseFragmentHTML(
-          aTranslation.mValue, fragment, nsGkAtoms::_template,
-          kNameSpaceID_XHTML, false, true);
+      nsContentUtils::ParseFragmentHTML(aTranslation.mValue, fragment,
+                                        nsGkAtoms::_template,
+                                        kNameSpaceID_XHTML, false, true);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }

@@ -267,7 +267,8 @@ class nsTextFrame : public nsFrame {
   RenderedText GetRenderedText(
       uint32_t aStartOffset = 0, uint32_t aEndOffset = UINT32_MAX,
       TextOffsetType aOffsetType = TextOffsetType::OffsetsInContentText,
-      TrailingWhitespace aTrimTrailingWhitespace = TrailingWhitespace::Trim) final;
+      TrailingWhitespace aTrimTrailingWhitespace =
+          TrailingWhitespace::Trim) final;
 
   nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame,
                                     bool aIncludeShadows = true);

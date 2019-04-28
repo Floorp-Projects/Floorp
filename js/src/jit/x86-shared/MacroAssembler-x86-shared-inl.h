@@ -999,9 +999,8 @@ void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
   cmovCCl(cond, Operand(src), dest);
 }
 
-void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
-                                 Register rhs, const Address& src,
-                                 Register dest) {
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
+                                 const Address& src, Register dest) {
   cmp32(lhs, rhs);
   cmovCCl(cond, Operand(src), dest);
 }

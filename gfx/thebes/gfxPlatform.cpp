@@ -571,11 +571,13 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   // Bit 18 is for the zoom display, which requires the mouse position and thus
   // currently only works in wrench.
   GFX_WEBRENDER_DEBUG(".small-screen", wr::DebugFlags_SMALL_SCREEN)
-  GFX_WEBRENDER_DEBUG(".disable-opaque-pass", wr::DebugFlags_DISABLE_OPAQUE_PASS)
+  GFX_WEBRENDER_DEBUG(".disable-opaque-pass",
+                      wr::DebugFlags_DISABLE_OPAQUE_PASS)
   GFX_WEBRENDER_DEBUG(".disable-alpha-pass", wr::DebugFlags_DISABLE_ALPHA_PASS)
   GFX_WEBRENDER_DEBUG(".disable-clip-masks", wr::DebugFlags_DISABLE_CLIP_MASKS)
   GFX_WEBRENDER_DEBUG(".disable-text-prims", wr::DebugFlags_DISABLE_TEXT_PRIMS)
-  GFX_WEBRENDER_DEBUG(".disable-gradient-prims", wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
+  GFX_WEBRENDER_DEBUG(".disable-gradient-prims",
+                      wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);

@@ -523,7 +523,7 @@ class MOZ_RAII PEHeaders final {
   // There may be other code sections in the binary besides .text
   Maybe<Span<const uint8_t>> GetTextSectionInfo() const {
     return FindSection(".text", IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE |
-                                IMAGE_SCN_MEM_READ);
+                                    IMAGE_SCN_MEM_READ);
   }
 
   static bool IsValid(PIMAGE_IMPORT_DESCRIPTOR aImpDesc) {
@@ -554,11 +554,11 @@ class MOZ_RAII PEHeaders final {
 
   Span<IMAGE_SECTION_HEADER> GetSectionTable() const {
     MOZ_ASSERT(*this);
-    auto base = RVAToPtr<PIMAGE_SECTION_HEADER>(&mPeHeader->OptionalHeader,
-                         mPeHeader->FileHeader.SizeOfOptionalHeader);
+    auto base = RVAToPtr<PIMAGE_SECTION_HEADER>(
+        &mPeHeader->OptionalHeader, mPeHeader->FileHeader.SizeOfOptionalHeader);
     // The Windows loader has an internal limit of 96 sections (per PE spec)
-    auto numSections = std::min(mPeHeader->FileHeader.NumberOfSections,
-                                WORD(96));
+    auto numSections =
+        std::min(mPeHeader->FileHeader.NumberOfSections, WORD(96));
     return MakeSpan(base, numSections);
   }
 

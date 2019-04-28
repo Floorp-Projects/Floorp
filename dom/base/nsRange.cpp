@@ -2795,10 +2795,10 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 
       // Finally capture the text, if requested.
       if (aTextList) {
-        nsIFrame::RenderedText renderedText = f->GetRenderedText(
-            textContentStart, textContentEnd,
-            nsIFrame::TextOffsetType::OffsetsInContentText,
-            nsIFrame::TrailingWhitespace::DontTrim);
+        nsIFrame::RenderedText renderedText =
+            f->GetRenderedText(textContentStart, textContentEnd,
+                               nsIFrame::TextOffsetType::OffsetsInContentText,
+                               nsIFrame::TrailingWhitespace::DontTrim);
 
         aTextList->AppendElement(renderedText.mString, fallible);
       }

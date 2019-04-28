@@ -4162,8 +4162,8 @@ class BaseCompiler final : public BaseCompilerInterface {
       if (l.type == MIRType::RefOrNull) {
         uint32_t offs = fr.localOffset(l);
         MOZ_ASSERT(0 == (offs % sizeof(void*)));
-        stackMapGenerator_.machineStackTracker
-                          .setGCPointer(offs / sizeof(void*));
+        stackMapGenerator_.machineStackTracker.setGCPointer(offs /
+                                                            sizeof(void*));
       }
     }
 
@@ -4185,8 +4185,8 @@ class BaseCompiler final : public BaseCompilerInterface {
           MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
           // We should have just visited this local in the preceding loop.
-          MOZ_ASSERT(stackMapGenerator_.machineStackTracker
-                                       .isGCPointer(offs / sizeof(void*)));
+          MOZ_ASSERT(stackMapGenerator_.machineStackTracker.isGCPointer(
+              offs / sizeof(void*)));
           break;
         }
         case MIRType::Double:

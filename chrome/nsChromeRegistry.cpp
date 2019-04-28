@@ -272,7 +272,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI** aResult) {
 
 ////////////////////////////////////////////////////////////////////////
 
-
 void nsChromeRegistry::FlushAllCaches() {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");

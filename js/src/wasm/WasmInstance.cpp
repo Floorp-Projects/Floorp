@@ -853,8 +853,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
 /* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableFill(Instance* instance, uint32_t start, void* value,
-                    uint32_t len, uint32_t tableIndex)
-{
+                    uint32_t len, uint32_t tableIndex) {
   Table& table = *instance->tables()[tableIndex];
   MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
 

@@ -1906,9 +1906,8 @@ void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
   MOZ_CRASH("No known use cases");
 }
 
-void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
-                                 Register rhs, const Address& src,
-                                 Register dest) {
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
+                                 const Address& src, Register dest) {
   // This is never used, but must be present to facilitate linking on arm.
   MOZ_CRASH("No known use cases");
 }

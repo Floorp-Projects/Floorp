@@ -1439,8 +1439,8 @@ void nsXULPopupManager::FirePopupHidingEvent(
       // you won't be able to see it. If there is a next popup, indicating that
       // mutliple popups are rolling up, don't wait and hide the popup right
       // away since the effect would likely be undesirable.
-      if (StaticPrefs::xul_panel_animations_enabled() &&
-          !aNextPopup && aPopup->IsElement() &&
+      if (StaticPrefs::xul_panel_animations_enabled() && !aNextPopup &&
+          aPopup->IsElement() &&
           aPopup->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
         // If animate="false" then don't transition at all. If animate="cancel",
         // only show the transition if cancelling the popup or rolling up.
