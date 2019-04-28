@@ -16,4 +16,3 @@ MFBT_API bool IsWin32kLockedDown();
 }  // namespace mozilla
 
 #endif  // mozilla_WindowsProcessMitigations_h
-

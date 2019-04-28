@@ -69,7 +69,6 @@ void remoteClientNotificationCallback(CFNotificationCenterRef aCenter, void* aOb
   NSDictionary* userInfoDict = (__bridge NSDictionary*)aUserInfo;
   if (userInfoDict && [userInfoDict objectForKey:@"commandLineArgs"] &&
       [userInfoDict objectForKey:@"senderPath"]) {
-
     NSString* senderPath = [userInfoDict objectForKey:@"senderPath"];
     if (![senderPath isEqual:[[NSBundle mainBundle] bundlePath]]) {
       // The caller is not the process at the same path as we are at. Skipping.
@@ -209,13 +208,12 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
   if (!shallProceedLikeNoRemote) {
     // We check for other running instances only if -no-remote was not specified.
     // The check is needed so the marAppApplyUpdateSuccess.js test doesn't fail on next call.
-    NSArray* appsWithMatchingId = [NSRunningApplication runningApplicationsWithBundleIdentifier:
-                                    [[NSBundle mainBundle] bundleIdentifier]];
+    NSArray* appsWithMatchingId = [NSRunningApplication
+        runningApplicationsWithBundleIdentifier:[[NSBundle mainBundle] bundleIdentifier]];
     NSString* currentAppBundlePath = [[NSBundle mainBundle] bundlePath];
     NSRunningApplication* currentApp = [NSRunningApplication currentApplication];
     for (NSRunningApplication* app in appsWithMatchingId) {
-      if ([currentAppBundlePath isEqual:[[app bundleURL] path]] &&
-          ![currentApp isEqual:app]) {
+      if ([currentAppBundlePath isEqual:[[app bundleURL] path]] && ![currentApp isEqual:app]) {
         runningInstanceFound = YES;
         break;
       }
@@ -226,11 +224,8 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
     // There is another instance of this app already running!
     NSArray* arguments = [[NSProcessInfo processInfo] arguments];
     NSString* senderPath = [[NSBundle mainBundle] bundlePath];
-    CFDictionaryRef userInfoDict = (__bridge CFDictionaryRef) @{@"commandLineArgs" :
-                                                                  arguments,
-                                                                @"senderPath":
-                                                                  senderPath
-                                                                };
+    CFDictionaryRef userInfoDict =
+        (__bridge CFDictionaryRef) @{@"commandLineArgs" : arguments, @"senderPath" : senderPath};
 
     // This code is shared between Firefox, Thunderbird and other Mozilla products.
     // So we need a notification name that is unique to the product, so we

@@ -44,10 +44,11 @@ bool nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom* aAtom) {
                 aAtom == nsCSSPseudoElements::before() ||
                 aAtom == nsCSSPseudoElements::firstLetter() ||
                 aAtom == nsCSSPseudoElements::firstLine();
-  NS_ASSERTION(result == PseudoElementHasFlags(
-                             GetPseudoType(aAtom, EnabledState::IgnoreEnabledState),
-                             CSS_PSEUDO_ELEMENT_IS_CSS2),
-               "result doesn't match flags");
+  NS_ASSERTION(
+      result == PseudoElementHasFlags(
+                    GetPseudoType(aAtom, EnabledState::IgnoreEnabledState),
+                    CSS_PSEUDO_ELEMENT_IS_CSS2),
+      "result doesn't match flags");
   return result;
 }
 

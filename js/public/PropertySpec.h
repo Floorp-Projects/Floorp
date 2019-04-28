@@ -179,8 +179,9 @@ struct JSPropertySpec {
         name, flags | JSPROP_GETTER | (setterName ? JSPROP_SETTER : 0),
         AccessorsOrValue::fromAccessors(
             JSPropertySpec::Accessor::selfHostedAccessor(getterName),
-            setterName ? JSPropertySpec::Accessor::selfHostedAccessor(setterName)
-                       : JSPropertySpec::Accessor::noAccessor()));
+            setterName
+                ? JSPropertySpec::Accessor::selfHostedAccessor(setterName)
+                : JSPropertySpec::Accessor::noAccessor()));
   }
 
   static constexpr JSPropertySpec int32Value(const char* name, uint8_t flags,
@@ -232,9 +233,9 @@ struct JSPropertySpec {
   static_assert(sizeof(SelfHostedWrapper) == sizeof(JSNativeWrapper),
                 "JSPropertySpec::getter/setter must be compact");
   static_assert(offsetof(SelfHostedWrapper, unused) ==
-                    offsetof(JSNativeWrapper, op) &&
-                offsetof(SelfHostedWrapper, funname) ==
-                    offsetof(JSNativeWrapper, info),
+                        offsetof(JSNativeWrapper, op) &&
+                    offsetof(SelfHostedWrapper, funname) ==
+                        offsetof(JSNativeWrapper, info),
                 "checkAccessorsAreNative below require that "
                 "SelfHostedWrapper::funname overlay "
                 "JSNativeWrapper::info and "

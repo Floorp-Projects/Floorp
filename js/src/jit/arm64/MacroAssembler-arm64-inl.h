@@ -1595,9 +1595,8 @@ void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
   MOZ_CRASH("NYI");
 }
 
-void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
-                                 Register rhs, const Address& src,
-                                 Register dest) {
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
+                                 const Address& src, Register dest) {
   MOZ_CRASH("NYI");
 }
 

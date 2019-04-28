@@ -5073,11 +5073,9 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
                jsop == JSOP_GT || jsop == JSOP_LE || jsop == JSOP_GE);
     if (compTy == MCompare::Compare_Int32 ||
         compTy == MCompare::Compare_UInt32) {
-      auto* lir = new (alloc())
-        LWasmCompareAndSelect(useRegister(comp->lhs()), useAny(comp->rhs()),
-                              compTy, jsop,
-                              useRegisterAtStart(ins->trueExpr()),
-                              useAny(ins->falseExpr()));
+      auto* lir = new (alloc()) LWasmCompareAndSelect(
+          useRegister(comp->lhs()), useAny(comp->rhs()), compTy, jsop,
+          useRegisterAtStart(ins->trueExpr()), useAny(ins->falseExpr()));
 
       defineReuseInput(lir, ins, LWasmCompareAndSelect::IfTrueExprIndex);
       return;
