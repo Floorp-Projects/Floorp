@@ -6,13 +6,17 @@ package org.mozilla.fenix.search
 
 import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
+import android.graphics.Typeface.BOLD
+import android.graphics.Typeface.ITALIC
 import android.os.Bundle
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
@@ -33,6 +37,7 @@ import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -90,9 +95,28 @@ class SearchFragment : Fragment(), BackHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { result ->
-                    (activity as HomeActivity)
-                        .openToBrowserAndLoad(result, from = BrowserDirection.FromSearch)
-                    // TODO add metrics, also should we have confirmation before going to a URL?
+                    activity?.let {
+                        AlertDialog.Builder(it).apply {
+                            val spannable = resources.getSpannable(
+                                R.string.qr_scanner_confirmation_dialog_message,
+                                listOf(
+                                    getString(R.string.app_name) to listOf(StyleSpan(BOLD)),
+                                    result to listOf(StyleSpan(ITALIC))
+                                )
+                            )
+                            setMessage(spannable)
+                            setNegativeButton("DENY") { dialog: DialogInterface, _ ->
+                                dialog.cancel()
+                            }
+                            setPositiveButton("ALLOW") { dialog: DialogInterface, _ ->
+                                (activity as HomeActivity)
+                                    .openToBrowserAndLoad(result, from = BrowserDirection.FromSearch)
+                                dialog.dismiss()
+                                // TODO add metrics
+                            }
+                            create()
+                        }.show()
+                    }
                 }),
             owner = this,
             view = view

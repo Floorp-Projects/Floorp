@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #974 - Added telemetry for bookmarks
 - #113 - Added QR code scanner
 - #975 - Added telemetry for preference switches
+- #1955 - Added a confirmation dialog for QR code and barcode searches
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP
