@@ -270,7 +270,7 @@ windows-aarch64-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
-    # - web-platform-tests - disabled due to wpt11 experiencing BSoD
+    - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
 

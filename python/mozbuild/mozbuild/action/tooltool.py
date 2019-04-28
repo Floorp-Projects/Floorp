@@ -559,7 +559,12 @@ def unpack_file(filename):
             return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
-        if not execute('tar -Jxf %s 2>&1' % filename):
+        # Not using tar -Jxf because it fails on Windows for some reason.
+        process = Popen(['xz', '-d', '-c', filename], stdout=PIPE)
+        tar = tarfile.open(fileobj=process.stdout, mode='r|')
+        tar.extractall()
+        tar.close()
+        if not process.wait():
             return False
     elif zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')

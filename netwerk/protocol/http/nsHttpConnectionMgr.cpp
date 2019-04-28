@@ -4025,7 +4025,9 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
   if (mCaps & NS_HTTP_LOAD_ANONYMOUS)
     tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
 
-  if (ci->GetPrivate()) tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
+  if (ci->GetPrivate() || ci->GetIsolated()) {
+    tmpFlags |= nsISocketTransport::NO_PERMANENT_STORAGE;
+  }
 
   if (ci->GetLessThanTls13()) {
     tmpFlags |= nsISocketTransport::DONT_TRY_ESNI;

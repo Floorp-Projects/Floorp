@@ -81,9 +81,11 @@ worker_defaults = {
 }
 
 
-def run_task_url(config):
-    return '{}/raw-file/{}/taskcluster/scripts/run-task'.format(
-                config.params['head_repository'], config.params['head_rev'])
+def script_url(config, script):
+    return '{}/raw-file/{}/taskcluster/scripts/{}'.format(
+                config.params['head_repository'],
+                config.params['head_rev'],
+                script)
 
 
 @run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults)
@@ -141,10 +143,17 @@ def generic_worker_run_task(config, job, taskdesc):
         })
     worker['mounts'].append({
         'content': {
-            'url': run_task_url(config),
+            'url': script_url(config, 'run-task'),
         },
         'file': './run-task',
     })
+    if worker.get('env', {}).get('MOZ_FETCHES'):
+        worker['mounts'].append({
+            'content': {
+                'url': script_url(config, 'misc/fetch-content'),
+            },
+            'file': './fetch-content',
+        })
 
     run_command = run['command']
     if isinstance(run_command, basestring):
