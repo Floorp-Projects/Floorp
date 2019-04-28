@@ -103,7 +103,7 @@ def post_to_docker(tar, api_path, **kwargs):
                 status_line = {}
                 sys.stderr.write('{}\n'.format(data['status']))
         elif 'stream' in data:
-            sys.stderr.write(data['stream'].encode("utf-8"))
+            sys.stderr.write(data['stream'])
         elif 'aux' in data:
             sys.stderr.write(repr(data['aux']))
         elif 'error' in data:
