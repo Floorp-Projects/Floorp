@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+interface nsICookieSettings;
 interface nsIURI;
 interface nsIInterfaceRequestor;
 interface nsILoadGroup;
@@ -76,6 +77,7 @@ interface nsIWebSocketChannel : nsISupports
      * @param aLoadingNode
      * @param aLoadingPrincipal
      * @param aTriggeringPrincipal
+     * @param aCookieSettings
      * @param aSecurityFlags
      * @param aContentPolicyType
      *        These will be used as values for the nsILoadInfo object on the
@@ -89,6 +91,17 @@ interface nsIWebSocketChannel : nsISupports
      * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
      * But less error prone is to just supply a loadingNode.
      */
+     [notxpcom] nsresult initLoadInfoNative(in Node aLoadingNode,
+                                            in nsIPrincipal aLoadingPrincipal,
+                                            in nsIPrincipal aTriggeringPrincipal,
+                                            in nsICookieSettings aCookieSettings,
+                                            in unsigned long aSecurityFlags,
+                                            in unsigned long aContentPolicyType);
+
+     /**
+      * Similar to the previous one but without nsICookieSettings.
+      * This method is used by JS code where nsICookieSettings is not exposed.
+      */
      [must_use] void initLoadInfo(in Node aLoadingNode,
                                   in nsIPrincipal aLoadingPrincipal,
                                   in nsIPrincipal aTriggeringPrincipal,
