@@ -573,11 +573,22 @@ static uint32_t EvaluateInitExpr(const ValVector& globalImportValues,
   MOZ_CRASH("bad initializer expression");
 }
 
+#ifdef DEBUG
+static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
+  for (const DataSegment* seg : vec) {
+    if (seg->active()) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
                           const JSFunctionVector& funcImports,
                           HandleWasmMemoryObject memoryObj,
                           const ValVector& globalImportValues) const {
-  MOZ_ASSERT_IF(!memoryObj, dataSegments_.empty());
+  MOZ_ASSERT_IF(!memoryObj, AllSegmentsArePassive(dataSegments_));
 
   Instance& instance = instanceObj->instance();
   const SharedTableVector& tables = instance.tables();
@@ -804,7 +815,7 @@ bool Module::instantiateMemory(JSContext* cx,
                                MutableHandleWasmMemoryObject memory) const {
   if (!metadata().usesMemory()) {
     MOZ_ASSERT(!memory);
-    MOZ_ASSERT(dataSegments_.empty());
+    MOZ_ASSERT(AllSegmentsArePassive(dataSegments_));
     return true;
   }
 
