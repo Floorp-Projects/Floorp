@@ -317,9 +317,12 @@ class ReadableStreamController : public StreamController {
     addFlags(Flag_ExternalSource);
   }
   static void clearUnderlyingSource(
-      JS::Handle<ReadableStreamController*> controller) {
+      JS::Handle<ReadableStreamController*> controller,
+      bool finalizeSource = true) {
     if (controller->hasExternalSource()) {
-      controller->externalSource()->finalize();
+      if (finalizeSource) {
+        controller->externalSource()->finalize();
+      }
       controller->setFlags(controller->flags() & ~Flag_ExternalSource);
     }
     controller->setUnderlyingSource(JS::UndefinedHandleValue);
