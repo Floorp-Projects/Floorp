@@ -1,3 +1,17 @@
+function isIsolated(key) {
+  return key.charAt(7) == "i";
+}
+
+function hasTopWindowOrigin(key, origin) {
+  let tokenAtEnd = `{{${origin}}}`;
+  let endPart = key.slice(-tokenAtEnd.length);
+  return endPart == tokenAtEnd;
+}
+
+function hasAnyTopWindowOrigin(key) {
+  return !!key.match(/{{[^}]+}}/);
+}
+
 add_task(async function() {
   info("Starting tlsSessionTickets test");
 
@@ -82,6 +96,16 @@ add_task(async function() {
     is(hashKeys.length, 3, "We should have observed 3 loads for " + trackingURL);
     is(hashKeys[1], hashKeys[2], "The second and third hash keys should match");
     isnot(hashKeys[0], hashKeys[1], "The first and second hash keys should not match");
+
+    ok(isIsolated(hashKeys[0]), "The first connection must have been isolated");
+    ok(!isIsolated(hashKeys[1]), "The second connection must not have been isolated");
+    ok(!isIsolated(hashKeys[2]), "The third connection must not have been isolated");
+    ok(hasTopWindowOrigin(hashKeys[0], TEST_DOMAIN.replace(/\/$/, "")),
+       "The first connection must be bound to its top-level window");
+    ok(!hasAnyTopWindowOrigin(hashKeys[1]),
+       "The second connection must not be bound to a top-level window");
+    ok(!hasAnyTopWindowOrigin(hashKeys[2]),
+       "The third connection must not be bound to a top-level window");
   });
 
   info("Removing the tab");
