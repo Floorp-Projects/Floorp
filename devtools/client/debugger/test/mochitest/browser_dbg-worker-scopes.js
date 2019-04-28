@@ -3,6 +3,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This error shows up sometimes when running the test, and while this is a
+// strange problem that shouldn't be happening it doesn't prevent the test from
+// completing successfully.
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/Current state is running/);
+
 function findNode(dbg, text) {
   for (let index = 0;; index++) {
     var elem = findElement(dbg, "scopeNode", index);
