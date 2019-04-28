@@ -62,7 +62,7 @@
   -moz-appearance: toolbox;
   height: 1px;
   margin-top: -1px;
-  opacity: 0;
+  opacity: 0.001;
 }
 
 #tabbrowser-tabs {
