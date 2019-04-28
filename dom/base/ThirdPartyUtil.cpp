@@ -156,7 +156,18 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
   nsCString bottomDomain =
       GetBaseDomainFromWindow(nsPIDOMWindowOuter::From(aWindow));
   if (bottomDomain.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+    // We may have an about:blank window here.  Fall back to the slower code
+    // path which is principal aware.
+    nsCOMPtr<nsIURI> currentURI;
+    nsresult rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = GetBaseDomain(currentURI, bottomDomain);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   if (aURI) {
@@ -188,10 +199,19 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
 
     nsCString parentDomain = GetBaseDomainFromWindow(parent);
     if (parentDomain.IsEmpty()) {
-      return NS_ERROR_FAILURE;
-    }
+      // We may have an about:blank window here.  Fall back to the slower code
+      // path which is principal aware.
+      nsCOMPtr<nsIURI> parentURI;
+      nsresult rv = GetURIFromWindow(parent, getter_AddRefs(parentURI));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    result = IsThirdPartyInternal(bottomDomain, parentDomain);
+      rv = IsThirdPartyInternal(bottomDomain, parentURI, &result);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } else {
+      result = IsThirdPartyInternal(bottomDomain, parentDomain);
+    }
 
     if (result) {
       *aResult = true;
