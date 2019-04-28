@@ -5395,7 +5395,7 @@ mozilla::ipc::IPCResult Snapshot::RecvCheckpoint(
     nsTArray<LSWriteInfo>&& aWriteInfos) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mUsage >= 0);
-  MOZ_ASSERT(mPeakUsage >= mUsage);
+  MOZ_DIAGNOSTIC_ASSERT(mPeakUsage >= mUsage);
 
   if (NS_WARN_IF(aWriteInfos.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
