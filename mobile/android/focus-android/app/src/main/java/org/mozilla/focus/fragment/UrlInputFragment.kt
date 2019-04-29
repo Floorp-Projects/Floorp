@@ -783,7 +783,7 @@ class UrlInputFragment :
     }
 
     private fun onFilter(searchText: String) {
-        onFilter(searchText, null)
+        onFilter(searchText, urlView)
     }
 
     @Suppress("ComplexMethod")
@@ -804,8 +804,10 @@ class UrlInputFragment :
             } else {
                 null
             }
-            view.applyAutocompleteResult(AutocompleteResult(
-                    result!!.text, result.source, result.totalItems, { result.url }))
+            if (result != null) {
+                view.applyAutocompleteResult(AutocompleteResult(
+                        result.text, result.source, result.totalItems, { result.url }))
+            }
         }
 
         searchSuggestionsViewModel.setSearchQuery(searchText)
