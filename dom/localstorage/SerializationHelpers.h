@@ -27,15 +27,18 @@ struct ParamTraits<mozilla::dom::LSValue> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mBuffer);
+    WriteParam(aMsg, aParam.mUTF16Length);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mBuffer);
+    return ReadParam(aMsg, aIter, &aResult->mBuffer) &&
+           ReadParam(aMsg, aIter, &aResult->mUTF16Length);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
     LogParam(aParam.mBuffer, aLog);
+    LogParam(aParam.mUTF16Length, aLog);
   }
 };
 
