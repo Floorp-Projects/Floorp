@@ -677,6 +677,56 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvQueryVisitedState(
       InfallibleTArray<URIParams>&& aURIs);
 
+ private:
+  void SuppressDisplayport(bool aEnabled);
+
+  void DestroyInternal();
+
+  void SetRenderLayersInternal(bool aEnabled, bool aForceRepaint);
+
+  already_AddRefed<nsFrameLoader> GetFrameLoader(
+      bool aUseCachedFrameLoaderAfterDestroy = false) const;
+
+  void TryCacheDPIAndScale();
+
+  bool AsyncPanZoomEnabled() const;
+
+  // Update state prior to routing an APZ-aware event to the child process.
+  // |aOutTargetGuid| will contain the identifier
+  // of the APZC instance that handled the event. aOutTargetGuid may be null.
+  // |aOutInputBlockId| will contain the identifier of the input block
+  // that this event was added to, if there was one. aOutInputBlockId may be
+  // null. |aOutApzResponse| will contain the response that the APZ gave when
+  // processing the input block; this is used for generating appropriate
+  // pointercancel events.
+  void ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
+                                   uint64_t* aOutInputBlockId,
+                                   nsEventStatus* aOutApzResponse);
+
+  // When dropping links we perform a roundtrip from
+  // Parent (SendRealDragEvent) -> Child -> Parent (RecvDropLinks)
+  // and have to ensure that the child did not modify links to be loaded.
+  bool QueryDropLinksForVerification();
+
+ private:
+  // This is used when APZ needs to find the BrowserParent associated with a
+  // layer to dispatch events.
+  typedef nsDataHashtable<nsUint64HashKey, BrowserParent*>
+      LayerToBrowserParentTable;
+  static LayerToBrowserParentTable* sLayerToBrowserParentTable;
+
+  static void AddBrowserParentToTable(layers::LayersId aLayersId,
+                                      BrowserParent* aBrowserParent);
+
+  static void RemoveBrowserParentFromTable(layers::LayersId aLayersId);
+
+  // Keeps track of which BrowserParent has keyboard focus
+  static StaticAutoPtr<nsTArray<BrowserParent*>> sFocusStack;
+
+  static void PushFocus(BrowserParent* aBrowserParent);
+
+  static void PopFocus(BrowserParent* aBrowserParent);
+
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;
@@ -690,35 +740,10 @@ class BrowserParent final : public PBrowserParent,
   LayoutDeviceIntPoint mClientOffset;
   LayoutDeviceIntPoint mChromeOffset;
 
- private:
-  void SuppressDisplayport(bool aEnabled);
-
-  void DestroyInternal();
-
-  void SetRenderLayersInternal(bool aEnabled, bool aForceRepaint);
-
-  already_AddRefed<nsFrameLoader> GetFrameLoader(
-      bool aUseCachedFrameLoaderAfterDestroy = false) const;
-
   RefPtr<ContentParent> mManager;
-  void TryCacheDPIAndScale();
-
-  bool AsyncPanZoomEnabled() const;
 
   // Cached value indicating the docshell active state of the remote browser.
   bool mDocShellIsActive;
-
-  // Update state prior to routing an APZ-aware event to the child process.
-  // |aOutTargetGuid| will contain the identifier
-  // of the APZC instance that handled the event. aOutTargetGuid may be null.
-  // |aOutInputBlockId| will contain the identifier of the input block
-  // that this event was added to, if there was one. aOutInputBlockId may be
-  // null. |aOutApzResponse| will contain the response that the APZ gave when
-  // processing the input block; this is used for generating appropriate
-  // pointercancel events.
-  void ApzAwareEventRoutingToChild(ScrollableLayerGuid* aOutTargetGuid,
-                                   uint64_t* aOutInputBlockId,
-                                   nsEventStatus* aOutApzResponse);
 
   // When true, we've initiated normal shutdown and notified our managing
   // PContent.
@@ -794,34 +819,11 @@ class BrowserParent final : public PBrowserParent,
 
   bool mHasContentOpener;
 
-  // When dropping links we perform a roundtrip from
-  // Parent (SendRealDragEvent) -> Child -> Parent (RecvDropLinks)
-  // and have to ensure that the child did not modify links to be loaded.
-  bool QueryDropLinksForVerification();
   nsTArray<nsString> mVerifyDropLinks;
 
 #ifdef DEBUG
   int32_t mActiveSupressDisplayportCount;
 #endif
-
- private:
-  // This is used when APZ needs to find the BrowserParent associated with a
-  // layer to dispatch events.
-  typedef nsDataHashtable<nsUint64HashKey, BrowserParent*>
-      LayerToBrowserParentTable;
-  static LayerToBrowserParentTable* sLayerToBrowserParentTable;
-
-  static void AddBrowserParentToTable(layers::LayersId aLayersId,
-                                      BrowserParent* aBrowserParent);
-
-  static void RemoveBrowserParentFromTable(layers::LayersId aLayersId);
-
-  // Keeps track of which BrowserParent has keyboard focus
-  static StaticAutoPtr<nsTArray<BrowserParent*>> sFocusStack;
-
-  static void PushFocus(BrowserParent* aBrowserParent);
-
-  static void PopFocus(BrowserParent* aBrowserParent);
 
   layout::RenderFrame mRenderFrame;
   LayersObserverEpoch mLayerTreeEpoch;
