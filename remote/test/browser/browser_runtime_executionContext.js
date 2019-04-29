@@ -59,20 +59,42 @@ async function testCDP() {
   ok(context1.auxData.isDefault, "The execution context is the default one");
   ok(!!context1.auxData.frameId, "The execution context has a frame id set");
 
-  const executionContextCreated = Runtime.executionContextCreated();
+  info("Navigate to a new URL");
+  const executionContextDestroyed2 = Runtime.executionContextDestroyed();
+  const executionContextCreated2 = Runtime.executionContextCreated();
 
   const url = "data:text/html;charset=utf-8,test-page";
   const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
   is(frameId, context1.auxData.frameId, "Page.navigate returns the same frameId than executionContextCreated");
 
-  const { context: context2 } = await executionContextCreated;
+  let { executionContextId } = await executionContextDestroyed2;
+  is(executionContextId, context1.id, "The destroyed event reports the previous context id");
+
+  const { context: context2 } = await executionContextCreated2;
   ok(!!context2.id, "The execution context has an id");
   isnot(context1.id, context2.id, "The new execution context has a different id");
   ok(context2.auxData.isDefault, "The execution context is the default one");
   is(context2.auxData.frameId, frameId, "The execution context frame id is the same " +
-    "the one returned by Page.navigate");
+    "than the one returned by Page.navigate");
 
+  isnot(executionContextId, context2.id, "The destroyed id is different from the " +
+    "created one");
+
+  // Navigates back to the previous page.
+  // This should resurect the original document from the BF Cache and recreate the
+  // context for it
+  info("Navigate back to the previous document");
+  const executionContextDestroyed3 = Runtime.executionContextDestroyed();
+  const executionContextCreated3 = Runtime.executionContextCreated();
+  gBrowser.selectedBrowser.goBack();
+  const { context: context3 } = await executionContextCreated3;
+  is(context3.id, context1.id, "The new execution context should be the same than the first one");
+  ok(context3.auxData.isDefault, "The execution context is the default one");
+  is(context3.auxData.frameId, frameId, "The execution context frame id is always the same");
+
+  ({ executionContextId } = await executionContextDestroyed3);
+  is(executionContextId, context2.id, "The destroyed event reports the previous context id");
   await client.close();
   ok(true, "The client is closed");
 
