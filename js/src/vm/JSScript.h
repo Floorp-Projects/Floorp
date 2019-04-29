@@ -1157,6 +1157,10 @@ class ScriptSource {
                                                    bool retrievable);
 
   template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeBinASTData(XDRState<mode>* const xdr,
+                                               ScriptSource* const ss);
+
+  template <XDRMode mode>
   static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
                                         ScriptSource* const ss);
 
