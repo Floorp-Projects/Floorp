@@ -2659,6 +2659,8 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
 
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(ss->data.is<Uncompressed<Unit>>());
+  } else {
+    MOZ_ASSERT(ss->data.is<Missing>());
   }
 
   MOZ_ASSERT(retrievable == ss->sourceRetrievable());
@@ -2692,6 +2694,8 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
 
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(ss->data.is<Compressed<Unit>>());
+  } else {
+    MOZ_ASSERT(ss->data.is<Missing>());
   }
 
   MOZ_ASSERT(retrievable == ss->sourceRetrievable());
@@ -2746,6 +2750,12 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
 #if !defined(JS_BUILD_BINAST)
   return xdr->fail(JS::TranscodeResult_Throw);
 #else
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(ss->data.is<BinAST>());
+  } else {
+    MOZ_ASSERT(ss->data.is<Missing>());
+  }
+
   // XDR the length of the BinAST data.
   uint32_t binASTLength;
   if (mode == XDR_ENCODE) {
@@ -2867,6 +2877,19 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
 #endif  // !defined(JS_BUILD_BINAST)
 }
 
+template <typename Unit, XDRMode mode>
+/* static */
+void ScriptSource::codeRetrievableData(ScriptSource* ss) {
+  // There's nothing to code for retrievable data.  Just be sure to set
+  // retrievable data when decoding.
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(ss->data.is<Retrievable<char16_t>>());
+  } else {
+    MOZ_ASSERT(ss->data.is<Missing>());
+    ss->data = SourceType(Retrievable<char16_t>());
+  }
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
@@ -2964,21 +2987,13 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
       break;
     }
 
-    case DataType::RetrievableUtf8: {
-      if (mode == XDR_DECODE) {
-        MOZ_ASSERT(ss->data.is<Missing>());
-        ss->data = SourceType(Retrievable<Utf8Unit>());
-      }
+    case DataType::RetrievableUtf8:
+      codeRetrievableData<Utf8Unit, mode>(ss);
       return Ok();
-    }
 
-    case DataType::RetrievableUtf16: {
-      if (mode == XDR_DECODE) {
-        MOZ_ASSERT(ss->data.is<Missing>());
-        ss->data = SourceType(Retrievable<char16_t>());
-      }
+    case DataType::RetrievableUtf16:
+      codeRetrievableData<char16_t, mode>(ss);
       return Ok();
-    }
 
     case DataType::BinAST:
       return codeBinASTData(xdr, ss);
