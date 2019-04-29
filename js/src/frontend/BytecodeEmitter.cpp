@@ -7607,8 +7607,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec) {
 // the comment on emitSwitch.
 MOZ_NEVER_INLINE bool BytecodeEmitter::emitLabeledStatement(
     const LabeledStatement* labeledStmt) {
-  LabelEmitter label(this);
   RootedAtom name(cx, labeledStmt->label());
+  LabelEmitter label(this);
   if (!label.emitLabel(name)) {
     return false;
   }
