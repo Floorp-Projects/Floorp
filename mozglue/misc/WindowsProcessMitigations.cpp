@@ -17,11 +17,18 @@ BOOL WINAPI GetProcessMitigationPolicy(
 
 namespace mozilla {
 
-MFBT_API bool IsWin32kLockedDown() {
+static const DynamicallyLinkedFunctionPtr<
+    decltype(&::GetProcessMitigationPolicy)>&
+FetchGetProcessMitigationPolicyFunc() {
   static const DynamicallyLinkedFunctionPtr<decltype(
       &::GetProcessMitigationPolicy)>
       pGetProcessMitigationPolicy(L"kernel32.dll",
                                   "GetProcessMitigationPolicy");
+  return pGetProcessMitigationPolicy;
+}
+
+MFBT_API bool IsWin32kLockedDown() {
+  auto& pGetProcessMitigationPolicy = FetchGetProcessMitigationPolicyFunc();
   if (!pGetProcessMitigationPolicy) {
     return false;
   }
@@ -34,6 +41,22 @@ MFBT_API bool IsWin32kLockedDown() {
   }
 
   return polInfo.DisallowWin32kSystemCalls;
+}
+
+MFBT_API bool IsDynamicCodeDisabled() {
+  auto& pGetProcessMitigationPolicy = FetchGetProcessMitigationPolicyFunc();
+  if (!pGetProcessMitigationPolicy) {
+    return false;
+  }
+
+  PROCESS_MITIGATION_DYNAMIC_CODE_POLICY polInfo;
+  if (!pGetProcessMitigationPolicy(::GetCurrentProcess(),
+                                   ProcessDynamicCodePolicy, &polInfo,
+                                   sizeof(polInfo))) {
+    return false;
+  }
+
+  return polInfo.ProhibitDynamicCode;
 }
 
 }  // namespace mozilla
