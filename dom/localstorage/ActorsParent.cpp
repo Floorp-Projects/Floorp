@@ -2819,6 +2819,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void ReleaseIOThreadObjects() override;
 
+  void OnStorageInitFailed() override;
+
   void AbortOperations(const nsACString& aOrigin) override;
 
   void AbortOperationsForProcess(ContentParentId aContentParentId) override;
@@ -8803,6 +8805,14 @@ void QuotaClient::ReleaseIOThreadObjects() {
   // storage directory including ls-archive.sqlite.
 
   gArchivedOrigins = nullptr;
+}
+
+void QuotaClient::OnStorageInitFailed() {
+  AssertIsOnIOThread();
+  MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaManager::Get()->IsTemporaryStorageInitialized());
+
+  gUsages = nullptr;
 }
 
 void QuotaClient::AbortOperations(const nsACString& aOrigin) {

@@ -5826,6 +5826,13 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   // for whole profile can be collected
   nsresult statusKeeper = NS_OK;
 
+  AutoTArray<RefPtr<Client>, Client::TYPE_MAX>& clients = mClients;
+  auto autoNotifier = MakeScopeExit([&clients] {
+    for (RefPtr<Client>& client : clients) {
+      client->OnStorageInitFailed();
+    }
+  });
+
   nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RECORD_IN_NIGHTLY(statusKeeper, rv);
@@ -5877,6 +5884,8 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   mTemporaryStorageInitialized = true;
 
   CheckTemporaryStorageLimits();
+
+  autoNotifier.release();
 
   return rv;
 }
