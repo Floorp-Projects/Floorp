@@ -59,6 +59,16 @@ typedef struct _nsCocoaWindowList {
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
 - (BOOL)drawsContentsIntoWindowFrame;
 
+// These two methods are like contentRectForFrameRect and frameRectForContentRect,
+// but they deal with the rect of the window's "main ChildView" instead of the
+// rect of the window's content view. The two are sometimes sized differently: The
+// window's content view always covers the entire window, whereas the ChildView
+// only covers the full window when drawsContentsIntoWindowFrame is YES. When
+// drawsContentsIntoWindowFrame is NO, there's a titlebar-sized gap above the
+// ChildView within the content view.
+- (NSRect)childViewRectForFrameRect:(NSRect)aFrameRect;
+- (NSRect)frameRectForChildViewRect:(NSRect)aChildViewRect;
+
 - (void)mouseEntered:(NSEvent*)aEvent;
 - (void)mouseExited:(NSEvent*)aEvent;
 - (void)mouseMoved:(NSEvent*)aEvent;
@@ -234,6 +244,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  NSRect GetClientCocoaRect();
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   void ReportMoveEvent();
