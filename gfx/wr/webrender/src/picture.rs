@@ -8,7 +8,9 @@ use api::{DebugFlags, RasterSpace, ColorF, ImageKey, ClipMode};
 use api::units::*;
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
-use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId, VisibleFace};
+use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
+    ClipScrollTree, CoordinateSystemId, SpatialNodeIndex, VisibleFace
+};
 use debug_colors;
 use euclid::{size2, vec3, TypedPoint2D, TypedScale, TypedSize2D};
 use euclid::approxeq::ApproxEq;
@@ -19,7 +21,8 @@ use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, Pict
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{TransformPalette, UvRectKind};
 use plane_split::{Clipper, Polygon, Splitter};
-use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, PrimitiveInstanceKind};
+use prim_store::{CoordinateSpaceMapping, SpaceMapper};
+use prim_store::{PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, PrimitiveScratchBuffer, VectorKey, PointKey};
 use prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex, RectangleKey};
 use print_tree::PrintTreePrinter;
@@ -51,7 +54,7 @@ use ::filterdata::{FilterDataHandle};
 /// PictureUpdateState during picture traversal pass.
 struct PictureInfo {
     /// The spatial node for this picture.
-    spatial_node_index: SpatialNodeIndex,
+    _spatial_node_index: SpatialNodeIndex,
 }
 
 /// Stores a list of cached picture tiles that are retained
@@ -1678,11 +1681,6 @@ impl<'a> PictureUpdateState<'a> {
         self.surface_stack.pop().unwrap()
     }
 
-    /// Return the current picture, or None if stack is empty.
-    fn current_picture(&self) -> Option<&PictureInfo> {
-        self.picture_stack.last()
-    }
-
     /// Push information about a picture on the update stack
     fn push_picture(
         &mut self,
@@ -2157,12 +2155,15 @@ pub struct PicturePrimitive {
     #[cfg_attr(feature = "capture", serde(skip))]
     pub state: Option<(PictureState, PictureContext)>,
 
-    // The pipeline that the primitives on this picture belong to.
+    /// The pipeline that the primitives on this picture belong to.
     pub pipeline_id: PipelineId,
 
-    // If true, apply the local clip rect to primitive drawn
-    // in this picture.
+    /// If true, apply the local clip rect to primitive drawn
+    /// in this picture.
     pub apply_local_clip_rect: bool,
+    /// If false and transform ends up showing the back of the picture,
+    /// it will be considered invisible.
+    pub is_backface_visible: bool,
 
     // If a mix-blend-mode, contains the render task for
     // the readback of the framebuffer that we use to sample
@@ -2315,6 +2316,7 @@ impl PicturePrimitive {
         pipeline_id: PipelineId,
         frame_output_pipeline_id: Option<PipelineId>,
         apply_local_clip_rect: bool,
+        is_backface_visible: bool,
         requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
@@ -2332,6 +2334,7 @@ impl PicturePrimitive {
             frame_output_pipeline_id,
             extra_gpu_data_handle: GpuCacheHandle::new(),
             apply_local_clip_rect,
+            is_backface_visible,
             pipeline_id,
             requested_raster_space,
             spatial_node_index,
@@ -2617,9 +2620,22 @@ impl PicturePrimitive {
             return None;
         }
 
+        // For out-of-preserve-3d pictures, the backface visibility is determined by
+        // the local transform only.
+        // Note: we aren't taking the transform relativce to the parent picture,
+        // since picture tree can be more dense than the corresponding spatial tree.
+        if !self.is_backface_visible {
+            if let Picture3DContext::Out = self.context_3d {
+                match frame_context.clip_scroll_tree.get_local_visible_face(self.spatial_node_index) {
+                    VisibleFace::Front => {}
+                    VisibleFace::Back => return None,
+                }
+            }
+        }
+
         // Push information about this pic on stack for children to read.
         state.push_picture(PictureInfo {
-            spatial_node_index: self.spatial_node_index,
+            _spatial_node_index: self.spatial_node_index,
         });
 
         // See if this picture actually needs a surface for compositing.
@@ -2744,30 +2760,17 @@ impl PicturePrimitive {
         for cluster in &mut self.prim_list.clusters {
             // Skip the cluster if backface culled.
             if !cluster.is_backface_visible {
-                let containing_block_index = match self.context_3d {
-                    Picture3DContext::Out => {
-                        state.current_picture().map_or(ROOT_SPATIAL_NODE_INDEX, |info| {
-                            info.spatial_node_index
-                        })
+                // For in-preserve-3d primitives and pictures, the backface visibility is
+                // evaluated relative to the containing block.
+                if let Picture3DContext::In { ancestor_index, .. } = self.context_3d {
+                    match CoordinateSpaceMapping::<LayoutPoint, LayoutPoint>::new(
+                        ancestor_index,
+                        cluster.spatial_node_index,
+                        &frame_context.clip_scroll_tree,
+                    ) {
+                        (_, VisibleFace::Back) => continue,
+                        (_, VisibleFace::Front) => (),
                     }
-                    Picture3DContext::In { root_data: Some(_), ancestor_index } => {
-                        ancestor_index
-                    }
-                    Picture3DContext::In { root_data: None, ancestor_index } => {
-                        ancestor_index
-                    }
-                };
-
-                let map_local_to_containing_block: SpaceMapper<LayoutPixel, LayoutPixel> = SpaceMapper::new_with_target(
-                    containing_block_index,
-                    cluster.spatial_node_index,
-                    LayoutRect::zero(), // bounds aren't going to be used for this mapping
-                    &frame_context.clip_scroll_tree,
-                );
-
-                match map_local_to_containing_block.visible_face() {
-                    VisibleFace::Back => continue,
-                    VisibleFace::Front => {}
                 }
             }
 
