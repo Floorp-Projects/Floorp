@@ -15,11 +15,6 @@
 namespace js {
 namespace jit {
 
-// Longer scripts can only be compiled off thread, as these compilations
-// can be expensive and stall the main thread for too long.
-static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2 * 1000;
-static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
-
 // Possible register allocators which may be used.
 enum IonRegisterAllocator {
   RegisterAllocator_Backtracking,
@@ -98,6 +93,10 @@ struct DefaultJitOptions {
   uint32_t branchPruningBlockSpanFactor;
   uint32_t branchPruningEffectfulInstFactor;
   uint32_t branchPruningThreshold;
+  uint32_t ionMaxScriptSize;
+  uint32_t ionMaxScriptSizeMainThread;
+  uint32_t ionMaxLocalsAndArgs;
+  uint32_t ionMaxLocalsAndArgsMainThread;
   uint32_t wasmBatchIonThreshold;
   uint32_t wasmBatchBaselineThreshold;
   mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
