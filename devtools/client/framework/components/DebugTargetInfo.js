@@ -31,31 +31,6 @@ class DebugTargetInfo extends PureComponent {
     };
   }
 
-  componentDidMount() {
-    this.updateTitle();
-  }
-
-  updateTitle() {
-    const { L10N, debugTargetData, toolbox } = this.props;
-    const title = toolbox.target.name;
-    const targetTypeStr = L10N.getStr(this.getAssetsForDebugTargetType().l10nId);
-
-    const { connectionType } = debugTargetData;
-    if (connectionType === CONNECTION_TYPES.THIS_FIREFOX) {
-      toolbox.doc.title = L10N.getFormatStr("toolbox.debugTargetInfo.tabTitleLocal",
-        targetTypeStr,
-        title
-      );
-    } else {
-      const connectionTypeStr = L10N.getStr(this.getAssetsForConnectionType().l10nId);
-      toolbox.doc.title = L10N.getFormatStr("toolbox.debugTargetInfo.tabTitleRemote",
-        connectionTypeStr,
-        targetTypeStr,
-        title
-      );
-    }
-  }
-
   getRuntimeText() {
     const { debugTargetData, L10N } = this.props;
     const { brandName, version } = debugTargetData.deviceDescription;
@@ -80,8 +55,6 @@ class DebugTargetInfo extends PureComponent {
           image: "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg",
           l10nId: "toolbox.debugTargetInfo.connection.network",
         };
-      default:
-        return {};
     }
   }
 
@@ -114,8 +87,6 @@ class DebugTargetInfo extends PureComponent {
           image: "chrome://devtools/skin/images/debugging-workers.svg",
           l10nId: "toolbox.debugTargetInfo.targetType.worker",
         };
-      default:
-        return {};
     }
   }
 
