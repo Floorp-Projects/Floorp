@@ -646,9 +646,6 @@ class BrowserParent final : public PBrowserParent,
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
-  nsCOMPtr<Element> mFrameElement;
-  nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
-
   mozilla::ipc::IPCResult RecvRemotePaintIsReady();
 
   mozilla::ipc::IPCResult RecvNotifyCompositorTransaction();
@@ -727,7 +724,32 @@ class BrowserParent final : public PBrowserParent,
 
   static void PopFocus(BrowserParent* aBrowserParent);
 
+  TabId mTabId;
+
+  RefPtr<ContentParent> mManager;
+  // The root browsing context loaded in this BrowserParent.
+  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
+  nsCOMPtr<nsILoadContext> mLoadContext;
+  nsCOMPtr<Element> mFrameElement;
+  nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
+  // We keep a strong reference to the frameloader after we've sent the
+  // Destroy message and before we've received __delete__. This allows us to
+  // dispatch message manager messages during this time.
+  RefPtr<nsFrameLoader> mFrameLoader;
+  uint32_t mChromeFlags;
+
+  // Pointer back to BrowserBridgeParent if there is one associated with
+  // this BrowserParent. This is non-owning to avoid cycles and is managed
+  // by the BrowserBridgeParent instance, which has the strong reference
+  // to this BrowserParent.
+  BrowserBridgeParent* mBrowserBridgeParent;
+
   ContentCacheInParent mContentCache;
+
+  layout::RenderFrame mRenderFrame;
+  LayersObserverEpoch mLayerTreeEpoch;
+
+  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
 
   nsIntRect mRect;
   ScreenIntSize mDimensions;
@@ -740,44 +762,12 @@ class BrowserParent final : public PBrowserParent,
   LayoutDeviceIntPoint mClientOffset;
   LayoutDeviceIntPoint mChromeOffset;
 
-  RefPtr<ContentParent> mManager;
-
-  // Cached value indicating the docshell active state of the remote browser.
-  bool mDocShellIsActive;
-
-  // When true, we've initiated normal shutdown and notified our managing
-  // PContent.
-  bool mMarkedDestroying;
-  // When true, the BrowserParent is invalid and we should not send IPC messages
-  // anymore.
-  bool mIsDestroyed;
-
-  uint32_t mChromeFlags;
-
   nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
 
   RefPtr<gfx::DataSourceSurface> mDnDVisualization;
   bool mDragValid;
   LayoutDeviceIntRect mDragRect;
   nsCOMPtr<nsIPrincipal> mDragPrincipal;
-
-  nsCOMPtr<nsILoadContext> mLoadContext;
-
-  // We keep a strong reference to the frameloader after we've sent the
-  // Destroy message and before we've received __delete__. This allows us to
-  // dispatch message manager messages during this time.
-  RefPtr<nsFrameLoader> mFrameLoader;
-
-  // The root browsing context loaded in this BrowserParent.
-  RefPtr<CanonicalBrowsingContext> mBrowsingContext;
-
-  // Pointer back to BrowserBridgeParent if there is one associated with
-  // this BrowserParent. This is non-owning to avoid cycles and is managed
-  // by the BrowserBridgeParent instance, which has the strong reference
-  // to this BrowserParent.
-  BrowserBridgeParent* mBrowserBridgeParent;
-
-  TabId mTabId;
 
   // When loading a new tab or window via window.open, the child is
   // responsible for loading the URL it wants into the new BrowserChild. When
@@ -813,22 +803,26 @@ class BrowserParent final : public PBrowserParent,
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
 
+  nsTArray<nsString> mVerifyDropLinks;
+
+#ifdef DEBUG
+  int32_t mActiveSupressDisplayportCount = 0;
+#endif
+
+  // Cached value indicating the docshell active state of the remote browser.
+  bool mDocShellIsActive;
+
+  // When true, we've initiated normal shutdown and notified our managing
+  // PContent.
+  bool mMarkedDestroying;
+  // When true, the BrowserParent is invalid and we should not send IPC messages
+  // anymore.
+  bool mIsDestroyed;
   // True if the cursor changes from the BrowserChild should change the widget
   // cursor.  This happens whenever the cursor is in the tab's region.
   bool mTabSetsCursor;
 
   bool mHasContentOpener;
-
-  nsTArray<nsString> mVerifyDropLinks;
-
-#ifdef DEBUG
-  int32_t mActiveSupressDisplayportCount;
-#endif
-
-  layout::RenderFrame mRenderFrame;
-  LayersObserverEpoch mLayerTreeEpoch;
-
-  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
