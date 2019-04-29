@@ -247,8 +247,8 @@
     <string name="current_session_share">Share</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
-    <!-- Button to save the current set of tabs into a group -->
-    <string name="save_tab_group">Save Tab Group</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Save to collection</string>
     <!-- Text for the button to delete a session -->
     <string name="session_delete">Delete session</string>
     <!-- Text for the button to delete a single session -->

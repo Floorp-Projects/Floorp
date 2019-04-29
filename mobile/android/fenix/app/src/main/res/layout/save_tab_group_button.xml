@@ -28,6 +28,6 @@
         android:focusable="false"
         android:gravity="center"
         android:textStyle="bold"
-        android:text="@string/save_tab_group"
+        android:text="@string/save_to_collection"
         android:textColor="?contrastText"/>
 </FrameLayout>
