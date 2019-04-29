@@ -377,7 +377,6 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentLocalDescription,
                                      *sdp, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
-    CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
   *offer = sdp->ToString();
@@ -508,7 +507,6 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentRemoteDescription,
                                      offer, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
-    CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
   *answer = sdp->ToString();
@@ -1217,22 +1215,6 @@ nsresult JsepSessionImpl::CopyPreviousTransportParams(
   }
 
   return NS_OK;
-}
-
-void JsepSessionImpl::CopyPreviousMsid(const Sdp& oldLocal, Sdp* newLocal) {
-  for (size_t i = 0; i < oldLocal.GetMediaSectionCount(); ++i) {
-    const SdpMediaSection& oldMsection(oldLocal.GetMediaSection(i));
-    SdpMediaSection& newMsection(newLocal->GetMediaSection(i));
-    if (oldMsection.GetAttributeList().HasAttribute(
-            SdpAttribute::kMsidAttribute) &&
-        !mSdpHelper.MsectionIsDisabled(newMsection)) {
-      // JSEP says this cannot change, no matter what is happening in JS land.
-      // It can only be updated if there is an intermediate SDP that clears the
-      // msid.
-      newMsection.GetAttributeList().SetAttribute(
-          new SdpMsidAttributeList(oldMsection.GetAttributeList().GetMsid()));
-    }
-  }
 }
 
 nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,

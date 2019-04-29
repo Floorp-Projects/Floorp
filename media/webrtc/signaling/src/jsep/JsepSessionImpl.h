@@ -192,7 +192,6 @@ class JsepSessionImpl : public JsepSession {
   nsresult CopyPreviousTransportParams(const Sdp& oldAnswer,
                                        const Sdp& offerersPreviousSdp,
                                        const Sdp& newOffer, Sdp* newLocal);
-  void CopyPreviousMsid(const Sdp& oldLocal, Sdp* newLocal);
   void EnsureMsid(Sdp* remote);
   void SetupBundle(Sdp* sdp) const;
   nsresult GetRemoteIds(const Sdp& sdp, const SdpMediaSection& msection,
