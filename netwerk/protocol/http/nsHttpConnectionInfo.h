@@ -38,6 +38,7 @@ class nsHttpConnectionInfo final : public ARefBase {
  public:
   nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
                        const nsACString &npnToken, const nsACString &username,
+                       const nsACString &topWindowOrigin,
                        nsProxyInfo *proxyInfo,
                        const OriginAttributes &originAttributes,
                        bool endToEndSSL = false);
@@ -47,6 +48,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   // origin information
   nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
                        const nsACString &npnToken, const nsACString &username,
+                       const nsACString &topWindowOrigin,
                        nsProxyInfo *proxyInfo,
                        const OriginAttributes &originAttributes,
                        const nsACString &routedHost, int32_t routedPort);
@@ -147,6 +149,7 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   const nsCString &GetNPNToken() { return mNPNToken; }
   const nsCString &GetUsername() { return mUsername; }
+  const nsCString &GetTopWindowOrigin() { return mTopWindowOrigin; }
 
   const OriginAttributes &GetOriginAttributes() { return mOriginAttributes; }
 
@@ -180,8 +183,9 @@ class nsHttpConnectionInfo final : public ARefBase {
 
  private:
   void Init(const nsACString &host, int32_t port, const nsACString &npnToken,
-            const nsACString &username, nsProxyInfo *proxyInfo,
-            const OriginAttributes &originAttributes, bool EndToEndSSL);
+            const nsACString &username, const nsACString &topWindowOrigin,
+            nsProxyInfo *proxyInfo, const OriginAttributes &originAttributes,
+            bool EndToEndSSL);
   void SetOriginServer(const nsACString &host, int32_t port);
 
   nsCString mOrigin;
@@ -191,6 +195,7 @@ class nsHttpConnectionInfo final : public ARefBase {
 
   nsCString mHashKey;
   nsCString mUsername;
+  nsCString mTopWindowOrigin;
   nsCOMPtr<nsProxyInfo> mProxyInfo;
   bool mUsingHttpProxy;
   bool mUsingHttpsProxy;
