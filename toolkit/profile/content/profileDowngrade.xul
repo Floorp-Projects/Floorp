@@ -28,6 +28,7 @@
         buttons="accept,extra1" buttonpack="end">
 
   <script src="profileDowngrade.js"/>
+  <script src="chrome://global/content/customElements.js"/>
 
   <hbox flex="1" align="start">
     <image id="info" role="presentation"/>
