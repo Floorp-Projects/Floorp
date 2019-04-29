@@ -1151,6 +1151,11 @@ class ScriptSource {
                                                      ScriptSource* const ss,
                                                      bool retrievable);
 
+  template <typename Unit, XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
+                                                   ScriptSource* const ss,
+                                                   bool retrievable);
+
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
                                         ScriptSource* const ss);
