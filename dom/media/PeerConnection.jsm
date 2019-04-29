@@ -1874,11 +1874,6 @@ class PeerConnectionObserver {
     this._dompc._onGetStatsFailure(this.newError({name: "OperationError", message}));
   }
 
-  _getTransceiverWithRecvTrack(webrtcTrackId) {
-    return this._dompc.getTransceivers().find(
-        transceiver => transceiver.remoteTrackIdIs(webrtcTrackId));
-  }
-
   onTransceiverNeeded(kind, transceiverImpl) {
     this._dompc._onTransceiverNeeded(kind, transceiverImpl);
   }
@@ -2281,7 +2276,6 @@ class RTCRtpTransceiver {
           stopped: false,
           _direction: direction,
           currentDirection: null,
-          _remoteTrackId: null,
           addTrackMagic: false,
           shouldRemove: false,
           _hasBeenUsedToSend: false,
@@ -2339,18 +2333,6 @@ class RTCRtpTransceiver {
 
   hasBeenUsedToSend() {
     return this._hasBeenUsedToSend;
-  }
-
-  setRemoteTrackId(webrtcTrackId) {
-    this._remoteTrackId = webrtcTrackId;
-  }
-
-  remoteTrackIdIs(webrtcTrackId) {
-    return this._remoteTrackId == webrtcTrackId;
-  }
-
-  getRemoteTrackId() {
-    return this._remoteTrackId;
   }
 
   setAddTrackMagic() {
