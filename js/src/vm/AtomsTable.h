@@ -42,11 +42,11 @@ class MOZ_RAII AutoLockAllAtoms {
 struct AtomHasher {
   struct Lookup;
   static inline HashNumber hash(const Lookup& l);
-  static MOZ_ALWAYS_INLINE bool match(const ReadBarriered<JSAtom*>& entry,
+  static MOZ_ALWAYS_INLINE bool match(const WeakHeapPtr<JSAtom*>& entry,
                                       const Lookup& lookup);
 };
 
-using AtomSet = JS::GCHashSet<ReadBarriered<JSAtom*>, AtomHasher,
+using AtomSet = JS::GCHashSet<WeakHeapPtr<JSAtom*>, AtomHasher,
                               SystemAllocPolicy>;
 
 // This class is a wrapper for AtomSet that is used to ensure the AtomSet is

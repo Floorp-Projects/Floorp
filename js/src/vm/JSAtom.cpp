@@ -120,7 +120,7 @@ struct js::AtomHasher::Lookup {
 
 inline HashNumber js::AtomHasher::hash(const Lookup& l) { return l.hash; }
 
-MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const ReadBarriered<JSAtom*>& entry,
+MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
                                              const Lookup& lookup) {
   JSAtom* key = entry.unbarrieredGet();
   if (lookup.atom) {

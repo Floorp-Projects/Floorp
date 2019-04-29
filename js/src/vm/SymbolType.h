@@ -138,7 +138,7 @@ struct HashSymbolsByDescription {
  * enumerating the symbol registry, querying its size, etc.
  */
 class SymbolRegistry
-    : public GCHashSet<ReadBarrieredSymbol, HashSymbolsByDescription,
+    : public GCHashSet<WeakHeapPtrSymbol, HashSymbolsByDescription,
                        SystemAllocPolicy> {
  public:
   SymbolRegistry() {}

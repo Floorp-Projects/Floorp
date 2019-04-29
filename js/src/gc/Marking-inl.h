@@ -131,7 +131,7 @@ inline void CheckGCThingAfterMovingGC(T* t) {
 }
 
 template <typename T>
-inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t) {
+inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t) {
   CheckGCThingAfterMovingGC(t.unbarrieredGet());
 }
 

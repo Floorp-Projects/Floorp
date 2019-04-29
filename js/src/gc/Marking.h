@@ -89,7 +89,7 @@ inline bool IsMarkedUnbarriered(JSRuntime* rt, T* thingp) {
 // zones that are not currently being collected or are owned by another runtime
 // are always reported as being marked.
 template <typename T>
-inline bool IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp) {
+inline bool IsMarked(JSRuntime* rt, WriteBarriered<T>* thingp) {
   return IsMarkedInternal(rt,
                           ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
@@ -102,7 +102,7 @@ inline bool IsMarkedBlackUnbarriered(JSRuntime* rt, T* thingp) {
 
 // Report whether a GC thing has been marked black.
 template <typename T>
-inline bool IsMarkedBlack(JSRuntime* rt, WriteBarrieredBase<T>* thingp) {
+inline bool IsMarkedBlack(JSRuntime* rt, WriteBarriered<T>* thingp) {
   return IsMarkedBlackInternal(
       rt, ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
@@ -113,13 +113,13 @@ inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
 }
 
 template <typename T>
-inline bool IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp) {
+inline bool IsAboutToBeFinalized(WriteBarriered<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
       ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
-inline bool IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp) {
+inline bool IsAboutToBeFinalized(ReadBarriered<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
       ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
@@ -183,7 +183,7 @@ template <typename T>
 inline void CheckGCThingAfterMovingGC(T* t);
 
 template <typename T>
-inline void CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t);
+inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t);
 
 inline void CheckValueAfterMovingGC(const JS::Value& value);
 

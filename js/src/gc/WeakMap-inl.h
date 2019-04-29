@@ -15,7 +15,7 @@
 namespace js {
 
 template <typename T>
-static T extractUnbarriered(const WriteBarrieredBase<T>& v) {
+static T extractUnbarriered(const WriteBarriered<T>& v) {
   return v.get();
 }
 

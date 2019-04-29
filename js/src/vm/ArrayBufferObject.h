@@ -615,14 +615,14 @@ class InnerViewTable {
     }
   };
 
-  // This key is a raw pointer and not a ReadBarriered because the post-
-  // barrier would hold nursery-allocated entries live unconditionally. It is
-  // a very common pattern in low-level and performance-oriented JavaScript
-  // to create hundreds or thousands of very short lived temporary views on a
-  // larger buffer; having to tenured all of these would be a catastrophic
-  // performance regression. Thus, it is vital that nursery pointers in this
-  // map not be held live. Special support is required in the minor GC,
-  // implemented in sweepAfterMinorGC.
+  // This key is a raw pointer and not a WeakHeapPtr because the post-barrier
+  // would hold nursery-allocated entries live unconditionally. It is a very
+  // common pattern in low-level and performance-oriented JavaScript to create
+  // hundreds or thousands of very short lived temporary views on a larger
+  // buffer; having to tenured all of these would be a catastrophic performance
+  // regression. Thus, it is vital that nursery pointers in this map not be held
+  // live. Special support is required in the minor GC, implemented in
+  // sweepAfterMinorGC.
   typedef GCHashMap<JSObject*, ViewVector, MovableCellHasher<JSObject*>,
                     SystemAllocPolicy, MapGCPolicy>
       Map;
