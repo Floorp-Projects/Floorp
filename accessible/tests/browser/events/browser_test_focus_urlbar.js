@@ -119,6 +119,9 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   await focused;
   testStates(textBox, STATE_FOCUSED);
+  if (UrlbarPrefs.get("quantumbar")) {
+    gURLBar.view.close();
+  }
   // On Mac, down arrow when not at the end of the field moves to the end.
   // Move back to the end so the next press of down arrow opens the popup.
   EventUtils.synthesizeKey("KEY_ArrowRight");
