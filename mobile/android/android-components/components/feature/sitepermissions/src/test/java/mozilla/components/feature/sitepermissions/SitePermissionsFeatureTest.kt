@@ -257,9 +257,32 @@ class SitePermissionsFeatureTest {
         val sitePermissionsList = listOf(ContentGeoLocation())
         val request: PermissionRequest = mock()
 
-        sitePermissionFeature.storeSitePermissions(request, sitePermissionsList, ALLOWED)
+        runBlocking {
+            sitePermissionFeature.coroutineScopeInitializer = {
+                this
+            }
+            sitePermissionFeature.storeSitePermissions(mock(), request, sitePermissionsList, ALLOWED)
+        }
         verify(mockStorage).findSitePermissionsBy(anyString())
         verify(mockStorage).save(any())
+    }
+
+    @Test
+    fun `storing a SitePermissions with a private session must NOT call save on the store`() {
+        val sitePermissionsList = listOf(ContentGeoLocation())
+        val request: PermissionRequest = mock()
+        val session: Session = mock()
+
+        doReturn(true).`when`(session).private
+
+        runBlocking {
+            sitePermissionFeature.coroutineScopeInitializer = {
+                this
+            }
+            sitePermissionFeature.storeSitePermissions(session, request, sitePermissionsList, ALLOWED)
+        }
+
+        verify(mockStorage, times(0)).save(any())
     }
 
     @Test
@@ -281,8 +304,18 @@ class SitePermissionsFeatureTest {
             doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
             doReturn(permissions).`when`(mockRequest).permissions
 
+            val feature = SitePermissionsFeature(
+                anchorView = anchorView,
+                sessionManager = mockSessionManager,
+                onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
+                storage = mockStorage
+            )
+
             try {
-                sitePermissionFeature.storeSitePermissions(mockRequest, permissions, ALLOWED)
+                runBlocking {
+                    feature.coroutineScopeInitializer = { this }
+                    feature.storeSitePermissions(mock(), mockRequest, permissions, ALLOWED)
+                }
                 verify(mockStorage, times(index + 1)).findSitePermissionsBy(anyString())
                 verify(mockStorage, times(index + 1)).update(any())
             } catch (e: InvalidParameterException) {

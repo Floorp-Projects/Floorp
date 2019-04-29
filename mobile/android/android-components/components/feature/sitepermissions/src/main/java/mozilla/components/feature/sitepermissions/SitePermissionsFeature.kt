@@ -68,7 +68,11 @@ class SitePermissionsFeature(
 ) : LifecycleAwareFeature {
 
     private val observer = SitePermissionsRequestObserver(sessionManager, feature = this)
-    internal val ioCoroutineScope by lazy { CoroutineScope(Dispatchers.IO) }
+    internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
+
+    internal var coroutineScopeInitializer = {
+        CoroutineScope(Dispatchers.IO)
+    }
 
     override fun start() {
         observer.observeSelected()
@@ -119,30 +123,35 @@ class SitePermissionsFeature(
             request.grant()
 
             if (shouldStore) {
-                ioCoroutineScope.launch {
-                    storeSitePermissions(request, grantedPermissions, ALLOWED)
-                }
+                storeSitePermissions(session, request, grantedPermissions, ALLOWED)
             }
             true
         }
     }
 
     @Synchronized internal fun storeSitePermissions(
+        session: Session,
         request: PermissionRequest,
         permissions: List<Permission> = request.permissions,
         status: SitePermissions.Status
     ) {
-        var sitePermissions = storage.findSitePermissionsBy(request.host)
+        if (session.private) {
+            return
+        }
 
-        if (sitePermissions == null) {
-            sitePermissions = request.toSitePermissions(
-                status = status,
-                permissions = permissions
-            )
-            storage.save(sitePermissions)
-        } else {
-            sitePermissions = request.toSitePermissions(status, sitePermissions)
-            storage.update(sitePermissions)
+        ioCoroutineScope.launch {
+            var sitePermissions = storage.findSitePermissionsBy(request.host)
+
+            if (sitePermissions == null) {
+                sitePermissions = request.toSitePermissions(
+                    status = status,
+                    permissions = permissions
+                )
+                storage.save(sitePermissions)
+            } else {
+                sitePermissions = request.toSitePermissions(status, sitePermissions)
+                storage.update(sitePermissions)
+            }
         }
     }
 
@@ -157,9 +166,7 @@ class SitePermissionsFeature(
             request.reject()
 
             if (shouldStore) {
-                ioCoroutineScope.launch {
-                    storeSitePermissions(request = request, status = BLOCKED)
-                }
+                storeSitePermissions(session, request = request, status = BLOCKED)
             }
             true
         }

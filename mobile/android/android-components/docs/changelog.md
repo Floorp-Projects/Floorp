@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-sitepermissions**
+  * Do not save new site permissions in private sessions.
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)
