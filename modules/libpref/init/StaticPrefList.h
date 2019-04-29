@@ -1040,11 +1040,17 @@ VARCACHE_PREF(
 )
 
 // Are dynamic reflow roots enabled?
+#ifdef EARLY_BETA_OR_EARLIER
+#define PREF_VALUE true
+#else
+#define PREF_VALUE false
+#endif
 VARCACHE_PREF(
    "layout.dynamic-reflow-roots.enabled",
    layout_dynamic_reflow_roots_enabled,
-  bool, true
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
    "layout.lower_priority_refresh_driver_during_load",
