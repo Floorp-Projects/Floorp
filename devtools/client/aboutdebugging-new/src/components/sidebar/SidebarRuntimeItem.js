@@ -72,6 +72,7 @@ class SidebarRuntimeItem extends PureComponent {
       {
         level,
         className: `${className} sidebar-runtime-item__message`,
+        isCloseable: true,
       },
       Localized(
         {
