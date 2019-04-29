@@ -308,7 +308,7 @@ class Rule {
    * in the element style's store.
    */
   _applyPropertiesNoAuthored(modifications) {
-    this.elementStyle.markOverriddenAll();
+    this.elementStyle.onRuleUpdated();
 
     const disabledProps = [];
 
@@ -419,7 +419,7 @@ class Rule {
           }
           return this._applyPropertiesNoAuthored(modifications);
         }).then(() => {
-          this.elementStyle.markOverriddenAll();
+          this.elementStyle.onRuleUpdated();
 
           if (resultPromise === this._applyingModifications) {
             this._applyingModifications = null;
