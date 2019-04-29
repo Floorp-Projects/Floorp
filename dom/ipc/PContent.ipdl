@@ -1249,14 +1249,8 @@ parent:
      *   The character coverage map of the face. (This will be stored as a
      *   SharedBitSet record within the shared font list, and the Face record
      *   will be updated to reference it.)
-     *
-     * This is initially a sync message because the content process needs the
-     * Face record to be updated with its character-map reference before it can
-     * proceed with its font-matching work.
-     *
-     * NOTE: a later patch in the series makes this async.
      */
-    sync SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
+    async SetCharacterMap(uint32_t aGeneration, Pointer aFacePtr, gfxSparseBitSet aMap);
 
     /**
      * Ask the parent to set up the merged charmap for a family, to accelerate

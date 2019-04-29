@@ -323,25 +323,24 @@ void Family::SearchAllFontsForChar(FontList* aList,
       ++charMapsLoaded;
     }
     // Check style distance if the char is supported, or if charmap not known
+    // (so that we don't trigger cmap-loading for faces that would be a worse
+    // match than what we've already found).
     if (!charmap || charmap->test(aMatchData->mCh)) {
       double distance = WSSDistance(face, aMatchData->mStyle);
       if (distance < aMatchData->mMatchDistance) {
-        // It's a better style match: if we didn't already check charmap,
-        // load it and do that now
-        if (!charmap) {
-          aList->LoadCharMapFor(*face, this);
-          charmap = static_cast<const SharedBitSet*>(
-              face->mCharacterMap.ToPtr(aList));
-          if (charmap) {
-            ++charMapsLoaded;
-          }
-          if (!charmap || !charmap->test(aMatchData->mCh)) {
-            continue;
-          }
+        // It's a better style match: get a fontEntry, and if we haven't
+        // already checked character coverage, do it now (note that
+        // HasCharacter() will trigger loading the fontEntry's cmap, if
+        // needed).
+        RefPtr<gfxFontEntry> fe = gfxPlatformFontList::PlatformFontList()
+            ->GetOrCreateFontEntry(face, this);
+        if (!fe) {
+          continue;
         }
-        aMatchData->mBestMatch =
-            gfxPlatformFontList::PlatformFontList()->GetOrCreateFontEntry(face,
-                                                                          this);
+        if (!charmap && !fe->HasCharacter(aMatchData->mCh)) {
+          continue;
+        }
+        aMatchData->mBestMatch = fe;
         aMatchData->mMatchDistance = distance;
         aMatchData->mMatchedSharedFamily = this;
       }
@@ -603,15 +602,6 @@ Pointer FontList::Alloc(uint32_t aSize) {
   }
 
   return Pointer(blockIndex, curAlloc);
-}
-
-void FontList::LoadCharMapFor(Face& aFace, const Family* aFamily) {
-  RefPtr<gfxFontEntry> fe =
-      gfxPlatformFontList::PlatformFontList()->GetOrCreateFontEntry(&aFace,
-                                                                    aFamily);
-  if (fe) {
-    fe->ReadCMAP();
-  }
 }
 
 void FontList::SetFamilyNames(const nsTArray<Family::InitData>& aFamilies) {
