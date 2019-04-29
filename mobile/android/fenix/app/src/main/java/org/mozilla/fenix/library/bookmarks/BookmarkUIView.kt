@@ -111,8 +111,9 @@ class BookmarkUIView(
 
     private fun setTitle(root: BookmarkNode?) {
         (activity as? AppCompatActivity)?.title =
-            if (root?.title in setOf(
-                    "root",
+            if (root?.guid in setOf(
+                    BookmarkRoot.Mobile.id,
+                    BookmarkRoot.Root.id,
                     null
                 )
             ) context.getString(R.string.library_bookmarks) else root!!.title

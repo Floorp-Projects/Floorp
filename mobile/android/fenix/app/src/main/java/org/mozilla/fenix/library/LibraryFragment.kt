@@ -54,10 +54,12 @@ class LibraryFragment : Fragment() {
             )
         )
 
-        libraryBookmarks.setOnClickListener(Navigation.createNavigateOnClickListener(
-            LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Root.id).actionId,
-            BookmarkFragmentArgs(BookmarkRoot.Root.id).toBundle()
-        ))
+        libraryBookmarks.setOnClickListener(
+            Navigation.createNavigateOnClickListener(
+                LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Mobile.id).actionId,
+                BookmarkFragmentArgs(BookmarkRoot.Mobile.id).toBundle()
+            )
+        )
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
