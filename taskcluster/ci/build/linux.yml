@@ -175,6 +175,7 @@ linux64-plain/debug:
 
 linux64-devedition-nightly/opt:
     description: "Linux64 devedition Nightly"
+    use-pgo: linux64-shippable/opt
     attributes:
         nightly: true
         enable-full-crashsymbols: true
