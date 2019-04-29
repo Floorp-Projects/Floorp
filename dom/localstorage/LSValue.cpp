@@ -10,7 +10,7 @@ namespace mozilla {
 namespace dom {
 
 const LSValue& VoidLSValue() {
-  static const LSValue sVoidLSValue(VoidString());
+  static const LSValue sVoidLSValue(VoidCString(), 0);
 
   return sVoidLSValue;
 }
