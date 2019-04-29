@@ -315,8 +315,26 @@ void BrowserParent::RemoveBrowserParentFromTable(layers::LayersId aLayersId) {
   }
 }
 
-void BrowserParent::CacheFrameLoader(nsFrameLoader* aFrameLoader) {
-  mFrameLoader = aFrameLoader;
+already_AddRefed<nsILoadContext> BrowserParent::GetLoadContext() {
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (mLoadContext) {
+    loadContext = mLoadContext;
+  } else {
+    bool isPrivate = mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+    SetPrivateBrowsingAttributes(isPrivate);
+    bool useTrackingProtection = false;
+    nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+    if (docShell) {
+      docShell->GetUseTrackingProtection(&useTrackingProtection);
+    }
+    loadContext = new LoadContext(
+        GetOwnerElement(), true /* aIsContent */, isPrivate,
+        mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
+        mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW,
+        useTrackingProtection, OriginAttributesRef());
+    mLoadContext = loadContext;
+  }
+  return loadContext.forget();
 }
 
 /**
@@ -336,6 +354,114 @@ already_AddRefed<nsPIDOMWindowOuter> BrowserParent::GetParentWindowOuter() {
   }
 
   return parent.forget();
+}
+
+already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
+  nsCOMPtr<nsIContent> content = mFrameElement;
+  if (content) {
+    PresShell* presShell = content->OwnerDoc()->GetPresShell();
+    if (presShell) {
+      nsViewManager* vm = presShell->GetViewManager();
+      nsCOMPtr<nsIWidget> widget;
+      vm->GetRootWidget(getter_AddRefs(widget));
+      return widget.forget();
+    }
+  }
+  return nullptr;
+}
+
+already_AddRefed<nsIWidget> BrowserParent::GetWidget() const {
+  if (!mFrameElement) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(mFrameElement);
+  if (!widget) {
+    widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
+  }
+  return widget.forget();
+}
+
+already_AddRefed<nsIWidget> BrowserParent::GetDocWidget() const {
+  if (!mFrameElement) {
+    return nullptr;
+  }
+  return do_AddRef(
+      nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc()));
+}
+
+nsIXULBrowserWindow* BrowserParent::GetXULBrowserWindow() {
+  if (!mFrameElement) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
+  if (!window) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+  window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+  return xulBrowserWindow;
+}
+
+a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
+#ifdef ACCESSIBILITY
+  // XXX Consider managing non top level PDocAccessibles with their parent
+  // document accessible.
+  const ManagedContainer<PDocAccessibleParent>& docs =
+      ManagedPDocAccessibleParent();
+  for (auto iter = docs.ConstIter(); !iter.Done(); iter.Next()) {
+    auto doc = static_cast<a11y::DocAccessibleParent*>(iter.Get()->GetKey());
+    if (doc->IsTopLevel()) {
+      return doc;
+    }
+  }
+
+  MOZ_ASSERT(docs.Count() == 0,
+             "If there isn't a top level accessible doc "
+             "there shouldn't be an accessible doc at all!");
+#endif
+  return nullptr;
+}
+
+RenderFrame* BrowserParent::GetRenderFrame() {
+  if (!mRenderFrame.IsInitialized()) {
+    return nullptr;
+  }
+  return &mRenderFrame;
+}
+
+ShowInfo BrowserParent::GetShowInfo() {
+  TryCacheDPIAndScale();
+  if (mFrameElement) {
+    nsAutoString name;
+    mFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+    bool allowFullscreen =
+        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
+        mFrameElement->HasAttr(kNameSpaceID_None,
+                               nsGkAtoms::mozallowfullscreen);
+    bool isPrivate = mFrameElement->HasAttr(kNameSpaceID_None,
+                                            nsGkAtoms::mozprivatebrowsing);
+    bool isTransparent =
+        nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
+        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
+    return ShowInfo(name, allowFullscreen, isPrivate, false, isTransparent,
+                    mDPI, mRounding, mDefaultScale.scale);
+  }
+
+  return ShowInfo(EmptyString(), false, false, false, false, mDPI, mRounding,
+                  mDefaultScale.scale);
 }
 
 void BrowserParent::SetOwnerElement(Element* aElement) {
@@ -427,6 +553,10 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
 NS_IMETHODIMP BrowserParent::GetOwnerElement(Element** aElement) {
   *aElement = do_AddRef(GetOwnerElement()).take();
   return NS_OK;
+}
+
+void BrowserParent::CacheFrameLoader(nsFrameLoader* aFrameLoader) {
+  mFrameLoader = aFrameLoader;
 }
 
 void BrowserParent::AddWindowListeners() {
@@ -1064,26 +1194,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
   }
 #endif
   return IPC_OK();
-}
-
-a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
-#ifdef ACCESSIBILITY
-  // XXX Consider managing non top level PDocAccessibles with their parent
-  // document accessible.
-  const ManagedContainer<PDocAccessibleParent>& docs =
-      ManagedPDocAccessibleParent();
-  for (auto iter = docs.ConstIter(); !iter.Done(); iter.Next()) {
-    auto doc = static_cast<a11y::DocAccessibleParent*>(iter.Get()->GetKey());
-    if (doc->IsTopLevel()) {
-      return doc;
-    }
-  }
-
-  MOZ_ASSERT(docs.Count() == 0,
-             "If there isn't a top level accessible doc "
-             "there shouldn't be an accessible doc at all!");
-#endif
-  return nullptr;
 }
 
 PFilePickerParent* BrowserParent::AllocPFilePickerParent(const nsString& aTitle,
@@ -1827,32 +1937,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
   mCustomCursorHotspotY = aHotspotY;
 
   return IPC_OK();
-}
-
-nsIXULBrowserWindow* BrowserParent::GetXULBrowserWindow() {
-  if (!mFrameElement) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
-  if (!docShell) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-  if (!treeOwner) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
-  if (!window) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
-  window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
-  return xulBrowserWindow;
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetStatus(const uint32_t& aType,
@@ -2647,17 +2731,6 @@ void BrowserParent::PopFocus(BrowserParent* aBrowserParent) {
   }
 }
 
-RenderFrame* BrowserParent::GetRenderFrame() {
-  if (!mRenderFrame.IsInitialized()) {
-    return nullptr;
-  }
-  return &mRenderFrame;
-}
-
-BrowserBridgeParent* BrowserParent::GetBrowserBridgeParent() const {
-  return mBrowserBridgeParent;
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRequestIMEToCommitComposition(
     const bool& aCancel, bool* aIsCommitted, nsString* aCommittedString) {
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -2742,20 +2815,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetInputContext(
     const InputContext& aContext, const InputContextAction& aAction) {
   IMEStateManager::SetInputContextForChildProcess(this, aContext, aAction);
   return IPC_OK();
-}
-
-already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
-  nsCOMPtr<nsIContent> content = mFrameElement;
-  if (content) {
-    PresShell* presShell = content->OwnerDoc()->GetPresShell();
-    if (presShell) {
-      nsViewManager* vm = presShell->GetViewManager();
-      nsCOMPtr<nsIWidget> widget;
-      vm->GetRootWidget(getter_AddRefs(widget));
-      return widget.forget();
-    }
-  }
-  return nullptr;
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetNativeChildOfShareableWindow(
@@ -2873,25 +2932,6 @@ void BrowserParent::TryCacheDPIAndScale() {
   }
 }
 
-already_AddRefed<nsIWidget> BrowserParent::GetWidget() const {
-  if (!mFrameElement) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(mFrameElement);
-  if (!widget) {
-    widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
-  }
-  return widget.forget();
-}
-
-already_AddRefed<nsIWidget> BrowserParent::GetDocWidget() const {
-  if (!mFrameElement) {
-    return nullptr;
-  }
-  return do_AddRef(
-      nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc()));
-}
-
 void BrowserParent::ApzAwareEventRoutingToChild(
     ScrollableLayerGuid* aOutTargetGuid, uint64_t* aOutInputBlockId,
     nsEventStatus* aOutApzResponse) {
@@ -2968,28 +3008,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvRespondStartSwipeEvent(
     widget->ReportSwipeStarted(aInputBlockId, aStartSwipe);
   }
   return IPC_OK();
-}
-
-already_AddRefed<nsILoadContext> BrowserParent::GetLoadContext() {
-  nsCOMPtr<nsILoadContext> loadContext;
-  if (mLoadContext) {
-    loadContext = mLoadContext;
-  } else {
-    bool isPrivate = mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-    SetPrivateBrowsingAttributes(isPrivate);
-    bool useTrackingProtection = false;
-    nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
-    if (docShell) {
-      docShell->GetUseTrackingProtection(&useTrackingProtection);
-    }
-    loadContext = new LoadContext(
-        GetOwnerElement(), true /* aIsContent */, isPrivate,
-        mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
-        mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW,
-        useTrackingProtection, OriginAttributesRef());
-    mLoadContext = loadContext;
-  }
-  return loadContext.forget();
 }
 
 // defined in nsIRemoteTab
@@ -3714,28 +3732,6 @@ BrowserParent::StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId) {
     }
   }
   return NS_OK;
-}
-
-ShowInfo BrowserParent::GetShowInfo() {
-  TryCacheDPIAndScale();
-  if (mFrameElement) {
-    nsAutoString name;
-    mFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-    bool allowFullscreen =
-        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
-        mFrameElement->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::mozallowfullscreen);
-    bool isPrivate = mFrameElement->HasAttr(kNameSpaceID_None,
-                                            nsGkAtoms::mozprivatebrowsing);
-    bool isTransparent =
-        nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
-        mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
-    return ShowInfo(name, allowFullscreen, isPrivate, false, isTransparent,
-                    mDPI, mRounding, mDefaultScale.scale);
-  }
-
-  return ShowInfo(EmptyString(), false, false, false, false, mDPI, mRounding,
-                  mDefaultScale.scale);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvLookUpDictionary(
