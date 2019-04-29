@@ -262,18 +262,18 @@ class QuotaManager final : public BackgroundThreadObject {
                                      const nsACString& aSuffix,
                                      const nsACString& aGroup,
                                      const nsACString& aOrigin,
-                                     bool aCreateIfNotExists,
                                      nsIFile** aDirectory);
 
-  nsresult EnsureOriginIsInitializedInternal(
-      PersistenceType aPersistenceType, const nsACString& aSuffix,
-      const nsACString& aGroup, const nsACString& aOrigin,
-      bool aCreateIfNotExists, nsIFile** aDirectory, bool* aCreated);
+  nsresult EnsureOriginIsInitializedInternal(PersistenceType aPersistenceType,
+                                             const nsACString& aSuffix,
+                                             const nsACString& aGroup,
+                                             const nsACString& aOrigin,
+                                             nsIFile** aDirectory,
+                                             bool* aCreated);
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
-  nsresult EnsureOriginDirectory(nsIFile* aDirectory, bool aCreateIfNotExists,
-                                 bool* aCreated);
+  nsresult EnsureOriginDirectory(nsIFile* aDirectory, bool* aCreated);
 
   nsresult AboutToClearOrigins(
       const Nullable<PersistenceType>& aPersistenceType,
