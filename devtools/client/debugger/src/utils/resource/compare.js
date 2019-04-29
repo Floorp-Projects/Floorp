@@ -35,7 +35,7 @@ function objectShallowEqual(
   return (
     keys.length === existingKeys.length &&
     keys.every((k, i) => k === existingKeys[i]) &&
-    keys.every((k, i) => value[k] === other[existingKeys[i]])
+    keys.every(k => value[k] === other[k])
   );
 }
 
