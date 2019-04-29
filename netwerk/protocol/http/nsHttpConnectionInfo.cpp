@@ -44,8 +44,8 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
     const nsACString &originHost, int32_t originPort,
     const nsACString &npnToken, const nsACString &username,
     const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
-    const OriginAttributes &originAttributes, bool endToEndSSL)
-    : mRoutedPort(443), mIsolated(0), mLessThanTls13(false) {
+    const OriginAttributes &originAttributes, bool endToEndSSL, bool isolated)
+    : mRoutedPort(443), mIsolated(isolated), mLessThanTls13(false) {
   Init(originHost, originPort, npnToken, username, topWindowOrigin, proxyInfo,
        originAttributes, endToEndSSL);
 }
@@ -54,9 +54,18 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
     const nsACString &originHost, int32_t originPort,
     const nsACString &npnToken, const nsACString &username,
     const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
+    const OriginAttributes &originAttributes, bool endToEndSSL)
+    : nsHttpConnectionInfo(originHost, originPort, npnToken, username,
+                           topWindowOrigin, proxyInfo, originAttributes,
+                           endToEndSSL, false) {}
+
+nsHttpConnectionInfo::nsHttpConnectionInfo(
+    const nsACString &originHost, int32_t originPort,
+    const nsACString &npnToken, const nsACString &username,
+    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
     const OriginAttributes &originAttributes, const nsACString &routedHost,
-    int32_t routedPort)
-    : mIsolated(0), mLessThanTls13(false) {
+    int32_t routedPort, bool isolated)
+    : mIsolated(isolated), mLessThanTls13(false) {
   mEndToEndSSL = true;  // so DefaultPort() works
   mRoutedPort = routedPort == -1 ? DefaultPort() : routedPort;
 
@@ -66,6 +75,16 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
   Init(originHost, originPort, npnToken, username, topWindowOrigin, proxyInfo,
        originAttributes, true);
 }
+
+nsHttpConnectionInfo::nsHttpConnectionInfo(
+    const nsACString &originHost, int32_t originPort,
+    const nsACString &npnToken, const nsACString &username,
+    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
+    const OriginAttributes &originAttributes, const nsACString &routedHost,
+    int32_t routedPort)
+    : nsHttpConnectionInfo(originHost, originPort, npnToken, username,
+                           topWindowOrigin, proxyInfo, originAttributes,
+                           routedHost, routedPort, false) {}
 
 void nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
                                 const nsACString &npnToken,
@@ -248,14 +267,14 @@ void nsHttpConnectionInfo::SetOriginServer(const nsACString &host,
 already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   RefPtr<nsHttpConnectionInfo> clone;
   if (mRoutedHost.IsEmpty()) {
-    clone = new nsHttpConnectionInfo(mOrigin, mOriginPort, mNPNToken, mUsername,
-                                     mTopWindowOrigin, mProxyInfo,
-                                     mOriginAttributes, mEndToEndSSL);
+    clone = new nsHttpConnectionInfo(
+        mOrigin, mOriginPort, mNPNToken, mUsername, mTopWindowOrigin,
+        mProxyInfo, mOriginAttributes, mEndToEndSSL, mIsolated);
   } else {
     MOZ_ASSERT(mEndToEndSSL);
     clone = new nsHttpConnectionInfo(
         mOrigin, mOriginPort, mNPNToken, mUsername, mTopWindowOrigin,
-        mProxyInfo, mOriginAttributes, mRoutedHost, mRoutedPort);
+        mProxyInfo, mOriginAttributes, mRoutedHost, mRoutedPort, mIsolated);
   }
 
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
@@ -264,7 +283,6 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   clone->SetInsecureScheme(GetInsecureScheme());
   clone->SetNoSpdy(GetNoSpdy());
   clone->SetBeConservative(GetBeConservative());
-  clone->SetIsolated(GetIsolated());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetTrrUsed(GetTrrUsed());
   clone->SetTrrDisabled(GetTrrDisabled());
@@ -284,14 +302,13 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI) {
 
   RefPtr<nsHttpConnectionInfo> clone = new nsHttpConnectionInfo(
       mOrigin, mOriginPort, EmptyCString(), mUsername, mTopWindowOrigin,
-      mProxyInfo, mOriginAttributes, mEndToEndSSL);
+      mProxyInfo, mOriginAttributes, mEndToEndSSL, mIsolated);
   // Make sure the anonymous, insecure-scheme, and private flags are transferred
   clone->SetAnonymous(GetAnonymous());
   clone->SetPrivate(GetPrivate());
   clone->SetInsecureScheme(GetInsecureScheme());
   clone->SetNoSpdy(GetNoSpdy());
   clone->SetBeConservative(GetBeConservative());
-  clone->SetIsolated(GetIsolated());
   clone->SetTlsFlags(GetTlsFlags());
   clone->SetTrrUsed(GetTrrUsed());
   clone->SetTrrDisabled(GetTrrDisabled());
