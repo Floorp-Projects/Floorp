@@ -310,9 +310,7 @@ JSObject* Wrapper::wrappedObject(JSObject* wrapper) {
 
     // Unmark wrapper targets that should be black in case an incremental GC
     // hasn't marked them the correct color yet.
-    if (!wrapper->isMarkedGray()) {
-      JS::ExposeObjectToActiveJS(target);
-    }
+    JS::ExposeObjectToActiveJS(target);
   }
 
   return target;
