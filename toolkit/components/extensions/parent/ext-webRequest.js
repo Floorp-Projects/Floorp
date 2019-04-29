@@ -24,7 +24,9 @@ function registerEvent(extension, eventName, fire, filter, info, remoteTab = nul
 
     let event = data.serialize(eventName);
     event.tabId = browserData.tabId;
-
+    if (data.originAttributes) {
+      event.incognito = data.originAttributes.privateBrowsingId > 0;
+    }
     if (data.registerTraceableChannel) {
       // If this is a primed listener, no tabParent was passed in here,
       // but the convert() callback later in this function will be called

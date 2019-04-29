@@ -147,6 +147,7 @@
               "method": {"type": "string", "description": "Standard HTTP method."},
               "frameId": {"type": "integer", "description": "The value 0 indicates that the request happens in the main frame; a positive value indicates the ID of a subframe in which the request happens. If the document of a (sub-)frame is loaded (<code>type</code> is <code>main_frame</code> or <code>sub_frame</code>), <code>frameId</code> indicates the ID of this frame, not the ID of the outer frame. Frame IDs are unique within a tab."},
               "parentFrameId": {"type": "integer", "description": "ID of frame that wraps the frame which sent the request. Set to -1 if no parent frame exists."},
+              "incognito": {"type": "boolean", "optional": true, "description": "True for private browsing requests."},
               "originUrl": {"type": "string", "optional": true, "description": "URL of the resource that triggered this request."},
               "documentUrl": {"type": "string", "optional": true, "description": "URL of the page into which the requested resource will be loaded."},
               "tabId": {"type": "integer", "description": "The ID of the tab in which the request takes place. Set to -1 if the request isn't related to a tab."},

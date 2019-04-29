@@ -11,21 +11,41 @@ server.registerPathHandler("/dummy", (request, response) => {
 add_task(async function test_incognito_webrequest_access() {
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
 
-  // This extension will fail if it gets a request
+  let pb_extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(async (details) => {
+        browser.test.assertTrue(details.incognito, "incognito flag is set");
+        browser.test.notifyPass("webRequest.private");
+      }, {urls: ["<all_urls>"]}, ["blocking"]);
+    },
+  });
+  await pb_extension.startup();
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
     },
     background() {
       browser.webRequest.onBeforeRequest.addListener(async (details) => {
-        browser.test.fail("webrequest received incognito request");
+        browser.test.assertFalse(details.incognito, "incognito flag is not set");
+        browser.test.notifyPass("webRequest");
       }, {urls: ["<all_urls>"]}, ["blocking"]);
     },
   });
+  // Load non-incognito extension to check that private requests are invisible to it.
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
+  await pb_extension.awaitFinish("webRequest.private");
+  await pb_extension.unload();
+  await contentPage.close();
 
+  contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+  await extension.awaitFinish("webRequest");
   await extension.unload();
   await contentPage.close();
 
