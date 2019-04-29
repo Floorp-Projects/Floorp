@@ -284,7 +284,7 @@ ChromeUtils.defineModuleGetter(this, "Point", "resource://gre/modules/Geometry.j
 
 function resolveGeckoURI(aURI) {
   if (!aURI)
-    throw "Can't resolve an empty uri";
+    throw new Error("Can't resolve an empty uri");
 
   if (aURI.startsWith("chrome://")) {
     let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
@@ -1315,8 +1315,8 @@ var BrowserApp = {
     if (movedTab.id != fromTabId || this._tabs[toPosition].id != toTabId) {
       // The gecko and/or java Tabs tabs lists changed sometime between when the Tabs list was
       // updated and when news of the update arrived here.
-      throw "Moved tab mismatch: (" + fromTabId + ", " + movedTab.id + "), " +
-            "(" + toTabId + ", " + this._tabs[toPosition].id + ")";
+      throw new Error("Moved tab mismatch: (" + fromTabId + ", " + movedTab.id + "), " +
+            "(" + toTabId + ", " + this._tabs[toPosition].id + ")");
     }
 
     let step = (fromPosition < toPosition) ? 1 : -1;
@@ -1500,7 +1500,7 @@ var BrowserApp = {
     }
 
     BrowserApp.sanitize(aClear.sanitize, function() {
-      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+      let appStartup = Services.startup;
       appStartup.quit(Ci.nsIAppStartup.eForceQuit);
     }, true);
   },
@@ -1722,6 +1722,7 @@ var BrowserApp = {
     Services.prefs.setComplexValue(pref, Ci.nsIPrefLocalizedString, pls);
   },
 
+  // eslint-disable-next-line complexity
   onEvent: function(event, data, callback) {
     let browser = this.selectedBrowser;
 
@@ -1792,12 +1793,7 @@ var BrowserApp = {
         Strings.flush();
 
         // Make sure we use the right Accept-Language header.
-        let osLocale;
-        try {
-          // This should never not be set at this point, but better safe than sorry.
-          osLocale = Services.prefs.getCharPref("intl.locale.os");
-        } catch (e) {
-        }
+        let osLocale = Services.prefs.getCharPref("intl.locale.os");
 
         this.computeAcceptLanguages(osLocale, data && data.languageTag);
         break;
@@ -1891,6 +1887,7 @@ var BrowserApp = {
               // Remove the current host from the 'trackingprotection' consumer
               // of the permission manager. This effectively removes this host
               // from the tracking protection white list (any list actually).
+              // eslint-disable-next-line no-lonely-if
               if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
                 PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
               } else {
@@ -2352,7 +2349,7 @@ var NativeWindow = {
             callback: arguments[2],
           };
       } else {
-         throw "Incorrect number of parameters";
+         throw new Error("Incorrect number of parameters");
       }
 
       options.type = "Menu:Add";
@@ -2510,11 +2507,11 @@ var NativeWindow = {
           callback: arguments[2],
         };
       } else {
-        throw "Incorrect number of parameters";
+        throw new Error("Incorrect number of parameters");
       }
 
       if (!args.label)
-        throw "Menu items must have a name";
+        throw new Error("Menu items must have a name");
 
       let cmItem = new ContextMenuItem(args);
       this.items[cmItem.id] = cmItem;
@@ -3226,7 +3223,7 @@ var NativeWindow = {
       if (!href || !href.match(/\S/)) {
         // Without this we try to save as the current doc,
         // for example, HTML case also throws if empty
-        throw "Empty href";
+        throw new Error("Empty href");
       }
 
       return this.makeURLAbsolute(aLink.baseURI, href);
@@ -3389,6 +3386,7 @@ function nsBrowserAccess() {
 nsBrowserAccess.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
+  // eslint-disable-next-line complexity
   _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aFlags, aTriggeringPrincipal, aCsp) {
     let isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
     if (isExternal && aURI && aURI.schemeIs("chrome"))
@@ -3482,7 +3480,7 @@ nsBrowserAccess.prototype = {
   openURI: function browser_openURI(aURI, aOpener, aWhere, aFlags,
                                     aTriggeringPrincipal, aCsp) {
     if (!aURI) {
-      throw "Can't open an empty uri";
+      throw new Error("Can't open an empty uri");
     }
     let browser = this._getBrowser(aURI, aOpener, aWhere, aFlags,
                                    aTriggeringPrincipal, aCsp);
@@ -3594,6 +3592,7 @@ function getBaseDomain(aURI) {
 }
 
 Tab.prototype = {
+  // eslint-disable-next-line complexity
   create: function(aURL, aParams) {
     if (this.browser)
       return;
@@ -4129,6 +4128,7 @@ Tab.prototype = {
       return Services.io.newURI(url);
   },
 
+  // eslint-disable-next-line complexity
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
@@ -4509,6 +4509,7 @@ Tab.prototype = {
     }
   },
 
+  // eslint-disable-next-line complexity
   onLocationChange: function(aWebProgress, aRequest, aLocationURI, aFlags) {
     let contentWin = aWebProgress.DOMWindow;
     let webNav = contentWin.docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -4919,6 +4920,7 @@ var BrowserEventHandler = {
 };
 
 var ErrorPageEventHandler = {
+  // eslint-disable-next-line complexity
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "click": {
@@ -4985,7 +4987,7 @@ var ErrorPageEventHandler = {
           let isIframe = (errorDoc.defaultView.parent === errorDoc.defaultView);
           bucketName += isIframe ? "TOP_" : "FRAME_";
 
-          let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+          let formatter = Services.urlFormatter;
 
           if (target == errorDoc.getElementById("getMeOutButton")) {
             if (sendTelemetry) {
@@ -5214,20 +5216,18 @@ var XPInstallObserver = {
 
     if (needsRestart) {
       this.showRestartPrompt();
-    } else {
+    } else if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
       // Display completion message for new installs or updates not done Automatically
-      if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
-        let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.message");
-        Snackbars.show(message, Snackbars.LENGTH_LONG, {
-          action: {
-            label: Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.action2"),
-            callback: () => {
-              UITelemetry.addEvent("show.1", "toast", null, "addons");
-              BrowserApp.selectOrAddTab("about:addons", { parentId: BrowserApp.selectedTab.id });
-            },
+      let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.message");
+      Snackbars.show(message, Snackbars.LENGTH_LONG, {
+        action: {
+          label: Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.action2"),
+          callback: () => {
+            UITelemetry.addEvent("show.1", "toast", null, "addons");
+            BrowserApp.selectOrAddTab("about:addons", { parentId: BrowserApp.selectedTab.id });
           },
-        });
-      }
+        },
+      });
     }
   },
 
@@ -5300,10 +5300,10 @@ var XPInstallObserver = {
         Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
         // If nothing aborted, quit the app
-        if (cancelQuit.data == false) {
+        if (!cancelQuit.data) {
           Services.obs.notifyObservers(null, "quit-application-proceeding");
           SharedPreferences.forApp().setBoolPref("browser.sessionstore.resume_session_once", true);
-          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+          let appStartup = Services.startup;
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }
       },
