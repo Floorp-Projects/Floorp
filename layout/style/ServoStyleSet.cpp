@@ -100,6 +100,7 @@ ServoStyleSet::ServoStyleSet(Document& aDocument) : mDocument(&aDocument) {
 }
 
 ServoStyleSet::~ServoStyleSet() {
+  MOZ_ASSERT(!IsInServoTraversal());
   EnumerateStyleSheets([&](StyleSheet& aSheet) { aSheet.DropStyleSet(this); });
 }
 

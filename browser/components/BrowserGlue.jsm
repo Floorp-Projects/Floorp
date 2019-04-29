@@ -1254,6 +1254,24 @@ BrowserGlue.prototype = {
     } catch (ex) {}
   },
 
+  _collectStartupConditionsTelemetry() {
+    let nowSeconds = Math.round(Date.now() / 1000);
+    // Don't include cases where we don't have the pref. This rules out the first install
+    // as well as the first run of a build since this was introduced. These could by some
+    // definitions be referred to as "cold" startups, but probably not since we likely
+    // just wrote many of the files we use to disk. This way we should approximate a lower
+    // bound to the number of cold startups rather than an upper bound.
+    let lastCheckSeconds = Services.prefs.getIntPref("browser.startup.lastColdStartupCheck", nowSeconds);
+    Services.prefs.setIntPref("browser.startup.lastColdStartupCheck", nowSeconds);
+    try {
+      let secondsSinceLastOSRestart = Services.startup.secondsSinceLastOSRestart;
+      let isColdStartup = nowSeconds - secondsSinceLastOSRestart > lastCheckSeconds;
+      Services.telemetry.scalarSet("startup.is_cold", isColdStartup);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  },
+
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
     TabCrashHandler.init();
@@ -1328,6 +1346,8 @@ BrowserGlue.prototype = {
 
     this._firstWindowTelemetry(aWindow);
     this._firstWindowLoaded();
+
+    this._collectStartupConditionsTelemetry();
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);

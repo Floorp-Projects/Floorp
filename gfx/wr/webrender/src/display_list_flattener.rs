@@ -520,6 +520,7 @@ impl<'a> DisplayListFlattener<'a> {
             self.scene.root_pipeline_id.unwrap(),
             None,
             true,
+            true,
             RasterSpace::Screen,
             prim_list,
             main_scroll_root,
@@ -1692,6 +1693,7 @@ impl<'a> DisplayListFlattener<'a> {
                 stacking_context.pipeline_id,
                 leaf_output_pipeline_id,
                 true,
+                stacking_context.is_backface_visible,
                 stacking_context.requested_raster_space,
                 PrimitiveList::new(
                     stacking_context.primitives,
@@ -1739,6 +1741,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.pipeline_id,
                     stacking_context.frame_output_pipeline_id,
                     true,
+                    stacking_context.is_backface_visible,
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         prims,
@@ -1806,6 +1809,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.pipeline_id,
                     None,
                     true,
+                    stacking_context.is_backface_visible,
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         vec![cur_instance.clone()],
@@ -1860,6 +1864,7 @@ impl<'a> DisplayListFlattener<'a> {
                     stacking_context.pipeline_id,
                     None,
                     true,
+                    stacking_context.is_backface_visible,
                     stacking_context.requested_raster_space,
                     PrimitiveList::new(
                         vec![cur_instance.clone()],
@@ -2213,6 +2218,7 @@ impl<'a> DisplayListFlattener<'a> {
                         let blur_filter = FilterOp::Blur(std_deviation).sanitize();
                         let composite_mode = PictureCompositeMode::Filter(blur_filter);
                         let composite_mode_key = Some(composite_mode.clone()).into();
+                        let is_backface_visible = true; //TODO: double check this
 
                         // Pass through configuration information about whether WR should
                         // do the bounding rect inflation for text shadows.
@@ -2229,6 +2235,7 @@ impl<'a> DisplayListFlattener<'a> {
                                 pipeline_id,
                                 None,
                                 is_passthrough,
+                                is_backface_visible,
                                 raster_space,
                                 PrimitiveList::new(
                                     prims,
@@ -3000,6 +3007,7 @@ impl FlattenedStackingContext {
                 self.pipeline_id,
                 None,
                 true,
+                self.is_backface_visible,
                 self.requested_raster_space,
                 PrimitiveList::new(
                     mem::replace(&mut self.primitives, Vec::new()),

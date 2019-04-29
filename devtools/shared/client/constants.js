@@ -9,10 +9,10 @@
  * state the actor is in after each message.
  */
 const ThreadStateTypes = {
-  "paused": "paused",
-  "resumed": "attached",
-  "detached": "detached",
-  "running": "attached",
+  paused: "paused",
+  resumed: "attached",
+  detached: "detached",
+  running: "attached",
 };
 
 /**
@@ -20,19 +20,18 @@ const ThreadStateTypes = {
  * by the client.
  */
 const UnsolicitedNotifications = {
-  "networkEventUpdate": "networkEventUpdate",
-  "tabDetached": "tabDetached",
-  "tabListChanged": "tabListChanged",
-  "addonListChanged": "addonListChanged",
-  "workerListChanged": "workerListChanged",
-  "serviceWorkerRegistrationListChanged": "serviceWorkerRegistrationList",
-  "updatedSource": "updatedSource",
+  networkEventUpdate: "networkEventUpdate",
+  tabDetached: "tabDetached",
+  tabListChanged: "tabListChanged",
+  addonListChanged: "addonListChanged",
+  workerListChanged: "workerListChanged",
+  serviceWorkerRegistrationListChanged: "serviceWorkerRegistrationList",
 
   // newSource is still emitted on the ThreadActor, in addition to the
   // BrowsingContextActor we have to keep it here until ThreadClient is converted to
   // ThreadFront and/or we stop emitting this duplicated events.
   // See ThreadActor.onNewSourceEvent.
-  "newSource": "newSource",
+  newSource: "newSource",
 };
 
 /**
@@ -40,13 +39,13 @@ const UnsolicitedNotifications = {
  * response to a client request.
  */
 const UnsolicitedPauses = {
-  "resumeLimit": "resumeLimit",
-  "debuggerStatement": "debuggerStatement",
-  "breakpoint": "breakpoint",
-  "DOMEvent": "DOMEvent",
-  "watchpoint": "watchpoint",
-  "exception": "exception",
-  "replayForcedPause": "replayForcedPause",
+  resumeLimit: "resumeLimit",
+  debuggerStatement: "debuggerStatement",
+  breakpoint: "breakpoint",
+  DOMEvent: "DOMEvent",
+  watchpoint: "watchpoint",
+  exception: "exception",
+  replayForcedPause: "replayForcedPause",
 };
 
 module.exports = {

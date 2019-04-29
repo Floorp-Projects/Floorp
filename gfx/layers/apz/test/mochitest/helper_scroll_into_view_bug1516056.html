@@ -19,12 +19,20 @@
 <body>
   <div id="target"></div>
   <script>
+    let vv = window.visualViewport;
     function getVisualScrollRange() {
       let rootScroller = document.scrollingElement;
-      let vv = window.visualViewport;
       return {
         width: rootScroller.scrollWidth - vv.width,
         height: rootScroller.scrollHeight - vv.height,
+      };
+    }
+    function getVisualViewportRect() {
+      return {
+        x: vv.pageLeft,
+        y: vv.pageTop,
+        w: vv.width,
+        h: vv.height,
       };
     }
     function* test(testDriver) {
@@ -34,9 +42,24 @@
       SimpleTest.ok(visualScrollRange.width > 0, "page should have a nonzero horizontal visual scroll range");
       SimpleTest.ok(visualScrollRange.height > 0, "page should have a nonzero vertical visual scroll range");
       let target = document.getElementById("target");
+
+      // Scroll target element into view. Wait until any visual scrolling is done before doing checks.
+      vv.addEventListener("scroll", testDriver, { once: true });
       target.scrollIntoView();
+      yield; // wait for visual viewport "scroll" event
+      yield waitForApzFlushedRepaints(testDriver);
+
+      // Test that scrollIntoView() respected the layout scroll range.
       SimpleTest.is(window.scrollX, 0, "page should not layout-scroll with a zero layout scroll range");
       SimpleTest.is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
+
+      // Test that scrollIntoView() did perform visual scrolling.
+      let vvRect = getVisualViewportRect();
+      let targetBounds = target.getBoundingClientRect();
+      // set property names expected by rectContains()
+      targetBounds.w = targetBounds.width;
+      targetBounds.h = targetBounds.height;
+      assertRectContainment(vvRect, "visual viewport", targetBounds, "target element bounding rect");
     }
     waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
   </script>

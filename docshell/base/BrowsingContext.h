@@ -94,6 +94,8 @@ class BrowsingContext : public nsWrapperCache,
  public:
   enum class Type { Chrome, Content };
 
+  using Children = nsTArray<RefPtr<BrowsingContext>>;
+
   static void Init();
   static LogModule* GetLog();
   static void CleanupContexts(uint64_t aProcessId);
@@ -149,6 +151,9 @@ class BrowsingContext : public nsWrapperCache,
   // them to allow them to be attached again.
   void CacheChildren(bool aFromIPC = false);
 
+  // Restore cached browsing contexts.
+  void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
+
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
   bool IsCached();
@@ -172,7 +177,7 @@ class BrowsingContext : public nsWrapperCache,
 
   bool HasOpener() const;
 
-  void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
+  void GetChildren(Children& aChildren);
 
   BrowsingContextGroup* Group() { return mGroup; }
 
@@ -221,7 +226,6 @@ class BrowsingContext : public nsWrapperCache,
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
 
-  using Children = nsTArray<RefPtr<BrowsingContext>>;
   const Children& GetChildren() { return mChildren; }
 
   // Perform a pre-order walk of this BrowsingContext subtree.
@@ -335,6 +339,7 @@ class BrowsingContext : public nsWrapperCache,
     already_AddRefed<BrowsingContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
+    bool mCached;
     // Include each field, skipping mOpener, as we want to handle it
     // separately.
 #define MOZ_BC_FIELD(name, type) type m##name;
@@ -346,6 +351,7 @@ class BrowsingContext : public nsWrapperCache,
     IPCInitializer init;
     init.mId = Id();
     init.mParentId = mParent ? mParent->Id() : 0;
+    init.mCached = IsCached();
 
 #define MOZ_BC_FIELD(name, type) init.m##name = m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
@@ -477,6 +483,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
 typedef BrowsingContext::FieldEpochs BrowsingContextFieldEpochs;
 typedef BrowsingContext::IPCInitializer BrowsingContextInitializer;
+typedef BrowsingContext::Children BrowsingContextChildren;
 
 }  // namespace dom
 

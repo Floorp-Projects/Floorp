@@ -3935,7 +3935,7 @@ bool ArenaLists::checkEmptyArenaList(AllocKind kind) {
   size_t numLive = 0;
   if (!arenaLists(kind).isEmpty()) {
     isEmpty = false;
-    size_t maxCells = 20;
+    size_t maxCells = 5;
     char* env = getenv("JS_GC_MAX_LIVE_CELLS");
     if (env && *env) {
       maxCells = atol(env);

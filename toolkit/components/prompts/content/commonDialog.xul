@@ -18,6 +18,7 @@
 
   <script src="chrome://global/content/commonDialog.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/customElements.js"/>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       commonDialogOnLoad();

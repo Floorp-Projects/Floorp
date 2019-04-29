@@ -140,12 +140,23 @@ gfxFontEntry::~gfxFontEntry() {
   MOZ_ASSERT(!mGrFaceInitialized);
 }
 
+bool gfxFontEntry::TrySetShmemCharacterMap()
+{
+  MOZ_ASSERT(mShmemFace);
+  auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  mShmemCharacterMap =
+      static_cast<const SharedBitSet*>(mShmemFace->mCharacterMap.ToPtr(list));
+  return mShmemCharacterMap != nullptr;
+}
+
 bool gfxFontEntry::TestCharacterMap(uint32_t aCh) {
-  if (!mCharacterMap) {
+  if (!mCharacterMap && !mShmemCharacterMap) {
     ReadCMAP();
-    NS_ASSERTION(mCharacterMap, "failed to initialize character map");
+    MOZ_ASSERT(mCharacterMap || mShmemCharacterMap,
+               "failed to initialize character map");
   }
-  return mCharacterMap->test(aCh);
+  return mShmemCharacterMap ? mShmemCharacterMap->test(aCh)
+                            : mCharacterMap->test(aCh);
 }
 
 nsresult gfxFontEntry::InitializeUVSMap() {
@@ -1694,8 +1705,9 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
                                   FontInfoData* aFontInfoData) {
   // if all needed names have already been read, skip
   if (mOtherFamilyNamesInitialized &&
-      (mFaceNamesInitialized || !aNeedFullnamePostscriptNames))
+      (mFaceNamesInitialized || !aNeedFullnamePostscriptNames)) {
     return;
+  }
 
   bool asyncFontLoaderDisabled = false;
 

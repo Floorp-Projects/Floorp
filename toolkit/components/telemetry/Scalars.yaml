@@ -3589,6 +3589,20 @@ startup:
     record_in_processes:
       - main
 
+  is_cold:
+    bug_numbers:
+      - 1542833
+    description: >
+      Whether or not this startup is the first startup since OS reboot (according to our
+      best guess.)
+    expires: never
+    kind: boolean
+    notification_emails:
+      - dothayer@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 script.preloader:
   mainthread_recompile:
     bug_numbers:

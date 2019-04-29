@@ -367,6 +367,8 @@ class ContentChild final : public PContentChild,
       const FileDescriptor& aMapFile, const uint32_t& aMapSize,
       nsTArray<IPCBlob>&& aBlobs, nsTArray<nsCString>&& aChangedKeys);
 
+  mozilla::ipc::IPCResult RecvFontListChanged();
+
   mozilla::ipc::IPCResult RecvGeolocationUpdate(nsIDOMGeoPosition* aPosition);
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we don't have MOZ_CAN_RUN_SCRIPT bits
@@ -379,6 +381,7 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvUpdateFontList(
       InfallibleTArray<SystemFontListEntry>&& aFontList);
+  mozilla::ipc::IPCResult RecvRebuildFontList();
 
   mozilla::ipc::IPCResult RecvUpdateAppLocales(
       nsTArray<nsCString>&& aAppLocales);
@@ -698,8 +701,13 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvAttachBrowsingContext(
       BrowsingContext::IPCInitializer&& aInit);
 
-  mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
-                                                    bool aMoveToBFCache);
+  mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext);
+
+  mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
+      BrowsingContext* aContext);
+
+  mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
+      BrowsingContext* aContext, nsTArray<BrowsingContextId>&& aChildren);
 
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
       nsTArray<BrowsingContext::IPCInitializer>&& aInits);
