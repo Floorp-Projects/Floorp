@@ -142,14 +142,52 @@ class BrowserParent final : public PBrowserParent,
     return gNumActiveRecordReplayTabs != 0;
   }
 
+  const TabId GetTabId() const { return mTabId; }
+
+  ContentParent* Manager() const { return mManager; }
+
+  CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+
+  already_AddRefed<nsILoadContext> GetLoadContext();
+
   Element* GetOwnerElement() const { return mFrameElement; }
-  already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
-
-  void SetOwnerElement(Element* aElement);
-
-  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   nsIBrowserDOMWindow* GetBrowserDOMWindow() const { return mBrowserDOMWindow; }
+
+  // Returns the BrowserBridgeParent if this BrowserParent is for an
+  // out-of-process iframe and nullptr otherwise.
+  BrowserBridgeParent* GetBrowserBridgeParent() const {
+    return mBrowserBridgeParent;
+  }
+
+  already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
+
+  already_AddRefed<nsIWidget> GetTopLevelWidget();
+
+  // Returns the closest widget for our frameloader's content.
+  already_AddRefed<nsIWidget> GetWidget() const;
+
+  // Returns the top-level widget for our frameloader's document.
+  already_AddRefed<nsIWidget> GetDocWidget() const;
+
+  nsIXULBrowserWindow* GetXULBrowserWindow();
+
+  /**
+   * Return the top level doc accessible parent for this tab.
+   */
+  a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
+
+  layout::RenderFrame* GetRenderFrame();
+
+  ShowInfo GetShowInfo();
+
+  /**
+   * Let managees query if Destroy() is already called so they don't send out
+   * messages when the PBrowser actor is being destroyed.
+   */
+  bool IsDestroyed() const { return mIsDestroyed; }
+
+  void SetOwnerElement(Element* aElement);
 
   void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
     mBrowserDOMWindow = aBrowserDOMWindow;
@@ -161,13 +199,7 @@ class BrowserParent final : public PBrowserParent,
     aFrameScripts.SwapElements(mDelayedFrameScripts);
   }
 
-  already_AddRefed<nsILoadContext> GetLoadContext();
-
-  already_AddRefed<nsIWidget> GetTopLevelWidget();
-
-  nsIXULBrowserWindow* GetXULBrowserWindow();
-
-  CanonicalBrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   void Destroy();
 
@@ -365,11 +397,6 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
 
-  /**
-   * Return the top level doc accessible parent for this tab.
-   */
-  a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
-
   PWindowGlobalParent* AllocPWindowGlobalParent(const WindowGlobalInit& aInit);
 
   bool DeallocPWindowGlobalParent(PWindowGlobalParent* aActor);
@@ -522,22 +549,6 @@ class BrowserParent final : public PBrowserParent,
                              nsIPrincipal* aRequestingPrincipal,
                              const uint32_t& aContentPolicyType);
 
-  ContentParent* Manager() const { return mManager; }
-
-  /**
-   * Let managees query if Destroy() is already called so they don't send out
-   * messages when the PBrowser actor is being destroyed.
-   */
-  bool IsDestroyed() const { return mIsDestroyed; }
-
-  // Returns the closest widget for our frameloader's content.
-  already_AddRefed<nsIWidget> GetWidget() const;
-
-  // Returns the top-level widget for our frameloader's document.
-  already_AddRefed<nsIWidget> GetDocWidget() const;
-
-  const TabId GetTabId() const { return mTabId; }
-
   // Helper for transforming a point
   LayoutDeviceIntPoint TransformPoint(
       const LayoutDeviceIntPoint& aPoint,
@@ -615,12 +626,6 @@ class BrowserParent final : public PBrowserParent,
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                              LayoutDeviceIntRect* aDragRect);
 
-  layout::RenderFrame* GetRenderFrame();
-
-  // Returns the BrowserBridgeParent if this BrowserParent is for an
-  // out-of-process iframe and nullptr otherwise.
-  BrowserBridgeParent* GetBrowserBridgeParent() const;
-
   mozilla::ipc::IPCResult RecvEnsureLayersConnected(
       CompositorOptions* aCompositorOptions);
 
@@ -632,8 +637,6 @@ class BrowserParent final : public PBrowserParent,
   bool IsReadyToHandleInputEvents() { return mIsReadyToHandleInputEvents; }
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
-
-  ShowInfo GetShowInfo();
 
  protected:
   bool ReceiveMessage(
