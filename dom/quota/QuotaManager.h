@@ -443,6 +443,9 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult UpgradeLocalStorageArchiveFrom1To2(
       nsCOMPtr<mozIStorageConnection>& aConnection);
 
+  nsresult UpgradeLocalStorageArchiveFrom2To3(
+      nsCOMPtr<mozIStorageConnection>& aConnection);
+
   nsresult InitializeRepository(PersistenceType aPersistenceType);
 
   nsresult InitializeOrigin(PersistenceType aPersistenceType,

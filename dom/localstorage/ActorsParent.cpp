@@ -93,7 +93,7 @@ typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 3;
+const uint32_t kMajorSchemaVersion = 4;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -387,6 +387,18 @@ nsresult UpgradeSchemaFrom2_0To3_0(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
+nsresult UpgradeSchemaFrom3_0To4_0(mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(4, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConnection);
@@ -536,7 +548,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
       }
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((3 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((4 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -544,6 +556,8 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
           rv = UpgradeSchemaFrom1_0To2_0(connection);
         } else if (schemaVersion == MakeSchemaVersion(2, 0)) {
           rv = UpgradeSchemaFrom2_0To3_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(3, 0)) {
+          rv = UpgradeSchemaFrom3_0To4_0(connection);
         } else {
           LS_WARNING(
               "Unable to open LocalStorage database, no upgrade path is "
@@ -3791,8 +3805,8 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
   Connection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING(
-          "INSERT OR REPLACE INTO data (key, value, utf16Length) "
-          "VALUES(:key, :value, :utf16Length)"),
+          "INSERT OR REPLACE INTO data (key, value, utf16Length, compressed) "
+          "VALUES(:key, :value, :utf16Length, :compressed)"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3810,6 +3824,12 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("utf16Length"),
                              mValue.UTF16Length());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("compressed"),
+                             mValue.IsCompressed());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3854,7 +3874,15 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (mValue.IsCompressed()) {
+    nsCString value;
+    if (NS_WARN_IF(!SnappyUncompress(mValue, value))) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), value);
+  } else {
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7323,7 +7351,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
 
   Connection::CachedStatement stmt;
   nsresult rv = mConnection->GetCachedStatement(
-      NS_LITERAL_CSTRING("SELECT key, value, utf16Length "
+      NS_LITERAL_CSTRING("SELECT key, value, utf16Length, compressed "
                          "FROM data;"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7350,7 +7378,13 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
       return rv;
     }
 
-    LSValue value(buffer, utf16Length);
+    int32_t compressed;
+    rv = stmt->GetInt32(3, &compressed);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LSValue value(buffer, utf16Length, compressed);
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
