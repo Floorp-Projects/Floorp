@@ -45,7 +45,7 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
     const nsACString &npnToken, const nsACString &username,
     const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
     const OriginAttributes &originAttributes, bool endToEndSSL)
-    : mRoutedPort(443), mLessThanTls13(false) {
+    : mRoutedPort(443), mIsolated(0), mLessThanTls13(false) {
   Init(originHost, originPort, npnToken, username, topWindowOrigin, proxyInfo,
        originAttributes, endToEndSSL);
 }
@@ -56,7 +56,7 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
     const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
     const OriginAttributes &originAttributes, const nsACString &routedHost,
     int32_t routedPort)
-    : mLessThanTls13(false) {
+    : mIsolated(0), mLessThanTls13(false) {
   mEndToEndSSL = true;  // so DefaultPort() works
   mRoutedPort = routedPort == -1 ? DefaultPort() : routedPort;
 
@@ -137,6 +137,9 @@ void nsHttpConnectionInfo::BuildHashKey() {
   // byte 7 is i/. i is for isolated
 
   mHashKey.AssignLiteral("........[tlsflags0x00000000]");
+  if (mIsolated) {
+    mHashKey.SetCharAt('i', 7);
+  }
 
   mHashKey.Append(keyHost);
   mHashKey.Append(':');
@@ -220,6 +223,14 @@ void nsHttpConnectionInfo::BuildHashKey() {
 
   if (GetIPv6Disabled()) {
     mHashKey.AppendLiteral("[!v6]");
+  }
+
+  if (mIsolated && !mTopWindowOrigin.IsEmpty()) {
+    mHashKey.Append('{');
+    mHashKey.Append('{');
+    mHashKey.Append(mTopWindowOrigin);
+    mHashKey.Append('}');
+    mHashKey.Append('}');
   }
 
   nsAutoCString originAttributes;
