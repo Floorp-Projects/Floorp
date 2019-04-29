@@ -32,8 +32,8 @@
 #  define SPOOFED_OSCPU "Intel Mac OS X 10.14"
 #  define SPOOFED_PLATFORM "MacIntel"
 #elif defined(MOZ_WIDGET_ANDROID)
-#  define SPOOFED_UA_OS "Android 6.0; Mobile"
-#  define SPOOFED_APPVERSION "5.0 (Android 6.0)"
+#  define SPOOFED_UA_OS "Android 8.1; Mobile"
+#  define SPOOFED_APPVERSION "5.0 (Android 8.1)"
 #  define SPOOFED_OSCPU "Linux armv7l"
 #  define SPOOFED_PLATFORM "Linux armv7l"
 #else
