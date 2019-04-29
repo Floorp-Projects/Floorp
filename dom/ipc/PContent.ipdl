@@ -1272,8 +1272,19 @@ both:
      * should move it to the bfcache allowing it to be re-attached if navigated
      * to.
      */
-    async DetachBrowsingContext(BrowsingContext aContext,
-                                bool aMoveToBFCache);
+    async DetachBrowsingContext(BrowsingContext aContext);
+
+    /**
+     * Removes all of 'aContext'\'s children, and caches them in the
+     * BrowsingContextGroup.
+     */
+    async CacheBrowsingContextChildren(BrowsingContext aContext);
+
+    /**
+     * Re-attach all BrowsingContexts in a 'aContext'.
+     */
+    async RestoreBrowsingContextChildren(BrowsingContext aContext,
+                                         BrowsingContextId[] aChildren);
 
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
     async WindowFocus(BrowsingContext aContext);
