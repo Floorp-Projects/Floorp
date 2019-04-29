@@ -8,11 +8,11 @@ documented [here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
 When adding a new metric, the workflow is:
 * Decide on which [metric type](#Choosing-a-metric-type) you want to use.
 * Add a new entry to [`metrics.yaml`](#The-metricsyaml-file).
-* Add code to your project to record into the metric by calling glean.
+* Add code to your project to record into the metric by calling Glean.
 
 **Important**: as stated [here](../../README.md#before-using-the-library), any new data collection requires
 documentation and data-review. This is also required for any new metric automatically collected
-by glean.
+by Glean.
 
 # The `metrics.yaml` file
 
@@ -137,7 +137,7 @@ assertEquals("login_opened", first.name)
 Event timestamps use a system timer that is guaranteed to be monotonic only
 within a particular boot of the device. Therefore, if there are any unsent
 recorded events on disk when the application starts, any pings containing those
-events are sent immediately, so that glean can start over using a new timer and
+events are sent immediately, so that Glean can start over using a new timer and
 events based on different timers are never sent within the same ping.
 
 ## Booleans

@@ -40,7 +40,7 @@ internal object Dispatchers {
         }
 
         /**
-         * Helper function to ensure glean is being used in testing mode and async
+         * Helper function to ensure Glean is being used in testing mode and async
          * jobs are being run synchronously.  This should be called from every method
          * in the testing API to make sure that the results of the main API can be
          * tested as expected.
@@ -50,13 +50,13 @@ internal object Dispatchers {
             assert(
                 testingMode
             ) {
-                "To use the testing API, glean must be in testing mode by calling " +
+                "To use the testing API, Glean must be in testing mode by calling " +
                 "Glean.enableTestingMode() (for example, in a @Before method)."
             }
         }
 
         /**
-         * Enable testing mode, which makes all of the glean public API synchronous.
+         * Enable testing mode, which makes all of the Glean public API synchronous.
          *
          * @param enabled whether or not to enable the testing mode
          */

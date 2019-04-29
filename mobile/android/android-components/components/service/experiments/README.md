@@ -61,7 +61,7 @@ run-time, using the following [`adb`](https://developer.android.com/studio/comma
 In the above:
 
 - `[applicationId]` is the product's application id as defined in the manifest
-  file and/or build script. For the glean sample application, this is
+  file and/or build script. For the Glean sample application, this is
   `org.mozilla.samples.glean` for a release build and
   `org.mozilla.samples.glean.debug` for a debug build.
 
@@ -74,7 +74,7 @@ In the above:
     |---|----|-----------|
     | updateExperiments | boolean (--ez) | forces the experiments updater to run and fetch experiments immediately |
 
-For example, to direct a release build of the glean sample application to update experiments immediately, the following command
+For example, to direct a release build of the Glean sample application to update experiments immediately, the following command
 can be used:
 
 ```

@@ -1,14 +1,14 @@
-# Unit testing glean metrics
+# Unit testing Glean metrics
 
-In order to support unit testing inside of client applications using glean, a set of testing API 
-functions have been included.  The intent is to make glean easier to test 'out of the box' in any
+In order to support unit testing inside of client applications using Glean, a set of testing API 
+functions have been included.  The intent is to make Glean easier to test 'out of the box' in any
 client application it may be used in.  These functions expose a way to inspect and validate recorded
 metric values within the client application but are restricted to test code only through visibility
 annotations (`@VisibleForTesting(otherwise = VisibleForTesting.NONE)`).
 
 ## General test API method semantics
 
-In order to prevent issues with async calls when unit testing glean, it is important to put glean
+In order to prevent issues with async calls when unit testing Glean, it is important to put Glean
 into testing mode by calling `Glean.enableTestingMode()`.  This will ensure that metrics are done
 recording when the other test functions are used.
 

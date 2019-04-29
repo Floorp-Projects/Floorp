@@ -32,7 +32,7 @@ internal class HttpPingUploader : PingUploader {
      *
      * @param path the URL path to append to the server address
      * @param data the serialized text data to send
-     * @param config the glean configuration object
+     * @param config the Glean configuration object
      */
     private fun logPing(path: String, data: String, config: Configuration) {
         if (config.logPings) {
@@ -52,11 +52,11 @@ internal class HttpPingUploader : PingUploader {
      * Synchronously upload a ping to Mozilla servers.
      * Note that the `X-Client-Type`: `Glean` and `X-Client-Version`: <SDK version>
      * headers are added to the HTTP request in addition to the UserAgent. This allows
-     * us to easily handle pings coming from glean on the legacy Mozilla pipeline.
+     * us to easily handle pings coming from Glean on the legacy Mozilla pipeline.
      *
      * @param path the URL path to append to the server address
      * @param data the serialized text data to send
-     * @param config the glean configuration object
+     * @param config the Glean configuration object
      *
      * @return true if the ping was correctly dealt with (sent successfully
      *         or faced an unrecoverable error), false if there was a recoverable

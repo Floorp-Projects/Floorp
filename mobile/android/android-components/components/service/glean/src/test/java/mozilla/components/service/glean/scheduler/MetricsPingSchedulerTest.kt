@@ -219,7 +219,7 @@ class MetricsPingSchedulerTest {
 
     @Test
     fun `collectMetricsPing must correctly trigger the collection of the metrics ping`() {
-        // Setup a test server and make glean point to it.
+        // Setup a test server and make Glean point to it.
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
@@ -373,12 +373,12 @@ class MetricsPingSchedulerTest {
     }
 
     // @Test
-    // fun `glean should close the measurement window for overdue pings before recording new data`() {
+    // fun `Glean should close the measurement window for overdue pings before recording new data`() {
     //     // This test is a bit tricky: we want to make sure that, when our metrics ping is overdue
     //     // and collected at startup (if there's pending data), we don't mistakenly add new collected
     //     // data to it. In order to test for this specific edge case, we resort to the following:
-    //     // record some data, then "pretend glean is disabled" to simulate a crash, start using the
-    //     // recording API off the main thread, init glean in a separate thread and trigger a metrics
+    //     // record some data, then "pretend Glean is disabled" to simulate a crash, start using the
+    //     // recording API off the main thread, init Glean in a separate thread and trigger a metrics
     //     // ping at startup. We expect the initially written data to be there ("expected_data!"), but
     //     // not the "should_not_be_recorded", which will be reported in a separate ping.
 
@@ -391,7 +391,7 @@ class MetricsPingSchedulerTest {
     //         sendInPings = listOf("default")
     //     )
 
-    //     // Start glean in the current thread, clean the local storage.
+    //     // Start Glean in the current thread, clean the local storage.
     //     resetGlean()
 
     //     // Record the data we expect to be in the final metrics ping.
@@ -399,8 +399,8 @@ class MetricsPingSchedulerTest {
     //     stringMetric.set(expectedValue)
     //     assertTrue("The initial expected data must be recorded", stringMetric.testHasValue())
 
-    //     // Pretend glean is disabled. This is used so that any API call will be discarded and
-    //     // glean will init again.
+    //     // Pretend Glean is disabled. This is used so that any API call will be discarded and
+    //     // Glean will init again.
     //     Glean.initialized = false
 
     //     // Start the web-server that will receive the metrics ping.
@@ -425,7 +425,7 @@ class MetricsPingSchedulerTest {
     //     }
 
     //     try {
-    //         // Restart glean in a separate thread to simulate a crash/restart without
+    //         // Restart Glean in a separate thread to simulate a crash/restart without
     //         // clearing the local storage.
     //         val asyncInit = GlobalScope.async {
     //             Glean.initialize(getContextWithMockedInfo(), Configuration(

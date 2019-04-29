@@ -7,18 +7,18 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
 - [Usage](#usage)
     - [Setting up the dependency](#setting-up-the-dependency)
     - [Integrating with the build system](#integrating-with-the-build-system)
-    - [Initializing glean](#initializing-glean)
+    - [Initializing Glean](#initializing-glean)
     - [Adding new metrics](#adding-new-metrics)
     - [Adding custom pings](#adding-custom-pings)
     - [Testing metrics](#testing-metrics)
     - [Providing UI to enable / disable metrics](#providing-ui-to-enable--disable-metrics)
-- [Debugging products using glean](#debugging-products-using-glean)
+- [Debugging products using Glean](#debugging-products-using-glean)
 - [Data documentation](#data-documentation)
 - [Contact](#contact)
 - [License](#license)
 
 ## Before using the library
-Products using glean to collect telemetry **must**:
+Products using Glean to collect telemetry **must**:
 
 - add documentation for any new metric collected with the library in its repository (see [an example](https://github.com/mozilla-mobile/android-components/blob/df429df1a193516f796f2330863af384cce820bc/components/service/glean/docs/pings/pings.md));
 - go through data review for the newly collected data by following [this process](https://wiki.mozilla.org/Firefox/Data_Collection);
@@ -49,7 +49,7 @@ plugins {
 }
 ```
 
-Right before the end of the same file, the glean build script must be included. This script can be
+Right before the end of the same file, the Glean build script must be included. This script can be
 referenced directly from the GitHub repo, as shown below:
 
 ```Groovy
@@ -57,16 +57,16 @@ apply from: 'https://github.com/mozilla-mobile/android-components/raw/v{latest-v
 ```
 
 **Important:** the `{latest-version}` placeholder in the above link should be replaced with the version
-number of the glean library used by the project. For example, if version *0.34.2* is used, then the
+number of the Glean library used by the project. For example, if version *0.34.2* is used, then the
 include directive becomes:
 
 ```Groovy
 apply from: 'https://github.com/mozilla-mobile/android-components/raw/v0.34.2/components/service/glean/scripts/sdk_generator.gradle'
 ```
 
-### Initializing glean
+### Initializing Glean
 
-Before any data collection can take place, glean **must** be initialized from the application. An
+Before any data collection can take place, Glean **must** be initialized from the application. An
 excellent place to perform this operation is within the `onCreate` method of the class that extends
 Android's `Application` class.
 
@@ -87,7 +87,7 @@ class SampleApplication : Application() {
 }
 ```
 
-Once initialized, if collection is enabled, glean will automatically start collecting [baseline metrics](metrics.yaml)
+Once initialized, if collection is enabled, Glean will automatically start collecting [baseline metrics](metrics.yaml)
 and sending its [pings](docs/pings/pings.md).
 
 Glean should be initialized as soon as possible, and importantly, before any
@@ -95,7 +95,7 @@ other libraries in the application start using Glean. Library code should never
 call `Glean.initialize`, since it should be called exactly once per application.
 
 **Note**: if the application has the concept of release channels and knows which channel it is on at
-run-time, then it can provide glean with this information by setting it as part of the `Configuration`
+run-time, then it can provide Glean with this information by setting it as part of the `Configuration`
 object parameter of the `Glean.initialize` method. For example:
 
 ```Kotlin
@@ -112,21 +112,21 @@ To learn more, see [adding new metrics](docs/metrics/adding-new-metrics.md).
 
 **Important**: as stated [here](#before-using-the-library), any new data collection requires
 documentation and data-review. This is also required for any new metric automatically collected
-by glean.
+by Glean.
 
 ### Adding custom pings
 
 Please refer to the custom pings documentation living [here](docs/pings/custom.md).
 
 **Important**: as stated [here](#before-using-the-library), any new data collection, including
-new custom pings, requires documentation and data-review. This is also required for any new ping automatically collected by glean.
+new custom pings, requires documentation and data-review. This is also required for any new ping automatically collected by Glean.
 
 ### Testing metrics
 
 In order to make testing metrics easier 'out of the box', all metrics include a set of test API 
 functions in order to facilitate unit testing.  These include functions to test whether a value has
 been stored, and functions to retrieve the stored value for validation.  For more information, 
-please refer to [Unit testing glean metrics](docs/metrics/testing-metrics.md).
+please refer to [Unit testing Glean metrics](docs/metrics/testing-metrics.md).
 
 ### Providing UI to enable / disable metrics
 
@@ -134,10 +134,10 @@ Every application must provide a way to disable and re-enable data collection
 and upload. This is controlled with the `glean.setUploadEnabled()` method. The
 application should provide some form of user interface to call this method.
 Additionally, it is good practice to call this method immediately before calling
-`Glean.initialize()` to ensure that glean doesn't send any pings at start up
+`Glean.initialize()` to ensure that Glean doesn't send any pings at start up
 when telemetry is disabled.
 
-## Debugging products using glean
+## Debugging products using Glean
 Glean exports the [`GleanDebugActivity`](src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt)
 that can be used to toggle debugging features on or off. Users can invoke this special activity, at
 run-time, using the following [`adb`](https://developer.android.com/studio/command-line/adb) command:
@@ -147,7 +147,7 @@ run-time, using the following [`adb`](https://developer.android.com/studio/comma
 In the above:
 
 - `[applicationId]` is the product's application id as defined in the manifest
-  file and/or build script. For the glean sample application, this is
+  file and/or build script. For the Glean sample application, this is
   `org.mozilla.samples.glean` for a release build and
   `org.mozilla.samples.glean.debug` for a debug build.
 
@@ -158,11 +158,11 @@ In the above:
 
     |key|type|description|
     |---|----|-----------|
-    | logPings | boolean (--ez) | If set to `true`, glean dumps pings to logcat; defaults to `false` |
+    | logPings | boolean (--ez) | If set to `true`, Glean dumps pings to logcat; defaults to `false` |
     | sendPing | string (--es) | Sends the ping with the given name immediately |
     | tagPings | string (--es) | Tags all outgoing pings as debug pings to make them available for real-time validation. The value must match the pattern `[a-zA-Z0-9-]{1,20}` |
 
-For example, to direct a release build of the glean sample application to (1) dump pings to logcat, (2) tag the ping 
+For example, to direct a release build of the Glean sample application to (1) dump pings to logcat, (2) tag the ping 
 with the `test-metrics-ping` tag, and (3) send the "metrics" ping immediately, the following command
 can be used:
 

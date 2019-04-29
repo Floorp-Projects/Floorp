@@ -14,7 +14,7 @@ import java.io.IOException
  * User's app directory to determine if this is a first run or not.
  *
  * @param gleanDataDir the directory, within the application's data dir, that
- *        contains glean files.
+ *        contains Glean files.
  */
 internal class FileFirstRunDetector(
     private val gleanDataDir: File
@@ -31,7 +31,7 @@ internal class FileFirstRunDetector(
     }
 
     /**
-     * Whether or not the first run file exists in the glean's data directory.
+     * Whether or not the first run file exists in the Glean's data directory.
      *
      * @return true if the file exists (regardless if that's a dir or a file), false
      *         if it doesn't exist or an exception was thrown.
@@ -55,7 +55,7 @@ internal class FileFirstRunDetector(
     }
 
     /**
-     * Check if this is the first time glean was run.
+     * Check if this is the first time Glean was run.
      *
      * @return true if it was, false otherwise
      */

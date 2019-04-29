@@ -17,7 +17,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonOutput
 
 // This installs a Miniconda3 environment into the gradle user home directory
-// so that it will be shared between all libraries that use glean.  This is
+// so that it will be shared between all libraries that use Glean.  This is
 // important because it is approximately 300MB in installed size.
 
 String GLEAN_PARSER_VERSION = "0.24.0"
@@ -183,7 +183,7 @@ ext.gleanGenerateMetricsAPI = {
 
     // Only attach the generation task if the metrics file is available. We don't need to
     // fail hard otherwise, as some 3rd party project might just want metrics included in
-    // glean and nothing more.
+    // Glean and nothing more.
     if (file("$projectDir/metrics.yaml").exists() || file("$projectDir/pings.yaml").exists()) {
         // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
         // searching for "registerJavaGeneratingTask", and finding

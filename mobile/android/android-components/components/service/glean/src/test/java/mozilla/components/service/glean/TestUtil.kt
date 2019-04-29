@@ -33,7 +33,7 @@ import java.io.File
 import java.util.concurrent.ExecutionException
 
 /**
- * Checks ping content against the glean ping schema.
+ * Checks ping content against the Glean ping schema.
  *
  * This uses the Python utility, glean_parser, to perform the actual checking.
  * This is installed in its own Miniconda environment as part of the build
@@ -76,7 +76,7 @@ internal fun checkPingSchema(content: JSONObject) {
 }
 
 /**
- * Checks ping content against the glean ping schema.
+ * Checks ping content against the Glean ping schema.
  *
  * This uses the Python utility, glean_parser, to perform the actual checking.
  * This is installed in its own Miniconda environment as part of the build
@@ -93,7 +93,7 @@ internal fun checkPingSchema(content: String): JSONObject {
 }
 
 /**
- * Collects a specified ping type and checks it against the glean ping schema.
+ * Collects a specified ping type and checks it against the Glean ping schema.
  *
  * @param ping The ping to check
  * @return the ping contents, in a JSONObject
@@ -109,10 +109,10 @@ internal fun collectAndCheckPingSchema(ping: PingType): JSONObject {
 }
 
 /**
- * Resets the glean state and trigger init again.
+ * Resets the Glean state and trigger init again.
  *
- * @param context the application context to init glean with
- * @param config the [Configuration] to init glean with
+ * @param context the application context to init Glean with
+ * @param config the [Configuration] to init Glean with
  * @param clearStores if true, clear the contents of all stores
  */
 internal fun resetGlean(
@@ -122,7 +122,7 @@ internal fun resetGlean(
 ) {
     Glean.enableTestingMode()
 
-    // We're using the WorkManager in a bunch of places, and glean will crash
+    // We're using the WorkManager in a bunch of places, and Glean will crash
     // in tests without this line. Let's simply put it here.
     WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
@@ -138,7 +138,7 @@ internal fun resetGlean(
     // Clear the "first run" flag.
     val firstRun = FileFirstRunDetector(File(context.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR))
     firstRun.reset()
-    // Init glean.
+    // Init Glean.
     Glean.initialized = false
     Glean.setUploadEnabled(true)
     Glean.initialize(context, config)
@@ -148,7 +148,7 @@ internal fun resetGlean(
  * Get a context that contains [PackageInfo.versionName] mocked to
  * "glean.version.name".
  *
- * @return an application [Context] that can be used to init glean
+ * @return an application [Context] that can be used to init Glean
  */
 internal fun getContextWithMockedInfo(): Context {
     val context = Mockito.spy<Context>(ApplicationProvider.getApplicationContext<Context>())

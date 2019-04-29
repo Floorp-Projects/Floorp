@@ -69,8 +69,8 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
 
         // Enqueue the work request: replace older requests if needed. This is to cover
         // the odd case in which:
-        // - glean is killed, but the work request is still there;
-        // - glean restarts;
+        // - Glean is killed, but the work request is still there;
+        // - Glean restarts;
         // - the ping is overdue and is immediately collected at startup;
         // - a new work is scheduled for the next calendar day.
         WorkManager.getInstance().enqueueUniqueWork(
