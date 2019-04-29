@@ -37,6 +37,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   class AutoTaggedTuple;
 
   using CharSlice = BinaryASTSupport::CharSlice;
+  using Context = BinASTTokenReaderBase::Context;
 
   // This implementation of `BinASTFields` is effectively `void`, as the format
   // does not embed field information.
@@ -83,44 +84,45 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   /**
    * Read a single `true | false` value.
    */
-  MOZ_MUST_USE JS::Result<bool> readBool();
+  MOZ_MUST_USE JS::Result<bool> readBool(const Context&);
 
   /**
    * Read a single `number` value.
    */
-  MOZ_MUST_USE JS::Result<double> readDouble();
+  MOZ_MUST_USE JS::Result<double> readDouble(const Context&);
 
   /**
    * Read a single `string | null` value.
    *
    * Fails if that string is not valid UTF-8.
    */
-  MOZ_MUST_USE JS::Result<JSAtom*> readMaybeAtom();
-  MOZ_MUST_USE JS::Result<JSAtom*> readAtom();
+  MOZ_MUST_USE JS::Result<JSAtom*> readMaybeAtom(const Context&);
+  MOZ_MUST_USE JS::Result<JSAtom*> readAtom(const Context&);
 
   /**
    * Read a single IdentifierName value.
    */
-  MOZ_MUST_USE JS::Result<JSAtom*> readMaybeIdentifierName();
-  MOZ_MUST_USE JS::Result<JSAtom*> readIdentifierName();
+  MOZ_MUST_USE JS::Result<JSAtom*> readMaybeIdentifierName(const Context&);
+  MOZ_MUST_USE JS::Result<JSAtom*> readIdentifierName(const Context&);
 
   /**
    * Read a single PropertyKey value.
    */
-  MOZ_MUST_USE JS::Result<JSAtom*> readPropertyKey();
+  MOZ_MUST_USE JS::Result<JSAtom*> readPropertyKey(const Context&);
 
   /**
    * Read a single `string | null` value.
    *
    * MAY check if that string is not valid UTF-8.
    */
-  MOZ_MUST_USE JS::Result<Ok> readChars(Chars&);
+  MOZ_MUST_USE JS::Result<Ok> readChars(Chars&, const Context&);
 
   /**
    * Read a single `BinASTVariant | null` value.
    */
-  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinASTVariant>> readMaybeVariant();
-  MOZ_MUST_USE JS::Result<BinASTVariant> readVariant();
+  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinASTVariant>> readMaybeVariant(
+      const Context&);
+  MOZ_MUST_USE JS::Result<BinASTVariant> readVariant(const Context&);
 
   /**
    * Read over a single `[Skippable]` subtree value.
@@ -129,7 +131,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    * returned `SkippableSubTree` contains the necessary information
    * to parse/tokenize the subtree at a later stage
    */
-  MOZ_MUST_USE JS::Result<SkippableSubTree> readSkippableSubTree();
+  MOZ_MUST_USE JS::Result<SkippableSubTree> readSkippableSubTree(
+      const Context&);
 
   // --- Composite values.
   //
@@ -151,7 +154,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    * If the caller has consumed too few/too many bytes, this will be reported
    * in the call go `guard.done()`.
    */
-  MOZ_MUST_USE JS::Result<Ok> enterList(uint32_t& length, AutoList& guard);
+  MOZ_MUST_USE JS::Result<Ok> enterList(uint32_t& length, const Context&,
+                                        AutoList& guard);
 
   /**
    * Start reading a tagged tuple.
@@ -171,12 +175,12 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-      AutoTaggedTuple& guard);
+      const Context&, AutoTaggedTuple& guard);
 
   /**
    * Read a single unsigned long.
    */
-  MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong() {
+  MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&) {
     return readInternalUint32();
   }
 
