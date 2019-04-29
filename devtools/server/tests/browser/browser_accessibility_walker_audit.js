@@ -19,7 +19,7 @@ add_task(async function() {
   }, {
     name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do " +
           "eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    role: "heading",
+    role: "paragraph",
     childCount: 1,
     checks: {
       "CONTRAST": null,
@@ -31,10 +31,11 @@ add_task(async function() {
     childCount: 0,
     checks: {
       "CONTRAST": {
-        "value": 21,
-        "color": [0, 0, 0, 1],
+        "value": 4.00,
+        "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
-        "isLargeText": true,
+        "isLargeText": false,
+        "score": "fail",
       },
     },
   }, {
@@ -50,10 +51,11 @@ add_task(async function() {
     childCount: 0,
     checks: {
       "CONTRAST": {
-        "value": 21,
-        "color": [0, 0, 0, 1],
+        "value": 4.00,
+        "color": [255, 0, 0, 1],
         "backgroundColor": [255, 255, 255, 1],
         "isLargeText": false,
+        "score": "fail",
       },
     },
   }];
@@ -68,8 +70,11 @@ add_task(async function() {
   await accessibility.enable();
 
   info("Checking AccessibleWalker audit functionality");
-  const ancestries = await a11yWalker.audit();
+  const auditEvent = a11yWalker.once("audit-event");
+  a11yWalker.startAudit();
+  const { ancestries } = await auditEvent;
 
+  is(ancestries.length, 2, "The size of ancestries is correct");
   for (const ancestry of ancestries) {
     for (const { accessible, children } of ancestry) {
       checkA11yFront(accessible,
