@@ -12,7 +12,6 @@
 #include "js/TrackedOptimizationInfo.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk.h"
@@ -277,10 +276,13 @@ UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
 
 UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther) {
   mStringTableWriter.StartBareList();
-  if (aOther.mStringToIndexMap.Count() > 0) {
-    for (auto iter = aOther.mStringToIndexMap.ConstIter(); !iter.Done();
-         iter.Next()) {
-      mStringToIndexMap.Put(iter.Key(), iter.Data());
+  uint32_t count = mStringHashToIndexMap.count();
+  if (count != 0) {
+    MOZ_RELEASE_ASSERT(mStringHashToIndexMap.reserve(count));
+    for (auto iter = aOther.mStringHashToIndexMap.iter(); !iter.done();
+         iter.next()) {
+      mStringHashToIndexMap.putNewInfallible(iter.get().key(),
+                                             iter.get().value());
     }
     UniquePtr<char[]> stringTableJSON =
         aOther.mStringTableWriter.WriteFunc()->CopyData();
@@ -289,16 +291,15 @@ UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther) {
 }
 
 uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr) {
-  nsDependentCString str(aStr);
-
-  uint32_t count = mStringToIndexMap.Count();
-  auto entry = mStringToIndexMap.LookupForAdd(str);
+  uint32_t count = mStringHashToIndexMap.count();
+  HashNumber hash = HashString(aStr);
+  auto entry = mStringHashToIndexMap.lookupForAdd(hash);
   if (entry) {
-    MOZ_ASSERT(entry.Data() < count);
-    return entry.Data();
+    MOZ_ASSERT(entry->value() < count);
+    return entry->value();
   }
 
-  entry.OrInsert([&] { return count; });
+  MOZ_RELEASE_ASSERT(mStringHashToIndexMap.add(entry, hash, count));
   mStringTableWriter.StringElement(aStr);
   return count;
 }
@@ -313,45 +314,27 @@ UniqueStacks::StackKey UniqueStacks::AppendFrame(const StackKey& aStack,
                   GetOrAddFrameIndex(aFrame));
 }
 
-uint32_t JITFrameInfoForBufferRange::JITFrameKey::Hash() const {
-  uint32_t hash = 0;
-  hash = AddToHash(hash, mCanonicalAddress);
-  hash = AddToHash(hash, mDepth);
-  return hash;
-}
-
-bool JITFrameInfoForBufferRange::JITFrameKey::operator==(
-    const JITFrameKey& aOther) const {
-  return mCanonicalAddress == aOther.mCanonicalAddress &&
-         mDepth == aOther.mDepth;
-}
-
-template <class KeyClass, class T>
-void CopyVectorHashtable(nsClassHashtable<KeyClass, Vector<T>>& aDest,
-                         const nsClassHashtable<KeyClass, Vector<T>>& aSrc) {
-  for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
-    const Vector<T>& objRef = *iter.Data();
-    Vector<T>& destRef = *aDest.LookupOrAdd(iter.Key());
-    MOZ_RELEASE_ASSERT(destRef.appendAll(objRef));
-  }
-}
-
-template <class KeyClass, class T>
-void CopyClassHashtable(nsClassHashtable<KeyClass, T>& aDest,
-                        const nsClassHashtable<KeyClass, T>& aSrc) {
-  for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
-    const T& objRef = *iter.Data();
-    aDest.LookupOrAdd(iter.Key(), objRef);
-  }
-}
-
 JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
-  nsClassHashtable<nsPtrHashKey<void>, Vector<JITFrameKey>>
-      jitAddressToJITFramesMap;
-  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString>
-      jitFrameToFrameJSONMap;
-  CopyVectorHashtable(jitAddressToJITFramesMap, mJITAddressToJITFramesMap);
-  CopyClassHashtable(jitFrameToFrameJSONMap, mJITFrameToFrameJSONMap);
+  JITFrameInfoForBufferRange::JITAddressToJITFramesMap jitAddressToJITFramesMap;
+  MOZ_RELEASE_ASSERT(
+      jitAddressToJITFramesMap.reserve(mJITAddressToJITFramesMap.count()));
+  for (auto iter = mJITAddressToJITFramesMap.iter(); !iter.done();
+       iter.next()) {
+    const mozilla::Vector<JITFrameKey>& srcKeys = iter.get().value();
+    mozilla::Vector<JITFrameKey> destKeys;
+    MOZ_RELEASE_ASSERT(destKeys.appendAll(srcKeys));
+    jitAddressToJITFramesMap.putNewInfallible(iter.get().key(),
+                                              std::move(destKeys));
+  }
+
+  JITFrameInfoForBufferRange::JITFrameToFrameJSONMap jitFrameToFrameJSONMap;
+  MOZ_RELEASE_ASSERT(
+      jitFrameToFrameJSONMap.reserve(mJITFrameToFrameJSONMap.count()));
+  for (auto iter = mJITFrameToFrameJSONMap.iter(); !iter.done(); iter.next()) {
+    jitFrameToFrameJSONMap.putNewInfallible(iter.get().key(),
+                                            iter.get().value());
+  }
+
   return JITFrameInfoForBufferRange{mRangeStart, mRangeEnd,
                                     std::move(jitAddressToJITFramesMap),
                                     std::move(jitFrameToFrameJSONMap)};
@@ -377,32 +360,6 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
          mDepth == aOther.mDepth && mRangeIndex == aOther.mRangeIndex;
 }
 
-uint32_t UniqueStacks::FrameKey::Hash() const {
-  uint32_t hash = 0;
-  if (mData.is<NormalFrameData>()) {
-    const NormalFrameData& data = mData.as<NormalFrameData>();
-    if (!data.mLocation.IsEmpty()) {
-      hash = AddToHash(hash, HashString(data.mLocation.get()));
-    }
-    hash = AddToHash(hash, data.mRelevantForJS);
-    if (data.mLine.isSome()) {
-      hash = AddToHash(hash, *data.mLine);
-    }
-    if (data.mColumn.isSome()) {
-      hash = AddToHash(hash, *data.mColumn);
-    }
-    if (data.mCategoryPair.isSome()) {
-      hash = AddToHash(hash, uint32_t(*data.mCategoryPair));
-    }
-  } else {
-    const JITFrameData& data = mData.as<JITFrameData>();
-    hash = AddToHash(hash, data.mCanonicalAddress);
-    hash = AddToHash(hash, data.mDepth);
-    hash = AddToHash(hash, data.mRangeIndex);
-  }
-  return hash;
-}
-
 // Consume aJITFrameInfo by stealing its string table and its JIT frame info
 // ranges. The JIT frame info contains JSON which refers to strings from the
 // JIT frame info's string table, so our string table needs to have the same
@@ -415,14 +372,14 @@ UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
 }
 
 uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack) {
-  uint32_t count = mStackToIndexMap.Count();
-  auto entry = mStackToIndexMap.LookupForAdd(aStack);
+  uint32_t count = mStackToIndexMap.count();
+  auto entry = mStackToIndexMap.lookupForAdd(aStack);
   if (entry) {
-    MOZ_ASSERT(entry.Data() < count);
-    return entry.Data();
+    MOZ_ASSERT(entry->value() < count);
+    return entry->value();
   }
 
-  entry.OrInsert([&] { return count; });
+  MOZ_RELEASE_ASSERT(mStackToIndexMap.add(entry, aStack, count));
   StreamStack(aStack);
   return count;
 }
@@ -454,8 +411,8 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
   using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
 
   const JITFrameInfoForBufferRange& jitFrameInfoRange = *rangeIter;
-  const Vector<JITFrameKey>* jitFrameKeys =
-      jitFrameInfoRange.mJITAddressToJITFramesMap.Get(aJITAddress);
+  auto jitFrameKeys =
+      jitFrameInfoRange.mJITAddressToJITFramesMap.lookup(aJITAddress);
   if (!jitFrameKeys) {
     return Nothing();
   }
@@ -463,21 +420,21 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
   // Map the array of JITFrameKeys to an array of FrameKeys, and ensure that
   // each of the FrameKeys exists in mFrameToIndexMap.
   Vector<FrameKey> frameKeys;
-  MOZ_RELEASE_ASSERT(frameKeys.initCapacity(jitFrameKeys->length()));
-  for (const JITFrameKey& jitFrameKey : *jitFrameKeys) {
+  MOZ_RELEASE_ASSERT(frameKeys.initCapacity(jitFrameKeys->value().length()));
+  for (const JITFrameKey& jitFrameKey : jitFrameKeys->value()) {
     FrameKey frameKey(jitFrameKey.mCanonicalAddress, jitFrameKey.mDepth,
                       rangeIter - mJITInfoRanges.begin());
-    uint32_t index = mFrameToIndexMap.Count();
-    auto entry = mFrameToIndexMap.LookupForAdd(frameKey);
+    uint32_t index = mFrameToIndexMap.count();
+    auto entry = mFrameToIndexMap.lookupForAdd(frameKey);
     if (!entry) {
       // We need to add this frame to our frame table. The JSON for this frame
       // already exists in jitFrameInfoRange, we just need to splice it into
       // the frame table and give it an index.
-      const nsCString* frameJSON =
-          jitFrameInfoRange.mJITFrameToFrameJSONMap.Get(jitFrameKey);
+      auto frameJSON =
+          jitFrameInfoRange.mJITFrameToFrameJSONMap.lookup(jitFrameKey);
       MOZ_RELEASE_ASSERT(frameJSON, "Should have cached JSON for this frame");
-      mFrameTableWriter.Splice(frameJSON->get());
-      entry.OrInsert([&] { return index; });
+      mFrameTableWriter.Splice(frameJSON->value().get());
+      MOZ_RELEASE_ASSERT(mFrameToIndexMap.add(entry, frameKey, index));
     }
     MOZ_RELEASE_ASSERT(frameKeys.append(std::move(frameKey)));
   }
@@ -485,14 +442,14 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
 }
 
 uint32_t UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame) {
-  uint32_t count = mFrameToIndexMap.Count();
-  auto entry = mFrameToIndexMap.LookupForAdd(aFrame);
+  uint32_t count = mFrameToIndexMap.count();
+  auto entry = mFrameToIndexMap.lookupForAdd(aFrame);
   if (entry) {
-    MOZ_ASSERT(entry.Data() < count);
-    return entry.Data();
+    MOZ_ASSERT(entry->value() < count);
+    return entry->value();
   }
 
-  entry.OrInsert([&] { return count; });
+  MOZ_RELEASE_ASSERT(mFrameToIndexMap.add(entry, aFrame, count));
   StreamNonJITFrame(aFrame);
   return count;
 }
@@ -705,26 +662,28 @@ void JITFrameInfo::AddInfoForRange(
 
   using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
 
-  nsClassHashtable<nsPtrHashKey<void>, Vector<JITFrameKey>>
-      jitAddressToJITFrameMap;
-  nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString>
-      jitFrameToFrameJSONMap;
+  JITFrameInfoForBufferRange::JITAddressToJITFramesMap jitAddressToJITFrameMap;
+  JITFrameInfoForBufferRange::JITFrameToFrameJSONMap jitFrameToFrameJSONMap;
 
   aJITAddressProvider([&](void* aJITAddress) {
     // Make sure that we have cached data for aJITAddress.
-    if (!jitAddressToJITFrameMap.Contains(aJITAddress)) {
-      Vector<JITFrameKey>& jitFrameKeys =
-          *jitAddressToJITFrameMap.LookupOrAdd(aJITAddress);
+    auto addressEntry = jitAddressToJITFrameMap.lookupForAdd(aJITAddress);
+    if (!addressEntry) {
+      Vector<JITFrameKey> jitFrameKeys;
       for (JS::ProfiledFrameHandle handle :
            JS::GetProfiledFrames(aCx, aJITAddress)) {
         uint32_t depth = jitFrameKeys.length();
         JITFrameKey jitFrameKey{handle.canonicalAddress(), depth};
-        if (!jitFrameToFrameJSONMap.Contains(jitFrameKey)) {
-          nsCString& json = *jitFrameToFrameJSONMap.LookupOrAdd(jitFrameKey);
-          json = JSONForJITFrame(aCx, handle, *mUniqueStrings);
+        auto frameEntry = jitFrameToFrameJSONMap.lookupForAdd(jitFrameKey);
+        if (!frameEntry) {
+          MOZ_RELEASE_ASSERT(jitFrameToFrameJSONMap.add(
+              frameEntry, jitFrameKey,
+              JSONForJITFrame(aCx, handle, *mUniqueStrings)));
         }
         MOZ_RELEASE_ASSERT(jitFrameKeys.append(jitFrameKey));
       }
+      MOZ_RELEASE_ASSERT(jitAddressToJITFrameMap.add(addressEntry, aJITAddress,
+                                                     std::move(jitFrameKeys)));
     }
   });
 
@@ -1380,11 +1339,24 @@ struct CounterKeyedSample {
   int64_t mCount;
 };
 
-typedef Vector<CounterKeyedSample> CounterKeyedSamples;
+using CounterKeyedSamples = Vector<CounterKeyedSample>;
 
 static LazyLogModule sFuzzyfoxLog("Fuzzyfox");
 
-typedef nsDataHashtable<nsUint64HashKey, CounterKeyedSamples> CounterMap;
+using CounterMap = HashMap<uint64_t, CounterKeyedSamples>;
+
+// HashMap lookup, if not found, a default value is inserted.
+// Returns reference to (existing or new) value inside the HashMap.
+template <typename HashM, typename Key>
+static auto& LookupOrAdd(HashM& aMap, Key&& aKey) {
+  auto addPtr = aMap.lookupForAdd(aKey);
+  if (!addPtr) {
+    MOZ_RELEASE_ASSERT(aMap.add(addPtr, std::forward<Key>(aKey),
+                                typename HashM::Entry::ValueType{}));
+    MOZ_ASSERT(!!addPtr);
+  }
+  return addPtr->value();
+}
 
 void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
                                          const TimeStamp& aProcessStartTime,
@@ -1430,13 +1402,13 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
   // },
 
   // Build the map of counters and populate it
-  nsDataHashtable<nsVoidPtrHashKey, CounterMap> counters;
+  HashMap<void*, CounterMap> counters;
 
   while (e.Has()) {
     // skip all non-Counters, including if we start in the middle of a counter
     if (e.Get().IsCounterId()) {
       void* id = e.Get().GetPtr();
-      CounterMap& counter = counters.GetOrInsert(id);
+      CounterMap& counter = LookupOrAdd(counters, id);
       e.Next();
       if (!e.Has() || !e.Get().IsTime()) {
         ERROR_AND_CONTINUE("expected a Time entry");
@@ -1446,7 +1418,7 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
         e.Next();
         while (e.Has() && e.Get().IsCounterKey()) {
           uint64_t key = e.Get().GetUint64();
-          CounterKeyedSamples& data = counter.GetOrInsert(key);
+          CounterKeyedSamples& data = LookupOrAdd(counter, key);
           e.Next();
           if (!e.Has() || !e.Get().IsCount()) {
             ERROR_AND_CONTINUE("expected a Count entry");
@@ -1470,15 +1442,15 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
     e.Next();
   }
   // we have a map of a map of counter entries; dump them to JSON
-  if (counters.Count() == 0) {
+  if (counters.count() == 0) {
     return;
   }
 
   aWriter.StartArrayProperty("counters");
-  for (auto iter = counters.Iter(); !iter.Done(); iter.Next()) {
-    CounterMap& counter = iter.Data();
+  for (auto iter = counters.iter(); !iter.done(); iter.next()) {
+    CounterMap& counter = iter.get().value();
     const BaseProfilerCount* base_counter =
-        static_cast<const BaseProfilerCount*>(iter.Key());
+        static_cast<const BaseProfilerCount*>(iter.get().key());
 
     aWriter.Start();
     aWriter.StringProperty("name", base_counter->mLabel);
@@ -1486,10 +1458,10 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
     aWriter.StringProperty("description", base_counter->mDescription);
 
     aWriter.StartObjectProperty("sample_groups");
-    for (auto counter_iter = counter.Iter(); !counter_iter.Done();
-         counter_iter.Next()) {
-      CounterKeyedSamples& samples = counter_iter.Data();
-      uint64_t key = counter_iter.Key();
+    for (auto counter_iter = counter.iter(); !counter_iter.done();
+         counter_iter.next()) {
+      CounterKeyedSamples& samples = counter_iter.get().value();
+      uint64_t key = counter_iter.get().key();
 
       size_t size = samples.length();
       if (size == 0) {
