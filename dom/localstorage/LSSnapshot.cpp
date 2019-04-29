@@ -82,7 +82,7 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
       mLoadedItems.PutEntry(itemInfo.key());
     }
 
-    mValues.Put(itemInfo.key(), value);
+    mValues.Put(itemInfo.key(), value.AsString());
   }
 
   if (loadState == LoadState::Partial) {
@@ -443,7 +443,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
           return NS_ERROR_FAILURE;
         }
 
-        result = value;
+        result = value.AsString();
 
         if (result.IsVoid()) {
           mUnknownItems.PutEntry(aKey);
@@ -458,7 +458,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
           const LSItemInfo& itemInfo = itemInfos[i];
 
           mLoadedItems.PutEntry(itemInfo.key());
-          mValues.Put(itemInfo.key(), itemInfo.value());
+          mValues.Put(itemInfo.key(), itemInfo.value().AsString());
         }
 
         if (mLoadedItems.Count() == mInitLength) {
@@ -491,7 +491,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
             return NS_ERROR_FAILURE;
           }
 
-          result = value;
+          result = value.AsString();
 
           MOZ_ASSERT(!result.IsVoid());
 
@@ -504,7 +504,7 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
             const LSItemInfo& itemInfo = itemInfos[i];
 
             mLoadedItems.PutEntry(itemInfo.key());
-            mValues.Put(itemInfo.key(), itemInfo.value());
+            mValues.Put(itemInfo.key(), itemInfo.value().AsString());
           }
 
           if (mLoadedItems.Count() == mInitLength) {
