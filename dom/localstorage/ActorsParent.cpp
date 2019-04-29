@@ -4664,20 +4664,6 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(!mInUpdateBatch);
 
-  nsString value;
-  int64_t sizeOfKey = 0;
-  int64_t sizeOfItem = 0;
-  bool checkKey = false;
-
-  if (!aKey.IsVoid()) {
-    GetItem(aKey, value);
-    if (!value.IsVoid()) {
-      sizeOfKey = aKey.Length();
-      sizeOfItem = sizeOfKey + value.Length();
-      checkKey = true;
-    }
-  }
-
 #ifdef DEBUG
   int64_t sizeOfKeys = 0;
   int64_t sizeOfItems = 0;
@@ -4690,8 +4676,53 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
   MOZ_ASSERT(mSizeOfItems == sizeOfItems);
 #endif
 
-  if (mSizeOfKeys - sizeOfKey <= gSnapshotPrefill) {
-    if (mSizeOfItems - sizeOfItem <= gSnapshotPrefill) {
+  // Computes load state optimized for current size of keys and items.
+  // Zero key length and value can be passed to do a quick initial estimation.
+  // If computed load state is already AllOrderedItems then excluded key length
+  // and value length can't make it any better.
+  auto GetLoadState = [&](auto aKeyLength, auto aValueLength) {
+    if (mSizeOfKeys - aKeyLength <= gSnapshotPrefill) {
+      if (mSizeOfItems - aKeyLength - aValueLength <= gSnapshotPrefill) {
+        return LSSnapshot::LoadState::AllOrderedItems;
+      }
+
+      return LSSnapshot::LoadState::AllOrderedKeys;
+    }
+
+    return LSSnapshot::LoadState::Partial;
+  };
+
+  // Value for given aKey if aKey is not void (can be void too if value doesn't
+  // exist for given aKey).
+  nsString value;
+  // If aKey and value are not void, checkKey will be set to true. Once we find
+  // an item for given aKey in one of the loops below, checkKey is set to false
+  // to prevent additional comparison of strings (string implementation compares
+  // string lengths first to avoid char by char comparison if possible).
+  bool checkKey = false;
+
+  // Avoid additional hash lookup if all ordered items fit into initial prefill
+  // already.
+  LSSnapshot::LoadState loadState = GetLoadState(/* aKeyLength */ 0,
+                                                 /* aValueLength */ 0);
+  if (loadState != LSSnapshot::LoadState::AllOrderedItems && !aKey.IsVoid()) {
+    GetItem(aKey, value);
+    if (!value.IsVoid()) {
+      // Ok, we have a non void aKey and value.
+
+      // We have to watch for aKey during one of the loops below to exclude it
+      // from the size computation. The super fast mode (AllOrderedItems)
+      // doesn't have to do that though.
+      checkKey = true;
+
+      // We have to compute load state again because aKey length and value
+      // length is excluded from the size in this case.
+      loadState = GetLoadState(aKey.Length(), value.Length());
+    }
+  }
+
+  switch (loadState) {
+    case LSSnapshot::LoadState::AllOrderedItems: {
       // We're sending all ordered items, we don't need to check keys because
       // mOrderedItems must contain a value for aKey if checkKey is true.
 
@@ -4702,8 +4733,10 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
 
       aAddKeyToUnknownItems = false;
 
-      aLoadState = LSSnapshot::LoadState::AllOrderedItems;
-    } else {
+      break;
+    }
+
+    case LSSnapshot::LoadState::AllOrderedKeys: {
       // We don't have enough snapshot budget to send all items, but we do have
       // enough to send all of the keys and to make a best effort to populate as
       // many values as possible. We send void string values once we run out of
@@ -4765,55 +4798,65 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
 
       aAddKeyToUnknownItems = false;
 
-      aLoadState = LSSnapshot::LoadState::AllOrderedKeys;
+      break;
     }
-  } else {
-    int64_t size = 0;
-    for (uint32_t index = 0; index < mOrderedItems.Length(); index++) {
-      const LSItemInfo& item = mOrderedItems[index];
 
-      const nsString& key = item.key();
-      const nsString& value = item.value();
+    case LSSnapshot::LoadState::Partial: {
+      int64_t size = 0;
+      for (uint32_t index = 0; index < mOrderedItems.Length(); index++) {
+        const LSItemInfo& item = mOrderedItems[index];
 
-      if (checkKey && key == aKey) {
-        checkKey = false;
-      } else {
-        size += static_cast<int64_t>(key.Length()) +
-                static_cast<int64_t>(value.Length());
+        const nsString& key = item.key();
+        const nsString& value = item.value();
 
-        if (size > gSnapshotPrefill) {
-          aNextLoadIndex = index;
-          break;
+        if (checkKey && key == aKey) {
+          checkKey = false;
+        } else {
+          size += static_cast<int64_t>(key.Length()) +
+                  static_cast<int64_t>(value.Length());
+
+          if (size > gSnapshotPrefill) {
+            aNextLoadIndex = index;
+            break;
+          }
+        }
+
+        aLoadedItems.PutEntry(key);
+
+        LSItemInfo* itemInfo = aItemInfos.AppendElement();
+        itemInfo->key() = key;
+        itemInfo->value() = value;
+      }
+
+      aAddKeyToUnknownItems = false;
+
+      if (!aKey.IsVoid()) {
+        if (value.IsVoid()) {
+          aAddKeyToUnknownItems = true;
+        } else if (checkKey) {
+          // The item wasn't added in the loop above, add it here.
+
+          LSItemInfo* itemInfo = aItemInfos.AppendElement();
+          itemInfo->key() = aKey;
+          itemInfo->value() = value;
         }
       }
 
-      aLoadedItems.PutEntry(key);
+      MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
 
-      LSItemInfo* itemInfo = aItemInfos.AppendElement();
-      itemInfo->key() = key;
-      itemInfo->value() = value;
+      break;
     }
 
-    aAddKeyToUnknownItems = false;
-
-    if (!aKey.IsVoid()) {
-      if (value.IsVoid()) {
-        aAddKeyToUnknownItems = true;
-      } else if (checkKey) {
-        LSItemInfo* itemInfo = aItemInfos.AppendElement();
-        itemInfo->key() = aKey;
-        itemInfo->value() = value;
-      }
-    }
-
-    MOZ_ASSERT(aItemInfos.Length() < mOrderedItems.Length());
-    aLoadState = LSSnapshot::LoadState::Partial;
+    default:
+      MOZ_CRASH("Bad load state value!");
   }
 
   aTotalLength = mValues.Count();
 
   aInitialUsage = mUsage;
   aPeakUsage = aInitialUsage;
+
+  aLoadState = loadState;
 }
 
 void Datastore::GetItem(const nsString& aKey, nsString& aValue) const {
