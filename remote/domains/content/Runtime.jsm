@@ -23,12 +23,34 @@ class Runtime extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
+      this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
+        {mozSystemGroup: true});
     }
   }
 
   disable() {
     if (this.enabled) {
       this.enabled = false;
+      this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
+        {mozSystemGroup: true});
+    }
+  }
+
+  handleEvent({type, target}) {
+    const frameId = target.defaultView.windowUtils.outerWindowID;
+    const id = target.defaultView.windowUtils.currentInnerWindowID;
+    switch (type) {
+    case "DOMWindowCreated":
+      this.emit("Runtime.executionContextCreated", {
+        context: {
+          id,
+          auxData: {
+            isDefault: target == this.content.document,
+            frameId,
+          },
+        },
+      });
+      break;
     }
   }
 }
