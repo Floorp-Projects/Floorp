@@ -2158,16 +2158,21 @@ static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
     return false;
   }
 
-  uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
+  size_t numLocalsAndArgs = NumLocalsAndArgs(script);
 
-  if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
-      numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS) {
-    if (!OffThreadCompilationAvailable(cx)) {
-      JitSpew(JitSpew_IonAbort, "Script too large (%zu bytes) (%u locals/args)",
-              script->length(), numLocalsAndArgs);
-      TrackIonAbort(cx, script, script->code(), "too large");
-      return true;
-    }
+  bool canCompileOffThread = OffThreadCompilationAvailable(cx);
+  size_t maxScriptSize = canCompileOffThread
+                             ? JitOptions.ionMaxScriptSize
+                             : JitOptions.ionMaxScriptSizeMainThread;
+  size_t maxLocalsAndArgs = canCompileOffThread
+                                ? JitOptions.ionMaxLocalsAndArgs
+                                : JitOptions.ionMaxLocalsAndArgsMainThread;
+
+  if (script->length() > maxScriptSize || numLocalsAndArgs > maxLocalsAndArgs) {
+    JitSpew(JitSpew_IonAbort, "Script too large (%zu bytes) (%zu locals/args)",
+            script->length(), numLocalsAndArgs);
+    TrackIonAbort(cx, script, script->code(), "too large");
+    return true;
   }
 
   return false;
