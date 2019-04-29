@@ -852,7 +852,7 @@ nsresult nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
                                         bool aNeedMakeCX /*= true*/,
                                         bool aForceSetNewDocument /* = true*/) {
   if (mIsPageMode) {
-    // XXXbz should the InitInternal in SetPageMode just pass false
+    // XXXbz should the InitInternal in SetPageModeForTesting just pass false
     // here itself?
     aForceSetNewDocument = false;
   }
@@ -885,8 +885,8 @@ nsresult nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
           mDocument->GetDisplayDocument()->GetPresShell()))) {
       // Create presentation context
       if (mIsPageMode) {
-        // Presentation context already created in SetPageMode which is calling
-        // this method
+        // Presentation context already created in SetPageModeForTesting which
+        // is calling this method
       } else {
         mPresContext = CreatePresContext(
             mDocument, nsPresContext::eContext_Galley, containerView);
@@ -4103,8 +4103,8 @@ void nsDocumentViewer::OnDonePrinting() {
 #endif  // NS_PRINTING && NS_PRINT_PREVIEW
 }
 
-NS_IMETHODIMP nsDocumentViewer::SetPageMode(bool aPageMode,
-                                            nsIPrintSettings* aPrintSettings) {
+NS_IMETHODIMP nsDocumentViewer::SetPageModeForTesting(
+    bool aPageMode, nsIPrintSettings* aPrintSettings) {
   // XXX Page mode is only partially working; it's currently used for
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
