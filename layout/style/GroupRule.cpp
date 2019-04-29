@@ -74,6 +74,10 @@ void GroupRule::DropSheetReference() {
 
 uint32_t GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex,
                                ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return 0;
+  }
+
   StyleSheet* sheet = GetStyleSheet();
   if (NS_WARN_IF(!sheet)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -97,6 +101,10 @@ uint32_t GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex,
 }
 
 void GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   StyleSheet* sheet = GetStyleSheet();
   if (NS_WARN_IF(!sheet)) {
     aRv.Throw(NS_ERROR_FAILURE);

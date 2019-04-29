@@ -57,6 +57,11 @@ DeclarationBlock* CSSStyleRuleDeclaration::GetOrCreateCSSDeclaration(
 nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
     DeclarationBlock* aDecl, MutationClosureData* aClosureData) {
   CSSStyleRule* rule = Rule();
+
+  if (rule->IsReadOnly()) {
+    return NS_OK;
+  }
+
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
     if (aDecl != mDecls) {
       mDecls->SetOwningRule(nullptr);
@@ -158,6 +163,10 @@ void CSSStyleRule::GetSelectorText(nsAString& aSelectorText) {
 }
 
 void CSSStyleRule::SetSelectorText(const nsAString& aSelectorText) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   if (RefPtr<StyleSheet> sheet = GetStyleSheet()) {
     // StyleRule lives inside of the Inner, it is unsafe to call WillDirty
     // if sheet does not already have a unique Inner.

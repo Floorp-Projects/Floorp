@@ -2085,6 +2085,7 @@ class nsDisplayItemLink {
  protected:
   nsDisplayItemLink() : mAbove(nullptr) {}
   nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
+  ~nsDisplayItemLink() { MOZ_RELEASE_ASSERT(!mAbove); }
   nsDisplayItem* mAbove;
 
   friend class nsDisplayList;
@@ -3680,13 +3681,17 @@ class RetainedDisplayList : public nsDisplayList {
     MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
     AppendToTop(&aOther);
     mDAG = std::move(aOther.mDAG);
+    mOldItems = std::move(aOther.mOldItems);
     return *this;
   }
 
   void DeleteAll(nsDisplayListBuilder* aBuilder) override {
     for (OldItemInfo& i : mOldItems) {
-      if (i.mItem) {
+      if (i.mItem && i.mOwnsItem) {
         i.mItem->Destroy(aBuilder);
+        MOZ_ASSERT(!GetBottom(),
+                   "mOldItems should not be owning items if we also have items "
+                   "in the normal list");
       }
     }
     mOldItems.Clear();

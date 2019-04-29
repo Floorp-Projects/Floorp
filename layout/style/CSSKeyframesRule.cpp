@@ -67,9 +67,14 @@ class CSSKeyframeList : public dom::CSSRuleList {
     return GetRule(aIndex);
   }
 
-  void AppendRule() { mRules.AppendObject(nullptr); }
+  void AppendRule() {
+    MOZ_ASSERT(!mParentRule->IsReadOnly());
+    mRules.AppendObject(nullptr);
+  }
 
   void RemoveRule(uint32_t aIndex) {
+    MOZ_ASSERT(!mParentRule->IsReadOnly());
+
     if (aIndex >= mRules.Length()) {
       return;
     }
@@ -214,11 +219,17 @@ uint32_t CSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey) {
 }
 
 template <typename Func>
-void CSSKeyframesRule::UpdateRule(Func aCallback) {
+nsresult CSSKeyframesRule::UpdateRule(Func aCallback) {
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
+
   aCallback();
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
+
+  return NS_OK;
 }
 
 void CSSKeyframesRule::GetName(nsAString& aName) const {

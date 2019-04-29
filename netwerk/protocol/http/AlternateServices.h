@@ -49,9 +49,9 @@ class AltSvcMapping {
   AltSvcMapping(DataStorage *storage, int32_t storageEpoch,
                 const nsACString &originScheme, const nsACString &originHost,
                 int32_t originPort, const nsACString &username,
-                const nsACString &topWindowOrigin, bool privateBrowsing,
-                uint32_t expiresAt, const nsACString &alternateHost,
-                int32_t alternatePort, const nsACString &npnToken,
+                bool privateBrowsing, uint32_t expiresAt,
+                const nsACString &alternateHost, int32_t alternatePort,
+                const nsACString &npnToken,
                 const OriginAttributes &originAttributes);
 
  public:
@@ -60,9 +60,7 @@ class AltSvcMapping {
 
   static void ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                             const nsCString &originHost, int32_t originPort,
-                            const nsACString &username,
-                            const nsACString &topWindowOrigin,
-                            bool privateBrowsing,
+                            const nsACString &username, bool privateBrowsing,
                             nsIInterfaceRequestor *callbacks,
                             nsProxyInfo *proxyInfo, uint32_t caps,
                             const OriginAttributes &originAttributes);
@@ -117,7 +115,6 @@ class AltSvcMapping {
   MOZ_INIT_OUTSIDE_CTOR int32_t mOriginPort;
 
   nsCString mUsername;
-  nsCString mTopWindowOrigin;
   MOZ_INIT_OUTSIDE_CTOR bool mPrivate;
 
   MOZ_INIT_OUTSIDE_CTOR uint32_t mExpiresAt;  // alt-svc mappping
