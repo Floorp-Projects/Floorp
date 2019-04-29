@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/dom/LSSnapshot.h"
+#include "mozilla/dom/LSValue.h"
 
 namespace IPC {
 
@@ -19,6 +20,24 @@ struct ParamTraits<mozilla::dom::LSSnapshot::LoadState>
           mozilla::dom::LSSnapshot::LoadState,
           mozilla::dom::LSSnapshot::LoadState::Initial,
           mozilla::dom::LSSnapshot::LoadState::EndGuard> {};
+
+template <>
+struct ParamTraits<mozilla::dom::LSValue> {
+  typedef mozilla::dom::LSValue paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mBuffer);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mBuffer);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog) {
+    LogParam(aParam.mBuffer, aLog);
+  }
+};
 
 }  // namespace IPC
 
