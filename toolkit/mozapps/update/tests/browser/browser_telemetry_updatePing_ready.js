@@ -12,39 +12,17 @@ ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this
  * to a limitation in the build system, we were not able to simply reference
  * the dependencies as "support-files" in the test manifest.
  */
-add_task(async function testUpdatePingReady() {
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_STAGING_ENABLED, false],
-  ]});
-  await UpdateUtils.setAppUpdateAutoEnabled(false);
-
-  let updateParams = "promptWaitTime=0";
-
+add_task(async function telemetry_updatePing_ready() {
   let archiveChecker = new TelemetryArchiveTesting.Checker();
   await archiveChecker.promiseInit();
 
-  // Trigger an "update" ping by downloading and applying an update.
-  await runUpdateTest(updateParams, 1, [
-    {
-      notificationId: "update-available",
-      button: "button",
-      beforeClick() {
-        checkWhatsNewLink(window, "update-available-whats-new");
-      },
-    },
-    {
-      notificationId: "update-restart",
-      button: "secondaryButton",
-      cleanup() {
-        AppMenuNotifications.removeNotification(/.*/);
-      },
-    },
-  ]);
+  let updateParams = "";
+  await runTelemetryUpdateTest(updateParams, "update-downloaded");
 
   // We cannot control when the ping will be generated/archived after we trigger
   // an update, so let's make sure to have one before moving on with validation.
   let updatePing;
-  await BrowserTestUtils.waitForCondition(async function() {
+  await TestUtils.waitForCondition(async function() {
     // Check that the ping made it into the Telemetry archive.
     // The test data is defined in ../data/sharedUpdateXML.js
     updatePing = await archiveChecker.promiseFindPing("update", [
