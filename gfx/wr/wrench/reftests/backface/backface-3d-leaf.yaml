@@ -1,5 +1,6 @@
-# In this test, the leaf green rectangle "backface-visible = false" which is ignored
-# because it doesn't have any transform, and it's not in preserve-3d context.
+# In this test, the leaf green rectangle has only its back visible
+# due to rotate-x(180) transformation, preserve-3d style,
+# and "backface-visible = false", so it's completely hidden.
 ---
 root:
   items:
@@ -8,6 +9,7 @@ root:
       bounds: 0 0 1024 768
     - type: stacking-context
       bounds: 0 0 1024 768
+      transform-style: preserve-3d
       transform: rotate-x(180)
       items:
         - type: rect
