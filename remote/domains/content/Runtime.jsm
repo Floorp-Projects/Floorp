@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = ["Runtime"];
 
 const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class Runtime extends ContentProcessDomain {
   constructor(session) {
@@ -25,6 +26,22 @@ class Runtime extends ContentProcessDomain {
       this.enabled = true;
       this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
         {mozSystemGroup: true});
+
+      // Spin the event loop in order to send the `executionContextCreated` event right
+      // after we replied to `enable` request.
+      Services.tm.dispatchToMainThread(() => {
+        const frameId = this.content.windowUtils.outerWindowID;
+        const id = this.content.windowUtils.currentInnerWindowID;
+        this.emit("Runtime.executionContextCreated", {
+          context: {
+            id,
+            auxData: {
+              isDefault: true,
+              frameId,
+            },
+          },
+        });
+      });
     }
   }
 
