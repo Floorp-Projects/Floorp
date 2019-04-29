@@ -36,7 +36,7 @@
         android:layout_width="@dimen/glyph_button_width"
         android:layout_height="@dimen/glyph_button_height"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/tab_menu"
+        android:contentDescription="@string/open_tabs_menu"
         android:src="@drawable/ic_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -61,8 +61,8 @@ data class SessionControlState(
 
 sealed class TabAction : Action {
     data class SaveTabGroup(val selectedTabSessionId: String?) : TabAction()
-    object MenuTapped : TabAction()
     object Add : TabAction()
+    object ShareTabs : TabAction()
     data class CloseAll(val private: Boolean) : TabAction()
     data class Select(val sessionId: String) : TabAction()
     data class Close(val sessionId: String) : TabAction()

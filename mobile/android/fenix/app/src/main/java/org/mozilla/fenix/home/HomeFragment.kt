@@ -51,6 +51,7 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
@@ -200,20 +201,6 @@ class HomeFragment : Fragment(), CoroutineScope {
                         CreateCollectionFragment.createCollectionTag
                     )
             }
-            is TabAction.MenuTapped -> {
-                val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
-                val titles = requireComponents.core.sessionManager.sessions
-                    .filter { session -> session.private == isPrivate }
-                    .map { session -> session.title }
-
-                val sessionType = if (isPrivate) {
-                    SessionBottomSheetFragment.SessionType.Private(titles)
-                } else {
-                    SessionBottomSheetFragment.SessionType.Current(titles)
-                }
-
-                openSessionMenu(sessionType)
-            }
             is TabAction.Select -> {
                 val session = requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
@@ -239,6 +226,9 @@ class HomeFragment : Fragment(), CoroutineScope {
             is TabAction.Add -> {
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
+            }
+            is TabAction.ShareTabs -> {
+                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1843")
             }
         }
     }
