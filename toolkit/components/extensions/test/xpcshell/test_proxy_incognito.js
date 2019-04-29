@@ -18,14 +18,15 @@ add_task(async function test_incognito_proxy_onRequest_access() {
   // extension does not have permission.
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
 
-  // This extension will fail if it gets a request
+  // This extension will fail if it gets a private request.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["proxy", "<all_urls>"],
     },
     async background() {
       browser.proxy.onRequest.addListener(async (details) => {
-        browser.test.fail("proxy.onRequest received incognito request");
+        browser.test.assertFalse(details.incognito, "incognito flag is not set");
+        browser.test.notifyPass("proxy.onRequest");
       }, {urls: ["<all_urls>"]});
 
       // Actual call arguments do not matter here.
@@ -42,7 +43,6 @@ add_task(async function test_incognito_proxy_onRequest_access() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  // This extension will succeed if it gets a request
   let pextension = ExtensionTestUtils.loadExtension({
     incognitoOverride: "spanning",
     manifest: {
@@ -50,18 +50,22 @@ add_task(async function test_incognito_proxy_onRequest_access() {
     },
     background() {
       browser.proxy.onRequest.addListener(async (details) => {
-        browser.test.notifyPass("proxy.onRequest");
+        browser.test.assertTrue(details.incognito, "incognito flag is set");
+        browser.test.notifyPass("proxy.onRequest.private");
       }, {urls: ["<all_urls>"]});
     },
   });
   await pextension.startup();
 
-  let finished = pextension.awaitFinish("proxy.onRequest");
   let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy", {privateBrowsing: true});
-  await finished;
+  await pextension.awaitFinish("proxy.onRequest.private");
+  await pextension.unload();
+  await contentPage.close();
+
+  contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+  await extension.awaitFinish("proxy.onRequest");
 
   await extension.unload();
-  await pextension.unload();
   await contentPage.close();
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");

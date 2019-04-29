@@ -664,6 +664,7 @@ HttpObserverManager = {
   },
 
   getRequestData(channel, extraData) {
+    let originAttributes = channel.loadInfo && channel.loadInfo.originAttributes;
     let data = {
       requestId: String(channel.id),
       url: channel.finalURL,
@@ -671,6 +672,7 @@ HttpObserverManager = {
       browser: channel.browserElement,
       type: channel.type,
       fromCache: channel.fromCache,
+      originAttributes,
 
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,
