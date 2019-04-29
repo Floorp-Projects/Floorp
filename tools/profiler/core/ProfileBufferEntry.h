@@ -21,7 +21,6 @@
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "nsTArray.h"
 
 class ProfilerMarker;
 
@@ -167,7 +166,7 @@ struct JITFrameInfoForBufferRange final {
     void* mCanonicalAddress;
     uint32_t mDepth;
   };
-  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>>
+  nsClassHashtable<nsPtrHashKey<void>, mozilla::Vector<JITFrameKey>>
       mJITAddressToJITFramesMap;
   nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString>
       mJITFrameToFrameJSONMap;
@@ -196,19 +195,19 @@ struct JITFrameInfo final {
   // Returns whether the information stored in this object is still relevant
   // for any entries in the buffer.
   bool HasExpired(uint64_t aCurrentBufferRangeStart) const {
-    if (mRanges.IsEmpty()) {
+    if (mRanges.empty()) {
       // No information means no relevant information. Allow this object to be
       // discarded.
       return true;
     }
-    return mRanges.LastElement().mRangeEnd <= aCurrentBufferRangeStart;
+    return mRanges.back().mRangeEnd <= aCurrentBufferRangeStart;
   }
 
   // The array of ranges of JIT frame information, sorted by buffer position.
   // Ranges are non-overlapping.
   // The JSON of the cached frames can contain string indexes, which refer
   // to strings in mUniqueStrings.
-  nsTArray<JITFrameInfoForBufferRange> mRanges;
+  mozilla::Vector<JITFrameInfoForBufferRange> mRanges;
 
   // The string table which contains strings used in the frame JSON that's
   // cached in mRanges.
@@ -296,7 +295,7 @@ class UniqueStacks {
   // is taken from mJITInfoRanges.
   // aBufferPosition is needed in order to look up the correct JIT frame info
   // object in mJITInfoRanges.
-  MOZ_MUST_USE mozilla::Maybe<nsTArray<UniqueStacks::FrameKey>>
+  MOZ_MUST_USE mozilla::Maybe<mozilla::Vector<UniqueStacks::FrameKey>>
   LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
                                          uint64_t aBufferPosition);
 
@@ -320,7 +319,7 @@ class UniqueStacks {
   SpliceableChunkedJSONWriter mStackTableWriter;
   nsDataHashtable<nsGenericHashKey<StackKey>, uint32_t> mStackToIndexMap;
 
-  nsTArray<JITFrameInfoForBufferRange> mJITInfoRanges;
+  mozilla::Vector<JITFrameInfoForBufferRange> mJITInfoRanges;
 };
 
 //

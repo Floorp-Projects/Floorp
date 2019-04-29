@@ -327,6 +327,16 @@ bool JITFrameInfoForBufferRange::JITFrameKey::operator==(
 }
 
 template <class KeyClass, class T>
+void CopyVectorHashtable(nsClassHashtable<KeyClass, Vector<T>>& aDest,
+                         const nsClassHashtable<KeyClass, Vector<T>>& aSrc) {
+  for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
+    const Vector<T>& objRef = *iter.Data();
+    Vector<T>& destRef = *aDest.LookupOrAdd(iter.Key());
+    MOZ_RELEASE_ASSERT(destRef.appendAll(objRef));
+  }
+}
+
+template <class KeyClass, class T>
 void CopyClassHashtable(nsClassHashtable<KeyClass, T>& aDest,
                         const nsClassHashtable<KeyClass, T>& aSrc) {
   for (auto iter = aSrc.ConstIter(); !iter.Done(); iter.Next()) {
@@ -336,11 +346,11 @@ void CopyClassHashtable(nsClassHashtable<KeyClass, T>& aDest,
 }
 
 JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
-  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>>
+  nsClassHashtable<nsPtrHashKey<void>, Vector<JITFrameKey>>
       jitAddressToJITFramesMap;
   nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString>
       jitFrameToFrameJSONMap;
-  CopyClassHashtable(jitAddressToJITFramesMap, mJITAddressToJITFramesMap);
+  CopyVectorHashtable(jitAddressToJITFramesMap, mJITAddressToJITFramesMap);
   CopyClassHashtable(jitFrameToFrameJSONMap, mJITFrameToFrameJSONMap);
   return JITFrameInfoForBufferRange{mRangeStart, mRangeEnd,
                                     std::move(jitAddressToJITFramesMap),
@@ -350,7 +360,7 @@ JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
 JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther)
     : mUniqueStrings(MakeUnique<UniqueJSONStrings>(*aOther.mUniqueStrings)) {
   for (const JITFrameInfoForBufferRange& range : aOther.mRanges) {
-    mRanges.AppendElement(range.Clone());
+    MOZ_RELEASE_ASSERT(mRanges.append(range.Clone()));
   }
 }
 
@@ -428,21 +438,23 @@ struct PositionInRangeComparator final {
   }
 };
 
-Maybe<nsTArray<UniqueStacks::FrameKey>>
+Maybe<Vector<UniqueStacks::FrameKey>>
 UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
                                                      uint64_t aBufferPos) {
-  size_t rangeIndex = mJITInfoRanges.BinaryIndexOf(
-      aBufferPos,
-      PositionInRangeComparator<JITFrameInfoForBufferRange, uint64_t>());
+  JITFrameInfoForBufferRange* rangeIter =
+      std::lower_bound(mJITInfoRanges.begin(), mJITInfoRanges.end(), aBufferPos,
+                       [](const JITFrameInfoForBufferRange& aRange,
+                          uint64_t aPos) { return aRange.mRangeEnd < aPos; });
   MOZ_RELEASE_ASSERT(
-      rangeIndex != mJITInfoRanges.NoIndex,
+      rangeIter != mJITInfoRanges.end() &&
+          rangeIter->mRangeStart <= aBufferPos &&
+          aBufferPos < rangeIter->mRangeEnd,
       "Buffer position of jit address needs to be in one of the ranges");
 
   using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
 
-  const JITFrameInfoForBufferRange& jitFrameInfoRange =
-      mJITInfoRanges[rangeIndex];
-  const nsTArray<JITFrameKey>* jitFrameKeys =
+  const JITFrameInfoForBufferRange& jitFrameInfoRange = *rangeIter;
+  const Vector<JITFrameKey>* jitFrameKeys =
       jitFrameInfoRange.mJITAddressToJITFramesMap.Get(aJITAddress);
   if (!jitFrameKeys) {
     return Nothing();
@@ -450,10 +462,11 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
 
   // Map the array of JITFrameKeys to an array of FrameKeys, and ensure that
   // each of the FrameKeys exists in mFrameToIndexMap.
-  nsTArray<FrameKey> frameKeys;
+  Vector<FrameKey> frameKeys;
+  MOZ_RELEASE_ASSERT(frameKeys.initCapacity(jitFrameKeys->length()));
   for (const JITFrameKey& jitFrameKey : *jitFrameKeys) {
     FrameKey frameKey(jitFrameKey.mCanonicalAddress, jitFrameKey.mDepth,
-                      rangeIndex);
+                      rangeIter - mJITInfoRanges.begin());
     uint32_t index = mFrameToIndexMap.Count();
     auto entry = mFrameToIndexMap.LookupForAdd(frameKey);
     if (!entry) {
@@ -466,7 +479,7 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
       mFrameTableWriter.Splice(frameJSON->get());
       entry.OrInsert([&] { return index; });
     }
-    frameKeys.AppendElement(std::move(frameKey));
+    MOZ_RELEASE_ASSERT(frameKeys.append(std::move(frameKey)));
   }
   return Some(std::move(frameKeys));
 }
@@ -684,15 +697,15 @@ void JITFrameInfo::AddInfoForRange(
 
   MOZ_RELEASE_ASSERT(aRangeStart < aRangeEnd);
 
-  if (!mRanges.IsEmpty()) {
-    const JITFrameInfoForBufferRange& prevRange = mRanges.LastElement();
+  if (!mRanges.empty()) {
+    const JITFrameInfoForBufferRange& prevRange = mRanges.back();
     MOZ_RELEASE_ASSERT(prevRange.mRangeEnd <= aRangeStart,
                        "Ranges must be non-overlapping and added in-order.");
   }
 
   using JITFrameKey = JITFrameInfoForBufferRange::JITFrameKey;
 
-  nsClassHashtable<nsPtrHashKey<void>, nsTArray<JITFrameKey>>
+  nsClassHashtable<nsPtrHashKey<void>, Vector<JITFrameKey>>
       jitAddressToJITFrameMap;
   nsClassHashtable<nsGenericHashKey<JITFrameKey>, nsCString>
       jitFrameToFrameJSONMap;
@@ -700,24 +713,24 @@ void JITFrameInfo::AddInfoForRange(
   aJITAddressProvider([&](void* aJITAddress) {
     // Make sure that we have cached data for aJITAddress.
     if (!jitAddressToJITFrameMap.Contains(aJITAddress)) {
-      nsTArray<JITFrameKey>& jitFrameKeys =
+      Vector<JITFrameKey>& jitFrameKeys =
           *jitAddressToJITFrameMap.LookupOrAdd(aJITAddress);
       for (JS::ProfiledFrameHandle handle :
            JS::GetProfiledFrames(aCx, aJITAddress)) {
-        uint32_t depth = jitFrameKeys.Length();
+        uint32_t depth = jitFrameKeys.length();
         JITFrameKey jitFrameKey{handle.canonicalAddress(), depth};
         if (!jitFrameToFrameJSONMap.Contains(jitFrameKey)) {
           nsCString& json = *jitFrameToFrameJSONMap.LookupOrAdd(jitFrameKey);
           json = JSONForJITFrame(aCx, handle, *mUniqueStrings);
         }
-        jitFrameKeys.AppendElement(jitFrameKey);
+        MOZ_RELEASE_ASSERT(jitFrameKeys.append(jitFrameKey));
       }
     }
   });
 
-  mRanges.AppendElement(JITFrameInfoForBufferRange{
+  MOZ_RELEASE_ASSERT(mRanges.append(JITFrameInfoForBufferRange{
       aRangeStart, aRangeEnd, std::move(jitAddressToJITFrameMap),
-      std::move(jitFrameToFrameJSONMap)});
+      std::move(jitFrameToFrameJSONMap)}));
 }
 
 struct ProfileSample {
@@ -1108,7 +1121,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
         // A JIT frame may expand to multiple frames due to inlining.
         void* pc = e.Get().GetPtr();
-        const Maybe<nsTArray<UniqueStacks::FrameKey>>& frameKeys =
+        const Maybe<Vector<UniqueStacks::FrameKey>>& frameKeys =
             aUniqueStacks.LookupFramesForJITAddressFromBufferPos(pc,
                                                                  e.CurPos());
         MOZ_RELEASE_ASSERT(frameKeys,
@@ -1367,7 +1380,7 @@ struct CounterKeyedSample {
   int64_t mCount;
 };
 
-typedef nsTArray<CounterKeyedSample> CounterKeyedSamples;
+typedef Vector<CounterKeyedSample> CounterKeyedSamples;
 
 static LazyLogModule sFuzzyfoxLog("Fuzzyfox");
 
@@ -1447,7 +1460,7 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
             number = e.Get().GetInt64();
           }
           CounterKeyedSample sample = {time, number, count};
-          data.AppendElement(sample);
+          MOZ_RELEASE_ASSERT(data.append(sample));
         }
       } else {
         // skip counter sample - only need to skip the initial counter
@@ -1478,7 +1491,7 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
       CounterKeyedSamples& samples = counter_iter.Data();
       uint64_t key = counter_iter.Key();
 
-      size_t size = samples.Length();
+      size_t size = samples.length();
       if (size == 0) {
         continue;
       }
