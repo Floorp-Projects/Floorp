@@ -71,6 +71,8 @@ class ServoCSSRuleList final : public dom::CSSRuleList {
 
   void DropAllRules();
 
+  bool IsReadOnly() const;
+
   // mStyleSheet may be nullptr when it drops the reference to us.
   StyleSheet* mStyleSheet = nullptr;
   // mParentRule is nullptr if it isn't a nested rule list.

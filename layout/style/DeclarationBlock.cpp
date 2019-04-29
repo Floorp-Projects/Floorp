@@ -6,6 +6,7 @@
 
 #include "mozilla/DeclarationBlock.h"
 
+#include "mozilla/css/Rule.h"
 #include "mozilla/ServoBindings.h"
 
 #include "nsCSSProps.h"
@@ -21,6 +22,11 @@ already_AddRefed<DeclarationBlock> DeclarationBlock::FromCssText(
       Servo_ParseStyleAttribute(&value, aExtraData, aMode, aLoader).Consume();
   RefPtr<DeclarationBlock> decl = new DeclarationBlock(raw.forget());
   return decl.forget();
+}
+
+bool DeclarationBlock::OwnerIsReadOnly() const {
+  css::Rule* rule = GetOwningRule();
+  return rule && rule->IsReadOnly();
 }
 
 }  // namespace mozilla

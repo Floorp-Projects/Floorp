@@ -3,10 +3,16 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink='http://www.w3.org/1999/xlink'>
+  <style type="text/css"><![CDATA[
+    #s {
+      display: inline;
+    }
+  ]]></style>
   <!--
     A basic test that referencing a <symbol> with a <use> works.
     Note that the fill specified on the <use> inherits into the
     <use> shadow tree.
+    Also <symbol> itself should have |display:none !important|.
     -->
   <symbol id='s' viewBox='100 100 10 10'>
     <circle cx='105' cy='105' r='4'/>

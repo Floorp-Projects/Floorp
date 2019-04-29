@@ -7,8 +7,13 @@
 @namespace url(http://www.w3.org/2000/svg);
 @namespace xml url(http://www.w3.org/XML/1998/namespace);
 
-style, script, symbol {
+style, script {
  display: none;
+}
+
+/* This is only to be overridden by the rule right below. */
+symbol {
+ display: none !important;
 }
 
 symbol:-moz-use-shadow-tree-root {

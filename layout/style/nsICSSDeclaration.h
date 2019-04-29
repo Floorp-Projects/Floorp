@@ -100,6 +100,9 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
     rv = RemoveProperty(aPropName, aRetval);
   }
   virtual mozilla::css::Rule* GetParentRule() = 0;
+
+ protected:
+  bool IsReadOnly();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
