@@ -771,13 +771,13 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
               calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
           void* code = calleeInstance.codeBase(calleeTier) +
                        calleeCodeRange.funcTableEntry();
-          table.setAnyFunc(dstOffset + i, code, &calleeInstance);
+          table.setFuncRef(dstOffset + i, code, &calleeInstance);
           continue;
         }
       }
       void* code = codeBaseTier +
                    codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
-      table.setAnyFunc(dstOffset + i, code, this);
+      table.setFuncRef(dstOffset + i, code, this);
     }
   }
 }
@@ -803,7 +803,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
   // Element segments cannot currently contain arbitrary values, and anyref
   // tables cannot be initialized from segments.
-  MOZ_ASSERT(table.kind() == TableKind::AnyFunction);
+  MOZ_ASSERT(table.kind() == TableKind::FuncRef);
 
   // We are proposing to copy
   //
