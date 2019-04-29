@@ -5629,19 +5629,15 @@ void QuotaManager::OpenDirectoryInternal(
 
 nsresult QuotaManager::EnsureOriginIsInitialized(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin,
-    bool aCreateIfNotExists, nsIFile** aDirectory) {
+    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
   nsCOMPtr<nsIFile> directory;
   bool created;
   nsresult rv = EnsureOriginIsInitializedInternal(
-      aPersistenceType, aSuffix, aGroup, aOrigin, aCreateIfNotExists,
-      getter_AddRefs(directory), &created);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    return rv;
-  }
+      aPersistenceType, aSuffix, aGroup, aOrigin, getter_AddRefs(directory),
+      &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5652,8 +5648,8 @@ nsresult QuotaManager::EnsureOriginIsInitialized(
 
 nsresult QuotaManager::EnsureOriginIsInitializedInternal(
     PersistenceType aPersistenceType, const nsACString& aSuffix,
-    const nsACString& aGroup, const nsACString& aOrigin,
-    bool aCreateIfNotExists, nsIFile** aDirectory, bool* aCreated) {
+    const nsACString& aGroup, const nsACString& aOrigin, nsIFile** aDirectory,
+    bool* aCreated) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aCreated);
@@ -5681,10 +5677,7 @@ nsresult QuotaManager::EnsureOriginIsInitializedInternal(
   }
 
   bool created;
-  rv = EnsureOriginDirectory(directory, aCreateIfNotExists, &created);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    return rv;
-  }
+  rv = EnsureOriginDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5803,7 +5796,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 }
 
 nsresult QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
-                                             bool aCreateIfNotExists,
                                              bool* aCreated) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -5816,10 +5808,6 @@ nsresult QuotaManager::EnsureOriginDirectory(nsIFile* aDirectory,
   }
 
   if (!exists) {
-    if (!aCreateIfNotExists) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
     nsString leafName;
     rv = aDirectory->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7926,7 +7914,7 @@ nsresult InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   bool created;
   nsresult rv = aQuotaManager->EnsureOriginIsInitializedInternal(
       mPersistenceType.Value(), mSuffix, mGroup, mOriginScope.GetOrigin(),
-      /* aCreateIfNotExists */ true, getter_AddRefs(directory), &created);
+      getter_AddRefs(directory), &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8439,9 +8427,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   }
 
   bool created;
-  rv = aQuotaManager->EnsureOriginDirectory(directory,
-                                            /* aCreateIfNotExists */ true,
-                                            &created);
+  rv = aQuotaManager->EnsureOriginDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
