@@ -1727,6 +1727,9 @@ window._gBrowser = {
       // state set up completely first.
       aBrowser.changeRemoteness({ remoteType });
       // Once we have new frameloaders, this call sets the browser back up.
+      //
+      // FIXME(emilio): Shouldn't we call destroy() first? What hides the
+      // select pop-ups and such otherwise?
       aBrowser.construct();
     }
 
