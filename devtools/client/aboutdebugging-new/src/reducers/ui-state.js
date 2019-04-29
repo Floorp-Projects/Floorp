@@ -9,7 +9,7 @@ const {
   ADB_READY_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   HIDE_PROFILER_DIALOG,
-  NETWORK_LOCATIONS_UPDATED,
+  NETWORK_LOCATIONS_UPDATE_SUCCESS,
   SELECT_PAGE_SUCCESS,
   SHOW_PROFILER_DIALOG,
   TEMPORARY_EXTENSION_INSTALL_FAILURE,
@@ -52,7 +52,7 @@ function uiReducer(state = UiState(), action) {
       return Object.assign({}, state, { debugTargetCollapsibilities });
     }
 
-    case NETWORK_LOCATIONS_UPDATED: {
+    case NETWORK_LOCATIONS_UPDATE_SUCCESS: {
       const { locations } = action;
       return Object.assign({}, state, { networkLocations: locations });
     }

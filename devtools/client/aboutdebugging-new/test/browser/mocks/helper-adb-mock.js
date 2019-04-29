@@ -55,6 +55,10 @@ function createAdbMock() {
     console.log("MOCKED METHOD unregisterListener");
   };
 
+  adbMock.once = function() {
+    console.log("MOCKED METHOD once");
+  };
+
   return { adb: adbMock };
 }
 /* exported createAdbMock */
