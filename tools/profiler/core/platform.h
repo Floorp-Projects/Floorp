@@ -33,7 +33,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
-#include "nsStringFwd.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 #include <functional>
