@@ -94,6 +94,8 @@ class BrowsingContext : public nsWrapperCache,
  public:
   enum class Type { Chrome, Content };
 
+  using Children = nsTArray<RefPtr<BrowsingContext>>;
+
   static void Init();
   static LogModule* GetLog();
   static void CleanupContexts(uint64_t aProcessId);
@@ -149,6 +151,9 @@ class BrowsingContext : public nsWrapperCache,
   // them to allow them to be attached again.
   void CacheChildren(bool aFromIPC = false);
 
+  // Restore cached browsing contexts.
+  void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
+
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
   bool IsCached();
@@ -172,7 +177,7 @@ class BrowsingContext : public nsWrapperCache,
 
   bool HasOpener() const;
 
-  void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
+  void GetChildren(Children& aChildren);
 
   BrowsingContextGroup* Group() { return mGroup; }
 
@@ -221,7 +226,6 @@ class BrowsingContext : public nsWrapperCache,
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
 
-  using Children = nsTArray<RefPtr<BrowsingContext>>;
   const Children& GetChildren() { return mChildren; }
 
   // Perform a pre-order walk of this BrowsingContext subtree.
@@ -479,6 +483,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
 typedef BrowsingContext::FieldEpochs BrowsingContextFieldEpochs;
 typedef BrowsingContext::IPCInitializer BrowsingContextInitializer;
+typedef BrowsingContext::Children BrowsingContextChildren;
 
 }  // namespace dom
 

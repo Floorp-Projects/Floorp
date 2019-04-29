@@ -246,12 +246,11 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
 
 void BrowsingContext::Attach(bool aFromIPC) {
   MOZ_LOG(GetLog(), LogLevel::Debug,
-          ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
-           XRE_IsParentProcess() ? "Parent" : "Child",
-           Group()->IsContextCached(this) ? "Re-connecting" : "Connecting",
-           Id(), mParent ? mParent->Id() : 0));
+          ("%s: Connecting 0x%08" PRIx64 " to 0x%08" PRIx64,
+           XRE_IsParentProcess() ? "Parent" : "Child", Id(),
+           mParent ? mParent->Id() : 0));
 
-  Unused << Group()->EvictCachedContext(this);
+  MOZ_DIAGNOSTIC_ASSERT(!Group()->IsContextCached(this));
 
   auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
   MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
@@ -316,7 +315,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
+    cc->SendDetachBrowsingContext(this);
   }
 }
 
@@ -331,7 +330,33 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
+    cc->SendCacheBrowsingContextChildren(this);
+  }
+}
+
+void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
+  MOZ_LOG(GetLog(), LogLevel::Debug,
+          ("%s: Restoring children of 0x%08" PRIx64 "",
+           XRE_IsParentProcess() ? "Parent" : "Child", Id()));
+
+  MOZ_DIAGNOSTIC_ASSERT(mChildren.IsEmpty());
+
+  for (BrowsingContext* child : mChildren) {
+    MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
+    Unused << Group()->EvictCachedContext(child);
+  }
+
+  mChildren.SwapElements(aChildren);
+
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+
+    nsTArray<BrowsingContextId> contexts(mChildren.Length());
+    for (BrowsingContext* child : mChildren) {
+      contexts.AppendElement(child->Id());
+    }
+    cc->SendRestoreBrowsingContextChildren(this, contexts);
   }
 }
 
@@ -341,8 +366,7 @@ bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->has(mOpenerId);
 }
 
-void BrowsingContext::GetChildren(
-    nsTArray<RefPtr<BrowsingContext>>& aChildren) {
+void BrowsingContext::GetChildren(Children& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
 }
 

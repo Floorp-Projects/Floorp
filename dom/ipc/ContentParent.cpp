@@ -5674,7 +5674,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
-    BrowsingContext* aContext, bool aMoveToBFCache) {
+    BrowsingContext* aContext) {
   if (!aContext) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ParentIPC: Trying to detach already detached"));
@@ -5694,11 +5694,7 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
     return IPC_OK();
   }
 
-  if (aMoveToBFCache) {
-    aContext->CacheChildren(/* aFromIPC */ true);
-  } else {
-    aContext->Detach(/* aFromIPC */ true);
-  }
+  aContext->Detach(/* aFromIPC */ true);
 
   for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
        iter.Next()) {
@@ -5707,8 +5703,87 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
       continue;
     }
 
-    Unused << entry->GetKey()->SendDetachBrowsingContext(aContext,
-                                                         aMoveToBFCache);
+    Unused << entry->GetKey()->SendDetachBrowsingContext(aContext);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvCacheBrowsingContextChildren(
+    BrowsingContext* aContext) {
+  if (!aContext) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to cache already detached"));
+    return IPC_OK();
+  }
+
+  if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
+    // Where trying to cache a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+    MOZ_DIAGNOSTIC_ASSERT(false, "Trying to cache out of process context");
+
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
+            ("ParentIPC: Trying to cache out of process context 0x%08" PRIx64,
+             aContext->Id()));
+    return IPC_OK();
+  }
+
+  aContext->CacheChildren(/* aFromIPC */ true);
+
+  for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
+       iter.Next()) {
+    nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+    if (entry->GetKey() == this) {
+      continue;
+    }
+
+    Unused << entry->GetKey()->SendCacheBrowsingContextChildren(aContext);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvRestoreBrowsingContextChildren(
+    BrowsingContext* aContext, nsTArray<BrowsingContextId>&& aChildren) {
+  if (!aContext) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ParentIPC: Trying to restore already detached"));
+    return IPC_OK();
+  }
+
+  if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
+    // Where trying to cache a child BrowsingContext in another child
+    // process. This is illegal since the owner of the BrowsingContext
+    // is the proccess with the in-process docshell, which is tracked
+    // by OwnerProcessId.
+    MOZ_DIAGNOSTIC_ASSERT(false, "Trying to restore out of process context");
+
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
+            ("ParentIPC: Trying to restore out of process context 0x%08" PRIx64,
+             aContext->Id()));
+    return IPC_OK();
+  }
+
+  BrowsingContext::Children children(aChildren.Length());
+
+  for (auto id : aChildren) {
+    RefPtr<BrowsingContext> child = BrowsingContext::Get(id);
+    children.AppendElement(child);
+  }
+
+  aContext->RestoreChildren(std::move(children), /* aFromIPC */ true);
+
+  for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
+       iter.Next()) {
+    nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+    if (entry->GetKey() == this) {
+      continue;
+    }
+
+    Unused << entry->GetKey()->SendRestoreBrowsingContextChildren(aContext,
+                                                                  aChildren);
   }
 
   return IPC_OK();
