@@ -97,6 +97,16 @@ async function testCDP() {
   is(frameNavigated.frame.url, url, "frameNavigated url is the same being given to " +
     "Page.navigate");
 
+  const navigatedWithinDocument = resolutions.get("navigatedWithinDocument");
+  is(navigatedWithinDocument.frameId, frameId, "navigatedWithinDocument frameId is " +
+    "the same than the one returned by Page.navigate");
+  is(navigatedWithinDocument.url, url, "navigatedWithinDocument url is the same than " +
+    "the one being given to Page.navigate");
+
+  const frameStoppedLoading = resolutions.get("frameStoppedLoading");
+  is(frameStoppedLoading.frameId, frameId, "frameStoppedLoading frameId is the same " +
+    "than the one returned by Page.navigate");
+
   await client.close();
   ok(true, "The client is closed");
 
