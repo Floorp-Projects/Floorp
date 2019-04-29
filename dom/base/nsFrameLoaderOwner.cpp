@@ -6,8 +6,12 @@
 
 #include "nsFrameLoaderOwner.h"
 #include "nsFrameLoader.h"
-#include "mozilla/dom/FrameLoaderBinding.h"
+#include "nsFocusManager.h"
+#include "nsSubDocumentFrame.h"
+#include "nsQueryObject.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/FrameLoaderBinding.h"
 
 already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
   return do_AddRef(mFrameLoader);
@@ -51,11 +55,13 @@ void nsFrameLoaderOwner::ChangeRemoteness(
 
   // Now that we've got a new FrameLoader, we need to reset our
   // nsSubDocumentFrame to use the new FrameLoader.
-  nsIFrame* ourFrame = owner->GetPrimaryFrame();
-  if (ourFrame) {
-    nsSubDocumentFrame* ourFrameFrame = do_QueryFrame(ourFrame);
-    if (ourFrameFrame) {
-      ourFrameFrame->ResetFrameLoader();
+  if (nsSubDocumentFrame* ourFrame = do_QueryFrame(owner->GetPrimaryFrame())) {
+    ourFrame->ResetFrameLoader();
+  }
+
+  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    if (fm->GetFocusedElement() == owner) {
+      fm->ActivateRemoteFrameIfNeeded(*owner);
     }
   }
 
