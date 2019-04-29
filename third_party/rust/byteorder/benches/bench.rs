@@ -148,108 +148,108 @@ bench_num!(int_6, read_int, 6, [1, 2, 3, 4, 5, 6]);
 bench_num!(int_7, read_int, 7, [1, 2, 3, 4, 5, 6, 7]);
 bench_num!(int_8, read_int, 8, [1, 2, 3, 4, 5, 6, 7, 8]);
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(u128, MAX, read_u128, write_u128,
     16, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(i128, MAX, read_i128, write_i128,
     16, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_1, read_uint128,
     1, [1]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_2, read_uint128,
     2, [1, 2]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_3, read_uint128,
     3, [1, 2, 3]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_4, read_uint128,
     4, [1, 2, 3, 4]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_5, read_uint128,
     5, [1, 2, 3, 4, 5]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_6, read_uint128,
     6, [1, 2, 3, 4, 5, 6]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_7, read_uint128,
     7, [1, 2, 3, 4, 5, 6, 7]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_8, read_uint128,
     8, [1, 2, 3, 4, 5, 6, 7, 8]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_9, read_uint128,
     9, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_10, read_uint128,
     10, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_11, read_uint128,
     11, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_12, read_uint128,
     12, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_13, read_uint128,
     13, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_14, read_uint128,
     14, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_15, read_uint128,
     15, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(uint128_16, read_uint128,
     16, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_1, read_int128,
     1, [1]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_2, read_int128,
     2, [1, 2]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_3, read_int128,
     3, [1, 2, 3]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_4, read_int128,
     4, [1, 2, 3, 4]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_5, read_int128,
     5, [1, 2, 3, 4, 5]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_6, read_int128,
     6, [1, 2, 3, 4, 5, 6]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_7, read_int128,
     7, [1, 2, 3, 4, 5, 6, 7]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_8, read_int128,
     8, [1, 2, 3, 4, 5, 6, 7, 8]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_9, read_int128,
     9, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_10, read_int128,
     10, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_11, read_int128,
     11, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_12, read_int128,
     12, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_13, read_int128,
     13, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_14, read_int128,
     14, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_15, read_int128,
     15, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 bench_num!(int128_16, read_int128,
     16, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
