@@ -565,7 +565,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // doesn't push/pop a label when the profiler is inactive.
 #  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr) \
     mozilla::Maybe<nsAutoCString> autoCStr;                                  \
-    mozilla::Maybe<AutoProfilerLabel> raiiObjectNsCString;                   \
+    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectNsCString;          \
     if (profiler_is_active()) {                                              \
       autoCStr.emplace(nsCStr);                                              \
       raiiObjectNsCString.emplace(label, autoCStr->get(),                    \
@@ -583,7 +583,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 #  define AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(label, categoryPair,   \
                                                      nsStr)                 \
     mozilla::Maybe<NS_LossyConvertUTF16toASCII> asciiStr;                   \
-    mozilla::Maybe<AutoProfilerLabel> raiiObjectLossyNsString;              \
+    mozilla::Maybe<mozilla::AutoProfilerLabel> raiiObjectLossyNsString;     \
     if (profiler_is_active()) {                                             \
       asciiStr.emplace(nsStr);                                              \
       raiiObjectLossyNsString.emplace(                                      \
@@ -654,21 +654,21 @@ enum TracingKind {
 };
 
 // Helper macro to retrieve DocShellId and DocShellHistoryId from docShell
-#  define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell) \
-    mozilla::Maybe<nsID> docShellId;                \
-    mozilla::Maybe<uint32_t> docShellHistoryId;     \
-    if (docShell) {                                 \
-      docShellId = Some(docShell->HistoryID());     \
-      uint32_t id;                                  \
-      nsresult rv = docShell->GetOSHEId(&id);       \
-      if (NS_SUCCEEDED(rv)) {                       \
-        docShellHistoryId = Some(id);               \
-      } else {                                      \
-        docShellHistoryId = Nothing();              \
-      }                                             \
-    } else {                                        \
-      docShellId = Nothing();                       \
-      docShellHistoryId = Nothing();                \
+#  define DECLARE_DOCSHELL_AND_HISTORY_ID(docShell)      \
+    mozilla::Maybe<nsID> docShellId;                     \
+    mozilla::Maybe<uint32_t> docShellHistoryId;          \
+    if (docShell) {                                      \
+      docShellId = mozilla::Some(docShell->HistoryID()); \
+      uint32_t id;                                       \
+      nsresult rv = docShell->GetOSHEId(&id);            \
+      if (NS_SUCCEEDED(rv)) {                            \
+        docShellHistoryId = mozilla::Some(id);           \
+      } else {                                           \
+        docShellHistoryId = mozilla::Nothing();          \
+      }                                                  \
+    } else {                                             \
+      docShellId = mozilla::Nothing();                   \
+      docShellHistoryId = mozilla::Nothing();            \
     }
 
 // Adds a tracing marker to the profile. A no-op if the profiler is inactive or
@@ -757,11 +757,11 @@ class MOZ_RAII AutoProfilerTextMarker {
   const mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };
 
-#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair,     \
-                                          cause)                              \
-    AutoProfilerTextMarker PROFILER_RAII(                                     \
-        markerName, text, JS::ProfilingCategoryPair::categoryPair, Nothing(), \
-        Nothing(), cause)
+#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
+                                          cause)                          \
+    AutoProfilerTextMarker PROFILER_RAII(                                 \
+        markerName, text, JS::ProfilingCategoryPair::categoryPair,        \
+        mozilla::Nothing(), mozilla::Nothing(), cause)
 
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, categoryPair,   \
                                              docShell)                         \
