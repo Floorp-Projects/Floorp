@@ -74,8 +74,8 @@ function startTest() {
 
   ok(win.scrollY >= oldY, "Page is scrolled down");
 
-  win.close();
   cwu.restoreNormalRefresh();
+  win.close();
 
   win = window.open("file_bug915962.html", "_blank",
                     "width=600,height=600,scrollbars=yes");
@@ -88,8 +88,8 @@ function startTest() {
 
     isnot(win.scrollY, 0, "Page is scrolled down without crashing");
 
-    win.close();
     cwu.restoreNormalRefresh();
+    win.close();
 
     SimpleTest.finish();
   }, win);
