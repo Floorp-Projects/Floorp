@@ -124,8 +124,8 @@ class LSObserverChild final : public PBackgroundLSObserverChild {
                                       const uint32_t& aPrivateBrowsingId,
                                       const nsString& aDocumentURI,
                                       const nsString& aKey,
-                                      const nsString& aOldValue,
-                                      const nsString& aNewValue) override;
+                                      const LSValue& aOldValue,
+                                      const LSValue& aNewValue) override;
 };
 
 /**
