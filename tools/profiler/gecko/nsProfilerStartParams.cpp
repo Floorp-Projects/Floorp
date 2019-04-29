@@ -10,12 +10,12 @@ NS_IMPL_ISUPPORTS(nsProfilerStartParams, nsIProfilerStartParams)
 
 nsProfilerStartParams::nsProfilerStartParams(
     uint32_t aEntries, const mozilla::Maybe<double>& aDuration,
-    double aInterval, uint32_t aFeatures, const nsTArray<nsCString>& aFilters)
+    double aInterval, uint32_t aFeatures, nsTArray<nsCString>&& aFilters)
     : mEntries(aEntries),
       mDuration(aDuration),
       mInterval(aInterval),
       mFeatures(aFeatures),
-      mFilters(aFilters) {}
+      mFilters(std::move(aFilters)) {}
 
 nsProfilerStartParams::~nsProfilerStartParams() {}
 
