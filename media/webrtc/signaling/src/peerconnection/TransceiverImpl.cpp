@@ -494,8 +494,7 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     return;
   }
 
-  receiver->SetRemoteSendBit(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit(),
-                             aRv);
+  receiver->SetRecvBit(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit(), aRv);
   if (aRv.Failed()) {
     return;
   }
