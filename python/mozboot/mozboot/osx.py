@@ -22,6 +22,7 @@ HOMEBREW_BOOTSTRAP = 'https://raw.githubusercontent.com/Homebrew/install/master/
 XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
 XCODE_LEGACY = ('https://developer.apple.com/downloads/download.action?path=Developer_Tools/'
                 'xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg')
+JAVA_PATH = '/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home/bin'
 
 MACPORTS_URL = {
     '14': 'https://distfiles.macports.org/MacPorts/MacPorts-2.5.4-10.14-Mojave.pkg',
@@ -165,12 +166,6 @@ Modify your shell's configuration (e.g. ~/.profile or
 
 Once this is done, start a new shell (likely Command+T) and run
 this bootstrap again.
-'''
-
-JAVA_LICENSE_NOTICE = '''
-We installed a recent Java toolchain for you. We agreed to the Oracle Java
-license for you by downloading the JDK. If this is unacceptable you should
-uninstall.
 '''
 
 
@@ -365,11 +360,9 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_homebrew_packages(packages)
 
         casks = [
-            'java8',
+            'adoptopenjdk8',
         ]
-        installed = self._ensure_homebrew_casks(casks)
-        if installed:
-            print(JAVA_LICENSE_NOTICE)  # We accepted a license agreement for the user.
+        self._ensure_homebrew_casks(casks)
 
         is_64bits = sys.maxsize > 2**32
         if not is_64bits:
@@ -379,7 +372,7 @@ class OSXBootstrapper(BaseBootstrapper):
         # 2. Android pieces.
         # Prefer homebrew's java binary by putting it on the path first.
         os.environ['PATH'] = \
-            '{}{}{}'.format('/Library/Java/Home/bin', os.pathsep, os.environ['PATH'])
+            '{}{}{}'.format(JAVA_PATH, os.pathsep, os.environ['PATH'])
         self.ensure_java()
         from mozboot import android
 
@@ -388,9 +381,9 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
-        # Path to java from the homebrew/cask-versions/java8 cask.
+        # Path to java from the homebrew/cask-versions/adoptopenjdk8 cask.
         android.suggest_mozconfig('macosx', artifact_mode=artifact_mode,
-                                  java_bin_path='/Library/Java/Home/bin')
+                                  java_bin_path=JAVA_PATH)
 
     def _ensure_macports_packages(self, packages):
         self.port = self.which('port')
