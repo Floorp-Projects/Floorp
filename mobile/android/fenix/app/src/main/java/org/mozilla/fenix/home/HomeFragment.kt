@@ -188,8 +188,17 @@ class HomeFragment : Fragment(), CoroutineScope {
                     ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
                 }!!.tabs = tabs
 
+                val selectedTabs = tabs.find { tab -> tab.sessionId == action.selectedTabSessionId }
+                val selectedSet = if (selectedTabs == null) setOf() else setOf(selectedTabs)
+                activity?.run {
+                    ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+                }!!.selectedTabs = selectedSet
+
                 CreateCollectionFragment()
-                    .show(requireActivity().supportFragmentManager, CreateCollectionFragment.createCollectionTag)
+                    .show(
+                        requireActivity().supportFragmentManager,
+                        CreateCollectionFragment.createCollectionTag
+                    )
             }
             is TabAction.MenuTapped -> {
                 val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate

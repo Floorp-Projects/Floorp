@@ -55,6 +55,11 @@ class TabViewHolder(
             actionEmitter.onNext(TabAction.Select(tab?.sessionId!!))
         }
 
+        item_tab.setOnLongClickListener {
+            actionEmitter.onNext(TabAction.SaveTabGroup(tab?.sessionId!!))
+            true
+        }
+
         close_tab_button?.run {
             increaseTapArea(buttonIncreaseDps)
             setOnClickListener {

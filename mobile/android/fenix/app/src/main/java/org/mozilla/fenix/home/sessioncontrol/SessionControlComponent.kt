@@ -60,7 +60,7 @@ data class SessionControlState(
 ) : ViewState
 
 sealed class TabAction : Action {
-    object SaveTabGroup : TabAction()
+    data class SaveTabGroup(val selectedTabSessionId: String?) : TabAction()
     object MenuTapped : TabAction()
     object Add : TabAction()
     data class CloseAll(val private: Boolean) : TabAction()

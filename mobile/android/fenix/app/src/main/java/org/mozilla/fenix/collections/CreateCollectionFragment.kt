@@ -26,12 +26,23 @@ class CreateCollectionFragment : DialogFragment() {
         setStyle(DialogFragment.STYLE_NO_TITLE, R.style.CreateCollectionDialogStyle)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_create_collection, container, false)
+
+        val viewModel = activity?.run {
+            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+        }
+        val tabs = viewModel!!.tabs
+        val selectedTabs = viewModel.selectedTabs
 
         collectionCreationComponent = CollectionCreationComponent(
             view.create_collection_wrapper,
-            ActionBusFactory.get(this)
+            ActionBusFactory.get(this),
+            CollectionCreationState(tabs = tabs, selectedTabs = selectedTabs)
         )
 
         return view
@@ -39,12 +50,6 @@ class CreateCollectionFragment : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val tabs = activity?.run {
-            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-        }!!.tabs
-
-        getManagedEmitter<CollectionCreationChange>().onNext(CollectionCreationChange.TabListChange(tabs))
-
         getAutoDisposeObservable<CollectionCreationAction>().subscribe {
             when (it) {
                 is CollectionCreationAction.Close -> dismiss()

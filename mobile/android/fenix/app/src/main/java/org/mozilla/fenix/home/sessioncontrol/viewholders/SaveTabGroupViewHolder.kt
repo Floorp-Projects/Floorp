@@ -20,7 +20,7 @@ class SaveTabGroupViewHolder(
 
     init {
         view.save_tab_group_button.setOnClickListener {
-            actionEmitter.onNext(TabAction.SaveTabGroup)
+            actionEmitter.onNext(TabAction.SaveTabGroup(selectedTabSessionId = null))
         }
     }
 
