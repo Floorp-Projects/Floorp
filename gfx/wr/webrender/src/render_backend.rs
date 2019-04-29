@@ -1644,6 +1644,7 @@ impl RenderBackend {
     ) -> DebugOutput {
         use std::fs;
         use capture::CaptureConfig;
+        use render_task::dump_render_tasks_as_svg;
 
         debug!("capture: saving {:?}", root);
         if !root.is_dir() {
@@ -1680,6 +1681,14 @@ impl RenderBackend {
                 config.serialize_tree(&doc.clip_scroll_tree, file_name);
                 let file_name = format!("builder-{}-{}", id.namespace_id.0, id.id);
                 config.serialize(doc.frame_builder.as_ref().unwrap(), file_name);
+                let file_name = format!("render-tasks-{}-{}.svg", id.namespace_id.0, id.id);
+                let mut svg_file = fs::File::create(&config.file_path(file_name, "svg"))
+                    .expect("Failed to open the SVG file.");
+                dump_render_tasks_as_svg(
+                    &rendered_document.frame.render_tasks,
+                    &rendered_document.frame.passes,
+                    &mut svg_file
+                ).unwrap();
             }
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
