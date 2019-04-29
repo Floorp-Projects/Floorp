@@ -42,11 +42,11 @@ typedef GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
 
 class Table : public ShareableBase<Table> {
   using InstanceSet = JS::WeakCache<GCHashSet<
-      ReadBarrieredWasmInstanceObject,
-      MovableCellHasher<ReadBarrieredWasmInstanceObject>, SystemAllocPolicy>>;
+      WeakHeapPtrWasmInstanceObject,
+      MovableCellHasher<WeakHeapPtrWasmInstanceObject>, SystemAllocPolicy>>;
   using UniqueAnyFuncArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
-  ReadBarrieredWasmTableObject maybeObject_;
+  WeakHeapPtrWasmTableObject maybeObject_;
   InstanceSet observers_;
   UniqueAnyFuncArray functions_;  // either functions_ has data
   TableAnyRefVector objects_;     //   or objects_, but not both

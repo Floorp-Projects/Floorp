@@ -399,7 +399,7 @@ static T PopNextBitmaskValue(uint32_t* bitmask) {
 void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
   while (stubsToBarrier) {
     auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
-    const ReadBarrieredJitCode& jitCode = stubs_[stub];
+    const WeakHeapPtrJitCode& jitCode = stubs_[stub];
     MOZ_ASSERT(jitCode);
     jitCode.get();
   }
@@ -573,7 +573,7 @@ void JitRealm::sweep(JS::Realm* realm) {
 
   stubCodes_->sweep();
 
-  for (ReadBarrieredJitCode& stub : stubs_) {
+  for (WeakHeapPtrJitCode& stub : stubs_) {
     if (stub && IsAboutToBeFinalized(&stub)) {
       stub.set(nullptr);
     }
