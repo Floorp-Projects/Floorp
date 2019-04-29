@@ -84,7 +84,7 @@ fn extend_sign(val: u64, nbytes: usize) -> i64 {
     (val << shift) as i64 >> shift
 }
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 #[inline]
 fn extend_sign128(val: u128, nbytes: usize) -> i128 {
     let shift = (16 - nbytes) * 8;
@@ -97,7 +97,7 @@ fn unextend_sign(val: i64, nbytes: usize) -> u64 {
     (val << shift) as u64 >> shift
 }
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 #[inline]
 fn unextend_sign128(val: i128, nbytes: usize) -> u128 {
     let shift = (16 - nbytes) * 8;
@@ -125,7 +125,7 @@ fn pack_size(n: u64) -> usize {
     }
 }
 
-#[cfg(feature = "i128")]
+#[cfg(byteorder_i128)]
 #[inline]
 fn pack_size128(n: u128) -> usize {
     if n < 1 << 8 {
@@ -314,7 +314,7 @@ pub trait ByteOrder
     /// LittleEndian::write_u128(&mut buf, 1_000_000);
     /// assert_eq!(1_000_000, LittleEndian::read_u128(&buf));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn read_u128(buf: &[u8]) -> u128;
 
     /// Reads an unsigned n-bytes integer from `buf`.
@@ -355,7 +355,7 @@ pub trait ByteOrder
     /// LittleEndian::write_uint128(&mut buf, 1_000_000, 3);
     /// assert_eq!(1_000_000, LittleEndian::read_uint128(&buf, 3));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn read_uint128(buf: &[u8], nbytes: usize) -> u128;
 
     /// Writes an unsigned 16 bit integer `n` to `buf`.
@@ -474,7 +474,7 @@ pub trait ByteOrder
     /// LittleEndian::write_u128(&mut buf, 1_000_000);
     /// assert_eq!(1_000_000, LittleEndian::read_u128(&buf));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn write_u128(buf: &mut [u8], n: u128);
 
     /// Writes an unsigned integer `n` to `buf` using only `nbytes`.
@@ -515,7 +515,7 @@ pub trait ByteOrder
     /// LittleEndian::write_uint128(&mut buf, 1_000_000, 3);
     /// assert_eq!(1_000_000, LittleEndian::read_uint128(&buf, 3));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn write_uint128(buf: &mut [u8], n: u128, nbytes: usize);
 
     /// Reads a signed 16 bit integer from `buf`.
@@ -645,7 +645,7 @@ pub trait ByteOrder
     /// LittleEndian::write_i128(&mut buf, -1_000_000_000);
     /// assert_eq!(-1_000_000_000, LittleEndian::read_i128(&buf));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_i128(buf: &[u8]) -> i128 {
         Self::read_u128(buf) as i128
@@ -692,7 +692,7 @@ pub trait ByteOrder
     /// LittleEndian::write_int128(&mut buf, -1_000, 3);
     /// assert_eq!(-1_000, LittleEndian::read_int128(&buf, 3));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_int128(buf: &[u8], nbytes: usize) -> i128 {
         extend_sign128(Self::read_uint128(buf, nbytes), nbytes)
@@ -871,7 +871,7 @@ pub trait ByteOrder
     /// LittleEndian::write_i128(&mut buf, -1_000_000_000);
     /// assert_eq!(-1_000_000_000, LittleEndian::read_i128(&buf));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_i128(buf: &mut [u8], n: i128) {
         Self::write_u128(buf, n as u128)
@@ -918,7 +918,7 @@ pub trait ByteOrder
     /// LittleEndian::write_int128(&mut buf, -1_000, 3);
     /// assert_eq!(-1_000, LittleEndian::read_int128(&buf, 3));
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_int128(buf: &mut [u8], n: i128, nbytes: usize) {
         Self::write_uint128(buf, unextend_sign128(n, nbytes), nbytes)
@@ -1062,7 +1062,7 @@ pub trait ByteOrder
     /// LittleEndian::read_u128_into(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn read_u128_into(src: &[u8], dst: &mut [u128]);
 
     /// Reads signed 16 bit integers from `src` to `dst`.
@@ -1173,7 +1173,7 @@ pub trait ByteOrder
     /// LittleEndian::read_i128_into(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_i128_into(src: &[u8], dst: &mut [i128]) {
         let dst = unsafe {
@@ -1197,7 +1197,40 @@ pub trait ByteOrder
     /// use byteorder::{ByteOrder, LittleEndian};
     ///
     /// let mut bytes = [0; 16];
-    /// let numbers_given = [1.0, 2.0, 31.312e311, -11.32e91];
+    /// let numbers_given = [1.0, 2.0, 31.312e31, -11.32e19];
+    /// LittleEndian::write_f32_into(&numbers_given, &mut bytes);
+    ///
+    /// let mut numbers_got = [0.0; 4];
+    /// LittleEndian::read_f32_into(&bytes, &mut numbers_got);
+    /// assert_eq!(numbers_given, numbers_got);
+    /// ```
+    #[inline]
+    fn read_f32_into(src: &[u8], dst: &mut [f32]) {
+        let dst = unsafe {
+            slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u32, dst.len())
+        };
+        Self::read_u32_into(src, dst);
+    }
+
+    /// **DEPRECATED**.
+    ///
+    /// This method is deprecated. Use `read_f32_into` instead.
+    /// Reads IEEE754 single-precision (4 bytes) floating point numbers from
+    /// `src` into `dst`.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `src.len() != 4*dst.len()`.
+    ///
+    /// # Examples
+    ///
+    /// Write and read `f32` numbers in little endian order:
+    ///
+    /// ```rust
+    /// use byteorder::{ByteOrder, LittleEndian};
+    ///
+    /// let mut bytes = [0; 16];
+    /// let numbers_given = [1.0, 2.0, 31.312e31, -11.32e19];
     /// LittleEndian::write_f32_into(&numbers_given, &mut bytes);
     ///
     /// let mut numbers_got = [0.0; 4];
@@ -1205,13 +1238,45 @@ pub trait ByteOrder
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
     #[inline]
+    #[deprecated(since="1.3.0", note="please use `read_f32_into` instead")]
     fn read_f32_into_unchecked(src: &[u8], dst: &mut [f32]) {
-        let dst = unsafe {
-            slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u32, dst.len())
-        };
-        Self::read_u32_into(src, dst);
+        Self::read_f32_into(src, dst);
     }
 
+    /// Reads IEEE754 single-precision (4 bytes) floating point numbers from
+    /// `src` into `dst`.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `src.len() != 8*dst.len()`.
+    ///
+    /// # Examples
+    ///
+    /// Write and read `f64` numbers in little endian order:
+    ///
+    /// ```rust
+    /// use byteorder::{ByteOrder, LittleEndian};
+    ///
+    /// let mut bytes = [0; 32];
+    /// let numbers_given = [1.0, 2.0, 31.312e311, -11.32e91];
+    /// LittleEndian::write_f64_into(&numbers_given, &mut bytes);
+    ///
+    /// let mut numbers_got = [0.0; 4];
+    /// LittleEndian::read_f64_into(&bytes, &mut numbers_got);
+    /// assert_eq!(numbers_given, numbers_got);
+    /// ```
+    #[inline]
+    fn read_f64_into(src: &[u8], dst: &mut [f64]) {
+        let dst = unsafe {
+            slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u64, dst.len())
+        };
+        Self::read_u64_into(src, dst);
+    }
+
+    /// **DEPRECATED**.
+    ///
+    /// This method is deprecated. Use `read_f64_into` instead.
+    ///
     /// Reads IEEE754 single-precision (4 bytes) floating point numbers from
     /// `src` into `dst`.
     ///
@@ -1235,11 +1300,9 @@ pub trait ByteOrder
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
     #[inline]
+    #[deprecated(since="1.3.0", note="please use `read_f64_into` instead")]
     fn read_f64_into_unchecked(src: &[u8], dst: &mut [f64]) {
-        let dst = unsafe {
-            slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u64, dst.len())
-        };
-        Self::read_u64_into(src, dst);
+        Self::read_f64_into(src, dst);
     }
 
     /// Writes unsigned 16 bit integers from `src` into `dst`.
@@ -1332,7 +1395,7 @@ pub trait ByteOrder
     /// LittleEndian::read_u128_into(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn write_u128_into(src: &[u128], dst: &mut [u8]);
 
     /// Writes signed 16 bit integers from `src` into `dst`.
@@ -1440,7 +1503,7 @@ pub trait ByteOrder
     /// LittleEndian::read_i128_into(&bytes, &mut numbers_got);
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn write_i128_into(src: &[i128], dst: &mut [u8]) {
         let src = unsafe {
             slice::from_raw_parts(src.as_ptr() as *const u128, src.len())
@@ -1463,12 +1526,12 @@ pub trait ByteOrder
     /// use byteorder::{ByteOrder, LittleEndian};
     ///
     /// let mut bytes = [0; 16];
-    /// let numbers_given = [1.0, 2.0, 31.312e311, -11.32e91];
+    /// let numbers_given = [1.0, 2.0, 31.312e31, -11.32e19];
     /// LittleEndian::write_f32_into(&numbers_given, &mut bytes);
     ///
     /// let mut numbers_got = [0.0; 4];
     /// unsafe {
-    ///     LittleEndian::read_f32_into_unchecked(&bytes, &mut numbers_got);
+    ///     LittleEndian::read_f32_into(&bytes, &mut numbers_got);
     /// }
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
@@ -1499,7 +1562,7 @@ pub trait ByteOrder
     ///
     /// let mut numbers_got = [0.0; 4];
     /// unsafe {
-    ///     LittleEndian::read_f64_into_unchecked(&bytes, &mut numbers_got);
+    ///     LittleEndian::read_f64_into(&bytes, &mut numbers_got);
     /// }
     /// assert_eq!(numbers_given, numbers_got);
     /// ```
@@ -1584,7 +1647,7 @@ pub trait ByteOrder
     /// BigEndian::from_slice_u128(&mut numbers);
     /// assert_eq!(numbers, [5u128.to_be(), 65000u128.to_be()]);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     fn from_slice_u128(numbers: &mut [u128]);
 
     /// Converts the given slice of signed 16 bit integers to a particular
@@ -1679,7 +1742,7 @@ pub trait ByteOrder
     /// BigEndian::from_slice_i128(&mut numbers);
     /// assert_eq!(numbers, [5i128.to_be(), 65000i128.to_be()]);
     /// ```
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn from_slice_i128(src: &mut [i128]) {
         let src = unsafe {
@@ -1894,7 +1957,7 @@ impl ByteOrder for BigEndian {
         read_num_bytes!(u64, 8, buf, to_be)
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_u128(buf: &[u8]) -> u128 {
         read_num_bytes!(u128, 16, buf, to_be)
@@ -1912,7 +1975,7 @@ impl ByteOrder for BigEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_uint128(buf: &[u8], nbytes: usize) -> u128 {
         assert!(1 <= nbytes && nbytes <= 16 && nbytes <= buf.len());
@@ -1940,7 +2003,7 @@ impl ByteOrder for BigEndian {
         write_num_bytes!(u64, 8, n, buf, to_be);
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_u128(buf: &mut [u8], n: u128) {
         write_num_bytes!(u128, 16, n, buf, to_be);
@@ -1959,7 +2022,7 @@ impl ByteOrder for BigEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_uint128(buf: &mut [u8], n: u128, nbytes: usize) {
         assert!(pack_size128(n) <= nbytes && nbytes <= 16);
@@ -1988,7 +2051,7 @@ impl ByteOrder for BigEndian {
         read_slice!(src, dst, 8, to_be);
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_u128_into(src: &[u8], dst: &mut [u128]) {
         read_slice!(src, dst, 16, to_be);
@@ -2021,7 +2084,7 @@ impl ByteOrder for BigEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_u128_into(src: &[u128], dst: &mut [u8]) {
         if cfg!(target_endian = "big") {
@@ -2058,7 +2121,7 @@ impl ByteOrder for BigEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn from_slice_u128(numbers: &mut [u128]) {
         if cfg!(target_endian = "little") {
@@ -2109,7 +2172,7 @@ impl ByteOrder for LittleEndian {
         read_num_bytes!(u64, 8, buf, to_le)
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_u128(buf: &[u8]) -> u128 {
         read_num_bytes!(u128, 16, buf, to_le)
@@ -2126,7 +2189,7 @@ impl ByteOrder for LittleEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_uint128(buf: &[u8], nbytes: usize) -> u128 {
         assert!(1 <= nbytes && nbytes <= 16 && nbytes <= buf.len());
@@ -2153,7 +2216,7 @@ impl ByteOrder for LittleEndian {
         write_num_bytes!(u64, 8, n, buf, to_le);
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_u128(buf: &mut [u8], n: u128) {
         write_num_bytes!(u128, 16, n, buf, to_le);
@@ -2169,7 +2232,7 @@ impl ByteOrder for LittleEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_uint128(buf: &mut [u8], n: u128, nbytes: usize) {
         assert!(pack_size128(n as u128) <= nbytes && nbytes <= 16);
@@ -2195,7 +2258,7 @@ impl ByteOrder for LittleEndian {
         read_slice!(src, dst, 8, to_le);
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn read_u128_into(src: &[u8], dst: &mut [u128]) {
         read_slice!(src, dst, 16, to_le);
@@ -2228,7 +2291,7 @@ impl ByteOrder for LittleEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn write_u128_into(src: &[u128], dst: &mut [u8]) {
         if cfg!(target_endian = "little") {
@@ -2265,7 +2328,7 @@ impl ByteOrder for LittleEndian {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     #[inline]
     fn from_slice_u128(numbers: &mut [u128]) {
         if cfg!(target_endian = "big") {
@@ -2306,8 +2369,11 @@ mod test {
     extern crate rand;
 
     use self::quickcheck::{QuickCheck, StdGen, Testable};
-    use self::rand::{Rng, thread_rng};
-    #[cfg(feature = "i128")] use self::quickcheck::{Arbitrary, Gen};
+    use self::rand::thread_rng;
+    #[cfg(byteorder_i128)]
+    use self::rand::Rng;
+    #[cfg(byteorder_i128)]
+    use self::quickcheck::{Arbitrary, Gen};
 
     pub const U24_MAX: u32 = 16_777_215;
     pub const I24_MAX: i32 = 8_388_607;
@@ -2327,7 +2393,7 @@ mod test {
     #[derive(Clone, Debug)]
     pub struct Wi128<T>(pub T);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     impl<T: Clone> Wi128<T> {
         pub fn clone(&self) -> T {
             self.0.clone()
@@ -2340,7 +2406,7 @@ mod test {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     impl Arbitrary for Wi128<u128> {
         fn arbitrary<G: Gen>(gen: &mut G) -> Wi128<u128> {
             let max = calc_max!(::core::u128::MAX, gen.size(), 16);
@@ -2351,7 +2417,7 @@ mod test {
         }
     }
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     impl Arbitrary for Wi128<i128> {
         fn arbitrary<G: Gen>(gen: &mut G) -> Wi128<i128> {
             let max = calc_max!(::core::i128::MAX, gen.size(), 16);
@@ -2464,9 +2530,9 @@ mod test {
     qc_byte_order!(prop_f32, f32, ::core::u64::MAX as u64, read_f32, write_f32);
     qc_byte_order!(prop_f64, f64, ::core::i64::MAX as u64, read_f64, write_f64);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_u128, Wi128<u128>, 16 + 1, read_u128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_i128, Wi128<i128>, 16 + 1, read_i128, write_i128);
 
     qc_byte_order!(prop_uint_1,
@@ -2486,52 +2552,52 @@ mod test {
     qc_byte_order!(prop_uint_8,
         u64, calc_max!(super::U64_MAX, 8), 8, read_uint, write_uint);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_1,
         Wi128<u128>, 1, 1, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_2,
         Wi128<u128>, 2, 2, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_3,
         Wi128<u128>, 3, 3, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_4,
         Wi128<u128>, 4, 4, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_5,
         Wi128<u128>, 5, 5, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_6,
         Wi128<u128>, 6, 6, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_7,
         Wi128<u128>, 7, 7, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_8,
         Wi128<u128>, 8, 8, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_9,
         Wi128<u128>, 9, 9, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_10,
         Wi128<u128>, 10, 10, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_11,
         Wi128<u128>, 11, 11, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_12,
         Wi128<u128>, 12, 12, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_13,
         Wi128<u128>, 13, 13, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_14,
         Wi128<u128>, 14, 14, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_15,
         Wi128<u128>, 15, 15, read_uint128, write_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_uint128_16,
         Wi128<u128>, 16, 16, read_uint128, write_uint128);
 
@@ -2552,52 +2618,52 @@ mod test {
     qc_byte_order!(prop_int_8,
         i64, calc_max!(super::I64_MAX, 8), 8, read_int, write_int);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_1,
         Wi128<i128>, 1, 1, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_2,
         Wi128<i128>, 2, 2, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_3,
         Wi128<i128>, 3, 3, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_4,
         Wi128<i128>, 4, 4, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_5,
         Wi128<i128>, 5, 5, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_6,
         Wi128<i128>, 6, 6, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_7,
         Wi128<i128>, 7, 7, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_8,
         Wi128<i128>, 8, 8, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_9,
         Wi128<i128>, 9, 9, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_10,
         Wi128<i128>, 10, 10, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_11,
         Wi128<i128>, 11, 11, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_12,
         Wi128<i128>, 12, 12, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_13,
         Wi128<i128>, 13, 13, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_14,
         Wi128<i128>, 14, 14, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_15,
         Wi128<i128>, 15, 15, read_int128, write_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_byte_order!(prop_int128_16,
         Wi128<i128>, 16, 16, read_int128, write_int128);
 
@@ -2692,9 +2758,9 @@ mod test {
     too_small!(small_i64, 7, 0, read_i64, write_i64);
     too_small!(small_f32, 3, 0.0, read_f32, write_f32);
     too_small!(small_f64, 7, 0.0, read_f64, write_f64);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_u128, 15, 0, read_u128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_i128, 15, 0, read_i128, write_i128);
 
     too_small!(small_uint_1, 1, read_uint);
@@ -2705,35 +2771,35 @@ mod test {
     too_small!(small_uint_6, 6, read_uint);
     too_small!(small_uint_7, 7, read_uint);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_1, 1, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_2, 2, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_3, 3, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_4, 4, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_5, 5, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_6, 6, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_7, 7, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_8, 8, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_9, 9, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_10, 10, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_11, 11, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_12, 12, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_13, 13, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_14, 14, read_uint128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_uint128_15, 15, read_uint128);
 
     too_small!(small_int_1, 1, read_int);
@@ -2744,35 +2810,35 @@ mod test {
     too_small!(small_int_6, 6, read_int);
     too_small!(small_int_7, 7, read_int);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_1, 1, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_2, 2, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_3, 3, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_4, 4, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_5, 5, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_6, 6, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_7, 7, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_8, 8, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_9, 9, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_10, 10, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_11, 11, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_12, 12, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_13, 13, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_14, 14, read_int128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     too_small!(small_int128_15, 15, read_int128);
 
     // Test that reading/writing slices enforces the correct lengths.
@@ -2860,16 +2926,16 @@ mod test {
     slice_lengths!(
         slice_len_too_big_i64, read_i64_into, write_i64_into, 17, [0, 0]);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     slice_lengths!(
         slice_len_too_small_u128, read_u128_into, write_u128_into, 31, [0, 0]);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     slice_lengths!(
         slice_len_too_big_u128, read_u128_into, write_u128_into, 33, [0, 0]);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     slice_lengths!(
         slice_len_too_small_i128, read_i128_into, write_i128_into, 31, [0, 0]);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     slice_lengths!(
         slice_len_too_big_i128, read_i128_into, write_i128_into, 33, [0, 0]);
 
@@ -3016,9 +3082,9 @@ mod stdtests {
     qc_bytes_ext!(prop_ext_f64,
         f64, ::std::i64::MAX as u64, read_f64, write_f64);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_u128, Wi128<u128>, 16 + 1, read_u128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_i128, Wi128<i128>, 16 + 1, read_i128, write_i128);
 
     qc_bytes_ext!(prop_ext_uint_1,
@@ -3038,52 +3104,52 @@ mod stdtests {
     qc_bytes_ext!(prop_ext_uint_8,
         u64, calc_max!(::test::U64_MAX, 8), 8, read_uint, write_u64);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_1,
         Wi128<u128>, 1, 1, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_2,
         Wi128<u128>, 2, 2, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_3,
         Wi128<u128>, 3, 3, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_4,
         Wi128<u128>, 4, 4, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_5,
         Wi128<u128>, 5, 5, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_6,
         Wi128<u128>, 6, 6, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_7,
         Wi128<u128>, 7, 7, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_8,
         Wi128<u128>, 8, 8, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_9,
         Wi128<u128>, 9, 9, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_10,
         Wi128<u128>, 10, 10, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_11,
         Wi128<u128>, 11, 11, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_12,
         Wi128<u128>, 12, 12, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_13,
         Wi128<u128>, 13, 13, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_14,
         Wi128<u128>, 14, 14, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_15,
         Wi128<u128>, 15, 15, read_uint128, write_u128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_uint128_16,
         Wi128<u128>, 16, 16, read_uint128, write_u128);
 
@@ -3104,52 +3170,52 @@ mod stdtests {
     qc_bytes_ext!(prop_ext_int_8,
         i64, calc_max!(::test::I64_MAX, 8), 8, read_int, write_i64);
 
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_1,
         Wi128<i128>, 1, 1, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_2,
         Wi128<i128>, 2, 2, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_3,
         Wi128<i128>, 3, 3, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_4,
         Wi128<i128>, 4, 4, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_5,
         Wi128<i128>, 5, 5, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_6,
         Wi128<i128>, 6, 6, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_7,
         Wi128<i128>, 7, 7, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_8,
         Wi128<i128>, 8, 8, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_9,
         Wi128<i128>, 9, 9, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_10,
         Wi128<i128>, 10, 10, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_11,
         Wi128<i128>, 11, 11, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_12,
         Wi128<i128>, 12, 12, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_13,
         Wi128<i128>, 13, 13, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_14,
         Wi128<i128>, 14, 14, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_15,
         Wi128<i128>, 15, 15, read_int128, write_i128);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_bytes_ext!(prop_ext_int128_16,
         Wi128<i128>, 16, 16, read_int128, write_i128);
 
@@ -3235,15 +3301,15 @@ mod stdtests {
     qc_slice!(prop_slice_i32, i32, read_i32_into, write_i32_into, 0);
     qc_slice!(prop_slice_u64, u64, read_u64_into, write_u64_into, 0);
     qc_slice!(prop_slice_i64, i64, read_i64_into, write_i64_into, 0);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_slice!(
         prop_slice_u128, Wi128<u128>, read_u128_into, write_u128_into, 0);
-    #[cfg(feature = "i128")]
+    #[cfg(byteorder_i128)]
     qc_slice!(
         prop_slice_i128, Wi128<i128>, read_i128_into, write_i128_into, 0);
 
     qc_slice!(
-        prop_slice_f32, f32, read_f32_into_unchecked, write_f32_into, 0.0);
+        prop_slice_f32, f32, read_f32_into, write_f32_into, 0.0);
     qc_slice!(
-        prop_slice_f64, f64, read_f64_into_unchecked, write_f64_into, 0.0);
+        prop_slice_f64, f64, read_f64_into, write_f64_into, 0.0);
 }

@@ -12,6 +12,7 @@ moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rkv = "^0.9"
+rust_cascade = { git = "https://github.com/mozmark/rust-cascade", branch = "20190426-bitvec-vendor-issues" }
 sha2 = "^0.8"
 style = { path = "../../../../servo/components/style" }
 thin-vec = { version = "0.1.0", features = ["gecko-ffi"] }
