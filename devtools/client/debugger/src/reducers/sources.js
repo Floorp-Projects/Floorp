@@ -18,6 +18,18 @@ import {
   isOriginal as isOriginalSource,
   getPlainUrl
 } from "../utils/source";
+import {
+  createInitial,
+  insertResources,
+  updateResources,
+  hasResource,
+  getResource,
+  getResourceIds,
+  makeReduceAllQuery,
+  type Resource,
+  type ResourceState,
+  type ReduceAllQuery
+} from "../utils/resource";
 
 import { findBreakableLines } from "../utils/breakable-lines";
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
@@ -60,11 +72,16 @@ type UrlsMap = { [string]: SourceId[] };
 type DisplayedSources = Set<SourceId>;
 type PlainUrlsMap = { [string]: string[] };
 
+type SourceResource = Resource<{
+  ...Source
+}>;
+export type SourceResourceState = ResourceState<SourceResource>;
+
 export type SourcesState = {
   epoch: number,
 
   // All known sources.
-  sources: SourcesMap,
+  sources: SourceResourceState,
 
   content: SourcesContentMap,
 
@@ -96,7 +113,7 @@ export type SourcesState = {
 
 export function initialSourcesState(): SourcesState {
   return {
-    sources: {},
+    sources: createInitial(),
     displayed: new Set(),
     urls: {},
     plainUrls: {},
@@ -216,6 +233,10 @@ function update(
   return state;
 }
 
+function resourceAsSource(r: SourceResource): Source {
+  return r;
+}
+
 /*
  * Add sources to the sources store
  * - Add the source to the sources store
@@ -225,14 +246,14 @@ function addSources(state: SourcesState, sources: Source[]): SourcesState {
   state = {
     ...state,
     content: { ...state.content },
-    sources: { ...state.sources },
     urls: { ...state.urls },
     plainUrls: { ...state.plainUrls }
   };
 
+  state.sources = insertResources(state.sources, sources);
+
   for (const source of sources) {
     // 1. Add the source to the sources map
-    state.sources[source.id] = source;
     state.content[source.id] = null;
 
     // 2. Update the source url map
@@ -329,16 +350,16 @@ function updateRootRelativeValues(
 ) {
   const ids = sources
     ? sources.map(source => source.id)
-    : Object.keys(state.sources);
+    : getResourceIds(state.sources);
 
   state = {
     ...state,
-    sources: { ...state.sources },
     displayed: new Set(state.displayed)
   };
 
+  const relativeURLUpdates = [];
   for (const id of ids) {
-    const source = state.sources[id];
+    const source = getResource(state.sources, id);
 
     state.displayed.delete(source.id);
 
@@ -350,11 +371,13 @@ function updateRootRelativeValues(
       state.displayed.add(source.id);
     }
 
-    state.sources[id] = {
-      ...source,
+    relativeURLUpdates.push({
+      id,
       relativeUrl: getRelativeUrl(source, state.projectDirectoryRoot)
-    };
+    });
   }
+
+  state.sources = updateResources(state.sources, relativeURLUpdates);
 
   return state;
 }
@@ -405,21 +428,19 @@ function clearSourceMaps(
   state: SourcesState,
   sourceId: SourceId
 ): SourcesState {
-  const existingSource = state.sources[sourceId];
-  if (existingSource) {
-    state = {
-      ...state,
-      sources: {
-        ...state.sources,
-        [sourceId]: {
-          ...existingSource,
-          sourceMapURL: ""
-        }
-      }
-    };
+  if (!hasResource(state.sources, sourceId)) {
+    return state;
   }
 
-  return state;
+  return {
+    ...state,
+    sources: updateResources(state.sources, [
+      {
+        id: sourceId,
+        sourceMapURL: ""
+      }
+    ])
+  };
 }
 
 /*
@@ -431,25 +452,23 @@ function updateBlackboxFlag(
   sourceId: SourceId,
   isBlackBoxed: boolean
 ): SourcesState {
-  const existingSource = state.sources[sourceId];
-
   // If there is no existing version of the source, it means that we probably
   // ended up here as a result of an async action, and the sources were cleared
   // between the action starting and the source being updated.
-  if (!existingSource) {
+  if (!hasResource(state.sources, sourceId)) {
     // TODO: We may want to consider throwing here once we have a better
     // handle on async action flow control.
     return state;
   }
+
   return {
     ...state,
-    sources: {
-      ...state.sources,
-      [sourceId]: {
-        ...existingSource,
+    sources: updateResources(state.sources, [
+      {
+        id: sourceId,
         isBlackBoxed
       }
-    }
+    ])
   };
 }
 
@@ -494,8 +513,11 @@ export function getSourceThreads(
   );
 }
 
-export function getSourceInSources(sources: SourcesMap, id: string): ?Source {
-  return sources[id];
+export function getSourceInSources(
+  sources: SourceResourceState,
+  id: string
+): ?Source {
+  return hasResource(sources, id) ? getResource(sources, id) : null;
 }
 
 export function getSource(state: OuterState, id: SourceId): ?Source {
@@ -522,14 +544,14 @@ export function getSourceByActorId(
 }
 
 export function getSourcesByURLInSources(
-  sources: SourcesMap,
+  sources: SourceResourceState,
   urls: UrlsMap,
   url: string
 ): Source[] {
   if (!url || !urls[url]) {
     return [];
   }
-  return urls[url].map(id => sources[id]);
+  return urls[url].map(id => getResource(sources, id));
 }
 
 export function getSourcesByURL(state: OuterState, url: string): Source[] {
@@ -542,7 +564,7 @@ export function getSourceByURL(state: OuterState, url: string): ?Source {
 }
 
 export function getSpecificSourceByURLInSources(
-  sources: SourcesMap,
+  sources: SourceResourceState,
   urls: UrlsMap,
   url: string,
   isOriginal: boolean
@@ -645,7 +667,12 @@ export function getHasSiblingOfSameName(state: OuterState, source: ?Source) {
   return getSourcesUrlsInSources(state, source.url).length > 1;
 }
 
-export function getSources(state: OuterState) {
+const querySourceList: ReduceAllQuery<
+  SourceResource,
+  Array<Source>
+> = makeReduceAllQuery(resourceAsSource, sources => sources.slice());
+
+export function getSources(state: OuterState): SourceResourceState {
   return state.sources.sources;
 }
 
@@ -662,7 +689,7 @@ export function getPlainUrls(state: OuterState) {
 }
 
 export function getSourceList(state: OuterState): Source[] {
-  return (Object.values(getSources(state)): any);
+  return querySourceList(getSources(state));
 }
 
 export function getDisplayedSourcesList(
@@ -685,12 +712,15 @@ export const getSelectedLocation: Selector<?SourceLocation> = createSelector(
 export const getSelectedSource: Selector<?Source> = createSelector(
   getSelectedLocation,
   getSources,
-  (selectedLocation: ?SourceLocation, sources: SourcesMap): ?Source => {
+  (
+    selectedLocation: ?SourceLocation,
+    sources: SourceResourceState
+  ): ?Source => {
     if (!selectedLocation) {
       return;
     }
 
-    return sources[selectedLocation.sourceId];
+    return getSourceInSources(sources, selectedLocation.sourceId);
   }
 );
 
@@ -701,10 +731,12 @@ export const getSelectedSourceWithContent: GSSWC = createSelector(
   state => state.sources.content,
   (
     selectedLocation: ?SourceLocation,
-    sources: SourcesMap,
+    sources: SourceResourceState,
     content: SourcesContentMap
   ): SourceWithContent | null => {
-    const source = selectedLocation && sources[selectedLocation.sourceId];
+    const source =
+      selectedLocation &&
+      getSourceInSources(sources, selectedLocation.sourceId);
     return source
       ? getSourceWithContentInner(sources, content, source.id)
       : null;
@@ -724,24 +756,19 @@ export function getSourceContent(
   state: OuterState,
   id: SourceId
 ): AsyncValue<SourceContent> | null {
-  const source = state.sources.sources[id];
-  if (!source) {
-    throw new Error("Unknown Source ID");
-  }
+  // Assert the resource exists.
+  getResource(state.sources.sources, id);
 
   return state.sources.content[id] || null;
 }
 
 const contentLookup: WeakMap<Source, SourceWithContent> = new WeakMap();
 function getSourceWithContentInner(
-  sources: SourcesMap,
+  sources: SourceResourceState,
   content: SourcesContentMap,
   id: SourceId
 ): SourceWithContent {
-  const source = sources[id];
-  if (!source) {
-    throw new Error("Unknown Source ID");
-  }
+  const source = getResource(sources, id);
   const contentValue = content[source.id];
 
   let result = contentLookup.get(source);
@@ -812,7 +839,7 @@ export const getDisplayedSources: GetDisplayedSourcesSelector = createSelector(
         if (!result[thread]) {
           result[thread] = {};
         }
-        result[thread][id] = sources[id];
+        result[thread][id] = getResource(sources, id);
       }
     }
 
