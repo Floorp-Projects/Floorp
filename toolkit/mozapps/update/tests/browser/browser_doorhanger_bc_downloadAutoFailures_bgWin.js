@@ -1,13 +1,9 @@
-add_task(async function testBackgroundWindowFailures() {
-  const maxBackgroundErrors = 5;
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
-  ]});
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-  let updateParams = "badURL=1";
-  let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
-  await SimpleTest.promiseFocus(extraWindow);
+"use strict";
 
+add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
   function getBackgroundWindowHandler(destroyWindow) {
     return async function() {
       await TestUtils.waitForCondition(() =>
@@ -18,8 +14,10 @@ add_task(async function testBackgroundWindowFailures() {
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-available",
          "The badge is showing for the background window");
 
-      checkWhatsNewLink(extraWindow, "update-available-whats-new");
-      let buttonEl = getNotificationButton(extraWindow, "update-available", "button");
+      checkWhatsNewLink(extraWindow, "update-available-whats-new",
+                        gDefaultWhatsNewURL);
+      let buttonEl =
+        getNotificationButton(extraWindow, "update-available", "button");
       buttonEl.click();
 
       if (destroyWindow) {
@@ -29,18 +27,28 @@ add_task(async function testBackgroundWindowFailures() {
     };
   }
 
-  await runUpdateTest(updateParams, 1, [
+  const maxBackgroundErrors = 5;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
+    ],
+  });
+
+  let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(extraWindow);
+
+  let updateParams = "&badURL=1";
+  await runDoorhangerUpdateTest(updateParams, 1, [
     getBackgroundWindowHandler(false),
     getBackgroundWindowHandler(true),
     {
+      // If the update process is unable to install the update show the manual
+      // update doorhanger.
       notificationId: "update-manual",
       button: "button",
-      async cleanup() {
-        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        is(gBrowser.selectedBrowser.currentURI.spec,
-           URL_MANUAL_UPDATE, "Landed on manual update page.");
-        gBrowser.removeTab(gBrowser.selectedTab);
-      },
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDefaultWhatsNewURL,
+                 manual: URL_MANUAL_UPDATE},
     },
   ]);
 });

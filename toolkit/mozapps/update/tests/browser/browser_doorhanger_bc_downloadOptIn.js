@@ -1,25 +1,23 @@
-add_task(async function testBasicPromptNoStaging() {
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_STAGING_ENABLED, false],
-  ]});
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+add_task(async function doorhanger_bc_downloadOptIn() {
   await UpdateUtils.setAppUpdateAutoEnabled(false);
 
-  let updateParams = "promptWaitTime=0";
-
-  await runUpdateTest(updateParams, 1, [
+  let updateParams = "&invalidCompleteSize=1&promptWaitTime=0";
+  await runDoorhangerUpdateTest(updateParams, 1, [
     {
       notificationId: "update-available",
       button: "button",
-      beforeClick() {
-        checkWhatsNewLink(window, "update-available-whats-new");
-      },
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDefaultWhatsNewURL},
     },
     {
       notificationId: "update-restart",
       button: "secondaryButton",
-      cleanup() {
-        AppMenuNotifications.removeNotification(/.*/);
-      },
+      checkActiveUpdate: {state: STATE_PENDING},
     },
   ]);
 });

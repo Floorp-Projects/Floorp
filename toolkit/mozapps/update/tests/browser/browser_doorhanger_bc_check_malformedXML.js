@@ -1,28 +1,26 @@
-add_task(async function testMalformedXml() {
-  const updateDetailsUrl = "http://example.com/details";
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+add_task(async function doorhanger_bc_check_malformedXML() {
   const maxBackgroundErrors = 10;
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
-    [PREF_APP_UPDATE_URL_DETAILS, updateDetailsUrl],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_APP_UPDATE_BACKGROUNDMAXERRORS, maxBackgroundErrors],
+    ],
+  });
 
-  let updateParams = "xmlMalformed=1";
-
-  await runUpdateTest(updateParams, maxBackgroundErrors, [
+  let updateParams = "&xmlMalformed=1";
+  await runDoorhangerUpdateTest(updateParams, maxBackgroundErrors, [
     {
-      // if we fail 10 check attempts, then we want to just show the user a manual update
-      // workflow.
+      // If the update check fails 10 consecutive attempts then the manual
+      // update doorhanger.
       notificationId: "update-manual",
       button: "button",
-      beforeClick() {
-        checkWhatsNewLink(window, "update-manual-whats-new", updateDetailsUrl);
-      },
-      async cleanup() {
-        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        is(gBrowser.selectedBrowser.currentURI.spec,
-           URL_MANUAL_UPDATE, "Landed on manual update page.");
-        gBrowser.removeTab(gBrowser.selectedTab);
-      },
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDetailsURL,
+                 manual: URL_MANUAL_UPDATE},
     },
   ]);
 });
