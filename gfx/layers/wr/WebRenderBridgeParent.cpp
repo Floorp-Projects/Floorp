@@ -1761,6 +1761,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTestSampleTime(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvLeaveTestMode() {
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mCompositorBridge->LeaveTestMode(GetLayersId());
   return IPC_OK();
 }
