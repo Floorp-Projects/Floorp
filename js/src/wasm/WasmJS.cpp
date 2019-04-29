@@ -2006,7 +2006,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   TableKind tableKind;
   if (StringEqualsAscii(elementLinearStr, "anyfunc") ||
       StringEqualsAscii(elementLinearStr, "funcref")) {
-    tableKind = TableKind::AnyFunction;
+    tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsAscii(elementLinearStr, "anyref")) {
     if (!HasReftypesSupport(cx)) {
@@ -2095,8 +2095,8 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
   }
 
   switch (table.kind()) {
-    case TableKind::AnyFunction: {
-      const FunctionTableElem& elem = table.getAnyFunc(index);
+    case TableKind::FuncRef: {
+      const FunctionTableElem& elem = table.getFuncRef(index);
       if (!elem.code) {
         args.rval().setNull();
         return true;
@@ -2151,7 +2151,7 @@ static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
       metadata.codeRange(metadata.lookupFuncExport(funcIndex));
   void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
   while (index < limit) {
-    table->setAnyFunc(index++, code, &instance);
+    table->setFuncRef(index++, code, &instance);
   }
 }
 
@@ -2186,7 +2186,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
 
   RootedValue fillValue(cx, args[1]);
   switch (table.kind()) {
-    case TableKind::AnyFunction: {
+    case TableKind::FuncRef: {
       RootedFunction value(cx);
       if (!IsWasmExportedFunction(fillValue, &value) && !fillValue.isNull()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2260,12 +2260,12 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
   static_assert(MaxTableLength < UINT32_MAX, "Invariant");
 
   switch (table->table().kind()) {
-    case TableKind::AnyFunction: {
+    case TableKind::FuncRef: {
       RootedFunction value(cx);
       if (fillValue.isNull()) {
 #ifdef DEBUG
         for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table->table().getAnyFunc(index).code == nullptr);
+          MOZ_ASSERT(table->table().getFuncRef(index).code == nullptr);
         }
 #endif
       } else if (IsWasmExportedFunction(fillValue, &value)) {
