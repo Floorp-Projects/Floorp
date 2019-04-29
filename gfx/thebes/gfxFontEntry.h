@@ -201,16 +201,27 @@ class gfxFontEntry {
   }
 
   inline bool HasCmapTable() {
-    if (!mCharacterMap) {
+    if (!mCharacterMap && !mShmemCharacterMap) {
       ReadCMAP();
-      NS_ASSERTION(mCharacterMap, "failed to initialize character map");
+      NS_ASSERTION(mCharacterMap || mShmemCharacterMap,
+                   "failed to initialize character map");
     }
     return mHasCmapTable;
   }
 
   inline bool HasCharacter(uint32_t ch) {
-    if (mCharacterMap && mCharacterMap->test(ch)) {
-      return true;
+    if (mShmemCharacterMap) {
+      return mShmemCharacterMap->test(ch);
+    }
+    if (mCharacterMap) {
+      if (mShmemFace && TrySetShmemCharacterMap()) {
+        // Forget our temporary local copy, now we can use the shared cmap
+        mCharacterMap = nullptr;
+        return mShmemCharacterMap->test(ch);
+      }
+      if (mCharacterMap->test(ch)) {
+        return true;
+      }
     }
     return TestCharacterMap(ch);
   }
@@ -401,6 +412,9 @@ class gfxFontEntry {
 
   RefPtr<gfxCharacterMap> mCharacterMap;
 
+  mozilla::fontlist::Face* mShmemFace = nullptr;
+  const SharedBitSet* mShmemCharacterMap = nullptr;
+
   mozilla::UniquePtr<uint8_t[]> mUVSData;
   mozilla::UniquePtr<gfxUserFontData> mUserFontData;
   mozilla::UniquePtr<gfxSVGGlyphs> mSVGGlyphs;
@@ -519,6 +533,11 @@ class gfxFontEntry {
 
   // helper for HasCharacter(), which is what client code should call
   virtual bool TestCharacterMap(uint32_t aCh);
+
+  // Try to set mShmemCharacterMap, based on the char map in mShmemFace;
+  // return true if successful, false if it remains null (maybe the parent
+  // hasn't handled our SetCharacterMap message yet).
+  bool TrySetShmemCharacterMap();
 
   // Shaper-specific face objects, shared by all instantiations of the same
   // physical font, regardless of size.
@@ -682,19 +701,16 @@ inline bool gfxFontEntry::SupportsBold() {
 // used when iterating over all fonts looking for a match for a given character
 struct GlobalFontMatch {
   GlobalFontMatch(const uint32_t aCharacter, const gfxFontStyle& aStyle)
-      : mStyle(aStyle),
-        mCh(aCharacter),
-        mCount(0),
-        mCmapsTested(0),
-        mMatchDistance(INFINITY) {}
+      : mStyle(aStyle), mCh(aCharacter) {}
 
   RefPtr<gfxFontEntry> mBestMatch;       // current best match
   RefPtr<gfxFontFamily> mMatchedFamily;  // the family it belongs to
-  const gfxFontStyle& mStyle;            // style to match
-  const uint32_t mCh;                    // codepoint to be matched
-  uint32_t mCount;                       // number of fonts matched
-  uint32_t mCmapsTested;                 // number of cmaps tested
-  float mMatchDistance;                  // metric indicating closest match
+  mozilla::fontlist::Family* mMatchedSharedFamily = nullptr;
+  const gfxFontStyle& mStyle;       // style to match
+  const uint32_t mCh;               // codepoint to be matched
+  uint32_t mCount = 0;              // number of fonts matched
+  uint32_t mCmapsTested = 0;        // number of cmaps tested
+  float mMatchDistance = INFINITY;  // metric indicating closest match
 };
 
 class gfxFontFamily {

@@ -24,6 +24,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalError
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "TextDrawTarget.h"
 
 #ifdef XP_WIN
@@ -1733,7 +1734,11 @@ void gfxFontGroup::BuildFontList() {
 
   // build the fontlist from the specified families
   for (const auto& f : fonts) {
-    AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
+    if (f.mFamily.mIsShared) {
+      AddFamilyToFontList(f.mFamily.mShared, f.mGeneric);
+    } else {
+      AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
+    }
   }
 }
 
@@ -1755,7 +1760,7 @@ void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
 
   // Not known in the user font set ==> check system fonts
   gfxPlatformFontList::PlatformFontList()->FindAndAddFamilies(
-      aName, &aFamilyList,
+      StyleGenericFontFamily::None, aName, &aFamilyList,
       aQuotedName ? gfxPlatformFontList::FindFamiliesFlags::eQuotedFamilyName
                   : gfxPlatformFontList::FindFamiliesFlags(0),
       &mStyle, mDevToCssSize);
@@ -1787,6 +1792,34 @@ void gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
   }
 }
 
+void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
+                                       StyleGenericFontFamily aGeneric) {
+  gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+  if (!aFamily->IsInitialized()) {
+    if (!NS_IsMainThread()) {
+      // If we need to initialize a Family record, but we're on a style
+      // worker thread, we have to defer it.
+      ServoStyleSet* set = ServoStyleSet::Current();
+      MOZ_ASSERT(set);
+      set->AppendTask(PostTraversalTask::InitializeFamily(aFamily));
+      set->AppendTask(PostTraversalTask::FontInfoUpdate(set));
+      return;
+    }
+    if (!pfl->InitializeFamily(aFamily)) {
+      return;
+    }
+  }
+  AutoTArray<fontlist::Face*, 4> faceList;
+  aFamily->FindAllFacesForStyle(pfl->SharedFontList(), mStyle, faceList);
+  for (auto face : faceList) {
+    gfxFontEntry* fe = pfl->GetOrCreateFontEntry(face, aFamily);
+    if (fe && !HasFont(fe)) {
+      FamilyFace ff(aFamily, fe, aGeneric);
+      mFonts.AppendElement(ff);
+    }
+  }
+}
+
 bool gfxFontGroup::HasFont(const gfxFontEntry* aFontEntry) {
   uint32_t count = mFonts.Length();
   for (uint32_t i = 0; i < count; ++i) {
@@ -1815,7 +1848,7 @@ gfxFont* gfxFontGroup::GetFontAt(int32_t i, uint32_t aCh) {
       gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
       if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
           ufe->CharacterInUnicodeRange(aCh) && !mSkipDrawing &&
-          !FontLoadingForFamily(ff.Family(), aCh)) {
+          !FontLoadingForFamily(ff, aCh)) {
         ufe->Load();
         ff.CheckState(mSkipDrawing);
       }
@@ -1876,12 +1909,16 @@ bool gfxFontGroup::FamilyFace::EqualsUserFont(
   return false;
 }
 
-bool gfxFontGroup::FontLoadingForFamily(gfxFontFamily* aFamily,
+bool gfxFontGroup::FontLoadingForFamily(const FamilyFace& aFamily,
                                         uint32_t aCh) const {
+  if (aFamily.IsSharedFamily()) {
+    return false;
+  }
   uint32_t count = mFonts.Length();
   for (uint32_t i = 0; i < count; ++i) {
     const FamilyFace& ff = mFonts[i];
-    if (ff.IsLoading() && ff.Family() == aFamily) {
+    if (!ff.IsSharedFamily() && ff.IsLoading() &&
+        ff.OwnedFamily() == aFamily.OwnedFamily()) {
       const gfxUserFontEntry* ufe =
           static_cast<gfxUserFontEntry*>(ff.FontEntry());
       if (ufe->CharacterInUnicodeRange(aCh)) {
@@ -1898,21 +1935,33 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
   }
 
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-  FontFamily defaultFamily = pfl->GetDefaultFont(&mStyle);
-  NS_ASSERTION(!defaultFamily.mIsShared && defaultFamily.mUnshared,
-               "invalid default font returned by GetDefaultFont");
+  FontFamily family = pfl->GetDefaultFont(&mStyle);
+  MOZ_ASSERT(!family.IsNull(),
+             "invalid default font returned by GetDefaultFont");
 
-  if (defaultFamily.mUnshared) {
-    gfxFontEntry* fe = defaultFamily.mUnshared->FindFontForStyle(mStyle, true);
-    if (fe) {
-      mDefaultFont = fe->FindOrMakeFont(&mStyle);
+  gfxFontEntry* fe = nullptr;
+  if (family.mIsShared) {
+    fontlist::Family* fam = family.mShared;
+    if (!fam->IsInitialized()) {
+      // If this fails, FindFaceForStyle will just safely return nullptr
+      Unused << pfl->InitializeFamily(fam);
     }
+    fontlist::Face* face = fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);
+    if (face) {
+      fe = pfl->GetOrCreateFontEntry(face, fam);
+    }
+  } else {
+    fe = family.mUnshared->FindFontForStyle(mStyle);
+  }
+  if (fe) {
+    mDefaultFont = fe->FindOrMakeFont(&mStyle);
   }
 
   uint32_t numInits, loaderState;
   pfl->GetFontlistInitInfo(numInits, loaderState);
-  NS_ASSERTION(numInits != 0,
-               "must initialize system fontlist before getting default font!");
+
+  MOZ_ASSERT(numInits != 0,
+             "must initialize system fontlist before getting default font!");
 
   uint32_t numFonts = 0;
   if (!mDefaultFont) {
@@ -1921,17 +1970,52 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
     // that assumes it will be able to get valid metrics for layout,
     // just look for the first usable font and put in the list.
     // (see bug 554544)
-    AutoTArray<RefPtr<gfxFontFamily>, 200> familyList;
-    pfl->GetFontFamilyList(familyList);
-    numFonts = familyList.Length();
-    for (uint32_t i = 0; i < numFonts; ++i) {
-      gfxFontEntry* fe = familyList[i]->FindFontForStyle(mStyle, true);
-      if (fe) {
-        mDefaultFont = fe->FindOrMakeFont(&mStyle);
-        if (mDefaultFont) {
-          break;
+    if (pfl->SharedFontList()) {
+      fontlist::FontList* list = pfl->SharedFontList();
+      numFonts = list->NumFamilies();
+      fontlist::Family* families = list->Families();
+      for (uint32_t i = 0; i < numFonts; ++i) {
+        fontlist::Family* fam = &families[i];
+        if (!fam->IsInitialized()) {
+          Unused << pfl->InitializeFamily(fam);
+        }
+        fontlist::Face* face =
+            fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);
+        if (face) {
+          fe = pfl->GetOrCreateFontEntry(face, fam);
+          if (fe) {
+            mDefaultFont = fe->FindOrMakeFont(&mStyle);
+            if (mDefaultFont) {
+              break;
+            }
+            NS_WARNING("FindOrMakeFont failed");
+          }
         }
       }
+    } else {
+      AutoTArray<RefPtr<gfxFontFamily>, 200> familyList;
+      pfl->GetFontFamilyList(familyList);
+      numFonts = familyList.Length();
+      for (uint32_t i = 0; i < numFonts; ++i) {
+        gfxFontEntry* fe = familyList[i]->FindFontForStyle(mStyle, true);
+        if (fe) {
+          mDefaultFont = fe->FindOrMakeFont(&mStyle);
+          if (mDefaultFont) {
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (!mDefaultFont && pfl->SharedFontList() && !XRE_IsParentProcess()) {
+    // If we're a content process, it's possible this is failing because the
+    // chrome process has just updated the shared font list and we haven't yet
+    // refreshed our reference to it. If that's the case, update and retry.
+    uint32_t oldGeneration = pfl->SharedFontList()->GetGeneration();
+    pfl->UpdateFontList();
+    if (pfl->SharedFontList()->GetGeneration() != oldGeneration) {
+      return GetDefaultFont();
     }
   }
 
@@ -1989,7 +2073,7 @@ gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
           static_cast<gfxUserFontEntry*>(mFonts[i].FontEntry());
       bool inRange = ufe->CharacterInUnicodeRange(aCh);
       if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED && inRange &&
-          !mSkipDrawing && !FontLoadingForFamily(ff.Family(), aCh)) {
+          !mSkipDrawing && !FontLoadingForFamily(ff, aCh)) {
         ufe->Load();
         ff.CheckState(mSkipDrawing);
       }
@@ -2635,6 +2719,27 @@ gfxFont* gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily,
   return fe->FindOrMakeFont(&mStyle);
 }
 
+gfxFont* gfxFontGroup::FindFallbackFaceForChar(fontlist::Family* aFamily,
+                                               uint32_t aCh) {
+  fontlist::FontList* list =
+      gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  GlobalFontMatch data(aCh, mStyle);
+  aFamily->SearchAllFontsForChar(list, &data);
+  gfxFontEntry* fe = data.mBestMatch;
+  if (!fe) {
+    return nullptr;
+  }
+  return fe->FindOrMakeFont(&mStyle);
+}
+
+gfxFont* gfxFontGroup::FindFallbackFaceForChar(const FamilyFace& aFamily,
+                                               uint32_t aCh) {
+  if (aFamily.IsSharedFamily()) {
+    return FindFallbackFaceForChar(aFamily.SharedFamily(), aCh);
+  }
+  return FindFallbackFaceForChar(aFamily.OwnedFamily(), aCh);
+}
+
 gfxFloat gfxFontGroup::GetUnderlineOffset() {
   if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET) {
     // if the fontlist contains a bad underline font, make the underline
@@ -2643,7 +2748,10 @@ gfxFloat gfxFontGroup::GetUnderlineOffset() {
     for (uint32_t i = 0; i < len; i++) {
       FamilyFace& ff = mFonts[i];
       if (!ff.IsUserFontContainer() && !ff.FontEntry()->IsUserFont() &&
-          ff.Family() && ff.Family()->IsBadUnderlineFamily()) {
+          ((ff.IsSharedFamily() && ff.SharedFamily() &&
+            ff.SharedFamily()->IsBadUnderlineFamily()) ||
+           (!ff.IsSharedFamily() && ff.OwnedFamily() &&
+            ff.OwnedFamily()->IsBadUnderlineFamily()))) {
         gfxFont* font = GetFontAt(i);
         if (!font) {
           continue;
@@ -2717,13 +2825,13 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 
       gfxFont* font = nullptr;
       if (mFonts[0].CheckForFallbackFaces()) {
-        font = FindFallbackFaceForChar(mFonts[0].Family(), aCh);
+        font = FindFallbackFaceForChar(mFonts[0], aCh);
       } else if (!firstFont->GetFontEntry()->IsUserFont()) {
         // For platform fonts (but not userfonts), we may need to do
         // fallback within the family to handle cases where some faces
         // such as Italic or Black have reduced character sets compared
         // to the family's Regular face.
-        font = FindFallbackFaceForChar(mFonts[0].Family(), aCh);
+        font = FindFallbackFaceForChar(mFonts[0], aCh);
       }
       if (font) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[0].Generic()};
@@ -2797,7 +2905,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       // load if not already loaded but only if no other font in similar
       // range within family is loading
       if (ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED &&
-          !mSkipDrawing && !FontLoadingForFamily(ff.Family(), aCh)) {
+          !mSkipDrawing && !FontLoadingForFamily(ff, aCh)) {
         ufe->Load();
         ff.CheckState(mSkipDrawing);
       }
@@ -2821,12 +2929,21 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 
     // check other family faces if needed
     if (ff.CheckForFallbackFaces()) {
-      NS_ASSERTION(i == 0 ? true
-                          : !mFonts[i - 1].CheckForFallbackFaces() ||
-                                !mFonts[i - 1].Family()->Name().Equals(
-                                    ff.Family()->Name()),
+#ifdef DEBUG
+      if (i > 0) {
+        fontlist::FontList* list =
+            gfxPlatformFontList::PlatformFontList()->SharedFontList();
+        nsCString s1 = mFonts[i - 1].IsSharedFamily()
+                           ? mFonts[i - 1].SharedFamily()->Key().AsString(list)
+                           : mFonts[i - 1].OwnedFamily()->Name();
+        nsCString s2 = ff.IsSharedFamily()
+                           ? ff.SharedFamily()->Key().AsString(list)
+                           : ff.OwnedFamily()->Name();
+        MOZ_ASSERT(!mFonts[i - 1].CheckForFallbackFaces() || !s1.Equals(s2),
                    "should only do fallback once per font family");
-      font = FindFallbackFaceForChar(ff.Family(), aCh);
+      }
+#endif
+      font = FindFallbackFaceForChar(ff, aCh);
       if (font) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, ff.Generic()};
         return font;
@@ -2837,7 +2954,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       // also above).
       fe = ff.FontEntry();
       if (!fe->mIsUserFontContainer && !fe->IsUserFont()) {
-        font = FindFallbackFaceForChar(ff.Family(), aCh);
+        font = FindFallbackFaceForChar(ff, aCh);
         if (font) {
           *aMatchType = {FontMatchType::Kind::kFontGroup, ff.Generic()};
           return font;
@@ -3197,7 +3314,20 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
         return mLastPrefFont;
       }
 
-      gfxFontEntry* fe = family.mUnshared->FindFontForStyle(mStyle);
+      gfxFontEntry* fe = nullptr;
+      if (family.mIsShared) {
+        fontlist::Family* fam = family.mShared;
+        if (!fam->IsInitialized()) {
+          Unused << pfl->InitializeFamily(fam);
+        }
+        fontlist::Face* face =
+            fam->FindFaceForStyle(pfl->SharedFontList(), mStyle);
+        if (face) {
+          fe = pfl->GetOrCreateFontEntry(face, fam);
+        }
+      } else {
+        fe = family.mUnshared->FindFontForStyle(mStyle);
+      }
       if (!fe) {
         continue;
       }
@@ -3217,7 +3347,9 @@ gfxFont* gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh,
 
       // If the char was not available, see if we can fall back to an
       // alternative face in the same family.
-      gfxFont* prefFont = FindFallbackFaceForChar(family.mUnshared, aCh);
+      gfxFont* prefFont = family.mIsShared
+                              ? FindFallbackFaceForChar(family.mShared, aCh)
+                              : FindFallbackFaceForChar(family.mUnshared, aCh);
       if (prefFont) {
         mLastPrefFamily = family;
         mLastPrefFont = prefFont;

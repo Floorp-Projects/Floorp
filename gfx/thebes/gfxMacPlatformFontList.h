@@ -140,9 +140,6 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
 
   static int32_t AppleWeightToCSSWeight(int32_t aAppleWeight);
 
-  bool GetStandardFamilyName(const nsCString& aFontName,
-                             nsACString& aFamilyName) override;
-
   gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
                                 WeightRange aWeightForEntry,
                                 StretchRange aStretchForEntry,
@@ -155,7 +152,8 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
                                  const uint8_t* aFontData,
                                  uint32_t aLength) override;
 
-  bool FindAndAddFamilies(const nsACString& aFamily,
+  bool FindAndAddFamilies(mozilla::StyleGenericFontFamily aGeneric,
+                          const nsACString& aFamily,
                           nsTArray<FamilyAndGeneric>* aOutput,
                           FindFamiliesFlags aFlags,
                           gfxFontStyle* aStyle = nullptr,
@@ -188,6 +186,7 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
 
   // initialize font lists
   nsresult InitFontListForPlatform() override;
+  void InitSharedFontListForPlatform() override;
 
   // special case font faces treated as font families (set via prefs)
   void InitSingleFaceList();
@@ -223,6 +222,17 @@ class gfxMacPlatformFontList : public gfxPlatformFontList {
   void AddFamily(const nsACString& aFamilyName, bool aSystemFont);
 
   void ActivateFontsFromDir(nsIFile* aDir);
+
+  gfxFontEntry* CreateFontEntry(
+      mozilla::fontlist::Face* aFace,
+      const mozilla::fontlist::Family* aFamily) override;
+
+  void GetFacesInitDataForFamily(
+      const mozilla::fontlist::Family* aFamily,
+      nsTArray<mozilla::fontlist::Face::InitData>& aFaces) const override;
+
+  void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
+                              bool aNeedFullnamePostscriptNames) override;
 
 #ifdef MOZ_BUNDLED_FONTS
   void ActivateBundledFonts();

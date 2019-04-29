@@ -156,6 +156,11 @@ interface nsIAppStartup : nsISupports
      */
     readonly attribute boolean wasRestarted;
 
+    /**
+     * The number of seconds since the OS was last rebooted
+     */
+    readonly attribute int64_t secondsSinceLastOSRestart;
+
     /** 
      * Returns an object with main, process, firstPaint, sessionRestored properties.
      * Properties may not be available depending on platform or application

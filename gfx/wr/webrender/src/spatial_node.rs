@@ -334,31 +334,40 @@ impl SpatialNode {
                 info.invertible = self.world_viewport_transform.is_invertible();
 
                 if info.invertible {
-                    // Try to update our compatible coordinate system transform. If we cannot, start a new
-                    // incompatible coordinate system.
-                    match ScaleOffset::from_transform(&relative_transform) {
-                        Some(ref scale_offset) => {
-                            self.coordinate_system_relative_scale_offset =
-                                state.coordinate_system_relative_scale_offset.accumulate(scale_offset);
+                    let mut reset_cs_id = match info.transform_style {
+                        TransformStyle::Preserve3D => !state.preserves_3d,
+                        TransformStyle::Flat => state.preserves_3d,
+                    };
+                    // We reset the coordinate system upon either crossing the preserve-3d context boundary,
+                    // or simply a 3D transformation.
+                    if !reset_cs_id {
+                        // Try to update our compatible coordinate system transform. If we cannot, start a new
+                        // incompatible coordinate system.
+                        match ScaleOffset::from_transform(&relative_transform) {
+                            Some(ref scale_offset) => {
+                                self.coordinate_system_relative_scale_offset =
+                                    state.coordinate_system_relative_scale_offset.accumulate(scale_offset);
+                            }
+                            None => reset_cs_id = true,
                         }
-                        None => {
-                            // If we break 2D axis alignment or have a perspective component, we need to start a
-                            // new incompatible coordinate system with which we cannot share clips without masking.
-                            self.coordinate_system_relative_scale_offset = ScaleOffset::identity();
+                    }
+                    if reset_cs_id {
+                        // If we break 2D axis alignment or have a perspective component, we need to start a
+                        // new incompatible coordinate system with which we cannot share clips without masking.
+                        self.coordinate_system_relative_scale_offset = ScaleOffset::identity();
 
-                            let transform = state.coordinate_system_relative_scale_offset
-                                                 .to_transform()
-                                                 .pre_mul(&relative_transform);
+                        let transform = state.coordinate_system_relative_scale_offset
+                            .to_transform()
+                            .pre_mul(&relative_transform);
 
-                            // Push that new coordinate system and record the new id.
-                            let coord_system = CoordinateSystem {
-                                transform,
-                                is_flatten_root: !state.preserves_3d && info.transform_style == TransformStyle::Preserve3D,
-                                parent: Some(state.current_coordinate_system_id),
-                            };
-                            state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
-                            coord_systems.push(coord_system);
-                        }
+                        // Push that new coordinate system and record the new id.
+                        let coord_system = CoordinateSystem {
+                            transform,
+                            transform_style: info.transform_style,
+                            parent: Some(state.current_coordinate_system_id),
+                        };
+                        state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                        coord_systems.push(coord_system);
                     }
                 }
 
@@ -631,6 +640,14 @@ impl SpatialNode {
         match self.node_type {
             SpatialNodeType::ScrollFrame(info) if info.external_id == Some(external_id) => true,
             _ => false,
+        }
+    }
+
+    pub fn transform_style(&self) -> TransformStyle {
+        match self.node_type {
+            SpatialNodeType::ReferenceFrame(ref info) => info.transform_style,
+            SpatialNodeType::StickyFrame(_) |
+            SpatialNodeType::ScrollFrame(_) => TransformStyle::Flat,
         }
     }
 }

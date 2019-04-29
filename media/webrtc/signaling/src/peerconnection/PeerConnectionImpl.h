@@ -14,7 +14,6 @@
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIWeakReferenceUtils.h"  // for the definition of nsWeakPtr
 #include "IPeerConnection.h"
 #include "sigslot.h"
 #include "nsComponentManagerUtils.h"
@@ -584,8 +583,7 @@ class PeerConnectionImpl final
   mozilla::dom::PCImplIceGatheringState mIceGatheringState;
 
   nsCOMPtr<nsIThread> mThread;
-  // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
-  nsWeakPtr mPCObserver;
+  RefPtr<PeerConnectionObserver> mPCObserver;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 
@@ -663,7 +661,7 @@ class PeerConnectionImpl final
     NS_DECL_NSITIMERCALLBACK
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    nsWeakPtr mPCObserver;
+    RefPtr<PeerConnectionObserver> mPCObserver;
     RefPtr<TransceiverImpl> mTransceiver;
     nsCOMPtr<nsITimer> mSendTimer;
     nsString mTones;

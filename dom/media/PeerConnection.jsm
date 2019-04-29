@@ -473,7 +473,7 @@ class RTCPeerConnection {
     this._operationsChain = this._win.Promise.resolve();
 
     this.__DOM_IMPL__._innerObject = this;
-    this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
+    const observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
 
     this._warnDeprecatedStatsRemoteAccessNullable = { warn: (key) =>
       this.logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 66, but won't warn there!\
@@ -482,7 +482,7 @@ class RTCPeerConnection {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    this._impl.initialize(this._observer, this._win, rtcConfig,
+    this._impl.initialize(observer, this._win, rtcConfig,
                           Services.tm.currentThread);
 
     this._certificateReady = this._initCertificate(rtcConfig.certificates);
@@ -1411,7 +1411,6 @@ class RTCPeerConnection {
     this._impl.close();
     this._suppressEvents = true;
     delete this._pc;
-    delete this._observer;
   }
 
   getLocalStreams() {

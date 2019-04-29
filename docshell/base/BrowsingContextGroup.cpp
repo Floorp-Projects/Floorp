@@ -71,6 +71,26 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
   Unused << aProcess->SendRegisterBrowsingContextGroup(inits);
 }
 
+bool BrowsingContextGroup::IsContextCached(BrowsingContext* aContext) const {
+  MOZ_DIAGNOSTIC_ASSERT(aContext);
+  return mCachedContexts.Contains(aContext);
+}
+
+void BrowsingContextGroup::CacheContext(BrowsingContext* aContext) {
+  mCachedContexts.PutEntry(aContext);
+}
+
+void BrowsingContextGroup::CacheContexts(
+    const BrowsingContext::Children& aContexts) {
+  for (BrowsingContext* child : aContexts) {
+    mCachedContexts.PutEntry(child);
+  }
+}
+
+bool BrowsingContextGroup::EvictCachedContext(BrowsingContext* aContext) {
+  return mCachedContexts.EnsureRemoved(aContext);
+}
+
 BrowsingContextGroup::~BrowsingContextGroup() {
   for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
     nsRefPtrHashKey<ContentParent>* entry = iter.Get();
@@ -88,7 +108,7 @@ JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
-                                      mToplevels, mSubscribers)
+                                      mToplevels, mSubscribers, mCachedContexts)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContextGroup, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContextGroup, Release)

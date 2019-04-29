@@ -187,9 +187,9 @@ impl ScaleOffset {
         )
     }
 
-    // Produce a ScaleOffset that includes both self
-    // and other. The 'self' ScaleOffset is applied
-    // after other.
+    /// Produce a ScaleOffset that includes both self and other.
+    /// The 'self' ScaleOffset is applied after other.
+    /// This is equivalent to `TypedTransform3D::pre_mul`.
     pub fn accumulate(&self, other: &ScaleOffset) -> Self {
         ScaleOffset {
             scale: Vector2D::new(

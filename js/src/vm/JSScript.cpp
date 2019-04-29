@@ -3308,16 +3308,33 @@ void js::FreeScriptData(JSRuntime* rt) {
   // The table should be empty unless the embedding leaked GC things.
   MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), table.empty());
 
+#ifdef DEBUG
+  size_t numLive = 0;
+  size_t maxCells = 5;
+  char* env = getenv("JS_GC_MAX_LIVE_CELLS");
+  if (env && *env) {
+    maxCells = atol(env);
+  }
+#endif
+
   for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
 #ifdef DEBUG
-    SharedScriptData* scriptData = e.front();
-    fprintf(stderr,
-            "ERROR: GC found live SharedScriptData %p with ref count %d at "
-            "shutdown\n",
-            scriptData, scriptData->refCount());
+    if (++numLive <= maxCells) {
+      SharedScriptData* scriptData = e.front();
+      fprintf(stderr,
+              "ERROR: GC found live SharedScriptData %p with ref count %d at "
+              "shutdown\n",
+              scriptData, scriptData->refCount());
+    }
 #endif
     js_free(e.front());
   }
+
+#ifdef DEBUG
+  if (numLive > 0) {
+    fprintf(stderr, "ERROR: GC found %zu live SharedScriptData at shutdown\n", numLive);
+  }
+#endif
 
   table.clear();
 }
