@@ -135,10 +135,12 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) { return }
+
         this.intent.putExtra(OPEN_TO_BROWSER, false)
         var customTabSessionId: String? = null
 
-        intent?.let {
+        intent.let {
             if (isCustomTab) {
                 customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
             }
