@@ -213,8 +213,15 @@ class gfxFontEntry {
     if (mShmemCharacterMap) {
       return mShmemCharacterMap->test(ch);
     }
-    if (mCharacterMap && mCharacterMap->test(ch)) {
-      return true;
+    if (mCharacterMap) {
+      if (mShmemFace && TrySetShmemCharacterMap()) {
+        // Forget our temporary local copy, now we can use the shared cmap
+        mCharacterMap = nullptr;
+        return mShmemCharacterMap->test(ch);
+      }
+      if (mCharacterMap->test(ch)) {
+        return true;
+      }
     }
     return TestCharacterMap(ch);
   }
@@ -526,6 +533,11 @@ class gfxFontEntry {
 
   // helper for HasCharacter(), which is what client code should call
   virtual bool TestCharacterMap(uint32_t aCh);
+
+  // Try to set mShmemCharacterMap, based on the char map in mShmemFace;
+  // return true if successful, false if it remains null (maybe the parent
+  // hasn't handled our SetCharacterMap message yet).
+  bool TrySetShmemCharacterMap();
 
   // Shaper-specific face objects, shared by all instantiations of the same
   // physical font, regardless of size.

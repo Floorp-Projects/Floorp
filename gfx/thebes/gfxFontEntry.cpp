@@ -140,6 +140,15 @@ gfxFontEntry::~gfxFontEntry() {
   MOZ_ASSERT(!mGrFaceInitialized);
 }
 
+bool gfxFontEntry::TrySetShmemCharacterMap()
+{
+  MOZ_ASSERT(mShmemFace);
+  auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+  mShmemCharacterMap =
+      static_cast<const SharedBitSet*>(mShmemFace->mCharacterMap.ToPtr(list));
+  return mShmemCharacterMap != nullptr;
+}
+
 bool gfxFontEntry::TestCharacterMap(uint32_t aCh) {
   if (!mCharacterMap && !mShmemCharacterMap) {
     ReadCMAP();
