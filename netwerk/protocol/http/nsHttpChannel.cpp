@@ -334,6 +334,8 @@ nsHttpChannel::nsHttpChannel()
       mAuthConnectionRestartable(0),
       mChannelClassifierCancellationPending(0),
       mAsyncResumePending(0),
+      mHasBeenIsolatedChecked(0),
+      mIsIsolated(0),
       mPushedStream(nullptr),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -625,9 +627,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     mCaps |= NS_HTTP_DISABLE_TRR;
   }
 
-  bool isIsolated = mPrivateBrowsing ||
-                    !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                        this, mURI, nullptr);
+  bool isIsolated = mPrivateBrowsing || IsIsolated();
 
   // Finalize ConnectionInfo flags before SpeculativeConnect
   mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
@@ -3895,6 +3895,16 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   return OpenCacheEntryInternal(isHttps, mApplicationCache, true);
 }
 
+bool nsHttpChannel::IsIsolated() {
+  if (mHasBeenIsolatedChecked) {
+    return mIsIsolated;
+  }
+  mIsIsolated = !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+      this, mURI, nullptr);
+  mHasBeenIsolatedChecked = true;
+  return mIsIsolated;
+}
+
 nsresult nsHttpChannel::OpenCacheEntryInternal(
     bool isHttps, nsIApplicationCache *applicationCache,
     bool allowApplicationCache) {
@@ -4014,9 +4024,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     extension.Append("TRR");
   }
 
-  if (IsThirdPartyTrackingResource() &&
-      !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI,
-                                                               nullptr)) {
+  if (IsThirdPartyTrackingResource() && IsIsolated()) {
     nsCOMPtr<nsIURI> topWindowURI;
     rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
     bool isDocument = false;
