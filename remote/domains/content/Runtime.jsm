@@ -27,6 +27,8 @@ class Runtime extends ContentProcessDomain {
       this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
         {mozSystemGroup: true});
 
+      Services.obs.addObserver(this, "inner-window-destroyed");
+
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
       Services.tm.dispatchToMainThread(() => {
@@ -50,6 +52,7 @@ class Runtime extends ContentProcessDomain {
       this.enabled = false;
       this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
         {mozSystemGroup: true});
+      Services.obs.removeObserver(this, "inner-window-destroyed");
     }
   }
 
@@ -69,5 +72,12 @@ class Runtime extends ContentProcessDomain {
       });
       break;
     }
+  }
+
+  observe(subject, topic, data) {
+    const innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    this.emit("Runtime.executionContextDestroyed", {
+      executionContextId: innerWindowID,
+    });
   }
 }
