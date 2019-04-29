@@ -14,35 +14,86 @@ namespace dom {
  * Represents a LocalStorage value. From content's perspective, values (if
  * present) are always DOMStrings. This is also true from a quota-tracking
  * perspective. However, for memory and disk efficiency it's preferable to store
- * the value in alternate representations. The LSValue type exists to support
- * these alternate representations in future.
+ * the value in alternate utf-8 encoding representations. The LSValue type
+ * exists to support these alternate representations, dynamically re-encoding to
+ * utf-16 while still tracking value size on a utf-16 basis for quota purposes.
  */
 class LSValue final {
   friend struct IPC::ParamTraits<LSValue>;
 
-  nsString mBuffer;
+  nsCString mBuffer;
+  uint32_t mUTF16Length;
 
  public:
-  LSValue() {}
+  LSValue() : mUTF16Length(0) {}
 
-  explicit LSValue(const nsAString& aBuffer) : mBuffer(aBuffer) {}
+  explicit LSValue(const nsACString& aBuffer, uint32_t aUTF16Length)
+      : mBuffer(aBuffer), mUTF16Length(aUTF16Length) {}
+
+  explicit LSValue(const nsAString& aBuffer) : mUTF16Length(aBuffer.Length()) {
+    if (aBuffer.IsVoid()) {
+      mBuffer.SetIsVoid(true);
+    } else {
+      CopyUTF16toUTF8(aBuffer, mBuffer);
+    }
+  }
 
   bool IsVoid() const { return mBuffer.IsVoid(); }
 
   void SetIsVoid(bool aVal) { mBuffer.SetIsVoid(aVal); }
 
+  /**
+   * This represents the "physical" length that the parent process uses for
+   * the size of value/item computation. This can also be used to see how much
+   * memory the value is using at rest or what the cost is for sending the value
+   * over IPC.
+   */
   uint32_t Length() const { return mBuffer.Length(); }
+
+  /*
+   * This represents the "logical" length that content sees and that is also
+   * used for quota management purposes.
+   */
+  uint32_t UTF16Length() const { return mUTF16Length; }
 
   bool Equals(const LSValue& aOther) const {
     return mBuffer == aOther.mBuffer &&
-           mBuffer.IsVoid() == aOther.mBuffer.IsVoid();
+           mBuffer.IsVoid() == aOther.mBuffer.IsVoid() &&
+           mUTF16Length == aOther.mUTF16Length;
   }
 
   bool operator==(const LSValue& aOther) const { return Equals(aOther); }
 
   bool operator!=(const LSValue& aOther) const { return !Equals(aOther); }
 
-  operator const nsString&() const { return mBuffer; }
+  operator const nsCString&() const { return mBuffer; }
+
+  operator Span<const char>() const { return mBuffer; }
+
+  class Converter {
+    nsString mBuffer;
+
+   public:
+    explicit Converter(const LSValue& aValue) {
+      if (aValue.mBuffer.IsVoid()) {
+        mBuffer.SetIsVoid(true);
+      } else {
+        CopyUTF8toUTF16(aValue.mBuffer, mBuffer);
+      }
+    }
+    Converter(Converter&& aOther) : mBuffer(aOther.mBuffer) {}
+    ~Converter() {}
+
+    operator const nsString&() const { return mBuffer; }
+
+   private:
+    Converter() = delete;
+    Converter(const Converter&) = delete;
+    Converter& operator=(const Converter&) = delete;
+    Converter& operator=(const Converter&&) = delete;
+  };
+
+  Converter AsString() const { return Converter(const_cast<LSValue&>(*this)); }
 };
 
 const LSValue& VoidLSValue();
