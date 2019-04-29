@@ -11,6 +11,8 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.mozilla.samples.glean.GleanMetrics.Basic
 import org.mozilla.samples.glean.GleanMetrics.Test
+import org.mozilla.samples.glean.GleanMetrics.Custom
+import org.mozilla.samples.glean.GleanMetrics.Pings
 
 class GleanApplication : Application() {
 
@@ -20,14 +22,20 @@ class GleanApplication : Application() {
         // We want the log messages of all builds to go to Android logcat
         Log.addSink(AndroidLogSink())
 
+        // Register the sample application's custom pings.
+        Glean.registerPings(Pings)
+
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
         Glean.initialize(applicationContext)
+
         // Initialize the Experiments library right afterwards. Experiments can
         // not be activated before this, so it's important to do this early.
         Experiments.initialize(applicationContext)
 
         Test.testTimespan.start(applicationContext)
+
+        Custom.counter.add()
 
         // Set a sample value for a metric.
         Basic.os.set("Android")

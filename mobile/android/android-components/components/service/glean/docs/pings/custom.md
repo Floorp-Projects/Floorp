@@ -27,6 +27,25 @@ search:
   include_client_id: false
 ```
 
+## Loading custom ping metadata into your application or library
+
+Glean generates code from `pings.yaml` in a `Pings` object, which must
+instantiated so Glean can send pings by name. This object must be registered
+with Glean from your startup code (such as in your application's `onCreate`
+method or a function called from that method).
+
+```
+import org.mozilla.yourApplication.GleanMetrics.Pings
+
+...
+
+override fun onCreate() {
+    ...
+    Glean.registerPings(Pings)
+    ...
+}
+```
+
 ## Sending metrics in a custom ping
 
 To send a metric on a custom ping, you add the custom ping's name to

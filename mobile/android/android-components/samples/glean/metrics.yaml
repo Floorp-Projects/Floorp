@@ -95,3 +95,19 @@ test:
     notification_emails:
       - CHANGE-ME@test-only.com
     expires: 2100-01-01
+
+custom:
+  counter:
+    type: counter
+    description: >
+      A custom counter that goes on a custom ping
+    lifetime: ping
+    send_in_pings:
+      - sample
+    bugs:
+      - 1547330
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01

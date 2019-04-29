@@ -85,10 +85,7 @@ open class GleanInternalAPI internal constructor () {
             return
         }
 
-        // Explicitly instantiate the Pings object so the built-in pings will be
-        // added to the ping registry.  This allows the GleanDebugActivity to look
-        // up pings by name.
-        @Suppress("UNUSED_VARIABLE") var pings = Pings
+        registerPings(Pings)
 
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager, applicationContext)
@@ -121,6 +118,18 @@ open class GleanInternalAPI internal constructor () {
      */
     fun isInitialized(): Boolean {
         return initialized
+    }
+
+    /**
+     * Register the pings generated from `pings.yaml` with Glean.
+     *
+     * @param pings The `Pings` object generated for your library or application
+     * by Glean.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun registerPings(pings: Any) {
+        // Deliberately empty. Instantiating the Pings object to send this function
+        // is enough to call the contructor and have it registered in [PingType.pingRegistry].
     }
 
     /**
