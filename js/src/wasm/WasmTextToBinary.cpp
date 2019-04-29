@@ -4693,7 +4693,7 @@ static bool ParseGlobalType(WasmParseContext& c, AstValType* type,
 static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
   WasmToken token;
   if (c.ts.getIf(WasmToken::FuncRef, &token)) {
-    *tableKind = TableKind::AnyFunction;
+    *tableKind = TableKind::FuncRef;
     return true;
   }
 #ifdef ENABLE_WASM_REFTYPES
@@ -6831,8 +6831,8 @@ static bool EncodeLimits(Encoder& e, const Limits& limits) {
 static bool EncodeTableLimits(Encoder& e, const Limits& limits,
                               TableKind tableKind) {
   switch (tableKind) {
-    case TableKind::AnyFunction:
-      if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc))) {
+    case TableKind::FuncRef:
+      if (!e.writeVarU32(uint32_t(TypeCode::FuncRef))) {
         return false;
       }
       break;
@@ -7253,7 +7253,7 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   }
 
   if (segment.isPassive()) {
-    if (!e.writeFixedU8(uint8_t(TypeCode::AnyFunc))) {
+    if (!e.writeFixedU8(uint8_t(TypeCode::FuncRef))) {
       return false;
     }
   }
