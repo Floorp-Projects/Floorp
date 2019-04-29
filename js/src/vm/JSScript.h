@@ -1006,7 +1006,7 @@ class ScriptSource {
    */
   MOZ_MUST_USE bool initializeBinAST(
       JSContext* cx, UniqueChars&& buf, size_t len,
-      UniquePtr<frontend::BinASTSourceMetadata> metadata);
+      JS::MutableHandle<UniquePtr<frontend::BinASTSourceMetadata>> metadata);
 
   const uint8_t* binASTSource();
 

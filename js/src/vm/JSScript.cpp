@@ -2188,7 +2188,7 @@ MOZ_MUST_USE bool ScriptSource::setBinASTSourceCopy(JSContext* cx,
 
 MOZ_MUST_USE bool ScriptSource::initializeBinAST(
     JSContext* cx, UniqueChars&& buf, size_t len,
-    UniquePtr<frontend::BinASTSourceMetadata> metadata) {
+    MutableHandle<UniquePtr<frontend::BinASTSourceMetadata>> metadata) {
   MOZ_ASSERT(data.is<Missing>(),
              "should only be initializing a fresh ScriptSource");
   MOZ_ASSERT(binASTMetadata_ == nullptr, "shouldn't have BinAST metadata yet");
@@ -2201,7 +2201,7 @@ MOZ_MUST_USE bool ScriptSource::initializeBinAST(
   }
 
   data = SourceType(BinAST(std::move(*deduped)));
-  binASTMetadata_ = std::move(metadata);
+  binASTMetadata_ = std::move(metadata.get());
   return true;
 }
 
@@ -2774,12 +2774,17 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   }
   MOZ_TRY(xdr->codeUint8(&hasMetadata));
 
-  UniquePtr<frontend::BinASTSourceMetadata> freshMetadata;
+  Rooted<UniquePtr<frontend::BinASTSourceMetadata>> freshMetadata(xdr->cx());
   if (hasMetadata) {
-    // If we're decoding, we decode into fresh metadata.  If we're encoding,
-    // we encode *from* the stored metadata.
-    auto& binASTMetadata =
-        mode == XDR_DECODE ? freshMetadata : ss->binASTMetadata_;
+    // If we're decoding, this is a *mutable borrowed* reference to the
+    // |UniquePtr| stored in the |Rooted| above, and the |UniquePtr| will be
+    // filled with freshly allocated metadata.
+    //
+    // If we're encoding, this is an *immutable borrowed* reference to the
+    // |UniquePtr| stored in |ss|.  (Immutable up to GCs transparently moving
+    // things around, that is.)
+    UniquePtr<frontend::BinASTSourceMetadata>& binASTMetadata =
+        mode == XDR_DECODE ? freshMetadata.get() : ss->binASTMetadata_;
 
     uint32_t numBinASTKinds;
     uint32_t numStrings;
@@ -2851,12 +2856,12 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
 
   if (mode == XDR_DECODE) {
     if (!ss->initializeBinAST(xdr->cx(), std::move(bytes), binASTLength,
-                              std::move(freshMetadata))) {
+                              &freshMetadata)) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
-  } else {
-    MOZ_ASSERT(freshMetadata == nullptr);
   }
+
+  MOZ_ASSERT(freshMetadata == nullptr);
 
   return Ok();
 #endif  // !defined(JS_BUILD_BINAST)
