@@ -231,12 +231,69 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
 
 BrowserParent::~BrowserParent() {}
 
+/* static */
+void BrowserParent::InitializeStatics() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  sFocusStack = new nsTArray<BrowserParent*>();
+  ClearOnShutdown(&sFocusStack);
+}
+
+/* static */
+BrowserParent* BrowserParent::GetFocused() {
+  if (!sFocusStack) {
+    return nullptr;
+  }
+  if (sFocusStack->IsEmpty()) {
+    return nullptr;
+  }
+  return sFocusStack->LastElement();
+}
+
+/*static*/
+BrowserParent* BrowserParent::GetFrom(nsFrameLoader* aFrameLoader) {
+  if (!aFrameLoader) {
+    return nullptr;
+  }
+  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
+  return static_cast<BrowserParent*>(remoteBrowser);
+}
+
+/*static*/
+BrowserParent* BrowserParent::GetFrom(nsIRemoteTab* aBrowserParent) {
+  return static_cast<BrowserParent*>(aBrowserParent);
+}
+
+/*static*/
+BrowserParent* BrowserParent::GetFrom(PBrowserParent* aBrowserParent) {
+  return static_cast<BrowserParent*>(aBrowserParent);
+}
+
+/*static*/
+BrowserParent* BrowserParent::GetFrom(nsIContent* aContent) {
+  RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
+  if (!loaderOwner) {
+    return nullptr;
+  }
+  RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  return GetFrom(frameLoader);
+}
+
+/* static */
 BrowserParent* BrowserParent::GetBrowserParentFromLayersId(
     layers::LayersId aLayersId) {
   if (!sLayerToBrowserParentTable) {
     return nullptr;
   }
   return sLayerToBrowserParentTable->Get(uint64_t(aLayersId));
+}
+
+/*static*/
+TabId BrowserParent::GetTabIdFrom(nsIDocShell* docShell) {
+  nsCOMPtr<nsIBrowserChild> browserChild(BrowserChild::GetFrom(docShell));
+  if (browserChild) {
+    return static_cast<BrowserChild*>(browserChild.get())->GetTabId();
+  }
+  return TabId(0);
 }
 
 void BrowserParent::AddBrowserParentToTable(layers::LayersId aLayersId,
@@ -2510,24 +2567,6 @@ bool BrowserParent::SendPasteTransferable(const IPCDataTransfer& aDataTransfer,
 }
 
 /* static */
-void BrowserParent::InitializeStatics() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  sFocusStack = new nsTArray<BrowserParent*>();
-  ClearOnShutdown(&sFocusStack);
-}
-
-/* static */
-BrowserParent* BrowserParent::GetFocused() {
-  if (!sFocusStack) {
-    return nullptr;
-  }
-  if (sFocusStack->IsEmpty()) {
-    return nullptr;
-  }
-  return sFocusStack->LastElement();
-}
-
-/* static */
 void BrowserParent::PushFocus(BrowserParent* aBrowserParent) {
   if (!sFocusStack) {
     MOZ_ASSERT_UNREACHABLE("PushFocus when not initialized");
@@ -2606,44 +2645,6 @@ void BrowserParent::PopFocus(BrowserParent* aBrowserParent) {
     LOGBROWSERFOCUS(("PopFocus changed focus to %p", focused));
     IMEStateManager::OnFocusMovedBetweenBrowsers(popped, focused);
   }
-}
-
-/*static*/
-BrowserParent* BrowserParent::GetFrom(nsFrameLoader* aFrameLoader) {
-  if (!aFrameLoader) {
-    return nullptr;
-  }
-  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
-  return static_cast<BrowserParent*>(remoteBrowser);
-}
-
-/*static*/
-BrowserParent* BrowserParent::GetFrom(nsIRemoteTab* aBrowserParent) {
-  return static_cast<BrowserParent*>(aBrowserParent);
-}
-
-/*static*/
-BrowserParent* BrowserParent::GetFrom(PBrowserParent* aBrowserParent) {
-  return static_cast<BrowserParent*>(aBrowserParent);
-}
-
-/*static*/
-BrowserParent* BrowserParent::GetFrom(nsIContent* aContent) {
-  RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
-  if (!loaderOwner) {
-    return nullptr;
-  }
-  RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
-  return GetFrom(frameLoader);
-}
-
-/*static*/
-TabId BrowserParent::GetTabIdFrom(nsIDocShell* docShell) {
-  nsCOMPtr<nsIBrowserChild> browserChild(BrowserChild::GetFrom(docShell));
-  if (browserChild) {
-    return static_cast<BrowserChild*>(browserChild.get())->GetTabId();
-  }
-  return TabId(0);
 }
 
 RenderFrame* BrowserParent::GetRenderFrame() {

@@ -116,6 +116,32 @@ class BrowserParent final : public PBrowserParent,
                 uint32_t aChromeFlags,
                 BrowserBridgeParent* aBrowserBridgeParent = nullptr);
 
+  // Call from LayoutStatics only
+  static void InitializeStatics();
+
+  /**
+   * Returns the focused BrowserParent or nullptr if chrome or another app
+   * is focused.
+   */
+  static BrowserParent* GetFocused();
+
+  static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
+
+  static BrowserParent* GetFrom(nsIRemoteTab* aBrowserParent);
+
+  static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
+
+  static BrowserParent* GetFrom(nsIContent* aContent);
+
+  static BrowserParent* GetBrowserParentFromLayersId(
+      layers::LayersId aLayersId);
+
+  static TabId GetTabIdFrom(nsIDocShell* docshell);
+
+  static bool AreRecordReplayTabsActive() {
+    return gNumActiveRecordReplayTabs != 0;
+  }
+
   Element* GetOwnerElement() const { return mFrameElement; }
   already_AddRefed<nsPIDOMWindowOuter> GetParentWindowOuter();
 
@@ -496,25 +522,6 @@ class BrowserParent final : public PBrowserParent,
                              nsIPrincipal* aRequestingPrincipal,
                              const uint32_t& aContentPolicyType);
 
-  // Call from LayoutStatics only
-  static void InitializeStatics();
-
-  /**
-   * Returns the focused BrowserParent or nullptr if chrome or another app
-   * is focused.
-   */
-  static BrowserParent* GetFocused();
-
-  static BrowserParent* GetFrom(nsFrameLoader* aFrameLoader);
-
-  static BrowserParent* GetFrom(nsIRemoteTab* aBrowserParent);
-
-  static BrowserParent* GetFrom(PBrowserParent* aBrowserParent);
-
-  static BrowserParent* GetFrom(nsIContent* aContent);
-
-  static TabId GetTabIdFrom(nsIDocShell* docshell);
-
   ContentParent* Manager() const { return mManager; }
 
   /**
@@ -623,10 +630,6 @@ class BrowserParent final : public PBrowserParent,
 
   void SetReadyToHandleInputEvents() { mIsReadyToHandleInputEvents = true; }
   bool IsReadyToHandleInputEvents() { return mIsReadyToHandleInputEvents; }
-
-  static bool AreRecordReplayTabsActive() {
-    return gNumActiveRecordReplayTabs != 0;
-  }
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
@@ -864,10 +867,6 @@ class BrowserParent final : public PBrowserParent,
 
   // Update whether this is an active record/replay tab.
   void SetIsActiveRecordReplayTab(bool aIsActive);
-
- public:
-  static BrowserParent* GetBrowserParentFromLayersId(
-      layers::LayersId aLayersId);
 };
 
 struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
