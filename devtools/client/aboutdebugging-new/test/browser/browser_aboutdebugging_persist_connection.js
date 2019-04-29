@@ -59,6 +59,12 @@ async function testRemoteClientPersistConnection(mocks,
     return sidebarItem && !sidebarItem.querySelector(".js-connect-button");
   });
 
+  info("Wait until the remote runtime page is selected");
+  await waitUntil(() => {
+    const runtimeInfo = document.querySelector(".js-runtime-name");
+    return runtimeInfo && runtimeInfo.textContent.includes(runtimeName);
+  });
+
   // Remove the runtime without emitting an update.
   // This is what happens today when we simply close Firefox for Android.
   info("Remove the runtime from the list of remote runtimes");

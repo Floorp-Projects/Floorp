@@ -15,7 +15,9 @@ const {
   ADB_READY_UPDATED,
   DEBUG_TARGET_COLLAPSIBILITY_UPDATED,
   HIDE_PROFILER_DIALOG,
-  NETWORK_LOCATIONS_UPDATED,
+  NETWORK_LOCATIONS_UPDATE_FAILURE,
+  NETWORK_LOCATIONS_UPDATE_START,
+  NETWORK_LOCATIONS_UPDATE_SUCCESS,
   PAGE_TYPES,
   SELECT_PAGE_FAILURE,
   SELECT_PAGE_START,
@@ -118,9 +120,14 @@ function updateAdbReady(isAdbReady) {
 }
 
 function updateNetworkLocations(locations) {
-  return (dispatch, getState) => {
-    dispatch(Actions.updateNetworkRuntimes(locations));
-    dispatch({ type: NETWORK_LOCATIONS_UPDATED, locations });
+  return async (dispatch, getState) => {
+    dispatch({ type: NETWORK_LOCATIONS_UPDATE_START });
+    try {
+      await dispatch(Actions.updateNetworkRuntimes(locations));
+      dispatch({ type: NETWORK_LOCATIONS_UPDATE_SUCCESS, locations });
+    } catch (e) {
+      dispatch({ type: NETWORK_LOCATIONS_UPDATE_FAILURE, error: e });
+    }
   };
 }
 
