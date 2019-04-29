@@ -465,9 +465,9 @@ void Zone::purgeAtomCache() {
 void Zone::traceAtomCache(JSTracer* trc) {
   MOZ_ASSERT(hasKeptAtoms());
   for (auto r = atomCache().all(); !r.empty(); r.popFront()) {
-    JSAtom* atom = r.front().asPtrUnbarriered();
+    JSAtom* atom = r.front().unbarrieredGet();
     TraceRoot(trc, &atom, "kept atom");
-    MOZ_ASSERT(r.front().asPtrUnbarriered() == atom);
+    MOZ_ASSERT(r.front().unbarrieredGet() == atom);
   }
 }
 
