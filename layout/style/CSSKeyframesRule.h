@@ -49,7 +49,7 @@ class CSSKeyframesRule final : public css::Rule {
   uint32_t FindRuleIndexForKey(const nsAString& aKey);
 
   template <typename Func>
-  void UpdateRule(Func aCallback);
+  nsresult UpdateRule(Func aCallback);
 
   virtual ~CSSKeyframesRule();
 

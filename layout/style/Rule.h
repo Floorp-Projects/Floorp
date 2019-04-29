@@ -89,6 +89,9 @@ class Rule : public nsISupports, public nsWrapperCache {
   uint32_t GetLineNumber() const { return mLineNumber; }
   uint32_t GetColumnNumber() const { return mColumnNumber; }
 
+  // Whether this a rule in a read only style sheet.
+  bool IsReadOnly() const;
+
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
