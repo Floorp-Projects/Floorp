@@ -5,11 +5,16 @@
 
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.UiModeManager;
+import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -31,12 +36,14 @@ public class PanZoomController {
     private static final int EVENT_SOURCE_SCROLL = 0;
     private static final int EVENT_SOURCE_MOTION = 1;
     private static final int EVENT_SOURCE_MOUSE = 2;
+    private static final String PREF_MOUSE_AS_TOUCH = "ui.android.mouse_as_touch";
 
     private final GeckoSession mSession;
     private final Rect mTempRect = new Rect();
     private boolean mAttached;
     private float mPointerScrollFactor = 64.0f;
     private long mLastDownTime;
+    private boolean mTreatMouseAsTouch;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SCROLL_BEHAVIOR_SMOOTH, SCROLL_BEHAVIOR_AUTO})
@@ -228,6 +235,32 @@ public class PanZoomController {
     protected PanZoomController(final GeckoSession session) {
         mSession = session;
         enableEventQueue();
+        initMouseAsTouch();
+    }
+
+    private void initMouseAsTouch() {
+        mTreatMouseAsTouch = true;
+
+        PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(final String pref, final int value) {
+                if (!PREF_MOUSE_AS_TOUCH.equals(pref)) {
+                    return;
+                }
+                if (value == 0) {
+                    mTreatMouseAsTouch = false;
+                } else if (value == 1) {
+                    mTreatMouseAsTouch = true;
+                } else if (value == 2) {
+                    Context c = GeckoAppShell.getApplicationContext();
+                    UiModeManager m = (UiModeManager)c.getSystemService(Context.UI_MODE_SERVICE);
+                    // on TV devices, treat mouse as touch. everywhere else, don't
+                    mTreatMouseAsTouch = (m.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION);
+                }
+            }
+        };
+        PrefsHelper.addObserver(new String[] { PREF_MOUSE_AS_TOUCH }, prefHandler);
+        PrefsHelper.getPref(PREF_MOUSE_AS_TOUCH, prefHandler);
     }
 
     /**
@@ -261,6 +294,10 @@ public class PanZoomController {
      */
     public boolean onTouchEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
+
+        if (!mTreatMouseAsTouch && event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE) {
+            return handleMouseEvent(event);
+        }
         return handleMotionEvent(event);
     }
 
