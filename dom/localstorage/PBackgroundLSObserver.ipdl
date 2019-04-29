@@ -6,6 +6,11 @@ include protocol PBackground;
 
 include PBackgroundSharedTypes;
 
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSValue
+  from "mozilla/dom/LSValue.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -49,8 +54,8 @@ child:
                 uint32_t privateBrowsingId,
                 nsString documentURI,
                 nsString key,
-                nsString oldValue,
-                nsString newValue);
+                LSValue oldValue,
+                LSValue newValue);
 };
 
 } // namespace dom

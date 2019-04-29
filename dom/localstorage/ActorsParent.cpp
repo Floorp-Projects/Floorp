@@ -1227,10 +1227,9 @@ class WriteOptimizer final {
     aWriteOptimizer.mTotalDelta = 0;
   }
 
-  void AddItem(const nsString& aKey, const nsString& aValue,
-               int64_t aDelta = 0);
+  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta = 0);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue,
+  void UpdateItem(const nsString& aKey, const LSValue& aValue,
                   int64_t aDelta = 0);
 
   void RemoveItem(const nsString& aKey, int64_t aDelta = 0);
@@ -1271,15 +1270,15 @@ class WriteOptimizer::WriteInfo {
  */
 class WriteOptimizer::AddItemInfo : public WriteInfo {
   nsString mKey;
-  nsString mValue;
+  LSValue mValue;
 
  public:
-  AddItemInfo(const nsAString& aKey, const nsAString& aValue)
+  AddItemInfo(const nsAString& aKey, const LSValue& aValue)
       : mKey(aKey), mValue(aValue) {}
 
   const nsAString& GetKey() const { return mKey; }
 
-  const nsAString& GetValue() const { return mValue; }
+  const LSValue& GetValue() const { return mValue; }
 
  private:
   Type GetType() override { return AddItem; }
@@ -1292,7 +1291,7 @@ class WriteOptimizer::AddItemInfo : public WriteInfo {
  */
 class WriteOptimizer::UpdateItemInfo final : public AddItemInfo {
  public:
-  UpdateItemInfo(const nsAString& aKey, const nsAString& aValue)
+  UpdateItemInfo(const nsAString& aKey, const LSValue& aValue)
       : AddItemInfo(aKey, aValue) {}
 
  private:
@@ -1482,9 +1481,9 @@ class Connection final {
   // connection thread.
   void Close(nsIRunnable* aCallback);
 
-  void AddItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
+  void AddItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
 
-  void UpdateItem(const nsString& aKey, const nsString& aValue, int64_t aDelta);
+  void UpdateItem(const nsString& aKey, const LSValue& aValue, int64_t aDelta);
 
   void RemoveItem(const nsString& aKey, int64_t aDelta);
 
@@ -1647,7 +1646,7 @@ class Datastore final
    * Non-authoritative hashtable representation of mOrderedItems for efficient
    * lookup.
    */
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   /**
    * The authoritative ordered state of the Datastore; mValue also exists as an
    * unordered hashtable for efficient lookup.
@@ -1673,7 +1672,7 @@ class Datastore final
             already_AddRefed<DirectoryLock>&& aDirectoryLock,
             already_AddRefed<Connection>&& aConnection,
             already_AddRefed<QuotaObject>&& aQuotaObject,
-            nsDataHashtable<nsStringHashKey, nsString>& aValues,
+            nsDataHashtable<nsStringHashKey, LSValue>& aValues,
             nsTArray<LSItemInfo>& aOrderedItems);
 
   const nsCString& Origin() const { return mOrigin; }
@@ -1722,7 +1721,7 @@ class Datastore final
 
   const nsTArray<LSItemInfo>& GetOrderedItems() const { return mOrderedItems; }
 
-  void GetItem(const nsString& aKey, nsString& aValue) const;
+  void GetItem(const nsString& aKey, LSValue& aValue) const;
 
   void GetKeys(nsTArray<nsString>& aKeys) const;
 
@@ -1736,11 +1735,11 @@ class Datastore final
    * explicit batch.
    */
   void SetItem(Database* aDatabase, const nsString& aDocumentURI,
-               const nsString& aKey, const nsString& aOldValue,
-               const nsString& aValue);
+               const nsString& aKey, const LSValue& aOldValue,
+               const LSValue& aValue);
 
   void RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                  const nsString& aKey, const nsString& aOldValue);
+                  const nsString& aKey, const LSValue& aOldValue);
 
   void Clear(Database* aDatabase, const nsString& aDocumentURI);
 
@@ -1767,13 +1766,13 @@ class Datastore final
   void CleanupMetadata();
 
   void NotifySnapshots(Database* aDatabase, const nsAString& aKey,
-                       const nsAString& aOldValue, bool aAffectsOrder);
+                       const LSValue& aOldValue, bool aAffectsOrder);
 
   void MarkSnapshotsDirty();
 
   void NotifyObservers(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const nsString& aOldValue,
-                       const nsString& aNewValue);
+                       const nsString& aKey, const LSValue& aOldValue,
+                       const LSValue& aNewValue);
 };
 
 class PreparedDatastore {
@@ -1996,7 +1995,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
    * are changed/evicted from the Datastore as they happen, as reported to us by
    * SaveItem notifications.
    */
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   /**
    * Latched state of mDatastore's keys during a SaveItem notification with
    * aAffectsOrder=true.  The ordered keys needed to be saved off so that a
@@ -2090,7 +2089,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
    * internal state so that snapshots can save off the state of a value at the
    * time of their creation.
    */
-  void SaveItem(const nsAString& aKey, const nsAString& aOldValue,
+  void SaveItem(const nsAString& aKey, const LSValue& aOldValue,
                 bool aAffectsOrder);
 
   void MarkDirty();
@@ -2116,7 +2115,7 @@ class Snapshot final : public PBackgroundLSSnapshotParent {
   mozilla::ipc::IPCResult RecvLoaded() override;
 
   mozilla::ipc::IPCResult RecvLoadValueAndMoreItems(
-      const nsString& aKey, nsString* aValue,
+      const nsString& aKey, LSValue* aValue,
       nsTArray<LSItemInfo>* aItemInfos) override;
 
   mozilla::ipc::IPCResult RecvLoadKeys(nsTArray<nsString>* aKeys) override;
@@ -2139,8 +2138,8 @@ class Observer final : public PBackgroundLSObserverParent {
   const nsCString& Origin() const { return mOrigin; }
 
   void Observe(Database* aDatabase, const nsString& aDocumentURI,
-               const nsString& aKey, const nsString& aOldValue,
-               const nsString& aNewValue);
+               const nsString& aKey, const LSValue& aOldValue,
+               const LSValue& aNewValue);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Observer)
 
@@ -2296,7 +2295,7 @@ class PrepareDatastoreOp
   RefPtr<Datastore> mDatastore;
   nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
   LoadDataOp* mLoadDataOp;
-  nsDataHashtable<nsStringHashKey, nsString> mValues;
+  nsDataHashtable<nsStringHashKey, LSValue> mValues;
   nsTArray<LSItemInfo> mOrderedItems;
   const LSRequestCommonParams mParams;
   Maybe<ContentParentId> mContentParentId;
@@ -3578,7 +3577,7 @@ already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient() {
  * WriteOptimizer
  ******************************************************************************/
 
-void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
+void WriteOptimizer::AddItem(const nsString& aKey, const LSValue& aValue,
                              int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -3595,7 +3594,7 @@ void WriteOptimizer::AddItem(const nsString& aKey, const nsString& aValue,
   mTotalDelta += aDelta;
 }
 
-void WriteOptimizer::UpdateItem(const nsString& aKey, const nsString& aValue,
+void WriteOptimizer::UpdateItem(const nsString& aKey, const LSValue& aValue,
                                 int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -4078,7 +4077,7 @@ void Connection::Close(nsIRunnable* aCallback) {
   Dispatch(op);
 }
 
-void Connection::AddItem(const nsString& aKey, const nsString& aValue,
+void Connection::AddItem(const nsString& aKey, const LSValue& aValue,
                          int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
@@ -4086,7 +4085,7 @@ void Connection::AddItem(const nsString& aKey, const nsString& aValue,
   mWriteOptimizer.AddItem(aKey, aValue, aDelta);
 }
 
-void Connection::UpdateItem(const nsString& aKey, const nsString& aValue,
+void Connection::UpdateItem(const nsString& aKey, const LSValue& aValue,
                             int64_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInUpdateBatch);
@@ -4474,7 +4473,7 @@ Datastore::Datastore(const nsACString& aOrigin, uint32_t aPrivateBrowsingId,
                      already_AddRefed<DirectoryLock>&& aDirectoryLock,
                      already_AddRefed<Connection>&& aConnection,
                      already_AddRefed<QuotaObject>&& aQuotaObject,
-                     nsDataHashtable<nsStringHashKey, nsString>& aValues,
+                     nsDataHashtable<nsStringHashKey, LSValue>& aValues,
                      nsTArray<LSItemInfo>& aOrderedItems)
     : mDirectoryLock(std::move(aDirectoryLock)),
       mConnection(std::move(aConnection)),
@@ -4694,7 +4693,7 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
 
   // Value for given aKey if aKey is not void (can be void too if value doesn't
   // exist for given aKey).
-  nsString value;
+  LSValue value;
   // If aKey and value are not void, checkKey will be set to true. Once we find
   // an item for given aKey in one of the loops below, checkKey is set to false
   // to prevent additional comparison of strings (string implementation compares
@@ -4763,7 +4762,7 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
         const LSItemInfo& item = mOrderedItems[index];
 
         const nsString& key = item.key();
-        const nsString& value = item.value();
+        const LSValue& value = item.value();
 
         if (checkKey && key == aKey) {
           checkKey = false;
@@ -4807,7 +4806,7 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
         const LSItemInfo& item = mOrderedItems[index];
 
         const nsString& key = item.key();
-        const nsString& value = item.value();
+        const LSValue& value = item.value();
 
         if (checkKey && key == aKey) {
           checkKey = false;
@@ -4859,7 +4858,7 @@ void Datastore::GetSnapshotInitInfo(const nsString& aKey,
   aLoadState = loadState;
 }
 
-void Datastore::GetItem(const nsString& aKey, nsString& aValue) const {
+void Datastore::GetItem(const nsString& aKey, LSValue& aValue) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
 
@@ -4878,17 +4877,17 @@ void Datastore::GetKeys(nsTArray<nsString>& aKeys) const {
 }
 
 void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
-                        const nsString& aKey, const nsString& aOldValue,
-                        const nsString& aValue) {
+                        const nsString& aKey, const LSValue& aOldValue,
+                        const LSValue& aValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsString oldValue;
+  LSValue oldValue;
   GetItem(aKey, oldValue);
 
-  if (oldValue != aValue || oldValue.IsVoid() != aValue.IsVoid()) {
+  if (oldValue != aValue) {
     bool isNewItem = oldValue.IsVoid();
 
     NotifySnapshots(aDatabase, aKey, oldValue, /* affectsOrder */ isNewItem);
@@ -4931,13 +4930,13 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 }
 
 void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
-                           const nsString& aKey, const nsString& aOldValue) {
+                           const nsString& aKey, const LSValue& aOldValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
   MOZ_ASSERT(mInUpdateBatch);
 
-  nsString oldValue;
+  LSValue oldValue;
   GetItem(aKey, oldValue);
 
   if (!oldValue.IsVoid()) {
@@ -4960,7 +4959,7 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
     }
   }
 
-  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidString());
+  NotifyObservers(aDatabase, aDocumentURI, aKey, aOldValue, VoidLSValue());
 }
 
 void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
@@ -4973,7 +4972,7 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
     int64_t sizeOfItems = 0;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
-      const nsAString& value = iter.Data();
+      const LSValue& value = iter.Data();
 
       sizeOfItems += (static_cast<int64_t>(key.Length()) +
                       static_cast<int64_t>(value.Length()));
@@ -4995,8 +4994,8 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
     }
   }
 
-  NotifyObservers(aDatabase, aDocumentURI, VoidString(), VoidString(),
-                  VoidString());
+  NotifyObservers(aDatabase, aDocumentURI, VoidString(), VoidLSValue(),
+                  VoidLSValue());
 }
 
 void Datastore::PrivateBrowsingClear() {
@@ -5167,8 +5166,7 @@ void Datastore::CleanupMetadata() {
 }
 
 void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
-                                const nsAString& aOldValue,
-                                bool aAffectsOrder) {
+                                const LSValue& aOldValue, bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -5200,8 +5198,8 @@ void Datastore::MarkSnapshotsDirty() {
 
 void Datastore::NotifyObservers(Database* aDatabase,
                                 const nsString& aDocumentURI,
-                                const nsString& aKey, const nsString& aOldValue,
-                                const nsString& aNewValue) {
+                                const nsString& aKey, const LSValue& aOldValue,
+                                const LSValue& aNewValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -5515,7 +5513,7 @@ Snapshot::~Snapshot() {
   MOZ_ASSERT(mFinishReceived);
 }
 
-void Snapshot::SaveItem(const nsAString& aKey, const nsAString& aOldValue,
+void Snapshot::SaveItem(const nsAString& aKey, const LSValue& aOldValue,
                         bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
 
@@ -5526,7 +5524,7 @@ void Snapshot::SaveItem(const nsAString& aKey, const nsAString& aOldValue,
   }
 
   if (!mLoadedItems.GetEntry(aKey) && !mUnknownItems.GetEntry(aKey)) {
-    nsString oldValue(aOldValue);
+    LSValue oldValue(aOldValue);
     mValues.LookupForAdd(aKey).OrInsert([oldValue]() { return oldValue; });
   }
 
@@ -5681,7 +5679,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoaded() {
 }
 
 mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
-    const nsString& aKey, nsString* aValue, nsTArray<LSItemInfo>* aItemInfos) {
+    const nsString& aKey, LSValue* aValue, nsTArray<LSItemInfo>* aItemInfos) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(aItemInfos);
@@ -5770,7 +5768,7 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
         // changed, we need to do a hash lookup rather than being able to do an
         // optimized direct access to the index.
 
-        nsString value;
+        LSValue value;
         auto valueEntry = mValues.Lookup(key);
         if (valueEntry) {
           value = valueEntry.Data();
@@ -5903,8 +5901,8 @@ Observer::Observer(const nsACString& aOrigin)
 Observer::~Observer() { MOZ_ASSERT(mActorDestroyed); }
 
 void Observer::Observe(Database* aDatabase, const nsString& aDocumentURI,
-                       const nsString& aKey, const nsString& aOldValue,
-                       const nsString& aNewValue) {
+                       const nsString& aKey, const LSValue& aOldValue,
+                       const LSValue& aNewValue) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
 
@@ -7302,11 +7300,13 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
       return rv;
     }
 
-    nsString value;
-    rv = stmt->GetString(1, value);
+    nsString buffer;
+    rv = stmt->GetString(1, buffer);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    LSValue value(buffer);
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
