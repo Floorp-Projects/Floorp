@@ -16,6 +16,18 @@ symbol {
  display: none !important;
 }
 
+/*
+ * From https://svgwg.org/svg2-draft/struct.html#SymbolNotes:
+ *
+ * > The generated instance of a 'symbol' that is the direct referenced element
+ * > of a 'use' element must always have a computed value of inline for the
+ * > display property. In other words, it must be rendered whenever the host
+ * > 'use' element is rendered.
+ *
+ * NOTE(emilio): other browsers instead just replace the `<symbol>` element by
+ * an `<svg>` element while cloning, but they don't implement the SVG2
+ * selector-matching rules that would make that observable via selectors.
+ */
 symbol:-moz-use-shadow-tree-root {
   display: inline !important;
 }
