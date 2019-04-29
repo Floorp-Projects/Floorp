@@ -183,6 +183,21 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
 
  private:
+  // These constructor versions are intended to only be used from Clone().
+  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
+                       const nsACString &npnToken, const nsACString &username,
+                       const nsACString &topWindowOrigin,
+                       nsProxyInfo *proxyInfo,
+                       const OriginAttributes &originAttributes,
+                       bool endToEndSSL, bool isolated);
+  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
+                       const nsACString &npnToken, const nsACString &username,
+                       const nsACString &topWindowOrigin,
+                       nsProxyInfo *proxyInfo,
+                       const OriginAttributes &originAttributes,
+                       const nsACString &routedHost, int32_t routedPort,
+                       bool isolated);
+
   void Init(const nsACString &host, int32_t port, const nsACString &npnToken,
             const nsACString &username, const nsACString &topWindowOrigin,
             nsProxyInfo *proxyInfo, const OriginAttributes &originAttributes,
