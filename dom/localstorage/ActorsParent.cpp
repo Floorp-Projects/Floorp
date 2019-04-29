@@ -2900,6 +2900,22 @@ void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   gUsages->Put(aOrigin, aUsage);
 }
 
+bool GetUsageForOrigin(const nsACString& aOrigin, int64_t& aUsage) {
+  AssertIsOnIOThread();
+
+  if (gUsages) {
+    int64_t usage;
+    if (gUsages->Get(aOrigin, &usage)) {
+      MOZ_ASSERT(usage >= 0);
+
+      aUsage = usage;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void UpdateUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
   AssertIsOnIOThread();
   MOZ_ASSERT(gUsages);
@@ -6694,7 +6710,18 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsresult rv;
+  // This must be called before EnsureTemporaryStorageIsInitialized.
+  nsresult rv = quotaManager->EnsureStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // This ensures that gUsages gets populated with usages for existings origin
+  // directories.
+  rv = quotaManager->EnsureTemporaryStorageIsInitialized();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (!gArchivedOrigins) {
     rv = LoadArchivedOrigins();
@@ -6706,17 +6733,23 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
   bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
 
-  // Initialize the origin even when the origin directory doesn't exist and we
-  // don't have data for migration (except the case when we are just trying to
-  // preload data). GetQuotaObject in GetResponse would fail otherwise.
-  nsCOMPtr<nsIFile> directoryEntry;
-  rv = quotaManager->EnsureOriginIsInitialized(
-      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
-      /* aCreateIfNotExists */ !mForPreload || hasDataForMigration,
-      getter_AddRefs(directoryEntry));
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
+  // If there's nothing to preload (except the case when we want to migrate data
+  // during preloading), then we can finish the operation without creating a
+  // datastore in GetResponse (GetResponse won't create a datastore if
+  // mDatatabaseNotAvailable and mForPreload are both true).
+  int64_t usage;
+  if (mForPreload && !GetUsageForOrigin(mOrigin, usage) &&
+      !hasDataForMigration) {
     return DatabaseNotAvailable();
   }
+
+  // Initialize the origin even when the origin directory doesn't exist and we
+  // don't have data for migration. GetQuotaObject in GetResponse would fail
+  // otherwise.
+  nsCOMPtr<nsIFile> directoryEntry;
+  rv = quotaManager->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
+                                               mSuffix, mGroup, mOrigin,
+                                               getter_AddRefs(directoryEntry));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6737,18 +6770,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   rv = EnsureDirectoryEntry(directoryEntry,
                             /* aCreateIfNotExists */ hasDataForMigration,
                             /* aIsDirectory */ true);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    if (mForPreload) {
-      // There's nothing to preload. Finish the operation without creating a
-      // datastore in GetResponse (GetResponse won't create a datastore if
-      // mDatatabaseNotAvailable and mForPreload are both true).
-      return DatabaseNotAvailable();
-    }
-
-    // Keep going if !mForPreload so that we will populate mDatabaseFilePath
-    // which is needed by GetQuotaObject. We will still return via call to
-    // DatabaseNotAvailable() below in the !alreadyExisted else branch.
-  } else if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -6769,14 +6791,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   rv = EnsureDirectoryEntry(directoryEntry,
                             /* aCreateIfNotExists */ hasDataForMigration,
                             /* aIsDirectory */ false, &alreadyExisted);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    if (mForPreload) {
-      // There's nothing to preload, finish the operation without creating a
-      // datastore in GetResponse (GetResponse won't create a datastore if
-      // mDatatabaseNotAvailable and mForPreload are both true).
-      return DatabaseNotAvailable();
-    }
-  } else if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -6785,13 +6800,13 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     DebugOnly<bool> hasUsage = gUsages->Get(mOrigin, &mUsage);
     MOZ_ASSERT(hasUsage);
   } else {
-    MOZ_ASSERT(!mForPreload);
+    // The database doesn't exist.
 
     if (!hasDataForMigration) {
-      // The ls directory or database doesn't exist and we don't have data for
-      // migration. Finish the operation, but create an empty datastore in
-      // GetResponse (GetResponse will create an empty datastore if
-      // mDatabaseNotAvailable is true and mForPreload is false).
+      // The database doesn't exist and we don't have data for migration.
+      // Finish the operation, but create an empty datastore in GetResponse
+      // (GetResponse will create an empty datastore if mDatabaseNotAvailable
+      // is true and mForPreload is false).
       return DatabaseNotAvailable();
     }
 
@@ -6996,7 +7011,7 @@ nsresult PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
       if (aAlreadyExisted) {
         *aAlreadyExisted = false;
       }
-      return NS_ERROR_NOT_AVAILABLE;
+      return NS_OK;
     }
 
     if (aIsDirectory) {
@@ -8289,12 +8304,10 @@ nsresult QuotaClient::GetUsageForOrigin(PersistenceType aPersistenceType,
   // We can't open the database at this point, since it can be already used
   // by the connection thread. Use the cached value instead.
 
-  if (gUsages) {
-    int64_t usage;
-    if (gUsages->Get(aOrigin, &usage)) {
-      MOZ_ASSERT(usage >= 0);
-      aUsageInfo->AppendToDatabaseUsage(usage);
-    }
+  int64_t usage;
+  if (mozilla::dom::GetUsageForOrigin(aOrigin, usage)) {
+    MOZ_ASSERT(usage >= 0);
+    aUsageInfo->AppendToDatabaseUsage(usage);
   }
 
   return NS_OK;
