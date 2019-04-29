@@ -34,4 +34,16 @@ under _remote/test/browser_:
 The functional tests will appear under the `M` (for _mochitest_)
 category in the `bc` (_browser-chrome_) jobs on Treeherder.
 
+As the functional tests will sporadically pop up new Firefox
+application windows, a helpful tip is to run them in [headless
+mode]:
+
+	% ./mach mochitest --headless remote/test/browser
+
+The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
+environment variable.  You can additionally use `MOZ_HEADLESS_WIDTH`
+and `MOZ_HEADLESS_HEIGHT` to control the dimensions of the virtual
+display.
+
 [browser chrome]: https://developer.mozilla.org/en-US/docs/Mozilla/Browser_chrome_tests
+[headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
