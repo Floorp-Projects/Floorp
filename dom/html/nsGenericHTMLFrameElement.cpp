@@ -173,6 +173,11 @@ void nsGenericHTMLFrameElement::SwapFrameLoaders(
 
 void nsGenericHTMLFrameElement::SwapFrameLoaders(
     nsFrameLoaderOwner* aOtherLoaderOwner, mozilla::ErrorResult& rv) {
+  if (RefPtr<Document> doc = GetComposedDoc()) {
+    // SwapWithOtherLoader relies on frames being up-to-date.
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
   RefPtr<nsFrameLoader> loader = GetFrameLoader();
   RefPtr<nsFrameLoader> otherLoader = aOtherLoaderOwner->GetFrameLoader();
   if (!loader || !otherLoader) {
