@@ -370,7 +370,7 @@ pub trait ReadBytesExt: io::Read {
     /// ]);
     /// assert_eq!(16947640962301618749969007319746179, rdr.read_u128::<BigEndian>().unwrap());
     /// ```
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_u128<T: ByteOrder>(&mut self) -> Result<u128> {
         let mut buf = [0; 16];
@@ -391,13 +391,14 @@ pub trait ReadBytesExt: io::Read {
     /// Read a signed 128 bit big-endian integer from a `Read`:
     ///
     /// ```rust
+    /// #![feature(i128_type)]
     /// use std::io::Cursor;
     /// use byteorder::{BigEndian, ReadBytesExt};
     ///
     /// let mut rdr = Cursor::new(vec![0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     /// assert_eq!(i128::min_value(), rdr.read_i128::<BigEndian>().unwrap());
     /// ```
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_i128<T: ByteOrder>(&mut self) -> Result<i128> {
         let mut buf = [0; 16];
@@ -456,7 +457,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads an unsigned n-bytes integer from the underlying reader.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_uint128<T: ByteOrder>(&mut self, nbytes: usize) -> Result<u128> {
         let mut buf = [0; 16];
@@ -465,7 +466,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads a signed n-bytes integer from the underlying reader.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_int128<T: ByteOrder>(&mut self, nbytes: usize) -> Result<i128> {
         let mut buf = [0; 16];
@@ -671,7 +672,7 @@ pub trait ReadBytesExt: io::Read {
     /// rdr.read_u128_into::<BigEndian>(&mut dst).unwrap();
     /// assert_eq!([517, 768], dst);
     /// ```
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_u128_into<T: ByteOrder>(
         &mut self,
@@ -821,7 +822,7 @@ pub trait ReadBytesExt: io::Read {
     /// rdr.read_i128_into::<BigEndian>(&mut dst).unwrap();
     /// assert_eq!([517, 768], dst);
     /// ```
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn read_i128_into<T: ByteOrder>(
         &mut self,
@@ -1372,7 +1373,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes an unsigned 128 bit integer to the underlying writer.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn write_u128<T: ByteOrder>(&mut self, n: u128) -> Result<()> {
         let mut buf = [0; 16];
@@ -1381,7 +1382,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes a signed 128 bit integer to the underlying writer.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn write_i128<T: ByteOrder>(&mut self, n: i128) -> Result<()> {
         let mut buf = [0; 16];
@@ -1465,7 +1466,7 @@ pub trait WriteBytesExt: io::Write {
     ///
     /// If the given integer is not representable in the given number of bytes,
     /// this method panics. If `nbytes > 16`, this method panics.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn write_uint128<T: ByteOrder>(
         &mut self,
@@ -1481,7 +1482,7 @@ pub trait WriteBytesExt: io::Write {
     ///
     /// If the given integer is not representable in the given number of bytes,
     /// this method panics. If `nbytes > 16`, this method panics.
-    #[cfg(byteorder_i128)]
+    #[cfg(feature = "i128")]
     #[inline]
     fn write_int128<T: ByteOrder>(
         &mut self,
