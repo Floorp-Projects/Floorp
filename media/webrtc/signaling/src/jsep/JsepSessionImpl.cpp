@@ -114,8 +114,7 @@ nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
         return NS_ERROR_FAILURE;
       }
 
-      transceiver->mSendTrack.UpdateTrackIds(std::vector<std::string>(),
-                                             trackId);
+      transceiver->mSendTrack.SetTrackId(trackId);
     }
   } else {
     // Datachannel transceivers should always be sendrecv. Just set it instead
@@ -325,25 +324,6 @@ void JsepSessionImpl::SetupBundle(Sdp* sdp) const {
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());
   }
-}
-
-nsresult JsepSessionImpl::GetRemoteIds(const Sdp& sdp,
-                                       const SdpMediaSection& msection,
-                                       std::vector<std::string>* streamIds,
-                                       std::string* trackId) {
-  // Generate random track ids.
-  if (!mUuidGen->Generate(trackId)) {
-    JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = mSdpHelper.GetIdsFromMsid(sdp, msection, streamIds);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    streamIds->push_back(mDefaultRemoteStreamId);
-    return NS_OK;
-  }
-
-  return rv;
 }
 
 JsepSession::Result JsepSessionImpl::CreateOffer(
@@ -1485,17 +1465,14 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
     }
 
     // Interop workaround for endpoints that don't support msid.
-    // Ensures that there is a default track id set.
-    // TODO(bug 1426005): Remove this
-    if (msection.IsSending() && transceiver->mRecvTrack.GetTrackId().empty()) {
-      std::vector<std::string> streamIds;
-      std::string trackId;
+    // Ensures that there is a default stream id set, provided the remote is
+    // sending.
+    // TODO(bug 1426005): Remove this, or at least move it to JsepTrack.
+    transceiver->mRecvTrack.UpdateStreamIds({mDefaultRemoteStreamId});
 
-      nsresult rv = GetRemoteIds(remote, msection, &streamIds, &trackId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      transceiver->mRecvTrack.UpdateTrackIds(streamIds, trackId);
-    }
-
+    // This will process a=msid if present, or clear the stream ids if the
+    // msection is not sending. If the msection is sending, and there are no
+    // a=msid, the previously set default will stay.
     transceiver->mRecvTrack.UpdateRecvTrack(remote, msection);
   }
 
