@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_localstorage_LSValue_h
 #define mozilla_dom_localstorage_LSValue_h
 
+#include "SnappyUtils.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -14,27 +16,37 @@ namespace dom {
  * Represents a LocalStorage value. From content's perspective, values (if
  * present) are always DOMStrings. This is also true from a quota-tracking
  * perspective. However, for memory and disk efficiency it's preferable to store
- * the value in alternate utf-8 encoding representations. The LSValue type
- * exists to support these alternate representations, dynamically re-encoding to
- * utf-16 while still tracking value size on a utf-16 basis for quota purposes.
+ * the value in alternate compressed or utf-8 encoding representations. The
+ * LSValue type exists to support these alternate representations, dynamically
+ * decompressing/re-encoding to utf-16 while still tracking value size on a
+ * utf-16 basis for quota purposes.
  */
 class LSValue final {
   friend struct IPC::ParamTraits<LSValue>;
 
   nsCString mBuffer;
   uint32_t mUTF16Length;
+  bool mCompressed;
 
  public:
-  LSValue() : mUTF16Length(0) {}
+  LSValue() : mUTF16Length(0), mCompressed(false) {}
 
-  explicit LSValue(const nsACString& aBuffer, uint32_t aUTF16Length)
-      : mBuffer(aBuffer), mUTF16Length(aUTF16Length) {}
+  explicit LSValue(const nsACString& aBuffer, uint32_t aUTF16Length,
+                   bool aCompressed)
+      : mBuffer(aBuffer),
+        mUTF16Length(aUTF16Length),
+        mCompressed(aCompressed) {}
 
   explicit LSValue(const nsAString& aBuffer) : mUTF16Length(aBuffer.Length()) {
     if (aBuffer.IsVoid()) {
       mBuffer.SetIsVoid(true);
+      mCompressed = false;
     } else {
       CopyUTF16toUTF8(aBuffer, mBuffer);
+      nsCString buffer;
+      if ((mCompressed = SnappyCompress(mBuffer, buffer))) {
+        mBuffer = buffer;
+      }
     }
   }
 
@@ -56,10 +68,13 @@ class LSValue final {
    */
   uint32_t UTF16Length() const { return mUTF16Length; }
 
+  bool IsCompressed() const { return mCompressed; }
+
   bool Equals(const LSValue& aOther) const {
     return mBuffer == aOther.mBuffer &&
            mBuffer.IsVoid() == aOther.mBuffer.IsVoid() &&
-           mUTF16Length == aOther.mUTF16Length;
+           mUTF16Length == aOther.mUTF16Length &&
+           mCompressed == aOther.mCompressed;
   }
 
   bool operator==(const LSValue& aOther) const { return Equals(aOther); }
@@ -77,6 +92,10 @@ class LSValue final {
     explicit Converter(const LSValue& aValue) {
       if (aValue.mBuffer.IsVoid()) {
         mBuffer.SetIsVoid(true);
+      } else if (aValue.mCompressed) {
+        nsCString buffer;
+        MOZ_ALWAYS_TRUE(SnappyUncompress(aValue.mBuffer, buffer));
+        CopyUTF8toUTF16(buffer, mBuffer);
       } else {
         CopyUTF8toUTF16(aValue.mBuffer, mBuffer);
       }

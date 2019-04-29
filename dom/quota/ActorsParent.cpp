@@ -218,7 +218,7 @@ const char kResourceOriginPrefix[] = "resource://";
 #define LS_ARCHIVE_FILE_NAME "ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME "ls-archive-tmp.sqlite"
 
-const uint32_t kLocalStorageArchiveVersion = 2;
+const uint32_t kLocalStorageArchiveVersion = 3;
 
 const char kProfileDoChangeTopic[] = "profile-do-change";
 
@@ -5269,6 +5269,16 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom1To2(
   return NS_OK;
 }
 
+nsresult QuotaManager::UpgradeLocalStorageArchiveFrom2To3(
+    nsCOMPtr<mozIStorageConnection>& aConnection) {
+  nsresult rv = SaveLocalStorageArchiveVersion(aConnection, 3);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 #ifdef DEBUG
 
 void QuotaManager::AssertStorageIsInitialized() const {
@@ -5491,7 +5501,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           return rv;
         }
       } else {
-        static_assert(kLocalStorageArchiveVersion == 2,
+        static_assert(kLocalStorageArchiveVersion == 3,
                       "Upgrade function needed due to LocalStorage archive "
                       "version increase.");
 
@@ -5500,6 +5510,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
             rv = UpgradeLocalStorageArchiveFrom0To1(connection);
           } else if (version == 1) {
             rv = UpgradeLocalStorageArchiveFrom1To2(connection);
+          } else if (version == 2) {
+            rv = UpgradeLocalStorageArchiveFrom2To3(connection);
           } else {
             QM_WARNING(
                 "Unable to initialize LocalStorage archive, no upgrade path is "
