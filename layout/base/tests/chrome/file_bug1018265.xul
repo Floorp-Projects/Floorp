@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
 
   function errorPageLoaded() {
     testcontent.addEventListener("pageshow", didGoBack, true);
-    setTimeout("testcontent.contentWindow.history.back();", 0);
+    setTimeout(function() {testcontent.contentWindow.history.back();}, 0);
   }
 
   function didGoBack(e) {

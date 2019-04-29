@@ -515,7 +515,7 @@ nsUnknownContentTypeDialog.prototype = {
       openHandlerBox.appendChild(openHandler);
     }
 
-    this.mDialog.setTimeout("dialog.postShowCallback()", 0);
+    this.mDialog.setTimeout(function() { this.dialog.postShowCallback(); }, 0);
 
     this.delayHelper = new EnableDelayHelper({
       disableDialog: () => {

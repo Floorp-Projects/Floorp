@@ -153,5 +153,5 @@ class TestExecuteAsyncChrome(TestExecuteAsyncContent):
         with self.assertRaises(ScriptTimeoutException):
             self.marionette.execute_async_script("""
                 var callback = arguments[arguments.length - 1];
-                setTimeout("callback(foo())", 50);
+                setTimeout(function() { callback(foo()); }, 50);
                 """)
