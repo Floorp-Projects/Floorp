@@ -85,6 +85,11 @@ open class GleanInternalAPI internal constructor () {
             return
         }
 
+        // Explicitly instantiate the Pings object so the built-in pings will be
+        // added to the ping registry.  This allows the GleanDebugActivity to look
+        // up pings by name.
+        @Suppress("UNUSED_VARIABLE") var pings = Pings
+
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager, applicationContext)
         this.configuration = configuration

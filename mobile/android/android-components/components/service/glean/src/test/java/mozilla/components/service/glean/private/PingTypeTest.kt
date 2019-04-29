@@ -141,4 +141,11 @@ class PingTypeTest {
             isWorkScheduled(PingUploadWorker.PING_WORKER_TAG)
         )
     }
+
+    @Test
+    fun `Registry should contain built-in pings`() {
+        assertTrue(PingType.pingRegistry.containsKey("metrics"))
+        assertTrue(PingType.pingRegistry.containsKey("events"))
+        assertTrue(PingType.pingRegistry.containsKey("baseline"))
+    }
 }
