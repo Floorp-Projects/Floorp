@@ -419,6 +419,15 @@
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Select Tabs</string>
 
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Select collection</string>
+
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Name collection</string>
+
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Add new collection</string>
+
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Select All</string>
 
@@ -431,6 +440,9 @@
 
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Close</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Save</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->

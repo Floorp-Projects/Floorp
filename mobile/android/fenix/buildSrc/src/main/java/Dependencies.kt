@@ -20,7 +20,7 @@ private object Versions {
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.1.0-beta01"
     const val androidx_lifecycle = "2.1.0-alpha04"
-    const val androidx_fragment = "1.1.0-alpha06"
+    const val androidx_fragment = "1.1.0-alpha07"
     const val androidx_navigation = "2.1.0-alpha02"
     const val androidx_recyclerview = "1.1.0-alpha04"
 

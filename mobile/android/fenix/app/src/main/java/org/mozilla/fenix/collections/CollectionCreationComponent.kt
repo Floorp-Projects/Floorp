@@ -19,13 +19,29 @@ data class Tab(
     val title: String
 )
 
-data class CollectionCreationState(val tabs: List<Tab> = listOf(), val selectedTabs: Set<Tab> = setOf()) : ViewState
+data class Collection(
+    val collectionId: String,
+    val title: String
+)
+
+sealed class SaveCollectionStep {
+    object SelectTabs : SaveCollectionStep()
+    object SelectCollection : SaveCollectionStep()
+    object NameCollection : SaveCollectionStep()
+}
+
+data class CollectionCreationState(
+    val tabs: List<Tab> = listOf(),
+    val selectedTabs: Set<Tab> = setOf(),
+    val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
+) : ViewState
 
 sealed class CollectionCreationChange : Change {
     data class TabListChange(val tabs: List<Tab>) : CollectionCreationChange()
     object AddAllTabs : CollectionCreationChange()
     data class TabAdded(val tab: Tab) : CollectionCreationChange()
     data class TabRemoved(val tab: Tab) : CollectionCreationChange()
+    data class StepChanged(val saveCollectionStep: SaveCollectionStep) : CollectionCreationChange()
 }
 
 sealed class CollectionCreationAction : Action {
@@ -34,6 +50,14 @@ sealed class CollectionCreationAction : Action {
     data class AddTabToSelection(val tab: Tab) : CollectionCreationAction()
     data class RemoveTabFromSelection(val tab: Tab) : CollectionCreationAction()
     data class SaveTabsToCollection(val tabs: List<Tab>) : CollectionCreationAction()
+    data class BackPressed(val backPressFrom: SaveCollectionStep) : CollectionCreationAction()
+    data class SaveCollectionName(val tabs: List<Tab>, val name: String) :
+        CollectionCreationAction()
+
+    data class SelectCollection(val collection: Collection) :
+        CollectionCreationAction()
+
+    data class AddNewCollection(val tabs: List<Tab>) : CollectionCreationAction()
 }
 
 class CollectionCreationComponent(
@@ -44,20 +68,24 @@ class CollectionCreationComponent(
     bus.getManagedEmitter(CollectionCreationAction::class.java),
     bus.getSafeManagedObservable(CollectionCreationChange::class.java)
 ) {
-    override val reducer: Reducer<CollectionCreationState, CollectionCreationChange> = { state, change ->
-        when (change) {
-            is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
-            is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
-            is CollectionCreationChange.TabAdded -> {
-                val selectedTabs = state.selectedTabs + setOf(change.tab)
-                state.copy(selectedTabs = selectedTabs)
-            }
-            is CollectionCreationChange.TabRemoved -> {
-                val selectedTabs = state.selectedTabs - setOf(change.tab)
-                state.copy(selectedTabs = selectedTabs)
+    override val reducer: Reducer<CollectionCreationState, CollectionCreationChange> =
+        { state, change ->
+            when (change) {
+                is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
+                is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
+                is CollectionCreationChange.TabAdded -> {
+                    val selectedTabs = state.selectedTabs + setOf(change.tab)
+                    state.copy(selectedTabs = selectedTabs)
+                }
+                is CollectionCreationChange.TabRemoved -> {
+                    val selectedTabs = state.selectedTabs - setOf(change.tab)
+                    state.copy(selectedTabs = selectedTabs)
+                }
+                is CollectionCreationChange.StepChanged -> {
+                    state.copy(saveCollectionStep = change.saveCollectionStep)
+                }
             }
         }
-    }
 
     override fun initView() = CollectionCreationUIView(container, actionEmitter, changesObservable)
 
