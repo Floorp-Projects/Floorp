@@ -10,9 +10,9 @@ add_task(async function testBackgroundWindowFailures() {
 
   function getBackgroundWindowHandler(destroyWindow) {
     return async function() {
-      await BrowserTestUtils.waitForCondition(() => PanelUI.menuButton.hasAttribute("badge-status"),
-                                              "Background window has a badge.");
-
+      await TestUtils.waitForCondition(() =>
+        PanelUI.menuButton.hasAttribute("badge-status"),
+        "Background window has a badge.");
       is(PanelUI.notificationPanel.state, "closed",
          "The doorhanger is not showing for the background window");
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-available",

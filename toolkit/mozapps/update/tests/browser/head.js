@@ -143,8 +143,8 @@ async function continueFileHandler(leafName) {
       continueFile.remove(false);
     }
   });
-  return BrowserTestUtils.waitForCondition(() => (
-    !continueFile.exists()),
+  return TestUtils.waitForCondition(() =>
+    (!continueFile.exists()),
     "Waiting for file to be deleted, path: " + continueFile.path,
     interval, retries
   ).catch(e => {
@@ -651,11 +651,14 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
     const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
     return (async function() {
       let updateDeck = aboutDialog.document.getElementById("updateDeck");
-      await BrowserTestUtils.waitForCondition(() =>
+      await TestUtils.waitForCondition(() =>
         (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
-        "Waiting for expected panel ID - got: \"" +
-        updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
-        undefined, 200);
+        "Waiting for the expected panel ID: " + panelId, undefined, 200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test so the panel
+        // ID and the expected panel ID is printed in the log.
+        logTestInfo(e);
+      });
       let selectedPanel = updateDeck.selectedPanel;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
 
@@ -680,11 +683,16 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
           if (!isLastPatch || patch) {
             let resultName = info.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await BrowserTestUtils.waitForCondition(() =>
+            await TestUtils.waitForCondition(() =>
               (patch.getProperty(resultName) == info[resultName]),
-              "Waiting for expected patch property " + resultName + " value " +
-              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
-              info[resultName] + "\"", undefined, 200);
+              "Waiting for expected patch property " + resultName + " value: " +
+              info[resultName], undefined, 200
+            ).catch(e => {
+              // Instead of throwing let the check below fail the test so the
+              // property value and the expected property value is printed in
+              // the log.
+              logTestInfo(e);
+            });
             is(patch.getProperty(resultName), info[resultName],
                "The patch property " + resultName + " value should equal " +
                info[resultName]);
@@ -707,7 +715,7 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
       let buttonPanels = ["downloadAndInstall", "apply"];
       if (buttonPanels.includes(panelId)) {
         let buttonEl = selectedPanel.querySelector("button");
-        await BrowserTestUtils.waitForCondition(() =>
+        await TestUtils.waitForCondition(() =>
           (aboutDialog.document.activeElement == buttonEl),
           "The button should receive focus");
         ok(!buttonEl.disabled, "The button should be enabled");
@@ -790,9 +798,12 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
         let updateDeck = content.document.getElementById("updateDeck");
         await ContentTaskUtils.waitForCondition(() =>
           (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
-          "Waiting for expected panel ID - got: \"" +
-          updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
-          undefined, 200);
+          "Waiting for the expected panel ID: " + panelId, undefined, 200
+        ).catch(e => {
+          // Instead of throwing let the check below fail the test so the panel
+          // ID and the expected panel ID is printed in the log.
+          logTestInfo(e);
+        });
         is(updateDeck.selectedPanel.id, panelId,
            "The panel ID should equal " + panelId);
       });
@@ -818,11 +829,16 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
           if (!isLastPatch || patch) {
             let resultName = info.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await BrowserTestUtils.waitForCondition(() =>
+            await TestUtils.waitForCondition(() =>
               (patch.getProperty(resultName) == info[resultName]),
-              "Waiting for expected patch property " + resultName + " value " +
-              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
-              info[resultName] + "\"", undefined, 200);
+              "Waiting for expected patch property " + resultName + " value: " +
+              info[resultName], undefined, 200
+            ).catch(e => {
+              // Instead of throwing let the check below fail the test so the
+              // property value and the expected property value is printed in
+              // the log.
+              logTestInfo(e);
+            });
             is(patch.getProperty(resultName), info[resultName],
                "The patch property " + resultName + " value should equal " +
                info[resultName]);
