@@ -1562,8 +1562,8 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
   }
 
   TableKind tableKind;
-  if (elementType == uint8_t(TypeCode::AnyFunc)) {
-    tableKind = TableKind::AnyFunction;
+  if (elementType == uint8_t(TypeCode::FuncRef)) {
+    tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
     tableKind = TableKind::AnyRef;
@@ -2271,7 +2271,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       // segments, there really is no segment index, and we should never
       // touch the field.
       tableIndex = (uint32_t)-1;
-    } else if (env->tables[tableIndex].kind != TableKind::AnyFunction) {
+    } else if (env->tables[tableIndex].kind != TableKind::FuncRef) {
       return d.fail("only tables of 'funcref' may have element segments");
     }
 
@@ -2292,7 +2292,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
         if (!d.readFixedU8(&form)) {
           return d.fail("expected type form");
         }
-        if (form != uint8_t(TypeCode::AnyFunc)) {
+        if (form != uint8_t(TypeCode::FuncRef)) {
           return d.fail(
               "passive segments can only contain function references");
         }
