@@ -203,7 +203,7 @@ about-debugging-runtime-processes =
 
 # Label of the button opening the performance profiler panel in runtime pages for remote
 # runtimes.
-about-debugging-runtime-profile-button = Profile Runtime
+about-debugging-runtime-profile-button2 = Profile performance
 
 # This string is displayed in the runtime page if the current configuration of the
 # target runtime is incompatible with service workers. "Learn more" points to MDN.
@@ -250,7 +250,7 @@ about-debugging-connection-prompt-enable-button = Enable connection prompt
 about-debugging-connection-prompt-disable-button = Disable connection prompt
 
 # Title of a modal dialog displayed on remote runtime pages after clicking on the Profile Runtime button.
-about-debugging-profiler-dialog-title = Performance Profiler
+about-debugging-profiler-dialog-title2 = Profiler
 
 # Label of a checkbox displayed in the runtime page for "This Firefox".
 # This checkbox will toggle preferences that enable local addon debugging.

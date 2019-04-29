@@ -48,13 +48,13 @@ class ProfilerDialog extends PureComponent {
           },
           Localized(
             {
-              id: "about-debugging-profiler-dialog-title",
+              id: "about-debugging-profiler-dialog-title2",
             },
             dom.h1(
               {
                 className: "profiler-dialog__header__title",
               },
-              "Performance Profiler",
+              "about-debugging-profiler-dialog-title2",
             )
           ),
           dom.button(

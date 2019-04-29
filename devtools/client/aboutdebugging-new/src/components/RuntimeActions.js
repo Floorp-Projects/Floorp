@@ -62,14 +62,14 @@ class RuntimeActions extends PureComponent {
     return runtimeId !== RUNTIMES.THIS_FIREFOX
          ? Localized(
            {
-             id: "about-debugging-runtime-profile-button",
+             id: "about-debugging-runtime-profile-button2",
            },
            dom.button(
              {
                className: "default-button js-profile-runtime-button",
                onClick: () => this.onProfilerButtonClick(),
              },
-             "Profile Runtime"
+             "about-debugging-runtime-profile-button2"
            ),
          )
          : null;
