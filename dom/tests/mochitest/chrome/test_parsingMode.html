@@ -6,6 +6,9 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
+  function sheetText(sheet) {
+    return [...sheet.cssRules].map(r => r.cssText).join();
+  }
   function run() {
     const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
       .getService(Ci.nsIStyleSheetService);
@@ -42,11 +45,14 @@
 
       // Check that re-parsing preserves the mode.
       let mode = sheet.parsingMode;
-      try {
-        InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
-        isnot(sheet.parsingMode, "agent", "Agent sheets cannot be reparsed");
-      } catch (ex) {
-        is(sheet.parsingMode, "agent", "Agent sheets cannot be reparsed");
+      let text = sheetText(sheet);
+      InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+      if (mode == "agent") {
+        is(sheetText(sheet), text,
+           "Reparsing should not have changed a UA sheet");
+      } else {
+        isnot(sheetText(sheet), text,
+           "Reparsing should have changed a non-UA sheet");
       }
       is(sheet.parsingMode, mode,
          "check that re-parsing preserved mode " + mode);

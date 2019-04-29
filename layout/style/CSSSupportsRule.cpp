@@ -47,6 +47,10 @@ void CSSSupportsRule::GetConditionText(nsAString& aConditionText) {
 
 void CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
                                        ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
