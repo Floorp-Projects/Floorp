@@ -2675,6 +2675,64 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
   return ss->xdrUncompressedSource(xdr, sizeof(Unit), uncompressedLength);
 }
 
+template <typename Unit, XDRMode mode>
+/* static */
+XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
+                                           ScriptSource* const ss,
+                                           bool retrievable) {
+  static_assert(std::is_same<Unit, Utf8Unit>::value ||
+                    std::is_same<Unit, char16_t>::value,
+                "should handle UTF-8 and UTF-16");
+
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(ss->data.is<Compressed<Unit>>());
+  }
+
+  MOZ_ASSERT(retrievable == ss->sourceRetrievable());
+
+  if (retrievable) {
+    // It's unnecessary to code compressed data if it can just be retrieved
+    // using the source hook.
+    if (mode == XDR_DECODE) {
+      ss->data = SourceType(Retrievable<Unit>());
+    }
+    return Ok();
+  }
+
+  uint32_t uncompressedLength;
+  if (mode == XDR_ENCODE) {
+    uncompressedLength = ss->data.as<Compressed<Unit>>().uncompressedLength;
+  }
+  MOZ_TRY(xdr->codeUint32(&uncompressedLength));
+
+  uint32_t compressedLength;
+  if (mode == XDR_ENCODE) {
+    compressedLength = ss->data.as<Compressed<Unit>>().raw.length();
+  }
+  MOZ_TRY(xdr->codeUint32(&compressedLength));
+
+  if (mode == XDR_DECODE) {
+    // Compressed data is always single-byte chars.
+    auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
+    if (!bytes) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
+
+    if (!ss->initializeWithCompressedSource<Unit>(xdr->cx(), std::move(bytes),
+                                                  compressedLength,
+                                                  uncompressedLength)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+  } else {
+    void* bytes =
+        const_cast<char*>(ss->data.as<Compressed<Unit>>().raw.chars());
+    MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
+  }
+
+  return Ok();
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
@@ -2749,60 +2807,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 
     tag = static_cast<DataType>(type);
   }
-
-  auto CodeCompressedData = [xdr, ss, &retrievable](auto unit) -> XDRResult {
-    using Unit = decltype(unit);
-
-    static_assert(std::is_same<Unit, Utf8Unit>::value ||
-                      std::is_same<Unit, char16_t>::value,
-                  "should handle UTF-8 and UTF-16");
-
-    if (mode == XDR_ENCODE) {
-      MOZ_ASSERT(ss->data.is<Compressed<Unit>>());
-    }
-
-    if (retrievable) {
-      // It's unnecessary to code compressed data if it can just be retrieved
-      // using the source hook.
-      if (mode == XDR_DECODE) {
-        ss->data = SourceType(Retrievable<Unit>());
-      }
-      return Ok();
-    }
-
-    uint32_t uncompressedLength = 0;
-    if (mode == XDR_ENCODE) {
-      uncompressedLength = ss->data.as<Compressed<Unit>>().uncompressedLength;
-    }
-    MOZ_TRY(xdr->codeUint32(&uncompressedLength));
-
-    uint32_t compressedLength;
-    if (mode == XDR_ENCODE) {
-      compressedLength = ss->data.as<Compressed<Unit>>().raw.length();
-    }
-    MOZ_TRY(xdr->codeUint32(&compressedLength));
-
-    if (mode == XDR_DECODE) {
-      // Compressed data is always single-byte chars.
-      auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
-      if (!bytes) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-      MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
-
-      if (!ss->initializeWithCompressedSource<Unit>(xdr->cx(), std::move(bytes),
-                                                    compressedLength,
-                                                    uncompressedLength)) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    } else {
-      void* bytes =
-          const_cast<char*>(ss->data.as<Compressed<Unit>>().raw.chars());
-      MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
-    }
-
-    return Ok();
-  };
 
   auto CodeBinASTData = [xdr
 #if defined(JS_BUILD_BINAST)
@@ -2932,15 +2936,13 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 
   switch (tag) {
     case DataType::CompressedUtf8:
-      // The argument here is just for overloading -- its value doesn't matter.
-      return CodeCompressedData(Utf8Unit('0'));
+      return ScriptSource::codeCompressedData<Utf8Unit>(xdr, ss, retrievable);
 
     case DataType::UncompressedUtf8:
       return ScriptSource::codeUncompressedData<Utf8Unit>(xdr, ss, retrievable);
 
     case DataType::CompressedUtf16:
-      // The argument here is just for overloading -- its value doesn't matter.
-      return CodeCompressedData(char16_t('0'));
+      return ScriptSource::codeCompressedData<char16_t>(xdr, ss, retrievable);
 
     case DataType::UncompressedUtf16:
       return ScriptSource::codeUncompressedData<char16_t>(xdr, ss, retrievable);
