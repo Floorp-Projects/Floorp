@@ -46,11 +46,19 @@ void CSSFontFeatureValuesRule::GetValueText(nsAString& aValueText) {
 
 void CSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
                                              ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 void CSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
                                             ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 

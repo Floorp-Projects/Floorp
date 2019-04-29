@@ -59,6 +59,7 @@ class DeclarationBlock final {
    */
   void AssertMutable() const {
     MOZ_ASSERT(IsMutable(), "someone forgot to call EnsureMutable");
+    MOZ_ASSERT(!OwnerIsReadOnly(), "User Agent sheets shouldn't be modified");
   }
 
   /**
@@ -85,6 +86,8 @@ class DeclarationBlock final {
    * Copy |this|, if necessary to ensure that it can be modified.
    */
   already_AddRefed<DeclarationBlock> EnsureMutable() {
+    MOZ_ASSERT(!OwnerIsReadOnly());
+
     if (!IsDirty()) {
       // In stylo, the old DeclarationBlock is stored in element's rule node
       // tree directly, to avoid new values replacing the DeclarationBlock in
@@ -135,6 +138,8 @@ class DeclarationBlock final {
     c.mRaw &= ~uintptr_t(1);
     return c.mHTMLCSSStyleSheet;
   }
+
+  bool IsReadOnly() const;
 
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsAString& aCssText, URLExtraData* aExtraData,
@@ -202,6 +207,9 @@ class DeclarationBlock final {
 
  private:
   ~DeclarationBlock() = default;
+
+  bool OwnerIsReadOnly() const;
+
   union {
     // We only ever have one of these since we have an
     // nsHTMLCSSStyleSheet only for style attributes, and style

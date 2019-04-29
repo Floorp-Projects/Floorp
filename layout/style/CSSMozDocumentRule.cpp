@@ -104,6 +104,10 @@ void CSSMozDocumentRule::GetConditionText(nsAString& aConditionText) {
 
 void CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
                                           ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
