@@ -28,7 +28,7 @@
 //   static bool isValid(const T& t)
 //       - Return false only if |t| is corrupt in some way. The built-in GC
 //         types do some memory layout checks. For debugging only; it is ok
-//         to always return true or even to omit this member entirely.
+//         to always return true.
 //
 // The default GCPolicy<T> assumes that T has a default constructor and |trace|
 // and |needsSweep| methods, and forwards to them. GCPolicy has appropriate
@@ -203,33 +203,6 @@ struct GCPolicy<mozilla::Maybe<T>> {
 
 template <>
 struct GCPolicy<JS::Realm*>;  // see Realm.h
-
-namespace detail {
-
-// Dummy types to make it easier to understand template overload preference
-// ordering.
-struct FallbackOverload {};
-struct PreferredOverload : FallbackOverload {};
-using OverloadSelector = PreferredOverload;
-
-// A version of GCPolicy<T> that is guaranteed to have an isValid member.
-template <typename T>
-struct GCPolicyWithIsValid : GCPolicy<T> {
-  template <typename U = T, typename = decltype(GCPolicy<U>::isValid)>
-  static bool isValidPicker(const T& t, detail::PreferredOverload) {
-    return GCPolicy<T>::isValid(t);
-  }
-
-  static bool isValidPicker(const T& t, detail::FallbackOverload) {
-    return true;
-  }
-
-  static bool isValid(const T& t) {
-    return isValidPicker(t, detail::OverloadSelector());
-  }
-};
-
-}  // namespace detail
 
 }  // namespace JS
 
