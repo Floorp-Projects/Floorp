@@ -1969,7 +1969,7 @@ struct Limits {
 // in global memory. Currently, wasm only has "any function" and asm.js only
 // "typed function".
 
-enum class TableKind { AnyFunction, AnyRef, TypedFunction };
+enum class TableKind { FuncRef, AnyRef, TypedFunction };
 
 struct TableDesc {
   TableKind kind;
@@ -2106,8 +2106,8 @@ struct TableTls {
   void* functionBase;
 };
 
-// Table elements for TableKind::AnyFunctions carry both the code pointer and an
-// instance pointer.
+// Table element for TableKind::FuncRef which carries both the code pointer and
+// an instance pointer.
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system
