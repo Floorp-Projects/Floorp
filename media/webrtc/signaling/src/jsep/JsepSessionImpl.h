@@ -194,9 +194,6 @@ class JsepSessionImpl : public JsepSession {
                                        const Sdp& newOffer, Sdp* newLocal);
   void EnsureMsid(Sdp* remote);
   void SetupBundle(Sdp* sdp) const;
-  nsresult GetRemoteIds(const Sdp& sdp, const SdpMediaSection& msection,
-                        std::vector<std::string>* streamIds,
-                        std::string* trackId);
   nsresult CreateOfferMsection(const JsepOfferOptions& options,
                                JsepTransceiver& transceiver, Sdp* local);
   nsresult CreateAnswerMsection(const JsepAnswerOptions& options,

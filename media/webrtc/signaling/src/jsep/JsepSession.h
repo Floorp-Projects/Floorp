@@ -189,12 +189,12 @@ class JsepSession {
     memset(sending, 0, sizeof(sending));
 
     for (const auto& transceiver : GetTransceivers()) {
-      if (!transceiver->mRecvTrack.GetTrackId().empty() ||
+      if (!transceiver->mRecvTrack.GetActive() ||
           transceiver->GetMediaType() == SdpMediaSection::kApplication) {
         receiving[transceiver->mRecvTrack.GetMediaType()]++;
       }
 
-      if (!transceiver->mSendTrack.GetTrackId().empty() ||
+      if (!transceiver->mSendTrack.GetActive() ||
           transceiver->GetMediaType() == SdpMediaSection::kApplication) {
         sending[transceiver->mSendTrack.GetMediaType()]++;
       }

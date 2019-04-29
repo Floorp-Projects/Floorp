@@ -85,16 +85,13 @@ class JsepTrack {
 
   virtual ~JsepTrack() {}
 
-  void UpdateTrackIds(const std::vector<std::string>& streamIds,
-                      const std::string& trackId) {
+  void UpdateStreamIds(const std::vector<std::string>& streamIds) {
     mStreamIds = streamIds;
-    mTrackId = trackId;
   }
 
-  void ClearTrackIds() {
-    mStreamIds.clear();
-    mTrackId.clear();
-  }
+  void SetTrackId(const std::string& aTrackId) { mTrackId = aTrackId; }
+
+  void ClearStreamIds() { mStreamIds.clear(); }
 
   void UpdateRecvTrack(const Sdp& sdp, const SdpMediaSection& msection) {
     MOZ_ASSERT(mDirection == sdp::kRecv);
@@ -158,8 +155,6 @@ class JsepTrack {
   virtual const std::vector<std::string>& GetStreamIds() const {
     return mStreamIds;
   }
-
-  virtual const std::string& GetTrackId() const { return mTrackId; }
 
   virtual const std::string& GetCNAME() const { return mCNAME; }
 
