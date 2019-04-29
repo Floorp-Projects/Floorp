@@ -2735,6 +2735,130 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
 
 template <XDRMode mode>
 /* static */
+XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
+                                       ScriptSource* const ss) {
+#if !defined(JS_BUILD_BINAST)
+  return xdr->fail(JS::TranscodeResult_Throw);
+#else
+  // XDR the length of the BinAST data.
+  uint32_t binASTLength;
+  if (mode == XDR_ENCODE) {
+    binASTLength = ss->data.as<BinAST>().string.length();
+  }
+  MOZ_TRY(xdr->codeUint32(&binASTLength));
+
+  // XDR the BinAST data.
+  UniquePtr<char[], JS::FreePolicy> bytes;
+  if (mode == XDR_DECODE) {
+    bytes = xdr->cx()->template make_pod_array<char>(
+        Max<size_t>(binASTLength, 1));
+    if (!bytes) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+    MOZ_TRY(xdr->codeBytes(bytes.get(), binASTLength));
+  } else {
+    void* bytes = ss->binASTData();
+    MOZ_TRY(xdr->codeBytes(bytes, binASTLength));
+  }
+
+  // XDR any BinAST metadata.
+  uint8_t hasMetadata;
+  if (mode == XDR_ENCODE) {
+    hasMetadata = ss->binASTMetadata_ != nullptr;
+  }
+  MOZ_TRY(xdr->codeUint8(&hasMetadata));
+
+  UniquePtr<frontend::BinASTSourceMetadata> freshMetadata;
+  if (hasMetadata) {
+    // If we're decoding, we decode into fresh metadata.  If we're encoding,
+    // we encode *from* the stored metadata.
+    auto& binASTMetadata =
+        mode == XDR_DECODE ? freshMetadata : ss->binASTMetadata_;
+
+    uint32_t numBinASTKinds;
+    uint32_t numStrings;
+    if (mode == XDR_ENCODE) {
+      numBinASTKinds = binASTMetadata->numBinASTKinds();
+      numStrings = binASTMetadata->numStrings();
+    }
+    MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
+    MOZ_TRY(xdr->codeUint32(&numStrings));
+
+    if (mode == XDR_DECODE) {
+      // Use calloc, since we're storing this immediately, and filling it
+      // might GC, to avoid marking bogus atoms.
+      void* mem = js_calloc(frontend::BinASTSourceMetadata::totalSize(
+          numBinASTKinds, numStrings));
+      if (!mem) {
+        return xdr->fail(JS::TranscodeResult_Throw);
+      }
+
+      auto metadata = new (mem)
+          frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
+      binASTMetadata.reset(metadata);
+    }
+
+    frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
+    for (uint32_t i = 0; i < numBinASTKinds; i++) {
+      MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
+    }
+
+    RootedAtom atom(xdr->cx());
+    JSAtom** atomsBase = binASTMetadata->atomsBase();
+    auto slices = binASTMetadata->sliceBase();
+    const char* sourceBase = mode == XDR_ENCODE
+                                 ? bytes.get()
+                                 : ss->data.as<BinAST>().string.chars();
+
+    for (uint32_t i = 0; i < numStrings; i++) {
+      uint8_t isNull;
+      if (mode == XDR_ENCODE) {
+        atom = binASTMetadata->getAtom(i);
+        isNull = !atom;
+      }
+      MOZ_TRY(xdr->codeUint8(&isNull));
+      if (isNull) {
+        atom = nullptr;
+      } else {
+        MOZ_TRY(XDRAtom(xdr, &atom));
+      }
+      if (mode == XDR_DECODE) {
+        atomsBase[i] = atom;
+      }
+
+      uint64_t sliceOffset;
+      uint32_t sliceLen;
+      if (mode == XDR_ENCODE) {
+        auto& slice = binASTMetadata->getSlice(i);
+        sliceOffset = slice.begin() - sourceBase;
+        sliceLen = slice.byteLen_;
+      }
+
+      MOZ_TRY(xdr->codeUint64(&sliceOffset));
+      MOZ_TRY(xdr->codeUint32(&sliceLen));
+
+      if (mode == XDR_DECODE) {
+        new (&slices[i]) frontend::BinASTSourceMetadata::CharSlice(
+            sourceBase + sliceOffset, sliceLen);
+      }
+    }
+  }
+
+  if (mode == XDR_DECODE) {
+    if (!ss->initializeBinAST(xdr->cx(), std::move(bytes), binASTLength,
+                              std::move(freshMetadata))) {
+      return xdr->fail(JS::TranscodeResult_Throw);
+    }
+  } else {
+    MOZ_ASSERT(freshMetadata == nullptr);
+  }
+
+  return Ok();
+#endif  // !defined(JS_BUILD_BINAST)
+}
+
+template <XDRMode mode>
+/* static */
 XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
                                 ScriptSource* const ss) {
   // Retrievability is kept outside |ScriptSource::data| (and not solely as
@@ -2808,132 +2932,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     tag = static_cast<DataType>(type);
   }
 
-  auto CodeBinASTData = [xdr
-#if defined(JS_BUILD_BINAST)
-                         ,
-                         ss
-#endif
-  ]() -> XDRResult {
-#if !defined(JS_BUILD_BINAST)
-    return xdr->fail(JS::TranscodeResult_Throw);
-#else
-    // XDR the length of the BinAST data.
-    uint32_t binASTLength;
-    if (mode == XDR_ENCODE) {
-      binASTLength = ss->data.as<BinAST>().string.length();
-    }
-    MOZ_TRY(xdr->codeUint32(&binASTLength));
-
-    // XDR the BinAST data.
-    UniquePtr<char[], JS::FreePolicy> bytes;
-    if (mode == XDR_DECODE) {
-      bytes = xdr->cx()->template make_pod_array<char>(
-          Max<size_t>(binASTLength, 1));
-      if (!bytes) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-      MOZ_TRY(xdr->codeBytes(bytes.get(), binASTLength));
-    } else {
-      void* bytes = ss->binASTData();
-      MOZ_TRY(xdr->codeBytes(bytes, binASTLength));
-    }
-
-    // XDR any BinAST metadata.
-    uint8_t hasMetadata;
-    if (mode == XDR_ENCODE) {
-      hasMetadata = ss->binASTMetadata_ != nullptr;
-    }
-    MOZ_TRY(xdr->codeUint8(&hasMetadata));
-
-    UniquePtr<frontend::BinASTSourceMetadata> freshMetadata;
-    if (hasMetadata) {
-      // If we're decoding, we decode into fresh metadata.  If we're encoding,
-      // we encode *from* the stored metadata.
-      auto& binASTMetadata =
-          mode == XDR_DECODE ? freshMetadata : ss->binASTMetadata_;
-
-      uint32_t numBinASTKinds;
-      uint32_t numStrings;
-      if (mode == XDR_ENCODE) {
-        numBinASTKinds = binASTMetadata->numBinASTKinds();
-        numStrings = binASTMetadata->numStrings();
-      }
-      MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
-      MOZ_TRY(xdr->codeUint32(&numStrings));
-
-      if (mode == XDR_DECODE) {
-        // Use calloc, since we're storing this immediately, and filling it
-        // might GC, to avoid marking bogus atoms.
-        void* mem = js_calloc(frontend::BinASTSourceMetadata::totalSize(
-            numBinASTKinds, numStrings));
-        if (!mem) {
-          return xdr->fail(JS::TranscodeResult_Throw);
-        }
-
-        auto metadata = new (mem)
-            frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
-        binASTMetadata.reset(metadata);
-      }
-
-      frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
-      for (uint32_t i = 0; i < numBinASTKinds; i++) {
-        MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
-      }
-
-      RootedAtom atom(xdr->cx());
-      JSAtom** atomsBase = binASTMetadata->atomsBase();
-      auto slices = binASTMetadata->sliceBase();
-      const char* sourceBase = mode == XDR_ENCODE
-                                   ? bytes.get()
-                                   : ss->data.as<BinAST>().string.chars();
-
-      for (uint32_t i = 0; i < numStrings; i++) {
-        uint8_t isNull;
-        if (mode == XDR_ENCODE) {
-          atom = binASTMetadata->getAtom(i);
-          isNull = !atom;
-        }
-        MOZ_TRY(xdr->codeUint8(&isNull));
-        if (isNull) {
-          atom = nullptr;
-        } else {
-          MOZ_TRY(XDRAtom(xdr, &atom));
-        }
-        if (mode == XDR_DECODE) {
-          atomsBase[i] = atom;
-        }
-
-        uint64_t sliceOffset;
-        uint32_t sliceLen;
-        if (mode == XDR_ENCODE) {
-          auto& slice = binASTMetadata->getSlice(i);
-          sliceOffset = slice.begin() - sourceBase;
-          sliceLen = slice.byteLen_;
-        }
-
-        MOZ_TRY(xdr->codeUint64(&sliceOffset));
-        MOZ_TRY(xdr->codeUint32(&sliceLen));
-
-        if (mode == XDR_DECODE) {
-          new (&slices[i]) frontend::BinASTSourceMetadata::CharSlice(
-              sourceBase + sliceOffset, sliceLen);
-        }
-      }
-    }
-
-    if (mode == XDR_DECODE) {
-      if (!ss->initializeBinAST(xdr->cx(), std::move(bytes), binASTLength,
-                                std::move(freshMetadata))) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    } else {
-      MOZ_ASSERT(freshMetadata == nullptr);
-    }
-
-    return Ok();
-#endif  // !defined(JS_BUILD_BINAST)
-  };
-
   switch (tag) {
     case DataType::CompressedUtf8:
       return ScriptSource::codeCompressedData<Utf8Unit>(xdr, ss, retrievable);
@@ -2973,7 +2971,7 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     }
 
     case DataType::BinAST:
-      return CodeBinASTData();
+      return codeBinASTData(xdr, ss);
   }
 
   // The range-check on |type| far above ought ensure the above |switch| is
