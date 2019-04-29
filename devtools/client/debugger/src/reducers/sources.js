@@ -881,4 +881,12 @@ export function getBreakableLines(state: OuterState, sourceId: string) {
   return state.sources.breakableLines[sourceId];
 }
 
+export const getSelectedBreakableLines: Selector<Set<number>> = createSelector(
+  state => {
+    const sourceId = getSelectedSourceId(state);
+    return sourceId && state.sources.breakableLines[sourceId];
+  },
+  breakableLines => new Set(breakableLines || [])
+);
+
 export default update;
