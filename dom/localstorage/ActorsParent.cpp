@@ -300,7 +300,7 @@ nsCString GetArchivedOriginHashKey(const nsACString& aOriginSuffix,
 }
 
 nsresult CreateTables(mozIStorageConnection* aConnection) {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(aConnection);
 
   // Table `database`
@@ -430,7 +430,7 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
                                  const nsACString& aOrigin,
                                  mozIStorageConnection** aConnection,
                                  bool* aRemovedUsageFile) {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(aDBFile);
   MOZ_ASSERT(aUsageFile);
   MOZ_ASSERT(aConnection);
@@ -844,7 +844,7 @@ nsresult GetShadowFile(const nsAString& aBasePath, nsIFile** aArchiveFile) {
 }
 
 nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(aConnection);
 
   // Try enabling WAL mode. This can fail in various circumstances so we have to
@@ -932,7 +932,7 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
 nsresult CreateShadowStorageConnection(const nsAString& aBasePath,
                                        mozIStorageConnection** aConnection) {
-  AssertIsOnIOThread();
+  MOZ_ASSERT(IsOnIOThread() || IsOnConnectionThread());
   MOZ_ASSERT(!aBasePath.IsEmpty());
   MOZ_ASSERT(aConnection);
 
@@ -1444,6 +1444,10 @@ class DatastoreOperationBase : public Runnable {
 class ConnectionDatastoreOperationBase : public DatastoreOperationBase {
  protected:
   RefPtr<Connection> mConnection;
+  /**
+   * This boolean flag is used by the CloseOp to avoid creating empty databases.
+   */
+  const bool mEnsureStorageConnection;
 
  public:
   // This callback will be called on the background thread before releasing the
@@ -1452,7 +1456,8 @@ class ConnectionDatastoreOperationBase : public DatastoreOperationBase {
   virtual void Cleanup();
 
  protected:
-  ConnectionDatastoreOperationBase(Connection* aConnection);
+  ConnectionDatastoreOperationBase(Connection* aConnection,
+                                   bool aEnsureStorageConnection = true);
 
   ~ConnectionDatastoreOperationBase();
 
@@ -1487,6 +1492,7 @@ class Connection final {
   class CloseOp;
 
   RefPtr<ConnectionThread> mConnectionThread;
+  RefPtr<QuotaClient> mQuotaClient;
   nsCOMPtr<nsITimer> mFlushTimer;
   nsCOMPtr<mozIStorageConnection> mStorageConnection;
   nsAutoPtr<ArchivedOriginScope> mArchivedOriginScope;
@@ -1495,6 +1501,15 @@ class Connection final {
   WriteOptimizer mWriteOptimizer;
   const nsCString mOrigin;
   const nsString mDirectoryPath;
+  /**
+   * Propagated from PrepareDatastoreOp. PrepareDatastoreOp may defer the
+   * creation of the localstorage client directory and database on the
+   * QuotaManager IO thread in its DatabaseWork method to
+   * Connection::EnsureStorageConnection, in which case the method needs to know
+   * it is responsible for taking those actions (without redundantly performing
+   * the existence checks).
+   */
+  const bool mDatabaseNotAvailable;
   bool mFlushScheduled;
 #ifdef DEBUG
   bool mInUpdateBatch;
@@ -1543,7 +1558,6 @@ class Connection final {
 
   mozIStorageConnection* StorageConnection() const {
     AssertIsOnConnectionThread();
-    MOZ_ASSERT(mStorageConnection);
 
     return mStorageConnection;
   }
@@ -1557,7 +1571,8 @@ class Connection final {
   // Only created by ConnectionThread.
   Connection(ConnectionThread* aConnectionThread, const nsACString& aOrigin,
              const nsAString& aDirectoryPath,
-             nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
+             nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+             bool aDatabaseNotAvailable);
 
   ~Connection();
 
@@ -1593,7 +1608,6 @@ class Connection::CachedStatement final {
 };
 
 class Connection::FlushOp final : public ConnectionDatastoreOperationBase {
-  RefPtr<QuotaClient> mQuotaClient;
   WriteOptimizer mWriteOptimizer;
   bool mShadowWrites;
 
@@ -1609,7 +1623,9 @@ class Connection::CloseOp final : public ConnectionDatastoreOperationBase {
 
  public:
   CloseOp(Connection* aConnection, nsIRunnable* aCallback)
-      : ConnectionDatastoreOperationBase(aConnection), mCallback(aCallback) {}
+      : ConnectionDatastoreOperationBase(aConnection,
+                                         /* aEnsureStorageConnection */ false),
+        mCallback(aCallback) {}
 
  private:
   nsresult DoDatastoreWork() override;
@@ -1636,7 +1652,8 @@ class ConnectionThread final {
 
   already_AddRefed<Connection> CreateConnection(
       const nsACString& aOrigin, const nsAString& aDirectoryPath,
-      nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope);
+      nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+      bool aDatabaseNotAvailable);
 
   void Shutdown();
 
@@ -2354,7 +2371,7 @@ class PrepareDatastoreOp
   int64_t mSizeOfItems;
   uint64_t mDatastoreId;
   NestedState mNestedState;
-  const bool mCreateIfNotExists;
+  const bool mForPreload;
   bool mDatabaseNotAvailable;
   bool mRequestedDirectoryLock;
   bool mInvalidated;
@@ -4005,8 +4022,9 @@ nsresult WriteOptimizer::ClearInfo::Perform(Connection* aConnection,
  ******************************************************************************/
 
 ConnectionDatastoreOperationBase::ConnectionDatastoreOperationBase(
-    Connection* aConnection)
-    : mConnection(aConnection) {
+    Connection* aConnection, bool aEnsureStorageConnection)
+    : mConnection(aConnection),
+      mEnsureStorageConnection(aEnsureStorageConnection) {
   MOZ_ASSERT(aConnection);
 }
 
@@ -4040,12 +4058,20 @@ void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
   if (!MayProceedOnNonOwningThread()) {
     SetFailureCode(NS_ERROR_FAILURE);
   } else {
-    nsresult rv = mConnection->EnsureStorageConnection();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      SetFailureCode(rv);
-    } else {
-      MOZ_ASSERT(mConnection->StorageConnection());
+    nsresult rv = NS_OK;
 
+    // The boolean flag is only used by the CloseOp to avoid creating empty
+    // databases.
+    if (mEnsureStorageConnection) {
+      rv = mConnection->EnsureStorageConnection();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        SetFailureCode(rv);
+      } else {
+        MOZ_ASSERT(mConnection->StorageConnection());
+      }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
       rv = DoDatastoreWork();
       if (NS_FAILED(rv)) {
         SetFailureCode(rv);
@@ -4091,11 +4117,14 @@ ConnectionDatastoreOperationBase::Run() {
 Connection::Connection(ConnectionThread* aConnectionThread,
                        const nsACString& aOrigin,
                        const nsAString& aDirectoryPath,
-                       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope)
+                       nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+                       bool aDatabaseNotAvailable)
     : mConnectionThread(aConnectionThread),
+      mQuotaClient(QuotaClient::GetInstance()),
       mArchivedOriginScope(std::move(aArchivedOriginScope)),
       mOrigin(aOrigin),
       mDirectoryPath(aDirectoryPath),
+      mDatabaseNotAvailable(aDatabaseNotAvailable),
       mFlushScheduled(false)
 #ifdef DEBUG
       ,
@@ -4203,21 +4232,83 @@ nsresult Connection::EnsureStorageConnection() {
       return rv;
     }
 
+    if (mDatabaseNotAvailable) {
+      bool exists;
+      rv = file->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (!exists) {
+        rv = file->Create(nsIFile::DIRECTORY_TYPE, 0755);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+    }
+
     rv = file->Append(NS_LITERAL_STRING(DATA_FILE_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    nsString filePath;
-    rv = file->GetPath(filePath);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
     nsCOMPtr<mozIStorageConnection> storageConnection;
-    rv = GetStorageConnection(filePath, getter_AddRefs(storageConnection));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+
+    if (mDatabaseNotAvailable) {
+      QuotaManager* quotaManager = QuotaManager::Get();
+      MOZ_ASSERT(quotaManager);
+
+      RefPtr<Runnable> runnable =
+          NS_NewRunnableFunction("dom::localstorage::InitUsageRunnable",
+                                 [origin = mOrigin]() {
+                                   InitUsageForOrigin(origin, 0);
+                                 });
+
+      MOZ_ALWAYS_SUCCEEDS(
+          quotaManager->IOThread()->Dispatch(runnable, NS_DISPATCH_NORMAL));
+
+      nsCOMPtr<nsIFile> usageFile;
+      rv = GetUsageFile(mDirectoryPath, getter_AddRefs(usageFile));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      bool removedUsageFile;
+      rv = CreateStorageConnection(file, usageFile, mOrigin,
+                                   getter_AddRefs(storageConnection),
+                                   &removedUsageFile);
+
+      MOZ_ASSERT(!removedUsageFile);
+
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(mQuotaClient);
+
+      MutexAutoLock shadowDatabaseLock(mQuotaClient->ShadowDatabaseMutex());
+
+      nsCOMPtr<mozIStorageConnection> shadowConnection;
+      if (!gInitializedShadowStorage) {
+        rv = CreateShadowStorageConnection(quotaManager->GetBasePath(),
+                                           getter_AddRefs(shadowConnection));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+
+        gInitializedShadowStorage = true;
+      }
+    } else {
+      nsString filePath;
+      rv = file->GetPath(filePath);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = GetStorageConnection(filePath, getter_AddRefs(storageConnection));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     mStorageConnection = storageConnection;
@@ -4353,11 +4444,8 @@ void Connection::CachedStatement::Assign(
 Connection::FlushOp::FlushOp(Connection* aConnection,
                              WriteOptimizer&& aWriteOptimizer)
     : ConnectionDatastoreOperationBase(aConnection),
-      mQuotaClient(QuotaClient::GetInstance()),
       mWriteOptimizer(std::move(aWriteOptimizer)),
-      mShadowWrites(gShadowWrites) {
-  MOZ_ASSERT(mQuotaClient);
-}
+      mShadowWrites(gShadowWrites) {}
 
 nsresult Connection::FlushOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
@@ -4375,9 +4463,10 @@ nsresult Connection::FlushOp::DoDatastoreWork() {
   Maybe<MutexAutoLock> shadowDatabaseLock;
 
   if (mShadowWrites) {
-    MOZ_ASSERT(mQuotaClient);
+    MOZ_ASSERT(mConnection->mQuotaClient);
 
-    shadowDatabaseLock.emplace(mQuotaClient->ShadowDatabaseMutex());
+    shadowDatabaseLock.emplace(
+        mConnection->mQuotaClient->ShadowDatabaseMutex());
 
     rv = AttachShadowDatabase(quotaManager->GetBasePath(), storageConnection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4461,7 +4550,9 @@ nsresult Connection::CloseOp::DoDatastoreWork() {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mConnection);
 
-  mConnection->CloseStorageConnection();
+  if (mConnection->StorageConnection()) {
+    mConnection->CloseStorageConnection();
+  }
 
   return NS_OK;
 }
@@ -4509,13 +4600,15 @@ void ConnectionThread::AssertIsOnConnectionThread() {
 
 already_AddRefed<Connection> ConnectionThread::CreateConnection(
     const nsACString& aOrigin, const nsAString& aDirectoryPath,
-    nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope) {
+    nsAutoPtr<ArchivedOriginScope>&& aArchivedOriginScope,
+    bool aDatabaseNotAvailable) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(!mConnections.GetWeak(aOrigin));
 
-  RefPtr<Connection> connection = new Connection(
-      this, aOrigin, aDirectoryPath, std::move(aArchivedOriginScope));
+  RefPtr<Connection> connection =
+      new Connection(this, aOrigin, aDirectoryPath,
+                     std::move(aArchivedOriginScope), aDatabaseNotAvailable);
   mConnections.Put(aOrigin, connection);
 
   return connection.forget();
@@ -6290,8 +6383,8 @@ PrepareDatastoreOp::PrepareDatastoreOp(
       mSizeOfItems(0),
       mDatastoreId(0),
       mNestedState(NestedState::BeforeNesting),
-      mCreateIfNotExists(aParams.type() ==
-                         LSRequestParams::TLSRequestPrepareDatastoreParams),
+      mForPreload(aParams.type() ==
+                  LSRequestParams::TLSRequestPreloadDatastoreParams),
       mDatabaseNotAvailable(false),
       mRequestedDirectoryLock(false),
       mInvalidated(false)
@@ -6615,11 +6708,13 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
   bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
 
-  bool createIfNotExists = mCreateIfNotExists || hasDataForMigration;
-
+  // Initialize the origin even when the origin directory doesn't exist and we
+  // don't have data for migration (except the case when we are just trying to
+  // preload data). GetQuotaObject in GetResponse would fail otherwise.
   nsCOMPtr<nsIFile> directoryEntry;
   rv = quotaManager->EnsureOriginIsInitialized(
-      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin, createIfNotExists,
+      PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
+      /* aCreateIfNotExists */ !mForPreload || hasDataForMigration,
       getter_AddRefs(directoryEntry));
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     return DatabaseNotAvailable();
@@ -6633,17 +6728,29 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return rv;
   }
 
-  rv = EnsureDirectoryEntry(directoryEntry, createIfNotExists,
-                            /* aIsDirectory */ true);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    return DatabaseNotAvailable();
-  }
+  rv = directoryEntry->GetPath(mDirectoryPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = directoryEntry->GetPath(mDirectoryPath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  // The ls directory doesn't need to be created when we don't have data for
+  // migration. It will be created on the connection thread in
+  // Connection::EnsureStorageConnection.
+  rv = EnsureDirectoryEntry(directoryEntry,
+                            /* aCreateIfNotExists */ hasDataForMigration,
+                            /* aIsDirectory */ true);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    if (mForPreload) {
+      // There's nothing to preload. Finish the operation without creating a
+      // datastore in GetResponse (GetResponse won't create a datastore if
+      // mDatatabaseNotAvailable and mForPreload are both true).
+      return DatabaseNotAvailable();
+    }
+
+    // Keep going if !mForPreload so that we will populate mDatabaseFilePath
+    // which is needed by GetQuotaObject. We will still return via call to
+    // DatabaseNotAvailable() below in the !alreadyExisted else branch.
+  } else if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -6652,13 +6759,26 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     return rv;
   }
 
+  rv = directoryEntry->GetPath(mDatabaseFilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // The database doesn't need to be created when we don't have data for
+  // migration. It will be created on the connection thread in
+  // Connection::EnsureStorageConnection.
   bool alreadyExisted;
-  rv = EnsureDirectoryEntry(directoryEntry, createIfNotExists,
+  rv = EnsureDirectoryEntry(directoryEntry,
+                            /* aCreateIfNotExists */ hasDataForMigration,
                             /* aIsDirectory */ false, &alreadyExisted);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
-    return DatabaseNotAvailable();
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (mForPreload) {
+      // There's nothing to preload, finish the operation without creating a
+      // datastore in GetResponse (GetResponse won't create a datastore if
+      // mDatatabaseNotAvailable and mForPreload are both true).
+      return DatabaseNotAvailable();
+    }
+  } else if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
@@ -6667,13 +6787,18 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     DebugOnly<bool> hasUsage = gUsages->Get(mOrigin, &mUsage);
     MOZ_ASSERT(hasUsage);
   } else {
+    MOZ_ASSERT(!mForPreload);
+
+    if (!hasDataForMigration) {
+      // The ls directory or database doesn't exist and we don't have data for
+      // migration. Finish the operation, but create an empty datastore in
+      // GetResponse (GetResponse will create an empty datastore if
+      // mDatabaseNotAvailable is true and mForPreload is false).
+      return DatabaseNotAvailable();
+    }
+
     MOZ_ASSERT(mUsage == 0);
     InitUsageForOrigin(mOrigin, mUsage);
-  }
-
-  rv = directoryEntry->GetPath(mDatabaseFilePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   nsCOMPtr<nsIFile> usageFile;
@@ -6870,6 +6995,9 @@ nsresult PrepareDatastoreOp::EnsureDirectoryEntry(nsIFile* aEntry,
 
   if (!exists) {
     if (!aCreateIfNotExists) {
+      if (aAlreadyExisted) {
+        *aAlreadyExisted = false;
+      }
       return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -6963,7 +7091,8 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
   }
 
   mConnection = gConnectionThread->CreateConnection(
-      mOrigin, mDirectoryPath, std::move(mArchivedOriginScope));
+      mOrigin, mDirectoryPath, std::move(mArchivedOriginScope),
+      /* aDatabaseNotAvailable */ false);
   MOZ_ASSERT(mConnection);
 
   // Must set this before dispatching otherwise we will race with the
@@ -7060,9 +7189,9 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
   MOZ_ASSERT(mState == State::SendingResults);
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
-  if (mDatabaseNotAvailable) {
-    MOZ_ASSERT(!mCreateIfNotExists);
-
+  // A datastore is not created when we are just trying to preload data and
+  // there's no database file.
+  if (mDatabaseNotAvailable && mForPreload) {
     LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
 
     aResponse = preloadDatastoreResponse;
@@ -7076,6 +7205,22 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
     RefPtr<QuotaObject> quotaObject;
 
     if (mPrivateBrowsingId == 0) {
+      if (!mConnection) {
+        // This can happen when there's no database file.
+        MOZ_ASSERT(mDatabaseNotAvailable);
+
+        // Even though there's no database file, we need to create a connection
+        // and pass it to datastore.
+        if (!gConnectionThread) {
+          gConnectionThread = new ConnectionThread();
+        }
+
+        mConnection = gConnectionThread->CreateConnection(
+            mOrigin, mDirectoryPath, std::move(mArchivedOriginScope),
+            /* aDatabaseNotAvailable */ true);
+        MOZ_ASSERT(mConnection);
+      }
+
       quotaObject = GetQuotaObject();
       MOZ_ASSERT(quotaObject);
     }
@@ -7099,7 +7244,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   nsAutoPtr<PreparedDatastore> preparedDatastore(
       new PreparedDatastore(mDatastore, mContentParentId, mOrigin, mDatastoreId,
-                            /* aForPreload */ !mCreateIfNotExists));
+                            /* aForPreload */ mForPreload));
 
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
@@ -7112,15 +7257,15 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   preparedDatastore.forget();
 
-  if (mCreateIfNotExists) {
+  if (mForPreload) {
+    LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
+
+    aResponse = preloadDatastoreResponse;
+  } else {
     LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
     prepareDatastoreResponse.datastoreId() = mDatastoreId;
 
     aResponse = prepareDatastoreResponse;
-  } else {
-    LSRequestPreloadDatastoreResponse preloadDatastoreResponse;
-
-    aResponse = preloadDatastoreResponse;
   }
 }
 
