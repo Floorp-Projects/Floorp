@@ -118,10 +118,22 @@ struct RetainedDisplayListBuilder {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
 
  private:
+  /**
+   * Recursively pre-processes the old display list tree before building the
+   * new partial display lists, and serializes the old list into an array,
+   * recording indices on items for fast lookup during merging. Builds an
+   * initial linear DAG for the list if we don't have an existing one. Finds
+   * items that have a different AGR from the specified one, and marks them to
+   * also be built so that we get relative ordering correct. Passes
+   * aKeepLinked=true internally for sub-lists that can't be changed to keep the
+   * original list structure linked for fast re-use.
+   */
   bool PreProcessDisplayList(RetainedDisplayList* aList,
                              AnimatedGeometryRoot* aAGR,
+                             PartialUpdateResult& aUpdated,
                              uint32_t aCallerKey = 0,
-                             uint32_t aNestingDepth = 0);
+                             uint32_t aNestingDepth = 0,
+                             bool aKeepLinked = false);
 
   /**
    * Merges items from aNewList into non-invalidated items from aOldList and
@@ -130,6 +142,9 @@ struct RetainedDisplayListBuilder {
    * aOuterItem is a pointer to an item that owns one of the lists, if
    * available. If both lists are populated, then both outer items must not be
    * invalidated, and identical, so either can be passed here.
+   *
+   * Returns true if changes were made, and the resulting display list (in
+   * aOutList) is different from aOldList.
    */
   bool MergeDisplayLists(
       nsDisplayList* aNewList, RetainedDisplayList* aOldList,

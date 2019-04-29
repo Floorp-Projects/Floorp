@@ -169,6 +169,7 @@ struct OldItemInfo {
   MergedListIndex mIndex;
   bool mUsed;
   bool mDiscarded;
+  bool mOwnsItem;
 };
 
 bool AnyContentAncestorModified(nsIFrame* aFrame,
