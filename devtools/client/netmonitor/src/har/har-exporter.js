@@ -72,7 +72,7 @@ const HarExporter = {
     trace.log("HarExporter.save; " + defaultFileName, options);
 
     let data = await this.fetchHarData(options);
-    let fileName = this.getHarFileName(defaultFileName, options.jsonp, compress);
+    let fileName = this.getHarFileName(defaultFileName, options.jsonp, compress, options);
 
     if (compress) {
       data = await JSZip().file(fileName, data).generateAsync({
@@ -99,8 +99,12 @@ const HarExporter = {
     return `${year}-${month}-${day} ${hour}-${minutes}-${seconds}`;
   },
 
-  getHarFileName(defaultFileName, jsonp, compress) {
+  getHarFileName(defaultFileName, jsonp, compress, options) {
+    const tabTarget = options.connector.getTabTarget();
+    const host = new URL(tabTarget.url);
+
     let name = defaultFileName.replace(/%date/g, this.formatDate(new Date()));
+    name = name.replace(/%hostname/g, host.hostname);
     name = name.replace(/\:/gm, "-", "");
     name = name.replace(/\//gm, "_", "");
     return `${name}.${jsonp ? "harp" : "har"}`;
