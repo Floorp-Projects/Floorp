@@ -55,6 +55,10 @@ nsresult CSSPageRuleDeclaration::SetCSSDeclaration(
   MOZ_ASSERT(aDecl, "must be non-null");
   CSSPageRule* rule = Rule();
 
+  if (rule->IsReadOnly()) {
+    return NS_OK;
+  }
+
   if (aDecl != mDecls) {
     mDecls->SetOwningRule(nullptr);
     RefPtr<DeclarationBlock> decls = aDecl;

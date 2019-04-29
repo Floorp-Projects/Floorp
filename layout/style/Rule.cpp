@@ -75,5 +75,13 @@ void Rule::SetCssText(const nsAString& aCssText) {
 
 Rule* Rule::GetParentRule() const { return mParentRule; }
 
+bool Rule::IsReadOnly() const {
+  MOZ_ASSERT(!mSheet || !mParentRule ||
+                 mSheet->IsReadOnly() == mParentRule->IsReadOnly(),
+             "a parent rule should be read only iff the owning sheet is "
+             "read only");
+  return mSheet && mSheet->IsReadOnly();
+}
+
 }  // namespace css
 }  // namespace mozilla

@@ -154,6 +154,11 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
   MOZ_ASSERT(mStyleSheet,
              "Caller must ensure that "
              "the list is not unlinked from stylesheet");
+
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
+
   NS_ConvertUTF16toUTF8 rule(aRule);
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
@@ -178,6 +183,10 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
 }
 
 nsresult ServoCSSRuleList::DeleteRule(uint32_t aIndex) {
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
+
   nsresult rv = Servo_CssRules_DeleteRule(mRawRules, aIndex);
   if (!NS_FAILED(rv)) {
     uintptr_t rule = mRules[aIndex];
@@ -201,6 +210,14 @@ ServoCSSRuleList::~ServoCSSRuleList() {
   MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
   MOZ_ASSERT(!mParentRule, "Backpointer should have been cleared");
   DropAllRules();
+}
+
+bool ServoCSSRuleList::IsReadOnly() const {
+  MOZ_ASSERT(!mStyleSheet || !mParentRule ||
+                 mStyleSheet->IsReadOnly() == mParentRule->IsReadOnly(),
+             "a parent rule should be read only iff the owning sheet is "
+             "read only");
+  return mStyleSheet && mStyleSheet->IsReadOnly();
 }
 
 }  // namespace mozilla

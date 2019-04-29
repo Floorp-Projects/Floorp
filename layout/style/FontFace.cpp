@@ -456,6 +456,9 @@ bool FontFace::SetDescriptor(nsCSSFontDesc aFontDesc, const nsAString& aValue,
     return false;
   }
 
+  // FIXME(heycam): Should not allow modification of FontFaces that are
+  // CSS-connected and whose rule is read only.
+
   NS_ConvertUTF16toUTF8 value(aValue);
   RefPtr<URLExtraData> url = GetURLExtraData();
   if (!Servo_FontFaceRule_SetDescriptor(GetData(), aFontDesc, &value, url)) {

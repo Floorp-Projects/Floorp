@@ -74,6 +74,9 @@ void CSSMediaRule::GetConditionText(nsAString& aConditionText) {
 
 void CSSMediaRule::SetConditionText(const nsAString& aConditionText,
                                     ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
   Media()->SetMediaText(aConditionText);
 }
 
