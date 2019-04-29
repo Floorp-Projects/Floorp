@@ -13,6 +13,11 @@ exports.auditing = filter =>
   dispatch => dispatch({ auditing: filter, type: AUDITING });
 
 exports.audit = (walker, filter) =>
-  dispatch => walker.audit()
-    .then(response => dispatch({ type: AUDIT, response }))
-    .catch(error => dispatch({ type: AUDIT, error }));
+  dispatch => {
+    const onAuditEvent = walker.once("audit-event");
+    walker.startAudit();
+    return onAuditEvent
+      .then(({ ancestries: response, error }) =>
+        dispatch({ type: AUDIT, error, response }))
+      .catch(error => dispatch({ type: AUDIT, error }));
+  };
