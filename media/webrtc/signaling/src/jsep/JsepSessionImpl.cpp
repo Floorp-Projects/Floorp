@@ -107,7 +107,7 @@ nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
 
     // Make sure we have identifiers for send track, just in case.
     // (man I hate this)
-    if (transceiver->mSendTrack.GetTrackId().empty()) {
+    if (mEncodeTrackId) {
       std::string trackId;
       if (!mUuidGen->Generate(&trackId)) {
         JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
@@ -257,8 +257,8 @@ nsresult JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   nsresult rv = AddTransportAttributes(msection, SdpSetupAttribute::kActpass);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
-  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
+  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, msection);
+  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, msection);
 
   AddExtmap(msection);
 
@@ -538,10 +538,8 @@ nsresult JsepSessionImpl::CreateAnswerMsection(
   rv = AddTransportAttributes(&msection, role);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator,
-                                     mEncodeTrackId, &msection);
-  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator,
-                                     mEncodeTrackId, &msection);
+  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
+  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
 
   // Add extmap attributes. This logic will probably be moved to the track,
   // since it can be specified on a per-sender basis in JS.
