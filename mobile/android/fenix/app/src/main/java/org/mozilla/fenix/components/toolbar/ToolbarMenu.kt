@@ -19,6 +19,7 @@ interface ToolbarMenu {
         object Stop : Item()
         object ReportIssue : Item()
         object OpenInFenix : Item()
+        object SaveToCollection : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

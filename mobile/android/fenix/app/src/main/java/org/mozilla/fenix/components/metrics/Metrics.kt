@@ -195,7 +195,8 @@ sealed class Event {
     data class BrowserMenuItemTapped(val item: Item) : Event() {
         enum class Item {
             SETTINGS, LIBRARY, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
-            NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX
+            NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX,
+            SAVE_TO_COLLECTION
         }
 
         override val extras: Map<String, String>?

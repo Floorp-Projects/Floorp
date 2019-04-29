@@ -477,6 +477,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             ToolbarMenu.Item.NewTab -> Item.NEW_TAB
             ToolbarMenu.Item.OpenInFenix -> Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Item.SHARE
+            ToolbarMenu.Item.SaveToCollection -> Item.SAVE_TO_COLLECTION
         }
 
         requireComponents.analytics.metrics.track(Event.BrowserMenuItemTapped(item))
@@ -526,6 +527,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+            }
+            ToolbarMenu.Item.SaveToCollection -> {
+                ItsNotBrokenSnack(requireContext())
+                    .showSnackbar("1843")
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 val intent = Intent(context, IntentReceiverActivity::class.java)
