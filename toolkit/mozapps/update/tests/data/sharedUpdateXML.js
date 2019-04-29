@@ -244,6 +244,8 @@ function getLocalUpdateString(aUpdateProps, aPatches) {
     updateProps[name] = aUpdateProps[name];
   }
 
+  let checkInterval = updateProps.checkInterval ?
+    "checkInterval=\"" + updateProps.checkInterval + "\" " : "";
   let channel = "channel=\"" + updateProps.channel + "\" ";
   let isCompleteUpdate =
     "isCompleteUpdate=\"" + updateProps.isCompleteUpdate + "\" ";
@@ -258,6 +260,7 @@ function getLocalUpdateString(aUpdateProps, aPatches) {
 
   return getUpdateString(updateProps) +
          " " +
+         checkInterval +
          channel +
          isCompleteUpdate +
          foregroundDownload +
