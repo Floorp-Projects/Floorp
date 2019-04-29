@@ -25,9 +25,12 @@ import {
   hasResource,
   getResource,
   getResourceIds,
+  makeReduceQuery,
   makeReduceAllQuery,
+  makeMapWithArgs,
   type Resource,
   type ResourceState,
+  type ReduceQuery,
   type ReduceAllQuery
 } from "../utils/resource";
 
@@ -69,7 +72,6 @@ export type SourcesMapByThread = { [ThreadId]: SourcesMap };
 type SourceActorMap = { [SourceId]: Array<SourceActorId> };
 
 type UrlsMap = { [string]: SourceId[] };
-type DisplayedSources = Set<SourceId>;
 type PlainUrlsMap = { [string]: string[] };
 
 type SourceResource = Resource<{
@@ -100,10 +102,6 @@ export type SourcesState = {
   // disambiguation.
   plainUrls: PlainUrlsMap,
 
-  // For each thread, all sources in that thread that are under the project root
-  // and should be shown in the editor's sources pane.
-  displayed: DisplayedSources,
-
   pendingSelectedLocation?: PendingSelectedLocation,
   selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string,
@@ -114,7 +112,6 @@ export type SourcesState = {
 export function initialSourcesState(): SourcesState {
   return {
     sources: createInitial(),
-    displayed: new Set(),
     urls: {},
     plainUrls: {},
     content: {},
@@ -353,23 +350,12 @@ function updateRootRelativeValues(
     : getResourceIds(state.sources);
 
   state = {
-    ...state,
-    displayed: new Set(state.displayed)
+    ...state
   };
 
   const relativeURLUpdates = [];
   for (const id of ids) {
     const source = getResource(state.sources, id);
-
-    state.displayed.delete(source.id);
-
-    if (
-      underRoot(source, state.projectDirectoryRoot) &&
-      (!source.isExtension ||
-        getChromeAndExtenstionsEnabled({ sources: state }))
-    ) {
-      state.displayed.add(source.id);
-    }
 
     relativeURLUpdates.push({
       id,
@@ -792,12 +778,37 @@ export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
 }
 
-function getAllDisplayedSources(state: OuterState): DisplayedSources {
-  return state.sources.displayed;
-}
+const queryAllDisplayedSources: ReduceQuery<
+  SourceResource,
+  {| projectDirectoryRoot: string, chromeAndExtensionsEnabled: boolean |},
+  Array<SourceId>
+> = makeReduceQuery(
+  makeMapWithArgs(
+    (
+      resource,
+      ident,
+      { projectDirectoryRoot, chromeAndExtensionsEnabled }
+    ) => ({
+      id: resource.id,
+      displayed:
+        underRoot(resource, projectDirectoryRoot) &&
+        (!resource.isExtension || chromeAndExtensionsEnabled)
+    })
+  ),
+  items =>
+    items.reduce((acc, { id, displayed }) => {
+      if (displayed) {
+        acc.push(id);
+      }
+      return acc;
+    }, [])
+);
 
-function getChromeAndExtenstionsEnabled(state: OuterState) {
-  return state.sources.chromeAndExtenstionsEnabled;
+function getAllDisplayedSources(state: OuterState): Array<SourceId> {
+  return queryAllDisplayedSources(state.sources.sources, {
+    projectDirectoryRoot: state.sources.projectDirectoryRoot,
+    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled
+  });
 }
 
 type GetDisplayedSourceIDsSelector = (
