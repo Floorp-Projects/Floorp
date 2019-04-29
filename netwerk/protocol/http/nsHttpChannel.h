@@ -546,10 +546,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetOriginHeader();
   void SetDoNotTrack();
 
-  bool IsIsolated();
-
-  const nsCString &GetTopWindowOrigin();
-
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 
   // Start an internal redirect to a new InterceptedHttpChannel which will
@@ -721,21 +717,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // True only when we are between Resume and async fire of mCallOnResume.
   // Used to suspend any newly created pumps in mCallOnResume handler.
   uint32_t mAsyncResumePending : 1;
-
-  // True only when we have checked whether this channel has been isolated for
-  // anti-tracking purposes.
-  uint32_t mHasBeenIsolatedChecked : 1;
-  // True only when we have determined this channel should be isolated for
-  // anti-tracking purposes.  Can never ben true unless mHasBeenIsolatedChecked
-  // is true.
-  uint32_t mIsIsolated : 1;
-
-  // True only when we have computed the value of the top window origin.
-  uint32_t mTopWindowOriginComputed : 1;
-
-  // The origin of the top window, only valid when mTopWindowOriginComputed is
-  // true.
-  nsCString mTopWindowOrigin;
 
   nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
