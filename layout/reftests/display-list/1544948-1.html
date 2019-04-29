@@ -1,0 +1,43 @@
+<html class="reftest-wait">
+<head>
+<style>
+  div {
+    width:10px;
+    height:10px;
+    background-color:green;
+    display: inline-block;
+    position: relative;
+  }
+  #wrapper {
+    opacity: 0.5;
+    width: 200px;
+    height: 200px;
+    background-color: transparent;
+  }
+
+  #first {
+    z-index: 1;
+  }
+</style>
+<script>
+function doTest2() {
+  var elem = document.getElementById("second");
+  elem.style.backgroundColor = "blue";
+}
+
+function doTest() {
+  var elem = document.getElementById("third");
+  elem.parentNode.removeChild(elem);
+  document.documentElement.removeAttribute("class");
+  requestAnimationFrame(doTest2);
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body id="body">
+  <div id="wrapper">
+    <div id="first" class="reftest-no-display-list"></div><div id="second"></div><div id="third"></div>
+  </div>
+</body>
+</html>
