@@ -26,6 +26,9 @@ function registerEvent(extension, eventName, fire, filter, info, remoteTab = nul
     event.tabId = browserData.tabId;
     if (data.originAttributes) {
       event.incognito = data.originAttributes.privateBrowsingId > 0;
+      if (extension.hasPermission("cookies")) {
+        event.cookieStoreId = getCookieStoreIdForOriginAttributes(data.originAttributes);
+      }
     }
     if (data.registerTraceableChannel) {
       // If this is a primed listener, no tabParent was passed in here,

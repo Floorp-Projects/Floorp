@@ -6,7 +6,8 @@
             getContainerForCookieStoreId,
             isValidCookieStoreId, isContainerCookieStoreId,
             EventManager, URL */
-/* global getCookieStoreIdForTab:false, getCookieStoreIdForContainer:false,
+/* global getCookieStoreIdForTab:false, getCookieStoreIdForOriginAttributes:false,
+          getCookieStoreIdForContainer:false,
           getContainerForCookieStoreId: false,
           isValidCookieStoreId:false, isContainerCookieStoreId:false,
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
@@ -35,6 +36,18 @@ global.getCookieStoreIdForTab = function(data, tab) {
 
   if (tab.userContextId) {
     return getCookieStoreIdForContainer(tab.userContextId);
+  }
+
+  return DEFAULT_STORE;
+};
+
+global.getCookieStoreIdForOriginAttributes = function(originAttributes) {
+  if (originAttributes.privateBrowsingId) {
+    return PRIVATE_STORE;
+  }
+
+  if (originAttributes.userContextId) {
+    return getCookieStoreIdForContainer(originAttributes.userContextId);
   }
 
   return DEFAULT_STORE;
