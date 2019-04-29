@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_tabs_BrowserParent_h
-#define mozilla_tabs_BrowserParent_h
+#ifndef mozilla_dom_BrowserParent_h
+#define mozilla_dom_BrowserParent_h
 
 #include "js/TypeDecls.h"
 #include "LiveResizeListener.h"
@@ -897,4 +897,4 @@ struct MOZ_STACK_CLASS BrowserParent::AutoUseNewTab final {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_tabs_BrowserParent_h
+#endif  // mozilla_dom_BrowserParent_h
