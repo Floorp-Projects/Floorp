@@ -186,10 +186,9 @@ class JsepTrack {
   }
 
   // These two are non-const because this is where ssrcs are chosen.
-  virtual void AddToOffer(SsrcGenerator& ssrcGenerator, bool encodeTrackId,
-                          SdpMediaSection* offer);
+  virtual void AddToOffer(SsrcGenerator& ssrcGenerator, SdpMediaSection* offer);
   virtual void AddToAnswer(const SdpMediaSection& offer,
-                           SsrcGenerator& ssrcGenerator, bool encodeTrackId,
+                           SsrcGenerator& ssrcGenerator,
                            SdpMediaSection* answer);
 
   virtual void Negotiate(const SdpMediaSection& answer,
@@ -243,7 +242,7 @@ class JsepTrack {
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
       std::vector<uint16_t>* pts);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
-                     bool encodeTrackId, SdpMediaSection* msection);
+                     SdpMediaSection* msection);
   void GetRids(const SdpMediaSection& msection, sdp::Direction direction,
                std::vector<SdpRidAttributeList::Rid>* rids) const;
   void CreateEncodings(

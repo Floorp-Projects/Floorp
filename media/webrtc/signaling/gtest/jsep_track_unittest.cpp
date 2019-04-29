@@ -127,8 +127,8 @@ class JsepTrackTest : public ::testing::Test {
   SdpMediaSection& GetAnswer() { return mAnswer->GetMediaSection(0); }
 
   void CreateOffer() {
-    mSendOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
-    mRecvOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
+    mSendOff.AddToOffer(mSsrcGenerator, &GetOffer());
+    mRecvOff.AddToOffer(mSsrcGenerator, &GetOffer());
   }
 
   void CreateAnswer() {
@@ -136,8 +136,8 @@ class JsepTrackTest : public ::testing::Test {
       mRecvAns.UpdateRecvTrack(*mOffer, GetOffer());
     }
 
-    mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
-    mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
+    mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
+    mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
   }
 
   void Negotiate() {
