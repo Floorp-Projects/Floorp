@@ -418,7 +418,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     override fun onStop() {
         super.onStop()
         sessionObserver?.let {
-            requireComponents.core.sessionManager.selectedSession?.unregister(it)
+            getSessionById()?.unregister(it)
         }
     }
 
@@ -602,7 +602,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 setToolbarBehavior(loading)
             }
         }
-        requireComponents.core.sessionManager.selectedSession?.register(observer)
+        getSessionById()?.register(observer)
         return observer
     }
 

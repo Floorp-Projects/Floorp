@@ -21,8 +21,6 @@ import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.feature.qr.QrFeature
-import mozilla.components.feature.search.SearchUseCases
-import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.isPermissionGranted
@@ -36,7 +34,6 @@ import org.mozilla.fenix.components.toolbar.SearchChange
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -110,7 +107,11 @@ class SearchFragment : Fragment(), BackHandler {
                             }
                             setPositiveButton("ALLOW") { dialog: DialogInterface, _ ->
                                 (activity as HomeActivity)
-                                    .openToBrowserAndLoad(result, from = BrowserDirection.FromSearch)
+                                    .openToBrowserAndLoad(
+                                        searchTermOrURL = result,
+                                        newTab = sessionId == null,
+                                        from = BrowserDirection.FromSearch
+                                    )
                                 dialog.dismiss()
                                 // TODO add metrics
                             }
@@ -182,7 +183,10 @@ class SearchFragment : Fragment(), BackHandler {
                     is SearchAction.UrlCommitted -> {
                         if (it.url.isNotBlank()) {
                             (activity as HomeActivity).openToBrowserAndLoad(
-                                it.url, engine = it.engine, from = BrowserDirection.FromSearch
+                                searchTermOrURL = it.url,
+                                newTab = sessionId == null,
+                                from = BrowserDirection.FromSearch,
+                                engine = it.engine
                             )
 
                             val event = if (it.url.isUrl()) {
@@ -212,18 +216,23 @@ class SearchFragment : Fragment(), BackHandler {
             .subscribe {
                 when (it) {
                     is AwesomeBarAction.URLTapped -> {
-                        getSessionUseCase(requireContext(), sessionId == null).invoke(it.url)
-                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromSearch)
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = it.url,
+                            newTab = sessionId == null,
+                            from = BrowserDirection.FromSearch
+                        )
                         requireComponents.analytics.metrics.track(Event.EnteredUrl(false))
                     }
                     is AwesomeBarAction.SearchTermsTapped -> {
-                        getSearchUseCase(requireContext(), sessionId == null)
-                            .invoke(it.searchTerms, it.engine)
-                        (activity as HomeActivity).openToBrowser(BrowserDirection.FromSearch)
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = it.searchTerms,
+                            newTab = sessionId == null,
+                            from = BrowserDirection.FromSearch,
+                            engine = it.engine
+                        )
 
                         val engine = it.engine ?: requireComponents
                             .search.searchEngineManager.getDefaultSearchEngine(requireContext())
-
                         val event = createSearchEvent(engine, true)
 
                         requireComponents.analytics.metrics.track(event)
@@ -252,28 +261,6 @@ class SearchFragment : Fragment(), BackHandler {
             else Event.PerformedSearch.EventSource.Action(engineSource)
 
         return Event.PerformedSearch(source)
-    }
-
-    private fun getSearchUseCase(context: Context, useNewTab: Boolean): SearchUseCases.SearchUseCase {
-        if (!useNewTab) {
-            return context.components.useCases.searchUseCases.defaultSearch
-        }
-
-        return when (isPrivate) {
-            true -> context.components.useCases.searchUseCases.newPrivateTabSearch
-            false -> context.components.useCases.searchUseCases.newTabSearch
-        }
-    }
-
-    private fun getSessionUseCase(context: Context, useNewTab: Boolean): SessionUseCases.LoadUrlUseCase {
-        if (!useNewTab) {
-            return context.components.useCases.sessionUseCases.loadUrl
-        }
-
-        return when (isPrivate) {
-            true -> context.components.useCases.tabsUseCases.addPrivateTab
-            false -> context.components.useCases.tabsUseCases.addTab
-        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

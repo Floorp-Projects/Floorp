@@ -142,10 +142,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
-                    SupportUtils.getSumoURLForTopic(
-                        context!!,
-                        SupportUtils.SumoTopic.HELP
-                    ), from = BrowserDirection.FromSettings
+                    searchTermOrURL = SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.HELP),
+                    newTab = true,
+                    from = BrowserDirection.FromSettings
                 )
             }
             resources.getString(pref_key_rate) -> {
@@ -153,7 +152,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_feedback) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
-                    SupportUtils.FEEDBACK_URL,
+                    searchTermOrURL = SupportUtils.FEEDBACK_URL,
+                    newTab = true,
                     from = BrowserDirection.FromSettings
                 )
             }

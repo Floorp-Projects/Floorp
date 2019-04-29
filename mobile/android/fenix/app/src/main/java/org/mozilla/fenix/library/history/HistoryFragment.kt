@@ -67,7 +67,10 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     }
 
     private fun selectItem(item: HistoryItem) {
-        (activity as HomeActivity).openToBrowserAndLoad(item.url, from = BrowserDirection.FromHistory)
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = item.url,
+            newTab = false,
+            from = BrowserDirection.FromHistory)
     }
 
     override fun onDestroy() {

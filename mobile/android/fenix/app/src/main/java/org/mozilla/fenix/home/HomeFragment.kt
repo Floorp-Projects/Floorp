@@ -220,8 +220,11 @@ class HomeFragment : Fragment(), CoroutineScope {
                 requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(action.private)
             }
             is TabAction.PrivateBrowsingLearnMore -> {
-                (activity as HomeActivity).openToBrowserAndLoad(SupportUtils.getGenericSumoURLForTopic
-                    (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS), from = BrowserDirection.FromHome)
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
+                        (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
+                    newTab = true,
+                    from = BrowserDirection.FromHome)
             }
             is TabAction.Add -> {
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
@@ -251,10 +254,12 @@ class HomeFragment : Fragment(), CoroutineScope {
                 )
                 HomeMenu.Item.Help -> {
                     (activity as HomeActivity).openToBrowserAndLoad(
-                        SupportUtils.getSumoURLForTopic(
+                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
                             SupportUtils.SumoTopic.HELP
-                        ), from = BrowserDirection.FromHome
+                        ),
+                        newTab = true,
+                        from = BrowserDirection.FromHome
                     )
                 }
             }

@@ -145,7 +145,10 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         if (it.item.type == BookmarkNodeType.ITEM) {
                             it.item.url?.let { url ->
                                 (activity as HomeActivity)
-                                    .openToBrowserAndLoad(url, from = BrowserDirection.FromBookmarks)
+                                    .openToBrowserAndLoad(
+                                        searchTermOrURL = url,
+                                        newTab = false,
+                                        from = BrowserDirection.FromBookmarks)
                             }
                         }
                         requireComponents.analytics.metrics.track(Event.OpenedBookmark)
@@ -188,6 +191,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                                 BrowsingModeManager.Mode.Normal
                             (activity as HomeActivity).openToBrowserAndLoad(
                                 searchTermOrURL = url,
+                                newTab = true,
                                 from = BrowserDirection.FromBookmarks
                             )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInNewTab)
@@ -199,6 +203,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                                 BrowsingModeManager.Mode.Private
                             (activity as HomeActivity).openToBrowserAndLoad(
                                 searchTermOrURL = url,
+                                newTab = true,
                                 from = BrowserDirection.FromBookmarks
                             )
                             requireComponents.analytics.metrics.track(Event.OpenedBookmarkInPrivateTab)

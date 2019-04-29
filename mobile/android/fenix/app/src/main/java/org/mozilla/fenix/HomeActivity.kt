@@ -140,22 +140,22 @@ open class HomeActivity : AppCompatActivity() {
         this.intent.putExtra(OPEN_TO_BROWSER, false)
         var customTabSessionId: String? = null
 
-        intent.let {
-            if (isCustomTab) {
-                customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
-            }
-            openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
+        if (isCustomTab) {
+            customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
         }
+
+        openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
     }
 
     fun openToBrowserAndLoad(
         searchTermOrURL: String,
+        newTab: Boolean,
+        from: BrowserDirection,
         customTabSessionId: String? = null,
-        engine: SearchEngine? = null,
-        from: BrowserDirection
+        engine: SearchEngine? = null
     ) {
         openToBrowser(from, customTabSessionId)
-        load(searchTermOrURL, customTabSessionId, engine)
+        load(searchTermOrURL, newTab, engine)
     }
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
@@ -180,10 +180,10 @@ open class HomeActivity : AppCompatActivity() {
         navHost.navController.navigate(directions)
     }
 
-    private fun load(searchTermOrURL: String, sessionId: String?, engine: SearchEngine?) {
+    private fun load(searchTermOrURL: String, newTab: Boolean, engine: SearchEngine?) {
         val isPrivate = this.browsingModeManager.isPrivate
 
-        val loadUrlUseCase = if (sessionId == null) {
+        val loadUrlUseCase = if (newTab) {
             if (isPrivate) {
                 components.useCases.tabsUseCases.addPrivateTab
             } else {
@@ -192,7 +192,7 @@ open class HomeActivity : AppCompatActivity() {
         } else components.useCases.sessionUseCases.loadUrl
 
         val searchUseCase: (String) -> Unit = { searchTerms ->
-            if (sessionId == null) {
+            if (newTab) {
                 components.useCases.searchUseCases.newTabSearch
                     .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate, searchEngine = engine)
             } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
