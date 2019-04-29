@@ -312,7 +312,7 @@ TestRunner._makeIframe = function (url, retry) {
         SpecialPowers.focus();
         iframe.focus();
         if (retry < 3) {
-            window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
+            window.setTimeout(function() {TestRunner._makeIframe(url, retry+1)}, 1000);
             return;
         }
 
