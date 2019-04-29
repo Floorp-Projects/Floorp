@@ -140,6 +140,10 @@ void CSSKeyframeRule::List(FILE* out, int32_t aIndent) const {
 
 template <typename Func>
 void CSSKeyframeRule::UpdateRule(Func aCallback) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   aCallback();
 
   if (StyleSheet* sheet = GetStyleSheet()) {

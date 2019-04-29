@@ -41,6 +41,10 @@ void MediaList::SetStyleSheet(StyleSheet* aSheet) {
 
 template <typename Func>
 nsresult MediaList::DoMediaChange(Func aCallback) {
+  if (IsReadOnly()) {
+    return NS_OK;
+  }
+
   if (mStyleSheet) {
     mStyleSheet->WillDirty();
   }
@@ -85,6 +89,10 @@ already_AddRefed<MediaList> MediaList::Create(const nsAString& aMedia,
 }
 
 void MediaList::SetText(const nsAString& aMediaText) {
+  if (IsReadOnly()) {
+    return;
+  }
+
   SetTextInternal(aMediaText, CallerType::NonSystem);
 }
 
@@ -107,6 +115,7 @@ void MediaList::IndexedGetter(uint32_t aIndex, bool& aFound,
 }
 
 nsresult MediaList::Delete(const nsAString& aOldMedium) {
+  MOZ_ASSERT(!IsReadOnly());
   NS_ConvertUTF16toUTF8 oldMedium(aOldMedium);
   if (Servo_MediaList_DeleteMedium(mRawList, &oldMedium)) {
     return NS_OK;
@@ -122,6 +131,7 @@ bool MediaList::Matches(const Document& aDocument) const {
 }
 
 nsresult MediaList::Append(const nsAString& aNewMedium) {
+  MOZ_ASSERT(!IsReadOnly());
   if (aNewMedium.IsEmpty()) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
@@ -159,6 +169,10 @@ size_t MediaList::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
                                            ServoMediaListMallocEnclosingSizeOf,
                                            mRawList);
   return n;
+}
+
+bool MediaList::IsReadOnly() const {
+  return mStyleSheet && mStyleSheet->IsReadOnly();
 }
 
 }  // namespace dom

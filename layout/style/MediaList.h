@@ -77,6 +77,8 @@ class MediaList final : public nsISupports, public nsWrapperCache {
     MOZ_ASSERT(!mStyleSheet, "Backpointer should have been cleared");
   }
 
+  bool IsReadOnly() const;
+
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this
   // medialist changes
