@@ -1132,7 +1132,7 @@ impl AlphaBatchBuilder {
                                     .combined_local_clip_rect
                                     .intersection(&picture.local_rect)
                                     .and_then(|rect| {
-                                        rect.intersection(&picture.local_clip_rect)
+                                        rect.intersection(&tile_cache.local_clip_rect)
                                     });
 
                                 if let Some(local_clip_rect) = local_clip_rect {
