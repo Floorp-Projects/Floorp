@@ -55,6 +55,10 @@ async function showErrorPage(doc, errorMessage) {
 
   // mount the React component into our XUL container once the DOM is ready
   await onLoad;
+
+  // Update the tab title.
+  document.title = L10N.getStr("toolbox.debugTargetInfo.tabTitleError");
+
   const mountEl = doc.querySelector("#toolbox-error-mount");
   const element = DebugTargetErrorPage({
     errorMessage,
