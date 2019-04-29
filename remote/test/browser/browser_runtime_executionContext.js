@@ -53,17 +53,24 @@ async function testCDP() {
   await Runtime.enable();
   ok(true, "Runtime domain has been enabled");
 
+  // Calling Runtime.enable will emit executionContextCreated for the existing contexts
+  const { context: context1 } = await Runtime.executionContextCreated();
+  ok(!!context1.id, "The execution context has an id");
+  ok(context1.auxData.isDefault, "The execution context is the default one");
+  ok(!!context1.auxData.frameId, "The execution context has a frame id set");
+
   const executionContextCreated = Runtime.executionContextCreated();
 
   const url = "data:text/html;charset=utf-8,test-page";
-  const { frameId } = await Page.navigate({ url  });
+  const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
-  ok(frameId, "Page.navigate returned a frameId");
+  is(frameId, context1.auxData.frameId, "Page.navigate returns the same frameId than executionContextCreated");
 
-  const { context } = await executionContextCreated;
-  ok(!!context.id, "The execution context has an id");
-  ok(context.auxData.isDefault, "The execution context is the default one");
-  is(context.auxData.frameId, frameId, "The execution context frame id is the same " +
+  const { context: context2 } = await executionContextCreated;
+  ok(!!context2.id, "The execution context has an id");
+  isnot(context1.id, context2.id, "The new execution context has a different id");
+  ok(context2.auxData.isDefault, "The execution context is the default one");
+  is(context2.auxData.frameId, frameId, "The execution context frame id is the same " +
     "the one returned by Page.navigate");
 
   await client.close();
