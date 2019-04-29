@@ -2642,6 +2642,39 @@ XDRResult ScriptSource::xdrUncompressedSource<XDR_ENCODE>(
 
 }  // namespace js
 
+template <typename Unit, XDRMode mode>
+/* static */
+XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
+                                             ScriptSource* const ss,
+                                             bool retrievable) {
+  static_assert(std::is_same<Unit, Utf8Unit>::value ||
+                    std::is_same<Unit, char16_t>::value,
+                "should handle UTF-8 and UTF-16");
+
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(ss->data.is<Uncompressed<Unit>>());
+  }
+
+  MOZ_ASSERT(retrievable == ss->sourceRetrievable());
+
+  if (retrievable) {
+    // It's unnecessary to code uncompressed data if it can just be retrieved
+    // using the source hook.
+    if (mode == XDR_DECODE) {
+      ss->data = SourceType(Retrievable<Unit>());
+    }
+    return Ok();
+  }
+
+  uint32_t uncompressedLength;
+  if (mode == XDR_ENCODE) {
+    uncompressedLength = ss->data.as<Uncompressed<Unit>>().length();
+  }
+  MOZ_TRY(xdr->codeUint32(&uncompressedLength));
+
+  return ss->xdrUncompressedSource(xdr, sizeof(Unit), uncompressedLength);
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
@@ -2769,35 +2802,6 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     }
 
     return Ok();
-  };
-
-  auto CodeUncompressedData = [xdr, ss, &retrievable](auto unit) -> XDRResult {
-    using Unit = decltype(unit);
-
-    static_assert(std::is_same<Unit, Utf8Unit>::value ||
-                      std::is_same<Unit, char16_t>::value,
-                  "should handle UTF-8 and UTF-16");
-
-    if (mode == XDR_ENCODE) {
-      MOZ_ASSERT(ss->data.is<Uncompressed<Unit>>());
-    }
-
-    if (retrievable) {
-      // It's unnecessary to code uncompressed data if it can just be retrieved
-      // using the source hook.
-      if (mode == XDR_DECODE) {
-        ss->data = SourceType(Retrievable<Unit>());
-      }
-      return Ok();
-    }
-
-    uint32_t uncompressedLength = 0;
-    if (mode == XDR_ENCODE) {
-      uncompressedLength = ss->data.as<Uncompressed<Unit>>().length();
-    }
-    MOZ_TRY(xdr->codeUint32(&uncompressedLength));
-
-    return ss->xdrUncompressedSource(xdr, sizeof(Unit), uncompressedLength);
   };
 
   auto CodeBinASTData = [xdr
@@ -2932,16 +2936,14 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
       return CodeCompressedData(Utf8Unit('0'));
 
     case DataType::UncompressedUtf8:
-      // The argument here is just for overloading -- its value doesn't matter.
-      return CodeUncompressedData(Utf8Unit('0'));
+      return ScriptSource::codeUncompressedData<Utf8Unit>(xdr, ss, retrievable);
 
     case DataType::CompressedUtf16:
       // The argument here is just for overloading -- its value doesn't matter.
       return CodeCompressedData(char16_t('0'));
 
     case DataType::UncompressedUtf16:
-      // The argument here is just for overloading -- its value doesn't matter.
-      return CodeUncompressedData(char16_t('0'));
+      return ScriptSource::codeUncompressedData<char16_t>(xdr, ss, retrievable);
 
     case DataType::Missing: {
       MOZ_ASSERT(ss->data.is<Missing>(),
