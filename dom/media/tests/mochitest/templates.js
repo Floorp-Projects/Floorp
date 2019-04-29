@@ -197,20 +197,6 @@ var commandsPeerConnectionOfferAnswer = [
     test.pcRemote.setupIceCandidateHandler(test);
   },
 
-  function PC_LOCAL_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
-    if (test.testOptions.steeplechase) {
-      send_message({"type": "local_expected_tracks",
-                    "expected_tracks": test.pcLocal.expectedLocalTrackInfoById});
-    }
-  },
-
-  function PC_REMOTE_STEEPLECHASE_SIGNAL_EXPECTED_LOCAL_TRACKS(test) {
-    if (test.testOptions.steeplechase) {
-      send_message({"type": "remote_expected_tracks",
-                    "expected_tracks": test.pcRemote.expectedLocalTrackInfoById});
-    }
-  },
-
   function PC_LOCAL_CREATE_OFFER(test) {
     return test.createOffer(test.pcLocal).then(offer => {
       is(test.pcLocal.signalingState, STABLE,
@@ -301,8 +287,7 @@ var commandsPeerConnectionOfferAnswer = [
       .then(() => {
         is(test.pcRemote.signalingState, STABLE,
            "signalingState after remote setLocalDescription is 'stable'");
-      })
-      .then(() => test.pcRemote.markRemoteTracksAsNegotiated());
+      });
   },
 
   function PC_LOCAL_GET_ANSWER(test) {
@@ -324,8 +309,7 @@ var commandsPeerConnectionOfferAnswer = [
       .then(() => {
         is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
-      })
-      .then(() => test.pcLocal.markRemoteTracksAsNegotiated());
+      });
   },
 
   function PC_REMOTE_SANE_LOCAL_SDP(test) {
@@ -415,10 +399,10 @@ var commandsPeerConnectionOfferAnswer = [
   },
 
   function PC_LOCAL_CHECK_MSID(test) {
-    return test.pcLocal.checkMsids();
+    return test.pcLocal.checkLocalMsids();
   },
   function PC_REMOTE_CHECK_MSID(test) {
-    return test.pcRemote.checkMsids();
+    return test.pcRemote.checkLocalMsids();
   },
 
   function PC_LOCAL_CHECK_TRACK_STATS(test) {
