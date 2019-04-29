@@ -5,6 +5,11 @@
 include PBackgroundSharedTypes;
 include ProtocolTypes;
 
+include "mozilla/dom/localstorage/SerializationHelpers.h";
+
+using mozilla::dom::LSValue
+  from "mozilla/dom/LSValue.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -57,7 +62,7 @@ union LSSimpleRequestParams
 struct LSItemInfo
 {
   nsString key;
-  nsString value;
+  LSValue value;
 };
 
 } // namespace dom

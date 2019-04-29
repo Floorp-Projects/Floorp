@@ -76,7 +76,7 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
   for (uint32_t i = 0; i < itemInfos.Length(); i++) {
     const LSItemInfo& itemInfo = itemInfos[i];
 
-    const nsString& value = itemInfo.value();
+    const LSValue& value = itemInfo.value();
 
     if (loadState != LoadState::AllOrderedItems && !value.IsVoid()) {
       mLoadedItems.PutEntry(itemInfo.key());
@@ -243,8 +243,8 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
 
     LSSetItemInfo setItemInfo;
     setItemInfo.key() = aKey;
-    setItemInfo.oldValue() = oldValue;
-    setItemInfo.value() = aValue;
+    setItemInfo.oldValue() = LSValue(oldValue);
+    setItemInfo.value() = LSValue(aValue);
 
     mWriteInfos.AppendElement(std::move(setItemInfo));
   }
@@ -289,7 +289,7 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
 
     LSRemoveItemInfo removeItemInfo;
     removeItemInfo.key() = aKey;
-    removeItemInfo.oldValue() = oldValue;
+    removeItemInfo.oldValue() = LSValue(oldValue);
 
     mWriteInfos.AppendElement(std::move(removeItemInfo));
   }
@@ -436,11 +436,14 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
       } else if (mLoadedItems.GetEntry(aKey) || mUnknownItems.GetEntry(aKey)) {
         result.SetIsVoid(true);
       } else {
+        LSValue value;
         nsTArray<LSItemInfo> itemInfos;
         if (NS_WARN_IF(!mActor->SendLoadValueAndMoreItems(
-                nsString(aKey), &result, &itemInfos))) {
+                nsString(aKey), &value, &itemInfos))) {
           return NS_ERROR_FAILURE;
         }
+
+        result = value;
 
         if (result.IsVoid()) {
           mUnknownItems.PutEntry(aKey);
@@ -481,11 +484,14 @@ nsresult LSSnapshot::GetItemInternal(const nsAString& aKey,
     case LoadState::AllOrderedKeys: {
       if (mValues.Get(aKey, &result)) {
         if (result.IsVoid()) {
+          LSValue value;
           nsTArray<LSItemInfo> itemInfos;
           if (NS_WARN_IF(!mActor->SendLoadValueAndMoreItems(
-                  nsString(aKey), &result, &itemInfos))) {
+                  nsString(aKey), &value, &itemInfos))) {
             return NS_ERROR_FAILURE;
           }
+
+          result = value;
 
           MOZ_ASSERT(!result.IsVoid());
 
