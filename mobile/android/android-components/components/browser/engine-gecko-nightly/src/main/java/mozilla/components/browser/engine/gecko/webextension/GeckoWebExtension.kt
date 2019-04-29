@@ -17,7 +17,11 @@ class GeckoWebExtension(
     id: String,
     url: String,
     allowContentMessaging: Boolean = true,
-    val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(url, id, allowContentMessaging)
+    val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
+        url,
+        id,
+        createWebExtensionFlags(allowContentMessaging)
+    )
 ) : WebExtension(id, url) {
 
     /**
@@ -100,5 +104,13 @@ class GeckoPort(
 
     override fun postMessage(message: Any) {
         nativePort.postMessage(message as JSONObject)
+    }
+}
+
+private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
+    return if (allowContentMessaging) {
+        GeckoNativeWebExtension.Flags.ALLOW_CONTENT_MESSAGING
+    } else {
+        GeckoNativeWebExtension.Flags.NONE
     }
 }

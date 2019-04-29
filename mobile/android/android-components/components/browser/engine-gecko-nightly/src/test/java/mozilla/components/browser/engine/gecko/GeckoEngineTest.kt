@@ -209,7 +209,7 @@ class GeckoEngineTest {
         verify(runtime).registerWebExtension(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
-        assertTrue(extCaptor.value.allowContentMessaging)
+        assertEquals(GeckoWebExtension.Flags.ALLOW_CONTENT_MESSAGING, extCaptor.value.flags)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
     }
@@ -236,7 +236,7 @@ class GeckoEngineTest {
         verify(runtime).registerWebExtension(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
-        assertFalse(extCaptor.value.allowContentMessaging)
+        assertEquals(GeckoWebExtension.Flags.NONE, extCaptor.value.flags)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
     }
