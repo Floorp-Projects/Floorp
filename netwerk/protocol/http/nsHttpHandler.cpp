@@ -2496,13 +2496,9 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
   nsAutoCString username;
   aURI->GetUsername(username);
 
-  // TODO For now pass EmptyCString() for topWindowOrigin for all speculative
-  // connection attempts, but ideally we should pass the accurate top window
-  // origin here.  This would require updating the nsISpeculativeConnect API
-  // and all of its consumers.
-  RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
-      host, port, EmptyCString(), username, EmptyCString(), nullptr,
-      originAttributes, usingSSL);
+  RefPtr<nsHttpConnectionInfo> ci =
+      new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
+                               originAttributes, usingSSL);
   ci->SetAnonymous(anonymous);
 
   return SpeculativeConnect(ci, aCallbacks);

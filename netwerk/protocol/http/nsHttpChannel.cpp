@@ -334,9 +334,6 @@ nsHttpChannel::nsHttpChannel()
       mAuthConnectionRestartable(0),
       mChannelClassifierCancellationPending(0),
       mAsyncResumePending(0),
-      mHasBeenIsolatedChecked(0),
-      mIsIsolated(0),
-      mTopWindowOriginComputed(0),
       mPushedStream(nullptr),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -628,10 +625,13 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     mCaps |= NS_HTTP_DISABLE_TRR;
   }
 
+  bool isIsolated = mPrivateBrowsing ||
+                    !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+                        this, mURI, nullptr);
+
   // Finalize ConnectionInfo flags before SpeculativeConnect
   mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
-  mConnectionInfo->SetPrivate(mPrivateBrowsing);
-  mConnectionInfo->SetIsolated(IsIsolated());
+  mConnectionInfo->SetPrivate(isIsolated);
   mConnectionInfo->SetNoSpdy(mCaps & NS_HTTP_DISALLOW_SPDY);
   mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) ||
                                      mBeConservative);
@@ -2368,10 +2368,9 @@ void nsHttpChannel::ProcessAltService() {
   OriginAttributes originAttributes;
   NS_GetOriginAttributes(this, originAttributes);
 
-  AltSvcMapping::ProcessHeader(altSvc, scheme, originHost, originPort,
-                               mUsername, GetTopWindowOrigin(),
-                               mPrivateBrowsing, callbacks, proxyInfo,
-                               mCaps & NS_HTTP_DISALLOW_SPDY, originAttributes);
+  AltSvcMapping::ProcessHeader(
+      altSvc, scheme, originHost, originPort, mUsername, mPrivateBrowsing,
+      callbacks, proxyInfo, mCaps & NS_HTTP_DISALLOW_SPDY, originAttributes);
 }
 
 nsresult nsHttpChannel::ProcessResponse() {
@@ -3896,42 +3895,6 @@ nsresult nsHttpChannel::OpenCacheEntry(bool isHttps) {
   return OpenCacheEntryInternal(isHttps, mApplicationCache, true);
 }
 
-bool nsHttpChannel::IsIsolated() {
-  if (mHasBeenIsolatedChecked) {
-    return mIsIsolated;
-  }
-  mIsIsolated = IsThirdPartyTrackingResource() &&
-                !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                    this, mURI, nullptr);
-  mHasBeenIsolatedChecked = true;
-  return mIsIsolated;
-}
-
-const nsCString &nsHttpChannel::GetTopWindowOrigin() {
-  if (mTopWindowOriginComputed) {
-    return mTopWindowOrigin;
-  }
-
-  nsCOMPtr<nsIURI> topWindowURI;
-  nsresult rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-  bool isDocument = false;
-  if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
-      isDocument) {
-    // For top-level documents, use the document channel's origin to compute
-    // the unique storage space identifier instead of the top Window URI.
-    rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
-    NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-  }
-
-  rv = nsContentUtils::GetASCIIOrigin(topWindowURI ? topWindowURI : mURI,
-                                      mTopWindowOrigin);
-  NS_ENSURE_SUCCESS(rv, mTopWindowOrigin);
-
-  mTopWindowOriginComputed = true;
-
-  return mTopWindowOrigin;
-}
-
 nsresult nsHttpChannel::OpenCacheEntryInternal(
     bool isHttps, nsIApplicationCache *applicationCache,
     bool allowApplicationCache) {
@@ -4051,14 +4014,27 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     extension.Append("TRR");
   }
 
-  if (IsIsolated()) {
-    auto &topWindowOrigin = GetTopWindowOrigin();
-    if (topWindowOrigin.IsEmpty()) {
-      return NS_ERROR_FAILURE;
+  if (IsThirdPartyTrackingResource() &&
+      !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI,
+                                                               nullptr)) {
+    nsCOMPtr<nsIURI> topWindowURI;
+    rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
+    bool isDocument = false;
+    if (NS_FAILED(rv) && NS_SUCCEEDED(GetIsMainDocumentChannel(&isDocument)) &&
+        isDocument) {
+      // For top-level documents, use the document channel's origin to compute
+      // the unique storage space identifier instead of the top Window URI.
+      rv = NS_GetFinalChannelURI(this, getter_AddRefs(topWindowURI));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    nsAutoString topWindowOrigin;
+    rv = nsContentUtils::GetUTFOrigin(topWindowURI ? topWindowURI : mURI,
+                                      topWindowOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     extension.Append("-unique:");
-    extension.Append(topWindowOrigin);
+    extension.Append(NS_ConvertUTF16toUTF8(topWindowOrigin));
   }
 
   mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
@@ -6565,9 +6541,9 @@ nsresult nsHttpChannel::BeginConnect() {
   OriginAttributes originAttributes;
   NS_GetOriginAttributes(this, originAttributes);
 
-  RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
-      host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
-      originAttributes, isHttps);
+  RefPtr<nsHttpConnectionInfo> connInfo =
+      new nsHttpConnectionInfo(host, port, EmptyCString(), mUsername, proxyInfo,
+                               originAttributes, isHttps);
   mAllowAltSvc = (mAllowAltSvc && !gHttpHandler->IsSpdyBlacklisted(connInfo));
 
   RefPtr<AltSvcMapping> mapping;
