@@ -242,8 +242,7 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
 }
 
 void StyleSheet::SetDisabled(bool aDisabled) {
-  // Only allow disabling author sheets.
-  if (mParsingMode != css::eAuthorSheetFeatures) {
+  if (IsReadOnly()) {
     return;
   }
 
@@ -296,9 +295,8 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
       mCORSMode(aCopy.mCORSMode),
       mReferrerPolicy(aCopy.mReferrerPolicy),
       mIntegrity(aCopy.mIntegrity),
-      mFirstChild()  // We don't rebuild the child because we're making a copy
-                     // without children.
-      ,
+      mFirstChild(),  // We don't rebuild the child because we're making a copy
+                      // without children.
       mSourceMapURL(aCopy.mSourceMapURL),
       mSourceMapURLFromComment(aCopy.mSourceMapURLFromComment),
       mSourceURL(aCopy.mSourceURL),
@@ -412,6 +410,8 @@ void StyleSheet::GetTitle(nsAString& aTitle) {
 }
 
 void StyleSheet::WillDirty() {
+  MOZ_ASSERT(!IsReadOnly());
+
   if (IsComplete()) {
     EnsureUniqueInner();
   }
@@ -433,6 +433,12 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 
 void StyleSheet::EnsureUniqueInner() {
   MOZ_ASSERT(mInner->mSheets.Length() != 0, "unexpected number of outers");
+
+  if (IsReadOnly()) {
+    // Sheets that can't be modified don't need a unique inner.
+    return;
+  }
+
   mState |= State::ForcedUniqueInner;
 
   if (HasUniqueInner()) {
@@ -504,6 +510,9 @@ css::Rule* StyleSheet::GetDOMOwnerRule() const { return mOwnerRule; }
 uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
                                 nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return 0;
+  }
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return 0;
   }
@@ -512,6 +521,9 @@ uint32_t StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
 
 void StyleSheet::DeleteRule(uint32_t aIndex, nsIPrincipal& aSubjectPrincipal,
                             ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
   if (!AreRulesAvailable(aSubjectPrincipal, aRv)) {
     return;
   }
@@ -528,6 +540,10 @@ nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
   // check that the rule actually belongs to this sheet!
   if (this != rule->GetStyleSheet()) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  if (IsReadOnly()) {
+    return NS_OK;
   }
 
   WillDirty();
@@ -599,6 +615,10 @@ nsresult StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
   // check that the group actually belongs to this sheet!
   if (this != aGroup->GetStyleSheet()) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  if (IsReadOnly()) {
+    return NS_OK;
   }
 
   WillDirty();
@@ -729,6 +749,7 @@ void StyleSheet::PrependStyleSheet(StyleSheet* aSheet) {
 
 void StyleSheet::PrependStyleSheetSilently(StyleSheet* aSheet) {
   MOZ_ASSERT(aSheet);
+  MOZ_ASSERT(!IsReadOnly());
 
   aSheet->mNext = Inner().mFirstChild;
   Inner().mFirstChild = aSheet;
@@ -995,8 +1016,8 @@ nsresult StyleSheet::ReparseSheet(const nsAString& aInput) {
   // Allowing to modify UA sheets is dangerous (in the sense that C++ code
   // relies on rules in those sheets), plus they're probably going to be shared
   // across processes in which case this is directly a no-go.
-  if (GetOrigin() == StyleOrigin::UserAgent) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  if (IsReadOnly()) {
+    return NS_OK;
   }
 
   // Hold strong ref to the CSSLoader in case the document update
@@ -1133,6 +1154,8 @@ ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
 
 uint32_t StyleSheet::InsertRuleInternal(const nsAString& aRule, uint32_t aIndex,
                                         ErrorResult& aRv) {
+  MOZ_ASSERT(!IsReadOnly());
+
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();
 
@@ -1153,6 +1176,8 @@ uint32_t StyleSheet::InsertRuleInternal(const nsAString& aRule, uint32_t aIndex,
 }
 
 void StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv) {
+  MOZ_ASSERT(!IsReadOnly());
+
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();
   if (aIndex >= mRuleList->Length()) {
@@ -1175,6 +1200,8 @@ void StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv) {
 nsresult StyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
                                                  css::GroupRule* aGroup,
                                                  uint32_t aIndex) {
+  MOZ_ASSERT(!IsReadOnly());
+
   auto rules = static_cast<ServoCSSRuleList*>(aGroup->CssRules());
   MOZ_ASSERT(rules->GetParentRule() == aGroup);
   return rules->InsertRule(aRule, aIndex);
@@ -1213,6 +1240,10 @@ const ServoCssRules* StyleSheet::ToShared(
   MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(Principal()));
 
   return Servo_SharedMemoryBuilder_AddStylesheet(aBuilder, Inner().mContents);
+}
+
+bool StyleSheet::IsReadOnly() const {
+  return IsComplete() && GetOrigin() == StyleOrigin::UserAgent;
 }
 
 }  // namespace mozilla
