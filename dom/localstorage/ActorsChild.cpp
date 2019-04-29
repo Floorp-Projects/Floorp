@@ -126,7 +126,7 @@ void LSObserverChild::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSObserverChild::RecvObserve(
     const PrincipalInfo& aPrincipalInfo, const uint32_t& aPrivateBrowsingId,
     const nsString& aDocumentURI, const nsString& aKey,
-    const nsString& aOldValue, const nsString& aNewValue) {
+    const LSValue& aOldValue, const LSValue& aNewValue) {
   AssertIsOnOwningThread();
 
   if (!mObserver) {
