@@ -73,9 +73,8 @@
                      y: vv.offsetTop,
                      w: vv.width,
                      h: vv.height };
-      ok(rectContains(fixedPosDisplayport, vvRect),
-         "fixed-pos displayport " + rectToString(fixedPosDisplayport) +
-         " should contain visual viewport " + rectToString(vvRect));
+      assertRectContainment(fixedPosDisplayport, "fixed-pos displayport",
+                            vvRect, "visual viewport");
     }
 
     function* test(testDriver) {
