@@ -180,7 +180,7 @@ pref("devtools.netmonitor.saveRequestAndResponseBodies", true);
 
 // The default Network monitor HAR export setting
 pref("devtools.netmonitor.har.defaultLogDir", "");
-pref("devtools.netmonitor.har.defaultFileName", "Archive %date");
+pref("devtools.netmonitor.har.defaultFileName", "%hostname_Archive [%date]");
 pref("devtools.netmonitor.har.jsonp", false);
 pref("devtools.netmonitor.har.jsonpCallback", "");
 pref("devtools.netmonitor.har.includeResponseBodies", true);
