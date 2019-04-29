@@ -1,19 +1,19 @@
-add_task(async function testBasicPrompt() {
-  SpecialPowers.pushPrefEnv({set: [[PREF_APP_UPDATE_SERVICE_ENABLED, false]]});
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+add_task(async function doorhanger_bc_check_cantApply() {
   lockWriteTestFile();
 
-  let updateParams = "promptWaitTime=0";
-
-  await runUpdateTest(updateParams, 1, [
+  let updateParams = "&promptWaitTime=0";
+  await runDoorhangerUpdateTest(updateParams, 1, [
     {
       notificationId: "update-manual",
       button: "button",
-      async cleanup() {
-        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        is(gBrowser.selectedBrowser.currentURI.spec,
-           URL_MANUAL_UPDATE, "Landed on manual update page.");
-        gBrowser.removeTab(gBrowser.selectedTab);
-      },
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDetailsURL,
+                 manual: URL_MANUAL_UPDATE},
     },
   ]);
 });

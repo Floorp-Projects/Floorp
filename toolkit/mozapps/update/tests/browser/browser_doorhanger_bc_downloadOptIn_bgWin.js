@@ -1,15 +1,11 @@
-add_task(async function testUpdatesBackgroundWindow() {
-  SpecialPowers.pushPrefEnv({set: [
-    [PREF_APP_UPDATE_STAGING_ENABLED, false],
-  ]});
-  await UpdateUtils.setAppUpdateAutoEnabled(false);
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-  let updateParams = "promptWaitTime=0";
-  let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
-  await SimpleTest.promiseFocus(extraWindow);
+"use strict";
 
-  await runUpdateTest(updateParams, 1, [
-    async function() {
+add_task(async function doorhanger_bc_downloadOptIn_bgWin() {
+  function getBackgroundWindowHandler() {
+    return async function() {
       await TestUtils.waitForCondition(() =>
         PanelUI.menuButton.hasAttribute("badge-status"),
         "Background window has a badge.");
@@ -17,22 +13,32 @@ add_task(async function testUpdatesBackgroundWindow() {
          "The doorhanger is not showing for the background window");
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-available",
          "The badge is showing for the background window");
-      let popupShownPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
+      let popupShownPromise =
+        BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
       await BrowserTestUtils.closeWindow(extraWindow);
       await SimpleTest.promiseFocus(window);
       await popupShownPromise;
 
-      checkWhatsNewLink(window, "update-available-whats-new");
-      let buttonEl = getNotificationButton(window, "update-available", "button");
+      checkWhatsNewLink(window, "update-available-whats-new",
+                        gDefaultWhatsNewURL);
+      let buttonEl =
+        getNotificationButton(window, "update-available", "button");
       buttonEl.click();
-    },
+    };
+  }
+
+  await UpdateUtils.setAppUpdateAutoEnabled(false);
+
+  let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
+  await SimpleTest.promiseFocus(extraWindow);
+
+  let updateParams = "&promptWaitTime=0";
+  await runDoorhangerUpdateTest(updateParams, 1, [
+    getBackgroundWindowHandler(),
     {
       notificationId: "update-restart",
       button: "secondaryButton",
-      cleanup() {
-        AppMenuNotifications.removeNotification(/.*/);
-      },
+      checkActiveUpdate: {state: STATE_PENDING},
     },
   ]);
 });
-
