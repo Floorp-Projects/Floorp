@@ -6,6 +6,7 @@
 
 import { getCallStackFrames } from "../getCallStackFrames";
 import { pullAt } from "lodash";
+import { insertResources, createInitial } from "../../utils/resource";
 
 describe("getCallStackFrames selector", () => {
   describe("library annotation", () => {
@@ -16,14 +17,14 @@ describe("getCallStackFrames selector", () => {
           { location: { sourceId: "source2" } },
           { location: { sourceId: "source2" } }
         ],
-        sources: {
-          source1: { id: "source1", url: "webpack:///src/App.js" },
-          source2: {
+        sources: insertResources(createInitial(), [
+          { id: "source1", url: "webpack:///src/App.js" },
+          {
             id: "source2",
             url:
               "webpack:///foo/node_modules/react-dom/lib/ReactCompositeComponent.js"
           }
-        },
+        ]),
         selectedSource: {
           id: "sourceId-originalSource"
         }
@@ -127,22 +128,22 @@ describe("getCallStackFrames selector", () => {
 
       const state = {
         frames: [...preAwaitGroup, ...postAwaitGroup],
-        sources: {
-          app: { id: "app", url: "webpack///app.js" },
-          bundle: { id: "bundle", url: "https://foo.com/bundle.js" },
-          regenerator: {
+        sources: insertResources(createInitial(), [
+          { id: "app", url: "webpack///app.js" },
+          { id: "bundle", url: "https://foo.com/bundle.js" },
+          {
             id: "regenerator",
             url: "webpack:///foo/node_modules/regenerator-runtime/runtime.js"
           },
-          microtask: {
+          {
             id: "microtask",
             url: "webpack:///foo/node_modules/core-js/modules/_microtask.js"
           },
-          promise: {
+          {
             id: "promise",
             url: "webpack///foo/node_modules/core-js/modules/es6.promise.js"
           }
-        },
+        ]),
         selectedSource: {
           id: "sourceId-originalSource"
         }

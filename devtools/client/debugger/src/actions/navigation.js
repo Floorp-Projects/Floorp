@@ -6,7 +6,7 @@
 
 import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
-import { getSources } from "../reducers/sources";
+import { getSourceList } from "../reducers/sources";
 import { waitForMs } from "../utils/utils";
 
 import { newGeneratedSources } from "./sources";
@@ -81,7 +81,7 @@ export function navigated() {
     // it is likely that the sources are being loaded from the bfcache,
     // and we should make an explicit request to the server to load them.
     await waitForMs(100);
-    if (Object.keys(getSources(getState())).length == 0) {
+    if (getSourceList(getState()).length == 0) {
       const sources = await client.fetchSources();
       dispatch(newGeneratedSources(sources));
     }
