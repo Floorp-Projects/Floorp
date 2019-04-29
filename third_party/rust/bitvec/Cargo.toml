@@ -1,0 +1,49 @@
+[package]
+name = "bitvec"
+version = "0.10.0"
+authors = [
+	"myrrlyn <myrrlyn@outlook.com>",
+]
+categories = [
+	"data-structures",
+	"embedded",
+	"no-std",
+	"rust-patterns",
+]
+description = "A crate for manipulating memory, bit by bit"
+documentation = "https://docs.rs/bitvec"
+edition = "2018"
+homepage = "https://myrrlyn.net/bitvec"
+keywords = [
+	"bits",
+	"bitvec",
+]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/myrrlyn/bitvec"
+
+[features]
+alloc = []
+default = [
+	"std",
+]
+std = [
+	"alloc",
+]
+testing = [
+	"std",
+]
+
+[badges.codecov]
+repository = "myrrlyn/bitvec"
+branch = "master"
+service = "github"
+
+[badges.is-it-maintained-issue-resolution]
+repository = "myrrlyn/bitvec"
+
+[badges.is-it-maintained-open-issues]
+repository = "myrrlyn/bitvec"
+
+[badges.maintenance]
+status = "actively-developed"
