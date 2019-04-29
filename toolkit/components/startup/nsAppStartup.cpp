@@ -47,6 +47,10 @@
 #if defined(XP_WIN)
 // Prevent collisions with nsAppStartup::GetStartupInfo()
 #  undef GetStartupInfo
+
+#  include <windows.h>
+#elif defined(XP_DARWIN)
+#  include <mach/mach_time.h>
 #endif
 
 #include "mozilla/IOInterposer.h"
@@ -59,6 +63,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #define kPrefMaxResumedCrashes "toolkit.startup.max_resumed_crashes"
 #define kPrefRecentCrashes "toolkit.startup.recent_crashes"
 #define kPrefAlwaysUseSafeMode "toolkit.startup.always_use_safe_mode"
+
+#define kNanosecondsPerSecond 1000000000.0
 
 #if defined(XP_WIN)
 #  include "mozilla/perfprobe.h"
@@ -539,6 +545,25 @@ nsAppStartup::GetWasRestarted(bool *aResult) {
   *aResult = mozAppRestart && (strcmp(mozAppRestart, "") != 0);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetSecondsSinceLastOSRestart(int64_t *aResult) {
+#if defined(XP_WIN)
+  *aResult = int64_t(GetTickCount64() / 1000ull);
+  return NS_OK;
+#elif defined(XP_DARWIN)
+  uint64_t absTime = mach_absolute_time();
+  mach_timebase_info_data_t timebaseInfo;
+  mach_timebase_info(&timebaseInfo);
+  double toNanoseconds =
+      double(timebaseInfo.numer) / double(timebaseInfo.denom);
+  *aResult =
+      std::llround(double(absTime) * toNanoseconds / kNanosecondsPerSecond);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
