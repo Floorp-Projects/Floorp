@@ -335,6 +335,7 @@ class BrowsingContext : public nsWrapperCache,
     already_AddRefed<BrowsingContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
+    bool mCached;
     // Include each field, skipping mOpener, as we want to handle it
     // separately.
 #define MOZ_BC_FIELD(name, type) type m##name;
@@ -346,6 +347,7 @@ class BrowsingContext : public nsWrapperCache,
     IPCInitializer init;
     init.mId = Id();
     init.mParentId = mParent ? mParent->Id() : 0;
+    init.mCached = IsCached();
 
 #define MOZ_BC_FIELD(name, type) init.m##name = m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
