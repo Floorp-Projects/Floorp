@@ -173,18 +173,14 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
 
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
       MediaRawData* aSample) override {
-    RefPtr<RemoteVideoDecoder> self = this;
-    RefPtr<MediaRawData> sample = aSample;
-    return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
-      const VideoInfo* config =
-          sample->mTrackInfo ? sample->mTrackInfo->GetAsVideoInfo() : &mConfig;
-      MOZ_ASSERT(config);
+    const VideoInfo* config =
+        aSample->mTrackInfo ? aSample->mTrackInfo->GetAsVideoInfo() : &mConfig;
+    MOZ_ASSERT(config);
 
-      InputInfo info(sample->mDuration.ToMicroseconds(), config->mImage,
-                     config->mDisplay);
-      mInputInfos.Insert(sample->mTime.ToMicroseconds(), info);
-      return RemoteDataDecoder::ProcessDecode(sample);
-    });
+    InputInfo info(aSample->mDuration.ToMicroseconds(), config->mImage,
+                   config->mDisplay);
+    mInputInfos.Insert(aSample->mTime.ToMicroseconds(), info);
+    return RemoteDataDecoder::Decode(aSample);
   }
 
   bool SupportDecoderRecycling() const override {
@@ -368,26 +364,6 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
   }
 
-  RefPtr<FlushPromise> Flush() override {
-    RefPtr<RemoteAudioDecoder> self = this;
-    return InvokeAsync(mTaskQueue, __func__, [self, this]() {
-      mFirstDemuxedSampleTime.reset();
-      return RemoteDataDecoder::ProcessFlush();
-    });
-  }
-
-  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override {
-    RefPtr<RemoteAudioDecoder> self = this;
-    RefPtr<MediaRawData> sample = aSample;
-    return InvokeAsync(mTaskQueue, __func__, [self, sample, this]() {
-      if (mFirstDemuxedSampleTime.isNothing()) {
-        MOZ_ASSERT(sample->mTime.IsValid());
-        mFirstDemuxedSampleTime.emplace(sample->mTime);
-      }
-      return RemoteDataDecoder::ProcessDecode(sample);
-    });
-  }
-
  private:
   class CallbacksSupport final : public JavaCallbacksSupport {
    public:
@@ -432,10 +408,6 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     RemoteAudioDecoder* mDecoder;
   };
 
-  bool IsSampleTimeSmallerThanFirstDemuxedSampleTime(int64_t aTime) const {
-    return TimeUnit::FromMicroseconds(aTime) < mFirstDemuxedSampleTime.ref();
-  }
-
   // Param and LocalRef are only valid for the duration of a JNI method call.
   // Use GlobalRef as the parameter type to keep the Java object referenced
   // until running.
@@ -476,8 +448,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     int32_t size;
     ok &= NS_SUCCEEDED(info->Size(&size));
 
-    if (!ok ||
-        IsSampleTimeSmallerThanFirstDemuxedSampleTime(presentationTimeUs)) {
+    if (!ok) {
       Error(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
       return;
     }
@@ -529,7 +500,6 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 
   int32_t mOutputChannels;
   int32_t mOutputSampleRate;
-  Maybe<TimeUnit> mFirstDemuxedSampleTime;
 };
 
 already_AddRefed<MediaDataDecoder> RemoteDataDecoder::CreateAudioDecoder(
@@ -712,27 +682,23 @@ static CryptoInfo::LocalRef GetCryptoInfoFromSample(
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
     MediaRawData* aSample) {
+  MOZ_ASSERT(aSample != nullptr);
+
   RefPtr<RemoteDataDecoder> self = this;
   RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
-    return RemoteDataDecoder::ProcessDecode(sample);
+  return InvokeAsync(mTaskQueue, __func__, [self, sample]() {
+    jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
+        const_cast<uint8_t*>(sample->Data()), sample->Size());
+
+    self->SetState(State::DRAINABLE);
+    self->mInputBufferInfo->Set(0, sample->Size(),
+                                sample->mTime.ToMicroseconds(), 0);
+    return self->mJavaDecoder->Input(bytes, self->mInputBufferInfo,
+                                     GetCryptoInfoFromSample(sample))
+               ? self->mDecodePromise.Ensure(__func__)
+               : DecodePromise::CreateAndReject(
+                     MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
   });
-}
-
-RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::ProcessDecode(
-    MediaRawData* aSample) {
-  AssertOnTaskQueue();
-  MOZ_ASSERT(aSample != nullptr);
-  jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
-      const_cast<uint8_t*>(aSample->Data()), aSample->Size());
-
-  SetState(State::DRAINABLE);
-  mInputBufferInfo->Set(0, aSample->Size(), aSample->mTime.ToMicroseconds(), 0);
-  return mJavaDecoder->Input(bytes, mInputBufferInfo,
-                             GetCryptoInfoFromSample(aSample))
-             ? mDecodePromise.Ensure(__func__)
-             : DecodePromise::CreateAndReject(
-                   MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
 }
 
 void RemoteDataDecoder::UpdatePendingInputStatus(PendingOp aOp) {
