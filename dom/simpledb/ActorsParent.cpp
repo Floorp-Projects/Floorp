@@ -1152,7 +1152,7 @@ nsresult OpenOp::DatabaseWork() {
   nsCOMPtr<nsIFile> dbDirectory;
   nsresult rv = quotaManager->EnsureOriginIsInitialized(
       PERSISTENCE_TYPE_DEFAULT, mSuffix, mGroup, mOrigin,
-      /* aCreateIfNotExists */ true, getter_AddRefs(dbDirectory));
+      getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
