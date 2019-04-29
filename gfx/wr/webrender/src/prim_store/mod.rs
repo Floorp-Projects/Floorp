@@ -2020,7 +2020,7 @@ impl PrimitiveStore {
             let mut tile_cache = frame_state.tile_cache.take().unwrap();
 
             // Build the dirty region(s) for this tile cache.
-            pic.local_clip_rect = tile_cache.post_update(
+            tile_cache.post_update(
                 frame_state.resource_cache,
                 frame_state.gpu_cache,
                 frame_context,
