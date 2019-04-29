@@ -97,12 +97,21 @@ class Adb extends EventEmitter {
     return adbAddon.status === "installed" && this._listeners.size > 0;
   }
 
-  _updateAdbProcess() {
+  /**
+   * This method will emit "runtime-list-ready" to notify the consumer that the list of
+   * runtimes is ready to be retrieved.
+   */
+  async _updateAdbProcess() {
     if (!this._isTrackingDevices && this._shouldTrack()) {
+      const onRuntimesUpdated = this.once("runtime-list-updated");
       this._startTracking();
+      // If we are starting to track runtimes, the list of runtimes will only be ready
+      // once the first "runtime-list-updated" event has been processed.
+      await onRuntimesUpdated;
     } else if (this._isTrackingDevices && !this._shouldTrack()) {
       this._stopTracking();
     }
+    this.emit("runtime-list-ready");
   }
 
   async _onDeviceConnected(deviceId) {
