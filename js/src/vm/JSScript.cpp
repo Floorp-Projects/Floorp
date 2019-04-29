@@ -4514,11 +4514,17 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 /* static */ bool SharedScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
   uint32_t natoms = bce->atomIndices->count();
-  uint32_t codeLength = bce->code().length();
+
+  size_t codeLength = bce->code().length();
+  MOZ_RELEASE_ASSERT(codeLength <= frontend::MaxBytecodeLength);
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
   // when the notes are copied to their final destination by copySrcNotes.
-  uint32_t noteLength = bce->notes().length() + 1;
+  static_assert(frontend::MaxSrcNotesLength < UINT32_MAX,
+                "Length + 1 shouldn't overflow UINT32_MAX");
+  size_t noteLengthNoTerminator = bce->notes().length();
+  size_t noteLength = noteLengthNoTerminator + 1;
+  MOZ_RELEASE_ASSERT(noteLengthNoTerminator <= frontend::MaxSrcNotesLength);
 
   // Create and initialize SharedScriptData
   if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
