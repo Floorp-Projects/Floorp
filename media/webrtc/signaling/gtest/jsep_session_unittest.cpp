@@ -216,10 +216,10 @@ class JsepSessionTest : public JsepSessionTestBase,
 
     RefPtr<JsepTransceiver>& transceiver(side.GetTransceivers()[index]);
     JsepTrack& track = transceiver->mSendTrack;
-    EXPECT_FALSE(track.GetTrackId().empty()) << "No track at index " << index;
+    EXPECT_FALSE(track.GetStreamIds().empty()) << "No track at index " << index;
 
     JsepTrack original(track);
-    track.ClearTrackIds();
+    track.ClearStreamIds();
     transceiver->mJsDirection &= SdpDirectionAttribute::Direction::kRecvonly;
     return original;
   }
@@ -324,8 +324,8 @@ class JsepSessionTest : public JsepSessionTestBase,
       }
       transceivers[i]->mJsDirection |=
           SdpDirectionAttribute::Direction::kSendonly;
-      transceivers[i]->mSendTrack.UpdateTrackIds(
-          std::vector<std::string>(1, stream_id), track_id);
+      transceivers[i]->mSendTrack.UpdateStreamIds(
+          std::vector<std::string>(1, stream_id));
     }
   }
 
@@ -576,10 +576,6 @@ class JsepSessionTest : public JsepSessionTestBase,
       return false;
     }
 
-    if (t1.GetTrackId() != t2.GetTrackId()) {
-      return false;
-    }
-
     if (t1.GetActive() != t2.GetActive()) {
       return false;
     }
@@ -793,8 +789,6 @@ class JsepSessionTest : public JsepSessionTestBase,
         if (track.GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
           msidAttr += track.GetStreamIds()[0];
-          msidAttr += " ";
-          msidAttr += track.GetTrackId();
           ASSERT_NE(std::string::npos, offer.find(msidAttr))
               << "Did not find " << msidAttr << " in offer";
         }
@@ -877,8 +871,6 @@ class JsepSessionTest : public JsepSessionTestBase,
         if (recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
           msidAttr += sendTrack.GetStreamIds()[0];
-          msidAttr += " ";
-          msidAttr += sendTrack.GetTrackId();
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
               << "Did not find " << msidAttr << " in answer";
         }
@@ -1302,8 +1294,7 @@ class JsepSessionTest : public JsepSessionTestBase,
 
   void DumpTrack(const JsepTrack& track) {
     const JsepTrackNegotiatedDetails* details = track.GetNegotiatedDetails();
-    std::cerr << "  type=" << track.GetMediaType()
-              << " track-id=" << track.GetTrackId() << std::endl;
+    std::cerr << "  type=" << track.GetMediaType() << std::endl;
     if (!details) {
       std::cerr << "  not negotiated" << std::endl;
       return;
@@ -1807,9 +1798,7 @@ TEST_P(JsepSessionTest, RenegotiationBothAddTracksToExistingStream) {
 }
 
 // The JSEP draft explicitly forbids changing the msid on an m-section, but
-// that is a new restriction that older versions of Firefox do not follow.
-// JS will not see the msid change, since that is filtered out (except for
-// RTCRtpTransceiver.remoteTrackId)
+// that is a bug.
 TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid) {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
@@ -1826,14 +1815,11 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid) {
     return;
   }
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
-  std::string trackId = transceiver->mSendTrack.GetTrackId();
   std::string msidToReplace("a=msid:");
   msidToReplace += streamId;
-  msidToReplace += " ";
-  msidToReplace += trackId;
   size_t msidOffset = offer.find(msidToReplace);
   ASSERT_NE(std::string::npos, msidOffset);
-  offer.replace(msidOffset, msidToReplace.size(), "a=msid:foo bar");
+  offer.replace(msidOffset, msidToReplace.size(), "a=msid:foo");
 
   SetRemoteOffer(offer);
   transceiver = GetNegotiatedTransceiver(*mSessionAns, 0);
@@ -1845,7 +1831,7 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid) {
 }
 
 // The JSEP draft explicitly forbids changing the msid on an m-section, but
-// that is a new restriction that older versions of Firefox do not follow.
+// that is a bug.
 TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid) {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
@@ -1871,14 +1857,11 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid) {
     return;
   }
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
-  std::string trackId = transceiver->mSendTrack.GetTrackId();
   std::string msidToReplace("a=msid:");
   msidToReplace += streamId;
-  msidToReplace += " ";
-  msidToReplace += trackId;
   size_t msidOffset = answer.find(msidToReplace);
   ASSERT_NE(std::string::npos, msidOffset);
-  answer.replace(msidOffset, msidToReplace.size(), "a=msid:foo bar");
+  answer.replace(msidOffset, msidToReplace.size(), "a=msid:foo");
 
   SetRemoteAnswer(answer);
 
@@ -2121,7 +2104,7 @@ TEST_P(JsepSessionTest, RenegotiationBothStopTransceiverDifferentMsection) {
   ASSERT_TRUE(mSessionAns->GetTransceivers()[1]->IsStopped());
 }
 
-TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack) {
+TEST_P(JsepSessionTest, RenegotiationOffererChangesStreamId) {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
 
@@ -2132,20 +2115,16 @@ TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack) {
 
   OfferAnswer();
 
-  mSessionOff->GetTransceivers()[0]->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "newstream"), "newtrack");
+  mSessionOff->GetTransceivers()[0]->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "newstream"));
 
   OfferAnswer(CHECK_SUCCESS);
 
-  // Latest JSEP spec says the msid never changes, so the other side will not
-  // notice track replacement.
-  ASSERT_NE("newtrack",
-            mSessionAns->GetTransceivers()[0]->mRecvTrack.GetTrackId());
-  ASSERT_NE("newstream",
+  ASSERT_EQ("newstream",
             mSessionAns->GetTransceivers()[0]->mRecvTrack.GetStreamIds()[0]);
 }
 
-TEST_P(JsepSessionTest, RenegotiationAnswererReplacesTrack) {
+TEST_P(JsepSessionTest, RenegotiationAnswererChangesStreamId) {
   AddTracks(*mSessionOff);
   AddTracks(*mSessionAns);
 
@@ -2156,16 +2135,12 @@ TEST_P(JsepSessionTest, RenegotiationAnswererReplacesTrack) {
 
   OfferAnswer();
 
-  mSessionAns->GetTransceivers()[0]->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "newstream"), "newtrack");
+  mSessionAns->GetTransceivers()[0]->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "newstream"));
 
   OfferAnswer(CHECK_SUCCESS);
 
-  // Latest JSEP spec says the msid never changes, so the other side will not
-  // notice track replacement.
-  ASSERT_NE("newtrack",
-            mSessionOff->GetTransceivers()[0]->mRecvTrack.GetTrackId());
-  ASSERT_NE("newstream",
+  ASSERT_EQ("newstream",
             mSessionOff->GetTransceivers()[0]->mRecvTrack.GetStreamIds()[0]);
 }
 
@@ -2196,8 +2171,6 @@ TEST_P(JsepSessionTest, RenegotiationAutoAssignedMsidIsStable) {
     // These should not match since we've monkeyed with the msid
     ASSERT_NE(origOffererTransceivers[i]->mRecvTrack.GetStreamIds(),
               origAnswererTransceivers[i]->mSendTrack.GetStreamIds());
-    ASSERT_NE(origOffererTransceivers[i]->mRecvTrack.GetTrackId(),
-              origAnswererTransceivers[i]->mSendTrack.GetTrackId());
   }
 
   offer = CreateOffer();
@@ -2363,7 +2336,26 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesMsid) {
 
   auto newOffererTransceivers = mSessionOff->GetTransceivers();
 
-  ASSERT_TRUE(Equals(origOffererTransceivers, newOffererTransceivers));
+  ASSERT_EQ(origOffererTransceivers.size(), newOffererTransceivers.size());
+  for (size_t i = 0; i < origOffererTransceivers.size(); ++i) {
+    ASSERT_EQ(origOffererTransceivers[i]->mRecvTrack.GetMediaType(),
+              newOffererTransceivers[i]->mRecvTrack.GetMediaType());
+
+    ASSERT_TRUE(Equals(origOffererTransceivers[i]->mSendTrack,
+                       newOffererTransceivers[i]->mSendTrack));
+    ASSERT_TRUE(Equals(origOffererTransceivers[i]->mTransport,
+                       newOffererTransceivers[i]->mTransport));
+
+    if (origOffererTransceivers[i]->mRecvTrack.GetMediaType() ==
+        SdpMediaSection::kApplication) {
+      ASSERT_TRUE(Equals(origOffererTransceivers[i]->mRecvTrack,
+                         newOffererTransceivers[i]->mRecvTrack));
+    } else {
+      // This should be the only difference
+      ASSERT_FALSE(Equals(origOffererTransceivers[i]->mRecvTrack,
+                          newOffererTransceivers[i]->mRecvTrack));
+    }
+  }
 }
 
 // Tests behavior when offerer does not use bundle on the initial offer/answer,
@@ -3152,13 +3144,13 @@ TEST_F(JsepSessionTest, OfferToReceiveVideoNotUsed) {
 
 TEST_F(JsepSessionTest, CreateOfferNoDatachannelDefault) {
   RefPtr<JsepTransceiver> audio(new JsepTransceiver(SdpMediaSection::kAudio));
-  audio->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "a1");
+  audio->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(audio);
 
   RefPtr<JsepTransceiver> video(new JsepTransceiver(SdpMediaSection::kVideo));
-  video->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "v1");
+  video->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(video);
 
   std::string offer = CreateOffer();
@@ -3178,13 +3170,13 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams) {
   types.push_back(SdpMediaSection::kVideo);
 
   RefPtr<JsepTransceiver> audio(new JsepTransceiver(SdpMediaSection::kAudio));
-  audio->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "a1");
+  audio->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(audio);
 
   RefPtr<JsepTransceiver> video(new JsepTransceiver(SdpMediaSection::kVideo));
-  video->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "v1");
+  video->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(video);
 
   std::string offer = CreateOffer();
@@ -3307,13 +3299,13 @@ TEST_F(JsepSessionTest, ValidateOfferedAudioCodecParams) {
   types.push_back(SdpMediaSection::kVideo);
 
   RefPtr<JsepTransceiver> audio(new JsepTransceiver(SdpMediaSection::kAudio));
-  audio->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "a1");
+  audio->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(audio);
 
   RefPtr<JsepTransceiver> video(new JsepTransceiver(SdpMediaSection::kVideo));
-  video->mSendTrack.UpdateTrackIds(
-      std::vector<std::string>(1, "offerer_stream"), "v1");
+  video->mSendTrack.UpdateStreamIds(
+      std::vector<std::string>(1, "offerer_stream"));
   mSessionOff->AddTransceiver(video);
 
   std::string offer = CreateOffer();
@@ -6117,7 +6109,7 @@ TEST_F(JsepSessionTest, AddTrackMagicWithNullReplaceTrack) {
 
   // Ok, transceiver 2 is "magical". Ensure it still has this "magical"
   // auto-matching property even if we null it out with replaceTrack.
-  mSessionAns->GetTransceivers()[2]->mSendTrack.ClearTrackIds();
+  mSessionAns->GetTransceivers()[2]->mSendTrack.ClearStreamIds();
   mSessionAns->GetTransceivers()[2]->mJsDirection =
       SdpDirectionAttribute::Direction::kRecvonly;
 
@@ -6164,8 +6156,7 @@ TEST_F(JsepSessionTest, NoAddTrackMagicReplaceTrack) {
   mSessionAns->AddTransceiver(
       new JsepTransceiver(SdpMediaSection::MediaType::kAudio));
 
-  mSessionAns->GetTransceivers()[2]->mSendTrack.UpdateTrackIds({"newstream"},
-                                                               "newtrack");
+  mSessionAns->GetTransceivers()[2]->mSendTrack.UpdateStreamIds({"newstream"});
 
   ASSERT_EQ(3U, mSessionAns->GetTransceivers().size());
   ASSERT_EQ(0U, mSessionAns->GetTransceivers()[0]->GetLevel());
@@ -6305,7 +6296,7 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
   // with replaceTrack.
   AddTracks(*mSessionAns, "audio");
   ASSERT_TRUE(mSessionAns->GetTransceivers()[2]->HasAddTrackMagic());
-  mSessionAns->GetTransceivers()[2]->mSendTrack.ClearTrackIds();
+  mSessionAns->GetTransceivers()[2]->mSendTrack.ClearStreamIds();
   mSessionAns->GetTransceivers()[2]->mJsDirection =
       SdpDirectionAttribute::Direction::kRecvonly;
 
@@ -6314,8 +6305,7 @@ TEST_F(JsepSessionTest, ComplicatedRemoteRollback) {
 
   // This will not cause the third audio transceiver to stick around; having a
   // track is _not_ enough to preserve it. It must have addTrack "magic"!
-  mSessionAns->GetTransceivers()[4]->mSendTrack.UpdateTrackIds({"newstream"},
-                                                               "newtrack");
+  mSessionAns->GetTransceivers()[4]->mSendTrack.UpdateStreamIds({"newstream"});
 
   // Create a fourth audio transceiver. Rollback will leave it alone, since we
   // created it.
