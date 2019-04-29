@@ -27,6 +27,12 @@ class Runtime extends ContentProcessDomain {
       this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
         {mozSystemGroup: true});
 
+      // Listen for pageshow and pagehide to track pages going in/out to/from the BF Cache
+      this.chromeEventHandler.addEventListener("pageshow", this,
+        {mozSystemGroup: true});
+      this.chromeEventHandler.addEventListener("pagehide", this,
+        {mozSystemGroup: true});
+
       Services.obs.addObserver(this, "inner-window-destroyed");
 
       // Spin the event loop in order to send the `executionContextCreated` event right
@@ -52,11 +58,15 @@ class Runtime extends ContentProcessDomain {
       this.enabled = false;
       this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
         {mozSystemGroup: true});
+      this.chromeEventHandler.removeEventListener("pageshow", this,
+        {mozSystemGroup: true});
+      this.chromeEventHandler.removeEventListener("pagehide", this,
+        {mozSystemGroup: true});
       Services.obs.removeObserver(this, "inner-window-destroyed");
     }
   }
 
-  handleEvent({type, target}) {
+  handleEvent({type, target, persisted}) {
     const frameId = target.defaultView.windowUtils.outerWindowID;
     const id = target.defaultView.windowUtils.currentInnerWindowID;
     switch (type) {
@@ -69,6 +79,32 @@ class Runtime extends ContentProcessDomain {
             frameId,
           },
         },
+      });
+      break;
+
+    case "pageshow":
+      // `persisted` is true when this is about a page being resurected from BF Cache
+      if (!persisted) {
+        return;
+      }
+      this.emit("Runtime.executionContextCreated", {
+        context: {
+          id,
+          auxData: {
+            isDefault: target == this.content.document,
+            frameId,
+          },
+        },
+      });
+      break;
+
+    case "pagehide":
+      // `persisted` is true when this is about a page being frozen into BF Cache
+      if (!persisted) {
+        return;
+      }
+      this.emit("Runtime.executionContextDestroyed", {
+        executionContextId: id,
       });
       break;
     }
