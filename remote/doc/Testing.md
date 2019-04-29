@@ -29,7 +29,7 @@ Functional tests
 We also have a set of functional [browser chrome] tests located
 under _remote/test/browser_:
 
-	% ./mach mochitest -f browser remote/test/browser/browser_cdp.js
+	% ./mach mochitest remote/test/browser/browser_cdp.js
 
 The functional tests will appear under the `M` (for _mochitest_)
 category in the `bc` (_browser-chrome_) jobs on Treeherder.
