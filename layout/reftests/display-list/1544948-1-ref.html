@@ -1,0 +1,32 @@
+<html>
+<head>
+<style>
+  div {
+    width:10px;
+    height:10px;
+    background-color:green;
+    display: inline-block;
+    position: relative;
+  }
+  #wrapper {
+    opacity: 0.5;
+    width: 200px;
+    height: 200px;
+    background-color: transparent;
+  }
+
+  #first {
+    z-index: 1;
+  }
+
+  #second {
+    background-color: blue;
+  }
+</style>
+</head>
+<body id="body">
+  <div id="wrapper">
+    <div id="first" class="reftest-no-display-list"></div><div id="second" class="reftest-no-display-list"></div>
+  </div>
+</body>
+</html>
