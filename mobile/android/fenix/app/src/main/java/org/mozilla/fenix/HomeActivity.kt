@@ -135,45 +135,42 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
-            handleOpenedFromExternalSource()
-        }
-    }
+        this.intent.putExtra(OPEN_TO_BROWSER, false)
+        var customTabSessionId: String? = null
 
-    private fun handleOpenedFromExternalSource() {
-        intent?.putExtra(OPEN_TO_BROWSER, false)
-        openToBrowser(
-            BrowserDirection.FromGlobal,
-            SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
-                ?: components.core.sessionManager.selectedSession?.id
-        )
+        intent?.let {
+            if (isCustomTab) {
+                customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
+            }
+            openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
+        }
     }
 
     fun openToBrowserAndLoad(
         searchTermOrURL: String,
-        externalSessionId: String? = null,
+        customTabSessionId: String? = null,
         engine: SearchEngine? = null,
         from: BrowserDirection
     ) {
-        openToBrowser(from, externalSessionId)
-        load(searchTermOrURL, externalSessionId, engine)
+        openToBrowser(from, customTabSessionId)
+        load(searchTermOrURL, customTabSessionId, engine)
     }
 
-    fun openToBrowser(from: BrowserDirection, externalSessionId: String? = null) {
+    fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
         val directions = when (from) {
-            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(externalSessionId)
-            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(externalSessionId)
+            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
+            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromSearch ->
-                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(externalSessionId)
+                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromSettings ->
-                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(externalSessionId)
+                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromBookmarks ->
-                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(externalSessionId)
+                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromBookmarksFolderSelect ->
                 SelectBookmarkFolderFragmentDirections
-                    .actionBookmarkSelectFolderFragmentToBrowserFragment(externalSessionId)
+                    .actionBookmarkSelectFolderFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromHistory ->
-                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(externalSessionId)
+                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
         }
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()

@@ -97,8 +97,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private lateinit var job: Job
 
-    // Session id for custom tab or opened from external intent
-    var externalSessionId: String? = null
+    var customTabSessionId: String? = null
 
     override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
 
@@ -113,13 +112,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         savedInstanceState: Bundle?
     ): View? {
         require(arguments != null)
-        externalSessionId = BrowserFragmentArgs.fromBundle(arguments!!).externalSessionId
+        customTabSessionId = BrowserFragmentArgs.fromBundle(arguments!!).customTabSessionId
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
-            ActionBusFactory.get(this), externalSessionId,
+            ActionBusFactory.get(this), customTabSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
             SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false),
             search_engine_icon
@@ -150,7 +149,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     }
 
     private fun getAppropriateLayoutGravity(): Int {
-        if (getSessionById()?.isCustomTabSession() == true) {
+        if (customTabSessionId != null) {
             return Gravity.TOP
         }
 
@@ -206,7 +205,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 sessionManager,
                 SessionUseCases(sessionManager),
                 view.engineView,
-                externalSessionId
+                customTabSessionId
             ),
             owner = this,
             view = view
@@ -241,7 +240,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
             feature = FullScreenFeature(
                 sessionManager,
                 SessionUseCases(sessionManager),
-                externalSessionId
+                customTabSessionId
             ) {
                 if (it) {
                     FenixSnackbar.make(view.rootView, Snackbar.LENGTH_LONG)
@@ -279,20 +278,18 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
         val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
 
-        if (getSessionById()?.isCustomTabSession() == true) {
-            externalSessionId?.let {
-                customTabsIntegration.set(
-                    feature = CustomTabsIntegration(
-                        requireContext(),
-                        requireComponents.core.sessionManager,
-                        toolbar,
-                        it,
-                        activity,
-                        onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
-                    ),
-                    owner = this,
-                    view = view)
-            }
+        customTabSessionId?.let {
+            customTabsIntegration.set(
+                feature = CustomTabsIntegration(
+                    requireContext(),
+                    requireComponents.core.sessionManager,
+                    toolbar,
+                    it,
+                    activity,
+                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                ),
+                owner = this,
+                view = view)
         }
 
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
@@ -508,8 +505,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode =
-                    BrowsingModeManager.Mode.Private
+                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
                 FindInPageIntegration.launch?.invoke()
@@ -529,8 +525,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode =
-                    BrowsingModeManager.Mode.Normal
+                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
             }
             ToolbarMenu.Item.OpenInFenix -> {
                 val intent = Intent(context, IntentReceiverActivity::class.java)
@@ -576,10 +571,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     }
 
     private fun getSessionById(): Session? {
-        return if (externalSessionId != null) {
+        return if (customTabSessionId != null) {
             requireNotNull(
                 requireContext().components.core.sessionManager.findSessionById(
-                    externalSessionId!!
+                    customTabSessionId!!
                 )
             )
         } else {
@@ -628,7 +623,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     }
 
     private fun setToolbarBehavior(loading: Boolean) {
-        if (getSessionById()?.isCustomTabSession() == true) {
+        if (customTabSessionId != null) {
             return
         }
 
