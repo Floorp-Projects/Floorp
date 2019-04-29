@@ -1191,11 +1191,17 @@ VARCACHE_PREF(
 )
 
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE  true
+#else
+# define PREF_VALUE  false
+#endif
 VARCACHE_PREF(
   "layout.css.grid-template-subgrid-value.enabled",
    layout_css_grid_template_subgrid_value_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 // Pref to control whether line-height: -moz-block-height is exposed to content.
 VARCACHE_PREF(
