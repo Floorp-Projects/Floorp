@@ -8,10 +8,8 @@
 // This shouldn't happen, but Fronts should rather be part of client anyway.
 // Otherwise gDevTools is only used for local tabs and should propably only
 // used by a subclass, specific to local tabs.
-loader.lazyRequireGetter(this, "gDevTools",
-  "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "TargetFactory",
-  "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
@@ -45,7 +43,6 @@ function TargetMixin(parentClass) {
 
       this.destroy = this.destroy.bind(this);
       this._onNewSource = this._onNewSource.bind(this);
-      this._onUpdatedSource = this._onUpdatedSource.bind(this);
 
       this.activeConsole = null;
       this.threadClient = null;
@@ -109,8 +106,7 @@ function TargetMixin(parentClass) {
      * }
      */
     async getActorDescription(actorName) {
-      if (this._protocolDescription &&
-          this._protocolDescription.types[actorName]) {
+      if (this._protocolDescription && this._protocolDescription.types[actorName]) {
         return this._protocolDescription.types[actorName];
       }
       const description = await this.client.mainRoot.protocolDescription();
@@ -205,7 +201,7 @@ function TargetMixin(parentClass) {
     async getFront(typeName) {
       let front = this.fronts.get(typeName);
       // the front might have been destroyed and no longer have an actor ID
-      if (front && front.actorID || front && typeof front.then === "function") {
+      if ((front && front.actorID) || (front && typeof front.then === "function")) {
         return front;
       }
       front = getFront(this.client, typeName, this.targetForm);
@@ -236,8 +232,13 @@ function TargetMixin(parentClass) {
     // Allows to controls which features are available against
     // a chrome or a content document.
     get chrome() {
-      return this.isAddon || this.isContentProcess || this.isParentProcess ||
-        this.isWindowTarget || this._forceChrome;
+      return (
+        this.isAddon ||
+        this.isContentProcess ||
+        this.isParentProcess ||
+        this.isWindowTarget ||
+        this._forceChrome
+      );
     }
 
     forceChrome() {
@@ -275,15 +276,20 @@ function TargetMixin(parentClass) {
     }
 
     get isLegacyAddon() {
-      return !!(this.targetForm && this.targetForm.actor &&
-        this.targetForm.actor.match(/conn\d+\.addon(Target)?\d+/));
+      return !!(
+        this.targetForm &&
+        this.targetForm.actor &&
+        this.targetForm.actor.match(/conn\d+\.addon(Target)?\d+/)
+      );
     }
 
     get isWebExtension() {
-      return !!(this.targetForm && this.targetForm.actor && (
-        this.targetForm.actor.match(/conn\d+\.webExtension(Target)?\d+/) ||
-        this.targetForm.actor.match(/child\d+\/webExtension(Target)?\d+/)
-      ));
+      return !!(
+        this.targetForm &&
+        this.targetForm.actor &&
+        (this.targetForm.actor.match(/conn\d+\.webExtension(Target)?\d+/) ||
+          this.targetForm.actor.match(/child\d+\/webExtension(Target)?\d+/))
+      );
     }
 
     get isContentProcess() {
@@ -291,19 +297,29 @@ function TargetMixin(parentClass) {
       //   server0.conn0.content-process0/contentProcessTarget7
       // while xpcshell debugging will be:
       //   server1.conn0.contentProcessTarget7
-      return !!(this.targetForm && this.targetForm.actor &&
+      return !!(
+        this.targetForm &&
+        this.targetForm.actor &&
         this.targetForm.actor.match(
-          /conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/));
+          /conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/
+        )
+      );
     }
 
     get isParentProcess() {
-      return !!(this.targetForm && this.targetForm.actor &&
-        this.targetForm.actor.match(/conn\d+\.parentProcessTarget\d+/));
+      return !!(
+        this.targetForm &&
+        this.targetForm.actor &&
+        this.targetForm.actor.match(/conn\d+\.parentProcessTarget\d+/)
+      );
     }
 
     get isWindowTarget() {
-      return !!(this.targetForm && this.targetForm.actor &&
-        this.targetForm.actor.match(/conn\d+\.chromeWindowTarget\d+/));
+      return !!(
+        this.targetForm &&
+        this.targetForm.actor &&
+        this.targetForm.actor.match(/conn\d+\.chromeWindowTarget\d+/)
+      );
     }
 
     get isLocalTab() {
@@ -384,31 +400,23 @@ function TargetMixin(parentClass) {
      */
     async attachThread(options = {}) {
       if (!this._threadActor) {
-        throw new Error("TargetMixin sub class should set _threadActor before calling " +
-                        "attachThread");
+        throw new Error(
+          "TargetMixin sub class should set _threadActor before calling " + "attachThread"
+        );
       }
-      const [response, threadClient] =
-        await this._client.attachThread(this._threadActor, options);
+      const [response, threadClient] = await this._client.attachThread(
+        this._threadActor,
+        options
+      );
       this.threadClient = threadClient;
 
       this.threadClient.addListener("newSource", this._onNewSource);
-
-      // "updatedSource" is emitted by the thread actor, but on its parent actor.
-      // i.e. the target actor. So we have to listen on the target actor, but ideally,
-      // the actor should emit this event itself.
-      this.on("updatedSource", this._onUpdatedSource);
 
       return [response, threadClient];
     }
 
     // Listener for "newSource" event fired by the thread actor
     _onNewSource(type, packet) {
-      this.emit("source-updated", packet);
-    }
-
-    // Listener for "updatedSource" event fired by the thread actor in the name of the
-    // target actor
-    _onUpdatedSource(packet) {
       this.emit("source-updated", packet);
     }
 
@@ -452,7 +460,6 @@ function TargetMixin(parentClass) {
       // Remove listeners set in attachThread
       if (this.threadClient) {
         this.threadClient.removeListener("newSource", this._onNewSource);
-        this.off("updatedSource", this._onUpdatedSource);
       }
 
       // Remove listeners set in attachConsole
@@ -491,7 +498,7 @@ function TargetMixin(parentClass) {
 
       // Save a reference to the tab as it will be nullified on destroy
       const tab = this._tab;
-      const onToolboxDestroyed = async (target) => {
+      const onToolboxDestroyed = async target => {
         if (target != this) {
           return;
         }
@@ -534,8 +541,8 @@ function TargetMixin(parentClass) {
           // should close it.
           await this._client.close();
 
-        // Not all targets supports attach/detach. For example content process doesn't.
-        // Also ensure that the front is still active before trying to do the request.
+          // Not all targets supports attach/detach. For example content process doesn't.
+          // Also ensure that the front is still active before trying to do the request.
         } else if (this.detach && this.actorID) {
           // The client was handed to us, so we are not responsible for closing
           // it. We just need to detach from the tab, if already attached.
@@ -583,7 +590,7 @@ function TargetMixin(parentClass) {
     }
 
     toString() {
-      const id = this._tab ? this._tab : (this.targetForm && this.targetForm.actor);
+      const id = this._tab ? this._tab : this.targetForm && this.targetForm.actor;
       return `Target:${id}`;
     }
 
