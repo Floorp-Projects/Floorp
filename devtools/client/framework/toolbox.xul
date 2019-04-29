@@ -17,7 +17,6 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <html:link href="chrome://browser/skin/window.svg" rel="shortcut icon"/>
   <script src="chrome://devtools/content/shared/theme-switching.js"/>
   <script src="chrome://global/content/viewSourceUtils.js"/>
 
