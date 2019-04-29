@@ -5700,6 +5700,17 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
     aContext->Detach(/* aFromIPC */ true);
   }
 
+  for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
+       iter.Next()) {
+    nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+    if (entry->GetKey() == this) {
+      continue;
+    }
+
+    Unused << entry->GetKey()->SendDetachBrowsingContext(aContext,
+                                                         aMoveToBFCache);
+  }
+
   return IPC_OK();
 }
 
