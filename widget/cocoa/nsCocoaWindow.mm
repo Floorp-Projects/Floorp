@@ -3170,11 +3170,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     mSheetAttachmentPosition = aContentRect.size.height;
     mWindowButtonsRect = NSZeroRect;
     mFullScreenButtonRect = NSZeroRect;
-
-    // setBottomCornerRounded: is a private API call, so we check to make sure
-    // we respond to it just in case.
-    if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
-      [self setBottomCornerRounded:YES];
   }
   return self;
 
