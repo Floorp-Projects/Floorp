@@ -919,6 +919,12 @@ var CustomizableUIInternal = {
           if ((node.id || this.isSpecialWidget(node)) &&
               node.getAttribute("skipintoolbarset") != "true") {
             if (this.isWidgetRemovable(node)) {
+              if (node.id && (gResetting || gUndoResetting)) {
+                let widget = gPalette.get(node.id);
+                if (widget) {
+                  widget.currentArea = null;
+                }
+              }
               if (palette && !this.isSpecialWidget(node.id)) {
                 palette.appendChild(node);
                 this.removeLocationAttributes(node);

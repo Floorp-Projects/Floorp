@@ -1,4 +1,5 @@
-== backface-leaf.yaml backface-ref.yaml
+== backface-leaf.yaml backface-leaf-ref.yaml
+== backface-3d-leaf.yaml backface-ref.yaml
 == backface-hidden.yaml backface-ref.yaml
 == backface-sc.yaml backface-ref.yaml
 == backface-picture.yaml backface-picture-ref.yaml

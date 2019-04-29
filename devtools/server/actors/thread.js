@@ -85,7 +85,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.global = global;
 
     this.onNewSourceEvent = this.onNewSourceEvent.bind(this);
-    this.onUpdatedSourceEvent = this.onUpdatedSourceEvent.bind(this);
 
     this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
     this.createCompletionGrip = this.createCompletionGrip.bind(this);
@@ -224,7 +223,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._updateNetworkObserver();
 
     this.sources.off("newSource", this.onNewSourceEvent);
-    this.sources.off("updatedSource", this.onUpdatedSourceEvent);
     this.clearDebuggees();
     this.conn.removeActorPool(this._threadLifetimePool);
     this._threadLifetimePool = null;
@@ -269,7 +267,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     Object.assign(this._options, request.options || {});
     this.sources.setOptions(this._options);
     this.sources.on("newSource", this.onNewSourceEvent);
-    this.sources.on("updatedSource", this.onUpdatedSourceEvent);
 
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
@@ -1654,20 +1651,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         type: "newSource",
         source: source.form(),
       });
-    });
-  },
-
-  /**
-   * A function called when there's an updated source from a thread actor' sources.
-   * Emits `updatedSource` on the target actor.
-   *
-   * @param {SourceActor} source
-   */
-  onUpdatedSourceEvent: function(source) {
-    this.conn.send({
-      from: this._parent.actorID,
-      type: "updatedSource",
-      source: source.form(),
     });
   },
 

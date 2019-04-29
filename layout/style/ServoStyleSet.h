@@ -431,6 +431,7 @@ class ServoStyleSet {
  private:
   friend class AutoSetInServoTraversal;
   friend class AutoPrepareTraversal;
+  friend class PostTraversalTask;
 
   bool ShouldTraverseInParallel() const;
 

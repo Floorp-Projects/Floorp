@@ -263,9 +263,6 @@ mobile/android/chrome/content/about.js
 mobile/android/installer/
 mobile/android/locales/
 
-# Non-standard `(catch ex if ...)`
-mobile/android/chrome/content/browser.js
-
 # Pre-processed/pref files
 modules/libpref/greprefs.js
 modules/libpref/init/all.js

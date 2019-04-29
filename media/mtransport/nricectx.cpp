@@ -1030,6 +1030,10 @@ nsresult NrIceCtx::Finalize() {
 void NrIceCtx::UpdateNetworkState(bool online) {
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): updating network state to "
                                  << (online ? "online" : "offline"));
+  if (connection_state_ == ICE_CTX_CLOSED) {
+    return;
+  }
+
   if (online) {
     nr_ice_peer_ctx_refresh_consent_all_streams(peer_);
   } else {

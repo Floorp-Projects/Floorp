@@ -8,7 +8,10 @@
 
 #include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSet.h"
-#include "gfxUserFontSet.h"
+#include "gfxPlatformFontList.h"
+#include "gfxTextRun.h"
+#include "ServoStyleSet.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 
@@ -36,6 +39,19 @@ void PostTraversalTask::Run() {
 
     case Type::LoadFontEntry:
       static_cast<gfxUserFontEntry*>(mTarget)->ContinueLoad();
+      break;
+
+    case Type::InitializeFamily:
+      Unused << gfxPlatformFontList::PlatformFontList()->InitializeFamily(
+          static_cast<fontlist::Family*>(mTarget));
+      break;
+
+    case Type::FontInfoUpdate:
+      nsPresContext* pc =
+          static_cast<ServoStyleSet*>(mTarget)->GetPresContext();
+      if (pc) {
+        pc->ForceReflowForFontInfoUpdate();
+      }
       break;
   }
 }

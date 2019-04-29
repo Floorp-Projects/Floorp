@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/StaticPtr.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -45,6 +44,12 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   // Force the given ContentParent to subscribe to our BrowsingContextGroup.
   void EnsureSubscribed(ContentParent* aProcess);
+
+  // Methods interacting with cached contexts.
+  bool IsContextCached(BrowsingContext* aContext) const;
+  void CacheContext(BrowsingContext* aContext);
+  void CacheContexts(const BrowsingContext::Children& aContexts);
+  bool EvictCachedContext(BrowsingContext* aContext);
 
   ContentParents::Iterator ContentParentsIter() { return mSubscribers.Iter(); }
 
@@ -97,6 +102,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
   BrowsingContext::Children mToplevels;
 
   ContentParents mSubscribers;
+
+  // Map of cached contexts that need to stay alive due to bfcache.
+  nsTHashtable<nsRefPtrHashKey<BrowsingContext>> mCachedContexts;
 };
 
 }  // namespace dom

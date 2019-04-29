@@ -57,10 +57,6 @@ using BrowsingContextMap =
 
 static StaticAutoPtr<BrowsingContextMap<WeakPtr>> sBrowsingContexts;
 
-// TODO(farre): This duplicates some of the work performed by the
-// bfcache. This should be unified. [Bug 1471601]
-static StaticAutoPtr<BrowsingContextMap<RefPtr>> sCachedBrowsingContexts;
-
 static void Register(BrowsingContext* aBrowsingContext) {
   MOZ_ALWAYS_TRUE(
       sBrowsingContexts->putNew(aBrowsingContext->Id(), aBrowsingContext));
@@ -81,11 +77,6 @@ void BrowsingContext::Init() {
   if (!sBrowsingContexts) {
     sBrowsingContexts = new BrowsingContextMap<WeakPtr>();
     ClearOnShutdown(&sBrowsingContexts);
-  }
-
-  if (!sCachedBrowsingContexts) {
-    sCachedBrowsingContexts = new BrowsingContextMap<RefPtr>();
-    ClearOnShutdown(&sCachedBrowsingContexts);
   }
 }
 
@@ -221,9 +212,8 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
 
       MOZ_DIAGNOSTIC_ASSERT(mType == Type::Chrome, "must be chrome");
       MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "must be in parent");
-      MOZ_DIAGNOSTIC_ASSERT(
-          !sCachedBrowsingContexts || !sCachedBrowsingContexts->has(Id()),
-          "cannot be in bfcache");
+      MOZ_DIAGNOSTIC_ASSERT(!Group()->IsContextCached(this),
+                            "cannot be in bfcache");
 
       RefPtr<BrowsingContext> kungFuDeathGrip(this);
       RefPtr<BrowsingContext> newParent;
@@ -256,12 +246,11 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
 
 void BrowsingContext::Attach(bool aFromIPC) {
   MOZ_LOG(GetLog(), LogLevel::Debug,
-          ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
-           XRE_IsParentProcess() ? "Parent" : "Child",
-           sCachedBrowsingContexts->has(Id()) ? "Re-connecting" : "Connecting",
-           Id(), mParent ? mParent->Id() : 0));
+          ("%s: Connecting 0x%08" PRIx64 " to 0x%08" PRIx64,
+           XRE_IsParentProcess() ? "Parent" : "Child", Id(),
+           mParent ? mParent->Id() : 0));
 
-  sCachedBrowsingContexts->remove(Id());
+  MOZ_DIAGNOSTIC_ASSERT(!Group()->IsContextCached(this));
 
   auto* children = mParent ? &mParent->mChildren : &mGroup->Toplevels();
   MOZ_DIAGNOSTIC_ASSERT(!children->Contains(this));
@@ -294,12 +283,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
 
   RefPtr<BrowsingContext> kungFuDeathGrip(this);
 
-  BrowsingContextMap<RefPtr>::Ptr p;
-  if (sCachedBrowsingContexts && (p = sCachedBrowsingContexts->lookup(Id()))) {
-    MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
-    MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
-    sCachedBrowsingContexts->remove(p);
-  } else {
+  if (!Group()->EvictCachedContext(this)) {
     Children* children = nullptr;
     if (mParent) {
       children = &mParent->mChildren;
@@ -331,41 +315,58 @@ void BrowsingContext::Detach(bool aFromIPC) {
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
+    cc->SendDetachBrowsingContext(this);
   }
 }
 
 void BrowsingContext::CacheChildren(bool aFromIPC) {
-  if (mChildren.IsEmpty()) {
-    return;
-  }
-
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Caching children of 0x%08" PRIx64 "",
            XRE_IsParentProcess() ? "Parent" : "Child", Id()));
 
-  MOZ_ALWAYS_TRUE(sCachedBrowsingContexts->reserve(mChildren.Length()));
-
-  for (BrowsingContext* child : mChildren) {
-    MOZ_ALWAYS_TRUE(sCachedBrowsingContexts->putNew(child->Id(), child));
-  }
+  Group()->CacheContexts(mChildren);
   mChildren.Clear();
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
+    cc->SendCacheBrowsingContextChildren(this);
   }
 }
 
-bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
+void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
+  MOZ_LOG(GetLog(), LogLevel::Debug,
+          ("%s: Restoring children of 0x%08" PRIx64 "",
+           XRE_IsParentProcess() ? "Parent" : "Child", Id()));
+
+  MOZ_DIAGNOSTIC_ASSERT(mChildren.IsEmpty());
+
+  for (BrowsingContext* child : mChildren) {
+    MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
+    Unused << Group()->EvictCachedContext(child);
+  }
+
+  mChildren.SwapElements(aChildren);
+
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+
+    nsTArray<BrowsingContextId> contexts(mChildren.Length());
+    for (BrowsingContext* child : mChildren) {
+      contexts.AppendElement(child->Id());
+    }
+    cc->SendRestoreBrowsingContextChildren(this, contexts);
+  }
+}
+
+bool BrowsingContext::IsCached() { return Group()->IsContextCached(this); }
 
 bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->has(mOpenerId);
 }
 
-void BrowsingContext::GetChildren(
-    nsTArray<RefPtr<BrowsingContext>>& aChildren) {
+void BrowsingContext::GetChildren(Children& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
 }
 
@@ -526,8 +527,7 @@ bool BrowsingContext::IsActive() const {
 BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mParent || !mParent->mChildren.Contains(this));
   MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
-  MOZ_DIAGNOSTIC_ASSERT(!sCachedBrowsingContexts ||
-                        !sCachedBrowsingContexts->has(Id()));
+  MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->IsContextCached(this));
 
   if (sBrowsingContexts) {
     sBrowsingContexts->remove(Id());
@@ -963,6 +963,8 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mId);
   WriteIPDLParam(aMessage, aActor, aInit.mParentId);
 
+  WriteIPDLParam(aMessage, aActor, aInit.mCached);
+
   // Write other synchronized fields.
 #define MOZ_BC_FIELD(name, ...) WriteIPDLParam(aMessage, aActor, aInit.m##name);
 #include "mozilla/dom/BrowsingContextFieldList.h"
@@ -974,6 +976,10 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
   // Read actor ID parameters.
   if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mParentId)) {
+    return false;
+  }
+
+  if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mCached)) {
     return false;
   }
 

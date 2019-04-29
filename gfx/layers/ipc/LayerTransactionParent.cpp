@@ -673,6 +673,10 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvSetTestSampleTime(
 }
 
 mozilla::ipc::IPCResult LayerTransactionParent::RecvLeaveTestMode() {
+  if (mDestroyed) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   mCompositorBridge->LeaveTestMode(GetId());
   return IPC_OK();
 }

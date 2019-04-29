@@ -80,7 +80,9 @@ interface nsIFocusManager : nsISupports
 
   /**
    * Changes the focused element reference within the window containing
-   * aElement to aElement.
+   * aElement to aElement or potentially redirects it to an anonymous
+   * descendant of it (e.g., for `<input type="number">` the focus is redirected
+   * to its descendant `<input type="text">`).
    */
   void setFocus(in Element aElement, in unsigned long aFlags);
 
@@ -99,8 +101,8 @@ interface nsIFocusManager : nsISupports
    * MOVEFOCUS_CARET, then the focus is cleared. If aType is any other value,
    * the focus is not changed.
    *
-   * Returns the element that was focused. The return value may be null if focus
-   * was moved into a child process.
+   * Returns the element that was focused (see setFocus). The return value
+   * may be null if focus was moved into a child process.
    */
   Element moveFocus(in mozIDOMWindowProxy aWindow,
                     in Element aStartElement,
@@ -141,7 +143,8 @@ interface nsIFocusManager : nsISupports
   void moveCaretToFocus(in mozIDOMWindowProxy aWindow);
 
   /***
-   * Check if given element is focusable.
+   * Check if given element (or potentially a descendant, see setFocus) is
+   * focusable.
    */
   boolean elementIsFocusable(in Element aElement, in unsigned long aFlags);
 

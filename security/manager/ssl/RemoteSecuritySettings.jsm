@@ -29,7 +29,9 @@ XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
 
 XPCOMUtils.defineLazyGetter(this, "baseAttachmentsURL", async () => {
   const server = Services.prefs.getCharPref("services.settings.server");
-  const serverInfo = await (await fetch(`${server}/`)).json();
+  const serverInfo = await (await fetch(`${server}/`, {
+    credentials: "omit",
+  })).json();
   const {capabilities: {attachments: {base_url}}} = serverInfo;
   return base_url;
 });
@@ -168,8 +170,10 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
       const headers = new Headers();
       headers.set("Accept-Encoding", "gzip");
 
-      return fetch(remoteFilePath, {headers})
-      .then(resp => {
+      return fetch(remoteFilePath, {
+        headers,
+        credentials: "omit",
+      }).then(resp => {
         log.debug(`Download fetch completed: ${resp.ok} ${resp.status}`);
         if (!resp.ok) {
           Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);

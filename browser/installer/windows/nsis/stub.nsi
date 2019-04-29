@@ -269,6 +269,7 @@ Var ArchToInstall
 !insertmacro GetParent
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
+!insertmacro InitHashAppModelId
 !insertmacro IsUserAdmin
 !insertmacro RemovePrecompleteEntries
 !insertmacro SetBrandNameVars
@@ -530,6 +531,8 @@ Function .onInit
     MessageBox MB_OK|MB_ICONEXCLAMATION "$(WARN_DISK_SPACE_QUIT)"
     Quit
   ${EndIf}
+
+  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
 FunctionEnd
 
 ; .onGUIInit isn't needed except for RTL locales
@@ -1773,38 +1776,49 @@ Function ShouldPromptForProfileCleanup
   ; We'll set this back to all at the end of the function.
   SetShellVarContext current
 
-  ; Check each Profile section in profiles.ini until we find the default profile.
   StrCpy $R0 ""
   ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\profiles.ini"
-    StrCpy $0 0
-    ${Do}
-      ClearErrors
-      ; Check if the section exists by reading a value that must be present.
-      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
-      ${If} ${Errors}
-        ; We've run out of profile sections.
-        ${Break}
-      ${EndIf}
-
-      ClearErrors
-      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
-      ${IfNot} ${Errors}
-      ${AndIf} $1 == "1"
-        ; We've found the default profile
+    ; See if there's an installation-specific profile for our INSTDIR.
+    ClearErrors
+    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Install$AppUserModelID" "Default"
+    ${IfNot} ${Errors}
+      ; We found an installation-specific profile, let's use that one.
+      ; These don't set IsRelative but they're always relative paths.
+      StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
+    ${Else}
+      ; We don't have an install-specific profile, so look for an old-style
+      ; default profile instead by checking each numbered Profile section.
+      StrCpy $0 0
+      ${Do}
+        ClearErrors
+        ; Check if the section exists by reading a value that must be present.
         ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
-        ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
-        ${If} $2 == "1"
-          StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
-        ${Else}
-          StrCpy $R0 "$1"
+        ${If} ${Errors}
+          ; We've run out of profile sections.
+          ${Break}
         ${EndIf}
-        GetFullPathName $R0 $R0
-        ${Break}
-      ${EndIf}
 
-      IntOp $0 $0 + 1
-    ${Loop}
+        ClearErrors
+        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
+        ${IfNot} ${Errors}
+        ${AndIf} $1 == "1"
+          ; We've found the default profile
+          ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+          ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
+          ${If} $2 == "1"
+            StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
+          ${Else}
+            StrCpy $R0 "$1"
+          ${EndIf}
+          ${Break}
+        ${EndIf}
+
+        IntOp $0 $0 + 1
+      ${Loop}
+    ${EndIf}
   ${EndIf}
+
+  GetFullPathName $R0 $R0
 
   ${If} $R0 == ""
     ; No profile to clean up, so don't show the cleanup prompt.

@@ -118,6 +118,7 @@ hpp:
         using AutoList = typename Tokenizer::AutoList;
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;
+        using Context = typename BinASTTokenReaderBase::Context;
 
        public:
         // Auto-generated types.
@@ -296,6 +297,8 @@ hpp:
       #define frontend_BinASTToken_h
 
       #include <stddef.h>
+
+      #include "jstypes.h"
 
       /**
        * Definition of Binary AST tokens.
@@ -625,7 +628,7 @@ BreakStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   build: |
     if (label) {
@@ -769,7 +772,7 @@ ContinueStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom());
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   build: |
     if (label) {
@@ -1282,7 +1285,7 @@ LiteralRegExpExpression:
       block:
         replace: |
           Chars flags(cx_);
-          MOZ_TRY(tokenizer_->readChars(flags));
+          MOZ_TRY(tokenizer_->readChars(flags, fieldContext++));
   build: |
     RegExpFlags reflags = RegExpFlag::NoFlags;
     for (auto c : flags) {

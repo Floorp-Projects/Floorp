@@ -270,10 +270,6 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
-    pub fn visible_face(&self) -> VisibleFace {
-        self.visible_face
-    }
-
     pub fn get_conservative_local_bounds(&self) -> Option<TypedRect<f32, F>> {
         self.unmap(&self.bounds)
     }
@@ -1772,13 +1768,15 @@ impl PrimitiveStore {
             prim_instance.reset();
 
             if prim_instance.is_chased() {
-                #[cfg(debug_assertions)]
-                println!("\tpreparing {:?} in {:?}",
-                    prim_instance.id, pic_index);
+                #[cfg(debug_assertions)] // needed for ".id" part
+                println!("\tpreparing {:?} in {:?}", prim_instance.id, pic_index);
             }
 
             // Get the cluster and see if is visible
             if !prim_list.clusters[prim_instance.cluster_index.0 as usize].is_visible {
+                if prim_instance.is_chased() {
+                    println!("\tcluster is invisible");
+                }
                 continue;
             }
 
