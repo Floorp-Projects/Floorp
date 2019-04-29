@@ -51,8 +51,8 @@ bool AltSvcMapping::AcceptableProxy(nsProxyInfo *proxyInfo) {
 void AltSvcMapping::ProcessHeader(
     const nsCString &buf, const nsCString &originScheme,
     const nsCString &originHost, int32_t originPort, const nsACString &username,
-    bool privateBrowsing, nsIInterfaceRequestor *callbacks,
-    nsProxyInfo *proxyInfo, uint32_t caps,
+    const nsACString &topWindowOrigin, bool privateBrowsing,
+    nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo, uint32_t caps,
     const OriginAttributes &originAttributes) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("AltSvcMapping::ProcessHeader: %s\n", buf.get()));
@@ -145,8 +145,8 @@ void AltSvcMapping::ProcessHeader(
     RefPtr<AltSvcMapping> mapping = new AltSvcMapping(
         gHttpHandler->ConnMgr()->GetStoragePtr(),
         gHttpHandler->ConnMgr()->StorageEpoch(), originScheme, originHost,
-        originPort, username, privateBrowsing, NowInSeconds() + maxage,
-        hostname, portno, npnToken, originAttributes);
+        originPort, username, topWindowOrigin, privateBrowsing,
+        NowInSeconds() + maxage, hostname, portno, npnToken, originAttributes);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
@@ -169,8 +169,9 @@ void AltSvcMapping::ProcessHeader(
 AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
                              const nsACString &originScheme,
                              const nsACString &originHost, int32_t originPort,
-                             const nsACString &username, bool privateBrowsing,
-                             uint32_t expiresAt,
+                             const nsACString &username,
+                             const nsACString &topWindowOrigin,
+                             bool privateBrowsing, uint32_t expiresAt,
                              const nsACString &alternateHost,
                              int32_t alternatePort, const nsACString &npnToken,
                              const OriginAttributes &originAttributes)
@@ -181,6 +182,7 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
       mOriginHost(originHost),
       mOriginPort(originPort),
       mUsername(username),
+      mTopWindowOrigin(topWindowOrigin),
       mPrivate(privateBrowsing),
       mExpiresAt(expiresAt),
       mValidated(false),
@@ -310,8 +312,8 @@ void AltSvcMapping::GetConnectionInfo(
     nsHttpConnectionInfo **outCI, nsProxyInfo *pi,
     const OriginAttributes &originAttributes) {
   RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
-      mOriginHost, mOriginPort, mNPNToken, mUsername, pi, originAttributes,
-      mAlternateHost, mAlternatePort);
+      mOriginHost, mOriginPort, mNPNToken, mUsername, mTopWindowOrigin, pi,
+      originAttributes, mAlternateHost, mAlternatePort);
 
   // http:// without the mixed-scheme attribute needs to be segmented in the
   // connection manager connection information hash with this attribute
@@ -323,6 +325,7 @@ void AltSvcMapping::GetConnectionInfo(
 }
 
 void AltSvcMapping::Serialize(nsCString &out) {
+  // Be careful, when serializing new members, add them to the end of this list.
   out = mHttps ? NS_LITERAL_CSTRING("https:") : NS_LITERAL_CSTRING("http:");
   out.Append(mOriginHost);
   out.Append(':');
@@ -350,6 +353,9 @@ void AltSvcMapping::Serialize(nsCString &out) {
   mOriginAttributes.CreateSuffix(suffix);
   out.Append(suffix);
   out.Append(':');
+  out.Append(mTopWindowOrigin);
+  out.Append('|');  // Be careful, the top window origin may contain colons!
+  // Add code to serialize new members here!
 }
 
 AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
@@ -357,6 +363,7 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
     : mStorage(storage), mStorageEpoch(epoch), mSyncOnlyOnSuccess(false) {
   mValidated = false;
   nsresult code;
+  char separator = ':';
 
   // The the do {} while(0) loop acts like try/catch(e){} with the break in
   // _NS_NEXT_TOKEN
@@ -364,14 +371,16 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
 #ifdef _NS_NEXT_TOKEN
     COMPILER ERROR
 #endif
-#define _NS_NEXT_TOKEN            \
-  start = idx + 1;                \
-  idx = str.FindChar(':', start); \
+#define _NS_NEXT_TOKEN                  \
+  start = idx + 1;                      \
+  idx = str.FindChar(separator, start); \
   if (idx < 0) break;
         int32_t start = 0;
     int32_t idx;
-    idx = str.FindChar(':', start);
+    idx = str.FindChar(separator, start);
     if (idx < 0) break;
+    // Be careful, when deserializing new members, add them to the end of this
+    // list.
     mHttps = Substring(str, start, idx - start).EqualsLiteral("https");
     _NS_NEXT_TOKEN;
     mOriginHost = Substring(str, start, idx - start);
@@ -401,6 +410,13 @@ AltSvcMapping::AltSvcMapping(DataStorage *storage, int32_t epoch,
     _NS_NEXT_TOKEN;
     Unused << mOriginAttributes.PopulateFromSuffix(
         Substring(str, start, idx - start));
+    // The separator after the top window origin is a pipe character since the
+    // origin string can contain colons.
+    separator = '|';
+    _NS_NEXT_TOKEN;
+    mTopWindowOrigin = Substring(str, start, idx - start);
+    separator = ':';
+    // Add code to deserialize new members here!
 #undef _NS_NEXT_TOKEN
 
     MakeHashKey(

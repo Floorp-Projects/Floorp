@@ -2516,10 +2516,10 @@ class UpdateAltSvcEvent : public Runnable {
     uri->GetHost(originHost);
     uri->GetPort(&originPort);
 
-    AltSvcMapping::ProcessHeader(mHeader, originScheme, originHost, originPort,
-                                 mCI->GetUsername(), mCI->GetPrivate(),
-                                 mCallbacks, mCI->ProxyInfo(), 0,
-                                 mCI->GetOriginAttributes());
+    AltSvcMapping::ProcessHeader(
+        mHeader, originScheme, originHost, originPort, mCI->GetUsername(),
+        mCI->GetTopWindowOrigin(), mCI->GetPrivate(), mCallbacks,
+        mCI->ProxyInfo(), 0, mCI->GetOriginAttributes());
     return NS_OK;
   }
 
