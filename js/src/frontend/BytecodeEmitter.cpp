@@ -230,10 +230,16 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
 }
 
 bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
-  *offset = bytecodeSection().code().length();
+  size_t oldLength = bytecodeSection().code().length();
+  *offset = ptrdiff_t(oldLength);
+
+  size_t newLength = oldLength + size_t(delta);
+  if (MOZ_UNLIKELY(newLength > MaxBytecodeLength)) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
 
   if (!bytecodeSection().code().growByUninitialized(delta)) {
-    ReportOutOfMemory(cx);
     return false;
   }
 
@@ -9407,12 +9413,18 @@ bool BytecodeEmitter::emitTree(
 
 static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
                          unsigned* index) {
-  if (!notes.growByUninitialized(1)) {
-    ReportOutOfMemory(cx);
+  size_t oldLength = notes.length();
+
+  if (MOZ_UNLIKELY(oldLength + 1 > MaxSrcNotesLength)) {
+    ReportAllocationOverflow(cx);
     return false;
   }
 
-  *index = notes.length() - 1;
+  if (!notes.growByUninitialized(1)) {
+    return false;
+  }
+
+  *index = oldLength;
   return true;
 }
 
@@ -9529,10 +9541,13 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
     /* Maybe this offset was already set to a four-byte value. */
     if (!(*sn & SN_4BYTE_OFFSET_FLAG)) {
       /* Insert three dummy bytes that will be overwritten shortly. */
+      if (MOZ_UNLIKELY(notes.length() + 3 > MaxSrcNotesLength)) {
+        ReportAllocationOverflow(cx);
+        return false;
+      }
       jssrcnote dummy = 0;
       if (!(sn = notes.insert(sn, dummy)) || !(sn = notes.insert(sn, dummy)) ||
           !(sn = notes.insert(sn, dummy))) {
-        ReportOutOfMemory(cx);
         return false;
       }
     }
