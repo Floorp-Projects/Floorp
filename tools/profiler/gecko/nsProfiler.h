@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Vector.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
 
@@ -68,7 +69,7 @@ class nsProfiler final : public nsIProfiler, public nsIObserver {
   };
 
   // These fields are all related to profile gathering.
-  nsTArray<ExitProfile> mExitProfiles;
+  mozilla::Vector<ExitProfile> mExitProfiles;
   mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
   nsCOMPtr<nsIThread> mSymbolTableThread;
   mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
