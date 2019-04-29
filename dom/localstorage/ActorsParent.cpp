@@ -93,7 +93,7 @@ typedef nsClassHashtable<nsCStringHashKey, ArchivedOriginInfo>
  ******************************************************************************/
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 2;
+const uint32_t kMajorSchemaVersion = 3;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -321,6 +321,7 @@ nsresult CreateTables(mozIStorageConnection* aConnection) {
       NS_LITERAL_CSTRING("CREATE TABLE data"
                          "( key TEXT PRIMARY KEY"
                          ", value TEXT NOT NULL"
+                         ", utf16Length INTEGER NOT NULL DEFAULT 0"
                          ", compressed INTEGER NOT NULL DEFAULT 0"
                          ", lastAccessTime INTEGER NOT NULL DEFAULT 0"
                          ");"));
@@ -355,6 +356,32 @@ nsresult UpgradeSchemaFrom1_0To2_0(mozIStorageConnection* aConnection) {
   }
 
   rv = aConnection->SetSchemaVersion(MakeSchemaVersion(2, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult UpgradeSchemaFrom2_0To3_0(mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE data ADD COLUMN utf16Length INTEGER NOT NULL DEFAULT 0;"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("UPDATE data "
+                         "SET utf16Length = utf16Length(value) "
+                         "FROM data);"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(3, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -511,12 +538,14 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aUsageFile,
       }
     } else {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((2 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((3 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
         if (schemaVersion == MakeSchemaVersion(1, 0)) {
           rv = UpgradeSchemaFrom1_0To2_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(2, 0)) {
+          rv = UpgradeSchemaFrom2_0To3_0(connection);
         } else {
           LS_WARNING(
               "Unable to open LocalStorage database, no upgrade path is "
@@ -3763,8 +3792,9 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
 
   Connection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(
-      NS_LITERAL_CSTRING("INSERT OR REPLACE INTO data (key, value) "
-                         "VALUES(:key, :value)"),
+      NS_LITERAL_CSTRING(
+          "INSERT OR REPLACE INTO data (key, value, utf16Length) "
+          "VALUES(:key, :value, :utf16Length)"),
       &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3775,7 +3805,13 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("utf16Length"),
+                             mValue.UTF16Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3820,7 +3856,7 @@ nsresult WriteOptimizer::AddItemInfo::Perform(Connection* aConnection,
     return rv;
   }
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("value"), mValue);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("value"), mValue);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4894,34 +4930,37 @@ void Datastore::SetItem(Database* aDatabase, const nsString& aDocumentURI,
 
     mValues.Put(aKey, aValue);
 
-    int64_t sizeOfItem;
+    int64_t delta;
 
     if (isNewItem) {
       mWriteOptimizer.AddItem(aKey, aValue);
 
       int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-      sizeOfItem = sizeOfKey + static_cast<int64_t>(aValue.Length());
 
-      mUpdateBatchUsage += sizeOfItem;
+      delta = sizeOfKey + static_cast<int64_t>(aValue.UTF16Length());
+
+      mUpdateBatchUsage += delta;
 
       mSizeOfKeys += sizeOfKey;
-      mSizeOfItems += sizeOfItem;
+      mSizeOfItems += sizeOfKey + static_cast<int64_t>(aValue.Length());
+      ;
     } else {
       mWriteOptimizer.UpdateItem(aKey, aValue);
 
-      sizeOfItem = static_cast<int64_t>(aValue.Length()) -
-                   static_cast<int64_t>(oldValue.Length());
+      delta = static_cast<int64_t>(aValue.UTF16Length()) -
+              static_cast<int64_t>(oldValue.UTF16Length());
 
-      mUpdateBatchUsage += sizeOfItem;
+      mUpdateBatchUsage += delta;
 
-      mSizeOfItems += sizeOfItem;
+      mSizeOfItems += static_cast<int64_t>(aValue.Length()) -
+                      static_cast<int64_t>(oldValue.Length());
     }
 
     if (IsPersistent()) {
       if (oldValue.IsVoid()) {
-        mConnection->AddItem(aKey, aValue, sizeOfItem);
+        mConnection->AddItem(aKey, aValue, delta);
       } else {
-        mConnection->UpdateItem(aKey, aValue, sizeOfItem);
+        mConnection->UpdateItem(aKey, aValue, delta);
       }
     }
   }
@@ -4947,15 +4986,16 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aDocumentURI,
     mWriteOptimizer.RemoveItem(aKey);
 
     int64_t sizeOfKey = static_cast<int64_t>(aKey.Length());
-    int64_t sizeOfItem = sizeOfKey + static_cast<int64_t>(oldValue.Length());
 
-    mUpdateBatchUsage -= sizeOfItem;
+    int64_t delta = -sizeOfKey - static_cast<int64_t>(oldValue.UTF16Length());
+
+    mUpdateBatchUsage += delta;
 
     mSizeOfKeys -= sizeOfKey;
-    mSizeOfItems -= sizeOfItem;
+    mSizeOfItems -= sizeOfKey + static_cast<int64_t>(oldValue.Length());
 
     if (IsPersistent()) {
-      mConnection->RemoveItem(aKey, -sizeOfItem);
+      mConnection->RemoveItem(aKey, delta);
     }
   }
 
@@ -4969,13 +5009,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
   MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
-    int64_t sizeOfItems = 0;
+    int64_t delta = 0;
     for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
       const nsAString& key = iter.Key();
       const LSValue& value = iter.Data();
 
-      sizeOfItems += (static_cast<int64_t>(key.Length()) +
-                      static_cast<int64_t>(value.Length()));
+      delta += -static_cast<int64_t>(key.Length()) -
+               static_cast<int64_t>(value.UTF16Length());
 
       NotifySnapshots(aDatabase, key, value, /* aAffectsOrder */ true);
     }
@@ -4984,13 +5024,13 @@ void Datastore::Clear(Database* aDatabase, const nsString& aDocumentURI) {
 
     mWriteOptimizer.Clear();
 
-    mUpdateBatchUsage -= sizeOfItems;
+    mUpdateBatchUsage += delta;
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
 
     if (IsPersistent()) {
-      mConnection->Clear(-sizeOfItems);
+      mConnection->Clear(delta);
     }
   }
 
@@ -6662,8 +6702,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = connection->CreateStatement(
-        NS_LITERAL_CSTRING("INSERT INTO data (key, value) "
-                           "SELECT key, value "
+        NS_LITERAL_CSTRING("INSERT INTO data (key, value, utf16Length) "
+                           "SELECT key, value, utf16Length(value) "
                            "FROM webappsstore2 "
                            "WHERE originKey = :originKey "
                            "AND originAttributes = :originAttributes;"
@@ -7284,10 +7324,10 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
   }
 
   Connection::CachedStatement stmt;
-  nsresult rv =
-      mConnection->GetCachedStatement(NS_LITERAL_CSTRING("SELECT key, value "
-                                                         "FROM data;"),
-                                      &stmt);
+  nsresult rv = mConnection->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT key, value, utf16Length "
+                         "FROM data;"),
+      &stmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7300,13 +7340,19 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
       return rv;
     }
 
-    nsString buffer;
-    rv = stmt->GetString(1, buffer);
+    nsCString buffer;
+    rv = stmt->GetUTF8String(1, buffer);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    LSValue value(buffer);
+    int32_t utf16Length;
+    rv = stmt->GetInt32(2, &utf16Length);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LSValue value(buffer, utf16Length);
 
     mPrepareDatastoreOp->mValues.Put(key, value);
     auto item = mPrepareDatastoreOp->mOrderedItems.AppendElement();
@@ -7315,7 +7361,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
     mPrepareDatastoreOp->mSizeOfKeys += key.Length();
     mPrepareDatastoreOp->mSizeOfItems += key.Length() + value.Length();
 #ifdef DEBUG
-    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.Length();
+    mPrepareDatastoreOp->mDEBUGUsage += key.Length() + value.UTF16Length();
 #endif
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
