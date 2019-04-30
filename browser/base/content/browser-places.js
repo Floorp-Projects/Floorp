@@ -189,15 +189,8 @@ var StarUI = {
     return BookmarkPanelHub.messageRequest(data, window);
   },
 
-  toggleRecommendation(visible) {
-    const info = this._element("editBookmarkPanelInfoButton");
-    info.checked = visible !== undefined ? !!visible : !info.checked;
-    const recommendation = this._element("editBookmarkPanelRecommendation");
-    if (info.checked) {
-      recommendation.removeAttribute("disabled");
-    } else {
-      recommendation.setAttribute("disabled", "disabled");
-    }
+  toggleRecommendation() {
+    BookmarkPanelHub.toggleRecommendation();
   },
 
   async showEditBookmarkPopup(aNode, aIsNewBookmark, aUrl) {
@@ -241,20 +234,20 @@ var StarUI = {
 
     this._setIconAndPreviewImage();
 
-    const showRecommendation = await this.getRecommendation({
+    await this.getRecommendation({
       container: this._element("editBookmarkPanelRecommendation"),
-      createElement: elem => document.createElementNS("http://www.w3.org/1999/xhtml", elem),
+      infoButton: this._element("editBookmarkPanelInfoButton"),
+      recommendationContainer: this._element("editBookmarkPanelRecommendation"),
+      document,
       url: aUrl.href,
       close: e => {
         e.stopPropagation();
-        this.toggleRecommendation(false);
+        BookmarkPanelHub.toggleRecommendation(false);
       },
       hidePopup: () => {
         this.panel.hidePopup();
       },
     });
-    this._element("editBookmarkPanelInfoButton").disabled = !showRecommendation;
-    this.toggleRecommendation(showRecommendation);
 
     this.beginBatch();
 
