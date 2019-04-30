@@ -7,9 +7,12 @@ DIRS += [
 ]
 
 CompiledModules(
-    'actions.js',
-    'caching.js',
+    'base-query.js',
+    'compare.js',
     'core.js',
     'index.js',
-    'selectors.js'
+    'memoize.js',
+    'query-cache.js',
+    'query.js',
+    'selector.js',
 )
