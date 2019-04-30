@@ -130,6 +130,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
     ) :
         BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
 
+        @Suppress("ComplexMethod")
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 
             bookmark_favicon.visibility = View.VISIBLE
@@ -171,7 +172,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                     orientation = BrowserMenu.Orientation.DOWN
                 )
             }
-            bookmark_title.text = item.title ?: item.url
+            bookmark_title.text = if (item.title.isNullOrBlank()) item.url else item.title
             updateUrl(item, mode, selected)
         }
 
