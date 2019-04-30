@@ -211,15 +211,15 @@ bool nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
 
 nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
                                         uint32_t aScrollType) {
-  nsIPresShell::ScrollAxis vertical, horizontal;
+  ScrollAxis vertical, horizontal;
   ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
 
   return ScrollSubstringTo(aFrame, aRange, vertical, horizontal);
 }
 
 nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
-                                        nsIPresShell::ScrollAxis aVertical,
-                                        nsIPresShell::ScrollAxis aHorizontal) {
+                                        ScrollAxis aVertical,
+                                        ScrollAxis aHorizontal) {
   if (!aFrame || !aRange) {
     return NS_ERROR_FAILURE;
   }
@@ -262,9 +262,9 @@ void nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
   scrollableFrame->ScrollTo(scrollPoint, ScrollMode::Instant);
 }
 
-void nsCoreUtils::ConvertScrollTypeToPercents(
-    uint32_t aScrollType, nsIPresShell::ScrollAxis *aVertical,
-    nsIPresShell::ScrollAxis *aHorizontal) {
+void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
+                                              ScrollAxis *aVertical,
+                                              ScrollAxis *aHorizontal) {
   WhereToScroll whereY, whereX;
   WhenToScroll whenY, whenX;
   switch (aScrollType) {
@@ -310,8 +310,8 @@ void nsCoreUtils::ConvertScrollTypeToPercents(
       whereX = kScrollMinimum;
       whenX = WhenToScroll::IfNotFullyVisible;
   }
-  *aVertical = nsIPresShell::ScrollAxis(whereY, whenY);
-  *aHorizontal = nsIPresShell::ScrollAxis(whereX, whenX);
+  *aVertical = ScrollAxis(whereY, whenY);
+  *aHorizontal = ScrollAxis(whereX, whenX);
 }
 
 nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode) {
@@ -507,7 +507,7 @@ bool nsCoreUtils::IsColumnHidden(nsTreeColumn *aColumn) {
 
 void nsCoreUtils::ScrollTo(PresShell *aPresShell, nsIContent *aContent,
                            uint32_t aScrollType) {
-  nsIPresShell::ScrollAxis vertical, horizontal;
+  ScrollAxis vertical, horizontal;
   ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
   aPresShell->ScrollContentIntoView(aContent, vertical, horizontal,
                                     ScrollFlags::ScrollOverflowHidden);
