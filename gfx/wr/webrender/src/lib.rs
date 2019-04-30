@@ -206,7 +206,7 @@ pub extern crate webrender_api;
 extern crate webrender_build;
 
 #[doc(hidden)]
-pub use device::{build_shader_strings, ReadPixelsFormat, UploadMethod, VertexUsageHint};
+pub use device::{build_shader_strings, UploadMethod, VertexUsageHint};
 pub use device::{ProgramBinary, ProgramCache, ProgramCacheObserver};
 pub use device::Device;
 pub use frame_builder::ChasePrimitive;
