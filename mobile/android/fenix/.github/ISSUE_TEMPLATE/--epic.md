@@ -1,18 +1,14 @@
 ---
-name: "\U0001F535 Meta Feature (Epic)"
-about: Create Epic (Meta Feature)
+name: "\U0001F535 Epic (Meta Feature)"
+about: Create an Epic (Meta Feature)
 title: "[Meta]"
 labels: ''
 assignees: ''
 
 ---
-
-Owner: Product Manager
-Purpose: PM to describe a feature and track overall activities, dependencies, progress
-
 ### Why/User Benefit/User Problem
-- Description of Feature (Added by PM)
-- Add any additional links or research related to this feature.
+- Description of Feature
+- Add relevant info/research related to this feature
 - Immediate task: Convert to epic and move to appropriate milestone
 
 ### Acceptance Criteria (Added by PM. For EPM to track when a Meta feature is done)
