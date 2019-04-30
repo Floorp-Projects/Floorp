@@ -1740,18 +1740,8 @@ bool nsStyleGradient::operator==(const nsStyleGradient& aOther) const {
     return false;
   }
 
-  if (mStops.Length() != aOther.mStops.Length()) {
+  if (mStops != aOther.mStops) {
     return false;
-  }
-
-  for (uint32_t i = 0; i < mStops.Length(); i++) {
-    const auto& stop1 = mStops[i];
-    const auto& stop2 = aOther.mStops[i];
-    if (stop1.mLocation != stop2.mLocation ||
-        stop1.mIsInterpolationHint != stop2.mIsInterpolationHint ||
-        (!stop1.mIsInterpolationHint && stop1.mColor != stop2.mColor)) {
-      return false;
-    }
   }
 
   return true;
@@ -1765,24 +1755,21 @@ nsStyleGradient::nsStyleGradient()
       mMozLegacySyntax(false) {}
 
 bool nsStyleGradient::IsOpaque() {
-  for (uint32_t i = 0; i < mStops.Length(); i++) {
-    if (mStops[i].mColor.MaybeTransparent()) {
+  for (auto& stop : mStops) {
+    if (stop.IsInterpolationHint()) {
+      continue;
+    }
+
+    auto& color = stop.IsSimpleColorStop() ? stop.AsSimpleColorStop()
+                                           : stop.AsComplexColorStop().color;
+    if (color.MaybeTransparent()) {
       // We don't know the foreground color here, so if it's being used
       // we must assume it might be transparent.
       return false;
     }
   }
-  return true;
-}
 
-bool nsStyleGradient::HasCalc() {
-  for (uint32_t i = 0; i < mStops.Length(); i++) {
-    if (mStops[i].mLocation.IsCalcUnit()) {
-      return true;
-    }
-  }
-  return mBgPosX.IsCalcUnit() || mBgPosY.IsCalcUnit() || mAngle.IsCalcUnit() ||
-         mRadiusX.IsCalcUnit() || mRadiusY.IsCalcUnit();
+  return true;
 }
 
 // --------------------
