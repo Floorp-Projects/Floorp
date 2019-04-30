@@ -5295,6 +5295,15 @@ void ContentParent::PaintTabWhileInterruptingJS(
       mHangMonitorActor, aBrowserParent, aForceRepaint, aEpoch);
 }
 
+void ContentParent::CancelContentJSExecutionIfRunning(
+    BrowserParent* aBrowserParent) {
+  if (!mHangMonitorActor) {
+    return;
+  }
+  ProcessHangMonitor::CancelContentJSExecutionIfRunning(mHangMonitorActor,
+                                                        aBrowserParent);
+}
+
 void ContentParent::UpdateCookieStatus(nsIChannel* aChannel) {
   PNeckoParent* neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
   PCookieServiceParent* csParent =

@@ -8,6 +8,7 @@
 #include "mozilla/ProcessHangMonitorIPC.h"
 
 #include "jsapi.h"
+#include "xpcprivate.h"
 
 #include "mozilla/Atomics.h"
 #include "mozilla/BackgroundHangMonitor.h"
@@ -111,6 +112,9 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   mozilla::ipc::IPCResult RecvPaintWhileInterruptingJS(
       const TabId& aTabId, const bool& aForceRepaint,
       const LayersObserverEpoch& aEpoch) override;
+
+  mozilla::ipc::IPCResult RecvCancelContentJSExecutionIfRunning(
+      const TabId& aTabId) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -234,6 +238,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   void PaintWhileInterruptingJS(dom::BrowserParent* aBrowserParent,
                                 bool aForceRepaint,
                                 const LayersObserverEpoch& aEpoch);
+  void CancelContentJSExecutionIfRunning(dom::BrowserParent* aBrowserParent);
 
   void TerminateScript(bool aTerminateGlobal);
   void BeginStartingDebugger();
@@ -262,6 +267,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
 
   void PaintWhileInterruptingJSOnThread(TabId aTabId, bool aForceRepaint,
                                         const LayersObserverEpoch& aEpoch);
+  void CancelContentJSExecutionIfRunningOnThread(TabId aTabId);
 
   void ShutdownOnThread();
 
@@ -446,6 +452,18 @@ void HangMonitorChild::ClearPaintWhileInterruptingJS(
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
   mPaintWhileInterruptingJSActive = false;
+}
+
+mozilla::ipc::IPCResult HangMonitorChild::RecvCancelContentJSExecutionIfRunning(
+    const TabId& aTabId) {
+  MOZ_RELEASE_ASSERT(IsOnThread());
+
+  // Tell xpconnect that we want to cancel the content JS in this tab during the
+  // next interrupt callback.
+  XPCJSContext::SetTabIdToCancelContentJS(aTabId);
+  JS_RequestInterruptCallback(mContext);
+
+  return IPC_OK();
 }
 
 void HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint) {
@@ -653,6 +671,25 @@ void HangMonitorParent::PaintWhileInterruptingJSOnThread(
 
   if (mIPCOpen) {
     Unused << SendPaintWhileInterruptingJS(aTabId, aForceRepaint, aEpoch);
+  }
+}
+
+void HangMonitorParent::CancelContentJSExecutionIfRunning(
+    dom::BrowserParent* aBrowserParent) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  TabId id = aBrowserParent->GetTabId();
+  Dispatch(NewNonOwningRunnableMethod<TabId>(
+      "HangMonitorParent::CancelContentJSExecutionIfRunningOnThread", this,
+      &HangMonitorParent::CancelContentJSExecutionIfRunningOnThread, id));
+}
+
+void HangMonitorParent::CancelContentJSExecutionIfRunningOnThread(
+    TabId aTabId) {
+  MOZ_RELEASE_ASSERT(IsOnThread());
+
+  if (mIPCOpen) {
+    Unused << SendCancelContentJSExecutionIfRunning(aTabId);
   }
 }
 
@@ -1255,4 +1292,12 @@ void ProcessHangMonitor::MaybeStartPaintWhileInterruptingJS() {
   if (HangMonitorChild* child = HangMonitorChild::Get()) {
     child->MaybeStartPaintWhileInterruptingJS();
   }
+}
+
+/* static */
+void ProcessHangMonitor::CancelContentJSExecutionIfRunning(
+    PProcessHangMonitorParent* aParent, dom::BrowserParent* aBrowserParent) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  auto parent = static_cast<HangMonitorParent*>(aParent);
+  parent->CancelContentJSExecutionIfRunning(aBrowserParent);
 }

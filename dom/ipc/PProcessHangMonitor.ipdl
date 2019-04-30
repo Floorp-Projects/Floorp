@@ -43,6 +43,8 @@ child:
   async EndStartingDebugger();
 
   async PaintWhileInterruptingJS(TabId tabId, bool forceRepaint, LayersObserverEpoch aEpoch);
+
+  async CancelContentJSExecutionIfRunning(TabId tabId);
 };
 
 } // namespace mozilla
