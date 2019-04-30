@@ -1120,7 +1120,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
   DebuggerStatementType debuggerStatement();
 
-  Node variableStatement(YieldHandling yieldHandling);
+  ListNodeType variableStatement(YieldHandling yieldHandling);
 
   LabeledStatementType labeledStatement(YieldHandling yieldHandling);
   Node labeledItem(YieldHandling yieldHandling);
@@ -1202,12 +1202,12 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   // from its initializer, parse and bind that initializer -- and possibly
   // consume trailing in/of and subsequent expression, if so directed by
   // |forHeadKind|.
-  Node initializerInNameDeclaration(NameNodeType binding,
-                                    DeclarationKind declKind,
-                                    bool initialDeclaration,
-                                    YieldHandling yieldHandling,
-                                    ParseNodeKind* forHeadKind,
-                                    Node* forInOrOfExpression);
+  AssignmentNodeType initializerInNameDeclaration(NameNodeType binding,
+                                                  DeclarationKind declKind,
+                                                  bool initialDeclaration,
+                                                  YieldHandling yieldHandling,
+                                                  ParseNodeKind* forHeadKind,
+                                                  Node* forInOrOfExpression);
 
   Node expr(InHandling inHandling, YieldHandling yieldHandling,
             TripledotHandling tripledotHandling,
