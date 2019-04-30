@@ -164,6 +164,7 @@ Structure:
                 subsysID: <string>, // null on failure
                 RAM: <number>, // in MB, null on failure
                 driver: <string>, // null on failure
+                driverVendor: <string>, // null on failure
                 driverVersion: <string>, // null on failure
                 driverDate: <string>, // null on failure
                 GPUActive: <bool>, // currently always true for the first adapter
@@ -171,7 +172,7 @@ Structure:
               ...
             ],
             // Note: currently only added on Desktop. On Linux, only a single
-            // monitor is returned representing the entire virtual screen.
+            // monitor is returned for the primary screen.
             monitors: [
               {
                 screenWidth: <number>,  // screen width in pixels

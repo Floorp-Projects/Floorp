@@ -49,6 +49,8 @@ void GfxInfo::AddCrashReportAnnotations() {
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
                                      mDeviceId);
   CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
+  CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
 }
 
