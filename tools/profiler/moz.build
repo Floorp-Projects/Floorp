@@ -163,6 +163,7 @@ if CONFIG['MOZ_TASK_TRACER']:
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
