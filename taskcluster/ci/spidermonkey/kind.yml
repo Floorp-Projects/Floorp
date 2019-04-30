@@ -23,7 +23,7 @@ job-defaults:
         tier: 1
     index:
         product: firefox
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     run:
         using: spidermonkey
     when:

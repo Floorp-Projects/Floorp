@@ -8,7 +8,7 @@ linux64/opt:
     treeherder:
         platform: linux64/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 7200
     run:
@@ -41,7 +41,7 @@ linux64-plain/opt:
         platform: linux64/opt
         symbol: Bp
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 5400
@@ -75,7 +75,7 @@ linux64-fuzzing/debug:
     treeherder:
         platform: linux64/debug
         symbol: Bf
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
@@ -113,7 +113,7 @@ linux64/debug:
     treeherder:
         platform: linux64/debug
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 5400
     run:
@@ -147,7 +147,7 @@ linux64-plain/debug:
         platform: linux64/debug
         symbol: Bp
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian9-amd64-build}
         max-run-time: 5400
@@ -188,7 +188,7 @@ linux64-devedition-nightly/opt:
     treeherder:
         platform: linux64-devedition/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 7200
     run:
@@ -223,7 +223,7 @@ linux64-base-toolchains/opt:
     treeherder:
         platform: linux64/opt
         symbol: Bb
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
         max-run-time: 7200
@@ -257,7 +257,7 @@ linux64-base-toolchains/debug:
     treeherder:
         platform: linux64/debug
         symbol: Bb
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
         max-run-time: 5400
@@ -293,7 +293,7 @@ linux64-base-toolchains-clang/opt:
     treeherder:
         platform: linux64/opt
         symbol: Bbc
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
         max-run-time: 7200
@@ -325,7 +325,7 @@ linux64-base-toolchains-clang/debug:
     treeherder:
         platform: linux64/debug
         symbol: Bbc
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-amd64-build-base}
         max-run-time: 3600
@@ -361,7 +361,7 @@ linux/opt:
     treeherder:
         platform: linux32/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
@@ -396,7 +396,7 @@ linux/debug:
     treeherder:
         platform: linux32/debug
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 5400
@@ -431,7 +431,7 @@ linux-rusttests/opt:
         platform: linux32/opt
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 2700
@@ -469,7 +469,7 @@ linux-rusttests/debug:
         platform: linux32/debug
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 2700
@@ -512,7 +512,7 @@ linux-devedition-nightly/opt:
     treeherder:
         platform: linux32-devedition/opt
         symbol: N
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 7200
@@ -554,7 +554,7 @@ linux-shippable/opt:
     treeherder:
         platform: linux32-shippable/opt
         symbol: B
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
         max-run-time: 9000
@@ -586,7 +586,7 @@ linux64-asan/opt:
     treeherder:
         platform: linux64/asan
         symbol: Bo
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
@@ -621,7 +621,7 @@ linux64-asan-fuzzing/opt:
     treeherder:
         platform: linux64/asan
         symbol: Bof
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
@@ -657,7 +657,7 @@ linux64-asan-fuzzing-ccov/opt:
         platform: linux64/asan
         symbol: Bocf
     run-on-projects: ['mozilla-central', 'try']
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-ccov
@@ -692,7 +692,7 @@ linux64-fuzzing-ccov/opt:
         platform: linux64/opt
         symbol: Bocf
     run-on-projects: ['mozilla-central', 'try']
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 5400
         env:
@@ -735,7 +735,7 @@ linux64-asan-reporter-nightly/opt:
         platform: linux64-asan-reporter/opt
         symbol: BoR
     run-on-projects: ['mozilla-central']
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-reporter
@@ -770,7 +770,7 @@ linux64-asan/debug:
     treeherder:
         platform: linux64/asan
         symbol: Bd
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
@@ -812,7 +812,7 @@ linux64-shippable/opt:
     treeherder:
         platform: linux64-shippable/opt
         symbol: Bpgo(B)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 9000
     run:
@@ -845,7 +845,7 @@ linux64-noopt/debug:
         platform: linux64-noopt/debug
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 5400
     run:
@@ -881,7 +881,7 @@ linux64-rusttests/opt:
         platform: linux64/opt
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -918,7 +918,7 @@ linux64-rusttests/debug:
         platform: linux64/debug
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 2700
         env:
@@ -955,7 +955,7 @@ linux64-tup/opt:
         platform: linux64/opt
         symbol: Btup
         tier: 3
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
         env:
@@ -993,7 +993,7 @@ linux64-ccov/debug:
         symbol: B
         tier: 2
     run-on-projects: ['mozilla-central', 'try']
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
@@ -1036,7 +1036,7 @@ linux64-ccov/opt:
         symbol: B
         tier: 2
     run-on-projects: ['mozilla-central', 'try']
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -1071,7 +1071,7 @@ linux64-add-on-devel/opt:
         platform: linux64-add-on-devel/opt
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
     run:
@@ -1108,7 +1108,7 @@ linux64-aarch64/opt:
         platform: linux64-aarch64/opt
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: debian9-arm64-build}
         max-run-time: 7200

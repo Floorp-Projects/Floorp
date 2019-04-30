@@ -252,7 +252,6 @@ def make_job_description(config, jobs):
             build_task = 'build'
             _fetch_subst_locale = locale
 
-        level = config.params['level']
         build_platform = attributes['build_platform']
 
         use_stub = attributes.get('stub-installer')
@@ -310,12 +309,12 @@ def make_job_description(config, jobs):
             worker.setdefault('env', {}).update(LOCALE=locale)
 
         if build_platform.startswith('win'):
-            worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
+            worker_type = 'b-win2012'
             run['use-magic-mh-args'] = False
             run['use-caches'] = False
         else:
             if build_platform.startswith(('linux', 'macosx')):
-                worker_type = 'aws-provisioner-v1/gecko-%s-b-linux' % level
+                worker_type = 'b-linux'
             else:
                 raise NotImplementedError(
                     'Unsupported build_platform: "{}"'.format(build_platform)

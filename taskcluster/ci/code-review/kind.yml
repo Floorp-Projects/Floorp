@@ -16,7 +16,7 @@ jobs:
    issues:
       label: code-review-issues
       description: List all issues found in static analysis and linting tasks
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker-type: b-linux
 
       # Only run by using the code-review target_tasks_method
       run-on-projects: []

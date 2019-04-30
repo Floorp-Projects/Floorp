@@ -20,7 +20,7 @@ job-defaults:
     shipping-phase: promote
     treeherder:
         symbol: Src
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
         env:

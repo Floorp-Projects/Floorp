@@ -4,7 +4,7 @@
 
 job-defaults:
     description: "gn toolchain build"
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 1800
     run-on-projects:
@@ -42,7 +42,7 @@ macosx64-gn:
 win32-gn:
     treeherder:
         symbol: TW32(gn)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 3600
         env:
