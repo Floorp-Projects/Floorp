@@ -40,6 +40,12 @@ impl CaptureConfig {
     }
 
     #[cfg(feature = "capture")]
+    pub fn file_path<P>(&self, name: P, ext: &str) -> PathBuf
+    where P: AsRef<Path> {
+        self.root.join(name).with_extension(ext)
+    }
+
+    #[cfg(feature = "capture")]
     pub fn serialize<T, P>(&self, data: &T, name: P)
     where
         T: serde::Serialize,
@@ -49,9 +55,7 @@ impl CaptureConfig {
 
         let ron = ron::ser::to_string_pretty(data, self.pretty.clone())
             .unwrap();
-        let path = self.root
-            .join(name)
-            .with_extension("ron");
+        let path = self.file_path(name, "ron");
         let mut file = File::create(path)
             .unwrap();
         write!(file, "{}\n", ron)

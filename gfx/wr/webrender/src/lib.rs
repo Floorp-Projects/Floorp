@@ -70,6 +70,7 @@ extern crate serde;
 extern crate thread_profiler;
 
 extern crate wr_malloc_size_of;
+extern crate svg_fmt;
 use wr_malloc_size_of as malloc_size_of;
 
 #[macro_use]
