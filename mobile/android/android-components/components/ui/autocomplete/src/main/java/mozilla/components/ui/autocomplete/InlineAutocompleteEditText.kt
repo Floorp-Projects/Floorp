@@ -271,6 +271,15 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         resetAutocompleteState()
     }
 
+    fun setText(text: CharSequence?, shouldAutoComplete: Boolean = true) {
+        val previousEnabledState = isEnabled
+
+        // Disable the edit text if necessary in order to stop auto completion
+        isEnabled = shouldAutoComplete
+        setText(text, TextView.BufferType.EDITABLE)
+        isEnabled = previousEnabledState
+    }
+
     override fun getText(): Editable {
         return super.getText() as Editable
     }

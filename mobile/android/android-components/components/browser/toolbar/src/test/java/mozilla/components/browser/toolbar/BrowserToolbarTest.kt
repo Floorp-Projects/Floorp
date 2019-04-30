@@ -123,7 +123,7 @@ class BrowserToolbarTest {
         toolbar.url = "https://www.mozilla.org"
 
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
-        verify(ediToolbar, never()).updateUrl(ArgumentMatchers.anyString())
+        verify(ediToolbar, never()).updateUrl(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())
     }
 
     @Test
@@ -134,11 +134,11 @@ class BrowserToolbarTest {
         toolbar.editToolbar = ediToolbar
 
         toolbar.url = "https://www.mozilla.org"
-        verify(ediToolbar, never()).updateUrl("https://www.mozilla.org")
+        verify(ediToolbar, never()).updateUrl("https://www.mozilla.org", true)
 
         toolbar.editMode()
 
-        verify(ediToolbar).updateUrl("https://www.mozilla.org")
+        verify(ediToolbar).updateUrl("https://www.mozilla.org", true)
     }
 
     @Test
@@ -416,13 +416,13 @@ class BrowserToolbarTest {
         toolbar.url = "https://www.mozilla.com"
         toolbar.editMode()
         verify(displayToolbar).updateUrl("https://www.mozilla.com")
-        verify(editToolbar).updateUrl("mozilla android")
+        verify(editToolbar).updateUrl("mozilla android", false)
 
         toolbar.setSearchTerms("")
         toolbar.url = "https://www.mozilla.org"
         toolbar.editMode()
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
-        verify(editToolbar).updateUrl("https://www.mozilla.org")
+        verify(editToolbar).updateUrl("https://www.mozilla.org", true)
     }
 
     @Test

@@ -46,6 +46,13 @@ permalink: /changelog/
      registered with Glean at startup time. See
      `components/service/glean/docs/pings/custom.md` for more information.
 
+* **ui-autocomplete**
+  * Added an optional `shouldAutoComplete` boolean to `setText` which is currently used by `updateUrl` in `EditToolbar`.
+  
+* **browser-toolbar**
+  * Modified `EditToolbar`'s `updateUrl` function to take a `shouldAutoComplete` boolean. By default a call to this function does **not** autocomplete. Generally you want to disable autocomplete when calling `updateUrl` if the text is a search term.
+  See `editMode` in `BrowserToolbar` and `setText` in `InlineAutocompleteEditText` for more information.
+
 # 0.51.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...v0.51.0)
@@ -59,7 +66,7 @@ permalink: /changelog/
 
 * **browser-errorpages**
   * Added `%backButton%` replacement for buttons that need the text "Go Back" instead of "Try Again"
-
+  
 * **browser-session**, **browser-engine-gecko-nightly**, **browser-engine-system**
   * Fixed an issue causing `Session.searchTerms` getting cleared to early. Now the search terms will stay assigned to the `Session` until a new request, triggered by a user interaction like clicking a link, started loading (ignoring redirects).
 
