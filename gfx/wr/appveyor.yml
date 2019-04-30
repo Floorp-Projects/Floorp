@@ -8,8 +8,8 @@ environment:
   TARGET: x86_64-pc-windows-msvc
 
 install:
-  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-1.30.0-${env:TARGET}.msi"
-  - msiexec /passive /i "rust-1.30.0-%TARGET%.msi" ADDLOCAL=Rustc,Cargo,Std INSTALLDIR=C:\Rust
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-1.34.0-${env:TARGET}.msi"
+  - msiexec /passive /i "rust-1.34.0-%TARGET%.msi" ADDLOCAL=Rustc,Cargo,Std INSTALLDIR=C:\Rust
   - rustc -V
   - cargo -V
 
