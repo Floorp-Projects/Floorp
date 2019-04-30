@@ -360,6 +360,10 @@ var invalidGradientAndElementValues = [
   "radial-gradient(red 0% 50% 75%, blue 75%)",
   "radial-gradient(center, red 0% 50% 100%)",
   "radial-gradient(center, red 0% 50% 75%, blue 75%)",
+
+  "-moz-linear-gradient(unset, 10px 10px, from(blue))",
+  "-moz-linear-gradient(unset, 10px 10px, blue 0)",
+  "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
 ];
 var unbalancedGradientAndElementValues = [
   "-moz-element(#a()",
@@ -849,7 +853,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   );
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
+if (/* mozGradientsEnabled */ true) { // Maybe one day :(
   // Extend gradient lists with valid/invalid moz-prefixed expressions:
   validGradientAndElementValues.push(
     "-moz-linear-gradient(red, blue)",
@@ -862,9 +866,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-linear-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
 
     "-moz-linear-gradient(top, red, blue)",
-    "-moz-linear-gradient(center 0%, red, blue)",
-    "-moz-linear-gradient(50% top, red, blue)",
-    "-moz-linear-gradient(50% 0%, red, blue)",
 
     "-moz-linear-gradient(to top, red, blue)",
     "-moz-linear-gradient(to bottom, red, blue)",
@@ -880,30 +881,12 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-linear-gradient(to right bottom, red, blue)",
 
     "-moz-linear-gradient(top left, red, blue)",
-    "-moz-linear-gradient(0 0, red, blue)",
-    "-moz-linear-gradient(20% bottom, red, blue)",
-    "-moz-linear-gradient(center 20%, red, blue)",
-    "-moz-linear-gradient(left 35px, red, blue)",
-    "-moz-linear-gradient(10% 10em, red, blue)",
-    "-moz-linear-gradient(44px top, red, blue)",
     "-moz-linear-gradient(left, red, blue)",
     "-moz-linear-gradient(bottom, red, blue)",
 
-    "-moz-linear-gradient(0px, red, blue)",
     "-moz-linear-gradient(0, red, blue)",
-    "-moz-linear-gradient(top left 45deg, red, blue)",
-    "-moz-linear-gradient(20% bottom -300deg, red, blue)",
-    "-moz-linear-gradient(center 20% 1.95929rad, red, blue)",
-    "-moz-linear-gradient(left 35px 30grad, red, blue)",
-    "-moz-linear-gradient(left 35px 0.1turn, red, blue)",
-    "-moz-linear-gradient(10% 10em 99999deg, red, blue)",
-    "-moz-linear-gradient(44px top -33deg, red, blue)",
 
     "-moz-linear-gradient(-33deg, red, blue)",
-    "-moz-linear-gradient(30grad left 35px, red, blue)",
-    "-moz-linear-gradient(10deg 20px, red, blue)",
-    "-moz-linear-gradient(1turn 20px, red, blue)",
-    "-moz-linear-gradient(.414rad bottom, red, blue)",
 
     "-moz-linear-gradient(blue calc(0px) ,green calc(25%) ,red calc(40px) ,blue calc(60px) , yellow  calc(100px))",
     "-moz-linear-gradient(-33deg, blue calc(-25%) ,red 40px)",
@@ -927,19 +910,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-radial-gradient(10% 10em, red, blue)",
     "-moz-radial-gradient(44px top, red, blue)",
 
-    "-moz-radial-gradient(top left 45deg, red, blue)",
     "-moz-radial-gradient(0 0, red, blue)",
-    "-moz-radial-gradient(20% bottom -300deg, red, blue)",
-    "-moz-radial-gradient(center 20% 1.95929rad, red, blue)",
-    "-moz-radial-gradient(left 35px 30grad, red, blue)",
-    "-moz-radial-gradient(10% 10em 99999deg, red, blue)",
-    "-moz-radial-gradient(44px top -33deg, red, blue)",
     "-moz-radial-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
-
-    "-moz-radial-gradient(-33deg, red, blue)",
-    "-moz-radial-gradient(30grad left 35px, red, blue)",
-    "-moz-radial-gradient(10deg 20px, red, blue)",
-    "-moz-radial-gradient(.414rad bottom, red, blue)",
 
     "-moz-radial-gradient(cover, red, blue)",
     "-moz-radial-gradient(cover circle, red, blue)",
@@ -953,16 +925,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-radial-gradient(15% 20%, circle, red, blue)",
     "-moz-radial-gradient(45px, ellipse closest-corner, red, blue)",
     "-moz-radial-gradient(45px, farthest-side circle, red, blue)",
-
-    "-moz-radial-gradient(99deg, cover, red, blue)",
-    "-moz-radial-gradient(-1.2345rad, circle, red, blue)",
-    "-moz-radial-gradient(399grad, ellipse closest-corner, red, blue)",
-    "-moz-radial-gradient(399grad, farthest-side circle, red, blue)",
-
-    "-moz-radial-gradient(top left 99deg, cover, red, blue)",
-    "-moz-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
-    "-moz-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
-    "-moz-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
 
     "-moz-repeating-linear-gradient(red, blue)",
     "-moz-repeating-linear-gradient(red, yellow, blue)",
@@ -987,24 +949,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-repeating-linear-gradient(to right bottom, red, blue)",
 
     "-moz-repeating-linear-gradient(top left, red, blue)",
-    "-moz-repeating-linear-gradient(0 0, red, blue)",
-    "-moz-repeating-linear-gradient(20% bottom, red, blue)",
-    "-moz-repeating-linear-gradient(center 20%, red, blue)",
-    "-moz-repeating-linear-gradient(left 35px, red, blue)",
-    "-moz-repeating-linear-gradient(10% 10em, red, blue)",
-    "-moz-repeating-linear-gradient(44px top, red, blue)",
-
-    "-moz-repeating-linear-gradient(top left 45deg, red, blue)",
-    "-moz-repeating-linear-gradient(20% bottom -300deg, red, blue)",
-    "-moz-repeating-linear-gradient(center 20% 1.95929rad, red, blue)",
-    "-moz-repeating-linear-gradient(left 35px 30grad, red, blue)",
-    "-moz-repeating-linear-gradient(10% 10em 99999deg, red, blue)",
-    "-moz-repeating-linear-gradient(44px top -33deg, red, blue)",
-
-    "-moz-repeating-linear-gradient(-33deg, red, blue)",
-    "-moz-repeating-linear-gradient(30grad left 35px, red, blue)",
-    "-moz-repeating-linear-gradient(10deg 20px, red, blue)",
-    "-moz-repeating-linear-gradient(.414rad bottom, red, blue)",
 
     "-moz-repeating-radial-gradient(red, blue)",
     "-moz-repeating-radial-gradient(red, yellow, blue)",
@@ -1032,6 +976,72 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-radial-gradient(calc(100px + -25px) top, red, blue)",
     "-moz-radial-gradient(left calc(100px + -25px), red, blue)",
   );
+
+  (IsCSSPropertyPrefEnabled("layout.css.simple-moz-gradient.enabled")
+    ? validGradientAndElementValues
+    : validGradientAndElementValues).push(
+      "-moz-radial-gradient(40%, -100px -10%, red, blue)",
+    );
+
+  (IsCSSPropertyPrefEnabled("layout.css.simple-moz-gradient.enabled")
+    ? invalidGradientAndElementValues
+    : validGradientAndElementValues).push(
+      "-moz-linear-gradient(center 0%, red, blue)",
+      "-moz-linear-gradient(50% top, red, blue)",
+      "-moz-linear-gradient(50% 0%, red, blue)",
+      "-moz-linear-gradient(0 0, red, blue)",
+      "-moz-linear-gradient(20% bottom, red, blue)",
+      "-moz-linear-gradient(center 20%, red, blue)",
+      "-moz-linear-gradient(left 35px, red, blue)",
+      "-moz-linear-gradient(10% 10em, red, blue)",
+      "-moz-linear-gradient(44px top, red, blue)",
+      "-moz-linear-gradient(0px, red, blue)",
+      "-moz-linear-gradient(top left 45deg, red, blue)",
+      "-moz-linear-gradient(20% bottom -300deg, red, blue)",
+      "-moz-linear-gradient(center 20% 1.95929rad, red, blue)",
+      "-moz-linear-gradient(left 35px 30grad, red, blue)",
+      "-moz-linear-gradient(left 35px 0.1turn, red, blue)",
+      "-moz-linear-gradient(10% 10em 99999deg, red, blue)",
+      "-moz-linear-gradient(44px top -33deg, red, blue)",
+      "-moz-linear-gradient(30grad left 35px, red, blue)",
+      "-moz-linear-gradient(10deg 20px, red, blue)",
+      "-moz-linear-gradient(1turn 20px, red, blue)",
+      "-moz-linear-gradient(.414rad bottom, red, blue)",
+      "-moz-radial-gradient(top left 45deg, red, blue)",
+      "-moz-radial-gradient(20% bottom -300deg, red, blue)",
+      "-moz-radial-gradient(center 20% 1.95929rad, red, blue)",
+      "-moz-radial-gradient(left 35px 30grad, red, blue)",
+      "-moz-radial-gradient(10% 10em 99999deg, red, blue)",
+      "-moz-radial-gradient(44px top -33deg, red, blue)",
+      "-moz-radial-gradient(-33deg, red, blue)",
+      "-moz-radial-gradient(30grad left 35px, red, blue)",
+      "-moz-radial-gradient(10deg 20px, red, blue)",
+      "-moz-radial-gradient(.414rad bottom, red, blue)",
+      "-moz-radial-gradient(99deg, cover, red, blue)",
+      "-moz-radial-gradient(-1.2345rad, circle, red, blue)",
+      "-moz-radial-gradient(399grad, ellipse closest-corner, red, blue)",
+      "-moz-radial-gradient(399grad, farthest-side circle, red, blue)",
+      "-moz-radial-gradient(top left 99deg, cover, red, blue)",
+      "-moz-radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
+      "-moz-radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
+      "-moz-radial-gradient(45px 399grad, farthest-side circle, red, blue)",
+      "-moz-repeating-linear-gradient(0 0, red, blue)",
+      "-moz-repeating-linear-gradient(20% bottom, red, blue)",
+      "-moz-repeating-linear-gradient(center 20%, red, blue)",
+      "-moz-repeating-linear-gradient(left 35px, red, blue)",
+      "-moz-repeating-linear-gradient(10% 10em, red, blue)",
+      "-moz-repeating-linear-gradient(44px top, red, blue)",
+      "-moz-repeating-linear-gradient(top left 45deg, red, blue)",
+      "-moz-repeating-linear-gradient(20% bottom -300deg, red, blue)",
+      "-moz-repeating-linear-gradient(center 20% 1.95929rad, red, blue)",
+      "-moz-repeating-linear-gradient(left 35px 30grad, red, blue)",
+      "-moz-repeating-linear-gradient(10% 10em 99999deg, red, blue)",
+      "-moz-repeating-linear-gradient(44px top -33deg, red, blue)",
+      "-moz-repeating-linear-gradient(30grad left 35px, red, blue)",
+      "-moz-repeating-linear-gradient(10deg 20px, red, blue)",
+      "-moz-repeating-linear-gradient(.414rad bottom, red, blue)",
+    );
+
   invalidGradientAndElementValues.push(
     /* no quirks mode colors */
     "-moz-radial-gradient(10% bottom, ffffff, black) scroll no-repeat",
@@ -1087,7 +1097,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-radial-gradient(to top left, red, blue)",
     "-moz-radial-gradient(center, 10%, red, blue)",
     "-moz-radial-gradient(5rad, 20px, red, blue)",
-    "-moz-radial-gradient(40%, -100px -10%, red, blue)",
 
     "-moz-radial-gradient(at top left to cover, red, blue)",
     "-moz-radial-gradient(at 15% 20% circle, red, blue)",
@@ -8495,40 +8504,20 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
-  gCSSProperties["background"].other_values.push(
-    "-moz-radial-gradient(10% bottom, #ffffff, black) scroll no-repeat",
-    "-moz-linear-gradient(10px 10px -45deg, red, blue) repeat",
-    "-moz-linear-gradient(10px 10px -0.125turn, red, blue) repeat",
-    "-moz-repeating-radial-gradient(10% bottom, #ffffff, black) scroll no-repeat",
-    "-moz-repeating-linear-gradient(10px 10px -45deg, red, blue) repeat",
-    "url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green), -moz-element(#a) black",
-  );
-  gCSSProperties["background"].invalid_values.push(
-    /* no quirks mode colors */
-    "-moz-radial-gradient(10% bottom, ffffff, black) scroll no-repeat",
-    /* no quirks mode lengths */
-    "-moz-linear-gradient(10 10px -45deg, red, blue) repeat",
-    "-moz-linear-gradient(10px 10 -45deg, red, blue) repeat",
-    /* bug 513395: old syntax for gradients */
-    "-moz-radial-gradient(10% bottom, 30px, 20px 20px, 10px, from(#ffffff), to(black)) scroll no-repeat",
-    "-moz-linear-gradient(10px 10px, 20px 20px, from(red), to(blue)) repeat",
-  );
-  gCSSProperties["mask"].other_values.push(
-    "-moz-radial-gradient(10% bottom, #ffffff, black) add no-repeat",
-    "-moz-linear-gradient(10px 10px -45deg, red, blue) repeat",
-    "-moz-linear-gradient(10px 10px -0.125turn, red, blue) repeat",
-    "-moz-repeating-radial-gradient(10% bottom, #ffffff, black) add no-repeat",
-    "-moz-repeating-linear-gradient(10px 10px -45deg, red, blue) repeat",
-    "url(404.png), -moz-linear-gradient(20px 20px -45deg, blue, green), -moz-element(#a) alpha",
-  );
-  gCSSProperties["mask"].invalid_values.push(
-    /* no quirks mode colors */
-    "-moz-radial-gradient(10% bottom, ffffff, black) add no-repeat",
-    /* no quirks mode lengths */
-    "-moz-linear-gradient(10 10px -45deg, red, blue) repeat",
-    "-moz-linear-gradient(10px 10 -45deg, red, blue) repeat",
-  );
+{
+  const patterns = {
+    background: ["{} scroll no-repeat", "{} repeat", "url(404.png), {}, -moz-element(#a) black"],
+    mask: ["{} add no-repeat", "{} repeat", "url(404.png), {}, -moz-element(#a) alpha"],
+  };
+
+  for (const prop of ["background", "mask"]) {
+    let i = 0;
+    const p = patterns[prop];
+    for (const v of invalidGradientAndElementValues)
+      gCSSProperties[prop].invalid_values.push(p[i++ % p.length].replace("{}", v));
+    for (const v of validGradientAndElementValues)
+      gCSSProperties[prop].other_values.push(p[i++ % p.length].replace("{}", v));
+  }
 }
 
 gCSSProperties["display"].other_values.push("flow-root");
@@ -8685,14 +8674,6 @@ if (false) {
     other_values: [ "green", "#fc3" ],
     invalid_values: [ "000000", "ff00ff" ]
   };
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
-  gCSSProperties["background-image"].invalid_values.push(
-    "-moz-linear-gradient(unset, 10px 10px, from(blue))",
-    "-moz-linear-gradient(unset, 10px 10px, blue 0)",
-    "-moz-repeating-linear-gradient(unset, 10px 10px, blue 0)",
-  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-color.enabled")) {
