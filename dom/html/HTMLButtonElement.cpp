@@ -258,7 +258,7 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         nsEventStatus status = nsEventStatus_eIgnore;
 
         RefPtr<PresShell> presShell = aVisitor.mPresContext->GetPresShell();
-        // If |nsIPresShell::Destroy| has been called due to
+        // If |PresShell::Destroy| has been called due to
         // handling the event, the pres context will return
         // a null pres shell.  See bug 125624.
         //

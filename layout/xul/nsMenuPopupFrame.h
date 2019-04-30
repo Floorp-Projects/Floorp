@@ -180,6 +180,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   virtual nsMenuFrame* GetCurrentMenuItem() override;
   NS_IMETHOD SetCurrentMenuItem(nsMenuFrame* aMenuItem) override;
   virtual void CurrentMenuIsBeingDestroyed() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem,
                             bool aFromKey) override;
 

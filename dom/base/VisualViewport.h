@@ -11,7 +11,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/VisualViewportBinding.h"
 #include "Units.h"
-#include "nsIPresShell.h"
 
 namespace mozilla {
 
