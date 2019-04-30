@@ -29,8 +29,17 @@ exports.grid = {
   // Whether or not the grid highlighter is highlighting the grid
   highlighted: PropTypes.bool,
 
+  // Whether or not the grid is a subgrid
+  isSubgrid: PropTypes.bool,
+
   // The node front of the grid container
   nodeFront: PropTypes.object,
+
+  // If the grid is a subgrid, this references the parent node front actor ID
+  parentNodeActorID: PropTypes.string,
+
+  // Array of ids belonging to the subgrid within the grid container
+  subgrids: PropTypes.arrayOf(PropTypes.number),
 
   // The writing mode of the grid container
   writingMode: PropTypes.string,
