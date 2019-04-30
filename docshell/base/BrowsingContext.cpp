@@ -337,7 +337,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
 
   MOZ_DIAGNOSTIC_ASSERT(mChildren.IsEmpty());
 
-  for (BrowsingContext* child : mChildren) {
+  for (BrowsingContext* child : aChildren) {
     MOZ_DIAGNOSTIC_ASSERT(child->GetParent() == this);
     Unused << Group()->EvictCachedContext(child);
   }
