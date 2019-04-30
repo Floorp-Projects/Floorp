@@ -45,7 +45,7 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
   }
 
   /**
-   * Get a Front for either an arrayBuffer or LongString
+   * Get a Front for either an ArrayBuffer or LongString
    * for this SourceFront's source.
    */
   async source() {
