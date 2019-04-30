@@ -234,22 +234,14 @@ async function testTabUpdated(tab) {
   nextCycle();
 }
 
-function waitForResult() {
-  console.log("awaiting results...");
-  return new Promise(resolve => {
-    async function checkForResult() {
+async function waitForResult() {
+  let results = await new Promise(resolve => {
+    function checkForResult() {
+      console.log("checking results...");
       switch (testType) {
         case TEST_BENCHMARK:
           if (!isBenchmarkPending) {
-            cancelTimeoutAlarm("raptor-page-timeout");
-            postToControlServer("status", "results received");
-            if (geckoProfiling) {
-              await getGeckoProfile();
-            }
             resolve();
-            if (screenCapture) {
-              await getScreenCapture();
-            }
           } else {
             setTimeout(checkForResult, 5);
           }
@@ -257,20 +249,11 @@ function waitForResult() {
 
         case TEST_PAGE_LOAD:
           if (!isHeroPending &&
-            !isFNBPaintPending &&
-            !isFCPPending &&
-            !isDCFPending &&
-            !isTTFIPending &&
-            !isLoadTimePending) {
-            cancelTimeoutAlarm("raptor-page-timeout");
-            postToControlServer("status", "results received");
-            if (geckoProfiling) {
-              await getGeckoProfile();
-            }
-            if (screenCapture) {
-              await getScreenCapture();
-            }
-
+              !isFNBPaintPending &&
+              !isFCPPending &&
+              !isDCFPending &&
+              !isTTFIPending &&
+              !isLoadTimePending) {
             resolve();
           } else {
             setTimeout(checkForResult, 5);
@@ -278,8 +261,23 @@ function waitForResult() {
           break;
       }
     }
+
     checkForResult();
   });
+
+  cancelTimeoutAlarm("raptor-page-timeout");
+
+  postToControlServer("status", "results received");
+
+  if (geckoProfiling) {
+    await getGeckoProfile();
+  }
+
+  if (screenCapture) {
+    await getScreenCapture();
+  }
+
+  return results;
 }
 
 async function getScreenCapture() {
