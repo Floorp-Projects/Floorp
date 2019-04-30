@@ -193,7 +193,6 @@ NS_INTERFACE_MAP_END
 
 static uint32_t sESMInstanceCount = 0;
 
-uint64_t EventStateManager::sUserInputCounter = 0;
 int32_t EventStateManager::sUserInputEventDepth = 0;
 int32_t EventStateManager::sUserKeyboardEventDepth = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
@@ -4055,7 +4054,6 @@ bool EventStateManager::IsHandlingKeyboardInput() {
 /*static*/
 void EventStateManager::StartHandlingUserInput(EventMessage aMessage) {
   ++sUserInputEventDepth;
-  ++sUserInputCounter;
   if (sUserInputEventDepth == 1) {
     sLatestUserInputStart = sHandlingInputStart = TimeStamp::Now();
   }
