@@ -38,6 +38,10 @@
  * Common styles for the layout container
  */
 
+.layout-container ul {
+  list-style: none;
+}
+
 .layout-container li {
   padding: 3px 0;
   -moz-user-select: none;
@@ -643,9 +647,12 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
 }
 
 .grid-container > ul {
-  list-style: none;
   margin: 0;
   padding: 0;
+}
+
+#grid-list ul {
+  padding-inline-start: 20px;
 }
 
 /**
