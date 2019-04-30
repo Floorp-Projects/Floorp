@@ -58,6 +58,6 @@ add_task(async function() {
      "Correct actor front will be opened in worker toolbox");
 
   await removeTab(devtoolsTab);
-  await waitUntil(() => !findDebugTargetByText("about:devtools-toolbox?", document));
+  await waitUntil(() => !findDebugTargetByText("Toolbox - ", document));
   await removeTab(tab);
 });
