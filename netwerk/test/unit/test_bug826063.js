@@ -6,7 +6,6 @@
  * result for various combinations of .setPrivate() and nsILoadContexts
  */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 
 var URIs = [

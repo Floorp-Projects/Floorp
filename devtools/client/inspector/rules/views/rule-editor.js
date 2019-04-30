@@ -701,7 +701,7 @@ RuleEditor.prototype = {
       rules.splice(oldIndex, 1);
       rules.splice(newRuleIndex, 0, newRule);
       elementStyle._changed();
-      elementStyle.markOverriddenAll();
+      elementStyle.onRuleUpdated();
 
       // We install the new editor in place of the old -- you might
       // think we would replicate the list-modification logic above,

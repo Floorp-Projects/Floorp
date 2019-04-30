@@ -83,7 +83,7 @@ def get_test_parser():
     return parser
 
 
-ADD_TEST_SUPPORTED_SUITES = ['mochitest-chrome', 'mochitest-plain', 'mochitest-browser',
+ADD_TEST_SUPPORTED_SUITES = ['mochitest-chrome', 'mochitest-plain', 'mochitest-browser-chrome',
                              'web-platform-tests-testharness', 'web-platform-tests-reftest',
                              'xpcshell']
 ADD_TEST_SUPPORTED_DOCS = ['js', 'html', 'xhtml', 'xul']
@@ -267,7 +267,7 @@ class AddTest(MachCommandBase):
             guessed_suite = "xpcshell"
         else:
             if filename.startswith("browser_") and has_browser_ini:
-                guessed_suite = "mochitest-browser"
+                guessed_suite = "mochitest-browser-chrome"
             elif filename.startswith("test_"):
                 if has_chrome_ini and has_plain_ini:
                     err = ("Error: directory contains both a chrome.ini and mochitest.ini. "

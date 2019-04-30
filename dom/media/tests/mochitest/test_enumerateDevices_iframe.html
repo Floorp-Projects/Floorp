@@ -14,7 +14,7 @@ var gUM = c => navigator.mediaDevices.getUserMedia(c);
   await pushPrefs(["media.navigator.streams.fake", true]);
 
   let devices = await navigator.mediaDevices.enumerateDevices();
-  parent.postMessage(JSON.stringify(devices), "http://mochi.test:8888");
+  parent.postMessage(JSON.stringify(devices), "https://example.com:443");
 
 })().catch(e => setTimeout(() => { throw e; }));
 </script>

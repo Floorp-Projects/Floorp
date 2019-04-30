@@ -1,6 +1,5 @@
 "use strict";
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 const mainThread = Services.tm.currentThread;

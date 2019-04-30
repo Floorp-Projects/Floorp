@@ -36,6 +36,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
+const { LongStringFront } = require("devtools/shared/fronts/string");
 const {TargetFactory} = require("devtools/client/framework/target");
 
 const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
@@ -163,6 +164,17 @@ async function createMainProcessMemoryFront() {
   });
 
   return { client: target.client, memoryFront };
+}
+
+function createLongStringFront(conn, form) {
+  // CAUTION -- do not replicate in the codebase. Instead, use marshalling
+  // This code is simulating how the LongStringFront would be created by protocol.js
+  // We should not use it like this in the codebase, this is done only for testing
+  // purposes until we can return a proper LongStringFront from the server.
+  const front = new LongStringFront(conn, form);
+  front.actorID = form.actor;
+  front.manage(front);
+  return front;
 }
 
 function createTestGlobal(name) {

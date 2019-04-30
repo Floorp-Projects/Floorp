@@ -383,6 +383,10 @@ class CorePS {
     });
   }
 
+  static void ClearRegisteredPages(PSLockRef) {
+    sInstance->mRegisteredPages.clear();
+  }
+
   PS_GET(const Vector<BaseProfilerCount*>&, Counters)
 
   static void AppendCounter(PSLockRef, BaseProfilerCount* aCounter) {
@@ -820,6 +824,10 @@ class ActivePS {
                              "should have unregistered this page");
           return *bufferPosition < bufferRangeStart;
         });
+  }
+
+  static void ClearUnregisteredPages(PSLockRef) {
+    sInstance->mDeadProfiledPages.clear();
   }
 
 #if !defined(RELEASE_OR_BETA)
@@ -3757,6 +3765,24 @@ void profiler_unregister_pages(const nsID& aRegisteredDocShellId) {
   } else {
     CorePS::RemoveRegisteredPages(lock, aRegisteredDocShellId);
   }
+}
+
+void profiler_clear_all_pages() {
+  if (!CorePS::Exists()) {
+    // This function can be called after the main thread has already shut down.
+    return;
+  }
+
+  {
+    PSAutoLock lock(gPSMutex);
+    CorePS::ClearRegisteredPages(lock);
+    if (ActivePS::Exists(lock)) {
+      ActivePS::ClearUnregisteredPages(lock);
+    }
+  }
+
+  // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ClearAllPages();
 }
 
 void profiler_thread_sleep() {

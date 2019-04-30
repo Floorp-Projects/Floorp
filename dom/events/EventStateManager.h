@@ -269,13 +269,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static bool IsHandlingKeyboardInput();
 
   /**
-   * Get the number of user inputs handled since process start. This
-   * includes anything that is initiated by user, with the exception
-   * of page load events or mouse over events.
-   */
-  static uint64_t UserInputCount() { return sUserInputCounter; }
-
-  /**
    * Get the timestamp at which the latest user input was handled.
    *
    * Guaranteed to be monotonic. Until the first user input, return
@@ -1255,11 +1248,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static nsresult UpdateUserActivityTimer(void);
   // Array for accesskey support
   nsCOMArray<nsIContent> mAccessKeys;
-
-  // The number of user inputs handled since process start. This
-  // includes anything that is initiated by user, with the exception
-  // of page load events or mouse over events.
-  static uint64_t sUserInputCounter;
 
   // The current depth of user and keyboard inputs. sUserInputEventDepth
   // is the number of any user input events, page load events and mouse over

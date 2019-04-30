@@ -3,7 +3,6 @@
 var CC = Components.Constructor;
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var obs = Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService);

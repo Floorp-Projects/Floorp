@@ -107,15 +107,14 @@ nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
 
     // Make sure we have identifiers for send track, just in case.
     // (man I hate this)
-    if (transceiver->mSendTrack.GetTrackId().empty()) {
+    if (mEncodeTrackId) {
       std::string trackId;
       if (!mUuidGen->Generate(&trackId)) {
         JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
         return NS_ERROR_FAILURE;
       }
 
-      transceiver->mSendTrack.UpdateTrackIds(std::vector<std::string>(),
-                                             trackId);
+      transceiver->mSendTrack.SetTrackId(trackId);
     }
   } else {
     // Datachannel transceivers should always be sendrecv. Just set it instead
@@ -258,8 +257,8 @@ nsresult JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   nsresult rv = AddTransportAttributes(msection, SdpSetupAttribute::kActpass);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
-  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
+  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, msection);
+  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, msection);
 
   AddExtmap(msection);
 
@@ -327,25 +326,6 @@ void JsepSessionImpl::SetupBundle(Sdp* sdp) const {
   }
 }
 
-nsresult JsepSessionImpl::GetRemoteIds(const Sdp& sdp,
-                                       const SdpMediaSection& msection,
-                                       std::vector<std::string>* streamIds,
-                                       std::string* trackId) {
-  // Generate random track ids.
-  if (!mUuidGen->Generate(trackId)) {
-    JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = mSdpHelper.GetIdsFromMsid(sdp, msection, streamIds);
-  if (rv == NS_ERROR_NOT_AVAILABLE) {
-    streamIds->push_back(mDefaultRemoteStreamId);
-    return NS_OK;
-  }
-
-  return rv;
-}
-
 JsepSession::Result JsepSessionImpl::CreateOffer(
     const JsepOfferOptions& options, std::string* offer) {
   mLastError.clear();
@@ -377,12 +357,12 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentLocalDescription,
                                      *sdp, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
-    CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
   *offer = sdp->ToString();
   mGeneratedOffer = std::move(sdp);
   ++mSessionVersion;
+  MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: CreateOffer \nSDP=\n" << *offer);
 
   return Result();
 }
@@ -508,12 +488,12 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentRemoteDescription,
                                      offer, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
-    CopyPreviousMsid(*mCurrentLocalDescription, sdp.get());
   }
 
   *answer = sdp->ToString();
   mGeneratedAnswer = std::move(sdp);
   ++mSessionVersion;
+  MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: CreateAnswer \nSDP=\n" << *answer);
 
   return Result();
 }
@@ -560,10 +540,8 @@ nsresult JsepSessionImpl::CreateAnswerMsection(
   rv = AddTransportAttributes(&msection, role);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator,
-                                     mEncodeTrackId, &msection);
-  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator,
-                                     mEncodeTrackId, &msection);
+  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
+  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
 
   // Add extmap attributes. This logic will probably be moved to the track,
   // since it can be specified on a per-sender basis in JS.
@@ -1219,22 +1197,6 @@ nsresult JsepSessionImpl::CopyPreviousTransportParams(
   return NS_OK;
 }
 
-void JsepSessionImpl::CopyPreviousMsid(const Sdp& oldLocal, Sdp* newLocal) {
-  for (size_t i = 0; i < oldLocal.GetMediaSectionCount(); ++i) {
-    const SdpMediaSection& oldMsection(oldLocal.GetMediaSection(i));
-    SdpMediaSection& newMsection(newLocal->GetMediaSection(i));
-    if (oldMsection.GetAttributeList().HasAttribute(
-            SdpAttribute::kMsidAttribute) &&
-        !mSdpHelper.MsectionIsDisabled(newMsection)) {
-      // JSEP says this cannot change, no matter what is happening in JS land.
-      // It can only be updated if there is an intermediate SDP that clears the
-      // msid.
-      newMsection.GetAttributeList().SetAttribute(
-          new SdpMsidAttributeList(oldMsection.GetAttributeList().GetMsid()));
-    }
-  }
-}
-
 nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
                                    UniquePtr<Sdp>* parsedp) {
   UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
@@ -1503,17 +1465,14 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
     }
 
     // Interop workaround for endpoints that don't support msid.
-    // Ensures that there is a default track id set.
-    // TODO(bug 1426005): Remove this
-    if (msection.IsSending() && transceiver->mRecvTrack.GetTrackId().empty()) {
-      std::vector<std::string> streamIds;
-      std::string trackId;
+    // Ensures that there is a default stream id set, provided the remote is
+    // sending.
+    // TODO(bug 1426005): Remove this, or at least move it to JsepTrack.
+    transceiver->mRecvTrack.UpdateStreamIds({mDefaultRemoteStreamId});
 
-      nsresult rv = GetRemoteIds(remote, msection, &streamIds, &trackId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      transceiver->mRecvTrack.UpdateTrackIds(streamIds, trackId);
-    }
-
+    // This will process a=msid if present, or clear the stream ids if the
+    // msection is not sending. If the msection is sending, and there are no
+    // a=msid, the previously set default will stay.
     transceiver->mRecvTrack.UpdateRecvTrack(remote, msection);
   }
 

@@ -54,6 +54,6 @@ add_task(async function() {
   await waitUntilUsbDeviceIsUnplugged(RUNTIME_DEVICE_NAME, document);
 
   await removeTab(devtoolsTab);
-  await waitUntil(() => !findDebugTargetByText("about:devtools-toolbox?", document));
+  await waitUntil(() => !findDebugTargetByText("Toolbox - ", document));
   await removeTab(tab);
 });

@@ -87,7 +87,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
 
 DIRS += [
-    '/extensions/cookie',
     '/extensions/permissions',
 ]
 

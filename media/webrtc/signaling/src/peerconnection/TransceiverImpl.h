@@ -113,6 +113,11 @@ class TransceiverImpl : public nsISupports {
 
   bool IsVideo() const;
 
+  bool IsSending() const {
+    return !mJsepTransceiver->IsStopped() &&
+           mJsepTransceiver->mSendTrack.GetActive();
+  }
+
   void GetRtpSources(const int64_t aTimeNow,
                      nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
 

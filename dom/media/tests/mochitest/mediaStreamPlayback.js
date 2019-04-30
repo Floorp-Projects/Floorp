@@ -167,7 +167,8 @@ function createHTML(options) {
 // media.navigator.permission.fake otherwise fake devices don't count as active.
 
 var noGum = () => pushPrefs(["media.navigator.permission.disabled", false],
-                            ["media.navigator.permission.fake", true])
+                            ["media.navigator.permission.fake", true],
+                            ["media.devices.insecure.enabled", true])
   .then(() => navigator.mediaDevices.enumerateDevices())
   .then(([device]) => device &&
       is(device.label, "", "Test must leave no active gUM streams behind."));

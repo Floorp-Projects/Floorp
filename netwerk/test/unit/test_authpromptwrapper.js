@@ -5,7 +5,6 @@
 // - HTTPS
 // - Proxies
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const nsIAuthInformation = Ci.nsIAuthInformation;
 const nsIAuthPromptAdapterFactory = Ci.nsIAuthPromptAdapterFactory;
 

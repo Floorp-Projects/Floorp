@@ -53,3 +53,66 @@ e5e885ae3128a6878d08df4ff6baaf3fc4a4b9e8 # gecko-dev
 1ce955dcb2e09fd9ce19c1ec6c470f75db486bd2 # cinnabar
 7cf43b9bc01d650f87deceb65f336cdac7c0e78f # gecko-dev
 
+# Bug 1519636 - clang-format-8: Reformat recent changes to the Google coding style
+# and its various backouts.
+# https://hg.mozilla.org/integration/autoland/rev/d091a005f031
+a7f51c0bd925f88cd4f7c90e53eee9bc8a699958 # cinnabar
+96da5036adba9b6cf7339388ef20fc81fbc8bf8f # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/44928a7f5745
+85e14a8329a4f70eff94454c20fb30d068afdd7e # cinnabar
+a1dce6440a18b10feed1479fd9e1bb76498c5297 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/f95dc32944ac
+e4401f52c313cdbd1f6a21d2d158a39aea08629a # cinnabar
+7f60810d8613c150c5efd762229bbfaea7c95b34 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/662b776a02e6
+a45536a2ffe94764488656e0cff7f792da61d208 # cinnabar
+03c8e8c2ddd618ee28fd1fe42126cc7e7c903871 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/6d386a2162b9
+5ff1b801dc84e045ebe1c10ffa0008f1551baa07 # cinnabar
+ba58e936bd475793a3c74f9355498554ea02c341 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/4ad80127f89f
+51f8a2a90bddca7d6b72b4170b10caae45dcac7b # cinnabar
+d1c1878603873095a41a7d0f45022d469eb6baa8 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/9e48fefcf1ac
+64a824984811080bc44ad5364ff70e652396c29c # cinnabar
+24dbe577a5e1f238defc1cfd800e6258a72632df # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/389b6bbd76db
+8780f9e6d11598df632eb1ac1a9fa2cb11a3e76a # cinnabar
+399dbd28fe9d399571a92347957ae4712333441c # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/7de6e431f1ae
+48ca7974405930abc6f87d89704fe111444e6f86 # cinnabar
+ef0bfc3822e1ebcc4af26fa1d604393f504333c0 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/fa3daa92292d
+7c9505d11132c1713ae20d3de68086f7dee06454 # cinnabar
+3d0316a9027c4ae6ec84d454a3b4454b7fd84e1f # gecko-dev
+# https://hg.mozilla.org/integration/mozilla-inbound/rev/d55401632cea
+4ea8582800a843ae3348a03ca619b0109d1c1537 # cinnabar
+4aa92e3091227fe771d64424fe62d3e133633be2 # gecko-dev
+# https://hg.mozilla.org/integration/mozilla-inbound/rev/9adeff2c423f
+dafa8b4d1a427e98492d391d8692d555e716711c # cinnabar
+e0c61dafa502cf337a3ace00834c6138a5a8ba11 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/a031c9dd9dd5
+d2f46ba4a543531b6c87ebf54d57a8be1999038e # cinnabar
+41d1d7909496a3f672eb9aeed1efec042c9568b0 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/3924aed041cf
+20f6da83f406ebbe5367f6df3b8719428c022d92 # cinnabar
+14486004b69a5342e075d784430b741a259c9ac7 # gecko-dev
+# https://hg.mozilla.org/integration/mozilla-inbound/rev/07f6f62a24f5
+9595b32aaa2c87be8168ad20ba8d277dc5f474c9 # cinnabar
+ee2016670c850d7ec19c6d6c56fca0a38e591d9d # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/08b686c04a01
+0f53aeedad4bcfe93916273a00b4577747c3914c # cinnabar
+b61d90492bef978d04e9a12e7081837825e55973 # gecko-dev
+# https://hg.mozilla.org/integration/mozilla-inbound/rev/7d46c1872ba7
+140cb38f7666d3d48c527f8ce9ca13f0b060ab03 # cinnabar
+c4a4488fb459de2180f7d39bfc9be97bfa59bbf8 # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/2307fb1cfa80
+d9145bdd58d06b0550ff76d6cd449fb0aa065787 # cinnabar
+9c0e9e7467ba1697326a8f056cc11e0153e8217d # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/d536f45f5b16
+cfc0d52d902cd58293f32a97f286a5e2a3683386 # cinnabar
+755a1a7c2f77bf360808d8470d92a8b48dd2469c # gecko-dev
+# https://hg.mozilla.org/integration/autoland/rev/d54846d01280
+abc28896717209d5f0ed2a6b0a46f8e03880ad19 # cinnabar
+47a5dd1fb80fa5bbe608c32db426f1ed29b7fd79 # gecko-dev
+

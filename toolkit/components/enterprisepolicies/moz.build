@@ -12,3 +12,24 @@ XPIDL_SOURCES += [
 ]
 
 XPIDL_MODULE = 'enterprisepolicies'
+
+TEST_DIRS += [
+    'tests'
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android":
+    EXTRA_COMPONENTS += [
+        'EnterprisePolicies.js',
+        'EnterprisePolicies.manifest',
+        'EnterprisePoliciesContent.js',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXTRA_JS_MODULES.policies += [
+        'WindowsGPOParser.jsm',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXTRA_JS_MODULES.policies += [
+        'macOSPoliciesParser.jsm',
+]

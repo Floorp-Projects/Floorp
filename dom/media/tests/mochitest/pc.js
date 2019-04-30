@@ -789,9 +789,8 @@ function PeerConnectionWrapper(label, configuration) {
 
   this._sendStreams = [];
 
-  this.expectedLocalTrackInfoById = {};
-  this.expectedSignalledTrackInfoById = {};
-  this.observedRemoteTrackInfoById = {};
+  this.expectedLocalTrackInfo = [];
+  this.remoteStreamsByTrackId = new Map();
 
   this.disableRtpCountChecking = false;
 
@@ -975,17 +974,12 @@ PeerConnectionWrapper.prototype = {
     this.expectNegotiationNeeded();
     var sender = this._pc.addTrack(track, stream);
     is(sender.track, track, "addTrack returns sender");
+    is(this._pc.getSenders().pop(), sender, "Sender should be the last element in getSenders()");
 
     ok(track.id, "track has id");
     ok(track.kind, "track has kind");
     ok(stream.id, "stream has id");
-    this.expectedLocalTrackInfoById[track.id] = {
-      type: track.kind,
-      streamId: stream.id,
-    };
-    this.expectedSignalledTrackInfoById[track.id] =
-      this.expectedLocalTrackInfoById[track.id];
-
+    this.expectedLocalTrackInfo.push({track, sender, streamId: stream.id});
     this.addSendStream(stream);
 
     // This will create one media element per track, which might not be how
@@ -1034,12 +1028,9 @@ PeerConnectionWrapper.prototype = {
     stream.getTracks().forEach(track => {
       ok(track.id, "track has id");
       ok(track.kind, "track has kind");
-      this.expectedLocalTrackInfoById[track.id] = {
-          type: track.kind,
-          streamId: stream.id
-        };
-      this.expectedSignalledTrackInfoById[track.id] =
-        this.expectedLocalTrackInfoById[track.id];
+      const sender = this._pc.getSenders().find(s => s.track == track);
+      ok(sender, "track has a sender");
+      this.expectedLocalTrackInfo.push({track, sender, streamId: stream.id});
       this.ensureMediaElement(track, "local");
     });
 
@@ -1048,18 +1039,19 @@ PeerConnectionWrapper.prototype = {
 
   removeSender : function(index) {
     var sender = this._pc.getSenders()[index];
-    delete this.expectedLocalTrackInfoById[sender.track.id];
+    this.expectedLocalTrackInfo =
+      this.expectedLocalTrackInfo.filter(i => i.sender != sender);
     this.expectNegotiationNeeded();
     this._pc.removeTrack(sender);
     return this.observedNegotiationNeeded;
   },
 
   senderReplaceTrack : function(sender, withTrack, stream) {
-    delete this.expectedLocalTrackInfoById[sender.track.id];
-    this.expectedLocalTrackInfoById[withTrack.id] = {
-        type: withTrack.kind,
-        streamId: stream.id
-      };
+    const info = this.expectedLocalTrackInfo.find(i => i.sender == sender);
+    if (!info) {
+      return; // replaceTrack on a null track, probably
+    }
+    info.track = withTrack;
     this.addSendStream(stream);
     this.ensureMediaElement(withTrack, 'local');
     return sender.replaceTrack(withTrack);
@@ -1265,25 +1257,6 @@ PeerConnectionWrapper.prototype = {
     });
   },
 
-  /**
-   * Checks whether a given track is expected, has not been observed yet, and
-   * is of the correct type. Then, moves the track from
-   * |expectedTrackInfoById| to |observedTrackInfoById|.
-   */
-  checkTrackIsExpected : function(trackId,
-                                  kind,
-                                  expectedTrackInfoById,
-                                  observedTrackInfoById) {
-    ok(expectedTrackInfoById[trackId], "track id " + trackId + " was expected");
-    ok(!observedTrackInfoById[trackId], "track id " + trackId + " was not yet observed");
-    var observedKind = kind;
-    var expectedKind = expectedTrackInfoById[trackId].type;
-    is(observedKind, expectedKind,
-        "track id " + trackId + " was of kind " +
-        observedKind + ", which matches " + expectedKind);
-    observedTrackInfoById[trackId] = expectedTrackInfoById[trackId];
-  },
-
   isTrackOnPC: function(track) {
     return !!this.getStreamForRecvTrack(track);
   },
@@ -1292,36 +1265,72 @@ PeerConnectionWrapper.prototype = {
     return Object.keys(expected).every(trackId => observed[trackId]);
   },
 
-  getWebrtcTrackId: function(receiveTrack) {
-    let matchingTransceiver = this._pc.getTransceivers().find(
-        transceiver => transceiver.receiver.track == receiveTrack);
-    if (!matchingTransceiver) {
-      return null;
-    }
+  setupStreamEventHandlers: function(stream) {
+    const myTrackIds = new Set(stream.getTracks().map(t => t.id));
 
-    return matchingTransceiver.getRemoteTrackId();
+    stream.addEventListener('addtrack', ({track}) => {
+      ok(!myTrackIds.has(track.id), "Duplicate addtrack callback: "
+        + `stream id=${stream.id} track id=${track.id}`);
+      myTrackIds.add(track.id);
+      // addtrack events happen before track events, so the track callback hasn't
+      // heard about this yet.
+      let streams = this.remoteStreamsByTrackId.get(track.id);
+      ok(!streams || !streams.has(stream.id),
+        `In addtrack for stream id=${stream.id}` +
+        `there should not have been a track event for track id=${track.id} ` +
+        " containing this stream yet.");
+      ok(stream.getTracks().includes(track), "In addtrack, stream id=" +
+        `${stream.id} should already contain track id=${track.id}`);
+    });
+
+    stream.addEventListener('removetrack', ({track}) => {
+      ok(myTrackIds.has(track.id), "Duplicate removetrack callback: "
+        + `stream id=${stream.id} track id=${track.id}`);
+      myTrackIds.delete(track.id);
+      // Also remove the association from remoteStreamsByTrackId
+      const streams = this.remoteStreamsByTrackId.get(track.id);
+      ok(streams, `In removetrack for stream id=${stream.id}, track id=` +
+        `${track.id} should have had a track callback for the stream.`);
+      streams.delete(stream.id);
+      ok(!stream.getTracks().includes(track), "In removetrack, stream id=" +
+        `${stream.id} should not contain track id=${track.id}`);
+    });
   },
 
   setupTrackEventHandler: function() {
-    this._pc.addEventListener('track', event => {
-      info(this + ": 'ontrack' event fired for " + event.track.id +
-                  "(SDP msid is " + this.getWebrtcTrackId(event.track) +
-                  ")");
+    this._pc.addEventListener('track', ({track, streams}) => {
+      info(`${this}: 'ontrack' event fired for ${track.id}`);
+      ok(this.isTrackOnPC(track), `Found track ${track.id}`);
 
-      // TODO(bug 1403238): Checking for remote tracks needs to be completely
-      // reworked, because with the latest spec the identifiers aren't the same
-      // as they are on the other end. Ultimately, what we need to check is
-      // whether the _transceivers_ are in line with what is expected, and
-      // whether the callbacks are consistent with the transceivers.
-      let trackId = this.getWebrtcTrackId(event.track);
-      ok(!this.observedRemoteTrackInfoById[trackId],
-         "track id " + trackId + " was not yet observed");
-      this.observedRemoteTrackInfoById[trackId] = {
-        type: event.track.kind
-      };
-      ok(this.isTrackOnPC(event.track), "Found track " + event.track.id);
+      let gratuitousEvent = true;
+      let streamsContainingTrack = this.remoteStreamsByTrackId.get(track.id);
+      if (!streamsContainingTrack) {
+        gratuitousEvent = false; // Told us about a new track
+        this.remoteStreamsByTrackId.set(track.id, new Set());
+        streamsContainingTrack = this.remoteStreamsByTrackId.get(track.id);
+      }
 
-      this.ensureMediaElement(event.track, 'remote');
+      for (const stream of streams) {
+        ok(stream.getTracks().includes(track),
+          `In track event, track id=${track.id}` +
+          ` should already be in stream id=${stream.id}`);
+
+        if (!streamsContainingTrack.has(stream.id)) {
+          gratuitousEvent = false; // Told us about a new stream
+          streamsContainingTrack.add(stream.id);
+          this.setupStreamEventHandlers(stream);
+        }
+      }
+
+      ok(!gratuitousEvent, "track event told us something new")
+
+      // So far, we've verified consistency between the current state of the
+      // streams, addtrack/removetrack events on the streams, and track events
+      // on the peerconnection. We have also verified that we have not gotten
+      // any gratuitous events. We have not done anything to verify that the
+      // current state of affairs matches what we were expecting it to.
+
+      this.ensureMediaElement(track, 'remote');
     });
   },
 
@@ -1448,19 +1457,19 @@ PeerConnectionWrapper.prototype = {
   },
 
   checkLocalMediaTracks : function() {
-    var observed = {};
-    info(this + " Checking local tracks " + JSON.stringify(this.expectedLocalTrackInfoById));
-    this._pc.getSenders().forEach(sender => {
-      if (sender.track) {
-        this.checkTrackIsExpected(sender.track.id,
-                                  sender.track.kind,
-                                  this.expectedLocalTrackInfoById,
-                                  observed);
-      }
-    });
+    info(`${this}: Checking local tracks ${JSON.stringify(this.expectedLocalTrackInfo)}`);
+    const sendersWithTrack = this._pc.getSenders().filter(({track}) => track);
+    is(sendersWithTrack.length, this.expectedLocalTrackInfo.length,
+      "The number of senders with a track should be equal to the number of " +
+      "expected local tracks.");
 
-    Object.keys(this.expectedLocalTrackInfoById).forEach(
-        id => ok(observed[id], this + " local id " + id + " was observed"));
+    // expectedLocalTrackInfo is in the same order that the tracks were added, and
+    // so should the output of getSenders.
+    this.expectedLocalTrackInfo.forEach((info, i) => {
+      const sender = sendersWithTrack[i];
+      is(sender, info.sender, `Sender ${i} should match`);
+      is(sender.track, info.track, `Track ${i} should match`);
+    });
   },
 
   /**
@@ -1470,32 +1479,42 @@ PeerConnectionWrapper.prototype = {
     this.checkLocalMediaTracks();
   },
 
-  checkMsids: function() {
-    var checkSdpForMsids = (desc, expectedTrackInfo, side) => {
-      Object.keys(expectedTrackInfo).forEach(trackId => {
-        var streamId = expectedTrackInfo[trackId].streamId;
-        ok(desc.sdp.match(new RegExp("a=msid:" + streamId + " " + trackId)),
-           this + ": " + side + " SDP contains stream " + streamId +
-           " and track " + trackId );
-      });
+  checkLocalMsids: function() {
+    const sdp = this.localDescription.sdp;
+    const msections = sdputils.getMSections(sdp);
+    const expectedStreamIdCounts = new Map();
+    for (const {track, sender, streamId} of this.expectedLocalTrackInfo) {
+      const transceiver = this._pc.getTransceivers().find(t => t.sender == sender);
+      ok(transceiver, "There should be a transceiver for each sender");
+      if (transceiver.mid) {
+        const midFinder = new RegExp(`^a=mid:${transceiver.mid}$`, "m");
+        const msection = msections.find(m => m.match(midFinder));
+        ok(msection, `There should be a media section for mid = ${transceiver.mid}`);
+        ok(msection.startsWith(`m=${track.kind}`),
+          `Media section should be of type ${track.kind}`);
+        const msidFinder = new RegExp(`^a=msid:${streamId} \\S+$`, "m");
+        ok(msection.match(msidFinder),
+          `Should find a=msid:${streamId} in media section`
+          + " (with any track id for now)");
+        const count = expectedStreamIdCounts.get(streamId) || 0;
+        expectedStreamIdCounts.set(streamId, count + 1);
+      }
     };
 
-    checkSdpForMsids(this.localDescription, this.expectedSignalledTrackInfoById,
-                     "local");
-  },
-
-  markRemoteTracksAsNegotiated: function() {
-    Object.values(this.observedRemoteTrackInfoById).forEach(
-        trackInfo => trackInfo.negotiated = true);
-  },
-
-  rollbackRemoteTracksIfNotNegotiated: function() {
-    Object.keys(this.observedRemoteTrackInfoById).forEach(
-        id => {
-          if (!this.observedRemoteTrackInfoById[id].negotiated) {
-            delete this.observedRemoteTrackInfoById[id];
-          }
-        });
+    // Check for any unexpected msids.
+    const allMsids = sdp.match(new RegExp("^a=msid:\\S+", "mg"));
+    if (!allMsids) {
+      return;
+    }
+    const allStreamIds =
+      allMsids.map(msidAttr => msidAttr.replace('a=msid:', ''));
+    allStreamIds.forEach(id => {
+      const count = expectedStreamIdCounts.get(id);
+      ok(count, `Unexpected stream id ${id} found in local description.`);
+      if (count) {
+        expectedStreamIdCounts.set(id, count - 1);
+      }
+    });
   },
 
   /**
@@ -1596,24 +1615,12 @@ PeerConnectionWrapper.prototype = {
              " currentDirection=" + t.currentDirection + " kind=" +
              t.receiver.track.kind + " track-id=" + t.receiver.track.id);
         return t.receiver.track;
-      });
+      })
+      .filter(t => t);
   },
 
   getExpectedSendTracks : function() {
-    return Object.keys(this.expectedLocalTrackInfoById)
-              .map(id => this.findSendTrackByWebrtcId(id));
-  },
-
-  findReceiveTrackByWebrtcId : function(webrtcId) {
-    return this._pc.getReceivers().map(receiver => receiver.track)
-              .find(track => this.getWebrtcTrackId(track) == webrtcId);
-  },
-
-  // Send tracks use the same identifiers that go in the signaling
-  findSendTrackByWebrtcId : function(webrtcId) {
-    return this._pc.getSenders().map(sender => sender.track)
-              .filter(track => track) // strip out null
-              .find(track => track.id == webrtcId);
+    return this._pc.getSenders().map(s => s.track).filter(t => t);
   },
 
   /**
@@ -1873,7 +1880,7 @@ PeerConnectionWrapper.prototype = {
                (t.currentDirection != "inactive") &&
                (t.currentDirection != "sendonly");
       }).length;
-    var nout = Object.keys(this.expectedLocalTrackInfoById).length;
+    const nout = Object.keys(this.expectedLocalTrackInfo).length;
     var ndata = this.dataChannels.length;
 
     // TODO(Bug 957145): Restore stronger inbound-rtp test once Bug 948249 is fixed

@@ -10,7 +10,6 @@
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // We need the profile directory so the test harness will clean up our test
 // files.
