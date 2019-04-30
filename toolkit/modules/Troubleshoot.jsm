@@ -443,6 +443,7 @@ var dataProviders = {
       adapterSubsysID: null,
       adapterRAM: null,
       adapterDriver: "adapterDrivers",
+      adapterDriverVendor: "driverVendor",
       adapterDriverVersion: "driverVersion",
       adapterDriverDate: "driverDate",
 
@@ -452,6 +453,7 @@ var dataProviders = {
       adapterSubsysID2: null,
       adapterRAM2: null,
       adapterDriver2: "adapterDrivers2",
+      adapterDriverVendor2: "driverVendor2",
       adapterDriverVersion2: "driverVersion2",
       adapterDriverDate2: "driverDate2",
       isGPU2Active: null,
