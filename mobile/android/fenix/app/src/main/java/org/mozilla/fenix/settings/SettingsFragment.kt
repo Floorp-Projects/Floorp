@@ -71,6 +71,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 }
             } catch (e: IllegalArgumentException) {
                 // The event is not tracked
+            } catch (e: ClassCastException) {
+                // The setting is not a boolean, not tracked
             }
         }
     }
