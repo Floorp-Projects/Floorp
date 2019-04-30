@@ -869,9 +869,26 @@ PresShell::PresShell()
   mHasReceivedPaintMessage = false;
 }
 
-NS_IMPL_ISUPPORTS(PresShell, nsIPresShell, nsIDocumentObserver,
-                  nsISelectionController, nsISelectionDisplay, nsIObserver,
-                  nsISupportsWeakReference, nsIMutationObserver)
+NS_INTERFACE_TABLE_HEAD(PresShell)
+  NS_INTERFACE_TABLE_BEGIN
+    // In most cases, PresShell should be treated as concrete class, but need to
+    // QI for weak reference.  Therefore, the case needed by do_QueryReferent()
+    // should be tested first.
+    NS_INTERFACE_TABLE_ENTRY(PresShell, PresShell)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsIPresShell)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsIDocumentObserver)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsISelectionController)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsISelectionDisplay)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsIObserver)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsISupportsWeakReference)
+    NS_INTERFACE_TABLE_ENTRY(PresShell, nsIMutationObserver)
+    NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(PresShell, nsISupports, nsIObserver)
+  NS_INTERFACE_TABLE_END
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(PresShell)
+NS_IMPL_RELEASE(PresShell)
 
 PresShell::~PresShell() {
   MOZ_RELEASE_ASSERT(!mForbiddenToFlush,
