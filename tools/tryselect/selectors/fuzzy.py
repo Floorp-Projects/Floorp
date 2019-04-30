@@ -16,7 +16,7 @@ from mozterm import Terminal
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
-from ..push import check_working_directory, push_to_try, vcs
+from ..push import check_working_directory, push_to_try
 
 terminal = Terminal()
 
@@ -228,7 +228,7 @@ def run(update=False, query=None, intersect_query=None, templates=None, full=Fal
         return 1
 
     check_working_directory(push)
-    tg = generate_tasks(parameters, full, root=vcs.path)
+    tg = generate_tasks(parameters, full)
     all_tasks = sorted(tg.tasks.keys())
 
     if not full:
