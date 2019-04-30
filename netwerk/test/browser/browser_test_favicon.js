@@ -2,8 +2,8 @@
 // domain. The cookie should be considered third party.
 
 add_task(async function() {
-  const iconUrl = "http://example.org/browser/extensions/cookie/test/damonbowling.jpg";
-  const pageUrl = "http://example.com/browser/extensions/cookie/test/file_favicon.html";
+  const iconUrl = "http://example.org/browser/netwerk/test/browser/damonbowling.jpg";
+  const pageUrl = "http://example.com/browser/netwerk/test/browser/file_favicon.html";
 	await SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]]});
 
   let promise = TestUtils.topicObserved("cookie-rejected", subject => {
