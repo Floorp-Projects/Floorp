@@ -1813,8 +1813,8 @@ void nsListControlFrame::ScrollToFrame(dom::HTMLOptionElement& aOptElement) {
   nsIFrame* childFrame = aOptElement.GetPrimaryFrame();
   if (childFrame) {
     PresShell()->ScrollFrameRectIntoView(
-        childFrame, nsRect(nsPoint(0, 0), childFrame->GetSize()),
-        nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
+        childFrame, nsRect(nsPoint(0, 0), childFrame->GetSize()), ScrollAxis(),
+        ScrollAxis(),
         ScrollFlags::ScrollOverflowHidden |
             ScrollFlags::ScrollFirstAncestorOnly |
             ScrollFlags::IgnoreMarginAndPadding);
