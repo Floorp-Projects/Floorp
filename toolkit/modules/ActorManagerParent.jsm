@@ -170,7 +170,6 @@ let ACTORS = {
   FindBar: {
     child: {
       module: "resource://gre/actors/FindBarChild.jsm",
-      allFrames: true,
       events: {
         "keypress": {mozSystemGroup: true},
       },
