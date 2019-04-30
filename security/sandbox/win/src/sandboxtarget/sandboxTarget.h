@@ -7,9 +7,13 @@
 #ifndef __SECURITY_SANDBOX_SANDBOXTARGET_H__
 #define __SECURITY_SANDBOX_SANDBOXTARGET_H__
 
+#include <functional>
+#include <list>
+
 #include <windows.h>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Move.h"
 
 namespace sandbox {
 class TargetServices;
@@ -39,6 +43,11 @@ class SandboxTarget {
     mTargetServices = aTargetServices;
   }
 
+  template <typename CallbackT>
+  void RegisterSandboxStartCallback(CallbackT aCallback) {
+    mStartObservers.push_back(std::forward<CallbackT>(aCallback));
+  }
+
   /**
    * Called by the library that wants to "start" the sandbox, i.e. change to the
    * more secure delayed / lockdown policy.
@@ -57,6 +66,10 @@ class SandboxTarget {
   SandboxTarget() : mTargetServices(nullptr) {}
 
   sandbox::TargetServices* mTargetServices;
+
+ private:
+  void NotifyStartObservers();
+  std::list<std::function<void()>> mStartObservers;
 };
 
 }  // namespace mozilla

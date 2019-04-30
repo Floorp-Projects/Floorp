@@ -25,6 +25,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs.h"
@@ -123,7 +124,6 @@
 #include "nsRefreshDriver.h"
 #include "nsTextNode.h"
 #include "ActiveLayerTracker.h"
-#include "nsIPresShellInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -6887,7 +6887,8 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 #endif
 
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+  if (nsAccessibilityService* accService =
+          PresShell::GetAccessibilityService()) {
     accService->ContentRangeInserted(mPresShell, aFirstNewContent, nullptr);
   }
 #endif
@@ -6999,7 +7000,8 @@ void nsCSSFrameConstructor::ContentRangeInserted(
     }
 
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+    if (nsAccessibilityService* accService =
+            PresShell::GetAccessibilityService()) {
       accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
     }
 #endif
@@ -7365,7 +7367,8 @@ void nsCSSFrameConstructor::ContentRangeInserted(
 #endif
 
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+  if (nsAccessibilityService* accService =
+          PresShell::GetAccessibilityService()) {
     accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
   }
 #endif
@@ -7565,7 +7568,8 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     }
 
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+    if (nsAccessibilityService* accService =
+            PresShell::GetAccessibilityService()) {
       accService->ContentRemoved(mPresShell, aChild);
     }
 #endif
@@ -11698,7 +11702,8 @@ void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
   }
 
 #ifdef ACCESSIBILITY
-  if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
+  if (nsAccessibilityService* accService =
+          PresShell::GetAccessibilityService()) {
     if (nsIContent* child = aFrame->GetContent()->GetFirstChild()) {
       accService->ContentRangeInserted(mPresShell, child, nullptr);
     }

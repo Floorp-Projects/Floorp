@@ -76,21 +76,25 @@ const nsCString ToString(CodeNameIndex aCodeNameIndex) {
 }
 
 const char* ToChar(Command aCommand) {
-  if (aCommand == CommandDoNothing) {
+  if (aCommand == Command::DoNothing) {
     return "CommandDoNothing";
   }
 
   switch (aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) \
-  case Command##aName:                        \
-    return "Command" #aName;
+  case Command::aName:                        \
+    return "Command::" #aName;
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) \
+  case Command::aName:                                           \
+    return "Command::" #aName;
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) \
-  case Command##aName:                           \
-    return "Command" #aName;
+  case Command::aName:                           \
+    return "Command::" #aName;
 
 #include "mozilla/CommandList.h"
 
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
 #undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
     default:
@@ -171,6 +175,61 @@ SelectionType ToSelectionType(TextRangeType aTextRangeType) {
       MOZ_CRASH("TextRangeType is invalid");
       return SelectionType::eNormal;
   }
+}
+
+/******************************************************************************
+ * non class method implementation
+ ******************************************************************************/
+
+static nsDataHashtable<nsDepCharHashKey, Command>* sCommandHashtable = nullptr;
+
+Command GetInternalCommand(const char* aCommandName) {
+  return GetInternalCommand(aCommandName, EmptyString());
+}
+
+Command GetInternalCommand(const char* aCommandName, const nsAString& aParam) {
+  if (!aCommandName) {
+    return Command::DoNothing;
+  }
+
+  // Special cases for "cmd_align".  It's mapped to multiple internal commands
+  // with additional param.  Therefore, we cannot handle it with the hashtable.
+  if (!strcmp(aCommandName, "cmd_align")) {
+    if (aParam.LowerCaseEqualsASCII("left")) {
+      return Command::FormatJustifyLeft;
+    }
+    if (aParam.LowerCaseEqualsASCII("right")) {
+      return Command::FormatJustifyRight;
+    }
+    if (aParam.LowerCaseEqualsASCII("center")) {
+      return Command::FormatJustifyCenter;
+    }
+    if (aParam.LowerCaseEqualsASCII("justify")) {
+      return Command::FormatJustifyFull;
+    }
+    return Command::DoNothing;
+  }
+
+  if (!sCommandHashtable) {
+    sCommandHashtable = new nsDataHashtable<nsDepCharHashKey, Command>();
+#define NS_DEFINE_COMMAND(aName, aCommandStr) \
+  sCommandHashtable->Put(#aCommandStr, Command::aName);
+
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam)
+
+#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName)
+
+#include "mozilla/CommandList.h"
+
+#undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
+#undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
+  }
+  Command command = Command::DoNothing;
+  if (!sCommandHashtable->Get(aCommandName, &command)) {
+    return Command::DoNothing;
+  }
+  return command;
 }
 
 /******************************************************************************
@@ -1001,6 +1060,10 @@ void WidgetKeyboardEvent::Shutdown() {
   sKeyNameIndexHashtable = nullptr;
   delete sCodeNameIndexHashtable;
   sCodeNameIndexHashtable = nullptr;
+  // Although sCommandHashtable is not a member of WidgetKeyboardEvent, but
+  // let's delete it here since we need to do it at same time.
+  delete sCommandHashtable;
+  sCommandHashtable = nullptr;
 }
 
 /* static */
@@ -1098,17 +1161,19 @@ uint32_t WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 
 /* static */ const char* WidgetKeyboardEvent::GetCommandStr(Command aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) , #aCommandStr
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName)
   static const char* const kCommands[] = {
-      ""  // CommandDoNothing
+      ""  // DoNothing
 #include "mozilla/CommandList.h"
   };
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
 #undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
   MOZ_RELEASE_ASSERT(static_cast<size_t>(aCommand) < ArrayLength(kCommands),
                      "Illegal command enumeration value");
-  return kCommands[aCommand];
+  return kCommands[static_cast<CommandInt>(aCommand)];
 }
 
 /* static */

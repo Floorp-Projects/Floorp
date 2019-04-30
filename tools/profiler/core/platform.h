@@ -111,7 +111,8 @@ void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
 
 // Convert the array of strings to a bitfield.
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
-                                      uint32_t aFeatureCount);
+                                      uint32_t aFeatureCount,
+                                      bool aIsStartup = false);
 
 void profiler_get_profile_json_into_lazily_allocated_buffer(
     const std::function<char*(size_t)>& aAllocator, double aSinceTime,

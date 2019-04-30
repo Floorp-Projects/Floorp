@@ -105,9 +105,9 @@ LazyLogModule gFocusNavigationLog("FocusNavigation");
   LOGTAG(gFocusNavigationLog, format, content)
 
 struct nsDelayedBlurOrFocusEvent {
-  nsDelayedBlurOrFocusEvent(EventMessage aEventMessage,
-                            nsIPresShell* aPresShell, Document* aDocument,
-                            EventTarget* aTarget, EventTarget* aRelatedTarget)
+  nsDelayedBlurOrFocusEvent(EventMessage aEventMessage, PresShell* aPresShell,
+                            Document* aDocument, EventTarget* aTarget,
+                            EventTarget* aRelatedTarget)
       : mPresShell(aPresShell),
         mDocument(aDocument),
         mTarget(aTarget),
@@ -120,7 +120,7 @@ struct nsDelayedBlurOrFocusEvent {
         mTarget(aOther.mTarget),
         mEventMessage(aOther.mEventMessage) {}
 
-  nsCOMPtr<nsIPresShell> mPresShell;
+  RefPtr<PresShell> mPresShell;
   nsCOMPtr<Document> mDocument;
   nsCOMPtr<EventTarget> mTarget;
   EventMessage mEventMessage;
@@ -137,7 +137,9 @@ inline void ImplCycleCollectionUnlink(nsDelayedBlurOrFocusEvent& aField) {
 inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback,
     nsDelayedBlurOrFocusEvent& aField, const char* aName, uint32_t aFlags = 0) {
-  CycleCollectionNoteChild(aCallback, aField.mPresShell.get(), aName, aFlags);
+  CycleCollectionNoteChild(
+      aCallback, static_cast<nsIDocumentObserver*>(aField.mPresShell.get()),
+      aName, aFlags);
   CycleCollectionNoteChild(aCallback, aField.mDocument.get(), aName, aFlags);
   CycleCollectionNoteChild(aCallback, aField.mTarget.get(), aName, aFlags);
   CycleCollectionNoteChild(aCallback, aField.mRelatedTarget.get(), aName,
@@ -992,8 +994,7 @@ nsFocusManager::FireDelayedEvents(Document* aDocument) {
       } else if (!aDocument->EventHandlingSuppressed()) {
         EventMessage message = mDelayedBlurFocusEvents[i].mEventMessage;
         nsCOMPtr<EventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
-        nsCOMPtr<nsIPresShell> presShell =
-            mDelayedBlurFocusEvents[i].mPresShell;
+        RefPtr<PresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
         nsCOMPtr<EventTarget> relatedTarget =
             mDelayedBlurFocusEvents[i].mRelatedTarget;
         mDelayedBlurFocusEvents.RemoveElementAt(i);
@@ -1076,17 +1077,23 @@ void nsFocusManager::EnsureCurrentWidgetFocused() {
   // get the main child widget for the focused window and ensure that the
   // platform knows that this widget is focused.
   nsCOMPtr<nsIDocShell> docShell = mFocusedWindow->GetDocShell();
-  if (docShell) {
-    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-    if (presShell) {
-      nsViewManager* vm = presShell->GetViewManager();
-      if (vm) {
-        nsCOMPtr<nsIWidget> widget;
-        vm->GetRootWidget(getter_AddRefs(widget));
-        if (widget) widget->SetFocus(false);
-      }
-    }
+  if (!docShell) {
+    return;
   }
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  nsViewManager* vm = presShell->GetViewManager();
+  if (!vm) {
+    return;
+  }
+  nsCOMPtr<nsIWidget> widget;
+  vm->GetRootWidget(getter_AddRefs(widget));
+  if (!widget) {
+    return;
+  }
+  widget->SetFocus(false);
 }
 
 bool ActivateOrDeactivateChild(BrowserParent* aParent, void* aArg) {
@@ -2019,7 +2026,7 @@ static Document* GetDocumentHelper(EventTarget* aTarget) {
 }
 
 void nsFocusManager::FireFocusInOrOutEvent(
-    EventMessage aEventMessage, nsIPresShell* aPresShell, nsISupports* aTarget,
+    EventMessage aEventMessage, PresShell* aPresShell, nsISupports* aTarget,
     nsPIDOMWindowOuter* aCurrentFocusedWindow,
     nsIContent* aCurrentFocusedContent, EventTarget* aRelatedTarget) {
   NS_ASSERTION(aEventMessage == eFocusIn || aEventMessage == eFocusOut,
@@ -2031,7 +2038,7 @@ void nsFocusManager::FireFocusInOrOutEvent(
 }
 
 void nsFocusManager::SendFocusOrBlurEvent(
-    EventMessage aEventMessage, nsIPresShell* aPresShell, Document* aDocument,
+    EventMessage aEventMessage, PresShell* aPresShell, Document* aDocument,
     nsISupports* aTarget, uint32_t aFocusMethod, bool aWindowRaised,
     bool aIsRefocus, EventTarget* aRelatedTarget) {
   NS_ASSERTION(aEventMessage == eFocus || aEventMessage == eBlur,
@@ -2078,7 +2085,7 @@ void nsFocusManager::SendFocusOrBlurEvent(
 }
 
 void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
-                                          nsIPresShell* aPresShell,
+                                          PresShell* aPresShell,
                                           nsISupports* aTarget,
                                           bool aWindowRaised, bool aIsRefocus,
                                           EventTarget* aRelatedTarget) {
@@ -2263,7 +2270,7 @@ void nsFocusManager::UpdateCaret(bool aMoveCaretToFocus, bool aUpdateVisibility,
   SetCaretVisible(presShell, browseWithCaret, aContent);
 }
 
-void nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell,
+void nsFocusManager::MoveCaretToFocus(PresShell* aPresShell,
                                       nsIContent* aContent) {
   nsCOMPtr<Document> doc = aPresShell->GetDocument();
   if (doc) {
@@ -2301,8 +2308,8 @@ void nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell,
   }
 }
 
-nsresult nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
-                                         bool aVisible, nsIContent* aContent) {
+nsresult nsFocusManager::SetCaretVisible(PresShell* aPresShell, bool aVisible,
+                                         nsIContent* aContent) {
   // When browsing with caret, make sure caret is visible after new focus
   // Return early if there is no caret. This can happen for the testcase
   // for bug 308025 where a window is closed in a blur handler.
@@ -2327,13 +2334,9 @@ nsresult nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
     Selection* domSelection =
         docFrameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
-      nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
-      if (!selCon) {
-        return NS_ERROR_FAILURE;
-      }
       // First, hide the caret to prevent attempting to show it in
       // SetCaretDOMSelection
-      selCon->SetCaretEnabled(false);
+      aPresShell->SetCaretEnabled(false);
 
       // Caret must blink on non-editable elements
       caret->SetIgnoreUserModify(true);
@@ -2344,8 +2347,8 @@ nsresult nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       // fields, which have a different frame selection from the document.
       // They will take care of making the caret visible themselves.
 
-      selCon->SetCaretReadOnly(false);
-      selCon->SetCaretEnabled(aVisible);
+      aPresShell->SetCaretReadOnly(false);
+      aPresShell->SetCaretEnabled(aVisible);
     }
   }
 
@@ -2353,7 +2356,7 @@ nsresult nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
 }
 
 nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
-                                              nsIPresShell* aPresShell,
+                                              PresShell* aPresShell,
                                               nsIContent** aStartContent,
                                               nsIContent** aEndContent) {
   *aStartContent = *aEndContent = nullptr;
@@ -3226,7 +3229,7 @@ static nsIContent* GetTopLevelScopeOwner(nsIContent* aContent) {
 }
 
 nsresult nsFocusManager::GetNextTabbableContent(
-    nsIPresShell* aPresShell, nsIContent* aRootContent,
+    PresShell* aPresShell, nsIContent* aRootContent,
     nsIContent* aOriginalStartContent, nsIContent* aStartContent, bool aForward,
     int32_t aCurrentTabIndex, bool aIgnoreTabIndex, bool aForDocumentNavigation,
     nsIContent** aResultContent) {

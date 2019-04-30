@@ -4852,9 +4852,9 @@ bool EventStateManager::EventCausesClickEvents(
 
 nsresult EventStateManager::InitAndDispatchClickEvent(
     WidgetMouseEvent* aMouseUpEvent, nsEventStatus* aStatus,
-    EventMessage aMessage, nsIPresShell* aPresShell,
-    nsIContent* aMouseUpContent, AutoWeakFrame aCurrentTarget,
-    bool aNoContentDispatch, nsIContent* aOverrideClickTarget) {
+    EventMessage aMessage, PresShell* aPresShell, nsIContent* aMouseUpContent,
+    AutoWeakFrame aCurrentTarget, bool aNoContentDispatch,
+    nsIContent* aOverrideClickTarget) {
   MOZ_ASSERT(aMouseUpEvent);
   MOZ_ASSERT(EventCausesClickEvents(*aMouseUpEvent));
   MOZ_ASSERT(aMouseUpContent || aCurrentTarget || aOverrideClickTarget);
@@ -4974,7 +4974,7 @@ nsresult EventStateManager::PostHandleMouseUp(
 }
 
 nsresult EventStateManager::DispatchClickEvents(
-    nsIPresShell* aPresShell, WidgetMouseEvent* aMouseUpEvent,
+    PresShell* aPresShell, WidgetMouseEvent* aMouseUpEvent,
     nsEventStatus* aStatus, nsIContent* aClickTarget,
     nsIContent* aOverrideClickTarget) {
   MOZ_ASSERT(aPresShell);
@@ -5021,7 +5021,7 @@ nsresult EventStateManager::DispatchClickEvents(
 }
 
 nsresult EventStateManager::HandleMiddleClickPaste(
-    nsIPresShell* aPresShell, WidgetMouseEvent* aMouseEvent,
+    PresShell* aPresShell, WidgetMouseEvent* aMouseEvent,
     nsEventStatus* aStatus, TextEditor* aTextEditor) {
   MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMouseEvent);
@@ -5060,8 +5060,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   nsCOMPtr<nsIContent> container;
   int32_t offset;
   nsLayoutUtils::GetContainerAndOffsetAtEvent(
-      static_cast<PresShell*>(aPresShell), aMouseEvent,
-      getter_AddRefs(container), &offset);
+      aPresShell, aMouseEvent, getter_AddRefs(container), &offset);
   if (container) {
     // XXX If readonly or disabled <input> or <textarea> in contenteditable
     //     designMode editor is clicked, the point is in the editor.
@@ -5087,8 +5086,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   // Fire ePaste event by ourselves since we need to dispatch "paste" event
   // even if the middle click event was consumed for compatibility with
   // Chromium.
-  if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType,
-                                         static_cast<PresShell*>(aPresShell),
+  if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType, aPresShell,
                                          selection)) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return NS_OK;

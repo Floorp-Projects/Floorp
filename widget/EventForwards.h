@@ -202,19 +202,39 @@ inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
   }
 }
 
-#define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
-#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
+#define NS_DEFINE_COMMAND(aName, aCommandStr) , aName
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) , aName
+#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , aName
 
 typedef int8_t CommandInt;
-enum Command : CommandInt {
-  CommandDoNothing
+enum class Command : CommandInt {
+  DoNothing
 
 #include "mozilla/CommandList.h"
 };
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
 #undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
 const char* ToChar(Command aCommand);
+
+/**
+ * Return a command value for aCommandName.
+ * NOTE: We use overloads instead of default constructor with EmptyString()
+ *       because using it here requires to include another header file but
+ *       this header file shouldn't include other header files as far as
+ *       possible to avoid making rebuild time of them longer.
+ * XXX: Is there a better place to put `Command` related methods instead of
+ *      global scope in `mozilla` namespace?
+ *
+ * @param aCommandName  Should be a XUL command name like "cmd_bold" (case
+ *                      sensitive).
+ * @param aValue        Additional parameter value of aCommandName.
+ *                      It depends on the command whethere it's case sensitive
+ *                      or not.
+ */
+Command GetInternalCommand(const char* aCommandName);
+Command GetInternalCommand(const char* aCommandName, const nsAString& aValue);
 
 }  // namespace mozilla
 

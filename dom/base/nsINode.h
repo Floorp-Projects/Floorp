@@ -45,7 +45,6 @@ class nsIHTMLCollection;
 class nsIMutationObserver;
 class nsINode;
 class nsINodeList;
-class nsIPresShell;
 class nsIPrincipal;
 class nsIURI;
 class nsNodeSupportsWeakRefTearoff;
@@ -56,6 +55,7 @@ struct RawServoSelectorList;
 
 namespace mozilla {
 class EventListenerManager;
+class PresShell;
 class TextEditor;
 namespace dom {
 /**
@@ -1180,7 +1180,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * node. Be aware that if this node and the computed selection limiter are
    * not in same subtree, this returns the root content of the closeset subtree.
    */
-  nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
+  nsIContent* GetSelectionRootContent(mozilla::PresShell* aPresShell);
 
   nsINodeList* ChildNodes();
 

@@ -612,89 +612,89 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
       Modifiers modifiers = nsCocoaUtils::ModifiersForEvent(mKeyEvent) &
                             (MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
       switch (aCommand) {
-        case CommandInsertLineBreak:
+        case Command::InsertLineBreak:
           return keyNameIndex == KEY_NAME_INDEX_Enter && modifiers == MODIFIER_CONTROL;
-        case CommandInsertParagraph:
+        case Command::InsertParagraph:
           return keyNameIndex == KEY_NAME_INDEX_Enter && modifiers == MODIFIER_NONE;
-        case CommandDeleteCharBackward:
+        case Command::DeleteCharBackward:
           return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_NONE;
-        case CommandDeleteToBeginningOfLine:
+        case Command::DeleteToBeginningOfLine:
           return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_META;
-        case CommandDeleteWordBackward:
+        case Command::DeleteWordBackward:
           return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_ALT;
-        case CommandDeleteCharForward:
+        case Command::DeleteCharForward:
           return keyNameIndex == KEY_NAME_INDEX_Delete && modifiers == MODIFIER_NONE;
-        case CommandDeleteWordForward:
+        case Command::DeleteWordForward:
           return keyNameIndex == KEY_NAME_INDEX_Delete && modifiers == MODIFIER_ALT;
-        case CommandInsertTab:
+        case Command::InsertTab:
           return keyNameIndex == KEY_NAME_INDEX_Tab && modifiers == MODIFIER_NONE;
-        case CommandInsertBacktab:
+        case Command::InsertBacktab:
           return keyNameIndex == KEY_NAME_INDEX_Tab && modifiers == MODIFIER_SHIFT;
-        case CommandCharNext:
+        case Command::CharNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_NONE;
-        case CommandSelectCharNext:
+        case Command::SelectCharNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_SHIFT;
-        case CommandWordNext:
+        case Command::WordNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_ALT;
-        case CommandSelectWordNext:
+        case Command::SelectWordNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
-        case CommandEndLine:
+        case Command::EndLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_META;
-        case CommandSelectEndLine:
+        case Command::SelectEndLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
-        case CommandCharPrevious:
+        case Command::CharPrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_NONE;
-        case CommandSelectCharPrevious:
+        case Command::SelectCharPrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_SHIFT;
-        case CommandWordPrevious:
+        case Command::WordPrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_ALT;
-        case CommandSelectWordPrevious:
+        case Command::SelectWordPrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
-        case CommandBeginLine:
+        case Command::BeginLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_META;
-        case CommandSelectBeginLine:
+        case Command::SelectBeginLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
-        case CommandLinePrevious:
+        case Command::LinePrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_NONE;
-        case CommandSelectLinePrevious:
+        case Command::SelectLinePrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_SHIFT;
-        case CommandMoveTop:
+        case Command::MoveTop:
           return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_META;
-        case CommandSelectTop:
+        case Command::SelectTop:
           return (keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
                   modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
                  (keyNameIndex == KEY_NAME_INDEX_Home && modifiers == MODIFIER_SHIFT);
-        case CommandLineNext:
+        case Command::LineNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_NONE;
-        case CommandSelectLineNext:
+        case Command::SelectLineNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_SHIFT;
-        case CommandMoveBottom:
+        case Command::MoveBottom:
           return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_META;
-        case CommandSelectBottom:
+        case Command::SelectBottom:
           return (keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
                   modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
                  (keyNameIndex == KEY_NAME_INDEX_End && modifiers == MODIFIER_SHIFT);
-        case CommandScrollPageUp:
+        case Command::ScrollPageUp:
           return keyNameIndex == KEY_NAME_INDEX_PageUp && modifiers == MODIFIER_NONE;
-        case CommandSelectPageUp:
+        case Command::SelectPageUp:
           return keyNameIndex == KEY_NAME_INDEX_PageUp && modifiers == MODIFIER_SHIFT;
-        case CommandScrollPageDown:
+        case Command::ScrollPageDown:
           return keyNameIndex == KEY_NAME_INDEX_PageDown && modifiers == MODIFIER_NONE;
-        case CommandSelectPageDown:
+        case Command::SelectPageDown:
           return keyNameIndex == KEY_NAME_INDEX_PageDown && modifiers == MODIFIER_SHIFT;
-        case CommandScrollBottom:
+        case Command::ScrollBottom:
           return keyNameIndex == KEY_NAME_INDEX_End && modifiers == MODIFIER_NONE;
-        case CommandScrollTop:
+        case Command::ScrollTop:
           return keyNameIndex == KEY_NAME_INDEX_Home && modifiers == MODIFIER_NONE;
-        case CommandCancelOperation:
+        case Command::CancelOperation:
           return (keyNameIndex == KEY_NAME_INDEX_Escape &&
                   (modifiers == MODIFIER_NONE || modifiers == MODIFIER_SHIFT)) ||
                  ([mKeyEvent keyCode] == kVK_ANSI_Period && modifiers == MODIFIER_META);
-        case CommandComplete:
+        case Command::Complete:
           return keyNameIndex == KEY_NAME_INDEX_Escape &&
                  (modifiers == MODIFIER_ALT || modifiers == (MODIFIER_ALT | MODIFIER_SHIFT));
         default:

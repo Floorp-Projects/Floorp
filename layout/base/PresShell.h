@@ -54,6 +54,14 @@ class EventDispatchingCallback;
 class GeckoMVMContext;
 class OverflowChangedTracker;
 
+// 039d8ffc-fa55-42d7-a53a-388cb129b052
+#define NS_PRESSHELL_IID                             \
+  {                                                  \
+    0x039d8ffc, 0xfa55, 0x42d7, {                    \
+      0xa5, 0x3a, 0x38, 0x8c, 0xb1, 0x29, 0xb0, 0x52 \
+    }                                                \
+  }
+
 class PresShell final : public nsIPresShell,
                         public nsISelectionController,
                         public nsIObserver,
@@ -70,6 +78,8 @@ class PresShell final : public nsIPresShell,
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PRESSHELL_IID)
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
@@ -101,6 +111,30 @@ class PresShell final : public nsIPresShell,
   // clears that capture.
   static void ClearMouseCapture(nsIFrame* aFrame);
 
+#ifdef ACCESSIBILITY
+  /**
+   * Return the document accessible for this PresShell if there is one.
+   */
+  a11y::DocAccessible* GetDocAccessible() const { return mDocAccessible; }
+
+  /**
+   * Set the document accessible for this PresShell.
+   */
+  void SetDocAccessible(a11y::DocAccessible* aDocAccessible) {
+    mDocAccessible = aDocAccessible;
+  }
+
+  /**
+   * Return true if accessibility is active.
+   */
+  static bool IsAccessibilityActive();
+
+  /**
+   * Return accessibility service if accessibility is active.
+   */
+  static nsAccessibilityService* GetAccessibilityService();
+#endif  // #ifdef ACCESSIBILITY
+
   void Init(Document*, nsPresContext*, nsViewManager*);
   void Destroy() override;
 
@@ -129,11 +163,6 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
       ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption) override;
-
-  MOZ_CAN_RUN_SCRIPT
-  void DoFlushPendingNotifications(FlushType aType) override;
-  MOZ_CAN_RUN_SCRIPT
-  void DoFlushPendingNotifications(ChangesToFlush aType) override;
 
   RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
                                    nscoord aMinTwips) const override;
@@ -324,6 +353,149 @@ class PresShell final : public nsIPresShell,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_NSIOBSERVER
+
+  // Inline methods defined in PresShellInlines.h
+  inline void EnsureStyleFlush();
+  inline void SetNeedStyleFlush();
+  inline void SetNeedLayoutFlush();
+  inline void SetNeedThrottledAnimationFlush();
+  inline ServoStyleSet* StyleSet() const;
+
+  /**
+   * Whether we might need a flush for the given flush type.  If this
+   * function returns false, we definitely don't need to flush.
+   *
+   * @param aFlushType The flush type to check.  This must be
+   *   >= FlushType::Style.  This also returns true if a throttled
+   *   animation flush is required.
+   */
+  bool NeedFlush(FlushType aType) const {
+    // We check mInFlush to handle re-entrant calls to FlushPendingNotifications
+    // by reporting that we always need a flush in that case.  Otherwise,
+    // we could end up missing needed flushes, since we clear the mNeedXXXFlush
+    // flags at the top of FlushPendingNotifications.
+    MOZ_ASSERT(aType >= FlushType::Style);
+    return mNeedStyleFlush ||
+           (mNeedLayoutFlush && aType >= FlushType::InterruptibleLayout) ||
+           aType >= FlushType::Display || mNeedThrottledAnimationFlush ||
+           mInFlush;
+  }
+
+  /**
+   * Returns true if we might need to flush layout, even if we haven't scheduled
+   * one yet (as opposed to HasPendingReflow, which returns true if a flush is
+   * scheduled or will soon be scheduled).
+   */
+  bool NeedLayoutFlush() const { return mNeedLayoutFlush; }
+
+  bool NeedStyleFlush() const { return mNeedStyleFlush; }
+
+  /**
+   * Flush pending notifications of the type specified.  This method
+   * will not affect the content model; it'll just affect style and
+   * frames. Callers that actually want up-to-date presentation (other
+   * than the document itself) should probably be calling
+   * Document::FlushPendingNotifications.
+   *
+   * This method can execute script, which can destroy this presshell object
+   * unless someone is holding a reference to it on the stack.  The presshell
+   * itself will ensure it lives up until the method returns, but callers who
+   * plan to use the presshell after this call should hold a strong ref
+   * themselves!
+   *
+   * @param aType the type of notifications to flush
+   */
+  MOZ_CAN_RUN_SCRIPT
+  void FlushPendingNotifications(FlushType aType) {
+    if (!NeedFlush(aType)) {
+      return;
+    }
+
+    DoFlushPendingNotifications(aType);
+  }
+
+  MOZ_CAN_RUN_SCRIPT
+  void FlushPendingNotifications(ChangesToFlush aType) {
+    if (!NeedFlush(aType.mFlushType)) {
+      return;
+    }
+
+    DoFlushPendingNotifications(aType);
+  }
+
+  /**
+   * Tell the pres shell that a frame needs to be marked dirty and needs
+   * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
+   * long as the ancestor chain between them doesn't cross a reflow root.
+   *
+   * The bit to add should be NS_FRAME_IS_DIRTY, NS_FRAME_HAS_DIRTY_CHILDREN
+   * or nsFrameState(0); passing 0 means that dirty bits won't be set on the
+   * frame or its ancestors/descendants, but that intrinsic widths will still
+   * be marked dirty.  Passing aIntrinsicDirty = eResize and aBitToAdd = 0
+   * would result in no work being done, so don't do that.
+   */
+  void FrameNeedsReflow(
+      nsIFrame* aFrame, IntrinsicDirty aIntrinsicDirty, nsFrameState aBitToAdd,
+      ReflowRootHandling aRootHandling = ReflowRootHandling::InferFromBitToAdd);
+
+  /**
+   * Calls FrameNeedsReflow on all fixed position children of the root frame.
+   */
+  void MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty);
+
+  // This function handles all the work after VisualViewportSize is set
+  // or reset.
+  void CompleteChangeToVisualViewportSize();
+
+  /**
+   * The return value indicates whether the offset actually changed.
+   */
+  bool SetVisualViewportOffset(const nsPoint& aScrollOffset,
+                               const nsPoint& aPrevLayoutScrollPos);
+
+  nsPoint GetVisualViewportOffset() const {
+    return mVisualViewportOffset.valueOr(nsPoint());
+  }
+  bool IsVisualViewportOffsetSet() const {
+    return mVisualViewportOffset.isSome();
+  }
+
+  void SetVisualViewportSize(nscoord aWidth, nscoord aHeight);
+  void ResetVisualViewportSize();
+  bool IsVisualViewportSizeSet() { return mVisualViewportSizeSet; }
+  nsSize GetVisualViewportSize() {
+    NS_ASSERTION(mVisualViewportSizeSet,
+                 "asking for visual viewport size when its not set?");
+    return mVisualViewportSize;
+  }
+
+  nsPoint GetVisualViewportOffsetRelativeToLayoutViewport() const;
+
+  /* Enable/disable author style level. Disabling author style disables the
+   * entire author level of the cascade, including the HTML preshint level.
+   */
+  // XXX these could easily be inlined, but there is a circular #include
+  // problem with nsStyleSet.
+  void SetAuthorStyleDisabled(bool aDisabled);
+  bool GetAuthorStyleDisabled() const;
+
+  /**
+   * Update the style set somehow to take into account changed prefs which
+   * affect document styling.
+   */
+  void UpdatePreferenceStyles();
+
+  // aSheetType is one of the nsIStyleSheetService *_SHEET constants.
+  void NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
+                                         uint32_t aSheetType);
+  void NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
+                                           uint32_t aSheetType);
+
+  // DoReflow returns whether the reflow finished without interruption
+  // If aFrame is not the root frame, the caller must pass a non-null
+  // aOverflowTracker.
+  bool DoReflow(nsIFrame* aFrame, bool aInterruptible,
+                OverflowChangedTracker* aOverflowTracker);
 
 #ifdef MOZ_REFLOW_PERF
   void DumpReflows() override;
@@ -531,6 +703,30 @@ class PresShell final : public nsIPresShell,
   // acknowledged, to make sure they don't stick around for the next paint.
   void EndPaint();
 
+  /**
+   * Tell the presshell that the given frame's reflow was interrupted.  This
+   * will mark as having dirty children a path from the given frame (inclusive)
+   * to the nearest ancestor with a dirty subtree, or to the reflow root
+   * currently being reflowed if no such ancestor exists (inclusive).  This is
+   * to be done immediately after reflow of the current reflow root completes.
+   * This method must only be called during reflow, and the frame it's being
+   * called on must be in the process of being reflowed when it's called.  This
+   * method doesn't mark any intrinsic widths dirty and doesn't add any bits
+   * other than NS_FRAME_HAS_DIRTY_CHILDREN.
+   */
+  void FrameNeedsToContinueReflow(nsIFrame* aFrame);
+
+  /**
+   * Notification sent by a frame informing the pres shell that it is about to
+   * be destroyed.
+   * This allows any outstanding references to the frame to be cleaned up
+   */
+  void NotifyDestroyingFrame(nsIFrame* aFrame);
+
+#ifdef DEBUG
+  nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
+#endif
+
  private:
   ~PresShell();
 
@@ -555,6 +751,16 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT void DoScrollContentIntoView();
 
   /**
+   * Methods to handle changes to user and UA sheet lists that we get
+   * notified about.
+   */
+  void AddUserSheet(StyleSheet*);
+  void AddAgentSheet(StyleSheet*);
+  void AddAuthorSheet(StyleSheet*);
+  void RemoveSheet(StyleOrigin, StyleSheet*);
+  void RemovePreferenceStyles();
+
+  /**
    * Initialize cached font inflation preference values and do an initial
    * computation to determine if font inflation is enabled.
    *
@@ -563,6 +769,12 @@ class PresShell final : public nsIPresShell,
    * @see nsLayoutUtils::sFontSizeInflationLineThreshold
    */
   void SetupFontInflation();
+
+  /**
+   * Implementation methods for FlushPendingNotifications.
+   */
+  MOZ_CAN_RUN_SCRIPT void DoFlushPendingNotifications(FlushType aType);
+  MOZ_CAN_RUN_SCRIPT void DoFlushPendingNotifications(ChangesToFlush aType);
 
   struct RenderingState {
     explicit RenderingState(PresShell* aPresShell)
@@ -1529,6 +1741,20 @@ class PresShell final : public nsIPresShell,
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution,
                              nsAtom* aOrigin);
 
+#ifdef DEBUG
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool VerifyIncrementalReflow();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoVerifyReflow();
+  void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
+  void ShowEventTargetDebug();
+
+  bool mInVerifyReflow = false;
+  // The reflow root under which we're currently reflowing.  Null when
+  // not in reflow.
+  nsIFrame* mCurrentReflowRoot = nullptr;
+
+  nsIFrame* mDrawEventTargetFrame = nullptr;
+#endif  // #ifdef DEBUG
+
   // This is used for synthetic mouse events that are sent when what is under
   // the mouse pointer may have changed without the mouse moving (eg scrolling,
   // change to the document contents).
@@ -1577,6 +1803,14 @@ class PresShell final : public nsIPresShell,
   // details for the scroll operation, see ScrollIntoViewData above.
   nsCOMPtr<nsIContent> mContentToScrollTo;
 
+#ifdef ACCESSIBILITY
+  a11y::DocAccessible* mDocAccessible;
+#endif  // #ifdef ACCESSIBILITY
+
+  nsSize mVisualViewportSize;
+
+  mozilla::Maybe<nsPoint> mVisualViewportOffset;
+
   TimeStamp mLastOSWake;
 
   // The focus sequence number of the last processed input event
@@ -1587,6 +1821,18 @@ class PresShell final : public nsIPresShell,
   nscoord mLastAnchorScrollPositionY = 0;
 
   int32_t mActiveSuppressDisplayport;
+
+  // True if a layout flush might not be a no-op
+  bool mNeedLayoutFlush : 1;
+
+  // True if a style flush might not be a no-op
+  bool mNeedStyleFlush : 1;
+
+  // True if there are throttled animations that would be processed when
+  // performing a flush with mFlushAnimations == true.
+  bool mNeedThrottledAnimationFlush : 1;
+
+  bool mVisualViewportSizeSet : 1;
 
   bool mDocumentLoading : 1;
   bool mNoDelayedMouseEvents : 1;
@@ -1646,6 +1892,8 @@ class PresShell final : public nsIPresShell,
 
   static bool sProcessInteractable;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(PresShell, NS_PRESSHELL_IID)
 
 }  // namespace mozilla
 

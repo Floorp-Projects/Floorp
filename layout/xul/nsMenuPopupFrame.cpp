@@ -1948,9 +1948,11 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem, bool aSelectFirstItem,
       // Fire a command event as the new item, but we don't want to close
       // the menu, blink it, or update any other state of the menuitem. The
       // command event will cause the item to be selected.
-      nsContentUtils::DispatchXULCommand(
-          aMenuItem->GetContent(), /* aTrusted = */ true, nullptr, PresShell(),
-          false, false, false, false);
+      nsCOMPtr<nsIContent> menuItemContent = aMenuItem->GetContent();
+      RefPtr<mozilla::PresShell> presShell = PresShell();
+      nsContentUtils::DispatchXULCommand(menuItemContent, /* aTrusted = */ true,
+                                         nullptr, presShell, false, false,
+                                         false, false);
     }
 #endif
   }

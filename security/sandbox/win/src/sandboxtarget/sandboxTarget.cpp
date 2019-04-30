@@ -21,7 +21,20 @@ SandboxTarget* SandboxTarget::Instance() {
 void SandboxTarget::StartSandbox() {
   if (mTargetServices) {
     mTargetServices->LowerToken();
+    NotifyStartObservers();
   }
+}
+
+void SandboxTarget::NotifyStartObservers() {
+  for (auto&& obs : mStartObservers) {
+    if (!obs) {
+      continue;
+    }
+
+    obs();
+  }
+
+  mStartObservers.clear();
 }
 
 bool SandboxTarget::BrokerDuplicateHandle(HANDLE aSourceHandle,
