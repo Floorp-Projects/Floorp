@@ -140,7 +140,7 @@ def make_base_task(config, name, description, command):
             'checkout': False,
             'command': command,
         },
-        'worker-type': 'aws-provisioner-v1/gecko-{level}-images',
+        'worker-type': 'images',
         'worker': {
             'chain-of-trust': True,
             'docker-image': {'in-tree': 'fetch'},

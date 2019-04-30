@@ -21,7 +21,7 @@ jobs:
       run-on-projects: []
       shipping-phase: promote
       shipping-product: firefox
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker-type: b-linux
       worker:
          implementation: docker-worker
          os: linux
@@ -37,7 +37,7 @@ jobs:
       run-on-projects: []
       shipping-phase: promote
       shipping-product: devedition
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker-type: b-linux
       worker:
          implementation: docker-worker
          os: linux
@@ -53,7 +53,7 @@ jobs:
       run-on-projects: []
       shipping-phase: promote
       shipping-product: fennec
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker-type: b-linux
       worker:
          implementation: docker-worker
          os: linux

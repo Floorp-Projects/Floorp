@@ -14,7 +14,7 @@ win32/debug:
         platform: windows2012-32/debug
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -49,7 +49,7 @@ win32/opt:
         platform: windows2012-32/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -85,7 +85,7 @@ win64/debug:
         platform: windows2012-64/debug
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -120,7 +120,7 @@ win64-fuzzing/debug:
         platform: windows2012-64/debug
         symbol: Bf
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -155,7 +155,7 @@ win64-plain/debug:
         platform: windows2012-64/debug
         symbol: Bp
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -192,7 +192,7 @@ win64/opt:
         platform: windows2012-64/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -226,7 +226,7 @@ win64-plain/opt:
         platform: windows2012-64/opt
         symbol: Bp
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -277,7 +277,7 @@ win32-shippable/opt:
         platform: windows2012-32-shippable/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -316,7 +316,7 @@ win64-shippable/opt:
         platform: windows2012-64-shippable/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -349,7 +349,7 @@ win32-add-on-devel/opt:
         platform: windows2012-32-add-on-devel/opt
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -384,7 +384,7 @@ win64-add-on-devel/opt:
         platform: windows2012-64-add-on-devel/opt
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -419,7 +419,7 @@ win64-noopt/debug:
         platform: windows2012-64-noopt/debug
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -453,7 +453,7 @@ win32-noopt/debug:
         platform: windows2012-32-noopt/debug
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -487,7 +487,7 @@ win32-rusttests/opt:
         platform: windows2012-32/opt
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 5400
         env:
@@ -525,7 +525,7 @@ win32-rusttests/debug:
         platform: windows2012-32/debug
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 5400
         env:
@@ -563,7 +563,7 @@ win64-rusttests/opt:
         platform: windows2012-64/opt
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 5400
         env:
@@ -598,7 +598,7 @@ win64-rusttests/debug:
         platform: windows2012-64/debug
         symbol: BR
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 5400
         env:
@@ -633,7 +633,7 @@ win64-ccov/debug:
         platform: windows2012-64/ccov
         symbol: B
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
@@ -674,7 +674,7 @@ win64-asan/debug:
         platform: windows2012-64/asan
         symbol: Bd
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -709,7 +709,7 @@ win64-asan/opt:
         platform: windows2012-64/asan
         symbol: Bo
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -751,7 +751,7 @@ win64-asan-reporter-nightly/opt:
     treeherder:
         platform: win64-asan-reporter/opt
         symbol: BoR
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -787,7 +787,7 @@ win64-asan-fuzzing/opt:
     treeherder:
         platform: windows2012-64/asan
         symbol: Bof
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -839,7 +839,7 @@ win32-devedition-nightly/opt:
         platform: windows2012-32-devedition/opt
         symbol: N
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -880,7 +880,7 @@ win64-devedition-nightly/opt:
         platform: windows2012-64-devedition/opt
         symbol: N
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 10800
         env:
@@ -917,7 +917,7 @@ win64-aarch64/debug:
         platform: windows2012-aarch64/debug
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -955,7 +955,7 @@ win64-aarch64/opt:
         platform: windows2012-aarch64/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -991,7 +991,7 @@ win64-aarch64-eme/opt:
         platform: windows2012-aarch64/opt
         symbol: Be
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -1033,7 +1033,7 @@ win64-aarch64-shippable/opt:
         platform: windows2012-aarch64-shippable/opt
         symbol: B
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -1086,7 +1086,7 @@ win64-aarch64-shippable-no-eme/opt:
         platform: windows2012-aarch64/opt
         symbol: Nn
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:
@@ -1129,7 +1129,7 @@ win64-aarch64-devedition-nightly/opt:
         platform: windows2012-aarch64-devedition/opt
         symbol: N
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:

@@ -245,7 +245,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 @run_job_using("generic-worker", "mozharness", schema=mozharness_run_schema,
                defaults=mozharness_defaults)
 def mozharness_on_generic_worker(config, job, taskdesc):
-    assert job['worker']['os'] == 'windows', 'only supports windows right now'
+    assert job['worker']['os'] == 'windows', 'only supports windows right now: {}'.format(job['label'])
 
     run = job['run']
 

@@ -60,7 +60,7 @@ jobs:
          platform: linux64/opt
          symbol: pfu
          tier: 1
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker-type: b-linux
       worker:
          implementation: docker-worker
          os: linux

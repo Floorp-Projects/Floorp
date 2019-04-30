@@ -5,7 +5,7 @@
 job-defaults:
     treeherder:
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: mingw32-build}
         max-run-time: 3600

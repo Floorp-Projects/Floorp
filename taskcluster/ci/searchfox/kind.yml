@@ -31,7 +31,7 @@ jobs:
             job-name: linux64-searchfox-debug
         treeherder:
             platform: linux64/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 36000
             env:
@@ -61,7 +61,7 @@ jobs:
             job-name: macosx64-searchfox-debug
         treeherder:
             platform: osx-cross/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 36000
             env:
@@ -99,7 +99,7 @@ jobs:
             job-name: win64-searchfox-debug
         treeherder:
             platform: windows2012-64/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker-type: b-win2012
         worker:
             max-run-time: 36000
             env:

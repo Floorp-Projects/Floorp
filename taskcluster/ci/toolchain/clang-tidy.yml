@@ -6,7 +6,7 @@ job-defaults:
     description: "Clang-tidy build"
     index:
         product: static-analysis
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    worker-type: b-linux-large
     worker:
         max-run-time: 3600
     run:
@@ -41,7 +41,7 @@ macosx64-clang-tidy:
         job-name: macosx64-clang-tidy
     treeherder:
         symbol: TM(clang-tidy)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    worker-type: b-linux-large
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
@@ -65,7 +65,7 @@ win64-clang-tidy:
     treeherder:
         symbol: TW64(clang-tidy)
         tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 7200
         env:

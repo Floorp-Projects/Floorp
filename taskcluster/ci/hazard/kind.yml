@@ -20,7 +20,7 @@ job-defaults:
     treeherder:
         kind: build
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 36000
         docker-image: {in-tree: debian7-amd64-build}

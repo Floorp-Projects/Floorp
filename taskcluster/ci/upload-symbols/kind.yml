@@ -19,7 +19,7 @@ not-for-build-platforms:
 
 job-template:
     description: Upload Symbols
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 900
