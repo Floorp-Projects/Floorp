@@ -494,6 +494,8 @@ function showFxaToolbarMenu(enable) {
   mainWindowEl.setAttribute("fxastatus", "not_configured");
   fxaPanelEl.addEventListener("ViewShowing", gSync.updateSendToDeviceTitle);
 
+  Services.telemetry.setEventRecordingEnabled("fxa_app_menu", true);
+
   if (enable && syncEnabled) {
     mainWindowEl.setAttribute("fxatoolbarmenu", "visible");
 
@@ -502,7 +504,6 @@ function showFxaToolbarMenu(enable) {
     // event was performed yet.
     gSync.maybeUpdateUIState();
 
-    // Enabled FxA toolbar telemetry
     Services.telemetry.setEventRecordingEnabled("fxa_avatar_menu", true);
 
     // We set an attribute here so that we can toggle the custom

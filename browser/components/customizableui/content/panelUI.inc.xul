@@ -693,7 +693,7 @@
           <label class="PanelUI-fxa-signin-instruction-label">&fxa.signin.description.label;</label>
           <toolbarbutton class="PanelUI-fxa-signin-button"
                          label="&fxa.signin.button.label;"
-                         oncommand="gSync.openFxAEmailFirstPage('fxa_discoverability_native'); gSync.emitFxaToolbarTelemetry('login');"/>
+                         oncommand="gSync.openFxAEmailFirstPageFromFxaMenu(this);"/>
         </vbox>
         <vbox id="PanelUI-fxa-unverified" class="PanelUI-fxa-unverified-instruction-box">
           <image class="fxaGraphicMail"/>
@@ -701,7 +701,7 @@
           <label class="PanelUI-fxa-signin-instruction-label">&fxa.unverified.description.label;</label>
           <toolbarbutton class="PanelUI-fxa-signin-button"
                          label="&fxa.unverified.button.label;"
-                         oncommand="gSync.openPrefs('fxa_discoverability_native'); gSync.emitFxaToolbarTelemetry('unver_sync_settings');"/>
+                         oncommand="gSync.openPrefsFromFxaMenu('unver_sync_settings', this);"/>
         </vbox>
         <vbox id="PanelUI-fxa-menu">
           <hbox flex="1" align="center" class="fxa-avatar-subpanel">
@@ -715,34 +715,34 @@
           <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
                          class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                          closemenu="none"
-                         oncommand="gSync.showSendToDeviceView(this); gSync.emitFxaToolbarTelemetry('send_tab');"/>
+                         oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
           <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
                          class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                          label="&appMenuRemoteTabs.label;"
                          closemenu="none"
-                         oncommand="PanelUI.showSubView('PanelUI-remotetabs', this); gSync.emitFxaToolbarTelemetry('sync_tabs');"/>
+                         oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
           <toolbarbutton id="PanelUI-fxa-menu-view-sidebar"
                          class="subviewbutton subviewbutton-iconic"
                          label="&appMenuRemoteTabs.sidebar.label;"
-                         oncommand="SidebarUI.toggle('viewTabsSidebar'); gSync.emitFxaToolbarTelemetry('sync_tabs_sidebar');">
+                         oncommand="gSync.showSidebarFromFxaMenu(this);">
             <observes element="sidebar-box" attribute="positionend"/>
           </toolbarbutton>
           <toolbarseparator/>
           <toolbarbutton class="subviewbutton"
                          label="&fxa.menu.connectAnotherDevice2.label;"
-                         oncommand="gSync.openConnectAnotherDevice('fxa_discoverability_native'); gSync.emitFxaToolbarTelemetry('cad');"/>
+                         oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
           <toolbarbutton class="subviewbutton"
                          label="&fxa.menu.manageAccount.label;"
-                         oncommand="gSync.openFxAManagePage('fxa_discoverability_native'); gSync.emitFxaToolbarTelemetry('account_settings');"/>
+                         oncommand="gSync.openFxAManagePageFromFxaMenu(this);"/>
           <toolbarbutton class="subviewbutton"
                          label="&fxa.menu.syncSettings.label;"
-                         oncommand="gSync.openPrefs('fxa_discoverability_native'); gSync.emitFxaToolbarTelemetry('sync_settings');"/>
+                         oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
                          label="&syncSyncNowItem.label;"
                          syncinglabel="&syncSyncNowItemSyncing.label;"
                          class="subviewbutton subviewbutton-iconic"
-                         oncommand="gSync.doSync(); gSync.emitFxaToolbarTelemetry('sync_now');"
+                         oncommand="gSync.doSyncFromFxaMenu(this);"
                          closemenu="none"/>
         </vbox>
       </vbox>
