@@ -65,6 +65,10 @@ struct GCPolicy<nsJSObjWrapper *> {
     MOZ_ASSERT(*wrapper);
     (*wrapper)->trace(trc);
   }
+
+  static bool isValid(const nsJSObjWrapper *&wrapper) {
+    return true;
+  }
 };
 }  // namespace JS
 
