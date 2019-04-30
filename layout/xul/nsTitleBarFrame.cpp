@@ -156,7 +156,8 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
 void nsTitleBarFrame::MouseClicked(WidgetMouseEvent* aEvent) {
   // Execute the oncommand event handler.
+  nsCOMPtr<nsIContent> content = mContent;
   nsContentUtils::DispatchXULCommand(
-      mContent, false, nullptr, nullptr, aEvent->IsControl(), aEvent->IsAlt(),
+      content, false, nullptr, nullptr, aEvent->IsControl(), aEvent->IsAlt(),
       aEvent->IsShift(), aEvent->IsMeta(), aEvent->mInputSource);
 }

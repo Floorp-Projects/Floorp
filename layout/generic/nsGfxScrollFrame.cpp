@@ -6163,8 +6163,8 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
 #if DEBUG
 static bool ShellIsAlive(nsWeakPtr& aWeakPtr) {
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aWeakPtr));
-  return !!shell;
+  RefPtr<PresShell> presShell = do_QueryReferent(aWeakPtr);
+  return !!presShell;
 }
 #endif
 

@@ -22,6 +22,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs.h"
 
@@ -44,7 +45,6 @@
 #include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
-#include "nsIPresShellInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"

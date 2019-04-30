@@ -51,14 +51,13 @@ class EditorCommand : public nsIControllerCommand {
                                    nsISupports* aCommandRefCon) final;
 
   MOZ_CAN_RUN_SCRIPT
-  virtual bool IsCommandEnabled(const char* aCommandName,
+  virtual bool IsCommandEnabled(Command aCommand,
                                 TextEditor* aTextEditor) const = 0;
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult DoCommand(const char* aCommandName,
+  virtual nsresult DoCommand(Command aCommand,
                              TextEditor& aTextEditor) const = 0;
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult DoCommandParams(const char* aCommandName,
-                                   nsCommandParams* aParams,
+  virtual nsresult DoCommandParams(Command aCommand, nsCommandParams* aParams,
                                    TextEditor& aTextEditor) const = 0;
   /**
    * @param aTextEditor         If the context is an editor, should be set to
@@ -70,34 +69,32 @@ class EditorCommand : public nsIControllerCommand {
    */
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult GetCommandStateParams(
-      const char* aCommandName, nsCommandParams& aParams,
-      TextEditor* aTextEditor, nsIEditingSession* aEditingSession) const = 0;
+      Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
+      nsIEditingSession* aEditingSession) const = 0;
 
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
 };
 
-#define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                             \
- public:                                                                 \
-  MOZ_CAN_RUN_SCRIPT                                                     \
-  virtual bool IsCommandEnabled(const char* aCommandName,                \
-                                TextEditor* aTextEditor) const final;    \
-  using EditorCommand::IsCommandEnabled;                                 \
-  MOZ_CAN_RUN_SCRIPT                                                     \
-  virtual nsresult DoCommand(const char* aCommandName,                   \
-                             TextEditor& aTextEditor) const final;       \
-  using EditorCommand::DoCommand;                                        \
-  MOZ_CAN_RUN_SCRIPT                                                     \
-  virtual nsresult DoCommandParams(const char* aCommandName,             \
-                                   nsCommandParams* aParams,             \
-                                   TextEditor& aTextEditor) const final; \
-  using EditorCommand::DoCommandParams;                                  \
-  MOZ_CAN_RUN_SCRIPT                                                     \
-  virtual nsresult GetCommandStateParams(                                \
-      const char* aCommandName, nsCommandParams& aParams,                \
-      TextEditor* aTextEditor, nsIEditingSession* aEditingSession)       \
-      const final;                                                       \
+#define NS_DECL_EDITOR_COMMAND_METHODS(_cmd)                                   \
+ public:                                                                       \
+  MOZ_CAN_RUN_SCRIPT                                                           \
+  virtual bool IsCommandEnabled(Command aCommand, TextEditor* aTextEditor)     \
+      const final;                                                             \
+  using EditorCommand::IsCommandEnabled;                                       \
+  MOZ_CAN_RUN_SCRIPT                                                           \
+  virtual nsresult DoCommand(Command aCommand, TextEditor& aTextEditor)        \
+      const final;                                                             \
+  using EditorCommand::DoCommand;                                              \
+  MOZ_CAN_RUN_SCRIPT                                                           \
+  virtual nsresult DoCommandParams(Command aCommand, nsCommandParams* aParams, \
+                                   TextEditor& aTextEditor) const final;       \
+  using EditorCommand::DoCommandParams;                                        \
+  MOZ_CAN_RUN_SCRIPT                                                           \
+  virtual nsresult GetCommandStateParams(                                      \
+      Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,     \
+      nsIEditingSession* aEditingSession) const final;                         \
   using EditorCommand::GetCommandStateParams;
 
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
@@ -160,7 +157,7 @@ class StateUpdatingCommandBase : public EditorCommand {
 
  protected:
   StateUpdatingCommandBase() = default;
-  virtual ~StateUpdatingCommandBase() { sTagNameTable.Clear(); }
+  virtual ~StateUpdatingCommandBase() = default;
 
   // get the current state (on or off) for this style or block format
   MOZ_CAN_RUN_SCRIPT
@@ -172,41 +169,57 @@ class StateUpdatingCommandBase : public EditorCommand {
   virtual nsresult ToggleState(nsAtom* aTagName,
                                HTMLEditor* aHTMLEditor) const = 0;
 
-  static already_AddRefed<nsAtom> TagName(const char* aCommandName) {
-    MOZ_DIAGNOSTIC_ASSERT(aCommandName);
-    if (NS_WARN_IF(!aCommandName)) {
-      return nullptr;
+  static nsAtom* GetTagName(Command aCommand) {
+    switch (aCommand) {
+      case Command::FormatBold:
+        return nsGkAtoms::b;
+      case Command::FormatItalic:
+        return nsGkAtoms::i;
+      case Command::FormatUnderline:
+        return nsGkAtoms::u;
+      case Command::FormatTeletypeText:
+        return nsGkAtoms::tt;
+      case Command::FormatStrikeThrough:
+        return nsGkAtoms::strike;
+      case Command::FormatSuperscript:
+        return nsGkAtoms::sup;
+      case Command::FormatSubscript:
+        return nsGkAtoms::sub;
+      case Command::FormatNoBreak:
+        return nsGkAtoms::nobr;
+      case Command::FormatEmphasis:
+        return nsGkAtoms::em;
+      case Command::FormatStrong:
+        return nsGkAtoms::strong;
+      case Command::FormatCitation:
+        return nsGkAtoms::cite;
+      case Command::FormatAbbreviation:
+        return nsGkAtoms::abbr;
+      case Command::FormatAcronym:
+        return nsGkAtoms::acronym;
+      case Command::FormatCode:
+        return nsGkAtoms::code;
+      case Command::FormatSample:
+        return nsGkAtoms::samp;
+      case Command::FormatVariable:
+        return nsGkAtoms::var;
+      case Command::FormatRemoveLink:
+        return nsGkAtoms::href;
+      case Command::InsertOrderedList:
+        return nsGkAtoms::ol;
+      case Command::InsertUnorderedList:
+        return nsGkAtoms::ul;
+      case Command::InsertDefinitionTerm:
+        return nsGkAtoms::dt;
+      case Command::InsertDefinitionDetails:
+        return nsGkAtoms::dd;
+      case Command::FormatAbsolutePosition:
+        return nsGkAtoms::_empty;
+      default:
+        return nullptr;
     }
-    if (!sTagNameTable.Count()) {
-      sTagNameTable.Put("cmd_bold", nsGkAtoms::b);
-      sTagNameTable.Put("cmd_italic", nsGkAtoms::i);
-      sTagNameTable.Put("cmd_underline", nsGkAtoms::u);
-      sTagNameTable.Put("cmd_tt", nsGkAtoms::tt);
-      sTagNameTable.Put("cmd_strikethrough", nsGkAtoms::strike);
-      sTagNameTable.Put("cmd_superscript", nsGkAtoms::sup);
-      sTagNameTable.Put("cmd_subscript", nsGkAtoms::sub);
-      sTagNameTable.Put("cmd_nobreak", nsGkAtoms::nobr);
-      sTagNameTable.Put("cmd_em", nsGkAtoms::em);
-      sTagNameTable.Put("cmd_strong", nsGkAtoms::strong);
-      sTagNameTable.Put("cmd_cite", nsGkAtoms::cite);
-      sTagNameTable.Put("cmd_abbr", nsGkAtoms::abbr);
-      sTagNameTable.Put("cmd_acronym", nsGkAtoms::acronym);
-      sTagNameTable.Put("cmd_code", nsGkAtoms::code);
-      sTagNameTable.Put("cmd_samp", nsGkAtoms::samp);
-      sTagNameTable.Put("cmd_var", nsGkAtoms::var);
-      sTagNameTable.Put("cmd_removeLinks", nsGkAtoms::href);
-      sTagNameTable.Put("cmd_ol", nsGkAtoms::ol);
-      sTagNameTable.Put("cmd_ul", nsGkAtoms::ul);
-      sTagNameTable.Put("cmd_dt", nsGkAtoms::dt);
-      sTagNameTable.Put("cmd_dd", nsGkAtoms::dd);
-      sTagNameTable.Put("cmd_absPos", nsGkAtoms::_empty);
-    }
-    RefPtr<nsAtom> tagName = sTagNameTable.Get(aCommandName);
-    MOZ_DIAGNOSTIC_ASSERT(tagName);
-    return tagName.forget();
   }
-
-  static nsRefPtrHashtable<nsCharPtrHashKey, nsAtom> sTagNameTable;
+  friend class InsertTagCommand;  // for allowing it to access GetTagName()
 };
 
 // Shared class for the various style updating commands like bold, italics etc.
@@ -238,24 +251,20 @@ class InsertTagCommand final : public EditorCommand {
 
  protected:
   InsertTagCommand() = default;
-  virtual ~InsertTagCommand() { sTagNameTable.Clear(); }
+  virtual ~InsertTagCommand() = default;
 
-  static already_AddRefed<nsAtom> TagName(const char* aCommandName) {
-    MOZ_DIAGNOSTIC_ASSERT(aCommandName);
-    if (NS_WARN_IF(!aCommandName)) {
-      return nullptr;
+  static nsAtom* GetTagName(Command aCommand) {
+    switch (aCommand) {
+      case Command::InsertLink:
+        return nsGkAtoms::a;
+      case Command::InsertImage:
+        return nsGkAtoms::img;
+      case Command::InsertHorizontalRule:
+        return nsGkAtoms::hr;
+      default:
+        return StateUpdatingCommandBase::GetTagName(aCommand);
     }
-    if (!sTagNameTable.Count()) {
-      sTagNameTable.Put("cmd_insertLinkNoUI", nsGkAtoms::a);
-      sTagNameTable.Put("cmd_insertImageNoUI", nsGkAtoms::img);
-      sTagNameTable.Put("cmd_insertHR", nsGkAtoms::hr);
-    }
-    RefPtr<nsAtom> tagName = sTagNameTable.Get(aCommandName);
-    MOZ_DIAGNOSTIC_ASSERT(tagName);
-    return tagName.forget();
   }
-
-  static nsRefPtrHashtable<nsCharPtrHashKey, nsAtom> sTagNameTable;
 };
 
 class ListCommand final : public StateUpdatingCommandBase {

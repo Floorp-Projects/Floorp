@@ -6,6 +6,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"
@@ -27,7 +28,6 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsStubMutationObserver.h"
 #include "nsINode.h"
-#include "nsIPresShellInlines.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsLiteralString.h"

@@ -4908,252 +4908,252 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
 - (void)insertNewline:(id)sender {
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandInsertParagraph);
+    mTextInputHandler->HandleCommand(Command::InsertParagraph);
   }
 }
 
 - (void)insertLineBreak:(id)sender {
   // Ctrl + Enter in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandInsertLineBreak);
+    mTextInputHandler->HandleCommand(Command::InsertLineBreak);
   }
 }
 
 - (void)deleteBackward:(id)sender {
   // Backspace in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteCharBackward);
+    mTextInputHandler->HandleCommand(Command::DeleteCharBackward);
   }
 }
 
 - (void)deleteBackwardByDecomposingPreviousCharacter:(id)sender {
   // Ctrl + Backspace in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteCharBackward);
+    mTextInputHandler->HandleCommand(Command::DeleteCharBackward);
   }
 }
 
 - (void)deleteWordBackward:(id)sender {
   // Alt + Backspace in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteWordBackward);
+    mTextInputHandler->HandleCommand(Command::DeleteWordBackward);
   }
 }
 
 - (void)deleteToBeginningOfBackward:(id)sender {
   // Command + Backspace in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteToBeginningOfLine);
+    mTextInputHandler->HandleCommand(Command::DeleteToBeginningOfLine);
   }
 }
 
 - (void)deleteForward:(id)sender {
   // Delete in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteCharForward);
+    mTextInputHandler->HandleCommand(Command::DeleteCharForward);
   }
 }
 
 - (void)deleteWordForward:(id)sender {
   // Alt + Delete in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandDeleteWordForward);
+    mTextInputHandler->HandleCommand(Command::DeleteWordForward);
   }
 }
 
 - (void)insertTab:(id)sender {
   // Tab in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandInsertTab);
+    mTextInputHandler->HandleCommand(Command::InsertTab);
   }
 }
 
 - (void)insertBacktab:(id)sender {
   // Shift + Tab in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandInsertBacktab);
+    mTextInputHandler->HandleCommand(Command::InsertBacktab);
   }
 }
 
 - (void)moveRight:(id)sender {
   // RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandCharNext);
+    mTextInputHandler->HandleCommand(Command::CharNext);
   }
 }
 
 - (void)moveRightAndModifySelection:(id)sender {
   // Shift + RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectCharNext);
+    mTextInputHandler->HandleCommand(Command::SelectCharNext);
   }
 }
 
 - (void)moveWordRight:(id)sender {
   // Alt + RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandWordNext);
+    mTextInputHandler->HandleCommand(Command::WordNext);
   }
 }
 
 - (void)moveWordRightAndModifySelection:(id)sender {
   // Alt + Shift + RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectWordNext);
+    mTextInputHandler->HandleCommand(Command::SelectWordNext);
   }
 }
 
 - (void)moveToRightEndOfLine:(id)sender {
   // Command + RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandEndLine);
+    mTextInputHandler->HandleCommand(Command::EndLine);
   }
 }
 
 - (void)moveToRightEndOfLineAndModifySelection:(id)sender {
   // Command + Shift + RightArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectEndLine);
+    mTextInputHandler->HandleCommand(Command::SelectEndLine);
   }
 }
 
 - (void)moveLeft:(id)sender {
   // LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandCharPrevious);
+    mTextInputHandler->HandleCommand(Command::CharPrevious);
   }
 }
 
 - (void)moveLeftAndModifySelection:(id)sender {
   // Shift + LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectCharPrevious);
+    mTextInputHandler->HandleCommand(Command::SelectCharPrevious);
   }
 }
 
 - (void)moveWordLeft:(id)sender {
   // Alt + LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandWordPrevious);
+    mTextInputHandler->HandleCommand(Command::WordPrevious);
   }
 }
 
 - (void)moveWordLeftAndModifySelection:(id)sender {
   // Alt + Shift + LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectWordPrevious);
+    mTextInputHandler->HandleCommand(Command::SelectWordPrevious);
   }
 }
 
 - (void)moveToLeftEndOfLine:(id)sender {
   // Command + LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandBeginLine);
+    mTextInputHandler->HandleCommand(Command::BeginLine);
   }
 }
 
 - (void)moveToLeftEndOfLineAndModifySelection:(id)sender {
   // Command + Shift + LeftArrow in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectBeginLine);
+    mTextInputHandler->HandleCommand(Command::SelectBeginLine);
   }
 }
 
 - (void)moveUp:(id)sender {
   // ArrowUp in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandLinePrevious);
+    mTextInputHandler->HandleCommand(Command::LinePrevious);
   }
 }
 
 - (void)moveUpAndModifySelection:(id)sender {
   // Shift + ArrowUp in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectLinePrevious);
+    mTextInputHandler->HandleCommand(Command::SelectLinePrevious);
   }
 }
 
 - (void)moveToBeginningOfDocument:(id)sender {
   // Command + ArrowUp in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandMoveTop);
+    mTextInputHandler->HandleCommand(Command::MoveTop);
   }
 }
 
 - (void)moveToBeginningOfDocumentAndModifySelection:(id)sender {
   // Command + Shift + ArrowUp or Shift + Home in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectTop);
+    mTextInputHandler->HandleCommand(Command::SelectTop);
   }
 }
 
 - (void)moveDown:(id)sender {
   // ArrowDown in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandLineNext);
+    mTextInputHandler->HandleCommand(Command::LineNext);
   }
 }
 
 - (void)moveDownAndModifySelection:(id)sender {
   // Shift + ArrowDown in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectLineNext);
+    mTextInputHandler->HandleCommand(Command::SelectLineNext);
   }
 }
 
 - (void)moveToEndOfDocument:(id)sender {
   // Command + ArrowDown in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandMoveBottom);
+    mTextInputHandler->HandleCommand(Command::MoveBottom);
   }
 }
 
 - (void)moveToEndOfDocumentAndModifySelection:(id)sender {
   // Command + Shift + ArrowDown or Shift + End in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectBottom);
+    mTextInputHandler->HandleCommand(Command::SelectBottom);
   }
 }
 
 - (void)scrollPageUp:(id)sender {
   // PageUp in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandScrollPageUp);
+    mTextInputHandler->HandleCommand(Command::ScrollPageUp);
   }
 }
 
 - (void)pageUpAndModifySelection:(id)sender {
   // Shift + PageUp in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectPageUp);
+    mTextInputHandler->HandleCommand(Command::SelectPageUp);
   }
 }
 
 - (void)scrollPageDown:(id)sender {
   // PageDown in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandScrollPageDown);
+    mTextInputHandler->HandleCommand(Command::ScrollPageDown);
   }
 }
 
 - (void)pageDownAndModifySelection:(id)sender {
   // Shift + PageDown in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandSelectPageDown);
+    mTextInputHandler->HandleCommand(Command::SelectPageDown);
   }
 }
 
 - (void)scrollToEndOfDocument:(id)sender {
   // End in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandScrollBottom);
+    mTextInputHandler->HandleCommand(Command::ScrollBottom);
   }
 }
 
 - (void)scrollToBeginningOfDocument:(id)sender {
   // Home in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandScrollTop);
+    mTextInputHandler->HandleCommand(Command::ScrollTop);
   }
 }
 
@@ -5164,7 +5164,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 - (void)complete:(id)sender {
   // Alt + Escape or Alt + Shift + Escape in the default settings.
   if (mTextInputHandler) {
-    mTextInputHandler->HandleCommand(CommandComplete);
+    mTextInputHandler->HandleCommand(Command::Complete);
   }
 }
 

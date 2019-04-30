@@ -834,7 +834,7 @@ nsDOMWindowUtils::SendTouchEventCommon(
 
   nsEventStatus status;
   if (aToWindow) {
-    nsCOMPtr<nsIPresShell> presShell;
+    RefPtr<PresShell> presShell;
     nsView* view = nsContentUtils::GetViewToDispatchEvent(
         presContext, getter_AddRefs(presShell));
     if (!presShell || !view) {

@@ -2669,7 +2669,8 @@ nsXULMenuCommandEvent::Run() {
 
     AutoHandlingUserInputStatePusher userInpStatePusher(
         mUserInput, nullptr, presShell->GetDocument());
-    nsContentUtils::DispatchXULCommand(mMenu, mIsTrusted, nullptr, presShell,
+    RefPtr<Element> menu = mMenu;
+    nsContentUtils::DispatchXULCommand(menu, mIsTrusted, nullptr, presShell,
                                        mControl, mAlt, mShift, mMeta);
   }
 
