@@ -66,7 +66,7 @@ use gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use gpu_glyph_renderer::GpuGlyphRenderer;
 use gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData, ResolveInstanceData};
 use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
-use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, RenderedDocument, ResultMsg};
+use internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use malloc_size_of::MallocSizeOfOps;
@@ -1941,6 +1941,13 @@ pub struct Renderer {
     /// functionality only, such as the debug zoom widget.
     cursor_position: DeviceIntPoint,
 
+    /// Guards to check if we might be rendering a frame with expired texture
+    /// cache entries.
+    shared_texture_cache_cleared: bool,
+
+    /// The set of documents which we've seen a publish for since last render.
+    documents_seen: FastHashSet<DocumentId>,
+
     #[cfg(feature = "capture")]
     read_fbo: FBOId,
     #[cfg(feature = "replay")]
@@ -2418,6 +2425,8 @@ impl Renderer {
             device_size: None,
             zoom_debug_texture: None,
             cursor_position: DeviceIntPoint::zero(),
+            shared_texture_cache_cleared: false,
+            documents_seen: FastHashSet::default(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -2482,6 +2491,8 @@ impl Renderer {
                     texture_update_list,
                     profile_counters,
                 ) => {
+                    self.documents_seen.insert(document_id);
+
                     if doc.is_new_scene {
                         self.new_scene_indicator.changed();
                     }
@@ -3021,7 +3032,12 @@ impl Renderer {
             );
 
             let last_document_index = active_documents.len() - 1;
-            for (doc_index, (_, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
+            for (doc_index, (document_id, RenderedDocument { ref mut frame, .. })) in active_documents.iter_mut().enumerate() {
+                if self.shared_texture_cache_cleared {
+                    assert!(self.documents_seen.contains(&document_id),
+                            "Cleared texture cache without sending new document frame.");
+                }
+
                 frame.profile_counters.reset_targets();
                 self.prepare_gpu_cache(frame);
                 assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
@@ -3173,6 +3189,9 @@ impl Renderer {
         if device_size.is_some() {
             self.last_time = current_time;
         }
+
+        self.documents_seen.clear();
+        self.shared_texture_cache_cleared = false;
 
         if self.renderer_errors.is_empty() {
             Ok(results)
@@ -3385,6 +3404,10 @@ impl Renderer {
                         }
                     };
                     self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
+                }
+
+                if update_list.clears_shared_cache {
+                    self.shared_texture_cache_cleared = true;
                 }
             }
 
