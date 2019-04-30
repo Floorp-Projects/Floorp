@@ -15,11 +15,24 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsBrowser, devtoolsTab } =
+  const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
     await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Check whether the shortcut keys which opens devtools is disabled");
   await assertShortcutKeys(devtoolsBrowser, false);
+
+  info("Switch to the inspector programmatically");
+  const toolbox = getToolbox(devtoolsWindow);
+  await toolbox.selectTool("inspector");
+
+  info("Use the Webconsole keyboard shortcut and wait for the panel to be selected");
+  const onToolReady = toolbox.once("webconsole-ready");
+  EventUtils.synthesizeKey("K", {
+    accelKey: true,
+    shiftKey: !navigator.userAgent.match(/Mac/),
+    altKey: navigator.userAgent.match(/Mac/),
+  }, devtoolsWindow);
+  await onToolReady;
 
   info("Force to select about:debugging page");
   gBrowser.selectedTab = tab;

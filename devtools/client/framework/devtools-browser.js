@@ -189,6 +189,8 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * triggered from the WebDeveloper menu and keyboard shortcuts.
    *
    * selectToolCommand's behavior:
+   * - if the current page is about:devtools-toolbox
+   *   we select the targeted tool
    * - if the toolbox is closed,
    *   we open the toolbox and select the tool
    * - if the toolbox is open, and the targeted tool is not selected,
@@ -197,11 +199,18 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    *   and the host is NOT a window, we close the toolbox
    * - if the toolbox is open, and the targeted tool is selected,
    *   and the host is a window, we raise the toolbox window
+   *
+   * Used when: - registering a new tool
+   *            - new xul window, to add menu items
    */
-  // Used when: - registering a new tool
-  //            - new xul window, to add menu items
-  async selectToolCommand(gBrowser, toolId, startTime) {
-    const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  async selectToolCommand(win, toolId, startTime) {
+    if (gDevToolsBrowser._isAboutDevtoolsToolbox(win)) {
+      const toolbox = gDevToolsBrowser._getAboutDevtoolsToolbox(win);
+      toolbox.selectTool(toolId, "key_shortcut");
+      return;
+    }
+
+    const target = await TargetFactory.forTab(win.gBrowser.selectedTab);
     const toolbox = gDevTools.getToolbox(target);
     const toolDefinition = gDevTools.getToolDefinition(toolId);
 
@@ -245,16 +254,14 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // Avoid to open devtools when the about:devtools-toolbox page is showing
     // on the window now.
     if (gDevToolsBrowser._isAboutDevtoolsToolbox(window) &&
-        (key.toolId ||
-         key.id === "toggleToolbox" ||
-         key.id === "toggleToolboxF12" ||
-         key.id === "inspectorMac")) {
+        (key.id === "toggleToolbox" ||
+         key.id === "toggleToolboxF12")) {
       return;
     }
 
     // If this is a toolbox's panel key shortcut, delegate to selectToolCommand
     if (key.toolId) {
-      await gDevToolsBrowser.selectToolCommand(window.gBrowser, key.toolId, startTime);
+      await gDevToolsBrowser.selectToolCommand(window, key.toolId, startTime);
       return;
     }
     // Otherwise implement all other key shortcuts individually here
@@ -282,7 +289,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         ScratchpadManager.openScratchpad();
         break;
       case "inspectorMac":
-        await gDevToolsBrowser.selectToolCommand(window.gBrowser, "inspector", startTime);
+        await gDevToolsBrowser.selectToolCommand(window, "inspector", startTime);
         break;
     }
   },
@@ -628,16 +635,18 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * @param {XULWindow} win
    */
   _updateMenuItems(win) {
-    if (gDevToolsBrowser._isAboutDevtoolsToolbox(win)) {
-      BrowserMenus.disableDevtoolsMenuItems(win.document);
-      return;
+    const menu = win.document.getElementById("menu_devToolbox");
+
+    // Hide the "Toggle Tools" menu item if we are on about:devtools-toolbox.
+    const isAboutDevtoolsToolbox = gDevToolsBrowser._isAboutDevtoolsToolbox(win);
+    if (isAboutDevtoolsToolbox) {
+      menu.setAttribute("hidden", "true");
+    } else {
+      menu.removeAttribute("hidden");
     }
 
-    BrowserMenus.enableDevtoolsMenuItems(win.document);
-
+    // Add a checkmark for the "Toggle Tools" menu item if a toolbox is already opened.
     const hasToolbox = gDevToolsBrowser.hasToolboxOpened(win);
-
-    const menu = win.document.getElementById("menu_devToolbox");
     if (hasToolbox) {
       menu.setAttribute("checked", "true");
     } else {
@@ -655,6 +664,23 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   _isAboutDevtoolsToolbox(win) {
     const currentURI = win.gBrowser.currentURI;
     return currentURI.scheme === "about" && currentURI.filePath === "devtools-toolbox";
+  },
+
+  /**
+   * Retrieve the Toolbox instance loaded in the current page if the page is
+   * about:devtools-toolbox, null otherwise.
+   *
+   * @param {XULWindow} win
+   *        The chrome window containing about:devtools-toolbox. Will match
+   *        toolbox.topWindow.
+   * @return {Toolbox} The toolbox instance loaded in about:devtools-toolbox
+   *
+   */
+  _getAboutDevtoolsToolbox(win) {
+    if (!gDevToolsBrowser._isAboutDevtoolsToolbox(win)) {
+      return null;
+    }
+    return gDevTools.getToolboxes().find(toolbox => toolbox.topWindow === win);
   },
 
   /**
