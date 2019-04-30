@@ -117,7 +117,7 @@ FRAME_STATE_BIT(Generic, 9, NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
 // Do not set this bit yourself if you plan to pass the frame to
-// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+// PresShell::FrameNeedsReflow.  Pass the right arguments instead.
 FRAME_STATE_BIT(Generic, 10, NS_FRAME_IS_DIRTY)
 
 // If this bit is set then the frame is too deep in the frame tree, and
@@ -141,7 +141,7 @@ FRAME_STATE_BIT(Generic, 11, NS_FRAME_TOO_DEEP_IN_FRAME_TREE)
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
 // Do not set this bit yourself if you plan to pass the frame to
-// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
+// PresShell::FrameNeedsReflow.  Pass the right arguments instead.
 FRAME_STATE_BIT(Generic, 12, NS_FRAME_HAS_DIRTY_CHILDREN)
 
 // If this bit is set, the frame has an associated view

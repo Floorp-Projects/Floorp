@@ -4,18 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIPresShellInlines_h
-#define nsIPresShellInlines_h
+#ifndef mozilla_PresShellInlines_h
+#define mozilla_PresShellInlines_h
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 
-void nsIPresShell::SetNeedLayoutFlush() {
+namespace mozilla {
+
+void PresShell::SetNeedLayoutFlush() {
   mNeedLayoutFlush = true;
-  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (mozilla::PresShell* shell = doc->GetPresShell()) {
-      shell->mNeedLayoutFlush = true;
+  if (dom::Document* doc = mDocument->GetDisplayDocument()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
+      presShell->mNeedLayoutFlush = true;
     }
   }
 
@@ -26,10 +28,10 @@ void nsIPresShell::SetNeedLayoutFlush() {
 #endif
 }
 
-void nsIPresShell::SetNeedStyleFlush() {
+void PresShell::SetNeedStyleFlush() {
   mNeedStyleFlush = true;
-  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (mozilla::PresShell* presShell = doc->GetPresShell()) {
+  if (dom::Document* doc = mDocument->GetDisplayDocument()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
       presShell->mNeedStyleFlush = true;
     }
   }
@@ -41,25 +43,23 @@ void nsIPresShell::SetNeedStyleFlush() {
 #endif
 }
 
-void nsIPresShell::EnsureStyleFlush() {
+void PresShell::EnsureStyleFlush() {
   SetNeedStyleFlush();
   ObserveStyleFlushes();
 }
 
-void nsIPresShell::SetNeedThrottledAnimationFlush() {
+void PresShell::SetNeedThrottledAnimationFlush() {
   mNeedThrottledAnimationFlush = true;
-  if (mozilla::dom::Document* doc = mDocument->GetDisplayDocument()) {
-    if (mozilla::PresShell* presShell = doc->GetPresShell()) {
+  if (dom::Document* doc = mDocument->GetDisplayDocument()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
       presShell->mNeedThrottledAnimationFlush = true;
     }
   }
 }
 
-mozilla::ServoStyleSet* nsIPresShell::StyleSet() const {
+ServoStyleSet* PresShell::StyleSet() const {
   return mDocument->StyleSetForPresShellOrMediaQueryEvaluation();
 }
-
-namespace mozilla {
 
 /* static */
 inline void PresShell::EventHandler::OnPresShellDestroy(Document* aDocument) {
@@ -71,4 +71,4 @@ inline void PresShell::EventHandler::OnPresShellDestroy(Document* aDocument) {
 
 }  // namespace mozilla
 
-#endif  // nsIPresShellInlines_h
+#endif  // mozilla_PresShellInlines_h

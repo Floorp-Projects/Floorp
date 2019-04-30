@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
@@ -25,7 +26,6 @@
 #include "nsNetUtil.h"
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
-#include "nsIPresShellInlines.h"
 #include "nsLayoutStatics.h"
 #include "nsLayoutUtils.h"
 

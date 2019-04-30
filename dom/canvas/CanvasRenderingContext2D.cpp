@@ -16,11 +16,11 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "SVGObserverUtils.h"
 #include "nsPresContext.h"
-#include "nsIPresShellInlines.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"

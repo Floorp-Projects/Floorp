@@ -23,6 +23,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
@@ -43,7 +44,6 @@
 #include "nsContentList.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIPresShellInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -794,13 +794,9 @@ nsIPresShell::nsIPresShell()
       mIsFirstPaint(false),
       mObservesMutationsForPrint(false),
       mWasLastReflowInterrupted(false),
-      mVisualViewportSizeSet(false),
-      mNeedLayoutFlush(true),
-      mNeedStyleFlush(true),
       mObservingStyleFlushes(false),
       mObservingLayoutFlushes(false),
       mResizeEventPending(false),
-      mNeedThrottledAnimationFlush(true),
       mFontSizeInflationForceEnabled(false),
       mFontSizeInflationDisabledInMasterProcess(false),
       mFontSizeInflationEnabled(false),
@@ -821,6 +817,10 @@ PresShell::PresShell()
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
       mAPZFocusSequenceNumber(0),
       mActiveSuppressDisplayport(0),
+      mNeedLayoutFlush(true),
+      mNeedStyleFlush(true),
+      mNeedThrottledAnimationFlush(true),
+      mVisualViewportSizeSet(false),
       mDocumentLoading(false),
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
@@ -853,8 +853,6 @@ PresShell::PresShell()
   mPresShellId = sNextPresShellId++;
   mFrozen = false;
   mRenderFlags = 0;
-
-  mVisualViewportSizeSet = false;
 
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
@@ -1413,7 +1411,7 @@ nsRefreshDriver* nsIPresShell::GetRefreshDriver() const {
   return mPresContext ? mPresContext->RefreshDriver() : nullptr;
 }
 
-void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
+void PresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
   if (aStyleDisabled != StyleSet()->GetAuthorStyleDisabled()) {
     StyleSet()->SetAuthorStyleDisabled(aStyleDisabled);
     mDocument->ApplicableStylesChanged();
@@ -1427,11 +1425,11 @@ void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
   }
 }
 
-bool nsIPresShell::GetAuthorStyleDisabled() const {
+bool PresShell::GetAuthorStyleDisabled() const {
   return StyleSet()->GetAuthorStyleDisabled();
 }
 
-void nsIPresShell::UpdatePreferenceStyles() {
+void PresShell::UpdatePreferenceStyles() {
   if (!mDocument) {
     return;
   }
@@ -1471,14 +1469,14 @@ void nsIPresShell::UpdatePreferenceStyles() {
   mPrefStyleSheet = newPrefSheet;
 }
 
-void nsIPresShell::RemovePreferenceStyles() {
+void PresShell::RemovePreferenceStyles() {
   if (mPrefStyleSheet) {
     StyleSet()->RemoveStyleSheet(StyleOrigin::UserAgent, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
 
-void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
+void PresShell::AddUserSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
   // service sheets (which are at the start), but before other user sheets; see
@@ -1513,14 +1511,14 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
   mDocument->ApplicableStylesChanged();
 }
 
-void nsIPresShell::AddAgentSheet(StyleSheet* aSheet) {
+void PresShell::AddAgentSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
   StyleSet()->AppendStyleSheet(StyleOrigin::UserAgent, aSheet);
   mDocument->ApplicableStylesChanged();
 }
 
-void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
+void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
   // Document specific "additional" Author sheets should be stronger than the
   // ones added with the StyleSheetService.
   StyleSheet* firstAuthorSheet = mDocument->GetFirstAdditionalAuthorSheet();
@@ -1534,7 +1532,7 @@ void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
   mDocument->ApplicableStylesChanged();
 }
 
-void nsIPresShell::RemoveSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
+void PresShell::RemoveSheet(StyleOrigin aOrigin, StyleSheet* aSheet) {
   StyleSet()->RemoveStyleSheet(aOrigin, aSheet);
   mDocument->ApplicableStylesChanged();
 }
@@ -2083,7 +2081,7 @@ void nsIPresShell::SetIgnoreFrameDestruction(bool aIgnore) {
   mIgnoreFrameDestruction = aIgnore;
 }
 
-void nsIPresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
+void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
   // We must remove these from FrameLayerBuilder::DisplayItemData::mFrameList
   // here, otherwise the DisplayItemData destructor will use the destroyed frame
   // when it tries to remove it from the (array) value of this property.
@@ -2523,7 +2521,7 @@ void PresShell::LoadComplete() {
 }
 
 #ifdef DEBUG
-void nsIPresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
+void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
   // XXXbz due to bug 372769, can't actually assert anything here...
   return;
 
@@ -2580,10 +2578,10 @@ void nsIPresShell::FlushPendingScrollAnchorAdjustments() {
   mPendingScrollAnchorAdjustment.Clear();
 }
 
-void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
-                                    IntrinsicDirty aIntrinsicDirty,
-                                    nsFrameState aBitToAdd,
-                                    ReflowRootHandling aRootHandling) {
+void PresShell::FrameNeedsReflow(nsIFrame* aFrame,
+                                 IntrinsicDirty aIntrinsicDirty,
+                                 nsFrameState aBitToAdd,
+                                 ReflowRootHandling aRootHandling) {
   MOZ_ASSERT(aBitToAdd == NS_FRAME_IS_DIRTY ||
                  aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN || !aBitToAdd,
              "Unexpected bits being added");
@@ -2745,7 +2743,7 @@ void nsIPresShell::FrameNeedsReflow(nsIFrame* aFrame,
   MaybeScheduleReflow();
 }
 
-void nsIPresShell::FrameNeedsToContinueReflow(nsIFrame* aFrame) {
+void PresShell::FrameNeedsToContinueReflow(nsIFrame* aFrame) {
   NS_ASSERTION(mIsReflowing, "Must be in reflow when marking path dirty.");
   MOZ_ASSERT(mCurrentReflowRoot, "Must have a current reflow root here");
   NS_ASSERTION(
@@ -7640,7 +7638,7 @@ Document* PresShell::GetPrimaryContentDocument() {
 }
 
 #ifdef DEBUG
-void nsIPresShell::ShowEventTargetDebug() {
+void PresShell::ShowEventTargetDebug() {
   if (nsFrame::GetShowEventTargetFrameBorder() && GetCurrentEventFrame()) {
     if (mDrawEventTargetFrame) {
       mDrawEventTargetFrame->InvalidateFrame();
@@ -9058,8 +9056,8 @@ bool nsIPresShell::ScheduleReflowOffTimer() {
   return true;
 }
 
-bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
-                            OverflowChangedTracker* aOverflowTracker) {
+bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
+                         OverflowChangedTracker* aOverflowTracker) {
 #ifdef MOZ_GECKO_PROFILER
   nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
@@ -9295,7 +9293,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 }
 
 #ifdef DEBUG
-void nsIPresShell::DoVerifyReflow() {
+void PresShell::DoVerifyReflow() {
   if (GetVerifyReflowEnable()) {
     // First synchronously render what we have so far so that we can
     // see it.
@@ -9793,7 +9791,7 @@ FindTopFrame(nsIFrame* aRoot)
 
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
-bool nsIPresShell::VerifyIncrementalReflow() {
+bool PresShell::VerifyIncrementalReflow() {
   if (VerifyReflowFlags::Noisy & gVerifyReflowFlags) {
     printf("Building Verification Tree...\n");
   }
@@ -10575,7 +10573,7 @@ size_t PresShell::SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const {
                                                 /* clear = */ false);
 }
 
-void nsIPresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
+void PresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
     const nsFrameList& childList =
@@ -10586,7 +10584,7 @@ void nsIPresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
   }
 }
 
-void nsIPresShell::CompleteChangeToVisualViewportSize() {
+void PresShell::CompleteChangeToVisualViewportSize() {
   if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
     rootScrollFrame->MarkScrollbarsDirtyForReflow();
   }
@@ -10602,7 +10600,7 @@ void nsIPresShell::CompleteChangeToVisualViewportSize() {
   }
 }
 
-void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
+void PresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
   if (!mVisualViewportSizeSet || mVisualViewportSize.width != aWidth ||
       mVisualViewportSize.height != aHeight) {
     mVisualViewportSizeSet = true;
@@ -10613,7 +10611,7 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
   }
 }
 
-void nsIPresShell::ResetVisualViewportSize() {
+void PresShell::ResetVisualViewportSize() {
   if (mVisualViewportSizeSet) {
     mVisualViewportSizeSet = false;
     mVisualViewportSize.width = 0;
@@ -10623,8 +10621,8 @@ void nsIPresShell::ResetVisualViewportSize() {
   }
 }
 
-bool nsIPresShell::SetVisualViewportOffset(
-    const nsPoint& aScrollOffset, const nsPoint& aPrevLayoutScrollPos) {
+bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
+                                        const nsPoint& aPrevLayoutScrollPos) {
   bool didChange = false;
   if (GetVisualViewportOffset() != aScrollOffset) {
     nsPoint prevOffset = GetVisualViewportOffset();
@@ -10687,7 +10685,7 @@ void nsIPresShell::AcknowledgePendingVisualScrollUpdate() {
   mPendingVisualScrollUpdate->mAcknowledged = true;
 }
 
-nsPoint nsIPresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
+nsPoint PresShell::GetVisualViewportOffsetRelativeToLayoutViewport() const {
   return GetVisualViewportOffset() - GetLayoutViewportOffset();
 }
 
@@ -10839,8 +10837,8 @@ nsresult nsIPresShell::HasRuleProcessorUsedByMultipleStyleSets(
   return NS_OK;
 }
 
-void nsIPresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
-                                                     uint32_t aSheetType) {
+void PresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
+                                                  uint32_t aSheetType) {
   switch (aSheetType) {
     case nsIStyleSheetService::AGENT_SHEET:
       AddAgentSheet(aSheet);
@@ -10857,8 +10855,8 @@ void nsIPresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
   }
 }
 
-void nsIPresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
-                                                       uint32_t aSheetType) {
+void PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
+                                                    uint32_t aSheetType) {
   RemoveSheet(ToOrigin(aSheetType), aSheet);
 }
 

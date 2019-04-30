@@ -21,6 +21,7 @@
 #include "mozilla/LookAndFeel.h"  // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TypeTraits.h"
@@ -32,7 +33,6 @@
 #include "nsCSSPseudoElements.h"    // For PseudoStyleType
 #include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 #include "nsIFrame.h"
-#include "nsIPresShellInlines.h"
 #include "nsIScriptError.h"
 #include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
