@@ -4340,6 +4340,33 @@ float MOZ_MAYBE_UNUSED GetPref<float>(const char* aName, float aDefaultValue) {
   return Preferences::GetFloat(aName, aDefaultValue);
 }
 
+static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
+                                      const char* path) {
+  nsZipFind* findPtr;
+  nsAutoPtr<nsZipFind> find;
+  nsTArray<nsCString> prefEntries;
+  const char* entryName;
+  uint16_t entryNameLen;
+
+  nsresult rv = jarReader->FindInit(path, &findPtr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  find = findPtr;
+  while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
+    prefEntries.AppendElement(Substring(entryName, entryNameLen));
+  }
+
+  prefEntries.Sort();
+  for (uint32_t i = prefEntries.Length(); i--;) {
+    rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error parsing preferences.");
+    }
+  }
+
+  return NS_OK;
+}
+
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
 /* static */ Result<Ok, const char*> Preferences::InitInitialObjects(
@@ -4441,22 +4468,17 @@ float MOZ_MAYBE_UNUSED GetPref<float>(const char* aName, float aDefaultValue) {
     NS_ENSURE_SUCCESS(rv, Err("pref_ReadPrefFromJar() failed"));
 
     // Load jar:$gre/omni.jar!/defaults/pref/*.js.
-    rv = jarReader->FindInit("defaults/pref/*.js$", &findPtr);
-    NS_ENSURE_SUCCESS(rv, Err("jarReader->FindInit() failed"));
+    rv = pref_ReadDefaultPrefs(jarReader, "defaults/pref/*.js$");
+    NS_ENSURE_SUCCESS(rv, Err("pref_ReadDefaultPrefs() failed"));
 
-    find = findPtr;
-    while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-      prefEntries.AppendElement(Substring(entryName, entryNameLen));
-    }
-
-    prefEntries.Sort();
-    for (uint32_t i = prefEntries.Length(); i--;) {
-      rv = pref_ReadPrefFromJar(jarReader, prefEntries[i].get());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Error parsing preferences.");
-      }
-    }
-
+#ifdef MOZ_WIDGET_ANDROID
+    // Load jar:$gre/omni.jar!/defaults/pref/$MOZ_ANDROID_CPU_ABI/*.js.
+    nsAutoCString path;
+    path.AppendPrintf("jar:$gre/omni.jar!/defaults/pref/%s/*.js$", abi);
+    pref_ReadDefaultPrefs(jarReader, path.get());
+    NS_ENSURE_SUCCESS(
+        rv, Err("architecture-specific pref_ReadDefaultPrefs() failed"));
+#endif
   } else {
     // Load $gre/greprefs.js.
     nsCOMPtr<nsIFile> greprefsFile;
