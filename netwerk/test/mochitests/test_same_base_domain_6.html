@@ -15,7 +15,7 @@
       SpecialPowers.pushPrefEnv({set: [
         ["network.proxy.allow_hijacking_localhost", true]
       ]}).then(function() {
-        setupTest('http://127.0.0.1:8888/tests/extensions/cookie/test/file_loopback_inner.html', 5, 2);
+        setupTest('http://127.0.0.1:8888/tests/netwerk/test/mochitests/file_loopback_inner.html', 5, 2);
       });
     }
   </script>

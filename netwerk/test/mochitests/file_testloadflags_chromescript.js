@@ -42,7 +42,7 @@ obs.prototype = {
 
     // Ignore notifications we don't care about (like favicons)
     if (!channel.URI.spec.includes(
-          "http://example.org/tests/extensions/cookie/test/")) {
+          "http://example.org/tests/netwerk/test/mochitests/")) {
       info("ignoring this one");
       return;
     }
