@@ -111,6 +111,30 @@ class PresShell final : public nsIPresShell,
   // clears that capture.
   static void ClearMouseCapture(nsIFrame* aFrame);
 
+#ifdef ACCESSIBILITY
+  /**
+   * Return the document accessible for this PresShell if there is one.
+   */
+  a11y::DocAccessible* GetDocAccessible() const { return mDocAccessible; }
+
+  /**
+   * Set the document accessible for this PresShell.
+   */
+  void SetDocAccessible(a11y::DocAccessible* aDocAccessible) {
+    mDocAccessible = aDocAccessible;
+  }
+
+  /**
+   * Return true if accessibility is active.
+   */
+  static bool IsAccessibilityActive();
+
+  /**
+   * Return accessibility service if accessibility is active.
+   */
+  static nsAccessibilityService* GetAccessibilityService();
+#endif  // #ifdef ACCESSIBILITY
+
   void Init(Document*, nsPresContext*, nsViewManager*);
   void Destroy() override;
 
@@ -1778,6 +1802,10 @@ class PresShell final : public nsIPresShell,
   // all our dirty roots.  mContentToScrollTo has a content property storing the
   // details for the scroll operation, see ScrollIntoViewData above.
   nsCOMPtr<nsIContent> mContentToScrollTo;
+
+#ifdef ACCESSIBILITY
+  a11y::DocAccessible* mDocAccessible;
+#endif  // #ifdef ACCESSIBILITY
 
   nsSize mVisualViewportSize;
 
