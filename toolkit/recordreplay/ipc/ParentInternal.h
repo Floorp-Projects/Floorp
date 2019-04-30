@@ -159,13 +159,8 @@ class ChildProcessInfo {
   bool IsRecording() { return mRecording; }
   bool IsPaused() { return mPaused; }
 
-  void SendMessage(const Message& aMessage);
-
-  // Recover to the same state as another process.
-  void Recover(ChildProcessInfo* aTargetProcess);
-
-  // Recover to be paused at a checkpoint with no breakpoints set.
-  void RecoverToCheckpoint(size_t aCheckpoint);
+  // Send a message over the underlying channel.
+  void SendMessage(Message&& aMessage);
 
   // Handle incoming messages from this process (and no others) until it pauses.
   // The return value is null if it is already paused, otherwise the message
