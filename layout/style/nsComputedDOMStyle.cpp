@@ -13,12 +13,12 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPtr.h"
 
 #include "nsError.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
-#include "nsIPresShellInlines.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"

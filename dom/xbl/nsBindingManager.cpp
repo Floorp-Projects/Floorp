@@ -19,7 +19,6 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
-#include "nsIPresShellInlines.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
 #include "mozilla/dom/XMLDocument.h"
@@ -51,6 +50,7 @@
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;

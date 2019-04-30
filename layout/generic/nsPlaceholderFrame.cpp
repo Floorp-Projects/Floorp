@@ -16,6 +16,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -23,7 +24,6 @@
 #include "nsPresContext.h"
 #include "nsIFrameInlines.h"
 #include "nsIContentInlines.h"
-#include "nsIPresShellInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
