@@ -217,6 +217,9 @@ static uint32_t AvailableFeatures() {
 #if !defined(MOZ_TASK_TRACER)
   ProfilerFeature::ClearTaskTracer(features);
 #endif
+#if !(defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY))
+  ProfilerFeature::ClearMemory(features);
+#endif
   if (!JS::TraceLoggerSupported()) {
     ProfilerFeature::ClearJSTracer(features);
   }
@@ -2962,6 +2965,14 @@ void profiler_init(void* aStackTop) {
                           filters.length(), duration);
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  if (ProfilerFeature::HasMemory(features)) {
+    // start counting memory allocations (outside of lock because this may call
+    // profiler_add_sampled_counter which would attempt to take the lock.)
+    mozilla::profiler::install_memory_counter(true);
+  }
+#endif
+
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
   NotifyProfilerStarted(capacity, duration, interval, features, filters.begin(),
@@ -3391,8 +3402,11 @@ void profiler_start(uint32_t aCapacity, double aInterval, uint32_t aFeatures,
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
-  // start counting memory allocations (outside of lock)
-  mozilla::profiler::install_memory_counter(true);
+  if (ProfilerFeature::HasMemory(aFeatures)) {
+    // start counting memory allocations (outside of lock because this may call
+    // profiler_add_sampled_counter which would attempt to take the lock.)
+    mozilla::profiler::install_memory_counter(true);
+  }
 #endif
 
   // We do these operations with gPSMutex unlocked. The comments in
@@ -3428,6 +3442,12 @@ void profiler_ensure_started(uint32_t aCapacity, double aInterval,
                             aFilters, aFilterCount)) {
         // Stop and restart with different settings.
         samplerThread = locked_profiler_stop(lock);
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+        if (!ProfilerFeature::HasMemory(aFeatures)) {
+          // Ensure we don't record memory measurements anymore (if we were).
+          mozilla::profiler::install_memory_counter(false);
+        }
+#endif
         locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
                               aFilterCount, aDuration);
         startedProfiler = true;
@@ -3440,6 +3460,15 @@ void profiler_ensure_started(uint32_t aCapacity, double aInterval,
     }
   }
 
+#if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
+  if (startedProfiler && ProfilerFeature::HasMemory(aFeatures)) {
+    // start counting memory allocations (outside of lock because this may
+    // call profiler_add_sampled_counter which would attempt to take the
+    // lock.)
+    mozilla::profiler::install_memory_counter(true);
+  }
+#endif
+
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
@@ -3447,6 +3476,7 @@ void profiler_ensure_started(uint32_t aCapacity, double aInterval,
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
+
   if (startedProfiler) {
     NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
                           aFilterCount);
