@@ -31,6 +31,10 @@ struct GCPolicy<RefPtr<T>> {
       (*tp)->Trace(trc);
     }
   }
+
+  static bool isValid(const RefPtr<T>& v) {
+    return !v || GCPolicy<T>::isValid(*v.get());
+  }
 };
 }  // namespace JS
 

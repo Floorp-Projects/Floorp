@@ -639,11 +639,11 @@ class MOZ_STACK_CLASS MutableHandle
  public:
   void set(const T& v) {
     *ptr = v;
-    MOZ_ASSERT(detail::GCPolicyWithIsValid<T>::isValid(*ptr));
+    MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
   }
   void set(T&& v) {
     *ptr = std::move(v);
-    MOZ_ASSERT(detail::GCPolicyWithIsValid<T>::isValid(*ptr));
+    MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
   }
 
   /*
@@ -987,6 +987,12 @@ using MaybeWrapped =
                                       JS::RootKind::Traceable,
                                   js::DispatchWrapper<T>, T>::Type;
 
+// Dummy types to make it easier to understand template overload preference
+// ordering.
+struct FallbackOverload {};
+struct PreferredOverload : FallbackOverload {};
+using OverloadSelector = PreferredOverload;
+
 } /* namespace detail */
 
 /**
@@ -1046,7 +1052,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   template <typename RootingContext, typename S>
   Rooted(const RootingContext& cx, S&& initial)
       : ptr(std::forward<S>(initial)) {
-    MOZ_ASSERT(detail::GCPolicyWithIsValid<T>::isValid(ptr));
+    MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     registerWithRootLists(rootLists(cx));
   }
 
@@ -1063,11 +1069,11 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
    */
   void set(const T& value) {
     ptr = value;
-    MOZ_ASSERT(detail::GCPolicyWithIsValid<T>::isValid(ptr));
+    MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
   }
   void set(T&& value) {
     ptr = std::move(value);
-    MOZ_ASSERT(detail::GCPolicyWithIsValid<T>::isValid(ptr));
+    MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
   }
 
   DECLARE_POINTER_CONSTREF_OPS(T);
