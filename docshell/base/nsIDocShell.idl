@@ -75,6 +75,8 @@ webidl Document;
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
+  void setCancelContentJSEpoch(in long aEpoch);
+
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing this interface.  If it can't be loaded here

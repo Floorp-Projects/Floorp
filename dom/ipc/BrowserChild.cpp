@@ -407,7 +407,8 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
     mPendingDocShellIsActive(false), mPendingDocShellReceivedMessage(false),
     mPendingRenderLayers(false),
     mPendingRenderLayersReceivedMessage(false), mPendingLayersObserverEpoch{0},
-    mPendingDocShellBlockers(0), mWidgetNativeData(0) {
+    mPendingDocShellBlockers(0), mCancelContentJSEpoch(0),
+    mWidgetNativeData(0) {
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
@@ -3304,9 +3305,16 @@ void BrowserChild::PaintWhileInterruptingJS(
 
 nsresult BrowserChild::CanCancelContentJS(
     nsIRemoteTab::NavigationType aNavigationType, int32_t aNavigationIndex,
-    nsIURI* aNavigationURI, bool* aCanCancel) {
+    nsIURI* aNavigationURI, int32_t aEpoch, bool* aCanCancel) {
   nsresult rv;
   *aCanCancel = false;
+
+  if (aEpoch <= mCancelContentJSEpoch) {
+    // The next page loaded before we got here, so we shouldn't try to cancel
+    // the content JS.
+    TABC_LOG("Unable to cancel content JS; the next page is already loaded!\n");
+    return NS_OK;
+  }
 
   nsCOMPtr<nsISHistory> history = do_GetInterface(WebNavigation());
   if (!history) {

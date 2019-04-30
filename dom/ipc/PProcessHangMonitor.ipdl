@@ -50,7 +50,7 @@ child:
 
   async CancelContentJSExecutionIfRunning(
       TabId tabId, NavigationType aNavigationType,
-      int32_t aNavigationIndex, nsCString? aNavigationURI);
+      int32_t aNavigationIndex, nsCString? aNavigationURI, int32_t aEpoch);
 };
 
 } // namespace mozilla
