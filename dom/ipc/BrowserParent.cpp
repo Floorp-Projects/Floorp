@@ -13,6 +13,7 @@
 #  include "nsAccessibilityService.h"
 #endif
 #include "mozilla/BrowserElementParent.h"
+#include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -3121,9 +3122,16 @@ BrowserParent::GetContentBlockingLog(Promise** aPromise) {
 }
 
 NS_IMETHODIMP
-BrowserParent::MaybeCancelContentJSExecution() {
+BrowserParent::MaybeCancelContentJSExecutionFromScript(
+    nsIRemoteTab::NavigationType aNavigationType,
+    JS::Handle<JS::Value> aCancelContentJSOptions, JSContext* aCx) {
+  dom::CancelContentJSOptions cancelContentJSOptions;
+  if (!cancelContentJSOptions.Init(aCx, aCancelContentJSOptions)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   if (StaticPrefs::dom_ipc_cancel_content_js_when_navigating()) {
-    Manager()->CancelContentJSExecutionIfRunning(this);
+    Manager()->CancelContentJSExecutionIfRunning(this, aNavigationType,
+                                                 cancelContentJSOptions);
   }
   return NS_OK;
 }

@@ -612,6 +612,10 @@ class BrowserChild final : public BrowserChildBase,
   void PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch,
                                 bool aForceRepaint);
 
+  nsresult CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
+                              int32_t aNavigationIndex, nsIURI* aNavigationURI,
+                              bool* aCanCancel);
+
   layers::LayersObserverEpoch LayersObserverEpoch() const {
     return mLayersObserverEpoch;
   }
@@ -807,6 +811,9 @@ class BrowserChild final : public BrowserChildBase,
                                        nsIRequest* aRequest,
                                        Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
+
+  nsresult CanCancelContentJSBetweenURIs(nsIURI* aFirstURI, nsIURI* aSecondURI,
+                                         bool* aCanCancel);
 
   class DelayedDeleteRunnable;
 
