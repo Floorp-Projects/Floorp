@@ -38,6 +38,8 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.concept.storage.VisitType
+import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -285,12 +287,37 @@ class SystemEngineViewTest {
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
 
         engineSession.settings.historyTrackingDelegate = historyDelegate
+        `when`(historyDelegate.shouldStoreUri(any())).thenReturn(true)
 
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(false))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(VisitType.LINK))
 
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", true)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(true))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(VisitType.RELOAD))
+    }
+
+    @Test
+    fun `WebView client checks with the delegate if the URI visit should be recorded`() = runBlocking {
+        val engineSession = SystemEngineSession(getApplicationContext())
+        val engineView = SystemEngineView(getApplicationContext())
+        val webView: WebView = mock()
+        engineView.render(engineSession)
+
+        val historyDelegate: HistoryTrackingDelegate = mock()
+        engineSession.settings.historyTrackingDelegate = historyDelegate
+
+        `when`(historyDelegate.shouldStoreUri("https://www.mozilla.com")).thenReturn(true)
+
+        // Verify that engine session asked delegate if uri should be stored.
+        engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(VisitType.LINK))
+        verify(historyDelegate).shouldStoreUri("https://www.mozilla.com")
+
+        // Verify that engine won't try to store a uri that delegate doesn't want.
+        engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com/not-allowed", false)
+        verify(historyDelegate, never()).onVisited(eq("https://www.mozilla.com/not-allowed"), any())
+        verify(historyDelegate).shouldStoreUri("https://www.mozilla.com/not-allowed")
+        Unit
     }
 
     @Test
@@ -299,8 +326,12 @@ class SystemEngineViewTest {
 
         val engineView = SystemEngineView(getApplicationContext())
         val historyDelegate = object : HistoryTrackingDelegate {
-            override suspend fun onVisited(uri: String, isReload: Boolean) {
+            override suspend fun onVisited(uri: String, type: VisitType) {
                 fail()
+            }
+
+            override fun shouldStoreUri(uri: String): Boolean {
+                return true
             }
 
             override suspend fun onTitleChanged(uri: String, title: String) {
