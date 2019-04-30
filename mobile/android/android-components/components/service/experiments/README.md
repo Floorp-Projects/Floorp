@@ -2,6 +2,11 @@
 
 An Android SDK for running experiments on user segments in multiple branches.
 
+Contents:
+- [Usage](#usage)
+- [Testing experiments](#testing-experiments)
+- [Experiments format for Kinto](#experiments-format-for-kinto)
+
 ## Usage
 
 ### Setting up the dependency
@@ -50,6 +55,21 @@ Experiments.withExperiment("button-color-experiment") {
     }
 }
 ```
+
+## Testing experiments
+
+### Testing on the dev server
+
+For any technical tests, we do have a Kinto dev server available, which can be freely configured & gets reset daily.
+The admin interface is [here](https://kinto.dev.mozaws.net/v1/admin/). For setting up a testing setup we can:
+- [Create a collection in the main bucket](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/create).
+  - The *collection id* should be `mobile-experiments`.
+  - The *JSON schema* should have [this content](https://gist.github.com/georgf/cbf4c145ca0e202ad0d25a5a83e06f38/#file-json-schema-json).
+  - The *UI schema* should have [this content](https://gist.github.com/georgf/cbf4c145ca0e202ad0d25a5a83e06f38/#file-ui-schema-json).
+  - The *Records list columns* should contain `id` and `description`.
+  - Click *Create collection*
+- In the [`mobile-experiments` record list](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/mobile-experiments/records), create new entries for experiments as needed.
+- In the mobile application, use the debug commands below to switch to the `dev` endpoint.
 
 ### ExperimentsDebugActivity usage
 Experiments exports the [`ExperimentsDebugActivity`](src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt)
