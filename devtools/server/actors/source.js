@@ -8,7 +8,6 @@
 
 const { Ci } = require("chrome");
 const { setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
-const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
@@ -16,6 +15,7 @@ const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 
 loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
+loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
 
 function isEvalSource(source) {
   const introType = source.introductionType;
@@ -327,8 +327,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    * Handler for the "onSource" packet.
    * @return Object
    *         The return of this function contains a field `contentType`, and
-   *         a field `source`. `source` can either be an arrayBufferActor grip,
-   *         or a LongStringActor grip.
+   *         a field `source`. `source` can either be an ArrayBuffer or
+   *         a LongString.
    */
   onSource: function() {
     return Promise.resolve(this._init)
@@ -341,10 +341,10 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
             contentType,
           };
         }
+
         return {
-          source: createValueGrip(content, this.threadActor.threadLifetimePool,
-            this.threadActor.objectGrip),
-          contentType: contentType,
+          source: new LongStringActor(this.threadActor.conn, content),
+          contentType,
         };
       })
       .catch(error => {
