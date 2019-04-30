@@ -912,7 +912,7 @@ pub struct RenderPass {
     pub kind: RenderPassKind,
     /// The set of tasks to be performed in this pass, as indices into the
     /// `RenderTaskTree`.
-    tasks: Vec<RenderTaskId>,
+    pub tasks: Vec<RenderTaskId>,
 }
 
 impl RenderPass {

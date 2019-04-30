@@ -1146,6 +1146,20 @@ class ScriptSource {
   }
 
  private:
+  template <typename Unit, XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeUncompressedData(XDRState<mode>* const xdr,
+                                                     ScriptSource* const ss,
+                                                     bool retrievable);
+
+  template <typename Unit, XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
+                                                   ScriptSource* const ss,
+                                                   bool retrievable);
+
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult codeBinASTData(XDRState<mode>* const xdr,
+                                               ScriptSource* const ss);
+
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult xdrData(XDRState<mode>* const xdr,
                                         ScriptSource* const ss);
