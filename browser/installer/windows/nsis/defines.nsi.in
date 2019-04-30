@@ -118,6 +118,10 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
+#ifdef MOZ_BITS_DOWNLOAD
+!define MOZ_BITS_DOWNLOAD
+#endif
+
 !if "@AB_CD@" == "en-US"
 !define MOZ_OPTIONAL_EXTENSIONS
 !else if "@AB_CD@" == "zh-CN"
