@@ -303,6 +303,7 @@ var BrowserUtils = {
       if (elt instanceof win.HTMLTextAreaElement ||
           elt instanceof win.HTMLSelectElement ||
           elt instanceof win.HTMLObjectElement ||
+          elt instanceof win.HTMLIFrameElement ||
           elt instanceof win.HTMLEmbedElement)
         return false;
     }
