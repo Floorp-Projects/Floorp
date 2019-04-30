@@ -32,7 +32,6 @@ pref("devtools.debugger.remote-enabled", true, sticky);
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
 pref("devtools.debugger.log.verbose", false);
-pref("devtools.debugger.quiet", false);
 
 pref("devtools.debugger.remote-port", 6000);
 pref("devtools.debugger.remote-websocket", false);
