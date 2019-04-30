@@ -393,11 +393,13 @@ class GeckoEngineSession(
             lastVisitedURL: String?,
             flags: Int
         ): GeckoResult<Boolean>? {
+            // Don't track:
+            // - private visits
+            // - error pages
+            // - non-top level visits (i.e. iframes).
             if (privateMode ||
                 (flags and GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL) == 0 ||
                 (flags and GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR) != 0) {
-
-                // Don't track visits in private mode, or error pages, even if they're top-level visits.
                 return GeckoResult.fromValue(false)
             }
 
