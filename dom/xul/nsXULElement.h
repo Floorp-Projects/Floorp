@@ -324,6 +324,7 @@ class nsXULElement : public nsStyledElement {
 
   // nsINode
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PreHandleEvent(
       mozilla::EventChainVisitor& aVisitor) override;
   // nsIContent
@@ -515,7 +516,7 @@ class nsXULElement : public nsStyledElement {
   already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(
       mozilla::ErrorResult& rv);
   void Click(mozilla::dom::CallerType aCallerType);
-  void DoCommand();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoCommand();
   // Style() inherited from nsStyledElement
 
   nsINode* GetScopeChainParent() const override {
@@ -624,6 +625,7 @@ class nsXULElement : public nsStyledElement {
 
   bool IsEventStoppedFromAnonymousScrollbar(mozilla::EventMessage aMessage);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult DispatchXULCommand(const mozilla::EventChainVisitor& aVisitor,
                               nsAutoString& aCommand);
 };

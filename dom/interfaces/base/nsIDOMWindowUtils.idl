@@ -941,7 +941,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute float fullZoom;
 
   /**
-   * Dispatches aEvent as a trusted event via the nsIPresShell object of the
+   * Dispatches aEvent as a trusted event via the PresShell object of the
    * window's document.
    * The event is dispatched to aTarget, which should be an object
    * which implements nsIContent interface (#element, #text, etc).

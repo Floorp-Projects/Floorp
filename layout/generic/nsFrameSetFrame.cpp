@@ -16,6 +16,7 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -24,7 +25,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIContentInlines.h"
-#include "nsIPresShellInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLParts.h"

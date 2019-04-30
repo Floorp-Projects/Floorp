@@ -202,6 +202,7 @@ class nsXBLPrototypeHandler {
   MOZ_CAN_RUN_SCRIPT
   nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget,
                               mozilla::dom::Event* aEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult DispatchXULKeyCommand(mozilla::dom::Event* aEvent);
   nsresult EnsureEventHandler(mozilla::dom::AutoJSAPI& jsapi, nsAtom* aName,
                               JS::MutableHandle<JSObject*> aHandler);

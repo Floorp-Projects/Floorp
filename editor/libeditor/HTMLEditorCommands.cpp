@@ -11,10 +11,10 @@
 #include "mozilla/HTMLEditor.h"  // for HTMLEditor
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
+#include "nsAtom.h"                   // for nsAtom, nsStaticAtom, etc
 #include "nsCommandParams.h"          // for nsCommandParams, etc
 #include "nsComponentManagerUtils.h"  // for do_CreateInstance
 #include "nsGkAtoms.h"                // for nsGkAtoms, nsGkAtoms::font, etc
-#include "nsAtom.h"                   // for nsAtom, etc
 #include "nsIClipboard.h"             // for nsIClipboard, etc
 #include "nsIEditingSession.h"
 #include "nsLiteralString.h"  // for NS_LITERAL_STRING
@@ -46,10 +46,7 @@ static nsresult GetListState(HTMLEditor* aHTMLEditor, bool* aMixed,
  * mozilla::StateUpdatingCommandBase
  *****************************************************************************/
 
-nsRefPtrHashtable<nsCharPtrHashKey, nsAtom>
-    StateUpdatingCommandBase::sTagNameTable;
-
-bool StateUpdatingCommandBase::IsCommandEnabled(const char* aCommandName,
+bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
                                                 TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -57,34 +54,33 @@ bool StateUpdatingCommandBase::IsCommandEnabled(const char* aCommandName,
   if (!aTextEditor->IsSelectionEditable()) {
     return false;
   }
-  if (!strcmp(aCommandName, "cmd_absPos")) {
+  if (aCommand == Command::FormatAbsolutePosition) {
     HTMLEditor* htmlEditor = aTextEditor->AsHTMLEditor();
     return htmlEditor && htmlEditor->IsAbsolutePositionEditorEnabled();
   }
   return true;
 }
 
-nsresult StateUpdatingCommandBase::DoCommand(const char* aCommandName,
+nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
                                              TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<nsAtom> tagName = TagName(aCommandName);
+  nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return ToggleState(tagName, MOZ_KnownLive(htmlEditor));
+  return ToggleState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor));
 }
 
 nsresult StateUpdatingCommandBase::DoCommandParams(
-    const char* aCommandName, nsCommandParams* aParams,
-    TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult StateUpdatingCommandBase::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   if (!aTextEditor) {
     return NS_OK;
@@ -93,11 +89,12 @@ nsresult StateUpdatingCommandBase::GetCommandStateParams(
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<nsAtom> tagName = TagName(aCommandName);
+  nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return GetCurrentState(tagName, MOZ_KnownLive(htmlEditor), aParams);
+  return GetCurrentState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor),
+                         aParams);
 }
 
 /*****************************************************************************
@@ -106,7 +103,7 @@ nsresult StateUpdatingCommandBase::GetCommandStateParams(
 
 StaticRefPtr<PasteNoFormattingCommand> PasteNoFormattingCommand::sInstance;
 
-bool PasteNoFormattingCommand::IsCommandEnabled(const char* aCommandName,
+bool PasteNoFormattingCommand::IsCommandEnabled(Command aCommand,
                                                 TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -122,7 +119,7 @@ bool PasteNoFormattingCommand::IsCommandEnabled(const char* aCommandName,
   return htmlEditor->CanPaste(nsIClipboard::kGlobalClipboard);
 }
 
-nsresult PasteNoFormattingCommand::DoCommand(const char* aCommandName,
+nsresult PasteNoFormattingCommand::DoCommand(Command aCommand,
                                              TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
@@ -134,16 +131,15 @@ nsresult PasteNoFormattingCommand::DoCommand(const char* aCommandName,
 }
 
 nsresult PasteNoFormattingCommand::DoCommandParams(
-    const char* aCommandName, nsCommandParams* aParams,
-    TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult PasteNoFormattingCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -372,7 +368,7 @@ nsresult ListItemCommand::ToggleState(nsAtom* aTagName,
 
 StaticRefPtr<RemoveListCommand> RemoveListCommand::sInstance;
 
-bool RemoveListCommand::IsCommandEnabled(const char* aCommandName,
+bool RemoveListCommand::IsCommandEnabled(Command aCommand,
                                          TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -397,7 +393,7 @@ bool RemoveListCommand::IsCommandEnabled(const char* aCommandName,
   return bMixed || !localName.IsEmpty();
 }
 
-nsresult RemoveListCommand::DoCommand(const char* aCommandName,
+nsresult RemoveListCommand::DoCommand(Command aCommand,
                                       TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -407,17 +403,17 @@ nsresult RemoveListCommand::DoCommand(const char* aCommandName,
   return htmlEditor->RemoveList(EmptyString());
 }
 
-nsresult RemoveListCommand::DoCommandParams(const char* aCommandName,
+nsresult RemoveListCommand::DoCommandParams(Command aCommand,
                                             nsCommandParams* aParams,
                                             TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult RemoveListCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -426,7 +422,7 @@ nsresult RemoveListCommand::GetCommandStateParams(
 
 StaticRefPtr<IndentCommand> IndentCommand::sInstance;
 
-bool IndentCommand::IsCommandEnabled(const char* aCommandName,
+bool IndentCommand::IsCommandEnabled(Command aCommand,
                                      TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -434,7 +430,7 @@ bool IndentCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult IndentCommand::DoCommand(const char* aCommandName,
+nsresult IndentCommand::DoCommand(Command aCommand,
                                   TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -447,17 +443,17 @@ nsresult IndentCommand::DoCommand(const char* aCommandName,
   return NS_OK;
 }
 
-nsresult IndentCommand::DoCommandParams(const char* aCommandName,
+nsresult IndentCommand::DoCommandParams(Command aCommand,
                                         nsCommandParams* aParams,
                                         TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult IndentCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -466,7 +462,7 @@ nsresult IndentCommand::GetCommandStateParams(
 
 StaticRefPtr<OutdentCommand> OutdentCommand::sInstance;
 
-bool OutdentCommand::IsCommandEnabled(const char* aCommandName,
+bool OutdentCommand::IsCommandEnabled(Command aCommand,
                                       TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -474,7 +470,7 @@ bool OutdentCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult OutdentCommand::DoCommand(const char* aCommandName,
+nsresult OutdentCommand::DoCommand(Command aCommand,
                                    TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -487,24 +483,24 @@ nsresult OutdentCommand::DoCommand(const char* aCommandName,
   return NS_OK;
 }
 
-nsresult OutdentCommand::DoCommandParams(const char* aCommandName,
+nsresult OutdentCommand::DoCommandParams(Command aCommand,
                                          nsCommandParams* aParams,
                                          TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult OutdentCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
  * mozilla::MultiStateCommandBase
  *****************************************************************************/
 
-bool MultiStateCommandBase::IsCommandEnabled(const char* aCommandName,
+bool MultiStateCommandBase::IsCommandEnabled(Command aCommand,
                                              TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -513,14 +509,14 @@ bool MultiStateCommandBase::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult MultiStateCommandBase::DoCommand(const char* aCommandName,
+nsresult MultiStateCommandBase::DoCommand(Command aCommand,
                                           TextEditor& aTextEditor) const {
   NS_WARNING(
       "who is calling MultiStateCommandBase::DoCommand (no implementation)?");
   return NS_OK;
 }
 
-nsresult MultiStateCommandBase::DoCommandParams(const char* aCommandName,
+nsresult MultiStateCommandBase::DoCommandParams(Command aCommand,
                                                 nsCommandParams* aParams,
                                                 TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
@@ -542,7 +538,7 @@ nsresult MultiStateCommandBase::DoCommandParams(const char* aCommandName,
 }
 
 nsresult MultiStateCommandBase::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   if (!aTextEditor) {
     return NS_OK;
@@ -950,7 +946,7 @@ nsresult AbsolutePositioningCommand::ToggleState(
 
 StaticRefPtr<DecreaseZIndexCommand> DecreaseZIndexCommand::sInstance;
 
-bool DecreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
+bool DecreaseZIndexCommand::IsCommandEnabled(Command aCommand,
                                              TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -969,7 +965,7 @@ bool DecreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
   return htmlEditor->GetZIndex(*positionedElement) > 0;
 }
 
-nsresult DecreaseZIndexCommand::DoCommand(const char* aCommandName,
+nsresult DecreaseZIndexCommand::DoCommand(Command aCommand,
                                           TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
@@ -978,17 +974,17 @@ nsresult DecreaseZIndexCommand::DoCommand(const char* aCommandName,
   return htmlEditor->AddZIndex(-1);
 }
 
-nsresult DecreaseZIndexCommand::DoCommandParams(const char* aCommandName,
+nsresult DecreaseZIndexCommand::DoCommandParams(Command aCommand,
                                                 nsCommandParams* aParams,
                                                 TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult DecreaseZIndexCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -997,7 +993,7 @@ nsresult DecreaseZIndexCommand::GetCommandStateParams(
 
 StaticRefPtr<IncreaseZIndexCommand> IncreaseZIndexCommand::sInstance;
 
-bool IncreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
+bool IncreaseZIndexCommand::IsCommandEnabled(Command aCommand,
                                              TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1012,7 +1008,7 @@ bool IncreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
   return !!htmlEditor->GetPositionedElement();
 }
 
-nsresult IncreaseZIndexCommand::DoCommand(const char* aCommandName,
+nsresult IncreaseZIndexCommand::DoCommand(Command aCommand,
                                           TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
@@ -1021,17 +1017,17 @@ nsresult IncreaseZIndexCommand::DoCommand(const char* aCommandName,
   return htmlEditor->AddZIndex(1);
 }
 
-nsresult IncreaseZIndexCommand::DoCommandParams(const char* aCommandName,
+nsresult IncreaseZIndexCommand::DoCommandParams(Command aCommand,
                                                 nsCommandParams* aParams,
                                                 TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult IncreaseZIndexCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -1040,7 +1036,7 @@ nsresult IncreaseZIndexCommand::GetCommandStateParams(
 
 StaticRefPtr<RemoveStylesCommand> RemoveStylesCommand::sInstance;
 
-bool RemoveStylesCommand::IsCommandEnabled(const char* aCommandName,
+bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
                                            TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1049,7 +1045,7 @@ bool RemoveStylesCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult RemoveStylesCommand::DoCommand(const char* aCommandName,
+nsresult RemoveStylesCommand::DoCommand(Command aCommand,
                                         TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -1058,17 +1054,17 @@ nsresult RemoveStylesCommand::DoCommand(const char* aCommandName,
   return MOZ_KnownLive(htmlEditor)->RemoveAllInlineProperties();
 }
 
-nsresult RemoveStylesCommand::DoCommandParams(const char* aCommandName,
+nsresult RemoveStylesCommand::DoCommandParams(Command aCommand,
                                               nsCommandParams* aParams,
                                               TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult RemoveStylesCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -1077,7 +1073,7 @@ nsresult RemoveStylesCommand::GetCommandStateParams(
 
 StaticRefPtr<IncreaseFontSizeCommand> IncreaseFontSizeCommand::sInstance;
 
-bool IncreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
+bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
                                                TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1086,7 +1082,7 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult IncreaseFontSizeCommand::DoCommand(const char* aCommandName,
+nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
                                             TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -1096,16 +1092,15 @@ nsresult IncreaseFontSizeCommand::DoCommand(const char* aCommandName,
 }
 
 nsresult IncreaseFontSizeCommand::DoCommandParams(
-    const char* aCommandName, nsCommandParams* aParams,
-    TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult IncreaseFontSizeCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -1114,7 +1109,7 @@ nsresult IncreaseFontSizeCommand::GetCommandStateParams(
 
 StaticRefPtr<DecreaseFontSizeCommand> DecreaseFontSizeCommand::sInstance;
 
-bool DecreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
+bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
                                                TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1123,7 +1118,7 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult DecreaseFontSizeCommand::DoCommand(const char* aCommandName,
+nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
                                             TextEditor& aTextEditor) const {
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (!htmlEditor) {
@@ -1133,16 +1128,15 @@ nsresult DecreaseFontSizeCommand::DoCommand(const char* aCommandName,
 }
 
 nsresult DecreaseFontSizeCommand::DoCommandParams(
-    const char* aCommandName, nsCommandParams* aParams,
-    TextEditor& aTextEditor) const {
-  return DoCommand(aCommandName, aTextEditor);
+    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
+  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult DecreaseFontSizeCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -1151,7 +1145,7 @@ nsresult DecreaseFontSizeCommand::GetCommandStateParams(
 
 StaticRefPtr<InsertHTMLCommand> InsertHTMLCommand::sInstance;
 
-bool InsertHTMLCommand::IsCommandEnabled(const char* aCommandName,
+bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
                                          TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1159,7 +1153,7 @@ bool InsertHTMLCommand::IsCommandEnabled(const char* aCommandName,
   return aTextEditor->IsSelectionEditable();
 }
 
-nsresult InsertHTMLCommand::DoCommand(const char* aCommandName,
+nsresult InsertHTMLCommand::DoCommand(Command aCommand,
                                       TextEditor& aTextEditor) const {
   // If nsInsertHTMLCommand is called with no parameters, it was probably called
   // with an empty string parameter ''. In this case, it should act the same as
@@ -1172,7 +1166,7 @@ nsresult InsertHTMLCommand::DoCommand(const char* aCommandName,
   return MOZ_KnownLive(htmlEditor)->InsertHTML(html);
 }
 
-nsresult InsertHTMLCommand::DoCommandParams(const char* aCommandName,
+nsresult InsertHTMLCommand::DoCommandParams(Command aCommand,
                                             nsCommandParams* aParams,
                                             TextEditor& aTextEditor) const {
   if (NS_WARN_IF(!aParams)) {
@@ -1194,10 +1188,10 @@ nsresult InsertHTMLCommand::DoCommandParams(const char* aCommandName,
 }
 
 nsresult InsertHTMLCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************
@@ -1205,9 +1199,8 @@ nsresult InsertHTMLCommand::GetCommandStateParams(
  *****************************************************************************/
 
 StaticRefPtr<InsertTagCommand> InsertTagCommand::sInstance;
-nsRefPtrHashtable<nsCharPtrHashKey, nsAtom> InsertTagCommand::sTagNameTable;
 
-bool InsertTagCommand::IsCommandEnabled(const char* aCommandName,
+bool InsertTagCommand::IsCommandEnabled(Command aCommand,
                                         TextEditor* aTextEditor) const {
   if (!aTextEditor) {
     return false;
@@ -1216,9 +1209,9 @@ bool InsertTagCommand::IsCommandEnabled(const char* aCommandName,
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)
-nsresult InsertTagCommand::DoCommand(const char* aCmdName,
+nsresult InsertTagCommand::DoCommand(Command aCommand,
                                      TextEditor& aTextEditor) const {
-  RefPtr<nsAtom> tagName = TagName(aCmdName);
+  nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(tagName != nsGkAtoms::hr)) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1229,7 +1222,8 @@ nsresult InsertTagCommand::DoCommand(const char* aCmdName,
   }
 
   RefPtr<Element> newElement =
-      MOZ_KnownLive(htmlEditor)->CreateElementWithDefaults(*tagName);
+      MOZ_KnownLive(htmlEditor)
+          ->CreateElementWithDefaults(MOZ_KnownLive(*tagName));
   if (NS_WARN_IF(!newElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1241,18 +1235,18 @@ nsresult InsertTagCommand::DoCommand(const char* aCmdName,
   return NS_OK;
 }
 
-nsresult InsertTagCommand::DoCommandParams(const char* aCommandName,
+nsresult InsertTagCommand::DoCommandParams(Command aCommand,
                                            nsCommandParams* aParams,
                                            TextEditor& aTextEditor) const {
   // inserting an hr shouldn't have an parameters, just call DoCommand for that
-  if (!strcmp(aCommandName, "cmd_insertHR")) {
-    return DoCommand(aCommandName, aTextEditor);
+  if (aCommand == Command::InsertHorizontalRule) {
+    return DoCommand(aCommand, aTextEditor);
   }
 
   if (NS_WARN_IF(!aParams)) {
     return NS_ERROR_INVALID_ARG;
   }
-  RefPtr<nsAtom> tagName = TagName(aCommandName);
+  nsAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1285,7 +1279,8 @@ nsresult InsertTagCommand::DoCommandParams(const char* aCommandName,
   }
 
   RefPtr<Element> newElement =
-      MOZ_KnownLive(htmlEditor)->CreateElementWithDefaults(*tagName);
+      MOZ_KnownLive(htmlEditor)
+          ->CreateElementWithDefaults(MOZ_KnownLive(*tagName));
   if (NS_WARN_IF(!newElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1313,10 +1308,10 @@ nsresult InsertTagCommand::DoCommandParams(const char* aCommandName,
 }
 
 nsresult InsertTagCommand::GetCommandStateParams(
-    const char* aCommandName, nsCommandParams& aParams, TextEditor* aTextEditor,
+    Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
   return aParams.SetBool(STATE_ENABLED,
-                         IsCommandEnabled(aCommandName, aTextEditor));
+                         IsCommandEnabled(aCommand, aTextEditor));
 }
 
 /*****************************************************************************

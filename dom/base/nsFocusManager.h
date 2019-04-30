@@ -351,7 +351,7 @@ class nsFocusManager final : public nsIFocusManager,
    * aWindowRaised should only be true if called from WindowRaised.
    */
   void SendFocusOrBlurEvent(
-      mozilla::EventMessage aEventMessage, nsIPresShell* aPresShell,
+      mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       Document* aDocument, nsISupports* aTarget, uint32_t aFocusMethod,
       bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
@@ -365,7 +365,7 @@ class nsFocusManager final : public nsIFocusManager,
    * aWindowRaised should only be true if called from WindowRaised.
    */
   void FireFocusOrBlurEvent(
-      mozilla::EventMessage aEventMessage, nsIPresShell* aPresShell,
+      mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       nsISupports* aTarget, bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
 
@@ -387,7 +387,7 @@ class nsFocusManager final : public nsIFocusManager,
    *  losing focus for focusin, the object getting focus for focusout).
    */
   void FireFocusInOrOutEvent(
-      mozilla::EventMessage aEventMessage, nsIPresShell* aPresShell,
+      mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
       nsISupports* aTarget, nsPIDOMWindowOuter* aCurrentFocusedWindow,
       nsIContent* aCurrentFocusedContent,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
@@ -418,12 +418,12 @@ class nsFocusManager final : public nsIFocusManager,
   /**
    * Helper method to move the caret to the focused element aContent.
    */
-  void MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent);
+  void MoveCaretToFocus(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   /**
    * Makes the caret visible or not, depending on aVisible.
    */
-  nsresult SetCaretVisible(nsIPresShell* aPresShell, bool aVisible,
+  nsresult SetCaretVisible(mozilla::PresShell* aPresShell, bool aVisible,
                            nsIContent* aContent);
 
   // the remaining functions are used for tab key and document-navigation
@@ -432,7 +432,8 @@ class nsFocusManager final : public nsIFocusManager,
    * Retrieves the start and end points of the current selection for
    * aDocument and stores them in aStartContent and aEndContent.
    */
-  nsresult GetSelectionLocation(Document* aDocument, nsIPresShell* aPresShell,
+  nsresult GetSelectionLocation(Document* aDocument,
+                                mozilla::PresShell* aPresShell,
                                 nsIContent** aStartContent,
                                 nsIContent** aEndContent);
 
@@ -539,7 +540,7 @@ class nsFocusManager final : public nsIFocusManager,
    * focusable, since it doesn't really have a defined tab index.
    */
   nsresult GetNextTabbableContent(
-      nsIPresShell* aPresShell, nsIContent* aRootContent,
+      mozilla::PresShell* aPresShell, nsIContent* aRootContent,
       nsIContent* aOriginalStartContent, nsIContent* aStartContent,
       bool aForward, int32_t aCurrentTabIndex, bool aIgnoreTabIndex,
       bool aForDocumentNavigation, nsIContent** aResultContent);

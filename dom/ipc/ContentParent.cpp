@@ -103,6 +103,7 @@
 #include "mozilla/net/PCookieServiceParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RDDProcessManager.h"
@@ -158,7 +159,6 @@
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIParentChannel.h"
-#include "nsIPresShell.h"
 #include "nsIRemoteWindowContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -1281,7 +1281,7 @@ void ContentParent::Init() {
 #ifdef ACCESSIBILITY
   // If accessibility is running in chrome process then start it in content
   // process.
-  if (nsIPresShell::IsAccessibilityActive()) {
+  if (PresShell::IsAccessibilityActive()) {
 #  if defined(XP_WIN)
     // Don't init content a11y if we detect an incompat version of JAWS in use.
     if (!mozilla::a11y::Compatibility::IsOldJAWS()) {
@@ -1293,7 +1293,7 @@ void ContentParent::Init() {
     Unused << SendActivateA11y(0, 0);
 #  endif
   }
-#endif
+#endif  // #ifdef ACCESSIBILITY
 
 #ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));

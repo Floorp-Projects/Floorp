@@ -370,7 +370,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                                set nullptr.
    */
   MOZ_CAN_RUN_SCRIPT
-  nsresult HandleMiddleClickPaste(nsIPresShell* aPresShell,
+  nsresult HandleMiddleClickPaste(PresShell* aPresShell,
                                   WidgetMouseEvent* aMouseEvent,
                                   nsEventStatus* aStatus,
                                   TextEditor* aTextEditor);
@@ -492,9 +492,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   MOZ_CAN_RUN_SCRIPT
   static nsresult InitAndDispatchClickEvent(
       WidgetMouseEvent* aMouseUpEvent, nsEventStatus* aStatus,
-      EventMessage aMessage, nsIPresShell* aPresShell,
-      nsIContent* aMouseUpContent, AutoWeakFrame aCurrentTarget,
-      bool aNoContentDispatch, nsIContent* aOverrideClickTarget);
+      EventMessage aMessage, PresShell* aPresShell, nsIContent* aMouseUpContent,
+      AutoWeakFrame aCurrentTarget, bool aNoContentDispatch,
+      nsIContent* aOverrideClickTarget);
 
   nsresult SetClickCount(WidgetMouseEvent* aEvent, nsEventStatus* aStatus,
                          nsIContent* aOverrideClickTarget = nullptr);
@@ -545,7 +545,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *                                current target frame of the ESM are ignored.
    */
   MOZ_CAN_RUN_SCRIPT
-  nsresult DispatchClickEvents(nsIPresShell* aPresShell,
+  nsresult DispatchClickEvents(PresShell* aPresShell,
                                WidgetMouseEvent* aMouseUpEvent,
                                nsEventStatus* aStatus,
                                nsIContent* aMouseUpContent,

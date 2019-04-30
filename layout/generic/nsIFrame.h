@@ -3811,9 +3811,8 @@ class nsIFrame : public nsQueryFrame {
    */
   void UpdatePaintCountForPaintedPresShells() {
     for (nsWeakPtr& item : *PaintedPresShellList()) {
-      nsCOMPtr<nsIPresShell> shell = do_QueryReferent(item);
-      if (shell) {
-        shell->IncrementPaintCount();
+      if (RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item)) {
+        presShell->IncrementPaintCount();
       }
     }
   }
@@ -3821,10 +3820,10 @@ class nsIFrame : public nsQueryFrame {
   /**
    * @return true if we painted @aPresShell during the last repaint.
    */
-  bool DidPaintPresShell(mozilla::PresShell* aShell) {
+  bool DidPaintPresShell(mozilla::PresShell* aPresShell) {
     for (nsWeakPtr& item : *PaintedPresShellList()) {
-      nsCOMPtr<nsIPresShell> shell = do_QueryReferent(item);
-      if (shell == aShell) {
+      RefPtr<mozilla::PresShell> presShell = do_QueryReferent(item);
+      if (presShell == aPresShell) {
         return true;
       }
     }

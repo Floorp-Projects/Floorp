@@ -22,12 +22,20 @@
 # in which the manifest file resides and it should be called
 # 'manifest.tt'
 
+from __future__ import print_function
+
+import base64
+import calendar
 import hashlib
+import hmac
 import httplib
 import json
 import logging
+import math
 import optparse
 import os
+import pprint
+import re
 import shutil
 import sys
 import tarfile
@@ -43,8 +51,20 @@ from subprocess import Popen
 
 __version__ = '1'
 
+# Allowed request header characters:
+# !#$%&'()*+,-./:;<=>?@[]^_`{|}~ and space, a-z, A-Z, 0-9, \, "
+REQUEST_HEADER_ATTRIBUTE_CHARS = re.compile(
+    r"^[ a-zA-Z0-9_\!#\$%&'\(\)\*\+,\-\./\:;<\=>\?@\[\]\^`\{\|\}~]*$")
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
+HAWK_VER = 1
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    # TODO: py3 coverage
+    six_binary_type = bytes  # pragma: no cover
+else:
+    six_binary_type = str
 
 
 log = logging.getLogger(__name__)
@@ -75,6 +95,204 @@ class DigestMismatchException(ExceptionWithFilename):
 
 class MissingFileException(ExceptionWithFilename):
     pass
+
+
+class InvalidCredentials(Exception):
+    pass
+
+
+class BadHeaderValue(Exception):
+    pass
+
+
+def parse_url(url):
+    url_parts = urlparse.urlparse(url)
+    url_dict = {
+        'scheme': url_parts.scheme,
+        'hostname': url_parts.hostname,
+        'port': url_parts.port,
+        'path': url_parts.path,
+        'resource': url_parts.path,
+        'query': url_parts.query,
+    }
+    if len(url_dict['query']) > 0:
+        url_dict['resource'] = '%s?%s' % (url_dict['resource'],  # pragma: no cover
+                                          url_dict['query'])
+
+    if url_parts.port is None:
+        if url_parts.scheme == 'http':
+            url_dict['port'] = 80
+        elif url_parts.scheme == 'https':  # pragma: no cover
+            url_dict['port'] = 443
+    return url_dict
+
+
+def utc_now(offset_in_seconds=0.0):
+    return int(math.floor(calendar.timegm(time.gmtime()) + float(offset_in_seconds)))
+
+
+def random_string(length):
+    return base64.urlsafe_b64encode(os.urandom(length))[:length]
+
+
+def prepare_header_val(val):
+    if isinstance(val, six_binary_type):
+        val = val.decode('utf-8')
+
+    if not REQUEST_HEADER_ATTRIBUTE_CHARS.match(val):
+        raise BadHeaderValue(  # pragma: no cover
+            'header value value={val} contained an illegal character'.format(val=repr(val)))
+
+    return val
+
+
+def parse_content_type(content_type):  # pragma: no cover
+    if content_type:
+        return content_type.split(';')[0].strip().lower()
+    else:
+        return ''
+
+
+def calculate_payload_hash(algorithm, payload, content_type):  # pragma: no cover
+    parts = [
+        part if isinstance(part, six_binary_type) else part.encode('utf8')
+        for part in ['hawk.' + str(HAWK_VER) + '.payload\n',
+                     parse_content_type(content_type) + '\n',
+                     payload or '',
+                     '\n',
+                     ]
+    ]
+
+    p_hash = hashlib.new(algorithm)
+    p_hash.update(''.join(parts))
+
+    log.debug('calculating payload hash from:\n{parts}'.format(parts=pprint.pformat(parts)))
+
+    return base64.b64encode(p_hash.digest())
+
+
+def validate_taskcluster_credentials(credentials):
+    if not hasattr(credentials, '__getitem__'):
+        raise InvalidCredentials('credentials must be a dict-like object')  # pragma: no cover
+    try:
+        credentials['clientId']
+        credentials['accessToken']
+    except KeyError:  # pragma: no cover
+        etype, val, tb = sys.exc_info()
+        raise InvalidCredentials('{etype}: {val}'.format(etype=etype, val=val))
+
+
+def normalize_header_attr(val):
+    if isinstance(val, six_binary_type):
+        return val.decode('utf-8')
+    return val  # pragma: no cover
+
+
+def normalize_string(mac_type,
+                     timestamp,
+                     nonce,
+                     method,
+                     name,
+                     host,
+                     port,
+                     content_hash,
+                     ):
+    return '\n'.join([
+        normalize_header_attr(header)
+        # The blank lines are important. They follow what the Node Hawk lib does.
+        for header in ['hawk.' + str(HAWK_VER) + '.' + mac_type,
+                       timestamp,
+                       nonce,
+                       method or '',
+                       name or '',
+                       host,
+                       port,
+                       content_hash or ''
+                       '',  # for ext which is empty in this case
+                       '',  # Add trailing new line.
+                       ]
+    ])
+
+
+def calculate_mac(mac_type,
+                  access_token,
+                  algorithm,
+                  timestamp,
+                  nonce,
+                  method,
+                  name,
+                  host,
+                  port,
+                  content_hash,
+                  ):
+    normalized = normalize_string(mac_type,
+                                  timestamp,
+                                  nonce,
+                                  method,
+                                  name,
+                                  host,
+                                  port,
+                                  content_hash)
+    log.debug(u'normalized resource for mac calc: {norm}'.format(norm=normalized))
+    digestmod = getattr(hashlib, algorithm)
+
+    # Make sure we are about to hash binary strings.
+
+    if not isinstance(normalized, six_binary_type):
+        normalized = normalized.encode('utf8')
+
+    if not isinstance(access_token, six_binary_type):
+        access_token = access_token.encode('ascii')
+
+    result = hmac.new(access_token, normalized, digestmod)
+    return base64.b64encode(result.digest())
+
+
+def make_taskcluster_header(credentials, req):
+    validate_taskcluster_credentials(credentials)
+
+    url = req.get_full_url()
+    method = req.get_method()
+    algorithm = 'sha256'
+    timestamp = str(utc_now())
+    nonce = random_string(6)
+    url_parts = parse_url(url)
+
+    content_hash = None
+    if req.has_data():
+        content_hash = calculate_payload_hash(  # pragma: no cover
+            algorithm,
+            req.get_data(),
+            req.get_method(),
+        )
+
+    mac = calculate_mac('header',
+                        credentials['accessToken'],
+                        algorithm,
+                        timestamp,
+                        nonce,
+                        method,
+                        url_parts['resource'],
+                        url_parts['hostname'],
+                        str(url_parts['port']),
+                        content_hash,
+                        )
+
+    header = u'Hawk mac="{}"'.format(prepare_header_val(mac))
+
+    if content_hash:  # pragma: no cover
+        header = u'{}, hash="{}"'.format(header, prepare_header_val(content_hash))
+
+    header = u'{header}, id="{id}", ts="{ts}", nonce="{nonce}"'.format(
+        header=header,
+        id=prepare_header_val(credentials['clientId']),
+        ts=prepare_header_val(timestamp),
+        nonce=prepare_header_val(nonce),
+    )
+
+    log.debug('Hawk header for URL={} method={}: {}'.format(url, method, header))
+
+    return header
 
 
 class FileRecord(object):
@@ -483,6 +701,8 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
                 k = True
                 size = 0
                 while k:
+                    # TODO: print statistics as file transfers happen both for info and to stop
+                    # buildbot timeouts
                     indata = f.read(grabchunk)
                     out.write(indata)
                     size += len(indata)
@@ -517,14 +737,39 @@ def clean_path(dirname):
         shutil.rmtree(dirname)
 
 
+CHECKSUM_SUFFIX = ".checksum"
+
+
+def _cache_checksum_matches(base_file, checksum):
+    try:
+        with open(base_file + CHECKSUM_SUFFIX, "rb") as f:
+            prev_checksum = f.read().strip()
+            if prev_checksum == checksum:
+                log.info("Cache matches, avoiding extracting in '%s'" % base_file)
+                return True
+            return False
+    except IOError as e:
+        return False
+
+
+def _compute_cache_checksum(filename):
+    with open(filename, "rb") as f:
+        return digest_file(f, "sha256")
+
+
 def unpack_file(filename, setup=None):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
+
+    checksum = _compute_cache_checksum(filename)
+
     if tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         tar = tarfile.open(filename)
@@ -532,12 +777,16 @@ def unpack_file(filename, setup=None):
         tar.close()
     elif filename.endswith('.tar.xz'):
         base_file = filename.replace('.tar.xz', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         if not execute('tar -Jxf %s 2>&1' % filename):
             return False
     elif zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
+        if _cache_checksum_matches(base_file, checksum):
+            return True
         clean_path(base_file)
         log.info('unzipping "%s"' % filename)
         z = zipfile.ZipFile(filename)
@@ -549,6 +798,10 @@ def unpack_file(filename, setup=None):
 
     if setup and not execute(os.path.join(base_file, setup)):
         return False
+
+    with open(base_file + CHECKSUM_SUFFIX, "wb") as f:
+        f.write(checksum)
+
     return True
 
 
@@ -755,10 +1008,25 @@ def _log_api_error(e):
 
 
 def _authorize(req, auth_file):
-    if auth_file:
-        log.debug("using bearer token in %s" % auth_file)
-        req.add_unredirected_header('Authorization',
-                                    'Bearer %s' % (open(auth_file, "rb").read().strip()))
+    if not auth_file:
+        return
+
+    is_taskcluster_auth = False
+    with open(auth_file) as f:
+        auth_file_content = f.read().strip()
+        try:
+            auth_file_content = json.loads(auth_file_content)
+            is_taskcluster_auth = True
+        except:
+            pass
+
+    if is_taskcluster_auth:
+        taskcluster_header = make_taskcluster_header(auth_file_content, req)
+        log.debug("Using taskcluster credentials in %s" % auth_file)
+        req.add_unredirected_header('Authorization', taskcluster_header)
+    else:
+        log.debug("Using Bearer token in %s" % auth_file)
+        req.add_unredirected_header('Authorization', 'Bearer %s' % auth_file_content)
 
 
 def _send_batch(base_url, auth_file, batch, region):
@@ -785,7 +1053,7 @@ def _s3_upload(filename, file):
     try:
         req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
         conn.request('PUT', req_path, open(filename, "rb"),
-                     {'Content-type': 'application/octet-stream'})
+                     {'Content-Type': 'application/octet-stream'})
         resp = conn.getresponse()
         resp_body = resp.read()
         conn.close()
