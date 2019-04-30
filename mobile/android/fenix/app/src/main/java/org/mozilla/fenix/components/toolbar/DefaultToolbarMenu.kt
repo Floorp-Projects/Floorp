@@ -117,8 +117,6 @@ class DefaultToolbarMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.Library)
             },
 
-            BrowserMenuDivider(),
-
             BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
                 requestDesktopStateProvider, { checked ->
                     onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
