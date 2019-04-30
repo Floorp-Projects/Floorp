@@ -55,6 +55,9 @@ class ProcessHangMonitor final : public nsIObserver {
       const layers::LayersObserverEpoch& aEpoch);
   static void MaybeStartPaintWhileInterruptingJS();
 
+  static void CancelContentJSExecutionIfRunning(
+      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab);
+
   enum SlowScriptAction {
     Continue,
     Terminate,

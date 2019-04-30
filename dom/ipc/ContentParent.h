@@ -591,6 +591,8 @@ class ContentParent final : public PContentParent,
                                    bool aForceRepaint,
                                    const layers::LayersObserverEpoch& aEpoch);
 
+  void CancelContentJSExecutionIfRunning(BrowserParent* aBrowserParent);
+
   // This function is called when we are about to load a document from an
   // HTTP(S) or FTP channel for a content process.  It is a useful place
   // to start to kick off work as early as possible in response to such
