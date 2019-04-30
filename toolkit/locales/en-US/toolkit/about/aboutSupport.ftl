@@ -206,6 +206,7 @@ gpu-device-id = Device ID
 gpu-subsys-id = Subsys ID
 gpu-drivers = Drivers
 gpu-ram = RAM
+gpu-driver-vendor = Driver Vendor
 gpu-driver-version = Driver Version
 gpu-driver-date = Driver Date
 gpu-active = Active
