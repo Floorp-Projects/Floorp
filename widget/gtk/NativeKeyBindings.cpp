@@ -22,15 +22,20 @@ namespace widget {
 static nsTArray<CommandInt>* gCurrentCommands = nullptr;
 static bool gHandled = false;
 
+inline void AddCommand(Command aCommand) {
+  MOZ_ASSERT(gCurrentCommands);
+  gCurrentCommands->AppendElement(static_cast<CommandInt>(aCommand));
+}
+
 // Common GtkEntry and GtkTextView signals
 static void copy_clipboard_cb(GtkWidget* w, gpointer user_data) {
-  gCurrentCommands->AppendElement(CommandCopy);
+  AddCommand(Command::Copy);
   g_signal_stop_emission_by_name(w, "copy_clipboard");
   gHandled = true;
 }
 
 static void cut_clipboard_cb(GtkWidget* w, gpointer user_data) {
-  gCurrentCommands->AppendElement(CommandCut);
+  AddCommand(Command::Cut);
   g_signal_stop_emission_by_name(w, "cut_clipboard");
   gHandled = true;
 }
@@ -42,18 +47,24 @@ static void cut_clipboard_cb(GtkWidget* w, gpointer user_data) {
 
 static const Command sDeleteCommands[][2] = {
     // backward, forward
-    {CommandDeleteCharBackward, CommandDeleteCharForward},       // CHARS
-    {CommandDeleteWordBackward, CommandDeleteWordForward},       // WORD_ENDS
-    {CommandDeleteWordBackward, CommandDeleteWordForward},       // WORDS
-    {CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine},  // LINES
-    {CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine},  // LINE_ENDS
-    {CommandDeleteToBeginningOfLine,
-     CommandDeleteToEndOfLine},  // PARAGRAPH_ENDS
-    {CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine},  // PARAGRAPHS
+    // CHARS
+    {Command::DeleteCharBackward, Command::DeleteCharForward},
+    // WORD_ENDS
+    {Command::DeleteWordBackward, Command::DeleteWordForward},
+    // WORDS
+    {Command::DeleteWordBackward, Command::DeleteWordForward},
+    // LINES
+    {Command::DeleteToBeginningOfLine, Command::DeleteToEndOfLine},
+    // LINE_ENDS
+    {Command::DeleteToBeginningOfLine, Command::DeleteToEndOfLine},
+    // PARAGRAPH_ENDS
+    {Command::DeleteToBeginningOfLine, Command::DeleteToEndOfLine},
+    // PARAGRAPHS
+    {Command::DeleteToBeginningOfLine, Command::DeleteToEndOfLine},
     // This deletes from the end of the previous word to the beginning of the
     // next word, but only if the caret is not in a word.
     // XXX need to implement in editor
-    {CommandDoNothing, CommandDoNothing}  // WHITESPACE
+    {Command::DoNothing, Command::DoNothing}  // WHITESPACE
 };
 
 static void delete_from_cursor_cb(GtkWidget* w, GtkDeleteType del_type,
@@ -91,31 +102,31 @@ static void delete_from_cursor_cb(GtkWidget* w, GtkDeleteType del_type,
     // This works like word_ends, except we first move the caret to the
     // beginning/end of the current word.
     if (forward) {
-      gCurrentCommands->AppendElement(CommandWordNext);
-      gCurrentCommands->AppendElement(CommandWordPrevious);
+      AddCommand(Command::WordNext);
+      AddCommand(Command::WordPrevious);
     } else {
-      gCurrentCommands->AppendElement(CommandWordPrevious);
-      gCurrentCommands->AppendElement(CommandWordNext);
+      AddCommand(Command::WordPrevious);
+      AddCommand(Command::WordNext);
     }
   } else if (del_type == GTK_DELETE_DISPLAY_LINES ||
              del_type == GTK_DELETE_PARAGRAPHS) {
     // This works like display_line_ends, except we first move the caret to the
     // beginning/end of the current line.
     if (forward) {
-      gCurrentCommands->AppendElement(CommandBeginLine);
+      AddCommand(Command::BeginLine);
     } else {
-      gCurrentCommands->AppendElement(CommandEndLine);
+      AddCommand(Command::EndLine);
     }
   }
 
   Command command = sDeleteCommands[del_type][forward];
-  if (!command) {
-    return;  // unsupported command
+  if (command == Command::DoNothing) {
+    return;
   }
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCommands->AppendElement(command);
+    AddCommand(command);
   }
 }
 
@@ -125,35 +136,35 @@ static const Command sMoveCommands[][2][2] = {
     // and visual position, which is always left/right.
     // We should fix this to work the same way for RTL text input.
     {// LOGICAL_POSITIONS
-     {CommandCharPrevious, CommandCharNext},
-     {CommandSelectCharPrevious, CommandSelectCharNext}},
+     {Command::CharPrevious, Command::CharNext},
+     {Command::SelectCharPrevious, Command::SelectCharNext}},
     {// VISUAL_POSITIONS
-     {CommandCharPrevious, CommandCharNext},
-     {CommandSelectCharPrevious, CommandSelectCharNext}},
+     {Command::CharPrevious, Command::CharNext},
+     {Command::SelectCharPrevious, Command::SelectCharNext}},
     {// WORDS
-     {CommandWordPrevious, CommandWordNext},
-     {CommandSelectWordPrevious, CommandSelectWordNext}},
+     {Command::WordPrevious, Command::WordNext},
+     {Command::SelectWordPrevious, Command::SelectWordNext}},
     {// DISPLAY_LINES
-     {CommandLinePrevious, CommandLineNext},
-     {CommandSelectLinePrevious, CommandSelectLineNext}},
+     {Command::LinePrevious, Command::LineNext},
+     {Command::SelectLinePrevious, Command::SelectLineNext}},
     {// DISPLAY_LINE_ENDS
-     {CommandBeginLine, CommandEndLine},
-     {CommandSelectBeginLine, CommandSelectEndLine}},
+     {Command::BeginLine, Command::EndLine},
+     {Command::SelectBeginLine, Command::SelectEndLine}},
     {// PARAGRAPHS
-     {CommandLinePrevious, CommandLineNext},
-     {CommandSelectLinePrevious, CommandSelectLineNext}},
+     {Command::LinePrevious, Command::LineNext},
+     {Command::SelectLinePrevious, Command::SelectLineNext}},
     {// PARAGRAPH_ENDS
-     {CommandBeginLine, CommandEndLine},
-     {CommandSelectBeginLine, CommandSelectEndLine}},
+     {Command::BeginLine, Command::EndLine},
+     {Command::SelectBeginLine, Command::SelectEndLine}},
     {// PAGES
-     {CommandMovePageUp, CommandMovePageDown},
-     {CommandSelectPageUp, CommandSelectPageDown}},
+     {Command::MovePageUp, Command::MovePageDown},
+     {Command::SelectPageUp, Command::SelectPageDown}},
     {// BUFFER_ENDS
-     {CommandMoveTop, CommandMoveBottom},
-     {CommandSelectTop, CommandSelectBottom}},
+     {Command::MoveTop, Command::MoveBottom},
+     {Command::SelectTop, Command::SelectBottom}},
     {// HORIZONTAL_PAGES (unsupported)
-     {CommandDoNothing, CommandDoNothing},
-     {CommandDoNothing, CommandDoNothing}}};
+     {Command::DoNothing, Command::DoNothing},
+     {Command::DoNothing, Command::DoNothing}}};
 
 static void move_cursor_cb(GtkWidget* w, GtkMovementStep step, gint count,
                            gboolean extend_selection, gpointer user_data) {
@@ -171,25 +182,25 @@ static void move_cursor_cb(GtkWidget* w, GtkMovementStep step, gint count,
   }
 
   Command command = sMoveCommands[step][extend_selection][forward];
-  if (!command) {
-    return;  // unsupported command
+  if (command == Command::DoNothing) {
+    return;
   }
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCommands->AppendElement(command);
+    AddCommand(command);
   }
 }
 
 static void paste_clipboard_cb(GtkWidget* w, gpointer user_data) {
-  gCurrentCommands->AppendElement(CommandPaste);
+  AddCommand(Command::Paste);
   g_signal_stop_emission_by_name(w, "paste_clipboard");
   gHandled = true;
 }
 
 // GtkTextView-only signals
 static void select_all_cb(GtkWidget* w, gboolean select, gpointer user_data) {
-  gCurrentCommands->AppendElement(CommandSelectAll);
+  AddCommand(Command::SelectAll);
   g_signal_stop_emission_by_name(w, "select_all");
   gHandled = true;
 }
