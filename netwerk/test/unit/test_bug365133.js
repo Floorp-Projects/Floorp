@@ -1,5 +1,4 @@
 const URL = "ftp://localhost/bug365133/";
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const tests = [
   [ /* Unix style listing, space at the end of filename */

@@ -1,4 +1,3 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {UrlClassifierTestUtils} = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 var {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');

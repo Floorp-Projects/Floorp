@@ -2,7 +2,6 @@
  * Send HTTP requests and notify the parent about their channelId
  */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 let shouldQuit = false;
 

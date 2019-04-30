@@ -1,5 +1,4 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const VALUE_HDR_NAME = "X-HTTP-VALUE-HEADER";
 const VARY_HDR_NAME = "X-HTTP-VARY-HEADER";

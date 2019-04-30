@@ -7,7 +7,6 @@
 //   2 - allow the cross-origin authentication as well.
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
