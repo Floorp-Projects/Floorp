@@ -339,8 +339,9 @@ nsresult nsPluginFrame::PrepForDrawing(nsIWidget* aWidget) {
   }
 
 #ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
+  ;
+  if (nsAccessibilityService* accService =
+          PresShell::GetAccessibilityService()) {
     accService->RecreateAccessible(PresShell(), mContent);
   }
 #endif
