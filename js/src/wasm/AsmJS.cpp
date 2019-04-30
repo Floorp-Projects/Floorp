@@ -6562,7 +6562,8 @@ static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,
         }
         case ValType::Ref:
         case ValType::NullRef:
-        case ValType::AnyRef: {
+        case ValType::AnyRef:
+        case ValType::FuncRef: {
           MOZ_CRASH("not available in asm.js");
         }
       }
