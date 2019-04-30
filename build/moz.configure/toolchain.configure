@@ -1188,10 +1188,11 @@ include('arm.configure', when=depends(target.cpu)(lambda cpu: cpu == 'arm'))
 
 @depends(host,
          host_os_kernel_major_version,
+         target,
          cxx_compiler.try_run(header='#include_next <inttypes.h>'))
-def check_have_mac_10_14_sdk(host, version, value):
+def check_have_mac_10_14_sdk(host, version, target, value):
     # Only an issue on Mac OS X 10.14 (and probably above).
-    if host.kernel != 'Darwin' or version < '18' or value:
+    if host.kernel != 'Darwin' or target.kernel !='Darwin' or version < '18' or value:
         return
 
     die('System inttypes.h not found. Please try running '
