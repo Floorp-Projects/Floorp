@@ -4,7 +4,6 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
@@ -24,7 +23,7 @@ var EXPORTED_SYMBOLS = ["WindowsGPOParser"];
 
 var WindowsGPOParser = {
   readPolicies(wrk, policies) {
-    let childWrk = wrk.openChild("Mozilla\\" + Services.appinfo.name, wrk.ACCESS_READ);
+    let childWrk = wrk.openChild("Mozilla\\Firefox", wrk.ACCESS_READ);
     if (!policies) {
       policies = {};
     }
