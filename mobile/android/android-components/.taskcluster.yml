@@ -202,7 +202,7 @@ tasks:
                         path: /build/android-components/parameters.yml
                         expires: ${expires_in}
               in:
-                - $if: 'tasks_for == "github-release" && event["action"] in ["published"]'
+                - $if: 'tasks_for == "github-release" && event["action"] == "published"'
                   then:
                     $let:
                       tag: ${event.release.tag_name}
