@@ -18,7 +18,6 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -127,15 +126,6 @@ namespace gfx {
 class SourceSurface;
 }  // namespace gfx
 }  // namespace mozilla
-
-struct CapturingContentInfo final {
-  // capture should only be allowed during a mousedown event
-  bool mAllowed;
-  bool mPointerLock;
-  bool mRetargetToElement;
-  bool mPreventDrag;
-  mozilla::StaticRefPtr<nsIContent> mContent;
-};
 
 // b7b89561-4f03-44b3-9afa-b47e7f313ffb
 #define NS_IPRESSHELL_IID                            \
@@ -1057,29 +1047,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   bool IsActive() { return mIsActive; }
 
-  // mouse capturing
-  static CapturingContentInfo gCaptureInfo;
-
-  /**
-   * Return the active content currently capturing the mouse if any.
-   */
-  static nsIContent* GetCapturingContent() { return gCaptureInfo.mContent; }
-
-  /**
-   * Allow or disallow mouse capturing.
-   */
-  static void AllowMouseCapture(bool aAllowed) {
-    gCaptureInfo.mAllowed = aAllowed;
-  }
-
-  /**
-   * Returns true if there is an active mouse capture that wants to prevent
-   * drags.
-   */
-  static bool IsMouseCapturePreventingDrag() {
-    return gCaptureInfo.mPreventDrag && gCaptureInfo.mContent;
-  }
-
   /**
    * Keep track of how many times this presshell has been rendered to
    * a window.
@@ -1200,7 +1167,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual void DidPaintWindow() = 0;
 
-  virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
   MOZ_CAN_RUN_SCRIPT
   void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent);
@@ -1361,10 +1327,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
   bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
-
-  // If a frame in the subtree rooted at aFrame is capturing the mouse then
-  // clears that capture.
-  static void ClearMouseCapture(nsIFrame* aFrame);
 
   void SetVisualViewportSize(nscoord aWidth, nscoord aHeight);
   void ResetVisualViewportSize();

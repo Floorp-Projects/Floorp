@@ -6336,7 +6336,7 @@ void nsGlobalWindowOuter::EnterModalState() {
   // Usually the activeESM check above does that, but there are cases when
   // we don't have activeESM, or it is for different document.
   Document* topDoc = topWin->GetExtantDoc();
-  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+  nsIContent* capturingContent = PresShell::GetCapturingContent();
   if (capturingContent && topDoc &&
       nsContentUtils::ContentIsCrossDocDescendantOf(capturingContent, topDoc)) {
     PresShell::ReleaseCapturingContent();
