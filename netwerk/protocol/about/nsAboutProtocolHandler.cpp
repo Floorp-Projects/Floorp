@@ -183,7 +183,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
                !path.EqualsLiteral("newtab") &&
                !path.EqualsLiteral("certerror")) {
       nsCOMPtr<nsIEnterprisePolicies> policyManager =
-          do_GetService("@mozilla.org/enterprisepolicies;1", &rv2);
+          do_GetService("@mozilla.org/browser/enterprisepolicies;1", &rv2);
       if (NS_SUCCEEDED(rv2)) {
         nsAutoCString normalizedURL;
         normalizedURL.AssignLiteral("about:");
