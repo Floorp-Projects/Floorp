@@ -49,7 +49,7 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xslt',
     '/dom/xul',
     '/editor/composer',
-    '/extensions/cookie',
+    '/extensions/permissions',
     '/js/xpconnect/loader',
     '/js/xpconnect/src',
     '/netwerk/base',

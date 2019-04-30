@@ -4,15 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TEST_DIRS += ['test']
+
 UNIFIED_SOURCES += [
     'nsContentBlocker.cpp',
+    'nsPermission.cpp',
+    'nsPermissionManager.cpp',
 ]
 
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
+LOCAL_INCLUDES += [
+    '/caps',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    CXXFLAGS += ['-Wno-error=shadow']
+
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+    BUG_COMPONENT = ('Core', 'Permission Manager')
