@@ -5,6 +5,8 @@ const Memory = WebAssembly.Memory;
 const LinkError = WebAssembly.LinkError;
 const RuntimeError = WebAssembly.RuntimeError;
 
+const badFuncRefError = /can only pass WebAssembly exported functions to funcref/;
+
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
 wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /elem segment requires a table section/);
@@ -122,8 +124,8 @@ assertEq(e4.call(2), 13);
 
 var asmjsFun = (function() { "use asm"; function f() {} return f })();
 assertEq(isAsmJSFunction(asmjsFun), isAsmJSCompilationAvailable());
-assertErrorMessage(() => tbl.set(0, asmjsFun), TypeError, /can only assign WebAssembly exported functions/);
-assertErrorMessage(() => tbl.grow(1, asmjsFun), TypeError, /bad initializer to funcref table/);
+assertErrorMessage(() => tbl.set(0, asmjsFun), TypeError, badFuncRefError);
+assertErrorMessage(() => tbl.grow(1, asmjsFun), TypeError, badFuncRefError);
 
 var m = new Module(wasmTextToBinary(`(module
     (type $i2i (func (param i32) (result i32)))
