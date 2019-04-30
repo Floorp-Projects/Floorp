@@ -225,6 +225,13 @@
       await BrowserTestUtils.synthesizeKey("VK_LEFT", { shiftKey: true }, gBrowser);
       await BrowserTestUtils.synthesizeKey("x", { ctrlKey: sendCtrl, metaKey: sendMeta }, gBrowser);
       await testSelection(elementId, 0, testTypeText + " correctly removed second highlight on selection deletion");
+
+      // Turn off highlighting
+      let highlightButton = gFindBar.getElement("highlight");
+      if (highlightButton.checked) {
+        highlightButton.click();
+      }
+
     }
 
     function onPageShow() {

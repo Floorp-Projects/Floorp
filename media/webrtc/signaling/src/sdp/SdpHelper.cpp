@@ -398,7 +398,9 @@ nsresult SdpHelper::GetIdsFromMsid(const Sdp& sdp,
   streamIds->clear();
   for (const auto& msid : allMsids) {
     // "-" means no stream, see draft-ietf-mmusic-msid
-    if (msid.identifier != "-") {
+    // Remove duplicates, but leave order the same
+    if (msid.identifier != "-" &&
+        !std::count(streamIds->begin(), streamIds->end(), msid.identifier)) {
       streamIds->push_back(msid.identifier);
     }
   }

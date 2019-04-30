@@ -10,7 +10,6 @@
 // passes iff both succeeds.
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var notification = "http-on-modify-request";
 

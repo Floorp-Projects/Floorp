@@ -1,5 +1,4 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const BUGID = "369787";
 var server = null;

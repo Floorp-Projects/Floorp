@@ -1,6 +1,5 @@
 // This is just a crashtest for a url that is rejected at parse time (port 80,000)
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test()
 {

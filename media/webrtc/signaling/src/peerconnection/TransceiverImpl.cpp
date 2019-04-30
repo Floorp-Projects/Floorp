@@ -388,20 +388,6 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     return;
   }
 
-  RefPtr<dom::MediaStreamTrack> sendTrack = sender->GetTrack(aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  std::string trackId = mJsepTransceiver->mSendTrack.GetTrackId();
-
-  if (sendTrack) {
-    nsString wideTrackId;
-    sendTrack->GetId(wideTrackId);
-    trackId = NS_ConvertUTF16toUTF8(wideTrackId).get();
-    MOZ_ASSERT(!trackId.empty());
-  }
-
   nsTArray<RefPtr<DOMMediaStream>> streams;
   sender->GetStreams(streams, aRv);
   if (aRv.Failed()) {
@@ -417,7 +403,7 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     streamIds.push_back(streamId);
   }
 
-  mJsepTransceiver->mSendTrack.UpdateTrackIds(streamIds, trackId);
+  mJsepTransceiver->mSendTrack.UpdateStreamIds(streamIds);
 
   // Update RTCRtpParameters
   // TODO: Both ways for things like ssrc, codecs, header extensions, etc
@@ -453,22 +439,6 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
       DebugOnly<nsresult> rv = UpdateConduit();
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  }
-
-  // Update webrtc track id in JS; the ids in SDP are not surfaced to content,
-  // because they don't follow the rules that track/stream ids must. Our JS
-  // code must be able to map the SDP ids to the actual tracks/streams, and
-  // this is how the mapping for track ids is updated.
-  nsString webrtcTrackId =
-      NS_ConvertUTF8toUTF16(mJsepTransceiver->mRecvTrack.GetTrackId().c_str());
-  MOZ_MTLOG(ML_DEBUG, mPCHandle
-                          << "[" << mMid << "]: " << __FUNCTION__
-                          << " Setting webrtc track id: "
-                          << mJsepTransceiver->mRecvTrack.GetTrackId().c_str());
-  aJsTransceiver.SetRemoteTrackId(webrtcTrackId, aRv);
-
-  if (aRv.Failed()) {
-    return;
   }
 
   // mid from JSEP
@@ -524,8 +494,7 @@ void TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     return;
   }
 
-  receiver->SetRemoteSendBit(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit(),
-                             aRv);
+  receiver->SetRecvBit(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit(), aRv);
   if (aRv.Failed()) {
     return;
   }

@@ -1,7 +1,6 @@
 
 var CC = Components.Constructor;
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",

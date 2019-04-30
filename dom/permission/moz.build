@@ -20,7 +20,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/extensions/cookie',
+    '/extensions/permissions',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

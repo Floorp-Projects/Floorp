@@ -106,9 +106,9 @@ void JsepTrack::PopulateCodecs(
   EnsureNoDuplicatePayloadTypes(&mPrototypeCodecs);
 }
 
-void JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator, bool encodeTrackId,
+void JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator,
                            SdpMediaSection* offer) {
-  AddToMsection(mPrototypeCodecs, encodeTrackId, offer);
+  AddToMsection(mPrototypeCodecs, offer);
 
   if (mDirection == sdp::kSend) {
     std::vector<JsConstraints> constraints;
@@ -120,7 +120,7 @@ void JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator, bool encodeTrackId,
 }
 
 void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
-                            SsrcGenerator& ssrcGenerator, bool encodeTrackId,
+                            SsrcGenerator& ssrcGenerator,
                             SdpMediaSection* answer) {
   // We do not modify mPrototypeCodecs here, since we're only creating an
   // answer. Once offer/answer concludes, we will update mPrototypeCodecs.
@@ -130,7 +130,7 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
     return;
   }
 
-  AddToMsection(codecs, encodeTrackId, answer);
+  AddToMsection(codecs, answer);
 
   if (mDirection == sdp::kSend) {
     std::vector<JsConstraints> constraints;
@@ -169,7 +169,7 @@ bool JsepTrack::SetJsConstraints(
 
 void JsepTrack::AddToMsection(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
-    bool encodeTrackId, SdpMediaSection* msection) {
+    SdpMediaSection* msection) {
   MOZ_ASSERT(msection->GetMediaType() == mType);
   MOZ_ASSERT(!codecs.empty());
 
@@ -180,10 +180,10 @@ void JsepTrack::AddToMsection(
   if ((mDirection == sdp::kSend) && (mType != SdpMediaSection::kApplication) &&
       msection->IsSending()) {
     if (mStreamIds.empty()) {
-      msection->AddMsid("-", encodeTrackId ? mTrackId : "");
+      msection->AddMsid("-", mTrackId);
     } else {
       for (const std::string& streamId : mStreamIds) {
-        msection->AddMsid(streamId, encodeTrackId ? mTrackId : "");
+        msection->AddMsid(streamId, mTrackId);
       }
     }
   }

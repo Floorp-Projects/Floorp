@@ -41,13 +41,6 @@ this.FirefoxMonitor = {
   // Map of breached site host -> breach metadata.
   domainMap: new Map(),
 
-  // Set of hosts for which the user has already been shown,
-  // and interacted with, the popup.
-  warnedHostsSet: new Set(),
-
-  // The above set is persisted as a JSON string in this pref.
-  kWarnedHostsPref: "extensions.fxmonitor.warnedHosts",
-
   // Reference to the extension object from the WebExtension context.
   // Used for getting URIs for resources packaged in the extension.
   extension: null,
@@ -102,6 +95,31 @@ this.FirefoxMonitor = {
     return this.strings.formatStringFromName(aKey, args, args.length);
   },
 
+  // We used to persist the list of hosts we've already warned the
+  // user for in this pref. Now, we check the pref at init and
+  // if it has a value, migrate the remembered hosts to content prefs
+  // and clear this one.
+  kWarnedHostsPref: "extensions.fxmonitor.warnedHosts",
+  migrateWarnedHostsIfNeeded() {
+    if (!Preferences.isSet(this.kWarnedHostsPref)) {
+      return;
+    }
+
+    let hosts = [];
+    try {
+      hosts = JSON.parse(Preferences.get(this.kWarnedHostsPref));
+    } catch (ex) {
+      // Invalid JSON, nothing to be done.
+    }
+
+    let loadContext = Cu.createLoadContext();
+    for (let host of hosts) {
+      this.rememberWarnedHost(loadContext, host);
+    }
+
+    Preferences.reset(this.kWarnedHostsPref);
+  },
+
   init(aExtension) {
     this.extension = aExtension;
 
@@ -131,6 +149,12 @@ this.FirefoxMonitor = {
 
     this._delayedInited = true;
 
+    XPCOMUtils.defineLazyServiceGetter(this, "_contentPrefService",
+      "@mozilla.org/content-pref/service;1",
+      "nsIContentPrefService2");
+
+    this.migrateWarnedHostsIfNeeded();
+
     // Expire our telemetry on November 1, at which time
     // we should redo data-review.
     let telemetryExpiryDate = new Date(2019, 10, 1); // Month is zero-index
@@ -154,17 +178,6 @@ this.FirefoxMonitor = {
 
     let telemetryEnabled = !Preferences.get(this.kTelemetryDisabledPref);
     Services.telemetry.setEventRecordingEnabled("fxmonitor", telemetryEnabled);
-
-    let warnedHostsJSON = Preferences.get(this.kWarnedHostsPref, "");
-    if (warnedHostsJSON) {
-      try {
-        let json = JSON.parse(warnedHostsJSON);
-        this.warnedHostsSet = new Set(json);
-      } catch (ex) {
-        // Invalid JSON, invalidate the pref.
-        Preferences.reset(this.kWarnedHostsPref);
-      }
-    }
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "FirefoxMonitorURL",
       this.kFirefoxMonitorURLPref, this.kDefaultFirefoxMonitorURL);
@@ -288,15 +301,19 @@ this.FirefoxMonitor = {
         DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
                                                  DOMWindowUtils.AUTHOR_SHEET);
 
-        this.notificationsByWindow.get(win).forEach(n => {
-          n.remove();
-        });
-        this.notificationsByWindow.delete(win);
+        if (this.notificationsByWindow.has(win)) {
+          this.notificationsByWindow.get(win).forEach(n => {
+            n.remove();
+          });
+          this.notificationsByWindow.delete(win);
+        }
 
-        let doc = win.document;
-        doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
-        doc.getElementById(`${this.kNotificationID}-notification`).remove();
-        this.panelUIsByWindow.delete(win);
+        if (this.panelUIsByWindow.has(win)) {
+          let doc = win.document;
+          doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
+          doc.getElementById(`${this.kNotificationID}-notification`).remove();
+          this.panelUIsByWindow.delete(win);
+        }
 
         win.gBrowser.removeTabsProgressListener(this);
       },
@@ -355,8 +372,30 @@ this.FirefoxMonitor = {
     this.observerAdded = false;
   },
 
-  warnIfNeeded(browser, host) {
-    if (!this.enabled || this.warnedHostsSet.has(host) || !this.domainMap.has(host)) {
+  async hostAlreadyWarned(loadContext, host) {
+    return new Promise((resolve, reject) => {
+      this._contentPrefService.getByDomainAndName(
+        host,
+        "extensions.fxmonitor.hostAlreadyWarned",
+        loadContext,
+        {
+          handleCompletion: () => resolve(false),
+          handleResult: (result) => resolve(result.value),
+        });
+    });
+  },
+
+  rememberWarnedHost(loadContext, host) {
+    this._contentPrefService.set(
+      host,
+      "extensions.fxmonitor.hostAlreadyWarned",
+      true,
+      loadContext);
+  },
+
+  async warnIfNeeded(browser, host) {
+    if (!this.enabled || !this.domainMap.has(host) ||
+        await this.hostAlreadyWarned(browser.loadContext, host)) {
       return;
     }
 
@@ -378,8 +417,7 @@ this.FirefoxMonitor = {
       Preferences.set(this.kFirstAlertShownPref, true);
     }
 
-    this.warnedHostsSet.add(host);
-    Preferences.set(this.kWarnedHostsPref, JSON.stringify([...this.warnedHostsSet]));
+    this.rememberWarnedHost(browser.loadContext, host);
 
     let doc = browser.ownerDocument;
     let win = doc.defaultView;

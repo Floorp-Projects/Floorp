@@ -1,5 +1,4 @@
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // needs to be rooted
 var cacheFlushObserver = { observe: function() {

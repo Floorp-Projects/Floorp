@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Cross domain access to properties</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runThisTest()">
+<p id="display"></p>
+<pre id="test">
+  <script>
+    function runThisTest() {
+      // By default, proxies don't apply to 127.0.0.1.
+      // We need them to for this test (at least on android), though:
+      SpecialPowers.pushPrefEnv({set: [
+        ["network.proxy.allow_hijacking_localhost", true]
+      ]}).then(function() {
+        setupTest('http://127.0.0.1:8888/tests/netwerk/test/mochitests/file_loopback_inner.html', 5, 2);
+      });
+    }
+  </script>
+<script class="testbody" type="text/javascript" src="file_testcommon.js">
+</script>
+</pre>
+</body>
+</html>

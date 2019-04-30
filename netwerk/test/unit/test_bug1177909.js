@@ -1,6 +1,5 @@
 "use strict";
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gProxyService",

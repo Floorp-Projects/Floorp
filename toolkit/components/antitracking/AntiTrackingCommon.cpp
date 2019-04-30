@@ -235,8 +235,10 @@ int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
   return cookieSettings->GetCookieBehavior();
 }
 
-int32_t CookiesBehavior(nsIPrincipal* aPrincipal) {
+int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
+                        nsICookieSettings* aCookieSettings) {
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCookieSettings);
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
@@ -244,7 +246,7 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  return StaticPrefs::network_cookie_cookieBehavior();
+  return aCookieSettings->GetCookieBehavior();
 }
 
 struct ContentBlockingAllowListKey {
@@ -777,12 +779,17 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   LOG(("Adding a first-party storage exception for %s...",
        PromiseFlatCString(origin).get()));
 
-  if (StaticPrefs::network_cookie_cookieBehavior() !=
-      nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+  Document* parentDoc = aParentWindow->GetExtantDoc();
+  if (!parentDoc) {
+    LOG(("Parent window has no doc"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+  auto cookieBehavior = parentDoc->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
-         StaticPrefs::network_cookie_cookieBehavior()));
+         cookieBehavior));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -1525,8 +1532,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsIPrincipal* aPrincipal) {
+    nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings) {
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCookieSettings);
 
   uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
   if (aPrincipal->GetIsCodebasePrincipal()) {
@@ -1541,7 +1549,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  int32_t behavior = CookiesBehavior(aPrincipal);
+  int32_t behavior = CookiesBehavior(aPrincipal, aCookieSettings);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
 }
 
@@ -1563,10 +1571,9 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  if (parentDocument->CookieSettings()->GetCookieBehavior() !=
-      nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    LOG(("Disabled by the pref (%d), bail out early",
-         StaticPrefs::network_cookie_cookieBehavior()));
+  auto cookieBehavior = parentDocument->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    LOG(("Disabled by the pref (%d), bail out early", cookieBehavior));
     return true;
   }
 

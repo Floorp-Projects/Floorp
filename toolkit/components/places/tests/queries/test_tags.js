@@ -355,6 +355,24 @@ add_task(async function tag_casing() {
   });
 });
 
+add_task(async function tag_casing_l10n() {
+  info("Querying on associated tags should return " +
+       "correct results irrespective of casing of tags with international strings.");
+  // \u041F is a lowercase \u043F
+  await task_doWithBookmark(["\u041F\u0442\u0438\u0446\u044B"], function(aURI) {
+    let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+  await task_doWithBookmark(["\u043F\u0442\u0438\u0446\u044B"], function(aURI) {
+    let [query, opts] = makeQuery(["\u041F\u0442\u0438\u0446\u044B"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+    [query, opts] = makeQuery(["\u043F\u0442\u0438\u0446\u044B"]);
+    executeAndCheckQueryResults(query, opts, [aURI.spec]);
+  });
+});
+
 add_task(async function tag_special_char() {
   info("Querying on associated tags should return " +
        "correct results even if tags contain special characters.");

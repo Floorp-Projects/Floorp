@@ -85,16 +85,13 @@ class JsepTrack {
 
   virtual ~JsepTrack() {}
 
-  void UpdateTrackIds(const std::vector<std::string>& streamIds,
-                      const std::string& trackId) {
+  void UpdateStreamIds(const std::vector<std::string>& streamIds) {
     mStreamIds = streamIds;
-    mTrackId = trackId;
   }
 
-  void ClearTrackIds() {
-    mStreamIds.clear();
-    mTrackId.clear();
-  }
+  void SetTrackId(const std::string& aTrackId) { mTrackId = aTrackId; }
+
+  void ClearStreamIds() { mStreamIds.clear(); }
 
   void UpdateRecvTrack(const Sdp& sdp, const SdpMediaSection& msection) {
     MOZ_ASSERT(mDirection == sdp::kRecv);
@@ -159,8 +156,6 @@ class JsepTrack {
     return mStreamIds;
   }
 
-  virtual const std::string& GetTrackId() const { return mTrackId; }
-
   virtual const std::string& GetCNAME() const { return mCNAME; }
 
   virtual void SetCNAME(const std::string& cname) { mCNAME = cname; }
@@ -191,10 +186,9 @@ class JsepTrack {
   }
 
   // These two are non-const because this is where ssrcs are chosen.
-  virtual void AddToOffer(SsrcGenerator& ssrcGenerator, bool encodeTrackId,
-                          SdpMediaSection* offer);
+  virtual void AddToOffer(SsrcGenerator& ssrcGenerator, SdpMediaSection* offer);
   virtual void AddToAnswer(const SdpMediaSection& offer,
-                           SsrcGenerator& ssrcGenerator, bool encodeTrackId,
+                           SsrcGenerator& ssrcGenerator,
                            SdpMediaSection* answer);
 
   virtual void Negotiate(const SdpMediaSection& answer,
@@ -248,7 +242,7 @@ class JsepTrack {
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
       std::vector<uint16_t>* pts);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
-                     bool encodeTrackId, SdpMediaSection* msection);
+                     SdpMediaSection* msection);
   void GetRids(const SdpMediaSection& msection, sdp::Direction direction,
                std::vector<SdpRidAttributeList::Rid>* rids) const;
   void CreateEncodings(

@@ -344,6 +344,9 @@ void profiler_register_page(const nsID& aDocShellId, uint32_t aHistoryId,
 // Take a docShellId and unregister all the page entries that have the given ID.
 void profiler_unregister_pages(const nsID& aRegisteredDocShellId);
 
+// Remove all registered and unregistered pages in the profiler.
+void profiler_clear_all_pages();
+
 class BaseProfilerCount;
 void profiler_add_sampled_counter(BaseProfilerCount* aCounter);
 void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);

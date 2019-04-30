@@ -1,5 +1,4 @@
 // Tests bug 304414
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const PR_RDONLY = 0x1;  // see prio.h
 

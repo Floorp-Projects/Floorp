@@ -7868,7 +7868,9 @@ nsresult nsDocShell::RestoreFromHistory() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  GetBrowsingContext()->RestoreChildren(std::move(contexts));
+  if (!contexts.IsEmpty()) {
+    GetBrowsingContext()->RestoreChildren(std::move(contexts));
+  }
 
   // Make sure to restore the window state after adding the child shells back
   // to the tree.  This is necessary for Thaw() and Resume() to propagate

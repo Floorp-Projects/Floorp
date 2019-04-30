@@ -6,6 +6,7 @@
 
 const { sourceSpec } = require("devtools/shared/specs/source");
 const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol");
+const { ArrayBufferFront } = require("devtools/shared/fronts/array-buffer");
 
 /**
  * A SourceFront provides a way to access the source text of a script.
@@ -14,15 +15,11 @@ const { FrontClassWithSpec, registerFront } = require("devtools/shared/protocol"
  *        The Debugger Client instance.
  * @param form Object
  *        The form sent across the remote debugging protocol.
- * @param activeThread ThreadClient
- *        The thread client parent. Used until the SourceFront marshalls LongStringFront
- *        and ArrayBuffer.
  */
 class SourceFront extends FrontClassWithSpec(sourceSpec) {
-  constructor(client, form, activeThread) {
+  constructor(client, form) {
     super(client);
     this._url = form.url;
-    this._activeThread = activeThread;
     // this is here for the time being, until the source front is managed
     // via protocol.js marshalling
     this.actorID = form.actor;
@@ -48,7 +45,8 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
   }
 
   /**
-   * Get a long string grip for this SourceFront's source.
+   * Get a Front for either an ArrayBuffer or LongString
+   * for this SourceFront's source.
    */
   async source() {
     const response = await this.onSource();
@@ -56,14 +54,9 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
   }
 
   _onSourceResponse(response) {
-    if (typeof response.source === "string") {
-      return response;
-    }
-
     const { contentType, source } = response;
-    if (source.type === "arrayBuffer") {
-      const arrayBuffer = this._activeThread.threadArrayBuffer(source);
-      return arrayBuffer.slice(0, arrayBuffer.length).then(function(resp) {
+    if (source instanceof ArrayBufferFront) {
+      return source.slice(0, source.length).then(function(resp) {
         if (resp.error) {
           return resp;
         }
@@ -81,14 +74,13 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
       });
     }
 
-    const longString = this._activeThread.threadLongString(source);
-    return longString.substring(0, longString.length).then(function(resp) {
+    return source.substring(0, source.length).then(function(resp) {
       if (resp.error) {
         return resp;
       }
 
       const newResponse = {
-        source: resp.substring,
+        source: resp,
         contentType: contentType,
       };
       return newResponse;

@@ -14,7 +14,6 @@
 // get blocked by queuing) this test will time out
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var server = new HttpServer();
 server.start(-1);
 var baseURL = "http://localhost:" + server.identity.primaryPort + "/";

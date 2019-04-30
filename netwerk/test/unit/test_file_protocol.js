@@ -1,6 +1,5 @@
 /* run some tests on the file:// protocol handler */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const PR_RDONLY = 0x1;  // see prio.h
 
