@@ -195,6 +195,50 @@ class GeckoJavaSampler
 };
 #endif
 
+// Return all features that are available on this platform.
+static uint32_t AvailableFeatures() {
+  uint32_t features = 0;
+
+#define ADD_FEATURE(n_, str_, Name_, desc_) \
+  ProfilerFeature::Set##Name_(features);
+
+  // Add all the possible features.
+  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE)
+
+#undef ADD_FEATURE
+
+  // Now remove features not supported on this platform/configuration.
+#if !defined(GP_OS_android)
+  ProfilerFeature::ClearJava(features);
+#endif
+#if !defined(HAVE_NATIVE_UNWIND)
+  ProfilerFeature::ClearStackWalk(features);
+#endif
+#if !defined(MOZ_TASK_TRACER)
+  ProfilerFeature::ClearTaskTracer(features);
+#endif
+  if (!JS::TraceLoggerSupported()) {
+    ProfilerFeature::ClearJSTracer(features);
+  }
+
+  return features;
+}
+
+// Default features common to all contexts (even if not available).
+static uint32_t DefaultFeatures() {
+  return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
+         ProfilerFeature::StackWalk | ProfilerFeature::Threads |
+         ProfilerFeature::Responsiveness;
+}
+
+// Extra default features when MOZ_PROFILER_STARTUP is set (even if not
+// available).
+static uint32_t StartupExtraDefaultFeatures() {
+  // Enable mainthreadio by default for startup profiles as startup is heavy on
+  // I/O operations, and main thread I/O is really important to see there.
+  return ProfilerFeature::MainThreadIO;
+}
+
 class PSMutex : public StaticMutex {};
 
 typedef BaseAutoLock<PSMutex&> PSAutoLock;
@@ -412,7 +456,7 @@ class ActivePS {
  private:
   static uint32_t AdjustFeatures(uint32_t aFeatures, uint32_t aFilterCount) {
     // Filter out any features unavailable in this platform/configuration.
-    aFeatures &= profiler_get_available_features();
+    aFeatures &= AvailableFeatures();
 
 #if defined(GP_OS_android)
     if (!jni::IsFennec()) {
@@ -607,7 +651,7 @@ class ActivePS {
 
   PS_GET(uint32_t, Features)
 
-#define PS_GET_FEATURE(n_, str_, Name_)                       \
+#define PS_GET_FEATURE(n_, str_, Name_, desc_)                \
   static bool Feature##Name_(PSLockRef) {                     \
     return ProfilerFeature::Has##Name_(sInstance->mFeatures); \
   }
@@ -2132,6 +2176,27 @@ bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
 // END saving/streaming code
 ////////////////////////////////////////////////////////////////////////
 
+static char FeatureCategory(uint32_t aFeature) {
+  if (aFeature & DefaultFeatures()) {
+    if (aFeature & AvailableFeatures()) {
+      return 'D';
+    }
+    return 'd';
+  }
+
+  if (aFeature & StartupExtraDefaultFeatures()) {
+    if (aFeature & AvailableFeatures()) {
+      return 'S';
+    }
+    return 's';
+  }
+
+  if (aFeature & AvailableFeatures()) {
+    return '-';
+  }
+  return 'x';
+}
+
 static void PrintUsageThenExit(int aExitCode) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -2178,6 +2243,19 @@ static void PrintUsageThenExit(int aExitCode) {
       "  a comma-separated list of strings.\n"
       "  Ignored if  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
       "  If unset, the platform default is used.\n"
+      "\n"
+      "    Features: (x=unavailable, D/d=default/unavailable,\n"
+      "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n");
+
+#define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
+  printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
+         ProfilerFeature::Name_, str_, desc_);
+
+  PROFILER_FOR_EACH_FEATURE(PRINT_FEATURE)
+
+#undef PRINT_FEATURE
+
+  printf(
       "\n"
       "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
@@ -2562,7 +2640,7 @@ static bool HasFeature(const char** aFeatures, uint32_t aFeatureCount,
 
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount) {
-#define ADD_FEATURE_BIT(n_, str_, Name_)            \
+#define ADD_FEATURE_BIT(n_, str_, Name_, desc_)     \
   if (HasFeature(aFeatures, aFeatureCount, str_)) { \
     features |= ProfilerFeature::Name_;             \
   }
@@ -2734,15 +2812,7 @@ void profiler_init(void* aStackTop) {
 
   SharedLibraryInfo::Initialize();
 
-  uint32_t features =
-#if defined(GP_OS_android)
-      ProfilerFeature::Java |
-#endif
-      ProfilerFeature::JS | ProfilerFeature::Leaf |
-#if defined(HAVE_NATIVE_UNWIND)
-      ProfilerFeature::StackWalk |
-#endif
-      ProfilerFeature::Threads | ProfilerFeature::Responsiveness | 0;
+  uint32_t features = DefaultFeatures() & AvailableFeatures();
 
   UniquePtr<char[]> filterStorage;
 
@@ -2835,10 +2905,7 @@ void profiler_init(void* aStackTop) {
       }
     }
 
-    // Enable mainthreadio by default for startup profiles as startup is
-    // heavy on I/O operations, and main thread I/O is really important to
-    // see there.
-    features |= ProfilerFeature::MainThreadIO;
+    features |= StartupExtraDefaultFeatures() & AvailableFeatures();
 
     const char* startupFeaturesBitfield =
         getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
@@ -3131,31 +3198,7 @@ void profiler_save_profile_to_file(const char* aFilename) {
 
 uint32_t profiler_get_available_features() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  uint32_t features = 0;
-
-#define ADD_FEATURE(n_, str_, Name_) ProfilerFeature::Set##Name_(features);
-
-  // Add all the possible features.
-  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE)
-
-#undef ADD_FEATURE
-
-  // Now remove features not supported on this platform/configuration.
-#if !defined(GP_OS_android)
-  ProfilerFeature::ClearJava(features);
-#endif
-#if !defined(HAVE_NATIVE_UNWIND)
-  ProfilerFeature::ClearStackWalk(features);
-#endif
-#if !defined(MOZ_TASK_TRACER)
-  ProfilerFeature::ClearTaskTracer(features);
-#endif
-  if (!JS::TraceLoggerSupported()) {
-    ProfilerFeature::ClearJSTracer(features);
-  }
-
-  return features;
+  return AvailableFeatures();
 }
 
 Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
@@ -3218,7 +3261,7 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
     LOG("- duration  = %.2f", aDuration ? *aDuration : -1);
     LOG("- interval = %.2f", aInterval);
 
-#define LOG_FEATURE(n_, str_, Name_)            \
+#define LOG_FEATURE(n_, str_, Name_, desc_)     \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
     LOG("- feature  = %s", str_);               \
   }
