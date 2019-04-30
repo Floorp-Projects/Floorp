@@ -235,8 +235,10 @@ int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
   return cookieSettings->GetCookieBehavior();
 }
 
-int32_t CookiesBehavior(nsIPrincipal* aPrincipal) {
+int32_t CookiesBehavior(nsIPrincipal* aPrincipal,
+                        nsICookieSettings* aCookieSettings) {
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCookieSettings);
 
   // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
   // (See Bug 1406675 for rationale).
@@ -244,7 +246,7 @@ int32_t CookiesBehavior(nsIPrincipal* aPrincipal) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  return StaticPrefs::network_cookie_cookieBehavior();
+  return aCookieSettings->GetCookieBehavior();
 }
 
 struct ContentBlockingAllowListKey {
@@ -1530,8 +1532,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 }
 
 bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-    nsIPrincipal* aPrincipal) {
+    nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings) {
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aCookieSettings);
 
   uint32_t access = nsICookiePermission::ACCESS_DEFAULT;
   if (aPrincipal->GetIsCodebasePrincipal()) {
@@ -1546,7 +1549,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return access != nsICookiePermission::ACCESS_DENY;
   }
 
-  int32_t behavior = CookiesBehavior(aPrincipal);
+  int32_t behavior = CookiesBehavior(aPrincipal, aCookieSettings);
   return behavior != nsICookieService::BEHAVIOR_REJECT;
 }
 
