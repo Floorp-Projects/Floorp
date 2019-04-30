@@ -189,7 +189,7 @@ var PrintUtils = {
       printPreviewTB.disableUpdateTriggers(true);
 
       // collapse the browser here -- it will be shown in
-      // enterPrintPreview; this forces a reflow which fixes display
+      // _enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
       // We use the print preview browser as the source browser to avoid
       // re-initializing print preview with a document that might now have changed.
@@ -227,10 +227,10 @@ var PrintUtils = {
       // this tells us whether we should continue on with PP or
       // wait for the callback via the observer
       if (!notifyOnOpen.value.valueOf() || this._webProgressPP.value == null) {
-        this.enterPrintPreview();
+        this._enterPrintPreview();
       }
     } catch (e) {
-      this.enterPrintPreview();
+      this._enterPrintPreview();
     }
   },
 
@@ -396,7 +396,7 @@ var PrintUtils = {
       }
 
       // delay the print preview to show the content of the progress dialog
-      setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
+      setTimeout(function() { PrintUtils._enterPrintPreview(); }, 0);
     },
 
     QueryInterface: ChromeUtils.generateQI(["nsIObserver",
@@ -425,7 +425,7 @@ var PrintUtils = {
   _ppBrowsers: new Set(),
   _currentPPBrowser: null,
 
-  enterPrintPreview() {
+  _enterPrintPreview() {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
     // progress listener from nsIPrintingPromptService.showPrintProgressDialog
