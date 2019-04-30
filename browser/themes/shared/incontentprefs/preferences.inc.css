@@ -161,7 +161,7 @@ button > hbox > label {
 .subcategory:not([hidden]) ~ .subcategory {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(12, 12, 13, 0.15);
+  border-top: 1px solid var(--in-content-border-color);
 }
 
 /* Category List */
