@@ -212,7 +212,6 @@ whitelist-types = [
     ".*ThreadSafe.*Holder",
     "AnonymousContent",
     "AudioContext",
-    "CapturingContentInfo",
     "DefaultDelete",
     "DOMIntersectionObserverEntry",
     "Element",

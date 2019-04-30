@@ -446,7 +446,7 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
     if (anchorRoot == contentRoot) {
       // If the aFrame's content isn't the capturing content, it should be
       // a descendant.  At this time, we can return simply.
-      nsIContent* capturedContent = nsIPresShell::GetCapturingContent();
+      nsIContent* capturedContent = PresShell::GetCapturingContent();
       if (capturedContent != content) {
         return NS_OK;
       }

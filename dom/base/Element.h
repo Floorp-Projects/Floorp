@@ -1175,7 +1175,7 @@ class Element : public FragmentOrElement {
     // If there is already an active capture, ignore this request. This would
     // occur if a splitter, frame resizer, etc had already captured and we don't
     // want to override those.
-    if (!nsIPresShell::GetCapturingContent()) {
+    if (!PresShell::GetCapturingContent()) {
       PresShell::SetCapturingContent(
           this, CaptureFlags::PreventDragStart |
                     (aRetargetToElement ? CaptureFlags::RetargetToElement
@@ -1192,7 +1192,7 @@ class Element : public FragmentOrElement {
   }
 
   void ReleaseCapture() {
-    if (nsIPresShell::GetCapturingContent() == this) {
+    if (PresShell::GetCapturingContent() == this) {
       PresShell::ReleaseCapturingContent();
     }
   }
