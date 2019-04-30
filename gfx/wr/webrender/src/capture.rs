@@ -39,6 +39,7 @@ impl CaptureConfig {
         }
     }
 
+    #[cfg(feature = "capture")]
     pub fn file_path<P>(&self, name: P, ext: &str) -> PathBuf
     where P: AsRef<Path> {
         self.root.join(name).with_extension(ext)
