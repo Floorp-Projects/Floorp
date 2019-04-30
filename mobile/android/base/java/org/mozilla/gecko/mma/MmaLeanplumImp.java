@@ -170,6 +170,7 @@ public class MmaLeanplumImp implements MmaInterface {
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.welcomePanelTitle, LeanplumVariables.welcomePanelMessage,
                         LeanplumVariables.welcomePanelSubtext, LeanplumVariables.getWelcomeImage());
             case PRIVACY:
+            case LAST_PRIVACY:
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.privacyPanelTitle, LeanplumVariables.privacyPanelMessage,
                         LeanplumVariables.privacyPanelSubtext, LeanplumVariables.getPrivacyImage());
             case CUSTOMIZE:
