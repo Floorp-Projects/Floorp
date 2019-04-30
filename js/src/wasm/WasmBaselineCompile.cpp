@@ -1056,6 +1056,7 @@ void BaseLocalIter::settle() {
       case ValType::F32:
       case ValType::F64:
       case ValType::Ref:
+      case ValType::FuncRef:
       case ValType::AnyRef:
         // TODO/AnyRef-boxing: With boxed immediates and strings, the
         // debugger must be made aware that AnyRef != Pointer.
@@ -2783,6 +2784,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       case ExprType::I64:
         needI64(joinRegI64_);
         break;
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
       case ExprType::NullRef:
       case ExprType::Ref:
@@ -2800,6 +2802,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       case ExprType::I64:
         freeI64(joinRegI64_);
         break;
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
       case ExprType::NullRef:
       case ExprType::Ref:
@@ -2825,6 +2828,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         break;
       case ExprType::Ref:
       case ExprType::NullRef:
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
         needRef(joinRegPtr_);
         break;
@@ -2849,6 +2853,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         break;
       case ExprType::Ref:
       case ExprType::NullRef:
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
         freeRef(joinRegPtr_);
         break;
@@ -3778,6 +3783,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
       case ExprType::Ref:
       case ExprType::NullRef:
+      case ExprType::FuncRef:
       case ExprType::AnyRef: {
         DebugOnly<Stk::Kind> k(stk_.back().kind());
         MOZ_ASSERT(k == Stk::RegisterRef || k == Stk::ConstRef ||
@@ -3816,6 +3822,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         return Some(AnyReg(joinRegF64_));
       case ExprType::Ref:
       case ExprType::NullRef:
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
         MOZ_ASSERT(isAvailableRef(joinRegPtr_));
         needRef(joinRegPtr_);
@@ -4239,6 +4246,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
         break;
       case ExprType::Ref:
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
         masm.storePtr(RegPtr(ReturnReg), resultsAddress);
         break;
@@ -4269,6 +4277,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
         break;
       case ExprType::Ref:
+      case ExprType::FuncRef:
       case ExprType::AnyRef:
         masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
         break;
@@ -4581,6 +4590,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         break;
       }
       case ValType::Ref:
+      case ValType::FuncRef:
       case ValType::AnyRef: {
         ABIArg argLoc = call->abi.next(MIRType::RefOrNull);
         if (argLoc.kind() == ABIArg::Stack) {
@@ -8553,6 +8563,7 @@ void BaseCompiler::doReturn(ExprType type, bool popStack) {
     }
     case ExprType::Ref:
     case ExprType::NullRef:
+    case ExprType::FuncRef:
     case ExprType::AnyRef: {
       RegPtr rv = popRef(RegPtr(ReturnReg));
       returnCleanup(popStack);
@@ -8995,6 +9006,7 @@ bool BaseCompiler::emitGetLocal() {
       pushLocalF32(slot);
       break;
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef:
       pushLocalRef(slot);
       break;
@@ -9059,6 +9071,7 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
       break;
     }
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       RegPtr rv = popRef();
       syncLocal(slot);
@@ -9124,12 +9137,12 @@ bool BaseCompiler::emitGetGlobal() {
         pushF64(value.f64());
         break;
       case ValType::Ref:
-      case ValType::NullRef:
-        pushRef(intptr_t(value.ref()));
-        break;
+      case ValType::FuncRef:
       case ValType::AnyRef:
-        pushRef(intptr_t(value.anyref().forCompiledCode()));
+        pushRef(intptr_t(value.ref().forCompiledCode()));
         break;
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Global constant type");
     }
@@ -9166,6 +9179,7 @@ bool BaseCompiler::emitGetGlobal() {
       break;
     }
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       RegPtr rv = needRef();
       ScratchI32 tmp(*this);
@@ -9225,6 +9239,7 @@ bool BaseCompiler::emitSetGlobal() {
       break;
     }
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       RegPtr valueAddr(PreBarrierReg);
       needRef(valueAddr);
@@ -9632,6 +9647,7 @@ bool BaseCompiler::emitSelect() {
     }
     case ValType::Ref:
     case ValType::NullRef:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       RegPtr r, rs;
       pop2xRef(&r, &rs);
@@ -10545,6 +10561,7 @@ bool BaseCompiler::emitStructNew() {
         break;
       }
       case ValType::Ref:
+      case ValType::FuncRef:
       case ValType::AnyRef: {
         RegPtr value = popRef();
         masm.storePtr(value, Address(rdata, offs));
@@ -10662,6 +10679,7 @@ bool BaseCompiler::emitStructGet() {
       break;
     }
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       RegPtr r = needRef();
       masm.loadPtr(Address(rp, offs), r);
@@ -10723,6 +10741,7 @@ bool BaseCompiler::emitStructSet() {
       rd = popF64();
       break;
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef:
       rr = popRef();
       break;
@@ -10766,6 +10785,7 @@ bool BaseCompiler::emitStructSet() {
       break;
     }
     case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
       // emitBarrieredStore consumes valueAddr
@@ -10801,6 +10821,10 @@ bool BaseCompiler::emitStructNarrow() {
   if (deadCode_) {
     return true;
   }
+
+  // Currently not supported by struct.narrow validation.
+  MOZ_ASSERT(inputType != ValType::FuncRef);
+  MOZ_ASSERT(outputType != ValType::FuncRef);
 
   // AnyRef -> AnyRef is a no-op, just leave the value on the stack.
 
