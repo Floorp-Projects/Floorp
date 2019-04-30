@@ -53,9 +53,10 @@ def invalidate(cache, root):
         os.remove(cache)
 
 
-def generate_tasks(params, full, root):
+def generate_tasks(params=None, full=False):
     # TODO: Remove after January 1st, 2020.
     # Try to delete the old taskgraph cache directories.
+    root = build.topsrcdir
     root_hash = hashlib.sha256(os.path.abspath(root)).hexdigest()
     old_cache_dirs = [
         os.path.join(get_state_dir(), 'cache', 'taskgraph'),
@@ -81,7 +82,7 @@ def generate_tasks(params, full, root):
 
     taskgraph.fast = True
     cwd = os.getcwd()
-    os.chdir(build.topsrcdir)
+    os.chdir(root)
 
     root = os.path.join(root, 'taskcluster', 'ci')
     params = parameters_loader(params, strict=False, overrides={'try_mode': 'try_select'})

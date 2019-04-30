@@ -10,7 +10,7 @@ from threading import Timer
 
 from tryselect.cli import BaseTryParser
 from tryselect.tasks import generate_tasks
-from tryselect.push import check_working_directory, push_to_try, vcs
+from tryselect.push import check_working_directory, push_to_try
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,7 +28,7 @@ def run(update=False, query=None, templates=None, full=False, parameters=None,
     from .app import create_application
     check_working_directory(push)
 
-    tg = generate_tasks(parameters, full, root=vcs.path)
+    tg = generate_tasks(parameters, full)
     app = create_application(tg)
 
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
