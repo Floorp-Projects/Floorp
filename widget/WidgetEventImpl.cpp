@@ -84,6 +84,9 @@ const char* ToChar(Command aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) \
   case Command::aName:                        \
     return "Command::" #aName;
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) \
+  case Command::aName:                                           \
+    return "Command::" #aName;
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) \
   case Command::aName:                           \
     return "Command::" #aName;
@@ -91,6 +94,7 @@ const char* ToChar(Command aCommand) {
 #include "mozilla/CommandList.h"
 
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
 #undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
     default:
@@ -1098,12 +1102,14 @@ uint32_t WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 
 /* static */ const char* WidgetKeyboardEvent::GetCommandStr(Command aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
+#define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) , #aCommandStr
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName)
   static const char* const kCommands[] = {
       ""  // DoNothing
 #include "mozilla/CommandList.h"
   };
 #undef NS_DEFINE_COMMAND
+#undef NS_DEFINE_COMMAND_WITH_PARAM
 #undef NS_DEFINE_COMMAND_NO_EXEC_COMMAND
 
   MOZ_RELEASE_ASSERT(static_cast<size_t>(aCommand) < ArrayLength(kCommands),
