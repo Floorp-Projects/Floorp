@@ -934,7 +934,11 @@ gfxFontEntry* gfxDWriteFontList::MakePlatformFont(
 gfxFontEntry* gfxDWriteFontList::CreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
   IDWriteFontCollection* collection =
+#ifdef MOZ_BUNDLED_FONTS
       aFamily->IsBundled() ? mBundledFonts : mSystemFonts;
+#else
+      mSystemFonts;
+#endif
   RefPtr<IDWriteFontFamily> family;
   collection->GetFontFamily(aFamily->Index(), getter_AddRefs(family));
   RefPtr<IDWriteFont> font;
@@ -984,7 +988,11 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
     const fontlist::Family* aFamily,
     nsTArray<fontlist::Face::InitData>& aFaces) const {
   IDWriteFontCollection* collection =
+#ifdef MOZ_BUNDLED_FONTS
       aFamily->IsBundled() ? mBundledFonts : mSystemFonts;
+#else
+      mSystemFonts;
+#endif
   if (!collection) {
     return;
   }
@@ -1041,7 +1049,11 @@ bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
                                       fontlist::Face* aFace, nsCString& aPSName,
                                       nsCString& aFullName) {
   IDWriteFontCollection* collection =
+#ifdef MOZ_BUNDLED_FONTS
       aFamily->IsBundled() ? mBundledFonts : mSystemFonts;
+#else
+      mSystemFonts;
+#endif
   RefPtr<IDWriteFontFamily> family;
   if (FAILED(collection->GetFontFamily(aFamily->Index(),
                                        getter_AddRefs(family)))) {
@@ -1105,7 +1117,11 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
     }
   }
   IDWriteFontCollection* collection =
+#ifdef MOZ_BUNDLED_FONTS
       aFamily->IsBundled() ? mBundledFonts : mSystemFonts;
+#else
+      mSystemFonts;
+#endif
   RefPtr<IDWriteFontFamily> family;
   if (FAILED(collection->GetFontFamily(aFamily->Index(),
                                        getter_AddRefs(family)))) {
