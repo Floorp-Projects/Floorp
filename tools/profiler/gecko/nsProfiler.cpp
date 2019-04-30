@@ -472,7 +472,7 @@ nsProfiler::IsActive(bool* aIsActive) {
 
 static void GetArrayOfStringsForFeatures(uint32_t aFeatures, uint32_t* aCount,
                                          char*** aFeatureList) {
-#define COUNT_IF_SET(n_, str_, Name_)           \
+#define COUNT_IF_SET(n_, str_, Name_, desc_)    \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
     len++;                                      \
   }
@@ -485,7 +485,7 @@ static void GetArrayOfStringsForFeatures(uint32_t aFeatures, uint32_t* aCount,
 
   auto featureList = static_cast<char**>(moz_xmalloc(len * sizeof(char*)));
 
-#define DUP_IF_SET(n_, str_, Name_)             \
+#define DUP_IF_SET(n_, str_, Name_, desc_)      \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
     featureList[i] = moz_xstrdup(str_);         \
     i++;                                        \
