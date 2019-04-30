@@ -30,25 +30,23 @@ var PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE = test => {
   });
 }
 
-runNetworkTest(options => {
-  // uses NAT simulator in order to get srflx candidates.
-  SpecialPowers.pushPrefEnv(
-    {
-      'set': [
-        ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
-        ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT']
-      ]
-    }, function (options) {
-      const test = new PeerConnectionTest(options);
-      makeOffererNonTrickle(test.chain);
-      makeAnswererNonTrickle(test.chain);
+// This test uses the NAT simulator in order to get srflx candidates.
+// It doesn't work in https, so we turn on getUserMedia in http.
+runNetworkTest(async (options = {}) => {
+  await pushPrefs(
+      ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
+      ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT'],
+      ['media.devices.insecure.enabled', true],
+      ['media.getusermedia.insecure.enabled', true]);
+  const test = new PeerConnectionTest(options);
+  makeOffererNonTrickle(test.chain);
+  makeAnswererNonTrickle(test.chain);
 
-      test.chain.removeAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW");
-      test.chain.append([PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE]);
+  test.chain.removeAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW");
+  test.chain.append([PC_LOCAL_TEST_LOCAL_STATS_RELAYCANDIDATE]);
 
-      test.setMediaConstraints([{ audio: true }], [{ audio: true }]);
-      test.run();
-    })
+  test.setMediaConstraints([{ audio: true }], [{ audio: true }]);
+  test.run();
 }, { useIceServer: true });
 </script>
 </pre>

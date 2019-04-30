@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -11,25 +11,22 @@
     title: "Basic audio-only peer connection with port dependent NAT that blocks UDP"
   });
 
-  var test;
-  runNetworkTest(options => {
-    SpecialPowers.pushPrefEnv(
-      {
-        'set': [
-          ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
-          ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
-          ['media.peerconnection.nat_simulator.block_udp', true]
-        ]
-      }, function (options) {
-        options = options || {};
-        options.expectedLocalCandidateType = "relay-tcp";
-        options.expectedRemoteCandidateType = "relay-tcp";
-        // No reason to wait for gathering to complete like the other NAT tests,
-        // since relayed-tcp is the only thing that can work.
-        test = new PeerConnectionTest(options);
-        test.setMediaConstraints([{audio: true}], [{audio: true}]);
-        test.run();
-      })
+  // This test uses the NAT simulator, which doesn't work in https, so we turn
+  // on getUserMedia in http.
+  runNetworkTest(async (options = {}) => {
+    await pushPrefs(
+        ['media.peerconnection.nat_simulator.filtering_type', 'PORT_DEPENDENT'],
+        ['media.peerconnection.nat_simulator.mapping_type', 'PORT_DEPENDENT'],
+        ['media.peerconnection.nat_simulator.block_udp', true],
+        ['media.devices.insecure.enabled', true],
+        ['media.getusermedia.insecure.enabled', true]);
+    options.expectedLocalCandidateType = "relay-tcp";
+    options.expectedRemoteCandidateType = "relay-tcp";
+    // No reason to wait for gathering to complete like the other NAT tests,
+    // since relayed-tcp is the only thing that can work.
+    const test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
   }, { useIceServer: true });
 </script>
 </pre>
