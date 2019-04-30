@@ -61,7 +61,7 @@ var pageTimeout = 10000; // default pageload timeout
 var geckoProfiling = false;
 var geckoInterval = 1;
 var geckoEntries = 1000000;
-var webRenderEnabled = false;
+var geckoThreads = [];
 var debugMode = 0;
 var screenCapture = false;
 
@@ -116,20 +116,13 @@ function getTestSettings() {
         results.subtest_lower_is_better = settings.subtest_lower_is_better === true;
         results.alert_threshold = settings.alert_threshold;
 
-        if (settings.gecko_profile !== undefined) {
-          if (settings.gecko_profile === true) {
-            geckoProfiling = true;
-            results.extra_options = ["gecko_profile"];
-            if (settings.gecko_interval !== undefined) {
-              geckoInterval = settings.gecko_interval;
-            }
-            if (settings.gecko_entries !== undefined) {
-              geckoEntries = settings.gecko_entries;
-            }
-            if (settings.webrender_enabled !== undefined) {
-              webRenderEnabled = settings.webrender_enabled;
-            }
-          }
+        if (settings.gecko_profile === true) {
+          results.extra_options = ["gecko_profile"];
+
+          geckoProfiling = true;
+          geckoEntries = settings.gecko_profile_entries;
+          geckoInterval = settings.gecko_profile_interval;
+          geckoThreads = settings.gecko_profile_threads;
         }
 
         if (settings.screen_capture !== undefined) {
@@ -318,20 +311,13 @@ function onError(error) {
   console.log(`Error: ${error}`);
 }
 
-
 async function startGeckoProfiling() {
-  var _threads;
-  if (webRenderEnabled) {
-    _threads = ["GeckoMain", "Compositor", "WR,Renderer"];
-  } else {
-    _threads = ["GeckoMain", "Compositor"];
-  }
-  postToControlServer("status", "starting gecko profiling");
+  postToControlServer("status", `starting Gecko profiling for threads: ${geckoThreads}`);
   await browser.geckoProfiler.start({
     bufferSize: geckoEntries,
     interval: geckoInterval,
     features: ["js", "leaf", "stackwalk", "threads", "responsiveness"],
-    threads: _threads,
+    threads: geckoThreads.split(","),
   });
 }
 

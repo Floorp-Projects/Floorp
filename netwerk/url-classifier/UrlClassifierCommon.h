@@ -37,6 +37,10 @@ class UrlClassifierCommon final {
                                     const nsACString& aProvider,
                                     const nsACString& aFullHash);
 
+  static nsresult SetTrackingInfo(nsIChannel* channel,
+                                  const nsTArray<nsCString>& aLists,
+                                  const nsTArray<nsCString>& aFullHashes);
+
   // Use this function only when you are looking for a pairwise whitelist uri
   // with the format: http://toplevel.page/?resource=channel.uri.domain
   static nsresult CreatePairwiseWhiteListURI(nsIChannel* aChannel,

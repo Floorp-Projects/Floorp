@@ -18,7 +18,6 @@
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -127,15 +126,6 @@ namespace gfx {
 class SourceSurface;
 }  // namespace gfx
 }  // namespace mozilla
-
-struct CapturingContentInfo final {
-  // capture should only be allowed during a mousedown event
-  bool mAllowed;
-  bool mPointerLock;
-  bool mRetargetToElement;
-  bool mPreventDrag;
-  mozilla::StaticRefPtr<nsIContent> mContent;
-};
 
 // b7b89561-4f03-44b3-9afa-b47e7f313ffb
 #define NS_IPRESSHELL_IID                            \
@@ -619,53 +609,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   already_AddRefed<gfxContext> CreateReferenceRenderingContext();
 
-  typedef struct ScrollAxis {
-    mozilla::WhereToScroll mWhereToScroll;
-    mozilla::WhenToScroll mWhenToScroll;
-    bool mOnlyIfPerceivedScrollableDirection : 1;
-    /**
-     * aWhere:
-     *   Either a percentage or a special value. nsIPresShell defines:
-     *   * (Default) SCROLL_MINIMUM = -1: The visible area is scrolled the
-     *     minimum amount to show as much as possible of the frame. This won't
-     *     hide any initially visible part of the frame.
-     *   * SCROLL_TOP = 0: The frame's upper edge is aligned with the top edge
-     *     of the visible area.
-     *   * SCROLL_BOTTOM = 100: The frame's bottom edge is aligned with the
-     *     bottom edge of the visible area.
-     *   * SCROLL_LEFT = 0: The frame's left edge is aligned with the left edge
-     *     of the visible area.
-     *   * SCROLL_RIGHT = 100: The frame's right edge is aligned* with the right
-     *     edge of the visible area.
-     *   * SCROLL_CENTER = 50: The frame is centered along the axis the
-     *     ScrollAxis is used for.
-     *
-     *   Other values are treated as a percentage, and the point*"percent"
-     *   down the frame is placed at the point "percent" down the visible area.
-     *
-     * aWhen:
-     *   * (Default) SCROLL_IF_NOT_FULLY_VISIBLE: Move the frame only if it is
-     *     not fully visible (including if it's not visible at all). Note that
-     *     in this case if the frame is too large to fit in view, it will only
-     *     be scrolled if more of it can fit than is already in view.
-     *   * SCROLL_IF_NOT_VISIBLE: Move the frame only if none of it is visible.
-     *   * SCROLL_ALWAYS: Move the frame regardless of its current visibility.
-     *
-     * aOnlyIfPerceivedScrollableDirection:
-     *   If the direction is not a perceived scrollable direction (i.e. no
-     *   scrollbar showing and less than one device pixel of scrollable
-     *   distance), don't scroll. Defaults to false.
-     */
-    explicit ScrollAxis(
-        mozilla::WhereToScroll aWhere = mozilla::kScrollMinimum,
-        mozilla::WhenToScroll aWhen = mozilla::WhenToScroll::IfNotFullyVisible,
-        bool aOnlyIfPerceivedScrollableDirection = false)
-        : mWhereToScroll(aWhere),
-          mWhenToScroll(aWhen),
-          mOnlyIfPerceivedScrollableDirection(
-              aOnlyIfPerceivedScrollableDirection) {}
-  } ScrollAxis;
-
   /**
    * Scrolls the view of the document so that the given area of a frame
    * is visible, if possible. Layout is not flushed before scrolling.
@@ -690,7 +633,8 @@ class nsIPresShell : public nsStubDocumentObserver {
    * @return true if any scrolling happened, false if no scrolling happened
    */
   bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
-                               ScrollAxis aVertical, ScrollAxis aHorizontal,
+                               mozilla::ScrollAxis aVertical,
+                               mozilla::ScrollAxis aHorizontal,
                                mozilla::ScrollFlags aScrollFlags);
 
   /**
@@ -1103,29 +1047,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   bool IsActive() { return mIsActive; }
 
-  // mouse capturing
-  static CapturingContentInfo gCaptureInfo;
-
-  /**
-   * Return the active content currently capturing the mouse if any.
-   */
-  static nsIContent* GetCapturingContent() { return gCaptureInfo.mContent; }
-
-  /**
-   * Allow or disallow mouse capturing.
-   */
-  static void AllowMouseCapture(bool aAllowed) {
-    gCaptureInfo.mAllowed = aAllowed;
-  }
-
-  /**
-   * Returns true if there is an active mouse capture that wants to prevent
-   * drags.
-   */
-  static bool IsMouseCapturePreventingDrag() {
-    return gCaptureInfo.mPreventDrag && gCaptureInfo.mContent;
-  }
-
   /**
    * Keep track of how many times this presshell has been rendered to
    * a window.
@@ -1246,7 +1167,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   virtual void DidPaintWindow() = 0;
 
-  virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
   MOZ_CAN_RUN_SCRIPT
   void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent);
@@ -1408,10 +1328,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
   bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
 
-  // If a frame in the subtree rooted at aFrame is capturing the mouse then
-  // clears that capture.
-  static void ClearMouseCapture(nsIFrame* aFrame);
-
   void SetVisualViewportSize(nscoord aWidth, nscoord aHeight);
   void ResetVisualViewportSize();
   bool IsVisualViewportSizeSet() { return mVisualViewportSizeSet; }
@@ -1561,8 +1477,8 @@ class nsIPresShell : public nsStubDocumentObserver {
   // This data is stored as a content property (nsGkAtoms::scrolling) on
   // mContentToScrollTo when we have a pending ScrollIntoView.
   struct ScrollIntoViewData {
-    ScrollAxis mContentScrollVAxis;
-    ScrollAxis mContentScrollHAxis;
+    mozilla::ScrollAxis mContentScrollVAxis;
+    mozilla::ScrollAxis mContentScrollHAxis;
     mozilla::ScrollFlags mContentToScrollToFlags;
   };
 

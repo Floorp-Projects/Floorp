@@ -17,6 +17,7 @@ module.exports = {
     "getUserContextIdForCookieStoreId": true,
     "getContainerForCookieStoreId": true,
     "getCookieStoreIdForContainer": true,
+    "getCookieStoreIdForOriginAttributes": true,
     "getCookieStoreIdForTab": true,
     "isContainerCookieStoreId": true,
     "isDefaultCookieStoreId": true,

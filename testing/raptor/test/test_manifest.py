@@ -192,7 +192,7 @@ def test_get_raptor_test_list_geckoview(create_args):
     assert test_list[0]['name'] == 'raptor-unity-webgl-geckoview'
 
 
-def test_get_raptor_test_list_gecko_profiling(create_args):
+def test_get_raptor_test_list_gecko_profiling_enabled(create_args):
     args = create_args(test="raptor-tp6-google-firefox",
                        gecko_profile=True,
                        browser_cycles=1)
@@ -201,7 +201,60 @@ def test_get_raptor_test_list_gecko_profiling(create_args):
     assert len(test_list) == 1
     assert test_list[0]['name'] == 'raptor-tp6-google-firefox'
     assert test_list[0]['gecko_profile'] is True
-    assert test_list[0]['page_cycles'] == 3
+    assert test_list[0].get('gecko_profile_entries') == '14000000'
+    assert test_list[0].get('gecko_profile_interval') == '1'
+    assert test_list[0].get('gecko_profile_threads') is None
+
+
+def test_get_raptor_test_list_gecko_profiling_enabled_args_override(create_args):
+    args = create_args(test="raptor-tp6-google-firefox",
+                       gecko_profile=True,
+                       gecko_profile_entries=42,
+                       gecko_profile_interval=100,
+                       gecko_profile_threads=['Foo'],
+                       browser_cycles=1)
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]['name'] == 'raptor-tp6-google-firefox'
+    assert test_list[0]['gecko_profile'] is True
+    assert test_list[0]['gecko_profile_entries'] == '42'
+    assert test_list[0]['gecko_profile_interval'] == '100'
+    assert test_list[0]['gecko_profile_threads'] == 'Foo'
+
+
+def test_get_raptor_test_list_gecko_profiling_disabled(create_args):
+    args = create_args(test="raptor-tp6-google-firefox",
+                       gecko_profile=False,
+                       gecko_profile_entries=42,
+                       gecko_profile_interval=100,
+                       gecko_profile_threads=['Foo'],
+                       browser_cycles=1)
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]['name'] == 'raptor-tp6-google-firefox'
+    assert test_list[0].get('gecko_profile') is None
+    assert test_list[0].get('gecko_profile_entries') is None
+    assert test_list[0].get('gecko_profile_interval') is None
+    assert test_list[0].get('gecko_profile_threads') is None
+
+
+def test_get_raptor_test_list_gecko_profiling_disabled_args_override(create_args):
+    args = create_args(test="raptor-tp6-google-firefox",
+                       gecko_profile=False,
+                       gecko_profile_entries=42,
+                       gecko_profile_interval=100,
+                       gecko_profile_threads=['Foo'],
+                       browser_cycles=1)
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]['name'] == 'raptor-tp6-google-firefox'
+    assert test_list[0].get('gecko_profile') is None
+    assert test_list[0].get('gecko_profile_entries') is None
+    assert test_list[0].get('gecko_profile_interval') is None
+    assert test_list[0].get('gecko_profile_threads') is None
 
 
 def test_get_raptor_test_list_debug_mode(create_args):

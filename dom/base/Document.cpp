@@ -3149,8 +3149,8 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
 #endif
 }
 
-mozilla::dom::DocGroup* Document::GetDocGroup() const {
 #ifdef DEBUG
+void Document::AssertDocGroupMatchesKey() const {
   // Sanity check that we have an up-to-date and accurate docgroup
   if (mDocGroup) {
     nsAutoCString docGroupKey;
@@ -3162,10 +3162,8 @@ mozilla::dom::DocGroup* Document::GetDocGroup() const {
     }
     // XXX: Check that the TabGroup is correct as well!
   }
-#endif
-
-  return mDocGroup;
 }
+#endif
 
 nsresult Document::Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable) {
@@ -3678,7 +3676,7 @@ Element* Document::GetCurrentScript() {
 void Document::ReleaseCapture() const {
   // only release the capture if the caller can access it. This prevents a
   // page from stopping a scrollbar grab for example.
-  nsCOMPtr<nsINode> node = nsIPresShell::GetCapturingContent();
+  nsCOMPtr<nsINode> node = PresShell::GetCapturingContent();
   if (node && nsContentUtils::CanCallerAccess(node)) {
     PresShell::ReleaseCapturingContent();
   }
@@ -7334,7 +7332,8 @@ void Document::FlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   // affect style, we need to promote a style flush on ourself to a
   // layout flush on our parent, since we need our container to be the
   // correct size to determine the correct style.
-  if (mParentDocument && IsSafeToFlush()) {
+  if (StyleOrLayoutObservablyDependsOnParentDocumentLayout() &&
+      IsSafeToFlush()) {
     mozilla::ChangesToFlush parentFlush = aFlush;
     if (flushType >= FlushType::Style) {
       parentFlush.mFlushType = std::max(FlushType::Layout, flushType);

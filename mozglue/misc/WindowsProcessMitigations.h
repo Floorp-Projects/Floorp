@@ -12,6 +12,7 @@
 namespace mozilla {
 
 MFBT_API bool IsWin32kLockedDown();
+MFBT_API bool IsDynamicCodeDisabled();
 
 }  // namespace mozilla
 

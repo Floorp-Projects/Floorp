@@ -117,7 +117,7 @@ UrlClassifierFeatureTrackingAnnotation::GetIfNameMatches(
 NS_IMETHODIMP
 UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
     nsIChannel* aChannel, const nsTArray<nsCString>& aList,
-    bool* aShouldContinue) {
+    const nsTArray<nsCString>& aHashes, bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -139,6 +139,8 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
       aList, sClassificationData,
       nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
+
+  UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
 
   UrlClassifierCommon::AnnotateChannel(
       aChannel, AntiTrackingCommon::eTrackingAnnotations, flags,

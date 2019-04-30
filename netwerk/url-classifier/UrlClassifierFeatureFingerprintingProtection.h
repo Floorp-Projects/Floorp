@@ -29,6 +29,7 @@ class UrlClassifierFeatureFingerprintingProtection final
 
   NS_IMETHOD ProcessChannel(nsIChannel* aChannel,
                             const nsTArray<nsCString>& aList,
+                            const nsTArray<nsCString>& aHashes,
                             bool* aShouldContinue) override;
 
   NS_IMETHOD GetURIByListType(nsIChannel* aChannel,

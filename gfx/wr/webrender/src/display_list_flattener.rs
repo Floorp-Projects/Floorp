@@ -524,7 +524,6 @@ impl<'a> DisplayListFlattener<'a> {
             RasterSpace::Screen,
             prim_list,
             main_scroll_root,
-            LayoutRect::max_rect(),
             Some(tile_cache),
             PictureOptions::default(),
         ));
@@ -1649,14 +1648,6 @@ impl<'a> DisplayListFlattener<'a> {
             );
         }
 
-        // An arbitrary large clip rect. For now, we don't
-        // specify a clip specific to the stacking context.
-        // However, now that they are represented as Picture
-        // primitives, we can apply any kind of clip mask
-        // to them, as for a normal primitive. This is needed
-        // to correctly handle some CSS cases (see #1957).
-        let max_clip = LayoutRect::max_rect();
-
         let (leaf_context_3d, leaf_composite_mode, leaf_output_pipeline_id) = match stacking_context.context_3d {
             // TODO(gw): For now, as soon as this picture is in
             //           a 3D context, we draw it to an intermediate
@@ -1700,7 +1691,6 @@ impl<'a> DisplayListFlattener<'a> {
                     &self.interners,
                 ),
                 stacking_context.spatial_node_index,
-                max_clip,
                 None,
                 PictureOptions::default(),
             ))
@@ -1748,7 +1738,6 @@ impl<'a> DisplayListFlattener<'a> {
                         &self.interners,
                     ),
                     stacking_context.spatial_node_index,
-                    max_clip,
                     None,
                     PictureOptions::default(),
                 ))
@@ -1816,7 +1805,6 @@ impl<'a> DisplayListFlattener<'a> {
                         &self.interners,
                     ),
                     stacking_context.spatial_node_index,
-                    max_clip,
                     None,
                     PictureOptions::default(),
                 ))
@@ -1871,7 +1859,6 @@ impl<'a> DisplayListFlattener<'a> {
                         &self.interners,
                     ),
                     stacking_context.spatial_node_index,
-                    max_clip,
                     None,
                     PictureOptions::default(),
                 ))
@@ -2125,7 +2112,6 @@ impl<'a> DisplayListFlattener<'a> {
         assert!(!self.pending_shadow_items.is_empty(), "popped shadows, but none were present");
 
         let pipeline_id = self.sc_stack.last().unwrap().pipeline_id;
-        let max_clip = LayoutRect::max_rect();
         let mut items = mem::replace(&mut self.pending_shadow_items, VecDeque::new());
 
         //
@@ -2242,7 +2228,6 @@ impl<'a> DisplayListFlattener<'a> {
                                     &self.interners,
                                 ),
                                 pending_shadow.clip_and_scroll.spatial_node_index,
-                                max_clip,
                                 None,
                                 options,
                             ))
@@ -3014,7 +2999,6 @@ impl FlattenedStackingContext {
                     interners,
                 ),
                 self.spatial_node_index,
-                LayoutRect::max_rect(),
                 None,
                 PictureOptions::default(),
             ))

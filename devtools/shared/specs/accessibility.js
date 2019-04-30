@@ -21,6 +21,18 @@ types.addDictType("accessibleWithChildren", {
 });
 
 /**
+ * Data passed via "audit-event" to the client. It may include a list of
+ * ancestries for accessible actors that have failing accessibility checks or
+ * an error flag.
+ */
+types.addDictType("auditEventData", {
+  // List of ancestries (array:accessibleWithChildren)
+  ancestries: "array:array:accessibleWithChildren",
+  // True if the audit failed.
+  error: "boolean",
+});
+
+/**
  * Accessible relation object described by its type that also includes relation targets.
  */
 types.addDictType("accessibleRelation", {
@@ -147,6 +159,10 @@ const accessibleWalkerSpec = generateActorSpec({
       type: "highlighter-event",
       data: Arg(0, "json"),
     },
+    "audit-event": {
+      type: "audit-event",
+      audit: Arg(0, "auditEventData"),
+    },
   },
 
   methods: {
@@ -168,12 +184,7 @@ const accessibleWalkerSpec = generateActorSpec({
         ancestry: RetVal("array:accessibleWithChildren"),
       },
     },
-    audit: {
-      request: {},
-      response: {
-        audit: RetVal("array:array:accessibleWithChildren"),
-      },
-    },
+    startAudit: {},
     highlightAccessible: {
       request: {
         accessible: Arg(0, "accessible"),

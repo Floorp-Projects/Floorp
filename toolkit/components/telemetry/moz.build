@@ -101,6 +101,7 @@ XPCOM_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'app/ClientID.jsm',
     'app/TelemetryArchive.jsm',
     'app/TelemetryController.jsm',
     'app/TelemetryEnvironment.jsm',

@@ -160,6 +160,20 @@ NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedFullHash(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP RemoteWebProgressRequest::SetMatchedTrackingInfo(
+    const nsTArray<nsCString> &aLists, const nsTArray<nsCString> &aFullHashes) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedTrackingLists(
+    nsTArray<nsCString> &aLists) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedTrackingFullHashes(
+    nsTArray<nsCString> &aFullHashes) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 // nsIRequest methods
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetName(nsACString &aName) {

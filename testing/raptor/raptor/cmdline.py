@@ -102,10 +102,12 @@ def create_parser(mach_interface=False):
             "After talos is finished, profiler.firefox.com will be launched in Firefox "
             "so you can analyze the local profiles. To disable auto-launching of "
             "profiler.firefox.com set the DISABLE_PROFILE_LAUNCH=1 env var.")
-    add_arg('--gecko-profile-interval', dest='gecko_profile_interval', type=float,
-            help="How frequently to take samples (milliseconds)")
     add_arg('--gecko-profile-entries', dest="gecko_profile_entries", type=int,
-            help="How many samples to take with the profiler")
+            help='How many samples to take with the profiler')
+    add_arg('--gecko-profile-interval', dest='gecko_profile_interval', type=int,
+            help='How frequently to take samples (milliseconds)')
+    add_arg('--gecko-profile-thread', dest='gecko_profile_threads', action='append',
+            help='Name of the extra thread to be profiled')
     add_arg('--symbolsPath', dest='symbols_path',
             help="Path to the symbols for the build we are testing")
     add_arg('--page-cycles', dest="page_cycles", type=int,
@@ -152,7 +154,7 @@ def verify_options(parser, args):
     # if --power-test specified, must be on geckoview/android with --host specified.
     if args.power_test:
         if args.app not in ["fennec", "geckoview", "refbrow", "fenix"] \
-          or args.host in ('localhost', '127.0.0.1'):
+                or args.host in ('localhost', '127.0.0.1'):
             parser.error("Power test is only supported when running raptor on Firefox Android "
                          "browsers when host is specified!")
 

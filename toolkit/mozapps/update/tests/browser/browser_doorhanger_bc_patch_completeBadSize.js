@@ -1,31 +1,33 @@
-add_task(async function testCompletePatchWithBadCompleteSize() {
-  let updateParams = "completePatchOnly=1&invalidCompleteSize=1";
-  await runUpdateTest(updateParams, 1, [
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+add_task(async function doorhanger_bc_patch_completeBadSize() {
+  let updateParams = "&completePatchOnly=1&invalidCompleteSize=1";
+  await runDoorhangerUpdateTest(updateParams, 1, [
     {
-      // if we fail maxBackgroundErrors download attempts, then we want to
-      // first show the user an update available prompt.
+      // If the update download fails maxBackgroundErrors download attempts then
+      // show the update available prompt.
       notificationId: "update-available",
       button: "button",
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDefaultWhatsNewURL},
     },
     {
       notificationId: "update-available",
       button: "button",
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDefaultWhatsNewURL},
     },
     {
-      // if we have only an invalid patch, then something's wrong and we don't
-      // have an automatic way to fix it, so show the manual update
-      // doorhanger.
+      // If the update process is unable to install the update show the manual
+      // update doorhanger.
       notificationId: "update-manual",
       button: "button",
-      beforeClick() {
-        checkWhatsNewLink(window, "update-manual-whats-new");
-      },
-      async cleanup() {
-        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-        is(gBrowser.selectedBrowser.currentURI.spec,
-           URL_MANUAL_UPDATE, "Landed on manual update page.");
-        gBrowser.removeTab(gBrowser.selectedTab);
-      },
+      checkActiveUpdate: null,
+      pageURLs: {whatsNew: gDefaultWhatsNewURL,
+                 manual: URL_MANUAL_UPDATE},
     },
   ]);
 });

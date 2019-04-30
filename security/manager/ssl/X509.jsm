@@ -4,9 +4,7 @@
 
 "use strict";
 
-// Until DER.jsm is actually used in production code, this is where we have to
-// import it from.
-var { DER } = ChromeUtils.import("resource://testing-common/psm/DER.jsm", null);
+var { DER } = ChromeUtils.import("resource://gre/modules/psm/DER.jsm", null);
 
 const ERROR_UNSUPPORTED_ASN1 = "unsupported asn.1";
 const ERROR_TIME_NOT_VALID = "Time not valid";

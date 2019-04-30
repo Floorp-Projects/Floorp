@@ -417,6 +417,27 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     return Promise.all(ancestries);
   },
 
+  /**
+   * Start accessibility audit. The result of this function will not be an audit
+   * report. Instead, an "audit-event" event will be fired when the audit is
+   * completed or fails.
+   */
+  startAudit() {
+    // Audit is already running, wait for the "audit-event" event.
+    if (this._auditing) {
+      return;
+    }
+
+    this._auditing = this.audit()
+      // We do not want to block on audit request, instead fire "audit-event"
+      // event when internal audit is finished or failed.
+      .then(ancestries => this.emit("audit-event", { ancestries }))
+      .catch(() => this.emit("audit-event", { error: true }))
+      .finally(() => {
+        this._auditing = null;
+      });
+  },
+
   onHighlighterEvent: function(data) {
     this.emit("highlighter-event", data);
   },

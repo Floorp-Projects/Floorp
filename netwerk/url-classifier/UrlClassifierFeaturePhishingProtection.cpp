@@ -111,7 +111,7 @@ UrlClassifierFeaturePhishingProtection::GetIfNameMatches(
 NS_IMETHODIMP
 UrlClassifierFeaturePhishingProtection::ProcessChannel(
     nsIChannel* aChannel, const nsTArray<nsCString>& aList,
-    bool* aShouldContinue) {
+    const nsTArray<nsCString>& aHashes, bool* aShouldContinue) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

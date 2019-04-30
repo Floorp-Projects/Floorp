@@ -76,18 +76,6 @@ class App extends PureComponent {
   // See react-router docs:
   // https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/api/match.md
   renderRuntime({ match }) {
-    // Redirect to This Firefox in these cases:
-    // - If the runtimepage for a device is the first page shown (since we can't
-    //   keep connections open between page reloads).
-    // - If no runtimeId is given.
-    // - If runtime is not in the runtimes list or disconnected (this is handled later)
-    const isDeviceFirstPage =
-      !this.props.selectedPage &&
-      match.params.runtimeId !== RUNTIMES.THIS_FIREFOX;
-    if (!match.params.runtimeId || isDeviceFirstPage) {
-      return Redirect({ to: `/runtime/${RUNTIMES.THIS_FIREFOX}` });
-    }
-
     const isRuntimeAvailable = id => {
       const runtimes = [
         ...this.props.networkRuntimes,

@@ -3397,7 +3397,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 // This is the analog of nsChildView::MaybeDrawRoundedCorners for CGContexts.
 // We only need to mask the top corners here because Cocoa does the masking
-// for the window's bottom corners automatically (starting with 10.7).
+// for the window's bottom corners automatically.
 - (void)maskTopCornersInContext:(CGContextRef)aContext {
   CGFloat radius = [self cornerRadius];
   int32_t devPixelCornerRadius = mGeckoChild->CocoaPointsToDevPixels(radius);

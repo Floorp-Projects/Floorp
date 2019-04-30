@@ -414,9 +414,13 @@ var gXPInstallObserver = {
       removeNotificationOnEnd(popup, installInfo.installs);
       break; }
     case "addon-install-blocked": {
-      messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage.header", ["<>"]);
-      let unknown = gNavigatorBundle.getString("xpinstallPromptMessage.unknown");
-      options.name = options.displayURI && options.displayURI.displayHost || unknown;
+      let hasHost = !!options.displayURI;
+      if (hasHost) {
+        messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage.header", ["<>"]);
+        options.name = options.displayURI.displayHost;
+      } else {
+        messageString = gNavigatorBundle.getString("xpinstallPromptMessage.header.unknown");
+      }
       // displayURI becomes it's own label, so we unset it for this panel. It will become part of the
       // messageString above.
       options.displayURI = undefined;
@@ -431,11 +435,15 @@ var gXPInstallObserver = {
         while (message.firstChild) {
           message.firstChild.remove();
         }
-        let text = gNavigatorBundle.getString("xpinstallPromptMessage.message");
-        let b = doc.createElementNS("http://www.w3.org/1999/xhtml", "b");
-        b.textContent = options.name;
-        let fragment = BrowserUtils.getLocalizedFragment(doc, text, b);
-        message.appendChild(fragment);
+        if (hasHost) {
+          let text = gNavigatorBundle.getString("xpinstallPromptMessage.message");
+          let b = doc.createElementNS("http://www.w3.org/1999/xhtml", "b");
+          b.textContent = options.name;
+          let fragment = BrowserUtils.getLocalizedFragment(doc, text, b);
+          message.appendChild(fragment);
+        } else {
+          message.textContent = gNavigatorBundle.getString("xpinstallPromptMessage.message.unknown");
+        }
         let learnMore = doc.getElementById("addon-install-blocked-info");
         learnMore.textContent = gNavigatorBundle.getString("xpinstallPromptMessage.learnMore");
         learnMore.setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "unlisted-extensions-risks");

@@ -603,6 +603,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCString mMatchedProvider;
   nsCString mMatchedFullHash;
 
+  nsTArray<nsCString> mMatchedTrackingLists;
+  nsTArray<nsCString> mMatchedTrackingFullHashes;
+
   nsCOMPtr<nsISupports> mOwner;
 
   nsHttpRequestHead mRequestHead;
