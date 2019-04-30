@@ -284,8 +284,6 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
-// 0 = false, 1 = true, 2 = autodetect.
-pref("ui.android.mouse_as_touch", 1);
 
 // Pop up context menu on mouseup instead of mousedown, if that's the OS default.
 // Note: ignored on Windows (context menus always use mouseup)
