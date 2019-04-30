@@ -53,7 +53,7 @@ use device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, 
 use device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
 use device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
-use device::{ProgramCache, ReadPixelsFormat};
+use device::{ProgramCache};
 use device::query::GpuTimer;
 use euclid::rect;
 use euclid::{Transform3D, TypedScale};
@@ -5290,13 +5290,13 @@ impl Renderer {
     }
 
     /// Pass-through to `Device::read_pixels_into`, used by Gecko's WR bindings.
-    pub fn read_pixels_into(&mut self, rect: FramebufferIntRect, format: ReadPixelsFormat, output: &mut [u8]) {
+    pub fn read_pixels_into(&mut self, rect: FramebufferIntRect, format: ImageFormat, output: &mut [u8]) {
         self.device.read_pixels_into(rect, format, output);
     }
 
     pub fn read_pixels_rgba8(&mut self, rect: FramebufferIntRect) -> Vec<u8> {
         let mut pixels = vec![0; (rect.size.width * rect.size.height * 4) as usize];
-        self.device.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut pixels);
+        self.device.read_pixels_into(rect, ImageFormat::RGBA8, &mut pixels);
         pixels
     }
 
@@ -5308,7 +5308,7 @@ impl Renderer {
         self.device.bind_read_target(ReadTarget::Texture { texture, layer: 0 });
         self.device.read_pixels_into(
             size.into(),
-            ReadPixelsFormat::Standard(ImageFormat::RGBAF32),
+            ImageFormat::RGBAF32,
             &mut texels,
         );
         self.device.reset_read_target();
@@ -5798,7 +5798,7 @@ impl Renderer {
         let short_path = format!("textures/{}.raw", name);
 
         let bytes_per_pixel = texture.get_format().bytes_per_pixel();
-        let read_format = ReadPixelsFormat::Standard(texture.get_format());
+        let read_format = texture.get_format();
         let rect_size = texture.get_dimensions();
 
         let mut file = fs::File::create(root.join(&short_path))
@@ -5819,10 +5819,10 @@ impl Renderer {
                 let (data_ref, format) = match texture.get_format() {
                     ImageFormat::RGBAF32 => {
                         png_data = vec![0; (rect_size.width * rect_size.height * 4) as usize];
-                        device.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut png_data);
-                        (&png_data, ReadPixelsFormat::Rgba8)
+                        device.read_pixels_into(rect, ImageFormat::RGBA8, &mut png_data);
+                        (&png_data, ImageFormat::RGBA8)
                     }
-                    fm => (&data, ReadPixelsFormat::Standard(fm)),
+                    fm => (&data, fm),
                 };
                 CaptureConfig::save_png(
                     root.join(format!("textures/{}-{}.png", name, layer_id)),
@@ -5948,7 +5948,7 @@ impl Renderer {
                     CaptureConfig::save_png(
                         config.root.join(&short_path).with_extension("png"),
                         def.descriptor.size,
-                        ReadPixelsFormat::Standard(def.descriptor.format),
+                        def.descriptor.format,
                         &bytes,
                     );
                 }
