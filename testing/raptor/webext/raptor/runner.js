@@ -243,7 +243,7 @@ async function waitForResult() {
           if (!isBenchmarkPending) {
             resolve();
           } else {
-            setTimeout(checkForResult, 5);
+            setTimeout(checkForResult, 250);
           }
           break;
 
@@ -256,7 +256,7 @@ async function waitForResult() {
               !isLoadTimePending) {
             resolve();
           } else {
-            setTimeout(checkForResult, 5);
+            setTimeout(checkForResult, 250);
           }
           break;
       }
