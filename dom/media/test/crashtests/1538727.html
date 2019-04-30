@@ -1,0 +1,14 @@
+<script>
+const canvas = document.createElement('canvas')
+const context = canvas.getContext('2d', {})
+const xhr = new XMLHttpRequest({})
+const stream = canvas.captureStream(new Float64Array([1593177632.1689904])[0])
+recorder = new MediaRecorder(stream)
+recorder.start(100)
+xhr.open('G', '', false)
+xhr.send()
+recorder.stop()
+tracks = stream.getVideoTracks()
+track = tracks[(1051736525 % tracks.length)]
+stream.removeTrack(track)
+</script>
