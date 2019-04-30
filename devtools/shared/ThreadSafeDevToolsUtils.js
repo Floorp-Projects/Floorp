@@ -9,8 +9,6 @@
  * workers.
  */
 
-var flags = require("./flags");
-
 /**
  * Immutably reduce the given `...objs` into one object. The reduction is
  * applied from left to right, so `immutableUpdate({ a: 1 }, { a: 2 })` will
@@ -114,9 +112,7 @@ exports.makeInfallible = function(handler, name = handler.name) {
       if (name) {
         who += " " + name;
       }
-      if (!flags.quiet) {
-        exports.reportException(who, ex);
-      }
+      exports.reportException(who, ex);
       return undefined;
     }
   };
