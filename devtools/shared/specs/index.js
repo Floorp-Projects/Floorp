@@ -43,6 +43,11 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/animation",
   },
   {
+    types: ["arraybuffer"],
+    spec: "devtools/shared/specs/array-buffer",
+    front: "devtools/shared/fronts/array-buffer",
+  },
+  {
     types: ["changes"],
     spec: "devtools/shared/specs/changes",
     front: "devtools/shared/fronts/changes",

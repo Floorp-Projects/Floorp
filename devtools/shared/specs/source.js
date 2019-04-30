@@ -6,18 +6,22 @@
 const {Arg, RetVal, generateActorSpec, types} = require("devtools/shared/protocol");
 
 const longstringType = types.getType("longstring");
+const arraybufferType = types.getType("arraybuffer");
 // The sourcedata type needs some custom marshalling, because it is sometimes
 // returned as an arraybuffer and sometimes as a longstring.
 types.addType("sourcedata", {
   write: (value, context, detail) => {
-    if (value.type === "arrayBuffer") {
-      return value;
+    if (value.typeName === "arraybuffer") {
+      return arraybufferType.write(value, context, detail);
     }
     return longstringType.write(value, context, detail);
   },
   read: (value, context, detail) => {
-    if (value.type === "arrayBuffer") {
-      return value;
+    // backward compatibility for FF67 or older: value might be an old style ArrayBuffer
+    // actor grip with type="arrayBuffer". The content should be the same so it can be
+    // translated to a regular ArrayBufferFront.
+    if (value.typeName === "arraybuffer" || value.type === "arrayBuffer") {
+      return arraybufferType.read(value, context, detail);
     }
     return longstringType.read(value, context, detail);
   },
