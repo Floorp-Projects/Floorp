@@ -24,6 +24,8 @@ child:
   async Resume();
 
   async GatherProfile() returns (Shmem profile);
+
+  async ClearAllPages();
 };
 
 } // namespace mozilla

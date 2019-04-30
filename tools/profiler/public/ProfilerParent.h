@@ -58,6 +58,7 @@ class ProfilerParent final : public PProfilerParent {
   static void ProfilerStopped();
   static void ProfilerPaused();
   static void ProfilerResumed();
+  static void ClearAllPages();
 
  private:
   friend class ProfilerParentTracker;

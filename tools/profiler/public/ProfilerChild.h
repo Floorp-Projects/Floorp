@@ -43,6 +43,7 @@ class ProfilerChild final : public PProfilerChild,
   mozilla::ipc::IPCResult RecvResume() override;
   mozilla::ipc::IPCResult RecvGatherProfile(
       GatherProfileResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvClearAllPages() override;
 
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
