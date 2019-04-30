@@ -218,6 +218,24 @@ enum class Command : CommandInt {
 
 const char* ToChar(Command aCommand);
 
+/**
+ * Return a command value for aCommandName.
+ * NOTE: We use overloads instead of default constructor with EmptyString()
+ *       because using it here requires to include another header file but
+ *       this header file shouldn't include other header files as far as
+ *       possible to avoid making rebuild time of them longer.
+ * XXX: Is there a better place to put `Command` related methods instead of
+ *      global scope in `mozilla` namespace?
+ *
+ * @param aCommandName  Should be a XUL command name like "cmd_bold" (case
+ *                      sensitive).
+ * @param aValue        Additional parameter value of aCommandName.
+ *                      It depends on the command whethere it's case sensitive
+ *                      or not.
+ */
+Command GetInternalCommand(const char* aCommandName);
+Command GetInternalCommand(const char* aCommandName, const nsAString& aValue);
+
 }  // namespace mozilla
 
 /**
