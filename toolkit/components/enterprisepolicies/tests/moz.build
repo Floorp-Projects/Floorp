@@ -6,10 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += [
     'browser/browser.ini',
-    'browser/disable_app_update/browser.ini',
-    'browser/disable_default_bookmarks/browser.ini',
-    'browser/disable_developer_tools/browser.ini',
-    'browser/disable_forget_button/browser.ini',
-    'browser/disable_fxscreenshots/browser.ini',
-    'browser/hardware_acceleration/browser.ini',
+]
+
+TESTING_JS_MODULES += [
+    'EnterprisePolicyTesting.jsm',
 ]
