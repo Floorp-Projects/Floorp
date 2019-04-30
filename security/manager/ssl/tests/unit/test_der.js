@@ -7,7 +7,7 @@
 
 // Until DER.jsm is actually used in production code, this is where we have to
 // import it from.
-var { DER } = ChromeUtils.import("resource://testing-common/psm/DER.jsm", null);
+var { DER } = ChromeUtils.import("resource://gre/modules/psm/DER.jsm", null);
 
 function run_simple_tests() {
   throws(() => new DER.DER("this is not an array"), /invalid input/,

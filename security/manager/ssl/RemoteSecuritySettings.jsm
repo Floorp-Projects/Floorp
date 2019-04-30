@@ -9,6 +9,7 @@ const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm", null);
 
 const INTERMEDIATES_BUCKET_PREF          = "security.remote_settings.intermediates.bucket";
 const INTERMEDIATES_CHECKED_SECONDS_PREF = "security.remote_settings.intermediates.checked";
@@ -64,9 +65,22 @@ function getHash(str) {
   return hexify(hasher.finish(false));
 }
 
-// Remove all colons from a string
-function stripColons(hexString) {
-  return hexString.replace(/:/g, "");
+// Converts a JS string to an array of bytes consisting of the char code at each
+// index in the string.
+function stringToBytes(s) {
+  let b = [];
+  for (let i = 0; i < s.length; i++) {
+    b.push(s.charCodeAt(i));
+  }
+  return b;
+}
+
+// Converts an array of bytes to a JS string using fromCharCode on each byte.
+function bytesToString(bytes) {
+  if (bytes.length > 65535) {
+    throw new Error("input too long for bytesToString");
+  }
+  return String.fromCharCode.apply(null, bytes);
 }
 
 this.RemoteSecuritySettings = class RemoteSecuritySettings {
@@ -108,11 +122,11 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
 
         TelemetryStopwatch.start(INTERMEDIATES_UPDATE_MS_TELEMETRY);
 
-        const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
+        const certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
         const col = await this.client.openCollection();
 
         Promise.all(waiting.slice(0, maxDownloadsPerRun)
-          .map(record => this.maybeDownloadAttachment(record, col, certdb))
+          .map(record => this.maybeDownloadAttachment(record, col, certStorage))
         ).then(async () => {
           const finalCurrent = await this.client.get();
           const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
@@ -143,19 +157,18 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
     }
 
     // This method returns a promise to RemoteSettingsClient.maybeSync method.
-    onSync(event) {
+    async onSync(event) {
         const {
           data: {deleted},
         } = event;
 
         if (!Services.prefs.getBoolPref(INTERMEDIATES_ENABLED_PREF, true)) {
           log.debug("Intermediate Preloading is disabled");
-          return Promise.resolve();
+          return;
         }
 
         log.debug(`Removing ${deleted.length} Intermediate certificates`);
-        this.removeCerts(deleted);
-        return Promise.resolve();
+        await this.removeCerts(deleted);
     }
 
     /**
@@ -195,14 +208,14 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
      * success/failure, check record.cert_import_complete.
      * @param  {AttachmentRecord} record defines which data to obtain
      * @param  {KintoCollection}  col The kinto collection to update
-     * @param  {nsIX509CertDB}    certdb The NSS DB to update
+     * @param  {nsICertStorage}   certStorage The certificate storage to update
      * @return {Promise}          a Promise representing the transaction
      */
-    async maybeDownloadAttachment(record, col, certdb) {
+    async maybeDownloadAttachment(record, col, certStorage) {
       const {attachment: {hash, size}} = record;
 
       return this._downloadAttachmentBytes(record)
-      .then(function(attachmentData) {
+      .then(async function(attachmentData) {
         if (!attachmentData || attachmentData.length == 0) {
           // Bug 1519273 - Log telemetry for these rejections
           log.debug(`Empty attachment. Hash=${hash}`);
@@ -210,7 +223,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
             .add("emptyAttachment");
 
-          return Promise.reject();
+          return;
         }
 
         // check the length
@@ -220,7 +233,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
             .add("unexpectedLength");
 
-          return Promise.reject();
+          return;
         }
 
         // check the hash
@@ -232,32 +245,50 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
             .add("unexpectedHash");
 
-          return Promise.reject();
+          return;
         }
 
-        // split off the header and footer, base64 decode, construct the cert
-        // from the resulting DER data.
-        let b64data = dataAsString.split("-----")[2].replace(/\s/g, "");
-        let certDer = atob(b64data);
-
+        let certBase64;
+        let subjectBase64;
         try {
-          log.debug(`Adding cert. Hash=${hash}. Size=${size}`);
-
-          // We can assume that roots obtained from remote-settings are part of
-          // the root program. If they aren't, they won't be used for path-
-          // building or have trust anyway, so just add it to the DB.
-          certdb.addCert(certDer, ",,");
+          // split off the header and footer
+          certBase64 = dataAsString.split("-----")[2].replace(/\s/g, "");
+          // get an array of bytes so we can use X509.jsm
+          let certBytes = stringToBytes(atob(certBase64));
+          let cert = new X509.Certificate();
+          cert.parse(certBytes);
+          // get the DER-encoded subject and get a base64-encoded string from it
+          // TODO(bug 1542028): add getters for _der and _bytes
+          subjectBase64 = btoa(bytesToString(cert.tbsCertificate.subject._der._bytes));
         } catch (err) {
-          Cu.reportError(`Failed to update CertDB: ${err}`);
+          Cu.reportError(`Failed to decode cert: ${err}`);
 
+          // Re-purpose the "failedToUpdateNSS" telemetry tag as "failed to
+          // decode preloaded intermediate certificate"
           Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
             .add("failedToUpdateNSS");
 
-          return Promise.reject();
+          return;
+        }
+        log.debug(`Adding cert. Hash=${hash}. Size=${size}`);
+        // We can assume that certs obtained from remote-settings are part of
+        // the root program. If they aren't, they won't be used for path-
+        // building anyway, so just add it to the DB with trust set to
+        // "inherit".
+        let result = await new Promise((resolve) => {
+          certStorage.addCertBySubject(certBase64, subjectBase64,
+                                       Ci.nsICertStorage.TRUST_INHERIT,
+                                       resolve);
+        });
+        if (result != Cr.NS_OK) {
+          Cu.reportError(`Failed to add to cert storage: ${result}`);
+          Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
+            .add("failedToUpdateDB");
+          return;
         }
 
         record.cert_import_complete = true;
-        return col.update(record);
+        await col.update(record);
       })
       .catch(() => {
         // Don't abort the outer Promise.all because of an error. Errors were
@@ -271,31 +302,21 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
       return this.client.maybeSync(expectedTimestamp, options);
     }
 
-    // Note that removing certificates from the DB will likely not have an
-    // effect until restart.
-    removeCerts(records) {
-      let recordsToRemove = records;
-
-      let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
-
-      for (let cert of certdb.getCerts().getEnumerator()) {
-        let certHash = stripColons(cert.sha256Fingerprint);
-        for (let i = 0; i < recordsToRemove.length; i++) {
-          let record = recordsToRemove[i];
-          if (record.pubKeyHash == certHash) {
-            try {
-              certdb.deleteCertificate(cert);
-              recordsToRemove.splice(i, 1);
-            } catch (err) {
-              Cu.reportError(`Failed to remove intermediate certificate Hash=${certHash}: ${err}`);
-            }
-            break;
-          }
+    async removeCerts(recordsToRemove) {
+      let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+      let failures = 0;
+      for (let record of recordsToRemove) {
+        let result = await new Promise((resolve) => {
+          certStorage.removeCertByHash(record.pubKeyHash, resolve);
+        });
+        if (result != Cr.NS_OK) {
+          Cu.reportError(`Failed to remove intermediate certificate Hash=${record.pubKeyHash}: ${result}`);
+          failures++;
         }
       }
 
-      if (recordsToRemove.length > 0) {
-        Cu.reportError(`Failed to remove ${recordsToRemove.length} intermediate certificates`);
+      if (failures > 0) {
+        Cu.reportError(`Failed to remove ${failures} intermediate certificates`);
         Services.telemetry.getHistogramById(INTERMEDIATES_ERRORS_TELEMETRY)
           .add("failedToRemove");
       }
