@@ -7,8 +7,8 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  WindowsGPOParser: "resource:///modules/policies/WindowsGPOParser.jsm",
-  macOSPoliciesParser: "resource:///modules/policies/macOSPoliciesParser.jsm",
+  WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.jsm",
+  macOSPoliciesParser: "resource://gre/modules/policies/macOSPoliciesParser.jsm",
   Policies: "resource:///modules/policies/Policies.jsm",
   JsonSchemaValidator: "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
 });
@@ -468,7 +468,7 @@ class WindowsGPOPoliciesProvider {
 
   _readData(wrk, root) {
     wrk.open(root, "SOFTWARE\\Policies", wrk.ACCESS_READ);
-    if (wrk.hasChild("Mozilla\\Firefox")) {
+    if (wrk.hasChild("Mozilla\\" + Services.appinfo.name)) {
       this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
     }
     wrk.close();

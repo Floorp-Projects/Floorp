@@ -1,5 +1,0 @@
-component {ea4e1414-779b-458b-9d1f-d18e8efbc145} EnterprisePolicies.js process=main
-contract @mozilla.org/browser/enterprisepolicies;1 {ea4e1414-779b-458b-9d1f-d18e8efbc145} process=main
-
-component {dc6358f8-d167-4566-bf5b-4350b5e6a7a2} EnterprisePoliciesContent.js process=content
-contract @mozilla.org/browser/enterprisepolicies;1 {dc6358f8-d167-4566-bf5b-4350b5e6a7a2} process=content
