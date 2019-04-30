@@ -507,10 +507,9 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         !aEvent->IsAllowedToDispatchDOMEvent()) {
       return;
     }
-    int16_t button = mouseEvent->mButton;
+
     switch (mouseEvent->mMessage) {
       case eMouseMove:
-        button = MouseButton::eNotPressed;
         pointerMessage = ePointerMove;
         break;
       case eMouseUp:
@@ -519,7 +518,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       case eMouseDown:
         pointerMessage =
             mouseEvent->mButtons &
-                    ~nsContentUtils::GetButtonsFlagForButton(button)
+                    ~nsContentUtils::GetButtonsFlagForButton(mouseEvent->mButton)
                 ? ePointerMove
                 : ePointerDown;
         break;
