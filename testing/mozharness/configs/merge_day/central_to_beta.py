@@ -11,16 +11,6 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ("{}{}".format(d, f),
-        "ac_add_options --with-branding=mobile/android/branding/nightly",
-        "ac_add_options --with-branding=mobile/android/branding/beta")
-        for d in ["mobile/android/config/mozconfigs/android-aarch64/",
-                  "mobile/android/config/mozconfigs/android-api-16/",
-                  "mobile/android/config/mozconfigs/android-x86/",
-                  "mobile/android/config/mozconfigs/android-x86_64/"]
-        for f in ["debug", "nightly"]
-    ] + [
-        # File, from, to
         (f, "ac_add_options --with-branding=browser/branding/nightly",
         "ac_add_options --enable-official-branding")
         for f in ["browser/config/mozconfigs/linux32/l10n-mozconfig",
