@@ -172,10 +172,10 @@ void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
   StartDelayedAutoplayMediaComponents();
   // Notfiy all content browsing contexts which are related with the canonical
   // browsing content tree to start delayed autoplay media.
-  for (auto iter = Group()->ContentParentsIter(); !iter.Done(); iter.Next()) {
-    auto entry = iter.Get();
-    Unused << entry->GetKey()->SendStartDelayedAutoplayMediaComponents(this);
-  }
+
+  Group()->EachParent([&](ContentParent* aParent) {
+    Unused << aParent->SendStartDelayedAutoplayMediaComponents(this);
+  });
 }
 
 void CanonicalBrowsingContext::SetFieldEpochsForChild(

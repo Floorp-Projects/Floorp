@@ -264,13 +264,9 @@ void BrowsingContext::Attach(bool aFromIPC) {
           GetIPCInitializer());
     } else if (IsContent()) {
       MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-      for (auto iter = Group()->ContentParentsIter(); !iter.Done();
-           iter.Next()) {
-        nsRefPtrHashKey<ContentParent>* entry = iter.Get();
-
-        Unused << entry->GetKey()->SendAttachBrowsingContext(
-            GetIPCInitializer());
-      }
+      Group()->EachParent([&](ContentParent* aParent) {
+        Unused << aParent->SendAttachBrowsingContext(GetIPCInitializer());
+      });
     }
   }
 }
@@ -775,14 +771,13 @@ void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
                                              aBrowsingContext->mFieldEpochs);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    for (auto iter = aBrowsingContext->Group()->ContentParentsIter();
-         !iter.Done(); iter.Next()) {
-      RefPtr<ContentParent> child = iter.Get()->GetKey();
+
+    aBrowsingContext->Group()->EachParent([&](ContentParent* aParent) {
       const FieldEpochs& childEpochs =
-          aBrowsingContext->Canonical()->GetFieldEpochsForChild(child);
-      Unused << child->SendCommitBrowsingContextTransaction(aBrowsingContext,
-                                                            *this, childEpochs);
-    }
+          aBrowsingContext->Canonical()->GetFieldEpochsForChild(aParent);
+      Unused << aParent->SendCommitBrowsingContextTransaction(
+          aBrowsingContext, *this, childEpochs);
+    });
   }
 
   Apply(aBrowsingContext, nullptr);
