@@ -159,6 +159,14 @@ def check_and_add_flags(flag, flags_collection, test_flags,
                 return True
 
         if check:
+            @depends(c, dependable(flags))
+            def flags(c, flags):
+                # Don't error out just because clang complains about other things.
+                if c.type == 'clang':
+                    flags += ['-Wno-error=unused-command-line-argument']
+
+                return flags
+
             result = c.try_compile(
                 flags=flags, when=result,
                 check_msg='whether the %s compiler supports %s' % (lang, flag))
