@@ -99,7 +99,7 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
                            &outputData);
       Message::UniquePtr response(MiddlemanCallResponseMessage::New(
           outputData.begin(), outputData.length()));
-      SendMessage(*response);
+      SendMessage(std::move(*response));
       break;
     }
     case MessageType::ResetMiddlemanCalls:
@@ -110,7 +110,7 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
   }
 }
 
-void ChildProcessInfo::SendMessage(const Message& aMsg) {
+void ChildProcessInfo::SendMessage(Message&& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   // Update paused state.
@@ -128,7 +128,7 @@ void ChildProcessInfo::SendMessage(const Message& aMsg) {
   }
 
   mLastMessageTime = TimeStamp::Now();
-  mChannel->SendMessage(aMsg);
+  mChannel->SendMessage(std::move(aMsg));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ void ChildProcessInfo::LaunchSubprocess(
   WaitUntilPaused();
 
   MOZ_RELEASE_ASSERT(gIntroductionMessage);
-  SendMessage(*gIntroductionMessage);
+  SendMessage(std::move(*gIntroductionMessage));
 
   // Always save the first checkpoint in replaying child processes.
   if (!IsRecording()) {
