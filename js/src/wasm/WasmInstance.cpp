@@ -131,6 +131,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       case ValType::F64:
         args[i].set(JS::CanonicalizedDoubleValue(*(double*)&argv[i]));
         break;
+      case ValType::FuncRef:
       case ValType::AnyRef: {
         args[i].set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)&argv[i])));
         break;
@@ -219,7 +220,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         type = TypeSet::DoubleType();
         break;
       case ValType::Ref:
-        MOZ_CRASH("case guarded above");
+      case ValType::FuncRef:
       case ValType::AnyRef:
         MOZ_CRASH("case guarded above");
       case ValType::I64:
@@ -306,6 +307,24 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
     return false;
   }
   *(void**)argv = result.get().forCompiledCode();
+  return true;
+}
+
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
+Instance::callImport_funcref(Instance* instance, int32_t funcImportIndex,
+                             int32_t argc, uint64_t* argv) {
+  JSContext* cx = TlsContext.get();
+  RootedValue rval(cx);
+  if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval)) {
+    return false;
+  }
+
+  RootedFunction fun(cx);
+  if (!CheckFuncRefValue(cx, rval, &fun)) {
+    return false;
+  }
+
+  *(void**)argv = fun;
   return true;
 }
 
@@ -1059,7 +1078,7 @@ Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref,
 // Either the written location is in the global data section in the
 // WasmInstanceObject, or the Cell of a WasmGlobalObject:
 //
-// - WasmInstanceObjects are always tenured and u.ref_/anyref_ may point to a
+// - WasmInstanceObjects are always tenured and u.ref_ may point to a
 //   nursery object, so we need a post-barrier since the global data of an
 //   instance is effectively a field of the WasmInstanceObject.
 //
@@ -1088,33 +1107,22 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
       memcpy(dst, &x, sizeof(x));
       break;
     }
+    case ValType::Ref:
+    case ValType::FuncRef:
     case ValType::AnyRef: {
       // TODO/AnyRef-boxing: With boxed immediates and strings, the write
       // barrier is going to have to be more complicated.
       ASSERT_ANYREF_IS_JSOBJECT;
       MOZ_ASSERT(*(void**)dst == nullptr,
                  "should be null so no need for a pre-barrier");
-      AnyRef x = src.anyref();
-      memcpy(dst, x.asJSObjectAddress(), sizeof(x));
+      AnyRef x = src.ref();
+      memcpy(dst, x.asJSObjectAddress(), sizeof(*x.asJSObjectAddress()));
       if (!x.isNull()) {
         JSObject::writeBarrierPost((JSObject**)dst, nullptr, x.asJSObject());
       }
       break;
     }
-    case ValType::Ref: {
-      MOZ_ASSERT(*(JSObject**)dst == nullptr,
-                 "should be null so no need for a pre-barrier");
-      JSObject* x = src.ref();
-      memcpy(dst, &x, sizeof(x));
-      if (x) {
-        JSObject::writeBarrierPost((JSObject**)dst, nullptr, x);
-      }
-      break;
-    }
     case ValType::NullRef: {
-      break;
-    }
-    default: {
       MOZ_CRASH("unexpected Val type");
     }
   }
@@ -1402,13 +1410,13 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 
   for (const GlobalDesc& global : code().metadata().globals) {
-    // Indirect anyref global get traced by the owning WebAssembly.Global.
+    // Indirect reference globals get traced by the owning WebAssembly.Global.
     if (!global.type().isReference() || global.isConstant() ||
         global.isIndirect()) {
       continue;
     }
     GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
-    TraceNullableEdge(trc, obj, "wasm ref/anyref global");
+    TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
@@ -1656,7 +1664,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   }
 
   ASSERT_ANYREF_IS_JSOBJECT;
-  Rooted<GCVector<JSObject*, 8, SystemAllocPolicy>> anyrefs(cx);
+  Rooted<GCVector<JSObject*, 8, SystemAllocPolicy>> refs(cx);
 
   DebugCodegen(DebugChannel::Function, "wasm-function[%d]; arguments ",
                funcIndex);
@@ -1666,7 +1674,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     switch (funcType->arg(i).code()) {
       case ValType::I32:
         if (!ToInt32(cx, v, (int32_t*)&exportArgs[i])) {
-          DebugCodegen(DebugChannel::Function, "call to ToInt32 failed!\n");
           return false;
         }
         DebugCodegen(DebugChannel::Function, "i32(%d) ",
@@ -1676,8 +1683,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         MOZ_CRASH("unexpected i64 flowing into callExport");
       case ValType::F32:
         if (!RoundFloat32(cx, v, (float*)&exportArgs[i])) {
-          DebugCodegen(DebugChannel::Function,
-                       "call to RoundFloat32 failed!\n");
           return false;
         }
         DebugCodegen(DebugChannel::Function, "f32(%f) ",
@@ -1685,7 +1690,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         break;
       case ValType::F64:
         if (!ToNumber(cx, v, (double*)&exportArgs[i])) {
-          DebugCodegen(DebugChannel::Function, "call to ToNumber failed!\n");
           return false;
         }
         DebugCodegen(DebugChannel::Function, "f64(%lf) ",
@@ -1693,20 +1697,32 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
         break;
       case ValType::Ref:
         MOZ_CRASH("temporarily unsupported Ref type in callExport");
-      case ValType::AnyRef: {
-        RootedAnyRef ar(cx, AnyRef::null());
-        if (!BoxAnyRef(cx, v, &ar)) {
-          DebugCodegen(DebugChannel::Function, "call to BoxAnyRef failed!\n");
+      case ValType::FuncRef: {
+        RootedFunction fun(cx);
+        if (!CheckFuncRefValue(cx, v, &fun)) {
           return false;
         }
-        // We'll copy the value into the arguments array just before the call;
-        // for now tuck the value away in a rooted array.
+        // Store in rooted array until no more GC is possible.
         ASSERT_ANYREF_IS_JSOBJECT;
-        if (!anyrefs.emplaceBack(ar.get().asJSObject())) {
+        if (!refs.emplaceBack(fun)) {
           return false;
         }
         DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
-                     int(anyrefs.length() - 1));
+                     int(refs.length() - 1));
+        break;
+      }
+      case ValType::AnyRef: {
+        RootedAnyRef ar(cx, AnyRef::null());
+        if (!BoxAnyRef(cx, v, &ar)) {
+          return false;
+        }
+        // Store in rooted array until no more GC is possible.
+        ASSERT_ANYREF_IS_JSOBJECT;
+        if (!refs.emplaceBack(ar.get().asJSObject())) {
+          return false;
+        }
+        DebugCodegen(DebugChannel::Function, "ptr(#%d) ",
+                     int(refs.length() - 1));
         break;
       }
       case ValType::NullRef: {
@@ -1718,18 +1734,18 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   DebugCodegen(DebugChannel::Function, "\n");
 
   // Copy over reference values from the rooted array, if any.
-  if (anyrefs.length() > 0) {
+  if (refs.length() > 0) {
     DebugCodegen(DebugChannel::Function, "; ");
     size_t nextRef = 0;
     for (size_t i = 0; i < funcType->args().length(); ++i) {
       if (funcType->arg(i).isReference()) {
         ASSERT_ANYREF_IS_JSOBJECT;
-        *(void**)&exportArgs[i] = (void*)anyrefs[nextRef++];
+        *(void**)&exportArgs[i] = (void*)refs[nextRef++];
         DebugCodegen(DebugChannel::Function, "ptr(#%d) = %p ", int(nextRef - 1),
                      *(void**)&exportArgs[i]);
       }
     }
-    anyrefs.clear();
+    refs.clear();
   }
 
   {
@@ -1783,6 +1799,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
       break;
     case ExprType::Ref:
       MOZ_CRASH("temporarily unsupported Ref type in callExport");
+    case ExprType::FuncRef:
     case ExprType::AnyRef:
       args.rval().set(UnboxAnyRef(AnyRef::fromCompiledCode(*(void**)retAddr)));
       DebugCodegen(DebugChannel::Function, "ptr(%p)", *(void**)retAddr);
