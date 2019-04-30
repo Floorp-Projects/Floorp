@@ -63,7 +63,7 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
     const { contentType, source } = response;
     if (source.type === "arrayBuffer") {
       const arrayBuffer = this._activeThread.threadArrayBuffer(source);
-      return arrayBuffer.slice(0, arrayBuffer.length).then(function(resp) {
+      return arrayBuffer.slice(0, source.length).then(function(resp) {
         if (resp.error) {
           return resp;
         }
@@ -81,14 +81,13 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
       });
     }
 
-    const longString = this._activeThread.threadLongString(source);
-    return longString.substring(0, longString.length).then(function(resp) {
+    return source.substring(0, source.length).then(function(resp) {
       if (resp.error) {
         return resp;
       }
 
       const newResponse = {
-        source: resp.substring,
+        source: resp,
         contentType: contentType,
       };
       return newResponse;
