@@ -87,8 +87,7 @@ class JsepTrackTest : public ::testing::Test {
   void InitTracks(SdpMediaSection::MediaType type) {
     mSendOff = JsepTrack(type, sdp::kSend);
     if (type != SdpMediaSection::MediaType::kApplication) {
-      mSendOff.UpdateTrackIds(std::vector<std::string>(1, "stream_id"),
-                              "track_id");
+      mSendOff.UpdateStreamIds(std::vector<std::string>(1, "stream_id"));
     }
     mRecvOff = JsepTrack(type, sdp::kRecv);
     mSendOff.PopulateCodecs(mOffCodecs);
@@ -96,8 +95,7 @@ class JsepTrackTest : public ::testing::Test {
 
     mSendAns = JsepTrack(type, sdp::kSend);
     if (type != SdpMediaSection::MediaType::kApplication) {
-      mSendAns.UpdateTrackIds(std::vector<std::string>(1, "stream_id"),
-                              "track_id");
+      mSendAns.UpdateStreamIds(std::vector<std::string>(1, "stream_id"));
     }
     mRecvAns = JsepTrack(type, sdp::kRecv);
     mSendAns.PopulateCodecs(mAnsCodecs);
@@ -129,8 +127,8 @@ class JsepTrackTest : public ::testing::Test {
   SdpMediaSection& GetAnswer() { return mAnswer->GetMediaSection(0); }
 
   void CreateOffer() {
-    mSendOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
-    mRecvOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
+    mSendOff.AddToOffer(mSsrcGenerator, &GetOffer());
+    mRecvOff.AddToOffer(mSsrcGenerator, &GetOffer());
   }
 
   void CreateAnswer() {
@@ -138,8 +136,8 @@ class JsepTrackTest : public ::testing::Test {
       mRecvAns.UpdateRecvTrack(*mOffer, GetOffer());
     }
 
-    mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
-    mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
+    mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
+    mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
   }
 
   void Negotiate() {
@@ -182,11 +180,11 @@ class JsepTrackTest : public ::testing::Test {
       ASSERT_TRUE(recv.GetNegotiatedDetails());
     }
 
-    if (!send.GetTrackId().empty() && send.GetNegotiatedDetails()) {
+    if (!send.GetStreamIds().empty() && send.GetNegotiatedDetails()) {
       ASSERT_EQ(expected, send.GetNegotiatedDetails()->GetEncodingCount());
     }
 
-    if (!recv.GetTrackId().empty() && recv.GetNegotiatedDetails()) {
+    if (!recv.GetStreamIds().empty() && recv.GetNegotiatedDetails()) {
       ASSERT_EQ(expected, recv.GetNegotiatedDetails()->GetEncodingCount());
     }
   }
@@ -385,8 +383,7 @@ TEST_F(JsepTrackTest, CheckForMismatchedAudioCodecAndVideoTrack) {
   // make codecs including telephone-event (an audio codec)
   offerCodecs = MakeCodecs(false, false, true);
   JsepTrack videoTrack(SdpMediaSection::kVideo, sdp::kSend);
-  videoTrack.UpdateTrackIds(std::vector<std::string>(1, "stream_id"),
-                            "track_id");
+  videoTrack.UpdateStreamIds(std::vector<std::string>(1, "stream_id"));
   // populate codecs and then make sure we don't have any audio codecs
   // in the video track
   videoTrack.PopulateCodecs(offerCodecs);

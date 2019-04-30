@@ -234,81 +234,68 @@ async function testTabUpdated(tab) {
   nextCycle();
 }
 
-function waitForResult() {
-  console.log("awaiting results...");
-  return new Promise(resolve => {
-    async function checkForResult() {
+async function waitForResult() {
+  let results = await new Promise(resolve => {
+    function checkForResult() {
+      console.log("checking results...");
       switch (testType) {
         case TEST_BENCHMARK:
           if (!isBenchmarkPending) {
-            cancelTimeoutAlarm("raptor-page-timeout");
-            postToControlServer("status", "results received");
-            if (geckoProfiling) {
-              await getGeckoProfile();
-            }
             resolve();
-            if (screenCapture) {
-              await getScreenCapture();
-            }
           } else {
-            setTimeout(checkForResult, 5);
+            setTimeout(checkForResult, 250);
           }
           break;
 
         case TEST_PAGE_LOAD:
           if (!isHeroPending &&
-            !isFNBPaintPending &&
-            !isFCPPending &&
-            !isDCFPending &&
-            !isTTFIPending &&
-            !isLoadTimePending) {
-            cancelTimeoutAlarm("raptor-page-timeout");
-            postToControlServer("status", "results received");
-            if (geckoProfiling) {
-              await getGeckoProfile();
-            }
-            if (screenCapture) {
-              await getScreenCapture();
-            }
-
+              !isFNBPaintPending &&
+              !isFCPPending &&
+              !isDCFPending &&
+              !isTTFIPending &&
+              !isLoadTimePending) {
             resolve();
           } else {
-            setTimeout(checkForResult, 5);
+            setTimeout(checkForResult, 250);
           }
           break;
       }
     }
+
     checkForResult();
   });
+
+  cancelTimeoutAlarm("raptor-page-timeout");
+
+  postToControlServer("status", "results received");
+
+  if (geckoProfiling) {
+    await getGeckoProfile();
+  }
+
+  if (screenCapture) {
+    await getScreenCapture();
+  }
+
+  return results;
 }
 
 async function getScreenCapture() {
-  console.log("Capturing screenshot...");
-  var capturing;
-  if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
-    capturing = ext.tabs.captureVisibleTab();
-    capturing.then(onCaptured, onError);
-    await capturing;
-  } else {
-    // create capturing promise
-    capturing =  new Promise(function(resolve, reject) {
-    ext.tabs.captureVisibleTab(resolve);
-  });
+  console.log("capturing screenshot");
 
-    // capture and wait for promise to end
-    capturing.then(onCaptured, onError);
-    await capturing;
+  try {
+    let screenshotUri;
+
+    if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
+      screenshotUri = await ext.tabs.captureVisibleTab();
+    } else {
+      screenshotUri = await new Promise(resolve =>
+          ext.tabs.captureVisibleTab(resolve));
+    }
+    postToControlServer("screenshot", [screenshotUri, testName, pageCycle]);
+  } catch (e) {
+    console.log(`failed to capture screenshot: ${e}`);
   }
-}
-
-function onCaptured(screenshotUri) {
-  console.log("Screenshot capured!");
-  postToControlServer("screenshot", [screenshotUri, testName, pageCycle]);
-}
-
-function onError(error) {
-  console.log("Screenshot captured failed!");
-  console.log(`Error: ${error}`);
 }
 
 async function startGeckoProfiling() {
@@ -421,10 +408,8 @@ async function timeoutAlarmListener() {
   }
   postToControlServer("raptor-page-timeout", msgData);
 
-  // take a screen capture
-  if (screenCapture) {
-    await getScreenCapture();
-  }
+  await getScreenCapture();
+
   // call clean-up to shutdown gracefully
   cleanUp();
 }

@@ -7,7 +7,6 @@
 //
 
 "use strict";
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var testpath = "/bug672448";
 

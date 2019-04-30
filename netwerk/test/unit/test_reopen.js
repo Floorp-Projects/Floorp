@@ -4,7 +4,6 @@
 "use strict";
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream",

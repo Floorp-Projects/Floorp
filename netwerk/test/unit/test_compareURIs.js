@@ -1,4 +1,3 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function do_info(text, stack) {
   if (!stack)

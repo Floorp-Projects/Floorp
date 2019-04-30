@@ -34,6 +34,8 @@ class Page extends ContentProcessDomain {
   async enable() {
     if (!this.enabled) {
       this.enabled = true;
+      this.chromeEventHandler.addEventListener("DOMWindowCreated", this,
+        {mozSystemGroup: true});
       this.chromeEventHandler.addEventListener("DOMContentLoaded", this,
         {mozSystemGroup: true});
       this.chromeEventHandler.addEventListener("pageshow", this,
@@ -43,6 +45,8 @@ class Page extends ContentProcessDomain {
 
   disable() {
     if (this.enabled) {
+      this.chromeEventHandler.removeEventListener("DOMWindowCreated", this,
+        {mozSystemGroup: true});
       this.chromeEventHandler.removeEventListener("DOMContentLoaded", this,
         {mozSystemGroup: true});
       this.chromeEventHandler.removeEventListener("pageshow", this,
@@ -64,7 +68,9 @@ class Page extends ContentProcessDomain {
     this.docShell.QueryInterface(Ci.nsIWebNavigation);
     this.docShell.loadURI(url, opts);
 
-    return {frameId: "42"};
+    return {
+      frameId: this.content.windowUtils.outerWindowID,
+    };
   }
 
   getFrameTree() {
@@ -86,19 +92,37 @@ class Page extends ContentProcessDomain {
     return this.content.location.href;
   }
 
-  handleEvent({type}) {
+  handleEvent({type, target}) {
+    if (target.defaultView != this.content) {
+      // Ignore iframes for now
+      return;
+    }
+
     const timestamp = Date.now();
+    const frameId = target.defaultView.windowUtils.outerWindowID;
+    const url = target.location.href;
 
     switch (type) {
+    case "DOMWindowCreated":
+      this.emit("Page.frameNavigated", {
+        frame: {
+          id: frameId,
+          // frameNavigated is only emitted for the top level document
+          // so that it never has a parent.
+          parentId: null,
+          url,
+        },
+      });
+      break;
     case "DOMContentLoaded":
       this.emit("Page.domContentEventFired", {timestamp});
       break;
 
     case "pageshow":
-      this.emit("Page.loadEventFired", {timestamp});
+      this.emit("Page.loadEventFired", {timestamp, frameId});
       // XXX this should most likely be sent differently
-      this.emit("Page.navigatedWithinDocument", {timestamp});
-      this.emit("Page.frameStoppedLoading", {timestamp});
+      this.emit("Page.navigatedWithinDocument", {timestamp, frameId, url});
+      this.emit("Page.frameStoppedLoading", {timestamp, frameId});
       break;
     }
   }

@@ -232,6 +232,19 @@ class TextProperty {
     return this.rule.domRule.declarations[selfIndex].isValid;
   }
 
+  isUsed() {
+    const selfIndex = this.rule.textProps.indexOf(this);
+    const declarations = this.rule.domRule.declarations;
+
+    // StyleRuleActor's declarations may have a isUsed flag (if the server is the right
+    // version). Just return true if the information is missing.
+    if (!declarations || !declarations[selfIndex] || !declarations[selfIndex].isUsed) {
+      return { used: true };
+    }
+
+    return declarations[selfIndex].isUsed;
+  }
+
   /**
    * Validate the name of this property.
    *

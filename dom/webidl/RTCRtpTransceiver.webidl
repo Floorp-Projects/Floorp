@@ -38,15 +38,6 @@ interface RTCRtpTransceiver {
     // void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
 
     [ChromeOnly]
-    void setRemoteTrackId(DOMString trackId);
-    [ChromeOnly]
-    boolean remoteTrackIdIs(DOMString trackId);
-
-    // Mostly for testing
-    [Pref="media.peerconnection.remoteTrackId.enabled"]
-    DOMString getRemoteTrackId();
-
-    [ChromeOnly]
     void setAddTrackMagic();
     [ChromeOnly]
     readonly attribute boolean addTrackMagic;

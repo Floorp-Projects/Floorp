@@ -336,6 +336,12 @@ html|input.urlbar-input {
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 }
 
+/* Remove our custom border since we already get a native one that we can't
+ * seem to override. */
+#urlbar-results {
+  border-style: none;
+}
+
 /* Give an extra margin top to align the top of the awesomebar with the
  * bottom of the nav bar, OSX calculates the panel position with an missing
  * 1px - https://bugzilla.mozilla.org/show_bug.cgi?id=1406353

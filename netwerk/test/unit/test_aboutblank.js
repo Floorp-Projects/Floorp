@@ -1,4 +1,3 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   var base = NetUtil.newURI("http://www.example.com");

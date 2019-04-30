@@ -284,6 +284,8 @@ pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("ui.use_native_colors", true);
 pref("ui.click_hold_context_menus", false);
+// 0 = false, 1 = true, 2 = autodetect.
+pref("ui.android.mouse_as_touch", 1);
 
 // Pop up context menu on mouseup instead of mousedown, if that's the OS default.
 // Note: ignored on Windows (context menus always use mouseup)
@@ -443,7 +445,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false
 pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
 
 #ifdef MOZ_WEBRTC
-pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.use_remb", true);
@@ -468,7 +469,6 @@ pref("media.webrtc.debug.aec_dump_max_size", 4194304); // 4MB
 
 pref("media.navigator.video.default_width",0);  // adaptive default
 pref("media.navigator.video.default_height",0); // adaptive default
-pref("media.peerconnection.enabled", true);
 pref("media.peerconnection.video.enabled", true);
 pref("media.navigator.video.max_fs", 12288); // Enough for 2048x1536
 pref("media.navigator.video.max_fr", 60);

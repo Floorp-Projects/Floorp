@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Cross domain access to properties</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<!--
+ *5 cookies: 1+1 from file_testloadflags.js, 2 from file_loadflags_inner.html + 1 from beltzner.jpg.
+ *1 load: file_loadflags_inner.html.
+ *2 headers: 1 for file_loadflags_inner.html + 1 for beltzner.jpg.
+ -->
+<body onload="setupTest('http://example.org/tests/netwerk/test/mochitests/file_loadflags_inner.html', 'example.org', 5, 2, 2)">
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript" src="file_testloadflags.js">
+</script>
+</pre>
+</body>
+</html>

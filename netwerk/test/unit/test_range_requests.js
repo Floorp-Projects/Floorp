@@ -19,7 +19,6 @@
 //  for each. None of the handlers should see a Range-header.
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = null;
 

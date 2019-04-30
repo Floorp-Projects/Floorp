@@ -1,5 +1,4 @@
 const URL = "ftp://localhost/bug515583/";
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const tests = [
   ["[RWCEM1 4 1-MAR-1993 18:09:01.12\r\n" +

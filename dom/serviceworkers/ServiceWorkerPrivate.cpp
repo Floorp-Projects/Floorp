@@ -1730,11 +1730,11 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // moment, ServiceWorkers are not exposed in partitioned contexts.
   info.mStoragePrincipal = info.mPrincipal;
 
-  info.mStorageAccess =
-      nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
-
   info.mCookieSettings = mozilla::net::CookieSettings::Create();
   MOZ_ASSERT(info.mCookieSettings);
+
+  info.mStorageAccess = nsContentUtils::StorageAllowedForServiceWorker(
+      info.mPrincipal, info.mCookieSettings);
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 

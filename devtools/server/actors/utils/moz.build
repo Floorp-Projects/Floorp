@@ -13,6 +13,7 @@ DevToolsModules(
     'dbg-source.js',
     'event-breakpoints.js',
     'event-loop.js',
+    'inactive-property-helper.js',
     'make-debugger.js',
     'shapes-utils.js',
     'stack.js',

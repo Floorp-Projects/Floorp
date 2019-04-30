@@ -43,7 +43,7 @@ if CONFIG['NECKO_COOKIES']:
     ]
     LOCAL_INCLUDES += [
         '/dom/base',
-        '/extensions/cookie',
+        '/extensions/permissions',
         '/intl/uconv',
     ]
 

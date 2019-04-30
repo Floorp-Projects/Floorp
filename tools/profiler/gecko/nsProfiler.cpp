@@ -161,6 +161,12 @@ nsProfiler::AddMarker(const char* aMarker) {
 }
 
 NS_IMETHODIMP
+nsProfiler::ClearAllPages() {
+  profiler_clear_all_pages();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfiler::GetProfile(double aSinceTime, char** aProfile) {
   mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
   *aProfile = profile.release();

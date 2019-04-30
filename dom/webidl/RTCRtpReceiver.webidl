@@ -20,7 +20,7 @@ interface RTCRtpReceiver {
   [ChromeOnly]
   void setStreamIds(sequence<DOMString> streamIds);
   [ChromeOnly]
-  void setRemoteSendBit(boolean sendBit);
+  void setRecvBit(boolean recvBit);
   [ChromeOnly]
   void processTrackAdditionsAndRemovals(
       RTCRtpTransceiver transceiver,

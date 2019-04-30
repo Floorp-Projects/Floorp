@@ -56,7 +56,7 @@ add_task(async function test_TODO() {
 
 class MochitestCreator(Creator):
     templates = {
-        "mochitest-browser": "browser.template.txt",
+        "mochitest-browser-chrome": "browser.template.txt",
         "mochitest-plain": "plain%(doc)s.template.txt",
         "mochitest-chrome": "chrome%(doc)s.template.txt",
     }
@@ -86,7 +86,7 @@ class MochitestCreator(Creator):
         guessed_ini = {
             "mochitest-plain": "mochitest.ini",
             "mochitest-chrome": "chrome.ini",
-            "mochitest-browser": "browser.ini"
+            "mochitest-browser-chrome": "browser.ini"
         }[self.suite]
         manifest_file = os.path.join(os.path.dirname(self.test), guessed_ini)
         filename = os.path.basename(self.test)
@@ -308,5 +308,8 @@ TEST_CREATORS = {"mochitest": MochitestCreator,
 
 
 def creator_for_suite(suite):
-    base_suite = suite.rsplit("-", 1)[0]
+    if suite.split("-")[0] == "mochitest":
+        base_suite = "mochitest"
+    else:
+        base_suite = suite.rsplit("-", 1)[0]
     return TEST_CREATORS.get(base_suite)
