@@ -157,8 +157,8 @@ class nsCoreUtils {
    * and when.
    */
   static nsresult ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
-                                    nsIPresShell::ScrollAxis aVertical,
-                                    nsIPresShell::ScrollAxis aHorizontal);
+                                    mozilla::ScrollAxis aVertical,
+                                    mozilla::ScrollAxis aHorizontal);
 
   /**
    * Scrolls the given frame to the point, used for implememntation of
@@ -175,9 +175,9 @@ class nsCoreUtils {
    * Converts scroll type constant defined in nsIAccessibleScrollType to
    * vertical and horizontal parameters.
    */
-  static void ConvertScrollTypeToPercents(
-      uint32_t aScrollType, nsIPresShell::ScrollAxis *aVertical,
-      nsIPresShell::ScrollAxis *aHorizontal);
+  static void ConvertScrollTypeToPercents(uint32_t aScrollType,
+                                          mozilla::ScrollAxis *aVertical,
+                                          mozilla::ScrollAxis *aHorizontal);
 
   /**
    * Returns coordinates in device pixels relative screen for the top level
