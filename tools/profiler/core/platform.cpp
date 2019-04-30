@@ -2218,7 +2218,8 @@ static void PrintUsageThenExit(int aExitCode) {
       "  MOZ_PROFILER_STARTUP_ENTRIES=<1..>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the number of entries in\n"
       "  the profiler's circular buffer when the profiler is first started.\n"
-      "  If unset, the platform default is used.\n"
+      "  If unset, the platform default is used:\n"
+      "  %u, or %u when MOZ_PROFILER_STARTUP is set.\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_DURATION=<1..>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the maximum life time of\n"
@@ -2245,7 +2246,9 @@ static void PrintUsageThenExit(int aExitCode) {
       "  If unset, the platform default is used.\n"
       "\n"
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
-      "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n");
+      "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
+      unsigned(PROFILER_DEFAULT_ENTRIES),
+      unsigned(PROFILER_DEFAULT_STARTUP_ENTRIES));
 
 #define PRINT_FEATURE(n_, str_, Name_, desc_)                                  \
   printf("    %c %5u: \"%s\" (%s)\n", FeatureCategory(ProfilerFeature::Name_), \
@@ -2828,7 +2831,7 @@ void profiler_init(void* aStackTop) {
   MOZ_RELEASE_ASSERT(filters.append("Compositor"));
   MOZ_RELEASE_ASSERT(filters.append("DOM Worker"));
 
-  int capacity = PROFILER_DEFAULT_ENTRIES;
+  uint32_t capacity = PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = Nothing();
   double interval = PROFILER_DEFAULT_INTERVAL;
 
@@ -2870,12 +2873,20 @@ void profiler_init(void* aStackTop) {
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
+    // Startup default capacity may be different.
+    capacity = PROFILER_DEFAULT_STARTUP_ENTRIES;
+
     const char* startupCapacity = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
     if (startupCapacity && startupCapacity[0] != '\0') {
       errno = 0;
-      capacity = strtol(startupCapacity, nullptr, 10);
-      if (errno == 0 && capacity > 0) {
-        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %d", capacity);
+      long capacityLong = strtol(startupCapacity, nullptr, 10);
+      // `long` could be 32 or 64 bits, so we force a 64-bit comparison with
+      // the maximum 32-bit unsigned number.
+      if (errno == 0 && capacityLong > 0 &&
+          static_cast<uint64_t>(capacityLong) <=
+              static_cast<uint64_t>(UINT32_MAX)) {
+        capacity = static_cast<uint32_t>(capacityLong);
+        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %u", unsigned(capacity));
       } else {
         LOG("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
             startupCapacity);
