@@ -13918,6 +13918,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::I64:
       case wasm::ValType::Ref:
       case wasm::ValType::AnyRef:
+      case wasm::ValType::FuncRef:
         // Don't forget to trace GC type arguments in TraceJitExitFrames
         // when they're enabled.
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
@@ -13976,6 +13977,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       break;
     case wasm::ExprType::Ref:
     case wasm::ExprType::AnyRef:
+    case wasm::ExprType::FuncRef:
     case wasm::ExprType::I64:
       // Don't forget to trace GC type return value in TraceJitExitFrames
       // when they're enabled.
