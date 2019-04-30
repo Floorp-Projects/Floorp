@@ -76,17 +76,17 @@ const nsCString ToString(CodeNameIndex aCodeNameIndex) {
 }
 
 const char* ToChar(Command aCommand) {
-  if (aCommand == CommandDoNothing) {
+  if (aCommand == Command::DoNothing) {
     return "CommandDoNothing";
   }
 
   switch (aCommand) {
 #define NS_DEFINE_COMMAND(aName, aCommandStr) \
-  case Command##aName:                        \
-    return "Command" #aName;
+  case Command::aName:                        \
+    return "Command::" #aName;
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) \
-  case Command##aName:                           \
-    return "Command" #aName;
+  case Command::aName:                           \
+    return "Command::" #aName;
 
 #include "mozilla/CommandList.h"
 
@@ -1100,7 +1100,7 @@ uint32_t WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 #define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName)
   static const char* const kCommands[] = {
-      ""  // CommandDoNothing
+      ""  // DoNothing
 #include "mozilla/CommandList.h"
   };
 #undef NS_DEFINE_COMMAND
@@ -1108,7 +1108,7 @@ uint32_t WidgetKeyboardEvent::GetFallbackKeyCodeOfPunctuationKey(
 
   MOZ_RELEASE_ASSERT(static_cast<size_t>(aCommand) < ArrayLength(kCommands),
                      "Illegal command enumeration value");
-  return kCommands[aCommand];
+  return kCommands[static_cast<CommandInt>(aCommand)];
 }
 
 /* static */

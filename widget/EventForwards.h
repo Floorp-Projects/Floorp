@@ -202,12 +202,12 @@ inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
   }
 }
 
-#define NS_DEFINE_COMMAND(aName, aCommandStr) , Command##aName
-#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , Command##aName
+#define NS_DEFINE_COMMAND(aName, aCommandStr) , aName
+#define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , aName
 
 typedef int8_t CommandInt;
-enum Command : CommandInt {
-  CommandDoNothing
+enum class Command : CommandInt {
+  DoNothing
 
 #include "mozilla/CommandList.h"
 };
