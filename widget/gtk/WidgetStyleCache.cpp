@@ -662,9 +662,6 @@ static void CreateHeaderBar() {
 }
 
 static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
-  MOZ_ASSERT(aAppearance != MOZ_GTK_DROPDOWN_ENTRY,
-             "Callers should be passing MOZ_GTK_ENTRY");
-
   switch (aAppearance) {
     case MOZ_GTK_WINDOW:
       return CreateWindowWidget();
@@ -707,6 +704,7 @@ static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
     case MOZ_GTK_BUTTON_ARROW:
       return CreateButtonArrowWidget();
     case MOZ_GTK_ENTRY:
+    case MOZ_GTK_DROPDOWN_ENTRY:
       return CreateEntryWidget();
     case MOZ_GTK_SCROLLED_WINDOW:
       return CreateScrolledWindowWidget();
@@ -1349,10 +1347,6 @@ void ResetWidgetCache(void) {
 GtkStyleContext* GetStyleContext(WidgetNodeType aNodeType, int aScale,
                                  GtkTextDirection aDirection,
                                  GtkStateFlags aStateFlags) {
-  if (aNodeType == MOZ_GTK_DROPDOWN_ENTRY) {
-    aNodeType = MOZ_GTK_ENTRY;
-  }
-
   GtkStyleContext* style;
   if (gtk_check_version(3, 20, 0) != nullptr) {
     style = GetWidgetStyleInternal(aNodeType);
