@@ -3,7 +3,6 @@
  * should not fail for channels of unknown size
  */
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
                           .getService(Ci.nsIContentSecurityManager);

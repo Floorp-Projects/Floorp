@@ -6,7 +6,6 @@
 //  HTTP Server-Timing header test
 //
 
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function make_and_open_channel(url, callback) {
   let chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});

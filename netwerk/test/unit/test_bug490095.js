@@ -4,7 +4,6 @@
 //
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 var index = 0;

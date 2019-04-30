@@ -4,7 +4,6 @@
 var CC = Components.Constructor;
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Turn off the authentication dialog blocking for this test.
 var prefs = Cc["@mozilla.org/preferences-service;1"].
