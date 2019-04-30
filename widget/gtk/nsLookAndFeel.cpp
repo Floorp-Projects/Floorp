@@ -512,21 +512,10 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   // are read, and so EnsureInit(), which depends on preference values,
   // is deliberately delayed until required.
   switch (aID) {
-    case eIntID_CaretBlinkTime: {
-      GtkSettings* settings;
-      gint blink_time;
-      gboolean blink;
-
-      settings = gtk_settings_get_default();
-      g_object_get(settings, "gtk-cursor-blink-time", &blink_time,
-                   "gtk-cursor-blink", &blink, nullptr);
-
-      if (blink)
-        aResult = (int32_t)blink_time;
-      else
-        aResult = 0;
+    case eIntID_CaretBlinkTime:
+      EnsureInit();
+      aResult = mCaretBlinkTime;
       break;
-    }
     case eIntID_CaretWidth:
       aResult = 1;
       break;
@@ -1124,6 +1113,12 @@ void nsLookAndFeel::EnsureInit() {
 
   // caret styles
   gtk_widget_style_get(entry, "cursor-aspect-ratio", &mCaretRatio, nullptr);
+
+  gint blink_time;
+  gboolean blink;
+  g_object_get(settings, "gtk-cursor-blink-time", &blink_time,
+               "gtk-cursor-blink", &blink, nullptr);
+  mCaretBlinkTime = blink ? (int32_t)blink_time : 0;
 
   GetSystemFontInfo(gtk_widget_get_style_context(entry), &mFieldFontName,
                     &mFieldFontStyle);
