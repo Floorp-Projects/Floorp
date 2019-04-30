@@ -1720,6 +1720,20 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
   return result;
 }
 
+void nsFocusManager::ActivateRemoteFrameIfNeeded(Element& aElement) {
+  MOZ_DIAGNOSTIC_ASSERT(mFocusedElement == &aElement);
+  if (BrowserParent* remote = BrowserParent::GetFrom(&aElement)) {
+    remote->Activate();
+    LOGFOCUS(("Remote browser activated %p", remote));
+  }
+
+  // Same as above but for out-of-process iframes
+  if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(&aElement)) {
+    bbc->Activate();
+    LOGFOCUS(("Out-of-process iframe activated %p", bbc));
+  }
+}
+
 void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
                            uint32_t aFlags, bool aIsNewDocument,
                            bool aFocusChanged, bool aWindowRaised,
@@ -1862,16 +1876,7 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
 
         // if the object being focused is a remote browser, activate remote
         // content
-        if (BrowserParent* remote = BrowserParent::GetFrom(aElement)) {
-          remote->Activate();
-          LOGFOCUS(("Remote browser activated %p", remote));
-        }
-
-        // Same as above but for out-of-process iframes
-        if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(aElement)) {
-          bbc->Activate();
-          LOGFOCUS(("Out-of-process iframe activated %p", bbc));
-        }
+        ActivateRemoteFrameIfNeeded(*aElement);
       }
 
       IMEStateManager::OnChangeFocus(presContext, aElement,
@@ -2130,10 +2135,8 @@ void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
       scrollFlags |= ScrollFlags::IgnoreMarginAndPadding;
     }
     aPresShell->ScrollContentIntoView(
-        aContent,
-        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-        scrollFlags);
+        aContent, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible), scrollFlags);
   }
 }
 

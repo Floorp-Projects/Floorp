@@ -271,7 +271,17 @@ function checkA11yFront(front, expected, expectedFront) {
     is(front, expectedFront, "Matching accessibility front");
   }
 
+  // Clone the front so we could modify some values for comparison.
+  front = Object.assign(front);
   for (const key in expected) {
+    if (key === "checks") {
+      const { CONTRAST } = front[key];
+      // Contrast values are rounded to two digits after the decimal point.
+      if (CONTRAST && CONTRAST.value) {
+        CONTRAST.value = parseFloat(CONTRAST.value.toFixed(2));
+      }
+    }
+
     if (["actions", "states", "attributes", "checks"].includes(key)) {
       SimpleTest.isDeeply(front[key], expected[key],
         `Accessible Front has correct ${key}`);

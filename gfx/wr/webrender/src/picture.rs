@@ -605,6 +605,8 @@ pub struct TileCache {
     /// If true, this tile cache is enabled. For now, it doesn't
     /// support tile caching if the surface is not the main framebuffer.
     pub is_enabled: bool,
+    /// Local clip rect for this tile cache.
+    pub local_clip_rect: LayoutRect,
 }
 
 /// Stores information about a primitive in the cache that we will
@@ -729,6 +731,7 @@ impl TileCache {
             reference_prims,
             root_clip_chain_id,
             is_enabled: true,
+            local_clip_rect: LayoutRect::zero(),
         }
     }
 
@@ -1380,18 +1383,18 @@ impl TileCache {
         gpu_cache: &mut GpuCache,
         frame_context: &FrameVisibilityContext,
         scratch: &mut PrimitiveScratchBuffer,
-    ) -> LayoutRect {
+    ) {
         self.dirty_region.clear();
         self.pending_blits.clear();
 
         // If the tile cache is disabled, just return a no-op local clip rect.
         if !self.is_enabled {
-            return LayoutRect::max_rect();
+            return;
         }
 
         // Skip all tiles if completely off-screen.
         if !self.world_bounding_rect.intersects(&frame_context.screen_world_rect) {
-            return LayoutRect::zero();
+            return;
         }
 
         let map_surface_to_world: SpaceMapper<LayoutPixel, WorldPixel> = SpaceMapper::new_with_target(
@@ -1401,7 +1404,7 @@ impl TileCache {
             frame_context.clip_scroll_tree,
         );
 
-        let local_clip_rect = map_surface_to_world
+        self.local_clip_rect = map_surface_to_world
             .unmap(&self.world_bounding_rect)
             .expect("bug: unable to map local clip rect");
 
@@ -1595,8 +1598,6 @@ impl TileCache {
         if self.dirty_region.dirty_rects.len() > MAX_DIRTY_RECTS {
             self.dirty_region.collapse();
         }
-
-        local_clip_rect
     }
 
     pub fn tile_dimensions(testing: bool) -> DeviceIntSize {
@@ -2205,9 +2206,6 @@ pub struct PicturePrimitive {
     /// transform animation and/or scrolling.
     pub segments_are_valid: bool,
 
-    /// Local clip rect for this picture.
-    pub local_clip_rect: LayoutRect,
-
     /// If Some(..) the tile cache that is associated with this picture.
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
     pub tile_cache: Option<TileCache>,
@@ -2226,9 +2224,6 @@ impl PicturePrimitive {
         pt.new_level(format!("{:?}", self_index));
         pt.add_item(format!("prim_count: {:?}", self.prim_list.prim_instances.len()));
         pt.add_item(format!("local_rect: {:?}", self.local_rect));
-        if self.apply_local_clip_rect {
-            pt.add_item(format!("local_clip_rect: {:?}", self.local_clip_rect));
-        }
         pt.add_item(format!("spatial_node_index: {:?}", self.spatial_node_index));
         pt.add_item(format!("raster_config: {:?}", self.raster_config));
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
@@ -2320,7 +2315,6 @@ impl PicturePrimitive {
         requested_raster_space: RasterSpace,
         prim_list: PrimitiveList,
         spatial_node_index: SpatialNodeIndex,
-        local_clip_rect: LayoutRect,
         tile_cache: Option<TileCache>,
         options: PictureOptions,
     ) -> Self {
@@ -2339,7 +2333,6 @@ impl PicturePrimitive {
             requested_raster_space,
             spatial_node_index,
             local_rect: LayoutRect::zero(),
-            local_clip_rect,
             tile_cache,
             options,
             segments_are_valid: false,

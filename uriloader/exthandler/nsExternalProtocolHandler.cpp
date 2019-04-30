@@ -406,6 +406,12 @@ NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedInfo(
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedTrackingInfo(
+    const nsACString &aLists, const nsACString &aFullHashes) {
+  // nothing to do
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::NotifyClassificationFlags(
     uint32_t aClassificationFlags, bool aIsThirdParty) {
   // nothing to do

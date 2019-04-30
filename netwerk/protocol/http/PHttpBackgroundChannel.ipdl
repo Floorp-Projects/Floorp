@@ -74,6 +74,9 @@ child:
   // Tell the child information of matched URL againts SafeBrowsing list
   async SetClassifierMatchedInfo(ClassifierInfo info);
 
+  // Tell the child information of matched URL againts SafeBrowsing tracking list
+  async SetClassifierMatchedTrackingInfo(ClassifierInfo info);
+
   async __delete__();
 
 };

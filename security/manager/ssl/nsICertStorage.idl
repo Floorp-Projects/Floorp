@@ -105,7 +105,7 @@ interface nsICertStorage : nsISupports {
    * serial - serial number, DER encoded
    * subject - subject name, DER encoded
    * pubkey - public key, DER encoded
-   * Must not be called from the main thread.
+   * Must not be called from the main thread. See bug 1541212.
    */
   [must_use]
   short getRevocationState(in Array<octet> issuer,
@@ -159,4 +159,56 @@ interface nsICertStorage : nsISupports {
     */
   [must_use]
   boolean isEnrollmentFresh();
+
+  /**
+   * Trust flags to use when adding a adding a certificate.
+   * TRUST_INHERIT indicates a certificate inherits trust from another
+   * certificate.
+   * TRUST_ANCHOR indicates the certificate is a root of trust.
+   */
+  const short TRUST_INHERIT = 0;
+  const short TRUST_ANCHOR = 1;
+
+  /**
+   * Asynchronously add a certificate to the backing storage.
+   * cert is the bytes of the certificate as base64-encoded DER.
+   * subject is the subject distinguished name of the certificate as
+   * base64-encoded DER (although we don't actually validate that the given
+   * certificate has the indicated subject).
+   * trust is one of the TRUST_* constants in this interface.
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void addCertBySubject(in ACString cert,
+                        in ACString subject,
+                        in short trust,
+                        in nsICertStorageCallback callback);
+
+  /**
+   * Asynchronously remove the certificate with the given sha-256 hash from the
+   * backing storage.
+   * hash is the base64-encoded bytes of the sha-256 hash of the certificate's
+   * bytes (DER-encoded).
+   * The given callback is called with the result of the operation when it
+   * completes.
+   * Must only be called from the main thread.
+   */
+  [must_use]
+  void removeCertByHash(in ACString hash,
+                        in nsICertStorageCallback callback);
+
+  /**
+   * Find all certificates in the backing storage with the given subject
+   * distinguished name.
+   * subject is the DER-encoded bytes of the subject distinguished name.
+   * Returns an array of arrays of bytes, where each inner array corresponds to
+   * the DER-encoded bytes of a certificate that has the given subject (although
+   * as these certificates were presumably added via addCertBySubject, this
+   * aspect is never actually valided by nsICertStorage).
+   * Must not be called from the main thread. See bug 1541212.
+   */
+  [must_use]
+  Array<Array<octet> > findCertsBySubject(in Array<octet> subject);
 };
