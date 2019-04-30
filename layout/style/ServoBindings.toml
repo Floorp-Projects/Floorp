@@ -275,7 +275,6 @@ whitelist-types = [
     "nsStyleFilter",
     "nsStyleFont",
     "nsStyleGradient",
-    "nsStyleGradientStop",
     "nsStyleGridTemplate",
     "nsStyleImage",
     "nsStyleImageLayers",
@@ -470,6 +469,7 @@ cbindgen-types = [
     { gecko = "StyleGenericScrollbarColor", servo = "values::generics::ui::ScrollbarColor" },
     { gecko = "StyleRGBA", servo = "cssparser::RGBA" },
     { gecko = "StyleOrigin", servo = "stylesheets::Origin" },
+    { gecko = "StyleGenericGradientItem", servo = "values::generics::image::GradientItem" },
 ]
 
 mapped-generic-types = [
