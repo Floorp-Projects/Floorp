@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "bundle", function() {
@@ -371,10 +372,16 @@ class UrlbarView {
     // Align the panel with the input's parent toolbar.
     let toolbarRect =
       this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
-    this.panel.style.marginInlineStart = px(this.window.RTL_UI ?
+    let horizontalOffset = this.window.RTL_UI ?
       inputRect.right - documentRect.right :
-      documentRect.left - inputRect.left);
-    this.panel.style.marginTop = px(inputRect.top - toolbarRect.top);
+      documentRect.left - inputRect.left;
+    let verticalOffset = inputRect.top - toolbarRect.top;
+    if (AppConstants.platform == "macosx") {
+      // Adjust vertical offset to account for the popup's native outer border.
+      verticalOffset++;
+    }
+    this.panel.style.marginInlineStart = px(horizontalOffset);
+    this.panel.style.marginTop = px(verticalOffset);
 
     this.panel.openPopup(this.input.textbox, "after_start");
   }
