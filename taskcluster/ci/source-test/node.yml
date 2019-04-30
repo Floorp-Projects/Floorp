@@ -5,7 +5,7 @@ debugger-tests:
         symbol: node(debugger)
         kind: test
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -29,7 +29,7 @@ devtools-tests:
         symbol: node(devtools)
         kind: test
         tier: 3
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
@@ -65,7 +65,7 @@ eslint-plugin-mozilla:
         symbol: node(epm)
         kind: test
         tier: 1
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker-type: t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800

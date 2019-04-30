@@ -82,8 +82,8 @@ job-template:
     run-on-projects: ['all']
     worker-type:
         by-build-platform:
-            default: aws-provisioner-v1/gecko-{level}-b-linux
-            win.*: aws-provisioner-v1/gecko-{level}-b-win2012
+            default: b-linux
+            win.*: b-win2012
     treeherder:
         symbol: L10n
         tier:

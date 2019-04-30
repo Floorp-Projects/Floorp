@@ -32,7 +32,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: linux32/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -53,7 +53,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: linux64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -74,7 +74,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: macosx64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 1800
             artifacts:
@@ -96,7 +96,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: win32/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker-type: b-win2012
         worker:
             max-run-time: 1800
             artifacts:
@@ -116,7 +116,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: win64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker-type: b-win2012
         worker:
             max-run-time: 1800
             artifacts:
@@ -136,7 +136,7 @@ jobs:
             build_type: opt
         treeherder:
             platform: win64-aarch64/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker-type: b-win2012
         worker:
             max-run-time: 1800
             artifacts:

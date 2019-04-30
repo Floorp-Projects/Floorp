@@ -21,7 +21,7 @@ job-defaults:
    description: Sends email to release-drivers telling release was shipped.
    run-on-projects: []
    shipping-phase: ship
-   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker-type: b-linux
    worker:
       implementation: docker-worker
       os: linux

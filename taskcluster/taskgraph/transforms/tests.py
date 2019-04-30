@@ -49,103 +49,103 @@ import logging
 
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
-    'large': 'aws-provisioner-v1/gecko-t-linux-large',
-    'xlarge': 'aws-provisioner-v1/gecko-t-linux-xlarge',
-    'default': 'aws-provisioner-v1/gecko-t-linux-large',
+    'large': 't-linux-large',
+    'xlarge': 't-linux-xlarge',
+    'default': 't-linux-large',
 }
 
 # windows worker types keyed by test-platform and virtualization
 WINDOWS_WORKER_TYPES = {
     'windows7-32': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows7-32-pgo': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows7-32-nightly': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows7-32-shippable': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows7-32-devedition': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win7-32',
+      'virtual-with-gpu': 't-win7-32-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-aarch64': {
-      'virtual': 'bitbar/gecko-t-win64-aarch64-laptop',
-      'virtual-with-gpu': 'bitbar/gecko-t-win64-aarch64-laptop',
-      'hardware': 'bitbar/gecko-t-win64-aarch64-laptop',
+      'virtual': 't-win64-aarch64-laptop',
+      'virtual-with-gpu': 't-win64-aarch64-laptop',
+      'hardware': 't-win64-aarch64-laptop',
     },
     'windows10-64-ccov': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-pgo': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-devedition': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-nightly': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-asan': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-qr': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-pgo-qr': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-shippable-qr': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-hw',
     },
     'windows10-64-ux': {
-      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
-      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-      'hardware': 'releng-hardware/gecko-t-win10-64-ux',
+      'virtual': 't-win10-64',
+      'virtual-with-gpu': 't-win10-64-gpu',
+      'hardware': 't-win10-64-ux',
     },
 }
 
 # os x worker types keyed by test-platform
 MACOSX_WORKER_TYPES = {
-    'macosx64': 'releng-hardware/gecko-t-osx-1010',
+    'macosx64': 't-osx-1010',
 }
 
 
@@ -1203,7 +1203,7 @@ def set_worker_type(config, tests):
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') in ['talos', 'raptor'] and \
                  not test['build-platform'].startswith('linux64-ccov'):
-                test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
+                test['worker-type'] = 't-linux-talos'
             else:
                 test['worker-type'] = LINUX_WORKER_TYPES[test['instance-size']]
         else:
