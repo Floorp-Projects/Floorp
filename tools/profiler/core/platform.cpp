@@ -2628,28 +2628,27 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
-static bool HasFeature(const char** aFeatures, uint32_t aFeatureCount,
-                       const char* aFeature) {
-  for (size_t i = 0; i < aFeatureCount; i++) {
-    if (strcmp(aFeatures[i], aFeature) == 0) {
-      return true;
-    }
+static uint32_t ParseFeature(const char* aFeature) {
+#define PARSE_FEATURE_BIT(n_, str_, Name_, desc_) \
+  if (strcmp(aFeature, str_) == 0) {              \
+    return ProfilerFeature::Name_;                \
   }
-  return false;
+
+  PROFILER_FOR_EACH_FEATURE(PARSE_FEATURE_BIT)
+
+#undef PARSE_FEATURE_BIT
+
+  printf("\nUnrecognized feature \"%s\".\n\n", aFeature);
+  PrintUsageThenExit(1);
+  return 0;
 }
 
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount) {
-#define ADD_FEATURE_BIT(n_, str_, Name_, desc_)     \
-  if (HasFeature(aFeatures, aFeatureCount, str_)) { \
-    features |= ProfilerFeature::Name_;             \
-  }
-
   uint32_t features = 0;
-  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE_BIT)
-
-#undef ADD_FEATURE_BIT
-
+  for (size_t i = 0; i < aFeatureCount; i++) {
+    features |= ParseFeature(aFeatures[i]);
+  }
   return features;
 }
 
