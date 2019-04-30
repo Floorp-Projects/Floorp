@@ -70,12 +70,11 @@ function _getMediaCaptureState() {
   let hasMicrophone = {};
   let hasScreenShare = {};
   let hasWindowShare = {};
-  let hasAppShare = {};
   let hasBrowserShare = {};
   MediaManagerService.mediaCaptureWindowState(content,
                                               hasCamera, hasMicrophone,
                                               hasScreenShare, hasWindowShare,
-                                              hasAppShare, hasBrowserShare);
+                                              hasBrowserShare);
   let result = {};
 
   if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE)
@@ -87,8 +86,6 @@ function _getMediaCaptureState() {
     result.screen = "Screen";
   else if (hasWindowShare.value != MediaManagerService.STATE_NOCAPTURE)
     result.screen = "Window";
-  else if (hasAppShare.value != MediaManagerService.STATE_NOCAPTURE)
-    result.screen = "Application";
   else if (hasBrowserShare.value != MediaManagerService.STATE_NOCAPTURE)
     result.screen = "Browser";
 

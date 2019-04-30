@@ -341,9 +341,6 @@ function updateIndicators(aSubject, aTopic, aData) {
       } else if (tabState.screen.startsWith("Window")) {
         if (state.showScreenSharingIndicator != "Screen")
           state.showScreenSharingIndicator = "Window";
-      } else if (tabState.screen.startsWith("Application")) {
-        if (!state.showScreenSharingIndicator)
-          state.showScreenSharingIndicator = "Application";
       } else if (tabState.screen.startsWith("Browser")) {
         if (!state.showScreenSharingIndicator)
           state.showScreenSharingIndicator = "Browser";
@@ -376,25 +373,21 @@ function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
 }
 
 function getTabStateForContentWindow(aContentWindow) {
-  let camera = {}, microphone = {}, screen = {}, window = {}, app = {}, browser = {};
+  let camera = {}, microphone = {}, screen = {}, window = {}, browser = {};
   MediaManagerService.mediaCaptureWindowState(aContentWindow,
                                               camera, microphone,
-                                              screen, window, app, browser);
+                                              screen, window, browser);
   let tabState = {camera: camera.value, microphone: microphone.value};
   if (screen.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Screen";
   else if (window.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Window";
-  else if (app.value == MediaManagerService.STATE_CAPTURE_ENABLED)
-    tabState.screen = "Application";
   else if (browser.value == MediaManagerService.STATE_CAPTURE_ENABLED)
     tabState.screen = "Browser";
   else if (screen.value == MediaManagerService.STATE_CAPTURE_DISABLED)
     tabState.screen = "ScreenPaused";
   else if (window.value == MediaManagerService.STATE_CAPTURE_DISABLED)
     tabState.screen = "WindowPaused";
-  else if (app.value == MediaManagerService.STATE_CAPTURE_DISABLED)
-    tabState.screen = "ApplicationPaused";
   else if (browser.value == MediaManagerService.STATE_CAPTURE_DISABLED)
     tabState.screen = "BrowserPaused";
 
