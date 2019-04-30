@@ -990,6 +990,11 @@ class MachCommandConditions(object):
         """Must be an artifact build."""
         return getattr(cls, 'substs', {}).get('MOZ_ARTIFACT_BUILDS')
 
+    @staticmethod
+    def is_non_artifact_build(cls):
+        """Must not be an artifact build."""
+        return not MachCommandConditions.is_artifact_build(cls)
+
 
 class PathArgument(object):
     """Parse a filesystem path argument and transform it in various ways."""
