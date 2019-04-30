@@ -7070,7 +7070,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
 
     if (numFieldKeys > 0) {
-      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Var,
+      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Let,
                             namePos)) {
         return null();
       }
