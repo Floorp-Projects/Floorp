@@ -41,6 +41,8 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
@@ -3115,6 +3117,14 @@ BrowserParent::GetContentBlockingLog(Promise** aPromise) {
         jsPromise->MaybeRejectWithUndefined();
       });
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BrowserParent::MaybeCancelContentJSExecution() {
+  if (StaticPrefs::dom_ipc_cancel_content_js_when_navigating()) {
+    Manager()->CancelContentJSExecutionIfRunning(this);
+  }
   return NS_OK;
 }
 

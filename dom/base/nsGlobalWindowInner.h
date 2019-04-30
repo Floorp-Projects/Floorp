@@ -394,6 +394,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
       const nsAString& aName);
 
+  inline nsIBrowserChild* GetBrowserChild() { return mBrowserChild.get(); }
+
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
   //
