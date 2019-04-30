@@ -45,6 +45,7 @@
 #     taskGroupId, // targetted taskGroupId
 #     action: {name, title, description, taskGroupId, symbol, repo_scope, cb_name}
 #     ownTaskId:   // taskId of the task that will be created
+#     clientId:    // clientId that triggered this hook
 #   }
 
 version: 1
