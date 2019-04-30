@@ -14,7 +14,7 @@ const { assert, fetch } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 
-loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
+loader.lazyRequireGetter(this, "ArrayBufferActor", "devtools/server/actors/array-buffer", true);
 loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
 
 function isEvalSource(source) {
@@ -337,7 +337,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         if (typeof content === "object" && content && content.constructor &&
             content.constructor.name === "ArrayBuffer") {
           return {
-            source: arrayBufferGrip(content, this.threadActor.threadLifetimePool),
+            source: new ArrayBufferActor(this.threadActor.conn, content),
             contentType,
           };
         }

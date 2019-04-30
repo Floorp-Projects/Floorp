@@ -9,7 +9,7 @@ const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 const eventSource = require("devtools/shared/client/event-source");
 const {ThreadStateTypes} = require("devtools/shared/client/constants");
 
-loader.lazyRequireGetter(this, "ArrayBufferClient", "devtools/shared/client/array-buffer-client");
+loader.lazyRequireGetter(this, "ArrayBufferFront", "devtools/shared/fronts/array-buffer");
 loader.lazyRequireGetter(this, "LongStringClient", "devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "SourceFront", "devtools/shared/fronts/source", true);
@@ -415,9 +415,9 @@ ThreadClient.prototype = {
       return this[gripCacheName][grip.actor];
     }
 
-    const client = new ArrayBufferClient(this.client, grip);
-    this[gripCacheName][grip.actor] = client;
-    return client;
+    const front = new ArrayBufferFront(this.client, grip);
+    this[gripCacheName][grip.actor] = front;
+    return front;
   },
 
   /**
@@ -544,7 +544,7 @@ ThreadClient.prototype = {
       return this._threadGrips[form.actor];
     }
 
-    this._threadGrips[form.actor] = new SourceFront(this.client, form, this);
+    this._threadGrips[form.actor] = new SourceFront(this.client, form);
     return this._threadGrips[form.actor];
   },
 
