@@ -8,6 +8,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "sechash.h"
+#include "secerr.h"
 
 #include "cpputil.h"
 #include "nss_scoped_ptrs.h"
@@ -17,10 +18,17 @@
 
 namespace nss_test {
 
+static const CK_MECHANISM_TYPE kMech = CKM_NSS_CHACHA20_POLY1305;
+static const CK_MECHANISM_TYPE kMechXor = CKM_NSS_CHACHA20_CTR;
+// Some test data for simple tests.
+static const uint8_t kKeyData[32] = {'k'};
+static const uint8_t kCtrNonce[16] = {'c', 0, 0, 0, 'n'};
+static const uint8_t kData[16] = {'d'};
+
 class Pkcs11ChaCha20Poly1305Test
     : public ::testing::TestWithParam<chacha_testvector> {
  public:
-  void EncryptDecrypt(PK11SymKey* symKey, const bool invalid_iv,
+  void EncryptDecrypt(const ScopedPK11SymKey& key, const bool invalid_iv,
                       const bool invalid_tag, const uint8_t* data,
                       size_t data_len, const uint8_t* aad, size_t aad_len,
                       const uint8_t* iv, size_t iv_len,
@@ -39,7 +47,7 @@ class Pkcs11ChaCha20Poly1305Test
     // Encrypt.
     unsigned int outputLen = 0;
     std::vector<uint8_t> output(data_len + aead_params.ulTagLen);
-    SECStatus rv = PK11_Encrypt(symKey, mech, &params, output.data(),
+    SECStatus rv = PK11_Encrypt(key.get(), kMech, &params, output.data(),
                                 &outputLen, output.size(), data, data_len);
 
     // Return if encryption failure was expected due to invalid IV.
@@ -60,8 +68,9 @@ class Pkcs11ChaCha20Poly1305Test
     // Decrypt.
     unsigned int decryptedLen = 0;
     std::vector<uint8_t> decrypted(data_len);
-    rv = PK11_Decrypt(symKey, mech, &params, decrypted.data(), &decryptedLen,
-                      decrypted.size(), output.data(), outputLen);
+    rv =
+        PK11_Decrypt(key.get(), kMech, &params, decrypted.data(), &decryptedLen,
+                     decrypted.size(), output.data(), outputLen);
     EXPECT_EQ(rv, SECSuccess);
 
     // Check the plaintext.
@@ -73,8 +82,9 @@ class Pkcs11ChaCha20Poly1305Test
     if (outputLen != 0) {
       std::vector<uint8_t> bogusCiphertext(output);
       bogusCiphertext[0] ^= 0xff;
-      rv = PK11_Decrypt(symKey, mech, &params, decrypted.data(), &decryptedLen,
-                        decrypted.size(), bogusCiphertext.data(), outputLen);
+      rv = PK11_Decrypt(key.get(), kMech, &params, decrypted.data(),
+                        &decryptedLen, decrypted.size(), bogusCiphertext.data(),
+                        outputLen);
       EXPECT_NE(rv, SECSuccess);
     }
 
@@ -83,8 +93,9 @@ class Pkcs11ChaCha20Poly1305Test
     if (outputLen != 0) {
       std::vector<uint8_t> bogusTag(output);
       bogusTag[outputLen - 1] ^= 0xff;
-      rv = PK11_Decrypt(symKey, mech, &params, decrypted.data(), &decryptedLen,
-                        decrypted.size(), bogusTag.data(), outputLen);
+      rv = PK11_Decrypt(key.get(), kMech, &params, decrypted.data(),
+                        &decryptedLen, decrypted.size(), bogusTag.data(),
+                        outputLen);
       EXPECT_NE(rv, SECSuccess);
     }
 
@@ -100,7 +111,7 @@ class Pkcs11ChaCha20Poly1305Test
       bogusAeadParams.pNonce = toUcharPtr(bogusIV.data());
       bogusIV[0] ^= 0xff;
 
-      rv = PK11_Decrypt(symKey, mech, &bogusParams, decrypted.data(),
+      rv = PK11_Decrypt(key.get(), kMech, &bogusParams, decrypted.data(),
                         &decryptedLen, data_len, output.data(), outputLen);
       EXPECT_NE(rv, SECSuccess);
     }
@@ -117,7 +128,7 @@ class Pkcs11ChaCha20Poly1305Test
       bogusAeadParams.pAAD = toUcharPtr(bogusAAD.data());
       bogusAAD[0] ^= 0xff;
 
-      rv = PK11_Decrypt(symKey, mech, &bogusParams, decrypted.data(),
+      rv = PK11_Decrypt(key.get(), kMech, &bogusParams, decrypted.data(),
                         &decryptedLen, data_len, output.data(), outputLen);
       EXPECT_NE(rv, SECSuccess);
     }
@@ -125,16 +136,16 @@ class Pkcs11ChaCha20Poly1305Test
 
   void EncryptDecrypt(const chacha_testvector testvector) {
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-    SECItem keyItem = {siBuffer, toUcharPtr(testvector.Key.data()),
-                       static_cast<unsigned int>(testvector.Key.size())};
+    SECItem key_item = {siBuffer, toUcharPtr(testvector.Key.data()),
+                        static_cast<unsigned int>(testvector.Key.size())};
 
     // Import key.
-    ScopedPK11SymKey symKey(PK11_ImportSymKey(
-        slot.get(), mech, PK11_OriginUnwrap, CKA_ENCRYPT, &keyItem, nullptr));
-    EXPECT_TRUE(!!symKey);
+    ScopedPK11SymKey key(PK11_ImportSymKey(slot.get(), kMech, PK11_OriginUnwrap,
+                                           CKA_ENCRYPT, &key_item, nullptr));
+    EXPECT_TRUE(!!key);
 
     // Check.
-    EncryptDecrypt(symKey.get(), testvector.invalid_iv, testvector.invalid_tag,
+    EncryptDecrypt(key, testvector.invalid_iv, testvector.invalid_tag,
                    testvector.Data.data(), testvector.Data.size(),
                    testvector.AAD.data(), testvector.AAD.size(),
                    testvector.IV.data(), testvector.IV.size(),
@@ -142,14 +153,13 @@ class Pkcs11ChaCha20Poly1305Test
   }
 
  protected:
-  CK_MECHANISM_TYPE mech = CKM_NSS_CHACHA20_POLY1305;
 };
 
 TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateEncryptDecrypt) {
   // Generate a random key.
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-  ScopedPK11SymKey symKey(PK11_KeyGen(slot.get(), mech, nullptr, 32, nullptr));
-  EXPECT_TRUE(!!symKey);
+  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
+  EXPECT_TRUE(!!key);
 
   // Generate random data.
   std::vector<uint8_t> data(512);
@@ -168,8 +178,85 @@ TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateEncryptDecrypt) {
   EXPECT_EQ(rv, SECSuccess);
 
   // Check.
-  EncryptDecrypt(symKey.get(), false, false, data.data(), data.size(),
-                 aad.data(), aad.size(), iv.data(), iv.size());
+  EncryptDecrypt(key, false, false, data.data(), data.size(), aad.data(),
+                 aad.size(), iv.data(), iv.size());
+}
+
+TEST_F(Pkcs11ChaCha20Poly1305Test, Xor) {
+  static const uint8_t kExpected[sizeof(kData)] = {
+      0xd8, 0x15, 0xd3, 0xb3, 0xe9, 0x34, 0x3b, 0x7a,
+      0x24, 0xf6, 0x5f, 0xd7, 0x95, 0x3d, 0xd3, 0x51};
+
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  SECItem keyItem = {siBuffer, toUcharPtr(kKeyData),
+                     static_cast<unsigned int>(sizeof(kKeyData))};
+  ScopedPK11SymKey key(PK11_ImportSymKey(
+      slot.get(), kMechXor, PK11_OriginUnwrap, CKA_ENCRYPT, &keyItem, nullptr));
+  EXPECT_TRUE(!!key);
+
+  SECItem ctr_nonce_item = {siBuffer, toUcharPtr(kCtrNonce),
+                            static_cast<unsigned int>(sizeof(kCtrNonce))};
+  uint8_t output[sizeof(kData)];
+  unsigned int output_len = 88;  // This should be overwritten.
+  SECStatus rv =
+      PK11_Encrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                   sizeof(output), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kExpected), static_cast<size_t>(output_len));
+  EXPECT_EQ(0, memcmp(kExpected, output, sizeof(kExpected)));
+
+  // Decrypting has the same effect.
+  rv = PK11_Decrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                    sizeof(output), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kData), static_cast<size_t>(output_len));
+  EXPECT_EQ(0, memcmp(kExpected, output, sizeof(kExpected)));
+
+  // Operating in reverse too.
+  rv = PK11_Encrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                    sizeof(output), kExpected, sizeof(kExpected));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kExpected), static_cast<size_t>(output_len));
+  EXPECT_EQ(0, memcmp(kData, output, sizeof(kData)));
+}
+
+// This test just ensures that a key can be generated for use with the XOR
+// function.  The result is random and therefore cannot be checked.
+TEST_F(Pkcs11ChaCha20Poly1305Test, GenerateXor) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
+  EXPECT_TRUE(!!key);
+
+  SECItem ctr_nonce_item = {siBuffer, toUcharPtr(kCtrNonce),
+                            static_cast<unsigned int>(sizeof(kCtrNonce))};
+  uint8_t output[sizeof(kData)];
+  unsigned int output_len = 88;  // This should be overwritten.
+  SECStatus rv =
+      PK11_Encrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                   sizeof(output), kData, sizeof(kData));
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_EQ(sizeof(kData), static_cast<size_t>(output_len));
+}
+
+TEST_F(Pkcs11ChaCha20Poly1305Test, XorInvalidParams) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ScopedPK11SymKey key(PK11_KeyGen(slot.get(), kMech, nullptr, 32, nullptr));
+  EXPECT_TRUE(!!key);
+
+  SECItem ctr_nonce_item = {siBuffer, toUcharPtr(kCtrNonce),
+                            static_cast<unsigned int>(sizeof(kCtrNonce)) - 1};
+  uint8_t output[sizeof(kData)];
+  unsigned int output_len = 88;
+  SECStatus rv =
+      PK11_Encrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                   sizeof(output), kData, sizeof(kData));
+  EXPECT_EQ(SECFailure, rv);
+
+  ctr_nonce_item.data = nullptr;
+  rv = PK11_Encrypt(key.get(), kMechXor, &ctr_nonce_item, output, &output_len,
+                    sizeof(output), kData, sizeof(kData));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
 }
 
 TEST_P(Pkcs11ChaCha20Poly1305Test, TestVectors) { EncryptDecrypt(GetParam()); }

@@ -564,3 +564,6 @@ ER3(SSL_ERROR_MISSING_ESNI_EXTENSION, (SSL_ERROR_BASE + 178),
 
 ER3(SSL_ERROR_RX_UNEXPECTED_RECORD_TYPE, (SSL_ERROR_BASE + 179),
     "SSL received an unexpected record type.")
+
+ER3(SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT, (SSL_ERROR_BASE + 181),
+    "SSL received a certificate_required alert.")

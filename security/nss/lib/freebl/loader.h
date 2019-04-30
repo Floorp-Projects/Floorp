@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0314
+#define FREEBL_VERSION 0x0315
 
 struct FREEBLVectorStr {
 
@@ -758,6 +758,12 @@ struct FREEBLVectorStr {
     BLAKE2BContext *(*p_BLAKE2B_Resurrect)(unsigned char *space, void *arg);
 
     /* Version 3.020 came to here */
+
+    SECStatus (*p_ChaCha20_Xor)(unsigned char *output, const unsigned char *block,
+                                unsigned int len, const unsigned char *k,
+                                const unsigned char *nonce, PRUint32 ctr);
+
+    /* Version 3.021 came to here */
 
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */

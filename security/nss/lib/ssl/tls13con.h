@@ -18,11 +18,6 @@ typedef enum {
     tls13_extension_unknown
 } tls13ExtensionStatus;
 
-typedef enum {
-    update_not_requested = 0,
-    update_requested = 1
-} tls13KeyUpdateRequest;
-
 #define TLS13_MAX_FINISHED_SIZE 64
 
 SECStatus tls13_UnprotectRecord(
@@ -46,6 +41,8 @@ void tls13_SetHsState(sslSocket *ss, SSL3WaitState ws,
 PRBool tls13_InHsState(sslSocket *ss, ...);
 #define TLS13_IN_HS_STATE(ss, ...) \
     tls13_InHsState(ss, __VA_ARGS__, wait_invalid)
+
+PRBool tls13_IsPostHandshake(const sslSocket *ss);
 
 SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
 SSLHashType tls13_GetHash(const sslSocket *ss);

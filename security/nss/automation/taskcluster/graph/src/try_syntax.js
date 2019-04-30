@@ -167,7 +167,7 @@ export async function initFilter() {
   let comment = await getCommitComment();
 
   // Check for try syntax in changeset comment.
-  let match = comment.match(/^\s*try:\s*(.*)\s*$/);
+  let match = comment.match(/\btry:\s*(.*)\s*$/m);
 
   // Add try syntax filter.
   if (match) {

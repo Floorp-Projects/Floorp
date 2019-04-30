@@ -226,6 +226,7 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len)
             return CKK_CAMELLIA;
         case CKM_NSS_CHACHA20_POLY1305:
         case CKM_NSS_CHACHA20_KEY_GEN:
+        case CKM_NSS_CHACHA20_CTR:
             return CKK_NSS_CHACHA20;
         case CKM_AES_ECB:
         case CKM_AES_CBC:
@@ -440,6 +441,7 @@ PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size)
         case CKM_CAMELLIA_KEY_GEN:
             return CKM_CAMELLIA_KEY_GEN;
         case CKM_NSS_CHACHA20_POLY1305:
+        case CKM_NSS_CHACHA20_CTR:
             return CKM_NSS_CHACHA20_KEY_GEN;
         case CKM_AES_ECB:
         case CKM_AES_CBC:
@@ -730,6 +732,9 @@ PK11_GetBlockSize(CK_MECHANISM_TYPE type, SECItem *params)
         case CKM_RSA_X_509:
             /*actually it's the modulus length of the key!*/
             return -1; /* failure */
+        case CKM_NSS_CHACHA20_POLY1305:
+        case CKM_NSS_CHACHA20_CTR:
+            return 64;
         default:
             return pk11_lookup(type)->blockSize;
     }
@@ -784,12 +789,16 @@ PK11_GetIVLength(CK_MECHANISM_TYPE type)
         case CKM_CAST3_CBC_PAD:
         case CKM_CAST5_CBC_PAD:
             return 8;
+        case CKM_AES_GCM:
+        case CKM_NSS_CHACHA20_POLY1305:
+            return 12;
         case CKM_SEED_CBC:
         case CKM_SEED_CBC_PAD:
         case CKM_CAMELLIA_CBC:
         case CKM_CAMELLIA_CBC_PAD:
         case CKM_AES_CBC:
         case CKM_AES_CBC_PAD:
+        case CKM_NSS_CHACHA20_CTR:
             return 16;
         case CKM_SKIPJACK_CBC64:
         case CKM_SKIPJACK_ECB64:
