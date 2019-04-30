@@ -74,6 +74,11 @@ interface nsIProfiler : nsISupports
   boolean IsActive();
 
   /**
+   * Clear all registered and unregistered page information in prifiler.
+   */
+  void ClearAllPages();
+
+  /**
    * Returns an array of the features that are supported in this build.
    * Features may vary depending on platform and build flags.
    */

@@ -63,6 +63,11 @@ mozilla::ipc::IPCResult ProfilerChild::RecvResume() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ProfilerChild::RecvClearAllPages() {
+  profiler_clear_all_pages();
+  return IPC_OK();
+}
+
 static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
   nsCString profileCString;
   UniquePtr<char[]> profile =
