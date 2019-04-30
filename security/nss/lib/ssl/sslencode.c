@@ -10,6 +10,7 @@
 #include "prnetdb.h"
 #include "ssl.h"
 #include "sslimpl.h"
+#include "sslproto.h"
 
 /* Helper function to encode an unsigned integer into a buffer. */
 static void
@@ -263,9 +264,11 @@ ssl3_AppendHandshake(sslSocket *ss, const void *void_src, unsigned int bytes)
     }
 
     PRINT_BUF(60, (ss, "Append to Handshake", (unsigned char *)void_src, bytes));
-    rv = ssl3_UpdateHandshakeHashes(ss, src, bytes);
-    if (rv != SECSuccess)
-        return SECFailure; /* error code set by ssl3_UpdateHandshakeHashes */
+    if (!ss->firstHsDone || ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        rv = ssl3_UpdateHandshakeHashes(ss, src, bytes);
+        if (rv != SECSuccess)
+            return SECFailure; /* error code set by ssl3_UpdateHandshakeHashes */
+    }
 
     while (bytes > room) {
         if (room > 0)

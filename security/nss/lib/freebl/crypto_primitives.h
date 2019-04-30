@@ -40,7 +40,8 @@
 #pragma intrinsic(_byteswap_uint64)
 #define FREEBL_HTONLL(x) _byteswap_uint64(x)
 
-#elif __has_builtin(__builtin_bswap64)
+/* gcc doesn't have __has_builtin, but it does have __builtin_bswap64 */
+#elif __has_builtin(__builtin_bswap64) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)))
 
 #define FREEBL_HTONLL(x) __builtin_bswap64(x)
 

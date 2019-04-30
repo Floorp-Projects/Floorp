@@ -259,6 +259,12 @@ tls13_CheckHsState(sslSocket *ss, int err, const char *error_name,
     return SECFailure;
 }
 
+PRBool
+tls13_IsPostHandshake(const sslSocket *ss)
+{
+    return ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 && ss->firstHsDone;
+}
+
 SSLHashType
 tls13_GetHashForCipherSuite(ssl3CipherSuite suite)
 {
@@ -682,8 +688,9 @@ tls13_SendKeyUpdate(sslSocket *ss, tls13KeyUpdateRequest request, PRBool buffer)
                                               : "not requested"));
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
+    PORT_Assert(!ss->sec.isServer || !ss->ssl3.clientCertRequested);
 
-    if (!ss->firstHsDone) {
+    if (!tls13_IsPostHandshake(ss)) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
@@ -741,8 +748,13 @@ SSLExp_KeyUpdate(PRFileDesc *fd, PRBool requestUpdate)
         return SECFailure;
     }
 
-    if (!ss->firstHsDone) {
+    if (!tls13_IsPostHandshake(ss)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ss->ssl3.clientCertRequested) {
+        PORT_SetError(PR_WOULD_BLOCK_ERROR);
         return SECFailure;
     }
 
@@ -786,7 +798,7 @@ tls13_HandleKeyUpdate(sslSocket *ss, PRUint8 *b, unsigned int length)
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     PORT_Assert(ss->firstHsDone);
-    if (!ss->firstHsDone) {
+    if (!tls13_IsPostHandshake(ss)) {
         FATAL_ERROR(ss, SSL_ERROR_RX_UNEXPECTED_KEY_UPDATE, unexpected_message);
         return SECFailure;
     }
@@ -820,7 +832,12 @@ tls13_HandleKeyUpdate(sslSocket *ss, PRUint8 *b, unsigned int length)
 
     if (update == update_requested) {
         PRBool sendUpdate;
-        if (ss->ssl3.peerRequestedKeyUpdate) {
+        if (ss->ssl3.clientCertRequested) {
+            /* Post-handshake auth is in progress; defer sending a key update. */
+            ss->ssl3.keyUpdateDeferred = PR_TRUE;
+            ss->ssl3.deferredKeyUpdateRequest = update_not_requested;
+            sendUpdate = PR_FALSE;
+        } else if (ss->ssl3.peerRequestedKeyUpdate) {
             /* Only send an update if we have sent with the current spec.  This
              * prevents us from being forced to crank forward pointlessly. */
             ssl_GetSpecReadLock(ss);
@@ -857,7 +874,7 @@ SSLExp_SendCertificateRequest(PRFileDesc *fd)
         return SECFailure;
     }
 
-    if (!ss->firstHsDone || ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+    if (!tls13_IsPostHandshake(ss)) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -2195,9 +2212,19 @@ tls13_SendCertificateRequest(sslSocket *ss)
 {
     SECStatus rv;
     sslBuffer extensionBuf = SSL_BUFFER_EMPTY;
+    unsigned int offset = 0;
 
     SSL_TRC(3, ("%d: TLS13[%d]: begin send certificate_request",
                 SSL_GETPID(), ss->fd));
+
+    if (ss->firstHsDone) {
+        PORT_Assert(ss->ssl3.hs.shaPostHandshake == NULL);
+        ss->ssl3.hs.shaPostHandshake = PK11_CloneContext(ss->ssl3.hs.sha);
+        if (ss->ssl3.hs.shaPostHandshake == NULL) {
+            ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+            return SECFailure;
+        }
+    }
 
     rv = ssl_ConstructExtensions(ss, &extensionBuf, ssl_hs_certificate_request);
     if (rv != SECSuccess) {
@@ -2222,6 +2249,8 @@ tls13_SendCertificateRequest(sslSocket *ss)
             FATAL_ERROR(ss, SEC_ERROR_NO_MEMORY, internal_error);
             goto loser;
         }
+
+        offset = SSL_BUFFER_LEN(&ss->sec.ci.sendBuf);
     }
 
     rv = ssl3_AppendHandshakeHeader(ss, ssl_hs_certificate_request,
@@ -2243,6 +2272,15 @@ tls13_SendCertificateRequest(sslSocket *ss)
     rv = ssl3_AppendBufferToHandshakeVariable(ss, &extensionBuf, 2);
     if (rv != SECSuccess) {
         goto loser; /* err set by AppendHandshake. */
+    }
+
+    if (ss->firstHsDone) {
+        rv = ssl3_UpdatePostHandshakeHashes(ss,
+                                            SSL_BUFFER_BASE(&ss->sec.ci.sendBuf) + offset,
+                                            SSL_BUFFER_LEN(&ss->sec.ci.sendBuf) - offset);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
     }
 
     sslBuffer_Clear(&extensionBuf);
@@ -2410,7 +2448,19 @@ tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    if (ss->firstHsDone) {
+    if (tls13_IsPostHandshake(ss)) {
+        PORT_Assert(ss->ssl3.hs.shaPostHandshake == NULL);
+        ss->ssl3.hs.shaPostHandshake = PK11_CloneContext(ss->ssl3.hs.sha);
+        if (ss->ssl3.hs.shaPostHandshake == NULL) {
+            ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+            return SECFailure;
+        }
+        rv = ssl_HashPostHandshakeMessage(ss, ssl_hs_certificate_request, b, length);
+        if (rv != SECSuccess) {
+            FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
+            return SECFailure;
+        }
+
         /* clean up anything left from previous handshake. */
         if (ss->ssl3.clientCertChain != NULL) {
             CERT_DestroyCertificateList(ss->ssl3.clientCertChain);
@@ -2441,7 +2491,7 @@ tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
 
     /* Unless it is a post-handshake client auth, the certificate
      * request context must be empty. */
-    if (!ss->firstHsDone && context.len > 0) {
+    if (!tls13_IsPostHandshake(ss) && context.len > 0) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_CERT_REQUEST, illegal_parameter);
         return SECFailure;
     }
@@ -2501,6 +2551,9 @@ tls13_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
             return SECFailure;
         }
         PORT_Assert(ss->ssl3.hs.ws == idle_handshake);
+        PORT_Assert(ss->ssl3.hs.shaPostHandshake != NULL);
+        PK11_DestroyContext(ss->ssl3.hs.shaPostHandshake, PR_TRUE);
+        ss->ssl3.hs.shaPostHandshake = NULL;
     } else {
         TLS13_SET_HS_STATE(ss, wait_server_cert);
     }
@@ -3058,6 +3111,15 @@ tls13_HandleCertificate(sslSocket *ss, PRUint8 *b, PRUint32 length)
         ssl_CipherSpecReleaseByEpoch(ss, ssl_secret_read, TrafficKeyClearText);
         dtls_ReceivedFirstMessageInFlight(ss);
     }
+
+    if (ss->firstHsDone) {
+        rv = ssl_HashPostHandshakeMessage(ss, ssl_hs_certificate, b, length);
+        if (rv != SECSuccess) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            return SECFailure;
+        }
+    }
+
     /* Process the context string */
     rv = ssl3_ConsumeHandshakeVariable(ss, &context, 1, &b, &length);
     if (rv != SECSuccess)
@@ -3615,7 +3677,11 @@ tls13_ComputeHandshakeHashes(sslSocket *ss, SSL3Hashes *hashes)
             goto loser;
         }
     } else {
-        ctx = PK11_CloneContext(ss->ssl3.hs.sha);
+        if (ss->firstHsDone) {
+            ctx = PK11_CloneContext(ss->ssl3.hs.shaPostHandshake);
+        } else {
+            ctx = PK11_CloneContext(ss->ssl3.hs.sha);
+        }
         if (!ctx) {
             ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
             return SECFailure;
@@ -4069,7 +4135,11 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    rv = ssl_HashHandshakeMessage(ss, ssl_hs_certificate_verify, b, length);
+    if (ss->firstHsDone) {
+        rv = ssl_HashPostHandshakeMessage(ss, ssl_hs_certificate_verify, b, length);
+    } else {
+        rv = ssl_HashHandshakeMessage(ss, ssl_hs_certificate_verify, b, length);
+    }
     if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
@@ -4129,10 +4199,6 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
         }
     }
 
-    if (ss->ssl3.clientCertRequested) {
-        PORT_Assert(ss->sec.isServer);
-        ss->ssl3.clientCertRequested = PR_FALSE;
-    }
     TLS13_SET_HS_STATE(ss, wait_finished);
 
     return SECSuccess;
@@ -4393,7 +4459,11 @@ tls13_CommonHandleFinished(sslSocket *ss, PK11SymKey *key,
         return SECFailure;
     }
 
-    rv = ssl_HashHandshakeMessage(ss, ssl_hs_finished, b, length);
+    if (ss->firstHsDone) {
+        rv = ssl_HashPostHandshakeMessage(ss, ssl_hs_finished, b, length);
+    } else {
+        rv = ssl_HashHandshakeMessage(ss, ssl_hs_finished, b, length);
+    }
     if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
@@ -4443,6 +4513,22 @@ tls13_ServerHandleFinished(sslSocket *ss, PRUint8 *b, PRUint32 length)
 
     if (ss->firstHsDone) {
         TLS13_SET_HS_STATE(ss, idle_handshake);
+
+        PORT_Assert(ss->ssl3.hs.shaPostHandshake != NULL);
+        PK11_DestroyContext(ss->ssl3.hs.shaPostHandshake, PR_TRUE);
+        ss->ssl3.hs.shaPostHandshake = NULL;
+
+        ss->ssl3.clientCertRequested = PR_FALSE;
+
+        if (ss->ssl3.keyUpdateDeferred) {
+            rv = tls13_SendKeyUpdate(ss, ss->ssl3.deferredKeyUpdateRequest,
+                                     PR_FALSE);
+            if (rv != SECSuccess) {
+                return SECFailure; /* error is set. */
+            }
+            ss->ssl3.keyUpdateDeferred = PR_FALSE;
+        }
+
         return SECSuccess;
     }
 
@@ -4525,10 +4611,15 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
                              SSL3AlertDescription *sendAlert)
 {
     SECStatus rv;
+    unsigned int offset = 0;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
     *sendAlert = internal_error;
+
+    if (ss->firstHsDone) {
+        offset = SSL_BUFFER_LEN(&ss->sec.ci.sendBuf);
+    }
 
     if (ss->ssl3.sendEmptyCert) {
         ss->ssl3.sendEmptyCert = PR_FALSE;
@@ -4543,6 +4634,16 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
             return SECFailure; /* error code is set. */
         }
     }
+
+    if (ss->firstHsDone) {
+        rv = ssl3_UpdatePostHandshakeHashes(ss,
+                                            SSL_BUFFER_BASE(&ss->sec.ci.sendBuf) + offset,
+                                            SSL_BUFFER_LEN(&ss->sec.ci.sendBuf) - offset);
+        if (rv != SECSuccess) {
+            return SECFailure; /* error code is set. */
+        }
+    }
+
     if (ss->ssl3.hs.clientCertRequested) {
         SECITEM_FreeItem(&ss->xtnData.certReqContext, PR_FALSE);
         if (ss->xtnData.certReqAuthorities.arena) {
@@ -4555,11 +4656,24 @@ tls13_SendClientSecondFlight(sslSocket *ss, PRBool sendClientCert,
     }
 
     if (sendClientCert) {
+        if (ss->firstHsDone) {
+            offset = SSL_BUFFER_LEN(&ss->sec.ci.sendBuf);
+        }
+
         rv = tls13_SendCertificateVerify(ss, ss->ssl3.clientPrivateKey);
         SECKEY_DestroyPrivateKey(ss->ssl3.clientPrivateKey);
         ss->ssl3.clientPrivateKey = NULL;
         if (rv != SECSuccess) {
             return SECFailure; /* err is set. */
+        }
+
+        if (ss->firstHsDone) {
+            rv = ssl3_UpdatePostHandshakeHashes(ss,
+                                                SSL_BUFFER_BASE(&ss->sec.ci.sendBuf) + offset,
+                                                SSL_BUFFER_LEN(&ss->sec.ci.sendBuf) - offset);
+            if (rv != SECSuccess) {
+                return SECFailure; /* error is set. */
+            }
         }
     }
 
@@ -4825,8 +4939,7 @@ SSLExp_SendSessionTicket(PRFileDesc *fd, const PRUint8 *token,
         return SECFailure;
     }
 
-    if (!ss->sec.isServer || !ss->firstHsDone ||
-        ss->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
+    if (!ss->sec.isServer || !tls13_IsPostHandshake(ss) ||
         tokenLen > 0xffff) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -4862,7 +4975,7 @@ tls13_HandleNewSessionTicket(sslSocket *ss, PRUint8 *b, PRUint32 length)
     if (rv != SECSuccess) {
         return SECFailure;
     }
-    if (!ss->firstHsDone || ss->sec.isServer) {
+    if (!tls13_IsPostHandshake(ss) || ss->sec.isServer) {
         FATAL_ERROR(ss, SSL_ERROR_RX_UNEXPECTED_NEW_SESSION_TICKET,
                     unexpected_message);
         return SECFailure;

@@ -157,7 +157,8 @@ tls13_RecoverHashState(sslSocket *ss,
     /* Now reinject the message. */
     SSL_ASSERT_HASHES_EMPTY(ss);
     rv = ssl_HashHandshakeMessageInt(ss, ssl_hs_message_hash, 0,
-                                     SSL_READER_CURRENT(&reader), hashLen);
+                                     SSL_READER_CURRENT(&reader), hashLen,
+                                     ssl3_UpdateHandshakeHashes);
     if (rv != SECSuccess) {
         return SECFailure;
     }
@@ -173,7 +174,8 @@ tls13_RecoverHashState(sslSocket *ss,
 
     rv = ssl_HashHandshakeMessageInt(ss, ssl_hs_server_hello, 0,
                                      SSL_BUFFER_BASE(&messageBuf),
-                                     SSL_BUFFER_LEN(&messageBuf));
+                                     SSL_BUFFER_LEN(&messageBuf),
+                                     ssl3_UpdateHandshakeHashes);
     sslBuffer_Clear(&messageBuf);
     if (rv != SECSuccess) {
         return SECFailure;
