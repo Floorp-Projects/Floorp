@@ -18,7 +18,7 @@ const gUM = c => navigator.mediaDevices.getUserMedia(c);
   } catch(e) {
     message = e.name;
   }
-  parent.postMessage(message, "http://mochi.test:8888");
+  parent.postMessage(message, "https://example.com:443");
 
   if (message == "success") {
     stream.getTracks().forEach(track => track.stop());
