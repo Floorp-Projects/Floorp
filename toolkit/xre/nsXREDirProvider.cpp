@@ -986,7 +986,7 @@ nsXREDirProvider::DoStartup() {
     // In the content process it's loaded on demand when needed
     if (XRE_IsParentProcess()) {
       nsCOMPtr<nsIObserver> policies(
-          do_GetService("@mozilla.org/browser/enterprisepolicies;1"));
+          do_GetService("@mozilla.org/enterprisepolicies;1"));
       if (policies) {
         policies->Observe(nullptr, "policies-startup", nullptr);
       }

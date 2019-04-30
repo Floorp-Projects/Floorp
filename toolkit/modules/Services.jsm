@@ -113,8 +113,8 @@ if (AppConstants.platform == "android") {
 if (AppConstants.MOZ_GECKO_PROFILER) {
   initTable.profiler = ["@mozilla.org/tools/profiler;1", "nsIProfiler"];
 }
-if ("@mozilla.org/browser/enterprisepolicies;1" in Cc) {
-  initTable.policies = ["@mozilla.org/browser/enterprisepolicies;1", "nsIEnterprisePolicies"];
+if ("@mozilla.org/enterprisepolicies;1" in Cc) {
+  initTable.policies = ["@mozilla.org/enterprisepolicies;1", "nsIEnterprisePolicies"];
 }
 
 XPCOMUtils.defineLazyServiceGetters(Services, initTable);

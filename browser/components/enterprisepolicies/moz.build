@@ -16,24 +16,8 @@ TEST_DIRS += [
 	'tests'
 ]
 
-EXTRA_COMPONENTS += [
-    'EnterprisePolicies.js',
-    'EnterprisePolicies.manifest',
-    'EnterprisePoliciesContent.js',
-]
-
 EXTRA_JS_MODULES.policies += [
     'Policies.jsm',
-]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    EXTRA_JS_MODULES.policies += [
-        'WindowsGPOParser.jsm',
-]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    EXTRA_JS_MODULES.policies += [
-        'macOSPoliciesParser.jsm',
 ]
 
 FINAL_LIBRARY = 'browsercomps'
