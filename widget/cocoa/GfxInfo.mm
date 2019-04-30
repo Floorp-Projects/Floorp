@@ -151,6 +151,17 @@ GfxInfo::GetAdapterDriver(nsAString& aAdapterDriver) {
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) { return NS_ERROR_FAILURE; }
 
+/* readonly attribute DOMString adapterDriverVendor; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVendor(nsAString& aAdapterDriverVendor) {
+  aAdapterDriverVendor.AssignLiteral("");
+  return NS_OK;
+}
+
+/* readonly attribute DOMString adapterDriverVendor2; */
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) { return NS_ERROR_FAILURE; }
+
 /* readonly attribute DOMString adapterDriverVersion; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) {
@@ -225,23 +236,26 @@ void GfxInfo::AddCrashReportAnnotations() {
 }
 
 // We don't support checking driver versions on Mac.
-#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, ruleId)          \
-  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, ruleId)          \
+  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
                              V(0, 0, 0, 0), ruleId, "")
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBGL_MSAA,
         nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION, "FEATURE_FAILURE_MAC_ATI_NO_MSAA");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(RadeonX1000),
         nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(Geforce7300GT),
         nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
