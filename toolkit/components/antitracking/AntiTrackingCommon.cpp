@@ -777,12 +777,17 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   LOG(("Adding a first-party storage exception for %s...",
        PromiseFlatCString(origin).get()));
 
-  if (StaticPrefs::network_cookie_cookieBehavior() !=
-      nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+  Document* parentDoc = aParentWindow->GetExtantDoc();
+  if (!parentDoc) {
+    LOG(("Parent window has no doc"));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+  auto cookieBehavior = parentDoc->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
-         StaticPrefs::network_cookie_cookieBehavior()));
+         cookieBehavior));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
