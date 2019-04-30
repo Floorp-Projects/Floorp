@@ -651,7 +651,8 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
       xtolong(startp + centralOffset) == CENTRALSIG) {
     // Success means optimized jar layout from bug 559961 is in effect
     uint32_t readaheadLength = xtolong(startp);
-    mozilla::PrefetchMemory(const_cast<uint8_t *>(startp), readaheadLength);
+    mozilla::MaybePrefetchMemory(const_cast<uint8_t *>(startp),
+                                 readaheadLength);
   } else {
     for (buf = endp - ZIPEND_SIZE; buf > startp; buf--) {
       if (xtolong(buf) == ENDSIG) {
