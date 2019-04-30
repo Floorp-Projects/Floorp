@@ -408,10 +408,8 @@ async function timeoutAlarmListener() {
   }
   postToControlServer("raptor-page-timeout", msgData);
 
-  // take a screen capture
-  if (screenCapture) {
-    await getScreenCapture();
-  }
+  await getScreenCapture();
+
   // call clean-up to shutdown gracefully
   cleanUp();
 }
