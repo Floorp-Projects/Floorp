@@ -1664,33 +1664,28 @@ class ScriptSource::LoadSourceMatcher {
 
   template <typename Unit>
   bool operator()(const Compressed<Unit>&) const {
-    return sourceAlreadyLoaded();
+    *loaded_ = true;
+    return true;
   }
 
   template <typename Unit>
   bool operator()(const Uncompressed<Unit>&) const {
-    return sourceAlreadyLoaded();
+    *loaded_ = true;
+    return true;
   }
 
   template <typename Unit>
   bool operator()(const Retrievable<Unit>&) {
-    // Establish the default outcome first.
-    *loaded_ = false;
-
     MOZ_ASSERT(ss_->sourceRetrievable(),
                "should be retrievable if Retrievable");
 
     if (!cx_->runtime()->sourceHook.ref()) {
+      *loaded_ = false;
       return true;
     }
 
-    // The argument here is just for overloading -- its value doesn't matter.
-    if (!tryLoadAndSetSource(Unit('0'))) {
-      return false;
-    }
-
-    *loaded_ = true;
-    return true;
+    // The argument is just for overloading -- its value doesn't matter.
+    return tryLoadAndSetSource(Unit('0'));
   }
 
   bool operator()(const Missing&) const {
@@ -1708,31 +1703,50 @@ class ScriptSource::LoadSourceMatcher {
   }
 
  private:
-  bool sourceAlreadyLoaded() const {
-    *loaded_ = true;
-    return true;
-  }
-
   bool tryLoadAndSetSource(const Utf8Unit&) const {
     char* utf8Source;
     size_t length;
-    return cx_->runtime()->sourceHook->load(cx_, ss_->filename(), nullptr,
-                                            &utf8Source, &length) &&
-           utf8Source &&
-           ss_->setRetrievedSource(
-               cx_,
-               EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
-               length);
+    if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), nullptr,
+                                          &utf8Source, &length)) {
+      return false;
+    }
+
+    if (!utf8Source) {
+      *loaded_ = false;
+      return true;
+    }
+
+    if (!ss_->setRetrievedSource(
+             cx_,
+             EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
+             length)) {
+      return false;
+    }
+
+    *loaded_ = true;
+    return true;
   }
 
   bool tryLoadAndSetSource(const char16_t&) const {
     char16_t* utf16Source;
     size_t length;
-    return cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &utf16Source,
-                                            nullptr, &length) &&
-           utf16Source &&
-           ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(utf16Source),
-                                   length);
+    if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &utf16Source,
+                                          nullptr, &length)) {
+      return false;
+    }
+
+    if (!utf16Source) {
+      *loaded_ = false;
+      return true;
+    }
+
+    if (!ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(utf16Source),
+                                 length)) {
+      return false;
+    }
+
+    *loaded_ = true;
+    return true;
   }
 };
 
