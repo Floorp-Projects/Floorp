@@ -28,6 +28,7 @@ loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true
 loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
 
 loader.lazyRequireGetter(this, "allAnonymousContentTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
+loader.lazyRequireGetter(this, "findGridParentContainerForNode", "devtools/server/actors/inspector/utils", true);
 loader.lazyRequireGetter(this, "isNodeDead", "devtools/server/actors/inspector/utils", true);
 loader.lazyRequireGetter(this, "nodeDocument", "devtools/server/actors/inspector/utils", true);
 loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
@@ -2208,6 +2209,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     return this.layoutActor;
+  },
+
+  /**
+   * Returns the parent grid DOMNode of the given node if it exists, otherwise, it
+   * returns null.
+   */
+  getParentGridNode: function(node) {
+    if (isNodeDead(node)) {
+      return null;
+    }
+
+    const parentGridNode = findGridParentContainerForNode(node.rawNode);
+    return parentGridNode ? this._ref(parentGridNode) : null;
   },
 
   /**
