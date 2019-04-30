@@ -1101,9 +1101,10 @@ Toolbox.prototype = {
   _splitConsoleOnKeypress: function(e) {
     if (e.keyCode === KeyCodes.DOM_VK_ESCAPE) {
       this.toggleSplitConsole();
-      // If the debugger is paused, don't let the ESC key stop any pending
-      // navigation.
-      if (this._threadClient.state == "paused") {
+      // If the debugger is paused, don't let the ESC key stop any pending navigation.
+      // If the host is page, don't let the ESC stop the load of the webconsole frame.
+      if (this._threadClient.state == "paused" ||
+          this.hostType === Toolbox.HostType.PAGE) {
         e.preventDefault();
       }
     }
