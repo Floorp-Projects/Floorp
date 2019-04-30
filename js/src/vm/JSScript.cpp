@@ -2819,6 +2819,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
       binASTMetadata.reset(metadata);
     }
 
+    MOZ_ASSERT(binASTMetadata != nullptr);
+
     frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
     for (uint32_t i = 0; i < numBinASTKinds; i++) {
       MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
@@ -2828,7 +2830,7 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
     JSAtom** atomsBase = binASTMetadata->atomsBase();
     auto slices = binASTMetadata->sliceBase();
     const char* sourceBase =
-        mode == XDR_ENCODE ? bytes.get() : ss->data.as<BinAST>().string.chars();
+        mode == XDR_ENCODE ? ss->data.as<BinAST>().string.chars() : bytes.get();
 
     for (uint32_t i = 0; i < numStrings; i++) {
       uint8_t isNull;
@@ -2865,6 +2867,7 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   }
 
   if (mode == XDR_DECODE) {
+    MOZ_ASSERT(freshMetadata != nullptr);
     if (!ss->initializeBinAST(xdr->cx(), std::move(bytes), binASTLength,
                               &freshMetadata)) {
       return xdr->fail(JS::TranscodeResult_Throw);
