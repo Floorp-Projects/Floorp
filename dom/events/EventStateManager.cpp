@@ -1757,7 +1757,7 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     }
 
     // If non-native code is capturing the mouse don't start a drag.
-    if (PresShell::IsMouseCapturePreventingDrag()) {
+    if (nsIPresShell::IsMouseCapturePreventingDrag()) {
       StopTrackingDragGesture();
       return;
     }
@@ -3035,7 +3035,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // mousemove/mouseup events will continue to be dispatched to this element
       // and therefore forwarded to the child.
       if (aEvent->HasBeenPostedToRemoteProcess() &&
-          !PresShell::GetCapturingContent()) {
+          !nsIPresShell::GetCapturingContent()) {
         if (nsIContent* content =
                 mCurrentTarget ? mCurrentTarget->GetContent() : nullptr) {
           PresShell::SetCapturingContent(content, CaptureFlags::None);
@@ -6290,7 +6290,7 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher() {
   }
   EventStateManager::StopHandlingUserInput(mMessage);
   if (mMessage == eMouseDown) {
-    PresShell::AllowMouseCapture(false);
+    nsIPresShell::AllowMouseCapture(false);
   }
   if (NeedsToResetFocusManagerMouseButtonHandlingState()) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();

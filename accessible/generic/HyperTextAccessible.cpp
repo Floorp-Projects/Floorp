@@ -1277,7 +1277,7 @@ nsresult HyperTextAccessible::SetSelectionRange(int32_t aStartPos,
 
   // Make sure it is visible
   domSel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                         ScrollAxis(), ScrollAxis(),
+                         nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
                          dom::Selection::SCROLL_FOR_CARET_MOVE |
                              dom::Selection::SCROLL_OVERFLOW_HIDDEN);
 
@@ -1646,7 +1646,8 @@ void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
         int16_t vPercent = offsetPointY * 100 / size.height;
 
         nsresult rv = nsCoreUtils::ScrollSubstringTo(
-            frame, range, ScrollAxis(vPercent), ScrollAxis(hPercent));
+            frame, range, nsIPresShell::ScrollAxis(vPercent),
+            nsIPresShell::ScrollAxis(hPercent));
         if (NS_FAILED(rv)) return;
 
         initialScrolled = true;

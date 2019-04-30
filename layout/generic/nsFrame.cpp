@@ -2134,7 +2134,7 @@ void nsIFrame::OnVisibilityChange(Visibility aNewVisibility,
 
 static nsIFrame* GetActiveSelectionFrame(nsPresContext* aPresContext,
                                          nsIFrame* aFrame) {
-  nsIContent* capturingContent = PresShell::GetCapturingContent();
+  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
   if (capturingContent) {
     nsIFrame* activeFrame = aPresContext->GetPrimaryFrameFor(capturingContent);
     return activeFrame ? activeFrame : aFrame;
@@ -4268,7 +4268,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
   // the mouse on the nearest scrollable frame. If there isn't a scrollable
   // frame, or something else is already capturing the mouse, there's no
   // reason to capture.
-  if (!PresShell::GetCapturingContent()) {
+  if (!nsIPresShell::GetCapturingContent()) {
     nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
         this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
                   nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
@@ -4673,7 +4673,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
 
   nsIFrame* activeFrame = GetActiveSelectionFrame(aPresContext, this);
 
-  nsCOMPtr<nsIContent> captureContent = PresShell::GetCapturingContent();
+  nsCOMPtr<nsIContent> captureContent = nsIPresShell::GetCapturingContent();
 
   // We can unconditionally stop capturing because
   // we should never be capturing when the mouse button is up

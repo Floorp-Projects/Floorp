@@ -1844,7 +1844,8 @@ void Accessible::DispatchClickEvent(nsIContent* aContent,
   RefPtr<PresShell> presShell = mDoc->PresShellPtr();
 
   // Scroll into view.
-  presShell->ScrollContentIntoView(aContent, ScrollAxis(), ScrollAxis(),
+  presShell->ScrollContentIntoView(aContent, nsIPresShell::ScrollAxis(),
+                                   nsIPresShell::ScrollAxis(),
                                    ScrollFlags::ScrollOverflowHidden);
 
   AutoWeakFrame frame = aContent->GetPrimaryFrame();

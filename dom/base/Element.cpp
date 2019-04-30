@@ -783,8 +783,10 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
   }
 
   presShell->ScrollContentIntoView(
-      this, ScrollAxis(whereToScrollVertically, WhenToScroll::Always),
-      ScrollAxis(whereToScrollHorizontally, WhenToScroll::Always), scrollFlags);
+      this,
+      nsIPresShell::ScrollAxis(whereToScrollVertically, WhenToScroll::Always),
+      nsIPresShell::ScrollAxis(whereToScrollHorizontally, WhenToScroll::Always),
+      scrollFlags);
 }
 
 void Element::Scroll(const CSSIntPoint& aScroll,

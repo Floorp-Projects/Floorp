@@ -446,7 +446,7 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
     if (anchorRoot == contentRoot) {
       // If the aFrame's content isn't the capturing content, it should be
       // a descendant.  At this time, we can return simply.
-      nsIContent* capturedContent = PresShell::GetCapturingContent();
+      nsIContent* capturedContent = nsIPresShell::GetCapturingContent();
       if (capturedContent != content) {
         return NS_OK;
       }
@@ -702,7 +702,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
       sel->Collapse(node, offset);
     }
     sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                        ScrollAxis(), ScrollAxis(), scrollFlags);
+                        nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
+                        scrollFlags);
     return NS_OK;
   }
 
@@ -831,8 +832,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   }
   if (NS_SUCCEEDED(result)) {
     result = mDomSelections[index]->ScrollIntoView(
-        nsISelectionController::SELECTION_FOCUS_REGION, ScrollAxis(),
-        ScrollAxis(), scrollFlags);
+        nsISelectionController::SELECTION_FOCUS_REGION,
+        nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(), scrollFlags);
   }
 
   return result;
@@ -1388,7 +1389,7 @@ nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
 
   if (!mDomSelections[index]) return NS_ERROR_NULL_POINTER;
 
-  ScrollAxis verticalScroll = ScrollAxis();
+  nsIPresShell::ScrollAxis verticalScroll = nsIPresShell::ScrollAxis();
   int32_t flags = Selection::SCROLL_DO_FLUSH;
   if (aFlags & nsISelectionController::SCROLL_SYNCHRONOUS) {
     flags |= Selection::SCROLL_SYNCHRONOUS;
@@ -1399,8 +1400,8 @@ nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
     flags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
   if (aFlags & nsISelectionController::SCROLL_CENTER_VERTICALLY) {
-    verticalScroll =
-        ScrollAxis(kScrollToCenter, WhenToScroll::IfNotFullyVisible);
+    verticalScroll = nsIPresShell::ScrollAxis(kScrollToCenter,
+                                              WhenToScroll::IfNotFullyVisible);
   }
   if (aFlags & nsISelectionController::SCROLL_FOR_CARET_MOVE) {
     flags |= Selection::SCROLL_FOR_CARET_MOVE;
@@ -1409,7 +1410,8 @@ nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   RefPtr<Selection> sel = mDomSelections[index];
-  return sel->ScrollIntoView(aRegion, verticalScroll, ScrollAxis(), flags);
+  return sel->ScrollIntoView(aRegion, verticalScroll,
+                             nsIPresShell::ScrollAxis(), flags);
 }
 
 nsresult nsFrameSelection::RepaintSelection(SelectionType aSelectionType) {

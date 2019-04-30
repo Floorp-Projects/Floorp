@@ -212,7 +212,9 @@ using namespace mozilla::layout;
 using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
 typedef ScrollableLayerGuid::ViewID ViewID;
 
-PresShell::CapturingContentInfo PresShell::sCapturingContentInfo;
+CapturingContentInfo nsIPresShell::gCaptureInfo = {
+    false /* mAllowed */, false /* mPointerLock */,
+    false /* mRetargetToElement */, false /* mPreventDrag */};
 
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
@@ -2440,8 +2442,7 @@ void PresShell::MaybeReleaseCapturingContent() {
   if (frameSelection) {
     frameSelection->SetDragState(false);
   }
-  if (sCapturingContentInfo.mContent &&
-      sCapturingContentInfo.mContent->OwnerDoc() == mDocument) {
+  if (gCaptureInfo.mContent && gCaptureInfo.mContent->OwnerDoc() == mDocument) {
     PresShell::ReleaseCapturingContent();
   }
 }
@@ -3314,8 +3315,10 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
  */
 static void ScrollToShowRect(nsIPresShell* aPresShell,
                              nsIScrollableFrame* aFrameAsScrollable,
-                             const nsRect& aRect, ScrollAxis aVertical,
-                             ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
+                             const nsRect& aRect,
+                             nsIPresShell::ScrollAxis aVertical,
+                             nsIPresShell::ScrollAxis aHorizontal,
+                             ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   nsRect visibleRect(scrollPt, aFrameAsScrollable->GetVisualViewportSize());
 
@@ -3396,8 +3399,8 @@ static void ScrollToShowRect(nsIPresShell* aPresShell,
 }
 
 nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
-                                          ScrollAxis aVertical,
-                                          ScrollAxis aHorizontal,
+                                          nsIPresShell::ScrollAxis aVertical,
+                                          nsIPresShell::ScrollAxis aHorizontal,
                                           ScrollFlags aScrollFlags) {
   NS_ENSURE_TRUE(aContent, NS_ERROR_NULL_POINTER);
   RefPtr<Document> composedDoc = aContent->GetComposedDoc();
@@ -3514,8 +3517,8 @@ void PresShell::DoScrollContentIntoView() {
 
 bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
                                            const nsRect& aRect,
-                                           ScrollAxis aVertical,
-                                           ScrollAxis aHorizontal,
+                                           nsIPresShell::ScrollAxis aVertical,
+                                           nsIPresShell::ScrollAxis aHorizontal,
                                            ScrollFlags aScrollFlags) {
   bool didScroll = false;
   // This function needs to work even if rect has a width or height of 0.
@@ -3709,11 +3712,11 @@ void nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
 }
 
 void PresShell::ClearMouseCaptureOnView(nsView* aView) {
-  if (sCapturingContentInfo.mContent) {
+  if (gCaptureInfo.mContent) {
     if (aView) {
       // if a view was specified, ensure that the captured content is within
       // this view.
-      nsIFrame* frame = sCapturingContentInfo.mContent->GetPrimaryFrame();
+      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
       if (frame) {
         nsView* view = frame->GetClosestView();
         // if there is no view, capturing won't be handled any more, so
@@ -3721,10 +3724,10 @@ void PresShell::ClearMouseCaptureOnView(nsView* aView) {
         if (view) {
           do {
             if (view == aView) {
-              sCapturingContentInfo.mContent = nullptr;
+              gCaptureInfo.mContent = nullptr;
               // the view containing the captured content likely disappeared so
               // disable capture for now.
-              sCapturingContentInfo.mAllowed = false;
+              gCaptureInfo.mAllowed = false;
               break;
             }
 
@@ -3736,38 +3739,38 @@ void PresShell::ClearMouseCaptureOnView(nsView* aView) {
       }
     }
 
-    sCapturingContentInfo.mContent = nullptr;
+    gCaptureInfo.mContent = nullptr;
   }
 
   // disable mouse capture until the next mousedown as a dialog has opened
   // or a drag has started. Otherwise, someone could start capture during
   // the modal dialog or drag.
-  sCapturingContentInfo.mAllowed = false;
+  gCaptureInfo.mAllowed = false;
 }
 
-void PresShell::ClearMouseCapture(nsIFrame* aFrame) {
-  if (!sCapturingContentInfo.mContent) {
-    sCapturingContentInfo.mAllowed = false;
+void nsIPresShell::ClearMouseCapture(nsIFrame* aFrame) {
+  if (!gCaptureInfo.mContent) {
+    gCaptureInfo.mAllowed = false;
     return;
   }
 
   // null frame argument means clear the capture
   if (!aFrame) {
-    sCapturingContentInfo.mContent = nullptr;
-    sCapturingContentInfo.mAllowed = false;
+    gCaptureInfo.mContent = nullptr;
+    gCaptureInfo.mAllowed = false;
     return;
   }
 
-  nsIFrame* capturingFrame = sCapturingContentInfo.mContent->GetPrimaryFrame();
+  nsIFrame* capturingFrame = gCaptureInfo.mContent->GetPrimaryFrame();
   if (!capturingFrame) {
-    sCapturingContentInfo.mContent = nullptr;
-    sCapturingContentInfo.mAllowed = false;
+    gCaptureInfo.mContent = nullptr;
+    gCaptureInfo.mAllowed = false;
     return;
   }
 
   if (nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, capturingFrame)) {
-    sCapturingContentInfo.mContent = nullptr;
-    sCapturingContentInfo.mAllowed = false;
+    gCaptureInfo.mContent = nullptr;
+    gCaptureInfo.mAllowed = false;
   }
 }
 
@@ -6132,28 +6135,27 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
   // If capture was set for pointer lock, don't unlock unless we are coming
   // out of pointer lock explicitly.
-  if (!aContent && sCapturingContentInfo.mPointerLock &&
+  if (!aContent && gCaptureInfo.mPointerLock &&
       !(aFlags & CaptureFlags::PointerLock)) {
     return;
   }
 
-  sCapturingContentInfo.mContent = nullptr;
+  gCaptureInfo.mContent = nullptr;
 
   // only set capturing content if allowed or the
   // CaptureFlags::IgnoreAllowedState or CaptureFlags::PointerLock are used.
-  if ((aFlags & CaptureFlags::IgnoreAllowedState) ||
-      sCapturingContentInfo.mAllowed || (aFlags & CaptureFlags::PointerLock)) {
+  if ((aFlags & CaptureFlags::IgnoreAllowedState) || gCaptureInfo.mAllowed ||
+      (aFlags & CaptureFlags::PointerLock)) {
     if (aContent) {
-      sCapturingContentInfo.mContent = aContent;
+      gCaptureInfo.mContent = aContent;
     }
     // CaptureFlags::PointerLock is the same as
     // CaptureFlags::RetargetToElement & CaptureFlags::IgnoreAllowedState.
-    sCapturingContentInfo.mRetargetToElement =
+    gCaptureInfo.mRetargetToElement =
         !!(aFlags & CaptureFlags::RetargetToElement) ||
         !!(aFlags & CaptureFlags::PointerLock);
-    sCapturingContentInfo.mPreventDrag =
-        !!(aFlags & CaptureFlags::PreventDragStart);
-    sCapturingContentInfo.mPointerLock = !!(aFlags & CaptureFlags::PointerLock);
+    gCaptureInfo.mPreventDrag = !!(aFlags & CaptureFlags::PreventDragStart);
+    gCaptureInfo.mPointerLock = !!(aFlags & CaptureFlags::PointerLock);
   }
 }
 
@@ -6674,7 +6676,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // capture retargeting is being used, no frame was found or the frame's
   // content is not a descendant of the capturing content.
   if (capturingContent && !pointerCapturingContent &&
-      (PresShell::sCapturingContentInfo.mRetargetToElement ||
+      (gCaptureInfo.mRetargetToElement ||
        !eventTargetData.mFrame->GetContent() ||
        !nsContentUtils::ContentIsCrossDocDescendantOf(
            eventTargetData.mFrame->GetContent(), capturingContent))) {
@@ -7013,7 +7015,7 @@ nsIContent* PresShell::EventHandler::GetCapturingContentFor(
   return (aGUIEvent->mClass == ePointerEventClass ||
           aGUIEvent->mClass == eWheelEventClass ||
           aGUIEvent->HasMouseEventMessage())
-             ? PresShell::GetCapturingContent()
+             ? nsIPresShell::GetCapturingContent()
              : nullptr;
 }
 
@@ -7378,7 +7380,7 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
     return aRootFrameToHandleEvent;
   }
 
-  if (PresShell::sCapturingContentInfo.mRetargetToElement) {
+  if (gCaptureInfo.mRetargetToElement) {
     *aIsCaptureRetargeted = true;
     return aRootFrameToHandleEvent;
   }
@@ -7847,7 +7849,7 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
                           GetPresContext() &&
                           GetPresContext()->EventStateManager() ==
                               EventStateManager::GetActiveEventStateManager();
-      PresShell::AllowMouseCapture(allowCapture);
+      nsIPresShell::AllowMouseCapture(allowCapture);
       *aIsUserInteraction = false;
       return true;
     }
@@ -7924,7 +7926,7 @@ void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
       PresShell::ReleaseCapturingContent();
       return;
     case eMouseMove:
-      PresShell::AllowMouseCapture(false);
+      nsIPresShell::AllowMouseCapture(false);
       return;
     case eDrag:
     case eDragEnd:
@@ -8263,7 +8265,7 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
     }
 
     Document* doc = content->OwnerDoc();
-    nsIContent* capturingContent = PresShell::GetCapturingContent();
+    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
     if (capturingContent) {
       if (capturingContent->OwnerDoc() != doc) {
         // Wrong document, don't dispatch anything.
@@ -8511,13 +8513,15 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
     // problem. The only difference in the result is that if your cursor is in
     // an edit box below the current view, you'll get the edit box aligned with
     // the top of the window. This is arguably better behavior anyway.
-    rv =
-        MOZ_KnownLive(mPresShell)
-            ->ScrollContentIntoView(
-                content, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-                ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-                ScrollFlags::ScrollOverflowHidden |
-                    ScrollFlags::IgnoreMarginAndPadding);
+    rv = MOZ_KnownLive(mPresShell)
+             ->ScrollContentIntoView(
+                 content,
+                 nsIPresShell::ScrollAxis(kScrollMinimum,
+                                          WhenToScroll::IfNotVisible),
+                 nsIPresShell::ScrollAxis(kScrollMinimum,
+                                          WhenToScroll::IfNotVisible),
+                 ScrollFlags::ScrollOverflowHidden |
+                     ScrollFlags::IgnoreMarginAndPadding);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");

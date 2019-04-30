@@ -3428,7 +3428,7 @@ void HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent) {
 void HTMLInputElement::FinishRangeThumbDrag(WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(mIsDraggingRange);
 
-  if (PresShell::GetCapturingContent() == this) {
+  if (nsIPresShell::GetCapturingContent() == this) {
     PresShell::ReleaseCapturingContent();
   }
   if (aEvent) {
@@ -3443,7 +3443,7 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
   MOZ_ASSERT(mIsDraggingRange);
 
   mIsDraggingRange = false;
-  if (PresShell::GetCapturingContent() == this) {
+  if (nsIPresShell::GetCapturingContent() == this) {
     PresShell::ReleaseCapturingContent();
   }
   if (aIsForUserEvent) {
@@ -3512,7 +3512,7 @@ void HTMLInputElement::StartNumberControlSpinnerSpin() {
 
 void HTMLInputElement::StopNumberControlSpinnerSpin(SpinnerStopState aState) {
   if (mNumberControlSpinnerIsSpinning) {
-    if (PresShell::GetCapturingContent() == this) {
+    if (nsIPresShell::GetCapturingContent() == this) {
       PresShell::ReleaseCapturingContent();
     }
 
@@ -4183,7 +4183,7 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
       if (mIsDraggingRange) {
         break;
       }
-      if (PresShell::GetCapturingContent()) {
+      if (nsIPresShell::GetCapturingContent()) {
         break;  // don't start drag if someone else is already capturing
       }
       WidgetInputEvent* inputEvent = aVisitor.mEvent->AsInputEvent();
@@ -4212,7 +4212,7 @@ void HTMLInputElement::PostHandleEventForRangeThumb(
       if (!mIsDraggingRange) {
         break;
       }
-      if (PresShell::GetCapturingContent() != this) {
+      if (nsIPresShell::GetCapturingContent() != this) {
         // Someone else grabbed capture.
         CancelRangeThumbDrag();
         break;

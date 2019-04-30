@@ -11,7 +11,7 @@
 
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/PresShell.h"
+#include "mozilla/PresShell.h"  // For ScrollAxis
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/SelectionChangeEventDispatcher.h"
 #include "mozilla/TextRange.h"
@@ -136,10 +136,9 @@ class Selection final : public nsSupportsWeakReference,
   nsIFrame* GetSelectionEndPointGeometry(SelectionRegion aRegion,
                                          nsRect* aRect);
 
-  nsresult PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
-                                            int32_t aFlags,
-                                            ScrollAxis aVertical,
-                                            ScrollAxis aHorizontal);
+  nsresult PostScrollSelectionIntoViewEvent(
+      SelectionRegion aRegion, int32_t aFlags,
+      nsIPresShell::ScrollAxis aVertical, nsIPresShell::ScrollAxis aHorizontal);
   enum {
     SCROLL_SYNCHRONOUS = 1 << 1,
     SCROLL_FIRST_ANCESTOR_ONLY = 1 << 2,
@@ -153,10 +152,11 @@ class Selection final : public nsSupportsWeakReference,
   // Otherwise, if SCROLL_DO_FLUSH is also in aFlags, then this method will
   // flush layout and you MUST hold a strong ref on 'this' for the duration
   // of this call.  This might destroy arbitrary layout objects.
-  nsresult ScrollIntoView(SelectionRegion aRegion,
-                          ScrollAxis aVertical = ScrollAxis(),
-                          ScrollAxis aHorizontal = ScrollAxis(),
-                          int32_t aFlags = 0);
+  nsresult ScrollIntoView(
+      SelectionRegion aRegion,
+      nsIPresShell::ScrollAxis aVertical = nsIPresShell::ScrollAxis(),
+      nsIPresShell::ScrollAxis aHorizontal = nsIPresShell::ScrollAxis(),
+      int32_t aFlags = 0);
   nsresult SubtractRange(RangeData* aRange, nsRange* aSubtract,
                          nsTArray<RangeData>* aOutput);
   /**
@@ -664,7 +664,8 @@ class Selection final : public nsSupportsWeakReference,
    public:
     NS_DECL_NSIRUNNABLE
     ScrollSelectionIntoViewEvent(Selection* aSelection, SelectionRegion aRegion,
-                                 ScrollAxis aVertical, ScrollAxis aHorizontal,
+                                 nsIPresShell::ScrollAxis aVertical,
+                                 nsIPresShell::ScrollAxis aHorizontal,
                                  int32_t aFlags)
         : Runnable("dom::Selection::ScrollSelectionIntoViewEvent"),
           mSelection(aSelection),
@@ -679,8 +680,8 @@ class Selection final : public nsSupportsWeakReference,
    private:
     Selection* mSelection;
     SelectionRegion mRegion;
-    ScrollAxis mVerticalScroll;
-    ScrollAxis mHorizontalScroll;
+    nsIPresShell::ScrollAxis mVerticalScroll;
+    nsIPresShell::ScrollAxis mHorizontalScroll;
     int32_t mFlags;
   };
 
