@@ -222,22 +222,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   nsRefreshDriver* GetRefreshDriver() const;
 
-#ifdef ACCESSIBILITY
-  /**
-   * Return the document accessible for this pres shell if there is one.
-   */
-  mozilla::a11y::DocAccessible* GetDocAccessible() const {
-    return mDocAccessible;
-  }
-
-  /**
-   * Set the document accessible for this pres shell.
-   */
-  void SetDocAccessible(mozilla::a11y::DocAccessible* aDocAccessible) {
-    mDocAccessible = aDocAccessible;
-  }
-#endif
-
   nsCSSFrameConstructor* FrameConstructor() const {
     return mFrameConstructor.get();
   }
@@ -731,18 +715,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual void ListComputedStyles(FILE* out, int32_t aIndent = 0) = 0;
 
   virtual void ListStyleSheets(FILE* out, int32_t aIndent = 0) = 0;
-#endif
-
-#ifdef ACCESSIBILITY
-  /**
-   * Return true if accessibility is active.
-   */
-  static bool IsAccessibilityActive();
-
-  /**
-   * Return accessibility service if accessibility is active.
-   */
-  static nsAccessibilityService* AccService();
 #endif
 
   /**
@@ -1324,9 +1296,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // be inlined:
   nsFrameManager* mFrameManager;
   mozilla::WeakPtr<nsDocShell> mForwardingContainer;
-#ifdef ACCESSIBILITY
-  mozilla::a11y::DocAccessible* mDocAccessible;
-#endif
 
   // The `performance.now()` value when we last started to process reflows.
   DOMHighResTimeStamp mLastReflowStart{0.0};

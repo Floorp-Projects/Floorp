@@ -769,9 +769,6 @@ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
 nsIPresShell::nsIPresShell()
     : mViewManager(nullptr),
       mFrameManager(nullptr),
-#ifdef ACCESSIBILITY
-      mDocAccessible(nullptr),
-#endif
       mPaintCount(0),
       mAutoWeakFrames(nullptr),
       mCanvasBackgroundColor(NS_RGBA(0, 0, 0, 0)),
@@ -815,6 +812,9 @@ nsIPresShell::nsIPresShell()
 PresShell::PresShell()
     : mCaretEnabled(false),
       mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+#ifdef ACCESSIBILITY
+      mDocAccessible(nullptr),
+#endif  // #ifdef ACCESSIBILITY
       mAPZFocusSequenceNumber(0),
       mActiveSuppressDisplayport(0),
       mNeedLayoutFlush(true),
@@ -3163,10 +3163,11 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 
 #ifdef ACCESSIBILITY
   if (anchorTarget) {
-    nsAccessibilityService* accService = AccService();
-    if (accService) accService->NotifyOfAnchorJumpTo(anchorTarget);
+    if (nsAccessibilityService* accService = GetAccessibilityService()) {
+      accService->NotifyOfAnchorJumpTo(anchorTarget);
+    }
   }
-#endif
+#endif  // #ifdef ACCESSIBILITY
 
   return rv;
 }
@@ -10356,12 +10357,16 @@ nsIFrame* nsIPresShell::GetAbsoluteContainingBlock(nsIFrame* aFrame) {
 }
 
 #ifdef ACCESSIBILITY
-bool nsIPresShell::IsAccessibilityActive() {
-  return GetAccService() != nullptr;
+
+// static
+bool PresShell::IsAccessibilityActive() { return GetAccService() != nullptr; }
+
+// static
+nsAccessibilityService* PresShell::GetAccessibilityService() {
+  return GetAccService();
 }
 
-nsAccessibilityService* nsIPresShell::AccService() { return GetAccService(); }
-#endif
+#endif  // #ifdef ACCESSIBILITY
 
 // Asks our docshell whether we're active.
 void PresShell::QueryIsActive() {
@@ -10434,12 +10439,12 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
   nsresult rv = UpdateImageLockingState();
 #ifdef ACCESSIBILITY
   if (aIsActive) {
-    nsAccessibilityService* accService = AccService();
-    if (accService) {
+    if (nsAccessibilityService* accService =
+            PresShell::GetAccessibilityService()) {
       accService->PresShellActivated(this);
     }
   }
-#endif
+#endif  // #ifdef ACCESSIBILITY
   return rv;
 }
 
