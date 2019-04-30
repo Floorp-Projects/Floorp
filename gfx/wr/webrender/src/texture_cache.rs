@@ -624,6 +624,8 @@ impl TextureCache {
                 self.free(&entry);
             }
         }
+
+        self.pending_updates.note_clear();
         self.per_doc_data = per_doc_data;
         self.require_frame_build = true;
     }
