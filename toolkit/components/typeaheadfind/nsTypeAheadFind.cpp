@@ -329,7 +329,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
   mFoundEditable = nullptr;
   mFoundRange = nullptr;
   mCurrentWindow = nullptr;
-  nsCOMPtr<nsIPresShell> startingPresShell(GetPresShell());
+  RefPtr<PresShell> startingPresShell = GetPresShell();
   if (!startingPresShell) {
     nsCOMPtr<nsIDocShell> ds = do_QueryReferent(mDocShell);
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
@@ -338,7 +338,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
     mPresShell = do_GetWeakReference(startingPresShell);
   }
 
-  nsCOMPtr<nsIPresShell> presShell = startingPresShell;
+  RefPtr<PresShell> presShell = startingPresShell;
   if (!presShell) {
     return NS_ERROR_FAILURE;
   }
@@ -440,8 +440,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
 
       if (aIsLinksOnly) {
         // Don't check if inside link when searching all text
-        RangeStartsInsideLink(returnRange, presShell, &isInsideLink,
-                              &isStartingLink);
+        RangeStartsInsideLink(returnRange, &isInsideLink, &isStartingLink);
       }
 
       bool usesIndependentSelection;
@@ -728,7 +727,7 @@ nsTypeAheadFind::GetCurrentWindow(mozIDOMWindow** aCurrentWindow) {
 
 nsresult nsTypeAheadFind::GetSearchContainers(
     nsISupports* aContainer, nsISelectionController* aSelectionController,
-    bool aIsFirstVisiblePreferred, bool aFindPrev, nsIPresShell** aPresShell,
+    bool aIsFirstVisiblePreferred, bool aFindPrev, PresShell** aPresShell,
     nsPresContext** aPresContext) {
   NS_ENSURE_ARG_POINTER(aContainer);
   NS_ENSURE_ARG_POINTER(aPresShell);
@@ -797,7 +796,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
   // Consider current selection as null if
   // it's not in the currently focused document
   RefPtr<nsRange> currentSelectionRange;
-  nsCOMPtr<nsIPresShell> selectionPresShell = GetPresShell();
+  RefPtr<PresShell> selectionPresShell = GetPresShell();
   if (aSelectionController && selectionPresShell &&
       selectionPresShell == presShell) {
     RefPtr<Selection> selection = aSelectionController->GetSelection(
@@ -843,7 +842,6 @@ nsresult nsTypeAheadFind::GetSearchContainers(
 }
 
 void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
-                                            nsIPresShell* aPresShell,
                                             bool* aIsInsideLink,
                                             bool* aIsStartingLink) {
   *aIsInsideLink = false;
@@ -958,7 +956,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
                       uint16_t* aResult) {
   *aResult = FIND_NOTFOUND;
 
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  RefPtr<PresShell> presShell = GetPresShell();
   if (!presShell) {
     nsCOMPtr<nsIDocShell> ds(do_QueryReferent(mDocShell));
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
@@ -1087,7 +1085,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   return NS_OK;
 }
 
-void nsTypeAheadFind::GetSelection(nsIPresShell* aPresShell,
+void nsTypeAheadFind::GetSelection(PresShell* aPresShell,
                                    nsISelectionController** aSelCon,
                                    Selection** aDOMSel) {
   if (!aPresShell) return;
@@ -1138,7 +1136,7 @@ nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
   return NS_OK;
 }
 
-bool nsTypeAheadFind::IsRangeVisible(nsIPresShell* aPresShell,
+bool nsTypeAheadFind::IsRangeVisible(PresShell* aPresShell,
                                      nsPresContext* aPresContext,
                                      nsRange* aRange, bool aMustBeInViewPort,
                                      bool aGetTopVisibleLeaf,
@@ -1322,7 +1320,7 @@ nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
   return NS_OK;
 }
 
-bool nsTypeAheadFind::IsRangeRendered(nsIPresShell* aPresShell,
+bool nsTypeAheadFind::IsRangeRendered(PresShell* aPresShell,
                                       nsPresContext* aPresContext,
                                       nsRange* aRange) {
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
@@ -1377,16 +1375,16 @@ bool nsTypeAheadFind::IsRangeRendered(nsIPresShell* aPresShell,
   return false;
 }
 
-already_AddRefed<nsIPresShell> nsTypeAheadFind::GetPresShell() {
+already_AddRefed<PresShell> nsTypeAheadFind::GetPresShell() {
   if (!mPresShell) return nullptr;
 
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
-  if (shell) {
-    nsPresContext* pc = shell->GetPresContext();
+  nsCOMPtr<nsIPresShell> iPresShell = do_QueryReferent(mPresShell);
+  if (iPresShell) {
+    nsPresContext* pc = iPresShell->GetPresContext();
     if (!pc || !pc->GetContainerWeak()) {
       return nullptr;
     }
   }
-
-  return shell.forget();
+  RefPtr<PresShell> presShell = static_cast<PresShell*>(iPresShell.get());
+  return presShell.forget();
 }
