@@ -4496,9 +4496,9 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
   DispatchCustomEvent(NS_LITERAL_STRING("fullscreen"));
 
   if (!NS_WARN_IF(!IsChromeWindow())) {
-    if (nsCOMPtr<nsIPresShell> shell =
+    if (RefPtr<PresShell> presShell =
             do_QueryReferent(mChromeFields.mFullscreenPresShell)) {
-      if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
+      if (nsRefreshDriver* rd = presShell->GetRefreshDriver()) {
         rd->Thaw();
       }
       mChromeFields.mFullscreenPresShell = nullptr;

@@ -222,41 +222,9 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   nsRefreshDriver* GetRefreshDriver() const;
 
-#ifdef ACCESSIBILITY
-  /**
-   * Return the document accessible for this pres shell if there is one.
-   */
-  mozilla::a11y::DocAccessible* GetDocAccessible() const {
-    return mDocAccessible;
-  }
-
-  /**
-   * Set the document accessible for this pres shell.
-   */
-  void SetDocAccessible(mozilla::a11y::DocAccessible* aDocAccessible) {
-    mDocAccessible = aDocAccessible;
-  }
-#endif
-
-  inline mozilla::ServoStyleSet* StyleSet() const;
-
   nsCSSFrameConstructor* FrameConstructor() const {
     return mFrameConstructor.get();
   }
-
-  /* Enable/disable author style level. Disabling author style disables the
-   * entire author level of the cascade, including the HTML preshint level.
-   */
-  // XXX these could easily be inlined, but there is a circular #include
-  // problem with nsStyleSet.
-  void SetAuthorStyleDisabled(bool aDisabled);
-  bool GetAuthorStyleDisabled() const;
-
-  /**
-   * Update the style set somehow to take into account changed prefs which
-   * affect document styling.
-   */
-  void UpdatePreferenceStyles();
 
   /**
    * FrameSelection will return the Frame based selection API.
@@ -415,41 +383,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   void PostPendingScrollAnchorAdjustment(
       mozilla::layout::ScrollAnchorContainer* aContainer);
 
-  /**
-   * Tell the pres shell that a frame needs to be marked dirty and needs
-   * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
-   * long as the ancestor chain between them doesn't cross a reflow root.
-   *
-   * The bit to add should be NS_FRAME_IS_DIRTY, NS_FRAME_HAS_DIRTY_CHILDREN
-   * or nsFrameState(0); passing 0 means that dirty bits won't be set on the
-   * frame or its ancestors/descendants, but that intrinsic widths will still
-   * be marked dirty.  Passing aIntrinsicDirty = eResize and aBitToAdd = 0
-   * would result in no work being done, so don't do that.
-   */
-  void FrameNeedsReflow(nsIFrame* aFrame,
-                        mozilla::IntrinsicDirty aIntrinsicDirty,
-                        nsFrameState aBitToAdd,
-                        mozilla::ReflowRootHandling aRootHandling =
-                            mozilla::ReflowRootHandling::InferFromBitToAdd);
-
-  /**
-   * Calls FrameNeedsReflow on all fixed position children of the root frame.
-   */
-  void MarkFixedFramesForReflow(mozilla::IntrinsicDirty aIntrinsicDirty);
-
-  /**
-   * Tell the presshell that the given frame's reflow was interrupted.  This
-   * will mark as having dirty children a path from the given frame (inclusive)
-   * to the nearest ancestor with a dirty subtree, or to the reflow root
-   * currently being reflowed if no such ancestor exists (inclusive).  This is
-   * to be done immediately after reflow of the current reflow root completes.
-   * This method must only be called during reflow, and the frame it's being
-   * called on must be in the process of being reflowed when it's called.  This
-   * method doesn't mark any intrinsic widths dirty and doesn't add any bits
-   * other than NS_FRAME_HAS_DIRTY_CHILDREN.
-   */
-  void FrameNeedsToContinueReflow(nsIFrame* aFrame);
-
   void CancelAllPendingReflows();
 
   void NotifyCounterStylesAreDirty();
@@ -489,75 +422,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    */
   void NotifyFontFaceSetOnRefresh();
 
-  /**
-   * Flush pending notifications of the type specified.  This method
-   * will not affect the content model; it'll just affect style and
-   * frames. Callers that actually want up-to-date presentation (other
-   * than the document itself) should probably be calling
-   * Document::FlushPendingNotifications.
-   *
-   * This method can execute script, which can destroy this presshell object
-   * unless someone is holding a reference to it on the stack.  The presshell
-   * itself will ensure it lives up until the method returns, but callers who
-   * plan to use the presshell after this call should hold a strong ref
-   * themselves!
-   *
-   * @param aType the type of notifications to flush
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void FlushPendingNotifications(mozilla::FlushType aType) {
-    if (!NeedFlush(aType)) {
-      return;
-    }
-
-    DoFlushPendingNotifications(aType);
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  void FlushPendingNotifications(mozilla::ChangesToFlush aType) {
-    if (!NeedFlush(aType.mFlushType)) {
-      return;
-    }
-
-    DoFlushPendingNotifications(aType);
-  }
-
- protected:
-  /**
-   * Implementation methods for FlushPendingNotifications.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  virtual void DoFlushPendingNotifications(mozilla::FlushType aType) = 0;
-  MOZ_CAN_RUN_SCRIPT
-  virtual void DoFlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
-
- public:
-  /**
-   * Whether we might need a flush for the given flush type.  If this
-   * function returns false, we definitely don't need to flush.
-   *
-   * @param aFlushType The flush type to check.  This must be
-   *   >= FlushType::Style.  This also returns true if a throttled
-   *   animation flush is required.
-   */
-  bool NeedFlush(mozilla::FlushType aType) const {
-    // We check mInFlush to handle re-entrant calls to FlushPendingNotifications
-    // by reporting that we always need a flush in that case.  Otherwise,
-    // we could end up missing needed flushes, since we clear the mNeedXXXFlush
-    // flags at the top of FlushPendingNotifications.
-    MOZ_ASSERT(aType >= mozilla::FlushType::Style);
-    return mNeedStyleFlush ||
-           (mNeedLayoutFlush &&
-            aType >= mozilla::FlushType::InterruptibleLayout) ||
-           aType >= mozilla::FlushType::Display ||
-           mNeedThrottledAnimationFlush || mInFlush;
-  }
-
-  inline void EnsureStyleFlush();
-  inline void SetNeedStyleFlush();
-  inline void SetNeedLayoutFlush();
-  inline void SetNeedThrottledAnimationFlush();
-
   // Removes ourself from the list of layout / style / and resize refresh driver
   // observers.
   //
@@ -581,14 +445,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   void ObserveStyleFlushes() {
     if (!ObservingStyleFlushes()) DoObserveStyleFlushes();
   }
-
-  bool NeedStyleFlush() const { return mNeedStyleFlush; }
-  /**
-   * Returns true if we might need to flush layout, even if we haven't scheduled
-   * one yet (as opposed to HasPendingReflow, which returns true if a flush is
-   * scheduled or will soon be scheduled).
-   */
-  bool NeedLayoutFlush() const { return mNeedLayoutFlush; }
 
   /**
    * Callbacks will be called even if reflow itself fails for
@@ -665,13 +521,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    * being destroyed.
    */
   void SetIgnoreFrameDestruction(bool aIgnore);
-
-  /**
-   * Notification sent by a frame informing the pres shell that it is about to
-   * be destroyed.
-   * This allows any outstanding references to the frame to be cleaned up
-   */
-  void NotifyDestroyingFrame(nsIFrame* aFrame);
 
   /**
    * Get the AccessibleCaretEventHub, if it exists. AddRefs it.
@@ -868,18 +717,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   virtual void ListStyleSheets(FILE* out, int32_t aIndent = 0) = 0;
 #endif
 
-#ifdef ACCESSIBILITY
-  /**
-   * Return true if accessibility is active.
-   */
-  static bool IsAccessibilityActive();
-
-  /**
-   * Return accessibility service if accessibility is active.
-   */
-  static nsAccessibilityService* AccService();
-#endif
-
   /**
    * Stop all active elements (plugins and the caret) in this presentation and
    * in the presentations of subdocuments.  Resets painting to a suppressed
@@ -989,10 +826,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame);
   void RemoveWeakFrame(WeakFrame* aWeakFrame);
-
-#ifdef DEBUG
-  nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
-#endif
 
   /**
    * Stop or restart non synthetic test mouse event handling on *all*
@@ -1328,34 +1161,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
   bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
 
-  void SetVisualViewportSize(nscoord aWidth, nscoord aHeight);
-  void ResetVisualViewportSize();
-  bool IsVisualViewportSizeSet() { return mVisualViewportSizeSet; }
-  nsSize GetVisualViewportSize() {
-    NS_ASSERTION(mVisualViewportSizeSet,
-                 "asking for visual viewport size when its not set?");
-    return mVisualViewportSize;
-  }
-
-  // This function handles all the work after VisualViewportSize is set
-  // or reset.
-  void CompleteChangeToVisualViewportSize();
-
-  /**
-   * The return value indicates whether the offset actually changed.
-   */
-  bool SetVisualViewportOffset(const nsPoint& aScrollOffset,
-                               const nsPoint& aPrevLayoutScrollPos);
-
-  nsPoint GetVisualViewportOffset() const {
-    return mVisualViewportOffset.valueOr(nsPoint());
-  }
-  bool IsVisualViewportOffsetSet() const {
-    return mVisualViewportOffset.isSome();
-  }
-
-  nsPoint GetVisualViewportOffsetRelativeToLayoutViewport() const;
-
   // Represents an update to the visual scroll offset that will be sent to APZ.
   // The update type is used to determine priority compared to other scroll
   // updates.
@@ -1414,12 +1219,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   virtual Document* GetPrimaryContentDocument() = 0;
 
-  // aSheetType is one of the nsIStyleSheetService *_SHEET constants.
-  void NotifyStyleSheetServiceSheetAdded(mozilla::StyleSheet* aSheet,
-                                         uint32_t aSheetType);
-  void NotifyStyleSheetServiceSheetRemoved(mozilla::StyleSheet* aSheet,
-                                           uint32_t aSheetType);
-
   struct MOZ_RAII AutoAssertNoFlush {
     explicit AutoAssertNoFlush(nsIPresShell& aShell)
         : mShell(aShell), mOldForbidden(mShell.mForbiddenToFlush) {
@@ -1446,31 +1245,9 @@ class nsIPresShell : public nsStubDocumentObserver {
       const nsPoint& aVisualViewportOffset,
       FrameMetrics::ScrollOffsetUpdateType aUpdateType);
 
-#ifdef DEBUG
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool VerifyIncrementalReflow();
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoVerifyReflow();
-  void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
-  void ShowEventTargetDebug();
-
-  bool mInVerifyReflow = false;
-  // The reflow root under which we're currently reflowing.  Null when
-  // not in reflow.
-  nsIFrame* mCurrentReflowRoot = nullptr;
-#endif
-
 #ifdef MOZ_REFLOW_PERF
   mozilla::UniquePtr<ReflowCountMgr> mReflowCountMgr;
 #endif
-
-  /**
-   * Methods to handle changes to user and UA sheet lists that we get
-   * notified about.
-   */
-  void AddUserSheet(mozilla::StyleSheet*);
-  void AddAgentSheet(mozilla::StyleSheet*);
-  void AddAuthorSheet(mozilla::StyleSheet*);
-  void RemoveSheet(mozilla::StyleOrigin, mozilla::StyleSheet*);
-  void RemovePreferenceStyles();
 
   void WillDoReflow();
 
@@ -1498,12 +1275,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // sets up.
   void ScheduleReflow();
 
-  // DoReflow returns whether the reflow finished without interruption
-  // If aFrame is not the root frame, the caller must pass a non-null
-  // aOverflowTracker.
-  bool DoReflow(nsIFrame* aFrame, bool aInterruptible,
-                mozilla::OverflowChangedTracker* aOverflowTracker);
-
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1525,9 +1296,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // be inlined:
   nsFrameManager* mFrameManager;
   mozilla::WeakPtr<nsDocShell> mForwardingContainer;
-#ifdef ACCESSIBILITY
-  mozilla::a11y::DocAccessible* mDocAccessible;
-#endif
 
   // The `performance.now()` value when we last started to process reflows.
   DOMHighResTimeStamp mLastReflowStart{0.0};
@@ -1538,10 +1306,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer> mReflowContinueTimer;
 
-#ifdef DEBUG
-  nsIFrame* mDrawEventTargetFrame = nullptr;
-#endif
-
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // We track allocated pointers in a debug-only hashtable to assert against
   // missing/double frees.
@@ -1550,10 +1314,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   // Count of the number of times this presshell has been painted to a window.
   uint64_t mPaintCount;
-
-  nsSize mVisualViewportSize;
-
-  mozilla::Maybe<nsPoint> mVisualViewportOffset;
 
   // A pending visual scroll offset that we will ask APZ to scroll to
   // during the next transaction. Cleared when we send the transaction.
@@ -1673,13 +1433,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   // Whether the most recent interruptible reflow was actually interrupted:
   bool mWasLastReflowInterrupted : 1;
-  bool mVisualViewportSizeSet : 1;
-
-  // True if a layout flush might not be a no-op
-  bool mNeedLayoutFlush : 1;
-
-  // True if a style flush might not be a no-op
-  bool mNeedStyleFlush : 1;
 
   // True if we're observing the refresh driver for style flushes.
   bool mObservingStyleFlushes : 1;
@@ -1691,10 +1444,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool mObservingLayoutFlushes : 1;
 
   bool mResizeEventPending : 1;
-
-  // True if there are throttled animations that would be processed when
-  // performing a flush with mFlushAnimations == true.
-  bool mNeedThrottledAnimationFlush : 1;
 
   bool mFontSizeInflationForceEnabled : 1;
   bool mFontSizeInflationDisabledInMasterProcess : 1;

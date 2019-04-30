@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace widget {
 
-typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
+typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, Command>
     SelectorCommandHashtable;
 
 class NativeKeyBindings final {

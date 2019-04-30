@@ -470,38 +470,41 @@ nsresult nsTextInputSelectionImpl::RepaintSelection(
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::SetCaretEnabled(bool enabled) {
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak);
-  if (!shell) return NS_ERROR_FAILURE;
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  RefPtr<PresShell> presShell = do_QueryReferent(mPresShellWeak);
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   // tell the pres shell to enable the caret, rather than settings its
   // visibility directly. this way the presShell's idea of caret visibility is
   // maintained.
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
-  if (!selCon) return NS_ERROR_NO_INTERFACE;
-  selCon->SetCaretEnabled(enabled);
+  presShell->SetCaretEnabled(enabled);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::SetCaretReadOnly(bool aReadOnly) {
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result;
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
-  if (shell) {
-    RefPtr<nsCaret> caret = shell->GetCaret();
-    if (caret) {
-      Selection* selection =
-          mFrameSelection->GetSelection(SelectionType::eNormal);
-      if (selection) {
-        caret->SetCaretReadOnly(aReadOnly);
-      }
-      return NS_OK;
-    }
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+  RefPtr<PresShell> presShell = do_QueryReferent(mPresShellWeak, &rv);
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<nsCaret> caret = presShell->GetCaret();
+  if (!caret) {
+    return NS_ERROR_FAILURE;
+  }
+  Selection* selection = mFrameSelection->GetSelection(SelectionType::eNormal);
+  if (selection) {
+    caret->SetCaretReadOnly(aReadOnly);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -511,36 +514,41 @@ nsTextInputSelectionImpl::GetCaretEnabled(bool* _retval) {
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::GetCaretVisible(bool* _retval) {
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result;
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
-  if (shell) {
-    RefPtr<nsCaret> caret = shell->GetCaret();
-    if (caret) {
-      *_retval = caret->IsVisible();
-      return NS_OK;
-    }
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+  RefPtr<PresShell> presShell = do_QueryReferent(mPresShellWeak, &rv);
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<nsCaret> caret = presShell->GetCaret();
+  if (!caret) {
+    return NS_ERROR_FAILURE;
+  }
+  *_retval = caret->IsVisible();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(bool aVisibility) {
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result;
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
-  if (shell) {
-    RefPtr<nsCaret> caret = shell->GetCaret();
-    if (caret) {
-      Selection* selection =
-          mFrameSelection->GetSelection(SelectionType::eNormal);
-      if (selection) {
-        caret->SetVisibilityDuringSelection(aVisibility);
-      }
-      return NS_OK;
-    }
+  if (!mPresShellWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+  RefPtr<PresShell> presShell = do_QueryReferent(mPresShellWeak, &rv);
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<nsCaret> caret = presShell->GetCaret();
+  if (!caret) {
+    return NS_ERROR_FAILURE;
+  }
+  Selection* selection = mFrameSelection->GetSelection(SelectionType::eNormal);
+  if (selection) {
+    caret->SetVisibilityDuringSelection(aVisibility);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
