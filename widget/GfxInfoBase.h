@@ -104,9 +104,7 @@ class GfxInfoBase : public nsIGfxInfo,
   // Convenience to get the application version
   static const nsCString& GetApplicationVersion();
 
-  virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array);
 
   static void SetFeatureStatus(
       const nsTArray<mozilla::dom::GfxInfoFeatureStatus>& aFS);
@@ -125,8 +123,11 @@ class GfxInfoBase : public nsIGfxInfo,
 
   virtual void DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> obj);
 
-  virtual bool DoesVendorMatch(const nsAString& aBlocklistVendor,
-                               const nsAString& aAdapterVendor);
+  bool DoesVendorMatch(const nsAString& aBlocklistVendor,
+                       const nsAString& aAdapterVendor);
+
+  virtual bool DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
+                                     const nsAString& aDriverVendor);
 
   bool InitFeatureObject(JSContext* aCx, JS::Handle<JSObject*> aContainer,
                          const char* aName,
