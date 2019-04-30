@@ -3315,10 +3315,8 @@ static nscoord ComputeWhereToScroll(WhereToScroll aWhereToScroll,
  */
 static void ScrollToShowRect(nsIPresShell* aPresShell,
                              nsIScrollableFrame* aFrameAsScrollable,
-                             const nsRect& aRect,
-                             nsIPresShell::ScrollAxis aVertical,
-                             nsIPresShell::ScrollAxis aHorizontal,
-                             ScrollFlags aScrollFlags) {
+                             const nsRect& aRect, ScrollAxis aVertical,
+                             ScrollAxis aHorizontal, ScrollFlags aScrollFlags) {
   nsPoint scrollPt = aFrameAsScrollable->GetVisualViewportOffset();
   nsRect visibleRect(scrollPt, aFrameAsScrollable->GetVisualViewportSize());
 
@@ -3399,8 +3397,8 @@ static void ScrollToShowRect(nsIPresShell* aPresShell,
 }
 
 nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
-                                          nsIPresShell::ScrollAxis aVertical,
-                                          nsIPresShell::ScrollAxis aHorizontal,
+                                          ScrollAxis aVertical,
+                                          ScrollAxis aHorizontal,
                                           ScrollFlags aScrollFlags) {
   NS_ENSURE_TRUE(aContent, NS_ERROR_NULL_POINTER);
   RefPtr<Document> composedDoc = aContent->GetComposedDoc();
@@ -3517,8 +3515,8 @@ void PresShell::DoScrollContentIntoView() {
 
 bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
                                            const nsRect& aRect,
-                                           nsIPresShell::ScrollAxis aVertical,
-                                           nsIPresShell::ScrollAxis aHorizontal,
+                                           ScrollAxis aVertical,
+                                           ScrollAxis aHorizontal,
                                            ScrollFlags aScrollFlags) {
   bool didScroll = false;
   // This function needs to work even if rect has a width or height of 0.
@@ -8513,15 +8511,13 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
     // problem. The only difference in the result is that if your cursor is in
     // an edit box below the current view, you'll get the edit box aligned with
     // the top of the window. This is arguably better behavior anyway.
-    rv = MOZ_KnownLive(mPresShell)
-             ->ScrollContentIntoView(
-                 content,
-                 nsIPresShell::ScrollAxis(kScrollMinimum,
-                                          WhenToScroll::IfNotVisible),
-                 nsIPresShell::ScrollAxis(kScrollMinimum,
-                                          WhenToScroll::IfNotVisible),
-                 ScrollFlags::ScrollOverflowHidden |
-                     ScrollFlags::IgnoreMarginAndPadding);
+    rv =
+        MOZ_KnownLive(mPresShell)
+            ->ScrollContentIntoView(
+                content, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+                ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+                ScrollFlags::ScrollOverflowHidden |
+                    ScrollFlags::IgnoreMarginAndPadding);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
