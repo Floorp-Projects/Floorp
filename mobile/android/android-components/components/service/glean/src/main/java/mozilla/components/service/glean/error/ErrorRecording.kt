@@ -53,7 +53,7 @@ object ErrorRecording {
         val identifier = metricData.identifier.split("/", limit = 2)[0]
 
         // Record errors in the pings the metric is in, as well as the metrics ping.
-        var sendInPings = metricData.getStorageNames()
+        var sendInPings = metricData.sendInPings
         if (!sendInPings.contains("metrics")) {
             sendInPings = sendInPings + listOf("metrics")
         }
@@ -92,7 +92,7 @@ object ErrorRecording {
     * @param metricData The metric the errors were reported about
     * @param errorType The type of error
     * @param pingName The name of the ping (optional).  If null, will use
-    *     metricData.getStorageNames().first()
+    *     metricData.sendInPings.first()
     * @return The number of errors reported
     */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
@@ -107,7 +107,7 @@ object ErrorRecording {
         val usePingName = pingName?.let {
             pingName
         } ?: run {
-            metricData.getStorageNames().first()
+            metricData.sendInPings.first()
         }
 
         val errorName = GLEAN_ERROR_NAMES[errorType]!!

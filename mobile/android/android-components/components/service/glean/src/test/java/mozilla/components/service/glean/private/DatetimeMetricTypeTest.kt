@@ -28,19 +28,6 @@ class DatetimeMetricTypeTest {
     }
 
     @Test
-    fun `The API must define the expected "default" storage`() {
-        // Define a 'datetimeMetric' datetime metric, which will be stored in "store1"
-        val datetimeMetric = DatetimeMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "datetime_metric",
-            sendInPings = listOf("store1")
-        )
-        assertEquals(listOf("metrics"), datetimeMetric.defaultStorageDestinations)
-    }
-
-    @Test
     fun `The API saves to its storage engine`() {
         // Define a 'datetimeMetric' datetime metric, which will be stored in "store1"
         val datetimeMetric = DatetimeMetricType(

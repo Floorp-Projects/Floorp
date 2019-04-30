@@ -29,9 +29,7 @@ class GenericStorageEngineTest {
         override val lifetime: Lifetime,
         override val name: String,
         override val sendInPings: List<String>
-    ) : CommonMetricData {
-        override val defaultStorageDestinations: List<String> = listOf("metrics")
-    }
+    ) : CommonMetricData
 
     @Test
     fun `metrics with 'user' lifetime must not be cleared when snapshotting`() {

@@ -34,20 +34,6 @@ class TimingDistributionMetricTypeTest {
     }
 
     @Test
-    fun `The API must define the expected "default" storage`() {
-        // Define a timing distribution metric which will be stored in "store1"
-        val metric = TimingDistributionMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "timing_distribution",
-            sendInPings = listOf("store1"),
-            timeUnit = TimeUnit.Millisecond
-        )
-        assertEquals(listOf("metrics"), metric.defaultStorageDestinations)
-    }
-
-    @Test
     fun `The API saves to its storage engine`() {
         // Define a timing distribution metric which will be stored in "store1"
         val metric = TimingDistributionMetricType(

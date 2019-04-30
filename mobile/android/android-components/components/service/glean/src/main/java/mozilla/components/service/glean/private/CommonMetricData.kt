@@ -38,10 +38,6 @@ interface CommonMetricData {
 
     val identifier: String get() = if (category.isEmpty()) { name } else { "$category.$name" }
 
-    companion object {
-        internal const val DEFAULT_STORAGE_NAME = "default"
-    }
-
     fun shouldRecord(logger: Logger): Boolean {
         // Don't record metrics if we aren't initialized
         if (!Glean.isInitialized()) {
@@ -55,26 +51,5 @@ interface CommonMetricData {
         }
 
         return true
-    }
-
-    /**
-     * Defines the names of the storages the metric defaults to when
-     * "default" is used as the destination storage.
-     * Note that every metric type will need to override this.
-     */
-    val defaultStorageDestinations: List<String>
-
-    /**
-     * Get the list of storage names the metric will record to. This
-     * automatically expands [DEFAULT_STORAGE_NAME] to the list of default
-     * storages for the metric.
-     */
-    fun getStorageNames(): List<String> {
-        if (DEFAULT_STORAGE_NAME !in sendInPings) {
-            return sendInPings
-        }
-
-        val filteredNames = sendInPings.filter { it != DEFAULT_STORAGE_NAME }
-        return filteredNames + defaultStorageDestinations
     }
 }

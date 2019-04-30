@@ -27,19 +27,6 @@ class StringMetricTypeTest {
     }
 
     @Test
-    fun `The API must define the expected "default" storage`() {
-        // Define a 'stringMetric' string metric, which will be stored in "store1"
-        val stringMetric = StringMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "string_metric",
-            sendInPings = listOf("store1")
-        )
-        assertEquals(listOf("metrics"), stringMetric.defaultStorageDestinations)
-    }
-
-    @Test
     fun `The API saves to its storage engine`() {
         // Define a 'stringMetric' string metric, which will be stored in "store1"
         val stringMetric = StringMetricType(

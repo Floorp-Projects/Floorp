@@ -235,7 +235,7 @@ class MetricsPingSchedulerTest {
                 category = "telemetry",
                 lifetime = Lifetime.Application,
                 name = "string_metric",
-                sendInPings = listOf("default")
+                sendInPings = listOf("metrics")
             )
 
             val expectedValue = "test-only metric"
@@ -388,7 +388,7 @@ class MetricsPingSchedulerTest {
     //         category = "telemetry",
     //         lifetime = Lifetime.Ping,
     //         name = "string_metric",
-    //         sendInPings = listOf("default")
+    //         sendInPings = listOf("metrics")
     //     )
 
     //     // Start Glean in the current thread, clean the local storage.

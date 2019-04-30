@@ -26,8 +26,6 @@ data class CounterMetricType(
     override val sendInPings: List<String>
 ) : CommonMetricData {
 
-    override val defaultStorageDestinations: List<String> = listOf("metrics")
-
     private val logger = Logger("glean/CounterMetricType")
 
     /**
@@ -62,7 +60,7 @@ data class CounterMetricType(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+    fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
@@ -80,7 +78,7 @@ data class CounterMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testGetValue(pingName: String = getStorageNames().first()): Int {
+    fun testGetValue(pingName: String = sendInPings.first()): Int {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 

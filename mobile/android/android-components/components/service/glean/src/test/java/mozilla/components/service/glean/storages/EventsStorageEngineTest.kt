@@ -268,7 +268,7 @@ class EventsStorageEngineTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("events"),
             allowedExtraKeys = listOf("test_event_number")
         )
 

@@ -183,7 +183,7 @@ internal object EventsStorageEngine : StorageEngine {
         // Record a copy of the event in all the needed stores.
         synchronized(this) {
             val eventStoresToUpload: MutableList<String> = mutableListOf()
-            for (storeName in metricData.getStorageNames()) {
+            for (storeName in metricData.sendInPings) {
                 val storeData = eventStores.getOrPut(storeName) { mutableListOf() }
                 storeData.add(event.copy())
                 writeEventToDisk(storeName, jsonEvent)

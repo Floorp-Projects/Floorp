@@ -38,8 +38,6 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
     val allowedExtraKeys: List<String> = listOf()
 ) : CommonMetricData {
 
-    override val defaultStorageDestinations: List<String> = listOf("events")
-
     private val logger = Logger("glean/EventMetricType")
 
     /**
@@ -102,7 +100,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
+    fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 
@@ -123,7 +121,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
+    fun testGetValue(pingName: String = sendInPings.first()): List<RecordedEventData> {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
 

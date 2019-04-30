@@ -7,7 +7,6 @@ package mozilla.components.service.glean.private
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.resetGlean
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -24,19 +23,6 @@ class BooleanMetricTypeTest {
     @Before
     fun setUp() {
         resetGlean()
-    }
-
-    @Test
-    fun `The API must define the expected "default" storage`() {
-        // Define a 'booleanMetric' boolean metric, which will be stored in "store1"
-        val booleanMetric = BooleanMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "boolean_metric",
-            sendInPings = listOf("store1")
-        )
-        assertEquals(listOf("metrics"), booleanMetric.defaultStorageDestinations)
     }
 
     @Test

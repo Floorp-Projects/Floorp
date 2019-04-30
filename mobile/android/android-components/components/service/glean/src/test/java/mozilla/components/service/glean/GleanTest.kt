@@ -138,7 +138,7 @@ class GleanTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("default")
+            sendInPings = listOf("events")
         )
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(

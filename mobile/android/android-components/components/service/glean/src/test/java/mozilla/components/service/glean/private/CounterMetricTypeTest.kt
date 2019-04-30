@@ -27,19 +27,6 @@ class CounterMetricTypeTest {
     }
 
     @Test
-    fun `The API must define the expected "default" storage`() {
-        // Define a 'counterMetric' counter metric, which will be stored in "store1"
-        val counterMetric = CounterMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "counter_metric",
-            sendInPings = listOf("store1")
-        )
-        assertEquals(listOf("metrics"), counterMetric.defaultStorageDestinations)
-    }
-
-    @Test
     fun `The API saves to its storage engine`() {
         // Define a 'counterMetric' counter metric, which will be stored in "store1"
         val counterMetric = CounterMetricType(

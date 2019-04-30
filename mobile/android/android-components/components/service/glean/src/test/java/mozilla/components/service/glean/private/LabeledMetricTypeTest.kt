@@ -44,9 +44,7 @@ class LabeledMetricTypeTest {
         override val lifetime: Lifetime,
         override val name: String,
         override val sendInPings: List<String>
-    ) : CommonMetricData {
-        override val defaultStorageDestinations: List<String> = listOf("metrics")
-    }
+    ) : CommonMetricData
 
     @Before
     fun setup() {
@@ -67,7 +65,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledCounterMetric = LabeledMetricType<CounterMetricType>(
@@ -75,7 +73,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = counterMetric
         )
 
@@ -124,7 +122,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledCounterMetric = LabeledMetricType<CounterMetricType>(
@@ -132,7 +130,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = counterMetric,
             labels = setOf("foo", "bar", "baz")
         )
@@ -183,7 +181,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledCounterMetric = LabeledMetricType<CounterMetricType>(
@@ -191,7 +189,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = counterMetric
         )
 
@@ -243,7 +241,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledCounterMetric = LabeledMetricType<CounterMetricType>(
@@ -251,7 +249,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_counter_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = counterMetric
         )
 
@@ -285,7 +283,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_timespan_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             timeUnit = TimeUnit.Nanosecond
         )
 
@@ -294,7 +292,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_timespan_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = timespanMetric
         )
 
@@ -315,7 +313,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_uuid_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledUuidMetric = LabeledMetricType<UuidMetricType>(
@@ -323,7 +321,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_uuid_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = uuidMetric
         )
 
@@ -342,7 +340,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_list_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledStringListMetric = LabeledMetricType<StringListMetricType>(
@@ -350,7 +348,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_list_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = stringListMetric
         )
 
@@ -367,7 +365,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledStringMetric = LabeledMetricType<StringMetricType>(
@@ -375,7 +373,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = stringMetric
         )
 
@@ -394,7 +392,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_list_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledBooleanMetric = LabeledMetricType<BooleanMetricType>(
@@ -402,7 +400,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_string_list_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = booleanMetric
         )
 
@@ -419,7 +417,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_event_metric",
-            sendInPings = listOf("default")
+            sendInPings = listOf("metrics")
         )
 
         val labeledEventMetric = LabeledMetricType<EventMetricType<NoExtraKeys>>(
@@ -427,7 +425,7 @@ class LabeledMetricTypeTest {
             category = "telemetry",
             lifetime = Lifetime.Application,
             name = "labeled_event_metric",
-            sendInPings = listOf("default"),
+            sendInPings = listOf("metrics"),
             subMetric = eventMetric
         )
 
