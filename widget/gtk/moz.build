@@ -101,6 +101,9 @@ if CONFIG['MOZ_WAYLAND']:
         'nsWaylandDisplay.cpp',
         'WindowSurfaceWayland.cpp',
     ]
+    EXPORTS.mozilla.widget += [
+        'nsWaylandDisplayShutdown.h'
+    ]
 
 if CONFIG['ACCESSIBILITY']:
     UNIFIED_SOURCES += [

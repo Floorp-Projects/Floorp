@@ -27,6 +27,9 @@
 #include "ScreenHelperGTK.h"
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
+#ifdef MOZ_WAYLAND
+#  include "nsWaylandDisplay.h"
+#endif
 
 using mozilla::LazyLogModule;
 using mozilla::Unused;
@@ -267,5 +270,9 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
-  return g_main_context_iteration(nullptr, mayWait);
+  bool ret = g_main_context_iteration(nullptr, mayWait);
+#ifdef MOZ_WAYLAND
+  WaylandDispatchDisplays();
+#endif
+  return ret;
 }
