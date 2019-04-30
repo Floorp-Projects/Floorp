@@ -183,6 +183,7 @@ class FunctionCompiler {
           ins = MConstant::New(alloc(), DoubleValue(0.0), MIRType::Double);
           break;
         case ValType::Ref:
+        case ValType::FuncRef:
         case ValType::AnyRef:
           ins = MWasmNullConstant::New(alloc());
           break;
@@ -2183,8 +2184,9 @@ static bool EmitGetGlobal(FunctionCompiler& f) {
     case ValType::F64:
       result = f.constant(value.f64());
       break;
+    case ValType::FuncRef:
     case ValType::AnyRef:
-      MOZ_ASSERT(value.anyref().isNull());
+      MOZ_ASSERT(value.ref().isNull());
       result = f.nullRefConstant();
       break;
     default:
