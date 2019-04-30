@@ -2066,11 +2066,11 @@ void nsJSContext::MaybePokeCC() {
 
   // If GC hasn't run recently and forget skippable only cycle was run,
   // don't start a new cycle too soon.
-  if (sCleanupsSinceLastGC > NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
+  if ((sCleanupsSinceLastGC > NS_MAJOR_FORGET_SKIPPABLE_CALLS) &&
+      !sLastForgetSkippableCycleEndTime.IsNull()) {
     uint32_t sinceLastForgetSkippableCycle =
         TimeUntilNow(sLastForgetSkippableCycleEndTime);
-    if (sinceLastForgetSkippableCycle &&
-        sinceLastForgetSkippableCycle <
+    if (sinceLastForgetSkippableCycle <
             NS_TIME_BETWEEN_FORGET_SKIPPABLE_CYCLES) {
       return;
     }
