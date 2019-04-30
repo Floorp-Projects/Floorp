@@ -1814,7 +1814,7 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem) {
   if (aMenuItem) {
     aMenuItem->PresShell()->ScrollFrameRectIntoView(
         aMenuItem, nsRect(nsPoint(0, 0), aMenuItem->GetRect().Size()),
-        ScrollAxis(), ScrollAxis(),
+        nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
         ScrollFlags::ScrollOverflowHidden |
             ScrollFlags::ScrollFirstAncestorOnly |
             ScrollFlags::IgnoreMarginAndPadding);

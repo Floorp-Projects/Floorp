@@ -212,6 +212,7 @@ whitelist-types = [
     ".*ThreadSafe.*Holder",
     "AnonymousContent",
     "AudioContext",
+    "CapturingContentInfo",
     "DefaultDelete",
     "DOMIntersectionObserverEntry",
     "Element",
@@ -355,8 +356,6 @@ opaque-types = [
     "mozilla::HashSet",
     "mozilla::Pair",
     "mozilla::Pair_Base",
-    "mozilla::ScrollAxis",  # <- For some reason the alignment of this is 4
-                            # for clang.
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
     "mozilla::Tuple",
@@ -370,6 +369,8 @@ opaque-types = [
     "nsBaseHashtable", "nsRefPtrHashtable", "nsDataHashtable", "nsClassHashtable",  # <- Ditto
     "nsInterfaceHashtable",  # <- Ditto
     "mozilla::dom::Document_SelectorCache",  # <- Inherits from nsExpirationTracker<.., 4>
+    "nsIPresShell_ScrollAxis",  # <- For some reason the alignment of this is 4
+                                # for clang.
     "nsPIDOMWindow",  # <- Takes the vtable from a template parameter, and we can't
                       #    generate it conditionally.
     "JS::Rooted",

@@ -1151,7 +1151,7 @@ void nsSliderFrame::DragThumb(bool aGrabMouseEvents) {
 }
 
 bool nsSliderFrame::isDraggingThumb() const {
-  return PresShell::GetCapturingContent() == GetContent();
+  return (nsIPresShell::GetCapturingContent() == GetContent());
 }
 
 void nsSliderFrame::AddListener() {

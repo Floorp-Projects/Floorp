@@ -1809,7 +1809,7 @@ static NPCocoaEventType CocoaEventTypeForEvent(const WidgetGUIEvent& anEvent,
       // We don't know via information on events from the widget code whether or
       // not we're dragging. The widget code just generates mouse move events
       // from native drag events. If anybody is capturing, this is a drag event.
-      if (PresShell::GetCapturingContent()) {
+      if (nsIPresShell::GetCapturingContent()) {
         return NPCocoaEventMouseDragged;
       }
 
