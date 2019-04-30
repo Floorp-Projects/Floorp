@@ -599,11 +599,11 @@ CSSIntPoint Event::GetClientCoords(nsPresContext* aPresContext,
     return aDefaultPoint;
   }
 
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  if (!shell) {
+  PresShell* presShell = aPresContext->GetPresShell();
+  if (!presShell) {
     return CSSIntPoint(0, 0);
   }
-  nsIFrame* rootFrame = shell->GetRootFrame();
+  nsIFrame* rootFrame = presShell->GetRootFrame();
   if (!rootFrame) {
     return CSSIntPoint(0, 0);
   }
