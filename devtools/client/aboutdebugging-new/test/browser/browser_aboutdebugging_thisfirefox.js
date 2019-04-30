@@ -4,9 +4,9 @@
 "use strict";
 
 const EXPECTED_TARGET_PANES = [
+  "Tabs",
   "Temporary Extensions",
   "Extensions",
-  "Tabs",
   "Service Workers",
   "Shared Workers",
   "Other Workers",

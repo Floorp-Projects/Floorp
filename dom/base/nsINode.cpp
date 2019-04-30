@@ -23,6 +23,7 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEditor.h"
@@ -67,7 +68,6 @@
 #include "nsILinkHandler.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/NodeInfoInlines.h"
-#include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -314,7 +314,7 @@ static nsIContent* GetRootForContentSubtree(nsIContent* aContent) {
   return aContent;
 }
 
-nsIContent* nsINode::GetSelectionRootContent(nsIPresShell* aPresShell) {
+nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
   NS_ENSURE_TRUE(aPresShell, nullptr);
 
   if (IsDocument()) return AsDocument()->GetRootElement();

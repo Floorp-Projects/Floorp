@@ -199,12 +199,12 @@ void nsButtonBoxFrame::MouseClicked(WidgetGUIEvent* aEvent) {
   }
 
   // Execute the oncommand event handler.
+  nsCOMPtr<nsIContent> content = mContent;
   WidgetInputEvent* inputEvent = aEvent->AsInputEvent();
   WidgetMouseEventBase* mouseEvent = aEvent->AsMouseEventBase();
   nsContentUtils::DispatchXULCommand(
-      mContent, aEvent->IsTrusted(), nullptr, presShell,
-      inputEvent->IsControl(), inputEvent->IsAlt(), inputEvent->IsShift(),
-      inputEvent->IsMeta(),
+      content, aEvent->IsTrusted(), nullptr, presShell, inputEvent->IsControl(),
+      inputEvent->IsAlt(), inputEvent->IsShift(), inputEvent->IsMeta(),
       mouseEvent ? mouseEvent->mInputSource
                  : MouseEvent_Binding::MOZ_SOURCE_UNKNOWN);
 }

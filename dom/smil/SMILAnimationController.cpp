@@ -10,6 +10,7 @@
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -18,7 +19,6 @@
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShellInlines.h"
 #include "nsITimer.h"
 #include "SMILCompositor.h"
 #include "SMILCSSProperty.h"

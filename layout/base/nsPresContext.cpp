@@ -15,12 +15,12 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 
 #include "base/basictypes.h"
 
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIPresShellInlines.h"
 #include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
