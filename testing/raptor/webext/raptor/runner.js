@@ -281,32 +281,21 @@ async function waitForResult() {
 }
 
 async function getScreenCapture() {
-  console.log("Capturing screenshot...");
-  var capturing;
-  if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
-    capturing = ext.tabs.captureVisibleTab();
-    capturing.then(onCaptured, onError);
-    await capturing;
-  } else {
-    // create capturing promise
-    capturing =  new Promise(function(resolve, reject) {
-    ext.tabs.captureVisibleTab(resolve);
-  });
+  console.log("capturing screenshot");
 
-    // capture and wait for promise to end
-    capturing.then(onCaptured, onError);
-    await capturing;
+  try {
+    let screenshotUri;
+
+    if (["firefox", "geckoview", "refbrow", "fenix"].includes(browserName)) {
+      screenshotUri = await ext.tabs.captureVisibleTab();
+    } else {
+      screenshotUri = await new Promise(resolve =>
+          ext.tabs.captureVisibleTab(resolve));
+    }
+    postToControlServer("screenshot", [screenshotUri, testName, pageCycle]);
+  } catch (e) {
+    console.log(`failed to capture screenshot: ${e}`);
   }
-}
-
-function onCaptured(screenshotUri) {
-  console.log("Screenshot capured!");
-  postToControlServer("screenshot", [screenshotUri, testName, pageCycle]);
-}
-
-function onError(error) {
-  console.log("Screenshot captured failed!");
-  console.log(`Error: ${error}`);
 }
 
 async function startGeckoProfiling() {
