@@ -236,7 +236,7 @@ nsBaseDragService::InvokeDragSession(
   // capture. However, this gets in the way of determining drag
   // feedback for things like trees because the event coordinates
   // are in the wrong coord system, so turn off mouse capture.
-  nsIPresShell::ClearMouseCapture(nullptr);
+  PresShell::ClearMouseCapture(nullptr);
 
   uint32_t length = 0;
   mozilla::Unused << aTransferableArray->GetLength(&length);

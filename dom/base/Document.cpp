@@ -3676,7 +3676,7 @@ Element* Document::GetCurrentScript() {
 void Document::ReleaseCapture() const {
   // only release the capture if the caller can access it. This prevents a
   // page from stopping a scrollbar grab for example.
-  nsCOMPtr<nsINode> node = nsIPresShell::GetCapturingContent();
+  nsCOMPtr<nsINode> node = PresShell::GetCapturingContent();
   if (node && nsContentUtils::CanCallerAccess(node)) {
     PresShell::ReleaseCapturingContent();
   }
