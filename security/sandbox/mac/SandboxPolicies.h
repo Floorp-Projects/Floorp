@@ -158,6 +158,8 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (sysctl-name "kern.osversion")
       (sysctl-name "kern.osrelease")
       (sysctl-name "kern.version")
+      (sysctl-name "kern.tcsm_available")
+      (sysctl-name "kern.tcsm_enable")
       ; TODO: remove "kern.hostname". Without it the tests hang, but the hostname
       ; is arguably sensitive information, so we should see what can be done about
       ; removing it.
@@ -193,6 +195,9 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
       (sysctl-name "machdep.cpu.stepping")
       (sysctl-name "debug.intel.gstLevelGST")
       (sysctl-name "debug.intel.gstLoaderControl")))
+  (if (> macosMinorVersion 9)
+    (allow sysctl-write
+      (sysctl-name "kern.tcsm_enable")))
 
   (define (home-regex home-relative-regex)
     (regex (string-append "^" (regex-quote home-path) home-relative-regex)))
