@@ -128,6 +128,11 @@ decorate_task(
 );
 
 decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", false],
+    ],
+  }),
   withStub(Uptake, "reportRunner"),
   withStub(NormandyApi, "fetchRecipes"),
   withStub(ActionsManager.prototype, "runRecipe"),
