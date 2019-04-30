@@ -118,6 +118,7 @@ test-pref(media.navigator.permission.disabled,true) test-pref(media.getusermedia
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
 load 1533909.html
+load 1538727.html
 load empty-samples.webm # Bug 1540580
 test-pref(media.autoplay.block-webaudio,false) load 1545133.html
 load track-with-zero-dimensions.mp4
