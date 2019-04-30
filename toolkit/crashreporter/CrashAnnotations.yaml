@@ -49,6 +49,11 @@ AdapterDeviceID:
     Graphics adapter name.
   type: string
 
+AdapterDriverVendor:
+  description: >
+    Graphics adapter driver vendor.
+  type: string
+
 AdapterDriverVersion:
   description: >
     Graphics adapter driver version.
