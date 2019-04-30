@@ -157,8 +157,8 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   // Update the list bullet accessible. If old style list isn't available then
   // no need to update the accessible tree because it's not created yet.
   if (aOldComputedStyle) {
-    nsAccessibilityService* accService = nsIPresShell::AccService();
-    if (accService) {
+    if (nsAccessibilityService* accService =
+            PresShell::GetAccessibilityService()) {
       const nsStyleList* oldStyleList = aOldComputedStyle->StyleList();
       bool hadBullet = oldStyleList->GetListStyleImage() ||
                        !oldStyleList->mCounterStyle.IsNone();
@@ -174,7 +174,7 @@ void nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
       }
     }
   }
-#endif
+#endif  // #ifdef ACCESSIBILITY
 }
 
 class nsDisplayBulletGeometry

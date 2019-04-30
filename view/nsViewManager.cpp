@@ -7,6 +7,7 @@
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/dom/Document.h"
@@ -18,7 +19,6 @@
 #include "nsCOMArray.h"
 #include "nsIPluginWidget.h"
 #include "nsXULPopupManager.h"
-#include "nsIPresShellInlines.h"
 #include "nsPresContext.h"
 #include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"

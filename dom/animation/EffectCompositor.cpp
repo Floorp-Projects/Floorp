@@ -21,6 +21,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"  // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
@@ -32,7 +33,6 @@
 #include "nsCSSProps.h"
 #include "nsDisplayItemTypes.h"
 #include "nsAtom.h"
-#include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsTArray.h"
 #include "PendingAnimationTracker.h"

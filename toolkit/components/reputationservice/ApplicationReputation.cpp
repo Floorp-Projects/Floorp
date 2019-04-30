@@ -1683,6 +1683,8 @@ nsresult PendingLookup::SendRemoteQueryInternal(Reason& aReason) {
                        nsIContentPolicy::TYPE_OTHER, getter_AddRefs(mChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mChannel->SetLoadFlags(nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
+
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   mozilla::OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);

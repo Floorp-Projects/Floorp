@@ -7,7 +7,9 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
-UNIFIED_SOURCES += ['SandboxSettings.cpp']
+UNIFIED_SOURCES += [
+    'SandboxSettings.cpp',
+]
 
 XPCOM_MANIFESTS += [
     'components.conf',
@@ -22,5 +24,5 @@ XPIDL_MODULE = 'sandbox'
 FINAL_LIBRARY = 'xul'
 
 EXPORTS.mozilla += [
-    'SandboxSettings.h'
+    'SandboxSettings.h',
 ]

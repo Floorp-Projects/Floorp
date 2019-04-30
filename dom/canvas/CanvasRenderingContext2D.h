@@ -1008,21 +1008,26 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   // other helpers
   void GetAppUnitsValues(int32_t* aPerDevPixel, int32_t* aPerCSSPixel) {
     // If we don't have a canvas element, we just return something generic.
-    int32_t devPixel = 60;
-    int32_t cssPixel = 60;
-
-    nsIPresShell* ps = GetPresShell();
-    nsPresContext* pc;
-
-    if (!ps) goto FINISH;
-    pc = ps->GetPresContext();
-    if (!pc) goto FINISH;
-    devPixel = pc->AppUnitsPerDevPixel();
-    cssPixel = AppUnitsPerCSSPixel();
-
-  FINISH:
-    if (aPerDevPixel) *aPerDevPixel = devPixel;
-    if (aPerCSSPixel) *aPerCSSPixel = cssPixel;
+    if (aPerDevPixel) {
+      *aPerDevPixel = 60;
+    }
+    if (aPerCSSPixel) {
+      *aPerCSSPixel = 60;
+    }
+    PresShell* presShell = GetPresShell();
+    if (!presShell) {
+      return;
+    }
+    nsPresContext* presContext = presShell->GetPresContext();
+    if (!presContext) {
+      return;
+    }
+    if (aPerDevPixel) {
+      *aPerDevPixel = presContext->AppUnitsPerDevPixel();
+    }
+    if (aPerCSSPixel) {
+      *aPerCSSPixel = AppUnitsPerCSSPixel();
+    }
   }
 
   friend struct CanvasBidiProcessor;

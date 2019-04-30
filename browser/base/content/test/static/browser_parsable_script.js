@@ -5,6 +5,9 @@
  * detect newly occurring issues in shipping JS. It is a list of regexes
  * matching files which have errors:
  */
+
+requestLongerTimeout(2);
+
 const kWhitelist = new Set([
   /browser\/content\/browser\/places\/controller.js$/,
 ]);

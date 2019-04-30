@@ -2517,8 +2517,8 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
   // the command.
   if (IsIMEComposing()) {
     switch (aCommand) {
-      case CommandInsertLineBreak:
-      case CommandInsertParagraph: {
+      case Command::InsertLineBreak:
+      case Command::InsertParagraph: {
         // Insert '\n' as committing composition.
         // Otherwise, we need to dispatch keypress event because HTMLEditor
         // doesn't treat "\n" in composition string as a line break unless
@@ -2533,48 +2533,48 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
         [lineBreaker release];
         return true;
       }
-      case CommandDeleteCharBackward:
-      case CommandDeleteCharForward:
-      case CommandDeleteToBeginningOfLine:
-      case CommandDeleteWordBackward:
-      case CommandDeleteWordForward:
+      case Command::DeleteCharBackward:
+      case Command::DeleteCharForward:
+      case Command::DeleteToBeginningOfLine:
+      case Command::DeleteWordBackward:
+      case Command::DeleteWordForward:
         // Don't remove any contents during composition.
         return false;
-      case CommandInsertTab:
-      case CommandInsertBacktab:
+      case Command::InsertTab:
+      case Command::InsertBacktab:
         // Don't move focus during composition.
         return false;
-      case CommandCharNext:
-      case CommandSelectCharNext:
-      case CommandWordNext:
-      case CommandSelectWordNext:
-      case CommandEndLine:
-      case CommandSelectEndLine:
-      case CommandCharPrevious:
-      case CommandSelectCharPrevious:
-      case CommandWordPrevious:
-      case CommandSelectWordPrevious:
-      case CommandBeginLine:
-      case CommandSelectBeginLine:
-      case CommandLinePrevious:
-      case CommandSelectLinePrevious:
-      case CommandMoveTop:
-      case CommandLineNext:
-      case CommandSelectLineNext:
-      case CommandMoveBottom:
-      case CommandSelectBottom:
-      case CommandSelectPageUp:
-      case CommandSelectPageDown:
-      case CommandScrollBottom:
-      case CommandScrollTop:
+      case Command::CharNext:
+      case Command::SelectCharNext:
+      case Command::WordNext:
+      case Command::SelectWordNext:
+      case Command::EndLine:
+      case Command::SelectEndLine:
+      case Command::CharPrevious:
+      case Command::SelectCharPrevious:
+      case Command::WordPrevious:
+      case Command::SelectWordPrevious:
+      case Command::BeginLine:
+      case Command::SelectBeginLine:
+      case Command::LinePrevious:
+      case Command::SelectLinePrevious:
+      case Command::MoveTop:
+      case Command::LineNext:
+      case Command::SelectLineNext:
+      case Command::MoveBottom:
+      case Command::SelectBottom:
+      case Command::SelectPageUp:
+      case Command::SelectPageDown:
+      case Command::ScrollBottom:
+      case Command::ScrollTop:
         // Don't move selection during composition.
         return false;
-      case CommandCancelOperation:
-      case CommandComplete:
+      case Command::CancelOperation:
+      case Command::Complete:
         // Don't handle Escape key by ourselves during composition.
         return false;
-      case CommandScrollPageUp:
-      case CommandScrollPageDown:
+      case Command::ScrollPageUp:
+      case Command::ScrollPageDown:
         // Allow to scroll.
         break;
       default:
@@ -2621,8 +2621,8 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
     NS_WARNING_ASSERTION(keypressEvent.mNativeKeyEvent,
                          "Without native key event, NativeKeyBindings cannot compute aCommand");
     switch (aCommand) {
-      case CommandInsertLineBreak:
-      case CommandInsertParagraph: {
+      case Command::InsertLineBreak:
+      case Command::InsertParagraph: {
         // Although, Shift+Enter and Enter are work differently in HTML
         // editor, we should expose actual Shift state if it's caused by
         // Enter key for compatibility with Chromium.  Chromium breaks
@@ -2635,150 +2635,150 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
         keypressEvent.mKeyCode = NS_VK_RETURN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Enter;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandInsertLineBreak) {
+        if (aCommand == Command::InsertLineBreak) {
           // In default settings, Ctrl + Enter causes insertLineBreak command.
           // So, let's make Ctrl state active of the keypress event.
           keypressEvent.mModifiers |= MODIFIER_CONTROL;
         }
         break;
       }
-      case CommandInsertTab:
-      case CommandInsertBacktab:
+      case Command::InsertTab:
+      case Command::InsertBacktab:
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_TAB;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Tab;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandInsertBacktab) {
+        if (aCommand == Command::InsertBacktab) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
         break;
-      case CommandDeleteCharBackward:
-      case CommandDeleteToBeginningOfLine:
-      case CommandDeleteWordBackward: {
+      case Command::DeleteCharBackward:
+      case Command::DeleteToBeginningOfLine:
+      case Command::DeleteWordBackward: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_BACK;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Backspace;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandDeleteToBeginningOfLine) {
+        if (aCommand == Command::DeleteToBeginningOfLine) {
           keypressEvent.mModifiers |= MODIFIER_META;
-        } else if (aCommand == CommandDeleteWordBackward) {
+        } else if (aCommand == Command::DeleteWordBackward) {
           keypressEvent.mModifiers |= MODIFIER_ALT;
         }
         break;
       }
-      case CommandDeleteCharForward:
-      case CommandDeleteWordForward: {
+      case Command::DeleteCharForward:
+      case Command::DeleteWordForward: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_DELETE;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Delete;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandDeleteWordForward) {
+        if (aCommand == Command::DeleteWordForward) {
           keypressEvent.mModifiers |= MODIFIER_ALT;
         }
         break;
       }
-      case CommandCharNext:
-      case CommandSelectCharNext:
-      case CommandWordNext:
-      case CommandSelectWordNext:
-      case CommandEndLine:
-      case CommandSelectEndLine: {
+      case Command::CharNext:
+      case Command::SelectCharNext:
+      case Command::WordNext:
+      case Command::SelectWordNext:
+      case Command::EndLine:
+      case Command::SelectEndLine: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_RIGHT;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowRight;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectCharNext || aCommand == CommandSelectWordNext ||
-            aCommand == CommandSelectEndLine) {
+        if (aCommand == Command::SelectCharNext || aCommand == Command::SelectWordNext ||
+            aCommand == Command::SelectEndLine) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
-        if (aCommand == CommandWordNext || aCommand == CommandSelectWordNext) {
+        if (aCommand == Command::WordNext || aCommand == Command::SelectWordNext) {
           keypressEvent.mModifiers |= MODIFIER_ALT;
         }
-        if (aCommand == CommandEndLine || aCommand == CommandSelectEndLine) {
+        if (aCommand == Command::EndLine || aCommand == Command::SelectEndLine) {
           keypressEvent.mModifiers |= MODIFIER_META;
         }
         break;
       }
-      case CommandCharPrevious:
-      case CommandSelectCharPrevious:
-      case CommandWordPrevious:
-      case CommandSelectWordPrevious:
-      case CommandBeginLine:
-      case CommandSelectBeginLine: {
+      case Command::CharPrevious:
+      case Command::SelectCharPrevious:
+      case Command::WordPrevious:
+      case Command::SelectWordPrevious:
+      case Command::BeginLine:
+      case Command::SelectBeginLine: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_LEFT;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowLeft;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectCharPrevious || aCommand == CommandSelectWordPrevious ||
-            aCommand == CommandSelectBeginLine) {
+        if (aCommand == Command::SelectCharPrevious || aCommand == Command::SelectWordPrevious ||
+            aCommand == Command::SelectBeginLine) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
-        if (aCommand == CommandWordPrevious || aCommand == CommandSelectWordPrevious) {
+        if (aCommand == Command::WordPrevious || aCommand == Command::SelectWordPrevious) {
           keypressEvent.mModifiers |= MODIFIER_ALT;
         }
-        if (aCommand == CommandBeginLine || aCommand == CommandSelectBeginLine) {
+        if (aCommand == Command::BeginLine || aCommand == Command::SelectBeginLine) {
           keypressEvent.mModifiers |= MODIFIER_META;
         }
         break;
       }
-      case CommandLinePrevious:
-      case CommandSelectLinePrevious:
-      case CommandMoveTop:
-      case CommandSelectTop: {
+      case Command::LinePrevious:
+      case Command::SelectLinePrevious:
+      case Command::MoveTop:
+      case Command::SelectTop: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_UP;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowUp;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectLinePrevious || aCommand == CommandSelectTop) {
+        if (aCommand == Command::SelectLinePrevious || aCommand == Command::SelectTop) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
-        if (aCommand == CommandMoveTop || aCommand == CommandSelectTop) {
+        if (aCommand == Command::MoveTop || aCommand == Command::SelectTop) {
           keypressEvent.mModifiers |= MODIFIER_META;
         }
         break;
       }
-      case CommandLineNext:
-      case CommandSelectLineNext:
-      case CommandMoveBottom:
-      case CommandSelectBottom: {
+      case Command::LineNext:
+      case Command::SelectLineNext:
+      case Command::MoveBottom:
+      case Command::SelectBottom: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_DOWN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowDown;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectLineNext || aCommand == CommandSelectBottom) {
+        if (aCommand == Command::SelectLineNext || aCommand == Command::SelectBottom) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
-        if (aCommand == CommandMoveBottom || aCommand == CommandSelectBottom) {
+        if (aCommand == Command::MoveBottom || aCommand == Command::SelectBottom) {
           keypressEvent.mModifiers |= MODIFIER_META;
         }
         break;
       }
-      case CommandScrollPageUp:
-      case CommandSelectPageUp: {
+      case Command::ScrollPageUp:
+      case Command::SelectPageUp: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_PAGE_UP;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageUp;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectPageUp) {
+        if (aCommand == Command::SelectPageUp) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
         break;
       }
-      case CommandScrollPageDown:
-      case CommandSelectPageDown: {
+      case Command::ScrollPageDown:
+      case Command::SelectPageDown: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_PAGE_DOWN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageDown;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandSelectPageDown) {
+        if (aCommand == Command::SelectPageDown) {
           keypressEvent.mModifiers |= MODIFIER_SHIFT;
         }
         break;
       }
-      case CommandScrollBottom:
-      case CommandScrollTop: {
+      case Command::ScrollBottom:
+      case Command::ScrollTop: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
-        if (aCommand == CommandScrollBottom) {
+        if (aCommand == Command::ScrollBottom) {
           keypressEvent.mKeyCode = NS_VK_END;
           keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_End;
         } else {
@@ -2788,13 +2788,13 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
         break;
       }
-      case CommandCancelOperation:
-      case CommandComplete: {
+      case Command::CancelOperation:
+      case Command::Complete: {
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_ESCAPE;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Escape;
         keypressEvent.mModifiers &= ~(MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
-        if (aCommand == CommandComplete) {
+        if (aCommand == Command::Complete) {
           keypressEvent.mModifiers |= MODIFIER_ALT;
         }
         break;
@@ -2852,7 +2852,7 @@ bool TextInputHandler::HandleCommand(Command aCommand) {
 
   // If keypress event isn't dispatched as expected, we should fallback to
   // using composition events.
-  if (aCommand == CommandInsertLineBreak || aCommand == CommandInsertParagraph) {
+  if (aCommand == Command::InsertLineBreak || aCommand == Command::InsertParagraph) {
     NSAttributedString* lineBreaker = [[NSAttributedString alloc] initWithString:@"\n"];
     InsertTextAsCommittingComposition(lineBreaker, nullptr);
     if (currentKeyEvent) {
@@ -2953,8 +2953,8 @@ bool TextInputHandler::DoCommandBySelector(const char* aSelector) {
   // ChildView only when current key event is proper event to fire Escape
   // keypress event.
   if (!strcmp(aSelector, "cancelOperatiorn:") && currentKeyEvent &&
-      currentKeyEvent->IsProperKeyEvent(CommandCancelOperation)) {
-    return HandleCommand(CommandCancelOperation);
+      currentKeyEvent->IsProperKeyEvent(Command::CancelOperation)) {
+    return HandleCommand(Command::CancelOperation);
   }
 
   // Otherwise, we've not handled the command yet.  Propagate the command
