@@ -9,7 +9,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/extensions/cookie',
+    '/extensions/permissions',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
