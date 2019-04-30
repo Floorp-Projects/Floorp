@@ -572,6 +572,19 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mEncoder->Stop();
     }
 
+    // Remove main thread state added in Start().
+    if (mMediaStream) {
+      mMediaStream->UnregisterTrackListener(this);
+      mMediaStream = nullptr;
+    }
+
+    {
+      auto tracks(std::move(mMediaStreamTracks));
+      for (RefPtr<MediaStreamTrack>& track : tracks) {
+        track->RemovePrincipalChangeObserver(this);
+      }
+    }
+
     if (mRunningState.isOk() &&
         mRunningState.unwrap() == RunningState::Idling) {
       LOG(LogLevel::Debug, ("Session.Stop Explicit end task %p", this));
@@ -1128,7 +1141,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           });
     }
 
-    // Remove main thread state.
+    // Remove main thread state. This could be needed if Stop() wasn't called.
     if (mMediaStream) {
       mMediaStream->UnregisterTrackListener(this);
       mMediaStream = nullptr;
