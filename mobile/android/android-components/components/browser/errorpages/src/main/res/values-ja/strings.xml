@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-	<!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-	<string name="mozac_browser_errorpages_page_title">ページ読み込みエラー</string>
-	
-	<!-- The button that appears at the bottom of an error page. -->
-	<string name="mozac_browser_errorpages_page_refresh">再試行</string>
-	
-	<!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-	<string name="mozac_browser_errorpages_generic_title">リクエストを正常に完了できませんでした</string>
-	<!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-	<string name="mozac_browser_errorpages_generic_message"><![CDATA[
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">ページ読み込みエラー</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">再試行</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">戻る</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">リクエストを正常に完了できませんでした</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
       <p>現在のところこの問題やエラーについての詳細情報はありません。</p>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-	<string name="mozac_browser_errorpages_security_ssl_title">安全な接続ができませんでした</string>
-	<!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-	<string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">安全な接続ができませんでした</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>受信したデータの真正性を検証できなかったため、このページは表示できませんでした。</li>
         <li>ウェブサイトの所有者に連絡を取り、この問題を報告してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
-	<string name="mozac_browser_errorpages_security_bad_cert_title">安全な接続ができませんでした</string>
-	<!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
-	<string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">安全な接続ができませんでした</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
         <li>サーバーの設定に問題があるか、誰かが正規のサーバーになりすましている可能性があります。</li>
         <li>以前は正常に接続できていた場合、この問題は恐らく一時的なものですので、後で再度試してみてください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
-	<string name="mozac_browser_errorpages_net_interrupt_title">接続が中断されました</string>
-	<!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-	<string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">接続が中断されました</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
       <p>サイトに正常に接続できましたが、データの転送中にネットワーク接続が切断されました。再度試してください。</p>
       <ul>
         <li>このサイトが一時的に利用できなくなっていたり、サーバーの負荷が高すぎて接続できなくなっている可能性があります。しばらくしてから再度試してください。</li>
         <li>他のサイトも表示できない場合、端末のデータ接続や Wi-Fi 接続を確認してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website takes too long to load. -->
-	<string name="mozac_browser_errorpages_net_timeout_title">接続がタイムアウトしました</string>
-	<!-- The error message shown when a website took long to load. -->
-	<string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">接続がタイムアウトしました</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
       <p>接続リクエストに対してリクエスト先サーバーが応答を返さなかったため、接続を中止しました。</p>
       <ul>
         <li>サーバーに負荷が集中したり、一時的に停止している可能性があります。しばらく後で再度試してください。</li>
@@ -59,105 +59,105 @@
         <li>問題が繰り返される場合、ネットワーク管理者またはインターネットプロバイダーに問い合わせてください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website could not be reached. -->
-	<string name="mozac_browser_errorpages_connection_failure_title">正常に接続できませんでした</string>
-	<!-- The error message shown when a website could not be reached. -->
-	<string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">正常に接続できませんでした</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
         <li>このサイトが一時的に利用できなくなっていたり、サーバーの負荷が高すぎて接続できなくなっている可能性があります。しばらくしてから再度試してください。</li>
         <li>他のサイトも表示できない場合、端末のデータ接続や Wi-Fi 接続を確認してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-	<string name="mozac_browser_errorpages_unknown_socket_type_title">サーバーの応答が不正です</string>
-	<!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
-	<string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">サーバーの応答が不正です</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
       <p>ネットワークリクエストに対するサイトの応答が正しくなかったため、接続を中断しました。</p>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
-	<string name="mozac_browser_errorpages_redirect_loop_title">ページの自動転送設定が正しくありません</string>
-	<!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-	<string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ページの自動転送設定が正しくありません</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
       <p>リクエストされたリソースの取得を中止しました。このサイトではリクエストの自動転送がループしています。</p>
       <ul>
         <li>このサイトで要求されている Cookie を無効化またはブロックしていないか確認してください。</li>
         <li>サイトによる Cookie の使用を許可しても解決しない場合、これはご利用のコンピューターではなくサーバーの設定に問題があると思われます。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
-	<string name="mozac_browser_errorpages_offline_title">オフラインモードです</string>
-	<!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-	<string name="mozac_browser_errorpages_offline_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">オフラインモードです</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
       <p>ブラウザーは現在オフラインモードで動作しており、リクエスト対象に接続できません。</p>
       <ul>
         <li>コンピューターが有効なネットワークに接続されているか確認してください。</li>
         <li>“再試行” ボタンを押してブラウザーをオンラインモードに切り替え、ページを再読み込みしてください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
-	<string name="mozac_browser_errorpages_port_blocked_title">セキュリティ上の理由によりポートの使用が制限されています</string>
-	<!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-	<string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">セキュリティ上の理由によりポートの使用が制限されています</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
       <p>リクエストされたアドレスのポート (例えば mozilla.jp のポート 80 であれば <q>mozilla.jp:80</q>) は普通ウェブサイトの表示<em>以外の</em>目的で使用されます。ユーザーの保護とセキュリティのため、リクエストは中止されました。</p>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
-	<string name="mozac_browser_errorpages_net_reset_title">接続がリセットされました</string>
-	<!-- The error message shown when the Internet connection is disrupted while loading a website. -->
-	<string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">接続がリセットされました</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
       <p>ネットワーク接続の確立中にリンクが切れました。再度試してください</p>
       <ul>
         <li>このサイトが一時的に利用できなくなっていたり、サーバーの負荷が高すぎて接続できなくなっている可能性があります。しばらくしてから再度試してください。</li>
         <li>他のサイトも表示できない場合、端末のデータ接続や Wi-Fi 接続を確認してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
-	<string name="mozac_browser_errorpages_unsafe_content_type_title">安全でないファイルタイプ</string>
-	<!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
-	<string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">安全でないファイルタイプ</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
       <ul>
         <li>ウェブサイトの所有者に連絡を取り、この問題を報告してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
-	<string name="mozac_browser_errorpages_corrupted_content_title">コンテンツデータ破損エラー</string>
-	<!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
-	<string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">コンテンツデータ破損エラー</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       <p>このページは、データの伝送中にエラーが検出されたため表示できません。</p>
       <ul>
         <li>ウェブサイトの所有者に連絡を取り、この問題を報告してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_content_crashed_title">コンテンツデータのクラッシュ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">コンテンツデータのクラッシュ</string>
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>このページは、データの伝送中にエラーが検出されたため表示できません。</p>
       <ul>
         <li>ウェブサイトの所有者に連絡を取り、この問題を報告してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_invalid_content_encoding_title">内容符号化 (Content-Encoding) に問題があります</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">内容符号化 (Content-Encoding) に問題があります</string>
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       <p>不正または不明な形式で圧縮されているため、ページを表示できません。</p>
       <ul>
         <li>ウェブサイトの所有者に連絡を取り、この問題を報告してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_unknown_host_title">アドレスが見つかりません</string>
-	<!-- In the example, the two URLs in markup do not need to be translated. -->
-	<string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">アドレスが見つかりません</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
       <p>指定されたアドレスのホストサーバーが見つかりませんでした。</p>
       <ul>
         <li><strong>www</strong>.example.com を間違えて
@@ -166,24 +166,24 @@
         <li>他のサイトも表示できない場合、端末のデータ接続や Wi-Fi 接続を確認してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_malformed_uri_title">アドレスが無効です</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">アドレスが無効です</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
       <p>指定されたアドレスの書式が正しくありません。ミスがないかロケーションバーを確認してください。</p>
     ]]></string><!-- The document title and heading of an error page. -->
-	
-	<string name="mozac_browser_errorpages_malformed_uri_title_alternative">アドレスの書式が正しくありません</string>
-	<!-- This string contains markup. The URL should not be localized. -->
-	<string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">アドレスの書式が正しくありません</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
       <ul>
         <li>ウェブのアドレスは通常 <strong>http://www.example.com/</strong></li> のようなものになります。
         <li>スラッシュ (<strong>/</strong>) </li>が使われているか確認してください。
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_unknown_protocol_title">プロトコルが不明です</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">プロトコルが不明です</string>
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
       <p>指定されたプロトコル (例えば <q>wxyz://</q>) を認識できないため、サイトに正常に接続できませんでした。</p>
       <ul>
@@ -191,9 +191,9 @@
         <li>一部のプロトコルを使用するにはサードパーティのソフトウェアやプラグインが必要になります。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_file_not_found_title">ファイルが見つかりません</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ファイルが見つかりません</string>
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
       <ul>
         <li>ファイルの名前が変更、削除、または移動されている可能性があります。</li>
@@ -201,17 +201,17 @@
         <li>リソースへのアクセス権限があるか確認してください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_file_access_denied_title">ファイルへのアクセスが拒否されました</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">ファイルへのアクセスが拒否されました</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
         <li>ファイルが削除または移動されているかファイルの許可属性によりアクセスが拒否された可能性があります。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_proxy_connection_refused_title">プロキシサーバーが接続を拒否しました</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">プロキシサーバーが接続を拒否しました</string>
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
       <p>プロキシサーバーを使用する設定になっていますが、プロキシサーバーは接続を拒否しました。</p>
       <ul>
@@ -220,9 +220,9 @@
         <li>問題が繰り返される場合、ネットワーク管理者またはインターネットプロバイダーに問い合わせてください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_unknown_proxy_host_title">プロキシサーバーが見つかりませんでした</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">プロキシサーバーが見つかりませんでした</string>
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
       <p>プロキシサーバーを使用する設定になっていますが、プロキシサーバーが見つかりませんでした。</p>
       <ul>
@@ -231,32 +231,32 @@
         <li>問題が繰り返される場合、ネットワーク管理者またはインターネットプロバイダーに問い合わせてください。</li>
       </ul>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">マルウェアサイトの問題</string>
-	<!-- The %1$s will be replaced by the malicious website URL-->
-	<string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">マルウェアサイトの問題</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
       <p>%1$s のウェブサイトは攻撃サイトとして報告されており、セキュリティ設定に従いブロックされています。</p>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">望ましくないサイトの問題</string>
-	<!-- The %1$s will be replaced by the malicious website URL-->
-	<string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">望ましくないサイトの問題</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
       <p>%1$s のウェブサイトは望ましくないソフトウェアを配布しているサイトとして報告されており、セキュリティ設定に従いブロックされています。</p>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_safe_harmful_uri_title">有害なサイトの問題</string>
-	<!-- The %1$s will be replaced by the malicious website URL-->
-	<string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">有害なサイトの問題</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
       <p>%1$s のウェブサイトは有害サイトの可能性があると報告されており、セキュリティ設定に従いブロックされています。</p>
     ]]></string>
-	
-	<!-- The document title and heading of an error page. -->
-	<string name="mozac_browser_errorpages_safe_phishing_uri_title">詐欺サイトの問題</string>
-	<!-- The %1$s will be replaced by the malicious website URL-->
-	<string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">詐欺サイトの問題</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>%1$s のウェブページは詐欺サイトとして報告されており、セキュリティ設定に従いブロックされています。</p>
     ]]></string>
 </resources>

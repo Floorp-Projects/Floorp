@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of a dialog for a notification permission request. -->
-    <string name="mozac_feature_sitepermissions_notification_title">¿Permitir que %1$s envíe notificaciones?</string>
+    <string name="mozac_feature_sitepermissions_notification_title">¿Permitir que %1$s te envíe notificaciones?</string>
     <!-- Title of a dialog for a camera permission request. -->
     <string name="mozac_feature_sitepermissions_camera_title">¿Permitir que %1$s use tu cámara?</string>
     <!-- Title of a dialog for a microphone permission request. -->

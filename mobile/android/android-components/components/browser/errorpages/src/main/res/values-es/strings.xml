@@ -202,7 +202,7 @@
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">El acceso al archivo ha sido denegado archivo</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">El acceso al archivo ha sido denegado</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
 	<ul>
 		<li>Puede haberse eliminado o movido, o sus permisos de archivo pueden estar impidiendo el acceso.</li>

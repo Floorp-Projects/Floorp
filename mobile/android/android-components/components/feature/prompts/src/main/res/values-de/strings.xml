@@ -7,7 +7,7 @@
     <string name="mozac_feature_prompts_cancel">Abbrechen</string>
 
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
-    <string name="mozac_feature_prompts_no_more_dialogs">Diese Seiten daran hindern, weitere Dialoge zu öffnen</string>
+    <string name="mozac_feature_prompts_no_more_dialogs">Diese Seite daran hindern, weitere Dialoge zu öffnen</string>
 
     <!-- Title of a date picker dialog, this text is shown above a date picker. -->
     <string name="mozac_feature_prompts_pick_a_date">Datum auswählen</string>
@@ -46,6 +46,4 @@
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">Ablehnen</string>
 
-    <!-- Text of the title of a dialog when a page is requesting to open a new window. -->
-    <string name="mozac_feature_prompts_popup_dialog_title">Diese Website daran hindern, dass dieses Pop-up-Fenster geöffnet wird?</string>
-</resources>
+    </resources>
