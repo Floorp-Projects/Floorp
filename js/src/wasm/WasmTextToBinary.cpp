@@ -90,7 +90,6 @@ class WasmToken {
     Field,
     Float,
     Func,
-    FuncRef,
 #ifdef ENABLE_WASM_GC
     GcFeatureOptIn,
 #endif
@@ -376,7 +375,6 @@ class WasmToken {
       case Field:
       case Float:
       case Func:
-      case FuncRef:
 #ifdef ENABLE_WASM_GC
       case GcFeatureOptIn:
 #endif
@@ -954,7 +952,7 @@ WasmToken WasmTokenStream::next() {
         return WasmToken(WasmToken::Align, begin, cur_);
       }
       if (consume(u"anyfunc")) {
-        return WasmToken(WasmToken::FuncRef, begin, cur_);
+        return WasmToken(WasmToken::ValueType, ValType::FuncRef, begin, cur_);
       }
       if (consume(u"anyref")) {
         return WasmToken(WasmToken::ValueType, ValType::AnyRef, begin, cur_);
@@ -1037,7 +1035,7 @@ WasmToken WasmTokenStream::next() {
       }
 
       if (consume(u"funcref")) {
-        return WasmToken(WasmToken::FuncRef, begin, cur_);
+        return WasmToken(WasmToken::ValueType, ValType::FuncRef, begin, cur_);
       }
 
       if (consume(u"func")) {
@@ -3957,7 +3955,7 @@ static AstExpr* ParseStructNarrow(WasmParseContext& c, bool inParens) {
     return nullptr;
   }
 
-  if (!inputType.isRefType()) {
+  if (!inputType.isNarrowType()) {
     c.ts.generateError(c.ts.peek(), "struct.narrow requires ref type", c.error);
     return nullptr;
   }
@@ -3967,7 +3965,7 @@ static AstExpr* ParseStructNarrow(WasmParseContext& c, bool inParens) {
     return nullptr;
   }
 
-  if (!outputType.isRefType()) {
+  if (!outputType.isNarrowType()) {
     c.ts.generateError(c.ts.peek(), "struct.narrow requires ref type", c.error);
     return nullptr;
   }
@@ -4692,20 +4690,19 @@ static bool ParseGlobalType(WasmParseContext& c, AstValType* type,
 
 static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
   WasmToken token;
-  if (c.ts.getIf(WasmToken::FuncRef, &token)) {
-    *tableKind = TableKind::FuncRef;
-    return true;
-  }
+  if (c.ts.getIf(WasmToken::ValueType, &token)) {
+    if (token.valueType() == ValType::FuncRef) {
+      *tableKind = TableKind::FuncRef;
+      return true;
+    }
 #ifdef ENABLE_WASM_REFTYPES
-  if (c.ts.getIf(WasmToken::ValueType, &token) &&
-      token.valueType() == ValType::AnyRef) {
-    *tableKind = TableKind::AnyRef;
-    return true;
+    if (token.valueType() == ValType::AnyRef) {
+      *tableKind = TableKind::AnyRef;
+      return true;
+    }
+#endif
   }
   c.ts.generateError(token, "'funcref' or 'anyref' required", c.error);
-#else
-  c.ts.generateError(token, "'funcref' required", c.error);
-#endif
   return false;
 }
 
