@@ -29,7 +29,6 @@ interface nsIMediaManagerService : nsISupports
                                out unsigned short aMicrophone,
                                [optional] out unsigned short aScreenShare,
                                [optional] out unsigned short aWindowShare,
-                               [optional] out unsigned short aAppShare,
                                [optional] out unsigned short aBrowserShare);
 
   /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices

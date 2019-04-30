@@ -3857,7 +3857,6 @@ NS_IMETHODIMP
 MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
                                       uint16_t* aCamera, uint16_t* aMicrophone,
                                       uint16_t* aScreen, uint16_t* aWindow,
-                                      uint16_t* aApplication,
                                       uint16_t* aBrowser) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -3865,13 +3864,12 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
   CaptureState microphone = CaptureState::Off;
   CaptureState screen = CaptureState::Off;
   CaptureState window = CaptureState::Off;
-  CaptureState application = CaptureState::Off;
   CaptureState browser = CaptureState::Off;
 
   nsCOMPtr<nsPIDOMWindowInner> piWin = do_QueryInterface(aCapturedWindow);
   if (piWin) {
     IterateWindowListeners(
-        piWin, [&camera, &microphone, &screen, &window, &application,
+        piWin, [&camera, &microphone, &screen, &window,
                 &browser](const RefPtr<GetUserMediaWindowListener>& aListener) {
           camera = CombineCaptureState(
               camera, aListener->CapturingSource(MediaSourceEnum::Camera));
@@ -3882,9 +3880,6 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
               screen, aListener->CapturingSource(MediaSourceEnum::Screen));
           window = CombineCaptureState(
               window, aListener->CapturingSource(MediaSourceEnum::Window));
-          application = CombineCaptureState(
-              application,
-              aListener->CapturingSource(MediaSourceEnum::Application));
           browser = CombineCaptureState(
               browser, aListener->CapturingSource(MediaSourceEnum::Browser));
         });
@@ -3894,10 +3889,9 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
   *aMicrophone = FromCaptureState(microphone);
   *aScreen = FromCaptureState(screen);
   *aWindow = FromCaptureState(window);
-  *aApplication = FromCaptureState(application);
   *aBrowser = FromCaptureState(browser);
 
-  LOG("%s: window %" PRIu64 " capturing %s %s %s %s %s %s", __FUNCTION__,
+  LOG("%s: window %" PRIu64 " capturing %s %s %s %s %s", __FUNCTION__,
       piWin ? piWin->WindowID() : -1,
       *aCamera == nsIMediaManagerService::STATE_CAPTURE_ENABLED
           ? "camera (enabled)"
@@ -3910,7 +3904,7 @@ MediaManager::MediaCaptureWindowState(nsIDOMWindow* aCapturedWindow,
                  ? "microphone (disabled)"
                  : ""),
       *aScreen ? "screenshare" : "", *aWindow ? "windowshare" : "",
-      *aApplication ? "appshare" : "", *aBrowser ? "browsershare" : "");
+      *aBrowser ? "browsershare" : "");
 
   return NS_OK;
 }
