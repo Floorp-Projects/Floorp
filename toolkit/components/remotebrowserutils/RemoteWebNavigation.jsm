@@ -18,6 +18,7 @@ function makeURI(url) {
 
 function RemoteWebNavigation() {
   this.wrappedJSObject = this;
+  this._cancelContentJSEpoch = 1;
 }
 
 RemoteWebNavigation.prototype = {
@@ -55,19 +56,24 @@ RemoteWebNavigation.prototype = {
   canGoBack: false,
   canGoForward: false,
   goBack() {
+    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
     this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_BACK);
-    this._sendMessage("WebNavigation:GoBack", {});
+      Ci.nsIRemoteTab.NAVIGATE_BACK, {epoch: cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GoBack", {cancelContentJSEpoch});
   },
   goForward() {
+    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
     this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_FORWARD);
-    this._sendMessage("WebNavigation:GoForward", {});
+      Ci.nsIRemoteTab.NAVIGATE_FORWARD, {epoch: cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GoForward", {cancelContentJSEpoch});
   },
   gotoIndex(aIndex) {
+    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
     this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_INDEX, {index: aIndex});
-    this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
+      Ci.nsIRemoteTab.NAVIGATE_INDEX,
+      {index: aIndex, epoch: cancelContentJSEpoch});
+    this._sendMessage("WebNavigation:GotoIndex", {index: aIndex,
+                                                  cancelContentJSEpoch});
   },
   loadURI(aURI, aLoadURIOptions) {
     let uri;
@@ -97,8 +103,9 @@ RemoteWebNavigation.prototype = {
       }
     }
 
+    let cancelContentJSEpoch = this._cancelContentJSEpoch++;
     this._browser.frameLoader.remoteTab.maybeCancelContentJSExecution(
-      Ci.nsIRemoteTab.NAVIGATE_URL, {uri});
+      Ci.nsIRemoteTab.NAVIGATE_URL, {uri, epoch: cancelContentJSEpoch});
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
       flags: aLoadURIOptions.loadFlags,
@@ -110,6 +117,7 @@ RemoteWebNavigation.prototype = {
                            aLoadURIOptions.triggeringPrincipal || Services.scriptSecurityManager.createNullPrincipal({})),
       csp: aLoadURIOptions.csp ? E10SUtils.serializeCSP(aLoadURIOptions.csp) : null,
       requestTime: Services.telemetry.msSystemNow(),
+      cancelContentJSEpoch,
     });
   },
   setOriginAttributesBeforeLoading(aOriginAttributes) {
