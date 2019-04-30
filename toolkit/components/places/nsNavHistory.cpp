@@ -2652,8 +2652,9 @@ nsresult nsNavHistory::BindQueryClauseParameters(
   if (tags.Length() > 0) {
     for (uint32_t i = 0; i < tags.Length(); ++i) {
       nsPrintfCString paramName("tag%d_", i);
-      NS_ConvertUTF16toUTF8 tag(tags[i]);
-      ToLowerCase(tag);
+      nsString utf16Tag = tags[i];
+      ToLowerCase(utf16Tag);
+      NS_ConvertUTF16toUTF8 tag(utf16Tag);
       rv = statement->BindUTF8StringByName(paramName, tag);
       NS_ENSURE_SUCCESS(rv, rv);
     }
