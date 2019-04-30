@@ -520,7 +520,7 @@ static bool Middleman_SendDebuggerRequest(JSContext* aCx, unsigned aArgc,
 
   DebuggerRequestMessage* msg = DebuggerRequestMessage::New(
       requestBuffer.begin(), requestBuffer.length());
-  child->SendMessage(*msg);
+  child->SendMessage(std::move(*msg));
   free(msg);
 
   // Wait for the child to respond to the query.

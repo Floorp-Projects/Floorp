@@ -382,7 +382,7 @@ void ReportFatalError(const Maybe<MinidumpInfo>& aMinidump, const char* aFormat,
   msgBuf[sizeof(msgBuf) - 1] = 0;
 
   // Don't take the message lock when sending this, to avoid touching the heap.
-  gChannel->SendMessage(*msg);
+  gChannel->SendMessage(std::move(*msg));
 
   DirectPrint("***** Fatal Record/Replay Error *****\n");
   DirectPrint(buf);
@@ -677,7 +677,7 @@ void HitExecutionPoint(const js::ExecutionPoint& aPoint,
 void RespondToRequest(const js::CharBuffer& aBuffer) {
   DebuggerResponseMessage* msg =
       DebuggerResponseMessage::New(aBuffer.begin(), aBuffer.length());
-  gChannel->SendMessage(*msg);
+  gChannel->SendMessage(std::move(*msg));
   free(msg);
 }
 
@@ -693,7 +693,7 @@ void SendMiddlemanCallRequest(const char* aInputData, size_t aInputSize,
 
   MiddlemanCallRequestMessage* msg =
       MiddlemanCallRequestMessage::New(aInputData, aInputSize);
-  gChannel->SendMessage(*msg);
+  gChannel->SendMessage(std::move(*msg));
   free(msg);
 
   while (!gCallResponseMessage) {
