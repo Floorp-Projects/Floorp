@@ -3017,7 +3017,8 @@ class nsContentUtils {
    * Checks if storage for the given principal is permitted by the user's
    * preferences. This method should be used only by ServiceWorker loading.
    */
-  static StorageAccess StorageAllowedForServiceWorker(nsIPrincipal* aPrincipal);
+  static StorageAccess StorageAllowedForServiceWorker(
+      nsIPrincipal* aPrincipal, nsICookieSettings* aCookieSettings);
 
   /*
    * Returns true if this document should disable storages because of the
@@ -3449,11 +3450,10 @@ class nsContentUtils {
    * Used in the implementation of StorageAllowedForWindow,
    * StorageAllowedForChannel and StorageAllowedForServiceWorker.
    */
-  static StorageAccess InternalStorageAllowedCheck(nsIPrincipal* aPrincipal,
-                                                   nsPIDOMWindowInner* aWindow,
-                                                   nsIURI* aURI,
-                                                   nsIChannel* aChannel,
-                                                   uint32_t& aRejectedReason);
+  static StorageAccess InternalStorageAllowedCheck(
+      nsIPrincipal* aPrincipal, nsPIDOMWindowInner* aWindow, nsIURI* aURI,
+      nsIChannel* aChannel, nsICookieSettings* aCookieSettings,
+      uint32_t& aRejectedReason);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(
