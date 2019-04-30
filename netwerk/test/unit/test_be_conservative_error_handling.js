@@ -9,7 +9,6 @@
 // starting a TLS server that requires the advanced features and then ensuring
 // that a client that is set to be conservative will fail when connecting.
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();

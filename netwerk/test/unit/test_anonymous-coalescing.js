@@ -1,4 +1,3 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /*
 - test to check we use only a single connection for both onymous and anonymous requests over an existing h2 session

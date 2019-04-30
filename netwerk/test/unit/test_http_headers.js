@@ -1,4 +1,3 @@
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function check_request_header(chan, name, value) {
   var chanValue;

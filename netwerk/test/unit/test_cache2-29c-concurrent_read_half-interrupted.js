@@ -14,7 +14,6 @@ This test is using a resumable response.
 */
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
                           .getService(Ci.nsIHttpProtocolHandler);

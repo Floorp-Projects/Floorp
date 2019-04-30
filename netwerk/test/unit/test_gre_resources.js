@@ -1,5 +1,4 @@
 // test that things that are expected to be in gre-resources are still there
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var ios = Cc["@mozilla.org/network/io-service;1"]. getService(Ci.nsIIOService);
 

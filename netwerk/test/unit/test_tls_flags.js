@@ -11,7 +11,6 @@
 // level of intolerance rollback and to test out an experimental 1.3
 // hello, though they are not tested here.
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();

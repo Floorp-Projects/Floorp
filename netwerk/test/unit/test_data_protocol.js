@@ -1,5 +1,4 @@
 /* run some tests on the data: protocol handler */
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // The behaviour wrt spaces is:
 // - Textual content keeps all spaces

@@ -1,5 +1,4 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var httpServer = null;
 // Need to randomize, because apparently no one clears our cache

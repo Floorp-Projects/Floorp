@@ -19,7 +19,6 @@ request past the reval window.
 "use strict";
 
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   run_next_test();
