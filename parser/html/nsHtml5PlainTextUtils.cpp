@@ -14,30 +14,10 @@
 nsHtml5HtmlAttributes* nsHtml5PlainTextUtils::NewLinkAttributes() {
   nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
   nsHtml5String rel =
-      nsHtml5Portability::newStringFromLiteral("alternate stylesheet");
+      nsHtml5Portability::newStringFromLiteral("stylesheet");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_REL, rel, -1);
-  nsHtml5String type = nsHtml5Portability::newStringFromLiteral("text/css");
-  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type, -1);
   nsHtml5String href = nsHtml5Portability::newStringFromLiteral(
       "resource://content-accessible/plaintext.css");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href, -1);
-
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && bundleService,
-               "The bundle service could not be loaded");
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle("chrome://global/locale/browser.properties",
-                                   getter_AddRefs(bundle));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && bundle,
-               "chrome://global/locale/browser.properties could not be loaded");
-  nsAutoString title;
-  if (bundle) {
-    bundle->GetStringFromName("plainText.wordWrap", title);
-  }
-
-  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TITLE,
-                          nsHtml5String::FromString(title), -1);
   return linkAttrs;
 }
