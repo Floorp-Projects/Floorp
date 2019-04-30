@@ -834,7 +834,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Request", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ResizeObserver", insecureContext: true},
+    {name: "ResizeObserver", insecureContext: true, nightly: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Response", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

@@ -44,4 +44,24 @@ interface nsIClassifiedChannel : nsISupports
    */
   readonly attribute ACString matchedFullHash;
 
+  /**
+   * Sets matched tracking info of the classified channel.
+   *
+   * @param aLists
+   *        Name of the Tracking Protection list that matched (e.g. content-track-digest256).
+   * @param aFullHash
+   *        Full hash of URLs that matched Tracking Protection list.
+   */
+  void setMatchedTrackingInfo(in Array<ACString> aLists,
+                              in Array<ACString> aFullHashes);
+
+  /**
+   * Name of the lists that matched
+   */
+  readonly attribute Array<ACString> matchedTrackingLists;
+
+  /**
+   * Full hash of URLs that matched
+   */
+  readonly attribute Array<ACString> matchedTrackingFullHashes;
 };

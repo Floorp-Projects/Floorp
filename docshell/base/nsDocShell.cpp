@@ -9959,7 +9959,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       NS_ENSURE_SUCCESS(rv, rv);
       if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
                                        resultPrincipal)) {
-        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
+        loadInfo->SetUpgradeInsecureRequests();
       }
     }
   }

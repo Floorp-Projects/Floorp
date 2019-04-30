@@ -34,10 +34,15 @@ Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 let gOriginalUpdateAutoValue = null;
 
+// Some elements append a trailing /. After the chrome tests are removed this
+// code can be changed so URL_HOST already has a trailing /.
+const gDetailsURL = URL_HOST + "/";
+const gDefaultWhatsNewURL = URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS";
+
 // Set to true to log additional information for debugging. To log additional
-// information for individual tests set gDebugTest to false here and to true in
-// the test's onload function.
-gDebugTest = true;
+// information for individual tests set gDebugTest to false here and to true
+// globally in the test.
+gDebugTest = false;
 
 // This is to accommodate the TV task which runs the tests with --verify.
 requestLongerTimeout(10);
@@ -143,8 +148,8 @@ async function continueFileHandler(leafName) {
       continueFile.remove(false);
     }
   });
-  return BrowserTestUtils.waitForCondition(() => (
-    !continueFile.exists()),
+  return TestUtils.waitForCondition(() =>
+    (!continueFile.exists()),
     "Waiting for file to be deleted, path: " + continueFile.path,
     interval, retries
   ).catch(e => {
@@ -246,127 +251,6 @@ async function setAppUpdateAutoEnabledHelper(enabled) {
 }
 
 /**
- * Runs a typical update test. Will set various common prefs for using the
- * updater doorhanger, runs the provided list of steps, and makes sure
- * everything is cleaned up afterwards.
- *
- * @param  updateParams
- *         Params which will be sent to app_update.sjs.
- * @param  checkAttempts
- *         How many times to check for updates. Useful for testing the UI
- *         for check failures.
- * @param  steps
- *         A list of test steps to perform, specifying expected doorhangers
- *         and additional validation/cleanup callbacks.
- * @return A promise which will resolve once all of the steps have been run
- *         and cleanup has been performed.
- */
-function runUpdateTest(updateParams, checkAttempts, steps) {
-  return (async function() {
-    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_IDLETIME, 0],
-        [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
-      ],
-    });
-
-    await setupTestUpdater();
-
-    let url = URL_HTTP_UPDATE_SJS +
-              "?" + updateParams +
-              getVersionParams();
-
-    setUpdateURL(url);
-
-    executeSoon(() => {
-      (async function() {
-        gAUS.checkForBackgroundUpdates();
-        for (var i = 0; i < checkAttempts - 1; i++) {
-          await waitForEvent("update-error", "check-attempt-failed");
-          gAUS.checkForBackgroundUpdates();
-        }
-      })();
-    });
-
-    for (let step of steps) {
-      await processStep(step);
-    }
-  })();
-}
-
-/**
- * Runs a test which processes an update. Similar to runUpdateTest.
- *
- * @param  updates
- *         A list of updates to process.
- * @param  steps
- *         A list of test steps to perform, specifying expected doorhangers
- *         and additional validation/cleanup callbacks.
- * @return A promise which will resolve once all of the steps have been run
- *         and cleanup has been performed.
- */
-function runUpdateProcessingTest(updates, steps) {
-  return (async function() {
-    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_IDLETIME, 0],
-        [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
-      ],
-    });
-
-    await setupTestUpdater();
-
-    writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-
-    writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
-    writeStatusFile(STATE_FAILED_CRC_ERROR);
-    reloadUpdateManagerData();
-
-    testPostUpdateProcessing();
-
-    for (let step of steps) {
-      await processStep(step);
-    }
-  })();
-}
-
-function processStep(step) {
-  if (typeof(step) == "function") {
-    return step();
-  }
-
-  const {notificationId, button, beforeClick, cleanup} = step;
-  return (async function() {
-    await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
-    const shownNotification = AppMenuNotifications.activeNotification.id;
-
-    is(shownNotification, notificationId, "The right notification showed up.");
-    if (shownNotification != notificationId) {
-      if (cleanup) {
-        await cleanup();
-      }
-      return;
-    }
-
-    let buttonEl = getNotificationButton(window, notificationId, button);
-    if (beforeClick) {
-      await beforeClick();
-    }
-
-
-    buttonEl.click();
-
-    if (cleanup) {
-      await cleanup();
-    }
-  })();
-}
-
-/**
  * Gets the specified button for the notification.
  *
  * @param  win
@@ -380,28 +264,25 @@ function processStep(step) {
 function getNotificationButton(win, notificationId, button) {
   let notification =
     win.document.getElementById(`appMenu-${notificationId}-notification`);
-  is(notification.hidden, false, `${notificationId} notification is showing`);
+  ok(!notification.hidden, `${notificationId} notification is showing`);
   return notification[button];
 }
 
 /**
  * Ensures that the "What's new" link with the provided ID is displayed and
- * matches the url parameter provided. If no URL is provided, it will instead
- * ensure that the link matches the default link URL.
+ * matches the url parameter provided.
  *
  * @param  win
  *         The window to get the "What's new" link for.
  * @param  id
  *         The ID of the "What's new" link element.
- * @param  url (optional)
- *         The URL to check against. If none is provided, a default will be used.
+ * @param  url
+ *         The URL to check against.
  */
 function checkWhatsNewLink(win, id, url) {
   let whatsNewLink = win.document.getElementById(id);
-  is(whatsNewLink.href,
-     url || URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
-     "What's new link points to the test_details URL");
-  is(whatsNewLink.hidden, false, "What's new link is not hidden.");
+  ok(!whatsNewLink.hidden, "What's new link is not hidden.");
+  is(whatsNewLink.href, url, `What's new link href should equal ${url}`);
 }
 
 /**
@@ -625,6 +506,101 @@ function getPatchOfType(type) {
 }
 
 /**
+ * Runs a Doorhanger update test. This will set various common prefs for
+ * updating and runs the provided list of steps.
+ *
+ * @param  updateParams
+ *         Params which will be sent to app_update.sjs.
+ * @param  checkAttempts
+ *         How many times to check for updates. Useful for testing the UI
+ *         for check failures. If this is 0 then a startup processing test will
+ *         be performed.
+ * @param  steps
+ *         An array of test steps to perform. A step will either be an object
+ *         containing expected conditions and actions or a function to call.
+ * @return A promise which will resolve once all of the steps have been run.
+ */
+function runDoorhangerUpdateTest(updateParams, checkAttempts, steps) {
+  function processDoorhangerStep(step) {
+    if (typeof(step) == "function") {
+      return step();
+    }
+
+    const {notificationId, button, checkActiveUpdate, pageURLs} = step;
+    return (async function() {
+      await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
+      const shownNotificationId = AppMenuNotifications.activeNotification.id;
+      is(shownNotificationId, notificationId,
+         "The right notification showed up.");
+
+      if (checkActiveUpdate) {
+        ok(!!gUpdateManager.activeUpdate,
+           "There should be an active update");
+        is(gUpdateManager.activeUpdate.state, checkActiveUpdate.state,
+           `The active update state should equal ${checkActiveUpdate.state}`);
+      } else {
+        ok(!gUpdateManager.activeUpdate,
+           "There should not be an active update");
+      }
+
+      if (pageURLs && pageURLs.whatsNew !== undefined) {
+        checkWhatsNewLink(window, `${notificationId}-whats-new`,
+                          pageURLs.whatsNew);
+      }
+
+      let buttonEl = getNotificationButton(window, notificationId, button);
+      buttonEl.click();
+
+      if (pageURLs && pageURLs.manual !== undefined) {
+        await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+        is(gBrowser.selectedBrowser.currentURI.spec, pageURLs.manual,
+           `The page's url should equal ${pageURLs.manual}`);
+        gBrowser.removeTab(gBrowser.selectedTab);
+      }
+    })();
+  }
+
+  return (async function() {
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
+        [PREF_APP_UPDATE_URL_MANUAL, URL_MANUAL_UPDATE],
+        [PREF_APP_UPDATE_URL_DETAILS, gDetailsURL],
+      ],
+    });
+
+    await setupTestUpdater();
+
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
+                    updateParams + getVersionParams();
+    setUpdateURL(updateURL);
+
+    if (checkAttempts) {
+      // Perform a background check doorhanger test.
+      executeSoon(() => {
+        (async function() {
+          gAUS.checkForBackgroundUpdates();
+          for (var i = 0; i < checkAttempts - 1; i++) {
+            await waitForEvent("update-error", "check-attempt-failed");
+            gAUS.checkForBackgroundUpdates();
+          }
+        })();
+      });
+    } else {
+      // Perform a startup processing doorhanger test.
+      reloadUpdateManagerData();
+      writeStatusFile(STATE_FAILED_CRC_ERROR);
+      testPostUpdateProcessing();
+    }
+
+    for (let step of steps) {
+      await processDoorhangerStep(step);
+    }
+  })();
+}
+
+/**
  * Runs an About Dialog update test. This will set various common prefs for
  * updating and runs the provided list of steps.
  *
@@ -639,9 +615,6 @@ function getPatchOfType(type) {
  * @return A promise which will resolve once all of the steps have been run.
  */
 function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
-  // Some elements append a trailing /. After the chrome tests are removed this
-  // code can be changed so URL_HOST already has a trailing /.
-  let detailsURL = URL_HOST + "/";
   let aboutDialog;
   function processAboutDialogStep(step) {
     if (typeof(step) == "function") {
@@ -651,11 +624,14 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
     const {panelId, checkActiveUpdate, continueFile, downloadInfo} = step;
     return (async function() {
       let updateDeck = aboutDialog.document.getElementById("updateDeck");
-      await BrowserTestUtils.waitForCondition(() =>
+      await TestUtils.waitForCondition(() =>
         (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
-        "Waiting for expected panel ID - got: \"" +
-        updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
-        undefined, 200);
+        "Waiting for the expected panel ID: " + panelId, undefined, 200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test so the panel
+        // ID and the expected panel ID is printed in the log.
+        logTestInfo(e);
+      });
       let selectedPanel = updateDeck.selectedPanel;
       is(selectedPanel.id, panelId, "The panel ID should equal " + panelId);
 
@@ -680,11 +656,16 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
           if (!isLastPatch || patch) {
             let resultName = info.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await BrowserTestUtils.waitForCondition(() =>
+            await TestUtils.waitForCondition(() =>
               (patch.getProperty(resultName) == info[resultName]),
-              "Waiting for expected patch property " + resultName + " value " +
-              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
-              info[resultName] + "\"", undefined, 200);
+              "Waiting for expected patch property " + resultName + " value: " +
+              info[resultName], undefined, 200
+            ).catch(e => {
+              // Instead of throwing let the check below fail the test so the
+              // property value and the expected property value is printed in
+              // the log.
+              logTestInfo(e);
+            });
             is(patch.getProperty(resultName), info[resultName],
                "The patch property " + resultName + " value should equal " +
                info[resultName]);
@@ -700,14 +681,14 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
         // downloadFailed and manualUpdate panels use the app.update.url.manual
         // preference.
         let link = selectedPanel.querySelector("label.text-link");
-        is(link.href, detailsURL,
-           "The panel's link href should equal the expected value");
+        is(link.href, gDetailsURL,
+           `The panel's link href should equal ${gDetailsURL}`);
       }
 
       let buttonPanels = ["downloadAndInstall", "apply"];
       if (buttonPanels.includes(panelId)) {
         let buttonEl = selectedPanel.querySelector("button");
-        await BrowserTestUtils.waitForCondition(() =>
+        await TestUtils.waitForCondition(() =>
           (aboutDialog.document.activeElement == buttonEl),
           "The button should receive focus");
         ok(!buttonEl.disabled, "The button should be enabled");
@@ -725,13 +706,13 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_URL_MANUAL, detailsURL],
+        [PREF_APP_UPDATE_URL_MANUAL, gDetailsURL],
       ],
     });
 
     await setupTestUpdater();
 
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
                     updateParams + getVersionParams();
     if (backgroundUpdate) {
       if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
@@ -774,9 +755,6 @@ function runAboutDialogUpdateTest(updateParams, backgroundUpdate, steps) {
  * @return A promise which will resolve once all of the steps have been run.
  */
 function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
-  // Some elements append a trailing /. After the chrome tests are removed this
-  // code can be changed so URL_HOST already has a trailing /.
-  let detailsURL = URL_HOST + "/";
   let tab;
   function processAboutPrefsStep(step) {
     if (typeof(step) == "function") {
@@ -790,9 +768,12 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
         let updateDeck = content.document.getElementById("updateDeck");
         await ContentTaskUtils.waitForCondition(() =>
           (updateDeck.selectedPanel && updateDeck.selectedPanel.id == panelId),
-          "Waiting for expected panel ID - got: \"" +
-          updateDeck.selectedPanel.id + "\", expected: \"" + panelId + "\"",
-          undefined, 200);
+          "Waiting for the expected panel ID: " + panelId, undefined, 200
+        ).catch(e => {
+          // Instead of throwing let the check below fail the test so the panel
+          // ID and the expected panel ID is printed in the log.
+          logTestInfo(e);
+        });
         is(updateDeck.selectedPanel.id, panelId,
            "The panel ID should equal " + panelId);
       });
@@ -818,11 +799,16 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
           if (!isLastPatch || patch) {
             let resultName = info.bitsResult ? "bitsResult" : "internalResult";
             patch.QueryInterface(Ci.nsIWritablePropertyBag);
-            await BrowserTestUtils.waitForCondition(() =>
+            await TestUtils.waitForCondition(() =>
               (patch.getProperty(resultName) == info[resultName]),
-              "Waiting for expected patch property " + resultName + " value " +
-              "- got: \"" + patch.getProperty(resultName) + "\", expected: \"" +
-              info[resultName] + "\"", undefined, 200);
+              "Waiting for expected patch property " + resultName + " value: " +
+              info[resultName], undefined, 200
+            ).catch(e => {
+              // Instead of throwing let the check below fail the test so the
+              // property value and the expected property value is printed in
+              // the log.
+              logTestInfo(e);
+            });
             is(patch.getProperty(resultName), info[resultName],
                "The patch property " + resultName + " value should equal " +
                info[resultName]);
@@ -832,8 +818,8 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
         await continueFileHandler(continueFile);
       }
 
-      await ContentTask.spawn(tab.linkedBrowser, {panelId, detailsURL},
-                              async ({panelId, detailsURL}) => {
+      await ContentTask.spawn(tab.linkedBrowser, {panelId, gDetailsURL},
+                              async ({panelId, gDetailsURL}) => {
         let linkPanels = ["downloadFailed", "manualUpdate", "unsupportedSystem"];
         if (linkPanels.includes(panelId)) {
           let selectedPanel =
@@ -848,8 +834,8 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
             selector = "a.text-link";
           }
           let link = selectedPanel.querySelector(selector);
-          is(link.href, detailsURL,
-             "The panel's link href should equal the expected value");
+          is(link.href, gDetailsURL,
+             `The panel's link href should equal ${gDetailsURL}`);
         }
 
         let buttonPanels = ["downloadAndInstall", "apply"];
@@ -875,13 +861,13 @@ function runAboutPrefsUpdateTest(updateParams, backgroundUpdate, steps) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DISABLEDFORTESTING, false],
-        [PREF_APP_UPDATE_URL_MANUAL, detailsURL],
+        [PREF_APP_UPDATE_URL_MANUAL, gDetailsURL],
       ],
     });
 
     await setupTestUpdater();
 
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
                     updateParams + getVersionParams();
     if (backgroundUpdate) {
       if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
@@ -943,9 +929,6 @@ function removeUpdateSettingsIni() {
  * @return A promise which will resolve after the .
  */
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
-  // Some elements append a trailing /. After the chrome tests are removed this
-  // code can be changed so URL_HOST already has a trailing /.
-  let detailsURL = URL_HOST + "/";
   return (async function() {
     Services.telemetry.clearScalars();
     gEnv.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
@@ -961,7 +944,7 @@ function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
       removeUpdateSettingsIni();
     }
 
-    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + detailsURL +
+    let updateURL = URL_HTTP_UPDATE_SJS + "?detailsURL=" + gDetailsURL +
                     updateParams + getVersionParams();
     setUpdateURL(updateURL);
     if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {

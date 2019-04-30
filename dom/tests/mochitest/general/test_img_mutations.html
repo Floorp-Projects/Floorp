@@ -16,11 +16,11 @@
     SimpleTest.waitForExplicitFinish();
 
     // 50x50 png
-    var testPNG50 = new URL("image_50.png", location).href;
+    var testPNG50 = new URL("image_50.png?noCache=" + Math.random(), location).href;
     // 100x100 png
-    var testPNG100 = new URL("image_100.png", location).href;
+    var testPNG100 = new URL("image_100.png?noCache=" + Math.random(), location).href;
     // 200x200 png
-    var testPNG200 = new URL("image_200.png", location).href;
+    var testPNG200 = new URL("image_200.png?noCache=" + Math.random(), location).href;
 
     var tests = [];
     var img;

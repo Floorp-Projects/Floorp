@@ -83,7 +83,7 @@ UrlClassifierFeatureCustomTables::GetSkipHostList(nsACString& aList) {
 NS_IMETHODIMP
 UrlClassifierFeatureCustomTables::ProcessChannel(
     nsIChannel* aChannel, const nsTArray<nsCString>& aList,
-    bool* aShouldContinue) {
+    const nsTArray<nsCString>& aHashes, bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 

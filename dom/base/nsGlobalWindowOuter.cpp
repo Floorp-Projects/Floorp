@@ -6336,7 +6336,7 @@ void nsGlobalWindowOuter::EnterModalState() {
   // Usually the activeESM check above does that, but there are cases when
   // we don't have activeESM, or it is for different document.
   Document* topDoc = topWin->GetExtantDoc();
-  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+  nsIContent* capturingContent = PresShell::GetCapturingContent();
   if (capturingContent && topDoc &&
       nsContentUtils::ContentIsCrossDocDescendantOf(capturingContent, topDoc)) {
     PresShell::ReleaseCapturingContent();
@@ -7366,16 +7366,12 @@ void nsGlobalWindowOuter::FlushPendingNotifications(FlushType aType) {
 }
 
 void nsGlobalWindowOuter::EnsureSizeAndPositionUpToDate() {
-  // If we're a subframe, make sure our size is up to date.  It's OK that this
-  // crosses the content/chrome boundary, since chrome can have pending reflows
-  // too.
-  //
-  // Make sure to go through the document chain rather than the window chain to
-  // not flush on detached iframes, see bug 1545516.
-  if (mDoc) {
-    if (RefPtr<Document> parent = mDoc->GetParentDocument()) {
-      parent->FlushPendingNotifications(FlushType::Layout);
-    }
+  // If we're a subframe, make sure our size is up to date.  Make sure to go
+  // through the document chain rather than the window chain to not flush on
+  // detached iframes, see bug 1545516.
+  if (mDoc && mDoc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
+    RefPtr<Document> parent = mDoc->GetParentDocument();
+    parent->FlushPendingNotifications(FlushType::Layout);
   }
 }
 

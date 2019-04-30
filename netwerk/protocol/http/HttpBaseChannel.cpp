@@ -3186,10 +3186,6 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     MOZ_ASSERT(
         docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
         "docshell and necko should have the same privateBrowsingId attribute.");
-    MOZ_ASSERT(docShellAttrs.mGeckoViewSessionContextId ==
-                   attrs.mGeckoViewSessionContextId,
-               "docshell and necko should have the same "
-               "geckoViewSessionContextId attribute");
 
     attrs = docShellAttrs;
     attrs.SetFirstPartyDomain(true, newURI);
@@ -3781,6 +3777,30 @@ HttpBaseChannel::SetMatchedInfo(const nsACString& aList,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedTrackingLists(nsTArray<nsCString>& aLists) {
+  aLists = mMatchedTrackingLists;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedTrackingFullHashes(
+    nsTArray<nsCString>& aFullHashes) {
+  aFullHashes = mMatchedTrackingFullHashes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetMatchedTrackingInfo(
+    const nsTArray<nsCString>& aLists, const nsTArray<nsCString>& aFullHashes) {
+  NS_ENSURE_ARG(!aLists.IsEmpty());
+  // aFullHashes can be empty for non hash-matching algorithm, for example,
+  // host based test entries in preference.
+
+  mMatchedTrackingLists = aLists;
+  mMatchedTrackingFullHashes = aFullHashes;
+  return NS_OK;
+}
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsITimedChannel
 //-----------------------------------------------------------------------------

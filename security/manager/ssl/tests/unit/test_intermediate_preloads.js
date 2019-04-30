@@ -34,15 +34,19 @@ function* cyclingIterator(items, count = null) {
   }
 }
 
-function getHash(aStr) {
+function getHashCommon(aStr, useBase64) {
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   hasher.init(Ci.nsICryptoHash.SHA256);
   let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
   stringStream.data = aStr;
   hasher.updateFromStream(stringStream, -1);
 
-  // convert the binary hash data to a hex string.
-  return hexify(hasher.finish(false));
+  return hasher.finish(useBase64);
+}
+
+// Get a hexified SHA-256 hash of the given string.
+function getHash(aStr) {
+  return hexify(getHashCommon(aStr, false));
 }
 
 function countTelemetryReports(histogram) {
@@ -133,14 +137,11 @@ function setupKintoPreloadServer(certGenerator, options = {
 
     let output = [];
     let count = 1;
-    let certDB = Cc["@mozilla.org/security/x509certdb;1"]
-                 .getService(Ci.nsIX509CertDB);
 
     let certIterator = certGenerator();
     let result = certIterator.next();
     while (!result.done) {
       let certBytes = result.value;
-      let cert = certDB.constructX509FromBase64(pemToBase64(certBytes));
 
       output.push({
         "details": {
@@ -158,7 +159,8 @@ function setupKintoPreloadServer(certGenerator, options = {
           "mimetype": "application/x-pem-file",
         },
         "whitelist": false,
-        "pubKeyHash": cert.sha256Fingerprint,
+        // "pubKeyHash" is actually just the hash of the DER bytes of the certificate
+        "pubKeyHash": getHashCommon(atob(pemToBase64(certBytes)), true),
         "crlite_enrolled": true,
         "id": `78cf8900-fdea-4ce5-f8fb-${count}`,
         "last_modified": Date.now(),
@@ -273,9 +275,8 @@ add_task(async function test_preload_invalid_hash() {
                           .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
                           .snapshot();
 
-  equal(countTelemetryReports(errors_histogram), 2, "There should be two error reports");
+  equal(countTelemetryReports(errors_histogram), 1, "There should be one error report");
   equal(errors_histogram.values[7], 1, "There should be one invalid hash error");
-  equal(errors_histogram.values[1], 1, "There should be one generic download error");
 
   equal(countDownloadAttempts, 1, "There should have been one download attempt");
 
@@ -313,9 +314,8 @@ add_task(async function test_preload_invalid_length() {
                           .getHistogramById("INTERMEDIATE_PRELOADING_ERRORS")
                           .snapshot();
 
-  equal(countTelemetryReports(errors_histogram), 2, "There should be only two error reports");
+  equal(countTelemetryReports(errors_histogram), 1, "There should be only one error report");
   equal(errors_histogram.values[8], 1, "There should be one invalid length error");
-  equal(errors_histogram.values[1], 1, "There should be one generic download error");
 
   equal(countDownloadAttempts, 1, "There should have been one download attempt");
 

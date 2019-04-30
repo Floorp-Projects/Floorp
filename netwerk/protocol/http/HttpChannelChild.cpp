@@ -1932,6 +1932,28 @@ void HttpChannelChild::ProcessSetClassifierMatchedInfo(
       NS_DISPATCH_NORMAL);
 }
 
+void HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo(
+    const nsCString& aLists, const nsCString& aFullHashes) {
+  LOG(("HttpChannelChild::ProcessSetClassifierMatchedTrackingInfo [this=%p]\n",
+       this));
+  MOZ_ASSERT(OnSocketThread());
+
+  nsTArray<nsCString> lists, fullhashes;
+  for (const nsACString& token : aLists.Split(',')) {
+    lists.AppendElement(token);
+  }
+  for (const nsACString& token : aFullHashes.Split(',')) {
+    fullhashes.AppendElement(token);
+  }
+
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
+      NewRunnableMethod<const nsTArray<nsCString>, const nsTArray<nsCString>>(
+          "HttpChannelChild::SetMatchedTrackingInfo", this,
+          &HttpChannelChild::SetMatchedTrackingInfo, lists, fullhashes),
+      NS_DISPATCH_NORMAL);
+}
+
 void HttpChannelChild::ProcessDivertMessages() {
   LOG(("HttpChannelChild::ProcessDivertMessages [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
