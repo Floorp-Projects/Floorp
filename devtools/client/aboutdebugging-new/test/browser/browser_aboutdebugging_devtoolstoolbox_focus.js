@@ -53,8 +53,7 @@ add_task(async function() {
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
   newNavigator.close();
   await onToolboxDestroyed;
-  await waitUntil(() =>
-    !findDebugTargetByText("about:devtools-toolbox?", document));
+  await waitUntil(() => !findDebugTargetByText("Toolbox - ", document));
 
   await removeTab(tab);
 });

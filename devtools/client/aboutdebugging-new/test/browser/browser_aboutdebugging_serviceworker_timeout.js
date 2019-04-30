@@ -57,7 +57,7 @@ add_task(async function() {
   info("Click on inspect and wait for the toolbox to open");
   const onToolboxReady = gDevTools.once("toolbox-ready");
   inspectButton.click();
-  const toolbox = await onToolboxReady;
+  await onToolboxReady;
 
   // Wait for more 10 times the service worker timeout to check that the toolbox prevents
   // the worker from being destroyed.
@@ -69,7 +69,8 @@ add_task(async function() {
   ok(hasInspectButton, "Service worker target still has an inspect button");
 
   info("Destroy the toolbox");
-  await toolbox.destroy();
+  const devtoolsTab = gBrowser.selectedTab;
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
 
   // After stopping the toolbox, the service worker instance should be released and the
   // service worker registration should be displayed as stopped again.
