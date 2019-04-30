@@ -582,7 +582,7 @@ void nsCaret::ResetBlinking() {
     mBlinkTimer->Cancel();
   } else {
     nsIEventTarget* target = nullptr;
-    if (nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell)) {
+    if (RefPtr<PresShell> presShell = do_QueryReferent(mPresShell)) {
       if (nsCOMPtr<Document> doc = presShell->GetDocument()) {
         target = doc->EventTargetFor(TaskCategory::Other);
       }
