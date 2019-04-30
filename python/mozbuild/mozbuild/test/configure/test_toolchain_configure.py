@@ -1526,7 +1526,10 @@ class RustTest(BaseConfigureTest):
         }
 
         self.TARGET = target
-        sandbox = self.get_sandbox(paths, {}, [], environ)
+        # --enable-project=tools/crashreporter for more relaxed rust
+        # dependency.
+        sandbox = self.get_sandbox(
+            paths, {}, ['--enable-project=tools/crashreporter'], environ)
 
         # Trick the sandbox into not running the target compiler check
         dep = sandbox._depends[sandbox['c_compiler']]
