@@ -2750,8 +2750,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   // XDR the BinAST data.
   UniquePtr<char[], JS::FreePolicy> bytes;
   if (mode == XDR_DECODE) {
-    bytes = xdr->cx()->template make_pod_array<char>(
-        Max<size_t>(binASTLength, 1));
+    bytes =
+        xdr->cx()->template make_pod_array<char>(Max<size_t>(binASTLength, 1));
     if (!bytes) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -2793,8 +2793,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
         return xdr->fail(JS::TranscodeResult_Throw);
       }
 
-      auto metadata = new (mem)
-          frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
+      auto metadata =
+          new (mem) frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
       binASTMetadata.reset(metadata);
     }
 
@@ -2806,9 +2806,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
     RootedAtom atom(xdr->cx());
     JSAtom** atomsBase = binASTMetadata->atomsBase();
     auto slices = binASTMetadata->sliceBase();
-    const char* sourceBase = mode == XDR_ENCODE
-                                 ? bytes.get()
-                                 : ss->data.as<BinAST>().string.chars();
+    const char* sourceBase =
+        mode == XDR_ENCODE ? bytes.get() : ss->data.as<BinAST>().string.chars();
 
     for (uint32_t i = 0; i < numStrings; i++) {
       uint8_t isNull;
