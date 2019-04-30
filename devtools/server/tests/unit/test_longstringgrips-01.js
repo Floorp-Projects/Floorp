@@ -56,10 +56,10 @@ function test_longstring_grip() {
       Assert.equal(grip.initial,
                    longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
 
-      const longStringClient = gThreadClient.pauseLongString(grip);
-      longStringClient.substring(22, 28, function(response) {
+      const longStringFront = createLongStringFront(gClient, grip);
+      longStringFront.substring(22, 28).then(function(response) {
         try {
-          Assert.equal(response.substring, "monkey");
+          Assert.equal(response, "monkey");
         } finally {
           gThreadClient.resume(function() {
             finishClient(gClient);

@@ -9,8 +9,6 @@ const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 const eventSource = require("devtools/shared/client/event-source");
 const {ThreadStateTypes} = require("devtools/shared/client/constants");
 
-loader.lazyRequireGetter(this, "ArrayBufferFront", "devtools/shared/fronts/array-buffer");
-loader.lazyRequireGetter(this, "LongStringClient", "devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "SourceFront", "devtools/shared/fronts/source", true);
 
@@ -356,79 +354,6 @@ ThreadClient.prototype = {
     const client = new ObjectClient(this.client, grip);
     this._pauseGrips[grip.actor] = client;
     return client;
-  },
-
-  /**
-   * Get or create a long string client, checking the grip client cache if it
-   * already exists.
-   *
-   * @param grip Object
-   *        The long string grip returned by the protocol.
-   * @param gripCacheName String
-   *        The property name of the grip client cache to check for existing
-   *        clients in.
-   */
-  _longString: function(grip, gripCacheName) {
-    if (grip.actor in this[gripCacheName]) {
-      return this[gripCacheName][grip.actor];
-    }
-
-    const client = new LongStringClient(this.client, grip);
-    this[gripCacheName][grip.actor] = client;
-    return client;
-  },
-
-  /**
-   * Return an instance of LongStringClient for the given long string grip that
-   * is scoped to the current pause.
-   *
-   * @param grip Object
-   *        The long string grip returned by the protocol.
-   */
-  pauseLongString: function(grip) {
-    return this._longString(grip, "_pauseGrips");
-  },
-
-  /**
-   * Return an instance of LongStringClient for the given long string grip that
-   * is scoped to the thread lifetime.
-   *
-   * @param grip Object
-   *        The long string grip returned by the protocol.
-   */
-  threadLongString: function(grip) {
-    return this._longString(grip, "_threadGrips");
-  },
-
-  /**
-   * Get or create an ArrayBuffer client, checking the grip client cache if it
-   * already exists.
-   *
-   * @param grip Object
-   *        The ArrayBuffer grip returned by the protocol.
-   * @param gripCacheName String
-   *        The property name of the grip client cache to check for existing
-   *        clients in.
-   */
-  _arrayBuffer: function(grip, gripCacheName) {
-    if (grip.actor in this[gripCacheName]) {
-      return this[gripCacheName][grip.actor];
-    }
-
-    const front = new ArrayBufferFront(this.client, grip);
-    this[gripCacheName][grip.actor] = front;
-    return front;
-  },
-
-  /**
-   * Return an instance of ArrayBufferClient for the given ArrayBuffer grip that
-   * is scoped to the thread lifetime.
-   *
-   * @param grip Object
-   *        The ArrayBuffer grip returned by the protocol.
-   */
-  threadArrayBuffer: function(grip) {
-    return this._arrayBuffer(grip, "_threadGrips");
   },
 
   /**
