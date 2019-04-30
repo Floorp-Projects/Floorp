@@ -2,9 +2,9 @@
 
 # enableTestingMode
 
-`fun enableTestingMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L426)
+`fun enableTestingMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L431)
 
-Should be called from all users of the glean testing API.
+Should be called from all users of the Glean testing API.
 
 This makes all asynchronous work synchronous so we can test the results of the
 API synchronously.

@@ -4,8 +4,8 @@
 
 `class GleanDebugActivity : `[`Activity`](https://developer.android.com/reference/android/app/Activity.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt#L22)
 
-Debugging activity exported by glean to allow easier debugging.
-For example, invoking debug mode in the glean sample application
+Debugging activity exported by Glean to allow easier debugging.
+For example, invoking debug mode in the Glean sample application
 can be done via adb using the following command:
 
 adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean.debug.GleanDebugActivity
@@ -17,7 +17,7 @@ https://developer.android.com/studio/command-line/adb#am
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `GleanDebugActivity()`<br>Debugging activity exported by glean to allow easier debugging. For example, invoking debug mode in the glean sample application can be done via adb using the following command: |
+| [&lt;init&gt;](-init-.md) | `GleanDebugActivity()`<br>Debugging activity exported by Glean to allow easier debugging. For example, invoking debug mode in the Glean sample application can be done via adb using the following command: |
 
 ### Functions
 
