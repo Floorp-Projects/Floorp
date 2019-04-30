@@ -2256,6 +2256,7 @@ static void PrintUsageThenExit(int aExitCode) {
 #undef PRINT_FEATURE
 
   printf(
+      "    -                \"default\" (All above D+S defaults)\n"
       "\n"
       "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
       "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
@@ -2628,7 +2629,13 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
-static uint32_t ParseFeature(const char* aFeature) {
+static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
+  if (strcmp(aFeature, "default") == 0) {
+    return (aIsStartup ? (DefaultFeatures() | StartupExtraDefaultFeatures())
+                       : DefaultFeatures()) &
+           AvailableFeatures();
+  }
+
 #define PARSE_FEATURE_BIT(n_, str_, Name_, desc_) \
   if (strcmp(aFeature, str_) == 0) {              \
     return ProfilerFeature::Name_;                \
@@ -2644,10 +2651,11 @@ static uint32_t ParseFeature(const char* aFeature) {
 }
 
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
-                                      uint32_t aFeatureCount) {
+                                      uint32_t aFeatureCount,
+                                      bool aIsStartup /* = false */) {
   uint32_t features = 0;
   for (size_t i = 0; i < aFeatureCount; i++) {
-    features |= ParseFeature(aFeatures[i]);
+    features |= ParseFeature(aFeatures[i], aIsStartup);
   }
   return features;
 }
@@ -2927,7 +2935,8 @@ void profiler_init(void* aStackTop) {
         Vector<const char*> featureStringArray =
             SplitAtCommas(startupFeatures, featureStringStorage);
         features = ParseFeaturesFromStringArray(featureStringArray.begin(),
-                                                featureStringArray.length());
+                                                featureStringArray.length(),
+                                                /* aIsStartup */ true);
         LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
       }
     }
