@@ -40,6 +40,11 @@ permalink: /changelog/
 
 * **feature-sitepermissions**
   * Do not save new site permissions in private sessions.
+  
+* **service-glean**
+   * ⚠️ **This is a breaking API change**: Custom pings must be explicitly
+     registered with Glean at startup time. See
+     `components/service/glean/docs/pings/custom.md` for more information.
 
 # 0.51.0
 

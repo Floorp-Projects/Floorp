@@ -78,7 +78,9 @@ class SampleApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // OPTIONAL: Initialize your application's custom pings, if it has any.
+        // If you have custom pings in your application, you must register them
+        // using the following command. This command should be omitted for
+        // applications not using custom pings.
         Glean.registerPings(Pings)
 
         // Call setUploadEnabled first, since Glean.initialize
