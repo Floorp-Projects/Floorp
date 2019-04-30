@@ -4642,6 +4642,9 @@ pref("dom.datatransfer.mozAtAPIs", false);
 // causes enough issues to prevent us from turning it on everywhere.
 pref("fission.rebuild_frameloaders_on_remoteness_change", false);
 
+// Move session history to parent process (child processes access it over IPC).
+pref("fission.sessionHistoryInParent", true);
+
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
 //  * userContent.css
