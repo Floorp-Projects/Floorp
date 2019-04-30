@@ -126,10 +126,10 @@ open class GleanInternalAPI internal constructor () {
      * @param pings The `Pings` object generated for your library or application
      * by Glean.
      */
-    @Suppress("UNUSED_PARAMETER")
     fun registerPings(pings: Any) {
-        // Deliberately empty. Instantiating the Pings object to send this function
-        // is enough to call the contructor and have it registered in [PingType.pingRegistry].
+        // Instantiating the Pings object to send this function is enough to
+        // call the constructor and have it registered in [PingType.pingRegistry].
+        logger.info("Registering pings for ${pings.javaClass.canonicalName}")
     }
 
     /**
