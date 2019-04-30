@@ -97,7 +97,15 @@ class CustomTabToolbarMenu(
 
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
-                R.drawable.mozac_ic_share
+                R.drawable.mozac_ic_share,
+                textColorResource = DefaultThemeManager.resolveAttribute(
+                    R.attr.primaryText,
+                    context
+                ),
+                iconTintColorResource = DefaultThemeManager.resolveAttribute(
+                    R.attr.primaryText,
+                    context
+                )
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
             },
