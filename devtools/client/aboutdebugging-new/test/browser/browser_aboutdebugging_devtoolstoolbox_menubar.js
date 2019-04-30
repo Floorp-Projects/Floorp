@@ -15,11 +15,24 @@ add_task(async function() {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const { devtoolsTab } = await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Check whether the menu items are disabled");
   const rootDocument = devtoolsTab.ownerDocument;
   await assertMenusItems(rootDocument, false);
+
+  info("Select the inspector");
+  const toolbox = getToolbox(devtoolsWindow);
+  await toolbox.selectTool("inspector");
+
+  info("Click on the console item");
+  const onConsoleLoaded = toolbox.once("webconsole-ready");
+  const webconsoleMenuItem = rootDocument.getElementById("menuitem_webconsole");
+  webconsoleMenuItem.click();
+
+  info("Wait until about:devtools-toolbox switches to the console");
+  await onConsoleLoaded;
 
   info("Force to select about:debugging page");
   gBrowser.selectedTab = tab;
@@ -31,18 +44,20 @@ add_task(async function() {
 });
 
 async function assertMenusItems(rootDocument, shouldBeEnabled) {
+  info("Wait for the Toggle Tools menu-item hidden attribute to change");
   const menuItem = rootDocument.getElementById("menu_devToolbox");
-  // Wait for hidden attribute changed since the menu items will update asynchronously.
   await waitUntil(() => menuItem.hidden === !shouldBeEnabled);
 
+  info("Check that the state of the Toggle Tools menu-item depends on the page");
   assertMenuItem(rootDocument, "menu_devToolbox", shouldBeEnabled);
 
+  info("Check that the tools menu-items are always enabled regardless of the page");
   for (const toolDefinition of gDevTools.getToolDefinitionArray()) {
     if (!toolDefinition.inMenu) {
       continue;
     }
 
-    assertMenuItem(rootDocument, "menuitem_" + toolDefinition.id, shouldBeEnabled);
+    assertMenuItem(rootDocument, "menuitem_" + toolDefinition.id, true);
   }
 }
 
