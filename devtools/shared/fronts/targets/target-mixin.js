@@ -12,8 +12,6 @@ loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools"
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
-const flags = require("../../flags");
-
 /**
  * A Target represents a debuggable context. It can be a browser tab, a tab on
  * a remote device, like a tab on Firefox for Android. But it can also be an add-on,
@@ -553,9 +551,7 @@ function TargetMixin(parentClass) {
           try {
             await this.detach();
           } catch (e) {
-            if (!flags.quiet) {
-              console.warn(`Error while detaching target: ${e.message}`);
-            }
+            console.warn(`Error while detaching target: ${e.message}`);
           }
         }
 
@@ -563,9 +559,7 @@ function TargetMixin(parentClass) {
           try {
             await this.threadClient.detach();
           } catch (e) {
-            if (!flags.quiet) {
-              console.warn(`Error while detaching the thread front: ${e.message}`);
-            }
+            console.warn(`Error while detaching the thread front: ${e.message}`);
           }
         }
 
