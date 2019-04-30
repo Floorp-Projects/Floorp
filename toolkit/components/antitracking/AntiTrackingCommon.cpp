@@ -1568,10 +1568,9 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  if (parentDocument->CookieSettings()->GetCookieBehavior() !=
-      nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    LOG(("Disabled by the pref (%d), bail out early",
-         StaticPrefs::network_cookie_cookieBehavior()));
+  auto cookieBehavior = parentDocument->CookieSettings()->GetCookieBehavior();
+  if (cookieBehavior != nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+    LOG(("Disabled by the pref (%d), bail out early", cookieBehavior));
     return true;
   }
 
