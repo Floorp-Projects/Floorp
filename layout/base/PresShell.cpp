@@ -212,9 +212,7 @@ using namespace mozilla::layout;
 using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
 typedef ScrollableLayerGuid::ViewID ViewID;
 
-CapturingContentInfo nsIPresShell::gCaptureInfo = {
-    false /* mAllowed */, false /* mPointerLock */,
-    false /* mRetargetToElement */, false /* mPreventDrag */};
+PresShell::CapturingContentInfo PresShell::sCapturingContentInfo;
 
 // RangePaintInfo is used to paint ranges to offscreen buffers
 struct RangePaintInfo {
@@ -2442,7 +2440,8 @@ void PresShell::MaybeReleaseCapturingContent() {
   if (frameSelection) {
     frameSelection->SetDragState(false);
   }
-  if (gCaptureInfo.mContent && gCaptureInfo.mContent->OwnerDoc() == mDocument) {
+  if (sCapturingContentInfo.mContent &&
+      sCapturingContentInfo.mContent->OwnerDoc() == mDocument) {
     PresShell::ReleaseCapturingContent();
   }
 }
@@ -3701,11 +3700,11 @@ void nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
 }
 
 void PresShell::ClearMouseCaptureOnView(nsView* aView) {
-  if (gCaptureInfo.mContent) {
+  if (sCapturingContentInfo.mContent) {
     if (aView) {
       // if a view was specified, ensure that the captured content is within
       // this view.
-      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
+      nsIFrame* frame = sCapturingContentInfo.mContent->GetPrimaryFrame();
       if (frame) {
         nsView* view = frame->GetClosestView();
         // if there is no view, capturing won't be handled any more, so
@@ -3713,10 +3712,10 @@ void PresShell::ClearMouseCaptureOnView(nsView* aView) {
         if (view) {
           do {
             if (view == aView) {
-              gCaptureInfo.mContent = nullptr;
+              sCapturingContentInfo.mContent = nullptr;
               // the view containing the captured content likely disappeared so
               // disable capture for now.
-              gCaptureInfo.mAllowed = false;
+              sCapturingContentInfo.mAllowed = false;
               break;
             }
 
@@ -3728,38 +3727,38 @@ void PresShell::ClearMouseCaptureOnView(nsView* aView) {
       }
     }
 
-    gCaptureInfo.mContent = nullptr;
+    sCapturingContentInfo.mContent = nullptr;
   }
 
   // disable mouse capture until the next mousedown as a dialog has opened
   // or a drag has started. Otherwise, someone could start capture during
   // the modal dialog or drag.
-  gCaptureInfo.mAllowed = false;
+  sCapturingContentInfo.mAllowed = false;
 }
 
-void nsIPresShell::ClearMouseCapture(nsIFrame* aFrame) {
-  if (!gCaptureInfo.mContent) {
-    gCaptureInfo.mAllowed = false;
+void PresShell::ClearMouseCapture(nsIFrame* aFrame) {
+  if (!sCapturingContentInfo.mContent) {
+    sCapturingContentInfo.mAllowed = false;
     return;
   }
 
   // null frame argument means clear the capture
   if (!aFrame) {
-    gCaptureInfo.mContent = nullptr;
-    gCaptureInfo.mAllowed = false;
+    sCapturingContentInfo.mContent = nullptr;
+    sCapturingContentInfo.mAllowed = false;
     return;
   }
 
-  nsIFrame* capturingFrame = gCaptureInfo.mContent->GetPrimaryFrame();
+  nsIFrame* capturingFrame = sCapturingContentInfo.mContent->GetPrimaryFrame();
   if (!capturingFrame) {
-    gCaptureInfo.mContent = nullptr;
-    gCaptureInfo.mAllowed = false;
+    sCapturingContentInfo.mContent = nullptr;
+    sCapturingContentInfo.mAllowed = false;
     return;
   }
 
   if (nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, capturingFrame)) {
-    gCaptureInfo.mContent = nullptr;
-    gCaptureInfo.mAllowed = false;
+    sCapturingContentInfo.mContent = nullptr;
+    sCapturingContentInfo.mAllowed = false;
   }
 }
 
@@ -6124,27 +6123,28 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
 void PresShell::SetCapturingContent(nsIContent* aContent, CaptureFlags aFlags) {
   // If capture was set for pointer lock, don't unlock unless we are coming
   // out of pointer lock explicitly.
-  if (!aContent && gCaptureInfo.mPointerLock &&
+  if (!aContent && sCapturingContentInfo.mPointerLock &&
       !(aFlags & CaptureFlags::PointerLock)) {
     return;
   }
 
-  gCaptureInfo.mContent = nullptr;
+  sCapturingContentInfo.mContent = nullptr;
 
   // only set capturing content if allowed or the
   // CaptureFlags::IgnoreAllowedState or CaptureFlags::PointerLock are used.
-  if ((aFlags & CaptureFlags::IgnoreAllowedState) || gCaptureInfo.mAllowed ||
-      (aFlags & CaptureFlags::PointerLock)) {
+  if ((aFlags & CaptureFlags::IgnoreAllowedState) ||
+      sCapturingContentInfo.mAllowed || (aFlags & CaptureFlags::PointerLock)) {
     if (aContent) {
-      gCaptureInfo.mContent = aContent;
+      sCapturingContentInfo.mContent = aContent;
     }
     // CaptureFlags::PointerLock is the same as
     // CaptureFlags::RetargetToElement & CaptureFlags::IgnoreAllowedState.
-    gCaptureInfo.mRetargetToElement =
+    sCapturingContentInfo.mRetargetToElement =
         !!(aFlags & CaptureFlags::RetargetToElement) ||
         !!(aFlags & CaptureFlags::PointerLock);
-    gCaptureInfo.mPreventDrag = !!(aFlags & CaptureFlags::PreventDragStart);
-    gCaptureInfo.mPointerLock = !!(aFlags & CaptureFlags::PointerLock);
+    sCapturingContentInfo.mPreventDrag =
+        !!(aFlags & CaptureFlags::PreventDragStart);
+    sCapturingContentInfo.mPointerLock = !!(aFlags & CaptureFlags::PointerLock);
   }
 }
 
@@ -6665,7 +6665,7 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // capture retargeting is being used, no frame was found or the frame's
   // content is not a descendant of the capturing content.
   if (capturingContent && !pointerCapturingContent &&
-      (gCaptureInfo.mRetargetToElement ||
+      (PresShell::sCapturingContentInfo.mRetargetToElement ||
        !eventTargetData.mFrame->GetContent() ||
        !nsContentUtils::ContentIsCrossDocDescendantOf(
            eventTargetData.mFrame->GetContent(), capturingContent))) {
@@ -7004,7 +7004,7 @@ nsIContent* PresShell::EventHandler::GetCapturingContentFor(
   return (aGUIEvent->mClass == ePointerEventClass ||
           aGUIEvent->mClass == eWheelEventClass ||
           aGUIEvent->HasMouseEventMessage())
-             ? nsIPresShell::GetCapturingContent()
+             ? PresShell::GetCapturingContent()
              : nullptr;
 }
 
@@ -7369,7 +7369,7 @@ PresShell::EventHandler::ComputeRootFrameToHandleEventWithCapturingContent(
     return aRootFrameToHandleEvent;
   }
 
-  if (gCaptureInfo.mRetargetToElement) {
+  if (PresShell::sCapturingContentInfo.mRetargetToElement) {
     *aIsCaptureRetargeted = true;
     return aRootFrameToHandleEvent;
   }
@@ -7838,7 +7838,7 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
                           GetPresContext() &&
                           GetPresContext()->EventStateManager() ==
                               EventStateManager::GetActiveEventStateManager();
-      nsIPresShell::AllowMouseCapture(allowCapture);
+      PresShell::AllowMouseCapture(allowCapture);
       *aIsUserInteraction = false;
       return true;
     }
@@ -7915,7 +7915,7 @@ void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
       PresShell::ReleaseCapturingContent();
       return;
     case eMouseMove:
-      nsIPresShell::AllowMouseCapture(false);
+      PresShell::AllowMouseCapture(false);
       return;
     case eDrag:
     case eDragEnd:
@@ -8254,7 +8254,7 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
     }
 
     Document* doc = content->OwnerDoc();
-    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+    nsIContent* capturingContent = PresShell::GetCapturingContent();
     if (capturingContent) {
       if (capturingContent->OwnerDoc() != doc) {
         // Wrong document, don't dispatch anything.

@@ -163,7 +163,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
     // stopped by the selection if the prescontext is destroyed.
     mPresContext = aPresContext;
 
-    mContent = nsIPresShell::GetCapturingContent();
+    mContent = PresShell::GetCapturingContent();
 
     if (!mTimer) {
       mTimer = NS_NewTimer(

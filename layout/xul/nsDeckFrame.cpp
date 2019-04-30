@@ -77,7 +77,7 @@ void nsDeckFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 void nsDeckFrame::ShowBox(nsIFrame* aBox) { Animate(aBox, true); }
 
 void nsDeckFrame::HideBox(nsIFrame* aBox) {
-  nsIPresShell::ClearMouseCapture(aBox);
+  mozilla::PresShell::ClearMouseCapture(aBox);
   Animate(aBox, false);
 }
 
