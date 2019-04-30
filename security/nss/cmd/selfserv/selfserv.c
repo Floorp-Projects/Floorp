@@ -233,7 +233,9 @@ PrintParameterUsage()
         "     ecdsa_secp521r1_sha512,\n"
         "     rsa_pss_rsae_sha256, rsa_pss_rsae_sha384, rsa_pss_rsae_sha512,\n"
         "     rsa_pss_pss_sha256, rsa_pss_pss_sha384, rsa_pss_pss_sha512,\n"
-        "-Z enable 0-RTT (for TLS 1.3; also use -u)\n",
+        "-Z enable 0-RTT (for TLS 1.3; also use -u)\n"
+        "-E enable post-handshake authentication\n"
+        "   (for TLS 1.3; only has an effect with 3 or more -r options)\n",
         stderr);
 }
 
@@ -804,6 +806,7 @@ PRBool failedToNegotiateName = PR_FALSE;
 PRBool enableExtendedMasterSecret = PR_FALSE;
 PRBool zeroRTT = PR_FALSE;
 PRBool enableALPN = PR_FALSE;
+PRBool enablePostHandshakeAuth = PR_FALSE;
 SSLNamedGroup *enabledGroups = NULL;
 unsigned int enabledGroupsCount = 0;
 const SSLSignatureScheme *enabledSigSchemes = NULL;
@@ -1431,15 +1434,28 @@ handle_connection(PRFileDesc *tcp_sock, PRFileDesc *model_sock)
                         errWarn("second SSL_OptionSet SSL_REQUIRE_CERTIFICATE");
                         break;
                     }
-                    rv = SSL_ReHandshake(ssl_sock, PR_TRUE);
-                    if (rv != 0) {
-                        errWarn("SSL_ReHandshake");
-                        break;
-                    }
-                    rv = SSL_ForceHandshake(ssl_sock);
-                    if (rv < 0) {
-                        errWarn("SSL_ForceHandshake");
-                        break;
+                    if (enablePostHandshakeAuth) {
+                        rv = SSL_SendCertificateRequest(ssl_sock);
+                        if (rv != SECSuccess) {
+                            errWarn("SSL_SendCertificateRequest");
+                            break;
+                        }
+                        rv = SSL_ForceHandshake(ssl_sock);
+                        if (rv != SECSuccess) {
+                            errWarn("SSL_ForceHandshake");
+                            break;
+                        }
+                    } else {
+                        rv = SSL_ReHandshake(ssl_sock, PR_TRUE);
+                        if (rv != 0) {
+                            errWarn("SSL_ReHandshake");
+                            break;
+                        }
+                        rv = SSL_ForceHandshake(ssl_sock);
+                        if (rv < 0) {
+                            errWarn("SSL_ForceHandshake");
+                            break;
+                        }
                     }
                 }
             }
@@ -1948,6 +1964,16 @@ server_main(
         }
     }
 
+    if (enablePostHandshakeAuth) {
+        if (enabledVersions.max < SSL_LIBRARY_VERSION_TLS_1_3) {
+            errExit("You tried enabling post-handshake auth without enabling TLS 1.3!");
+        }
+        rv = SSL_OptionSet(model_sock, SSL_ENABLE_POST_HANDSHAKE_AUTH, PR_TRUE);
+        if (rv != SECSuccess) {
+            errExit("error enabling post-handshake auth");
+        }
+    }
+
     if (enableALPN) {
         PRUint8 alpnVal[] = { 0x08,
                               0x68, 0x74, 0x74, 0x70, 0x2f, 0x31, 0x2e, 0x31 };
@@ -2223,7 +2249,7 @@ main(int argc, char **argv)
     **      in 3.28, please leave some time before resuing those.
     **      'z' was removed in 3.39. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "2:A:C:DGH:I:J:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:y");
+                                 "2:A:C:DEGH:I:J:L:M:NP:QRS:T:U:V:W:YZa:bc:d:e:f:g:hi:jk:lmn:op:rst:uvw:y");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         ++optionsFound;
         switch (optstate->option) {
@@ -2243,6 +2269,11 @@ main(int argc, char **argv)
             case 'D':
                 noDelay = PR_TRUE;
                 break;
+
+            case 'E':
+                enablePostHandshakeAuth = PR_TRUE;
+                break;
+
             case 'H':
                 configureDHE = (PORT_Atoi(optstate->value) != 0);
                 break;

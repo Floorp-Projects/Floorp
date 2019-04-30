@@ -220,18 +220,20 @@ start_selfserv()
   else
       RSA_OPTIONS="-n ${HOSTADDR}-rsa-pss"
   fi
+  SERVER_VMIN=${SERVER_VMIN-ssl3}
+  SERVER_VMAX=${SERVER_VMAX-tls1.2}
   echo "selfserv starting at `date`"
   echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \\"
   echo "         ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID}\\"
-  echo "         -V ssl3:tls1.2 $verbose -H 1 &"
+  echo "         -V ${SERVER_VMIN}:${SERVER_VMAX} $verbose -H 1 &"
   if [ ${fileout} -eq 1 ]; then
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 \
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ${SERVER_VMIN}:${SERVER_VMAX} $verbose -H 1 \
                > ${SERVEROUTFILE} 2>&1 &
       RET=$?
   else
       ${PROFTOOL} ${BINDIR}/selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} ${RSA_OPTIONS} ${SERVER_OPTIONS} \
-               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ssl3:tls1.2 $verbose -H 1 &
+               ${ECC_OPTIONS} -S ${HOSTADDR}-dsa -w nss "$@" -i ${R_SERVERPID} -V ${SERVER_VMIN}:${SERVER_VMAX} $verbose -H 1 &
       RET=$?
   fi
 
@@ -388,6 +390,8 @@ ssl_auth()
   do
       echo "${testname}" | grep "don't require client auth" > /dev/null
       CAUTH=$?
+      echo "${testname}" | grep "TLS 1.3" > /dev/null
+      TLS13=$?
 
       if [ "${CLIENT_MODE}" = "fips" -a "${CAUTH}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
@@ -399,6 +403,13 @@ ssl_auth()
               cparam=`echo $cparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
               sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
           fi
+	  # SSL3 cannot be used with TLS 1.3
+	  unset SERVER_VMIN
+	  unset SERVER_VMAX
+	  if [ $TLS13 -eq 0 ] ; then
+	      SERVER_VMIN=tls1.0
+	      SERVER_VMAX=tls1.3
+	  fi
           start_selfserv `echo "$sparam" | sed -e 's,_, ,g'`
 
           echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
@@ -669,9 +680,18 @@ ssl_crl_ssl()
   ignore_blank_lines ${SSLAUTH} | \
   while read ectype value sparam cparam testname
   do
+    echo "${testname}" | grep "TLS 1.3" > /dev/null
+    TLS13=$?
     if [ "$ectype" = "SNI" ]; then
         continue
     else
+        # SSL3 cannot be used with TLS 1.3
+        unset SERVER_VMIN
+        unset SERVER_VMAX
+        if [ $TLS13 -eq 0 ] ; then
+            SERVER_VMIN=tls1.0
+            SERVER_VMAX=tls1.3
+        fi
         servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
         pwd=`echo $cparam | grep nss`
         user=`echo $cparam | grep TestUser`
@@ -1039,7 +1059,7 @@ ssl_crl_cache()
   rm -f ${SSLAUTH_TMP}
   echo ${SSLAUTH_TMP}
 
-  grep -- " $SERV_ARG " ${SSLAUTH} | grep -v "^#" | grep -v none | grep -v bogus > ${SSLAUTH_TMP}
+  grep -- " $SERV_ARG " ${SSLAUTH} | grep -v "^#" | grep -v none | grep -v bogus | grep -v 'post hs' > ${SSLAUTH_TMP}
   echo $?
   while [ $? -eq 0 -a -f ${SSLAUTH_TMP} ]
     do
