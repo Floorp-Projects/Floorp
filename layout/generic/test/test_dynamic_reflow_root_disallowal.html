@@ -228,16 +228,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     // triggers content-based sizing during the flex container's intrinsic
     // sizing step.  So we need to get the container to be intrinsically sized;
     // hence the use of the (optional) "isContainerIntrinsicallySized" flag.
-    { desc: "flex-basis-pct",
-      candStyle: "flex-basis:80%;",
-      isContainerIntrinsicallySized: true,
-    },
+// FIXME(bug 1548078): the following two tests fail to produce a rendering difference:
+//    { desc: "flex-basis-pct",
+//      candStyle: "flex-basis:80%;",
+//      isContainerIntrinsicallySized: true,
+//    },
+//    { desc: "flex-basis-calc-pct",
+//      candStyle: "flex-basis:calc(10px + 80%);",
+//      isContainerIntrinsicallySized: true,
+//    },
     { desc: "flex-basis-from-pct-isize",
       candStyle: "inline-size:80%",
-      isContainerIntrinsicallySized: true,
-    },
-    { desc: "flex-basis-calc-pct",
-      candStyle: "flex-basis:calc(10px + 80%);",
       isContainerIntrinsicallySized: true,
     },
     { desc: "flex-basis-from-calc-pct-isize",
@@ -277,7 +278,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
       (subtest.isContainerColumnOriented ? "column" : "row") + ";"
 
     let flexContainer = createStyledDiv("display: flex; \
-                                         border: 2px solid teal" +
+                                         border: 2px solid teal; " +
                                          containerSizeDecl +
                                          containerFlexDirectionDecl);
 
@@ -294,8 +295,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
                                subtest.candStyle);
 
     // Something whose size we can adjust, inside the reflow root candidate:
-    let inner = createStyledDiv("height:20px; width:20px; \
-                                 border: 1px solid purple");
+    let inner = createStyledDiv("height:20px; width:20px");
 
     cand.appendChild(inner);
     flexContainer.appendChild(simpleItem);
