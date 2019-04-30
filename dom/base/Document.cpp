@@ -4039,6 +4039,10 @@ void Document::DeletePresShell() {
   // no point on it.
   MarkUserFontSetDirty();
 
+  if (mResizeObserverController) {
+    mResizeObserverController->ShellDetachedFromDocument();
+  }
+
   PresShell* oldPresShell = mPresShell;
   mPresShell = nullptr;
   UpdateFrameRequestCallbackSchedulingState(oldPresShell);
