@@ -58,6 +58,9 @@ interface nsIGfxInfo : nsISupports
   readonly attribute AString adapterRAM;
   readonly attribute AString adapterRAM2;
 
+  readonly attribute AString adapterDriverVendor;
+  readonly attribute AString adapterDriverVendor2;
+
   readonly attribute AString adapterDriverVersion;
   readonly attribute AString adapterDriverVersion2;
 

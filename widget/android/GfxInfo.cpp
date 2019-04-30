@@ -242,6 +242,19 @@ GfxInfo::GetAdapterDriver2(nsAString& aAdapterDriver) {
 }
 
 NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVendor(nsAString& aAdapterDriverVendor) {
+  EnsureInitialized();
+  aAdapterDriverVendor.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetAdapterDriverVendor2(nsAString& aAdapterDriverVendor) {
+  EnsureInitialized();
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString& aAdapterDriverVersion) {
   EnsureInitialized();
   aAdapterDriverVersion = NS_ConvertASCIItoUTF16(mGLStrings->Version());
@@ -325,6 +338,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Android,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAll),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
         nsIGfxInfo::FEATURE_STATUS_OK, DRIVER_COMPARISON_IGNORED,
         GfxDriverInfo::allDriverVersions, "FEATURE_OK_FORCE_OPENGL");
