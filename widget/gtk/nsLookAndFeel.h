@@ -86,6 +86,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mInfoBarText = kBlack;
   char16_t mInvisibleCharacter = 0;
   float mCaretRatio = 0.0f;
+  int32_t mCaretBlinkTime = 0;
   bool mMenuSupportsDrag = false;
   bool mCSDAvailable = false;
   bool mCSDHideTitlebarByDefault = false;
