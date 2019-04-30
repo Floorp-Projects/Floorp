@@ -145,14 +145,14 @@ TEST_SUITES = {
     'mochitest-plain-clipboard': {
         'aliases': ('cl', 'clipboard',),
         'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'clipboard', 'test_paths': None},
+        'kwargs': {'flavor': 'plain', 'subsuite': 'clipboard', 'test_paths': None},
         'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-plain-gpu': {
         'aliases': ('gpu',),
         'mach_command': 'mochitest',
-        'kwargs': {'subsuite': 'gpu', 'test_paths': None},
+        'kwargs': {'flavor': 'plain', 'subsuite': 'gpu', 'test_paths': None},
         'task_regex': ['mochitest-gpu($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
