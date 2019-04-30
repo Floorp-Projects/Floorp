@@ -59,7 +59,7 @@ function run_test() {
   if ("nsIAndroidBridge" in Ci) {
     checkService("androidBridge", Ci.nsIAndroidBridge);
   }
-  if ("@mozilla.org/browser/enterprisepolicies;1" in Cc) {
+  if ("@mozilla.org/enterprisepolicies;1" in Cc) {
     checkService("policies", Ci.nsIEnterprisePolicies);
   }
 
