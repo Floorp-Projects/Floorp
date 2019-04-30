@@ -1376,15 +1376,15 @@ bool nsTypeAheadFind::IsRangeRendered(PresShell* aPresShell,
 }
 
 already_AddRefed<PresShell> nsTypeAheadFind::GetPresShell() {
-  if (!mPresShell) return nullptr;
-
-  nsCOMPtr<nsIPresShell> iPresShell = do_QueryReferent(mPresShell);
-  if (iPresShell) {
-    nsPresContext* pc = iPresShell->GetPresContext();
+  if (!mPresShell) {
+    return nullptr;
+  }
+  RefPtr<PresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell) {
+    nsPresContext* pc = presShell->GetPresContext();
     if (!pc || !pc->GetContainerWeak()) {
       return nullptr;
     }
   }
-  RefPtr<PresShell> presShell = static_cast<PresShell*>(iPresShell.get());
   return presShell.forget();
 }
