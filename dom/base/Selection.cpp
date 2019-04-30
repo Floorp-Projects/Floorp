@@ -163,7 +163,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
     // stopped by the selection if the prescontext is destroyed.
     mPresContext = aPresContext;
 
-    mContent = PresShell::GetCapturingContent();
+    mContent = nsIPresShell::GetCapturingContent();
 
     if (!mTimer) {
       mTimer = NS_NewTimer(
@@ -1877,8 +1877,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   bool didScroll;
   while (true) {
     didScroll = presShell->ScrollFrameRectIntoView(
-        aFrame, nsRect(aPoint, nsSize(0, 0)), ScrollAxis(), ScrollAxis(),
-        ScrollFlags::IgnoreMarginAndPadding);
+        aFrame, nsRect(aPoint, nsSize(0, 0)), nsIPresShell::ScrollAxis(),
+        nsIPresShell::ScrollAxis(), ScrollFlags::IgnoreMarginAndPadding);
     if (!weakFrame || !weakRootFrame) {
       return NS_OK;
     }
@@ -3006,10 +3006,9 @@ Selection::ScrollSelectionIntoViewEvent::Run() {
   return NS_OK;
 }
 
-nsresult Selection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion,
-                                                     int32_t aFlags,
-                                                     ScrollAxis aVertical,
-                                                     ScrollAxis aHorizontal) {
+nsresult Selection::PostScrollSelectionIntoViewEvent(
+    SelectionRegion aRegion, int32_t aFlags, nsIPresShell::ScrollAxis aVertical,
+    nsIPresShell::ScrollAxis aHorizontal) {
   // If we've already posted an event, revoke it and place a new one at the
   // end of the queue to make sure that any new pending reflow events are
   // processed before we scroll. This will insure that we scroll to the
@@ -3030,15 +3029,16 @@ void Selection::ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
                                WhereToScroll aVPercent, WhereToScroll aHPercent,
                                ErrorResult& aRv) {
   int32_t flags = aIsSynchronous ? Selection::SCROLL_SYNCHRONOUS : 0;
-  nsresult rv = ScrollIntoView(aRegion, ScrollAxis(aVPercent),
-                               ScrollAxis(aHPercent), flags);
+  nsresult rv = ScrollIntoView(aRegion, nsIPresShell::ScrollAxis(aVPercent),
+                               nsIPresShell::ScrollAxis(aHPercent), flags);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
 nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
-                                   ScrollAxis aVertical, ScrollAxis aHorizontal,
+                                   nsIPresShell::ScrollAxis aVertical,
+                                   nsIPresShell::ScrollAxis aHorizontal,
                                    int32_t aFlags) {
   if (!mFrameSelection) {
     return NS_OK;

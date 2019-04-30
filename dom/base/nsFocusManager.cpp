@@ -2135,8 +2135,10 @@ void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
       scrollFlags |= ScrollFlags::IgnoreMarginAndPadding;
     }
     aPresShell->ScrollContentIntoView(
-        aContent, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-        ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible), scrollFlags);
+        aContent,
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        nsIPresShell::ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
+        scrollFlags);
   }
 }
 

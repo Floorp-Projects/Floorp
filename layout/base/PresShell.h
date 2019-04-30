@@ -73,34 +73,6 @@ class PresShell final : public nsIPresShell,
 
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
-  /**
-   * Return the active content currently capturing the mouse if any.
-   */
-  static nsIContent* GetCapturingContent() {
-    return sCapturingContentInfo.mContent;
-  }
-
-  /**
-   * Allow or disallow mouse capturing.
-   */
-  static void AllowMouseCapture(bool aAllowed) {
-    sCapturingContentInfo.mAllowed = aAllowed;
-  }
-
-  /**
-   * Returns true if there is an active mouse capture that wants to prevent
-   * drags.
-   */
-  static bool IsMouseCapturePreventingDrag() {
-    return sCapturingContentInfo.mPreventDrag && sCapturingContentInfo.mContent;
-  }
-
-  static void ClearMouseCaptureOnView(nsView* aView);
-
-  // If a frame in the subtree rooted at aFrame is capturing the mouse then
-  // clears that capture.
-  static void ClearMouseCapture(nsIFrame* aFrame);
-
   void Init(Document*, nsPresContext*, nsViewManager*);
   void Destroy() override;
 
@@ -266,6 +238,7 @@ class PresShell final : public nsIPresShell,
    */
   void ScheduleViewManagerFlush(PaintType aType = PaintType::Default);
 
+  void ClearMouseCaptureOnView(nsView* aView) override;
   bool IsVisible() override;
   void SuppressDisplayport(bool aEnabled) override;
   void RespectDisplayportSuppression(bool aEnabled) override;
@@ -1577,8 +1550,6 @@ class PresShell final : public nsIPresShell,
   // details for the scroll operation, see ScrollIntoViewData above.
   nsCOMPtr<nsIContent> mContentToScrollTo;
 
-  TimeStamp mLastOSWake;
-
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
   // The focus information needed for async keyboard scrolling
@@ -1626,23 +1597,9 @@ class PresShell final : public nsIPresShell,
   // Whether mForceUseLegacyNonPrimaryDispatch is initialised.
   bool mInitializedWithClickEventDispatchingBlacklist : 1;
 
-  struct CapturingContentInfo final {
-    CapturingContentInfo()
-        : mAllowed(false),
-          mPointerLock(false),
-          mRetargetToElement(false),
-          mPreventDrag(false) {}
-
-    // capture should only be allowed during a mousedown event
-    StaticRefPtr<nsIContent> mContent;
-    bool mAllowed;
-    bool mPointerLock;
-    bool mRetargetToElement;
-    bool mPreventDrag;
-  };
-  static CapturingContentInfo sCapturingContentInfo;
-
   static bool sDisableNonTestMouseEvents;
+
+  TimeStamp mLastOSWake;
 
   static bool sProcessInteractable;
 };

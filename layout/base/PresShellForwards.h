@@ -77,7 +77,7 @@ enum class ReflowRootHandling {
 
 // WhereToScroll should be 0 ~ 100 or -1.  When it's in 0 ~ 100, it means
 // percentage of scrollTop/scrollLeft in scrollHeight/scrollWidth.
-// See the comment for constructor of ScrollAxis for the detail.
+// See ComputeWhereToScroll() for the detail.
 typedef int16_t WhereToScroll;
 static const WhereToScroll kScrollToTop = 0;
 static const WhereToScroll kScrollToLeft = 0;
@@ -86,60 +86,10 @@ static const WhereToScroll kScrollToBottom = 100;
 static const WhereToScroll kScrollToRight = 100;
 static const WhereToScroll kScrollMinimum = -1;
 
-// See the comment for constructor of ScrollAxis for the detail.
 enum class WhenToScroll : uint8_t {
   Always,
   IfNotVisible,
   IfNotFullyVisible,
-};
-
-struct ScrollAxis final {
-  /**
-   * aWhere:
-   *   Either a percentage or a special value. PresShell defines:
-   *   * (Default) kScrollMinimum = -1: The visible area is scrolled the
-   *     minimum amount to show as much as possible of the frame. This won't
-   *     hide any initially visible part of the frame.
-   *   * kScrollToTop = 0: The frame's upper edge is aligned with the top edge
-   *     of the visible area.
-   *   * kScrollToBottom = 100: The frame's bottom edge is aligned with the
-   *     bottom edge of the visible area.
-   *   * kScrollToLeft = 0: The frame's left edge is aligned with the left edge
-   *     of the visible area.
-   *   * kScrollToRight = 100: The frame's right edge is aligned* with the right
-   *     edge of the visible area.
-   *   * kScrollToCenter = 50: The frame is centered along the axis the
-   *     ScrollAxis is used for.
-   *
-   *   Other values are treated as a percentage, and the point*"percent"
-   *   down the frame is placed at the point "percent" down the visible area.
-   *
-   * aWhen:
-   *   * (Default) WhenToScroll::IfNotFullyVisible: Move the frame only if it is
-   *     not fully visible (including if it's not visible at all). Note that
-   *     in this case if the frame is too large to fit in view, it will only
-   *     be scrolled if more of it can fit than is already in view.
-   *   * WhenToScroll::IfNotVisible: Move the frame only if none of it is
-   *     visible.
-   *   * WhenToScroll::Always: Move the frame regardless of its current
-   *     visibility.
-   *
-   * aOnlyIfPerceivedScrollableDirection:
-   *   If the direction is not a perceived scrollable direction (i.e. no
-   *   scrollbar showing and less than one device pixel of scrollable
-   *   distance), don't scroll. Defaults to false.
-   */
-  explicit ScrollAxis(WhereToScroll aWhere = kScrollMinimum,
-                      WhenToScroll aWhen = WhenToScroll::IfNotFullyVisible,
-                      bool aOnlyIfPerceivedScrollableDirection = false)
-      : mWhereToScroll(aWhere),
-        mWhenToScroll(aWhen),
-        mOnlyIfPerceivedScrollableDirection(
-            aOnlyIfPerceivedScrollableDirection) {}
-
-  WhereToScroll mWhereToScroll;
-  WhenToScroll mWhenToScroll;
-  bool mOnlyIfPerceivedScrollableDirection : 1;
 };
 
 enum class ScrollFlags {

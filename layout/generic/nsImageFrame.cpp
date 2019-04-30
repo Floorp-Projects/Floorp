@@ -2231,7 +2231,7 @@ nsresult nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
   // XXX We need to make this special check for area element's capturing the
   // mouse due to bug 135040. Remove it once that's fixed.
   nsIContent* capturingContent = aEvent->HasMouseEventMessage()
-                                     ? PresShell::GetCapturingContent()
+                                     ? nsIPresShell::GetCapturingContent()
                                      : nullptr;
   if (capturingContent && capturingContent->GetPrimaryFrame() == this) {
     *aContent = capturingContent;
