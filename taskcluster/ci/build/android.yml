@@ -384,7 +384,7 @@ android-api-16-without-google-play-services/opt:
 
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
-    use-pgo: true
+    use-pgo: android-api-16/pgo
     attributes:
         nightly: true
         enable-full-crashsymbols: true
