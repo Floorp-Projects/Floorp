@@ -1900,6 +1900,13 @@ enum class SymbolicAddress {
   Limit
 };
 
+// The FailureMode indicates whether, immediately after a call to a builtin
+// returns, the return value should be checked against an error condition
+// (and if so, which one) which signals that the C++ calle has already
+// reported an error and thus wasm needs to wasmTrap(Trap::ThrowReported).
+
+enum class FailureMode : uint8_t { Infallible, FailOnNegI32, FailOnNullPtr };
+
 // SymbolicAddressSignature carries type information for a function referred
 // to by a SymbolicAddress.  In order that |argTypes| can be written out as a
 // static initialiser, it has to have fixed length.  At present
@@ -1915,6 +1922,8 @@ struct SymbolicAddressSignature {
   const SymbolicAddress identity;
   // The return type, or MIRType::None to denote 'void'.
   const jit::MIRType retType;
+  // The failure mode, which is checked by masm.wasmCallBuiltinInstanceMethod.
+  const FailureMode failureMode;
   // The number of arguments, 0 .. SymbolicAddressSignatureMaxArgs only.
   const uint8_t numArgs;
   // The argument types; SymbolicAddressSignatureMaxArgs + 1 guard, which
