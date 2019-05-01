@@ -2813,9 +2813,6 @@ pref("ui.key.contentAccess", 5);
 
 pref("ui.key.menuAccessKeyFocuses", false); // overridden below
 
-// Disable page loading activity cursor by default.
-pref("ui.use_activity_cursor", false);
-
 // Middle-mouse handling
 pref("middlemouse.paste", false);
 pref("middlemouse.contentLoadURL", false);
