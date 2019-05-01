@@ -773,6 +773,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
+VARCACHE_PREF(
+  "browser.autofocus",
+   browser_autofocus,
+  bool, true
+)
+
 PREF("browser.display.foreground_color", String, "")
 PREF("browser.display.background_color", String, "")
 PREF("browser.display.focus_background_color", String, "")

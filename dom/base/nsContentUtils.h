@@ -3188,10 +3188,6 @@ class nsContentUtils {
    */
   static bool GetUserIsInteracting();
 
-  // Check pref "browser.autofocus" to see if we want to enable autofocusing
-  // elements when the page requests it.
-  static bool AutoFocusEnabled() { return sAutoFocusEnabled; }
-
   // Check pref "dom.script_loader.bytecode_cache.enabled" to see
   // if we want to cache JS bytecode on the cache entry.
   static bool IsBytecodeCacheEnabled() { return sIsBytecodeCacheEnabled; }
@@ -3408,7 +3404,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sAutoFocusEnabled;
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
