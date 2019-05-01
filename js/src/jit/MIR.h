@@ -11775,31 +11775,6 @@ class MWasmDerivedPointer : public MUnaryInstruction,
   ALLOW_CLONE(MWasmDerivedPointer)
 };
 
-class MWasmLoadRef : public MUnaryInstruction, public NoTypePolicy::Data {
-  AliasSet::Flag aliasSet_;
-
-  explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet,
-                        bool isMovable = true)
-      : MUnaryInstruction(classOpcode, valueAddr), aliasSet_(aliasSet) {
-    MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
-    setResultType(MIRType::RefOrNull);
-    if (isMovable) {
-      setMovable();
-    }
-  }
-
- public:
-  INSTRUCTION_HEADER(WasmLoadRef)
-  TRIVIAL_NEW_WRAPPERS
-
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  AliasSet getAliasSet() const override { return AliasSet::Load(aliasSet_); }
-
-  ALLOW_CLONE(MWasmLoadRef)
-};
-
 class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;
 

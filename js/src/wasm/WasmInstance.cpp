@@ -306,6 +306,7 @@ Instance::callImport_anyref(Instance* instance, int32_t funcImportIndex,
   if (!BoxAnyRef(cx, rval, &result)) {
     return false;
   }
+  static_assert(sizeof(argv[0]) >= sizeof(void*), "fits");
   *(void**)argv = result.get().forCompiledCode();
   return true;
 }
@@ -934,27 +935,17 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return -1;
 }
 
-// The return convention for tableGet() is awkward but avoids a situation where
-// Ion code has to hold a value that may or may not be a pointer to GC'd
-// storage, or where Ion has to pass in a pointer to storage where a return
-// value can be written.
-//
-// Note carefully that the pointer that is returned may not be valid past
-// operations that change the size of the table or cause GC work; it is strictly
-// to be used to retrieve the return value.
-
 /* static */ void* Instance::tableGet(Instance* instance, uint32_t index,
                                       uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnNullPtr);
-
+  MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
   const Table& table = *instance->tables()[tableIndex];
   MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
   if (index >= table.length()) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
-    return nullptr;
+    return AnyRef::invalid().forCompiledCode();
   }
-  return const_cast<void*>(table.getShortlivedAnyRefLocForCompiledCode(index));
+  return table.getAnyRef(index).forCompiledCode();
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
