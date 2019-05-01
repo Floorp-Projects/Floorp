@@ -522,6 +522,18 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   // number of realms visited by RealmsIter.
   js::MainThreadData<size_t> numRealms;
 
+ private:
+  // Number of debuggee realms in the runtime.
+  js::MainThreadData<size_t> numDebuggeeRealms_;
+
+ public:
+  void incrementNumDebuggeeRealms();
+  void decrementNumDebuggeeRealms();
+
+  size_t numDebuggeeRealms() const {
+    return numDebuggeeRealms_;
+  }
+
   /* Locale-specific callbacks for string conversion. */
   js::MainThreadData<const JSLocaleCallbacks*> localeCallbacks;
 
