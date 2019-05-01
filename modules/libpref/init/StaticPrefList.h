@@ -2366,6 +2366,12 @@ VARCACHE_PREF(
   uint32_t, 32
 )
 
+VARCACHE_PREF(
+  "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
+   browser_contentblocking_rejecttrackers_control_center_ui_enabled,
+  bool, false
+)
+
 // Annotate trackers using the strict list. If set to false, the basic list will
 // be used instead.
 #ifdef EARLY_BETA_OR_EARLIER

@@ -3404,7 +3404,6 @@ class nsContentUtils {
   static bool sBypassCSSOMOriginCheck;
 #endif
   static int32_t sBytecodeCacheStrategy;
-  static bool sAntiTrackingControlCenterUIEnabled;
 
   class UserInteractionObserver;
   static UserInteractionObserver* sUserInteractionObserver;
