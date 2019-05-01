@@ -3103,7 +3103,7 @@ impl PicturePrimitive {
 
                 PictureSurface::RenderTask(render_task_id)
             }
-            PictureCompositeMode::MixBlend(..) => {
+            PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {
                 let uv_rect_kind = calculate_uv_rect_kind(
                     &pic_rect,
                     &transform,
@@ -3193,6 +3193,7 @@ impl PicturePrimitive {
                 frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
+            PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) => {
                 // The SplitComposite shader used for 3d contexts doesn't snap
                 // to pixels, so we shouldn't snap our uv coordinates either.

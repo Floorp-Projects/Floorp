@@ -2111,4 +2111,13 @@ impl Gl for GlesFns {
             self.ffi_gl_.ProvokingVertexANGLE(mode);
         }
     }
+
+    // GL_KHR_blend_equation_advanced
+    fn blend_barrier_khr(&self) {
+        if self.ffi_gl_.BlendBarrierKHR.is_loaded() {
+            unsafe {
+                self.ffi_gl_.BlendBarrierKHR();
+            }
+        }
+    }
 }

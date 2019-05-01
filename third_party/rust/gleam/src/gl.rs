@@ -568,6 +568,8 @@ declare_gl_apis! {
     fn test_fence_apple(&self, fence: GLuint);
     fn test_object_apple(&self, object: GLenum, name: GLuint) -> GLboolean;
     fn finish_object_apple(&self, object: GLenum, name: GLuint);
+    // GL_KHR_blend_equation_advanced
+    fn blend_barrier_khr(&self);
 
     // GL_ARB_blend_func_extended
     fn bind_frag_data_location_indexed(
