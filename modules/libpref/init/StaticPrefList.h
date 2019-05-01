@@ -2430,6 +2430,14 @@ VARCACHE_PREF(
   int32_t, 1000
 )
 
+// Time limit, in milliseconds, for EventStateManager::IsHandlingUserInput().
+// Used to detect long running handlers of user-generated events.
+VARCACHE_PREF(
+  "dom.event.handling-user-input-time-limit",
+   dom_event_handling_user_input_time_limit,
+  uint32_t, 1000
+)
+
 // Password protection
 VARCACHE_PREF(
   "browser.safebrowsing.passwords.enabled",
