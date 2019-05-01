@@ -3188,10 +3188,6 @@ class nsContentUtils {
    */
   static bool GetUserIsInteracting();
 
-  // Check pref "dom.script_loader.bytecode_cache.strategy" to see which
-  // heuristic strategy should be used to trigger the caching of the bytecode.
-  static int32_t BytecodeCacheStrategy() { return sBytecodeCacheStrategy; }
-
   // Alternate data MIME type used by the ScriptLoader to register and read
   // bytecode out of the nsCacheInfoChannel.
   static nsCString& JSBytecodeMimeType() { return *sJSBytecodeMimeType; }
@@ -3403,7 +3399,6 @@ class nsContentUtils {
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
-  static int32_t sBytecodeCacheStrategy;
 
   class UserInteractionObserver;
   static UserInteractionObserver* sUserInteractionObserver;
