@@ -258,12 +258,12 @@ class UrlbarController {
     if (this.view.isOpen && executeAction) {
       let queryContext = this._lastQueryContext;
       if (queryContext) {
-        let handled = this.view.oneOffSearchButtons.handleKeyPress(
+        this.view.oneOffSearchButtons.handleKeyPress(
           event,
           queryContext.results.length,
           this.view.allowEmptySelection,
           queryContext.searchString);
-        if (handled) {
+        if (event.defaultPrevented) {
           return;
         }
       }
