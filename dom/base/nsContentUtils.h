@@ -3188,13 +3188,6 @@ class nsContentUtils {
    */
   static bool GetUserIsInteracting();
 
-  // Check pref "dom.placeholder.show_on_focus" to see
-  // if we want to show the placeholder inside input elements
-  // when they have focus.
-  static bool ShowInputPlaceholderOnFocus() {
-    return sShowInputPlaceholderOnFocus;
-  }
-
   // Check pref "browser.autofocus" to see if we want to enable autofocusing
   // elements when the page requests it.
   static bool AutoFocusEnabled() { return sAutoFocusEnabled; }
@@ -3415,7 +3408,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sShowInputPlaceholderOnFocus;
   static bool sAutoFocusEnabled;
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;

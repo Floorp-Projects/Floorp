@@ -5379,9 +5379,6 @@ pref("io.activity.enabled", false);
 // to take effect.
 pref("jsloader.shareGlobal", true);
 
-// Whether we should show the placeholder when the element is focused but empty.
-pref("dom.placeholder.show_on_focus", true);
-
 // WebVR is enabled by default in beta and release for Windows and for all
 // platforms in nightly and aurora.
 #if defined(XP_WIN) || defined(XP_MACOSX) || !defined(RELEASE_OR_BETA)

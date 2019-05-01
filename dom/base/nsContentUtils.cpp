@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
 bool nsContentUtils::sAutoFocusEnabled = true;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
@@ -613,9 +612,6 @@ nsresult nsContentUtils::Init() {
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
-
-  Preferences::AddBoolVarCache(&sShowInputPlaceholderOnFocus,
-                               "dom.placeholder.show_on_focus", true);
 
   Preferences::AddBoolVarCache(&sAutoFocusEnabled, "browser.autofocus", true);
 
