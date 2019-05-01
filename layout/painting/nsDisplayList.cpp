@@ -7803,10 +7803,15 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
       frame &&
       frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
 
+  bool shouldRound = true;
+
   // An SVG frame should not have its translation rounded.
   // Note it's possible that the SVG frame doesn't have an SVG
   // transform but only has a CSS transform.
-  bool shouldRound = !(frame && frame->IsFrameOfType(nsIFrame::eSVG));
+  if (frame && frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
+      !frame->IsSVGOuterSVGAnonChildFrame()) {
+    shouldRound = false;
+  }
 
   /* Transformed frames always have a transform, or are preserving 3d (and might
    * still have perspective!) */
