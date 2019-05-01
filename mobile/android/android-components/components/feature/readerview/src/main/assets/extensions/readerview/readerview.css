@@ -29,6 +29,18 @@
   color: #eeeeee;
 }
 
+.mozac-readerview-body.light * {
+  color: #222222;
+}
+
+.mozac-readerview-body.sepia * {
+  color: #5b4636;
+}
+
+.mozac-readerview-body.dark * {
+  color: #eeeeee;
+}
+
 .mozac-readerview-body.sans-serif * {
   font-family: sans-serif !important;
 }
@@ -97,6 +109,10 @@
 .mozac-readerview-body.dark > .container > .content blockquote {
   color: #aaaaaa !important;
   border-left-color: #777777 !important;
+}
+
+.mozac-readerview-body > .container > hr {
+  margin: 0px;
 }
 
 .mozac-readerview-body > .container > .header {
