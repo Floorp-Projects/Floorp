@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sIsUnprefixedFullscreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullscreenOnly = true;
 bool nsContentUtils::sIsCutCopyAllowed = true;
 bool nsContentUtils::sIsUpgradableDisplayContentPrefEnabled = false;
@@ -631,9 +630,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sIsUnprefixedFullscreenApiEnabled,
-                               "full-screen-api.unprefix.enabled");
 
   Preferences::AddBoolVarCache(&sTrustedFullscreenOnly,
                                "full-screen-api.allow-trusted-requests-only");

@@ -10664,7 +10664,7 @@ bool Document::IsUnprefixedFullscreenEnabled(JSContext* aCx,
                                              JSObject* aObject) {
   MOZ_ASSERT(NS_IsMainThread());
   return nsContentUtils::IsSystemCaller(aCx) ||
-         nsContentUtils::IsUnprefixedFullscreenApiEnabled();
+         StaticPrefs::full_screen_api_unprefix_enabled();
 }
 
 static bool HasFullscreenSubDocument(Document* aDoc) {
