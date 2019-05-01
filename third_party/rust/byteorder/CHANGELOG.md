@@ -1,3 +1,46 @@
+1.3.0
+=====
+This new minor release now enables `i128` support automatically on Rust
+compilers that support 128-bit integers. The `i128` feature is now a no-op, but
+continues to exist for backward compatibility purposes. The crate continues to
+maintain compatibility with Rust 1.12.0.
+
+This release also deprecates the `ByteOrder` trait methods
+`read_f32_into_unchecked` and `read_f64_into_unchecked` in favor of
+`read_f32_into` and `read_f64_into`. This was an oversight from the 1.2 release
+where the corresponding methods on `ReadBytesExt` were deprecated.
+
+`quickcheck` and `rand` were bumped to `0.8` and `0.6`, respectively.
+
+A few small documentation related bugs have been fixed.
+
+
+1.2.7
+=====
+This patch release excludes some CI files from the crate release and updates
+the license field to use `OR` instead of `/`.
+
+
+1.2.6
+=====
+This patch release fixes some test compilation errors introduced by an
+over-eager release of 1.2.5.
+
+
+1.2.5
+=====
+This patch release fixes some typos in the docs, adds doc tests to methods on
+`WriteByteExt` and bumps the quickcheck dependency to `0.7`.
+
+
+1.2.4
+=====
+This patch release adds support for 48-bit integers by adding the following
+methods to the `ByteOrder` trait: `read_u48`, `read_i48`, `write_u48` and
+`write_i48`. Corresponding methods have been added to the `ReadBytesExt` and
+`WriteBytesExt` traits as well.
+
+
 1.2.3
 =====
 This patch release removes the use of `feature(i128_type)` from byteorder,
