@@ -548,6 +548,27 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Ignore the heuristics of the bytecode cache, and always record on the first
+// visit. (used for testing purposes).
+
+// Choose one strategy to use to decide when the bytecode should be encoded and
+// saved. The following strategies are available right now:
+//   * -2 : (reader mode) The bytecode cache would be read, but it would never
+//          be saved.
+//   * -1 : (eager mode) The bytecode would be saved as soon as the script is
+//          seen for the first time, independently of the size or last access
+//          time.
+//   *  0 : (default) The bytecode would be saved in order to minimize the
+//          page-load time.
+//
+// Other values might lead to experimental strategies. For more details, have a
+// look at: ScriptLoader::ShouldCacheBytecode function.
+VARCACHE_PREF(
+  "dom.script_loader.bytecode_cache.strategy",
+   dom_script_loader_bytecode_cache_strategy,
+  int32_t, 0
+)
+
 // IMPORTANT: Keep this in condition in sync with all.js. The value
 // of MOZILLA_OFFICIAL is different between full and artifact builds, so without
 // it being specified there, dump is disabled in artifact builds (see Bug 1490412).
