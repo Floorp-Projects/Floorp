@@ -11,6 +11,7 @@
 #include "BaseMediaResource.h"
 #include "MediaShutdownManager.h"
 #include "mozilla/StaticPrefs.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -458,8 +459,9 @@ MediaStatistics ChannelMediaDecoder::GetStatistics(
 bool ChannelMediaDecoder::ShouldThrottleDownload(
     const MediaStatistics& aStats) {
   // We throttle the download if either the throttle override pref is set
-  // (so that we can always throttle in Firefox on mobile) or if the download
-  // is fast enough that there's no concern about playback being interrupted.
+  // (so that we always throttle at the readahead limit on mobile if using
+  // a cellular network) or if the download is fast enough that there's no
+  // concern about playback being interrupted.
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(GetStateMachine(), false);
 
@@ -472,8 +474,9 @@ bool ChannelMediaDecoder::ShouldThrottleDownload(
     return false;
   }
 
-  if (Preferences::GetBool("media.throttle-regardless-of-download-rate",
-                           false)) {
+  if (OnCellularConnection() &&
+      Preferences::GetBool(
+          "media.throttle-cellular-regardless-of-download-rate", false)) {
     return true;
   }
 
