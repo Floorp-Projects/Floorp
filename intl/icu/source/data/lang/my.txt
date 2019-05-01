@@ -580,7 +580,7 @@ my{
         REVISED{"ပြန်လည်စီစစ်ထားသော ရေးထုံး"}
         SCOTLAND{"စကော့ စံ အင်္ဂလိပ်"}
     }
-    Version{"2.1.48.36"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — အားလုံး"}
         category-list{"{0} − {1}"}

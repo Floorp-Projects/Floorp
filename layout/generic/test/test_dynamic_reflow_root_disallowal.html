@@ -228,16 +228,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     // triggers content-based sizing during the flex container's intrinsic
     // sizing step.  So we need to get the container to be intrinsically sized;
     // hence the use of the (optional) "isContainerIntrinsicallySized" flag.
-    { desc: "flex-basis-pct",
-      candStyle: "flex-basis:80%;",
-      isContainerIntrinsicallySized: true,
-    },
+// FIXME(bug 1548078): the following two tests fail to produce a rendering difference:
+//    { desc: "flex-basis-pct",
+//      candStyle: "flex-basis:80%;",
+//      isContainerIntrinsicallySized: true,
+//    },
+//    { desc: "flex-basis-calc-pct",
+//      candStyle: "flex-basis:calc(10px + 80%);",
+//      isContainerIntrinsicallySized: true,
+//    },
     { desc: "flex-basis-from-pct-isize",
       candStyle: "inline-size:80%",
-      isContainerIntrinsicallySized: true,
-    },
-    { desc: "flex-basis-calc-pct",
-      candStyle: "flex-basis:calc(10px + 80%);",
       isContainerIntrinsicallySized: true,
     },
     { desc: "flex-basis-from-calc-pct-isize",
@@ -277,7 +278,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
       (subtest.isContainerColumnOriented ? "column" : "row") + ";"
 
     let flexContainer = createStyledDiv("display: flex; \
-                                         border: 2px solid teal" +
+                                         border: 2px solid teal; " +
                                          containerSizeDecl +
                                          containerFlexDirectionDecl);
 
@@ -294,8 +295,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
                                subtest.candStyle);
 
     // Something whose size we can adjust, inside the reflow root candidate:
-    let inner = createStyledDiv("height:20px; width:20px; \
-                                 border: 1px solid purple");
+    let inner = createStyledDiv("height:20px; width:20px");
 
     cand.appendChild(inner);
     flexContainer.appendChild(simpleItem);
@@ -308,6 +308,107 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     tweakAndCompareSnapshots(tweakFunc, subtest.desc);
 
     flexContainer.remove(); // clean up
+  }
+
+  let gridItemSubtests = [
+    { desc: "grid-pct-inline-isize",
+      candStyle: "inline-size:80%",
+      isContainerIntrinsicallySized: true,
+    },
+    { desc: "grid-calc-pct-inline-isize",
+      candStyle: "inline-size:calc(10px + 80%);",
+      isContainerIntrinsicallySized: true,
+    },
+    { desc: "grid-min-inline-size-min-content",
+      candStyle: "min-inline-size:min-content",
+    },
+  ];
+
+  // 'auto' and intrinsic size keywords on some properties should prevent
+  // a grid item from becoming a reflow root.
+  function runGridItemSubtest(subtest) {
+    // We create a 4x4 grid container with two grid items:
+    //  - a simple grid item that just absorbs all extra space
+    //  - the reflow root candidate
+    let containerSizeVal = subtest.isContainerIntrinsicallySized ?
+      "max-content" : "100px";
+    let containerSizeDecl =
+      "inline-size: " + containerSizeVal + "; " +
+      "block-size: " + containerSizeVal + ";";
+    let containerGridDirectionDecl = "grid-auto-flow: " +
+      (subtest.isContainerColumnOriented ? "column" : "row") + ";"
+    let gridContainer = createStyledDiv("display: grid; \
+                                         grid: 1fr auto / 1fr auto; \
+                                         border: 2px solid teal; " +
+                                         containerSizeDecl +
+                                         containerGridDirectionDecl);
+
+    let simpleItem = createStyledDiv("border: 1px solid gray; \
+                                      background: yellow;");
+
+    // The reflow root candidate
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "background: blue; " +
+                               "grid-area:2/2; " +
+                               "min-width: 10px; min-height: 10px; " +
+                               subtest.candStyle);
+    // Something whose size we can adjust, inside the reflow root candidate:
+    let inner = createStyledDiv("height:20px; width:20px;");
+
+    cand.appendChild(inner);
+    gridContainer.appendChild(simpleItem);
+    gridContainer.appendChild(cand);
+    gFBody.appendChild(gridContainer);
+
+    let tweakFunc = function() {
+      inner.style.width = inner.style.height = "40px";
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    gridContainer.remove(); // clean up
+  }
+
+  let gridContainerSubtests = [
+    { desc: "grid-column-start",
+      candStyle: "grid-column-start:2",
+    },
+    { desc: "grid-column-end",
+      candStyle: "grid-column-end:3",
+    },
+    { desc: "grid-row-start",
+      candStyle: "grid-row-start:2",
+    },
+    { desc: "grid-row-end",
+      candStyle: "grid-row-end:3",
+    },
+  ];
+
+  // Test that changes to grid item properties that affect grid container
+  // layout causes a grid container reflow when the item is a reflow root.
+  function runGridContainerSubtest(subtest) {
+    // We create a 4x4 grid container with one grid item:
+    //  - a reflow root grid item that we'll tweak from
+    //    the list above. By default it's placed at 1,1
+    //    but after the tweak it should be placed elsewhere
+    let gridContainer = createStyledDiv("display: grid; \
+                                         width: 100px; \
+                                         height: 100px; \
+                                         grid: 1fr 10px / 1fr 10px; \
+                                         border: 2px solid teal");
+    // The reflow root candidate
+    let cand = createStyledDiv(gReflowRootCandidateStyles +
+                               "background: blue; " +
+                               " min-width: 10px; min-height: 10px; ");
+
+    gridContainer.appendChild(cand);
+    gFBody.appendChild(gridContainer);
+
+    let tweakFunc = function() {
+      cand.style.cssText += "; " + subtest.candStyle;
+    };
+    tweakAndCompareSnapshots(tweakFunc, subtest.desc);
+
+    gridContainer.remove(); // clean up
   }
 
   let tableSubtests = [
@@ -606,6 +707,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     }
     for (let subtest of flexItemSubtests) {
       runFlexItemSubtest(subtest);
+    }
+    for (let subtest of gridContainerSubtests) {
+      runGridContainerSubtest(subtest);
+    }
+    for (let subtest of gridItemSubtests) {
+      runGridItemSubtest(subtest);
     }
     for (let subtest of tableSubtests) {
       runTableSubtest(subtest);

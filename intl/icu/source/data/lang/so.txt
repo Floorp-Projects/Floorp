@@ -379,7 +379,7 @@ so{
             tibt{"Godka Tirada Tibetan"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} dhamaan"}
         category-list{"{0}: {1}"}

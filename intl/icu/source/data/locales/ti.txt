@@ -202,7 +202,7 @@ ti{
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"2.1.47.82"}
+    Version{"2.1.49.82"}
     calendar{
         generic{
             DateTimePatterns{

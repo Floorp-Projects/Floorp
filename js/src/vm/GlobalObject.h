@@ -855,7 +855,7 @@ class GlobalObject : public NativeObject {
                                       Handle<GlobalObject*> global,
                                       const JSFunctionSpec* builtins);
 
-  typedef js::Vector<js::ReadBarriered<js::Debugger*>, 0, js::SystemAllocPolicy>
+  typedef js::Vector<js::WeakHeapPtr<js::Debugger*>, 0, js::SystemAllocPolicy>
       DebuggerVector;
 
   /*

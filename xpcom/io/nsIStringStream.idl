@@ -62,5 +62,8 @@ interface nsIStringInputStream : nsIInputStream
     [noscript] void shareData(in string data, in long dataLen);
 
     [noscript, notxpcom]
-    size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
+    size_t SizeOfIncludingThisIfUnshared(in MallocSizeOf aMallocSizeOf);
+
+    [noscript, notxpcom]
+    size_t SizeOfIncludingThisEvenIfShared(in MallocSizeOf aMallocSizeOf);
 };

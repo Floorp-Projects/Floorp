@@ -856,7 +856,7 @@ fa{
         SAAHO{"ساهویی"}
         SCOTLAND{"انگلیسی معیار اسکاتلند"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — همه"}
         category-list{"{0}: {1}"}
