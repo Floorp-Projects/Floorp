@@ -286,11 +286,13 @@ impl Wrench {
     }
 
     pub fn set_page_zoom(&mut self, zoom_factor: ZoomFactor) {
-        self.page_zoom_factor = zoom_factor;
-        let mut txn = Transaction::new();
-        txn.set_page_zoom(self.page_zoom_factor);
-        self.api.send_transaction(self.document_id, txn);
-        self.set_title("");
+        if self.page_zoom_factor.get() != zoom_factor.get() {
+            self.page_zoom_factor = zoom_factor;
+            let mut txn = Transaction::new();
+            txn.set_page_zoom(self.page_zoom_factor);
+            self.api.send_transaction(self.document_id, txn);
+            self.set_title("");
+        }
     }
 
     pub fn layout_simple_ascii(

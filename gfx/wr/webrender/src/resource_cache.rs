@@ -1614,12 +1614,6 @@ impl ResourceCache {
 
         // Apply any updates of new / updated images (incl. blobs) to the texture cache.
         self.update_texture_cache(gpu_cache);
-        render_tasks.prepare_for_render();
-        self.cached_render_tasks.update(
-            gpu_cache,
-            &mut self.texture_cache,
-            render_tasks,
-        );
     }
 
     fn rasterize_missing_blob_images(&mut self) {
