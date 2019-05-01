@@ -7,14 +7,16 @@ package mozilla.components.feature.accounts
 import android.content.Context
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.FxaAccountManager
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.FxaNetworkException
 import mozilla.components.service.fxa.SharedPrefAccountStorage
+import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -38,7 +40,7 @@ class TestableFxaAccountManager(
     scopes: Array<String>,
     accountStorage: AccountStorage = SharedPrefAccountStorage(context),
     val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, scopes, null) {
+) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.MOBILE, listOf()), null) {
     override fun createAccount(config: Config): OAuthAccount {
         return block()
     }

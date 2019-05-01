@@ -14,6 +14,7 @@ import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
 import mozilla.appservices.fxaclient.FxaException.Unauthorized as Unauthorized
 
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
@@ -25,8 +26,9 @@ typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.Persist
  * FirefoxAccount represents the authentication state of a client.
  */
 @Suppress("TooManyFunctions")
-class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : OAuthAccount {
-    private val logger = Logger("FirefoxAccount")
+class FirefoxAccount internal constructor(
+    private val inner: InternalFxAcct
+) : OAuthAccount {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO) + job
 
@@ -39,7 +41,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
      * This wrapper exists to facilitate that flow of events.
      */
     private class WrappingPersistenceCallback : PersistCallback {
-        private val logger = Logger("StatePersistenceCallback")
+        private val logger = Logger("WrappingPersistenceCallback")
         @Volatile
         private var persistenceCallback: StatePersistenceCallback? = null
 
@@ -61,6 +63,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
     }
 
     private var persistCallback = WrappingPersistenceCallback()
+    private val deviceConstellation = FxaDeviceConstellation(inner, scope)
 
     init {
         inner.registerPersistCallback(persistCallback)
@@ -86,6 +89,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
     ) : this(InternalFxAcct(config, persistCallback))
 
     override fun close() {
+        deviceConstellation.stopPeriodicRefresh()
         job.cancel()
         inner.close()
     }
@@ -171,6 +175,10 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
         return scope.async {
             inner.getAccessToken(singleScope).into()
         }
+    }
+
+    override fun deviceConstellation(): DeviceConstellation {
+        return deviceConstellation
     }
 
     /**

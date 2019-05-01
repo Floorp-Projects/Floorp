@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.fxa
+package mozilla.components.service.fxa.manager
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -13,10 +14,19 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.concept.sync.DeviceEvent
+import mozilla.components.concept.sync.DeviceType
+import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
 import mozilla.components.concept.sync.SyncManager
+import mozilla.components.service.fxa.AccountStorage
+import mozilla.components.service.fxa.Config
+import mozilla.components.service.fxa.FirefoxAccount
+import mozilla.components.service.fxa.FxaException
+import mozilla.components.service.fxa.SharedPrefAccountStorage
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext
 
@@ -27,53 +37,6 @@ import mozilla.components.support.base.observer.ObserverRegistry
 import java.io.Closeable
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
-
-enum class AccountState {
-    Start,
-    NotAuthenticated,
-    AuthenticatedNoProfile,
-    AuthenticatedWithProfile
-}
-
-/**
- * Base class for account manager state machine events.
- * Events aren't a simple enum class because we might want to pass data along with some of the events.
- */
-internal sealed class Event {
-    override fun toString(): String {
-        // For a better logcat experience.
-        return this.javaClass.simpleName
-    }
-
-    internal object Init : Event()
-
-    object AccountNotFound : Event()
-    object AccountRestored : Event()
-
-    object Authenticate : Event()
-    data class Authenticated(val code: String, val state: String) : Event() {
-        override fun toString(): String {
-            // data classes define their own toString, so we override it here as well as in the base
-            // class to avoid exposing 'code' and 'state' in logs.
-            return this.javaClass.simpleName
-        }
-    }
-    object FetchProfile : Event()
-    object FetchedProfile : Event()
-
-    object FailedToAuthenticate : Event()
-    object FailedToFetchProfile : Event()
-
-    object Logout : Event()
-
-    data class Pair(val pairingUrl: String) : Event() {
-        override fun toString(): String {
-            // data classes define their own toString, so we override it here as well as in the base
-            // class to avoid exposing the 'pairingUrl' in logs.
-            return this.javaClass.simpleName
-        }
-    }
-}
 
 /**
  * Propagated via [AccountObserver.onError] if we fail to load a locally stored account during
@@ -102,6 +65,11 @@ private interface OAuthObserver {
 }
 
 /**
+ * Helper data class that wraps common device initialization parameters.
+ */
+data class DeviceTuple(val name: String, val type: DeviceType, val capabilities: List<DeviceCapability>)
+
+/**
  * An account manager which encapsulates various internal details of an account lifecycle and provides
  * an observer interface along with a public API for interacting with an account.
  * The internal state machine abstracts over state space as exposed by the fxaclient library, not
@@ -112,12 +80,14 @@ private interface OAuthObserver {
  * @param context A [Context] instance that's used for internal messaging and interacting with local storage.
  * @param config A [Config] used for account initialization.
  * @param scopes A list of scopes which will be requested during account authentication.
+ * @param deviceTuple A description of the current device (name, type, capabilities).
  */
 @Suppress("TooManyFunctions")
 open class FxaAccountManager(
     private val context: Context,
     private val config: Config,
     private val scopes: Array<String>,
+    private val deviceTuple: DeviceTuple,
     syncManager: SyncManager? = null
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logTag = "FirefoxAccountStateMachine"
@@ -203,6 +173,9 @@ open class FxaAccountManager(
     @Volatile private var state = AccountState.Start
     private val eventQueue = ConcurrentLinkedQueue<Event>()
 
+    private val deviceEventObserverRegistry = ObserverRegistry<DeviceEventsObserver>()
+    private val deviceEventsIntegration = DeviceEventsIntegration(deviceEventObserverRegistry)
+
     /**
      * Call this after registering your observers, and before interacting with this class.
      */
@@ -256,6 +229,10 @@ open class FxaAccountManager(
 
     fun logoutAsync(): Deferred<Unit> {
         return processQueueAsync(Event.Logout)
+    }
+
+    fun registerForDeviceEvents(observer: DeviceEventsObserver, owner: LifecycleOwner, autoPause: Boolean) {
+        deviceEventObserverRegistry.register(observer, owner, autoPause)
     }
 
     override fun close() {
@@ -389,12 +366,24 @@ open class FxaAccountManager(
 
                         account.completeOAuthFlow(via.code, via.state).await()
 
+                        account.deviceConstellation().register(deviceEventsIntegration)
+
+                        // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
+                        account.deviceConstellation().initDeviceAsync(
+                            deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
+                        ).await()
+                        account.deviceConstellation().startPeriodicRefresh()
+
                         notifyObservers { onAuthenticated(account) }
 
                         Event.FetchProfile
                     }
                     Event.AccountRestored -> {
                         account.registerPersistenceCallback(statePersistenceCallback)
+                        account.deviceConstellation().register(deviceEventsIntegration)
+
+                        account.deviceConstellation().ensureCapabilitiesAsync().await()
+                        account.deviceConstellation().startPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }
 
@@ -445,6 +434,22 @@ open class FxaAccountManager(
     @VisibleForTesting
     open fun getAccountStorage(): AccountStorage {
         return SharedPrefAccountStorage(context)
+    }
+
+    /**
+     * In the future, this could be an internal account-related events processing layer.
+     * E.g., once we grow events such as "please logout".
+     * For now, we just pass everything downstream as-is.
+     */
+    private class DeviceEventsIntegration(
+        private val listenerRegistry: ObserverRegistry<DeviceEventsObserver>
+    ) : DeviceEventsObserver {
+        private val logger = Logger("DeviceEventsIntegration")
+
+        override fun onEvents(events: List<DeviceEvent>) {
+            logger.info("Received events, notifying listeners")
+            listenerRegistry.notifyObservers { onEvents(events) }
+        }
     }
 
     private class SyncManagerIntegration(private val syncManager: SyncManager) : AccountObserver {

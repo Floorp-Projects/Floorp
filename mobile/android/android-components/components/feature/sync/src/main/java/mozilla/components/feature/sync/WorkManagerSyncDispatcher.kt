@@ -146,6 +146,11 @@ class WorkManagerSyncDispatcher(
         // Periodic interval must be at least PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS,
         // e.g. not more frequently than 15 minutes.
         return PeriodicWorkRequestBuilder<WorkManagerSyncWorker>(period, unit)
+                .setConstraints(
+                        Constraints.Builder()
+                                .setRequiredNetworkType(NetworkType.CONNECTED)
+                                .build()
+                )
                 .setInputData(data)
                 .addTag(SyncWorkerTag.Common.name)
                 .addTag(SyncWorkerTag.Periodic.name)

@@ -11,9 +11,16 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.DeviceConstellation
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.service.fxa.manager.AccountState
+import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.manager.Event
+import mozilla.components.service.fxa.manager.FailedToLoadAccountException
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -44,7 +51,7 @@ class TestableFxaAccountManager(
     scopes: Array<String>,
     private val storage: AccountStorage,
     val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, scopes, null) {
+) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.UNKNOWN, listOf()), null) {
     override fun createAccount(config: Config): OAuthAccount {
         return block()
     }
@@ -120,55 +127,8 @@ class FxaAccountManagerTest {
     fun `restored account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile("testUid", "test@example.com", null, "Test Profile")
-        val account = object : OAuthAccount {
-            var persistenceCallback: StatePersistenceCallback? = null
-
-            override fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String> {
-                fail()
-                return CompletableDeferred()
-            }
-
-            override fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String> {
-                fail()
-                return CompletableDeferred()
-            }
-
-            override fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
-                return CompletableDeferred(profile)
-            }
-
-            override fun getProfile(): Deferred<Profile> {
-                return CompletableDeferred(profile)
-            }
-
-            override fun completeOAuthFlow(code: String, state: String): Deferred<Unit> {
-                fail()
-                return CompletableDeferred()
-            }
-
-            override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
-                fail()
-                return CompletableDeferred()
-            }
-
-            override fun getTokenServerEndpointURL(): String {
-                fail()
-                return ""
-            }
-
-            override fun registerPersistenceCallback(callback: StatePersistenceCallback) {
-                persistenceCallback = callback
-            }
-
-            override fun toJSONString(): String {
-                fail()
-                return ""
-            }
-
-            override fun close() {
-                fail()
-            }
-        }
+        val constellation: DeviceConstellation = mock()
+        val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
             context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage
@@ -176,6 +136,7 @@ class FxaAccountManagerTest {
             account
         }
 
+        `when`(constellation.ensureCapabilitiesAsync()).thenReturn(unitCompletedDeferrable())
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
@@ -184,6 +145,13 @@ class FxaAccountManagerTest {
 
         // Assert that persistence callback is set.
         assertNotNull(account.persistenceCallback)
+
+        // Assert that ensureCapabilities fired, but not the device initialization (since we're restoring).
+        verify(constellation).ensureCapabilitiesAsync()
+        verify(constellation, never()).initDeviceAsync(any(), any(), any())
+
+        // Assert that periodic account refresh started.
+        verify(constellation).startPeriodicRefresh()
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -194,7 +162,8 @@ class FxaAccountManagerTest {
     fun `newly authenticated account state persistence`() = runBlocking {
         val accountStorage: AccountStorage = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
-        val account = StatePersistenceTestableAccount(profile)
+        val constellation: DeviceConstellation = mock()
+        val account = StatePersistenceTestableAccount(profile, constellation)
         val accountObserver: AccountObserver = mock()
         // We are not using the "prepareHappy..." helper method here, because our account isn't a mock,
         // but an actual implementation of the interface.
@@ -206,6 +175,8 @@ class FxaAccountManagerTest {
         ) {
             account
         }
+
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
 
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
@@ -223,6 +194,10 @@ class FxaAccountManagerTest {
         runBlocking {
             assertEquals("auth://url", manager.beginAuthenticationAsync().await())
         }
+
+        // Assert that periodic account refresh didn't start after kicking off auth.
+        verify(constellation, never()).startPeriodicRefresh()
+
         runBlocking {
             manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
         }
@@ -230,12 +205,19 @@ class FxaAccountManagerTest {
         // Assert that persistence callback is set.
         assertNotNull(account.persistenceCallback)
 
+        // Assert that periodic account refresh started after finishing auth.
+        verify(constellation).startPeriodicRefresh()
+
+        // Assert that initDevice fired, but not ensureCapabilities (since we're initing a new account).
+        verify(constellation).initDeviceAsync(any(), any(), any())
+        verify(constellation, never()).ensureCapabilitiesAsync()
+
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
         verify(accountStorage).write("test")
     }
 
-    class StatePersistenceTestableAccount(private val profile: Profile) : OAuthAccount {
+    class StatePersistenceTestableAccount(private val profile: Profile, private val constellation: DeviceConstellation) : OAuthAccount {
         var persistenceCallback: StatePersistenceCallback? = null
 
         override fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String> {
@@ -255,12 +237,7 @@ class FxaAccountManagerTest {
         }
 
         override fun completeOAuthFlow(code: String, state: String): Deferred<Unit> {
-            // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-            // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-            // So we manually complete it here!
-            val unitDeferred = CompletableDeferred<Unit>()
-            unitDeferred.complete(Unit)
-            return unitDeferred
+            return unitCompletedDeferrable()
         }
 
         override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
@@ -275,6 +252,10 @@ class FxaAccountManagerTest {
 
         override fun registerPersistenceCallback(callback: StatePersistenceCallback) {
             persistenceCallback = callback
+        }
+
+        override fun deviceConstellation(): DeviceConstellation {
+            return constellation
         }
 
         override fun toJSONString(): String {
@@ -367,11 +348,14 @@ class FxaAccountManagerTest {
     fun `with persisted account and profile`() = runBlocking {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
         val profile = Profile(
-                "testUid", "test@example.com", null, "Test Profile")
+            "testUid", "test@example.com", null, "Test Profile")
         `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.ensureCapabilitiesAsync()).thenReturn(unitCompletedDeferrable())
 
         val manager = TestableFxaAccountManager(
                 context,
@@ -424,6 +408,7 @@ class FxaAccountManagerTest {
     @Test
     fun `happy authentication and profile flow`() {
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountStorage = mock<AccountStorage>()
         val accountObserver: AccountObserver = mock()
@@ -439,6 +424,9 @@ class FxaAccountManagerTest {
         }
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
 
         runBlocking {
             manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
@@ -459,6 +447,7 @@ class FxaAccountManagerTest {
     @Test
     fun `happy pairing authentication and profile flow`() {
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountStorage = mock<AccountStorage>()
         val accountObserver: AccountObserver = mock()
@@ -474,6 +463,9 @@ class FxaAccountManagerTest {
         }
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
 
         runBlocking {
             manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
@@ -495,10 +487,13 @@ class FxaAccountManagerTest {
     fun `unhappy authentication flow`() {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountObserver: AccountObserver = mock()
         val fxaException = FxaNetworkException("network problem")
         val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, fxaException)
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -520,6 +515,7 @@ class FxaAccountManagerTest {
 
         // Try again, without any network problems this time.
         `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
 
         runBlocking {
             assertEquals("auth://url", manager.beginAuthenticationAsync().await())
@@ -548,10 +544,13 @@ class FxaAccountManagerTest {
     fun `unhappy pairing authentication flow`() {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
         val accountObserver: AccountObserver = mock()
         val fxaException = FxaNetworkException("network problem")
         val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, fxaException)
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -573,6 +572,7 @@ class FxaAccountManagerTest {
 
         // Try again, without any network problems this time.
         `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
 
         runBlocking {
             assertEquals("auth://url", manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await())
@@ -601,19 +601,17 @@ class FxaAccountManagerTest {
     fun `unhappy profile fetching flow`() {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
 
         val exceptionalProfile = CompletableDeferred<Profile>()
         val fxaException = FxaException("test exception")
         exceptionalProfile.completeExceptionally(fxaException)
 
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
         `when`(mockAccount.getProfile(anyBoolean())).thenReturn(exceptionalProfile)
         `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
@@ -691,12 +689,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
         `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
         `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
@@ -732,13 +725,7 @@ class FxaAccountManagerTest {
         exceptionalDeferred.completeExceptionally(fxaException)
         `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(exceptionalDeferred)
         `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(exceptionalDeferred)
-
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
@@ -759,4 +746,13 @@ class FxaAccountManagerTest {
 
         return manager
     }
+}
+
+// This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
+// and threads will deadlock since it'll never be resolved while state machine is waiting for it.
+// So we manually complete it here.
+fun unitCompletedDeferrable(): CompletableDeferred<Unit> {
+    val d = CompletableDeferred<Unit>()
+    d.complete(Unit)
+    return d
 }

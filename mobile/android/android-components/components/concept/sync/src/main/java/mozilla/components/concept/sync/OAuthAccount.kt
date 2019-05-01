@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package mozilla.components.concept.sync
 
 import kotlinx.coroutines.Deferred
@@ -17,6 +21,7 @@ class AuthException(type: AuthExceptionType) : java.lang.Exception(type.msg)
 /**
  * Facilitates testing consumers of FirefoxAccount.
  */
+@SuppressWarnings("TooManyFunctions")
 interface OAuthAccount : AutoCloseable {
     fun beginOAuthFlow(scopes: Array<String>, wantsKeys: Boolean): Deferred<String>
     fun beginPairingFlow(pairingUrl: String, scopes: Array<String>): Deferred<String>
@@ -26,6 +31,7 @@ interface OAuthAccount : AutoCloseable {
     fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
     fun getTokenServerEndpointURL(): String
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
+    fun deviceConstellation(): DeviceConstellation
     fun toJSONString(): String
 
     suspend fun authInfo(singleScope: String): AuthInfo {

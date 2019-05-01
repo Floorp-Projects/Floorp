@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.service.fxa.FxaAccountManager
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.FxaException
 import kotlin.coroutines.CoroutineContext
 
