@@ -303,14 +303,14 @@ raptor-tp6m-1-fenix:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-1
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=BrowserPerformanceTestActivity
 
 raptor-tp6m-1-refbrow:
@@ -762,14 +762,14 @@ raptor-tp6m-1-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-1
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-2-fenix-cold:
@@ -779,14 +779,14 @@ raptor-tp6m-2-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-2
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-3-fenix-cold:
@@ -796,14 +796,14 @@ raptor-tp6m-3-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-3
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-4-fenix-cold:
@@ -813,14 +813,14 @@ raptor-tp6m-4-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-4
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-5-fenix-cold:
@@ -830,14 +830,14 @@ raptor-tp6m-5-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-5
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-6-fenix-cold:
@@ -847,14 +847,14 @@ raptor-tp6m-6-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-6
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-7-fenix-cold:
@@ -864,14 +864,14 @@ raptor-tp6m-7-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-7
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-8-fenix-cold:
@@ -881,14 +881,14 @@ raptor-tp6m-8-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-8
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-9-fenix-cold:
@@ -898,14 +898,14 @@ raptor-tp6m-9-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-9
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-10-fenix-cold:
@@ -915,14 +915,14 @@ raptor-tp6m-10-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-10
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-11-fenix-cold:
@@ -932,14 +932,14 @@ raptor-tp6m-11-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-11
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-12-fenix-cold:
@@ -949,14 +949,14 @@ raptor-tp6m-12-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-12
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-13-fenix-cold:
@@ -966,14 +966,14 @@ raptor-tp6m-13-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-13
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-14-fenix-cold:
@@ -983,14 +983,14 @@ raptor-tp6m-14-fenix-cold:
     run-on-projects: ['try']
     e10s: true
     target:
-        index: project.mobile.fenix.v2.branch.master.latest.release-raptor.arm
+        index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
         name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-14
             - --app=fenix
-            - --binary-path=org.mozilla.fenix
+            - --binary-path=org.mozilla.fenix.raptor
             - --activity=browser.BrowserPerformanceTestActivity
 
 raptor-speedometer-firefox:
