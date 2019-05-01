@@ -1724,6 +1724,23 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
+  audit_activated:
+    bug_numbers:
+      - 1548241
+    description: >
+      Number of times accessibility audit was activated (with mouse or keyboard)
+      from the accessibility panel's toolbar. Keyed by the audit filter type
+      (e.g. "CONTRAST").
+    expires: "73"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - yzenevich@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.application:
   opened_count:
     bug_numbers:
