@@ -219,7 +219,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
                         CoroutineScope(Main).allowUndo(
                             view!!, getString(R.string.bookmark_deletion_snackbar_message, it.item.url.urlToHost()),
-                            getString(R.string.bookmark_undo_deletion)
+                            getString(R.string.bookmark_undo_deletion), { refreshBookmarks(components) }
                         ) {
                             components.core.bookmarksStorage.deleteNode(it.item.guid)
                             components.analytics.metrics.track(Event.RemoveBookmark)
@@ -292,7 +292,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
                 CoroutineScope(Main).allowUndo(
                     view!!, getString(R.string.bookmark_deletion_multiple_snackbar_message),
-                    getString(R.string.bookmark_undo_deletion)
+                    getString(R.string.bookmark_undo_deletion), { refreshBookmarks(components) }
                 ) {
                     deleteSelectedBookmarks(selectedBookmarks, components)
                     components.analytics.metrics.track(Event.RemoveBookmarks)
