@@ -228,6 +228,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef ANDROID
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "android", value)) {
+    return false;
+  }
+
 #ifdef JS_CODEGEN_ARM64
   value = BooleanValue(true);
 #else
