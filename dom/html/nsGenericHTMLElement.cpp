@@ -15,6 +15,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
@@ -1606,7 +1607,7 @@ nsresult nsGenericHTMLFormElement::BindToTree(Document* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      nsContentUtils::AutoFocusEnabled() && aDocument) {
+      StaticPrefs::browser_autofocus() && aDocument) {
     aDocument->SetAutoFocusElement(this);
   }
 
