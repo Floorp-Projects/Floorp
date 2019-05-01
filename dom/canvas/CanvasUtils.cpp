@@ -25,6 +25,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "WebGL2Context.h"
 
+#include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPermissionManager.h"
 #include "nsIObserverService.h"
@@ -112,14 +113,16 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   rv = thirdPartyUtil->IsThirdPartyURI(topLevelDocURI, docURI, &isThirdParty);
   NS_ENSURE_SUCCESS(rv, false);
   if (isThirdParty) {
-    nsAutoCString message;
+    nsAutoString message;
     message.AppendPrintf(
         "Blocked third party %s in page %s from extracting canvas data.",
         docURISpec.get(), topLevelDocURISpec.get());
     if (isScriptKnown) {
       message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
     }
-    nsContentUtils::LogMessageToConsole(message.get());
+    nsContentUtils::ReportToConsoleNonLocalized(
+        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
+        aDocument);
     return false;
   }
 
@@ -153,7 +156,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
       !EventStateManager::IsHandlingUserInput();
 
   if (isAutoBlockCanvas) {
-    nsAutoCString message;
+    nsAutoString message;
     message.AppendPrintf(
         "Blocked %s in page %s from extracting canvas data because no user "
         "input was detected.",
@@ -161,10 +164,12 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     if (isScriptKnown) {
       message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
     }
-    nsContentUtils::LogMessageToConsole(message.get());
+    nsContentUtils::ReportToConsoleNonLocalized(
+        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
+        aDocument);
   } else {
     // It was in response to user input, so log and display the prompt.
-    nsAutoCString message;
+    nsAutoString message;
     message.AppendPrintf(
         "Blocked %s in page %s from extracting canvas data, but prompting the "
         "user.",
@@ -172,7 +177,9 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     if (isScriptKnown) {
       message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
     }
-    nsContentUtils::LogMessageToConsole(message.get());
+    nsContentUtils::ReportToConsoleNonLocalized(
+        message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
+        aDocument);
   }
 
   // Prompt the user (asynchronous).
