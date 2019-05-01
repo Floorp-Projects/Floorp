@@ -481,6 +481,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether performance.GetEntries* will contain an entry for the active document
+VARCACHE_PREF(
+  "dom.enable_performance_navigation_timing",
+   dom_enable_performance_navigation_timing,
+  bool, true
+)
+
 // Render animations and videos as a solid color
 VARCACHE_PREF(
   "browser.measurement.render_anims_and_video_solid",
