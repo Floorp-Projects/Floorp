@@ -741,8 +741,7 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
 
   // Create an originAttributes object by inIsolatedMozBrowser.
   // Then create the originSuffix string from this object.
-  OriginAttributes attrs(nsIScriptSecurityManager::NO_APP_ID,
-                         (inIsolatedMozBrowser ? true : false));
+  OriginAttributes attrs(inIsolatedMozBrowser ? true : false);
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
@@ -777,7 +776,7 @@ SetAppIdFromOriginAttributesSQLFunction::OnFunctionCall(
   NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
   RefPtr<nsVariant> outVar(new nsVariant());
-  rv = outVar->SetAsInt32(attrs.mAppId);
+  rv = outVar->SetAsInt32(0);  // deprecated appId!
   NS_ENSURE_SUCCESS(rv, rv);
 
   outVar.forget(aResult);

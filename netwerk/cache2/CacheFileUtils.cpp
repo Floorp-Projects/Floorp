@@ -100,7 +100,8 @@ class KeyParser : protected Tokenizer {
         break;
       case 'i': {
         // Leaving to be able to read and understand oldformatted entries
-        if (!ReadInteger(&originAttribs.mAppId)) {
+        uint32_t deprecatedAppId = 0;
+        if (!ReadInteger(&deprecatedAppId)) {
           return false;  // not a valid 32-bit integer
         }
         break;

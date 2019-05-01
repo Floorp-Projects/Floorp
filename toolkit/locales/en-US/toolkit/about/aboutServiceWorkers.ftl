@@ -15,13 +15,6 @@ about-service-workers-warning-no-service-workers = No Service Workers registered
 #   $originTitle: original title
 origin-title = Origin: { $originTitle }
 
-# Show if app id is in isolated browser element, the term "InBrowserElement" should not be translated
-#
-# Variables:
-#   $appId: the application ID
-#   $isInIsolatedElement: "true" or "false" based on if the app id is in isolate element
-app-title = { -brand-short-name } Application ID { $appId } - InBrowserElement { $isInIsolatedElement }
-
 ## These strings are for showing the information of workers.
 ##
 ## Variables:
