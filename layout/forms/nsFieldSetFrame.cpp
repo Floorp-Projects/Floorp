@@ -571,7 +571,7 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     // If the inner content rect is larger than the legend, we can align the
     // legend.
     if (innerContentRect.ISize(wm) > mLegendRect.ISize(wm)) {
-      // NOTE legend @align values are: left/right/center/top/bottom.
+      // NOTE legend @align values are: left/right/center
       // GetLogicalAlign converts left/right to start/end for the given WM.
       // @see HTMLLegendElement::ParseAttribute, nsLegendFrame::GetLogicalAlign
       int32_t align =
@@ -589,8 +589,6 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
               (innerContentRect.ISize(wm) - mLegendRect.ISize(wm)) / 2;
           break;
         case NS_STYLE_TEXT_ALIGN_START:
-        case NS_STYLE_VERTICAL_ALIGN_TOP:
-        case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
           mLegendRect.IStart(wm) = innerContentRect.IStart(wm);
           break;
         default:
