@@ -6,6 +6,7 @@
 
 #include "PerformanceTiming.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -28,7 +29,7 @@ PerformanceTimingData* PerformanceTimingData::Create(
   MOZ_ASSERT(NS_IsMainThread());
 
   // Check if resource timing is prefed off.
-  if (!nsContentUtils::IsResourceTimingEnabled()) {
+  if (!StaticPrefs::dom_enable_resource_timing()) {
     return nullptr;
   }
 
