@@ -25,7 +25,7 @@ function validateTheme(backgroundImage, accentColor, textColor, isLWT) {
                  "LWT text color attribute should be set");
   }
 
-  Assert.ok(style.backgroundImage.includes(backgroundImage), "Expected correct background image");
+  checkThemeHeaderImage(window, backgroundImage);
   if (accentColor.startsWith("#")) {
     accentColor = hexToRGB(accentColor);
   }
@@ -75,7 +75,7 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-updated");
 
-  validateTheme("image1.png", ACCENT_COLOR_1, TEXT_COLOR_1, true);
+  validateTheme(`moz-extension://${extension.uuid}/image1.png`, ACCENT_COLOR_1, TEXT_COLOR_1, true);
 
   // Check with the LWT aliases (to update on Firefox 69, because the
   // LWT aliases are going to be removed).
@@ -91,7 +91,7 @@ add_task(async function test_dynamic_theme_updates() {
 
   await extension.awaitMessage("theme-updated");
 
-  validateTheme("image2.png", ACCENT_COLOR_2, TEXT_COLOR_2, true);
+  validateTheme(`moz-extension://${extension.uuid}/image2.png`, ACCENT_COLOR_2, TEXT_COLOR_2, true);
 
   extension.sendMessage("reset-theme");
 
