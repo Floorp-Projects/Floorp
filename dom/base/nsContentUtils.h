@@ -2351,11 +2351,6 @@ class nsContentUtils {
   }
 
   /**
-   * Returns true if the DOM Animations API should be enabled.
-   */
-  static bool AnimationsAPICoreEnabled() { return sAnimationsAPICoreEnabled; }
-
-  /**
    * Returns true if the getBoxQuads API should be enabled.
    */
   static bool GetBoxQuadsEnabled() { return sGetBoxQuadsEnabled; }
@@ -3443,7 +3438,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sAnimationsAPICoreEnabled;
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
