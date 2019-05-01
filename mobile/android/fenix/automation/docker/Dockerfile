@@ -5,9 +5,13 @@
 # Inspired by:
 # https://hub.docker.com/r/runmymind/docker-android-sdk/~/dockerfile/
 
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 
 MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
+
+# -- Configuration ----------------------------------------------------------------------
+
+ENV GOOGLE_SDK_VERSION 233
 
 # -- System -----------------------------------------------------------------------------
 
@@ -15,6 +19,7 @@ RUN apt-get update -qq
 
 RUN apt-get install -y openjdk-8-jdk \
 					   curl \
+					   wget \
 					   git \
 					   python \
 					   python-pip \
@@ -49,11 +54,32 @@ RUN sdkmanager --verbose "platform-tools" \
     "extras;google;m2repository"
 
 # Checkout source code
-RUN git clone https://github.com/mozilla-mobile/fenix.git
+#RUN git clone https://github.com/mozilla-mobile/fenix.git
+RUN git clone https://github.com/rpappalax/fenix.git -b dockerfile-add-test-deps --single-branch
 
 # Build project and run gradle tasks once to pull all dependencies
 WORKDIR /opt/fenix
-RUN ./gradlew --no-daemon assemble test lint
+RUN ./gradlew -PversionName=0.0 --no-daemon assemble test lint
+
+# -- Test tools -------------------------------------------------------------------------
+
+RUN mkdir -p /build/test-tools
+
+WORKDIR /build
+
+ENV TEST_TOOLS /build/test-tools
+ENV GOOGLE_SDK_DOWNLOAD ./gcloud.tar.gz
+ENV PATH ${PATH}:${TEST_TOOLS}:${TEST_TOOLS}/google-cloud-sdk/bin
+
+RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GOOGLE_SDK_VERSION}.0.0-linux-x86_64.tar.gz --output ${GOOGLE_SDK_DOWNLOAD} \
+    && tar -xvf ${GOOGLE_SDK_DOWNLOAD} -C ${TEST_TOOLS} \
+    && rm -f ${GOOGLE_SDK_DOWNLOAD} \
+    && ${TEST_TOOLS}/google-cloud-sdk/install.sh --quiet \
+    && ${TEST_TOOLS}/google-cloud-sdk/bin/gcloud --quiet components update
+
+RUN URL_FLANK_BIN=$(curl -s "https://api.github.com/repos/TestArmada/flank/releases/latest" | grep "browser_download_url*" | sed -r "s/\"//g" | cut -d ":" -f3) \
+    && wget "https:${URL_FLANK_BIN}" -O ${TEST_TOOLS}/flank.jar \
+    && chmod +x ${TEST_TOOLS}/flank.jar
 
 # -- Post setup -------------------------------------------------------------------------
 
