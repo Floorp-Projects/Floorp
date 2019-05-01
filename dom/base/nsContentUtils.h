@@ -2326,11 +2326,6 @@ class nsContentUtils {
   static bool IsFocusedContent(const nsIContent* aContent);
 
   /**
-   * Returns true if the DOM fullscreen API is enabled.
-   */
-  static bool IsFullscreenApiEnabled();
-
-  /**
    * Returns true if the unprefixed fullscreen API is enabled.
    */
   static bool IsUnprefixedFullscreenApiEnabled() {
@@ -3502,7 +3497,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sIsFullscreenApiEnabled;
   static bool sIsUnprefixedFullscreenApiEnabled;
   static bool sTrustedFullscreenOnly;
   static bool sIsCutCopyAllowed;

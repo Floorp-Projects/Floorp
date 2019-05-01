@@ -5287,7 +5287,6 @@ pref("alerts.useSystemBackend", true);
 #endif
 
 // DOM full-screen API.
-pref("full-screen-api.enabled", false);
 pref("full-screen-api.allow-trusted-requests-only", true);
 // whether to prevent the top level widget from going fullscreen
 pref("full-screen-api.ignore-widgets", false);
