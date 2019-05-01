@@ -98,7 +98,7 @@ void nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext* aPresContext,
   PseudoStyleType pseudoType = PseudoStyleType::mozMathAnonymous;  // savings
   RefPtr<ComputedStyle> newComputedStyle;
   newComputedStyle = aPresContext->StyleSet()->ResolvePseudoElementStyle(
-      aContent->AsElement(), pseudoType, aParentComputedStyle, nullptr);
+      *aContent->AsElement(), pseudoType, aParentComputedStyle);
 
   aMathMLChar->SetComputedStyle(newComputedStyle);
 }
