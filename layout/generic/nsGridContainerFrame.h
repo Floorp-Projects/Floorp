@@ -105,6 +105,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
               nsReflowStatus& aStatus) override;
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
+  void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
@@ -413,6 +414,19 @@ class nsGridContainerFrame final : public nsContainerFrame {
 #ifdef DEBUG
   void SanityCheckGridItemsBeforeReflow() const;
 #endif  // DEBUG
+
+  /**
+   * Update our NS_STATE_GRID_IS_COL/ROW_SUBGRID bits and related subgrid state
+   * on our entire continuation chain based on the current style.
+   * This is needed because grid-template-columns/rows style changes only
+   * trigger a reflow so we need to update this dynamically.
+   */
+  void UpdateSubgridFrameState();
+
+  /**
+   * Return the NS_STATE_GRID_IS_COL/ROW_SUBGRID bits we ought to have.
+   */
+  nsFrameState ComputeSelfSubgridBits() const;
 
  private:
   // Helpers for ReflowChildren
