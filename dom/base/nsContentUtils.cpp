@@ -325,8 +325,6 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
-bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
-
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
 
 int32_t nsContentUtils::sInnerOrOuterWindowCount = 0;
@@ -610,11 +608,6 @@ nsresult nsContentUtils::Init() {
 #ifndef RELEASE_OR_BETA
   sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
 #endif
-
-  Preferences::AddBoolVarCache(
-      &sAntiTrackingControlCenterUIEnabled,
-      "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
-      false);
 
   Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
                               "dom.script_loader.bytecode_cache.strategy", 0);
@@ -8362,7 +8355,8 @@ bool nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   }
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieSettings, aRejectedReason);
-  if (sAntiTrackingControlCenterUIEnabled) {
+  if (StaticPrefs::
+          browser_contentblocking_rejecttrackers_control_center_ui_enabled()) {
     if (aWindow) {
       AntiTrackingCommon::NotifyBlockingDecision(
           aWindow,
