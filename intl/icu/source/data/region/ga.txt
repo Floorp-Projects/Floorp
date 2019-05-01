@@ -183,7 +183,7 @@ ga{
         MF{"Saint-Martin"}
         MG{"Madagascar"}
         MH{"Oileáin Marshall"}
-        MK{"an Mhacadóin"}
+        MK{"an Mhacadóin Thuaidh"}
         ML{"Mailí"}
         MM{"Maenmar (Burma)"}
         MN{"an Mhongóil"}
@@ -311,9 +311,8 @@ ga{
         CI{"Côte d’Ivoire"}
         CZ{"Poblacht na Seice"}
         FK{"Oileáin Fháclainne (Islas Malvinas)"}
-        MK{"an Mhacadóin (PIIM)"}
         SZ{"Ríocht na Suasalainne"}
         TL{"TL"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

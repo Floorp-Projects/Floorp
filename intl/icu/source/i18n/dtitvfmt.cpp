@@ -1130,7 +1130,9 @@ DateIntervalFormat::setSeparateDateTimePtn(
         }
         setIntervalPattern(UCAL_YEAR, skeleton, bestSkeleton, differenceInfo,
                            &extendedSkeleton, &extendedBestSkeleton);
-    } else {
+        setIntervalPattern(UCAL_ERA, skeleton, bestSkeleton, differenceInfo,
+                           &extendedSkeleton, &extendedBestSkeleton);
+     } else {
         setIntervalPattern(UCAL_MINUTE, skeleton, bestSkeleton, differenceInfo);
         setIntervalPattern(UCAL_HOUR, skeleton, bestSkeleton, differenceInfo);
         setIntervalPattern(UCAL_AM_PM, skeleton, bestSkeleton, differenceInfo);

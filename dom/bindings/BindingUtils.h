@@ -1384,8 +1384,6 @@ inline mozilla::dom::ReflectionScope GetReflectionScope(
 
 template <class T>
 inline void ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj) {
-  JS::AutoAssertGCCallback inCallback;
-
   // Skip clearing the wrapper when replaying. This method is called during
   // finalization of |obj|, and when replaying a strong reference is kept on
   // the contents of the cache: since |obj| is being finalized, the cache
@@ -1394,13 +1392,15 @@ inline void ClearWrapper(T* p, nsWrapperCache* cache, JSObject* obj) {
   // released, if we are finalizing later than we did while recording, and the
   // cache may have already been deleted.
   if (!recordreplay::IsReplaying()) {
+    MOZ_ASSERT(cache->GetWrapperMaybeDead() == obj);
     cache->ClearWrapper(obj);
   }
 }
 
 template <class T>
 inline void ClearWrapper(T* p, void*, JSObject* obj) {
-  JS::AutoAssertGCCallback inCallback;
+  // QueryInterface to nsWrapperCache can't GC, we hope.
+  JS::AutoSuppressGCAnalysis nogc;
 
   // Skip clearing the wrapper when replaying, for the same reason as in the
   // overload above: |p| may have been deleted and we cannot QI it.
@@ -2591,7 +2591,8 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
-      JS_updateMallocCounter(aCx, mallocBytes);
+      JS::AddAssociatedMemory(aReflector, mallocBytes,
+                              JS::MemoryUse::DOMBinding);
     }
   }
 
@@ -2607,7 +2608,8 @@ class MOZ_STACK_CLASS BindingJSObjectCreator {
     }
 
     if (size_t mallocBytes = BindingJSObjectMallocBytes(aNative)) {
-      JS_updateMallocCounter(aCx, mallocBytes);
+      JS::AddAssociatedMemory(aReflector, mallocBytes,
+                              JS::MemoryUse::DOMBinding);
     }
   }
 

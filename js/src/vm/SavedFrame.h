@@ -106,7 +106,7 @@ class SavedFrame : public NativeObject {
   struct Lookup;
   struct HashPolicy;
 
-  typedef JS::GCHashSet<ReadBarriered<SavedFrame*>, HashPolicy,
+  typedef JS::GCHashSet<WeakHeapPtr<SavedFrame*>, HashPolicy,
                         SystemAllocPolicy>
       Set;
 
@@ -152,7 +152,7 @@ struct SavedFrame::HashPolicy {
   static HashNumber hash(const Lookup& lookup);
   static bool match(SavedFrame* existing, const Lookup& lookup);
 
-  typedef ReadBarriered<SavedFrame*> Key;
+  typedef WeakHeapPtr<SavedFrame*> Key;
   static void rekey(Key& key, const Key& newKey);
 };
 

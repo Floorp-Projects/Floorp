@@ -11,7 +11,7 @@
 
 #ifdef INCLUDED_FROM_UCASE_CPP
 
-static const UVersionInfo ucase_props_dataVersion={0xc,0,0,0};
+static const UVersionInfo ucase_props_dataVersion={0xc,1,0,0};
 
 static const int32_t ucase_props_indexes[UCASE_IX_TOP]={0x10,0x6fea,0x5fb8,0x687,0x172,0,0,0,0,0,0,0,0,0,0,3};
 

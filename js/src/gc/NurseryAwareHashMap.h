@@ -20,22 +20,22 @@ namespace detail {
 // pointers. The only users should be for NurseryAwareHashMap; it is defined
 // externally because we need a GCPolicy for its use in the contained map.
 template <typename T>
-class UnsafeBareReadBarriered : public ReadBarrieredBase<T> {
+class UnsafeBareWeakHeapPtr : public ReadBarriered<T> {
  public:
-  UnsafeBareReadBarriered()
-      : ReadBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
-  MOZ_IMPLICIT UnsafeBareReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {}
-  explicit UnsafeBareReadBarriered(const UnsafeBareReadBarriered& v)
-      : ReadBarrieredBase<T>(v) {}
-  UnsafeBareReadBarriered(UnsafeBareReadBarriered&& v)
-      : ReadBarrieredBase<T>(std::move(v)) {}
+  UnsafeBareWeakHeapPtr()
+      : ReadBarriered<T>(JS::SafelyInitialized<T>()) {}
+  MOZ_IMPLICIT UnsafeBareWeakHeapPtr(const T& v) : ReadBarriered<T>(v) {}
+  explicit UnsafeBareWeakHeapPtr(const UnsafeBareWeakHeapPtr& v)
+      : ReadBarriered<T>(v) {}
+  UnsafeBareWeakHeapPtr(UnsafeBareWeakHeapPtr&& v)
+      : ReadBarriered<T>(std::move(v)) {}
 
-  UnsafeBareReadBarriered& operator=(const UnsafeBareReadBarriered& v) {
+  UnsafeBareWeakHeapPtr& operator=(const UnsafeBareWeakHeapPtr& v) {
     this->value = v.value;
     return *this;
   }
 
-  UnsafeBareReadBarriered& operator=(const T& v) {
+  UnsafeBareWeakHeapPtr& operator=(const T& v) {
     this->value = v;
     return *this;
   }
@@ -71,7 +71,7 @@ template <typename Key, typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy>
 class NurseryAwareHashMap {
-  using BarrieredValue = detail::UnsafeBareReadBarriered<Value>;
+  using BarrieredValue = detail::UnsafeBareWeakHeapPtr<Value>;
   using MapType =
       GCRekeyableHashMap<Key, BarrieredValue, HashPolicy, AllocPolicy>;
   MapType map;
@@ -180,13 +180,13 @@ class NurseryAwareHashMap {
 
 namespace JS {
 template <typename T>
-struct GCPolicy<js::detail::UnsafeBareReadBarriered<T>> {
+struct GCPolicy<js::detail::UnsafeBareWeakHeapPtr<T>> {
   static void trace(JSTracer* trc,
-                    js::detail::UnsafeBareReadBarriered<T>* thingp,
+                    js::detail::UnsafeBareWeakHeapPtr<T>* thingp,
                     const char* name) {
     js::TraceEdge(trc, thingp, name);
   }
-  static bool needsSweep(js::detail::UnsafeBareReadBarriered<T>* thingp) {
+  static bool needsSweep(js::detail::UnsafeBareWeakHeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
   }
 };

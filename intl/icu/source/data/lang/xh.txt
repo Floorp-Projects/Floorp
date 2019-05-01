@@ -4,5 +4,5 @@ xh{
     Languages{
         xh{"isiXhosa"}
     }
-    Version{"2.1.48.89"}
+    Version{"2.1.49.82"}
 }

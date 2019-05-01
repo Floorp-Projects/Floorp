@@ -212,7 +212,7 @@ es{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.48.20"}
+    Version{"2.1.49.82"}
     calendar{
         chinese{
             DateTimePatterns{

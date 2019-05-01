@@ -488,19 +488,19 @@ typedef enum UDateFormatStyle {
  * root/English abbreviated version (ASCII-range characters).
  * @internal
  */
-#define JP_ERA_2019_ROOT                "Qqqq"
+#define JP_ERA_2019_ROOT                "Reiwa"
 /**
  * Constant for Unicode string name of new (in 2019) Japanese calendar era,
  * Japanese abbreviated version (Han, or fullwidth Latin for testing).
  * @internal
  */
-#define JP_ERA_2019_JA                  "\\uFF31\\uFF31"
+#define JP_ERA_2019_JA                  "\\u4EE4\\u548C"
 /**
  * Constant for Unicode string name of new (in 2019) Japanese calendar era,
  * root and Japanese narrow version (ASCII-range characters).
  * @internal
  */
-#define JP_ERA_2019_NARROW              "Q"
+#define JP_ERA_2019_NARROW              "R"
 #endif  // U_HIDE_INTERNAL_API
 
 /**

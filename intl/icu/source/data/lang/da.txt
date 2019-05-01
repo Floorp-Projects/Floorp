@@ -962,7 +962,7 @@ da{
         VALLADER{"vallader"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} – alle"}
         category-list{"{0}: {1}"}

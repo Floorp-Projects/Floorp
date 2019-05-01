@@ -2227,7 +2227,7 @@ void EmptyShape::insertInitialShape(JSContext* cx, HandleShape shape,
   MOZ_ASSERT(nshape == entry.shape);
 #endif
 
-  entry.shape = ReadBarrieredShape(shape);
+  entry.shape = WeakHeapPtrShape(shape);
 
   /*
    * This affects the shape that will be produced by the various NewObject

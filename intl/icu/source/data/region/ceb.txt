@@ -10,10 +10,11 @@ ceb{
         IN{"India"}
         IT{"Italya"}
         JP{"Hapon"}
+        MK{"Amihanang Macedonia"}
         PH{"Pilipinas"}
         RU{"Russia"}
         US{"Estados Unidos"}
         ZZ{"Wala-mailhing Rehiyon"}
     }
-    Version{"2.1.49.33"}
+    Version{"2.1.49.82"}
 }
