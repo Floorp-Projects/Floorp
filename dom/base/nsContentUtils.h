@@ -3188,9 +3188,6 @@ class nsContentUtils {
    */
   static bool GetUserIsInteracting();
 
-  // Whether tracker tailing is turned on - "network.http.tailing.enabled".
-  static bool IsTailingEnabled() { return sTailingEnabled; }
-
   // Check pref "dom.placeholder.show_on_focus" to see
   // if we want to show the placeholder inside input elements
   // when they have focus.
@@ -3418,7 +3415,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sTailingEnabled;
   static bool sShowInputPlaceholderOnFocus;
   static bool sAutoFocusEnabled;
 #ifndef RELEASE_OR_BETA

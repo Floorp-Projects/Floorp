@@ -345,7 +345,7 @@ void LowerPriorityHelper(nsIChannel* aChannel) {
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
   if (cos) {
-    if (nsContentUtils::IsTailingEnabled()) {
+    if (StaticPrefs::network_http_tailing_enabled()) {
       uint32_t cosFlags = 0;
       cos->GetClassFlags(&cosFlags);
       isBlockingResource =

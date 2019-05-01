@@ -2292,6 +2292,15 @@ VARCACHE_PREF(
    uint32_t, 2000
 )
 
+// Some requests during a page load are marked as "tail", mainly trackers, but not only.
+// This pref controls whether such requests are put to the tail, behind other requests
+// emerging during page loading process.
+VARCACHE_PREF(
+  "network.http.tailing.enabled",
+   network_http_tailing_enabled,
+   bool, true
+)
+
 //---------------------------------------------------------------------------
 // ContentSessionStore prefs
 //---------------------------------------------------------------------------
