@@ -174,6 +174,7 @@ def _update_reducer(accumulator, new_value):
     accumulator.update(new_value)
     return accumulator
 
+
 def combine_task_graph_files(suffixes):
     """Combine task-graph-{suffix}.json files into a single task-graph.json file.
 
