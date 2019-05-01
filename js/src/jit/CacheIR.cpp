@@ -5280,8 +5280,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   RootedObject templateObj(cx_);
-  if (isConstructing && isSpecialized &&
-      !getTemplateObjectForNative(calleeFunc, &templateObj)) {
+  if (isSpecialized && !getTemplateObjectForNative(calleeFunc, &templateObj)) {
     cx_->clearPendingException();
     return AttachDecision::NoAction;
   }
