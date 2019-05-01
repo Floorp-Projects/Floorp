@@ -405,3 +405,7 @@ def read_artifact(filename):
             return json.load(f)
     else:
         raise TypeError("Don't know how to read {}".format(filename))
+
+
+def rename_artifact(src, dest):
+    os.rename(os.path.join(ARTIFACTS_DIR, src), os.path.join(ARTIFACTS_DIR, dest))
