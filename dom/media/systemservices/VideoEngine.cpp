@@ -189,9 +189,8 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
           "webrtc::CaptureDeviceType::Browser: Finished creating new device."));
       break;
     }
-    // Window, Application, and Screen types are handled by DesktopCapture
+    // Window and Screen types are handled by DesktopCapture
     case webrtc::CaptureDeviceType::Window:
-    case webrtc::CaptureDeviceType::Application:
     case webrtc::CaptureDeviceType::Screen: {
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
       mDeviceInfo.reset(webrtc::DesktopCaptureImpl::CreateDeviceInfo(

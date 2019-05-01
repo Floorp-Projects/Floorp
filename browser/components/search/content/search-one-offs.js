@@ -829,8 +829,8 @@ class SearchOneOffs {
    * it also handles Up/Down keys that cross the boundaries between list
    * items and the one-off buttons.
    *
-   * If this method handles the key press, then event.defaultPrevented will
-   * be true when it returns.
+   * If this method handles the key press, then it will call
+   * event.preventDefault() and return true.
    *
    * @param {Event} event
    *        The key event.
@@ -849,10 +849,11 @@ class SearchOneOffs {
    *        restored to the value that the user typed.  Pass that value here.
    *        However, if you pass true for allowEmptySelection, you don't need
    *        to pass anything for this parameter.  (Pass undefined or null.)
+   * @returns {boolean} True if the one-offs handled the key press.
    */
   handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {
     if (!this.popup) {
-      return;
+      return false;
     }
     let handled = this._handleKeyPress(event, numListItems,
       allowEmptySelection,
@@ -861,6 +862,7 @@ class SearchOneOffs {
       event.preventDefault();
       event.stopPropagation();
     }
+    return handled;
   }
 
   _handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {

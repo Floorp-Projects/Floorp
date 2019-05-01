@@ -23,7 +23,6 @@ bool MediaEngineSource::IsVideo(MediaSourceEnum aSource) {
   switch (aSource) {
     case MediaSourceEnum::Camera:
     case MediaSourceEnum::Screen:
-    case MediaSourceEnum::Application:
     case MediaSourceEnum::Window:
     case MediaSourceEnum::Browser:
       return true;

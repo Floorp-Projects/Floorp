@@ -943,6 +943,7 @@ STATIC_ATOMS = [
     Atom("parent", "parent"),
     Atom("parentfocused", "parentfocused"),
     Atom("parsererror", "parsererror"),
+    Atom("part", "part"),
     Atom("password", "password"),
     Atom("pattern", "pattern"),
     Atom("patternSeparator", "pattern-separator"),

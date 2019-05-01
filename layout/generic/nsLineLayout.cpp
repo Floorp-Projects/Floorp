@@ -1959,47 +1959,51 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
     // Get vertical-align property ("vertical-align" is the CSS name for
     // block-direction align)
-    const nsStyleCoord& verticalAlign = frame->StyleDisplay()->mVerticalAlign;
-    uint8_t verticalAlignEnum = frame->VerticalAlignEnum();
+    const auto& verticalAlign = frame->StyleDisplay()->mVerticalAlign;
+    Maybe<StyleVerticalAlignKeyword> verticalAlignEnum =
+        frame->VerticalAlignEnum();
 #ifdef NOISY_BLOCKDIR_ALIGN
     printf("  [frame]");
     frame->ListTag(stdout);
-    printf(": verticalAlignUnit=%d (enum == %d", verticalAlign.GetUnit(),
-           ((eStyleUnit_Enumerated == verticalAlign.GetUnit())
-                ? verticalAlign.GetIntValue()
-                : -1));
-    if (verticalAlignEnum != nsIFrame::eInvalidVerticalAlign) {
+    printf(": verticalAlignIsKw=%d (enum == %d", verticalAlign.IsKeyword(),
+           verticalAlign.IsKeyword()
+               ? static_cast<int>(verticalAlign.AsKeyword())
+               : -1);
+    if (verticalAlignEnum) {
       printf(", after SVG dominant-baseline conversion == %d",
-             verticalAlignEnum);
+             static_cast<int>(*verticalAlignEnum));
     }
     printf(")\n");
 #endif
 
-    if (verticalAlignEnum != nsIFrame::eInvalidVerticalAlign) {
+    if (verticalAlignEnum) {
+      StyleVerticalAlignKeyword keyword = *verticalAlignEnum;
       if (lineWM.IsVertical()) {
-        if (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_MIDDLE) {
+        if (keyword == StyleVerticalAlignKeyword::Middle) {
           // For vertical writing mode where the dominant baseline is centered
           // (i.e. text-orientation is not sideways-*), we remap 'middle' to
           // 'middle-with-baseline' so that images align sensibly with the
           // center-baseline-aligned text.
           if (!lineWM.IsSideways()) {
-            verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE;
+            keyword = StyleVerticalAlignKeyword::MozMiddleWithBaseline;
           }
         } else if (lineWM.IsLineInverted()) {
           // Swap the meanings of top and bottom when line is inverted
           // relative to block direction.
-          switch (verticalAlignEnum) {
-            case NS_STYLE_VERTICAL_ALIGN_TOP:
-              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BOTTOM;
+          switch (keyword) {
+            case StyleVerticalAlignKeyword::Top:
+              keyword = StyleVerticalAlignKeyword::Bottom;
               break;
-            case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TOP;
+            case StyleVerticalAlignKeyword::Bottom:
+              keyword = StyleVerticalAlignKeyword::Top;
               break;
-            case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM;
+            case StyleVerticalAlignKeyword::TextTop:
+              keyword = StyleVerticalAlignKeyword::TextBottom;
               break;
-            case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TEXT_TOP;
+            case StyleVerticalAlignKeyword::TextBottom:
+              keyword = StyleVerticalAlignKeyword::TextTop;
+              break;
+            default:
               break;
           }
         }
@@ -2010,19 +2014,18 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
       // For superscript and subscript, raise or lower the baseline of the box
       // to the proper offset of the parent's box, then proceed as for BASELINE
-      if (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUB ||
-          verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUPER) {
-        revisedBaselineBCoord +=
-            lineWM.FlowRelativeToLineRelativeFactor() *
-            (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUB
-                 ? fm->SubscriptOffset()
-                 : -fm->SuperscriptOffset());
-        verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      if (keyword == StyleVerticalAlignKeyword::Sub ||
+          keyword == StyleVerticalAlignKeyword::Super) {
+        revisedBaselineBCoord += lineWM.FlowRelativeToLineRelativeFactor() *
+                                 (keyword == StyleVerticalAlignKeyword::Sub
+                                      ? fm->SubscriptOffset()
+                                      : -fm->SuperscriptOffset());
+        keyword = StyleVerticalAlignKeyword::Baseline;
       }
 
-      switch (verticalAlignEnum) {
+      switch (keyword) {
         default:
-        case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+        case StyleVerticalAlignKeyword::Baseline:
           if (lineWM.IsVertical() && !lineWM.IsSideways()) {
             if (frameSpan) {
               pfd->mBounds.BStart(lineWM) =
@@ -2038,7 +2041,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
 
-        case NS_STYLE_VERTICAL_ALIGN_TOP: {
+        case StyleVerticalAlignKeyword::Top: {
           pfd->mBlockDirAlign = VALIGN_TOP;
           nscoord subtreeBSize = logicalBSize;
           if (frameSpan) {
@@ -2052,7 +2055,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           break;
         }
 
-        case NS_STYLE_VERTICAL_ALIGN_BOTTOM: {
+        case StyleVerticalAlignKeyword::Bottom: {
           pfd->mBlockDirAlign = VALIGN_BOTTOM;
           nscoord subtreeBSize = logicalBSize;
           if (frameSpan) {
@@ -2066,7 +2069,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           break;
         }
 
-        case NS_STYLE_VERTICAL_ALIGN_MIDDLE: {
+        case StyleVerticalAlignKeyword::Middle: {
           // Align the midpoint of the frame with 1/2 the parents
           // x-height above the baseline.
           nscoord parentXHeight =
@@ -2084,7 +2087,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           break;
         }
 
-        case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP: {
+        case StyleVerticalAlignKeyword::TextTop: {
           // The top of the logical box is aligned with the top of
           // the parent element's text.
           // XXX For vertical text we will need a new API to get the logical
@@ -2103,7 +2106,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           break;
         }
 
-        case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM: {
+        case StyleVerticalAlignKeyword::TextBottom: {
           // The bottom of the logical box is aligned with the
           // bottom of the parent elements text.
           nscoord parentDescent =
@@ -2121,7 +2124,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
           break;
         }
 
-        case NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE: {
+        case StyleVerticalAlignKeyword::MozMiddleWithBaseline: {
           // Align the midpoint of the frame with the baseline of the parent.
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) =
@@ -2136,17 +2139,16 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       }
     } else {
       // We have either a coord, a percent, or a calc().
-      nscoord pctBasis = 0;
-      if (verticalAlign.HasPercent()) {
+      nscoord offset = verticalAlign.AsLength().Resolve([&] {
         // Percentages are like lengths, except treated as a percentage
         // of the elements line block size value.
         float inflation =
             GetInflationForBlockDirAlignment(frame, mInflationMinFontSize);
-        pctBasis = ReflowInput::CalcLineHeight(
+        return ReflowInput::CalcLineHeight(
             frame->GetContent(), frame->Style(), frame->PresContext(),
             mBlockReflowInput->ComputedBSize(), inflation);
-      }
-      nscoord offset = verticalAlign.ComputeCoordPercentCalc(pctBasis);
+      });
+
       // According to the CSS2 spec (10.8.1), a positive value
       // "raises" the box by the given distance while a negative value
       // "lowers" the box by the given distance (with zero being the

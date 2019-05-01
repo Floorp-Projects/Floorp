@@ -246,9 +246,6 @@ void MediaEngineWebRTC::EnumerateDevices(
         EnumerateVideoDevices(aWindowId, camera::WinEngine, aDevices);
         EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
         break;
-      case dom::MediaSourceEnum::Application:
-        EnumerateVideoDevices(aWindowId, camera::AppEngine, aDevices);
-        break;
       case dom::MediaSourceEnum::Screen:
         EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
         break;

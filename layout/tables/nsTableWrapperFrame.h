@@ -200,7 +200,7 @@ class nsTableWrapperFrame : public nsContainerFrame {
            captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
   }
 
-  uint8_t GetCaptionVerticalAlign();
+  mozilla::StyleVerticalAlignKeyword GetCaptionVerticalAlign() const;
 
   void SetDesiredSize(uint8_t aCaptionSide,
                       const mozilla::LogicalSize& aInnerSize,

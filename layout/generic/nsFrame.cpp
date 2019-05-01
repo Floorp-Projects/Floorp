@@ -9763,37 +9763,37 @@ bool nsIFrame::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
  */
 bool nsIFrame::HasSignificantTerminalNewline() const { return false; }
 
-static uint8_t ConvertSVGDominantBaselineToVerticalAlign(
+static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
     uint8_t aDominantBaseline) {
   // Most of these are approximate mappings.
   switch (aDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
-      return NS_STYLE_VERTICAL_ALIGN_TEXT_TOP;
+      return StyleVerticalAlignKeyword::TextTop;
     case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
     case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
-      return NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM;
+      return StyleVerticalAlignKeyword::TextBottom;
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
     case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
     case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
-      return NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+      return StyleVerticalAlignKeyword::Middle;
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
-      return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      return StyleVerticalAlignKeyword::Baseline;
     case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
     case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
     case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
       // These three should not simply map to 'baseline', but we don't
       // support the complex baseline model that SVG 1.1 has and which
       // css3-linebox now defines.
-      return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      return StyleVerticalAlignKeyword::Baseline;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected aDominantBaseline value");
-      return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      return StyleVerticalAlignKeyword::Baseline;
   }
 }
 
-uint8_t nsIFrame::VerticalAlignEnum() const {
+Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     uint8_t dominantBaseline;
     for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
@@ -9803,15 +9803,15 @@ uint8_t nsIFrame::VerticalAlignEnum() const {
         break;
       }
     }
-    return ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline);
+    return Some(ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline));
   }
 
-  const nsStyleCoord& verticalAlign = StyleDisplay()->mVerticalAlign;
-  if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    return verticalAlign.GetIntValue();
+  const auto& verticalAlign = StyleDisplay()->mVerticalAlign;
+  if (verticalAlign.IsKeyword()) {
+    return Some(verticalAlign.AsKeyword());
   }
 
-  return eInvalidVerticalAlign;
+  return Nothing();
 }
 
 NS_IMETHODIMP

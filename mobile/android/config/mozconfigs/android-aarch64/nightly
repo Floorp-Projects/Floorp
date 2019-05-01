@@ -6,6 +6,8 @@ ac_add_options --target=aarch64-linux-android
 
 ac_add_options --with-branding=mobile/android/branding/nightly
 
+export FENNEC_NIGHTLY=1
+
 export AR="$topsrcdir/clang/bin/llvm-ar"
 export NM="$topsrcdir/clang/bin/llvm-nm"
 export RANLIB="$topsrcdir/clang/bin/llvm-ranlib"

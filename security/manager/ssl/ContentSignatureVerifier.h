@@ -7,14 +7,8 @@
 #ifndef ContentSignatureVerifier_h
 #define ContentSignatureVerifier_h
 
-#include "cert.h"
-#include "CSTrustDomain.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsIContentSignatureVerifier.h"
-#include "nsIStreamListener.h"
-#include "nsNetUtil.h"
 #include "nsString.h"
-#include "ScopedNSSTypes.h"
 
 // 45a5fe2f-c350-4b86-962d-02d5aaaa955a
 #define NS_CONTENTSIGNATUREVERIFIER_CID              \
@@ -26,55 +20,24 @@
 #define NS_CONTENTSIGNATUREVERIFIER_CONTRACTID \
   "@mozilla.org/security/contentsignatureverifier;1"
 
-class ContentSignatureVerifier final : public nsIContentSignatureVerifier,
-                                       public nsIStreamListener,
-                                       public nsIInterfaceRequestor {
+class ContentSignatureVerifier final : public nsIContentSignatureVerifier {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTSIGNATUREVERIFIER
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-
-  ContentSignatureVerifier()
-      : mCx(nullptr), mInitialised(false), mHasCertChain(false) {}
 
  private:
-  ~ContentSignatureVerifier() {}
+  ~ContentSignatureVerifier() = default;
 
-  nsresult UpdateInternal(const nsACString& aData);
-  nsresult DownloadCertChain();
-  nsresult CreateContextInternal(const nsACString& aData,
-                                 const nsACString& aCertChain,
-                                 const nsACString& aName);
-
+  nsresult VerifyContentSignatureInternal(
+      const nsACString& aData, const nsACString& aCSHeader,
+      const nsACString& aCertChain, const nsACString& aHostname,
+      /* out */
+      mozilla::Telemetry::LABELS_CONTENT_SIGNATURE_VERIFICATION_ERRORS&
+          aErrorLabel,
+      /* out */ nsACString& aCertFingerprint, /* out */ uint32_t& aErrorValue);
   nsresult ParseContentSignatureHeader(
-      const nsACString& aContentSignatureHeader);
-
-  // verifier context for incremental verifications
-  mozilla::UniqueVFYContext mCx;
-  bool mInitialised;
-  // Indicates whether we hold a cert chain to verify the signature or not.
-  // It's set by default in CreateContext or when the channel created in
-  // DownloadCertChain finished. Update and End must only be called after
-  // mHashCertChain is set.
-  bool mHasCertChain;
-  // signature to verify
-  nsCString mSignature;
-  // x5u (X.509 URL) value pointing to pem cert chain
-  nsCString mCertChainURL;
-  // the downloaded cert chain to verify against
-  FallibleTArray<nsCString> mCertChain;
-  // verification key
-  mozilla::UniqueSECKEYPublicKey mKey;
-  // name of the verifying context
-  nsCString mName;
-  // callback to notify when finished
-  nsCOMPtr<nsIContentSignatureReceiverCallback> mCallback;
-  // channel to download the cert chain
-  nsCOMPtr<nsIChannel> mChannel;
-  // EE certificate fingerprint
-  nsCString mFingerprint;
+      const nsACString& aContentSignatureHeader,
+      /* out */ nsCString& aSignature);
 };
 
 #endif  // ContentSignatureVerifier_h
