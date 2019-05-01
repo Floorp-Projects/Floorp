@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
@@ -15,8 +14,6 @@ loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing
 loader.lazyRequireGetter(this, "parseNamedDeclarations", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "parseSingleValue", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "isCssVariable", "devtools/shared/fronts/css-properties", true);
-
-const PREF_INACTIVE_CSS_ENABLED = "devtools.inspector.inactive.css.enabled";
 
 /**
  * ElementStyle is responsible for the following:
@@ -66,13 +63,6 @@ class ElementStyle {
       this.ruleView.inspector.styleChangeTracker.on("style-changed", this.onRefresh);
       this.ruleView.selection.on("pseudoclass", this.onRefresh);
     }
-  }
-
-  get unusedCssEnabled() {
-    if (!this._unusedCssEnabled) {
-      this._unusedCssEnabled = Services.prefs.getBoolPref(PREF_INACTIVE_CSS_ENABLED);
-    }
-    return this._unusedCssEnabled;
   }
 
   destroy() {
@@ -135,7 +125,7 @@ class ElementStyle {
       }
 
       // Mark overridden computed styles.
-      this.onRuleUpdated();
+      this.markOverriddenAll();
 
       this._sortRulesForPseudoElement();
 
@@ -252,28 +242,26 @@ class ElementStyle {
   }
 
   /**
-   * Calls updateDeclarations with all supported pseudo elements
+   * Calls markOverridden with all supported pseudo elements
    */
-  onRuleUpdated() {
+  markOverriddenAll() {
     this.variables.clear();
-    this.updateDeclarations();
+    this.markOverridden();
 
     for (const pseudo of this.cssProperties.pseudoElements) {
-      this.updateDeclarations(pseudo);
+      this.markOverridden(pseudo);
     }
   }
 
   /**
-   * Mark the declarations for a given pseudo element with an overridden flag if
-   * an earlier property overrides it and update the editor to show it in the
-   * UI. If there is any inactive CSS we also update the editors state to show
-   * the inactive CSS icon.
+   * Mark the properties listed in this.rules for a given pseudo element
+   * with an overridden flag if an earlier property overrides it.
    *
    * @param  {String} pseudo
    *         Which pseudo element to flag as overridden.
    *         Empty string or undefined will default to no pseudo element.
    */
-  updateDeclarations(pseudo = "") {
+  markOverridden(pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
     // from more- to less-specific. Text properties from keyframes rule are
     // excluded from being marked as overridden since a number of criteria such
@@ -357,21 +345,15 @@ class ElementStyle {
       }
     }
 
-    // For each TextProperty, mark it overridden if all of its computed
-    // properties are marked overridden. Update the text property's associated
-    // editor, if any. This will clear the _overriddenDirty state on all
-    // computed properties. For each editor we also show or hide the inactive
-    // CSS icon as needed.
+    // For each TextProperty, mark it overridden if all of its
+    // computed properties are marked overridden. Update the text
+    // property's associated editor, if any. This will clear the
+    // _overriddenDirty state on all computed properties.
     for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
       if (this._updatePropertyOverridden(textProp)) {
         textProp.updateEditor();
-      }
-
-      // For each editor show or hide the inactive CSS icon as needed.
-      if (textProp.editor && this.unusedCssEnabled) {
-        textProp.editor.updatePropertyState();
       }
     }
   }
@@ -599,9 +581,8 @@ class ElementStyle {
       // the same relative position.
       this.rules.splice(newIndex === -1 ? oldIndex : newIndex, 0, newRule);
 
-      // Recompute, mark and update the UI for any properties that are
-      // overridden or contain inactive CSS according to the new list of rules.
-      this.onRuleUpdated();
+      // Mark any properties that are overridden according to the new list of rules.
+      this.markOverriddenAll();
 
       // In order to keep the new rule in place of the old in the rules view, we need
       // to remove the rule again if the rule was inserted to its new index according
@@ -613,6 +594,7 @@ class ElementStyle {
         this.rules.splice(newIndex, 1);
         this.rules.splice(oldIndex, 0, newRule);
       }
+
       this._changed();
     } catch (e) {
       console.error(e);

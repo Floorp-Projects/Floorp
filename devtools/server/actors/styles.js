@@ -21,8 +21,6 @@ loader.lazyRequireGetter(this, "getDefinedGeometryProperties",
   "devtools/server/actors/highlighters/geometry-editor", true);
 loader.lazyRequireGetter(this, "isCssPropertyKnown",
   "devtools/server/actors/css-properties", true);
-loader.lazyRequireGetter(this, "inactivePropertyHelper",
-  "devtools/server/actors/utils/inactive-property-helper", true);
 loader.lazyRequireGetter(this, "parseNamedDeclarations",
   "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "prettifyCSS",
@@ -1285,8 +1283,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         ? form.authoredText
         : form.cssText;
       const declarations = parseNamedDeclarations(isCssPropertyKnown, cssText, true);
-      const el = this.pageStyle.cssLogic.viewedElement;
-      const style = this.pageStyle.cssLogic.computedStyle;
 
       // We need to grab CSS from the window, since calling supports() on the
       // one from the current global will fail due to not being an HTML global.
@@ -1295,8 +1291,6 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Use the 1-arg CSS.supports() call so that we also accept !important
         // in the value.
         decl.isValid = CSS.supports(`${decl.name}:${decl.value}`);
-        decl.isUsed = inactivePropertyHelper.isPropertyUsed(
-          el, style, this.rawRule, decl.name);
         // Check property name. All valid CSS properties support "initial" as a value.
         decl.isNameValid = CSS.supports(decl.name, "initial");
         return decl;
