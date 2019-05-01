@@ -634,6 +634,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Support @autocomplete values for form autofill feature.
+VARCACHE_PREF(
+  "dom.forms.autocomplete.formautofill",
+   dom_forms_autocomplete_formautofill,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------

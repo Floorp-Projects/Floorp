@@ -3461,7 +3461,6 @@ class nsContentUtils {
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static uint32_t sHandlingInputTimeout;
-  static bool sIsFormAutofillAutocompleteEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
