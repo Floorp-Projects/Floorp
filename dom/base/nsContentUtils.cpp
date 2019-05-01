@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sIsFullscreenApiEnabled = false;
 bool nsContentUtils::sIsUnprefixedFullscreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullscreenOnly = true;
 bool nsContentUtils::sIsCutCopyAllowed = true;
@@ -632,9 +631,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sIsFullscreenApiEnabled,
-                               "full-screen-api.enabled");
 
   Preferences::AddBoolVarCache(&sIsUnprefixedFullscreenApiEnabled,
                                "full-screen-api.unprefix.enabled");
@@ -6665,11 +6661,6 @@ bool nsContentUtils::ChannelShouldInheritPrincipal(
          !aLoadingPrincipal->IsSystemPrincipal());
   }
   return inherit;
-}
-
-/* static */
-bool nsContentUtils::IsFullscreenApiEnabled() {
-  return sIsFullscreenApiEnabled;
 }
 
 /* static */

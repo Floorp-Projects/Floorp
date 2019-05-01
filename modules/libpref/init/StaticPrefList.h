@@ -597,13 +597,19 @@ VARCACHE_PREF(
   bool, true
 )
 
-
 // Allow the content process to create a File from a path. This is allowed just
 // on parent process, on 'file' Content process, or for testing.
 VARCACHE_PREF(
   "dom.file.createInChild",
    dom_file_createInChild,
   RelaxedAtomicBool, false
+)
+
+// DOM full-screen API.
+VARCACHE_PREF(
+  "full-screen-api.enabled",
+   full_screen_api_enabled,
+  bool, false
 )
 
 //---------------------------------------------------------------------------
