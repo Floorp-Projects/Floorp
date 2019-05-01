@@ -232,12 +232,6 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
 
 void TextTrackManager::DidSeek() {
   WEBVTT_LOG("DidSeek");
-  if (mMediaElement) {
-    mLastTimeMarchesOnCalled =
-        media::TimeUnit::FromSeconds(mMediaElement->CurrentTime());
-    WEBVTT_LOGV("DidSeek set mLastTimeMarchesOnCalled %lf",
-                mLastTimeMarchesOnCalled.ToSeconds());
-  }
   mHasSeeked = true;
 }
 
