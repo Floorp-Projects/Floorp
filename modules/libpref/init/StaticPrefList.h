@@ -242,6 +242,14 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Enable not moving the cursor to end when a text input or textarea has .value
+// set to the value it already has.  By default, enabled.
+VARCACHE_PREF(
+  "dom.input.skip_cursor_move_for_same_value_set",
+   dom_input_skip_cursor_move_for_same_value_set,
+  bool, true
+)
+
 // NOTE: This preference is used in unit tests. If it is removed or its default
 // value changes, please update test_sharedMap_var_caches.js accordingly.
 VARCACHE_PREF(

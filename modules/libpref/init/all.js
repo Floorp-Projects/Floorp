@@ -1376,10 +1376,6 @@ pref("dom.select_popup_in_parent.enabled", false);
 // Enable Directory API. By default, disabled.
 pref("dom.input.dirpicker", false);
 
-// Enable not moving the cursor to end when a text input or textarea has .value
-// set to the value it already has.  By default, enabled.
-pref("dom.input.skip_cursor_move_for_same_value_set", true);
-
 pref("dom.cycle_collector.incremental", true);
 
 // Whether to shim a Components object on untrusted windows.

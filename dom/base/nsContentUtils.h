@@ -3190,14 +3190,6 @@ class nsContentUtils {
   static uint64_t GenerateBrowsingContextId();
 
   /**
-   * Check whether we should skip moving the cursor for a same-value .value set
-   * on a text input or textarea.
-   */
-  static bool SkipCursorMoveForSameValueSet() {
-    return sSkipCursorMoveForSameValueSet;
-  }
-
-  /**
    * Determine whether or not the user is currently interacting with the web
    * browser. This method is safe to call from off of the main thread.
    */
@@ -3433,7 +3425,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
   static bool sTailingEnabled;
   static bool sShowInputPlaceholderOnFocus;

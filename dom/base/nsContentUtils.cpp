@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
 bool nsContentUtils::sTailingEnabled = false;
 bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
@@ -612,10 +611,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sSkipCursorMoveForSameValueSet,
-                               "dom.input.skip_cursor_move_for_same_value_set",
-                               true);
 
   Preferences::AddBoolVarCache(&sRequestIdleCallbackEnabled,
                                "dom.requestIdleCallback.enabled", false);
