@@ -2418,6 +2418,18 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "privacy.window.maxInnerWidth",
+   privacy_window_maxInnerWidth,
+  int32_t, 1000
+)
+
+VARCACHE_PREF(
+  "privacy.window.maxInnerHeight",
+   privacy_window_maxInnerHeight,
+  int32_t, 1000
+)
+
 // Password protection
 VARCACHE_PREF(
   "browser.safebrowsing.passwords.enabled",

@@ -3477,9 +3477,6 @@ class nsContentUtils {
   static int32_t sBytecodeCacheStrategy;
   static bool sAntiTrackingControlCenterUIEnabled;
 
-  static int32_t sPrivacyMaxInnerWidth;
-  static int32_t sPrivacyMaxInnerHeight;
-
   class UserInteractionObserver;
   static UserInteractionObserver* sUserInteractionObserver;
 
