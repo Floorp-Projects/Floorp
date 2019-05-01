@@ -2348,11 +2348,6 @@ class nsContentUtils {
   }
 
   /*
-   * Returns true if the frame timing APIs are enabled.
-   */
-  static bool IsFrameTimingEnabled();
-
-  /*
    * Returns true if the browser should attempt to prevent the given caller type
    * from collecting distinctive information about the browser that could
    * be used to "fingerprint" and track the user across websites.
@@ -3466,7 +3461,6 @@ class nsContentUtils {
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static uint32_t sHandlingInputTimeout;
-  static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
