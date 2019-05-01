@@ -132,7 +132,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     }
 
     try {
-      await Services.search.removeWebExtensionEngine(id);
+      let engines = await Services.search.getEnginesByExtensionID(id);
+      if (engines.length > 0) {
+        await Services.search.removeWebExtensionEngine(id);
+      }
     } catch (e) {
       Cu.reportError(e);
     }

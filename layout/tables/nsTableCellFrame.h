@@ -124,12 +124,12 @@ class nsTableCellFrame : public nsContainerFrame,
   /*
    * Get the value of vertical-align adjusted for CSS 2's rules for a
    * table cell, which means the result is always
-   * NS_STYLE_VERTICAL_ALIGN_{TOP,MIDDLE,BOTTOM,BASELINE}.
+   * StyleVerticalAlignKeyword::{Top,Middle,Bottom,Baseline}.
    */
-  virtual uint8_t GetVerticalAlign() const;
+  virtual mozilla::StyleVerticalAlignKeyword GetVerticalAlign() const;
 
   bool HasVerticalAlignBaseline() const {
-    return GetVerticalAlign() == NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    return GetVerticalAlign() == mozilla::StyleVerticalAlignKeyword::Baseline;
   }
 
   bool CellHasVisibleContent(nscoord aBSize, nsTableFrame* tableFrame,

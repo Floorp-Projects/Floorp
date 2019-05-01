@@ -127,10 +127,12 @@ class ProviderUnifiedComplete extends UrlbarProvider {
             addCallback(UrlbarProviderUnifiedComplete, match);
           }
           if (done) {
+            delete this._resolveSearch;
             resolve();
           }
         },
       };
+      this._resolveSearch = resolve;
       unifiedComplete.startSearch(queryContext.searchString,
                                   params.join(" "),
                                   null, // previousResult
@@ -150,6 +152,9 @@ class ProviderUnifiedComplete extends UrlbarProvider {
     // This doesn't properly support being used concurrently by multiple fields.
     this.queries.delete(queryContext);
     unifiedComplete.stopSearch();
+    if (this._resolveSearch) {
+      this._resolveSearch();
+    }
   }
 }
 

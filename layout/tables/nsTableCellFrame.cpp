@@ -523,8 +523,6 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
   nscoord bStartInset = borderPadding.BStart(aWM);
   nscoord bEndInset = borderPadding.BEnd(aWM);
 
-  uint8_t verticalAlignFlags = GetVerticalAlign();
-
   nscoord bSize = BSize(aWM);
   nsIFrame* firstKid = mFrames.FirstChild();
   nsSize containerSize = mRect.Size();
@@ -536,26 +534,26 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
 
   // Vertically align the child
   nscoord kidBStart = 0;
-  switch (verticalAlignFlags) {
-    case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+  switch (GetVerticalAlign()) {
+    case StyleVerticalAlignKeyword::Baseline:
       // Align the baselines of the child frame with the baselines of
       // other children in the same row which have 'vertical-align: baseline'
       kidBStart = bStartInset + aMaxAscent - GetCellBaseline();
       break;
 
-    case NS_STYLE_VERTICAL_ALIGN_TOP:
+    case StyleVerticalAlignKeyword::Top:
       // Align the top of the child frame with the top of the content area,
       kidBStart = bStartInset;
       break;
 
-    case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+    case StyleVerticalAlignKeyword::Bottom:
       // Align the bottom of the child frame with the bottom of the content
       // area,
       kidBStart = bSize - childBSize - bEndInset;
       break;
 
     default:
-    case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+    case StyleVerticalAlignKeyword::Middle:
       // Align the middle of the child frame with the middle of the content
       // area,
       kidBStart = (bSize - childBSize - bEndInset + bStartInset) / 2;
@@ -603,17 +601,17 @@ bool nsTableCellFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
 
 // Per CSS 2.1, we map 'sub', 'super', 'text-top', 'text-bottom',
 // length, percentage, and calc() values to 'baseline'.
-uint8_t nsTableCellFrame::GetVerticalAlign() const {
-  const nsStyleCoord& verticalAlign = StyleDisplay()->mVerticalAlign;
-  if (verticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    uint8_t value = verticalAlign.GetIntValue();
-    if (value == NS_STYLE_VERTICAL_ALIGN_TOP ||
-        value == NS_STYLE_VERTICAL_ALIGN_MIDDLE ||
-        value == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
+StyleVerticalAlignKeyword nsTableCellFrame::GetVerticalAlign() const {
+  const StyleVerticalAlign& verticalAlign = StyleDisplay()->mVerticalAlign;
+  if (verticalAlign.IsKeyword()) {
+    auto value = verticalAlign.AsKeyword();
+    if (value == StyleVerticalAlignKeyword::Top ||
+        value == StyleVerticalAlignKeyword::Middle ||
+        value == StyleVerticalAlignKeyword::Bottom) {
       return value;
     }
   }
-  return NS_STYLE_VERTICAL_ALIGN_BASELINE;
+  return StyleVerticalAlignKeyword::Baseline;
 }
 
 bool nsTableCellFrame::CellHasVisibleContent(nscoord height,

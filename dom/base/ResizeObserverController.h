@@ -42,10 +42,14 @@ class ResizeObserverNotificationHelper final : public nsARefreshObserver {
 
   void Unregister();
 
+  bool IsRegistered() const { return mRegistered; }
+
+  void DetachFromOwner() { mOwner = nullptr; }
+
  private:
   virtual ~ResizeObserverNotificationHelper();
 
-  ResizeObserverController* const mOwner;
+  ResizeObserverController* mOwner;
   bool mRegistered;
 };
 
@@ -66,6 +70,7 @@ class ResizeObserverController final {
   void Traverse(nsCycleCollectionTraversalCallback& aCb);
   void Unlink();
 
+  void ShellDetachedFromDocument();
   void AddResizeObserver(ResizeObserver* aObserver);
 
   /**

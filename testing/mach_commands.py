@@ -1141,6 +1141,7 @@ class TestInfoCommand(MachCommandBase):
 @CommandProvider
 class RustTests(MachCommandBase):
     @Command('rusttests', category='testing',
+             conditions=[conditions.is_non_artifact_build],
              description="Run rust unit tests (via cargo test).")
     def run_rusttests(self, **kwargs):
         return self._mach_context.commands.dispatch('build', self._mach_context,

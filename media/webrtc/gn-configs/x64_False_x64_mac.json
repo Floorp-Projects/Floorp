@@ -10231,7 +10231,6 @@
                 "//modules/desktop_capture/window_finder.h",
                 "//modules/desktop_capture/desktop_device_info.cc",
                 "//modules/desktop_capture/desktop_device_info.h",
-                "//modules/desktop_capture/app_capturer_mac.mm",
                 "//modules/desktop_capture/mac/desktop_device_info_mac.mm"
             ],
             "type": "static_library"
