@@ -477,8 +477,12 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
           nsContentUtils::ShouldResistFingerprinting(GetOwnerDoc())
                      :
                      // If we're constructed from an offscreen canvas
-          nsContentUtils::ShouldResistFingerprinting(
-              mOffscreenCanvas->GetOwnerGlobal()->PrincipalOrNull());
+          (mOffscreenCanvas->GetOwnerGlobal()
+               ? nsContentUtils::ShouldResistFingerprinting(
+                     mOffscreenCanvas->GetOwnerGlobal()->PrincipalOrNull())
+               :
+               // Last resort, just check the global preference
+               nsContentUtils::ShouldResistFingerprinting());
 
   if (gfxPrefs::WebGLMinCapabilityMode()) {
     bool ok = true;
