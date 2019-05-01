@@ -1664,12 +1664,17 @@ var PanelView = class extends AssociatedToNode {
         this._doingKeyboardActivation = true;
         // Unfortunately, 'tabindex' doesn't execute the default action, so
         // we explicitly do this here.
-        // We are sending a command event and then a click event.
-        // This is done in order to mimic a "real" mouse click event.
-        // The command event executes the action, then the click event closes the menu.
+        // We are sending a command event, a mousedown event and then a click
+        // event. This is done in order to mimic a "real" mouse click event.
+        // Normally, the command event executes the action, then the click event
+        // closes the menu. However, in some cases (e.g. the Library button),
+        // there is no command event handler and the mousedown event executes the
+        // action instead.
         button.doCommand();
-        let clickEvent = new event.target.ownerGlobal.MouseEvent("click", {"bubbles": true});
-        button.dispatchEvent(clickEvent);
+        let dispEvent = new event.target.ownerGlobal.MouseEvent("mousedown", {"bubbles": true});
+        button.dispatchEvent(dispEvent);
+        dispEvent = new event.target.ownerGlobal.MouseEvent("click", {"bubbles": true});
+        button.dispatchEvent(dispEvent);
         this._doingKeyboardActivation = false;
         break;
       }

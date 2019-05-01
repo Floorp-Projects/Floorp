@@ -288,6 +288,20 @@ add_task(async function testActivation() {
   await hidePopup();
 });
 
+// Test that keyboard activation works for buttons responding to mousedown
+// events (instead of command or click). The Library button does this, for
+// example.
+add_task(async function testActivationMousedown() {
+  await openPopup();
+  await expectFocusAfterKey("ArrowDown", gMainButton1);
+  let activated = false;
+  gMainButton1.onmousedown = function() { activated = true; };
+  EventUtils.synthesizeKey(" ");
+  ok(activated, "mousedown activated after space");
+  gMainButton1.onmousedown = null;
+  await hidePopup();
+});
+
 // Test that tab and the arrow keys aren't overridden in embedded documents.
 add_task(async function testTabArrowsBrowser() {
   await openPopup();
