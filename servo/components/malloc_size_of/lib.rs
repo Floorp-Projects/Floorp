@@ -749,6 +749,7 @@ where
             Component::ExplicitUniversalType |
             Component::LocalName(..) |
             Component::ID(..) |
+            Component::Part(..) |
             Component::Class(..) |
             Component::AttributeInNoNamespaceExists { .. } |
             Component::AttributeInNoNamespace { .. } |
