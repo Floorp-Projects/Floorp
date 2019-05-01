@@ -305,7 +305,7 @@ DOMHighResTimeStamp PerformanceMainThread::CreationTime() const {
 void PerformanceMainThread::CreateNavigationTimingEntry() {
   MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
 
-  if (!nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
+  if (!StaticPrefs::dom_enable_performance_navigation_timing()) {
     return;
   }
 

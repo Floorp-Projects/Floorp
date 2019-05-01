@@ -2341,13 +2341,6 @@ class nsContentUtils {
   static bool IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal);
 
   /*
-   * Returns true if the performance timing APIs are enabled.
-   */
-  static bool IsPerformanceNavigationTimingEnabled() {
-    return sIsPerformanceNavigationTimingEnabled;
-  }
-
-  /*
    * Returns true if notification should be sent for peformance timing events.
    */
   static bool SendPerformanceTimingNotifications() {
@@ -3473,7 +3466,6 @@ class nsContentUtils {
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static uint32_t sHandlingInputTimeout;
-  static bool sIsPerformanceNavigationTimingEnabled;
   static bool sIsUpgradableDisplayContentPrefEnabled;
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
