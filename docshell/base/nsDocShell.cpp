@@ -4255,6 +4255,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     if (messageStr.IsEmpty()) {
       messageStr.AssignLiteral(u" ");
     }
+  } else if (NS_ERROR_FRAME_CRASHED == aError) {
+    errorPage.AssignLiteral("framecrashed");
+    error = "framecrashed";
+    messageStr.AssignLiteral(u" ");
   } else if (NS_ERROR_BUILDID_MISMATCH == aError) {
     errorPage.AssignLiteral("restartrequired");
     error = "restartrequired";

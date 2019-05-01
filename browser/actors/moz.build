@@ -40,6 +40,8 @@ FINAL_TARGET_FILES.actors += [
     'PluginChild.jsm',
     'RFPHelperChild.jsm',
     'SearchTelemetryChild.jsm',
+    'SubframeCrashChild.jsm',
+    'SubframeCrashParent.jsm',
     'URIFixupChild.jsm',
     'WebRTCChild.jsm',
 ]

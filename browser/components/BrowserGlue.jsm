@@ -16,6 +16,17 @@ ChromeUtils.defineModuleGetter(this, "ActorManagerParent",
 const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
 
 let ACTORS = {
+  SubframeCrash: {
+    parent: {
+      moduleURI: "resource:///actors/SubframeCrashParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/SubframeCrashChild.jsm",
+    },
+
+    allFrames: true,
+  },
 };
 
 let LEGACY_ACTORS = {
