@@ -214,6 +214,17 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintFlags)
 // See comment at declaration of ScheduleViewManagerFlush() for the detail.
 enum class PaintType { Default, DelayedCompress };
 
+// This is a private enum class of PresShell, but currently,
+// MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS isn't available in class definition.
+// Therefore, we need to put this here.
+enum class RenderingStateFlags : uint8_t {
+  None = 0,
+  IgnoringViewportScrolling = 1 << 0,
+  DrawWindowNotFlushing = 1 << 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RenderingStateFlags)
+
 #ifdef DEBUG
 
 enum class VerifyReflowFlags {
