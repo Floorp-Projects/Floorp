@@ -39,9 +39,11 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToHost
@@ -148,7 +150,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                                     .openToBrowserAndLoad(
                                         searchTermOrURL = url,
                                         newTab = false,
-                                        from = BrowserDirection.FromBookmarks)
+                                        from = BrowserDirection.FromBookmarks
+                                    )
                             }
                         }
                         requireComponents.analytics.metrics.track(Event.OpenedBookmark)
@@ -210,13 +213,17 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         }
                     }
                     is BookmarkAction.Delete -> {
-                        allowUndo(
+                        val components = context?.applicationContext?.components!!
+
+                        getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot - it.item.guid))
+
+                        CoroutineScope(Main).allowUndo(
                             view!!, getString(R.string.bookmark_deletion_snackbar_message, it.item.url.urlToHost()),
                             getString(R.string.bookmark_undo_deletion)
                         ) {
-                            requireComponents.core.bookmarksStorage.deleteNode(it.item.guid)
-                            requireComponents.analytics.metrics.track(Event.RemoveBookmark)
-                            refreshBookmarks()
+                            components.core.bookmarksStorage.deleteNode(it.item.guid)
+                            components.analytics.metrics.track(Event.RemoveBookmark)
+                            refreshBookmarks(components)
                         }
                     }
                     is BookmarkAction.ModeChanged -> activity?.invalidateOptionsMenu()
@@ -278,13 +285,18 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 true
             }
             R.id.delete_bookmarks_multi_select -> {
-                allowUndo(
+                val components = context?.applicationContext?.components!!
+
+                val selectedBookmarks = getSelectedBookmarks()
+                getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot - selectedBookmarks))
+
+                CoroutineScope(Main).allowUndo(
                     view!!, getString(R.string.bookmark_deletion_multiple_snackbar_message),
                     getString(R.string.bookmark_undo_deletion)
                 ) {
-                    deleteSelectedBookmarks()
-                    requireComponents.analytics.metrics.track(Event.RemoveBookmarks)
-                    refreshBookmarks()
+                    deleteSelectedBookmarks(selectedBookmarks, components)
+                    components.analytics.metrics.track(Event.RemoveBookmarks)
+                    refreshBookmarks(components)
                 }
                 true
             }
@@ -310,14 +322,17 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     private fun getSelectedBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).getSelected()
 
-    private suspend fun deleteSelectedBookmarks() {
-        getSelectedBookmarks().forEach {
-            requireComponents.core.bookmarksStorage.deleteNode(it.guid)
+    private suspend fun deleteSelectedBookmarks(
+        selected: Set<BookmarkNode> = getSelectedBookmarks(),
+        components: Components = requireComponents
+    ) {
+        selected.forEach {
+            components.core.bookmarksStorage.deleteNode(it.guid)
         }
     }
 
-    private suspend fun refreshBookmarks() {
-        requireComponents.core.bookmarksStorage.getTree(currentRoot!!.guid, false)
+    private suspend fun refreshBookmarks(components: Components = requireComponents) {
+        components.core.bookmarksStorage.getTree(currentRoot!!.guid, false)
             ?.let { node ->
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(node))
             }
@@ -327,4 +342,12 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipBoard.primaryClip = ClipData.newPlainText(url, url)
     }
+}
+
+operator fun BookmarkNode?.minus(child: String): BookmarkNode {
+    return this!!.copy(children = this.children?.filter { it.guid != child })
+}
+
+operator fun BookmarkNode?.minus(children: Set<BookmarkNode>): BookmarkNode {
+    return this!!.copy(children = this.children?.filter { it !in children })
 }
