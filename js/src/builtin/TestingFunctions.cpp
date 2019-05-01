@@ -508,7 +508,8 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("nurseryFreeThresholdForIdleCollectionPercent",                          \
     JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, true)           \
   _("pretenureThreshold", JSGC_PRETENURE_THRESHOLD, true)                    \
-  _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)
+  _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)         \
+  _("zoneAllocDelayKB", JSGC_ZONE_ALLOC_DELAY_KB, true)
 
 static const struct ParamInfo {
   const char* name;
