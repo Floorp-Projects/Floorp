@@ -8,8 +8,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import json
 import logging
-
 import time
+import sys
+
+from redo import retry
 import yaml
 
 from . import GECKO
@@ -320,12 +322,16 @@ def get_existing_tasks(rebuild_kinds, parameters, graph_config):
     by `rebuild_kinds`.
     """
     try:
-        decision_task = find_decision_task(parameters, graph_config)
-        task_graph = get_artifact(decision_task, "public/full-task-graph.json")
+        decision_task = retry(
+            find_decision_task,
+            args=(parameters, graph_config),
+            attempts=4,
+            sleeptime=5*60,
+        )
     except Exception:
         logger.exception("Didn't find existing push task.")
-        return
-    _, task_graph = TaskGraph.from_json(task_graph)
+        sys.exit(1)
+    _, task_graph = TaskGraph.from_json(get_artifact(decision_task, "public/full-task-graph.json"))
     parameters['existing_tasks'] = find_existing_tasks_from_previous_kinds(
         task_graph, [decision_task], rebuild_kinds
     )
