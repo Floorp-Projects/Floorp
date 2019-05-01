@@ -213,6 +213,8 @@
     <string name="library_title">Catálogo</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Opciones</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menú de elementos del historial</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Cerrar</string>
 

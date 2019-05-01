@@ -15,6 +15,13 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Estás en una sesión privada</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_explanation">%1$s borra tus búsquedas e historial de navegación cuando cierras una sesión privada
+        Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet, 
+        te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo. \n\nMitos comunes sobre la navegación privada
+        
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
@@ -26,7 +33,7 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">Siguiente</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">Reiniciar</string>
+    <string name="browser_menu_refresh">Actualizar</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Detener</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -74,7 +81,7 @@
 
     <!-- Preferences -->
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Básico</string>
+    <string name="preferences_category_basics">Aspectos básicos</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Acerca de</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -114,8 +121,12 @@
     <string name="preferences_account_default_name">Cuenta Firefox</string>
     <!-- Preference for language -->
     <string name="preferences_language">Idioma</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Elección de datos</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Herramientas de desarrollador</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Depuración remota vía USB</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugerencias de búsqueda</string>
     <!-- Preference for account settings -->
@@ -132,6 +143,10 @@
     <string name="preferences_sign_out">Cerrar sesión</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">Sincronizando</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">La sincronización falló. Último éxito: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">La sincronización falló. Última sincronización: nunca</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Última sincronización: %s</string>
     <!-- Label summary showing never synced -->
@@ -151,6 +166,10 @@
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Informe de error</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Servicio de localización de Mozilla</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preferences_fenix_health_report">Informe de salud de %s</string>
 
@@ -159,6 +178,8 @@
     <string name="preference_light_theme">Claro</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Oscuro</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Establecido por el ahorrador de batería</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguir tema del dispositivo</string>
 
@@ -194,6 +215,8 @@
     <string name="library_title">Catálogo</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Ajustes</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menú de elementos del historial</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Cerrar</string>
 
@@ -222,6 +245,10 @@
     <string name="session_delete">Eliminar sesión</string>
     <!-- Text for the button to delete a single session -->
     <string name="session_item_delete">Eliminar</string>
+
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
+    <string name="session_items_more">Sitios %1$d…</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -327,6 +354,10 @@
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Ir a Ajustes</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Hoja de ajustes rápidos</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Recomendada</string>
     <!-- button that allows editing site permissions settings -->
