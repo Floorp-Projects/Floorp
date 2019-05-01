@@ -121,4 +121,21 @@ interface nsIRemoteTab : nsISupports
    * see nsISecureBrowserUI.contentBlockingLogJSON.
    */
   Promise getContentBlockingLog();
+
+  cenum NavigationType : 8 {
+    NAVIGATE_BACK = 0,
+    NAVIGATE_FORWARD = 1,
+    NAVIGATE_INDEX = 2,
+    NAVIGATE_URL = 3
+  };
+
+  /**
+   * Interrupt content scripts if possible/needed to allow chrome scripts in the
+   * content process to run (in particular, to allow navigating through browser
+   * history.
+   */
+  [implicit_jscontext, binaryname(MaybeCancelContentJSExecutionFromScript)]
+  void maybeCancelContentJSExecution(
+      in nsIRemoteTab_NavigationType aNavigationType,
+      [optional] in jsval aCancelContentJSOptions);
 };

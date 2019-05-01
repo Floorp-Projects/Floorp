@@ -19,8 +19,8 @@ class nsSOCKSSocketProvider : public nsISocketProvider {
 
   explicit nsSOCKSSocketProvider(uint32_t version) : mVersion(version) {}
 
-  static nsresult CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
-  static nsresult CreateV5(nsISupports *, REFNSIID aIID, void **aResult);
+  static nsresult CreateV4(nsISupports*, REFNSIID aIID, void** aResult);
+  static nsresult CreateV5(nsISupports*, REFNSIID aIID, void** aResult);
 
  private:
   virtual ~nsSOCKSSocketProvider() = default;

@@ -156,7 +156,7 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
                                               displayportBase);
     nsIScrollableFrame* scrollable = do_QueryFrame(root);
     nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-        scrollable, nsLayoutUtils::RepaintMode::DoNotRepaint);
+        scrollable, nsLayoutUtils::RepaintMode::Repaint);
   }
 }
 

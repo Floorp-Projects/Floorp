@@ -47,7 +47,7 @@ typedef nsACString::char_type char_type;
  *        An interator pointing to past-the-end of the string.
  */
 static MOZ_ALWAYS_INLINE void goToNextSearchCandidate(
-    const_char_iterator &aStart, const const_char_iterator &aEnd,
+    const_char_iterator& aStart, const const_char_iterator& aEnd,
     uint32_t aSearchFor) {
   // If the character we search for is ASCII, then we can scan until we find
   // it or its ASCII uppercase character, modulo the special cases
@@ -161,8 +161,8 @@ enum FindInStringBehavior { eFindOnBoundary, eFindAnywhere };
  *
  * @return true if aToken was found in aSourceString, false otherwise.
  */
-static bool findInString(const nsDependentCSubstring &aToken,
-                         const nsACString &aSourceString,
+static bool findInString(const nsDependentCSubstring& aToken,
+                         const nsACString& aSourceString,
                          FindInStringBehavior aBehavior) {
   // GetLowerUTF8Codepoint assumes that there's at least one byte in
   // the string, so don't pass an empty token here.
@@ -214,9 +214,9 @@ static bool findInString(const nsDependentCSubstring &aToken,
 }
 
 static MOZ_ALWAYS_INLINE nsDependentCString
-getSharedUTF8String(mozIStorageValueArray *aValues, uint32_t aIndex) {
+getSharedUTF8String(mozIStorageValueArray* aValues, uint32_t aIndex) {
   uint32_t len;
-  const char *str = aValues->AsSharedUTF8String(aIndex, &len);
+  const char* str = aValues->AsSharedUTF8String(aIndex, &len);
   if (!str) {
     return nsDependentCString("", (uint32_t)0);
   }
@@ -226,12 +226,12 @@ getSharedUTF8String(mozIStorageValueArray *aValues, uint32_t aIndex) {
 class MOZ_STACK_CLASS GetQueryParamIterator final
     : public URLParams::ForEachIterator {
  public:
-  explicit GetQueryParamIterator(const nsCString &aParamName,
-                                 nsVariant *aResult)
+  explicit GetQueryParamIterator(const nsCString& aParamName,
+                                 nsVariant* aResult)
       : mParamName(aParamName), mResult(aResult) {}
 
-  bool URLParamsIterator(const nsAString &aName,
-                         const nsAString &aValue) override {
+  bool URLParamsIterator(const nsAString& aName,
+                         const nsAString& aValue) override {
     NS_ConvertUTF16toUTF8 name(aName);
     if (!mParamName.Equals(name)) {
       return true;
@@ -241,8 +241,8 @@ class MOZ_STACK_CLASS GetQueryParamIterator final
   }
 
  private:
-  const nsCString &mParamName;
-  nsVariant *mResult;
+  const nsCString& mParamName;
+  nsVariant* mResult;
 };
 
 /**
@@ -267,7 +267,7 @@ class MOZ_STACK_CLASS GetQueryParamIterator final
  * @return The length of the prefix in the spec.  If there isn't a prefix,
  *         returns 0.
  */
-static MOZ_ALWAYS_INLINE size_type getPrefixLength(const nsACString &aSpec) {
+static MOZ_ALWAYS_INLINE size_type getPrefixLength(const nsACString& aSpec) {
   // To keep the search bounded, look at 64 characters at most.  The longest
   // IANA schemes are ~30, so double that and round up to a nice number.
   size_type length = std::min(static_cast<size_type>(64), aSpec.Length());
@@ -322,7 +322,7 @@ static MOZ_ALWAYS_INLINE size_type getPrefixLength(const nsACString &aSpec) {
  *         the length of aSpec.
  */
 static MOZ_ALWAYS_INLINE size_type
-indexOfHostAndPort(const nsACString &aSpec, size_type *_hostAndPortLength) {
+indexOfHostAndPort(const nsACString& aSpec, size_type* _hostAndPortLength) {
   size_type index = getPrefixLength(aSpec);
   size_type i = index;
   for (; i < aSpec.Length(); ++i) {
@@ -353,7 +353,7 @@ namespace places {
 //// AutoComplete Matching Function
 
 /* static */
-nsresult MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn) {
+nsresult MatchAutoCompleteFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<MatchAutoCompleteFunction> function = new MatchAutoCompleteFunction();
 
   nsresult rv = aDBConn->CreateFunction(
@@ -365,7 +365,7 @@ nsresult MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn) {
 
 /* static */
 nsDependentCSubstring MatchAutoCompleteFunction::fixupURISpec(
-    const nsACString &aURISpec, int32_t aMatchBehavior, nsACString &aSpecBuf) {
+    const nsACString& aURISpec, int32_t aMatchBehavior, nsACString& aSpecBuf) {
   nsDependentCSubstring fixedSpec;
 
   // Try to unescape the string.  If that succeeds and yields a different
@@ -395,7 +395,7 @@ nsDependentCSubstring MatchAutoCompleteFunction::fixupURISpec(
 
 /* static */
 bool MatchAutoCompleteFunction::findAnywhere(
-    const nsDependentCSubstring &aToken, const nsACString &aSourceString) {
+    const nsDependentCSubstring& aToken, const nsACString& aSourceString) {
   // We can't use FindInReadable here; it works only for ASCII.
 
   return findInString(aToken, aSourceString, eFindAnywhere);
@@ -403,7 +403,7 @@ bool MatchAutoCompleteFunction::findAnywhere(
 
 /* static */
 bool MatchAutoCompleteFunction::findOnBoundary(
-    const nsDependentCSubstring &aToken, const nsACString &aSourceString) {
+    const nsDependentCSubstring& aToken, const nsACString& aSourceString) {
   return findInString(aToken, aSourceString, eFindOnBoundary);
 }
 
@@ -429,8 +429,8 @@ MatchAutoCompleteFunction::MatchAutoCompleteFunction()
 }
 
 NS_IMETHODIMP
-MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                          nsIVariant **_result) {
+MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                          nsIVariant** _result) {
   // Macro to make the code a bit cleaner and easier to read.  Operates on
   // searchBehavior.
   int32_t searchBehavior = aArguments->AsInt32(kArgIndexSearchBehavior);
@@ -493,19 +493,19 @@ MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
   nsDependentCSubstring fixedUrl =
       fixupURISpec(url, matchBehavior, fixedUrlBuf);
   // Limit the number of chars we search through.
-  const nsDependentCSubstring &trimmedUrl =
+  const nsDependentCSubstring& trimmedUrl =
       Substring(fixedUrl, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
   nsDependentCString title = getSharedUTF8String(aArguments, kArgIndexTitle);
   // Limit the number of chars we search through.
-  const nsDependentCSubstring &trimmedTitle =
+  const nsDependentCSubstring& trimmedTitle =
       Substring(title, 0, MAX_CHARS_TO_SEARCH_THROUGH);
 
   // Determine if every token matches either the bookmark title, tags, page
   // title, or page URL.
   nsCWhitespaceTokenizer tokenizer(searchString);
   while (matches && tokenizer.hasMoreTokens()) {
-    const nsDependentCSubstring &token = tokenizer.nextToken();
+    const nsDependentCSubstring& token = tokenizer.nextToken();
 
     if (HAS_BEHAVIOR(TITLE) && HAS_BEHAVIOR(URL)) {
       matches = (searchFunction(token, trimmedTitle) ||
@@ -532,7 +532,7 @@ MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Frecency Calculation Function
 
 /* static */
-nsresult CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn) {
+nsresult CalculateFrecencyFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<CalculateFrecencyFunction> function = new CalculateFrecencyFunction();
 
   nsresult rv = aDBConn->CreateFunction(
@@ -545,8 +545,8 @@ nsresult CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(CalculateFrecencyFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                          nsIVariant **_result) {
+CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                          nsIVariant** _result) {
   // Fetch arguments.  Use default values if they were omitted.
   uint32_t numEntries;
   nsresult rv = aArguments->GetNumEntries(&numEntries);
@@ -577,7 +577,7 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
   int32_t bonus = 0;
 
   // This is a const version of the history object for thread-safety.
-  const nsNavHistory *history = nsNavHistory::GetConstHistoryService();
+  const nsNavHistory* history = nsNavHistory::GetConstHistoryService();
   NS_ENSURE_STATE(history);
   RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
@@ -743,7 +743,7 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// GUID Creation Function
 
 /* static */
-nsresult GenerateGUIDFunction::create(mozIStorageConnection *aDBConn) {
+nsresult GenerateGUIDFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
   nsresult rv =
       aDBConn->CreateFunction(NS_LITERAL_CSTRING("generate_guid"), 0, function);
@@ -755,8 +755,8 @@ nsresult GenerateGUIDFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(GenerateGUIDFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                     nsIVariant **_result) {
+GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                     nsIVariant** _result) {
   nsAutoCString guid;
   nsresult rv = GenerateGUID(guid);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -769,7 +769,7 @@ GenerateGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// GUID Validation Function
 
 /* static */
-nsresult IsValidGUIDFunction::create(mozIStorageConnection *aDBConn) {
+nsresult IsValidGUIDFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<IsValidGUIDFunction> function = new IsValidGUIDFunction();
   return aDBConn->CreateFunction(NS_LITERAL_CSTRING("is_valid_guid"), 1,
                                  function);
@@ -778,8 +778,8 @@ nsresult IsValidGUIDFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(IsValidGUIDFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-IsValidGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                    nsIVariant **_result) {
+IsValidGUIDFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                    nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -796,7 +796,7 @@ IsValidGUIDFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Get Unreversed Host Function
 
 /* static */
-nsresult GetUnreversedHostFunction::create(mozIStorageConnection *aDBConn) {
+nsresult GetUnreversedHostFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<GetUnreversedHostFunction> function = new GetUnreversedHostFunction();
   nsresult rv = aDBConn->CreateFunction(
       NS_LITERAL_CSTRING("get_unreversed_host"), 1, function);
@@ -808,8 +808,8 @@ nsresult GetUnreversedHostFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(GetUnreversedHostFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                          nsIVariant **_result) {
+GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                          nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -834,7 +834,7 @@ GetUnreversedHostFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Fixup URL Function
 
 /* static */
-nsresult FixupURLFunction::create(mozIStorageConnection *aDBConn) {
+nsresult FixupURLFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<FixupURLFunction> function = new FixupURLFunction();
   nsresult rv =
       aDBConn->CreateFunction(NS_LITERAL_CSTRING("fixup_url"), 1, function);
@@ -846,8 +846,8 @@ nsresult FixupURLFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(FixupURLFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-FixupURLFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                 nsIVariant **_result) {
+FixupURLFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                 nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -877,7 +877,7 @@ FixupURLFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Frecency Changed Notification Function
 
 /* static */
-nsresult FrecencyNotificationFunction::create(mozIStorageConnection *aDBConn) {
+nsresult FrecencyNotificationFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<FrecencyNotificationFunction> function =
       new FrecencyNotificationFunction();
   nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("notify_frecency"),
@@ -890,8 +890,8 @@ nsresult FrecencyNotificationFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(FrecencyNotificationFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                             nsIVariant **_result) {
+FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                             nsIVariant** _result) {
   uint32_t numArgs;
   nsresult rv = aArgs->GetNumEntries(&numArgs);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -910,7 +910,7 @@ FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
   bool hidden = static_cast<bool>(aArgs->AsInt32(3));
   PRTime lastVisitDate = static_cast<PRTime>(aArgs->AsInt64(4));
 
-  const nsNavHistory *navHistory = nsNavHistory::GetConstHistoryService();
+  const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
   NS_ENSURE_STATE(navHistory);
   navHistory->DispatchFrecencyChangedNotification(spec, newFrecency, guid,
                                                   hidden, lastVisitDate);
@@ -926,7 +926,7 @@ FrecencyNotificationFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// Store Last Inserted Id Function
 
 /* static */
-nsresult StoreLastInsertedIdFunction::create(mozIStorageConnection *aDBConn) {
+nsresult StoreLastInsertedIdFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<StoreLastInsertedIdFunction> function =
       new StoreLastInsertedIdFunction();
   nsresult rv = aDBConn->CreateFunction(
@@ -939,8 +939,8 @@ nsresult StoreLastInsertedIdFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(StoreLastInsertedIdFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-StoreLastInsertedIdFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                            nsIVariant **_result) {
+StoreLastInsertedIdFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                            nsIVariant** _result) {
   uint32_t numArgs;
   nsresult rv = aArgs->GetNumEntries(&numArgs);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -976,7 +976,7 @@ StoreLastInsertedIdFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// Get Query Param Function
 
 /* static */
-nsresult GetQueryParamFunction::create(mozIStorageConnection *aDBConn) {
+nsresult GetQueryParamFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<GetQueryParamFunction> function = new GetQueryParamFunction();
   return aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_query_param"), 2,
                                  function);
@@ -985,8 +985,8 @@ nsresult GetQueryParamFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(GetQueryParamFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                                      nsIVariant **_result) {
+GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                      nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -1007,7 +1007,7 @@ GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Hash Function
 
 /* static */
-nsresult HashFunction::create(mozIStorageConnection *aDBConn) {
+nsresult HashFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<HashFunction> function = new HashFunction();
   return aDBConn->CreateFunction(NS_LITERAL_CSTRING("hash"), -1, function);
 }
@@ -1015,8 +1015,8 @@ nsresult HashFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(HashFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-HashFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
-                             nsIVariant **_result) {
+HashFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                             nsIVariant** _result) {
   // Must have non-null function arguments.
   MOZ_ASSERT(aArguments);
 
@@ -1047,7 +1047,7 @@ HashFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
 //// Get prefix function
 
 /* static */
-nsresult GetPrefixFunction::create(mozIStorageConnection *aDBConn) {
+nsresult GetPrefixFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<GetPrefixFunction> function = new GetPrefixFunction();
   nsresult rv =
       aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_prefix"), 1, function);
@@ -1059,8 +1059,8 @@ nsresult GetPrefixFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(GetPrefixFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-GetPrefixFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                  nsIVariant **_result) {
+GetPrefixFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                  nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
   uint32_t numArgs;
@@ -1080,7 +1080,7 @@ GetPrefixFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// Get host and port function
 
 /* static */
-nsresult GetHostAndPortFunction::create(mozIStorageConnection *aDBConn) {
+nsresult GetHostAndPortFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<GetHostAndPortFunction> function = new GetHostAndPortFunction();
   nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("get_host_and_port"),
                                         1, function);
@@ -1092,8 +1092,8 @@ nsresult GetHostAndPortFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(GetHostAndPortFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-GetHostAndPortFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                       nsIVariant **_result) {
+GetHostAndPortFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                       nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
   uint32_t numArgs;
@@ -1117,7 +1117,7 @@ GetHostAndPortFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 
 /* static */
 nsresult StripPrefixAndUserinfoFunction::create(
-    mozIStorageConnection *aDBConn) {
+    mozIStorageConnection* aDBConn) {
   RefPtr<StripPrefixAndUserinfoFunction> function =
       new StripPrefixAndUserinfoFunction();
   nsresult rv = aDBConn->CreateFunction(
@@ -1130,8 +1130,8 @@ nsresult StripPrefixAndUserinfoFunction::create(
 NS_IMPL_ISUPPORTS(StripPrefixAndUserinfoFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-StripPrefixAndUserinfoFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                               nsIVariant **_result) {
+StripPrefixAndUserinfoFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                               nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
   uint32_t numArgs;
@@ -1153,7 +1153,7 @@ StripPrefixAndUserinfoFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// Is frecency decaying function
 
 /* static */
-nsresult IsFrecencyDecayingFunction::create(mozIStorageConnection *aDBConn) {
+nsresult IsFrecencyDecayingFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<IsFrecencyDecayingFunction> function =
       new IsFrecencyDecayingFunction();
   nsresult rv = aDBConn->CreateFunction(
@@ -1166,8 +1166,8 @@ nsresult IsFrecencyDecayingFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(IsFrecencyDecayingFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                           nsIVariant **_result) {
+IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                           nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
   uint32_t numArgs;
@@ -1175,7 +1175,7 @@ IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(numArgs == 0);
 
-  const nsNavHistory *navHistory = nsNavHistory::GetConstHistoryService();
+  const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
   NS_ENSURE_STATE(navHistory);
 
   RefPtr<nsVariant> result = new nsVariant();
@@ -1189,7 +1189,7 @@ IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// sqrt function
 
 /* static */
-nsresult SqrtFunction::create(mozIStorageConnection *aDBConn) {
+nsresult SqrtFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<SqrtFunction> function = new SqrtFunction();
   nsresult rv =
       aDBConn->CreateFunction(NS_LITERAL_CSTRING("sqrt"), 1, function);
@@ -1200,8 +1200,8 @@ nsresult SqrtFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(SqrtFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-SqrtFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                             nsIVariant **_result) {
+SqrtFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                             nsIVariant** _result) {
   MOZ_ASSERT(aArgs);
 
   uint32_t numArgs;
@@ -1223,7 +1223,7 @@ SqrtFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
 //// Note Sync Change Function
 
 /* static */
-nsresult NoteSyncChangeFunction::create(mozIStorageConnection *aDBConn) {
+nsresult NoteSyncChangeFunction::create(mozIStorageConnection* aDBConn) {
   RefPtr<NoteSyncChangeFunction> function = new NoteSyncChangeFunction();
   nsresult rv = aDBConn->CreateFunction(NS_LITERAL_CSTRING("note_sync_change"),
                                         0, function);
@@ -1235,8 +1235,8 @@ nsresult NoteSyncChangeFunction::create(mozIStorageConnection *aDBConn) {
 NS_IMPL_ISUPPORTS(NoteSyncChangeFunction, mozIStorageFunction)
 
 NS_IMETHODIMP
-NoteSyncChangeFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                       nsIVariant **_result) {
+NoteSyncChangeFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
+                                       nsIVariant** _result) {
   nsNavBookmarks::NoteSyncChange();
   *_result = nullptr;
   return NS_OK;

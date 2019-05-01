@@ -28,7 +28,7 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
    * currently, none are supported and the behaviour is more or less that of
    * RTLD_GLOBAL | RTLD_BIND_NOW.
    */
-  static already_AddRefed<LibHandle> Load(Mappable *mappable, const char *path,
+  static already_AddRefed<LibHandle> Load(Mappable* mappable, const char* path,
                                           int flags);
 
   /**
@@ -37,14 +37,14 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
   virtual ~CustomElf();
 
  protected:
-  virtual Mappable *GetMappable() const;
+  virtual Mappable* GetMappable() const;
 
  public:
   /**
    * Returns the instance, casted as BaseElf. (short of a better way to do
    * this without RTTI)
    */
-  virtual BaseElf *AsBaseElf() { return this; }
+  virtual BaseElf* AsBaseElf() { return this; }
 
  private:
   /**
@@ -52,12 +52,12 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
    * given symbol name. This is used to find symbols that are undefined
    * in the Elf object.
    */
-  void *GetSymbolPtrInDeps(const char *symbol) const;
+  void* GetSymbolPtrInDeps(const char* symbol) const;
 
   /**
    * Private constructor
    */
-  CustomElf(Mappable *mappable, const char *path)
+  CustomElf(Mappable* mappable, const char* path)
       : BaseElf(path, mappable),
         link_map(),
         init(0),
@@ -69,14 +69,14 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
    * Loads an Elf segment defined by the given PT_LOAD header.
    * Returns whether this succeeded or failed.
    */
-  bool LoadSegment(const Elf::Phdr *pt_load) const;
+  bool LoadSegment(const Elf::Phdr* pt_load) const;
 
   /**
    * Initializes the library according to information found in the given
    * PT_DYNAMIC header.
    * Returns whether this succeeded or failed.
    */
-  bool InitDyn(const Elf::Phdr *pt_dyn);
+  bool InitDyn(const Elf::Phdr* pt_dyn);
 
   /**
    * Apply .rel.dyn/.rela.dyn relocations.
@@ -105,11 +105,11 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
   /**
    * Call a function given a pointer to its location.
    */
-  void CallFunction(void *ptr) const {
+  void CallFunction(void* ptr) const {
     /* C++ doesn't allow direct conversion between pointer-to-object
      * and pointer-to-function. */
     union {
-      void *ptr;
+      void* ptr;
       void (*func)(void);
     } f;
     f.ptr = ptr;
@@ -137,7 +137,7 @@ class CustomElf : public BaseElf, private ElfLoader::link_map {
 
   /* List of initialization and destruction functions
    * (.init_array/.fini_array) */
-  Array<void *> init_array, fini_array;
+  Array<void*> init_array, fini_array;
 
   bool initialized;
 

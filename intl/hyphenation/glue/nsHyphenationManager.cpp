@@ -28,14 +28,14 @@ using namespace mozilla;
 static const char kIntlHyphenationAliasPrefix[] = "intl.hyphenation-alias.";
 static const char kMemoryPressureNotification[] = "memory-pressure";
 
-nsHyphenationManager *nsHyphenationManager::sInstance = nullptr;
+nsHyphenationManager* nsHyphenationManager::sInstance = nullptr;
 
 NS_IMPL_ISUPPORTS(nsHyphenationManager::MemoryPressureObserver, nsIObserver)
 
 NS_IMETHODIMP
-nsHyphenationManager::MemoryPressureObserver::Observe(nsISupports *aSubject,
-                                                      const char *aTopic,
-                                                      const char16_t *aData) {
+nsHyphenationManager::MemoryPressureObserver::Observe(nsISupports* aSubject,
+                                                      const char* aTopic,
+                                                      const char16_t* aData) {
   if (!nsCRT::strcmp(aTopic, kMemoryPressureNotification)) {
     // We don't call Instance() here, as we don't want to create a hyphenation
     // manager if there isn't already one in existence.
@@ -48,7 +48,7 @@ nsHyphenationManager::MemoryPressureObserver::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-nsHyphenationManager *nsHyphenationManager::Instance() {
+nsHyphenationManager* nsHyphenationManager::Instance() {
   if (sInstance == nullptr) {
     sInstance = new nsHyphenationManager();
 
@@ -74,7 +74,7 @@ nsHyphenationManager::nsHyphenationManager() {
 nsHyphenationManager::~nsHyphenationManager() { sInstance = nullptr; }
 
 already_AddRefed<nsHyphenator> nsHyphenationManager::GetHyphenator(
-    nsAtom *aLocale) {
+    nsAtom* aLocale) {
   RefPtr<nsHyphenator> hyph;
   mHyphenators.Get(aLocale, getter_AddRefs(hyph));
   if (hyph) {
@@ -178,13 +178,13 @@ void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
     return;
   }
 
-  nsZipFind *find;
+  nsZipFind* find;
   zip->FindInit("hyphenation/hyph_*.dic", &find);
   if (!find) {
     return;
   }
 
-  const char *result;
+  const char* result;
   uint16_t len;
   while (NS_SUCCEEDED(find->FindNext(&result, &len))) {
     nsCString uriString(base);
@@ -219,7 +219,7 @@ void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
   delete find;
 }
 
-void nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir) {
+void nsHyphenationManager::LoadPatternListFromDir(nsIFile* aDir) {
   nsresult rv;
 
   bool check = false;
@@ -271,12 +271,12 @@ void nsHyphenationManager::LoadPatternListFromDir(nsIFile *aDir) {
 }
 
 void nsHyphenationManager::LoadAliases() {
-  nsIPrefBranch *prefRootBranch = Preferences::GetRootBranch();
+  nsIPrefBranch* prefRootBranch = Preferences::GetRootBranch();
   if (!prefRootBranch) {
     return;
   }
   uint32_t prefCount;
-  char **prefNames;
+  char** prefNames;
   nsresult rv = prefRootBranch->GetChildList(kIntlHyphenationAliasPrefix,
                                              &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {

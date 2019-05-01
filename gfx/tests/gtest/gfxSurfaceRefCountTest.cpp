@@ -13,7 +13,7 @@
 
 #include "cairo.h"
 
-static int GetASurfaceRefCount(gfxASurface *s) {
+static int GetASurfaceRefCount(gfxASurface* s) {
   NS_ADDREF(s);
   return s->Release();
 }
@@ -27,7 +27,7 @@ static int CheckInt(int value, int expected) {
   return 0;
 }
 
-static int CheckPointer(void *value, void *expected) {
+static int CheckPointer(void* value, void* expected) {
   if (value != expected) {
     fprintf(stderr, "Expected %p got %p\n", expected, value);
     return 1;
@@ -37,7 +37,7 @@ static int CheckPointer(void *value, void *expected) {
 }
 
 static cairo_user_data_key_t destruction_key;
-static void SurfaceDestroyNotifier(void *data) { *(int *)data = 1; }
+static void SurfaceDestroyNotifier(void* data) { *(int*)data = 1; }
 
 static int TestNewSurface() {
   int failures = 0;
@@ -45,7 +45,7 @@ static int TestNewSurface() {
 
   RefPtr<gfxASurface> s = new gfxImageSurface(mozilla::gfx::IntSize(10, 10),
                                               SurfaceFormat::A8R8G8B8_UINT32);
-  cairo_surface_t *cs = s->CairoSurface();
+  cairo_surface_t* cs = s->CairoSurface();
 
   cairo_surface_set_user_data(cs, &destruction_key, &destroyed,
                               SurfaceDestroyNotifier);
@@ -60,7 +60,7 @@ static int TestNewSurface() {
   failures += CheckInt(cairo_surface_get_reference_count(cs), 2);
   failures += CheckInt(destroyed, 0);
 
-  gfxASurface *savedWrapper = s.get();
+  gfxASurface* savedWrapper = s.get();
 
   s = nullptr;
 
@@ -91,7 +91,7 @@ static int TestExistingSurface() {
   int failures = 0;
   int destroyed = 0;
 
-  cairo_surface_t *cs = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
+  cairo_surface_t* cs = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 10, 10);
 
   cairo_surface_set_user_data(cs, &destruction_key, &destroyed,
                               SurfaceDestroyNotifier);
@@ -109,7 +109,7 @@ static int TestExistingSurface() {
   failures += CheckInt(cairo_surface_get_reference_count(cs), 3);
   failures += CheckInt(destroyed, 0);
 
-  gfxASurface *savedWrapper = s.get();
+  gfxASurface* savedWrapper = s.get();
 
   s = nullptr;
 

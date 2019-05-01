@@ -2830,7 +2830,7 @@ class nsLayoutUtils {
    * are async scrollable.
    */
   static void SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-      nsIFrame* aFrame, RepaintMode aRepaintMode);
+      nsIFrame* aFrame);
   /**
    * Finds the closest ancestor async scrollable frame from aFrame that has a
    * displayport and attempts to trigger the displayport expiry on that

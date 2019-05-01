@@ -72,12 +72,12 @@ typedef SInt32 WIErr;
 // A WirelessContext should be created using WirelessAttach
 // before any other Wireless functions are called. WirelessDetach
 // is used to dispose of a WirelessContext.
-typedef struct __WirelessContext *WirelessContextPtr;
+typedef struct __WirelessContext* WirelessContextPtr;
 
 // WirelessAttach
 //
 // This should be called before all other wireless functions.
-typedef WIErr (*WirelessAttachFunction)(WirelessContextPtr *outContext,
+typedef WIErr (*WirelessAttachFunction)(WirelessContextPtr* outContext,
                                         const UInt32);
 
 // WirelessDetach
@@ -110,8 +110,8 @@ struct WirelessNetworkInfo {
 //
 // If stripDups != 0 only one bases tation for each SSID will be returned.
 typedef WIErr (*WirelessScanSplitFunction)(WirelessContextPtr inContext,
-                                           CFArrayRef *apList,
-                                           CFArrayRef *adhocList,
+                                           CFArrayRef* apList,
+                                           CFArrayRef* adhocList,
                                            const UInt32 stripDups);
 
 }  // extern "C"

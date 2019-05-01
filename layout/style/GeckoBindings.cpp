@@ -1225,11 +1225,11 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t aShape, uint8_t aSize,
   result->mRadiusX.SetNoneValue();
   result->mRadiusY.SetNoneValue();
 
-  nsStyleGradientStop dummyStop = {nsStyleCoord(eStyleUnit_None),
-                                   StyleColor::Black(), 0};
+  result->mStops.SetCapacity(aStopCount);
 
+  auto dummyItem = StyleGradientItem::SimpleColorStop(StyleColor::Black());
   for (uint32_t i = 0; i < aStopCount; i++) {
-    result->mStops.AppendElement(dummyStop);
+    result->mStops.AppendElement(dummyItem);
   }
 
   return result;

@@ -17,8 +17,8 @@ class MemoryFunctor : public nsDequeFunctor {
   MemoryFunctor() : mSize(0) {}
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  void operator()(void *aObject) override {
-    const AudioData *audioData = static_cast<const AudioData *>(aObject);
+  void operator()(void* aObject) override {
+    const AudioData* audioData = static_cast<const AudioData*>(aObject);
     mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
   }
 
@@ -27,14 +27,14 @@ class MemoryFunctor : public nsDequeFunctor {
 
 class TestCopy {
  public:
-  TestCopy(uint32_t aFrames, uint32_t aChannels, uint32_t &aCallCount,
-           uint32_t &aFrameCount)
+  TestCopy(uint32_t aFrames, uint32_t aChannels, uint32_t& aCallCount,
+           uint32_t& aFrameCount)
       : mFrames(aFrames),
         mChannels(aChannels),
         mCallCount(aCallCount),
         mFrameCount(aFrameCount) {}
 
-  uint32_t operator()(AudioDataValue *aBuffer, uint32_t aSamples) {
+  uint32_t operator()(AudioDataValue* aBuffer, uint32_t aSamples) {
     mCallCount += 1;
     uint32_t frames = std::min(mFrames - mFrameCount, aSamples / mChannels);
     mFrameCount += frames;
@@ -44,8 +44,8 @@ class TestCopy {
  private:
   const uint32_t mFrames;
   const uint32_t mChannels;
-  uint32_t &mCallCount;
-  uint32_t &mFrameCount;
+  uint32_t& mCallCount;
+  uint32_t& mFrameCount;
 };
 
 static void TestAudioCompactor(size_t aBytes) {

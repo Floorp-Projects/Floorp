@@ -31,7 +31,7 @@ class AxisPhysicsModel {
    * Advance the physics simulation.
    * |aDelta| is the time since the last sample.
    */
-  void Simulate(const TimeDuration &aDeltaTime);
+  void Simulate(const TimeDuration& aDeltaTime);
 
   /**
    * Gets the raw velocity of this axis at this moment.
@@ -72,7 +72,7 @@ class AxisPhysicsModel {
    * axis-position-units / second that should be added or removed from the
    * velocity.
    */
-  virtual double Acceleration(const State &aState) = 0;
+  virtual double Acceleration(const State& aState) = 0;
 
  private:
   /**
@@ -108,8 +108,8 @@ class AxisPhysicsModel {
    * Apply delta velocity and position represented by aDerivative over
    * aDeltaTime seconds, calculate new acceleration, and return new deltas.
    */
-  Derivative Evaluate(const State &aInitState, double aDeltaTime,
-                      const Derivative &aDerivative);
+  Derivative Evaluate(const State& aInitState, double aDeltaTime,
+                      const Derivative& aDerivative);
 
   /**
    * Helper function for performing linear interpolation (lerp) of double's

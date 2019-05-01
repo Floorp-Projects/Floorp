@@ -18,7 +18,7 @@ LazyLogModule gFuzzingLog("nsFuzzingNecko");
   MOZ_LOG(mozilla::net::gFuzzingLog, mozilla::LogLevel::Verbose, args)
 
 // These will be set by setNetworkFuzzingBuffer below
-static Atomic<const uint8_t *> gFuzzingBuf(NULL);
+static Atomic<const uint8_t*> gFuzzingBuf(NULL);
 static Atomic<size_t> gFuzzingSize(0);
 
 /*
@@ -39,7 +39,7 @@ Atomic<bool> gFuzzingConnClosed(true);
 Atomic<bool> gFuzzingAllowNewConn(false);
 Atomic<bool> gFuzzingAllowRead(false);
 
-void setNetworkFuzzingBuffer(const uint8_t *data, size_t size) {
+void setNetworkFuzzingBuffer(const uint8_t* data, size_t size) {
   if (size > INT32_MAX) {
     MOZ_CRASH("Unsupported buffer size");
   }
@@ -51,10 +51,10 @@ void setNetworkFuzzingBuffer(const uint8_t *data, size_t size) {
 
 static PRDescIdentity sFuzzyLayerIdentity;
 static PRIOMethods sFuzzyLayerMethods;
-static PRIOMethods *sFuzzyLayerMethodsPtr = nullptr;
+static PRIOMethods* sFuzzyLayerMethodsPtr = nullptr;
 
-static PRInt16 PR_CALLBACK FuzzyPoll(PRFileDesc *fd, PRInt16 in_flags,
-                                     PRInt16 *out_flags) {
+static PRInt16 PR_CALLBACK FuzzyPoll(PRFileDesc* fd, PRInt16 in_flags,
+                                     PRInt16* out_flags) {
   *out_flags = 0;
 
   if (in_flags & PR_POLL_READ && gFuzzingAllowRead) {
@@ -70,7 +70,7 @@ static PRInt16 PR_CALLBACK FuzzyPoll(PRFileDesc *fd, PRInt16 in_flags,
   return in_flags;
 }
 
-static PRStatus FuzzyConnect(PRFileDesc *fd, const PRNetAddr *addr,
+static PRStatus FuzzyConnect(PRFileDesc* fd, const PRNetAddr* addr,
                              PRIntervalTime timeout) {
   MOZ_RELEASE_ASSERT(fd->identity == sFuzzyLayerIdentity);
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -88,7 +88,7 @@ static PRStatus FuzzyConnect(PRFileDesc *fd, const PRNetAddr *addr,
   return PR_SUCCESS;
 }
 
-static PRInt32 FuzzySend(PRFileDesc *fd, const void *buf, PRInt32 amount,
+static PRInt32 FuzzySend(PRFileDesc* fd, const void* buf, PRInt32 amount,
                          PRIntn flags, PRIntervalTime timeout) {
   MOZ_RELEASE_ASSERT(fd->identity == sFuzzyLayerIdentity);
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -102,11 +102,11 @@ static PRInt32 FuzzySend(PRFileDesc *fd, const void *buf, PRInt32 amount,
   return amount;
 }
 
-static PRInt32 FuzzyWrite(PRFileDesc *fd, const void *buf, PRInt32 amount) {
+static PRInt32 FuzzyWrite(PRFileDesc* fd, const void* buf, PRInt32 amount) {
   return FuzzySend(fd, buf, amount, 0, PR_INTERVAL_NO_WAIT);
 }
 
-static PRInt32 FuzzyRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
+static PRInt32 FuzzyRecv(PRFileDesc* fd, void* buf, PRInt32 amount,
                          PRIntn flags, PRIntervalTime timeout) {
   MOZ_RELEASE_ASSERT(fd->identity == sFuzzyLayerIdentity);
 
@@ -134,15 +134,15 @@ static PRInt32 FuzzyRecv(PRFileDesc *fd, void *buf, PRInt32 amount,
   return amount;
 }
 
-static PRInt32 FuzzyRead(PRFileDesc *fd, void *buf, PRInt32 amount) {
+static PRInt32 FuzzyRead(PRFileDesc* fd, void* buf, PRInt32 amount) {
   return FuzzyRecv(fd, buf, amount, 0, PR_INTERVAL_NO_WAIT);
 }
 
-static PRStatus FuzzyClose(PRFileDesc *fd) {
+static PRStatus FuzzyClose(PRFileDesc* fd) {
   if (!fd) {
     return PR_FAILURE;
   }
-  PRFileDesc *layer = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
+  PRFileDesc* layer = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
   MOZ_RELEASE_ASSERT(layer && layer->identity == sFuzzyLayerIdentity,
                      "Fuzzy Layer not on top of stack");
 
@@ -162,7 +162,7 @@ static PRStatus FuzzyClose(PRFileDesc *fd) {
   return ret;
 }
 
-nsresult AttachFuzzyIOLayer(PRFileDesc *fd) {
+nsresult AttachFuzzyIOLayer(PRFileDesc* fd) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (!sFuzzyLayerMethodsPtr) {
@@ -178,7 +178,7 @@ nsresult AttachFuzzyIOLayer(PRFileDesc *fd) {
     sFuzzyLayerMethodsPtr = &sFuzzyLayerMethods;
   }
 
-  PRFileDesc *layer =
+  PRFileDesc* layer =
       PR_CreateIOLayerStub(sFuzzyLayerIdentity, sFuzzyLayerMethodsPtr);
 
   if (!layer) {

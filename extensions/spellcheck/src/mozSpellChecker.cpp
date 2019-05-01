@@ -50,7 +50,7 @@ mozSpellChecker::~mozSpellChecker() {
 nsresult mozSpellChecker::Init() {
   mSpellCheckingEngine = nullptr;
   if (XRE_IsContentProcess()) {
-    mozilla::dom::ContentChild *contentChild =
+    mozilla::dom::ContentChild* contentChild =
         mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(contentChild);
     mEngine = new RemoteSpellcheckEngineChild(this);
@@ -63,19 +63,19 @@ nsresult mozSpellChecker::Init() {
   return NS_OK;
 }
 
-TextServicesDocument *mozSpellChecker::GetTextServicesDocument() {
+TextServicesDocument* mozSpellChecker::GetTextServicesDocument() {
   return mTextServicesDocument;
 }
 
 nsresult mozSpellChecker::SetDocument(
-    TextServicesDocument *aTextServicesDocument, bool aFromStartofDoc) {
+    TextServicesDocument* aTextServicesDocument, bool aFromStartofDoc) {
   mTextServicesDocument = aTextServicesDocument;
   mFromStart = aFromStartofDoc;
   return NS_OK;
 }
 
-nsresult mozSpellChecker::NextMisspelledWord(nsAString &aWord,
-                                             nsTArray<nsString> &aSuggestions) {
+nsresult mozSpellChecker::NextMisspelledWord(nsAString& aWord,
+                                             nsTArray<nsString>& aSuggestions) {
   if (NS_WARN_IF(!mConverter)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -115,15 +115,15 @@ nsresult mozSpellChecker::NextMisspelledWord(nsAString &aWord,
 }
 
 RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
-    const nsTArray<nsString> &aWords) {
+    const nsTArray<nsString>& aWords) {
   if (XRE_IsContentProcess()) {
     return mEngine->SendCheckAsync(aWords)->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [](nsTArray<bool> &&aIsMisspelled) {
+        [](nsTArray<bool>&& aIsMisspelled) {
           return CheckWordPromise::CreateAndResolve(std::move(aIsMisspelled),
                                                     __func__);
         },
-        [](mozilla::ipc::ResponseRejectReason &&aReason) {
+        [](mozilla::ipc::ResponseRejectReason&& aReason) {
           return CheckWordPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                    __func__);
         });
@@ -131,7 +131,7 @@ RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
 
   nsTArray<bool> misspells;
   misspells.SetCapacity(aWords.Length());
-  for (auto &word : aWords) {
+  for (auto& word : aWords) {
     bool misspelled;
     nsresult rv = CheckWord(word, &misspelled, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -142,8 +142,8 @@ RefPtr<CheckWordPromise> mozSpellChecker::CheckWords(
   return CheckWordPromise::CreateAndResolve(std::move(misspells), __func__);
 }
 
-nsresult mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled,
-                                    nsTArray<nsString> *aSuggestions) {
+nsresult mozSpellChecker::CheckWord(const nsAString& aWord, bool* aIsMisspelled,
+                                    nsTArray<nsString>* aSuggestions) {
   nsresult result;
   bool correct;
 
@@ -165,11 +165,11 @@ nsresult mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled,
   if (!correct) {
     if (aSuggestions) {
       uint32_t count, i;
-      char16_t **words;
+      char16_t** words;
 
       result = mSpellCheckingEngine->Suggest(aWord, &words, &count);
       NS_ENSURE_SUCCESS(result, result);
-      nsString *suggestions = aSuggestions->AppendElements(count);
+      nsString* suggestions = aSuggestions->AppendElements(count);
       for (i = 0; i < count; i++) {
         suggestions[i].Assign(words[i]);
       }
@@ -181,8 +181,8 @@ nsresult mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled,
   return NS_OK;
 }
 
-nsresult mozSpellChecker::Replace(const nsAString &aOldWord,
-                                  const nsAString &aNewWord,
+nsresult mozSpellChecker::Replace(const nsAString& aOldWord,
+                                  const nsAString& aNewWord,
                                   bool aAllOccurrences) {
   if (NS_WARN_IF(!mConverter)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -279,14 +279,14 @@ nsresult mozSpellChecker::Replace(const nsAString &aOldWord,
   return NS_OK;
 }
 
-nsresult mozSpellChecker::IgnoreAll(const nsAString &aWord) {
+nsresult mozSpellChecker::IgnoreAll(const nsAString& aWord) {
   if (mPersonalDictionary) {
     mPersonalDictionary->IgnoreWord(aWord);
   }
   return NS_OK;
 }
 
-nsresult mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord) {
+nsresult mozSpellChecker::AddWordToPersonalDictionary(const nsAString& aWord) {
   nsresult res;
   if (NS_WARN_IF(!mPersonalDictionary)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -296,7 +296,7 @@ nsresult mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord) {
 }
 
 nsresult mozSpellChecker::RemoveWordFromPersonalDictionary(
-    const nsAString &aWord) {
+    const nsAString& aWord) {
   nsresult res;
   if (NS_WARN_IF(!mPersonalDictionary)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -305,7 +305,7 @@ nsresult mozSpellChecker::RemoveWordFromPersonalDictionary(
   return res;
 }
 
-nsresult mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList) {
+nsresult mozSpellChecker::GetPersonalDictionary(nsTArray<nsString>* aWordList) {
   if (!aWordList || !mPersonalDictionary) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIStringEnumerator> words;
@@ -321,9 +321,9 @@ nsresult mozSpellChecker::GetPersonalDictionary(nsTArray<nsString> *aWordList) {
 }
 
 nsresult mozSpellChecker::GetDictionaryList(
-    nsTArray<nsString> *aDictionaryList) {
+    nsTArray<nsString>* aDictionaryList) {
   if (XRE_IsContentProcess()) {
-    ContentChild *child = ContentChild::GetSingleton();
+    ContentChild* child = ContentChild::GetSingleton();
     child->GetAvailableDictionaries(*aDictionaryList);
     return NS_OK;
   }
@@ -341,7 +341,7 @@ nsresult mozSpellChecker::GetDictionaryList(
     nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
 
     uint32_t count = 0;
-    char16_t **words = nullptr;
+    char16_t** words = nullptr;
     engine->GetDictionaryList(&words, &count);
     for (uint32_t k = 0; k < count; k++) {
       nsAutoString dictName;
@@ -366,7 +366,7 @@ nsresult mozSpellChecker::GetDictionaryList(
   return NS_OK;
 }
 
-nsresult mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary) {
+nsresult mozSpellChecker::GetCurrentDictionary(nsAString& aDictionary) {
   if (XRE_IsContentProcess()) {
     aDictionary = mCurrentDictionary;
     return NS_OK;
@@ -380,7 +380,7 @@ nsresult mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary) {
   return mSpellCheckingEngine->GetDictionary(aDictionary);
 }
 
-nsresult mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary) {
+nsresult mozSpellChecker::SetCurrentDictionary(const nsAString& aDictionary) {
   if (XRE_IsContentProcess()) {
     nsString wrappedDict = nsString(aDictionary);
     bool isSuccess;
@@ -433,7 +433,7 @@ nsresult mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary) {
 }
 
 RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
-    const nsTArray<nsString> &aList) {
+    const nsTArray<nsString>& aList) {
   if (aList.IsEmpty()) {
     return GenericPromise::CreateAndReject(NS_ERROR_INVALID_ARG, __func__);
   }
@@ -443,7 +443,7 @@ RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
     return mEngine->SetCurrentDictionaryFromList(aList);
   }
 
-  for (auto &dictionary : aList) {
+  for (auto& dictionary : aList) {
     nsresult rv = SetCurrentDictionary(dictionary);
     if (NS_SUCCEEDED(rv)) {
       return GenericPromise::CreateAndResolve(true, __func__);
@@ -453,7 +453,7 @@ RefPtr<GenericPromise> mozSpellChecker::SetCurrentDictionaryFromList(
   return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
 }
 
-nsresult mozSpellChecker::SetupDoc(int32_t *outBlockOffset) {
+nsresult mozSpellChecker::SetupDoc(int32_t* outBlockOffset) {
   nsresult rv;
 
   TextServicesDocument::BlockSelectionStatus blockStatus;
@@ -513,7 +513,7 @@ nsresult mozSpellChecker::SetupDoc(int32_t *outBlockOffset) {
 // give us this, because it can't assume a read-only document. shamelessly
 // stolen from nsTextServicesDocument
 nsresult mozSpellChecker::GetCurrentBlockIndex(
-    TextServicesDocument *aTextServicesDocument, int32_t *aOutBlockIndex) {
+    TextServicesDocument* aTextServicesDocument, int32_t* aOutBlockIndex) {
   int32_t blockIndex = 0;
   bool isDone = false;
   nsresult result = NS_OK;
@@ -532,7 +532,7 @@ nsresult mozSpellChecker::GetCurrentBlockIndex(
 }
 
 nsresult mozSpellChecker::GetEngineList(
-    nsCOMArray<mozISpellCheckingEngine> *aSpellCheckingEngines) {
+    nsCOMArray<mozISpellCheckingEngine>* aSpellCheckingEngines) {
   MOZ_ASSERT(!XRE_IsContentProcess());
 
   nsresult rv;

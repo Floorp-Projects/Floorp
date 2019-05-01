@@ -52,8 +52,8 @@ static void WINAPI OnScanComplete(PWLAN_NOTIFICATION_DATA data, PVOID context) {
     return;
   }
 
-  InterfaceScanCallbackData *cbData =
-      reinterpret_cast<InterfaceScanCallbackData *>(context);
+  InterfaceScanCallbackData* cbData =
+      reinterpret_cast<InterfaceScanCallbackData*>(context);
   cbData->OnInterfaceScanComplete();
 }
 
@@ -73,7 +73,7 @@ WinWifiScanner::WinWifiScanner() {
 WinWifiScanner::~WinWifiScanner() {}
 
 nsresult WinWifiScanner::GetAccessPointsFromWLAN(
-    nsCOMArray<nsWifiAccessPoint> &accessPoints) {
+    nsCOMArray<nsWifiAccessPoint>& accessPoints) {
   accessPoints.Clear();
 
   // NOTE: We do not try to load the WLAN library if we previously failed
@@ -83,7 +83,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
   }
 
   // Get the list of interfaces. WlanEnumInterfaces allocates interface_list.
-  WLAN_INTERFACE_INFO_LIST *interface_list = nullptr;
+  WLAN_INTERFACE_INFO_LIST* interface_list = nullptr;
   if (ERROR_SUCCESS !=
       (*mWlanLibrary->GetWlanEnumInterfacesPtr())(mWlanLibrary->GetWLANHandle(),
                                                   nullptr, &interface_list)) {
@@ -132,7 +132,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
 
   // Go through the list of interfaces and get the data for each.
   for (uint32_t i = 0; i < interface_list->dwNumberOfItems; ++i) {
-    WLAN_BSS_LIST *bss_list;
+    WLAN_BSS_LIST* bss_list;
     if (ERROR_SUCCESS != (*mWlanLibrary->GetWlanGetNetworkBssListPtr())(
                              mWlanLibrary->GetWLANHandle(),
                              &interface_list->InterfaceInfo[i].InterfaceGuid,
@@ -149,7 +149,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
 
     // Store each discovered access point in our outparam
     for (int j = 0; j < static_cast<int>(bss_list->dwNumberOfItems); ++j) {
-      nsWifiAccessPoint *ap = new nsWifiAccessPoint();
+      nsWifiAccessPoint* ap = new nsWifiAccessPoint();
       if (!ap) {
         continue;
       }
@@ -157,7 +157,7 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
       const WLAN_BSS_ENTRY bss_entry = bss_list->wlanBssEntries[j];
       ap->setMac(bss_entry.dot11Bssid);
       ap->setSignal(bss_entry.lRssi);
-      ap->setSSID(reinterpret_cast<char const *>(bss_entry.dot11Ssid.ucSSID),
+      ap->setSSID(reinterpret_cast<char const*>(bss_entry.dot11Ssid.ucSSID),
                   bss_entry.dot11Ssid.uSSIDLength);
 
       accessPoints.AppendObject(ap);

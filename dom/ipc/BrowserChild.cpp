@@ -119,6 +119,7 @@
 #include "FrameLayerBuilder.h"
 #include "VRManagerChild.h"
 #include "nsCommandParams.h"
+#include "nsISHEntry.h"
 #include "nsISHistory.h"
 #include "nsQueryObject.h"
 #include "nsIHttpChannel.h"
@@ -406,7 +407,8 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
     mPendingDocShellIsActive(false), mPendingDocShellReceivedMessage(false),
     mPendingRenderLayers(false),
     mPendingRenderLayersReceivedMessage(false), mPendingLayersObserverEpoch{0},
-    mPendingDocShellBlockers(0), mWidgetNativeData(0) {
+    mPendingDocShellBlockers(0), mCancelContentJSEpoch(0),
+    mWidgetNativeData(0) {
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
@@ -3299,6 +3301,103 @@ void BrowserChild::PaintWhileInterruptingJS(
 
   nsAutoScriptBlocker scriptBlocker;
   RecvRenderLayers(true /* aEnabled */, aForceRepaint, aEpoch);
+}
+
+nsresult BrowserChild::CanCancelContentJS(
+    nsIRemoteTab::NavigationType aNavigationType, int32_t aNavigationIndex,
+    nsIURI* aNavigationURI, int32_t aEpoch, bool* aCanCancel) {
+  nsresult rv;
+  *aCanCancel = false;
+
+  if (aEpoch <= mCancelContentJSEpoch) {
+    // The next page loaded before we got here, so we shouldn't try to cancel
+    // the content JS.
+    TABC_LOG("Unable to cancel content JS; the next page is already loaded!\n");
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISHistory> history = do_GetInterface(WebNavigation());
+  if (!history) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t current;
+  rv = history->GetIndex(&current);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (current == -1) {
+    // This tab has no history! Just return.
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISHEntry> entry;
+  rv = history->GetEntryAtIndex(current, getter_AddRefs(entry));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNavigationType == nsIRemoteTab::NAVIGATE_BACK) {
+    aNavigationIndex = current - 1;
+  } else if (aNavigationType == nsIRemoteTab::NAVIGATE_FORWARD) {
+    aNavigationIndex = current + 1;
+  } else if (aNavigationType == nsIRemoteTab::NAVIGATE_URL) {
+    if (!aNavigationURI) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> currentURI = entry->GetURI();
+    CanCancelContentJSBetweenURIs(currentURI, aNavigationURI, aCanCancel);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+  // Note: aNavigationType may also be NAVIGATE_INDEX, in which case we don't
+  // need to do anything special.
+
+  int32_t delta = aNavigationIndex > current ? 1 : -1;
+  for (int32_t i = current + delta; i != aNavigationIndex + delta; i += delta) {
+    nsCOMPtr<nsISHEntry> nextEntry;
+    // If `i` happens to be negative, this call will fail (which is what we
+    // would want to happen).
+    rv = history->GetEntryAtIndex(i, getter_AddRefs(nextEntry));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISHEntry> laterEntry = delta == 1 ? nextEntry : entry;
+    nsCOMPtr<nsIURI> uri = entry->GetURI();
+    nsCOMPtr<nsIURI> nextURI = nextEntry->GetURI();
+
+    // If we changed origin and the load wasn't in a subframe, we know it was
+    // a full document load, so we can cancel the content JS safely.
+    if (!laterEntry->GetIsSubFrame()) {
+      CanCancelContentJSBetweenURIs(uri, nextURI, aCanCancel);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (*aCanCancel) {
+        return NS_OK;
+      }
+    }
+
+    entry = nextEntry;
+  }
+
+  return NS_OK;
+}
+
+nsresult BrowserChild::CanCancelContentJSBetweenURIs(nsIURI* aFirstURI,
+                                                     nsIURI* aSecondURI,
+                                                     bool* aCanCancel) {
+  nsresult rv;
+  *aCanCancel = false;
+
+  nsAutoCString firstHost;
+  rv = aFirstURI->GetHostPort(firstHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString secondHost;
+  rv = aSecondURI->GetHostPort(secondHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!firstHost.Equals(secondHost)) {
+    *aCanCancel = true;
+  }
+
+  return NS_OK;
 }
 
 void BrowserChild::BeforeUnloadAdded() {

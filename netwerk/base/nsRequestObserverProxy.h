@@ -28,9 +28,9 @@ class nsRequestObserverProxy final : public nsIRequestObserverProxy {
 
   nsRequestObserverProxy() = default;
 
-  nsIRequestObserver *Observer() { return mObserver; }
+  nsIRequestObserver* Observer() { return mObserver; }
 
-  nsresult FireEvent(nsARequestObserverEvent *);
+  nsresult FireEvent(nsARequestObserverEvent*);
 
  protected:
   nsMainThreadPtrHandle<nsIRequestObserver> mObserver;
@@ -42,7 +42,7 @@ class nsRequestObserverProxy final : public nsIRequestObserverProxy {
 
 class nsARequestObserverEvent : public Runnable {
  public:
-  explicit nsARequestObserverEvent(nsIRequest *);
+  explicit nsARequestObserverEvent(nsIRequest*);
 
  protected:
   virtual ~nsARequestObserverEvent() = default;

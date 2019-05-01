@@ -22,7 +22,7 @@
 
 #include "nsWindowsHelpers.h"
 
-typedef const unsigned char *FileView;
+typedef const unsigned char* FileView;
 
 template <>
 class nsAutoRefTraits<FileView> {
@@ -44,28 +44,28 @@ class nsAutoRefTraits<FileView> {
 
 typedef struct {
   PIMAGE_NT_HEADERS headers;
-  unsigned char *localCodeBase;
-  unsigned char *remoteCodeBase;
-  HMODULE *modules;
+  unsigned char* localCodeBase;
+  unsigned char* remoteCodeBase;
+  HMODULE* modules;
   int numModules;
 } MEMORYMODULE, *PMEMORYMODULE;
 
-typedef BOOL(WINAPI *DllEntryProc)(HINSTANCE hinstDLL, DWORD fdwReason,
+typedef BOOL(WINAPI* DllEntryProc)(HINSTANCE hinstDLL, DWORD fdwReason,
                                    LPVOID lpReserved);
 
 #define GET_HEADER_DICTIONARY(module, idx) \
   &(module)->headers->OptionalHeader.DataDirectory[idx]
 
 #ifdef DEBUG_OUTPUT
-static void OutputLastError(const char *msg) {
-  char *tmp;
-  char *tmpmsg;
+static void OutputLastError(const char* msg) {
+  char* tmp;
+  char* tmpmsg;
   FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                      FORMAT_MESSAGE_IGNORE_INSERTS,
                  nullptr, GetLastError(),
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&tmp, 0,
                  nullptr);
-  tmpmsg = (char *)LocalAlloc(LPTR, strlen(msg) + strlen(tmp) + 3);
+  tmpmsg = (char*)LocalAlloc(LPTR, strlen(msg) + strlen(tmp) + 3);
   sprintf(tmpmsg, "%s: %s", msg, tmp);
   OutputDebugStringA(tmpmsg);
   LocalFree(tmpmsg);
@@ -73,11 +73,11 @@ static void OutputLastError(const char *msg) {
 }
 #endif
 
-static void CopySections(const unsigned char *data,
+static void CopySections(const unsigned char* data,
                          PIMAGE_NT_HEADERS old_headers, PMEMORYMODULE module) {
   int i;
-  unsigned char *codeBase = module->localCodeBase;
-  unsigned char *dest;
+  unsigned char* codeBase = module->localCodeBase;
+  unsigned char* dest;
   PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(module->headers);
   for (i = 0; i < module->headers->FileHeader.NumberOfSections;
        i++, section++) {
@@ -91,8 +91,8 @@ static void CopySections(const unsigned char *data,
   }
 }
 
-static bool CopyRegion(HANDLE hRemoteProcess, void *remoteAddress,
-                       void *localAddress, DWORD size, DWORD protect) {
+static bool CopyRegion(HANDLE hRemoteProcess, void* remoteAddress,
+                       void* localAddress, DWORD size, DWORD protect) {
   if (size > 0) {
     // Copy the data from local->remote and set the memory protection
     if (!VirtualAllocEx(hRemoteProcess, remoteAddress, size, MEM_COMMIT,
@@ -163,8 +163,8 @@ static bool FinalizeSections(PMEMORYMODULE module, HANDLE hRemoteProcess) {
       protect |= PAGE_NOCACHE;
     }
 
-    void *remoteAddress = module->remoteCodeBase + section->VirtualAddress;
-    void *localAddress = module->localCodeBase + section->VirtualAddress;
+    void* remoteAddress = module->remoteCodeBase + section->VirtualAddress;
+    void* localAddress = module->localCodeBase + section->VirtualAddress;
 
     // determine size of region
     size = section->Misc.VirtualSize;
@@ -183,7 +183,7 @@ static bool FinalizeSections(PMEMORYMODULE module, HANDLE hRemoteProcess) {
 
 static void PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta) {
   DWORD i;
-  unsigned char *codeBase = module->localCodeBase;
+  unsigned char* codeBase = module->localCodeBase;
 
   PIMAGE_DATA_DIRECTORY directory =
       GET_HEADER_DICTIONARY(module, IMAGE_DIRECTORY_ENTRY_BASERELOC);
@@ -191,16 +191,15 @@ static void PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta) {
     PIMAGE_BASE_RELOCATION relocation =
         (PIMAGE_BASE_RELOCATION)(codeBase + directory->VirtualAddress);
     for (; relocation->VirtualAddress > 0;) {
-      unsigned char *dest = codeBase + relocation->VirtualAddress;
-      unsigned short *relInfo =
-          (unsigned short *)((unsigned char *)relocation +
-                             IMAGE_SIZEOF_BASE_RELOCATION);
+      unsigned char* dest = codeBase + relocation->VirtualAddress;
+      unsigned short* relInfo = (unsigned short*)((unsigned char*)relocation +
+                                                  IMAGE_SIZEOF_BASE_RELOCATION);
       for (i = 0;
            i < ((relocation->SizeOfBlock - IMAGE_SIZEOF_BASE_RELOCATION) / 2);
            i++, relInfo++) {
-        DWORD *patchAddrHL;
+        DWORD* patchAddrHL;
 #ifdef _WIN64
-        ULONGLONG *patchAddr64;
+        ULONGLONG* patchAddr64;
 #endif
         int type, offset;
 
@@ -216,13 +215,13 @@ static void PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta) {
 
           case IMAGE_REL_BASED_HIGHLOW:
             // change complete 32 bit address
-            patchAddrHL = (DWORD *)(dest + offset);
+            patchAddrHL = (DWORD*)(dest + offset);
             *patchAddrHL += delta;
             break;
 
 #ifdef _WIN64
           case IMAGE_REL_BASED_DIR64:
-            patchAddr64 = (ULONGLONG *)(dest + offset);
+            patchAddr64 = (ULONGLONG*)(dest + offset);
             *patchAddr64 += delta;
             break;
 #endif
@@ -234,7 +233,7 @@ static void PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta) {
       }
 
       // advance to next relocation block
-      relocation = (PIMAGE_BASE_RELOCATION)(((char *)relocation) +
+      relocation = (PIMAGE_BASE_RELOCATION)(((char*)relocation) +
                                             relocation->SizeOfBlock);
     }
   }
@@ -242,7 +241,7 @@ static void PerformBaseRelocation(PMEMORYMODULE module, SIZE_T delta) {
 
 static int BuildImportTable(PMEMORYMODULE module) {
   int result = 1;
-  unsigned char *codeBase = module->localCodeBase;
+  unsigned char* codeBase = module->localCodeBase;
 
   PIMAGE_DATA_DIRECTORY directory =
       GET_HEADER_DICTIONARY(module, IMAGE_DIRECTORY_ENTRY_IMPORT);
@@ -253,8 +252,8 @@ static int BuildImportTable(PMEMORYMODULE module) {
         codeBase + directory->VirtualAddress + directory->Size);
 
     for (; importDesc < importEnd && importDesc->Name; importDesc++) {
-      POINTER_TYPE *thunkRef;
-      FARPROC *funcRef;
+      POINTER_TYPE* thunkRef;
+      FARPROC* funcRef;
       HMODULE handle = GetModuleHandleA((LPCSTR)(codeBase + importDesc->Name));
       if (handle == nullptr) {
 #if DEBUG_OUTPUT
@@ -264,7 +263,7 @@ static int BuildImportTable(PMEMORYMODULE module) {
         break;
       }
 
-      module->modules = (HMODULE *)realloc(
+      module->modules = (HMODULE*)realloc(
           module->modules, (module->numModules + 1) * (sizeof(HMODULE)));
       if (module->modules == nullptr) {
         result = 0;
@@ -273,12 +272,12 @@ static int BuildImportTable(PMEMORYMODULE module) {
 
       module->modules[module->numModules++] = handle;
       if (importDesc->OriginalFirstThunk) {
-        thunkRef = (POINTER_TYPE *)(codeBase + importDesc->OriginalFirstThunk);
-        funcRef = (FARPROC *)(codeBase + importDesc->FirstThunk);
+        thunkRef = (POINTER_TYPE*)(codeBase + importDesc->OriginalFirstThunk);
+        funcRef = (FARPROC*)(codeBase + importDesc->FirstThunk);
       } else {
         // no hint table
-        thunkRef = (POINTER_TYPE *)(codeBase + importDesc->FirstThunk);
-        funcRef = (FARPROC *)(codeBase + importDesc->FirstThunk);
+        thunkRef = (POINTER_TYPE*)(codeBase + importDesc->FirstThunk);
+        funcRef = (FARPROC*)(codeBase + importDesc->FirstThunk);
       }
       for (; *thunkRef; thunkRef++, funcRef++) {
         if (IMAGE_SNAP_BY_ORDINAL(*thunkRef)) {
@@ -304,10 +303,10 @@ static int BuildImportTable(PMEMORYMODULE module) {
   return result;
 }
 
-static void *MemoryGetProcAddress(PMEMORYMODULE module, const char *name);
+static void* MemoryGetProcAddress(PMEMORYMODULE module, const char* name);
 
-void *LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
-                                     const WCHAR *library, const char *symbol) {
+void* LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
+                                     const WCHAR* library, const char* symbol) {
   // Map the DLL into memory
   nsAutoHandle hLibrary(CreateFile(library, GENERIC_READ, FILE_SHARE_READ,
                                    nullptr, OPEN_EXISTING,
@@ -329,7 +328,7 @@ void *LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
   }
 
   nsAutoRef<FileView> data(
-      (const unsigned char *)MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
+      (const unsigned char*)MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
   if (!data) {
 #if DEBUG_OUTPUT
     OutputLastError("Couldn't MapViewOfFile.\n");
@@ -357,7 +356,7 @@ void *LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
   }
 
   // reserve memory for image of library in this process and the target process
-  unsigned char *localCode = (unsigned char *)VirtualAlloc(
+  unsigned char* localCode = (unsigned char*)VirtualAlloc(
       nullptr, old_header->OptionalHeader.SizeOfImage, MEM_RESERVE | MEM_COMMIT,
       PAGE_READWRITE);
   if (!localCode) {
@@ -366,7 +365,7 @@ void *LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
 #endif
   }
 
-  unsigned char *remoteCode = (unsigned char *)VirtualAllocEx(
+  unsigned char* remoteCode = (unsigned char*)VirtualAllocEx(
       hRemoteProcess, nullptr, old_header->OptionalHeader.SizeOfImage,
       MEM_RESERVE, PAGE_EXECUTE_READ);
   if (!remoteCode) {
@@ -413,11 +412,11 @@ void *LoadRemoteLibraryAndGetAddress(HANDLE hRemoteProcess,
   return MemoryGetProcAddress(&result, symbol);
 }
 
-static void *MemoryGetProcAddress(PMEMORYMODULE module, const char *name) {
-  unsigned char *localCodeBase = module->localCodeBase;
+static void* MemoryGetProcAddress(PMEMORYMODULE module, const char* name) {
+  unsigned char* localCodeBase = module->localCodeBase;
   int idx = -1;
   DWORD i, *nameRef;
-  WORD *ordinal;
+  WORD* ordinal;
   PIMAGE_EXPORT_DIRECTORY exports;
   PIMAGE_DATA_DIRECTORY directory =
       GET_HEADER_DICTIONARY(module, IMAGE_DIRECTORY_ENTRY_EXPORT);
@@ -434,10 +433,10 @@ static void *MemoryGetProcAddress(PMEMORYMODULE module, const char *name) {
   }
 
   // search function name in list of exported names
-  nameRef = (DWORD *)(localCodeBase + exports->AddressOfNames);
-  ordinal = (WORD *)(localCodeBase + exports->AddressOfNameOrdinals);
+  nameRef = (DWORD*)(localCodeBase + exports->AddressOfNames);
+  ordinal = (WORD*)(localCodeBase + exports->AddressOfNameOrdinals);
   for (i = 0; i < exports->NumberOfNames; i++, nameRef++, ordinal++) {
-    if (stricmp(name, (const char *)(localCodeBase + (*nameRef))) == 0) {
+    if (stricmp(name, (const char*)(localCodeBase + (*nameRef))) == 0) {
       idx = *ordinal;
       break;
     }
@@ -455,5 +454,5 @@ static void *MemoryGetProcAddress(PMEMORYMODULE module, const char *name) {
 
   // AddressOfFunctions contains the RVAs to the "real" functions
   return module->remoteCodeBase +
-         (*(DWORD *)(localCodeBase + exports->AddressOfFunctions + (idx * 4)));
+         (*(DWORD*)(localCodeBase + exports->AddressOfFunctions + (idx * 4)));
 }

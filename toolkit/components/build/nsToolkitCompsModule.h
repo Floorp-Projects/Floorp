@@ -7,5 +7,5 @@
 
 class nsISupports;
 
-nsresult nsUrlClassifierDBServiceConstructor(nsISupports *aOuter,
-                                             const nsIID &aIID, void **aResult);
+nsresult nsUrlClassifierDBServiceConstructor(nsISupports* aOuter,
+                                             const nsIID& aIID, void** aResult);

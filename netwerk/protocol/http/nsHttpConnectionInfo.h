@@ -36,22 +36,22 @@ extern LazyLogModule gHttpLog;
 
 class nsHttpConnectionInfo final : public ARefBase {
  public:
-  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
-                       const nsACString &npnToken, const nsACString &username,
-                       const nsACString &topWindowOrigin,
-                       nsProxyInfo *proxyInfo,
-                       const OriginAttributes &originAttributes,
+  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
+                       const nsACString& npnToken, const nsACString& username,
+                       const nsACString& topWindowOrigin,
+                       nsProxyInfo* proxyInfo,
+                       const OriginAttributes& originAttributes,
                        bool endToEndSSL = false);
 
   // this version must use TLS and you may supply separate
   // connection (aka routing) information than the authenticated
   // origin information
-  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
-                       const nsACString &npnToken, const nsACString &username,
-                       const nsACString &topWindowOrigin,
-                       nsProxyInfo *proxyInfo,
-                       const OriginAttributes &originAttributes,
-                       const nsACString &routedHost, int32_t routedPort);
+  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
+                       const nsACString& npnToken, const nsACString& username,
+                       const nsACString& topWindowOrigin,
+                       nsProxyInfo* proxyInfo,
+                       const OriginAttributes& originAttributes,
+                       const nsACString& routedHost, int32_t routedPort);
 
  private:
   virtual ~nsHttpConnectionInfo() {
@@ -62,32 +62,32 @@ class nsHttpConnectionInfo final : public ARefBase {
   void BuildHashKey();
 
  public:
-  const nsCString &HashKey() const { return mHashKey; }
+  const nsCString& HashKey() const { return mHashKey; }
 
-  const nsCString &GetOrigin() const { return mOrigin; }
-  const char *Origin() const { return mOrigin.get(); }
+  const nsCString& GetOrigin() const { return mOrigin; }
+  const char* Origin() const { return mOrigin.get(); }
   int32_t OriginPort() const { return mOriginPort; }
 
-  const nsCString &GetRoutedHost() const { return mRoutedHost; }
-  const char *RoutedHost() const { return mRoutedHost.get(); }
+  const nsCString& GetRoutedHost() const { return mRoutedHost; }
+  const char* RoutedHost() const { return mRoutedHost.get(); }
   int32_t RoutedPort() const { return mRoutedPort; }
 
   // OK to treat these as an infalible allocation
   already_AddRefed<nsHttpConnectionInfo> Clone() const;
-  void CloneAsDirectRoute(nsHttpConnectionInfo **outParam);
-  MOZ_MUST_USE nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
+  void CloneAsDirectRoute(nsHttpConnectionInfo** outParam);
+  MOZ_MUST_USE nsresult CreateWildCard(nsHttpConnectionInfo** outParam);
 
-  const char *ProxyHost() const {
+  const char* ProxyHost() const {
     return mProxyInfo ? mProxyInfo->Host().get() : nullptr;
   }
   int32_t ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
-  const char *ProxyType() const {
+  const char* ProxyType() const {
     return mProxyInfo ? mProxyInfo->Type() : nullptr;
   }
-  const char *ProxyUsername() const {
+  const char* ProxyUsername() const {
     return mProxyInfo ? mProxyInfo->Username().get() : nullptr;
   }
-  const char *ProxyPassword() const {
+  const char* ProxyPassword() const {
     return mProxyInfo ? mProxyInfo->Password().get() : nullptr;
   }
 
@@ -98,12 +98,12 @@ class nsHttpConnectionInfo final : public ARefBase {
   // Note that we don't care about transparent proxies -
   // it doesn't matter if we're talking via socks or not, since
   // a request will end up at the same host.
-  bool Equals(const nsHttpConnectionInfo *info) {
+  bool Equals(const nsHttpConnectionInfo* info) {
     return mHashKey.Equals(info->HashKey());
   }
 
-  const char *Username() const { return mUsername.get(); }
-  nsProxyInfo *ProxyInfo() const { return mProxyInfo; }
+  const char* Username() const { return mUsername.get(); }
+  nsProxyInfo* ProxyInfo() const { return mProxyInfo; }
   int32_t DefaultPort() const {
     return mEndToEndSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
   }
@@ -148,11 +148,11 @@ class nsHttpConnectionInfo final : public ARefBase {
   void SetIPv6Disabled(bool aNoIPv6);
   bool GetIPv6Disabled() const { return mIPv6Disabled; }
 
-  const nsCString &GetNPNToken() { return mNPNToken; }
-  const nsCString &GetUsername() { return mUsername; }
-  const nsCString &GetTopWindowOrigin() { return mTopWindowOrigin; }
+  const nsCString& GetNPNToken() { return mNPNToken; }
+  const nsCString& GetUsername() { return mUsername; }
+  const nsCString& GetTopWindowOrigin() { return mTopWindowOrigin; }
 
-  const OriginAttributes &GetOriginAttributes() { return mOriginAttributes; }
+  const OriginAttributes& GetOriginAttributes() { return mOriginAttributes; }
 
   // Returns true for any kind of proxy (http, socks, https, etc..)
   bool UsingProxy();
@@ -184,25 +184,25 @@ class nsHttpConnectionInfo final : public ARefBase {
 
  private:
   // These constructor versions are intended to only be used from Clone().
-  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
-                       const nsACString &npnToken, const nsACString &username,
-                       const nsACString &topWindowOrigin,
-                       nsProxyInfo *proxyInfo,
-                       const OriginAttributes &originAttributes,
+  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
+                       const nsACString& npnToken, const nsACString& username,
+                       const nsACString& topWindowOrigin,
+                       nsProxyInfo* proxyInfo,
+                       const OriginAttributes& originAttributes,
                        bool endToEndSSL, bool isolated);
-  nsHttpConnectionInfo(const nsACString &originHost, int32_t originPort,
-                       const nsACString &npnToken, const nsACString &username,
-                       const nsACString &topWindowOrigin,
-                       nsProxyInfo *proxyInfo,
-                       const OriginAttributes &originAttributes,
-                       const nsACString &routedHost, int32_t routedPort,
+  nsHttpConnectionInfo(const nsACString& originHost, int32_t originPort,
+                       const nsACString& npnToken, const nsACString& username,
+                       const nsACString& topWindowOrigin,
+                       nsProxyInfo* proxyInfo,
+                       const OriginAttributes& originAttributes,
+                       const nsACString& routedHost, int32_t routedPort,
                        bool isolated);
 
-  void Init(const nsACString &host, int32_t port, const nsACString &npnToken,
-            const nsACString &username, const nsACString &topWindowOrigin,
-            nsProxyInfo *proxyInfo, const OriginAttributes &originAttributes,
+  void Init(const nsACString& host, int32_t port, const nsACString& npnToken,
+            const nsACString& username, const nsACString& topWindowOrigin,
+            nsProxyInfo* proxyInfo, const OriginAttributes& originAttributes,
             bool EndToEndSSL);
-  void SetOriginServer(const nsACString &host, int32_t port);
+  void SetOriginServer(const nsACString& host, int32_t port);
 
   nsCString mOrigin;
   int32_t mOriginPort;

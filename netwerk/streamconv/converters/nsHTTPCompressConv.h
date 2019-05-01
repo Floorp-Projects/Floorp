@@ -70,8 +70,8 @@ class BrotliWrapper {
   nsresult mStatus;
   Atomic<bool, Relaxed> mBrotliStateIsStreamEnd;
 
-  nsIRequest *mRequest;
-  nsISupports *mContext;
+  nsIRequest* mRequest;
+  nsISupports* mContext;
   uint64_t mSourceOffset;
 };
 
@@ -98,8 +98,8 @@ class nsHTTPCompressConv : public nsIStreamConverter,
       mListener;  // this guy gets the converted data via his OnDataAvailable ()
   Atomic<CompressMode, Relaxed> mMode;
 
-  unsigned char *mOutBuffer;
-  unsigned char *mInpBuffer;
+  unsigned char* mOutBuffer;
+  unsigned char* mInpBuffer;
 
   uint32_t mOutBufferLen;
   uint32_t mInpBufferLen;
@@ -108,12 +108,12 @@ class nsHTTPCompressConv : public nsIStreamConverter,
 
   nsCOMPtr<nsIStringInputStream> mStream;
 
-  static nsresult BrotliHandler(nsIInputStream *stream, void *closure,
-                                const char *dataIn, uint32_t, uint32_t avail,
-                                uint32_t *countRead);
+  static nsresult BrotliHandler(nsIInputStream* stream, void* closure,
+                                const char* dataIn, uint32_t, uint32_t avail,
+                                uint32_t* countRead);
 
-  nsresult do_OnDataAvailable(nsIRequest *request, nsISupports *aContext,
-                              uint64_t aSourceOffset, const char *buffer,
+  nsresult do_OnDataAvailable(nsIRequest* request, nsISupports* aContext,
+                              uint64_t aSourceOffset, const char* buffer,
                               uint32_t aCount);
 
   bool mCheckHeaderDone;
@@ -125,7 +125,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   z_stream d_stream;
   unsigned mLen, hMode, mSkipCount, mFlags;
 
-  uint32_t check_header(nsIInputStream *iStr, uint32_t streamLen, nsresult *rv);
+  uint32_t check_header(nsIInputStream* iStr, uint32_t streamLen, nsresult* rv);
 
   Atomic<uint32_t, Relaxed> mDecodedDataLength;
 

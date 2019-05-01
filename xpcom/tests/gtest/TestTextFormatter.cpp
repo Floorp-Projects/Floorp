@@ -19,7 +19,7 @@ TEST(TextFormatter, Tests)
   nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
   nsAutoString out(buf);
 
-  const char16_t *uout = out.get();
+  const char16_t* uout = out.get();
   const char16_t expected[] = {
       0x48,   0x65,   0x6C,   0x6C,   0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64,
       0x4E00, 0xAC00, 0xFF45, 0x0103, 0x20, 0x33, 0x20, 0x33, 0x33, 0x33, 0x20,
@@ -35,8 +35,7 @@ TEST(TextFormatter, Tests)
   EXPECT_STREQ("%1m!", NS_ConvertUTF16toUTF8(out2).get());
 
   // Treat NULL the same in both %s cases.
-  nsTextFormatter::ssprintf(out2, u"%s %S", (char *)nullptr,
-                            (char16_t *)nullptr);
+  nsTextFormatter::ssprintf(out2, u"%s %S", (char*)nullptr, (char16_t*)nullptr);
   EXPECT_STREQ("(null) (null)", NS_ConvertUTF16toUTF8(out2).get());
 
   nsTextFormatter::ssprintf(out2, u"%lld", INT64_MIN);

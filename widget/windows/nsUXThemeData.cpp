@@ -60,7 +60,7 @@ nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   return sThemes[cls];
 }
 
-const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
+const wchar_t* nsUXThemeData::GetClassName(nsUXThemeClass cls) {
   switch (cls) {
     case eUXButton:
       return L"Button";

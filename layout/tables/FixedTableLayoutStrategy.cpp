@@ -19,7 +19,7 @@
 
 using namespace mozilla;
 
-FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
+FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame* aTableFrame)
     : nsITableLayoutStrategy(nsITableLayoutStrategy::Fixed),
       mTableFrame(aTableFrame) {
   MarkIntrinsicISizesDirty();
@@ -29,7 +29,7 @@ FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
 FixedTableLayoutStrategy::~FixedTableLayoutStrategy() {}
 
 /* virtual */
-nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
+nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(mTableFrame, mMinISize);
   if (mMinISize != NS_INTRINSIC_WIDTH_UNKNOWN) {
     return mMinISize;
@@ -50,7 +50,7 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
   // XXX Should we really ignore 'min-inline-size' and 'max-inline-size'?
   // XXX Should we really ignore inline sizes on column groups?
 
-  nsTableCellMap *cellMap = mTableFrame->GetCellMap();
+  nsTableCellMap* cellMap = mTableFrame->GetCellMap();
   int32_t colCount = cellMap->GetColCount();
 
   nscoord result = 0;
@@ -61,13 +61,13 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
 
   WritingMode wm = mTableFrame->GetWritingMode();
   for (int32_t col = 0; col < colCount; ++col) {
-    nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
     if (!colFrame) {
       NS_ERROR("column frames out of sync with cell map");
       continue;
     }
     nscoord spacing = mTableFrame->GetColSpacing(col);
-    const auto *styleISize = &colFrame->StylePosition()->ISize(wm);
+    const auto* styleISize = &colFrame->StylePosition()->ISize(wm);
     if (styleISize->ConvertsToLength()) {
       result +=
           colFrame->ComputeISizeValue(aRenderingContext, 0, 0, 0, *styleISize);
@@ -82,7 +82,7 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
       // first row.
       bool originates;
       int32_t colSpan;
-      nsTableCellFrame *cellFrame =
+      nsTableCellFrame* cellFrame =
           cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
       if (cellFrame) {
         styleISize = &cellFrame->StylePosition()->ISize(wm);
@@ -118,7 +118,7 @@ nscoord FixedTableLayoutStrategy::GetMinISize(gfxContext *aRenderingContext) {
 }
 
 /* virtual */
-nscoord FixedTableLayoutStrategy::GetPrefISize(gfxContext *aRenderingContext,
+nscoord FixedTableLayoutStrategy::GetPrefISize(gfxContext* aRenderingContext,
                                                bool aComputingSize) {
   // It's theoretically possible to do something much better here that
   // depends only on the columns and the first row (where we look at
@@ -150,7 +150,7 @@ static inline nscoord AllocateUnassigned(nscoord aUnassignedSpace,
 
 /* virtual */
 void FixedTableLayoutStrategy::ComputeColumnISizes(
-    const ReflowInput &aReflowInput) {
+    const ReflowInput& aReflowInput) {
   nscoord tableISize = aReflowInput.ComputedISize();
 
   if (mLastCalcISize == tableISize) {
@@ -158,7 +158,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
   }
   mLastCalcISize = tableISize;
 
-  nsTableCellMap *cellMap = mTableFrame->GetCellMap();
+  nsTableCellMap* cellMap = mTableFrame->GetCellMap();
   int32_t colCount = cellMap->GetColCount();
 
   if (colCount == 0) {
@@ -198,7 +198,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
 
   WritingMode wm = mTableFrame->GetWritingMode();
   for (int32_t col = 0; col < colCount; ++col) {
-    nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
     if (!colFrame) {
       oldColISizes.AppendElement(0);
       NS_ERROR("column frames out of sync with cell map");
@@ -206,7 +206,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
     }
     oldColISizes.AppendElement(colFrame->GetFinalISize());
     colFrame->ResetPrefPercent();
-    const auto *styleISize = &colFrame->StylePosition()->ISize(wm);
+    const auto* styleISize = &colFrame->StylePosition()->ISize(wm);
     nscoord colISize;
     if (styleISize->ConvertsToLength()) {
       colISize = colFrame->ComputeISizeValue(aReflowInput.mRenderingContext, 0,
@@ -227,10 +227,10 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       // first row.
       bool originates;
       int32_t colSpan;
-      nsTableCellFrame *cellFrame =
+      nsTableCellFrame* cellFrame =
           cellMap->GetCellInfoAt(0, col, &originates, &colSpan);
       if (cellFrame) {
-        const nsStylePosition *cellStylePos = cellFrame->StylePosition();
+        const nsStylePosition* cellStylePos = cellFrame->StylePosition();
         styleISize = &cellStylePos->ISize(wm);
         if (styleISize->ConvertsToLength() ||
             (styleISize->IsExtremumLength() &&
@@ -304,7 +304,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       nscoord reduce = std::min(pctUsed, -unassignedSpace);
       float reduceRatio = float(reduce) / pctTotal;
       for (int32_t col = 0; col < colCount; ++col) {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
           NS_ERROR("column frames out of sync with cell map");
           continue;
@@ -325,7 +325,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
     // the columns.
     nscoord toAssign = unassignedSpace / unassignedCount;
     for (int32_t col = 0; col < colCount; ++col) {
-      nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
       if (!colFrame) {
         NS_ERROR("column frames out of sync with cell map");
         continue;
@@ -340,7 +340,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       // Distribute proportionally to non-percentage columns.
       nscoord specUndist = specTotal;
       for (int32_t col = 0; col < colCount; ++col) {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
           NS_ERROR("column frames out of sync with cell map");
           continue;
@@ -365,7 +365,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       // Distribute proportionally to percentage columns.
       float pctUndist = pctTotal;
       for (int32_t col = 0; col < colCount; ++col) {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
           NS_ERROR("column frames out of sync with cell map");
           continue;
@@ -390,7 +390,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
       // Distribute equally to the zero-iSize columns.
       int32_t colsRemaining = colCount;
       for (int32_t col = 0; col < colCount; ++col) {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
         if (!colFrame) {
           NS_ERROR("column frames out of sync with cell map");
           continue;
@@ -406,7 +406,7 @@ void FixedTableLayoutStrategy::ComputeColumnISizes(
     }
   }
   for (int32_t col = 0; col < colCount; ++col) {
-    nsTableColFrame *colFrame = mTableFrame->GetColFrame(col);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(col);
     if (!colFrame) {
       NS_ERROR("column frames out of sync with cell map");
       continue;

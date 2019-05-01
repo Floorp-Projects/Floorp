@@ -10,7 +10,7 @@
 #include "nsIFile.h"
 #include <windows.h>
 
-nsresult net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result) {
+nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   nsresult rv;
   nsAutoString path;
 
@@ -44,7 +44,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result) {
   return NS_OK;
 }
 
-nsresult net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result) {
+nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   nsresult rv;
 
   if (aURL.Length() > (uint32_t)net_GetURLMaxLength()) {
@@ -59,7 +59,7 @@ nsresult net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result) {
 
   localFile->SetFollowLinks(true);
 
-  const nsACString *specPtr;
+  const nsACString* specPtr;
 
   nsAutoCString buf;
   if (net_NormalizeFileURL(aURL, buf))

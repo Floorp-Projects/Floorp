@@ -20,11 +20,11 @@ using namespace mozilla::psm;
 
 NS_IMPL_ISUPPORTS(nsProtectedAuthThread, nsIProtectedAuthThread)
 
-static void nsProtectedAuthThreadRunner(void *arg) {
+static void nsProtectedAuthThreadRunner(void* arg) {
   AUTO_PROFILER_REGISTER_THREAD("Protected Auth");
   NS_SetCurrentThreadName("Protected Auth");
 
-  nsProtectedAuthThread *self = static_cast<nsProtectedAuthThread *>(arg);
+  nsProtectedAuthThread* self = static_cast<nsProtectedAuthThread*>(arg);
   self->Run();
 }
 
@@ -38,7 +38,7 @@ nsProtectedAuthThread::nsProtectedAuthThread()
 
 nsProtectedAuthThread::~nsProtectedAuthThread() {}
 
-NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver) {
+NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver* aObserver) {
   NS_ENSURE_ARG(aObserver);
 
   if (!mSlot)
@@ -61,7 +61,7 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver) {
   mIAmRunning = true;
 
   mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsProtectedAuthThreadRunner,
-                                  static_cast<void *>(this), PR_PRIORITY_NORMAL,
+                                  static_cast<void*>(this), PR_PRIORITY_NORMAL,
                                   PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 
   // bool thread_started_ok = (threadHandle != nullptr);
@@ -71,7 +71,7 @@ NS_IMETHODIMP nsProtectedAuthThread::Login(nsIObserver *aObserver) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval) {
+NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString& _retval) {
   MutexAutoLock lock(mMutex);
 
   // Get token name
@@ -80,7 +80,7 @@ NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval) {
+NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot** _retval) {
   RefPtr<nsPKCS11Slot> slot;
   {
     MutexAutoLock lock(mMutex);
@@ -91,7 +91,7 @@ NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval) {
   return NS_OK;
 }
 
-void nsProtectedAuthThread::SetParams(PK11SlotInfo *aSlot) {
+void nsProtectedAuthThread::SetParams(PK11SlotInfo* aSlot) {
   MutexAutoLock lock(mMutex);
 
   mSlot = (aSlot) ? PK11_ReferenceSlot(aSlot) : 0;

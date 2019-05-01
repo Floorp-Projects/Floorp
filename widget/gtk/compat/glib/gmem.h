@@ -16,13 +16,13 @@
 #include <glib/gmessages.h>
 
 #undef g_new
-#define g_new(type, num) ((type *)g_malloc_n((num), sizeof(type)))
+#define g_new(type, num) ((type*)g_malloc_n((num), sizeof(type)))
 
 #undef g_new0
-#define g_new0(type, num) ((type *)g_malloc0_n((num), sizeof(type)))
+#define g_new0(type, num) ((type*)g_malloc0_n((num), sizeof(type)))
 
 #undef g_renew
-#define g_renew(type, ptr, num) ((type *)g_realloc_n(ptr, (num), sizeof(type)))
+#define g_renew(type, ptr, num) ((type*)g_realloc_n(ptr, (num), sizeof(type)))
 
 #define _CHECK_OVERFLOW(num, type_size)                                    \
   if (G_UNLIKELY(type_size > 0 && num > G_MAXSIZE / type_size)) {          \

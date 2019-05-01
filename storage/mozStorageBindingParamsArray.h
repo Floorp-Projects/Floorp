@@ -27,7 +27,7 @@ class BindingParamsArray final : public mozIStorageBindingParamsArray {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEBINDINGPARAMSARRAY
 
-  explicit BindingParamsArray(StorageBaseStatementInternal *aOwningStatement);
+  explicit BindingParamsArray(StorageBaseStatementInternal* aOwningStatement);
 
   typedef array_type::size_type size_type;
 
@@ -40,7 +40,7 @@ class BindingParamsArray final : public mozIStorageBindingParamsArray {
   /**
    * @return the pointer to the owning BindingParamsArray.
    */
-  const StorageBaseStatementInternal *getOwner() const;
+  const StorageBaseStatementInternal* getOwner() const;
 
   /**
    * @return the number of elemets the array contains.
@@ -49,19 +49,19 @@ class BindingParamsArray final : public mozIStorageBindingParamsArray {
 
   class iterator {
    public:
-    iterator(BindingParamsArray *aArray, uint32_t aIndex)
+    iterator(BindingParamsArray* aArray, uint32_t aIndex)
         : mArray(aArray), mIndex(aIndex) {}
 
-    iterator &operator++(int) {
+    iterator& operator++(int) {
       mIndex++;
       return *this;
     }
 
-    bool operator==(const iterator &aOther) const {
+    bool operator==(const iterator& aOther) const {
       return mIndex == aOther.mIndex;
     }
-    bool operator!=(const iterator &aOther) const { return !(*this == aOther); }
-    mozIStorageBindingParams *operator*() {
+    bool operator!=(const iterator& aOther) const { return !(*this == aOther); }
+    mozIStorageBindingParams* operator*() {
       NS_ASSERTION(mIndex < mArray->length(),
                    "Dereferenceing an invalid value!");
       return mArray->mArray[mIndex].get();
@@ -69,7 +69,7 @@ class BindingParamsArray final : public mozIStorageBindingParamsArray {
 
    private:
     void operator--() {}
-    BindingParamsArray *mArray;
+    BindingParamsArray* mArray;
     uint32_t mIndex;
   };
 

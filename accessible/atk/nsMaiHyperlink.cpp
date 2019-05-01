@@ -38,7 +38,7 @@ struct MaiAtkHyperlink {
    * The MaiHyperlink whose properties and features are exported via this
    * hyperlink instance.
    */
-  MaiHyperlink *maiHyperlink;
+  MaiHyperlink* maiHyperlink;
 };
 
 struct MaiAtkHyperlinkClass {
@@ -49,23 +49,23 @@ GType mai_atk_hyperlink_get_type(void);
 
 G_BEGIN_DECLS
 /* callbacks for AtkHyperlink */
-static void classInitCB(AtkHyperlinkClass *aClass);
-static void finalizeCB(GObject *aObj);
+static void classInitCB(AtkHyperlinkClass* aClass);
+static void finalizeCB(GObject* aObj);
 
 /* callbacks for AtkHyperlink virtual functions */
-static gchar *getUriCB(AtkHyperlink *aLink, gint aLinkIndex);
-static AtkObject *getObjectCB(AtkHyperlink *aLink, gint aLinkIndex);
-static gint getEndIndexCB(AtkHyperlink *aLink);
-static gint getStartIndexCB(AtkHyperlink *aLink);
-static gboolean isValidCB(AtkHyperlink *aLink);
-static gint getAnchorCountCB(AtkHyperlink *aLink);
+static gchar* getUriCB(AtkHyperlink* aLink, gint aLinkIndex);
+static AtkObject* getObjectCB(AtkHyperlink* aLink, gint aLinkIndex);
+static gint getEndIndexCB(AtkHyperlink* aLink);
+static gint getStartIndexCB(AtkHyperlink* aLink);
+static gboolean isValidCB(AtkHyperlink* aLink);
+static gint getAnchorCountCB(AtkHyperlink* aLink);
 G_END_DECLS
 
 static gpointer parent_class = nullptr;
 
-static MaiHyperlink *GetMaiHyperlink(AtkHyperlink *aHyperlink) {
+static MaiHyperlink* GetMaiHyperlink(AtkHyperlink* aHyperlink) {
   NS_ENSURE_TRUE(MAI_IS_ATK_HYPERLINK(aHyperlink), nullptr);
-  MaiHyperlink *maiHyperlink = MAI_ATK_HYPERLINK(aHyperlink)->maiHyperlink;
+  MaiHyperlink* maiHyperlink = MAI_ATK_HYPERLINK(aHyperlink)->maiHyperlink;
   NS_ENSURE_TRUE(maiHyperlink != nullptr, nullptr);
   NS_ENSURE_TRUE(maiHyperlink->GetAtkHyperlink() == aHyperlink, nullptr);
   return maiHyperlink;
@@ -96,7 +96,7 @@ GType mai_atk_hyperlink_get_type(void) {
 
 MaiHyperlink::MaiHyperlink(AccessibleOrProxy aHyperLink)
     : mHyperlink(aHyperLink), mMaiAtkHyperlink(nullptr) {
-  mMaiAtkHyperlink = reinterpret_cast<AtkHyperlink *>(
+  mMaiAtkHyperlink = reinterpret_cast<AtkHyperlink*>(
       g_object_new(mai_atk_hyperlink_get_type(), nullptr));
   NS_ASSERTION(mMaiAtkHyperlink, "OUT OF MEMORY");
   if (!mMaiAtkHyperlink) return;
@@ -113,8 +113,8 @@ MaiHyperlink::~MaiHyperlink() {
 
 /* static functions for ATK callbacks */
 
-void classInitCB(AtkHyperlinkClass *aClass) {
-  GObjectClass *gobject_class = G_OBJECT_CLASS(aClass);
+void classInitCB(AtkHyperlinkClass* aClass) {
+  GObjectClass* gobject_class = G_OBJECT_CLASS(aClass);
 
   parent_class = g_type_class_peek_parent(aClass);
 
@@ -128,11 +128,11 @@ void classInitCB(AtkHyperlinkClass *aClass) {
   gobject_class->finalize = finalizeCB;
 }
 
-void finalizeCB(GObject *aObj) {
+void finalizeCB(GObject* aObj) {
   NS_ASSERTION(MAI_IS_ATK_HYPERLINK(aObj), "Invalid MaiAtkHyperlink");
   if (!MAI_IS_ATK_HYPERLINK(aObj)) return;
 
-  MaiAtkHyperlink *maiAtkHyperlink = MAI_ATK_HYPERLINK(aObj);
+  MaiAtkHyperlink* maiAtkHyperlink = MAI_ATK_HYPERLINK(aObj);
   maiAtkHyperlink->maiHyperlink = nullptr;
 
   /* call parent finalize function */
@@ -140,12 +140,12 @@ void finalizeCB(GObject *aObj) {
     G_OBJECT_CLASS(parent_class)->finalize(aObj);
 }
 
-gchar *getUriCB(AtkHyperlink *aLink, gint aLinkIndex) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+gchar* getUriCB(AtkHyperlink* aLink, gint aLinkIndex) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return nullptr;
 
   nsAutoCString cautoStr;
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink()) {
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
     nsCOMPtr<nsIURI> uri = hyperlink->AnchorURIAt(aLinkIndex);
     if (!uri) return nullptr;
 
@@ -162,28 +162,28 @@ gchar *getUriCB(AtkHyperlink *aLink, gint aLinkIndex) {
   return g_strdup(cautoStr.get());
 }
 
-AtkObject *getObjectCB(AtkHyperlink *aLink, gint aLinkIndex) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+AtkObject* getObjectCB(AtkHyperlink* aLink, gint aLinkIndex) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) {
     return nullptr;
   }
 
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink()) {
-    Accessible *anchor = hyperlink->AnchorAt(aLinkIndex);
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink()) {
+    Accessible* anchor = hyperlink->AnchorAt(aLinkIndex);
     NS_ENSURE_TRUE(anchor, nullptr);
 
     return AccessibleWrap::GetAtkObject(anchor);
   }
 
-  ProxyAccessible *anchor = maiLink->Proxy()->AnchorAt(aLinkIndex);
+  ProxyAccessible* anchor = maiLink->Proxy()->AnchorAt(aLinkIndex);
   return anchor ? GetWrapperFor(anchor) : nullptr;
 }
 
-gint getEndIndexCB(AtkHyperlink *aLink) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+gint getEndIndexCB(AtkHyperlink* aLink) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink())
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink())
     return static_cast<gint>(hyperlink->EndOffset());
 
   bool valid = false;
@@ -191,11 +191,11 @@ gint getEndIndexCB(AtkHyperlink *aLink) {
   return valid ? static_cast<gint>(endIdx) : -1;
 }
 
-gint getStartIndexCB(AtkHyperlink *aLink) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+gint getStartIndexCB(AtkHyperlink* aLink) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return -1;
 
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink())
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink())
     return static_cast<gint>(hyperlink->StartOffset());
 
   bool valid = false;
@@ -203,21 +203,21 @@ gint getStartIndexCB(AtkHyperlink *aLink) {
   return valid ? static_cast<gint>(startIdx) : -1;
 }
 
-gboolean isValidCB(AtkHyperlink *aLink) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+gboolean isValidCB(AtkHyperlink* aLink) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink())
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink())
     return static_cast<gboolean>(hyperlink->IsLinkValid());
 
   return static_cast<gboolean>(maiLink->Proxy()->IsLinkValid());
 }
 
-gint getAnchorCountCB(AtkHyperlink *aLink) {
-  MaiHyperlink *maiLink = GetMaiHyperlink(aLink);
+gint getAnchorCountCB(AtkHyperlink* aLink) {
+  MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return -1;
 
-  if (Accessible *hyperlink = maiLink->GetAccHyperlink())
+  if (Accessible* hyperlink = maiLink->GetAccHyperlink())
     return static_cast<gint>(hyperlink->AnchorCount());
 
   bool valid = false;

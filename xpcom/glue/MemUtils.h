@@ -12,7 +12,8 @@
 
 namespace mozilla {
 
-bool MaybePrefetchMemory(uint8_t* aStart, size_t aNumBytes);
+bool CanPrefetchMemory();
+void PrefetchMemory(uint8_t* aStart, size_t aNumBytes);
 
 }  // namespace mozilla
 

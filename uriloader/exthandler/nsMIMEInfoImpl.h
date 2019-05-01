@@ -37,45 +37,45 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // I'd use NS_DECL_NSIMIMEINFO, but I don't want GetHasDefaultHandler
-  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator **_retval) override;
-  NS_IMETHOD SetFileExtensions(const nsACString &aExtensions) override;
-  NS_IMETHOD ExtensionExists(const nsACString &aExtension,
-                             bool *_retval) override;
-  NS_IMETHOD AppendExtension(const nsACString &aExtension) override;
-  NS_IMETHOD GetPrimaryExtension(nsACString &aPrimaryExtension) override;
-  NS_IMETHOD SetPrimaryExtension(const nsACString &aPrimaryExtension) override;
-  NS_IMETHOD GetType(nsACString &aType) override;
-  NS_IMETHOD GetMIMEType(nsACString &aMIMEType) override;
-  NS_IMETHOD GetDescription(nsAString &aDescription) override;
-  NS_IMETHOD SetDescription(const nsAString &aDescription) override;
-  NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, bool *_retval) override;
+  NS_IMETHOD GetFileExtensions(nsIUTF8StringEnumerator** _retval) override;
+  NS_IMETHOD SetFileExtensions(const nsACString& aExtensions) override;
+  NS_IMETHOD ExtensionExists(const nsACString& aExtension,
+                             bool* _retval) override;
+  NS_IMETHOD AppendExtension(const nsACString& aExtension) override;
+  NS_IMETHOD GetPrimaryExtension(nsACString& aPrimaryExtension) override;
+  NS_IMETHOD SetPrimaryExtension(const nsACString& aPrimaryExtension) override;
+  NS_IMETHOD GetType(nsACString& aType) override;
+  NS_IMETHOD GetMIMEType(nsACString& aMIMEType) override;
+  NS_IMETHOD GetDescription(nsAString& aDescription) override;
+  NS_IMETHOD SetDescription(const nsAString& aDescription) override;
+  NS_IMETHOD Equals(nsIMIMEInfo* aMIMEInfo, bool* _retval) override;
   NS_IMETHOD GetPreferredApplicationHandler(
-      nsIHandlerApp **aPreferredAppHandler) override;
+      nsIHandlerApp** aPreferredAppHandler) override;
   NS_IMETHOD SetPreferredApplicationHandler(
-      nsIHandlerApp *aPreferredAppHandler) override;
+      nsIHandlerApp* aPreferredAppHandler) override;
   NS_IMETHOD GetPossibleApplicationHandlers(
-      nsIMutableArray **aPossibleAppHandlers) override;
-  NS_IMETHOD GetDefaultDescription(nsAString &aDefaultDescription) override;
-  NS_IMETHOD LaunchWithFile(nsIFile *aFile) override;
-  NS_IMETHOD LaunchWithURI(nsIURI *aURI,
-                           nsIInterfaceRequestor *aWindowContext) override;
-  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction) override;
+      nsIMutableArray** aPossibleAppHandlers) override;
+  NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
+  NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
+  NS_IMETHOD LaunchWithURI(nsIURI* aURI,
+                           nsIInterfaceRequestor* aWindowContext) override;
+  NS_IMETHOD GetPreferredAction(nsHandlerInfoAction* aPreferredAction) override;
   NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction) override;
   NS_IMETHOD GetAlwaysAskBeforeHandling(
-      bool *aAlwaysAskBeforeHandling) override;
+      bool* aAlwaysAskBeforeHandling) override;
   NS_IMETHOD SetAlwaysAskBeforeHandling(bool aAlwaysAskBeforeHandling) override;
-  NS_IMETHOD GetPossibleLocalHandlers(nsIArray **_retval) override;
+  NS_IMETHOD GetPossibleLocalHandlers(nsIArray** _retval) override;
 
   enum HandlerClass { eMIMEInfo, eProtocolInfo };
 
   // nsMIMEInfoBase methods
-  explicit nsMIMEInfoBase(const char *aMIMEType = "");
-  explicit nsMIMEInfoBase(const nsACString &aMIMEType);
-  nsMIMEInfoBase(const nsACString &aType, HandlerClass aClass);
+  explicit nsMIMEInfoBase(const char* aMIMEType = "");
+  explicit nsMIMEInfoBase(const nsACString& aMIMEType);
+  nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass);
 
-  void SetMIMEType(const nsACString &aMIMEType) { mSchemeOrType = aMIMEType; }
+  void SetMIMEType(const nsACString& aMIMEType) { mSchemeOrType = aMIMEType; }
 
-  void SetDefaultDescription(const nsString &aDesc) {
+  void SetDefaultDescription(const nsString& aDesc) {
     mDefaultAppDescription = aDesc;
   }
 
@@ -87,7 +87,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    * function also ensures that aOther's primary extension will be the same as
    * the one of this object.
    */
-  void CopyBasicDataTo(nsMIMEInfoBase *aOther);
+  void CopyBasicDataTo(nsMIMEInfoBase* aOther);
 
   /**
    * Return whether this MIMEInfo has any extensions
@@ -105,17 +105,17 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    *
    * @param aFile The file that should be opened
    */
-  virtual nsresult LaunchDefaultWithFile(nsIFile *aFile) = 0;
+  virtual nsresult LaunchDefaultWithFile(nsIFile* aFile) = 0;
 
   /**
    * Loads the URI with the OS default app.
    *
    * @param aURI The URI to pass off to the OS.
    */
-  virtual nsresult LoadUriInternal(nsIURI *aURI) = 0;
+  virtual nsresult LoadUriInternal(nsIURI* aURI) = 0;
 
-  static already_AddRefed<nsIProcess> InitProcess(nsIFile *aApp,
-                                                  nsresult *aResult);
+  static already_AddRefed<nsIProcess> InitProcess(nsIFile* aApp,
+                                                  nsresult* aResult);
 
   /**
    * This method can be used to launch the file or URI with a single
@@ -126,8 +126,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    * @param aApp The application to launch (may not be null)
    * @param aArg The argument to pass on the command line
    */
-  static nsresult LaunchWithIProcess(nsIFile *aApp, const nsCString &aArg);
-  static nsresult LaunchWithIProcess(nsIFile *aApp, const nsString &aArg);
+  static nsresult LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg);
+  static nsresult LaunchWithIProcess(nsIFile* aApp, const nsString& aArg);
 
   /**
    * Given a file: nsIURI, return the associated nsIFile
@@ -135,7 +135,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    * @param  aURI      the file: URI in question
    * @param  aFile     the associated nsIFile (out param)
    */
-  static nsresult GetLocalFileFromURI(nsIURI *aURI, nsIFile **aFile);
+  static nsresult GetLocalFileFromURI(nsIURI* aURI, nsIFile** aFile);
 
   // member variables
   nsTArray<nsCString>
@@ -162,24 +162,24 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
  */
 class nsMIMEInfoImpl : public nsMIMEInfoBase {
  public:
-  explicit nsMIMEInfoImpl(const char *aMIMEType = "")
+  explicit nsMIMEInfoImpl(const char* aMIMEType = "")
       : nsMIMEInfoBase(aMIMEType) {}
-  explicit nsMIMEInfoImpl(const nsACString &aMIMEType)
+  explicit nsMIMEInfoImpl(const nsACString& aMIMEType)
       : nsMIMEInfoBase(aMIMEType) {}
-  nsMIMEInfoImpl(const nsACString &aType, HandlerClass aClass)
+  nsMIMEInfoImpl(const nsACString& aType, HandlerClass aClass)
       : nsMIMEInfoBase(aType, aClass) {}
   virtual ~nsMIMEInfoImpl() {}
 
   // nsIMIMEInfo methods
-  NS_IMETHOD GetHasDefaultHandler(bool *_retval) override;
-  NS_IMETHOD GetDefaultDescription(nsAString &aDefaultDescription) override;
+  NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
+  NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
 
   // additional methods
   /**
    * Sets the default application. Supposed to be only called by the OS Helper
    * App Services; the default application is immutable after it is first set.
    */
-  void SetDefaultApplication(nsIFile *aApp) {
+  void SetDefaultApplication(nsIFile* aApp) {
     if (!mDefaultApplication) mDefaultApplication = aApp;
   }
 
@@ -189,13 +189,13 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
    * The base class implementation is to use LaunchWithIProcess in combination
    * with mDefaultApplication. Subclasses can override that behaviour.
    */
-  virtual nsresult LaunchDefaultWithFile(nsIFile *aFile) override;
+  virtual nsresult LaunchDefaultWithFile(nsIFile* aFile) override;
 
   /**
    * Loads the URI with the OS default app.  This should be overridden by each
    * OS's implementation.
    */
-  virtual nsresult LoadUriInternal(nsIURI *aURI) override = 0;
+  virtual nsresult LoadUriInternal(nsIURI* aURI) override = 0;
 
   nsCOMPtr<nsIFile>
       mDefaultApplication;  ///< default application associated with this type.

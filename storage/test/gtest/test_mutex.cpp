@@ -25,7 +25,7 @@ TEST(storage_mutex, AutoLock)
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");
-    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockType);
+    sqlite3_mutex* inner = sqlite3_mutex_alloc(lockType);
     do_check_true(inner);
     mutex.initWithMutex(inner);
 
@@ -52,7 +52,7 @@ TEST(storage_mutex, AutoUnlock)
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");
-    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockType);
+    sqlite3_mutex* inner = sqlite3_mutex_alloc(lockType);
     do_check_true(inner);
     mutex.initWithMutex(inner);
 

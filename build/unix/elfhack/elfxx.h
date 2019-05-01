@@ -59,7 +59,7 @@ class FixedSizeData {
   typedef Wrapper Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r) {
+  static void swap(T& t, R& r) {
     r.value = endian::swap(t.value);
   }
 };
@@ -70,7 +70,7 @@ class Elf_Ehdr_Traits {
   typedef Elf64_Ehdr Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Phdr_Traits {
@@ -79,7 +79,7 @@ class Elf_Phdr_Traits {
   typedef Elf64_Phdr Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Shdr_Traits {
@@ -88,7 +88,7 @@ class Elf_Shdr_Traits {
   typedef Elf64_Shdr Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Dyn_Traits {
@@ -97,7 +97,7 @@ class Elf_Dyn_Traits {
   typedef Elf64_Dyn Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Sym_Traits {
@@ -106,7 +106,7 @@ class Elf_Sym_Traits {
   typedef Elf64_Sym Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Rel_Traits {
@@ -115,7 +115,7 @@ class Elf_Rel_Traits {
   typedef Elf64_Rel Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class Elf_Rela_Traits {
@@ -124,13 +124,13 @@ class Elf_Rela_Traits {
   typedef Elf64_Rela Type64;
 
   template <class endian, typename R, typename T>
-  static void swap(T &t, R &r);
+  static void swap(T& t, R& r);
 };
 
 class ElfValue {
  public:
   virtual unsigned int getValue() { return 0; }
-  virtual ElfSection *getSection() { return nullptr; }
+  virtual ElfSection* getSection() { return nullptr; }
 };
 
 class ElfPlainValue : public ElfValue {
@@ -142,47 +142,47 @@ class ElfPlainValue : public ElfValue {
 };
 
 class ElfLocation : public ElfValue {
-  ElfSection *section;
+  ElfSection* section;
   unsigned int offset;
 
  public:
   enum position { ABSOLUTE, RELATIVE };
   ElfLocation() : section(nullptr), offset(0){};
-  ElfLocation(ElfSection *section, unsigned int off,
+  ElfLocation(ElfSection* section, unsigned int off,
               enum position pos = RELATIVE);
-  ElfLocation(unsigned int location, Elf *elf);
+  ElfLocation(unsigned int location, Elf* elf);
   unsigned int getValue();
-  ElfSection *getSection() { return section; }
-  const char *getBuffer();
+  ElfSection* getSection() { return section; }
+  const char* getBuffer();
 };
 
 class ElfSize : public ElfValue {
-  ElfSection *section;
+  ElfSection* section;
 
  public:
-  ElfSize(ElfSection *s) : section(s){};
+  ElfSize(ElfSection* s) : section(s){};
   unsigned int getValue();
-  ElfSection *getSection() { return section; }
+  ElfSection* getSection() { return section; }
 };
 
 class ElfEntSize : public ElfValue {
-  ElfSection *section;
+  ElfSection* section;
 
  public:
-  ElfEntSize(ElfSection *s) : section(s){};
+  ElfEntSize(ElfSection* s) : section(s){};
   unsigned int getValue();
-  ElfSection *getSection() { return section; }
+  ElfSection* getSection() { return section; }
 };
 
 template <typename T>
 class serializable : public T::Type32 {
  public:
   serializable(){};
-  serializable(const typename T::Type32 &p) : T::Type32(p){};
+  serializable(const typename T::Type32& p) : T::Type32(p){};
 
  private:
   template <typename R>
-  void init(const char *buf, size_t len, char ei_data) {
+  void init(const char* buf, size_t len, char ei_data) {
     R e;
     assert(len >= sizeof(e));
     memcpy(&e, buf, sizeof(e));
@@ -197,20 +197,20 @@ class serializable : public T::Type32 {
   }
 
   template <typename R>
-  void serialize(const char *buf, size_t len, char ei_data) {
+  void serialize(const char* buf, size_t len, char ei_data) {
     assert(len >= sizeof(R));
     if (ei_data == ELFDATA2LSB) {
-      T::template swap<little_endian>(*this, *(R *)buf);
+      T::template swap<little_endian>(*this, *(R*)buf);
       return;
     } else if (ei_data == ELFDATA2MSB) {
-      T::template swap<big_endian>(*this, *(R *)buf);
+      T::template swap<big_endian>(*this, *(R*)buf);
       return;
     }
     throw std::runtime_error("Unsupported ELF data encoding");
   }
 
  public:
-  serializable(const char *buf, size_t len, char ei_class, char ei_data) {
+  serializable(const char* buf, size_t len, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       init<typename T::Type32>(buf, len, ei_data);
       return;
@@ -221,37 +221,37 @@ class serializable : public T::Type32 {
     throw std::runtime_error("Unsupported ELF class");
   }
 
-  serializable(std::ifstream &file, char ei_class, char ei_data) {
+  serializable(std::ifstream& file, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       typename T::Type32 e;
-      file.read((char *)&e, sizeof(e));
-      init<typename T::Type32>((char *)&e, sizeof(e), ei_data);
+      file.read((char*)&e, sizeof(e));
+      init<typename T::Type32>((char*)&e, sizeof(e), ei_data);
       return;
     } else if (ei_class == ELFCLASS64) {
       typename T::Type64 e;
-      file.read((char *)&e, sizeof(e));
-      init<typename T::Type64>((char *)&e, sizeof(e), ei_data);
+      file.read((char*)&e, sizeof(e));
+      init<typename T::Type64>((char*)&e, sizeof(e), ei_data);
       return;
     }
     throw std::runtime_error("Unsupported ELF class or data encoding");
   }
 
-  void serialize(std::ofstream &file, char ei_class, char ei_data) {
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       typename T::Type32 e;
-      serialize<typename T::Type32>((char *)&e, sizeof(e), ei_data);
-      file.write((char *)&e, sizeof(e));
+      serialize<typename T::Type32>((char*)&e, sizeof(e), ei_data);
+      file.write((char*)&e, sizeof(e));
       return;
     } else if (ei_class == ELFCLASS64) {
       typename T::Type64 e;
-      serialize<typename T::Type64>((char *)&e, sizeof(e), ei_data);
-      file.write((char *)&e, sizeof(e));
+      serialize<typename T::Type64>((char*)&e, sizeof(e), ei_data);
+      file.write((char*)&e, sizeof(e));
       return;
     }
     throw std::runtime_error("Unsupported ELF class or data encoding");
   }
 
-  void serialize(char *buf, size_t len, char ei_class, char ei_data) {
+  void serialize(char* buf, size_t len, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       serialize<typename T::Type32>(buf, len, ei_data);
       return;
@@ -275,20 +275,20 @@ typedef serializable<Elf_Shdr_Traits> Elf_Shdr;
 
 class Elf {
  public:
-  Elf(std::ifstream &file);
+  Elf(std::ifstream& file);
   ~Elf();
 
   /* index == -1 is treated as index == ehdr.e_shstrndx */
-  ElfSection *getSection(int index);
+  ElfSection* getSection(int index);
 
-  ElfSection *getSectionAt(unsigned int offset);
+  ElfSection* getSectionAt(unsigned int offset);
 
-  ElfSegment *getSegmentByType(unsigned int type, ElfSegment *last = nullptr);
+  ElfSegment* getSegmentByType(unsigned int type, ElfSegment* last = nullptr);
 
-  ElfDynamic_Section *getDynSection();
+  ElfDynamic_Section* getDynSection();
 
   void normalize();
-  void write(std::ofstream &file);
+  void write(std::ofstream& file);
 
   char getClass();
   char getData();
@@ -296,46 +296,46 @@ class Elf {
   char getMachine();
   unsigned int getSize();
 
-  void insertSegmentAfter(ElfSegment *previous, ElfSegment *segment) {
-    std::vector<ElfSegment *>::iterator prev =
+  void insertSegmentAfter(ElfSegment* previous, ElfSegment* segment) {
+    std::vector<ElfSegment*>::iterator prev =
         std::find(segments.begin(), segments.end(), previous);
     segments.insert(prev + 1, segment);
   }
 
-  void removeSegment(ElfSegment *segment);
+  void removeSegment(ElfSegment* segment);
 
  private:
-  Elf_Ehdr *ehdr;
+  Elf_Ehdr* ehdr;
   ElfLocation eh_entry;
-  ElfStrtab_Section *eh_shstrndx;
-  ElfSection **sections;
-  std::vector<ElfSegment *> segments;
+  ElfStrtab_Section* eh_shstrndx;
+  ElfSection** sections;
+  std::vector<ElfSegment*> segments;
   ElfSection *shdr_section, *phdr_section;
   /* Values used only during initialization */
-  Elf_Shdr **tmp_shdr;
-  std::ifstream *tmp_file;
+  Elf_Shdr** tmp_shdr;
+  std::ifstream* tmp_file;
 };
 
 class ElfSection {
  public:
   typedef union {
-    ElfSection *section;
+    ElfSection* section;
     int index;
   } SectionInfo;
 
-  ElfSection(Elf_Shdr &s, std::ifstream *file, Elf *parent);
+  ElfSection(Elf_Shdr& s, std::ifstream* file, Elf* parent);
 
   virtual ~ElfSection() { free(data); }
 
-  const char *getName() { return name; }
+  const char* getName() { return name; }
   unsigned int getType() { return shdr.sh_type; }
   unsigned int getFlags() { return shdr.sh_flags; }
   unsigned int getAddr();
   unsigned int getSize() { return shdr.sh_size; }
   unsigned int getAddrAlign() { return shdr.sh_addralign; }
   unsigned int getEntSize() { return shdr.sh_entsize; }
-  const char *getData() { return data; }
-  ElfSection *getLink() { return link; }
+  const char* getData() { return data; }
+  ElfSection* getLink() { return link; }
   SectionInfo getInfo() { return info; }
 
   void shrink(unsigned int newsize) {
@@ -347,7 +347,7 @@ class ElfSection {
 
   void grow(unsigned int newsize) {
     if (newsize > shdr.sh_size) {
-      data = static_cast<char *>(realloc(data, newsize));
+      data = static_cast<char*>(realloc(data, newsize));
       memset(data + shdr.sh_size, 0, newsize - shdr.sh_size);
       shdr.sh_size = newsize;
       markDirty();
@@ -356,10 +356,10 @@ class ElfSection {
 
   unsigned int getOffset();
   int getIndex();
-  Elf_Shdr &getShdr();
+  Elf_Shdr& getShdr();
 
-  ElfSection *getNext() { return next; }
-  ElfSection *getPrevious() { return previous; }
+  ElfSection* getNext() { return next; }
+  ElfSection* getPrevious() { return previous; }
 
   virtual bool isRelocatable() {
     return ((getType() == SHT_SYMTAB) || (getType() == SHT_STRTAB) ||
@@ -371,7 +371,7 @@ class ElfSection {
            (getFlags() & SHF_ALLOC);
   }
 
-  void insertAfter(ElfSection *section, bool dirty = true) {
+  void insertAfter(ElfSection* section, bool dirty = true) {
     if (previous != nullptr) previous->next = next;
     if (next != nullptr) next->previous = previous;
     previous = section;
@@ -385,7 +385,7 @@ class ElfSection {
     insertInSegments(section->segments);
   }
 
-  virtual void insertBefore(ElfSection *section, bool dirty = true) {
+  virtual void insertBefore(ElfSection* section, bool dirty = true) {
     if (previous != nullptr) previous->next = next;
     if (next != nullptr) next->previous = previous;
     next = section;
@@ -407,49 +407,49 @@ class ElfSection {
     if (next) next->markDirty();
   }
 
-  virtual void serialize(std::ofstream &file, char ei_class, char ei_data) {
+  virtual void serialize(std::ofstream& file, char ei_class, char ei_data) {
     if (getType() == SHT_NOBITS) return;
     file.seekp(getOffset());
     file.write(data, getSize());
   }
 
-  ElfSegment *getSegmentByType(unsigned int type);
+  ElfSegment* getSegmentByType(unsigned int type);
 
  private:
   friend class ElfSegment;
 
-  void addToSegment(ElfSegment *segment) { segments.push_back(segment); }
+  void addToSegment(ElfSegment* segment) { segments.push_back(segment); }
 
-  void removeFromSegment(ElfSegment *segment) {
-    std::vector<ElfSegment *>::iterator i =
+  void removeFromSegment(ElfSegment* segment) {
+    std::vector<ElfSegment*>::iterator i =
         std::find(segments.begin(), segments.end(), segment);
     segments.erase(i, i + 1);
   }
 
-  void insertInSegments(std::vector<ElfSegment *> &segs);
+  void insertInSegments(std::vector<ElfSegment*>& segs);
 
  protected:
   Elf_Shdr shdr;
-  char *data;
-  const char *name;
+  char* data;
+  const char* name;
 
  private:
-  ElfSection *link;
+  ElfSection* link;
   SectionInfo info;
   ElfSection *next, *previous;
   int index;
-  std::vector<ElfSegment *> segments;
+  std::vector<ElfSegment*> segments;
 };
 
 class ElfSegment {
  public:
-  ElfSegment(Elf_Phdr *phdr);
+  ElfSegment(Elf_Phdr* phdr);
 
   unsigned int getType() { return type; }
   unsigned int getFlags() { return flags; }
   unsigned int getAlign() { return align; }
 
-  ElfSection *getFirstSection() {
+  ElfSection* getFirstSection() {
     return sections.empty() ? nullptr : sections.front();
   }
   int getVPDiff() { return v_p_diff; }
@@ -458,11 +458,11 @@ class ElfSegment {
   unsigned int getOffset();
   unsigned int getAddr();
 
-  void addSection(ElfSection *section);
-  void removeSection(ElfSection *section);
+  void addSection(ElfSection* section);
+  void removeSection(ElfSection* section);
 
-  std::list<ElfSection *>::iterator begin() { return sections.begin(); }
-  std::list<ElfSection *>::iterator end() { return sections.end(); }
+  std::list<ElfSection*>::iterator begin() { return sections.begin(); }
+  std::list<ElfSection*>::iterator end() { return sections.end(); }
 
   void clear();
 
@@ -471,7 +471,7 @@ class ElfSegment {
   int v_p_diff;  // Difference between physical and virtual address
   unsigned int flags;
   unsigned int align;
-  std::list<ElfSection *> sections;
+  std::list<ElfSection*> sections;
   // The following are only really used for PT_GNU_RELRO until something
   // better is found.
   unsigned int vaddr;
@@ -480,8 +480,8 @@ class ElfSegment {
 
 class Elf_Ehdr : public serializable<Elf_Ehdr_Traits>, public ElfSection {
  public:
-  Elf_Ehdr(std::ifstream &file, char ei_class, char ei_data);
-  void serialize(std::ofstream &file, char ei_class, char ei_data) {
+  Elf_Ehdr(std::ifstream& file, char ei_class, char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     serializable<Elf_Ehdr_Traits>::serialize(file, ei_class, ei_data);
   }
 };
@@ -489,9 +489,9 @@ class Elf_Ehdr : public serializable<Elf_Ehdr_Traits>, public ElfSection {
 class Elf_Phdr : public serializable<Elf_Phdr_Traits> {
  public:
   Elf_Phdr(){};
-  Elf_Phdr(std::ifstream &file, char ei_class, char ei_data)
+  Elf_Phdr(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Phdr_Traits>(file, ei_class, ei_data){};
-  bool contains(ElfSection *section) {
+  bool contains(ElfSection* section) {
     unsigned int size = section->getSize();
     unsigned int addr = section->getAddr();
     // This may be biased, but should work in most cases
@@ -510,19 +510,19 @@ typedef serializable<Elf_Dyn_Traits> Elf_Dyn;
 
 struct Elf_DynValue {
   unsigned int tag;
-  ElfValue *value;
+  ElfValue* value;
 };
 
 class ElfDynamic_Section : public ElfSection {
  public:
-  ElfDynamic_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent);
+  ElfDynamic_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent);
   ~ElfDynamic_Section();
 
-  void serialize(std::ofstream &file, char ei_class, char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
-  ElfValue *getValueForType(unsigned int tag);
-  ElfSection *getSectionForType(unsigned int tag);
-  bool setValueForType(unsigned int tag, ElfValue *val);
+  ElfValue* getValueForType(unsigned int tag);
+  ElfSection* getSectionForType(unsigned int tag);
+  bool setValueForType(unsigned int tag, ElfValue* val);
 
  private:
   std::vector<Elf_DynValue> dyns;
@@ -531,7 +531,7 @@ class ElfDynamic_Section : public ElfSection {
 typedef serializable<Elf_Sym_Traits> Elf_Sym;
 
 struct Elf_SymValue {
-  const char *name;
+  const char* name;
   unsigned char info;
   unsigned char other;
   ElfLocation value;
@@ -543,11 +543,11 @@ struct Elf_SymValue {
 
 class ElfSymtab_Section : public ElfSection {
  public:
-  ElfSymtab_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent);
+  ElfSymtab_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent);
 
-  void serialize(std::ofstream &file, char ei_class, char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
-  Elf_SymValue *lookup(const char *name,
+  Elf_SymValue* lookup(const char* name,
                        unsigned int type_filter = STT(OBJECT) | STT(FUNC));
 
   // private: // Until we have a real API
@@ -558,7 +558,7 @@ class Elf_Rel : public serializable<Elf_Rel_Traits> {
  public:
   Elf_Rel() : serializable<Elf_Rel_Traits>(){};
 
-  Elf_Rel(std::ifstream &file, char ei_class, char ei_data)
+  Elf_Rel(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Rel_Traits>(file, ei_class, ei_data){};
 
   static const unsigned int sh_type = SHT_REL;
@@ -570,7 +570,7 @@ class Elf_Rela : public serializable<Elf_Rela_Traits> {
  public:
   Elf_Rela() : serializable<Elf_Rela_Traits>(){};
 
-  Elf_Rela(std::ifstream &file, char ei_class, char ei_data)
+  Elf_Rela(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Rela_Traits>(file, ei_class, ei_data){};
 
   static const unsigned int sh_type = SHT_RELA;
@@ -581,7 +581,7 @@ class Elf_Rela : public serializable<Elf_Rela_Traits> {
 template <class Rel>
 class ElfRel_Section : public ElfSection {
  public:
-  ElfRel_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent)
+  ElfRel_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent)
       : ElfSection(s, file, parent) {
     int pos = file->tellg();
     file->seekg(shdr.sh_offset);
@@ -592,7 +592,7 @@ class ElfRel_Section : public ElfSection {
     file->seekg(pos);
   }
 
-  void serialize(std::ofstream &file, char ei_class, char ei_data) {
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     for (typename std::vector<Rel>::iterator i = rels.begin(); i != rels.end();
          ++i)
       (*i).serialize(file, ei_class, ei_data);
@@ -603,7 +603,7 @@ class ElfRel_Section : public ElfSection {
 
 class ElfStrtab_Section : public ElfSection {
  public:
-  ElfStrtab_Section(Elf_Shdr &s, std::ifstream *file, Elf *parent)
+  ElfStrtab_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent)
       : ElfSection(s, file, parent) {
     table.push_back(table_storage(data, shdr.sh_size));
   }
@@ -614,22 +614,22 @@ class ElfStrtab_Section : public ElfSection {
       delete[] t->buf;
   }
 
-  const char *getStr(unsigned int index);
+  const char* getStr(unsigned int index);
 
-  const char *getStr(const char *string);
+  const char* getStr(const char* string);
 
-  unsigned int getStrIndex(const char *string);
+  unsigned int getStrIndex(const char* string);
 
-  void serialize(std::ofstream &file, char ei_class, char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
  private:
   struct table_storage {
     unsigned int size, used;
-    char *buf;
+    char* buf;
 
     table_storage() : size(4096), used(0), buf(new char[4096]) {}
-    table_storage(const char *data, unsigned int sz)
-        : size(sz), used(sz), buf(const_cast<char *>(data)) {}
+    table_storage(const char* data, unsigned int sz)
+        : size(sz), used(sz), buf(const_cast<char*>(data)) {}
   };
   std::vector<table_storage> table;
 };
@@ -643,28 +643,28 @@ inline char Elf::getType() { return ehdr->e_type; }
 inline char Elf::getMachine() { return ehdr->e_machine; }
 
 inline unsigned int Elf::getSize() {
-  ElfSection *section;
+  ElfSection* section;
   for (section = shdr_section /* It's usually not far from the end */;
        section->getNext() != nullptr; section = section->getNext())
     ;
   return section->getOffset() + section->getSize();
 }
 
-inline ElfSegment *ElfSection::getSegmentByType(unsigned int type) {
-  for (std::vector<ElfSegment *>::iterator seg = segments.begin();
+inline ElfSegment* ElfSection::getSegmentByType(unsigned int type) {
+  for (std::vector<ElfSegment*>::iterator seg = segments.begin();
        seg != segments.end(); ++seg)
     if ((*seg)->getType() == type) return *seg;
   return nullptr;
 }
 
-inline void ElfSection::insertInSegments(std::vector<ElfSegment *> &segs) {
-  for (std::vector<ElfSegment *>::iterator it = segs.begin(); it != segs.end();
+inline void ElfSection::insertInSegments(std::vector<ElfSegment*>& segs) {
+  for (std::vector<ElfSegment*>::iterator it = segs.begin(); it != segs.end();
        ++it) {
     (*it)->addSection(this);
   }
 }
 
-inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off,
+inline ElfLocation::ElfLocation(ElfSection* section, unsigned int off,
                                 enum position pos)
     : section(section) {
   if ((pos == ABSOLUTE) && section)
@@ -673,7 +673,7 @@ inline ElfLocation::ElfLocation(ElfSection *section, unsigned int off,
     offset = off;
 }
 
-inline ElfLocation::ElfLocation(unsigned int location, Elf *elf) {
+inline ElfLocation::ElfLocation(unsigned int location, Elf* elf) {
   section = elf->getSectionAt(location);
   offset = location - (section ? section->getAddr() : 0);
 }
@@ -682,7 +682,7 @@ inline unsigned int ElfLocation::getValue() {
   return (section ? section->getAddr() : 0) + offset;
 }
 
-inline const char *ElfLocation::getBuffer() {
+inline const char* ElfLocation::getBuffer() {
   return section ? section->getData() + offset : nullptr;
 }
 

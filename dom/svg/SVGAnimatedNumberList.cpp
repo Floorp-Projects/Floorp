@@ -16,14 +16,14 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString &aValue) {
+nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString& aValue) {
   SVGNumberList newBaseValue;
   nsresult rv = newBaseValue.SetValueFromString(aValue);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  DOMSVGAnimatedNumberList *domWrapper =
+  DOMSVGAnimatedNumberList* domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! If the length
@@ -49,7 +49,7 @@ nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString &aValue) {
 }
 
 void SVGAnimatedNumberList::ClearBaseValue(uint32_t aAttrEnum) {
-  DOMSVGAnimatedNumberList *domWrapper =
+  DOMSVGAnimatedNumberList* domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // We must send this notification *before* changing mBaseVal! (See above.)
@@ -60,10 +60,10 @@ void SVGAnimatedNumberList::ClearBaseValue(uint32_t aAttrEnum) {
   // Caller notifies
 }
 
-nsresult SVGAnimatedNumberList::SetAnimValue(const SVGNumberList &aNewAnimValue,
-                                             SVGElement *aElement,
+nsresult SVGAnimatedNumberList::SetAnimValue(const SVGNumberList& aNewAnimValue,
+                                             SVGElement* aElement,
                                              uint32_t aAttrEnum) {
-  DOMSVGAnimatedNumberList *domWrapper =
+  DOMSVGAnimatedNumberList* domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // A new animation may totally change the number of items in the animVal
@@ -98,9 +98,9 @@ nsresult SVGAnimatedNumberList::SetAnimValue(const SVGNumberList &aNewAnimValue,
   return NS_OK;
 }
 
-void SVGAnimatedNumberList::ClearAnimValue(SVGElement *aElement,
+void SVGAnimatedNumberList::ClearAnimValue(SVGElement* aElement,
                                            uint32_t aAttrEnum) {
-  DOMSVGAnimatedNumberList *domWrapper =
+  DOMSVGAnimatedNumberList* domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
   if (domWrapper) {
     // When all animation ends, animVal simply mirrors baseVal, which may have
@@ -114,16 +114,16 @@ void SVGAnimatedNumberList::ClearAnimValue(SVGElement *aElement,
   aElement->DidAnimateNumberList(aAttrEnum);
 }
 
-UniquePtr<SMILAttr> SVGAnimatedNumberList::ToSMILAttr(SVGElement *aSVGElement,
+UniquePtr<SMILAttr> SVGAnimatedNumberList::ToSMILAttr(SVGElement* aSVGElement,
                                                       uint8_t aAttrEnum) {
   return MakeUnique<SMILAnimatedNumberList>(this, aSVGElement, aAttrEnum);
 }
 
 nsresult SVGAnimatedNumberList::SMILAnimatedNumberList::ValueFromString(
-    const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
-    SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
+    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SMILValue val(&SVGNumberListSMILType::sSingleton);
-  SVGNumberListAndInfo *nlai = static_cast<SVGNumberListAndInfo *>(val.mU.mPtr);
+  SVGNumberListAndInfo* nlai = static_cast<SVGNumberListAndInfo*>(val.mU.mPtr);
   nsresult rv = nlai->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     nlai->SetInfo(mElement);
@@ -140,7 +140,7 @@ SMILValue SVGAnimatedNumberList::SMILAnimatedNumberList::GetBaseValue() const {
   SMILValue val;
 
   SMILValue tmp(&SVGNumberListSMILType::sSingleton);
-  SVGNumberListAndInfo *nlai = static_cast<SVGNumberListAndInfo *>(tmp.mU.mPtr);
+  SVGNumberListAndInfo* nlai = static_cast<SVGNumberListAndInfo*>(tmp.mU.mPtr);
   nsresult rv = nlai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     nlai->SetInfo(mElement);
@@ -150,11 +150,11 @@ SMILValue SVGAnimatedNumberList::SMILAnimatedNumberList::GetBaseValue() const {
 }
 
 nsresult SVGAnimatedNumberList::SMILAnimatedNumberList::SetAnimValue(
-    const SMILValue &aValue) {
+    const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == &SVGNumberListSMILType::sSingleton,
                "Unexpected type to assign animated value");
   if (aValue.mType == &SVGNumberListSMILType::sSingleton) {
-    mVal->SetAnimValue(*static_cast<SVGNumberListAndInfo *>(aValue.mU.mPtr),
+    mVal->SetAnimValue(*static_cast<SVGNumberListAndInfo*>(aValue.mU.mPtr),
                        mElement, mAttrEnum);
   }
   return NS_OK;

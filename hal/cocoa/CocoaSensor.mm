@@ -15,7 +15,7 @@
 using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
-static nsITimer *sUpdateTimer = nullptr;
+static nsITimer* sUpdateTimer = nullptr;
 static bool sActiveSensors[NUM_SENSOR_TYPE];
 static io_connect_t sDataPort = IO_OBJECT_NULL;
 static uint64_t sLastMean = -1;
@@ -35,7 +35,7 @@ static float LMUvalueToLux(uint64_t aValue) {
   float lux = ceil(static_cast<float>(term4 + term3 + term2 + term1 - 0.19));
   return lux > 0 ? lux : 0;
 }
-void UpdateHandler(nsITimer *aTimer, void *aClosure) {
+void UpdateHandler(nsITimer* aTimer, void* aClosure) {
   for (int i = 0; i < NUM_SENSOR_TYPE; i++) {
     if (!sActiveSensors[i]) {
       continue;

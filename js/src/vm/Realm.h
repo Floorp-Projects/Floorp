@@ -711,7 +711,8 @@ class JS::Realm : public JS::shadow::Realm {
   // True if this realm's global is a debuggee of some Debugger
   // object.
   bool isDebuggee() const { return !!(debugModeBits_ & IsDebuggee); }
-  void setIsDebuggee() { debugModeBits_ |= IsDebuggee; }
+
+  void setIsDebuggee();
   void unsetIsDebuggee();
 
   // True if this compartment's global is a debuggee of some Debugger

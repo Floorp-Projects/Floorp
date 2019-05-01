@@ -46,7 +46,7 @@ class nsZipWriter final : public nsIZipWriter, public nsIRequestObserver {
   NS_DECL_NSIREQUESTOBSERVER
 
   nsZipWriter();
-  nsresult EntryCompleteCallback(nsZipHeader *aHeader, nsresult aStatus);
+  nsresult EntryCompleteCallback(nsZipHeader* aHeader, nsresult aStatus);
 
  private:
   ~nsZipWriter();
@@ -66,13 +66,13 @@ class nsZipWriter final : public nsIZipWriter, public nsIRequestObserver {
 
   nsresult SeekCDS();
   void Cleanup();
-  nsresult ReadFile(nsIFile *aFile);
-  nsresult InternalAddEntryDirectory(const nsACString &aZipEntry,
+  nsresult ReadFile(nsIFile* aFile);
+  nsresult InternalAddEntryDirectory(const nsACString& aZipEntry,
                                      PRTime aModTime, uint32_t aPermissions);
-  nsresult BeginProcessingAddition(nsZipQueueItem *aItem, bool *complete);
+  nsresult BeginProcessingAddition(nsZipQueueItem* aItem, bool* complete);
   nsresult BeginProcessingRemoval(int32_t aPos);
-  nsresult AddEntryStream(const nsACString &aZipEntry, PRTime aModTime,
-                          int32_t aCompression, nsIInputStream *aStream,
+  nsresult AddEntryStream(const nsACString& aZipEntry, PRTime aModTime,
+                          int32_t aCompression, nsIInputStream* aStream,
                           bool aQueue, uint32_t aPermissions);
   void BeginProcessingNextItem();
   void FinishQueue(nsresult aStatus);

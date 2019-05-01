@@ -29,8 +29,8 @@ class nsFtpProtocolHandler final : public nsIProxiedProtocolHandler,
   nsresult Init();
 
   // FTP Connection list access
-  nsresult InsertConnection(nsIURI *aKey, nsFtpControlConnection *aConn);
-  nsresult RemoveConnection(nsIURI *aKey, nsFtpControlConnection **aConn);
+  nsresult InsertConnection(nsIURI* aKey, nsFtpControlConnection* aConn);
+  nsresult RemoveConnection(nsIURI* aKey, nsFtpControlConnection** aConn);
   uint32_t GetSessionId() { return mSessionId; }
 
   uint8_t GetDataQoSBits() { return mDataQoSBits; }
@@ -43,7 +43,7 @@ class nsFtpProtocolHandler final : public nsIProxiedProtocolHandler,
   struct timerStruct {
     nsCOMPtr<nsITimer> timer;
     RefPtr<nsFtpControlConnection> conn;
-    char *key;
+    char* key;
 
     timerStruct() : key(nullptr) {}
 
@@ -56,10 +56,10 @@ class nsFtpProtocolHandler final : public nsIProxiedProtocolHandler,
     }
   };
 
-  static void Timeout(nsITimer *aTimer, void *aClosure);
+  static void Timeout(nsITimer* aTimer, void* aClosure);
   void ClearAllConnections();
 
-  nsTArray<timerStruct *> mRootConnectionList;
+  nsTArray<timerStruct*> mRootConnectionList;
 
   int32_t mIdleTimeout;
   bool mEnabled;
@@ -77,7 +77,7 @@ class nsFtpProtocolHandler final : public nsIProxiedProtocolHandler,
 
 //-----------------------------------------------------------------------------
 
-extern nsFtpProtocolHandler *gFtpHandler;
+extern nsFtpProtocolHandler* gFtpHandler;
 
 #include "mozilla/Logging.h"
 extern mozilla::LazyLogModule gFTPLog;

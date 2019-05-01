@@ -37,7 +37,7 @@ class HttpTrafficAnalyzer final {
 
   nsresult IncrementHttpTransaction(HttpTrafficCategory aCategory);
   nsresult IncrementHttpConnection(HttpTrafficCategory aCategory);
-  nsresult IncrementHttpConnection(nsTArray<HttpTrafficCategory> &&aCategories);
+  nsresult IncrementHttpConnection(nsTArray<HttpTrafficCategory>&& aCategories);
   nsresult AccumulateHttpTransferredSize(HttpTrafficCategory aCategory,
                                          uint64_t aBytesRead,
                                          uint64_t aBytesSent);

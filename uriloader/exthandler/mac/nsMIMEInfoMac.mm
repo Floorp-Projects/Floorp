@@ -12,7 +12,7 @@
 #include "nsIFileURL.h"
 
 // We override this to make sure app bundles display their pretty name (without .app suffix)
-NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString &aDefaultDescription) {
+NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescription) {
   if (mDefaultApplication) {
     nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mDefaultApplication);
     if (macFile) {
@@ -26,7 +26,7 @@ NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString &aDefaultDescriptio
 }
 
 NS_IMETHODIMP
-nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile) {
+nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsCOMPtr<nsIFile> application;
@@ -76,7 +76,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile) {
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI) {
+nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI* aURI) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG_POINTER(aURI);
@@ -86,7 +86,7 @@ nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI) {
   nsAutoCString uri;
   aURI->GetSpec(uri);
   if (!uri.IsEmpty()) {
-    CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)uri.get(),
+    CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8*)uri.get(),
                                                strlen(uri.get()), kCFStringEncodingUTF8, NULL);
     if (myURLRef) {
       OSStatus status = ::LSOpenCFURLRef(myURLRef, NULL);

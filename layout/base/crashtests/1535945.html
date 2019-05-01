@@ -1,0 +1,26 @@
+<html class="reftest-wait">
+<style>
+.c {
+  scroll-behavior: smooth;
+  border-style: groove;
+}
+* {
+  margin-right: 52vh;
+  width: 1vh
+}
+:not(feTile) {
+  overflow-x: scroll;
+}
+</style>
+<script>
+function go() {
+  a.scrollTo({left: 1, top: 80})
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<body onload=go()>
+<table background="A">
+A
+<dl>
+<dd id="a" contenteditable="true" class="c">
+</html>

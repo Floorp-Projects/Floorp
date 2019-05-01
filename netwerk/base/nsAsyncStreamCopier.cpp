@@ -32,7 +32,7 @@ class AsyncApplyBufferingPolicyEvent final : public Runnable {
    * @param aCopier
    *        The nsAsyncStreamCopier requesting the information.
    */
-  explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier *aCopier)
+  explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
       : mozilla::Runnable("AsyncApplyBufferingPolicyEvent"),
         mCopier(aCopier),
         mTarget(GetCurrentThreadEventTarget()) {}
@@ -79,14 +79,14 @@ nsAsyncStreamCopier::~nsAsyncStreamCopier() {
   LOG(("Destroying nsAsyncStreamCopier @%p\n", this));
 }
 
-bool nsAsyncStreamCopier::IsComplete(nsresult *status) {
+bool nsAsyncStreamCopier::IsComplete(nsresult* status) {
   MutexAutoLock lock(mLock);
   if (status) *status = mStatus;
   return !mIsPending;
 }
 
-nsIRequest *nsAsyncStreamCopier::AsRequest() {
-  return static_cast<nsIRequest *>(static_cast<nsIAsyncStreamCopier *>(this));
+nsIRequest* nsAsyncStreamCopier::AsRequest() {
+  return static_cast<nsIRequest*>(static_cast<nsIAsyncStreamCopier*>(this));
 }
 
 void nsAsyncStreamCopier::Complete(nsresult status) {
@@ -116,10 +116,9 @@ void nsAsyncStreamCopier::Complete(nsresult status) {
   }
 }
 
-void nsAsyncStreamCopier::OnAsyncCopyComplete(void *closure, nsresult status) {
+void nsAsyncStreamCopier::OnAsyncCopyComplete(void* closure, nsresult status) {
   // AddRef'd in AsyncCopy. Will be released at the end of the method.
-  RefPtr<nsAsyncStreamCopier> self =
-      dont_AddRef((nsAsyncStreamCopier *)closure);
+  RefPtr<nsAsyncStreamCopier> self = dont_AddRef((nsAsyncStreamCopier*)closure);
   self->Complete(status);
 }
 
@@ -146,19 +145,19 @@ NS_INTERFACE_TABLE_TAIL
 // nsIRequest
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::GetName(nsACString &name) {
+nsAsyncStreamCopier::GetName(nsACString& name) {
   name.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::IsPending(bool *result) {
+nsAsyncStreamCopier::IsPending(bool* result) {
   *result = !IsComplete();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::GetStatus(nsresult *status) {
+nsAsyncStreamCopier::GetStatus(nsresult* status) {
   IsComplete(status);
   return NS_OK;
 }
@@ -195,7 +194,7 @@ nsAsyncStreamCopier::Resume() {
 }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::GetLoadFlags(nsLoadFlags *aLoadFlags) {
+nsAsyncStreamCopier::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   *aLoadFlags = LOAD_NORMAL;
   return NS_OK;
 }
@@ -204,17 +203,17 @@ NS_IMETHODIMP
 nsAsyncStreamCopier::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::GetLoadGroup(nsILoadGroup **aLoadGroup) {
+nsAsyncStreamCopier::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup *aLoadGroup) { return NS_OK; }
+nsAsyncStreamCopier::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
 
-nsresult nsAsyncStreamCopier::InitInternal(nsIInputStream *source,
-                                           nsIOutputStream *sink,
-                                           nsIEventTarget *target,
+nsresult nsAsyncStreamCopier::InitInternal(nsIInputStream* source,
+                                           nsIOutputStream* sink,
+                                           nsIEventTarget* target,
                                            uint32_t chunkSize, bool closeSource,
                                            bool closeSink) {
   NS_ASSERTION(!mSource && !mSink, "Init() called more than once");
@@ -245,8 +244,8 @@ nsresult nsAsyncStreamCopier::InitInternal(nsIInputStream *source,
 // nsIAsyncStreamCopier
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::Init(nsIInputStream *source, nsIOutputStream *sink,
-                          nsIEventTarget *target, bool sourceBuffered,
+nsAsyncStreamCopier::Init(nsIInputStream* source, nsIOutputStream* sink,
+                          nsIEventTarget* target, bool sourceBuffered,
                           bool sinkBuffered, uint32_t chunkSize,
                           bool closeSource, bool closeSink) {
   NS_ASSERTION(sourceBuffered || sinkBuffered,
@@ -261,8 +260,8 @@ nsAsyncStreamCopier::Init(nsIInputStream *source, nsIOutputStream *sink,
 // nsIAsyncStreamCopier2
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::Init(nsIInputStream *source, nsIOutputStream *sink,
-                          nsIEventTarget *target, uint32_t chunkSize,
+nsAsyncStreamCopier::Init(nsIInputStream* source, nsIOutputStream* sink,
+                          nsIEventTarget* target, uint32_t chunkSize,
                           bool closeSource, bool closeSink) {
   mShouldSniffBuffering = true;
 
@@ -311,7 +310,7 @@ nsresult nsAsyncStreamCopier::ApplyBufferingPolicy() {
 // Both nsIAsyncStreamCopier and nsIAsyncStreamCopier2
 
 NS_IMETHODIMP
-nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx) {
+nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver* observer, nsISupports* ctx) {
   LOG(("nsAsyncStreamCopier::AsyncCopy [this=%p observer=%p]\n", this,
        observer));
 

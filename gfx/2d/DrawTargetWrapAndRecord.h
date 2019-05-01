@@ -16,7 +16,7 @@ namespace gfx {
 class DrawTargetWrapAndRecord : public DrawTarget {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetWrapAndRecord, override)
-  DrawTargetWrapAndRecord(DrawEventRecorder *aRecorder, DrawTarget *aDT,
+  DrawTargetWrapAndRecord(DrawEventRecorder* aRecorder, DrawTarget* aDT,
                           bool aHasData = false);
 
   ~DrawTargetWrapAndRecord();
@@ -55,13 +55,13 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aSurfOptions DrawSurface options that are applied
    */
   virtual void DrawSurface(
-      SourceSurface *aSurface, const Rect &aDest, const Rect &aSource,
-      const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
-      const DrawOptions &aOptions = DrawOptions()) override;
+      SourceSurface* aSurface, const Rect& aDest, const Rect& aSource,
+      const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
+      const DrawOptions& aOptions = DrawOptions()) override;
 
-  virtual void DrawFilter(FilterNode *aNode, const Rect &aSourceRect,
-                          const Point &aDestPoint,
-                          const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
+                          const Point& aDestPoint,
+                          const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
@@ -77,9 +77,9 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aSigma Sigma used for the guassian filter kernel
    * aOperator Composition operator used
    */
-  virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
-                                     const Point &aDest, const Color &aColor,
-                                     const Point &aOffset, Float aSigma,
+  virtual void DrawSurfaceWithShadow(SourceSurface* aSurface,
+                                     const Point& aDest, const Color& aColor,
+                                     const Point& aOffset, Float aSigma,
                                      CompositionOp aOperator) override;
 
   /*
@@ -88,7 +88,7 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    *
    * aRect Rectangle to clear
    */
-  virtual void ClearRect(const Rect &aRect) override;
+  virtual void ClearRect(const Rect& aRect) override;
 
   /*
    * This is essentially a 'memcpy' between two surfaces. It moves a pixel
@@ -99,8 +99,8 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aSourceRect Source rectangle to be copied
    * aDest Destination point to copy the surface to
    */
-  virtual void CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
-                           const IntPoint &aDestination) override;
+  virtual void CopySurface(SourceSurface* aSurface, const IntRect& aSourceRect,
+                           const IntPoint& aDestination) override;
 
   /*
    * Fill a rectangle on the DrawTarget with a certain source pattern.
@@ -109,8 +109,8 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aPattern Pattern that forms the source of this filling operation
    * aOptions Options that are applied to this operation
    */
-  virtual void FillRect(const Rect &aRect, const Pattern &aPattern,
-                        const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void FillRect(const Rect& aRect, const Pattern& aPattern,
+                        const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Stroke a rectangle on the DrawTarget with a certain source pattern.
@@ -119,9 +119,9 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aPattern Pattern that forms the source of this stroking operation
    * aOptions Options that are applied to this operation
    */
-  virtual void StrokeRect(const Rect &aRect, const Pattern &aPattern,
-                          const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                          const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void StrokeRect(const Rect& aRect, const Pattern& aPattern,
+                          const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                          const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Stroke a line on the DrawTarget with a certain source pattern.
@@ -131,10 +131,10 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aPattern Pattern that forms the source of this stroking operation
    * aOptions Options that are applied to this operation
    */
-  virtual void StrokeLine(const Point &aStart, const Point &aEnd,
-                          const Pattern &aPattern,
-                          const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                          const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void StrokeLine(const Point& aStart, const Point& aEnd,
+                          const Pattern& aPattern,
+                          const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                          const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Stroke a path on the draw target with a certain source pattern.
@@ -144,9 +144,9 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aStrokeOptions Stroke options used for this operation
    * aOptions Draw options used for this operation
    */
-  virtual void Stroke(const Path *aPath, const Pattern &aPattern,
-                      const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                      const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void Stroke(const Path* aPath, const Pattern& aPattern,
+                      const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                      const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Fill a path on the draw target with a certain source pattern.
@@ -155,15 +155,15 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aPattern Pattern that should be used for the fill
    * aOptions Draw options used for this operation
    */
-  virtual void Fill(const Path *aPath, const Pattern &aPattern,
-                    const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void Fill(const Path* aPath, const Pattern& aPattern,
+                    const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Fill a series of clyphs on the draw target with a certain source pattern.
    */
-  virtual void FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer,
-                          const Pattern &aPattern,
-                          const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+                          const Pattern& aPattern,
+                          const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * This takes a source pattern and a mask, and composites the source pattern
@@ -174,19 +174,19 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * aMask Mask pattern
    * aOptions Drawing options
    */
-  virtual void Mask(const Pattern &aSource, const Pattern &aMask,
-                    const DrawOptions &aOptions = DrawOptions()) override;
+  virtual void Mask(const Pattern& aSource, const Pattern& aMask,
+                    const DrawOptions& aOptions = DrawOptions()) override;
 
   virtual void MaskSurface(
-      const Pattern &aSource, SourceSurface *aMask, Point aOffset,
-      const DrawOptions &aOptions = DrawOptions()) override;
+      const Pattern& aSource, SourceSurface* aMask, Point aOffset,
+      const DrawOptions& aOptions = DrawOptions()) override;
 
   /*
    * Push a clip to the DrawTarget.
    *
    * aPath The path to clip to
    */
-  virtual void PushClip(const Path *aPath) override;
+  virtual void PushClip(const Path* aPath) override;
 
   /*
    * Push an axis-aligned rectangular clip to the DrawTarget. This rectangle
@@ -194,7 +194,7 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    *
    * aRect The rect to clip to
    */
-  virtual void PushClipRect(const Rect &aRect) override;
+  virtual void PushClipRect(const Rect& aRect) override;
 
   /* Pop a clip from the DrawTarget. A pop without a corresponding push will
    * be ignored.
@@ -217,9 +217,9 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * @param aCopyBackground Whether to copy the background into the layer, this
    *                        is only supported when aOpaque is true.
    */
-  virtual void PushLayer(bool aOpaque, Float aOpacity, SourceSurface *aMask,
-                         const Matrix &aMaskTransform,
-                         const IntRect &aBounds = IntRect(),
+  virtual void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
                          bool aCopyBackground = false) override;
 
   /**
@@ -237,7 +237,7 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * time.
    */
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(
-      unsigned char *aData, const IntSize &aSize, int32_t aStride,
+      unsigned char* aData, const IntSize& aSize, int32_t aStride,
       SurfaceFormat aFormat) const override;
 
   /*
@@ -246,7 +246,7 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * other existing surface.
    */
   virtual already_AddRefed<SourceSurface> OptimizeSourceSurface(
-      SourceSurface *aSurface) const override;
+      SourceSurface* aSurface) const override;
 
   /*
    * Create a SourceSurface for a type of NativeSurface. This may fail if the
@@ -254,16 +254,16 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * in.
    */
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromNativeSurface(
-      const NativeSurface &aSurface) const override;
+      const NativeSurface& aSurface) const override;
 
   /*
    * Create a DrawTarget whose snapshot is optimized for use with this
    * DrawTarget.
    */
   virtual already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
-      const IntSize &aSize, SurfaceFormat aFormat) const override;
+      const IntSize& aSize, SurfaceFormat aFormat) const override;
 
-  virtual bool CanCreateSimilarDrawTarget(const IntSize &aSize,
+  virtual bool CanCreateSimilarDrawTarget(const IntSize& aSize,
                                           SurfaceFormat aFormat) const override;
 
   /*
@@ -287,7 +287,7 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    *             gradient area.
    */
   virtual already_AddRefed<GradientStops> CreateGradientStops(
-      GradientStop *aStops, uint32_t aNumStops,
+      GradientStop* aStops, uint32_t aNumStops,
       ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
 
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
@@ -296,12 +296,12 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    * Set a transform on the surface, this transform is applied at drawing time
    * to both the mask and source of the operation.
    */
-  virtual void SetTransform(const Matrix &aTransform) override;
+  virtual void SetTransform(const Matrix& aTransform) override;
 
   /* Tries to get a native surface for a DrawTarget, this may fail if the
    * draw target cannot convert to this surface type.
    */
-  virtual void *GetNativeSurface(NativeSurfaceType aType) override {
+  virtual void* GetNativeSurface(NativeSurfaceType aType) override {
     return mFinalDT->GetNativeSurface(aType);
   }
 
@@ -319,12 +319,12 @@ class DrawTargetWrapAndRecord : public DrawTarget {
    *            called
    * @param aSimilarDT Similar DrawTarget created from aDT.mFinalDT.
    */
-  DrawTargetWrapAndRecord(const DrawTargetWrapAndRecord *aDT,
-                          DrawTarget *aSimilarDT);
+  DrawTargetWrapAndRecord(const DrawTargetWrapAndRecord* aDT,
+                          DrawTarget* aSimilarDT);
 
-  Path *GetPathForPathRecording(const Path *aPath) const;
-  already_AddRefed<PathRecording> EnsurePathStored(const Path *aPath);
-  void EnsurePatternDependenciesStored(const Pattern &aPattern);
+  Path* GetPathForPathRecording(const Path* aPath) const;
+  already_AddRefed<PathRecording> EnsurePathStored(const Path* aPath);
+  void EnsurePatternDependenciesStored(const Pattern& aPattern);
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
   RefPtr<DrawTarget> mFinalDT;

@@ -46,10 +46,10 @@ class nsOfflineCacheUpdateItem : public nsIStreamListener,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  nsOfflineCacheUpdateItem(nsIURI *aURI, nsIURI *aReferrerURI,
-                           nsIPrincipal *aLoadingPrincipal,
-                           nsIApplicationCache *aApplicationCache,
-                           nsIApplicationCache *aPreviousApplicationCache,
+  nsOfflineCacheUpdateItem(nsIURI* aURI, nsIURI* aReferrerURI,
+                           nsIPrincipal* aLoadingPrincipal,
+                           nsIApplicationCache* aApplicationCache,
+                           nsIApplicationCache* aPreviousApplicationCache,
                            uint32_t aType, uint32_t aLoadFlags);
 
   nsCOMPtr<nsIURI> mURI;
@@ -61,15 +61,15 @@ class nsOfflineCacheUpdateItem : public nsIStreamListener,
   uint32_t mItemType;
   uint32_t mLoadFlags;
 
-  nsresult OpenChannel(nsOfflineCacheUpdate *aUpdate);
+  nsresult OpenChannel(nsOfflineCacheUpdate* aUpdate);
   nsresult Cancel();
-  nsresult GetRequestSucceeded(bool *succeeded);
+  nsresult GetRequestSucceeded(bool* succeeded);
 
   bool IsInProgress();
   bool IsScheduled();
   bool IsCompleted();
 
-  nsresult GetStatus(uint16_t *aStatus);
+  nsresult GetStatus(uint16_t* aStatus);
 
  private:
   enum LoadStatus : uint16_t {
@@ -94,54 +94,54 @@ class nsOfflineManifestItem : public nsOfflineCacheUpdateItem {
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
-  nsOfflineManifestItem(nsIURI *aURI, nsIURI *aReferrerURI,
-                        nsIPrincipal *aLoadingPrincipal,
-                        nsIApplicationCache *aApplicationCache,
-                        nsIApplicationCache *aPreviousApplicationCache);
+  nsOfflineManifestItem(nsIURI* aURI, nsIURI* aReferrerURI,
+                        nsIPrincipal* aLoadingPrincipal,
+                        nsIApplicationCache* aApplicationCache,
+                        nsIApplicationCache* aPreviousApplicationCache);
   virtual ~nsOfflineManifestItem();
 
-  nsCOMArray<nsIURI> &GetExplicitURIs() { return mExplicitURIs; }
-  nsCOMArray<nsIURI> &GetAnonymousURIs() { return mAnonymousURIs; }
-  nsCOMArray<nsIURI> &GetFallbackURIs() { return mFallbackURIs; }
+  nsCOMArray<nsIURI>& GetExplicitURIs() { return mExplicitURIs; }
+  nsCOMArray<nsIURI>& GetAnonymousURIs() { return mAnonymousURIs; }
+  nsCOMArray<nsIURI>& GetFallbackURIs() { return mFallbackURIs; }
 
-  nsTArray<nsCString> &GetOpportunisticNamespaces() {
+  nsTArray<nsCString>& GetOpportunisticNamespaces() {
     return mOpportunisticNamespaces;
   }
-  nsIArray *GetNamespaces() { return mNamespaces.get(); }
+  nsIArray* GetNamespaces() { return mNamespaces.get(); }
 
   bool ParseSucceeded() {
     return (mParserState != PARSE_INIT && mParserState != PARSE_ERROR);
   }
   bool NeedsUpdate() { return mParserState != PARSE_INIT && mNeedsUpdate; }
 
-  void GetManifestHash(nsCString &aManifestHash) {
+  void GetManifestHash(nsCString& aManifestHash) {
     aManifestHash = mManifestHashValue;
   }
 
  private:
-  static nsresult ReadManifest(nsIInputStream *aInputStream, void *aClosure,
-                               const char *aFromSegment, uint32_t aOffset,
-                               uint32_t aCount, uint32_t *aBytesConsumed);
+  static nsresult ReadManifest(nsIInputStream* aInputStream, void* aClosure,
+                               const char* aFromSegment, uint32_t aOffset,
+                               uint32_t aCount, uint32_t* aBytesConsumed);
 
-  nsresult AddNamespace(uint32_t namespaceType, const nsCString &namespaceSpec,
-                        const nsCString &data);
+  nsresult AddNamespace(uint32_t namespaceType, const nsCString& namespaceSpec,
+                        const nsCString& data);
 
-  nsresult HandleManifestLine(const nsCString::const_iterator &aBegin,
-                              const nsCString::const_iterator &aEnd);
+  nsresult HandleManifestLine(const nsCString::const_iterator& aBegin,
+                              const nsCString::const_iterator& aEnd);
 
   /**
    * Saves "offline-manifest-hash" meta data from the old offline cache
    * token to mOldManifestHashValue member to be compared on
    * successfull load.
    */
-  nsresult GetOldManifestContentHash(nsIRequest *aRequest);
+  nsresult GetOldManifestContentHash(nsIRequest* aRequest);
   /**
    * This method setups the mNeedsUpdate to false when hash value
    * of the just downloaded manifest file is the same as stored in cache's
    * "offline-manifest-hash" meta data. Otherwise stores the new value
    * to this meta data.
    */
-  nsresult CheckNewManifestContentHash(nsIRequest *aRequest);
+  nsresult CheckNewManifestContentHash(nsIRequest* aRequest);
 
   void ReadStrictFileOriginPolicyPref();
 
@@ -183,7 +183,7 @@ class nsOfflineCacheUpdateOwner
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsOfflineCacheUpdateOwner)
   virtual ~nsOfflineCacheUpdateOwner() {}
-  virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) = 0;
+  virtual nsresult UpdateFinished(nsOfflineCacheUpdate* aUpdate) = 0;
 };
 
 class nsOfflineCacheUpdate final : public nsIOfflineCacheUpdate,
@@ -198,22 +198,22 @@ class nsOfflineCacheUpdate final : public nsIOfflineCacheUpdate,
 
   nsOfflineCacheUpdate();
 
-  static nsresult GetCacheKey(nsIURI *aURI, nsACString &aKey);
+  static nsresult GetCacheKey(nsIURI* aURI, nsACString& aKey);
 
   nsresult Init();
 
   nsresult Begin();
 
-  void LoadCompleted(nsOfflineCacheUpdateItem *aItem);
-  void ManifestCheckCompleted(nsresult aStatus, const nsCString &aManifestHash);
-  void StickDocument(nsIURI *aDocumentURI);
+  void LoadCompleted(nsOfflineCacheUpdateItem* aItem);
+  void ManifestCheckCompleted(nsresult aStatus, const nsCString& aManifestHash);
+  void StickDocument(nsIURI* aDocumentURI);
 
-  void SetOwner(nsOfflineCacheUpdateOwner *aOwner);
+  void SetOwner(nsOfflineCacheUpdateOwner* aOwner);
 
-  bool IsForGroupID(const nsACString &groupID);
-  bool IsForProfile(nsIFile *aCustomProfileDir);
+  bool IsForGroupID(const nsACString& groupID);
+  bool IsForProfile(nsIFile* aCustomProfileDir);
 
-  virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) override;
+  virtual nsresult UpdateFinished(nsOfflineCacheUpdate* aUpdate) override;
 
  protected:
   ~nsOfflineCacheUpdate();
@@ -222,9 +222,9 @@ class nsOfflineCacheUpdate final : public nsIOfflineCacheUpdate,
   void OnByteProgress(uint64_t byteIncrement);
 
  private:
-  nsresult InitInternal(nsIURI *aManifestURI, nsIPrincipal *aPrincipal);
-  nsresult HandleManifest(bool *aDoUpdate);
-  nsresult AddURI(nsIURI *aURI, uint32_t aItemType, uint32_t aLoadFlags = 0);
+  nsresult InitInternal(nsIURI* aManifestURI, nsIPrincipal* aPrincipal);
+  nsresult HandleManifest(bool* aDoUpdate);
+  nsresult AddURI(nsIURI* aURI, uint32_t aItemType, uint32_t aLoadFlags = 0);
 
   nsresult ProcessNextURI();
 
@@ -232,13 +232,13 @@ class nsOfflineCacheUpdate final : public nsIOfflineCacheUpdate,
   // If namespaceFilter is non-null, only items matching the
   // specified namespaces will be added.
   nsresult AddExistingItems(uint32_t aType,
-                            nsTArray<nsCString> *namespaceFilter = nullptr);
+                            nsTArray<nsCString>* namespaceFilter = nullptr);
   nsresult ScheduleImplicit();
-  void AssociateDocuments(nsIApplicationCache *cache);
+  void AssociateDocuments(nsIApplicationCache* cache);
   bool CheckUpdateAvailability();
   void NotifyUpdateAvailability(bool updateAvailable);
 
-  void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
+  void GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver>& aObservers);
   void NotifyState(uint32_t state);
   nsresult Finish();
   nsresult FinishNoNotify();
@@ -320,32 +320,32 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
 
   nsresult Init();
 
-  nsresult ScheduleUpdate(nsOfflineCacheUpdate *aUpdate);
-  nsresult FindUpdate(nsIURI *aManifestURI, nsACString const &aOriginSuffix,
-                      nsIFile *aCustomProfileDir,
-                      nsOfflineCacheUpdate **aUpdate);
+  nsresult ScheduleUpdate(nsOfflineCacheUpdate* aUpdate);
+  nsresult FindUpdate(nsIURI* aManifestURI, nsACString const& aOriginSuffix,
+                      nsIFile* aCustomProfileDir,
+                      nsOfflineCacheUpdate** aUpdate);
 
-  nsresult Schedule(nsIURI *aManifestURI, nsIURI *aDocumentURI,
-                    nsIPrincipal *aLoadingPrincipal,
-                    mozilla::dom::Document *aDocument,
-                    nsPIDOMWindowInner *aWindow, nsIFile *aCustomProfileDir,
-                    nsIOfflineCacheUpdate **aUpdate);
+  nsresult Schedule(nsIURI* aManifestURI, nsIURI* aDocumentURI,
+                    nsIPrincipal* aLoadingPrincipal,
+                    mozilla::dom::Document* aDocument,
+                    nsPIDOMWindowInner* aWindow, nsIFile* aCustomProfileDir,
+                    nsIOfflineCacheUpdate** aUpdate);
 
-  virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) override;
+  virtual nsresult UpdateFinished(nsOfflineCacheUpdate* aUpdate) override;
 
   /**
    * Returns the singleton nsOfflineCacheUpdateService without an addref, or
    * nullptr if the service couldn't be created.
    */
-  static nsOfflineCacheUpdateService *EnsureService();
+  static nsOfflineCacheUpdateService* EnsureService();
 
   static already_AddRefed<nsOfflineCacheUpdateService> GetInstance();
 
-  static nsresult OfflineAppPinnedForURI(nsIURI *aDocumentURI,
-                                         nsIPrefBranch *aPrefBranch,
-                                         bool *aPinned);
+  static nsresult OfflineAppPinnedForURI(nsIURI* aDocumentURI,
+                                         nsIPrefBranch* aPrefBranch,
+                                         bool* aPinned);
 
-  static nsTHashtable<nsCStringHashKey> *AllowedDomains();
+  static nsTHashtable<nsCStringHashKey>* AllowedDomains();
 
  private:
   ~nsOfflineCacheUpdateService();
@@ -353,7 +353,7 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
   nsresult ProcessNextUpdate();
 
   nsTArray<RefPtr<nsOfflineCacheUpdate> > mUpdates;
-  static nsTHashtable<nsCStringHashKey> *mAllowedDomains;
+  static nsTHashtable<nsCStringHashKey>* mAllowedDomains;
 
   bool mDisabled;
   bool mUpdateRunning;

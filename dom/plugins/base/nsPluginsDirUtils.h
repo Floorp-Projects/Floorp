@@ -16,20 +16,20 @@
 // E.g. "mime type::desecription;" // correct w/o ext
 //      "mime type:desecription;"  // wrong w/o ext
 //
-static nsresult ParsePluginMimeDescription(const char *mdesc,
-                                           nsPluginInfo &info) {
+static nsresult ParsePluginMimeDescription(const char* mdesc,
+                                           nsPluginInfo& info) {
   nsresult rv = NS_ERROR_FAILURE;
   if (!mdesc || !*mdesc) return rv;
 
-  char *mdescDup =
+  char* mdescDup =
       PL_strdup(mdesc);  // make a dup of intput string we'll change it content
   char anEmptyString[] = "";
-  AutoTArray<char *, 8> tmpMimeTypeArr;
+  AutoTArray<char*, 8> tmpMimeTypeArr;
   char delimiters[] = {':', ':', ';'};
   int mimeTypeVariantCount = 0;
-  char *p = mdescDup;  // make a dup of intput string we'll change it content
+  char* p = mdescDup;  // make a dup of intput string we'll change it content
   while (p) {
-    char *ptrMimeArray[] = {anEmptyString, anEmptyString, anEmptyString};
+    char* ptrMimeArray[] = {anEmptyString, anEmptyString, anEmptyString};
 
     // It's easy to point out ptrMimeArray[0] to the string sounds like
     // "Mime type is not specified, plugin will not function properly."
@@ -42,7 +42,7 @@ static nsresult ParsePluginMimeDescription(const char *mdesc,
     // empty string on GetMIMEDescription() call, e.g. plugger returns "" if
     // pluggerrc file is not found.
 
-    char *s = p;
+    char* s = p;
     int i;
     for (i = 0;
          i < (int)sizeof(delimiters) && (p = PL_strchr(s, delimiters[i]));
@@ -66,12 +66,10 @@ static nsresult ParsePluginMimeDescription(const char *mdesc,
   if (mimeTypeVariantCount) {
     info.fVariantCount = mimeTypeVariantCount;
     // we can do these 3 mallocs at once, later on code cleanup
-    info.fMimeTypeArray =
-        (char **)malloc(mimeTypeVariantCount * sizeof(char *));
+    info.fMimeTypeArray = (char**)malloc(mimeTypeVariantCount * sizeof(char*));
     info.fMimeDescriptionArray =
-        (char **)malloc(mimeTypeVariantCount * sizeof(char *));
-    info.fExtensionArray =
-        (char **)malloc(mimeTypeVariantCount * sizeof(char *));
+        (char**)malloc(mimeTypeVariantCount * sizeof(char*));
+    info.fExtensionArray = (char**)malloc(mimeTypeVariantCount * sizeof(char*));
 
     int j, i;
     for (j = i = 0; i < mimeTypeVariantCount; i++) {

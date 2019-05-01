@@ -59,15 +59,15 @@ class SocketTransportServiceTest : public MtransportTest {
   nsCOMPtr<nsISocketTransportService> stservice_;
   nsCOMPtr<nsIEventTarget> target_;
   size_t received_;
-  PRFileDesc *readpipe_;
-  PRFileDesc *writepipe_;
+  PRFileDesc* readpipe_;
+  PRFileDesc* writepipe_;
   bool registered_;
 };
 
 // Received an event.
 class EventReceived : public Runnable {
  public:
-  explicit EventReceived(SocketTransportServiceTest *test)
+  explicit EventReceived(SocketTransportServiceTest* test)
       : Runnable("EventReceived"), test_(test) {}
 
   NS_IMETHOD Run() override {
@@ -75,13 +75,13 @@ class EventReceived : public Runnable {
     return NS_OK;
   }
 
-  SocketTransportServiceTest *test_;
+  SocketTransportServiceTest* test_;
 };
 
 // Register our listener on the socket
 class RegisterEvent : public Runnable {
  public:
-  explicit RegisterEvent(SocketTransportServiceTest *test)
+  explicit RegisterEvent(SocketTransportServiceTest* test)
       : Runnable("RegisterEvent"), test_(test) {}
 
   NS_IMETHOD Run() override {
@@ -89,14 +89,14 @@ class RegisterEvent : public Runnable {
     return NS_OK;
   }
 
-  SocketTransportServiceTest *test_;
+  SocketTransportServiceTest* test_;
 };
 
 class SocketHandler : public nsASocketHandler {
  public:
-  explicit SocketHandler(SocketTransportServiceTest *test) : test_(test) {}
+  explicit SocketHandler(SocketTransportServiceTest* test) : test_(test) {}
 
-  void OnSocketReady(PRFileDesc *fd, int16_t outflags) override {
+  void OnSocketReady(PRFileDesc* fd, int16_t outflags) override {
     unsigned char buf[1600];
 
     int32_t rv;
@@ -107,9 +107,9 @@ class SocketHandler : public nsASocketHandler {
     }
   }
 
-  void OnSocketDetached(PRFileDesc *fd) override {}
+  void OnSocketDetached(PRFileDesc* fd) override {}
 
-  void IsLocal(bool *aIsLocal) override {
+  void IsLocal(bool* aIsLocal) override {
     // TODO(jesup): better check? Does it matter? (likely no)
     *aIsLocal = false;
   }
@@ -123,7 +123,7 @@ class SocketHandler : public nsASocketHandler {
   virtual ~SocketHandler() {}
 
  private:
-  SocketTransportServiceTest *test_;
+  SocketTransportServiceTest* test_;
 };
 
 NS_IMPL_ISUPPORTS0(SocketHandler)

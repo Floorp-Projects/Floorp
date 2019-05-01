@@ -75,12 +75,12 @@ static void RegisterJprofShutdown() {
 }
 
 #if defined(i386) || defined(_i386) || defined(__x86_64__)
-JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
-                             void *top_instr_ptr) {
+JPROF_STATIC void CrawlStack(malloc_log_entry* me, void* stack_top,
+                             void* top_instr_ptr) {
 #  if USE_GLIBC_BACKTRACE
   // This probably works on more than x86!  But we need a way to get the
   // top instruction pointer, which is kindof arch-specific
-  void *array[500];
+  void* array[500];
   int cnt, i;
   u_long numpcs = 0;
 
@@ -92,13 +92,13 @@ JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
   // Then we have sigaction, which replaced top_instr_ptr
   array[3] = top_instr_ptr;
   for (i = 3; i < cnt; i++) {
-    me->pcs[numpcs++] = (char *)array[i];
+    me->pcs[numpcs++] = (char*)array[i];
   }
   me->numpcs = numpcs;
 
 #  else
   // original code - this breaks on many platforms
-  void **bp;
+  void** bp;
 #    if defined(__i386)
   __asm__("movl %%ebp, %0" : "=g"(bp));
 #    elif defined(__x86_64__)
@@ -112,17 +112,17 @@ JPROF_STATIC void CrawlStack(malloc_log_entry *me, void *stack_top,
   u_long numpcs = 0;
   bool tracing = false;
 
-  me->pcs[numpcs++] = (char *)top_instr_ptr;
+  me->pcs[numpcs++] = (char*)top_instr_ptr;
 
   while (numpcs < MAX_STACK_CRAWL) {
-    void **nextbp = (void **)*bp++;
-    void *pc = *bp;
+    void** nextbp = (void**)*bp++;
+    void* pc = *bp;
     if (nextbp < bp) {
       break;
     }
     if (tracing) {
       // Skip the signal handling.
-      me->pcs[numpcs++] = (char *)pc;
+      me->pcs[numpcs++] = (char*)pc;
     } else if (pc == top_instr_ptr) {
       tracing = true;
     }
@@ -160,7 +160,7 @@ static void DumpAddressMap() {
   int mfd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
   if (mfd >= 0) {
     malloc_map_entry mme;
-    link_map *map = _r_debug.r_map;
+    link_map* map = _r_debug.r_map;
     while (nullptr != map) {
       if (map->l_name && *map->l_name) {
         mme.nameLen = strlen(map->l_name);
@@ -215,7 +215,7 @@ class DumbCircularBuffer {
   DumbCircularBuffer(size_t init_buffer_size) {
     used = 0;
     buffer_size = init_buffer_size;
-    buffer = (unsigned char *)malloc(buffer_size);
+    buffer = (unsigned char*)malloc(buffer_size);
     head = tail = buffer;
 
 #if defined(linux)
@@ -261,7 +261,7 @@ class DumbCircularBuffer {
     DUMB_UNLOCK();
   }
 
-  bool insert(void *data, size_t size) {
+  bool insert(void* data, size_t size) {
     // can fail if not enough space in the entire buffer
     DUMB_LOCK();
     if (space_available() < size) return false;
@@ -274,14 +274,14 @@ class DumbCircularBuffer {
 #endif
     memcpy(tail, data, initial);
     tail += initial;
-    data = ((char *)data) + initial;
+    data = ((char*)data) + initial;
     size -= initial;
     if (size != 0) {
 #if DEBUG_CIRCULAR
       fprintf(stderr, "wrapping by %d bytes\n", size);
 #endif
       memcpy(buffer, data, size);
-      tail = &(((unsigned char *)buffer)[size]);
+      tail = &(((unsigned char*)buffer)[size]);
     }
 
     used++;
@@ -296,17 +296,17 @@ class DumbCircularBuffer {
   void unlock() { DUMB_UNLOCK(); }
 
   // XXX These really shouldn't be public...
-  unsigned char *head;
-  unsigned char *tail;
+  unsigned char* head;
+  unsigned char* tail;
   unsigned int used;
-  unsigned char *buffer;
+  unsigned char* buffer;
   size_t buffer_size;
 
  private:
   pthread_mutex_t mutex;
 };
 
-class DumbCircularBuffer *JprofBuffer;
+class DumbCircularBuffer* JprofBuffer;
 
 JPROF_STATIC void JprofBufferInit(size_t size) {
   JprofBuffer = new DumbCircularBuffer(size);
@@ -317,11 +317,11 @@ JPROF_STATIC void JprofBufferClear() {
   JprofBuffer->clear();
 }
 
-JPROF_STATIC size_t JprofEntrySizeof(malloc_log_entry *me) {
-  return offsetof(malloc_log_entry, pcs) + me->numpcs * sizeof(char *);
+JPROF_STATIC size_t JprofEntrySizeof(malloc_log_entry* me) {
+  return offsetof(malloc_log_entry, pcs) + me->numpcs * sizeof(char*);
 }
 
-JPROF_STATIC void JprofBufferAppend(malloc_log_entry *me) {
+JPROF_STATIC void JprofBufferAppend(malloc_log_entry* me) {
   size_t size = JprofEntrySizeof(me);
 
   do {
@@ -331,10 +331,9 @@ JPROF_STATIC void JprofBufferAppend(malloc_log_entry *me) {
           stderr,
           "dropping entry: %d in use, %d free, need %d, size_to_free = %d\n",
           JprofBuffer->used, JprofBuffer->space_available(), size,
-          JprofEntrySizeof((malloc_log_entry *)JprofBuffer->head));
+          JprofEntrySizeof((malloc_log_entry*)JprofBuffer->head));
 #endif
-      JprofBuffer->drop(
-          JprofEntrySizeof((malloc_log_entry *)JprofBuffer->head));
+      JprofBuffer->drop(JprofEntrySizeof((malloc_log_entry*)JprofBuffer->head));
     }
     if (JprofBuffer->space_available() < size) return;
 
@@ -364,7 +363,7 @@ JPROF_STATIC void JprofBufferDump() {
 
 //----------------------------------------------------------------------
 
-JPROF_STATIC void JprofLog(u_long aTime, void *stack_top, void *top_instr_ptr) {
+JPROF_STATIC void JprofLog(u_long aTime, void* stack_top, void* top_instr_ptr) {
   // Static is simply to make debugging tolerable
   static malloc_log_entry me;
 
@@ -415,7 +414,7 @@ static void startSignalCounter(unsigned long millisec) {
 static long timerMilliSec = 50;
 
 #if defined(linux)
-static int setupRTCSignals(int hz, struct sigaction *sap) {
+static int setupRTCSignals(int hz, struct sigaction* sap) {
   /* global */ rtcFD = open("/dev/rtc", O_RDONLY);
   if (rtcFD < 0) {
     perror("JPROF_RTC setup: open(\"/dev/rtc\", O_RDONLY)");
@@ -482,7 +481,7 @@ static int enableRTCSignals(bool enable) {
 }
 #endif
 
-JPROF_STATIC void StackHook(int signum, siginfo_t *info, void *ucontext) {
+JPROF_STATIC void StackHook(int signum, siginfo_t* info, void* ucontext) {
   static struct timeval tFirst;
   static int first = 1;
   size_t millisec = 0;
@@ -520,11 +519,11 @@ JPROF_STATIC void StackHook(int signum, siginfo_t *info, void *ucontext) {
     }
   }
 
-  gregset_t &gregs = ((ucontext_t *)ucontext)->uc_mcontext.gregs;
+  gregset_t& gregs = ((ucontext_t*)ucontext)->uc_mcontext.gregs;
 #ifdef __x86_64__
-  JprofLog(millisec, (void *)gregs[REG_RSP], (void *)gregs[REG_RIP]);
+  JprofLog(millisec, (void*)gregs[REG_RSP], (void*)gregs[REG_RIP]);
 #else
-  JprofLog(millisec, (void *)gregs[REG_ESP], (void *)gregs[REG_EIP]);
+  JprofLog(millisec, (void*)gregs[REG_ESP], (void*)gregs[REG_EIP]);
 #endif
 
   if (!rtcHz) startSignalCounter(timerMilliSec);
@@ -539,7 +538,7 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
     int doNotStart = 1;
     int firstDelay = 0;
     int append = O_TRUNC;
-    char *tst = getenv("JPROF_FLAGS");
+    char* tst = getenv("JPROF_FLAGS");
 
     /* Options from JPROF_FLAGS environment variable:
      *   JP_DEFER  -> Wait for a SIGPROF (or SIGALRM, if JP_REALTIME
@@ -573,7 +572,7 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
       if (strstr(tst, "JP_REALTIME")) realTime = 1;
       if (strstr(tst, "JP_APPEND")) append = O_APPEND;
 
-      char *delay = strstr(tst, "JP_PERIOD=");
+      char* delay = strstr(tst, "JP_PERIOD=");
       if (delay) {
         double tmp = strtod(delay + strlen("JP_PERIOD="), nullptr);
         if (tmp >= 1e-3) {
@@ -585,7 +584,7 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
         }
       }
 
-      char *circular_op = strstr(tst, "JP_CIRCULAR=");
+      char* circular_op = strstr(tst, "JP_CIRCULAR=");
       if (circular_op) {
         size_t size = atol(circular_op + strlen("JP_CIRCULAR="));
         if (size < 1000) {
@@ -599,12 +598,12 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
         circular = true;
       }
 
-      char *first = strstr(tst, "JP_FIRST=");
+      char* first = strstr(tst, "JP_FIRST=");
       if (first) {
         firstDelay = atol(first + strlen("JP_FIRST="));
       }
 
-      char *rtc = strstr(tst, "JP_RTC_HZ=");
+      char* rtc = strstr(tst, "JP_RTC_HZ=");
       if (rtc) {
 #if defined(linux)
         rtcHz = atol(rtc + strlen("JP_RTC_HZ="));
@@ -628,13 +627,13 @@ NS_EXPORT_(void) setupProfilingStuff(void) {
 
 #endif
       }
-      const char *f = strstr(tst, "JP_FILENAME=");
+      const char* f = strstr(tst, "JP_FILENAME=");
       if (f)
         f = f + strlen("JP_FILENAME=");
       else
         f = M_LOGFILE;
 
-      char *is_slave = getenv("JPROF_SLAVE");
+      char* is_slave = getenv("JPROF_SLAVE");
       if (!is_slave) setenv("JPROF_SLAVE", "", 0);
       gIsSlave = !!is_slave;
 

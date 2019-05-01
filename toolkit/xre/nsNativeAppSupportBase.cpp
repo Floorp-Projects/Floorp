@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS(nsNativeAppSupportBase, nsINativeAppSupport)
 
 // Start answer defaults to OK.
 NS_IMETHODIMP
-nsNativeAppSupportBase::Start(bool *result) {
+nsNativeAppSupportBase::Start(bool* result) {
   *result = true;
   return NS_OK;
 }

@@ -25,7 +25,7 @@ class ResultSet final : public mozIStorageResultSet {
   /**
    * Adds a tuple to this result set.
    */
-  nsresult add(mozIStorageRow *aTuple);
+  nsresult add(mozIStorageRow* aTuple);
 
   /**
    * @returns the number of rows this result set holds.

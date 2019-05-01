@@ -49,7 +49,7 @@ static BOOL GetStringsFile(WCHAR filename[MAX_PATH]) {
     return FALSE;
   }
 
-  WCHAR *dot = wcsrchr(filename, '.');
+  WCHAR* dot = wcsrchr(filename, '.');
   if (!dot || wcsicmp(dot + 1, L"exe")) {
     return FALSE;
   }
@@ -192,7 +192,7 @@ static LRESULT CALLBACK DialogProc(HWND hDlg, UINT message, WPARAM wParam,
   return FALSE;
 }
 
-int InitProgressUI(int *argc, WCHAR ***argv) { return 0; }
+int InitProgressUI(int* argc, WCHAR*** argv) { return 0; }
 
 /**
  * Initializes the progress UI strings

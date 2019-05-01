@@ -30,14 +30,14 @@ class DirectoryProvider final : public nsIDirectoryServiceProvider2 {
    public:
     NS_DECL_NSISIMPLEENUMERATOR
 
-    AppendingEnumerator(nsISimpleEnumerator *aBase,
-                        char const *const *aAppendList);
+    AppendingEnumerator(nsISimpleEnumerator* aBase,
+                        char const* const* aAppendList);
 
    private:
     ~AppendingEnumerator() override = default;
 
     nsCOMPtr<nsISimpleEnumerator> mBase;
-    char const *const *const mAppendList;
+    char const* const* const mAppendList;
     nsCOMPtr<nsIFile> mNext;
   };
 };

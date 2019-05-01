@@ -110,10 +110,10 @@ static bool has_cpuid_bits(unsigned int level, CPUIDRegister reg,
                            unsigned int bits) {
   // Check that the level in question is supported.
   volatile int regs[4];
-  moz_cpuid((int *)regs, level & 0x80000000u);
+  moz_cpuid((int*)regs, level & 0x80000000u);
   if (unsigned(regs[0]) < level) return false;
 
-  moz_cpuid((int *)regs, level);
+  moz_cpuid((int*)regs, level);
   return (unsigned(regs[reg]) & bits) == bits;
 }
 

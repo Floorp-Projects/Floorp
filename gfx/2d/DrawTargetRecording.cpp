@@ -19,15 +19,15 @@ namespace mozilla {
 namespace gfx {
 
 struct RecordingSourceSurfaceUserData {
-  void *refPtr;
+  void* refPtr;
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-static void RecordingSourceSurfaceUserDataFunc(void *aUserData) {
-  RecordingSourceSurfaceUserData *userData =
-      static_cast<RecordingSourceSurfaceUserData *>(aUserData);
+static void RecordingSourceSurfaceUserDataFunc(void* aUserData) {
+  RecordingSourceSurfaceUserData* userData =
+      static_cast<RecordingSourceSurfaceUserData*>(aUserData);
 
-  userData->recorder->RemoveSourceSurface((SourceSurface *)userData->refPtr);
+  userData->recorder->RemoveSourceSurface((SourceSurface*)userData->refPtr);
   userData->recorder->RemoveStoredObject(userData->refPtr);
   userData->recorder->RecordEvent(
       RecordedSourceSurfaceDestruction(ReferencePtr(userData->refPtr)));
@@ -35,9 +35,9 @@ static void RecordingSourceSurfaceUserDataFunc(void *aUserData) {
   delete userData;
 }
 
-static void EnsureSurfaceStoredRecording(DrawEventRecorderPrivate *aRecorder,
-                                         SourceSurface *aSurface,
-                                         const char *reason) {
+static void EnsureSurfaceStoredRecording(DrawEventRecorderPrivate* aRecorder,
+                                         SourceSurface* aSurface,
+                                         const char* reason) {
   if (aRecorder->HasStoredObject(aSurface)) {
     return;
   }
@@ -46,10 +46,10 @@ static void EnsureSurfaceStoredRecording(DrawEventRecorderPrivate *aRecorder,
   aRecorder->AddStoredObject(aSurface);
   aRecorder->AddSourceSurface(aSurface);
 
-  RecordingSourceSurfaceUserData *userData = new RecordingSourceSurfaceUserData;
+  RecordingSourceSurfaceUserData* userData = new RecordingSourceSurfaceUserData;
   userData->refPtr = aSurface;
   userData->recorder = aRecorder;
-  aSurface->AddUserData(reinterpret_cast<UserDataKey *>(aRecorder), userData,
+  aSurface->AddUserData(reinterpret_cast<UserDataKey*>(aRecorder), userData,
                         &RecordingSourceSurfaceUserDataFunc);
 }
 
@@ -58,7 +58,7 @@ class SourceSurfaceRecording : public SourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording, override)
 
   SourceSurfaceRecording(IntSize aSize, SurfaceFormat aFormat,
-                         DrawEventRecorderPrivate *aRecorder)
+                         DrawEventRecorderPrivate* aRecorder)
       : mSize(aSize), mFormat(aFormat), mRecorder(aRecorder) {
     mRecorder->AddStoredObject(this);
   }
@@ -93,7 +93,7 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
 
   ~DataSourceSurfaceRecording() {}
 
-  static already_AddRefed<DataSourceSurface> Init(uint8_t *aData, IntSize aSize,
+  static already_AddRefed<DataSourceSurface> Init(uint8_t* aData, IntSize aSize,
                                                   int32_t aStride,
                                                   SurfaceFormat aFormat) {
     // XXX: do we need to ensure any alignment here?
@@ -111,7 +111,7 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
   IntSize GetSize() const override { return mSize; }
   int32_t Stride() override { return mStride; }
   SurfaceFormat GetFormat() const override { return mFormat; }
-  uint8_t *GetData() override { return mData.get(); }
+  uint8_t* GetData() override { return mData.get(); }
 
   UniquePtr<uint8_t[]> mData;
   IntSize mSize;
@@ -123,7 +123,7 @@ class GradientStopsRecording : public GradientStops {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsRecording, override)
 
-  explicit GradientStopsRecording(DrawEventRecorderPrivate *aRecorder)
+  explicit GradientStopsRecording(DrawEventRecorderPrivate* aRecorder)
       : mRecorder(aRecorder) {
     mRecorder->AddStoredObject(this);
   }
@@ -144,7 +144,7 @@ class FilterNodeRecording : public FilterNode {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording, override)
   using FilterNode::SetAttribute;
 
-  explicit FilterNodeRecording(DrawEventRecorderPrivate *aRecorder)
+  explicit FilterNodeRecording(DrawEventRecorderPrivate* aRecorder)
       : mRecorder(aRecorder) {
     mRecorder->AddStoredObject(this);
   }
@@ -154,12 +154,12 @@ class FilterNodeRecording : public FilterNode {
     mRecorder->RecordEvent(RecordedFilterNodeDestruction(ReferencePtr(this)));
   }
 
-  void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
+  void SetInput(uint32_t aIndex, SourceSurface* aSurface) override {
     EnsureSurfaceStoredRecording(mRecorder, aSurface, "SetInput");
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
   }
-  void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
+  void SetInput(uint32_t aIndex, FilterNode* aFilter) override {
     MOZ_ASSERT(mRecorder->HasStoredObject(aFilter));
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
@@ -175,20 +175,20 @@ class FilterNodeRecording : public FilterNode {
   FORWARD_SET_ATTRIBUTE(bool, BOOL);
   FORWARD_SET_ATTRIBUTE(uint32_t, UINT32);
   FORWARD_SET_ATTRIBUTE(Float, FLOAT);
-  FORWARD_SET_ATTRIBUTE(const Size &, SIZE);
-  FORWARD_SET_ATTRIBUTE(const IntSize &, INTSIZE);
-  FORWARD_SET_ATTRIBUTE(const IntPoint &, INTPOINT);
-  FORWARD_SET_ATTRIBUTE(const Rect &, RECT);
-  FORWARD_SET_ATTRIBUTE(const IntRect &, INTRECT);
-  FORWARD_SET_ATTRIBUTE(const Point &, POINT);
-  FORWARD_SET_ATTRIBUTE(const Matrix &, MATRIX);
-  FORWARD_SET_ATTRIBUTE(const Matrix5x4 &, MATRIX5X4);
-  FORWARD_SET_ATTRIBUTE(const Point3D &, POINT3D);
-  FORWARD_SET_ATTRIBUTE(const Color &, COLOR);
+  FORWARD_SET_ATTRIBUTE(const Size&, SIZE);
+  FORWARD_SET_ATTRIBUTE(const IntSize&, INTSIZE);
+  FORWARD_SET_ATTRIBUTE(const IntPoint&, INTPOINT);
+  FORWARD_SET_ATTRIBUTE(const Rect&, RECT);
+  FORWARD_SET_ATTRIBUTE(const IntRect&, INTRECT);
+  FORWARD_SET_ATTRIBUTE(const Point&, POINT);
+  FORWARD_SET_ATTRIBUTE(const Matrix&, MATRIX);
+  FORWARD_SET_ATTRIBUTE(const Matrix5x4&, MATRIX5X4);
+  FORWARD_SET_ATTRIBUTE(const Point3D&, POINT3D);
+  FORWARD_SET_ATTRIBUTE(const Color&, COLOR);
 
 #undef FORWARD_SET_ATTRIBUTE
 
-  void SetAttribute(uint32_t aIndex, const Float *aFloat,
+  void SetAttribute(uint32_t aIndex, const Float* aFloat,
                     uint32_t aSize) override {
     mRecorder->RecordEvent(
         RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
@@ -199,10 +199,10 @@ class FilterNodeRecording : public FilterNode {
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
-DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder,
-                                         DrawTarget *aDT, IntSize aSize,
+DrawTargetRecording::DrawTargetRecording(DrawEventRecorder* aRecorder,
+                                         DrawTarget* aDT, IntSize aSize,
                                          bool aHasData)
-    : mRecorder(static_cast<DrawEventRecorderPrivate *>(aRecorder)),
+    : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder)),
       mFinalDT(aDT),
       mSize(aSize) {
   RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
@@ -212,7 +212,7 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder,
   mFormat = mFinalDT->GetFormat();
 }
 
-DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording *aDT,
+DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording* aDT,
                                          IntSize aSize, SurfaceFormat aFormat)
     : mRecorder(aDT->mRecorder), mFinalDT(aDT->mFinalDT), mSize(aSize) {
   mFormat = aFormat;
@@ -222,34 +222,34 @@ DrawTargetRecording::~DrawTargetRecording() {
   mRecorder->RecordEvent(RecordedDrawTargetDestruction(ReferencePtr(this)));
 }
 
-void DrawTargetRecording::FillRect(const Rect &aRect, const Pattern &aPattern,
-                                   const DrawOptions &aOptions) {
+void DrawTargetRecording::FillRect(const Rect& aRect, const Pattern& aPattern,
+                                   const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aPattern);
 
   mRecorder->RecordEvent(RecordedFillRect(this, aRect, aPattern, aOptions));
 }
 
-void DrawTargetRecording::StrokeRect(const Rect &aRect, const Pattern &aPattern,
-                                     const StrokeOptions &aStrokeOptions,
-                                     const DrawOptions &aOptions) {
+void DrawTargetRecording::StrokeRect(const Rect& aRect, const Pattern& aPattern,
+                                     const StrokeOptions& aStrokeOptions,
+                                     const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aPattern);
 
   mRecorder->RecordEvent(
       RecordedStrokeRect(this, aRect, aPattern, aStrokeOptions, aOptions));
 }
 
-void DrawTargetRecording::StrokeLine(const Point &aBegin, const Point &aEnd,
-                                     const Pattern &aPattern,
-                                     const StrokeOptions &aStrokeOptions,
-                                     const DrawOptions &aOptions) {
+void DrawTargetRecording::StrokeLine(const Point& aBegin, const Point& aEnd,
+                                     const Pattern& aPattern,
+                                     const StrokeOptions& aStrokeOptions,
+                                     const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aPattern);
 
   mRecorder->RecordEvent(RecordedStrokeLine(this, aBegin, aEnd, aPattern,
                                             aStrokeOptions, aOptions));
 }
 
-void DrawTargetRecording::Fill(const Path *aPath, const Pattern &aPattern,
-                               const DrawOptions &aOptions) {
+void DrawTargetRecording::Fill(const Path* aPath, const Pattern& aPattern,
+                               const DrawOptions& aOptions) {
   RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
   EnsurePatternDependenciesStored(aPattern);
 
@@ -257,31 +257,31 @@ void DrawTargetRecording::Fill(const Path *aPath, const Pattern &aPattern,
 }
 
 struct RecordingFontUserData {
-  void *refPtr;
+  void* refPtr;
   RefPtr<DrawEventRecorderPrivate> recorder;
 };
 
-static void RecordingFontUserDataDestroyFunc(void *aUserData) {
-  RecordingFontUserData *userData =
-      static_cast<RecordingFontUserData *>(aUserData);
+static void RecordingFontUserDataDestroyFunc(void* aUserData) {
+  RecordingFontUserData* userData =
+      static_cast<RecordingFontUserData*>(aUserData);
 
   userData->recorder->RecordEvent(
       RecordedScaledFontDestruction(ReferencePtr(userData->refPtr)));
-  userData->recorder->RemoveScaledFont((ScaledFont *)userData->refPtr);
+  userData->recorder->RemoveScaledFont((ScaledFont*)userData->refPtr);
   delete userData;
 }
 
-void DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
-                                     const GlyphBuffer &aBuffer,
-                                     const Pattern &aPattern,
-                                     const DrawOptions &aOptions) {
+void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
+                                     const GlyphBuffer& aBuffer,
+                                     const Pattern& aPattern,
+                                     const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aPattern);
 
-  UserDataKey *userDataKey = reinterpret_cast<UserDataKey *>(mRecorder.get());
+  UserDataKey* userDataKey = reinterpret_cast<UserDataKey*>(mRecorder.get());
   if (mRecorder->WantsExternalFonts()) {
     mRecorder->AddScaledFont(aFont);
   } else if (!aFont->GetUserData(userDataKey)) {
-    UnscaledFont *unscaledFont = aFont->GetUnscaledFont();
+    UnscaledFont* unscaledFont = aFont->GetUnscaledFont();
     if (!mRecorder->HasStoredObject(unscaledFont)) {
       RecordedFontData fontData(unscaledFont);
       RecordedFontDetails fontDetails;
@@ -308,7 +308,7 @@ void DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
       mRecorder->AddStoredObject(unscaledFont);
     }
     mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
-    RecordingFontUserData *userData = new RecordingFontUserData;
+    RecordingFontUserData* userData = new RecordingFontUserData;
     userData->refPtr = aFont;
     userData->recorder = mRecorder;
     aFont->AddUserData(userDataKey, userData,
@@ -320,17 +320,17 @@ void DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
       this, aFont, aPattern, aOptions, aBuffer.mGlyphs, aBuffer.mNumGlyphs));
 }
 
-void DrawTargetRecording::Mask(const Pattern &aSource, const Pattern &aMask,
-                               const DrawOptions &aOptions) {
+void DrawTargetRecording::Mask(const Pattern& aSource, const Pattern& aMask,
+                               const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aSource);
   EnsurePatternDependenciesStored(aMask);
 
   mRecorder->RecordEvent(RecordedMask(this, aSource, aMask, aOptions));
 }
 
-void DrawTargetRecording::MaskSurface(const Pattern &aSource,
-                                      SourceSurface *aMask, Point aOffset,
-                                      const DrawOptions &aOptions) {
+void DrawTargetRecording::MaskSurface(const Pattern& aSource,
+                                      SourceSurface* aMask, Point aOffset,
+                                      const DrawOptions& aOptions) {
   EnsurePatternDependenciesStored(aSource);
   EnsureSurfaceStoredRecording(mRecorder, aMask, "MaskSurface");
 
@@ -338,9 +338,9 @@ void DrawTargetRecording::MaskSurface(const Pattern &aSource,
       RecordedMaskSurface(this, aSource, aMask, aOffset, aOptions));
 }
 
-void DrawTargetRecording::Stroke(const Path *aPath, const Pattern &aPattern,
-                                 const StrokeOptions &aStrokeOptions,
-                                 const DrawOptions &aOptions) {
+void DrawTargetRecording::Stroke(const Path* aPath, const Pattern& aPattern,
+                                 const StrokeOptions& aStrokeOptions,
+                                 const DrawOptions& aOptions) {
   RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
   EnsurePatternDependenciesStored(aPattern);
 
@@ -370,10 +370,10 @@ already_AddRefed<SourceSurface> DrawTargetRecording::IntoLuminanceSource(
 
 void DrawTargetRecording::DetachAllSnapshots() {}
 
-void DrawTargetRecording::DrawSurface(SourceSurface *aSurface,
-                                      const Rect &aDest, const Rect &aSource,
-                                      const DrawSurfaceOptions &aSurfOptions,
-                                      const DrawOptions &aOptions) {
+void DrawTargetRecording::DrawSurface(SourceSurface* aSurface,
+                                      const Rect& aDest, const Rect& aSource,
+                                      const DrawSurfaceOptions& aSurfOptions,
+                                      const DrawOptions& aOptions) {
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "DrawSurface");
 
   mRecorder->RecordEvent(RecordedDrawSurface(this, aSurface, aDest, aSource,
@@ -381,25 +381,25 @@ void DrawTargetRecording::DrawSurface(SourceSurface *aSurface,
 }
 
 void DrawTargetRecording::DrawDependentSurface(
-    uint64_t aId, const Rect &aDest, const DrawSurfaceOptions &aSurfOptions,
-    const DrawOptions &aOptions) {
+    uint64_t aId, const Rect& aDest, const DrawSurfaceOptions& aSurfOptions,
+    const DrawOptions& aOptions) {
   mRecorder->AddDependentSurface(aId);
   mRecorder->RecordEvent(
       RecordedDrawDependentSurface(this, aId, aDest, aSurfOptions, aOptions));
 }
 
 void DrawTargetRecording::DrawSurfaceWithShadow(
-    SourceSurface *aSurface, const Point &aDest, const Color &aColor,
-    const Point &aOffset, Float aSigma, CompositionOp aOp) {
+    SourceSurface* aSurface, const Point& aDest, const Color& aColor,
+    const Point& aOffset, Float aSigma, CompositionOp aOp) {
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "DrawSurfaceWithShadow");
 
   mRecorder->RecordEvent(RecordedDrawSurfaceWithShadow(
       this, aSurface, aDest, aColor, aOffset, aSigma, aOp));
 }
 
-void DrawTargetRecording::DrawFilter(FilterNode *aNode, const Rect &aSourceRect,
-                                     const Point &aDestPoint,
-                                     const DrawOptions &aOptions) {
+void DrawTargetRecording::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
+                                     const Point& aDestPoint,
+                                     const DrawOptions& aOptions) {
   MOZ_ASSERT(mRecorder->HasStoredObject(aNode));
 
   mRecorder->RecordEvent(
@@ -415,37 +415,37 @@ already_AddRefed<FilterNode> DrawTargetRecording::CreateFilter(
   return retNode.forget();
 }
 
-void DrawTargetRecording::ClearRect(const Rect &aRect) {
+void DrawTargetRecording::ClearRect(const Rect& aRect) {
   mRecorder->RecordEvent(RecordedClearRect(this, aRect));
 }
 
-void DrawTargetRecording::CopySurface(SourceSurface *aSurface,
-                                      const IntRect &aSourceRect,
-                                      const IntPoint &aDestination) {
+void DrawTargetRecording::CopySurface(SourceSurface* aSurface,
+                                      const IntRect& aSourceRect,
+                                      const IntPoint& aDestination) {
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "CopySurface");
 
   mRecorder->RecordEvent(
       RecordedCopySurface(this, aSurface, aSourceRect, aDestination));
 }
 
-void DrawTargetRecording::PushClip(const Path *aPath) {
+void DrawTargetRecording::PushClip(const Path* aPath) {
   RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
 
   mRecorder->RecordEvent(RecordedPushClip(this, pathRecording));
 }
 
-void DrawTargetRecording::PushClipRect(const Rect &aRect) {
+void DrawTargetRecording::PushClipRect(const Rect& aRect) {
   mRecorder->RecordEvent(RecordedPushClipRect(this, aRect));
 }
 
 void DrawTargetRecording::PopClip() {
-  mRecorder->RecordEvent(RecordedPopClip(static_cast<DrawTarget *>(this)));
+  mRecorder->RecordEvent(RecordedPopClip(static_cast<DrawTarget*>(this)));
 }
 
 void DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
-                                    SourceSurface *aMask,
-                                    const Matrix &aMaskTransform,
-                                    const IntRect &aBounds,
+                                    SourceSurface* aMask,
+                                    const Matrix& aMaskTransform,
+                                    const IntRect& aBounds,
                                     bool aCopyBackground) {
   if (aMask) {
     EnsureSurfaceStoredRecording(mRecorder, aMask, "PushLayer");
@@ -457,9 +457,9 @@ void DrawTargetRecording::PushLayer(bool aOpaque, Float aOpacity,
 }
 
 void DrawTargetRecording::PushLayerWithBlend(bool aOpaque, Float aOpacity,
-                                             SourceSurface *aMask,
-                                             const Matrix &aMaskTransform,
-                                             const IntRect &aBounds,
+                                             SourceSurface* aMask,
+                                             const Matrix& aMaskTransform,
+                                             const IntRect& aBounds,
                                              bool aCopyBackground,
                                              CompositionOp aCompositionOp) {
   if (aMask) {
@@ -472,12 +472,12 @@ void DrawTargetRecording::PushLayerWithBlend(bool aOpaque, Float aOpacity,
 }
 
 void DrawTargetRecording::PopLayer() {
-  mRecorder->RecordEvent(RecordedPopLayer(static_cast<DrawTarget *>(this)));
+  mRecorder->RecordEvent(RecordedPopLayer(static_cast<DrawTarget*>(this)));
 }
 
 already_AddRefed<SourceSurface>
-DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
-                                                 const IntSize &aSize,
+DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char* aData,
+                                                 const IntSize& aSize,
                                                  int32_t aStride,
                                                  SurfaceFormat aFormat) const {
   RefPtr<SourceSurface> surf =
@@ -493,20 +493,20 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
 }
 
 already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
-    SourceSurface *aSurface) const {
+    SourceSurface* aSurface) const {
   RefPtr<SourceSurface> surf(aSurface);
   return surf.forget();
 }
 
 already_AddRefed<SourceSurface>
 DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(
-    const NativeSurface &aSurface) const {
+    const NativeSurface& aSurface) const {
   MOZ_ASSERT(false);
   return nullptr;
 }
 
 already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
-    const IntSize &aSize, SurfaceFormat aFormat) const {
+    const IntSize& aSize, SurfaceFormat aFormat) const {
   RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat)) {
     similarDT = new DrawTargetRecording(this, aSize, aFormat);
@@ -525,12 +525,12 @@ already_AddRefed<DrawTarget> DrawTargetRecording::CreateSimilarDrawTarget(
 }
 
 bool DrawTargetRecording::CanCreateSimilarDrawTarget(
-    const IntSize &aSize, SurfaceFormat aFormat) const {
+    const IntSize& aSize, SurfaceFormat aFormat) const {
   return mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat);
 }
 
 RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
-    const IntSize &aMaxSize, const Matrix &aTransform,
+    const IntSize& aMaxSize, const Matrix& aTransform,
     SurfaceFormat aFormat) const {
   RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
@@ -548,8 +548,8 @@ RefPtr<DrawTarget> DrawTargetRecording::CreateClippedDrawTarget(
 
 already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTargetForFilter(
-    const IntSize &aMaxSize, SurfaceFormat aFormat, FilterNode *aFilter,
-    FilterNode *aSource, const Rect &aSourceRect, const Point &aDestPoint) {
+    const IntSize& aMaxSize, SurfaceFormat aFormat, FilterNode* aFilter,
+    FilterNode* aSource, const Rect& aSourceRect, const Point& aDestPoint) {
   RefPtr<DrawTarget> similarDT;
   if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
     similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
@@ -572,7 +572,7 @@ already_AddRefed<PathBuilder> DrawTargetRecording::CreatePathBuilder(
 }
 
 already_AddRefed<GradientStops> DrawTargetRecording::CreateGradientStops(
-    GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const {
+    GradientStop* aStops, uint32_t aNumStops, ExtendMode aExtendMode) const {
   RefPtr<GradientStops> retStops = new GradientStopsRecording(mRecorder);
 
   mRecorder->RecordEvent(
@@ -581,17 +581,17 @@ already_AddRefed<GradientStops> DrawTargetRecording::CreateGradientStops(
   return retStops.forget();
 }
 
-void DrawTargetRecording::SetTransform(const Matrix &aTransform) {
+void DrawTargetRecording::SetTransform(const Matrix& aTransform) {
   mRecorder->RecordEvent(RecordedSetTransform(this, aTransform));
   DrawTarget::SetTransform(aTransform);
 }
 
 already_AddRefed<PathRecording> DrawTargetRecording::EnsurePathStored(
-    const Path *aPath) {
+    const Path* aPath) {
   RefPtr<PathRecording> pathRecording;
   if (aPath->GetBackendType() == BackendType::RECORDING) {
     pathRecording =
-        const_cast<PathRecording *>(static_cast<const PathRecording *>(aPath));
+        const_cast<PathRecording*>(static_cast<const PathRecording*>(aPath));
     if (mRecorder->HasStoredObject(aPath)) {
       return pathRecording.forget();
     }
@@ -614,7 +614,7 @@ already_AddRefed<PathRecording> DrawTargetRecording::EnsurePathStored(
 
 // This should only be called on the 'root' DrawTargetRecording.
 // Calling it on a child DrawTargetRecordings will cause confusion.
-void DrawTargetRecording::FlushItem(const IntRect &aBounds) {
+void DrawTargetRecording::FlushItem(const IntRect& aBounds) {
   mRecorder->FlushItem(aBounds);
   // Reinitialize the recorder (FlushItem will write a new recording header)
   // Tell the new recording about our draw target
@@ -628,24 +628,23 @@ void DrawTargetRecording::FlushItem(const IntRect &aBounds) {
 }
 
 void DrawTargetRecording::EnsurePatternDependenciesStored(
-    const Pattern &aPattern) {
+    const Pattern& aPattern) {
   switch (aPattern.GetType()) {
     case PatternType::COLOR:
       // No dependencies here.
       return;
     case PatternType::LINEAR_GRADIENT: {
       MOZ_ASSERT(mRecorder->HasStoredObject(
-          static_cast<const LinearGradientPattern *>(&aPattern)->mStops));
+          static_cast<const LinearGradientPattern*>(&aPattern)->mStops));
       return;
     }
     case PatternType::RADIAL_GRADIENT: {
       MOZ_ASSERT(mRecorder->HasStoredObject(
-          static_cast<const RadialGradientPattern *>(&aPattern)->mStops));
+          static_cast<const RadialGradientPattern*>(&aPattern)->mStops));
       return;
     }
     case PatternType::SURFACE: {
-      const SurfacePattern *pat =
-          static_cast<const SurfacePattern *>(&aPattern);
+      const SurfacePattern* pat = static_cast<const SurfacePattern*>(&aPattern);
       EnsureSurfaceStoredRecording(mRecorder, pat->mSurface,
                                    "EnsurePatternDependenciesStored");
       return;

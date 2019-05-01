@@ -31,7 +31,7 @@ class RequestContextService final : public nsIRequestContextService,
   nsresult Init();
   void Shutdown();
 
-  static RequestContextService *sSelf;
+  static RequestContextService* sSelf;
 
   nsInterfaceHashtable<nsUint64HashKey, nsIRequestContext> mTable;
   uint32_t mRCIDNamespace;

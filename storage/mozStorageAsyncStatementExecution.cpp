@@ -44,16 +44,16 @@ namespace storage {
 
 /* static */
 nsresult AsyncExecuteStatements::execute(
-    StatementDataArray &aStatements, Connection *aConnection,
-    sqlite3 *aNativeConnection, mozIStorageStatementCallback *aCallback,
-    mozIStoragePendingStatement **_stmt) {
+    StatementDataArray& aStatements, Connection* aConnection,
+    sqlite3* aNativeConnection, mozIStorageStatementCallback* aCallback,
+    mozIStoragePendingStatement** _stmt) {
   // Create our event to run in the background
   RefPtr<AsyncExecuteStatements> event = new AsyncExecuteStatements(
       aStatements, aConnection, aNativeConnection, aCallback);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   // Dispatch it to the background
-  nsIEventTarget *target = aConnection->getAsyncExecutionTarget();
+  nsIEventTarget* target = aConnection->getAsyncExecutionTarget();
 
   // If we don't have a valid target, this is a bug somewhere else. In the past,
   // this assert found cases where a Run method would schedule a new statement
@@ -74,8 +74,8 @@ nsresult AsyncExecuteStatements::execute(
 }
 
 AsyncExecuteStatements::AsyncExecuteStatements(
-    StatementDataArray &aStatements, Connection *aConnection,
-    sqlite3 *aNativeConnection, mozIStorageStatementCallback *aCallback)
+    StatementDataArray& aStatements, Connection* aConnection,
+    sqlite3* aNativeConnection, mozIStorageStatementCallback* aCallback)
     : mConnection(aConnection),
       mNativeConnection(aNativeConnection),
       mHasTransaction(false),
@@ -118,14 +118,14 @@ bool AsyncExecuteStatements::shouldNotify() {
 }
 
 bool AsyncExecuteStatements::bindExecuteAndProcessStatement(
-    StatementData &aData, bool aLastStatement) {
+    StatementData& aData, bool aLastStatement) {
   mMutex.AssertNotCurrentThreadOwns();
 
-  sqlite3_stmt *aStatement = nullptr;
+  sqlite3_stmt* aStatement = nullptr;
   // This cannot fail; we are only called if it's available.
   (void)aData.getSqliteStatement(&aStatement);
   NS_ASSERTION(aStatement, "You broke the code; do not call here like that!");
-  BindingParamsArray *paramsArray(aData);
+  BindingParamsArray* paramsArray(aData);
 
   // Iterate through all of our parameters, bind them, and execute.
   bool continueProcessing = true;
@@ -158,7 +158,7 @@ bool AsyncExecuteStatements::bindExecuteAndProcessStatement(
 }
 
 bool AsyncExecuteStatements::executeAndProcessStatement(
-    sqlite3_stmt *aStatement, bool aLastStatement) {
+    sqlite3_stmt* aStatement, bool aLastStatement) {
   mMutex.AssertNotCurrentThreadOwns();
 
   // Execute our statement
@@ -209,7 +209,7 @@ bool AsyncExecuteStatements::executeAndProcessStatement(
   return true;
 }
 
-bool AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement) {
+bool AsyncExecuteStatements::executeStatement(sqlite3_stmt* aStatement) {
   mMutex.AssertNotCurrentThreadOwns();
   Telemetry::AutoTimer<Telemetry::MOZ_STORAGE_ASYNC_REQUESTS_MS>
       finallySendExecutionDuration(mRequestStartDate);
@@ -267,7 +267,7 @@ bool AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement) {
 }
 
 nsresult AsyncExecuteStatements::buildAndNotifyResults(
-    sqlite3_stmt *aStatement) {
+    sqlite3_stmt* aStatement) {
   NS_ASSERTION(mCallback, "Trying to dispatch results without a callback!");
   mMutex.AssertNotCurrentThreadOwns();
 
@@ -360,7 +360,7 @@ nsresult AsyncExecuteStatements::notifyCompleteOnCallingThread() {
 }
 
 nsresult AsyncExecuteStatements::notifyError(int32_t aErrorCode,
-                                             const char *aMessage) {
+                                             const char* aMessage) {
   mMutex.AssertNotCurrentThreadOwns();
   mDBMutex.assertNotCurrentThreadOwns();
 
@@ -372,7 +372,7 @@ nsresult AsyncExecuteStatements::notifyError(int32_t aErrorCode,
   return notifyError(errorObj);
 }
 
-nsresult AsyncExecuteStatements::notifyError(mozIStorageError *aError) {
+nsresult AsyncExecuteStatements::notifyError(mozIStorageError* aError) {
   mMutex.AssertNotCurrentThreadOwns();
   mDBMutex.assertNotCurrentThreadOwns();
 
@@ -388,7 +388,7 @@ nsresult AsyncExecuteStatements::notifyError(mozIStorageError *aError) {
 }
 
 nsresult AsyncExecuteStatements::notifyErrorOnCallingThread(
-    mozIStorageError *aError) {
+    mozIStorageError* aError) {
   MOZ_ASSERT(mCallingThread->IsOnCurrentThread());
   // Acquire our own strong reference so that if the callback spins a nested
   // event loop and notifyCompleteOnCallingThread is executed, forgetting
@@ -418,7 +418,7 @@ nsresult AsyncExecuteStatements::notifyResults() {
 }
 
 nsresult AsyncExecuteStatements::notifyResultsOnCallingThread(
-    ResultSet *aResultSet) {
+    ResultSet* aResultSet) {
   MOZ_ASSERT(mCallingThread->IsOnCurrentThread());
   // Acquire our own strong reference so that if the callback spins a nested
   // event loop and notifyCompleteOnCallingThread is executed, forgetting
@@ -502,7 +502,7 @@ AsyncExecuteStatements::Run() {
   for (uint32_t i = 0; i < mStatements.Length(); i++) {
     bool finished = (i == (mStatements.Length() - 1));
 
-    sqlite3_stmt *stmt;
+    sqlite3_stmt* stmt;
     {  // lock the sqlite mutex so sqlite3_errmsg cannot change
       SQLiteMutexAutoLock lockedScope(mDBMutex);
 

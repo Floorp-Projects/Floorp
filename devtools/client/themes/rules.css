@@ -7,7 +7,6 @@
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-header-background-color: var(--theme-toolbar-background);
   --rule-pseudo-class-text-color: var(--yellow-70) ;
-
   /* This should be --yellow-50 but since we need an opacity of 0.4, we hard-code the
   resulting color here for now. */
   --rule-property-highlight-background-color: #FFF697;
@@ -17,7 +16,6 @@
   --rule-highlight-background-color: #521C76;
   --rule-header-background-color: #222225;
   --rule-pseudo-class-text-color: var(--yellow-50);
-
   /* This should be --yellow-50 but since we need an opacity of 0.3, we hard-code the
   resulting color here for now. */
   --rule-property-highlight-background-color: #605913;
@@ -31,7 +29,6 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-
   /* Override the min-width from .inspector-tabpanel, as the rule panel can support small
      widths */
   min-width: 100px;
@@ -50,7 +47,7 @@
 }
 
 #ruleview-toolbar > .devtools-searchbox:first-child {
-  padding-inline-start: 0;
+  padding-inline-start: 0px;
 }
 
 #ruleview-command-toolbar {
@@ -194,8 +191,6 @@
 .ruleview-overridden-items[hidden],
 .ruleview-overridden-rule-filter[hidden],
 .ruleview-warning[hidden],
-.ruleview-unused-warning[hidden],
-.ruleview-used[hidden],
 .ruleview-overridden .ruleview-grid {
   display: none;
 }
@@ -264,7 +259,7 @@
 }
 
 .ruleview-rule-pseudo-element {
-  padding-left: 20px;
+  padding-left:20px;
   border-left: solid 10px;
 }
 
@@ -322,11 +317,6 @@
   border-bottom-color: transparent;
 }
 
-.ruleview-property.unused .ruleview-namecontainer,
-.ruleview-property.unused .ruleview-propertyvaluecontainer {
-  opacity: 0.5;
-}
-
 .ruleview-overridden-rule-filter {
   display: inline-block;
   width: 14px;
@@ -369,8 +359,7 @@
   background-clip: content-box;
 }
 
-.ruleview-warning,
-.ruleview-unused-warning {
+.ruleview-warning {
   display: inline-block;
   width: 12px;
   height: 12px;
@@ -379,19 +368,6 @@
   background-size: cover;
   -moz-context-properties: fill;
   fill: var(--yellow-60);
-}
-
-.ruleview-unused-warning {
-  background-image: url(chrome://devtools/skin/images/alerticon-unused.svg);
-  background-color: var(--theme-sidebar-background);
-  -moz-context-properties: fill, stroke;
-  fill: var(--theme-icon-dimmed-color);
-  stroke: var(--theme-icon-dimmed-color);
-}
-
-.ruleview-unused-warning:hover {
-  fill: var(--theme-icon-color);
-  stroke: var(--theme-icon-color);
 }
 
 .ruleview-rule:not(:hover) .ruleview-enableproperty {
@@ -442,11 +418,11 @@
   content: "";
   position: absolute;
   display: block;
-  border: 0 solid var(--theme-text-color-alt);
+  border: 0px solid var(--theme-text-color-alt);
 }
 
 .ruleview-overridden-item::before {
-  top: 0;
+  top: 0px;
   left: -15px;
   height: 0.8em;
   width: 10px;
@@ -479,7 +455,6 @@
   width: 1em;
   height: 1em;
   vertical-align: middle;
-
   /* align the swatch with its value */
   margin-top: -1px;
   margin-inline-end: 5px;

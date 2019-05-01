@@ -8,7 +8,7 @@
 #include "nsIdleServiceWin.h"
 #include <windows.h>
 
-bool nsIdleServiceWin::PollIdleTime(uint32_t *aIdleTime) {
+bool nsIdleServiceWin::PollIdleTime(uint32_t* aIdleTime) {
   LASTINPUTINFO inputInfo;
   inputInfo.cbSize = sizeof(inputInfo);
   if (!::GetLastInputInfo(&inputInfo)) return false;

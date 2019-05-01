@@ -33,7 +33,7 @@ class nsCocoaFeatures {
   // GetVersion actually adjusts to the lowest supported OS, so it will always
   // return a "supported" version.  GetSystemVersion does not make any
   // modifications.
-  static void GetSystemVersion(int &aMajor, int &aMinor, int &aBugFix);
+  static void GetSystemVersion(int& aMajor, int& aMinor, int& aBugFix);
   static int32_t GetVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix);
   static int32_t ExtractMajorVersion(int32_t aVersion);
   static int32_t ExtractMinorVersion(int32_t aVersion);

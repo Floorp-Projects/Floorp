@@ -16,8 +16,8 @@ class nsApplicationCache : public nsIApplicationCache,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPLICATIONCACHE
 
-  nsApplicationCache(nsOfflineCacheDevice *device, const nsACString &group,
-                     const nsACString &clientID);
+  nsApplicationCache(nsOfflineCacheDevice* device, const nsACString& group,
+                     const nsACString& clientID);
 
   nsApplicationCache();
 

@@ -21,8 +21,8 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 nsresult nsHttpChunkedDecoder::HandleChunkedContent(
-    char *buf, uint32_t count, uint32_t *contentRead,
-    uint32_t *contentRemaining) {
+    char* buf, uint32_t count, uint32_t* contentRead,
+    uint32_t* contentRemaining) {
   LOG(("nsHttpChunkedDecoder::HandleChunkedContent [count=%u]\n", count));
 
   *contentRead = 0;
@@ -82,14 +82,14 @@ nsresult nsHttpChunkedDecoder::HandleChunkedContent(
 // nsHttpChunkedDecoder <private>
 //-----------------------------------------------------------------------------
 
-nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char *buf, uint32_t count,
-                                                   uint32_t *bytesConsumed) {
+nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char* buf, uint32_t count,
+                                                   uint32_t* bytesConsumed) {
   MOZ_ASSERT(mChunkRemaining == 0, "chunk remaining should be zero");
   MOZ_ASSERT(count, "unexpected");
 
   *bytesConsumed = 0;
 
-  char *p = static_cast<char *>(memchr(buf, '\n', count));
+  char* p = static_cast<char*>(memchr(buf, '\n', count));
   if (p) {
     *p = 0;
     count = p - buf;                        // new length
@@ -102,7 +102,7 @@ nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char *buf, uint32_t count,
     // make buf point to the full line buffer to parse
     if (!mLineBuf.IsEmpty()) {
       mLineBuf.Append(buf, count);
-      buf = (char *)mLineBuf.get();
+      buf = (char*)mLineBuf.get();
       count = mLineBuf.Length();
     }
 
@@ -131,7 +131,7 @@ nsresult nsHttpChunkedDecoder::ParseChunkRemaining(char *buf, uint32_t count,
         LOG(("reached end of chunked-body\n"));
       }
     } else if (*buf) {
-      char *endptr;
+      char* endptr;
       unsigned long parsedval;  // could be 64 bit, could be 32
 
       // ignore any chunk-extensions

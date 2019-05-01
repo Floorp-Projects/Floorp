@@ -40,7 +40,7 @@ class nsCertVerificationResult : public nsICertVerificationResult {
   nsresult mRV;
   uint32_t mVerified;
   uint32_t mCount;
-  char16_t **mUsages;
+  char16_t** mUsages;
 
   friend class nsCertVerificationJob;
 };

@@ -39,7 +39,7 @@ OpenSLESProvider::~OpenSLESProvider() {
 }
 
 /* static */
-OpenSLESProvider &OpenSLESProvider::getInstance() {
+OpenSLESProvider& OpenSLESProvider::getInstance() {
   // This doesn't need a Mutex in C++11 or GCC 4.3+, see N2660 and
   // https://gcc.gnu.org/projects/cxx0x.html
   static OpenSLESProvider instance;
@@ -47,15 +47,15 @@ OpenSLESProvider &OpenSLESProvider::getInstance() {
 }
 
 /* static */
-SLresult OpenSLESProvider::Get(SLObjectItf *aObjectm, SLuint32 aOptionCount,
-                               const SLEngineOption *aOptions) {
-  OpenSLESProvider &provider = OpenSLESProvider::getInstance();
+SLresult OpenSLESProvider::Get(SLObjectItf* aObjectm, SLuint32 aOptionCount,
+                               const SLEngineOption* aOptions) {
+  OpenSLESProvider& provider = OpenSLESProvider::getInstance();
   return provider.GetEngine(aObjectm, aOptionCount, aOptions);
 }
 
-SLresult OpenSLESProvider::GetEngine(SLObjectItf *aObjectm,
+SLresult OpenSLESProvider::GetEngine(SLObjectItf* aObjectm,
                                      SLuint32 aOptionCount,
-                                     const SLEngineOption *aOptions) {
+                                     const SLEngineOption* aOptions) {
   MutexAutoLock lock(mLock);
   LOG(("Getting OpenSLES engine"));
   // Bug 1042051: Validate options are the same
@@ -78,9 +78,9 @@ SLresult OpenSLESProvider::GetEngine(SLObjectItf *aObjectm,
   }
 }
 
-SLresult OpenSLESProvider::ConstructEngine(SLObjectItf *aObjectm,
+SLresult OpenSLESProvider::ConstructEngine(SLObjectItf* aObjectm,
                                            SLuint32 aOptionCount,
-                                           const SLEngineOption *aOptions) {
+                                           const SLEngineOption* aOptions) {
   mLock.AssertCurrentThreadOwns();
 
   if (!mOpenSLESLib) {
@@ -91,9 +91,9 @@ SLresult OpenSLESProvider::ConstructEngine(SLObjectItf *aObjectm,
     }
   }
 
-  typedef SLresult (*slCreateEngine_t)(
-      SLObjectItf *, SLuint32, const SLEngineOption *, SLuint32,
-      const SLInterfaceID *, const SLboolean *);
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf*, SLuint32,
+                                       const SLEngineOption*, SLuint32,
+                                       const SLInterfaceID*, const SLboolean*);
 
   slCreateEngine_t f_slCreateEngine =
       (slCreateEngine_t)dlsym(mOpenSLESLib, "slCreateEngine");
@@ -103,12 +103,12 @@ SLresult OpenSLESProvider::ConstructEngine(SLObjectItf *aObjectm,
 }
 
 /* static */
-void OpenSLESProvider::Destroy(SLObjectItf *aObjectm) {
-  OpenSLESProvider &provider = OpenSLESProvider::getInstance();
+void OpenSLESProvider::Destroy(SLObjectItf* aObjectm) {
+  OpenSLESProvider& provider = OpenSLESProvider::getInstance();
   provider.DestroyEngine(aObjectm);
 }
 
-void OpenSLESProvider::DestroyEngine(SLObjectItf *aObjectm) {
+void OpenSLESProvider::DestroyEngine(SLObjectItf* aObjectm) {
   MutexAutoLock lock(mLock);
   NS_ASSERTION(mOpenSLESLib, "OpenSLES destroy called but library is not open");
 
@@ -130,7 +130,7 @@ void OpenSLESProvider::DestroyEngine(SLObjectItf *aObjectm) {
 
 /* static */
 SLresult OpenSLESProvider::Realize(SLObjectItf aObjectm) {
-  OpenSLESProvider &provider = OpenSLESProvider::getInstance();
+  OpenSLESProvider& provider = OpenSLESProvider::getInstance();
   return provider.RealizeEngine(aObjectm);
 }
 
@@ -159,12 +159,12 @@ SLresult OpenSLESProvider::RealizeEngine(SLObjectItf aObjectm) {
 }  // namespace mozilla
 
 extern "C" {
-SLresult mozilla_get_sles_engine(SLObjectItf *aObjectm, SLuint32 aOptionCount,
-                                 const SLEngineOption *aOptions) {
+SLresult mozilla_get_sles_engine(SLObjectItf* aObjectm, SLuint32 aOptionCount,
+                                 const SLEngineOption* aOptions) {
   return mozilla::OpenSLESProvider::Get(aObjectm, aOptionCount, aOptions);
 }
 
-void mozilla_destroy_sles_engine(SLObjectItf *aObjectm) {
+void mozilla_destroy_sles_engine(SLObjectItf* aObjectm) {
   mozilla::OpenSLESProvider::Destroy(aObjectm);
 }
 

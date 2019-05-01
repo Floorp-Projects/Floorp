@@ -15,7 +15,7 @@ struct HttpRetParams;
 class HttpInfo {
  public:
   /* Calls getConnectionData method in nsHttpConnectionMgr. */
-  static void GetHttpConnectionData(nsTArray<HttpRetParams> *);
+  static void GetHttpConnectionData(nsTArray<HttpRetParams>*);
 };
 
 }  // namespace net

@@ -11,20 +11,20 @@
 
 class nsMIMEInfoUnix : public nsMIMEInfoImpl {
  public:
-  explicit nsMIMEInfoUnix(const char *aMIMEType = "")
+  explicit nsMIMEInfoUnix(const char* aMIMEType = "")
       : nsMIMEInfoImpl(aMIMEType) {}
-  explicit nsMIMEInfoUnix(const nsACString &aMIMEType)
+  explicit nsMIMEInfoUnix(const nsACString& aMIMEType)
       : nsMIMEInfoImpl(aMIMEType) {}
-  nsMIMEInfoUnix(const nsACString &aType, HandlerClass aClass)
+  nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass)
       : nsMIMEInfoImpl(aType, aClass) {}
-  static bool HandlerExists(const char *aProtocolScheme);
+  static bool HandlerExists(const char* aProtocolScheme);
 
  protected:
-  NS_IMETHOD GetHasDefaultHandler(bool *_retval) override;
+  NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
 
-  virtual nsresult LoadUriInternal(nsIURI *aURI) override;
+  virtual nsresult LoadUriInternal(nsIURI* aURI) override;
 
-  virtual nsresult LaunchDefaultWithFile(nsIFile *aFile) override;
+  virtual nsresult LaunchDefaultWithFile(nsIFile* aFile) override;
 };
 
 #endif  // nsMIMEInfoUnix_h_

@@ -24,10 +24,9 @@ bool nsCUPSShim::Init() {
   if (!mCupsLib) return false;
 
   // List of symbol pointers. Must match gSymName[] defined above.
-  void **symAddr[] = {
-      (void **)&mCupsAddOption, (void **)&mCupsFreeDests,
-      (void **)&mCupsGetDest,   (void **)&mCupsGetDests,
-      (void **)&mCupsPrintFile, (void **)&mCupsTempFd,
+  void** symAddr[] = {
+      (void**)&mCupsAddOption, (void**)&mCupsFreeDests, (void**)&mCupsGetDest,
+      (void**)&mCupsGetDests,  (void**)&mCupsPrintFile, (void**)&mCupsTempFd,
   };
 
   for (int i = gSymNameCt; i--;) {

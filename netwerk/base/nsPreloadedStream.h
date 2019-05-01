@@ -33,7 +33,7 @@ class nsPreloadedStream final : public nsIAsyncInputStream {
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
 
-  nsPreloadedStream(nsIAsyncInputStream *aStream, const char *data,
+  nsPreloadedStream(nsIAsyncInputStream* aStream, const char* data,
                     uint32_t datalen);
 
  private:
@@ -41,7 +41,7 @@ class nsPreloadedStream final : public nsIAsyncInputStream {
 
   nsCOMPtr<nsIAsyncInputStream> mStream;
 
-  char *mBuf;
+  char* mBuf;
   uint32_t mOffset;
   uint32_t mLen;
 };
