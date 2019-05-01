@@ -248,6 +248,13 @@ public class AppConstants {
     false;
 //#endif
 
+    public static final boolean FENNEC_NIGHTLY =
+//#ifdef FENNEC_NIGHTLY
+    true;
+//#else
+    false;
+//#endif
+
     public static final boolean DEBUG_BUILD =
 //#ifdef MOZ_DEBUG
     true;

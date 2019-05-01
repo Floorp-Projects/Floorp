@@ -8,7 +8,13 @@ add_task(async function doorhanger_bc_downloadOptIn_bgWin() {
     return async function() {
       await TestUtils.waitForCondition(() =>
         PanelUI.menuButton.hasAttribute("badge-status"),
-        "Background window has a badge.");
+        "Background window has a badge.", undefined, 200
+      ).catch(e => {
+        // Instead of throwing let the check below fail the test.
+        logTestInfo(e);
+      });
+      ok(PanelUI.menuButton.hasAttribute("badge-status"),
+         "PanelUI.menuButton should have a 'badge-status' attribute");
       is(PanelUI.notificationPanel.state, "closed",
          "The doorhanger is not showing for the background window");
       is(PanelUI.menuButton.getAttribute("badge-status"), "update-available",

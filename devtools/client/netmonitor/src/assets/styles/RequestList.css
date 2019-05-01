@@ -295,10 +295,6 @@
   background-image: url(chrome://devtools/skin/images/security-state-broken.svg);
 }
 
-.security-state-local {
-  background-image: url(chrome://devtools/skin/images/globe-small.svg);
-}
-
 .tracking-resource {
   display: inline-block;
   width: 16px;
