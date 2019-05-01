@@ -289,11 +289,7 @@ void ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled) {
     }
   }
   Servo_StyleSet_SetAuthorStyleDisabled(mRawSet.get(), mAuthorStyleDisabled);
-  // XXX Workaround for the assertion in InvalidateStyleForDocumentStateChanges
-  // which is called by nsIPresShell::SetAuthorStyleDisabled via nsIPresShell::
-  // RestyleForCSSRuleChanges. It is not really necessary because we don't need
-  // to rebuild stylist for this change. But we have bug around this, and we
-  // may want to rethink how things should work. See bug 1437785.
+  // XXX Workaround for bug 1437785.
   SetStylistStyleSheetsDirty();
 }
 

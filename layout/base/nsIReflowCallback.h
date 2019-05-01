@@ -13,7 +13,7 @@
  * Protocol: objects will either get a ReflowFinished() call when a reflow
  * has finished or a ReflowCallbackCanceled() call if the shell is destroyed,
  * whichever happens first. If the object is explicitly removed from the shell
- * (using nsIPresShell::CancelReflowCallback()) before that occurs then neither
+ * (using PresShell::CancelReflowCallback()) before that occurs then neither
  * of the callback methods are called.
  */
 class nsIReflowCallback {
