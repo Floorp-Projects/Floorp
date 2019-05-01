@@ -681,16 +681,6 @@ class FunctionCompiler {
     return ins;
   }
 
-  MDefinition* derefTableElementPointer(MDefinition* base) {
-    // Table element storage may be moved by GC operations, so reads from that
-    // storage are not movable.
-    MWasmLoadRef* load =
-        MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement,
-                          /*isMovable=*/false);
-    curBlock_->add(load);
-    return load;
-  }
-
   MDefinition* load(MDefinition* base, MemoryAccessDesc* access,
                     ValType result) {
     if (inDeadCode()) {
@@ -3134,13 +3124,8 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   // The return value here is either null, denoting an error, or a short-lived
   // pointer to a location containing a possibly-null ref.
-  MDefinition* result;
-  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &result)) {
-    return false;
-  }
-
-  MDefinition* ret = f.derefTableElementPointer(result);
-  if (!ret) {
+  MDefinition* ret;
+  if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
   }
 

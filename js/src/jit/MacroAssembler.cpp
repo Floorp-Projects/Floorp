@@ -3220,6 +3220,11 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
       case wasm::FailureMode::FailOnNullPtr:
         branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &noTrap);
         break;
+      case wasm::FailureMode::FailOnInvalidRef:
+        branchPtr(Assembler::NotEqual, ReturnReg,
+                  ImmWord(uintptr_t(wasm::AnyRef::invalid().forCompiledCode())),
+                  &noTrap);
+        break;
     }
     wasmTrap(wasm::Trap::ThrowReported,
              wasm::BytecodeOffset(desc.lineOrBytecode()));

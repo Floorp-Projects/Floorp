@@ -59,6 +59,7 @@ static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
 #define _Infallible FailureMode::Infallible
 #define _FailOnNegI32 FailureMode::FailOnNegI32
 #define _FailOnNullPtr FailureMode::FailOnNullPtr
+#define _FailOnInvalidRef FailureMode::FailOnInvalidRef
 
 namespace js {
 namespace wasm {
@@ -148,8 +149,8 @@ const SymbolicAddressSignature SASigTableFill = {
     5,
     {_PTR, _I32, _RoN, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGet = {SymbolicAddress::TableGet,
-                                                _PTR,
-                                                _FailOnNullPtr,
+                                                _RoN,
+                                                _FailOnInvalidRef,
                                                 3,
                                                 {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
