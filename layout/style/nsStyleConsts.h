@@ -549,9 +549,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_TEXT_ALIGN_MOZ_RIGHT 9
 #define NS_STYLE_TEXT_ALIGN_MOZ_LEFT 10
 
-// Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
-// the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
-
 // See nsStyleText
 #define NS_STYLE_TEXT_DECORATION_STYLE_NONE \
   0  // not in CSS spec, mapped to -moz-none
@@ -578,20 +575,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 // See nsStyleDisplay
 #define NS_STYLE_TOP_LAYER_NONE 0  // not in the top layer
 #define NS_STYLE_TOP_LAYER_TOP 1   // in the top layer
-
-// See nsStyleText
-// Note: these values pickup after the text-align values because there
-// are a few html cases where an object can have both types of
-// alignment applied with a single attribute
-#define NS_STYLE_VERTICAL_ALIGN_BASELINE 14
-#define NS_STYLE_VERTICAL_ALIGN_SUB 15
-#define NS_STYLE_VERTICAL_ALIGN_SUPER 16
-#define NS_STYLE_VERTICAL_ALIGN_TOP 17
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP 18
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE 19
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM 20
-#define NS_STYLE_VERTICAL_ALIGN_BOTTOM 21
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 22
 
 // See nsStyleVisibility
 #define NS_STYLE_VISIBILITY_HIDDEN 0

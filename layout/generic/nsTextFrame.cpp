@@ -1848,9 +1848,12 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
             }
 
             // 2. vertical-align is not baseline.
-            const nsStyleCoord& coord = ctx->StyleDisplay()->mVerticalAlign;
-            if (coord.GetUnit() != eStyleUnit_Enumerated ||
-                coord.GetIntValue() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
+            //
+            // FIXME: Should this use VerticalAlignEnum()?
+            const auto& verticalAlign = ctx->StyleDisplay()->mVerticalAlign;
+            if (!verticalAlign.IsKeyword() ||
+                verticalAlign.AsKeyword() !=
+                    StyleVerticalAlignKeyword::Baseline) {
               return true;
             }
 
@@ -5022,7 +5025,9 @@ void nsTextFrame::GetTextDecorations(
     // that should be set (see nsLineLayout::VerticalAlignLine).
     if (firstBlock) {
       // At this point, fChild can't be null since TextFrames can't be blocks
-      if (fChild->VerticalAlignEnum() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
+      Maybe<StyleVerticalAlignKeyword> verticalAlign =
+          fChild->VerticalAlignEnum();
+      if (verticalAlign != Some(StyleVerticalAlignKeyword::Baseline)) {
         // Since offset is the offset in the child's coordinate space, we have
         // to undo the accumulation to bring the transform out of the block's
         // coordinate space
