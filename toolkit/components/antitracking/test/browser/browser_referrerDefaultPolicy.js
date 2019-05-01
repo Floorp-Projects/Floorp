@@ -7,8 +7,7 @@ Services.scriptloader.loadSubScript(CHROME_BASE + "head.js", this);
 async function testOnWindow(private, expectedReferrer, rp) {
   info("Creating a new " + (private ? "private" : "normal") + " window");
   let win = OpenBrowserWindow({private});
-  await TestUtils.topicObserved("browser-delayed-startup-finished",
-	                        subject => subject == win).then(() => win);
+  await TestUtils.topicObserved("browser-delayed-startup-finished", subject => subject == win).then(() => win);
   await BrowserTestUtils.firstBrowserLoaded(win);
 
   let browser = win.gBrowser;
