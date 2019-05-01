@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
@@ -623,9 +622,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sIsFormAutofillAutocompleteEnabled,
-                               "dom.forms.autocomplete.formautofill", false);
 
   Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
                               "privacy.window.maxInnerWidth", 1000);
@@ -1088,7 +1084,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
 
     // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!StaticPrefs::dom_forms_autocomplete_formautofill() &&
+        !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
@@ -1100,7 +1097,8 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   } else {  // Check if the last token is of the contact category instead.
     // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!StaticPrefs::dom_forms_autocomplete_formautofill() &&
+        !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
