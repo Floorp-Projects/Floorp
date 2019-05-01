@@ -206,10 +206,10 @@ scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
     scope-prefix: 'project:releng'
     worker-types:
-        'scriptworker-prov-v1/signing-linux-v1':
+        'linux-signing':
             - 'project:releng:signing:cert:release-signing'
             - 'project:releng:signing:cert:nightly-signing'
-        'scriptworker-prov-v1/depsigning':
+        'linux-depsigning':
             - 'project:releng:signing:cert:dep-signing'
         'scriptworker-prov-v1/beetmoverworker-v1':
             - 'project:releng:beetmover:bucket:release'
@@ -288,6 +288,16 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: 'gecko-{level}-{alias}'
+        linux-depsigning:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: linux
+            worker-type: depsigning
+        linux-signing:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-signing
+            os: linux
+            worker-type: signing-linux-v1
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
