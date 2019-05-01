@@ -2344,10 +2344,6 @@ pref("network.http.throttle.max-time-ms", 500);
 // like click-to-play, image fancy-box zoom, navigation.
 pref("network.http.on_click_priority", true);
 
-// Some requests during a page load are marked as "tail", mainly trackers, but not only.
-// This pref controls whether such requests are put to the tail, behind other requests
-// emerging during page loading process.
-pref("network.http.tailing.enabled", true);
 // When the page load has not yet reached DOMContentLoaded point, tail requestes are delayed
 // by (non-tailed requests count + 1) * delay-quantum milliseconds.
 pref("network.http.tailing.delay-quantum", 600);
