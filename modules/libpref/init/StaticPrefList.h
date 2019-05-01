@@ -605,13 +605,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-// DOM full-screen API.
-VARCACHE_PREF(
-  "full-screen-api.enabled",
-   full_screen_api_enabled,
-  bool, false
-)
-
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
@@ -640,6 +633,12 @@ VARCACHE_PREF(
 //---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "full-screen-api.enabled",
+   full_screen_api_enabled,
+  bool, false
+)
 
 VARCACHE_PREF(
   "full-screen-api.unprefix.enabled",
