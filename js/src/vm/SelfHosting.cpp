@@ -3511,7 +3511,8 @@ void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
 }
 
 bool js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name) {
-  return fun->isSelfHostedBuiltin() && GetSelfHostedFunctionName(fun) == name;
+  return fun->isSelfHostedBuiltin() && fun->isExtended() &&
+         GetSelfHostedFunctionName(fun) == name;
 }
 
 JSAtom* js::GetSelfHostedFunctionName(JSFunction* fun) {

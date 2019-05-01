@@ -969,6 +969,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
     return addStubField(uintptr_t(expected), StubField::Type::JSObject);
   }
+  FieldOffset guardSpecificFunction(ObjOperandId obj, JSFunction* expected) {
+    // Guard object is a specific function. This implies immutable fields on
+    // the JSFunction struct itself are unchanged.
+    return guardSpecificObject(obj, expected);
+  }
   FieldOffset guardSpecificAtom(StringOperandId str, JSAtom* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
     return addStubField(uintptr_t(expected), StubField::Type::String);
