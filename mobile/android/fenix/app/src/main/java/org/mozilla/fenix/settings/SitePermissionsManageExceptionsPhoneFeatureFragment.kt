@@ -99,6 +99,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment(), Coroutin
     private fun RadioButton.restoreState(status: SitePermissions.Status) {
         if (phoneFeature.getStatus(sitePermissions) == status) {
             this.isChecked = true
+            this.setStartCheckedIndicator()
         }
     }
 

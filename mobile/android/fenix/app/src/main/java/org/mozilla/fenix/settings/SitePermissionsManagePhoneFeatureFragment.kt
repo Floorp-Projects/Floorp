@@ -94,6 +94,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     private fun RadioButton.restoreState(action: SitePermissionsRules.Action) {
         if (phoneFeature.action == action) {
             this.isChecked = true
+            this.setStartCheckedIndicator()
         }
     }
 

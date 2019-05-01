@@ -6,10 +6,13 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.view.View
+import android.widget.RadioButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 
 internal fun SitePermissionsRules.Action.toString(context: Context): String {
@@ -93,6 +96,19 @@ fun PhoneFeature.getPreferenceKey(context: Context): String {
         PhoneFeature.MICROPHONE -> context.getString(R.string.pref_key_phone_feature_microphone)
         PhoneFeature.NOTIFICATION -> context.getString(R.string.pref_key_phone_feature_notification)
     }
+}
+
+/* In devices with Android 6, when we use android:button="@null" android:drawableStart doesn't work via xml
+* as a result we have to apply it programmatically. More info about this issue https://github.com/mozilla-mobile/fenix/issues/1414
+*/
+fun RadioButton.setStartCheckedIndicator() {
+    val attr =
+        DefaultThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+    val buttonDrawable = ContextCompat.getDrawable(context, attr)
+    buttonDrawable.apply {
+        this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
+    }
+    this.setCompoundDrawables(buttonDrawable, null, null, null)
 }
 
 fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: View) {
