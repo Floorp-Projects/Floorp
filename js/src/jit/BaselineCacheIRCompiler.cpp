@@ -888,34 +888,6 @@ bool BaselineCacheIRCompiler::emitLoadStringResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitCallStringSplitResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
-  Register sep = allocator.useRegister(masm, reader.stringOperandId());
-  Address groupAddr(stubAddress(reader.stubOffset()));
-
-  AutoScratchRegister scratch(allocator, masm);
-  allocator.discardStack(masm);
-
-  AutoStubFrame stubFrame(*this);
-  stubFrame.enter(masm, scratch);
-
-  // Load the group in the scratch register.
-  masm.loadPtr(groupAddr, scratch);
-
-  masm.Push(Imm32(INT32_MAX));
-  masm.Push(scratch);
-  masm.Push(sep);
-  masm.Push(str);
-
-  using Fn = bool (*)(JSContext*, HandleString, HandleString, HandleObjectGroup,
-                      uint32_t limit, MutableHandleValue);
-  callVM<Fn, StringSplitHelper>(masm);
-
-  stubFrame.leave(masm);
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitCallConstStringSplitResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Address resultTemplateAddr(stubAddress(reader.stubOffset()));

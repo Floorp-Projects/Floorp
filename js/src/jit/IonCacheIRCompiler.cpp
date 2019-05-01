@@ -1277,11 +1277,6 @@ bool IonCacheIRCompiler::emitLoadStringResult() {
   MOZ_CRASH("not used in ion");
 }
 
-bool IonCacheIRCompiler::emitCallStringSplitResult() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  MOZ_CRASH("not used in ion");
-}
-
 bool IonCacheIRCompiler::emitCallConstStringSplitResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   MOZ_CRASH("not used in ion");
