@@ -846,6 +846,8 @@ with modules["CONTENT"]:
     errors["NS_ERROR_XBL_BLOCKED"] = FAILURE(15)
     # Error code for when the content process crashed
     errors["NS_ERROR_CONTENT_CRASHED"] = FAILURE(16)
+    # Error code for when a subframe process crashed
+    errors["NS_ERROR_FRAME_CRASHED"] = FAILURE(14)
     # Error code for when the content process had a different buildID than the
     # parent
     errors["NS_ERROR_BUILDID_MISMATCH"] = FAILURE(17)
