@@ -330,8 +330,6 @@ nsCString* nsContentUtils::sJSBytecodeMimeType = nullptr;
 nsContentUtils::UserInteractionObserver*
     nsContentUtils::sUserInteractionObserver = nullptr;
 
-uint32_t nsContentUtils::sHandlingInputTimeout = 1000;
-
 nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
@@ -550,7 +548,8 @@ class nsContentUtils::UserInteractionObserver final
 
 /* static */
 TimeDuration nsContentUtils::HandlingUserInputTimeout() {
-  return TimeDuration::FromMilliseconds(sHandlingInputTimeout);
+  return TimeDuration::FromMilliseconds(
+      StaticPrefs::dom_event_handling_user_input_time_limit());
 }
 
 // static
@@ -619,9 +618,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddUintVarCache(
-      &sHandlingInputTimeout, "dom.event.handling-user-input-time-limit", 1000);
 
   Preferences::AddBoolVarCache(
       &sSendPerformanceTimingNotifications,
