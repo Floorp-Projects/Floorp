@@ -209,7 +209,7 @@ gen_config_files mac/ia32 "--target=x86-darwin9-gcc ${all_platforms} ${x86_platf
 gen_config_files win/x64 "--target=x86_64-win64-vs12 ${all_platforms} ${x86_platforms}"
 gen_config_files win/ia32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
-gen_config_files win/aarch64 "--target=aarch64-win64-vs12 ${all_platforms}"
+gen_config_files win/aarch64 "--target=aarch64-win64-vs12 ${all_platforms} ${arm64_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms}"
