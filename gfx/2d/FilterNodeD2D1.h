@@ -20,44 +20,44 @@ class FilterNodeD2D1 : public FilterNode {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeD2D1, override)
 
-  static already_AddRefed<FilterNode> Create(ID2D1DeviceContext *aDC,
+  static already_AddRefed<FilterNode> Create(ID2D1DeviceContext* aDC,
                                              FilterType aType);
 
-  FilterNodeD2D1(ID2D1Effect *aEffect, FilterType aType)
+  FilterNodeD2D1(ID2D1Effect* aEffect, FilterType aType)
       : mEffect(aEffect), mType(aType) {
     InitUnmappedProperties();
   }
 
   virtual FilterBackend GetBackendType() { return FILTER_BACKEND_DIRECT2D1_1; }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface);
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter);
+  virtual void SetInput(uint32_t aIndex, SourceSurface* aSurface);
+  virtual void SetInput(uint32_t aIndex, FilterNode* aFilter);
 
   virtual void SetAttribute(uint32_t aIndex, uint32_t aValue);
   virtual void SetAttribute(uint32_t aIndex, Float aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Point &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Size &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Color &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Rect &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Point& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Point3D& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Size& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const IntSize& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Color& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Rect& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const IntRect& aValue);
   virtual void SetAttribute(uint32_t aIndex, bool aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Float *aValues,
+  virtual void SetAttribute(uint32_t aIndex, const Float* aValues,
                             uint32_t aSize);
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue);
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint& aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Matrix& aValue);
 
   // Called by DrawTarget before it draws our OutputEffect, and recursively
   // by the filter nodes that have this filter as one of their inputs. This
   // gives us a chance to convert any input surfaces to the target format for
   // the DrawTarget that we will draw to.
-  virtual void WillDraw(DrawTarget *aDT);
+  virtual void WillDraw(DrawTarget* aDT);
 
-  virtual ID2D1Effect *MainEffect() { return mEffect.get(); }
-  virtual ID2D1Effect *InputEffect() { return mEffect.get(); }
-  virtual ID2D1Effect *OutputEffect() { return mEffect.get(); }
+  virtual ID2D1Effect* MainEffect() { return mEffect.get(); }
+  virtual ID2D1Effect* InputEffect() { return mEffect.get(); }
+  virtual ID2D1Effect* OutputEffect() { return mEffect.get(); }
 
  protected:
   friend class DrawTargetD2D1;
@@ -79,16 +79,16 @@ class FilterNodeD2D1 : public FilterNode {
 class FilterNodeConvolveD2D1 : public FilterNodeD2D1 {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1, override)
-  explicit FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
+  explicit FilterNodeConvolveD2D1(ID2D1DeviceContext* aDC);
 
-  void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
+  void SetInput(uint32_t aIndex, FilterNode* aFilter) override;
 
   void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
-  void SetAttribute(uint32_t aIndex, const IntSize &aValue) override;
-  void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override;
-  void SetAttribute(uint32_t aIndex, const IntRect &aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntSize& aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntPoint& aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntRect& aValue) override;
 
-  ID2D1Effect *InputEffect() override;
+  ID2D1Effect* InputEffect() override;
 
  private:
   using FilterNode::SetAttribute;
@@ -109,7 +109,7 @@ class FilterNodeConvolveD2D1 : public FilterNodeD2D1 {
 class FilterNodeOpacityD2D1 : public FilterNodeD2D1 {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeOpacityD2D1, override)
-  FilterNodeOpacityD2D1(ID2D1Effect *aEffect, FilterType aType)
+  FilterNodeOpacityD2D1(ID2D1Effect* aEffect, FilterType aType)
       : FilterNodeD2D1(aEffect, aType) {}
 
   void SetAttribute(uint32_t aIndex, Float aValue) override;
@@ -119,12 +119,12 @@ class FilterNodeExtendInputAdapterD2D1 : public FilterNodeD2D1 {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeExtendInputAdapterD2D1,
                                           override)
-  FilterNodeExtendInputAdapterD2D1(ID2D1DeviceContext *aDC,
-                                   FilterNodeD2D1 *aFilterNode,
+  FilterNodeExtendInputAdapterD2D1(ID2D1DeviceContext* aDC,
+                                   FilterNodeD2D1* aFilterNode,
                                    FilterType aType);
 
-  ID2D1Effect *InputEffect() override { return mExtendInputEffect.get(); }
-  ID2D1Effect *OutputEffect() override {
+  ID2D1Effect* InputEffect() override { return mExtendInputEffect.get(); }
+  ID2D1Effect* OutputEffect() override {
     return mWrappedFilterNode->OutputEffect();
   }
 
@@ -137,12 +137,12 @@ class FilterNodePremultiplyAdapterD2D1 : public FilterNodeD2D1 {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplyAdapterD2D1,
                                           override)
-  FilterNodePremultiplyAdapterD2D1(ID2D1DeviceContext *aDC,
-                                   FilterNodeD2D1 *aFilterNode,
+  FilterNodePremultiplyAdapterD2D1(ID2D1DeviceContext* aDC,
+                                   FilterNodeD2D1* aFilterNode,
                                    FilterType aType);
 
-  ID2D1Effect *InputEffect() override { return mPrePremultiplyEffect.get(); }
-  ID2D1Effect *OutputEffect() override {
+  ID2D1Effect* InputEffect() override { return mPrePremultiplyEffect.get(); }
+  ID2D1Effect* OutputEffect() override {
     return mPostUnpremultiplyEffect.get();
   }
 

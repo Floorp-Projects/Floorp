@@ -29,12 +29,12 @@
 // sandbox_init_with_parameters is not included in the header.  For the time
 // being (until this problem is resolved), we refer directly to what we need
 // from it, rather than including it here.
-extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf);
-extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags,
-                                            const char *const parameters[], char **errorbuf);
-extern "C" void sandbox_free_error(char *errorbuf);
+extern "C" int sandbox_init(const char* profile, uint64_t flags, char** errorbuf);
+extern "C" int sandbox_init_with_parameters(const char* profile, uint64_t flags,
+                                            const char* const parameters[], char** errorbuf);
+extern "C" void sandbox_free_error(char* errorbuf);
 #ifdef DEBUG
-extern "C" int sandbox_check(pid_t pid, const char *operation, int type, ...);
+extern "C" int sandbox_check(pid_t pid, const char* operation, int type, ...);
 #endif
 
 #define MAC_OS_X_VERSION_10_0_HEX 0x00001000
@@ -58,7 +58,7 @@ class OSXVersion {
   static int32_t OSXVersionMinor();
 
  private:
-  static void GetSystemVersion(int32_t &aMajor, int32_t &aMinor, int32_t &aBugFix);
+  static void GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix);
   static int32_t GetVersionNumber();
   static int32_t mOSXVersion;
 };
@@ -67,7 +67,7 @@ int32_t OSXVersion::mOSXVersion = -1;
 
 int32_t OSXVersion::OSXVersionMinor() { return (GetVersionNumber() & 0xF0) >> 4; }
 
-void OSXVersion::GetSystemVersion(int32_t &aMajor, int32_t &aMinor, int32_t &aBugFix) {
+void OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix) {
   SInt32 major = 0, minor = 0, bugfix = 0;
 
   CFURLRef url = CFURLCreateWithString(
@@ -122,8 +122,8 @@ int32_t OSXVersion::GetVersionNumber() {
   return mOSXVersion;
 }
 
-bool GetRealPath(std::string &aOutputPath, const char *aInputPath) {
-  char *resolvedPath = realpath(aInputPath, nullptr);
+bool GetRealPath(std::string& aOutputPath, const char* aInputPath) {
+  char* resolvedPath = realpath(aInputPath, nullptr);
   if (resolvedPath == nullptr) {
     return false;
   }
@@ -134,7 +134,7 @@ bool GetRealPath(std::string &aOutputPath, const char *aInputPath) {
   return !aOutputPath.empty();
 }
 
-void MacSandboxInfo::AppendAsParams(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendAsParams(std::vector<std::string>& aParams) const {
   this->AppendStartupParam(aParams);
   this->AppendLoggingParam(aParams);
   this->AppendAppPathParam(aParams);
@@ -159,30 +159,30 @@ void MacSandboxInfo::AppendAsParams(std::vector<std::string> &aParams) const {
   }
 }
 
-void MacSandboxInfo::AppendStartupParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendStartupParam(std::vector<std::string>& aParams) const {
   aParams.push_back("-sbStartup");
 }
 
-void MacSandboxInfo::AppendLoggingParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendLoggingParam(std::vector<std::string>& aParams) const {
   if (this->shouldLog) {
     aParams.push_back("-sbLogging");
   }
 }
 
-void MacSandboxInfo::AppendAppPathParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendAppPathParam(std::vector<std::string>& aParams) const {
   aParams.push_back("-sbAppPath");
   aParams.push_back(this->appPath);
 }
 
 /* static */
-void MacSandboxInfo::AppendFileAccessParam(std::vector<std::string> &aParams,
+void MacSandboxInfo::AppendFileAccessParam(std::vector<std::string>& aParams,
                                            bool aHasFilePrivileges) {
   if (aHasFilePrivileges) {
     aParams.push_back("-sbAllowFileAccess");
   }
 }
 
-void MacSandboxInfo::AppendLevelParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendLevelParam(std::vector<std::string>& aParams) const {
   std::ostringstream os;
   os << this->level;
   std::string levelString = os.str();
@@ -190,19 +190,19 @@ void MacSandboxInfo::AppendLevelParam(std::vector<std::string> &aParams) const {
   aParams.push_back(levelString);
 }
 
-void MacSandboxInfo::AppendAudioParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendAudioParam(std::vector<std::string>& aParams) const {
   if (this->hasAudio) {
     aParams.push_back("-sbAllowAudio");
   }
 }
 
-void MacSandboxInfo::AppendWindowServerParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendWindowServerParam(std::vector<std::string>& aParams) const {
   if (this->hasWindowServer) {
     aParams.push_back("-sbAllowWindowServer");
   }
 }
 
-void MacSandboxInfo::AppendReadPathParams(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendReadPathParams(std::vector<std::string>& aParams) const {
   if (!this->testingReadPath1.empty()) {
     aParams.push_back("-sbTestingReadPath");
     aParams.push_back(this->testingReadPath1.c_str());
@@ -222,7 +222,7 @@ void MacSandboxInfo::AppendReadPathParams(std::vector<std::string> &aParams) con
 }
 
 #ifdef DEBUG
-void MacSandboxInfo::AppendDebugWriteDirParam(std::vector<std::string> &aParams) const {
+void MacSandboxInfo::AppendDebugWriteDirParam(std::vector<std::string>& aParams) const {
   if (!this->debugWriteDir.empty()) {
     aParams.push_back("-sbDebugWriteDir");
     aParams.push_back(this->debugWriteDir.c_str());
@@ -232,8 +232,8 @@ void MacSandboxInfo::AppendDebugWriteDirParam(std::vector<std::string> &aParams)
 
 namespace mozilla {
 
-bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
-  std::vector<const char *> params;
+bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
+  std::vector<const char*> params;
   std::string profile;
   std::string macOSMinor = std::to_string(OSXVersion::OSXVersionMinor());
 
@@ -285,7 +285,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
     }
     params.push_back(flashTempDir.c_str());
   } else if (aInfo.type == MacSandboxType_Utility) {
-    profile = const_cast<char *>(SandboxPolicyUtility);
+    profile = const_cast<char*>(SandboxPolicyUtility);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("APP_PATH");
@@ -295,7 +295,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
       params.push_back(aInfo.crashServerPort.c_str());
     }
   } else if (aInfo.type == MacSandboxType_Plugin) {
-    profile = const_cast<char *>(SandboxPolicyGMP);
+    profile = const_cast<char*>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("PLUGIN_BINARY_PATH");
@@ -366,7 +366,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
       return false;
     }
   } else {
-    char *msg = NULL;
+    char* msg = NULL;
     asprintf(&msg, "Unexpected sandbox type %u", aInfo.type);
     if (msg) {
       aErrorMessage.assign(msg);
@@ -396,11 +396,11 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
   // The parameters array is null terminated.
   params.push_back(nullptr);
 
-  char *errorbuf = NULL;
+  char* errorbuf = NULL;
   int rv = sandbox_init_with_parameters(profile.c_str(), 0, params.data(), &errorbuf);
   if (rv) {
     if (errorbuf) {
-      char *msg = NULL;
+      char* msg = NULL;
       asprintf(&msg, "sandbox_init() failed with error \"%s\"", errorbuf);
       if (msg) {
         aErrorMessage.assign(msg);
@@ -422,7 +422,7 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
  * command line arguments. Return false if any sandbox parameters needed
  * for early startup of the sandbox are not present in the arguments.
  */
-bool GetContentSandboxParamsFromArgs(int aArgc, char **aArgv, MacSandboxInfo &aInfo) {
+bool GetContentSandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
   // Ensure we find these paramaters in the command
   // line arguments. Return false if any are missing.
   bool foundSandboxLevel = false;
@@ -534,7 +534,7 @@ bool GetContentSandboxParamsFromArgs(int aArgc, char **aArgv, MacSandboxInfo &aI
   return true;
 }
 
-bool GetUtilitySandboxParamsFromArgs(int aArgc, char **aArgv, MacSandboxInfo &aInfo) {
+bool GetUtilitySandboxParamsFromArgs(int aArgc, char** aArgv, MacSandboxInfo& aInfo) {
   // Ensure we find these paramaters in the command
   // line arguments. Return false if any are missing.
   bool foundAppPath = false;
@@ -573,8 +573,8 @@ bool GetUtilitySandboxParamsFromArgs(int aArgc, char **aArgv, MacSandboxInfo &aI
  * Returns true if no errors were encountered or if early sandbox startup is
  * not enabled for this process. Returns false if an error was encountered.
  */
-bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char **aArgv,
-                              std::string &aErrorMessage) {
+bool StartMacSandboxIfEnabled(const MacSandboxType aSandboxType, int aArgc, char** aArgv,
+                              std::string& aErrorMessage) {
   bool earlyStartupEnabled = false;
 
   // Check for the -sbStartup CLI parameter which

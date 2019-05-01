@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
+#include "nsIRemoteTab.h"
 #include "nsStringFwd.h"
 
 class nsIRunnable;
@@ -22,6 +23,7 @@ namespace mozilla {
 namespace dom {
 class ContentParent;
 class BrowserParent;
+struct CancelContentJSOptions;
 }  // namespace dom
 
 namespace layers {
@@ -54,6 +56,11 @@ class ProcessHangMonitor final : public nsIObserver {
   static void ClearPaintWhileInterruptingJS(
       const layers::LayersObserverEpoch& aEpoch);
   static void MaybeStartPaintWhileInterruptingJS();
+
+  static void CancelContentJSExecutionIfRunning(
+      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
+      nsIRemoteTab::NavigationType aNavigationType,
+      const dom::CancelContentJSOptions& aCancelContentJSOptions);
 
   enum SlowScriptAction {
     Continue,

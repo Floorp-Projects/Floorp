@@ -14,10 +14,10 @@
 #include "nsIURI.h"
 #include "mozilla/Preferences.h"
 
-static nsIDNSService *sDNSService = nullptr;
+static nsIDNSService* sDNSService = nullptr;
 static bool sESNIEnabled = false;
 
-nsresult nsDNSPrefetch::Initialize(nsIDNSService *aDNSService) {
+nsresult nsDNSPrefetch::Initialize(nsIDNSService* aDNSService) {
   NS_IF_RELEASE(sDNSService);
   sDNSService = aDNSService;
   NS_IF_ADDREF(sDNSService);
@@ -31,9 +31,9 @@ nsresult nsDNSPrefetch::Shutdown() {
   return NS_OK;
 }
 
-nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI,
-                             mozilla::OriginAttributes &aOriginAttributes,
-                             nsIDNSListener *aListener, bool storeTiming)
+nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
+                             mozilla::OriginAttributes& aOriginAttributes,
+                             nsIDNSListener* aListener, bool storeTiming)
     : mOriginAttributes(aOriginAttributes),
       mStoreTiming(storeTiming),
       mListener(do_GetWeakReference(aListener)) {
@@ -99,7 +99,7 @@ nsresult nsDNSPrefetch::PrefetchHigh(bool refreshDNS) {
 NS_IMPL_ISUPPORTS(nsDNSPrefetch, nsIDNSListener)
 
 NS_IMETHODIMP
-nsDNSPrefetch::OnLookupComplete(nsICancelable *request, nsIDNSRecord *rec,
+nsDNSPrefetch::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
 
@@ -114,8 +114,8 @@ nsDNSPrefetch::OnLookupComplete(nsICancelable *request, nsIDNSRecord *rec,
 }
 
 NS_IMETHODIMP
-nsDNSPrefetch::OnLookupByTypeComplete(nsICancelable *request,
-                                      nsIDNSByTypeRecord *res,
+nsDNSPrefetch::OnLookupByTypeComplete(nsICancelable* request,
+                                      nsIDNSByTypeRecord* res,
                                       nsresult status) {
   MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
 

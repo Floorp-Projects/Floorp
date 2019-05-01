@@ -16,7 +16,7 @@ enum {
 
 static unsigned get_mips_cpu_flags(void) {
   unsigned flags = 0;
-  FILE *fin;
+  FILE* fin;
 
   fin = fopen("/proc/cpuinfo", "r");
   if (fin != nullptr) {

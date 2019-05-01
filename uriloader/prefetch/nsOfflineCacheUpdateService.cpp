@@ -49,14 +49,14 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nullptr;
+static nsOfflineCacheUpdateService* gOfflineCacheUpdateService = nullptr;
 static bool sAllowOfflineCache = true;
 static bool sAllowInsecureOfflineCache = true;
 
-nsTHashtable<nsCStringHashKey> *nsOfflineCacheUpdateService::mAllowedDomains =
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains =
     nullptr;
 
-nsTHashtable<nsCStringHashKey> *nsOfflineCacheUpdateService::AllowedDomains() {
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::AllowedDomains() {
   if (!mAllowedDomains) mAllowedDomains = new nsTHashtable<nsCStringHashKey>();
 
   return mAllowedDomains;
@@ -95,10 +95,10 @@ class nsOfflineCachePendingUpdate final : public nsIWebProgressListener,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  nsOfflineCachePendingUpdate(nsOfflineCacheUpdateService *aService,
-                              nsIURI *aManifestURI, nsIURI *aDocumentURI,
-                              nsIPrincipal *aLoadingPrincipal,
-                              Document *aDocument)
+  nsOfflineCachePendingUpdate(nsOfflineCacheUpdateService* aService,
+                              nsIURI* aManifestURI, nsIURI* aDocumentURI,
+                              nsIPrincipal* aLoadingPrincipal,
+                              Document* aDocument)
       : mService(aService),
         mManifestURI(aManifestURI),
         mDocumentURI(aDocumentURI),
@@ -126,8 +126,8 @@ NS_IMPL_ISUPPORTS(nsOfflineCachePendingUpdate, nsIWebProgressListener,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCachePendingUpdate::OnProgressChange(nsIWebProgress *aProgress,
-                                              nsIRequest *aRequest,
+nsOfflineCachePendingUpdate::OnProgressChange(nsIWebProgress* aProgress,
+                                              nsIRequest* aRequest,
                                               int32_t curSelfProgress,
                                               int32_t maxSelfProgress,
                                               int32_t curTotalProgress,
@@ -137,8 +137,8 @@ nsOfflineCachePendingUpdate::OnProgressChange(nsIWebProgress *aProgress,
 }
 
 NS_IMETHODIMP
-nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
-                                           nsIRequest *aRequest,
+nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress* aWebProgress,
+                                           nsIRequest* aRequest,
                                            uint32_t progressStateFlags,
                                            nsresult aStatus) {
   if (mDidReleaseThis) {
@@ -163,8 +163,8 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(windowProxy));
   if (!windowProxy) return NS_OK;
 
-  auto *outerWindow = nsPIDOMWindowOuter::From(windowProxy);
-  nsPIDOMWindowInner *innerWindow = outerWindow->GetCurrentInnerWindow();
+  auto* outerWindow = nsPIDOMWindowOuter::From(windowProxy);
+  nsPIDOMWindowInner* innerWindow = outerWindow->GetCurrentInnerWindow();
 
   nsCOMPtr<Document> progressDoc = outerWindow->GetDoc();
   if (!progressDoc || progressDoc != updateDoc) {
@@ -193,26 +193,26 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress *aWebProgress,
 }
 
 NS_IMETHODIMP
-nsOfflineCachePendingUpdate::OnLocationChange(nsIWebProgress *aWebProgress,
-                                              nsIRequest *aRequest,
-                                              nsIURI *location,
+nsOfflineCachePendingUpdate::OnLocationChange(nsIWebProgress* aWebProgress,
+                                              nsIRequest* aRequest,
+                                              nsIURI* location,
                                               uint32_t aFlags) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCachePendingUpdate::OnStatusChange(nsIWebProgress *aWebProgress,
-                                            nsIRequest *aRequest,
+nsOfflineCachePendingUpdate::OnStatusChange(nsIWebProgress* aWebProgress,
+                                            nsIRequest* aRequest,
                                             nsresult aStatus,
-                                            const char16_t *aMessage) {
+                                            const char16_t* aMessage) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOfflineCachePendingUpdate::OnSecurityChange(nsIWebProgress *aWebProgress,
-                                              nsIRequest *aRequest,
+nsOfflineCachePendingUpdate::OnSecurityChange(nsIWebProgress* aWebProgress,
+                                              nsIRequest* aRequest,
                                               uint32_t aState) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
@@ -220,7 +220,7 @@ nsOfflineCachePendingUpdate::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsOfflineCachePendingUpdate::OnContentBlockingEvent(
-    nsIWebProgress *aWebProgress, nsIRequest *aRequest, uint32_t aEvent) {
+    nsIWebProgress* aWebProgress, nsIRequest* aRequest, uint32_t aEvent) {
   MOZ_ASSERT_UNREACHABLE("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
@@ -282,7 +282,7 @@ nsOfflineCacheUpdateService::GetInstance() {
 }
 
 /* static */
-nsOfflineCacheUpdateService *nsOfflineCacheUpdateService::EnsureService() {
+nsOfflineCacheUpdateService* nsOfflineCacheUpdateService::EnsureService() {
   if (!gOfflineCacheUpdateService) {
     // Make the service manager hold a long-lived reference to the service
     nsCOMPtr<nsIOfflineCacheUpdateService> service =
@@ -294,7 +294,7 @@ nsOfflineCacheUpdateService *nsOfflineCacheUpdateService::EnsureService() {
 }
 
 nsresult nsOfflineCacheUpdateService::ScheduleUpdate(
-    nsOfflineCacheUpdate *aUpdate) {
+    nsOfflineCacheUpdate* aUpdate) {
   LOG(("nsOfflineCacheUpdateService::Schedule [%p, update=%p]", this, aUpdate));
 
   aUpdate->SetOwner(this);
@@ -307,8 +307,8 @@ nsresult nsOfflineCacheUpdateService::ScheduleUpdate(
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleOnDocumentStop(
-    nsIURI *aManifestURI, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal,
-    Document *aDocument) {
+    nsIURI* aManifestURI, nsIURI* aDocumentURI, nsIPrincipal* aLoadingPrincipal,
+    Document* aDocument) {
   LOG(
       ("nsOfflineCacheUpdateService::ScheduleOnDocumentStop [%p, "
        "manifestURI=%p, documentURI=%p doc=%p]",
@@ -334,7 +334,7 @@ nsOfflineCacheUpdateService::ScheduleOnDocumentStop(
 }
 
 nsresult nsOfflineCacheUpdateService::UpdateFinished(
-    nsOfflineCacheUpdate *aUpdate) {
+    nsOfflineCacheUpdate* aUpdate) {
   LOG(("nsOfflineCacheUpdateService::UpdateFinished [%p, update=%p]", this,
        aUpdate));
 
@@ -378,7 +378,7 @@ nsresult nsOfflineCacheUpdateService::ProcessNextUpdate() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::GetNumUpdates(uint32_t *aNumUpdates) {
+nsOfflineCacheUpdateService::GetNumUpdates(uint32_t* aNumUpdates) {
   LOG(("nsOfflineCacheUpdateService::GetNumUpdates [%p]", this));
 
   *aNumUpdates = mUpdates.Length();
@@ -387,7 +387,7 @@ nsOfflineCacheUpdateService::GetNumUpdates(uint32_t *aNumUpdates) {
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::GetUpdate(uint32_t aIndex,
-                                       nsIOfflineCacheUpdate **aUpdate) {
+                                       nsIOfflineCacheUpdate** aUpdate) {
   LOG(("nsOfflineCacheUpdateService::GetUpdate [%p, %d]", this, aIndex));
 
   if (aIndex < mUpdates.Length()) {
@@ -400,8 +400,8 @@ nsOfflineCacheUpdateService::GetUpdate(uint32_t aIndex,
 }
 
 nsresult nsOfflineCacheUpdateService::FindUpdate(
-    nsIURI *aManifestURI, nsACString const &aOriginSuffix,
-    nsIFile *aCustomProfileDir, nsOfflineCacheUpdate **aUpdate) {
+    nsIURI* aManifestURI, nsACString const& aOriginSuffix,
+    nsIFile* aCustomProfileDir, nsOfflineCacheUpdate** aUpdate) {
   nsresult rv;
 
   nsCOMPtr<nsIApplicationCacheService> cacheService =
@@ -437,9 +437,9 @@ nsresult nsOfflineCacheUpdateService::FindUpdate(
 }
 
 nsresult nsOfflineCacheUpdateService::Schedule(
-    nsIURI *aManifestURI, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal,
-    Document *aDocument, nsPIDOMWindowInner *aWindow,
-    nsIFile *aCustomProfileDir, nsIOfflineCacheUpdate **aUpdate) {
+    nsIURI* aManifestURI, nsIURI* aDocumentURI, nsIPrincipal* aLoadingPrincipal,
+    Document* aDocument, nsPIDOMWindowInner* aWindow,
+    nsIFile* aCustomProfileDir, nsIOfflineCacheUpdate** aUpdate) {
   nsCOMPtr<nsIOfflineCacheUpdate> update;
   if (GeckoProcessType_Default != XRE_GetProcessType()) {
     update = new OfflineCacheUpdateChild(aWindow);
@@ -469,26 +469,26 @@ nsresult nsOfflineCacheUpdateService::Schedule(
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
-                                            nsIURI *aDocumentURI,
-                                            nsIPrincipal *aLoadingPrincipal,
-                                            mozIDOMWindow *aWindow,
-                                            nsIOfflineCacheUpdate **aUpdate) {
+nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI* aManifestURI,
+                                            nsIURI* aDocumentURI,
+                                            nsIPrincipal* aLoadingPrincipal,
+                                            mozIDOMWindow* aWindow,
+                                            nsIOfflineCacheUpdate** aUpdate) {
   return Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr,
                   nsPIDOMWindowInner::From(aWindow), nullptr, aUpdate);
 }
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleAppUpdate(
-    nsIURI *aManifestURI, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal,
-    nsIFile *aProfileDir, nsIOfflineCacheUpdate **aUpdate) {
+    nsIURI* aManifestURI, nsIURI* aDocumentURI, nsIPrincipal* aLoadingPrincipal,
+    nsIFile* aProfileDir, nsIOfflineCacheUpdate** aUpdate) {
   return Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr,
                   nullptr, aProfileDir, aUpdate);
 }
 
 NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(
-    nsIURI *aManifestURI, nsIPrincipal *aLoadingPrincipal,
-    nsIObserver *aObserver) {
+    nsIURI* aManifestURI, nsIPrincipal* aLoadingPrincipal,
+    nsIObserver* aObserver) {
   if (GeckoProcessType_Default != XRE_GetProcessType()) {
     // Not intended to support this on child processes
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -512,8 +512,8 @@ NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::Observe(nsISupports *aSubject, const char *aTopic,
-                                     const char16_t *aData) {
+nsOfflineCacheUpdateService::Observe(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     if (mUpdates.Length() > 0) mUpdates[0]->Cancel();
     mDisabled = true;
@@ -526,9 +526,9 @@ nsOfflineCacheUpdateService::Observe(nsISupports *aSubject, const char *aTopic,
 // nsOfflineCacheUpdateService::nsIOfflineCacheUpdateService
 //-----------------------------------------------------------------------------
 
-static nsresult OfflineAppPermForPrincipal(nsIPrincipal *aPrincipal,
-                                           nsIPrefBranch *aPrefBranch,
-                                           bool pinned, bool *aAllowed) {
+static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
+                                           nsIPrefBranch* aPrefBranch,
+                                           bool pinned, bool* aAllowed) {
   *aAllowed = false;
 
   if (!sAllowOfflineCache) {
@@ -595,16 +595,16 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal *aPrincipal,
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::OfflineAppAllowed(nsIPrincipal *aPrincipal,
-                                               nsIPrefBranch *aPrefBranch,
-                                               bool *aAllowed) {
+nsOfflineCacheUpdateService::OfflineAppAllowed(nsIPrincipal* aPrincipal,
+                                               nsIPrefBranch* aPrefBranch,
+                                               bool* aAllowed) {
   return OfflineAppPermForPrincipal(aPrincipal, aPrefBranch, false, aAllowed);
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
-                                                     nsIPrefBranch *aPrefBranch,
-                                                     bool *aAllowed) {
+nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI* aURI,
+                                                     nsIPrefBranch* aPrefBranch,
+                                                     bool* aAllowed) {
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
       BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
@@ -612,7 +612,7 @@ nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
 }
 
 nsresult nsOfflineCacheUpdateService::OfflineAppPinnedForURI(
-    nsIURI *aDocumentURI, nsIPrefBranch *aPrefBranch, bool *aPinned) {
+    nsIURI* aDocumentURI, nsIPrefBranch* aPrefBranch, bool* aPinned) {
   OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
       BasePrincipal::CreateCodebasePrincipal(aDocumentURI, attrs);
@@ -620,7 +620,7 @@ nsresult nsOfflineCacheUpdateService::OfflineAppPinnedForURI(
 }
 
 NS_IMETHODIMP
-nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal *aPrincipal) {
+nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
   nsresult rv;
 
   if (!sAllowOfflineCache) {
@@ -651,7 +651,7 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal *aPrincipal) {
   }
 
   if (GeckoProcessType_Default != XRE_GetProcessType()) {
-    ContentChild *child = ContentChild::GetSingleton();
+    ContentChild* child = ContentChild::GetSingleton();
 
     if (!child->SendSetOfflinePermission(IPC::Principal(aPrincipal))) {
       return NS_ERROR_FAILURE;

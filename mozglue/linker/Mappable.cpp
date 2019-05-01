@@ -30,7 +30,7 @@ using mozilla::UniquePtr;
 
 class CacheValidator {
  public:
-  CacheValidator(const char *aCachedLibPath, Zip *aZip, Zip::Stream *aStream)
+  CacheValidator(const char* aCachedLibPath, Zip* aZip, Zip::Stream* aStream)
       : mCachedLibPath(aCachedLibPath) {
     static const char kChecksumSuffix[] = ".crc";
 
@@ -82,7 +82,7 @@ class CacheValidator {
     size_t written = 0;
     while (written < size) {
       ssize_t ret =
-          write(fd, reinterpret_cast<const uint8_t *>(&mChecksum) + written,
+          write(fd, reinterpret_cast<const uint8_t*>(&mChecksum) + written,
                 size - written);
       if (ret >= 0) {
         written += ret;
@@ -100,19 +100,19 @@ class CacheValidator {
   uint32_t mChecksum;
 };
 
-Mappable *MappableFile::Create(const char *path) {
+Mappable* MappableFile::Create(const char* path) {
   int fd = open(path, O_RDONLY);
   if (fd != -1) return new MappableFile(fd);
   return nullptr;
 }
 
-MemoryRange MappableFile::mmap(const void *addr, size_t length, int prot,
+MemoryRange MappableFile::mmap(const void* addr, size_t length, int prot,
                                int flags, off_t offset) {
   MOZ_ASSERT(fd != -1);
   MOZ_ASSERT(!(flags & MAP_SHARED));
   flags |= MAP_PRIVATE;
 
-  return MemoryRange::mmap(const_cast<void *>(addr), length, prot, flags, fd,
+  return MemoryRange::mmap(const_cast<void*>(addr), length, prot, flags, fd,
                            offset);
 }
 
@@ -126,11 +126,11 @@ size_t MappableFile::GetLength() const {
   return fstat(fd, &st) ? 0 : st.st_size;
 }
 
-Mappable *MappableExtractFile::Create(const char *name, Zip *zip,
-                                      Zip::Stream *stream) {
+Mappable* MappableExtractFile::Create(const char* name, Zip* zip,
+                                      Zip::Stream* stream) {
   MOZ_ASSERT(zip && stream);
 
-  const char *cachePath = getenv("MOZ_LINKER_CACHE");
+  const char* cachePath = getenv("MOZ_LINKER_CACHE");
   if (!cachePath || !*cachePath) {
     WARN(
         "MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
@@ -147,10 +147,10 @@ Mappable *MappableExtractFile::Create(const char *name, Zip *zip,
 
   CacheValidator validator(path.get(), zip, stream);
   if (validator.IsValid()) {
-    DEBUG_LOG("Reusing %s", static_cast<char *>(path.get()));
+    DEBUG_LOG("Reusing %s", static_cast<char*>(path.get()));
     return MappableFile::Create(path.get());
   }
-  DEBUG_LOG("Extracting to %s", static_cast<char *>(path.get()));
+  DEBUG_LOG("Extracting to %s", static_cast<char*>(path.get()));
   AutoCloseFD fd;
   fd = open(path.get(), O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
             S_IRUSR | S_IWUSR);
@@ -239,7 +239,7 @@ class _MappableBuffer : public MappedPtr {
    * Returns a _MappableBuffer instance with the given name and the given
    * length.
    */
-  static _MappableBuffer *Create(const char *name, size_t length) {
+  static _MappableBuffer* Create(const char* name, size_t length) {
     AutoCloseFD fd;
 #ifdef ANDROID
     /* On Android, initialize an ashmem region with the given length */
@@ -258,10 +258,10 @@ class _MappableBuffer : public MappedPtr {
        */
 #  if defined(__arm__)
     // Address increases on ARM.
-    void *buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
+    void* buf = ::mmap(nullptr, length + PAGE_SIZE, PROT_READ | PROT_WRITE,
                        MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
-      ::mmap(AlignedEndPtr(reinterpret_cast<char *>(buf) + length, PAGE_SIZE),
+      ::mmap(AlignedEndPtr(reinterpret_cast<char*>(buf) + length, PAGE_SIZE),
              PAGE_SIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1,
              0);
       DEBUG_LOG("Decompression buffer of size 0x%" PRIxPTR
@@ -272,13 +272,13 @@ class _MappableBuffer : public MappedPtr {
 #  elif defined(__i386__) || defined(__x86_64__) || defined(__aarch64__)
     // Address decreases on x86, x86-64, and AArch64.
     size_t anon_mapping_length = length + PAGE_SIZE;
-    void *buf = ::mmap(nullptr, anon_mapping_length, PROT_NONE,
+    void* buf = ::mmap(nullptr, anon_mapping_length, PROT_NONE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (buf != MAP_FAILED) {
-      char *first_page = reinterpret_cast<char *>(buf);
-      char *map_page = first_page + PAGE_SIZE;
+      char* first_page = reinterpret_cast<char*>(buf);
+      char* map_page = first_page + PAGE_SIZE;
 
-      void *actual_buf = ::mmap(map_page, length, PROT_READ | PROT_WRITE,
+      void* actual_buf = ::mmap(map_page, length, PROT_READ | PROT_WRITE,
                                 MAP_FIXED | MAP_SHARED, fd, 0);
       if (actual_buf == MAP_FAILED) {
         ::munmap(buf, anon_mapping_length);
@@ -306,7 +306,7 @@ class _MappableBuffer : public MappedPtr {
     unlink(path);
     ftruncate(fd, length);
 
-    void *buf =
+    void* buf =
         ::mmap(nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (buf != MAP_FAILED) {
       DEBUG_LOG("Decompression buffer of size %ld in \"%s\", mapped @%p",
@@ -317,7 +317,7 @@ class _MappableBuffer : public MappedPtr {
     return nullptr;
   }
 
-  void *mmap(const void *addr, size_t length, int prot, int flags,
+  void* mmap(const void* addr, size_t length, int prot, int flags,
              off_t offset) {
     MOZ_ASSERT(fd != -1);
 #ifdef ANDROID
@@ -328,7 +328,7 @@ class _MappableBuffer : public MappedPtr {
       flags |= MAP_SHARED;
     }
 #endif
-    return ::mmap(const_cast<void *>(addr), length, prot, flags, fd, offset);
+    return ::mmap(const_cast<void*>(addr), length, prot, flags, fd, offset);
   }
 
 #ifdef ANDROID
@@ -345,29 +345,29 @@ class _MappableBuffer : public MappedPtr {
 #endif
 
  private:
-  _MappableBuffer(int fd, void *buf, size_t length)
+  _MappableBuffer(int fd, void* buf, size_t length)
       : MappedPtr(buf, length), fd(fd) {}
 
   /* File descriptor for the temporary file or ashmem */
   AutoCloseFD fd;
 };
 
-Mappable *MappableDeflate::Create(const char *name, Zip *zip,
-                                  Zip::Stream *stream) {
+Mappable* MappableDeflate::Create(const char* name, Zip* zip,
+                                  Zip::Stream* stream) {
   MOZ_ASSERT(stream->GetType() == Zip::Stream::DEFLATE);
-  _MappableBuffer *buf =
+  _MappableBuffer* buf =
       _MappableBuffer::Create(name, stream->GetUncompressedSize());
   if (buf) return new MappableDeflate(buf, zip, stream);
   return nullptr;
 }
 
-MappableDeflate::MappableDeflate(_MappableBuffer *buf, Zip *zip,
-                                 Zip::Stream *stream)
+MappableDeflate::MappableDeflate(_MappableBuffer* buf, Zip* zip,
+                                 Zip::Stream* stream)
     : zip(zip), buffer(buf), zStream(stream->GetZStream(*buf)) {}
 
 MappableDeflate::~MappableDeflate() {}
 
-MemoryRange MappableDeflate::mmap(const void *addr, size_t length, int prot,
+MemoryRange MappableDeflate::mmap(const void* addr, size_t length, int prot,
                                   int flags, off_t offset) {
   MOZ_ASSERT(buffer);
   MOZ_ASSERT(!(flags & MAP_SHARED));

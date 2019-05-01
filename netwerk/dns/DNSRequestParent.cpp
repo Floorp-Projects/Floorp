@@ -21,8 +21,8 @@ namespace net {
 
 DNSRequestParent::DNSRequestParent() : mFlags(0), mIPCClosed(false) {}
 
-void DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
-                                      const OriginAttributes &originAttributes,
+void DNSRequestParent::DoAsyncResolve(const nsACString& hostname,
+                                      const OriginAttributes& originAttributes,
                                       uint32_t flags) {
   nsresult rv;
   mFlags = flags;
@@ -41,9 +41,9 @@ void DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
 }
 
 mozilla::ipc::IPCResult DNSRequestParent::RecvCancelDNSRequest(
-    const nsCString &hostName, const uint16_t &type,
-    const OriginAttributes &originAttributes, const uint32_t &flags,
-    const nsresult &reason) {
+    const nsCString& hostName, const uint16_t& type,
+    const OriginAttributes& originAttributes, const uint32_t& flags,
+    const nsresult& reason) {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -80,7 +80,7 @@ NS_IMPL_ISUPPORTS(DNSRequestParent, nsIDNSListener)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-DNSRequestParent::OnLookupComplete(nsICancelable *request, nsIDNSRecord *rec,
+DNSRequestParent::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                    nsresult status) {
   if (mIPCClosed) {
     // nothing to do: child probably crashed
@@ -112,8 +112,8 @@ DNSRequestParent::OnLookupComplete(nsICancelable *request, nsIDNSRecord *rec,
 }
 
 NS_IMETHODIMP
-DNSRequestParent::OnLookupByTypeComplete(nsICancelable *aRequest,
-                                         nsIDNSByTypeRecord *aRes,
+DNSRequestParent::OnLookupByTypeComplete(nsICancelable* aRequest,
+                                         nsIDNSByTypeRecord* aRes,
                                          nsresult aStatus) {
   if (mIPCClosed) {
     // nothing to do: child probably crashed

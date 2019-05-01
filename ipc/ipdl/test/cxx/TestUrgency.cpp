@@ -27,7 +27,7 @@ void TestUrgencyParent::Main() {
   if (!SendStart()) fail("sending Start");
 }
 
-mozilla::ipc::IPCResult TestUrgencyParent::RecvTest1(uint32_t *value) {
+mozilla::ipc::IPCResult TestUrgencyParent::RecvTest1(uint32_t* value) {
   if (!SendReply1(value)) fail("sending Reply1");
   if (*value != 99) fail("bad value");
   return IPC_OK();
@@ -42,7 +42,7 @@ mozilla::ipc::IPCResult TestUrgencyParent::RecvTest2() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TestUrgencyParent::RecvTest3(uint32_t *value) {
+mozilla::ipc::IPCResult TestUrgencyParent::RecvTest3(uint32_t* value) {
   if (inreply_) fail("nested non-urgent on top of urgent rpc");
   *value = 1000;
   return IPC_OK();
@@ -88,7 +88,7 @@ mozilla::ipc::IPCResult TestUrgencyChild::RecvStart() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TestUrgencyChild::RecvReply1(uint32_t *reply) {
+mozilla::ipc::IPCResult TestUrgencyChild::RecvReply1(uint32_t* reply) {
   if (test_ != kFirstTestBegin) fail("wrong test # in RecvReply1");
 
   *reply = 99;
@@ -96,7 +96,7 @@ mozilla::ipc::IPCResult TestUrgencyChild::RecvReply1(uint32_t *reply) {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TestUrgencyChild::RecvReply2(uint32_t *reply) {
+mozilla::ipc::IPCResult TestUrgencyChild::RecvReply2(uint32_t* reply) {
   if (test_ != kSecondTestBegin) fail("wrong test # in RecvReply2");
 
   // sleep for 5 seconds so the parent process tries to deliver more messages.

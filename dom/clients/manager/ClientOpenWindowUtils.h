@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 MOZ_MUST_USE RefPtr<ClientOpPromise> ClientOpenWindowInCurrentProcess(
-    const ClientOpenWindowArgs &aArgs);
+    const ClientOpenWindowArgs& aArgs);
 
 }  // namespace dom
 }  // namespace mozilla

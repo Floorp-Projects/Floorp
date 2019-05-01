@@ -22,6 +22,7 @@
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
+#include "nsIBrowserChild.h"
 #include "nsIDebug2.h"
 #include "nsIDocShell.h"
 #include "nsIRunnable.h"
@@ -638,26 +639,6 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     limit = Preferences::GetInt(prefName, 10);
   }
 
-  // If there's no limit, or we're within the limit, let it go.
-  if (limit == 0 || duration.ToSeconds() < limit / 2.0) {
-    return true;
-  }
-
-  self->mSlowScriptActualWait += duration;
-
-  // In order to guard against time changes or laptops going to sleep, we
-  // don't trigger the slow script warning until (limit/2) seconds have
-  // elapsed twice.
-  if (!self->mSlowScriptSecondHalf) {
-    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
-    self->mSlowScriptSecondHalf = true;
-    return true;
-  }
-
-  //
-  // This has gone on long enough! Time to take action. ;-)
-  //
-
   // Get the DOM window associated with the running script. If the script is
   // running in a non-DOM scope, we have to just let it keep running.
   RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
@@ -681,6 +662,40 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
     NS_WARNING("No active window");
     return true;
   }
+
+  // Check if we're waiting to cancel JS when going back/forward in a tab.
+  if (sTabIdToCancelContentJS) {
+    if (nsIBrowserChild* browserChild = win->GetBrowserChild()) {
+      uint64_t tabId;
+      browserChild->GetTabId(&tabId);
+      if (sTabIdToCancelContentJS == tabId) {
+        // Don't add this page to the BF cache, since we're cancelling its JS.
+        win->GetExtantDoc()->GetTopLevelContentDocument()->DisallowBFCaching();
+        sTabIdToCancelContentJS = 0;
+        return false;
+      }
+    }
+  }
+
+  // If there's no limit, or we're within the limit, let it go.
+  if (limit == 0 || duration.ToSeconds() < limit / 2.0) {
+    return true;
+  }
+
+  self->mSlowScriptActualWait += duration;
+
+  // In order to guard against time changes or laptops going to sleep, we
+  // don't trigger the slow script warning until (limit/2) seconds have
+  // elapsed twice.
+  if (!self->mSlowScriptSecondHalf) {
+    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+    self->mSlowScriptSecondHalf = true;
+    return true;
+  }
+
+  //
+  // This has gone on long enough! Time to take action. ;-)
+  //
 
   if (win->IsDying()) {
     // The window is being torn down. When that happens we try to prevent
@@ -1217,6 +1232,11 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
 }
 
 // static
+void XPCJSContext::SetTabIdToCancelContentJS(uint64_t aTabId) {
+  sTabIdToCancelContentJS = aTabId;
+}
+
+// static
 uint32_t XPCJSContext::sInstanceCount;
 
 // static
@@ -1232,6 +1252,9 @@ WatchdogManager* XPCJSContext::GetWatchdogManager() {
   sWatchdogInstance = new WatchdogManager();
   return sWatchdogInstance;
 }
+
+// static
+mozilla::Atomic<uint64_t> XPCJSContext::sTabIdToCancelContentJS(0);
 
 // static
 void XPCJSContext::InitTLS() { MOZ_RELEASE_ASSERT(gTlsContext.init()); }

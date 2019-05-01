@@ -77,15 +77,15 @@ class nsZipHeader final : public nsIZipEntry {
   mozilla::UniquePtr<uint8_t[]> mExtraField;
   mozilla::UniquePtr<uint8_t[]> mLocalExtraField;
 
-  void Init(const nsACString &aPath, PRTime aDate, uint32_t aAttr,
+  void Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
             uint32_t aOffset);
   uint32_t GetFileHeaderLength();
-  nsresult WriteFileHeader(nsIOutputStream *aStream);
+  nsresult WriteFileHeader(nsIOutputStream* aStream);
   uint32_t GetCDSHeaderLength();
-  nsresult WriteCDSHeader(nsIOutputStream *aStream);
-  nsresult ReadCDSHeader(nsIInputStream *aStream);
-  const uint8_t *GetExtraField(uint16_t aTag, bool aLocal,
-                               uint16_t *aBlockSize);
+  nsresult WriteCDSHeader(nsIOutputStream* aStream);
+  nsresult ReadCDSHeader(nsIInputStream* aStream);
+  const uint8_t* GetExtraField(uint16_t aTag, bool aLocal,
+                               uint16_t* aBlockSize);
   nsresult PadExtraField(uint32_t aOffset, uint16_t aAlignSize);
 };
 

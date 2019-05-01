@@ -42,7 +42,7 @@ static uint32_t gFailCount = 0;
  * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-MOZ_FORMAT_PRINTF(1, 2) void fail(const char *msg, ...) {
+MOZ_FORMAT_PRINTF(1, 2) void fail(const char* msg, ...) {
   va_list ap;
 
   printf("TEST-UNEXPECTED-FAIL | ");
@@ -61,8 +61,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit ScopedXPCOM(const char *testName,
-                       nsIDirectoryServiceProvider *dirSvcProvider = nullptr)
+  explicit ScopedXPCOM(const char* testName,
+                       nsIDirectoryServiceProvider* dirSvcProvider = nullptr)
       : mDirSvcProvider(dirSvcProvider) {
     mTestName = testName;
     printf("Running %s tests...\n", mTestName);
@@ -145,7 +145,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
       return copy.forget();
     }
 
-    char *env = PR_GetEnv("MOZ_XRE_DIR");
+    char* env = PR_GetEnv("MOZ_XRE_DIR");
     nsCOMPtr<nsIFile> greD;
     if (env) {
       NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false, getter_AddRefs(greD));
@@ -182,8 +182,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
   ////////////////////////////////////////////////////////////////////////////
   //// nsIDirectoryServiceProvider
 
-  NS_IMETHODIMP GetFile(const char *aProperty, bool *_persistent,
-                        nsIFile **_result) override {
+  NS_IMETHODIMP GetFile(const char* aProperty, bool* _persistent,
+                        nsIFile** _result) override {
     // If we were supplied a directory service provider, ask it first.
     if (mDirSvcProvider && NS_SUCCEEDED(mDirSvcProvider->GetFile(
                                aProperty, _persistent, _result))) {
@@ -226,8 +226,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
   ////////////////////////////////////////////////////////////////////////////
   //// nsIDirectoryServiceProvider2
 
-  NS_IMETHODIMP GetFiles(const char *aProperty,
-                         nsISimpleEnumerator **_enum) override {
+  NS_IMETHODIMP GetFiles(const char* aProperty,
+                         nsISimpleEnumerator** _enum) override {
     // If we were supplied a directory service provider, ask it first.
     nsCOMPtr<nsIDirectoryServiceProvider2> provider =
         do_QueryInterface(mDirSvcProvider);
@@ -239,8 +239,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
   }
 
  private:
-  const char *mTestName;
-  nsIServiceManager *mServMgr;
+  const char* mTestName;
+  nsIServiceManager* mServMgr;
   nsCOMPtr<nsIDirectoryServiceProvider> mDirSvcProvider;
   nsCOMPtr<nsIFile> mProfD;
   nsCOMPtr<nsIFile> mGRED;

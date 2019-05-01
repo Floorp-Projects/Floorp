@@ -17,7 +17,7 @@
 using namespace mozilla;
 
 struct val_strength_t {
-  const char *strength_name;
+  const char* strength_name;
   int signal_value;
 };
 
@@ -27,8 +27,8 @@ static val_strength_t strength_vals[] = {{"very weak", -112},
                                          {"very good", -40},
                                          {"excellent", -16}};
 
-static nsWifiAccessPoint *do_parse_str(char *bssid_str, char *essid_str,
-                                       char *strength) {
+static nsWifiAccessPoint* do_parse_str(char* bssid_str, char* essid_str,
+                                       char* strength) {
   unsigned char mac_as_int[6] = {0};
   sscanf(bssid_str, "%x:%x:%x:%x:%x:%x", &mac_as_int[0], &mac_as_int[1],
          &mac_as_int[2], &mac_as_int[3], &mac_as_int[4], &mac_as_int[5]);
@@ -42,7 +42,7 @@ static nsWifiAccessPoint *do_parse_str(char *bssid_str, char *essid_str,
     }
   }
 
-  nsWifiAccessPoint *ap = new nsWifiAccessPoint();
+  nsWifiAccessPoint* ap = new nsWifiAccessPoint();
   if (ap) {
     ap->setMac(mac_as_int);
     ap->setSignal(signal);
@@ -52,12 +52,12 @@ static nsWifiAccessPoint *do_parse_str(char *bssid_str, char *essid_str,
   return ap;
 }
 
-static void do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints) {
-  GError *err = nullptr;
-  char *sout = nullptr;
-  char *serr = nullptr;
+static void do_dladm(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
+  GError* err = nullptr;
+  char* sout = nullptr;
+  char* serr = nullptr;
   int exit_status = 0;
-  char *dladm_args[] = {
+  char* dladm_args[] = {
       "/usr/bin/pfexec",     "/usr/sbin/dladm", "scan-wifi", "-p", "-o",
       "BSSID,ESSID,STRENGTH"};
 
@@ -69,7 +69,7 @@ static void do_dladm(nsCOMArray<nsWifiAccessPoint> &accessPoints) {
     uint32_t sout_scan = 0;
     uint32_t wlan_put = 0;
     bool escape = false;
-    nsWifiAccessPoint *ap;
+    nsWifiAccessPoint* ap;
     char sout_char;
     do {
       sout_char = sout[sout_scan++];

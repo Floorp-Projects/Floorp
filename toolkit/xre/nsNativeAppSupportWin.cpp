@@ -55,8 +55,8 @@ void nsNativeAppSupportWin::CheckConsole() {
 }
 
 // Create and return an instance of class nsNativeAppSupportWin.
-nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult) {
-  nsNativeAppSupportWin *pNative = new nsNativeAppSupportWin;
+nsresult NS_CreateNativeAppSupport(nsINativeAppSupport** aResult) {
+  nsNativeAppSupportWin* pNative = new nsNativeAppSupportWin;
   if (!pNative) return NS_ERROR_OUT_OF_MEMORY;
 
   // Check for dynamic console creation request.

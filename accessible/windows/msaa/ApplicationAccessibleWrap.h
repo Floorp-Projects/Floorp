@@ -27,20 +27,20 @@ class ApplicationAccessibleWrap : public ApplicationAccessible,
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void **);
+  STDMETHODIMP QueryInterface(REFIID, void**);
 
   // IAccessibleApplication
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appName(
-      /* [retval][out] */ BSTR *name);
+      /* [retval][out] */ BSTR* name);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_appVersion(
-      /* [retval][out] */ BSTR *version);
+      /* [retval][out] */ BSTR* version);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitName(
-      /* [retval][out] */ BSTR *name);
+      /* [retval][out] */ BSTR* name);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_toolkitVersion(
-      /* [retval][out] */ BSTR *version);
+      /* [retval][out] */ BSTR* version);
 };
 
 }  // namespace a11y

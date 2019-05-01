@@ -42,19 +42,19 @@ NS_IMPL_ISUPPORTS(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener,
 
 // nsIStreamConverter implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::Convert(nsIInputStream *aFromStream, const char *aFromType,
-                             const char *aToType, nsISupports *aCtxt,
-                             nsIInputStream **_retval) {
+nsFTPDirListingConv::Convert(nsIInputStream* aFromStream, const char* aFromType,
+                             const char* aToType, nsISupports* aCtxt,
+                             nsIInputStream** _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Stream converter service calls this to initialize the actual stream converter
 // (us).
 NS_IMETHODIMP
-nsFTPDirListingConv::AsyncConvertData(const char *aFromType,
-                                      const char *aToType,
-                                      nsIStreamListener *aListener,
-                                      nsISupports *aCtxt) {
+nsFTPDirListingConv::AsyncConvertData(const char* aFromType,
+                                      const char* aToType,
+                                      nsIStreamListener* aListener,
+                                      nsISupports* aCtxt) {
   NS_ASSERTION(aListener && aFromType && aToType,
                "null pointer passed into FTP dir listing converter");
 
@@ -72,7 +72,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType,
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                      uint64_t sourceOffset, uint32_t count) {
   NS_ASSERTION(request, "FTP dir listing stream converter needs a request");
 
@@ -131,7 +131,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
     mSentHeading = true;
   }
 
-  char *line = buffer.get();
+  char* line = buffer.get();
   line = DigestBufferLines(line, indexFormat);
 
   MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug,
@@ -160,14 +160,14 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
 
 // nsIRequestObserver implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStartRequest(nsIRequest *request) {
+nsFTPDirListingConv::OnStartRequest(nsIRequest* request) {
   // we don't care about start. move along... but start masqeurading
   // as the http-index channel now.
   return mFinalListener->OnStartRequest(request);
 }
 
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+nsFTPDirListingConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   // we don't care about stop. move along...
 
   return mFinalListener->OnStopRequest(request, aStatus);
@@ -181,7 +181,7 @@ nsFTPDirListingConv::nsFTPDirListingConv() {
 
 nsFTPDirListingConv::~nsFTPDirListingConv() { NS_IF_RELEASE(mFinalListener); }
 
-nsresult nsFTPDirListingConv::GetHeaders(nsACString &headers, nsIURI *uri) {
+nsresult nsFTPDirListingConv::GetHeaders(nsACString& headers, nsIURI* uri) {
   nsresult rv = NS_OK;
   // build up 300 line
   headers.AppendLiteral("300: ");
@@ -213,10 +213,10 @@ nsresult nsFTPDirListingConv::GetHeaders(nsACString &headers, nsIURI *uri) {
   return rv;
 }
 
-char *nsFTPDirListingConv::DigestBufferLines(char *aBuffer,
-                                             nsCString &aString) {
-  char *line = aBuffer;
-  char *eol;
+char* nsFTPDirListingConv::DigestBufferLines(char* aBuffer,
+                                             nsCString& aString) {
+  char* line = aBuffer;
+  char* eol;
   bool cr = false;
 
   list_state state;
@@ -257,7 +257,7 @@ char *nsFTPDirListingConv::DigestBufferLines(char *aBuffer,
 
     // parsers for styles 'U' and 'W' handle sequence " -> " themself
     if (state.lstyle != 'U' && state.lstyle != 'W') {
-      const char *offset = strstr(result.fe_fname, " -> ");
+      const char* offset = strstr(result.fe_fname, " -> ");
       if (offset) {
         result.fe_fnlen = offset - result.fe_fname;
       }
@@ -273,8 +273,8 @@ char *nsFTPDirListingConv::DigestBufferLines(char *aBuffer,
     // CONTENT LENGTH
 
     if (type != 'd') {
-      for (char &fe : result.fe_size) {
-        if (fe != '\0') aString.Append((const char *)&fe, 1);
+      for (char& fe : result.fe_size) {
+        if (fe != '\0') aString.Append((const char*)&fe, 1);
       }
 
       aString.Append(' ');
@@ -325,7 +325,7 @@ char *nsFTPDirListingConv::DigestBufferLines(char *aBuffer,
   return line;
 }
 
-nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv **aFTPDirListingConv) {
+nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** aFTPDirListingConv) {
   MOZ_ASSERT(aFTPDirListingConv != nullptr, "null ptr");
   if (!aFTPDirListingConv) return NS_ERROR_NULL_POINTER;
 

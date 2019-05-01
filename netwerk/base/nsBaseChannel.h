@@ -92,8 +92,8 @@ class nsBaseChannel
   // That case will be treated as a redirect to the new channel.  By default
   // *channel will be set to null by the caller, so callees who don't want to
   // return one an just not touch it.
-  virtual nsresult OpenContentStream(bool async, nsIInputStream **stream,
-                                     nsIChannel **channel) = 0;
+  virtual nsresult OpenContentStream(bool async, nsIInputStream** stream,
+                                     nsIChannel** channel) = 0;
 
   // Implemented by subclass to begin pumping data for an async channel, in
   // lieu of returning a stream. If implemented, OpenContentStream will never
@@ -104,8 +104,8 @@ class nsBaseChannel
   // and at some point call OnStartRequest followed by OnStopRequest.
   // Additionally, it may provide a request object which may be used to
   // suspend, resume, and cancel the underlying request.
-  virtual nsresult BeginAsyncRead(nsIStreamListener *listener,
-                                  nsIRequest **request) {
+  virtual nsresult BeginAsyncRead(nsIStreamListener* listener,
+                                  nsIRequest** request) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -117,7 +117,7 @@ class nsBaseChannel
   // to finish prior calling OnStartRequest of the listener.  This method is
   // called right after OpenContentStream() with async == true, after the input
   // stream pump has already been called asyncRead().
-  virtual nsresult ListenerBlockingPromise(BlockingPromise **aPromise) {
+  virtual nsresult ListenerBlockingPromise(BlockingPromise** aPromise) {
     NS_ENSURE_ARG(aPromise);
     *aPromise = nullptr;
     return NS_OK;
@@ -131,7 +131,7 @@ class nsBaseChannel
   // to pass to the OnStatus method.  By default, OnStatus messages are
   // suppressed.  The status parameter passed to this method is the status value
   // from the OnTransportStatus method.
-  virtual bool GetStatusArg(nsresult status, nsString &statusArg) {
+  virtual bool GetStatusArg(nsresult status, nsString& statusArg) {
     return false;
   }
 
@@ -152,7 +152,7 @@ class nsBaseChannel
   // redirect could not be performed (no channel was opened; this channel
   // wasn't canceled.)  The redirectFlags parameter consists of the flag values
   // defined on nsIChannelEventSink.
-  nsresult Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
+  nsresult Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
                     bool openNewChannel);
 
   // Tests whether a type hint was set. Subclasses can use this to decide
@@ -163,20 +163,20 @@ class nsBaseChannel
 
   // The URI member should be initialized before the channel is used, and then
   // it should never be changed again until the channel is destroyed.
-  nsIURI *URI() { return mURI; }
-  void SetURI(nsIURI *uri) {
+  nsIURI* URI() { return mURI; }
+  void SetURI(nsIURI* uri) {
     NS_ASSERTION(uri, "must specify a non-null URI");
     NS_ASSERTION(!mURI, "must not modify URI");
     NS_ASSERTION(!mOriginalURI, "how did that get set so early?");
     mURI = uri;
     mOriginalURI = uri;
   }
-  nsIURI *OriginalURI() { return mOriginalURI; }
+  nsIURI* OriginalURI() { return mOriginalURI; }
 
   // The security info is a property of the transport-layer, which should be
   // assigned by the subclass.
-  nsISupports *SecurityInfo() { return mSecurityInfo; }
-  void SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
+  nsISupports* SecurityInfo() { return mSecurityInfo; }
+  void SetSecurityInfo(nsISupports* info) { mSecurityInfo = info; }
 
   // Test the load flags
   bool HasLoadFlag(uint32_t flag) { return (mLoadFlags & flag) != 0; }
@@ -188,7 +188,7 @@ class nsBaseChannel
 
   // Helper function for querying the channel's notification callbacks.
   template <class T>
-  void GetCallback(nsCOMPtr<T> &result) {
+  void GetCallback(nsCOMPtr<T>& result) {
     GetInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(result));
   }
 
@@ -202,8 +202,8 @@ class nsBaseChannel
 
   // Some subclasses may wish to manually insert a stream listener between this
   // and the channel's listener.  The following methods make that possible.
-  void SetStreamListener(nsIStreamListener *listener) { mListener = listener; }
-  nsIStreamListener *StreamListener() { return mListener; }
+  void SetStreamListener(nsIStreamListener* listener) { mListener = listener; }
+  nsIStreamListener* StreamListener() { return mListener; }
 
   // Pushes a new stream converter in front of the channel's stream listener.
   // The fromType and toType values are passed to nsIStreamConverterService's
@@ -212,9 +212,9 @@ class nsBaseChannel
   // necessary when the converter changes the length of the resulting data
   // stream, which is almost always the case for a "stream converter" ;-)
   // This function optionally returns a reference to the new converter.
-  nsresult PushStreamConverter(const char *fromType, const char *toType,
+  nsresult PushStreamConverter(const char* fromType, const char* toType,
                                bool invalidatesContentLength = true,
-                               nsIStreamListener **converter = nullptr);
+                               nsIStreamListener** converter = nullptr);
 
  protected:
   void DisallowThreadRetargeting() { mAllowThreadRetargeting = false; }
@@ -244,7 +244,7 @@ class nsBaseChannel
 
   // Handle an async redirect callback.  This will only be called if we
   // returned success from AsyncOpen while posting a redirect runnable.
-  void HandleAsyncRedirect(nsIChannel *newChannel);
+  void HandleAsyncRedirect(nsIChannel* newChannel);
   void ContinueHandleAsyncRedirect(nsresult result);
   nsresult ContinueRedirect();
 
@@ -253,7 +253,7 @@ class nsBaseChannel
 
   class RedirectRunnable : public mozilla::Runnable {
    public:
-    RedirectRunnable(nsBaseChannel *chan, nsIChannel *newChannel)
+    RedirectRunnable(nsBaseChannel* chan, nsIChannel* newChannel)
         : mozilla::Runnable("nsBaseChannel::RedirectRunnable"),
           mChannel(chan),
           mNewChannel(newChannel) {

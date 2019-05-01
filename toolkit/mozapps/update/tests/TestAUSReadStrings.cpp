@@ -55,7 +55,7 @@ static int gFailCount = 0;
  * "TEST-UNEXPECTED-FAIL " for the benefit of the test harness and
  * appending "\n" to eliminate having to type it at each call site.
  */
-void fail(const char *msg, ...) {
+void fail(const char* msg, ...) {
   va_list ap;
 
   printf("TEST-UNEXPECTED-FAIL | ");
@@ -68,7 +68,7 @@ void fail(const char *msg, ...) {
   ++gFailCount;
 }
 
-int NS_main(int argc, NS_tchar **argv) {
+int NS_main(int argc, NS_tchar** argv) {
   printf("Running TestAUSReadStrings tests\n");
 
   int rv = 0;
@@ -76,9 +76,9 @@ int NS_main(int argc, NS_tchar **argv) {
   NS_tchar inifile[MAXPATHLEN];
   StringTable testStrings;
 
-  NS_tchar *slash = NS_tstrrchr(argv[0], PATH_SEPARATOR_CHAR);
+  NS_tchar* slash = NS_tstrrchr(argv[0], PATH_SEPARATOR_CHAR);
 #ifdef ALT_PATH_SEPARATOR_CHAR
-  NS_tchar *altslash = NS_tstrrchr(argv[0], ALT_PATH_SEPARATOR_CHAR);
+  NS_tchar* altslash = NS_tstrrchr(argv[0], ALT_PATH_SEPARATOR_CHAR);
   slash = (slash > altslash) ? slash : altslash;
 #endif  // ALT_PATH_SEPARATOR_CHAR
 

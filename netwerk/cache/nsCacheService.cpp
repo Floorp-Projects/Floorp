@@ -56,12 +56,12 @@ using namespace mozilla::net;
 
 #define CACHE_COMPRESSION_LEVEL 1
 
-static const char *observerList[] = {
+static const char* observerList[] = {
     "profile-before-change",        "profile-do-change",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,  "last-pb-context-exited",
     "suspend_process_notification", "resume_process_notification"};
 
-static const char *prefList[] = {
+static const char* prefList[] = {
     OFFLINE_CACHE_ENABLE_PREF,
     OFFLINE_CACHE_CAPACITY_PREF,
     OFFLINE_CACHE_DIR_PREF,
@@ -85,13 +85,13 @@ class nsCacheProfilePrefObserver : public nsIObserver {
 
   nsresult Install();
   void Remove();
-  nsresult ReadPrefs(nsIPrefBranch *branch);
+  nsresult ReadPrefs(nsIPrefBranch* branch);
 
-  nsIFile *DiskCacheParentDirectory() { return mDiskCacheParentDirectory; }
+  nsIFile* DiskCacheParentDirectory() { return mDiskCacheParentDirectory; }
 
   bool OfflineCacheEnabled();
   int32_t OfflineCacheCapacity() { return mOfflineCacheCapacity; }
-  nsIFile *OfflineCacheParentDirectory() {
+  nsIFile* OfflineCacheParentDirectory() {
     return mOfflineCacheParentDirectory;
   }
 
@@ -101,7 +101,7 @@ class nsCacheProfilePrefObserver : public nsIObserver {
     return mSanitizeOnShutdown && mClearCacheOnShutdown;
   }
 
-  void PrefChanged(const char *aPref);
+  void PrefChanged(const char* aPref);
 
  private:
   bool mHaveProfile;
@@ -140,7 +140,7 @@ nsresult nsCacheProfilePrefObserver::Install() {
   if (!observerService) return NS_ERROR_FAILURE;
 
   nsresult rv, rv2 = NS_OK;
-  for (auto &observer : observerList) {
+  for (auto& observer : observerList) {
     rv = observerService->AddObserver(this, observer, false);
     if (NS_FAILED(rv)) rv2 = rv;
   }
@@ -175,7 +175,7 @@ void nsCacheProfilePrefObserver::Remove() {
   // remove Observer Service observers
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    for (auto &observer : observerList) {
+    for (auto& observer : observerList) {
       obs->RemoveObserver(this, observer);
     }
   }
@@ -189,8 +189,8 @@ void nsCacheProfilePrefObserver::Remove() {
 }
 
 NS_IMETHODIMP
-nsCacheProfilePrefObserver::Observe(nsISupports *subject, const char *topic,
-                                    const char16_t *data_unicode) {
+nsCacheProfilePrefObserver::Observe(nsISupports* subject, const char* topic,
+                                    const char16_t* data_unicode) {
   NS_ConvertUTF16toUTF8 data(data_unicode);
   CACHE_LOG_INFO(("Observe [topic=%s data=%s]\n", topic, data.get()));
 
@@ -232,7 +232,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *subject, const char *topic,
   return NS_OK;
 }
 
-void nsCacheProfilePrefObserver::PrefChanged(const char *aPref) {
+void nsCacheProfilePrefObserver::PrefChanged(const char* aPref) {
   // ignore pref changes until we're done switch profiles
   if (!mHaveProfile) return;
   // which preference changed?
@@ -258,7 +258,7 @@ void nsCacheProfilePrefObserver::PrefChanged(const char *aPref) {
   }
 }
 
-nsresult nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch *branch) {
+nsresult nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch) {
   nsresult rv = NS_OK;
 
   if (!mDiskCacheParentDirectory) {
@@ -337,7 +337,7 @@ nsresult nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch *branch) {
   return rv;
 }
 
-nsresult nsCacheService::DispatchToCacheIOThread(nsIRunnable *event) {
+nsresult nsCacheService::DispatchToCacheIOThread(nsIRunnable* event) {
   if (!gService || !gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
   return gService->mCacheIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
@@ -381,7 +381,7 @@ int32_t nsCacheProfilePrefObserver::CacheCompressionLevel() {
 
 class nsProcessRequestEvent : public Runnable {
  public:
-  explicit nsProcessRequestEvent(nsCacheRequest *aRequest)
+  explicit nsProcessRequestEvent(nsCacheRequest* aRequest)
       : mozilla::Runnable("nsProcessRequestEvent") {
     mRequest = aRequest;
   }
@@ -406,7 +406,7 @@ class nsProcessRequestEvent : public Runnable {
   virtual ~nsProcessRequestEvent() = default;
 
  private:
-  nsCacheRequest *mRequest;
+  nsCacheRequest* mRequest;
 };
 
 /******************************************************************************
@@ -415,8 +415,8 @@ class nsProcessRequestEvent : public Runnable {
 
 class nsDoomEvent : public Runnable {
  public:
-  nsDoomEvent(nsCacheSession *session, const nsACString &key,
-              nsICacheListener *listener)
+  nsDoomEvent(nsCacheSession* session, const nsACString& key,
+              nsICacheListener* listener)
       : mozilla::Runnable("nsDoomEvent") {
     mKey = *session->ClientID();
     mKey.Append(':');
@@ -436,7 +436,7 @@ class nsDoomEvent : public Runnable {
 
     bool foundActive = true;
     nsresult status = NS_ERROR_NOT_AVAILABLE;
-    nsCacheEntry *entry;
+    nsCacheEntry* entry;
     entry = nsCacheService::gService->mActiveEntries.GetEntry(&mKey);
     if (!entry) {
       bool collision = false;
@@ -463,14 +463,14 @@ class nsDoomEvent : public Runnable {
  private:
   nsCString mKey;
   nsCacheStoragePolicy mStoragePolicy;
-  nsICacheListener *mListener;
+  nsICacheListener* mListener;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 /******************************************************************************
  * nsCacheService
  *****************************************************************************/
-nsCacheService *nsCacheService::gService = nullptr;
+nsCacheService* nsCacheService::gService = nullptr;
 
 NS_IMPL_ISUPPORTS(nsCacheService, nsICacheService, nsICacheServiceInternal)
 
@@ -636,8 +636,8 @@ void nsCacheService::Shutdown() {
   }
 }
 
-nsresult nsCacheService::Create(nsISupports *aOuter, const nsIID &aIID,
-                                void **aResult) {
+nsresult nsCacheService::Create(nsISupports* aOuter, const nsIID& aIID,
+                                void** aResult) {
   nsresult rv;
 
   if (aOuter != nullptr) return NS_ERROR_NO_AGGREGATION;
@@ -651,17 +651,17 @@ nsresult nsCacheService::Create(nsISupports *aOuter, const nsIID &aIID,
 }
 
 NS_IMETHODIMP
-nsCacheService::CreateSession(const char *clientID,
+nsCacheService::CreateSession(const char* clientID,
                               nsCacheStoragePolicy storagePolicy,
-                              bool streamBased, nsICacheSession **result) {
+                              bool streamBased, nsICacheSession** result) {
   *result = nullptr;
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCacheService::CreateSessionInternal(
-    const char *clientID, nsCacheStoragePolicy storagePolicy, bool streamBased,
-    nsICacheSession **result) {
+    const char* clientID, nsCacheStoragePolicy storagePolicy, bool streamBased,
+    nsICacheSession** result) {
   RefPtr<nsCacheSession> session =
       new nsCacheSession(clientID, storagePolicy, streamBased);
   session.forget(result);
@@ -669,7 +669,7 @@ nsresult nsCacheService::CreateSessionInternal(
   return NS_OK;
 }
 
-nsresult nsCacheService::EvictEntriesForSession(nsCacheSession *session) {
+nsresult nsCacheService::EvictEntriesForSession(nsCacheSession* session) {
   NS_ASSERTION(gService, "nsCacheService::gService is null.");
   return gService->EvictEntriesForClient(session->ClientID()->get(),
                                          session->StoragePolicy());
@@ -679,7 +679,7 @@ namespace {
 
 class EvictionNotifierRunnable : public Runnable {
  public:
-  explicit EvictionNotifierRunnable(nsISupports *aSubject)
+  explicit EvictionNotifierRunnable(nsISupports* aSubject)
       : mozilla::Runnable("EvictionNotifierRunnable"), mSubject(aSubject) {}
 
   NS_DECL_NSIRUNNABLE
@@ -701,9 +701,9 @@ EvictionNotifierRunnable::Run() {
 }  // namespace
 
 nsresult nsCacheService::EvictEntriesForClient(
-    const char *clientID, nsCacheStoragePolicy storagePolicy) {
+    const char* clientID, nsCacheStoragePolicy storagePolicy) {
   RefPtr<EvictionNotifierRunnable> r =
-      new EvictionNotifierRunnable(NS_ISUPPORTS_CAST(nsICacheService *, this));
+      new EvictionNotifierRunnable(NS_ISUPPORTS_CAST(nsICacheService*, this));
   NS_DispatchToMainThread(r);
 
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_EVICTENTRIESFORCLIENT));
@@ -723,7 +723,7 @@ nsresult nsCacheService::EvictEntriesForClient(
 }
 
 nsresult nsCacheService::IsStorageEnabledForPolicy(
-    nsCacheStoragePolicy storagePolicy, bool *result) {
+    nsCacheStoragePolicy storagePolicy, bool* result) {
   if (gService == nullptr) return NS_ERROR_NOT_AVAILABLE;
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY));
@@ -732,9 +732,9 @@ nsresult nsCacheService::IsStorageEnabledForPolicy(
   return NS_OK;
 }
 
-nsresult nsCacheService::DoomEntry(nsCacheSession *session,
-                                   const nsACString &key,
-                                   nsICacheListener *listener) {
+nsresult nsCacheService::DoomEntry(nsCacheSession* session,
+                                   const nsACString& key,
+                                   nsICacheListener* listener) {
   CACHE_LOG_DEBUG(("Dooming entry for session %p, key %s\n", session,
                    PromiseFlatCString(key).get()));
   if (!gService || !gService->mInitialized) return NS_ERROR_NOT_INITIALIZED;
@@ -752,11 +752,11 @@ bool nsCacheService::IsStorageEnabledForPolicy_Locked(
   return false;
 }
 
-NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor) {
+NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor* visitor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsCacheService::VisitEntriesInternal(nsICacheVisitor *visitor) {
+nsresult nsCacheService::VisitEntriesInternal(nsICacheVisitor* visitor) {
   NS_ENSURE_ARG_POINTER(visitor);
 
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_VISITENTRIES));
@@ -817,7 +817,7 @@ nsresult nsCacheService::EvictEntriesInternal(
 }
 
 NS_IMETHODIMP nsCacheService::GetCacheIOTarget(
-    nsIEventTarget **aCacheIOTarget) {
+    nsIEventTarget** aCacheIOTarget) {
   NS_ENSURE_ARG_POINTER(aCacheIOTarget);
 
   // Because mCacheIOThread can only be changed on the main thread, it can be
@@ -843,7 +843,7 @@ NS_IMETHODIMP nsCacheService::GetCacheIOTarget(
   return rv;
 }
 
-NS_IMETHODIMP nsCacheService::GetLockHeldTime(double *aLockHeldTime) {
+NS_IMETHODIMP nsCacheService::GetLockHeldTime(double* aLockHeldTime) {
   MutexAutoLock lock(mTimeStampLock);
 
   if (mLockAcquiredTimeStamp.IsNull()) {
@@ -859,7 +859,7 @@ NS_IMETHODIMP nsCacheService::GetLockHeldTime(double *aLockHeldTime) {
 /**
  * Internal Methods
  */
-nsresult nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice) {
+nsresult nsCacheService::GetOfflineDevice(nsOfflineCacheDevice** aDevice) {
   if (!mOfflineDevice) {
     nsresult rv = CreateOfflineDevice();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -870,7 +870,7 @@ nsresult nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice) {
 }
 
 nsresult nsCacheService::GetCustomOfflineDevice(
-    nsIFile *aProfileDir, int32_t aQuota, nsOfflineCacheDevice **aDevice) {
+    nsIFile* aProfileDir, int32_t aQuota, nsOfflineCacheDevice** aDevice) {
   nsresult rv;
 
   nsAutoString profilePath;
@@ -905,7 +905,7 @@ nsresult nsCacheService::CreateOfflineDevice() {
 }
 
 nsresult nsCacheService::CreateCustomOfflineDevice(
-    nsIFile *aProfileDir, int32_t aQuota, nsOfflineCacheDevice **aDevice) {
+    nsIFile* aProfileDir, int32_t aQuota, nsOfflineCacheDevice** aDevice) {
   NS_ENSURE_ARG(aProfileDir);
 
   if (MOZ_LOG_TEST(gCacheLog, LogLevel::Info)) {
@@ -936,7 +936,7 @@ nsresult nsCacheService::CreateCustomOfflineDevice(
 }
 
 nsresult nsCacheService::RemoveCustomOfflineDevice(
-    nsOfflineCacheDevice *aDevice) {
+    nsOfflineCacheDevice* aDevice) {
   nsCOMPtr<nsIFile> profileDir = aDevice->BaseDirectory();
   if (!profileDir) return NS_ERROR_UNEXPECTED;
 
@@ -948,12 +948,12 @@ nsresult nsCacheService::RemoveCustomOfflineDevice(
   return NS_OK;
 }
 
-nsresult nsCacheService::CreateRequest(nsCacheSession *session,
-                                       const nsACString &clientKey,
+nsresult nsCacheService::CreateRequest(nsCacheSession* session,
+                                       const nsACString& clientKey,
                                        nsCacheAccessMode accessRequested,
                                        bool blockingMode,
-                                       nsICacheListener *listener,
-                                       nsCacheRequest **request) {
+                                       nsICacheListener* listener,
+                                       nsCacheRequest** request) {
   NS_ASSERTION(request, "CreateRequest: request is null");
 
   nsAutoCString key(*session->ClientID());
@@ -976,8 +976,8 @@ nsresult nsCacheService::CreateRequest(nsCacheSession *session,
 
 class nsCacheListenerEvent : public Runnable {
  public:
-  nsCacheListenerEvent(nsICacheListener *listener,
-                       nsICacheEntryDescriptor *descriptor,
+  nsCacheListenerEvent(nsICacheListener* listener,
+                       nsICacheEntryDescriptor* descriptor,
                        nsCacheAccessMode accessGranted, nsresult status)
       : mozilla::Runnable("nsCacheListenerEvent"),
         mListener(listener)  // transfers reference
@@ -1000,20 +1000,20 @@ class nsCacheListenerEvent : public Runnable {
   // because otherwise we cannot guarantee that they are destroyed on
   // the right thread.
 
-  nsICacheListener *mListener;
-  nsICacheEntryDescriptor *mDescriptor;
+  nsICacheListener* mListener;
+  nsICacheEntryDescriptor* mDescriptor;
   nsCacheAccessMode mAccessGranted;
   nsresult mStatus;
 };
 
-nsresult nsCacheService::NotifyListener(nsCacheRequest *request,
-                                        nsICacheEntryDescriptor *descriptor,
+nsresult nsCacheService::NotifyListener(nsCacheRequest* request,
+                                        nsICacheEntryDescriptor* descriptor,
                                         nsCacheAccessMode accessGranted,
                                         nsresult status) {
   NS_ASSERTION(request->mEventTarget, "no thread set in async request!");
 
   // Swap ownership, and release listener on target thread...
-  nsICacheListener *listener = request->mListener;
+  nsICacheListener* listener = request->mListener;
   request->mListener = nullptr;
 
   nsCOMPtr<nsIRunnable> ev =
@@ -1028,13 +1028,13 @@ nsresult nsCacheService::NotifyListener(nsCacheRequest *request,
   return request->mEventTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
 }
 
-nsresult nsCacheService::ProcessRequest(nsCacheRequest *request,
+nsresult nsCacheService::ProcessRequest(nsCacheRequest* request,
                                         bool calledFromOpenCacheEntry,
-                                        nsICacheEntryDescriptor **result) {
+                                        nsICacheEntryDescriptor** result) {
   // !!! must be called with mLock held !!!
   nsresult rv;
-  nsCacheEntry *entry = nullptr;
-  nsCacheEntry *doomedEntry = nullptr;
+  nsCacheEntry* entry = nullptr;
+  nsCacheEntry* doomedEntry = nullptr;
   nsCacheAccessMode accessGranted = nsICache::ACCESS_NONE;
   if (result) *result = nullptr;
 
@@ -1088,7 +1088,7 @@ nsresult nsCacheService::ProcessRequest(nsCacheRequest *request,
     }
   }
 
-  nsICacheEntryDescriptor *descriptor = nullptr;
+  nsICacheEntryDescriptor* descriptor = nullptr;
 
   if (NS_SUCCEEDED(rv))
     rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
@@ -1126,12 +1126,12 @@ nsresult nsCacheService::ProcessRequest(nsCacheRequest *request,
   return rv;
 }
 
-nsresult nsCacheService::OpenCacheEntry(nsCacheSession *session,
-                                        const nsACString &key,
+nsresult nsCacheService::OpenCacheEntry(nsCacheSession* session,
+                                        const nsACString& key,
                                         nsCacheAccessMode accessRequested,
                                         bool blockingMode,
-                                        nsICacheListener *listener,
-                                        nsICacheEntryDescriptor **result) {
+                                        nsICacheListener* listener,
+                                        nsICacheEntryDescriptor** result) {
   CACHE_LOG_DEBUG(
       ("Opening entry for session %p, key %s, mode %d, blocking %d\n", session,
        PromiseFlatCString(key).get(), accessRequested, blockingMode));
@@ -1139,7 +1139,7 @@ nsresult nsCacheService::OpenCacheEntry(nsCacheSession *session,
 
   if (!gService || !gService->mInitialized) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCacheRequest *request = nullptr;
+  nsCacheRequest* request = nullptr;
 
   nsresult rv = gService->CreateRequest(session, key, accessRequested,
                                         blockingMode, listener, &request);
@@ -1168,9 +1168,9 @@ nsresult nsCacheService::OpenCacheEntry(nsCacheSession *session,
   return rv;
 }
 
-nsresult nsCacheService::ActivateEntry(nsCacheRequest *request,
-                                       nsCacheEntry **result,
-                                       nsCacheEntry **doomedEntry) {
+nsresult nsCacheService::ActivateEntry(nsCacheRequest* request,
+                                       nsCacheEntry** result,
+                                       nsCacheEntry** doomedEntry) {
   CACHE_LOG_DEBUG(("Activate entry for request %p\n", request));
   if (!mInitialized || mClearingEntries) return NS_ERROR_NOT_AVAILABLE;
 
@@ -1187,7 +1187,7 @@ nsresult nsCacheService::ActivateEntry(nsCacheRequest *request,
     return NS_ERROR_FAILURE;
 
   // search active entries (including those not bound to device)
-  nsCacheEntry *entry = mActiveEntries.GetEntry(&(request->mKey));
+  nsCacheEntry* entry = mActiveEntries.GetEntry(&(request->mKey));
   CACHE_LOG_DEBUG(("Active entry for request %p is %p\n", request, entry));
 
   if (!entry) {
@@ -1264,11 +1264,11 @@ error:
   return rv;
 }
 
-nsCacheEntry *nsCacheService::SearchCacheDevices(nsCString *key,
+nsCacheEntry* nsCacheService::SearchCacheDevices(nsCString* key,
                                                  nsCacheStoragePolicy policy,
-                                                 bool *collision) {
+                                                 bool* collision) {
   Telemetry::AutoTimer<Telemetry::CACHE_DEVICE_SEARCH_2> timer;
-  nsCacheEntry *entry = nullptr;
+  nsCacheEntry* entry = nullptr;
 
   *collision = false;
   if (policy == nsICache::STORE_OFFLINE ||
@@ -1286,8 +1286,8 @@ nsCacheEntry *nsCacheService::SearchCacheDevices(nsCString *key,
   return entry;
 }
 
-nsCacheDevice *nsCacheService::EnsureEntryHasDevice(nsCacheEntry *entry) {
-  nsCacheDevice *device = entry->CacheDevice();
+nsCacheDevice* nsCacheService::EnsureEntryHasDevice(nsCacheEntry* entry) {
+  nsCacheDevice* device = entry->CacheDevice();
   // return device if found, possibly null if the entry is doomed i.e prevent
   // doomed entries to bind to a device (see e.g. bugs #548406 and #596443)
   if (device || entry->IsDoomed()) return device;
@@ -1314,11 +1314,11 @@ nsCacheDevice *nsCacheService::EnsureEntryHasDevice(nsCacheEntry *entry) {
   return device;
 }
 
-nsresult nsCacheService::DoomEntry(nsCacheEntry *entry) {
+nsresult nsCacheService::DoomEntry(nsCacheEntry* entry) {
   return gService->DoomEntry_Internal(entry, true);
 }
 
-nsresult nsCacheService::DoomEntry_Internal(nsCacheEntry *entry,
+nsresult nsCacheService::DoomEntry_Internal(nsCacheEntry* entry,
                                             bool doProcessPendingRequests) {
   if (entry->IsDoomed()) return NS_OK;
 
@@ -1327,7 +1327,7 @@ nsresult nsCacheService::DoomEntry_Internal(nsCacheEntry *entry,
   entry->MarkDoomed();
 
   NS_ASSERTION(!entry->IsBinding(), "Dooming entry while binding device.");
-  nsCacheDevice *device = entry->CacheDevice();
+  nsCacheDevice* device = entry->CacheDevice();
   if (device) device->DoomEntry(entry);
 
   if (entry->IsActive()) {
@@ -1441,9 +1441,9 @@ void nsCacheService::SetOfflineCacheCapacity(int32_t capacity) {
 /******************************************************************************
  * static methods for nsCacheEntryDescriptor
  *****************************************************************************/
-void nsCacheService::CloseDescriptor(nsCacheEntryDescriptor *descriptor) {
+void nsCacheService::CloseDescriptor(nsCacheEntryDescriptor* descriptor) {
   // ask entry to remove descriptor
-  nsCacheEntry *entry = descriptor->CacheEntry();
+  nsCacheEntry* entry = descriptor->CacheEntry();
   bool doomEntry;
   bool stillActive = entry->RemoveDescriptor(descriptor, &doomEntry);
 
@@ -1461,37 +1461,37 @@ void nsCacheService::CloseDescriptor(nsCacheEntryDescriptor *descriptor) {
   }
 }
 
-nsresult nsCacheService::GetFileForEntry(nsCacheEntry *entry,
-                                         nsIFile **result) {
-  nsCacheDevice *device = gService->EnsureEntryHasDevice(entry);
+nsresult nsCacheService::GetFileForEntry(nsCacheEntry* entry,
+                                         nsIFile** result) {
+  nsCacheDevice* device = gService->EnsureEntryHasDevice(entry);
   if (!device) return NS_ERROR_UNEXPECTED;
 
   return device->GetFileForEntry(entry, result);
 }
 
-nsresult nsCacheService::OpenInputStreamForEntry(nsCacheEntry *entry,
+nsresult nsCacheService::OpenInputStreamForEntry(nsCacheEntry* entry,
                                                  nsCacheAccessMode mode,
                                                  uint32_t offset,
-                                                 nsIInputStream **result) {
-  nsCacheDevice *device = gService->EnsureEntryHasDevice(entry);
+                                                 nsIInputStream** result) {
+  nsCacheDevice* device = gService->EnsureEntryHasDevice(entry);
   if (!device) return NS_ERROR_UNEXPECTED;
 
   return device->OpenInputStreamForEntry(entry, mode, offset, result);
 }
 
-nsresult nsCacheService::OpenOutputStreamForEntry(nsCacheEntry *entry,
+nsresult nsCacheService::OpenOutputStreamForEntry(nsCacheEntry* entry,
                                                   nsCacheAccessMode mode,
                                                   uint32_t offset,
-                                                  nsIOutputStream **result) {
-  nsCacheDevice *device = gService->EnsureEntryHasDevice(entry);
+                                                  nsIOutputStream** result) {
+  nsCacheDevice* device = gService->EnsureEntryHasDevice(entry);
   if (!device) return NS_ERROR_UNEXPECTED;
 
   return device->OpenOutputStreamForEntry(entry, mode, offset, result);
 }
 
-nsresult nsCacheService::OnDataSizeChange(nsCacheEntry *entry,
+nsresult nsCacheService::OnDataSizeChange(nsCacheEntry* entry,
                                           int32_t deltaSize) {
-  nsCacheDevice *device = gService->EnsureEntryHasDevice(entry);
+  nsCacheDevice* device = gService->EnsureEntryHasDevice(entry);
   if (!device) return NS_ERROR_UNEXPECTED;
 
   return device->OnDataSizeChange(entry, deltaSize);
@@ -1541,7 +1541,7 @@ void nsCacheService::Lock(mozilla::Telemetry::HistogramID mainThreadLockerID) {
 void nsCacheService::Unlock() {
   gService->mLock.AssertCurrentThreadOwns();
 
-  nsTArray<nsISupports *> doomed;
+  nsTArray<nsISupports*> doomed;
   doomed.SwapElements(gService->mDoomedObjects);
 
   gService->LockReleased();
@@ -1550,8 +1550,8 @@ void nsCacheService::Unlock() {
   for (uint32_t i = 0; i < doomed.Length(); ++i) doomed[i]->Release();
 }
 
-void nsCacheService::ReleaseObject_Locked(nsISupports *obj,
-                                          nsIEventTarget *target) {
+void nsCacheService::ReleaseObject_Locked(nsISupports* obj,
+                                          nsIEventTarget* target) {
   gService->mLock.AssertCurrentThreadOwns();
 
   bool isCur;
@@ -1563,15 +1563,15 @@ void nsCacheService::ReleaseObject_Locked(nsISupports *obj,
   }
 }
 
-nsresult nsCacheService::SetCacheElement(nsCacheEntry *entry,
-                                         nsISupports *element) {
+nsresult nsCacheService::SetCacheElement(nsCacheEntry* entry,
+                                         nsISupports* element) {
   entry->SetData(element);
   entry->TouchData();
   return NS_OK;
 }
 
-nsresult nsCacheService::ValidateEntry(nsCacheEntry *entry) {
-  nsCacheDevice *device = gService->EnsureEntryHasDevice(entry);
+nsresult nsCacheService::ValidateEntry(nsCacheEntry* entry) {
+  nsCacheDevice* device = gService->EnsureEntryHasDevice(entry);
   if (!device) return NS_ERROR_UNEXPECTED;
 
   entry->MarkValid();
@@ -1587,11 +1587,11 @@ int32_t nsCacheService::CacheCompressionLevel() {
   return level;
 }
 
-void nsCacheService::DeactivateEntry(nsCacheEntry *entry) {
+void nsCacheService::DeactivateEntry(nsCacheEntry* entry) {
   CACHE_LOG_DEBUG(("Deactivating entry %p\n", entry));
   nsresult rv = NS_OK;
   NS_ASSERTION(entry->IsNotInUse(), "### deactivating an entry while in use!");
-  nsCacheDevice *device = nullptr;
+  nsCacheDevice* device = nullptr;
 
   if (mMaxDataSize < entry->DataSize()) mMaxDataSize = entry->DataSize();
   if (mMaxMetaSize < entry->MetaDataSize())
@@ -1637,10 +1637,10 @@ void nsCacheService::DeactivateEntry(nsCacheEntry *entry) {
   }
 }
 
-nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
+nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry* entry) {
   nsresult rv = NS_OK;
-  nsCacheRequest *request = (nsCacheRequest *)PR_LIST_HEAD(&entry->mRequestQ);
-  nsCacheRequest *nextRequest;
+  nsCacheRequest* request = (nsCacheRequest*)PR_LIST_HEAD(&entry->mRequestQ);
+  nsCacheRequest* nextRequest;
   bool newWriter = false;
 
   CACHE_LOG_DEBUG((
@@ -1660,9 +1660,9 @@ nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
     while (request != &entry->mRequestQ) {
       NS_ASSERTION(request->AccessRequested() != nsICache::ACCESS_WRITE,
                    "ACCESS_WRITE request should have been given a new entry");
-      request = (nsCacheRequest *)PR_NEXT_LINK(request);
+      request = (nsCacheRequest*)PR_NEXT_LINK(request);
     }
-    request = (nsCacheRequest *)PR_LIST_HEAD(&entry->mRequestQ);
+    request = (nsCacheRequest*)PR_LIST_HEAD(&entry->mRequestQ);
 #endif
     // find first request with ACCESS_READ_WRITE (if any) and promote it to 1st
     // writer
@@ -1673,12 +1673,12 @@ nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
         break;
       }
 
-      request = (nsCacheRequest *)PR_NEXT_LINK(request);
+      request = (nsCacheRequest*)PR_NEXT_LINK(request);
     }
 
     if (request == &entry->mRequestQ)  // no requests asked for
                                        // ACCESS_READ_WRITE, back to top
-      request = (nsCacheRequest *)PR_LIST_HEAD(&entry->mRequestQ);
+      request = (nsCacheRequest*)PR_LIST_HEAD(&entry->mRequestQ);
 
     // XXX what should we do if there are only READ requests in queue?
     // XXX serialize their accesses, give them only read access, but force them
@@ -1690,7 +1690,7 @@ nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
   nsCacheAccessMode accessGranted = nsICache::ACCESS_NONE;
 
   while (request != &entry->mRequestQ) {
-    nextRequest = (nsCacheRequest *)PR_NEXT_LINK(request);
+    nextRequest = (nsCacheRequest*)PR_NEXT_LINK(request);
     CACHE_LOG_DEBUG(("  %sync request %p for %p\n",
                      (request->mListener ? "As" : "S"), request, entry));
 
@@ -1718,7 +1718,7 @@ nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
         //     }
 
         // entry->CreateDescriptor dequeues request, and queues descriptor
-        nsICacheEntryDescriptor *descriptor = nullptr;
+        nsICacheEntryDescriptor* descriptor = nullptr;
         rv = entry->CreateDescriptor(request, accessGranted, &descriptor);
 
         // post call to listener to report error or descriptor
@@ -1750,15 +1750,15 @@ nsresult nsCacheService::ProcessPendingRequests(nsCacheEntry *entry) {
 }
 
 bool nsCacheService::IsDoomListEmpty() {
-  nsCacheEntry *entry = (nsCacheEntry *)PR_LIST_HEAD(&mDoomedEntries);
+  nsCacheEntry* entry = (nsCacheEntry*)PR_LIST_HEAD(&mDoomedEntries);
   return &mDoomedEntries == entry;
 }
 
 void nsCacheService::ClearDoomList() {
-  nsCacheEntry *entry = (nsCacheEntry *)PR_LIST_HEAD(&mDoomedEntries);
+  nsCacheEntry* entry = (nsCacheEntry*)PR_LIST_HEAD(&mDoomedEntries);
 
   while (entry != &mDoomedEntries) {
-    nsCacheEntry *next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+    nsCacheEntry* next = (nsCacheEntry*)PR_NEXT_LINK(entry);
 
     entry->DetachDescriptors();
     DeactivateEntry(entry);
@@ -1767,11 +1767,11 @@ void nsCacheService::ClearDoomList() {
 }
 
 void nsCacheService::DoomActiveEntries(DoomCheckFn check) {
-  AutoTArray<nsCacheEntry *, 8> array;
+  AutoTArray<nsCacheEntry*, 8> array;
 
   for (auto iter = mActiveEntries.Iter(); !iter.Done(); iter.Next()) {
-    nsCacheEntry *entry =
-        static_cast<nsCacheEntryHashTableEntry *>(iter.Get())->cacheEntry;
+    nsCacheEntry* entry =
+        static_cast<nsCacheEntryHashTableEntry*>(iter.Get())->cacheEntry;
 
     if (check && !check(entry)) {
       continue;
@@ -1797,21 +1797,21 @@ void nsCacheService::CloseAllStreams() {
   {
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_CLOSEALLSTREAMS));
 
-    nsTArray<nsCacheEntry *> entries;
+    nsTArray<nsCacheEntry*> entries;
 
 #if DEBUG
     // make sure there is no active entry
     for (auto iter = mActiveEntries.Iter(); !iter.Done(); iter.Next()) {
-      auto entry = static_cast<nsCacheEntryHashTableEntry *>(iter.Get());
+      auto entry = static_cast<nsCacheEntryHashTableEntry*>(iter.Get());
       entries.AppendElement(entry->cacheEntry);
     }
     NS_ASSERTION(entries.IsEmpty(), "Bad state");
 #endif
 
     // Get doomed entries
-    nsCacheEntry *entry = (nsCacheEntry *)PR_LIST_HEAD(&mDoomedEntries);
+    nsCacheEntry* entry = (nsCacheEntry*)PR_LIST_HEAD(&mDoomedEntries);
     while (entry != &mDoomedEntries) {
-      nsCacheEntry *next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+      nsCacheEntry* next = (nsCacheEntry*)PR_NEXT_LINK(entry);
       entries.AppendElement(entry);
       entry = next;
     }
@@ -1845,7 +1845,7 @@ bool nsCacheService::GetClearingEntries() {
 }
 
 // static
-void nsCacheService::GetCacheBaseDirectoty(nsIFile **result) {
+void nsCacheService::GetCacheBaseDirectoty(nsIFile** result) {
   *result = nullptr;
   if (!gService || !gService->mObserver) return;
 
@@ -1856,7 +1856,7 @@ void nsCacheService::GetCacheBaseDirectoty(nsIFile **result) {
 }
 
 // static
-void nsCacheService::GetDiskCacheDirectory(nsIFile **result) {
+void nsCacheService::GetDiskCacheDirectory(nsIFile** result) {
   nsCOMPtr<nsIFile> directory;
   GetCacheBaseDirectoty(getter_AddRefs(directory));
   if (!directory) return;
@@ -1868,7 +1868,7 @@ void nsCacheService::GetDiskCacheDirectory(nsIFile **result) {
 }
 
 // static
-void nsCacheService::GetAppCacheDirectory(nsIFile **result) {
+void nsCacheService::GetAppCacheDirectory(nsIFile** result) {
   nsCOMPtr<nsIFile> directory;
   GetCacheBaseDirectoty(getter_AddRefs(directory));
   if (!directory) return;
@@ -1900,9 +1900,9 @@ void nsCacheService::LogCacheStatistics() {
       ("    Deactivated Unbound Entries = %d\n", mDeactivatedUnboundEntries));
 }
 
-void nsCacheService::MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
-                                           nsIFile *aNewCacheDir,
-                                           const char *aCacheSubdir) {
+void nsCacheService::MoveOrRemoveDiskCache(nsIFile* aOldCacheDir,
+                                           nsIFile* aNewCacheDir,
+                                           const char* aCacheSubdir) {
   bool same;
   if (NS_FAILED(aOldCacheDir->Equals(aNewCacheDir, &same)) || same) return;
 
@@ -1946,7 +1946,7 @@ void nsCacheService::MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
   nsDeleteDir::DeleteDir(aOldCacheSubdir, false, 60000);
 }
 
-static bool IsEntryPrivate(nsCacheEntry *entry) { return entry->IsPrivate(); }
+static bool IsEntryPrivate(nsCacheEntry* entry) { return entry->IsPrivate(); }
 
 void nsCacheService::LeavePrivateBrowsing() {
   nsCacheServiceAutoLock lock;

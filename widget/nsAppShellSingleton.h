@@ -29,7 +29,7 @@
 
 #include "nsXULAppAPI.h"
 
-static nsIAppShell *sAppShell;
+static nsIAppShell* sAppShell;
 
 static nsresult nsAppShellInit() {
   NS_ASSERTION(!sAppShell, "already initialized");
@@ -39,7 +39,7 @@ static nsresult nsAppShellInit() {
   NS_ADDREF(sAppShell);
 
   nsresult rv;
-  rv = static_cast<nsAppShell *>(sAppShell)->Init();
+  rv = static_cast<nsAppShell*>(sAppShell)->Init();
   if (NS_FAILED(rv)) {
     NS_RELEASE(sAppShell);
     return rv;
@@ -50,8 +50,8 @@ static nsresult nsAppShellInit() {
 
 static void nsAppShellShutdown() { NS_RELEASE(sAppShell); }
 
-nsresult nsAppShellConstructor(nsISupports *outer, const nsIID &iid,
-                               void **result) {
+nsresult nsAppShellConstructor(nsISupports* outer, const nsIID& iid,
+                               void** result) {
   NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
   NS_ENSURE_TRUE(sAppShell, NS_ERROR_NOT_INITIALIZED);
 

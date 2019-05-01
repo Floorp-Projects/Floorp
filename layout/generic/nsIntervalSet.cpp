@@ -13,24 +13,24 @@
 
 using namespace mozilla;
 
-nsIntervalSet::nsIntervalSet(PresShell *aPresShell)
+nsIntervalSet::nsIntervalSet(PresShell* aPresShell)
     : mList(nullptr), mPresShell(aPresShell) {}
 
 nsIntervalSet::~nsIntervalSet() {
-  Interval *current = mList;
+  Interval* current = mList;
   while (current) {
-    Interval *trash = current;
+    Interval* trash = current;
     current = current->mNext;
     FreeInterval(trash);
   }
 }
 
-void *nsIntervalSet::AllocateInterval() {
+void* nsIntervalSet::AllocateInterval() {
   return mPresShell->AllocateByObjectID(eArenaObjectID_nsIntervalSet_Interval,
                                         sizeof(Interval));
 }
 
-void nsIntervalSet::FreeInterval(nsIntervalSet::Interval *aInterval) {
+void nsIntervalSet::FreeInterval(nsIntervalSet::Interval* aInterval) {
   NS_ASSERTION(aInterval, "null interval");
 
   aInterval->Interval::~Interval();
@@ -38,16 +38,16 @@ void nsIntervalSet::FreeInterval(nsIntervalSet::Interval *aInterval) {
 }
 
 void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd) {
-  auto newInterval = static_cast<Interval *>(AllocateInterval());
+  auto newInterval = static_cast<Interval*>(AllocateInterval());
   new (newInterval) Interval(aBegin, aEnd);
 
-  Interval **current = &mList;
+  Interval** current = &mList;
   while (*current && (*current)->mEnd < aBegin) current = &(*current)->mNext;
 
   newInterval->mNext = *current;
   *current = newInterval;
 
-  Interval *subsumed = newInterval->mNext;
+  Interval* subsumed = newInterval->mNext;
   while (subsumed && subsumed->mBegin <= aEnd) {
     newInterval->mBegin = std::min(newInterval->mBegin, subsumed->mBegin);
     newInterval->mEnd = std::max(newInterval->mEnd, subsumed->mEnd);
@@ -58,7 +58,7 @@ void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd) {
 }
 
 bool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const {
-  Interval *current = mList;
+  Interval* current = mList;
   while (current && current->mBegin <= aEnd) {
     if (current->mEnd >= aBegin) return true;
     current = current->mNext;
@@ -67,7 +67,7 @@ bool nsIntervalSet::Intersects(coord_type aBegin, coord_type aEnd) const {
 }
 
 bool nsIntervalSet::Contains(coord_type aBegin, coord_type aEnd) const {
-  Interval *current = mList;
+  Interval* current = mList;
   while (current && current->mBegin <= aBegin) {
     if (current->mEnd >= aEnd) return true;
     current = current->mNext;

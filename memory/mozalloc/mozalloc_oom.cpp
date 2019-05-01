@@ -18,7 +18,7 @@ static mozalloc_oom_abort_handler gAbortHandler;
 #define OOM_MSG_LAST_DIGIT_OFFSET \
   sizeof(OOM_MSG_LEADER) + sizeof(OOM_MSG_DIGITS) - 3
 
-static const char *hex = "0123456789ABCDEF";
+static const char* hex = "0123456789ABCDEF";
 
 void mozalloc_handle_oom(size_t size) {
   char oomMsg[] = OOM_MSG_LEADER OOM_MSG_DIGITS OOM_MSG_TRAILER;

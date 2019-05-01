@@ -17,29 +17,29 @@ namespace mscom {
 
 class DispatchForwarder final : public IDispatch {
  public:
-  static HRESULT Create(IInterceptor *aInterceptor,
-                        STAUniquePtr<IDispatch> &aTarget, IUnknown **aOutput);
+  static HRESULT Create(IInterceptor* aInterceptor,
+                        STAUniquePtr<IDispatch>& aTarget, IUnknown** aOutput);
 
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID riid, void **ppv) override;
+  STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
   STDMETHODIMP_(ULONG) AddRef() override;
   STDMETHODIMP_(ULONG) Release() override;
 
   // IDispatch
   STDMETHODIMP GetTypeInfoCount(
-      /* [out] */ __RPC__out UINT *pctinfo) override;
+      /* [out] */ __RPC__out UINT* pctinfo) override;
 
   STDMETHODIMP GetTypeInfo(
       /* [in] */ UINT iTInfo,
       /* [in] */ LCID lcid,
-      /* [out] */ __RPC__deref_out_opt ITypeInfo **ppTInfo) override;
+      /* [out] */ __RPC__deref_out_opt ITypeInfo** ppTInfo) override;
 
   STDMETHODIMP GetIDsOfNames(
       /* [in] */ __RPC__in REFIID riid,
-      /* [size_is][in] */ __RPC__in_ecount_full(cNames) LPOLESTR *rgszNames,
+      /* [size_is][in] */ __RPC__in_ecount_full(cNames) LPOLESTR* rgszNames,
       /* [range][in] */ __RPC__in_range(0, 16384) UINT cNames,
       /* [in] */ LCID lcid,
-      /* [size_is][out] */ __RPC__out_ecount_full(cNames) DISPID *rgDispId)
+      /* [size_is][out] */ __RPC__out_ecount_full(cNames) DISPID* rgDispId)
       override;
 
   STDMETHODIMP Invoke(
@@ -52,17 +52,17 @@ class DispatchForwarder final : public IDispatch {
       /* [annotation][in] */
       _In_ WORD wFlags,
       /* [annotation][out][in] */
-      _In_ DISPPARAMS *pDispParams,
+      _In_ DISPPARAMS* pDispParams,
       /* [annotation][out] */
-      _Out_opt_ VARIANT *pVarResult,
+      _Out_opt_ VARIANT* pVarResult,
       /* [annotation][out] */
-      _Out_opt_ EXCEPINFO *pExcepInfo,
+      _Out_opt_ EXCEPINFO* pExcepInfo,
       /* [annotation][out] */
-      _Out_opt_ UINT *puArgErr) override;
+      _Out_opt_ UINT* puArgErr) override;
 
  private:
-  DispatchForwarder(IInterceptor *aInterceptor,
-                    STAUniquePtr<IDispatch> &aTarget);
+  DispatchForwarder(IInterceptor* aInterceptor,
+                    STAUniquePtr<IDispatch>& aTarget);
   ~DispatchForwarder();
 
  private:

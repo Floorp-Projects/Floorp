@@ -26,9 +26,9 @@ struct ErrorEventInit;
 // notifies it of an error via nsIScriptGlobalObject::HandleScriptError.
 // Returns true if HandleDOMEvent was actually called, in which case
 // aStatus will be filled in with the status.
-bool NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
-                          const mozilla::dom::ErrorEventInit &aErrorEvent,
-                          nsEventStatus *aStatus);
+bool NS_HandleScriptError(nsIScriptGlobalObject* aScriptGlobal,
+                          const mozilla::dom::ErrorEventInit& aErrorEvent,
+                          nsEventStatus* aStatus);
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ISCRIPTGLOBALOBJECT_IID                   \
@@ -62,15 +62,15 @@ class nsIScriptGlobalObject : public nsIGlobalObject {
   /**
    * Get a script context (WITHOUT added reference) for the specified language.
    */
-  virtual nsIScriptContext *GetScriptContext() = 0;
+  virtual nsIScriptContext* GetScriptContext() = 0;
 
-  nsIScriptContext *GetContext() { return GetScriptContext(); }
+  nsIScriptContext* GetContext() { return GetScriptContext(); }
 
   /**
    * Handle a script error.  Generally called by a script context.
    */
-  bool HandleScriptError(const mozilla::dom::ErrorEventInit &aErrorEventInit,
-                         nsEventStatus *aEventStatus) {
+  bool HandleScriptError(const mozilla::dom::ErrorEventInit& aErrorEventInit,
+                         nsEventStatus* aEventStatus) {
     return NS_HandleScriptError(this, aErrorEventInit, aEventStatus);
   }
 

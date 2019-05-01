@@ -33,19 +33,19 @@ class TokenBucketCancelable : public nsICancelable {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICANCELABLE
 
-  explicit TokenBucketCancelable(class ATokenBucketEvent *event);
+  explicit TokenBucketCancelable(class ATokenBucketEvent* event);
   void Fire();
 
  private:
   virtual ~TokenBucketCancelable() = default;
 
   friend class EventTokenBucket;
-  ATokenBucketEvent *mEvent;
+  ATokenBucketEvent* mEvent;
 };
 
 NS_IMPL_ISUPPORTS(TokenBucketCancelable, nsICancelable)
 
-TokenBucketCancelable::TokenBucketCancelable(ATokenBucketEvent *event)
+TokenBucketCancelable::TokenBucketCancelable(ATokenBucketEvent* event)
     : mEvent(event) {}
 
 NS_IMETHODIMP
@@ -58,7 +58,7 @@ TokenBucketCancelable::Cancel(nsresult reason) {
 void TokenBucketCancelable::Fire() {
   if (!mEvent) return;
 
-  ATokenBucketEvent *event = mEvent;
+  ATokenBucketEvent* event = mEvent;
   mEvent = nullptr;
   event->OnTokenBucketAdmitted();
 }
@@ -105,7 +105,7 @@ EventTokenBucket::~EventTokenBucket() {
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
     RefPtr<TokenBucketCancelable> cancelable =
-        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable*>(mEvents.PopFront()));
     cancelable->Fire();
   }
 }
@@ -198,13 +198,13 @@ void EventTokenBucket::Stop() {
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
     RefPtr<TokenBucketCancelable> cancelable =
-        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable*>(mEvents.PopFront()));
     cancelable->Fire();
   }
 }
 
-nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent *event,
-                                       nsICancelable **cancelable) {
+nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent* event,
+                                       nsICancelable** cancelable) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(("EventTokenBucket::SubmitEvent %p\n", this));
 
@@ -230,7 +230,7 @@ nsresult EventTokenBucket::SubmitEvent(ATokenBucketEvent *event,
   return NS_OK;
 }
 
-bool EventTokenBucket::TryImmediateDispatch(TokenBucketCancelable *cancelable) {
+bool EventTokenBucket::TryImmediateDispatch(TokenBucketCancelable* cancelable) {
   if (mCredit < mUnitCost) return false;
 
   mCredit -= mUnitCost;
@@ -245,7 +245,7 @@ void EventTokenBucket::DispatchEvents() {
 
   while (mEvents.GetSize() && mUnitCost <= mCredit) {
     RefPtr<TokenBucketCancelable> cancelable =
-        dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
+        dont_AddRef(static_cast<TokenBucketCancelable*>(mEvents.PopFront()));
     if (cancelable->mEvent) {
       SOCKET_LOG(
           ("EventTokenBucket::DispachEvents [%p] "
@@ -293,7 +293,7 @@ void EventTokenBucket::UpdateTimer() {
 }
 
 NS_IMETHODIMP
-EventTokenBucket::Notify(nsITimer *timer) {
+EventTokenBucket::Notify(nsITimer* timer) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
 #ifdef XP_WIN
@@ -315,7 +315,7 @@ EventTokenBucket::Notify(nsITimer *timer) {
 }
 
 NS_IMETHODIMP
-EventTokenBucket::GetName(nsACString &aName) {
+EventTokenBucket::GetName(nsACString& aName) {
   aName.AssignLiteral("EventTokenBucket");
   return NS_OK;
 }

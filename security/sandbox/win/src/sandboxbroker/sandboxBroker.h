@@ -26,13 +26,13 @@ class AbstractSandboxBroker {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractSandboxBroker)
 
-  static AbstractSandboxBroker *Create(GeckoProcessType aProcessType);
+  static AbstractSandboxBroker* Create(GeckoProcessType aProcessType);
 
   virtual void Shutdown() = 0;
-  virtual bool LaunchApp(const wchar_t *aPath, const wchar_t *aArguments,
-                         base::EnvironmentMap &aEnvironment,
+  virtual bool LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
+                         base::EnvironmentMap& aEnvironment,
                          GeckoProcessType aProcessType,
-                         const bool aEnableLogging, void **aProcessHandle) = 0;
+                         const bool aEnableLogging, void** aProcessHandle) = 0;
 
   // Security levels for different types of processes
   virtual void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
@@ -46,7 +46,7 @@ class AbstractSandboxBroker {
   virtual bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel) = 0;
 
   // File system permissions
-  virtual bool AllowReadFile(wchar_t const *file) = 0;
+  virtual bool AllowReadFile(wchar_t const* file) = 0;
 
   /**
    * Share a HANDLE with the child process. The HANDLE will be made available
@@ -64,7 +64,7 @@ class SandboxBroker : public AbstractSandboxBroker {
  public:
   SandboxBroker();
 
-  static void Initialize(sandbox::BrokerServices *aBrokerServices);
+  static void Initialize(sandbox::BrokerServices* aBrokerServices);
 
   void Shutdown() override {}
 
@@ -74,10 +74,10 @@ class SandboxBroker : public AbstractSandboxBroker {
    */
   static void GeckoDependentInitialize();
 
-  bool LaunchApp(const wchar_t *aPath, const wchar_t *aArguments,
-                 base::EnvironmentMap &aEnvironment,
+  bool LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
+                 base::EnvironmentMap& aEnvironment,
                  GeckoProcessType aProcessType, const bool aEnableLogging,
-                 void **aProcessHandle) override;
+                 void** aProcessHandle) override;
   virtual ~SandboxBroker();
 
   // Security levels for different types of processes
@@ -91,7 +91,7 @@ class SandboxBroker : public AbstractSandboxBroker {
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel) override;
 
   // File system permissions
-  bool AllowReadFile(wchar_t const *file) override;
+  bool AllowReadFile(wchar_t const* file) override;
 
   /**
    * Exposes AddTargetPeer from broker services, so that non-sandboxed
@@ -111,9 +111,9 @@ class SandboxBroker : public AbstractSandboxBroker {
   void ApplyLoggingPolicy();
 
  private:
-  static sandbox::BrokerServices *sBrokerService;
+  static sandbox::BrokerServices* sBrokerService;
   static bool sRunningFromNetworkDrive;
-  sandbox::TargetPolicy *mPolicy;
+  sandbox::TargetPolicy* mPolicy;
 };
 
 }  // namespace mozilla

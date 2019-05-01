@@ -41,7 +41,7 @@
 // accomplished by converting inCmdLine to an argument list with
 // CommandLineToArgvW and converting it back to a command line with
 // MakeCommandLine.
-static int verifyCmdLineCreation(wchar_t *inCmdLine, wchar_t *compareCmdLine,
+static int verifyCmdLineCreation(wchar_t* inCmdLine, wchar_t* compareCmdLine,
                                  bool passes, int testNum) {
   int rv = 0;
   int i;
@@ -61,18 +61,18 @@ static int verifyCmdLineCreation(wchar_t *inCmdLine, wchar_t *compareCmdLine,
   // handles argv[0] differently than other arguments since argv[0] is the path
   // to the binary being executed and MakeCommandLine only handles argv[1] and
   // larger.
-  wchar_t *inCmdLineNew = (wchar_t *)malloc(
+  wchar_t* inCmdLineNew = (wchar_t*)malloc(
       (wcslen(DUMMY_ARG1) + wcslen(inCmdLine) + 1) * sizeof(wchar_t));
   wcscpy(inCmdLineNew, DUMMY_ARG1);
   wcscat(inCmdLineNew, inCmdLine);
-  LPWSTR *inArgv = CommandLineToArgvW(inCmdLineNew, &inArgc);
+  LPWSTR* inArgv = CommandLineToArgvW(inCmdLineNew, &inArgc);
 
   auto outCmdLine = mozilla::MakeCommandLine(inArgc - 1, inArgv + 1);
-  wchar_t *outCmdLineNew = (wchar_t *)malloc(
+  wchar_t* outCmdLineNew = (wchar_t*)malloc(
       (wcslen(DUMMY_ARG1) + wcslen(outCmdLine.get()) + 1) * sizeof(wchar_t));
   wcscpy(outCmdLineNew, DUMMY_ARG1);
   wcscat(outCmdLineNew, outCmdLine.get());
-  LPWSTR *outArgv = CommandLineToArgvW(outCmdLineNew, &outArgc);
+  LPWSTR* outArgv = CommandLineToArgvW(outCmdLineNew, &outArgc);
 
   if (VERBOSE) {
     wprintf(L"\n");
@@ -155,7 +155,7 @@ static int verifyCmdLineCreation(wchar_t *inCmdLine, wchar_t *compareCmdLine,
   return rv;
 }
 
-int wmain(int argc, wchar_t *argv[]) {
+int wmain(int argc, wchar_t* argv[]) {
   int i;
   int rv = 0;
 
@@ -175,7 +175,7 @@ int wmain(int argc, wchar_t *argv[]) {
     return 2;
   }
 
-  WCHAR *slash = wcsrchr(inifile, '\\');
+  WCHAR* slash = wcsrchr(inifile, '\\');
   if (!slash) {
     wprintf(L"TEST-UNEXPECTED-FAIL | %s | wcsrchr\n", TEST_NAME);
     return 3;
@@ -253,10 +253,10 @@ int wmain(int argc, wchar_t *argv[]) {
 
 #  include <shellapi.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   LPWSTR commandLine = GetCommandLineW();
   int argcw = 0;
-  LPWSTR *argvw = CommandLineToArgvW(commandLine, &argcw);
+  LPWSTR* argvw = CommandLineToArgvW(commandLine, &argcw);
   if (!argvw) return 127;
 
   int result = wmain(argcw, argvw);

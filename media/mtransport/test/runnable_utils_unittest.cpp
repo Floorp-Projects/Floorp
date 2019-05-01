@@ -42,17 +42,17 @@ class Destructor {
   }
 
  public:
-  explicit Destructor(bool *destroyed) : destroyed_(destroyed) {}
+  explicit Destructor(bool* destroyed) : destroyed_(destroyed) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Destructor)
 
  private:
-  bool *destroyed_;
+  bool* destroyed_;
 };
 
 class TargetClass {
  public:
-  explicit TargetClass(int *ran) : ran_(ran) {}
+  explicit TargetClass(int* ran) : ran_(ran) {}
 
   void m1(int x) {
     std::cerr << __FUNCTION__ << " " << x << std::endl;
@@ -64,7 +64,7 @@ class TargetClass {
     *ran_ = 2;
   }
 
-  void m1set(bool *z) {
+  void m1set(bool* z) {
     std::cerr << __FUNCTION__ << std::endl;
     *z = true;
   }
@@ -72,11 +72,11 @@ class TargetClass {
     std::cerr << __FUNCTION__ << std::endl;
     return x;
   }
-  void destructor_target(Destructor *) {}
+  void destructor_target(Destructor*) {}
 
   void destructor_target_ref(RefPtr<Destructor> destructor) {}
 
-  int *ran_;
+  int* ran_;
 };
 
 class RunnableArgsTest : public MtransportTest {
@@ -84,13 +84,13 @@ class RunnableArgsTest : public MtransportTest {
   RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_) {}
 
   void Test1Arg() {
-    Runnable *r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     r->Run();
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    Runnable *r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     r->Run();
     ASSERT_EQ(2, ran_);
   }
@@ -113,13 +113,13 @@ class DispatchTest : public MtransportTest {
   }
 
   void Test1Arg() {
-    Runnable *r = WrapRunnable(&cl_, &TargetClass::m1, 1);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(1, ran_);
   }
 
   void Test2Args() {
-    Runnable *r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
+    Runnable* r = WrapRunnable(&cl_, &TargetClass::m2, 1, 2);
     target_->Dispatch(r, NS_DISPATCH_SYNC);
     ASSERT_EQ(2, ran_);
   }
@@ -158,9 +158,9 @@ TEST_F(DispatchTest, Test1Set) { Test1Set(); }
 
 TEST_F(DispatchTest, TestRet) { TestRet(); }
 
-void SetNonMethod(TargetClass *cl, int x) { cl->m1(x); }
+void SetNonMethod(TargetClass* cl, int x) { cl->m1(x); }
 
-int SetNonMethodRet(TargetClass *cl, int x) {
+int SetNonMethodRet(TargetClass* cl, int x) {
   cl->m1(x);
 
   return x;

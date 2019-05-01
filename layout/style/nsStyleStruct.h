@@ -130,16 +130,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   RefPtr<nsAtom> mLanguage;
 };
 
-struct nsStyleGradientStop {
-  nsStyleCoord mLocation;  // percent, coord, calc, none
-  mozilla::StyleColor mColor;
-  bool mIsInterpolationHint;
-
-  // Use ==/!= on nsStyleGradient instead of on the gradient stop.
-  bool operator==(const nsStyleGradientStop&) const = delete;
-  bool operator!=(const nsStyleGradientStop&) const = delete;
-};
-
 class nsStyleGradient final {
  public:
   nsStyleGradient();
@@ -161,7 +151,7 @@ class nsStyleGradient final {
   nsStyleCoord mRadiusY;  // percent, coord, calc, none
 
   // stops are in the order specified in the stylesheet
-  nsTArray<nsStyleGradientStop> mStops;
+  nsTArray<mozilla::StyleGradientItem> mStops;
 
   bool operator==(const nsStyleGradient& aOther) const;
   bool operator!=(const nsStyleGradient& aOther) const {
@@ -169,8 +159,6 @@ class nsStyleGradient final {
   }
 
   bool IsOpaque();
-  bool HasCalc();
-  uint32_t Hash(PLDHashNumber aHash);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleGradient)
 

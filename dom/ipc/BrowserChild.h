@@ -612,6 +612,10 @@ class BrowserChild final : public BrowserChildBase,
   void PaintWhileInterruptingJS(const layers::LayersObserverEpoch& aEpoch,
                                 bool aForceRepaint);
 
+  nsresult CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
+                              int32_t aNavigationIndex, nsIURI* aNavigationURI,
+                              int32_t aEpoch, bool* aCanCancel);
+
   layers::LayersObserverEpoch LayersObserverEpoch() const {
     return mLayersObserverEpoch;
   }
@@ -659,6 +663,10 @@ class BrowserChild final : public BrowserChildBase,
   void HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                   const ScrollableLayerGuid& aGuid,
                                   const uint64_t& aInputBlockId);
+
+  void SetCancelContentJSEpoch(int32_t aEpoch) {
+    mCancelContentJSEpoch = aEpoch;
+  }
 
   static bool HasVisibleTabs() {
     return sVisibleTabs && !sVisibleTabs->IsEmpty();
@@ -808,6 +816,9 @@ class BrowserChild final : public BrowserChildBase,
                                        Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
 
+  nsresult CanCancelContentJSBetweenURIs(nsIURI* aFirstURI, nsIURI* aSecondURI,
+                                         bool* aCanCancel);
+
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
@@ -913,6 +924,7 @@ class BrowserChild final : public BrowserChildBase,
   // When mPendingDocShellBlockers is greater than 0, the DocShell is blocked,
   // and once it reaches 0, it is no longer blocked.
   uint32_t mPendingDocShellBlockers;
+  int32_t mCancelContentJSEpoch;
 
   WindowsHandle mWidgetNativeData;
 

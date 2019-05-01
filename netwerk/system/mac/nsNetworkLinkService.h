@@ -40,9 +40,9 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
   void UpdateReachability();
   void SendEvent(bool aNetworkChanged);
   static void ReachabilityChanged(SCNetworkReachabilityRef target,
-                                  SCNetworkConnectionFlags flags, void *info);
+                                  SCNetworkConnectionFlags flags, void* info);
   static void IPConfigChanged(SCDynamicStoreRef store, CFArrayRef changedKeys,
-                              void *info);
+                              void* info);
   void calculateNetworkId(void);
   nsCString mNetworkId;
 };

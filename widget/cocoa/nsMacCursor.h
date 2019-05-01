@@ -18,7 +18,7 @@
 */
 @interface nsMacCursor : NSObject {
  @private
-  NSTimer *mTimer;
+  NSTimer* mTimer;
  @protected
   nsCursor mType;
   int mFrameCounter;
@@ -32,7 +32,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code>
                 representing the given <code>NSCursor</code>
  */
-+ (nsMacCursor *)cursorWithCursor:(NSCursor *)aCursor type:(nsCursor)aType;
++ (nsMacCursor*)cursorWithCursor:(NSCursor*)aCursor type:(nsCursor)aType;
 
 /*! @method     cursorWithImageNamed:hotSpot:type:
     @abstract   Create a cursor by specifying the name of an image resource to
@@ -50,9 +50,9 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that uses the given image and
    hotspot
  */
-+ (nsMacCursor *)cursorWithImageNamed:(NSString *)aCursorImage
-                              hotSpot:(NSPoint)aPoint
-                                 type:(nsCursor)aType;
++ (nsMacCursor*)cursorWithImageNamed:(NSString*)aCursorImage
+                             hotSpot:(NSPoint)aPoint
+                                type:(nsCursor)aType;
 
 /*! @method     cursorWithFrames:type:
     @abstract   Create an animated cursor by specifying the frames to use for
@@ -67,7 +67,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that will
                 animate the given cursor frames
  */
-+ (nsMacCursor *)cursorWithFrames:(NSArray *)aCursorFrames type:(nsCursor)aType;
++ (nsMacCursor*)cursorWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType;
 
 /*! @method     cocoaCursorWithImageNamed:hotSpot:
     @abstract   Create a Cocoa NSCursor object with a Gecko image resource name
@@ -80,7 +80,7 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that will
                 animate the given cursor frames
  */
-+ (NSCursor *)cocoaCursorWithImageNamed:(NSString *)imageName hotSpot:(NSPoint)aPoint;
++ (NSCursor*)cocoaCursorWithImageNamed:(NSString*)imageName hotSpot:(NSPoint)aPoint;
 
 /*! @method     isSet
     @abstract   Determines whether this cursor is currently active.

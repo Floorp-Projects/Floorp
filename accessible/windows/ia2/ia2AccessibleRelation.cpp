@@ -14,9 +14,9 @@
 
 using namespace mozilla::a11y;
 
-ia2AccessibleRelation::ia2AccessibleRelation(RelationType aType, Relation *aRel)
+ia2AccessibleRelation::ia2AccessibleRelation(RelationType aType, Relation* aRel)
     : mType(aType) {
-  Accessible *target = nullptr;
+  Accessible* target = nullptr;
   while ((target = aRel->Next())) mTargets.AppendElement(target);
 }
 
@@ -30,7 +30,7 @@ IMPL_IUNKNOWN_QUERY_TAIL
 // IAccessibleRelation
 
 STDMETHODIMP
-ia2AccessibleRelation::get_relationType(BSTR *aRelationType) {
+ia2AccessibleRelation::get_relationType(BSTR* aRelationType) {
   if (!aRelationType) return E_INVALIDARG;
 
   *aRelationType = nullptr;
@@ -48,7 +48,7 @@ ia2AccessibleRelation::get_relationType(BSTR *aRelationType) {
 }
 
 STDMETHODIMP
-ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType) {
+ia2AccessibleRelation::get_localizedRelationType(BSTR* aLocalizedRelationType) {
   if (!aLocalizedRelationType) return E_INVALIDARG;
 
   *aLocalizedRelationType = nullptr;
@@ -56,7 +56,7 @@ ia2AccessibleRelation::get_localizedRelationType(BSTR *aLocalizedRelationType) {
 }
 
 STDMETHODIMP
-ia2AccessibleRelation::get_nTargets(long *aNTargets) {
+ia2AccessibleRelation::get_nTargets(long* aNTargets) {
   if (!aNTargets) return E_INVALIDARG;
 
   *aNTargets = mTargets.Length();
@@ -64,22 +64,22 @@ ia2AccessibleRelation::get_nTargets(long *aNTargets) {
 }
 
 STDMETHODIMP
-ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown **aTarget) {
+ia2AccessibleRelation::get_target(long aTargetIndex, IUnknown** aTarget) {
   if (aTargetIndex < 0 || (uint32_t)aTargetIndex >= mTargets.Length() ||
       !aTarget)
     return E_INVALIDARG;
 
-  AccessibleWrap *target =
-      static_cast<AccessibleWrap *>(mTargets[aTargetIndex].get());
-  *aTarget = static_cast<IAccessible *>(target);
+  AccessibleWrap* target =
+      static_cast<AccessibleWrap*>(mTargets[aTargetIndex].get());
+  *aTarget = static_cast<IAccessible*>(target);
   (*aTarget)->AddRef();
 
   return S_OK;
 }
 
 STDMETHODIMP
-ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown **aTargets,
-                                   long *aNTargets) {
+ia2AccessibleRelation::get_targets(long aMaxTargets, IUnknown** aTargets,
+                                   long* aNTargets) {
   if (!aNTargets || !aTargets) return E_INVALIDARG;
 
   *aNTargets = 0;

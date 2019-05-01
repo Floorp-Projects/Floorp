@@ -24,8 +24,8 @@
 namespace mozilla {
 namespace net {
 
-ASpdySession *ASpdySession::NewSpdySession(net::SpdyVersion version,
-                                           nsISocketTransport *aTransport,
+ASpdySession* ASpdySession::NewSpdySession(net::SpdyVersion version,
+                                           nsISocketTransport* aTransport,
                                            bool attemptingEarlyData) {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
@@ -53,8 +53,8 @@ bool SpdyInformation::ProtocolEnabled(uint32_t index) const {
   return gHttpHandler->IsHttp2Enabled();
 }
 
-nsresult SpdyInformation::GetNPNIndex(const nsACString &npnString,
-                                      uint32_t *result) const {
+nsresult SpdyInformation::GetNPNIndex(const nsACString& npnString,
+                                      uint32_t* result) const {
   if (npnString.IsEmpty()) return NS_ERROR_FAILURE;
 
   for (uint32_t index = 0; index < kCount; ++index) {
@@ -73,8 +73,8 @@ nsresult SpdyInformation::GetNPNIndex(const nsACString &npnString,
 
 SpdyPushCache::~SpdyPushCache() { mHashHttp2.Clear(); }
 
-bool SpdyPushCache::RegisterPushedStreamHttp2(const nsCString &key,
-                                              Http2PushedStream *stream) {
+bool SpdyPushCache::RegisterPushedStreamHttp2(const nsCString& key,
+                                              Http2PushedStream* stream) {
   LOG3(("SpdyPushCache::RegisterPushedStreamHttp2 %s 0x%X\n", key.get(),
         stream->StreamID()));
   if (mHashHttp2.Get(key)) {
@@ -86,18 +86,18 @@ bool SpdyPushCache::RegisterPushedStreamHttp2(const nsCString &key,
   return true;
 }
 
-Http2PushedStream *SpdyPushCache::RemovePushedStreamHttp2(
-    const nsCString &key) {
-  Http2PushedStream *rv = mHashHttp2.Get(key);
+Http2PushedStream* SpdyPushCache::RemovePushedStreamHttp2(
+    const nsCString& key) {
+  Http2PushedStream* rv = mHashHttp2.Get(key);
   LOG3(("SpdyPushCache::RemovePushedStreamHttp2 %s 0x%X\n", key.get(),
         rv ? rv->StreamID() : 0));
   if (rv) mHashHttp2.Remove(key);
   return rv;
 }
 
-Http2PushedStream *SpdyPushCache::RemovePushedStreamHttp2ByID(
-    const nsCString &key, const uint32_t &streamID) {
-  Http2PushedStream *rv = mHashHttp2.Get(key);
+Http2PushedStream* SpdyPushCache::RemovePushedStreamHttp2ByID(
+    const nsCString& key, const uint32_t& streamID) {
+  Http2PushedStream* rv = mHashHttp2.Get(key);
   LOG3(("SpdyPushCache::RemovePushedStreamHttp2ByID %s 0x%X 0x%X", key.get(),
         rv ? rv->StreamID() : 0, streamID));
   if (rv && streamID == rv->StreamID()) {

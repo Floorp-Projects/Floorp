@@ -204,34 +204,6 @@ mochitest-chrome:
                 android-em.*: false
                 default: true
 
-mochitest-clipboard:
-    description: "Mochitest clipboard run"
-    treeherder-symbol: M(cl)
-    loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
-    instance-size: xlarge
-    max-run-time:
-        by-test-platform:
-            windows10-64-ccov/debug: 7200
-            macosx64-ccov/debug: 7200
-            default: 3600
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    mozharness:
-        mochitest-flavor: plain
-        extra-options:
-            by-test-platform:
-                android-em.*:
-                    # note that Android runs fewer suites than other platforms
-                    - --test-suite=mochitest-plain-clipboard
-                default:
-                    - --mochitest-suite=mochitest-plain-clipboard,mochitest-chrome-clipboard,mochitest-browser-chrome-clipboard
-
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
     suite:

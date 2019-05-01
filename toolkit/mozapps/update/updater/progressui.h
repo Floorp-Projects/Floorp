@@ -18,7 +18,7 @@ typedef char NS_tchar;
 #endif
 
 // Called to perform any initialization of the widget toolkit
-int InitProgressUI(int *argc, NS_tchar ***argv);
+int InitProgressUI(int* argc, NS_tchar*** argv);
 
 #if defined(XP_WIN)
 // Called on the main thread at startup

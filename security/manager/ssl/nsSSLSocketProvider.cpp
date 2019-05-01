@@ -18,12 +18,12 @@ nsSSLSocketProvider::~nsSSLSocketProvider() {}
 NS_IMPL_ISUPPORTS(nsSSLSocketProvider, nsISocketProvider)
 
 NS_IMETHODIMP
-nsSSLSocketProvider::NewSocket(int32_t family, const char *host, int32_t port,
-                               nsIProxyInfo *proxy,
-                               const OriginAttributes &originAttributes,
+nsSSLSocketProvider::NewSocket(int32_t family, const char* host, int32_t port,
+                               nsIProxyInfo* proxy,
+                               const OriginAttributes& originAttributes,
                                uint32_t flags, uint32_t tlsFlags,
-                               PRFileDesc **_result,
-                               nsISupports **securityInfo) {
+                               PRFileDesc** _result,
+                               nsISupports** securityInfo) {
   nsresult rv =
       nsSSLIOLayerNewSocket(family, host, port, proxy, originAttributes,
                             _result, securityInfo, false, flags, tlsFlags);
@@ -32,12 +32,12 @@ nsSSLSocketProvider::NewSocket(int32_t family, const char *host, int32_t port,
 
 // Add the SSL IO layer to an existing socket
 NS_IMETHODIMP
-nsSSLSocketProvider::AddToSocket(int32_t family, const char *host, int32_t port,
-                                 nsIProxyInfo *proxy,
-                                 const OriginAttributes &originAttributes,
+nsSSLSocketProvider::AddToSocket(int32_t family, const char* host, int32_t port,
+                                 nsIProxyInfo* proxy,
+                                 const OriginAttributes& originAttributes,
                                  uint32_t flags, uint32_t tlsFlags,
-                                 PRFileDesc *aSocket,
-                                 nsISupports **securityInfo) {
+                                 PRFileDesc* aSocket,
+                                 nsISupports** securityInfo) {
   nsresult rv =
       nsSSLIOLayerAddToSocket(family, host, port, proxy, originAttributes,
                               aSocket, securityInfo, false, flags, tlsFlags);

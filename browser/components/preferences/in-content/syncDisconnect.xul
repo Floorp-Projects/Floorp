@@ -49,12 +49,10 @@
       <spacer flex="1"/>
       <hbox class="actionButtons" align="right" flex="1">
         <button id="butCancel"
-                is="highlightable-button"
                 oncommand="close(event);"
                 class="syncDisconnectButton"
                 data-l10n-id="sync-disconnect-cancel"/>
         <button id="butDisconnect"
-                is="highlightable-button"
                 oncommand="gSyncDisconnectDialog.accept(event);"
                 class="syncDisconnectButton"
                 data-l10n-id="sync-disconnect-confirm-disconnect"/>

@@ -50,8 +50,8 @@ const int64_t kint64max = ((int64_t)GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 // This should be used in the private: declarations for a class
 #undef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName &);              \
-  void operator=(const TypeName &)
+  TypeName(const TypeName&);               \
+  void operator=(const TypeName&)
 
 // An older, deprecated, politically incorrect name for the above.
 #undef DISALLOW_EVIL_CONSTRUCTORS
@@ -154,7 +154,7 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 // but the proposal was submitted too late.  It will probably make
 // its way into the language in the future.
 template <typename To, typename From>
-inline To implicit_cast(From const &f) {
+inline To implicit_cast(From const& f) {
   return f;
 }
 

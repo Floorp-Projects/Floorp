@@ -42,7 +42,7 @@ class AutoAutoreleasePool {
   ~AutoAutoreleasePool() { [mLocalPool release]; }
 
  private:
-  NSAutoreleasePool *mLocalPool;
+  NSAutoreleasePool* mLocalPool;
 };
 
 @interface MacApplicationDelegate : NSObject <NSApplicationDelegate> {
@@ -98,7 +98,7 @@ void ProcessPendingGetURLAppleEvents() {
   bool keepSpinning = true;
   while (keepSpinning) {
     sProcessedGetURLEvent = false;
-    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+    NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
                                         untilDate:nil
                                            inMode:NSDefaultRunLoopMode
                                           dequeue:YES];
@@ -113,7 +113,7 @@ void ProcessPendingGetURLAppleEvents() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if ((self = [super init])) {
-    NSAppleEventManager *aeMgr = [NSAppleEventManager sharedAppleEventManager];
+    NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
 
     [aeMgr setEventHandler:self
                andSelector:@selector(handleAppleEvent:withReplyEvent:)
@@ -133,7 +133,7 @@ void ProcessPendingGetURLAppleEvents() {
     if (![NSApp windowsMenu]) {
       // If the application has a windows menu, it will keep it up to date and
       // prepend the window list to the Dock menu automatically.
-      NSMenu *windowsMenu = [[NSMenu alloc] initWithTitle:@"Window"];
+      NSMenu* windowsMenu = [[NSMenu alloc] initWithTitle:@"Window"];
       [NSApp setWindowsMenu:windowsMenu];
       [windowsMenu release];
     }
@@ -146,7 +146,7 @@ void ProcessPendingGetURLAppleEvents() {
 - (void)dealloc {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSAppleEventManager *aeMgr = [NSAppleEventManager sharedAppleEventManager];
+  NSAppleEventManager* aeMgr = [NSAppleEventManager sharedAppleEventManager];
   [aeMgr removeEventHandlerForEventClass:kInternetEventClass andEventID:kAEGetURL];
   [aeMgr removeEventHandlerForEventClass:'WWW!' andEventID:'OURL'];
   [aeMgr removeEventHandlerForEventClass:kCoreEventClass andEventID:kAEOpenDocuments];
@@ -158,7 +158,7 @@ void ProcessPendingGetURLAppleEvents() {
 // The method that NSApplication calls upon a request to reopen, such as when
 // the Dock icon is clicked and no windows are open. A "visible" window may be
 // miniaturized, so we can't skip nsCocoaNativeReOpen() if 'flag' is 'true'.
-- (BOOL)applicationShouldHandleReopen:(NSApplication *)theApp hasVisibleWindows:(BOOL)flag {
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)theApp hasVisibleWindows:(BOOL)flag {
   nsCOMPtr<nsINativeAppSupport> nas = NS_GetNativeAppSupport();
   NS_ENSURE_TRUE(nas, NO);
 
@@ -172,13 +172,13 @@ void ProcessPendingGetURLAppleEvents() {
 
 // The method that NSApplication calls when documents are requested to be opened.
 // It will be called once for each selected document.
-- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename {
+- (BOOL)application:(NSApplication*)theApplication openFile:(NSString*)filename {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NSURL *url = [NSURL fileURLWithPath:filename];
+  NSURL* url = [NSURL fileURLWithPath:filename];
   if (!url) return NO;
 
-  NSString *urlString = [url absoluteString];
+  NSString* urlString = [url absoluteString];
   if (!urlString) return NO;
 
   // Add the URL to any command line we're currently setting up.
@@ -198,7 +198,7 @@ void ProcessPendingGetURLAppleEvents() {
   rv = NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(workingDir));
   if (NS_FAILED(rv)) return NO;
 
-  const char *argv[3] = {nullptr, "-file", filePath.get()};
+  const char* argv[3] = {nullptr, "-file", filePath.get()};
   rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
   if (NS_FAILED(rv)) return NO;
 
@@ -212,16 +212,16 @@ void ProcessPendingGetURLAppleEvents() {
 // The method that NSApplication calls when documents are requested to be printed
 // from the Finder (under the "File" menu).
 // It will be called once for each selected document.
-- (BOOL)application:(NSApplication *)theApplication printFile:(NSString *)filename {
+- (BOOL)application:(NSApplication*)theApplication printFile:(NSString*)filename {
   return NO;
 }
 
 // Create the menu that shows up in the Dock.
-- (NSMenu *)applicationDockMenu:(NSApplication *)sender {
+- (NSMenu*)applicationDockMenu:(NSApplication*)sender {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // Create the NSMenu that will contain the dock menu items.
-  NSMenu *menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+  NSMenu* menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
   [menu setAutoenablesItems:NO];
 
   // Add application-specific dock menu items. On error, do not insert the
@@ -242,8 +242,8 @@ void ProcessPendingGetURLAppleEvents() {
   if (NS_FAILED(rv) || !shouldShowItems) return menu;
 
   // Obtain a copy of the native menu.
-  NSMenu *nativeDockMenu;
-  rv = dockMenu->GetNativeMenu(reinterpret_cast<void **>(&nativeDockMenu));
+  NSMenu* nativeDockMenu;
+  rv = dockMenu->GetNativeMenu(reinterpret_cast<void**>(&nativeDockMenu));
   if (NS_FAILED(rv) || !nativeDockMenu) return menu;
 
   // Loop through the application-specific dock menu and insert its
@@ -253,7 +253,7 @@ void ProcessPendingGetURLAppleEvents() {
     if ([menu numberOfItems] > 0) [menu addItem:[NSMenuItem separatorItem]];
 
     for (int i = 0; i < numDockMenuItems; i++) {
-      NSMenuItem *itemCopy = [[nativeDockMenu itemAtIndex:i] copy];
+      NSMenuItem* itemCopy = [[nativeDockMenu itemAtIndex:i] copy];
       [menu addItem:itemCopy];
       [itemCopy release];
     }
@@ -264,7 +264,7 @@ void ProcessPendingGetURLAppleEvents() {
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)applicationWillFinishLaunching:(NSNotification *)notification {
+- (void)applicationWillFinishLaunching:(NSNotification*)notification {
   // We provide our own full screen menu item, so we don't want the OS providing
   // one as well.
   [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"NSFullScreenMenuItemEverywhere"];
@@ -272,7 +272,7 @@ void ProcessPendingGetURLAppleEvents() {
 
 // If we don't handle applicationShouldTerminate:, a call to [NSApp terminate:]
 // (from the browser or from the OS) can result in an unclean shutdown.
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender {
   nsCOMPtr<nsIObserverService> obsServ = do_GetService("@mozilla.org/observer-service;1");
   if (!obsServ) return NSTerminateNow;
 
@@ -292,8 +292,8 @@ void ProcessPendingGetURLAppleEvents() {
   return NSTerminateNow;
 }
 
-- (void)handleAppleEvent:(NSAppleEventDescriptor *)event
-          withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+- (void)handleAppleEvent:(NSAppleEventDescriptor*)event
+          withReplyEvent:(NSAppleEventDescriptor*)replyEvent {
   if (!event) return;
 
   AutoAutoreleasePool pool;
@@ -302,22 +302,22 @@ void ProcessPendingGetURLAppleEvents() {
   if (isGetURLEvent) sProcessedGetURLEvent = true;
 
   if (isGetURLEvent || ([event eventClass] == 'WWW!' && [event eventID] == 'OURL')) {
-    NSString *urlString = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
-    NSURL *url = [NSURL URLWithString:urlString];
+    NSString* urlString = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
+    NSURL* url = [NSURL URLWithString:urlString];
 
     [self openURL:url];
   } else if ([event eventClass] == kCoreEventClass && [event eventID] == kAEOpenDocuments) {
-    NSAppleEventDescriptor *fileListDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
+    NSAppleEventDescriptor* fileListDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
     if (!fileListDescriptor) return;
 
     // Descriptor list indexing is one-based...
     NSInteger numberOfFiles = [fileListDescriptor numberOfItems];
     for (NSInteger i = 1; i <= numberOfFiles; i++) {
-      NSString *urlString = [[fileListDescriptor descriptorAtIndex:i] stringValue];
+      NSString* urlString = [[fileListDescriptor descriptorAtIndex:i] stringValue];
       if (!urlString) continue;
 
       // We need a path, not a URL
-      NSURL *url = [NSURL URLWithString:urlString];
+      NSURL* url = [NSURL URLWithString:urlString];
       if (!url) continue;
 
       [self application:NSApp openFile:[url path]];
@@ -325,14 +325,14 @@ void ProcessPendingGetURLAppleEvents() {
   }
 }
 
-- (BOOL)application:(NSApplication *)application
-    willContinueUserActivityWithType:(NSString *)userActivityType {
+- (BOOL)application:(NSApplication*)application
+    willContinueUserActivityWithType:(NSString*)userActivityType {
   return [userActivityType isEqualToString:NSUserActivityTypeBrowsingWeb];
 }
 
-- (BOOL)application:(NSApplication *)application
-    continueUserActivity:(NSUserActivity *)userActivity
-      restorationHandler:(void (^)(NSArray *))restorationHandler {
+- (BOOL)application:(NSApplication*)application
+    continueUserActivity:(NSUserActivity*)userActivity
+      restorationHandler:(void (^)(NSArray*))restorationHandler {
   if (![userActivity.activityType isEqualToString:NSUserActivityTypeBrowsingWeb]) {
     return NO;
   }
@@ -340,18 +340,18 @@ void ProcessPendingGetURLAppleEvents() {
   return [self openURL:userActivity.webpageURL];
 }
 
-- (void)application:(NSApplication *)application
-    didFailToContinueUserActivityWithType:(NSString *)userActivityType
-                                    error:(NSError *)error {
+- (void)application:(NSApplication*)application
+    didFailToContinueUserActivityWithType:(NSString*)userActivityType
+                                    error:(NSError*)error {
   NSLog(@"Failed to continue user activity %@: %@", userActivityType, error);
 }
 
-- (BOOL)openURL:(NSURL *)url {
+- (BOOL)openURL:(NSURL*)url {
   if (!url || !url.scheme || [url.scheme caseInsensitiveCompare:@"chrome"] == NSOrderedSame) {
     return NO;
   }
 
-  const char *const urlString = [[url absoluteString] UTF8String];
+  const char* const urlString = [[url absoluteString] UTF8String];
   // Add the URL to any command line we're currently setting up.
   if (CommandLineServiceMac::AddURLToCurrentCommandLine(urlString)) {
     return NO;
@@ -363,7 +363,7 @@ void ProcessPendingGetURLAppleEvents() {
   if (NS_FAILED(rv)) {
     return NO;
   }
-  const char *argv[3] = {nullptr, "-url", urlString};
+  const char* argv[3] = {nullptr, "-url", urlString};
   rv = cmdLine->Init(3, argv, workingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
   if (NS_FAILED(rv)) {
     return NO;

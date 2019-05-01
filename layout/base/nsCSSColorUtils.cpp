@@ -64,8 +64,8 @@ int32_t NS_GetLuminosity(nscolor aColor) {
 // Hue is the primary color defined from 0 to 359 degrees
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper
 // the color Value is the brightness of the color. 0 is black, 255 is white.
-void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
-                uint16_t &aValue, uint8_t &aAlpha) {
+void NS_RGB2HSV(nscolor aColor, uint16_t& aHue, uint16_t& aSat,
+                uint16_t& aValue, uint8_t& aAlpha) {
   uint8_t r, g, b;
   int16_t delta, min, max, r1, b1, g1;
   float hue;
@@ -127,7 +127,7 @@ void NS_RGB2HSV(nscolor aColor, uint16_t &aHue, uint16_t &aSat,
 // Hue is the primary color defined from 0 to 359 degrees
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper
 // the color Value is the brightness of the color. 0 is black, 255 is white.
-void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
+void NS_HSV2RGB(nscolor& aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
                 uint8_t aAlpha) {
   uint16_t r = 0, g = 0, b = 0;
   uint16_t i, p, q, t;

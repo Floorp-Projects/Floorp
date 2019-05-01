@@ -91,16 +91,16 @@ class TimerTest : public MtransportTest {
     return 0;
   }
 
-  static void cb(NR_SOCKET r, int how, void *arg) {
+  static void cb(NR_SOCKET r, int how, void* arg) {
     std::cerr << "Timer fired " << std::endl;
 
-    TimerTest *t = static_cast<TimerTest *>(arg);
+    TimerTest* t = static_cast<TimerTest*>(arg);
 
     t->fired_ = true;
   }
 
  protected:
-  void *handle_;
+  void* handle_;
   bool fired_;
 };
 }  // namespace

@@ -22,9 +22,9 @@ class SourceSurfaceD2D1 : public SourceSurface {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceD2D1, override)
 
-  SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC,
-                    SurfaceFormat aFormat, const IntSize &aSize,
-                    DrawTargetD2D1 *aDT = nullptr);
+  SourceSurfaceD2D1(ID2D1Image* aImage, ID2D1DeviceContext* aDC,
+                    SurfaceFormat aFormat, const IntSize& aSize,
+                    DrawTargetD2D1* aDT = nullptr);
   ~SourceSurfaceD2D1();
 
   SurfaceType GetType() const override { return SurfaceType::D2D1_1_IMAGE; }
@@ -33,7 +33,7 @@ class SourceSurfaceD2D1 : public SourceSurface {
   bool IsValid() const override;
   already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
-  ID2D1Image *GetImage() { return mImage; }
+  ID2D1Image* GetImage() { return mImage; }
 
   void EnsureIndependent() {
     if (!mDrawTarget) return;
@@ -64,7 +64,7 @@ class SourceSurfaceD2D1 : public SourceSurface {
 
   SurfaceFormat mFormat;
   IntSize mSize;
-  DrawTargetD2D1 *mDrawTarget;
+  DrawTargetD2D1* mDrawTarget;
   std::shared_ptr<Mutex> mSnapshotLock;
 };
 
@@ -72,16 +72,16 @@ class DataSourceSurfaceD2D1 : public DataSourceSurface {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceD2D1, override)
 
-  DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap, SurfaceFormat aFormat);
+  DataSourceSurfaceD2D1(ID2D1Bitmap1* aMappableBitmap, SurfaceFormat aFormat);
   ~DataSourceSurfaceD2D1();
 
   SurfaceType GetType() const override { return SurfaceType::DATA; }
   IntSize GetSize() const override;
   SurfaceFormat GetFormat() const override { return mFormat; }
   bool IsValid() const override { return !!mBitmap; }
-  uint8_t *GetData() override;
+  uint8_t* GetData() override;
   int32_t Stride() override;
-  bool Map(MapType, MappedSurface *aMappedSurface) override;
+  bool Map(MapType, MappedSurface* aMappedSurface) override;
   void Unmap() override;
 
  private:

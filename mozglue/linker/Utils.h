@@ -49,20 +49,20 @@ class le_to_cpu {
 
   operator Type() const { return (b << (sizeof(T) * 8)) | a; }
 
-  const le_to_cpu &operator=(const Type &v) {
+  const le_to_cpu& operator=(const Type& v) {
     a = v & ((1 << (sizeof(T) * 8)) - 1);
     b = v >> (sizeof(T) * 8);
     return *this;
   }
 
   le_to_cpu() {}
-  explicit le_to_cpu(const Type &v) { operator=(v); }
+  explicit le_to_cpu(const Type& v) { operator=(v); }
 
-  const le_to_cpu &operator+=(const Type &v) {
+  const le_to_cpu& operator+=(const Type& v) {
     return operator=(operator Type() + v);
   }
 
-  const le_to_cpu &operator++(int) { return operator=(operator Type() + 1); }
+  const le_to_cpu& operator++(int) { return operator=(operator Type() + 1); }
 
  private:
   T a, b;
@@ -91,9 +91,9 @@ typedef mozilla::Scoped<AutoCloseFDTraits> AutoCloseFD;
  * AutoCloseFILE is a RAII wrapper for POSIX streams
  */
 struct AutoCloseFILETraits {
-  typedef FILE *type;
-  static FILE *empty() { return nullptr; }
-  static void release(FILE *f) {
+  typedef FILE* type;
+  static FILE* empty() { return nullptr; }
+  static void release(FILE* f) {
     if (f) fclose(f);
   }
 };
@@ -117,8 +117,8 @@ static inline uintptr_t AlignedPtr(uintptr_t ptr, size_t alignment) {
 }
 
 template <typename T>
-static inline T *AlignedPtr(T *ptr, size_t alignment) {
-  return reinterpret_cast<T *>(
+static inline T* AlignedPtr(T* ptr, size_t alignment) {
+  return reinterpret_cast<T*>(
       AlignedPtr(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
@@ -132,8 +132,8 @@ static inline uintptr_t AlignedEndPtr(uintptr_t ptr, size_t alignment) {
 }
 
 template <typename T>
-static inline T *AlignedEndPtr(T *ptr, size_t alignment) {
-  return reinterpret_cast<T *>(
+static inline T* AlignedEndPtr(T* ptr, size_t alignment) {
+  return reinterpret_cast<T*>(
       AlignedEndPtr(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
@@ -155,7 +155,7 @@ static inline bool IsAlignedPtr(uintptr_t ptr, size_t alignment) {
 }
 
 template <typename T>
-static inline bool IsAlignedPtr(T *ptr, size_t alignment) {
+static inline bool IsAlignedPtr(T* ptr, size_t alignment) {
   return IsAlignedPtr(reinterpret_cast<uintptr_t>(ptr), alignment);
 }
 
@@ -181,39 +181,39 @@ static inline size_t PageNumber(size_t size) {
  */
 class MemoryRange {
  public:
-  MemoryRange(void *buf, size_t length) : buf(buf), length(length) {}
+  MemoryRange(void* buf, size_t length) : buf(buf), length(length) {}
 
-  void Assign(void *b, size_t len) {
+  void Assign(void* b, size_t len) {
     buf = b;
     length = len;
   }
 
-  void Assign(const MemoryRange &other) {
+  void Assign(const MemoryRange& other) {
     buf = other.buf;
     length = other.length;
   }
 
-  void *get() const { return buf; }
+  void* get() const { return buf; }
 
-  operator void *() const { return buf; }
+  operator void*() const { return buf; }
 
-  operator unsigned char *() const {
-    return reinterpret_cast<unsigned char *>(buf);
+  operator unsigned char*() const {
+    return reinterpret_cast<unsigned char*>(buf);
   }
 
-  bool operator==(void *ptr) const { return buf == ptr; }
+  bool operator==(void* ptr) const { return buf == ptr; }
 
-  bool operator==(unsigned char *ptr) const { return buf == ptr; }
+  bool operator==(unsigned char* ptr) const { return buf == ptr; }
 
-  void *operator+(off_t offset) const {
-    return reinterpret_cast<char *>(buf) + offset;
+  void* operator+(off_t offset) const {
+    return reinterpret_cast<char*>(buf) + offset;
   }
 
   /**
    * Returns whether the given address is within the mapped range
    */
-  bool Contains(void *ptr) const {
-    return (ptr >= buf) && (ptr < reinterpret_cast<char *>(buf) + length);
+  bool Contains(void* ptr) const {
+    return (ptr >= buf) && (ptr < reinterpret_cast<char*>(buf) + length);
   }
 
   /**
@@ -221,13 +221,13 @@ class MemoryRange {
    */
   size_t GetLength() const { return length; }
 
-  static MemoryRange mmap(void *addr, size_t length, int prot, int flags,
+  static MemoryRange mmap(void* addr, size_t length, int prot, int flags,
                           int fd, off_t offset) {
     return MemoryRange(::mmap(addr, length, prot, flags, fd, offset), length);
   }
 
  private:
-  void *buf;
+  void* buf;
   size_t length;
 };
 
@@ -241,36 +241,36 @@ class MemoryRange {
 template <typename T>
 class GenericMappedPtr : public MemoryRange {
  public:
-  GenericMappedPtr(void *buf, size_t length) : MemoryRange(buf, length) {}
-  explicit GenericMappedPtr(const MemoryRange &other) : MemoryRange(other) {}
+  GenericMappedPtr(void* buf, size_t length) : MemoryRange(buf, length) {}
+  explicit GenericMappedPtr(const MemoryRange& other) : MemoryRange(other) {}
   GenericMappedPtr() : MemoryRange(MAP_FAILED, 0) {}
 
-  void Assign(void *b, size_t len) {
-    if (get() != MAP_FAILED) static_cast<T *>(this)->munmap(get(), GetLength());
+  void Assign(void* b, size_t len) {
+    if (get() != MAP_FAILED) static_cast<T*>(this)->munmap(get(), GetLength());
     MemoryRange::Assign(b, len);
   }
 
-  void Assign(const MemoryRange &other) {
+  void Assign(const MemoryRange& other) {
     Assign(other.get(), other.GetLength());
   }
 
   ~GenericMappedPtr() {
-    if (get() != MAP_FAILED) static_cast<T *>(this)->munmap(get(), GetLength());
+    if (get() != MAP_FAILED) static_cast<T*>(this)->munmap(get(), GetLength());
   }
 
   void release() { MemoryRange::Assign(MAP_FAILED, 0); }
 };
 
 struct MappedPtr : public GenericMappedPtr<MappedPtr> {
-  MappedPtr(void *buf, size_t length)
+  MappedPtr(void* buf, size_t length)
       : GenericMappedPtr<MappedPtr>(buf, length) {}
-  MOZ_IMPLICIT MappedPtr(const MemoryRange &other)
+  MOZ_IMPLICIT MappedPtr(const MemoryRange& other)
       : GenericMappedPtr<MappedPtr>(other) {}
   MappedPtr() : GenericMappedPtr<MappedPtr>() {}
 
  private:
   friend class GenericMappedPtr<MappedPtr>;
-  void munmap(void *buf, size_t length) { ::munmap(buf, length); }
+  void munmap(void* buf, size_t length) { ::munmap(buf, length); }
 };
 
 /**
@@ -296,30 +296,30 @@ class UnsizedArray {
    * Constructors and Initializers
    */
   UnsizedArray() : contents(nullptr) {}
-  explicit UnsizedArray(const void *buf)
-      : contents(reinterpret_cast<const T *>(buf)) {}
+  explicit UnsizedArray(const void* buf)
+      : contents(reinterpret_cast<const T*>(buf)) {}
 
-  void Init(const void *buf) {
+  void Init(const void* buf) {
     MOZ_ASSERT(contents == nullptr);
-    contents = reinterpret_cast<const T *>(buf);
+    contents = reinterpret_cast<const T*>(buf);
   }
 
   /**
    * Returns the nth element of the array
    */
-  const T &operator[](const idx_t index) const {
+  const T& operator[](const idx_t index) const {
     MOZ_ASSERT(contents);
     return contents[index];
   }
 
-  operator const T *() const { return contents; }
+  operator const T*() const { return contents; }
   /**
    * Returns whether the array points somewhere
    */
   explicit operator bool() const { return contents != nullptr; }
 
  private:
-  const T *contents;
+  const T* contents;
 };
 
 /**
@@ -353,10 +353,10 @@ class Array : public UnsizedArray<T> {
    * Constructors and Initializers
    */
   Array() : UnsizedArray<T>(), length(0) {}
-  Array(const void *buf, const idx_t length)
+  Array(const void* buf, const idx_t length)
       : UnsizedArray<T>(buf), length(length) {}
 
-  void Init(const void *buf) { UnsizedArray<T>::Init(buf); }
+  void Init(const void* buf) { UnsizedArray<T>::Init(buf); }
 
   void Init(const idx_t len) {
     MOZ_ASSERT(length == 0);
@@ -365,12 +365,12 @@ class Array : public UnsizedArray<T> {
 
   void InitSize(const idx_t size) { Init(size / sizeof(T)); }
 
-  void Init(const void *buf, const idx_t len) {
+  void Init(const void* buf, const idx_t len) {
     UnsizedArray<T>::Init(buf);
     Init(len);
   }
 
-  void InitSize(const void *buf, const idx_t size) {
+  void InitSize(const void* buf, const idx_t size) {
     UnsizedArray<T>::Init(buf);
     InitSize(size);
   }
@@ -378,7 +378,7 @@ class Array : public UnsizedArray<T> {
   /**
    * Returns the nth element of the array
    */
-  const T &operator[](const idx_t index) const {
+  const T& operator[](const idx_t index) const {
     MOZ_ASSERT(index < length);
     MOZ_ASSERT(operator bool());
     return UnsizedArray<T>::operator[](index);
@@ -409,23 +409,23 @@ class Array : public UnsizedArray<T> {
    public:
     iterator() : item(nullptr) {}
 
-    const T &operator*() const { return *item; }
+    const T& operator*() const { return *item; }
 
-    const T *operator->() const { return item; }
+    const T* operator->() const { return item; }
 
-    iterator &operator++() {
+    iterator& operator++() {
       ++item;
       return *this;
     }
 
-    bool operator<(const iterator &other) const { return item < other.item; }
+    bool operator<(const iterator& other) const { return item < other.item; }
 
    protected:
     friend class Array<T>;
-    explicit iterator(const T &item) : item(&item) {}
+    explicit iterator(const T& item) : item(&item) {}
 
    private:
-    const T *item;
+    const T* item;
   };
 
   /**
@@ -458,28 +458,28 @@ class Array : public UnsizedArray<T> {
    public:
     reverse_iterator() : item(nullptr) {}
 
-    const T &operator*() const {
-      const T *tmp = item;
+    const T& operator*() const {
+      const T* tmp = item;
       return *--tmp;
     }
 
-    const T *operator->() const { return &operator*(); }
+    const T* operator->() const { return &operator*(); }
 
-    reverse_iterator &operator++() {
+    reverse_iterator& operator++() {
       --item;
       return *this;
     }
 
-    bool operator<(const reverse_iterator &other) const {
+    bool operator<(const reverse_iterator& other) const {
       return item > other.item;
     }
 
    protected:
     friend class Array<T>;
-    explicit reverse_iterator(const T &item) : item(&item) {}
+    explicit reverse_iterator(const T& item) : item(&item) {}
 
    private:
-    const T *item;
+    const T* item;
   };
 
   /**
@@ -507,9 +507,9 @@ class Array : public UnsizedArray<T> {
  * same address.
  */
 template <typename T>
-void *FunctionPtr(T func) {
+void* FunctionPtr(T func) {
   union {
-    void *ptr;
+    void* ptr;
     T func;
   } f;
   f.func = func;
@@ -518,7 +518,7 @@ void *FunctionPtr(T func) {
 
 class AutoLock {
  public:
-  explicit AutoLock(pthread_mutex_t *mutex) : mutex(mutex) {
+  explicit AutoLock(pthread_mutex_t* mutex) : mutex(mutex) {
     if (pthread_mutex_lock(mutex)) MOZ_CRASH("pthread_mutex_lock failed");
   }
   ~AutoLock() {
@@ -526,7 +526,7 @@ class AutoLock {
   }
 
  private:
-  pthread_mutex_t *mutex;
+  pthread_mutex_t* mutex;
 };
 
 #endif /* Utils_h */

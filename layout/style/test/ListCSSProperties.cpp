@@ -15,9 +15,9 @@
 #define STRINGIFY_METHOD(method_) #method_
 
 struct PropertyInfo {
-  const char *propName;
-  const char *domName;
-  const char *pref;
+  const char* propName;
+  const char* domName;
+  const char* pref;
 };
 
 const PropertyInfo gLonghandProperties[] = {
@@ -38,7 +38,7 @@ const PropertyInfo gLonghandProperties[] = {
  * be used.  They're in the same order as the above list, with some
  * items skipped.
  */
-const char *gLonghandPropertiesWithDOMProp[] = {
+const char* gLonghandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_LONGHAND(name_, ...) #name_,
@@ -67,7 +67,7 @@ const PropertyInfo gShorthandProperties[] = {
 };
 
 /* see gLonghandPropertiesWithDOMProp */
-const char *gShorthandPropertiesWithDOMProp[] = {
+const char* gShorthandPropertiesWithDOMProp[] = {
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) #name_,
@@ -83,7 +83,7 @@ const char *gShorthandPropertiesWithDOMProp[] = {
 
 #undef STRINGIFY_METHOD
 
-const char *gInaccessibleProperties[] = {
+const char* gInaccessibleProperties[] = {
     // Don't print the properties that aren't accepted by the parser, per
     // CSSParserImpl::ParseProperty
     "-x-cols",
@@ -107,22 +107,22 @@ const char *gInaccessibleProperties[] = {
     "-moz-window-shadow",                    // chrome-only internal properties
 };
 
-inline int is_inaccessible(const char *aPropName) {
+inline int is_inaccessible(const char* aPropName) {
   for (unsigned j = 0; j < MOZ_ARRAY_LENGTH(gInaccessibleProperties); ++j) {
     if (strcmp(aPropName, gInaccessibleProperties[j]) == 0) return 1;
   }
   return 0;
 }
 
-void print_array(const char *aName, const PropertyInfo *aProps,
-                 unsigned aPropsLength, const char *const *aDOMProps,
+void print_array(const char* aName, const PropertyInfo* aProps,
+                 unsigned aPropsLength, const char* const* aDOMProps,
                  unsigned aDOMPropsLength) {
   printf("var %s = [\n", aName);
 
   int first = 1;
   unsigned j = 0;  // index into DOM prop list
   for (unsigned i = 0; i < aPropsLength; ++i) {
-    const PropertyInfo *p = aProps + i;
+    const PropertyInfo* p = aProps + i;
 
     if (is_inaccessible(p->propName))
       // inaccessible properties never have DOM props, so don't

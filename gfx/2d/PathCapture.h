@@ -22,23 +22,23 @@ class PathBuilderCapture : public PathBuilder {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderCapture, override)
 
-  PathBuilderCapture(FillRule aFillRule, DrawTarget *aDT)
+  PathBuilderCapture(FillRule aFillRule, DrawTarget* aDT)
       : mFillRule(aFillRule), mDT(aDT) {}
 
   /* Move the current point in the path, any figure currently being drawn will
    * be considered closed during fill operations, however when stroking the
    * closing line segment will not be drawn.
    */
-  virtual void MoveTo(const Point &aPoint) override;
+  virtual void MoveTo(const Point& aPoint) override;
   /* Add a linesegment to the current figure */
-  virtual void LineTo(const Point &aPoint) override;
+  virtual void LineTo(const Point& aPoint) override;
   /* Add a cubic bezier curve to the current figure */
-  virtual void BezierTo(const Point &aCP1, const Point &aCP2,
-                        const Point &aCP3) override;
+  virtual void BezierTo(const Point& aCP1, const Point& aCP2,
+                        const Point& aCP3) override;
   /* Add a quadratic bezier curve to the current figure */
-  virtual void QuadraticBezierTo(const Point &aCP1, const Point &aCP2) override;
+  virtual void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) override;
   /* Add an arc to the current figure */
-  virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
+  virtual void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
                    float aEndAngle, bool aAntiClockwise) override;
   /* Close the current figure, this will essentially generate a line segment
    * from the current point to the starting point for the current figure
@@ -70,7 +70,7 @@ class PathCapture : public Path {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCapture, override)
 
   PathCapture(const std::vector<PathOp> aOps, FillRule aFillRule,
-              DrawTarget *aDT, const Point &aCurrentPoint)
+              DrawTarget* aDT, const Point& aCurrentPoint)
       : mPathOps(aOps),
         mFillRule(aFillRule),
         mDT(aDT),
@@ -82,24 +82,24 @@ class PathCapture : public Path {
   virtual already_AddRefed<PathBuilder> CopyToBuilder(
       FillRule aFillRule) const override;
   virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(
-      const Matrix &aTransform, FillRule aFillRule) const override;
-  virtual bool ContainsPoint(const Point &aPoint,
-                             const Matrix &aTransform) const override;
-  virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
-                                   const Point &aPoint,
-                                   const Matrix &aTransform) const override;
+      const Matrix& aTransform, FillRule aFillRule) const override;
+  virtual bool ContainsPoint(const Point& aPoint,
+                             const Matrix& aTransform) const override;
+  virtual bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                                   const Point& aPoint,
+                                   const Matrix& aTransform) const override;
 
-  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const override;
+  virtual Rect GetBounds(const Matrix& aTransform = Matrix()) const override;
 
   virtual Rect GetStrokedBounds(
-      const StrokeOptions &aStrokeOptions,
-      const Matrix &aTransform = Matrix()) const override;
+      const StrokeOptions& aStrokeOptions,
+      const Matrix& aTransform = Matrix()) const override;
 
-  virtual void StreamToSink(PathSink *aSink) const override;
+  virtual void StreamToSink(PathSink* aSink) const override;
 
   virtual FillRule GetFillRule() const override { return mFillRule; }
 
-  Path *GetRealizedPath() const;
+  Path* GetRealizedPath() const;
 
  private:
   bool EnsureRealizedPath() const;

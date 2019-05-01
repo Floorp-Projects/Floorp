@@ -28,7 +28,7 @@ namespace net {
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
-static bool IsSafeForUntrustedContent(nsIAboutModule *aModule, nsIURI *aURI) {
+static bool IsSafeForUntrustedContent(nsIAboutModule* aModule, nsIURI* aURI) {
   uint32_t flags;
   nsresult rv = aModule->GetURIFlags(aURI, &flags);
   NS_ENSURE_SUCCESS(rv, false);
@@ -36,8 +36,8 @@ static bool IsSafeForUntrustedContent(nsIAboutModule *aModule, nsIURI *aURI) {
   return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
 }
 
-static bool IsSafeToLinkForUntrustedContent(nsIAboutModule *aModule,
-                                            nsIURI *aURI) {
+static bool IsSafeToLinkForUntrustedContent(nsIAboutModule* aModule,
+                                            nsIURI* aURI) {
   uint32_t flags;
   nsresult rv = aModule->GetURIFlags(aURI, &flags);
   NS_ENSURE_SUCCESS(rv, false);
@@ -54,26 +54,26 @@ NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler,
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetScheme(nsACString &result) {
+nsAboutProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("about");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetDefaultPort(int32_t *result) {
+nsAboutProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = -1;  // no port for about: URLs
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetProtocolFlags(uint32_t *result) {
+nsAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
             URI_SCHEME_NOT_SELF_LINKABLE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aFlags) {
+nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags) {
   // First use the default (which is "unsafe for content"):
   GetProtocolFlags(aFlags);
 
@@ -105,9 +105,9 @@ nsAboutProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aFlags) {
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
-                               const char *aCharset,  // ignore charset info
-                               nsIURI *aBaseURI, nsIURI **result) {
+nsAboutProtocolHandler::NewURI(const nsACString& aSpec,
+                               const char* aCharset,  // ignore charset info
+                               nsIURI* aBaseURI, nsIURI** result) {
   *result = nullptr;
   nsresult rv;
 
@@ -159,8 +159,8 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                   nsIChannel **result) {
+nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                   nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(uri);
 
   // about:what you ask?
@@ -209,7 +209,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
         NS_ASSERTION(false,
                      "nsIAboutModule->newChannel(aURI, aLoadInfo) needs to "
                      "set LoadInfo");
-        const char16_t *params[] = {
+        const char16_t* params[] = {
             u"nsIAboutModule->newChannel(aURI)",
             u"nsIAboutModule->newChannel(aURI, aLoadInfo)"};
         nsContentUtils::ReportToConsole(
@@ -260,8 +260,8 @@ nsAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                  bool *_retval) {
+nsAboutProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                  bool* _retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;
@@ -276,28 +276,28 @@ NS_IMPL_ISUPPORTS(nsSafeAboutProtocolHandler, nsIProtocolHandler,
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::GetScheme(nsACString &result) {
+nsSafeAboutProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("moz-safe-about");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::GetDefaultPort(int32_t *result) {
+nsSafeAboutProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = -1;  // no port for moz-safe-about: URLs
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t *result) {
+nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
             URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
-                                   const char *aCharset,  // ignore charset info
-                                   nsIURI *aBaseURI, nsIURI **result) {
+nsSafeAboutProtocolHandler::NewURI(const nsACString& aSpec,
+                                   const char* aCharset,  // ignore charset info
+                                   nsIURI* aBaseURI, nsIURI** result) {
   nsresult rv =
       NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(result);
   if (NS_FAILED(rv)) {
@@ -308,15 +308,15 @@ nsSafeAboutProtocolHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                       nsIChannel **result) {
+nsSafeAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                       nsIChannel** result) {
   *result = nullptr;
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                      bool *_retval) {
+nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                      bool* _retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;
@@ -326,19 +326,19 @@ nsSafeAboutProtocolHandler::AllowPort(int32_t port, const char *scheme,
 // nsNestedAboutURI implementation
 NS_INTERFACE_MAP_BEGIN(nsNestedAboutURI)
   if (aIID.Equals(kNestedAboutURICID))
-    foundInterface = static_cast<nsIURI *>(this);
+    foundInterface = static_cast<nsIURI*>(this);
   else
 NS_INTERFACE_MAP_END_INHERITING(nsSimpleNestedURI)
 
 // nsISerializable
 
 NS_IMETHODIMP
-nsNestedAboutURI::Read(nsIObjectInputStream *aStream) {
+nsNestedAboutURI::Read(nsIObjectInputStream* aStream) {
   MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsNestedAboutURI::ReadPrivate(nsIObjectInputStream *aStream) {
+nsresult nsNestedAboutURI::ReadPrivate(nsIObjectInputStream* aStream) {
   nsresult rv = nsSimpleNestedURI::ReadPrivate(aStream);
   if (NS_FAILED(rv)) return rv;
 
@@ -359,7 +359,7 @@ nsresult nsNestedAboutURI::ReadPrivate(nsIObjectInputStream *aStream) {
 }
 
 NS_IMETHODIMP
-nsNestedAboutURI::Write(nsIObjectOutputStream *aStream) {
+nsNestedAboutURI::Write(nsIObjectOutputStream* aStream) {
   nsresult rv = nsSimpleNestedURI::Write(aStream);
   if (NS_FAILED(rv)) return rv;
 
@@ -383,8 +383,8 @@ nsNestedAboutURI::Write(nsIObjectOutputStream *aStream) {
 }
 
 // nsSimpleURI
-/* virtual */ nsSimpleURI *nsNestedAboutURI::StartClone(
-    nsSimpleURI::RefHandlingEnum aRefHandlingMode, const nsACString &aNewRef) {
+/* virtual */ nsSimpleURI* nsNestedAboutURI::StartClone(
+    nsSimpleURI::RefHandlingEnum aRefHandlingMode, const nsACString& aNewRef) {
   // Sadly, we can't make use of nsSimpleNestedURI::StartClone here.
   // However, this function is expected to exactly match that function,
   // aside from the "new ns***URI()" call.
@@ -404,7 +404,7 @@ nsNestedAboutURI::Write(nsIObjectOutputStream *aStream) {
     return nullptr;
   }
 
-  nsNestedAboutURI *url = new nsNestedAboutURI(innerClone, mBaseURI);
+  nsNestedAboutURI* url = new nsNestedAboutURI(innerClone, mBaseURI);
   SetRefOnClone(url, aRefHandlingMode, aNewRef);
 
   return url;
@@ -416,7 +416,7 @@ NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsNestedAboutURI::Mutator, nsIURISetters,
                                 nsINestedAboutURIMutator)
 
 NS_IMETHODIMP
-nsNestedAboutURI::Mutate(nsIURIMutator **aMutator) {
+nsNestedAboutURI::Mutate(nsIURIMutator** aMutator) {
   RefPtr<nsNestedAboutURI::Mutator> mutator = new nsNestedAboutURI::Mutator();
   nsresult rv = mutator->InitFromURI(this);
   if (NS_FAILED(rv)) {
@@ -428,7 +428,7 @@ nsNestedAboutURI::Mutate(nsIURIMutator **aMutator) {
 
 // nsIClassInfo
 NS_IMETHODIMP
-nsNestedAboutURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) {
+nsNestedAboutURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   *aClassIDNoAlloc = kNestedAboutURICID;
   return NS_OK;
 }

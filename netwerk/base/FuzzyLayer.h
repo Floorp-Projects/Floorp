@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace net {
 
-nsresult AttachFuzzyIOLayer(PRFileDesc *fd);
+nsresult AttachFuzzyIOLayer(PRFileDesc* fd);
 
 }  // namespace net
 }  // namespace mozilla

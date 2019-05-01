@@ -33,8 +33,8 @@ class Dashboard final : public nsIDashboard, public nsIDashboardEventNotifier {
   NS_DECL_NSIDASHBOARDEVENTNOTIFIER
 
   Dashboard();
-  static const char *GetErrorString(nsresult rv);
-  nsresult GetConnectionStatus(ConnectionData *aConnectionData);
+  static const char* GetErrorString(nsresult rv);
+  nsresult GetConnectionStatus(ConnectionData* aConnectionData);
 
  private:
   struct LogData {
@@ -53,14 +53,14 @@ class Dashboard final : public nsIDashboard, public nsIDashboardEventNotifier {
     uint64_t mSizeSent;
     uint64_t mSizeReceived;
     bool mEncrypted;
-    bool operator==(const LogData &a) const {
+    bool operator==(const LogData& a) const {
       return mHost.Equals(a.mHost) && (mSerial == a.mSerial);
     }
   };
 
   struct WebSocketData {
     WebSocketData() : lock("Dashboard.webSocketData") {}
-    uint32_t IndexOf(const nsCString &hostname, uint32_t mSerial) {
+    uint32_t IndexOf(const nsCString& hostname, uint32_t mSerial) {
       LogData temp(hostname, mSerial, false);
       return data.IndexOf(temp);
     }
@@ -74,17 +74,17 @@ class Dashboard final : public nsIDashboard, public nsIDashboardEventNotifier {
  private:
   virtual ~Dashboard() = default;
 
-  nsresult GetSocketsDispatch(SocketData *);
-  nsresult GetHttpDispatch(HttpData *);
-  nsresult GetDnsInfoDispatch(DnsData *);
-  nsresult TestNewConnection(ConnectionData *);
+  nsresult GetSocketsDispatch(SocketData*);
+  nsresult GetHttpDispatch(HttpData*);
+  nsresult GetDnsInfoDispatch(DnsData*);
+  nsresult TestNewConnection(ConnectionData*);
 
   /* Helper methods that pass the JSON to the callback function. */
-  nsresult GetSockets(SocketData *);
-  nsresult GetHttpConnections(HttpData *);
-  nsresult GetDNSCacheEntries(DnsData *);
-  nsresult GetWebSocketConnections(WebSocketRequest *);
-  nsresult GetRcwnData(RcwnData *);
+  nsresult GetSockets(SocketData*);
+  nsresult GetHttpConnections(HttpData*);
+  nsresult GetDNSCacheEntries(DnsData*);
+  nsresult GetWebSocketConnections(WebSocketRequest*);
+  nsresult GetRcwnData(RcwnData*);
 
   nsCOMPtr<nsIDNSService> mDnsService;
 };

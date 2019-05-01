@@ -9,9 +9,9 @@
 #include "maiRedundantObjectFactory.h"
 
 static void mai_redundant_object_factory_class_init(
-    maiRedundantObjectFactoryClass *klass);
+    maiRedundantObjectFactoryClass* klass);
 
-static AtkObject *mai_redundant_object_factory_create_accessible(GObject *obj);
+static AtkObject* mai_redundant_object_factory_create_accessible(GObject* obj);
 static GType mai_redundant_object_factory_get_accessible_type(void);
 
 GType mai_redundant_object_factory_get_type(void) {
@@ -39,8 +39,8 @@ GType mai_redundant_object_factory_get_type(void) {
 }
 
 static void mai_redundant_object_factory_class_init(
-    maiRedundantObjectFactoryClass *klass) {
-  AtkObjectFactoryClass *class = ATK_OBJECT_FACTORY_CLASS(klass);
+    maiRedundantObjectFactoryClass* klass) {
+  AtkObjectFactoryClass* class = ATK_OBJECT_FACTORY_CLASS(klass);
 
   class->create_accessible = mai_redundant_object_factory_create_accessible;
   class->get_accessible_type = mai_redundant_object_factory_get_accessible_type;
@@ -54,8 +54,8 @@ static void mai_redundant_object_factory_class_init(
  *
  * Returns: an instance of an #AtkObjectFactory
  **/
-AtkObjectFactory *mai_redundant_object_factory_new() {
-  GObject *factory;
+AtkObjectFactory* mai_redundant_object_factory_new() {
+  GObject* factory;
 
   factory = g_object_new(mai_redundant_object_factory_get_type(), NULL);
 
@@ -63,8 +63,8 @@ AtkObjectFactory *mai_redundant_object_factory_new() {
   return ATK_OBJECT_FACTORY(factory);
 }
 
-static AtkObject *mai_redundant_object_factory_create_accessible(GObject *obj) {
-  AtkObject *accessible;
+static AtkObject* mai_redundant_object_factory_create_accessible(GObject* obj) {
+  AtkObject* accessible;
 
   g_return_val_if_fail(obj != NULL, NULL);
 

@@ -23,7 +23,7 @@ class nsIntervalSet {
  public:
   typedef nscoord coord_type;
 
-  explicit nsIntervalSet(mozilla::PresShell *aPresShell);
+  explicit nsIntervalSet(mozilla::PresShell* aPresShell);
   ~nsIntervalSet();
 
   /*
@@ -58,15 +58,15 @@ class nsIntervalSet {
 
     coord_type mBegin;
     coord_type mEnd;
-    Interval *mPrev;
-    Interval *mNext;
+    Interval* mPrev;
+    Interval* mNext;
   };
 
-  void *AllocateInterval();
-  void FreeInterval(Interval *aInterval);
+  void* AllocateInterval();
+  void FreeInterval(Interval* aInterval);
 
-  Interval *mList;
-  mozilla::PresShell *mPresShell;
+  Interval* mList;
+  mozilla::PresShell* mPresShell;
 };
 
 #endif  // !defined(nsIntervalSet_h___)

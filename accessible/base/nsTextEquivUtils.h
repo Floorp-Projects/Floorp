@@ -48,7 +48,7 @@ class nsTextEquivUtils {
    * @param aRule       [in] a given name rule
    * @return true if the accessible has the rule
    */
-  static inline bool HasNameRule(Accessible *aAccessible,
+  static inline bool HasNameRule(Accessible* aAccessible,
                                  ETextEquivRule aRule) {
     return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
   }
@@ -59,15 +59,15 @@ class nsTextEquivUtils {
    * @param aAccessible [in] the given accessible
    * @param aName       [out] accessible name
    */
-  static nsresult GetNameFromSubtree(const Accessible *aAccessible,
-                                     nsAString &aName);
+  static nsresult GetNameFromSubtree(const Accessible* aAccessible,
+                                     nsAString& aName);
 
   /**
    * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
    * However it returns not empty result for things like HTML p.
    */
-  static void GetTextEquivFromSubtree(const Accessible *aAccessible,
-                                      nsString &aTextEquiv) {
+  static void GetTextEquivFromSubtree(const Accessible* aAccessible,
+                                      nsString& aTextEquiv) {
     aTextEquiv.Truncate();
 
     AppendFromAccessibleChildren(aAccessible, &aTextEquiv);
@@ -82,9 +82,9 @@ class nsTextEquivUtils {
    * @param aIDRefsAttr  [in] IDRefs attribute on DOM node of the accessible
    * @param aTextEquiv   [out] result text equivalent
    */
-  static nsresult GetTextEquivFromIDRefs(const Accessible *aAccessible,
-                                         nsAtom *aIDRefsAttr,
-                                         nsAString &aTextEquiv);
+  static nsresult GetTextEquivFromIDRefs(const Accessible* aAccessible,
+                                         nsAtom* aIDRefsAttr,
+                                         nsAString& aTextEquiv);
 
   /**
    * Calculates the text equivalent from the given content and its subtree if
@@ -97,9 +97,9 @@ class nsTextEquivUtils {
    *                       computed from
    * @param aString        [in, out] the string
    */
-  static nsresult AppendTextEquivFromContent(const Accessible *aInitiatorAcc,
-                                             nsIContent *aContent,
-                                             nsAString *aString);
+  static nsresult AppendTextEquivFromContent(const Accessible* aInitiatorAcc,
+                                             nsIContent* aContent,
+                                             nsAString* aString);
 
   /**
    * Calculates the text equivalent from the given text content (may be text
@@ -108,46 +108,46 @@ class nsTextEquivUtils {
    * @param aContent       [in] the text content
    * @param aString        [in, out] the string
    */
-  static nsresult AppendTextEquivFromTextContent(nsIContent *aContent,
-                                                 nsAString *aString);
+  static nsresult AppendTextEquivFromTextContent(nsIContent* aContent,
+                                                 nsAString* aString);
 
  private:
   /**
    * Iterates accessible children and calculates text equivalent from each
    * child.
    */
-  static nsresult AppendFromAccessibleChildren(const Accessible *aAccessible,
-                                               nsAString *aString);
+  static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
+                                               nsAString* aString);
 
   /**
    * Calculates text equivalent from the given accessible and its subtree if
    * allowed.
    */
-  static nsresult AppendFromAccessible(Accessible *aAccessible,
-                                       nsAString *aString);
+  static nsresult AppendFromAccessible(Accessible* aAccessible,
+                                       nsAString* aString);
 
   /**
    * Calculates text equivalent from the value of given accessible.
    */
-  static nsresult AppendFromValue(Accessible *aAccessible, nsAString *aString);
+  static nsresult AppendFromValue(Accessible* aAccessible, nsAString* aString);
   /**
    * Iterates DOM children and calculates text equivalent from each child node.
    */
-  static nsresult AppendFromDOMChildren(nsIContent *aContent,
-                                        nsAString *aString);
+  static nsresult AppendFromDOMChildren(nsIContent* aContent,
+                                        nsAString* aString);
 
   /**
    * Calculates text equivalent from the given DOM node and its subtree if
    * allowed.
    */
-  static nsresult AppendFromDOMNode(nsIContent *aContent, nsAString *aString);
+  static nsresult AppendFromDOMNode(nsIContent* aContent, nsAString* aString);
 
   /**
    * Concatenates strings and appends space between them. Returns true if
    * text equivalent string was appended.
    */
-  static bool AppendString(nsAString *aString,
-                           const nsAString &aTextEquivalent);
+  static bool AppendString(nsAString* aString,
+                           const nsAString& aTextEquivalent);
 
   /**
    * Returns the rule (constant of ETextEquivRule) for a given role.

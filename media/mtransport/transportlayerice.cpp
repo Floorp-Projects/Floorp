@@ -120,7 +120,7 @@ void TransportLayerIce::PostSetup() {
   }
 }
 
-TransportResult TransportLayerIce::SendPacket(MediaPacket &packet) {
+TransportResult TransportLayerIce::SendPacket(MediaPacket& packet) {
   CheckThread();
   SignalPacketSending(this, packet);
   nsresult res = stream_->SendPacket(component_, packet.data(), packet.len());
@@ -135,12 +135,12 @@ TransportResult TransportLayerIce::SendPacket(MediaPacket &packet) {
   return packet.len();
 }
 
-void TransportLayerIce::IceCandidate(NrIceMediaStream *stream,
-                                     const std::string &) {
+void TransportLayerIce::IceCandidate(NrIceMediaStream* stream,
+                                     const std::string&) {
   // NO-OP for now
 }
 
-void TransportLayerIce::IceReady(NrIceMediaStream *stream) {
+void TransportLayerIce::IceReady(NrIceMediaStream* stream) {
   CheckThread();
   // only handle the current stream (not the old stream during restart)
   if (stream != stream_) {
@@ -151,7 +151,7 @@ void TransportLayerIce::IceReady(NrIceMediaStream *stream) {
   TL_SET_STATE(TS_OPEN);
 }
 
-void TransportLayerIce::IceFailed(NrIceMediaStream *stream) {
+void TransportLayerIce::IceFailed(NrIceMediaStream* stream) {
   CheckThread();
   // only handle the current stream (not the old stream during restart)
   if (stream != stream_) {
@@ -162,9 +162,9 @@ void TransportLayerIce::IceFailed(NrIceMediaStream *stream) {
   TL_SET_STATE(TS_ERROR);
 }
 
-void TransportLayerIce::IcePacketReceived(NrIceMediaStream *stream,
+void TransportLayerIce::IcePacketReceived(NrIceMediaStream* stream,
                                           int component,
-                                          const unsigned char *data, int len) {
+                                          const unsigned char* data, int len) {
   CheckThread();
   // We get packets for both components, so ignore the ones that aren't
   // for us.

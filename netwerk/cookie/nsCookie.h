@@ -36,11 +36,11 @@ class nsCookie final : public nsICookie2 {
 
  private:
   // for internal use only. see nsCookie::Create().
-  nsCookie(const char *aName, const char *aValue, const char *aHost,
-           const char *aPath, const char *aEnd, int64_t aExpiry,
+  nsCookie(const char* aName, const char* aValue, const char* aHost,
+           const char* aPath, const char* aEnd, int64_t aExpiry,
            int64_t aLastAccessed, int64_t aCreationTime, bool aIsSession,
            bool aIsSecure, bool aIsHttpOnly,
-           const OriginAttributes &aOriginAttributes, int32_t aSameSite)
+           const OriginAttributes& aOriginAttributes, int32_t aSameSite)
       : mName(aName),
         mValue(aValue),
         mHost(aHost),
@@ -73,12 +73,12 @@ class nsCookie final : public nsICookie2 {
 
   // public helper to create an nsCookie object. use |operator delete|
   // to destroy an object created by this method.
-  static nsCookie *Create(const nsACString &aName, const nsACString &aValue,
-                          const nsACString &aHost, const nsACString &aPath,
+  static nsCookie* Create(const nsACString& aName, const nsACString& aValue,
+                          const nsACString& aHost, const nsACString& aPath,
                           int64_t aExpiry, int64_t aLastAccessed,
                           int64_t aCreationTime, bool aIsSession,
                           bool aIsSecure, bool aIsHttpOnly,
-                          const OriginAttributes &aOriginAttributes,
+                          const OriginAttributes& aOriginAttributes,
                           int32_t aSameSite);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -110,7 +110,7 @@ class nsCookie final : public nsICookie2 {
   inline bool IsDomain() const { return *mHost == '.'; }
   inline bool IsSecure() const { return mIsSecure; }
   inline bool IsHttpOnly() const { return mIsHttpOnly; }
-  inline const OriginAttributes &OriginAttributesRef() const {
+  inline const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }
   inline int32_t SameSite() const { return mSameSite; }
@@ -136,11 +136,11 @@ class nsCookie final : public nsICookie2 {
   // out as nsCStrings.
   //
   // Please update SizeOfIncludingThis if this strategy changes.
-  const char *mName;
-  const char *mValue;
-  const char *mHost;
-  const char *mPath;
-  const char *mEnd;
+  const char* mName;
+  const char* mValue;
+  const char* mHost;
+  const char* mPath;
+  const char* mEnd;
   int64_t mExpiry;
   int64_t mLastAccessed;
   int64_t mCreationTime;
@@ -154,12 +154,12 @@ class nsCookie final : public nsICookie2 {
 // Comparator class for sorting cookies before sending to a server.
 class CompareCookiesForSending {
  public:
-  bool Equals(const nsCookie *aCookie1, const nsCookie *aCookie2) const {
+  bool Equals(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
     return aCookie1->CreationTime() == aCookie2->CreationTime() &&
            aCookie2->Path().Length() == aCookie1->Path().Length();
   }
 
-  bool LessThan(const nsCookie *aCookie1, const nsCookie *aCookie2) const {
+  bool LessThan(const nsCookie* aCookie1, const nsCookie* aCookie2) const {
     // compare by cookie path length in accordance with RFC2109
     int32_t result = aCookie2->Path().Length() - aCookie1->Path().Length();
     if (result != 0) return result < 0;

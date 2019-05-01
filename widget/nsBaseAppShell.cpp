@@ -71,7 +71,7 @@ void nsBaseAppShell::NativeEventCallback() {
   // nsBaseAppShell::Run is not being used to pump events, so this may be
   // our only opportunity to process pending gecko events.
 
-  nsIThread *thread = NS_GetCurrentThread();
+  nsIThread* thread = NS_GetCurrentThread();
   bool prevBlockNativeEvent = mBlockNativeEvent;
   if (mEventloopNestingState == eEventloopOther) {
     if (!NS_HasPendingEvents(thread)) return;
@@ -132,7 +132,7 @@ nsBaseAppShell::Run(void) {
   NS_ENSURE_STATE(!mRunning);  // should not call Run twice
   mRunning = true;
 
-  nsIThread *thread = NS_GetCurrentThread();
+  nsIThread* thread = NS_GetCurrentThread();
 
   MessageLoop::current()->Run();
 
@@ -179,7 +179,7 @@ nsBaseAppShell::ResumeNative() {
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::GetEventloopNestingLevel(uint32_t *aNestingLevelResult) {
+nsBaseAppShell::GetEventloopNestingLevel(uint32_t* aNestingLevelResult) {
   NS_ENSURE_ARG_POINTER(aNestingLevelResult);
 
   *aNestingLevelResult = mEventloopNestingLevel;
@@ -204,7 +204,7 @@ nsBaseAppShell::OnDispatchedEvent() {
 
 // Called from the main thread
 NS_IMETHODIMP
-nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait) {
+nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal* thr, bool mayWait) {
   if (mBlockNativeEvent) {
     if (!mayWait) return NS_OK;
     // Hmm, we're in a nested native event loop and would like to get
@@ -222,7 +222,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait) {
   // Unblock outer nested wait loop (below).
   if (mBlockedWait) *mBlockedWait = false;
 
-  bool *oldBlockedWait = mBlockedWait;
+  bool* oldBlockedWait = mBlockedWait;
   mBlockedWait = &mayWait;
 
   // When mayWait is true, we need to make sure that there is an event in the
@@ -271,7 +271,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait) {
   return NS_OK;
 }
 
-bool nsBaseAppShell::DispatchDummyEvent(nsIThread *aTarget) {
+bool nsBaseAppShell::DispatchDummyEvent(nsIThread* aTarget) {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mDummyEvent) mDummyEvent = new mozilla::Runnable("DummyEvent");
@@ -291,14 +291,14 @@ void nsBaseAppShell::DecrementEventloopNestingLevel() {
 
 // Called from the main thread
 NS_IMETHODIMP
-nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
+nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal* thr,
                                       bool eventWasProcessed) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::Observe(nsISupports *subject, const char *topic,
-                        const char16_t *data) {
+nsBaseAppShell::Observe(nsISupports* subject, const char* topic,
+                        const char16_t* data) {
   NS_ASSERTION(!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID), "oops");
   Exit();
   return NS_OK;

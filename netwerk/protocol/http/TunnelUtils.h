@@ -100,11 +100,11 @@ class TLSFilterTransaction;
 
 class NudgeTunnelCallback : public nsISupports {
  public:
-  virtual nsresult OnTunnelNudged(TLSFilterTransaction *) = 0;
+  virtual nsresult OnTunnelNudged(TLSFilterTransaction*) = 0;
 };
 
 #define NS_DECL_NUDGETUNNELCALLBACK \
-  nsresult OnTunnelNudged(TLSFilterTransaction *) override;
+  nsresult OnTunnelNudged(TLSFilterTransaction*) override;
 
 class TLSFilterTransaction final : public nsAHttpTransaction,
                                    public nsAHttpSegmentReader,
@@ -121,47 +121,47 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
-  TLSFilterTransaction(nsAHttpTransaction *aWrappedTransaction,
-                       const char *tlsHost, int32_t tlsPort,
-                       nsAHttpSegmentReader *reader,
-                       nsAHttpSegmentWriter *writer);
+  TLSFilterTransaction(nsAHttpTransaction* aWrappedTransaction,
+                       const char* tlsHost, int32_t tlsPort,
+                       nsAHttpSegmentReader* reader,
+                       nsAHttpSegmentWriter* writer);
 
-  const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
+  const nsAHttpTransaction* Transaction() const { return mTransaction.get(); }
   MOZ_MUST_USE nsresult CommitToSegmentSize(uint32_t size,
                                             bool forceCommitment) override;
-  MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports **) override;
-  MOZ_MUST_USE nsresult NudgeTunnel(NudgeTunnelCallback *callback);
+  MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports**) override;
+  MOZ_MUST_USE nsresult NudgeTunnel(NudgeTunnelCallback* callback);
   MOZ_MUST_USE nsresult
-  SetProxiedTransaction(nsAHttpTransaction *aTrans,
-                        nsAHttpTransaction *aSpdyConnectTransaction = nullptr);
-  void newIODriver(nsIAsyncInputStream *aSocketIn,
-                   nsIAsyncOutputStream *aSocketOut,
-                   nsIAsyncInputStream **outSocketIn,
-                   nsIAsyncOutputStream **outSocketOut);
+  SetProxiedTransaction(nsAHttpTransaction* aTrans,
+                        nsAHttpTransaction* aSpdyConnectTransaction = nullptr);
+  void newIODriver(nsIAsyncInputStream* aSocketIn,
+                   nsIAsyncOutputStream* aSocketOut,
+                   nsIAsyncInputStream** outSocketIn,
+                   nsIAsyncOutputStream** outSocketOut);
 
   // nsAHttpTransaction overloads
   bool IsNullTransaction() override;
-  NullHttpTransaction *QueryNullTransaction() override;
-  nsHttpTransaction *QueryHttpTransaction() override;
-  SpdyConnectTransaction *QuerySpdyConnectTransaction() override;
+  NullHttpTransaction* QueryNullTransaction() override;
+  nsHttpTransaction* QueryHttpTransaction() override;
+  SpdyConnectTransaction* QuerySpdyConnectTransaction() override;
 
  private:
   MOZ_MUST_USE nsresult StartTimerCallback();
   void Cleanup();
-  int32_t FilterOutput(const char *aBuf, int32_t aAmount);
-  int32_t FilterInput(char *aBuf, int32_t aAmount);
+  int32_t FilterOutput(const char* aBuf, int32_t aAmount);
+  int32_t FilterInput(char* aBuf, int32_t aAmount);
 
-  static PRStatus GetPeerName(PRFileDesc *fd, PRNetAddr *addr);
-  static PRStatus GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data);
-  static PRStatus SetSocketOption(PRFileDesc *fd,
-                                  const PRSocketOptionData *data);
-  static int32_t FilterWrite(PRFileDesc *fd, const void *buf, int32_t amount);
-  static int32_t FilterRead(PRFileDesc *fd, void *buf, int32_t amount);
-  static int32_t FilterSend(PRFileDesc *fd, const void *buf, int32_t amount,
+  static PRStatus GetPeerName(PRFileDesc* fd, PRNetAddr* addr);
+  static PRStatus GetSocketOption(PRFileDesc* fd, PRSocketOptionData* data);
+  static PRStatus SetSocketOption(PRFileDesc* fd,
+                                  const PRSocketOptionData* data);
+  static int32_t FilterWrite(PRFileDesc* fd, const void* buf, int32_t amount);
+  static int32_t FilterRead(PRFileDesc* fd, void* buf, int32_t amount);
+  static int32_t FilterSend(PRFileDesc* fd, const void* buf, int32_t amount,
                             int flags, PRIntervalTime timeout);
-  static int32_t FilterRecv(PRFileDesc *fd, void *buf, int32_t amount,
+  static int32_t FilterRecv(PRFileDesc* fd, void* buf, int32_t amount,
                             int flags, PRIntervalTime timeout);
-  static PRStatus FilterClose(PRFileDesc *fd);
+  static PRStatus FilterClose(PRFileDesc* fd);
 
  private:
   RefPtr<nsAHttpTransaction> mTransaction;
@@ -175,9 +175,9 @@ class TLSFilterTransaction final : public nsAHttpTransaction,
   uint32_t mEncryptedTextUsed;
   uint32_t mEncryptedTextSize;
 
-  PRFileDesc *mFD;
-  nsAHttpSegmentReader *mSegmentReader;
-  nsAHttpSegmentWriter *mSegmentWriter;
+  PRFileDesc* mFD;
+  nsAHttpSegmentReader* mSegmentReader;
+  nsAHttpSegmentWriter* mSegmentWriter;
 
   nsresult mFilterReadCode;
   bool mForce;
@@ -192,13 +192,13 @@ class nsHttpConnection;
 
 class SpdyConnectTransaction final : public NullHttpTransaction {
  public:
-  SpdyConnectTransaction(nsHttpConnectionInfo *ci,
-                         nsIInterfaceRequestor *callbacks, uint32_t caps,
-                         nsHttpTransaction *trans, nsAHttpConnection *session,
+  SpdyConnectTransaction(nsHttpConnectionInfo* ci,
+                         nsIInterfaceRequestor* callbacks, uint32_t caps,
+                         nsHttpTransaction* trans, nsAHttpConnection* session,
                          bool isWebsocket);
   ~SpdyConnectTransaction();
 
-  SpdyConnectTransaction *QuerySpdyConnectTransaction() override {
+  SpdyConnectTransaction* QuerySpdyConnectTransaction() override {
     return this;
   }
 
@@ -206,15 +206,15 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   // CONNECT tunnel but the setup fails. The plaintext only carries the CONNECT
   // error.
   void ForcePlainText();
-  void MapStreamToHttpConnection(nsISocketTransport *aTransport,
-                                 nsHttpConnectionInfo *aConnInfo);
+  void MapStreamToHttpConnection(nsISocketTransport* aTransport,
+                                 nsHttpConnectionInfo* aConnInfo);
 
-  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *reader,
-                                     uint32_t count, uint32_t *countRead) final;
-  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *writer,
+  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader* reader,
+                                     uint32_t count, uint32_t* countRead) final;
+  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter* writer,
                                       uint32_t count,
-                                      uint32_t *countWritten) final;
-  nsHttpRequestHead *RequestHead() final;
+                                      uint32_t* countWritten) final;
+  nsHttpRequestHead* RequestHead() final;
   void Close(nsresult reason) final;
 
   // ConnectedReadyForInput() tests whether the spdy connect transaction is
@@ -229,14 +229,14 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   friend class InputStreamShim;
   friend class OutputStreamShim;
 
-  MOZ_MUST_USE nsresult Flush(uint32_t count, uint32_t *countRead);
+  MOZ_MUST_USE nsresult Flush(uint32_t count, uint32_t* countRead);
   void CreateShimError(nsresult code);
 
   nsCString mConnectString;
   uint32_t mConnectStringOffset;
 
-  nsAHttpConnection *mSession;
-  nsAHttpSegmentReader *mSegmentReader;
+  nsAHttpConnection* mSession;
+  nsAHttpSegmentReader* mSegmentReader;
 
   UniquePtr<char[]> mInputData;
   uint32_t mInputDataSize;
@@ -267,11 +267,11 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   bool mConnRefTaken;
   nsCOMPtr<nsIAsyncOutputStream> mInputShimPipe;
   nsCOMPtr<nsIAsyncInputStream> mOutputShimPipe;
-  nsresult WriteDataToBuffer(nsAHttpSegmentWriter *writer, uint32_t count,
-                             uint32_t *countWritten);
-  MOZ_MUST_USE nsresult WebsocketWriteSegments(nsAHttpSegmentWriter *writer,
+  nsresult WriteDataToBuffer(nsAHttpSegmentWriter* writer, uint32_t count,
+                             uint32_t* countWritten);
+  MOZ_MUST_USE nsresult WebsocketWriteSegments(nsAHttpSegmentWriter* writer,
                                                uint32_t count,
-                                               uint32_t *countWritten);
+                                               uint32_t* countWritten);
 
   bool mCreateShimErrorCalled;
 };

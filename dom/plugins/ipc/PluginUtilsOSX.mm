@@ -26,10 +26,10 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 
 @interface CGBridgeLayer : CALayer {
   DrawPluginFunc mDrawFunc;
-  void *mPluginInstance;
+  void* mPluginInstance;
   nsIntRect mUpdateRect;
 }
-- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void *)aPluginInstance;
+- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void*)aPluginInstance;
 - (void)updateRect:(nsIntRect)aRect;
 
 @end
@@ -40,7 +40,7 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 // originally specified in a call to CGBitmapContextCreate() or
 // CGBitmapContextCreateWithData().
 typedef void (*CGBitmapContextSetDataFunc)(CGContextRef c, size_t x, size_t y, size_t width,
-                                           size_t height, void *data, size_t bitsPerComponent,
+                                           size_t height, void* data, size_t bitsPerComponent,
                                            size_t bitsPerPixel, size_t bytesPerRow);
 CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
 
@@ -49,7 +49,7 @@ CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
   mUpdateRect.UnionRect(mUpdateRect, aRect);
 }
 
-- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void *)aPluginInstance {
+- (void)setDrawFunc:(DrawPluginFunc)aFunc pluginInstance:(void*)aPluginInstance {
   mDrawFunc = aFunc;
   mPluginInstance = aPluginInstance;
 }
@@ -70,16 +70,16 @@ CGBitmapContextSetDataFunc CGBitmapContextSetDataPtr = NULL;
 
 @end
 
-void *mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void *aPluginInstance,
+void* mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void* aPluginInstance,
                                                    double aContentsScaleFactor) {
-  CGBridgeLayer *bridgeLayer = [[CGBridgeLayer alloc] init];
+  CGBridgeLayer* bridgeLayer = [[CGBridgeLayer alloc] init];
 
   // We need to make bridgeLayer behave properly when its superlayer changes
   // size (in nsCARenderer::SetBounds()).
   bridgeLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
   bridgeLayer.needsDisplayOnBoundsChange = YES;
-  NSNull *nullValue = [NSNull null];
-  NSDictionary *actions = [NSDictionary
+  NSNull* nullValue = [NSNull null];
+  NSDictionary* actions = [NSDictionary
       dictionaryWithObjectsAndKeys:nullValue, @"bounds", nullValue, @"contents", nullValue,
                                    @"contentsRect", nullValue, @"position", nil];
   [bridgeLayer setStyle:[NSDictionary dictionaryWithObject:actions forKey:@"actions"]];
@@ -100,13 +100,13 @@ void *mozilla::plugins::PluginUtilsOSX::GetCGLayer(DrawPluginFunc aFunc, void *a
   return bridgeLayer;
 }
 
-void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void *cgLayer) {
-  CGBridgeLayer *bridgeLayer = (CGBridgeLayer *)cgLayer;
+void mozilla::plugins::PluginUtilsOSX::ReleaseCGLayer(void* cgLayer) {
+  CGBridgeLayer* bridgeLayer = (CGBridgeLayer*)cgLayer;
   [bridgeLayer release];
 }
 
-void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
-  CGBridgeLayer *bridgeLayer = (CGBridgeLayer *)caLayer;
+void mozilla::plugins::PluginUtilsOSX::Repaint(void* caLayer, nsIntRect aRect) {
+  CGBridgeLayer* bridgeLayer = (CGBridgeLayer*)caLayer;
   [CATransaction begin];
   [bridgeLayer updateRect:aRect];
   [bridgeLayer setNeedsDisplay];
@@ -116,9 +116,9 @@ void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
 
 @interface EventProcessor : NSObject {
   RemoteProcessEvents aRemoteEvents;
-  void *aPluginModule;
+  void* aPluginModule;
 }
-- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void *)pluginModule;
+- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void*)pluginModule;
 - (void)onTick;
 @end
 
@@ -127,7 +127,7 @@ void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
   aRemoteEvents(aPluginModule);
 }
 
-- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void *)pluginModule {
+- (void)setRemoteEvents:(RemoteProcessEvents)remoteEvents pluginModule:(void*)pluginModule {
   aRemoteEvents = remoteEvents;
   aPluginModule = pluginModule;
 }
@@ -135,8 +135,8 @@ void mozilla::plugins::PluginUtilsOSX::Repaint(void *caLayer, nsIntRect aRect) {
 
 #define EVENT_PROCESS_DELAY 0.05  // 50 ms
 
-NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void *aMenu, int aX, int aY,
-                                                               void *pluginModule,
+NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void* aMenu, int aX, int aY,
+                                                               void* pluginModule,
                                                                RemoteProcessEvents remoteEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -148,8 +148,8 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void *aMenu, int 
   // change to an arrow cursor automatically -- as it does in Chrome.
   [[NSCursor arrowCursor] set];
 
-  EventProcessor *eventProcessor = nullptr;
-  NSTimer *eventTimer = nullptr;
+  EventProcessor* eventProcessor = nullptr;
+  NSTimer* eventTimer = nullptr;
   if (pluginModule) {
     // Create a timer to process browser events while waiting
     // on the menu. This prevents the browser from hanging
@@ -166,7 +166,7 @@ NPError mozilla::plugins::PluginUtilsOSX::ShowCocoaContextMenu(void *aMenu, int 
     [[NSRunLoop currentRunLoop] addTimer:eventTimer forMode:NSEventTrackingRunLoopMode];
   }
 
-  NSMenu *nsmenu = reinterpret_cast<NSMenu *>(aMenu);
+  NSMenu* nsmenu = reinterpret_cast<NSMenu*>(aMenu);
   NSPoint screen_point = ::NSMakePoint(aX, aY);
 
   [nsmenu popUpMenuPositioningItem:nil atLocation:screen_point inView:nil];
@@ -191,13 +191,13 @@ void mozilla::plugins::PluginUtilsOSX::InvokeNativeEventLoop() {
 namespace mozilla {
 namespace plugins {
 namespace PluginUtilsOSX {
-static void *sApplicationASN = NULL;
-static void *sApplicationInfoItem = NULL;
+static void* sApplicationASN = NULL;
+static void* sApplicationInfoItem = NULL;
 }  // namespace PluginUtilsOSX
 }  // namespace plugins
 }  // namespace mozilla
 
-bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char *aProcessName) {
+bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char* aProcessName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
   nsAutoreleasePool localPool;
 
@@ -205,8 +205,8 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char *aProcessName) 
     return false;
   }
 
-  NSString *currentName =
-      [[[NSBundle mainBundle] localizedInfoDictionary] objectForKey:(NSString *)kCFBundleNameKey];
+  NSString* currentName =
+      [[[NSBundle mainBundle] localizedInfoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
 
   char formattedName[1024];
   SprintfLiteral(formattedName, "%s %s", [currentName UTF8String], aProcessName);
@@ -216,7 +216,7 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char *aProcessName) 
   // This function is based on Chrome/Webkit's and relies on potentially dangerous SPI.
   typedef CFTypeRef (*LSGetASNType)();
   typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef, CFStringRef, CFStringRef,
-                                               CFDictionaryRef *);
+                                               CFDictionaryRef*);
 
   CFBundleRef launchServices = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
   if (!launchServices) {
@@ -244,12 +244,12 @@ bool mozilla::plugins::PluginUtilsOSX::SetProcessName(const char *aProcessName) 
   LSSetInformationItemType setInformationItemFunc =
       reinterpret_cast<LSSetInformationItemType>(sApplicationInfoItem);
 
-  void *displayNameKeyAddr =
+  void* displayNameKeyAddr =
       ::CFBundleGetDataPointerForName(launchServices, CFSTR("_kLSDisplayNameKey"));
 
   CFStringRef displayNameKey = nil;
   if (displayNameKeyAddr) {
-    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef *)displayNameKeyAddr);
+    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef*)displayNameKeyAddr);
   }
 
   // Rename will fail without this
@@ -350,7 +350,7 @@ bool nsDoubleBufferCARenderer::HasFrontSurface() { return !!mFrontSurface; }
 
 bool nsDoubleBufferCARenderer::HasCALayer() { return !!mCALayer; }
 
-void nsDoubleBufferCARenderer::SetCALayer(void *aCALayer) { mCALayer = aCALayer; }
+void nsDoubleBufferCARenderer::SetCALayer(void* aCALayer) { mCALayer = aCALayer; }
 
 bool nsDoubleBufferCARenderer::InitFrontSurface(size_t aWidth, size_t aHeight,
                                                 double aContentsScaleFactor,

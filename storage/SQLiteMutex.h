@@ -28,7 +28,7 @@ class SQLiteMutex : private BlockingResourceBase {
    * @param aName
    *        A name which can be used to reference this mutex.
    */
-  explicit SQLiteMutex(const char *aName)
+  explicit SQLiteMutex(const char* aName)
       : BlockingResourceBase(aName, eMutex), mMutex(nullptr) {}
 
   /**
@@ -39,7 +39,7 @@ class SQLiteMutex : private BlockingResourceBase {
    * @param aMutex
    *        The sqlite3_mutex that we are going to wrap.
    */
-  void initWithMutex(sqlite3_mutex *aMutex) {
+  void initWithMutex(sqlite3_mutex* aMutex) {
     NS_ASSERTION(aMutex, "You must pass in a valid mutex!");
     NS_ASSERTION(!mMutex, "A mutex has already been set for this!");
     mMutex = aMutex;
@@ -107,7 +107,7 @@ class SQLiteMutex : private BlockingResourceBase {
 #endif  // ifndef DEBUG
 
  private:
-  sqlite3_mutex *mMutex;
+  sqlite3_mutex* mMutex;
 };
 
 /**
@@ -116,14 +116,14 @@ class SQLiteMutex : private BlockingResourceBase {
  */
 class MOZ_STACK_CLASS SQLiteMutexAutoLock {
  public:
-  explicit SQLiteMutexAutoLock(SQLiteMutex &aMutex) : mMutex(aMutex) {
+  explicit SQLiteMutexAutoLock(SQLiteMutex& aMutex) : mMutex(aMutex) {
     mMutex.lock();
   }
 
   ~SQLiteMutexAutoLock() { mMutex.unlock(); }
 
  private:
-  SQLiteMutex &mMutex;
+  SQLiteMutex& mMutex;
 };
 
 /**
@@ -132,14 +132,14 @@ class MOZ_STACK_CLASS SQLiteMutexAutoLock {
  */
 class MOZ_STACK_CLASS SQLiteMutexAutoUnlock {
  public:
-  explicit SQLiteMutexAutoUnlock(SQLiteMutex &aMutex) : mMutex(aMutex) {
+  explicit SQLiteMutexAutoUnlock(SQLiteMutex& aMutex) : mMutex(aMutex) {
     mMutex.unlock();
   }
 
   ~SQLiteMutexAutoUnlock() { mMutex.lock(); }
 
  private:
-  SQLiteMutex &mMutex;
+  SQLiteMutex& mMutex;
 };
 
 }  // namespace storage

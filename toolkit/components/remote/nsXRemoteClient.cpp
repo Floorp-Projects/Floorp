@@ -57,7 +57,7 @@ using mozilla::Unused;
 
 static mozilla::LazyLogModule sRemoteLm("nsXRemoteClient");
 
-static int (*sOldHandler)(Display *, XErrorEvent *);
+static int (*sOldHandler)(Display*, XErrorEvent*);
 static bool sGotBadWindow;
 
 nsXRemoteClient::nsXRemoteClient() {
@@ -81,7 +81,7 @@ nsXRemoteClient::~nsXRemoteClient() {
 }
 
 // Minimize the roundtrips to the X-server
-static const char *XAtomNames[] = {
+static const char* XAtomNames[] = {
     MOZILLA_VERSION_PROP, MOZILLA_LOCK_PROP,       MOZILLA_RESPONSE_PROP,
     "WM_STATE",           MOZILLA_USER_PROP,       MOZILLA_PROFILE_PROP,
     MOZILLA_PROGRAM_PROP, MOZILLA_COMMANDLINE_PROP};
@@ -97,7 +97,7 @@ nsresult nsXRemoteClient::Init() {
   if (!mDisplay) return NS_ERROR_FAILURE;
 
   // get our atoms
-  XInternAtoms(mDisplay, const_cast<char **>(XAtomNames),
+  XInternAtoms(mDisplay, const_cast<char**>(XAtomNames),
                MOZ_ARRAY_LENGTH(XAtomNames), False, XAtoms);
 
   int i = 0;
@@ -130,7 +130,7 @@ void nsXRemoteClient::Shutdown(void) {
   }
 }
 
-static int HandleBadWindow(Display *display, XErrorEvent *event) {
+static int HandleBadWindow(Display* display, XErrorEvent* event) {
   if (event->error_code == BadWindow) {
     sGotBadWindow = true;
     return 0;  // ignored
@@ -140,8 +140,8 @@ static int HandleBadWindow(Display *display, XErrorEvent *event) {
 }
 
 nsresult nsXRemoteClient::SendCommandLine(
-    const char *aProgram, const char *aProfile, int32_t argc, char **argv,
-    const char *aDesktopStartupID, char **aResponse, bool *aWindowFound) {
+    const char* aProgram, const char* aProfile, int32_t argc, char** argv,
+    const char* aDesktopStartupID, char** aResponse, bool* aWindowFound) {
   NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
 
   MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsXRemoteClient::SendCommandLine"));
@@ -197,7 +197,7 @@ Window nsXRemoteClient::CheckWindow(Window aWindow) {
   Atom type = None;
   int format;
   unsigned long nitems, bytesafter;
-  unsigned char *data;
+  unsigned char* data;
   Window innerWindow;
 
   XGetWindowProperty(mDisplay, aWindow, mMozWMStateAtom, 0, 0, False,
@@ -219,13 +219,13 @@ Window nsXRemoteClient::CheckWindow(Window aWindow) {
 
 Window nsXRemoteClient::CheckChildren(Window aWindow) {
   Window root, parent;
-  Window *children;
+  Window* children;
   unsigned int nchildren;
   unsigned int i;
   Atom type = None;
   int format;
   unsigned long nitems, after;
-  unsigned char *data;
+  unsigned char* data;
   Window retval = None;
 
   if (!XQueryTree(mDisplay, aWindow, &root, &parent, &children, &nchildren))
@@ -247,12 +247,12 @@ Window nsXRemoteClient::CheckChildren(Window aWindow) {
     retval = CheckChildren(children[i]);
   }
 
-  if (children) XFree((char *)children);
+  if (children) XFree((char*)children);
 
   return retval;
 }
 
-nsresult nsXRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
+nsresult nsXRemoteClient::GetLock(Window aWindow, bool* aDestroyed) {
   bool locked = false;
   bool waited = false;
   *aDestroyed = false;
@@ -272,7 +272,7 @@ nsresult nsXRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
 
     // allocate enough space for the string plus the terminating
     // char
-    mLockData = (char *)malloc(strlen(pidstr) + strlen(sysinfobuf) + 1);
+    mLockData = (char*)malloc(strlen(pidstr) + strlen(sysinfobuf) + 1);
     if (!mLockData) return NS_ERROR_OUT_OF_MEMORY;
 
     strcpy(mLockData, pidstr);
@@ -284,7 +284,7 @@ nsresult nsXRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
     Atom actual_type;
     int actual_format;
     unsigned long nitems, bytes_after;
-    unsigned char *data = 0;
+    unsigned char* data = 0;
 
     XGrabServer(mDisplay);
 
@@ -303,7 +303,7 @@ nsresult nsXRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
     } else if (result != Success || actual_type == None) {
       /* It's not now locked - lock it. */
       XChangeProperty(mDisplay, aWindow, mMozLockAtom, XA_STRING, 8,
-                      PropModeReplace, (unsigned char *)mLockData,
+                      PropModeReplace, (unsigned char*)mLockData,
                       strlen(mLockData));
       locked = True;
     }
@@ -373,8 +373,8 @@ nsresult nsXRemoteClient::GetLock(Window aWindow, bool *aDestroyed) {
   return rv;
 }
 
-Window nsXRemoteClient::FindBestWindow(const char *aProgram,
-                                       const char *aProfile) {
+Window nsXRemoteClient::FindBestWindow(const char* aProgram,
+                                       const char* aProfile) {
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window bestWindow = 0;
   Window root2, parent, *kids;
@@ -400,7 +400,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
     Atom type;
     int format;
     unsigned long nitems, bytesafter;
-    unsigned char *data_return = 0;
+    unsigned char* data_return = 0;
     Window w;
     w = kids[i];
     // find the inner window with WM_STATE on it
@@ -412,7 +412,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
 
     if (!data_return) continue;
 
-    double version = PR_strtod((char *)data_return, nullptr);
+    double version = PR_strtod((char*)data_return, nullptr);
     XFree(data_return);
 
     if (!(version >= 5.1 && version < 6)) continue;
@@ -429,7 +429,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
     // If the return name is not the same as this program name, we don't want
     // this window.
     if (data_return) {
-      if (strcmp(aProgram, (const char *)data_return)) {
+      if (strcmp(aProgram, (const char*)data_return)) {
         XFree(data_return);
         continue;
       }
@@ -444,7 +444,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
 
     // Check to see if it has the user atom on that window.  If there
     // is then we need to make sure that it matches what we have.
-    const char *username = PR_GetEnv("LOGNAME");
+    const char* username = PR_GetEnv("LOGNAME");
 
     if (username) {
       Unused << XGetWindowProperty(
@@ -454,7 +454,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
       // if there's a username compare it with what we have
       if (data_return) {
         // If the IDs aren't equal, we don't want this window.
-        if (strcmp(username, (const char *)data_return)) {
+        if (strcmp(username, (const char*)data_return)) {
           XFree(data_return);
           continue;
         }
@@ -473,7 +473,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
     // If there's a profile compare it with what we have
     if (data_return) {
       // If the profiles aren't equal, we don't want this window.
-      if (strcmp(aProfile, (const char *)data_return)) {
+      if (strcmp(aProfile, (const char*)data_return)) {
         XFree(data_return);
         continue;
       }
@@ -493,7 +493,7 @@ Window nsXRemoteClient::FindBestWindow(const char *aProgram,
     break;
   }
 
-  if (kids) XFree((char *)kids);
+  if (kids) XFree((char*)kids);
 
   return bestWindow;
 }
@@ -503,7 +503,7 @@ nsresult nsXRemoteClient::FreeLock(Window aWindow) {
   Atom actual_type;
   int actual_format;
   unsigned long nitems, bytes_after;
-  unsigned char *data = 0;
+  unsigned char* data = 0;
 
   result = XGetWindowProperty(
       mDisplay, aWindow, mMozLockAtom, 0, (65536 / sizeof(long)),
@@ -519,7 +519,7 @@ nsresult nsXRemoteClient::FreeLock(Window aWindow) {
             ("invalid data on " MOZILLA_LOCK_PROP " of window 0x%x.\n",
              (unsigned int)aWindow));
     return NS_ERROR_FAILURE;
-  } else if (strcmp((char *)data, mLockData)) {
+  } else if (strcmp((char*)data, mLockData)) {
     MOZ_LOG(sRemoteLm, LogLevel::Debug,
             (MOZILLA_LOCK_PROP " was stolen!  Expected \"%s\", saw \"%s\"!\n",
              mLockData, data));
@@ -531,17 +531,17 @@ nsresult nsXRemoteClient::FreeLock(Window aWindow) {
 }
 
 nsresult nsXRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc,
-                                            char **argv,
-                                            const char *aDesktopStartupID,
-                                            char **aResponse,
-                                            bool *aDestroyed) {
+                                            char** argv,
+                                            const char* aDesktopStartupID,
+                                            char** aResponse,
+                                            bool* aDestroyed) {
   *aDestroyed = false;
 
   int commandLineLength;
-  char *commandLine =
+  char* commandLine =
       ConstructCommandLine(argc, argv, aDesktopStartupID, &commandLineLength);
   XChangeProperty(mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
-                  PropModeReplace, (unsigned char *)commandLine,
+                  PropModeReplace, (unsigned char*)commandLine,
                   commandLineLength);
   free(commandLine);
 
@@ -551,8 +551,8 @@ nsresult nsXRemoteClient::DoSendCommandLine(Window aWindow, int32_t argc,
   return NS_OK;
 }
 
-bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
-                                      bool *aDestroyed, Atom aCommandAtom) {
+bool nsXRemoteClient::WaitForResponse(Window aWindow, char** aResponse,
+                                      bool* aDestroyed, Atom aCommandAtom) {
   bool done = false;
   bool accepted = false;
 
@@ -575,7 +575,7 @@ bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
       Atom actual_type;
       int actual_format;
       unsigned long nitems, bytes_after;
-      unsigned char *data = 0;
+      unsigned char* data = 0;
       Bool result;
       result = XGetWindowProperty(mDisplay, aWindow, mMozResponseAtom, 0,
                                   (65536 / sizeof(long)),
@@ -589,7 +589,7 @@ bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
              (unsigned int)aWindow));
         *aResponse = strdup("Internal error reading response from window.");
         done = true;
-      } else if (!data || strlen((char *)data) < 5) {
+      } else if (!data || strlen((char*)data) < 5) {
         MOZ_LOG(sRemoteLm, LogLevel::Debug,
                 ("invalid data on " MOZILLA_RESPONSE_PROP
                  " property of window 0x%0x.\n",
@@ -602,15 +602,15 @@ bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
         done = false;
       }
 
-      else if (!strncmp((char *)data, "200", 3)) { /* positive completion */
-        *aResponse = strdup((char *)data);
+      else if (!strncmp((char*)data, "200", 3)) { /* positive completion */
+        *aResponse = strdup((char*)data);
         accepted = true;
         done = true;
       }
 
       else if (*data == '2') { /* positive completion */
         MOZ_LOG(sRemoteLm, LogLevel::Debug, ("%s\n", data + 4));
-        *aResponse = strdup((char *)data);
+        *aResponse = strdup((char*)data);
         accepted = true;
         done = true;
       }
@@ -620,14 +620,14 @@ bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
                 ("internal error: "
                  "server wants more information?  (%s)\n",
                  data));
-        *aResponse = strdup((char *)data);
+        *aResponse = strdup((char*)data);
         done = true;
       }
 
       else if (*data == '4' || /* transient negative completion */
                *data == '5') { /* permanent negative completion */
         MOZ_LOG(sRemoteLm, LogLevel::Debug, ("%s\n", data + 4));
-        *aResponse = strdup((char *)data);
+        *aResponse = strdup((char*)data);
         done = true;
       }
 
@@ -636,7 +636,7 @@ bool nsXRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
             sRemoteLm, LogLevel::Debug,
             ("unrecognised " MOZILLA_RESPONSE_PROP " from window 0x%x: %s\n",
              (unsigned int)aWindow, data));
-        *aResponse = strdup((char *)data);
+        *aResponse = strdup((char*)data);
         done = true;
       }
 

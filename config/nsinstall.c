@@ -62,8 +62,8 @@ static void usage(void) {
   exit(2);
 }
 
-static int mkdirs(char *path, mode_t mode) {
-  char *cp;
+static int mkdirs(char* path, mode_t mode) {
+  char* cp;
   struct stat sb;
   int res;
   int l;
@@ -91,10 +91,10 @@ static int mkdirs(char *path, mode_t mode) {
     return res;
 }
 
-static uid_t touid(char *owner) {
-  struct passwd *pw;
+static uid_t touid(char* owner) {
+  struct passwd* pw;
   uid_t uid;
-  char *cp;
+  char* cp;
 
   pw = getpwnam(owner);
   if (pw) return pw->pw_uid;
@@ -103,10 +103,10 @@ static uid_t touid(char *owner) {
   return uid;
 }
 
-static gid_t togid(char *group) {
-  struct group *gr;
+static gid_t togid(char* group) {
+  struct group* gr;
   gid_t gid;
-  char *cp;
+  char* cp;
 
   gr = getgrnam(group);
   if (gr) return gr->gr_gid;
@@ -115,8 +115,8 @@ static gid_t togid(char *group) {
   return gid;
 }
 
-static void copyfile(char *name, char *toname, mode_t mode, char *group,
-                     char *owner, int dotimes, uid_t uid, gid_t gid) {
+static void copyfile(char* name, char* toname, mode_t mode, char* group,
+                     char* owner, int dotimes, uid_t uid, gid_t gid) {
   int fromfd, tofd = -1, cc, wc, exists;
   char buf[BUFSIZ], *bp;
   struct stat sb, tosb;
@@ -181,10 +181,10 @@ static void copyfile(char *name, char *toname, mode_t mode, char *group,
 #endif
 }
 
-static void copydir(char *from, char *to, mode_t mode, char *group, char *owner,
+static void copydir(char* from, char* to, mode_t mode, char* group, char* owner,
                     int dotimes, uid_t uid, gid_t gid) {
-  DIR *dir;
-  struct dirent *ep;
+  DIR* dir;
+  struct dirent* ep;
   struct stat sb;
   char *base, *destdir, *direntry, *destentry;
 
@@ -226,7 +226,7 @@ static void copydir(char *from, char *to, mode_t mode, char *group, char *owner,
   closedir(dir);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   int onlydir, dodir, dolink, dorelsymlink, dotimes, opt, len, lplen, tdlen,
       bnlen, exists;
   mode_t mode = 0755;
