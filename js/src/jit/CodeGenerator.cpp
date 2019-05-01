@@ -7531,10 +7531,6 @@ void CodeGenerator::visitWasmDerivedPointer(LWasmDerivedPointer* ins) {
   masm.addPtr(Imm32(int32_t(ins->offset())), ToRegister(ins->output()));
 }
 
-void CodeGenerator::visitWasmLoadRef(LWasmLoadRef* lir) {
-  masm.loadPtr(Address(ToRegister(lir->ptr()), 0), ToRegister(lir->output()));
-}
-
 void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
   Register tls = ToRegister(ins->tls());
   Register valueAddr = ToRegister(ins->valueAddr());
