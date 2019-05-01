@@ -26,7 +26,7 @@
         <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/mozac_feature_readerview_font_sans_serif"
             style="@style/RadioButtonSelectedTextStyle"
-            android:text="@string/mozac_feature_readerview_sans_serif"
+            android:text="@string/mozac_feature_readerview_sans_serif_font"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif"
@@ -40,7 +40,7 @@
         <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/mozac_feature_readerview_font_serif"
             style="@style/RadioButtonSelectedTextStyle"
-            android:text="@string/mozac_feature_readerview_serif_desc"
+            android:text="@string/mozac_feature_readerview_serif_font"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:fontFamily="serif"
