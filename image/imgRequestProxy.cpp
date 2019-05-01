@@ -564,7 +564,8 @@ bool imgRequestProxy::RequestDecodeWithResult(uint32_t aFlags) {
 NS_IMETHODIMP
 imgRequestProxy::LockImage() {
   mLockCount++;
-  RefPtr<Image> image = GetImage();
+  RefPtr<Image> image =
+      GetOwner() && GetOwner()->ImageAvailable() ? GetImage() : nullptr;
   if (image) {
     return image->LockImage();
   }
@@ -576,7 +577,8 @@ imgRequestProxy::UnlockImage() {
   MOZ_ASSERT(mLockCount > 0, "calling unlock but no locks!");
 
   mLockCount--;
-  RefPtr<Image> image = GetImage();
+  RefPtr<Image> image =
+      GetOwner() && GetOwner()->ImageAvailable() ? GetImage() : nullptr;
   if (image) {
     return image->UnlockImage();
   }
@@ -595,7 +597,8 @@ imgRequestProxy::RequestDiscard() {
 NS_IMETHODIMP
 imgRequestProxy::IncrementAnimationConsumers() {
   mAnimationConsumers++;
-  RefPtr<Image> image = GetImage();
+  RefPtr<Image> image =
+      GetOwner() && GetOwner()->ImageAvailable() ? GetImage() : nullptr;
   if (image) {
     image->IncrementAnimationConsumers();
   }
@@ -612,7 +615,8 @@ imgRequestProxy::DecrementAnimationConsumers() {
   // early, but not the observer.)
   if (mAnimationConsumers > 0) {
     mAnimationConsumers--;
-    RefPtr<Image> image = GetImage();
+    RefPtr<Image> image =
+        GetOwner() && GetOwner()->ImageAvailable() ? GetImage() : nullptr;
     if (image) {
       image->DecrementAnimationConsumers();
     }
