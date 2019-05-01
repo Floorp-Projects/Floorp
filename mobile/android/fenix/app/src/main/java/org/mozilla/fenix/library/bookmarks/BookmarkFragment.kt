@@ -257,6 +257,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 }
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                (activity as HomeActivity).supportActionBar?.hide()
                 navigation
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 requireComponents.analytics.metrics.track(Event.OpenedBookmarksInNewTabs)
@@ -279,6 +280,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 }
 
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                (activity as HomeActivity).supportActionBar?.hide()
                 navigation
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 requireComponents.analytics.metrics.track(Event.OpenedBookmarksInPrivateTabs)
