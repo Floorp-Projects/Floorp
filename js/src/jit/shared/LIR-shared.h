@@ -6782,17 +6782,6 @@ class LWasmNullConstant : public LInstructionHelper<1, 0, 0> {
   explicit LWasmNullConstant() : LInstructionHelper(classOpcode) {}
 };
 
-class LIsNullPointer : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(IsNullPointer);
-  explicit LIsNullPointer(const LAllocation& value)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, value);
-  }
-  MIsNullPointer* mir() const { return mirRaw()->toIsNullPointer(); }
-  const LAllocation* value() { return getOperand(0); }
-};
-
 template <size_t Defs>
 class LWasmCallBase : public LVariadicInstruction<Defs, 0> {
   using Base = LVariadicInstruction<Defs, 0>;
