@@ -10333,17 +10333,12 @@ bool BaseCompiler::emitTableGet() {
   if (deadCode_) {
     return true;
   }
-  // get(index:u32, table:u32) -> void*
-  //
-  // Returns a pointer to a nonmoveable memory location that holds the anyref
-  // value.
+  // get(index:u32, table:u32) -> uintptr_t(AnyRef)
   pushI32(tableIndex);
   if (!emitInstanceCall(lineOrBytecode, SASigTableGet,
                         /*pushReturnedValue=*/false)) {
     return false;
   }
-
-  masm.loadPtr(Address(ReturnReg, 0), ReturnReg);
 
   // Push the resulting anyref back on the eval stack.  NOTE: needRef() must
   // not kill the value in the register.

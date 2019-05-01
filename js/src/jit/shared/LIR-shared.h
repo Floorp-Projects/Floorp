@@ -6682,17 +6682,6 @@ class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
   size_t offset() { return mirRaw()->toWasmDerivedPointer()->offset(); }
 };
 
-class LWasmLoadRef : public LInstructionHelper<1, 1, 0> {
- public:
-  LIR_HEADER(WasmLoadRef);
-  explicit LWasmLoadRef(const LAllocation& ptr)
-      : LInstructionHelper(classOpcode) {
-    setOperand(0, ptr);
-  }
-  MWasmLoadRef* mir() const { return mirRaw()->toWasmLoadRef(); }
-  const LAllocation* ptr() { return getOperand(0); }
-};
-
 class LWasmStoreRef : public LInstructionHelper<0, 3, 1> {
  public:
   LIR_HEADER(WasmStoreRef);
