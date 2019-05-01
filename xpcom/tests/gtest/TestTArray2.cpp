@@ -967,11 +967,11 @@ TEST(TArray, test_fallible)
       // We got our OOM.  Check that it didn't come too early.
       oomed = true;
 #  ifdef XP_WIN
-      // 32-bit Windows sometimes OOMs on the 7th, sometimes on the 8th.  To
-      // keep the test green, choose the lower of those: the important thing
-      // here is that some allocations fail and some succeed.  We're not too
+      // 32-bit Windows sometimes OOMs on the 6th, 7th, or 8th.  To keep the
+      // test green, choose the lower of those: the important thing here is
+      // that some allocations fail and some succeed.  We're not too
       // concerned about how many iterations it takes.
-      const size_t kOOMIterations = 7;
+      const size_t kOOMIterations = 6;
 #  else
       const size_t kOOMIterations = 8;
 #  endif
