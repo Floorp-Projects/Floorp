@@ -7773,6 +7773,14 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrix(
                                              aFlags, aBoundsOverride);
 }
 
+static bool ShouldRoundTransformOrigin(const nsIFrame* aFrame) {
+  // An SVG frame should not have its translation rounded.
+  // Note it's possible that the SVG frame doesn't have an SVG
+  // transform but only has a CSS transform.
+  return !aFrame || !aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
+         aFrame->IsSVGOuterSVGAnonChildFrame();
+}
+
 Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
     const FrameTransformProperties& aProperties, const nsPoint& aOrigin,
     float aAppUnitsPerPixel, uint32_t aFlags, const nsRect* aBoundsOverride) {
@@ -7803,15 +7811,7 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
       frame &&
       frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
 
-  bool shouldRound = true;
-
-  // An SVG frame should not have its translation rounded.
-  // Note it's possible that the SVG frame doesn't have an SVG
-  // transform but only has a CSS transform.
-  if (frame && frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
-      !frame->IsSVGOuterSVGAnonChildFrame()) {
-    shouldRound = false;
-  }
+  bool shouldRound = ShouldRoundTransformOrigin(frame);
 
   /* Transformed frames always have a transform, or are preserving 3d (and might
    * still have perspective!) */
@@ -8113,6 +8113,11 @@ Matrix4x4 nsDisplayTransform::GetTransformForRendering(
       // to what GetTransform() would have returned.
       float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
       *aOutOrigin = LayoutDevicePoint::FromAppUnits(ToReferenceFrame(), scale);
+
+      // The rounding behavior should also be the same as GetTransform().
+      if (ShouldRoundTransformOrigin(mFrame)) {
+        aOutOrigin->Round();
+      }
       return GetResultingTransformMatrix(mFrame, nsPoint(0, 0), scale,
                                          INCLUDE_PERSPECTIVE);
     }
