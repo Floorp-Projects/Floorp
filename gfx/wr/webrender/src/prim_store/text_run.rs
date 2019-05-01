@@ -5,11 +5,12 @@
 use api::{ColorF, GlyphInstance, RasterSpace, Shadow};
 use api::units::{DevicePixelScale, LayoutToWorldTransform, LayoutVector2D};
 use display_list_flattener::{CreateShadow, IsVisible};
-use frame_builder::{FrameBuildingState, PictureContext};
+use frame_builder::FrameBuildingState;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
 use intern;
 use internal_types::LayoutPrimitiveInfo;
+use picture::SurfaceInfo;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
 use render_task::{RenderTaskTree};
@@ -193,7 +194,7 @@ impl CreateShadow for TextRun {
         TextRun {
             font,
             glyphs: self.glyphs.clone(),
-            shadow: true
+            shadow: true,
         }
     }
 }
@@ -282,25 +283,27 @@ impl TextRunPrimitive {
         cache_dirty
     }
 
-    pub fn prepare_for_render(
+    pub fn request_resources(
         &mut self,
         prim_offset: LayoutVector2D,
         specified_font: &FontInstance,
         glyphs: &[GlyphInstance],
-        device_pixel_scale: DevicePixelScale,
         transform: &LayoutToWorldTransform,
-        pic_context: &PictureContext,
+        surface: &SurfaceInfo,
+        raster_space: RasterSpace,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
+        let device_pixel_scale = surface.device_pixel_scale;
+
         let cache_dirty = self.update_font_instance(
             specified_font,
             device_pixel_scale,
             transform,
-            pic_context.allow_subpixel_aa,
-            pic_context.raster_space,
+            surface.allow_subpixel_aa,
+            raster_space,
         );
 
         if self.glyph_keys_range.is_empty() || cache_dirty {
