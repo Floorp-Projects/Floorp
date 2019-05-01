@@ -1417,8 +1417,6 @@ pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 // opened more than this number of popups.
 pref("privacy.popups.maxReported", 100);
 
-// send "do not track" HTTP header, disabled by default
-pref("privacy.donottrackheader.enabled",    false);
 // Enforce tracking protection in all modes
 // In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 pref("privacy.trackingprotection.enabled",  false);
