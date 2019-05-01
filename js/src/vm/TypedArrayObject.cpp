@@ -1759,7 +1759,7 @@ bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
     uint32_t offset = uint32_t(targetOffset);
     if (srcTypedArray->length() > targetLength - offset) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_ARRAY_LENGTH);
+                                JSMSG_SOURCE_ARRAY_TOO_LONG);
       return false;
     }
 
@@ -1804,7 +1804,7 @@ bool TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args) {
     uint32_t offset = uint32_t(targetOffset);
     if (srcLength > targetLength - offset) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_ARRAY_LENGTH);
+                                JSMSG_SOURCE_ARRAY_TOO_LONG);
       return false;
     }
 

@@ -720,7 +720,8 @@ tls13_CheckKeyUpdate(sslSocket *ss, SSLSecretDirection dir)
     ssl3CipherSpec *spec;
     sslSequenceNumber seqNum;
     sslSequenceNumber margin;
-    SECStatus rv;
+    tls13KeyUpdateRequest keyUpdateRequest;
+    SECStatus rv = SECSuccess;
 
     /* Bug 1413368: enable for DTLS */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 || IS_DTLS(ss)) {
@@ -755,9 +756,15 @@ tls13_CheckKeyUpdate(sslSocket *ss, SSLSecretDirection dir)
     SSL_TRC(5, ("%d: SSL[%d]: automatic key update at %llx for %s cipher spec",
                 SSL_GETPID(), ss->fd, seqNum,
                 (dir == ssl_secret_read) ? "read" : "write"));
+    keyUpdateRequest = (dir == ssl_secret_read) ? update_requested : update_not_requested;
     ssl_GetSSL3HandshakeLock(ss);
-    rv = tls13_SendKeyUpdate(ss, (dir == ssl_secret_read) ? update_requested : update_not_requested,
-                             dir == ssl_secret_write /* buffer */);
+    if (ss->ssl3.clientCertRequested) {
+        ss->ssl3.keyUpdateDeferred = PR_TRUE;
+        ss->ssl3.deferredKeyUpdateRequest = keyUpdateRequest;
+    } else {
+        rv = tls13_SendKeyUpdate(ss, keyUpdateRequest,
+                                 dir == ssl_secret_write /* buffer */);
+    }
     ssl_ReleaseSSL3HandshakeLock(ss);
     return rv;
 }

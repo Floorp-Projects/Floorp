@@ -205,6 +205,10 @@ DLL_BLOCKLIST_ENTRY("dbroverlayiconbackuped.dll", MAKE_VERSION(1, 8, 0, 9))
 // NVIDIA nView Desktop Management causes crashes, bug 1465787
 DLL_BLOCKLIST_ENTRY("nviewh64.dll", MAKE_VERSION(6, 14, 10, 14847))
 
+// Causes crashes in the GPU process with WebRender enabled, bug 1544435
+DLL_BLOCKLIST_ENTRY("wbload.dll", ALL_VERSIONS,
+                    DllBlockInfo::CHILD_PROCESSES_ONLY)
+
 #ifdef ENABLE_TESTS
 
 // DLLs used by TestDllBlocklist* gTests

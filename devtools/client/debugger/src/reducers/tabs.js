@@ -17,6 +17,7 @@ import { asyncStore } from "../utils/prefs";
 import {
   getSource,
   getSources,
+  getSourceInSources,
   getUrls,
   getSpecificSourceByURL,
   getSpecificSourceByURLInSources
@@ -220,7 +221,7 @@ function getTabWithOrWithoutUrl(tab, sources, urls) {
     );
   }
 
-  return tab.sourceId ? sources[tab.sourceId] : null;
+  return tab.sourceId ? getSourceInSources(sources, tab.sourceId) : null;
 }
 
 export default update;

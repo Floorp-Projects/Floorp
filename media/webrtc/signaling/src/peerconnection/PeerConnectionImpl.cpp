@@ -1555,7 +1555,8 @@ PeerConnectionImpl::AddIceCandidate(
     // We do not bother PCMedia about this before offer/answer concludes.
     // Once offer/answer concludes, PCMedia will extract these candidates from
     // the remote SDP.
-    if (mSignalingState == PCImplSignalingState::SignalingStable) {
+    if (mSignalingState == PCImplSignalingState::SignalingStable &&
+        !transportId.empty()) {
       mMedia->AddIceCandidate(aCandidate, transportId, aUfrag);
       mRawTrickledCandidates.push_back(aCandidate);
     }

@@ -5,22 +5,34 @@
 
 ChromeUtils.defineModuleGetter(this, "DOMLocalization",
   "resource://gre/modules/DOMLocalization.jsm");
+ChromeUtils.defineModuleGetter(this, "FxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 class _BookmarkPanelHub {
   constructor() {
     this._id = "BookmarkPanelHub";
-    this._dispatchToASR = null;
+    this._trigger = {id: "bookmark-panel"};
+    this._handleMessageRequest = null;
+    this._addImpression = null;
     this._initalized = false;
     this._response = null;
     this._l10n = null;
 
-    this.dispatch = this.dispatch.bind(this);
     this.messageRequest = this.messageRequest.bind(this);
+    this.toggleRecommendation = this.toggleRecommendation.bind(this);
   }
 
-  init(dispatch) {
-    this._dispatchToASR = dispatch;
+  /**
+   * @param {function} handleMessageRequest
+   * @param {function} addImpression
+   */
+  init(handleMessageRequest, addImpression) {
+    this._handleMessageRequest = handleMessageRequest;
+    this._addImpression = addImpression;
     this._l10n = new DOMLocalization([
+      "browser/branding/sync-brand.ftl",
       "browser/newtab/asrouter.ftl",
     ]);
     this._initalized = true;
@@ -28,36 +40,29 @@ class _BookmarkPanelHub {
 
   uninit() {
     this._l10n = null;
-    this._dispatchToASR = null;
     this._initalized = false;
-  }
-
-  dispatch(message, target) {
-    return this._dispatchToASR(message, target);
+    this._handleMessageRequest = null;
+    this._addImpression = null;
+    this._response = null;
   }
 
   /**
    * Checks if a similar cached requests exists before forwarding the request
    * to ASRouter. Caches only 1 request, unique identifier is `request.url`.
    * Caching ensures we don't duplicate requests and telemetry pings.
+   * Return value is important for the caller to know if a message will be
+   * shown.
+   *
+   * @returns {obj|null} response object or null if no messages matched
    */
   async messageRequest(target, win) {
-    if (this._request && this._message.url === target.url) {
-      this.onResponse(this._response, target);
-      return !!this._response;
+    if (this._response && this._response.url === target.url) {
+      return this.onResponse(this._response, target, win);
     }
 
-    const waitForASRMessage = new Promise((resolve, reject) => {
-      this.dispatch({
-        type: "MESSAGE_REQUEST",
-        source: this._id,
-        data: {trigger: {id: "bookmark-panel"}},
-      }, {sendMessage: resolve});
-    });
+    const response = await this._handleMessageRequest(this._trigger);
 
-    const response = await waitForASRMessage;
-    this.onResponse(response, target, win);
-    return !!this._response;
+    return this.onResponse(response, target, win);
   }
 
   /**
@@ -65,62 +70,74 @@ class _BookmarkPanelHub {
    * Otherwise we remove the message from the container.
    */
   onResponse(response, target, win) {
-    if (response && response.message) {
-      this._response = {
-        ...response,
-        url: target.url,
-      };
+    this._response = {
+      ...response,
+      target,
+      win,
+      url: target.url,
+    };
 
-      this.showMessage(response.message.content, target, win);
+    if (response && response.content) {
+      this.showMessage(response.content, target, win);
       this.sendImpression();
     } else {
-      // If we didn't get a message response we need to remove and clear
-      // any existing messages
-      this._response = null;
       this.hideMessage(target);
     }
+
+    target.infoButton.disabled = !response;
+
+    return !!response;
   }
 
   showMessage(message, target, win) {
-    const {createElement} = target;
+    const createElement = elem => target.document.createElementNS("http://www.w3.org/1999/xhtml", elem);
+
     if (!target.container.querySelector("#cfrMessageContainer")) {
       const recommendation = createElement("div");
       recommendation.setAttribute("id", "cfrMessageContainer");
-      recommendation.addEventListener("click", e => {
+      recommendation.addEventListener("click", async e => {
         target.hidePopup();
-        this._dispatchToASR(
-          {type: "USER_ACTION", data: {
-            type: "SHOW_FIREFOX_ACCOUNTS",
-            entrypoint: "bookmark",
-            method: "emailFirst",
-            where: "tabshifted"
-          }},
-          {browser: win.gBrowser.selectedBrowser});
+        const url = await FxAccounts.config.promiseEmailFirstURI("bookmark");
+        win.ownerGlobal.openLinkIn(url, "tabshifted", {
+          private: false,
+          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
+          csp: null,
+        });
       });
       recommendation.style.color = message.color;
       recommendation.style.background = `-moz-linear-gradient(-45deg, ${message.background_color_1} 0%, ${message.background_color_2} 70%)`;
       const close = createElement("a");
       close.setAttribute("id", "cfrClose");
-      close.setAttribute("aria-label", "close"); // TODO localize
+      close.setAttribute("aria-label", "close");
+      this._l10n.setAttributes(close, message.close_button.tooltiptext);
       close.addEventListener("click", target.close);
       const title = createElement("h1");
       title.setAttribute("id", "editBookmarkPanelRecommendationTitle");
-      title.textContent = "Sync your bookmarks everywhere.";
       this._l10n.setAttributes(title, message.title);
       const content = createElement("p");
       content.setAttribute("id", "editBookmarkPanelRecommendationContent");
-      content.textContent = "Great find! Now don’t be left without this bookmark on your mobile devices. Get started with a Firefox Account.";
       this._l10n.setAttributes(content, message.text);
       const cta = createElement("button");
       cta.setAttribute("id", "editBookmarkPanelRecommendationCta");
-      cta.textContent = "Sync my bookmarks …";
       this._l10n.setAttributes(cta, message.cta);
       recommendation.appendChild(close);
       recommendation.appendChild(title);
       recommendation.appendChild(content);
       recommendation.appendChild(cta);
-      // this._l10n.translateElements([...recommendation.children]);
+      this._l10n.translateElements([...recommendation.children]);
       target.container.appendChild(recommendation);
+    }
+
+    this.toggleRecommendation(true);
+  }
+
+  toggleRecommendation(visible) {
+    const {target} = this._response;
+    target.infoButton.checked = visible !== undefined ? !!visible : !target.infoButton.checked;
+    if (target.infoButton.checked) {
+      target.recommendationContainer.removeAttribute("disabled");
+    } else {
+      target.recommendationContainer.setAttribute("disabled", "disabled");
     }
   }
 
@@ -129,17 +146,25 @@ class _BookmarkPanelHub {
     if (container) {
       container.remove();
     }
+    this.toggleRecommendation(false);
+  }
+
+  _forceShowMessage(message) {
+    this.showMessage(message.content, this._response.target, this._response.win);
+    this._response.target.infoButton.disabled = false;
   }
 
   sendImpression() {
-    this.dispatch({
-      type: "IMPRESSION",
-      source: this._id,
-      data: {},
-    });
+    this._addImpression(this._response);
   }
 }
 
+this._BookmarkPanelHub = _BookmarkPanelHub;
+
+/**
+ * BookmarkPanelHub - singleton instance of _BookmarkPanelHub that can initiate
+ * message requests and render messages.
+ */
 this.BookmarkPanelHub = new _BookmarkPanelHub();
 
-const EXPORTED_SYMBOLS = ["BookmarkPanelHub"];
+const EXPORTED_SYMBOLS = ["BookmarkPanelHub", "_BookmarkPanelHub"];

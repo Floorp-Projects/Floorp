@@ -73,18 +73,6 @@ class nsXBLMaybeCompiled {
   friend struct js::BarrierMethods<nsXBLMaybeCompiled<UncompiledT>>;
 };
 
-/* Add support for JS::Heap<nsXBLMaybeCompiled>. */
-namespace JS {
-
-template <class UncompiledT>
-struct GCPolicy<nsXBLMaybeCompiled<UncompiledT>> {
-  static nsXBLMaybeCompiled<UncompiledT> initial() {
-    return nsXBLMaybeCompiled<UncompiledT>();
-  }
-};
-
-}  // namespace JS
-
 namespace js {
 
 template <class UncompiledT>

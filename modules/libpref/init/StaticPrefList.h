@@ -941,10 +941,11 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Are -moz-prefixed gradient functions enabled?
+// Are -moz-prefixed gradients restricted to a simpler syntax? (with an optional
+// <angle> or <position>, but not both)?
 VARCACHE_PREF(
-  "layout.css.prefixes.gradients",
-   layout_css_prefixes_gradients,
+  "layout.css.simple-moz-gradient.enabled",
+   layout_css_simple_moz_gradient_enabled,
   bool, true
 )
 

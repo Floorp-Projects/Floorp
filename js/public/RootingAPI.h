@@ -987,6 +987,12 @@ using MaybeWrapped =
                                       JS::RootKind::Traceable,
                                   js::DispatchWrapper<T>, T>::Type;
 
+// Dummy types to make it easier to understand template overload preference
+// ordering.
+struct FallbackOverload {};
+struct PreferredOverload : FallbackOverload {};
+using OverloadSelector = PreferredOverload;
+
 } /* namespace detail */
 
 /**
@@ -1012,13 +1018,36 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
     return rootLists(RootingContext::get(cx));
   }
 
+  // Define either one or two Rooted(cx) constructors: the fallback one, which
+  // constructs a Rooted holding a SafelyInitialized<T>, and a convenience one
+  // for types that can be constructed with a cx, which will give a Rooted
+  // holding a T(cx).
+
+  // Dummy type to distinguish these constructors from Rooted(cx, initial)
+  struct CtorDispatcher {};
+
+  // Normal case: construct an empty Rooted holding a safely initialized but
+  // empty T.
+  template <typename RootingContext>
+  Rooted(const RootingContext& cx, CtorDispatcher, detail::FallbackOverload)
+    : Rooted(cx, SafelyInitialized<T>()) {}
+
+  // If T can be constructed with a cx, then define another constructor for it
+  // that will be preferred.
+  template <typename RootingContext,
+            typename = typename std::enable_if<std::is_constructible<T, RootingContext>::value>::type>
+  Rooted(const RootingContext& cx, CtorDispatcher, detail::PreferredOverload)
+      : Rooted(cx, T(cx)) {}
+
  public:
   using ElementType = T;
 
+  // Construct an empty Rooted. Delegates to an internal constructor that
+  // chooses a specific meaning of "empty" depending on whether T can be
+  // constructed with a cx.
   template <typename RootingContext>
-  explicit Rooted(const RootingContext& cx) : ptr(SafelyInitialized<T>()) {
-    registerWithRootLists(rootLists(cx));
-  }
+  explicit Rooted(const RootingContext& cx)
+      : Rooted(cx, CtorDispatcher(), detail::OverloadSelector()) {}
 
   template <typename RootingContext, typename S>
   Rooted(const RootingContext& cx, S&& initial)

@@ -286,7 +286,7 @@ class FullParseHandler {
                                      Node inner) {
     MOZ_ASSERT(literal->isKind(ParseNodeKind::ArrayExpr));
 
-    ParseNode* spread = newSpread(begin, inner);
+    UnaryNodeType spread = newSpread(begin, inner);
     if (!spread) {
       return false;
     }

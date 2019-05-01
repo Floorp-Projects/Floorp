@@ -4,119 +4,171 @@
 
 // @flow
 
-/**
- * This file defines the root resource datatypes and functions to manipulate
- * them. We specifically want these types to be opaque values because we want
- * to restrict access to them to the set of functions exposed specifically
- * for manipulation in order to promote good methods of access and good
- * memoization logic.
- */
+export type Resource<R: ResourceBound> = $ReadOnly<$Exact<R>>;
 
-type PropertiesById<ID, T> = $Exact<$ObjMap<T, <V>(v: V) => { [ID]: V }>>;
-
-export type Resource = {
-  +item: { +id: string }
+export type ResourceBound = {
+  +id: string
 };
-export type Value<R: Resource, K: $Keys<R>> = $ElementType<R, K>;
-export type Item<R: Resource> = Value<R, "item">;
-export type Id<R: Resource> = $ElementType<Item<R>, "id">;
+export type Id<R: ResourceBound> = $ElementType<R, "id">;
 
-export type Order<R: Resource> = Array<Id<R>>;
-export type ReadOnlyOrder<R: Resource> = $ReadOnlyArray<Id<R>>;
+type ResourceSubset<R: ResourceBound> = $ReadOnly<{
+  +id: Id<R>,
+  ...$Shape<$Rest<R, { +id: Id<R> }>>
+}>;
 
-export type Fields<R: Resource> = {|
-  // This spread clears the covariance on 'item'.
-  ...PropertiesById<Id<R>, R>
-|};
-export type ReadOnlyFields<R: Resource> = $ReadOnly<Fields<R>>;
+export opaque type ResourceIdentity: { [string]: mixed } = {||};
+export type ResourceValues<R: ResourceBound> = { [Id<R>]: R };
 
-// The resource type without "item" so it is all the types you're allow to
-// mutate via the resource API.
-export type MutableResource<R: Resource> = $Rest<
-  R,
-  { item: $ElementType<R, "item"> }
->;
-export type MutableFields<R: Resource> = PropertiesById<
-  Id<R>,
-  MutableResource<R>
->;
-
-// The general structure of a state store. Each top-level property of the
-// UnorderedState type will be stored as its own key/value object since the
-// types will likely mutate independent of one another and this approach
-// allows us to easily memoize values based on Redux selectors.
-export opaque type UnorderedState<R: Resource> = {
-  fields: ReadOnlyFields<R>
+export opaque type ResourceState<R: ResourceBound> = {
+  identity: { [Id<R>]: ResourceIdentity },
+  values: ResourceValues<R>
 };
 
-// An ordered version of the state where order is represented
-// as an array alongside the item lookup so that reordering items
-// does not need to affect any results that may have been computed
-// over the items as a whole ignoring sort order.
-export opaque type OrderedState<R: Resource> = {
-  order: ReadOnlyOrder<R>,
-  fields: ReadOnlyFields<R>
-};
-
-export type State<R: Resource> = OrderedState<R> | UnorderedState<R>;
-
-/**
- * Provide the default Redux state for an unordered store.
- */
-export function createUnordered<R: Resource>(
-  fields: Fields<R>
-): UnorderedState<R> {
-  if (Object.keys(fields.item).length !== 0) {
-    throw new Error("The initial 'fields' object should be empty.");
-  }
-
+export function createInitial<R: ResourceBound>(): ResourceState<R> {
   return {
-    fields
+    identity: {},
+    values: {}
   };
 }
 
-/**
- * Provide the default Redux state for an ordered store.
- */
-export function createOrdered<R: Resource>(fields: Fields<R>): OrderedState<R> {
-  if (Object.keys(fields.item).length !== 0) {
-    throw new Error("The initial 'fields' object should be empty.");
+export function insertResources<R: ResourceBound>(
+  state: ResourceState<R>,
+  resources: $ReadOnlyArray<R>
+): ResourceState<R> {
+  if (resources.length === 0) {
+    return state;
   }
 
-  return {
-    order: [],
-    fields
+  state = {
+    identity: { ...state.identity },
+    values: { ...state.values }
   };
+
+  for (const resource of resources) {
+    const { id } = resource;
+    if (state.identity[id]) {
+      throw new Error(`Resource "${id}" already exists, cannot insert`);
+    }
+    if (state.values[id]) {
+      throw new Error(
+        `Resource state corrupt: ${id} has value but no identity`
+      );
+    }
+
+    state.identity[resource.id] = makeIdentity();
+    state.values[resource.id] = resource;
+  }
+  return state;
 }
 
-export function mutateState<R: Resource, S: State<R>, T>(
-  state: S,
-  arg: T,
-  fieldsMutator: (T, Fields<R>) => void,
-  orderMutator?: (T, Order<R>) => Order<R> | void
-): S {
-  // $FlowIgnore - Flow can't quite tell that this is a valid way to copy state.
-  state = { ...state };
+export function removeResources<R: ResourceBound>(
+  state: ResourceState<R>,
+  resources: $ReadOnlyArray<ResourceSubset<R> | Id<R>>
+): ResourceState<R> {
+  if (resources.length === 0) {
+    return state;
+  }
 
-  state.fields = { ...state.fields };
+  state = {
+    identity: { ...state.identity },
+    values: { ...state.values }
+  };
 
-  fieldsMutator(arg, state.fields);
+  for (let id of resources) {
+    if (typeof id !== "string") {
+      id = id.id;
+    }
 
-  if (orderMutator && state.order) {
-    const mutableOrder = state.order.slice();
+    if (!state.identity[id]) {
+      throw new Error(`Resource "${id}" does not exists, cannot remove`);
+    }
+    if (!state.values[id]) {
+      throw new Error(
+        `Resource state corrupt: ${id} has identity but no value`
+      );
+    }
 
-    state.order = orderMutator(arg, mutableOrder) || mutableOrder;
+    delete state.identity[id];
+    delete state.values[id];
+  }
+  return state;
+}
+
+export function updateResources<R: ResourceBound>(
+  state: ResourceState<R>,
+  resources: $ReadOnlyArray<ResourceSubset<R>>
+): ResourceState<R> {
+  if (resources.length === 0) {
+    return state;
+  }
+
+  let didCopyValues = false;
+
+  for (const subset of resources) {
+    const { id } = subset;
+
+    if (!state.identity[id]) {
+      throw new Error(`Resource "${id}" does not exists, cannot update`);
+    }
+    if (!state.values[id]) {
+      throw new Error(
+        `Resource state corrupt: ${id} has identity but no value`
+      );
+    }
+
+    const existing = state.values[id];
+    const updated = {};
+
+    for (const field of Object.keys(subset)) {
+      if (field === "id") {
+        continue;
+      }
+
+      if (subset[field] !== existing[field]) {
+        updated[field] = subset[field];
+      }
+    }
+
+    if (Object.keys(updated).length > 0) {
+      if (!didCopyValues) {
+        didCopyValues = true;
+        state = {
+          identity: state.identity,
+          values: { ...state.values }
+        };
+      }
+
+      state.values[id] = { ...existing, ...updated };
+    }
   }
 
   return state;
 }
 
-export function getOrder<R: Resource>(
-  state: OrderedState<R>
-): ReadOnlyOrder<R> {
-  return state.order;
+export function makeIdentity(): ResourceIdentity {
+  return ({}: any);
 }
 
-export function getFields<R: Resource>(state: State<R>): ReadOnlyFields<R> {
-  return state.fields;
+export function getResourcePair<R: ResourceBound>(
+  state: ResourceState<R>,
+  id: Id<R>
+): {
+  value: R,
+  identity: ResourceIdentity
+} | null {
+  const value = state.values[id];
+  const identity = state.identity[id];
+  if ((value && !identity) || (!value && identity)) {
+    throw new Error(
+      `Resource state corrupt: ${id} has mismatched value and identity`
+    );
+  }
+
+  return value ? { value, identity } : null;
+}
+
+export function getResourceValues<R: ResourceBound>(
+  state: ResourceState<R>
+): ResourceValues<R> {
+  return state.values;
 }

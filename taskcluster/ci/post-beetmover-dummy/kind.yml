@@ -20,7 +20,7 @@ job-template:
    description: Dummy task to deal with max_dependencies
    run-on-projects: []
    shipping-phase: promote
-   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker-type: b-linux
    worker:
       implementation: docker-worker
       os: linux

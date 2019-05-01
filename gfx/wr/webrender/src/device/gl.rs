@@ -153,12 +153,6 @@ fn depth_target_size_in_bytes(dimensions: &DeviceIntSize) -> usize {
     (pixels as usize) * 4
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ReadPixelsFormat {
-    Standard(ImageFormat),
-    Rgba8,
-}
-
 pub fn get_gl_target(target: TextureTarget) -> gl::GLuint {
     match target {
         TextureTarget::Default => gl::TEXTURE_2D,
@@ -2535,21 +2529,11 @@ impl Device {
     pub fn read_pixels_into(
         &mut self,
         rect: FramebufferIntRect,
-        format: ReadPixelsFormat,
+        format: ImageFormat,
         output: &mut [u8],
     ) {
-        let (bytes_per_pixel, desc) = match format {
-            ReadPixelsFormat::Standard(imf) => {
-                (imf.bytes_per_pixel(), self.gl_describe_format(imf))
-            }
-            ReadPixelsFormat::Rgba8 => {
-                (4, FormatDesc {
-                    external: gl::RGBA,
-                    internal: gl::RGBA8,
-                    pixel_type: gl::UNSIGNED_BYTE,
-                })
-            }
-        };
+        let bytes_per_pixel = format.bytes_per_pixel();
+        let desc = self.gl_describe_format(format);
         let size_in_bytes = (bytes_per_pixel * rect.size.width * rect.size.height) as usize;
         assert_eq!(output.len(), size_in_bytes);
 

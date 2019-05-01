@@ -154,10 +154,6 @@ function waitForState(dbg, predicate, msg) {
  * @static
  */
 async function waitForSources(dbg, ...sources) {
-  const {
-    selectors: { getSources },
-    store
-  } = dbg;
   if (sources.length === 0) {
     return Promise.resolve();
   }
@@ -597,7 +593,7 @@ function findSource(dbg, url, { silent } = { silent: false }) {
     return source;
   }
 
-  const sources = Object.values(dbg.selectors.getSources());
+  const sources = dbg.selectors.getSourceList();
   const source = sources.find(s => (s.url || "").includes(url));
 
   if (!source) {
@@ -648,7 +644,7 @@ function waitForLoadedSources(dbg) {
   return waitForState(
     dbg,
     state => {
-      const sources = Object.values(dbg.selectors.getSources());
+      const sources = dbg.selectors.getSourceList();
       return sources.every(source => !!dbg.selectors.getSourceContent(source.id));
     },
     "loaded source"

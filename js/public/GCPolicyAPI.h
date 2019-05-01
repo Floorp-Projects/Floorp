@@ -28,7 +28,7 @@
 //   static bool isValid(const T& t)
 //       - Return false only if |t| is corrupt in some way. The built-in GC
 //         types do some memory layout checks. For debugging only; it is ok
-//         to always return true.
+//         to always return true or even to omit this member entirely.
 //
 // The default GCPolicy<T> assumes that T has a default constructor and |trace|
 // and |needsSweep| methods, and forwards to them. GCPolicy has appropriate

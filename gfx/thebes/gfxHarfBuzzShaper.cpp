@@ -1192,7 +1192,11 @@ bool gfxHarfBuzzShaper::Initialize() {
                               HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
 
   mHBFont = hb_font_create(mHBFace);
-  hb_font_set_funcs(mHBFont, sHBFontFuncs, &mCallbackData, nullptr);
+  if (mFont->GetFontEntry()->HasFontTable(TRUETYPE_TAG('C', 'F', 'F', ' '))) {
+    hb_ot_font_set_funcs(mHBFont);
+  } else {
+    hb_font_set_funcs(mHBFont, sHBFontFuncs, &mCallbackData, nullptr);
+  }
   hb_font_set_ppem(mHBFont, mFont->GetAdjustedSize(), mFont->GetAdjustedSize());
   uint32_t scale = FloatToFixed(mFont->GetAdjustedSize());  // 16.16 fixed-point
   hb_font_set_scale(mHBFont, scale, scale);

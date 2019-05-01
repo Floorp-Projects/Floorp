@@ -78,8 +78,8 @@ async function waitUntil(predicate, msg) {
 }
 
 function findSource(dbg, url) {
-  const sources = dbg.selectors.getSources(dbg.getState());
-  return Object.values(sources).find(s => (s.url || "").includes(url));
+  const sources = dbg.selectors.getSourceList(dbg.getState());
+  return sources.find(s => (s.url || "").includes(url));
 }
 
 function getCM(dbg) {

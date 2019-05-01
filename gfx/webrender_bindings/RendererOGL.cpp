@@ -92,6 +92,7 @@ static void DoNotifyWebRenderContextPurge(
 }
 
 bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
+                                  const Maybe<wr::ImageFormat>& aReadbackFormat,
                                   const Maybe<Range<uint8_t>>& aReadbackBuffer,
                                   bool aHadSlowFrame,
                                   RendererStats* aOutStats) {
@@ -126,8 +127,11 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
 
   if (aReadbackBuffer.isSome()) {
     MOZ_ASSERT(aReadbackSize.isSome());
+    MOZ_ASSERT(aReadbackFormat.isSome());
     wr_renderer_readback(mRenderer, aReadbackSize.ref().width,
-                         aReadbackSize.ref().height, &aReadbackBuffer.ref()[0],
+                         aReadbackSize.ref().height,
+                         aReadbackFormat.ref(),
+                         &aReadbackBuffer.ref()[0],
                          aReadbackBuffer.ref().length());
   }
 

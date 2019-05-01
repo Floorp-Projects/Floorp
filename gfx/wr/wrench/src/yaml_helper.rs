@@ -443,6 +443,9 @@ impl YamlHelper for Yaml {
             if nums.len() == 3 {
                 nums.push(1.0);
             }
+            assert!(nums[3] >= 0.0 && nums[3] <= 1.0,
+                    "alpha value should be in the 0-1 range, got {:?}",
+                    nums[3]);
             return Some(ColorF::new(
                 nums[0] / 255.0,
                 nums[1] / 255.0,

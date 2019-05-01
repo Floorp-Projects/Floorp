@@ -4,42 +4,71 @@
 
 // @flow
 
-import type { UnorderedState, OrderedState } from "./core";
-export type {
-  UnorderedState as ResourceState,
-  OrderedState as OrderedResourceState
-};
-export type {
-  FieldByIDGetter,
-  FieldByIDMapper,
-  FieldByIDReducer,
-  FieldReducer
-} from "./caching";
-
 export {
   createInitial,
-  createInitialOrdered,
-  insertResourceAtIndex,
-  insertResourcesAtIndex,
-  insertResource,
   insertResources,
-  removeResource,
   removeResources,
-  setFieldsValue,
-  setFieldsValues,
-  setFieldValue,
-  setFieldValues
-} from "./actions";
+  updateResources
+} from "./core";
+export type {
+  Id,
+  Resource,
+  ResourceBound,
+  // Disabled pending eslint-plugin-import bug #1345
+  // eslint-disable-next-line import/named
+  ResourceState,
+  // Disabled pending eslint-plugin-import bug #1345
+  // eslint-disable-next-line import/named
+  ResourceIdentity,
+  ResourceValues
+} from "./core";
+
 export {
   hasResource,
+  getResourceIds,
   getResource,
-  listItems,
-  getItem,
-  getFieldValue
-} from "./selectors";
+  getMappedResource
+} from "./selector";
+export type { ResourceMap } from "./selector";
+
+export { makeResourceQuery, makeMapWithArgs } from "./base-query";
+export type {
+  ResourceQuery,
+  QueryMap,
+  QueryMapNoArgs,
+  QueryMapWithArgs,
+  QueryFilter,
+  QueryReduce,
+  QueryResultCompare
+} from "./base-query";
+
 export {
-  createFieldByIDGetter,
-  createFieldByIDMapper,
-  createFieldByIDReducer,
-  createFieldReducer
-} from "./caching";
+  filterAllIds,
+  makeWeakQuery,
+  makeShallowQuery,
+  makeStrictQuery,
+  makeIdQuery,
+  makeLoadQuery,
+  makeFilterQuery,
+  makeReduceQuery,
+  makeReduceAllQuery
+} from "./query";
+export type {
+  WeakQuery,
+  ShallowQuery,
+  StrictQuery,
+  IdQuery,
+  LoadQuery,
+  FilterQuery,
+  ReduceQuery,
+  ReduceAllQuery
+} from "./query";
+
+export {
+  queryCacheWeak,
+  queryCacheShallow,
+  queryCacheStrict
+} from "./query-cache";
+export type { WeakArgsBound, ShallowArgsBound } from "./query-cache";
+
+export { memoizeResourceShallow } from "./memoize";

@@ -1,3 +1,5 @@
+// |jit-test| --enable-experimental-fields
+
 try { evaluate(`
 class constructor  { get;                                           } // Long line is long
 // Long line XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

@@ -265,6 +265,7 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
 
   UpdateAndRender(aWindowId, startId, startTime, aRender,
                   /* aReadbackSize */ Nothing(),
+                  /* aReadbackFormat */ Nothing(),
                   /* aReadbackBuffer */ Nothing(), hadSlowFrame);
   FrameRenderingComplete(aWindowId);
 }
@@ -347,6 +348,7 @@ void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
                                    const VsyncId& aStartId,
                                    const TimeStamp& aStartTime, bool aRender,
                                    const Maybe<gfx::IntSize>& aReadbackSize,
+                                   const Maybe<wr::ImageFormat>& aReadbackFormat,
                                    const Maybe<Range<uint8_t>>& aReadbackBuffer,
                                    bool aHadSlowFrame) {
   AUTO_PROFILER_TRACING("Paint", "Composite", GRAPHICS);
@@ -370,8 +372,8 @@ void RenderThread::UpdateAndRender(wr::WindowId aWindowId,
   bool rendered = false;
   RendererStats stats = {0};
   if (aRender) {
-    rendered = renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer,
-                                         aHadSlowFrame, &stats);
+    rendered = renderer->UpdateAndRender(aReadbackSize, aReadbackFormat,
+                                         aReadbackBuffer, aHadSlowFrame, &stats);
   } else {
     renderer->Update();
   }

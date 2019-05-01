@@ -106,9 +106,10 @@ function storeCertOverride(port, cert) {
                                                overrideBits, true);
 }
 
-function startClient(port, cert, expectingBadCertAlert) {
+function startClient(port, cert, expectingAlert, tlsVersion) {
   let SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
   let SSL_ERROR_BAD_CERT_ALERT = SSL_ERROR_BASE + 17;
+  let SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT = SSL_ERROR_BASE + 181;
   let transport =
     socketTransportService.createTransport(["ssl"], 1, "127.0.0.1", port, null);
   let input;
@@ -131,18 +132,29 @@ function startClient(port, cert, expectingBadCertAlert) {
         equal(data, "HELLO", "Echoed data received");
         input.close();
         output.close();
-        ok(!expectingBadCertAlert, "No bad cert alert expected");
+        ok(!expectingAlert, "No cert alert expected");
         inputDeferred.resolve();
       } catch (e) {
         let errorCode = -1 * (e.result & 0xFFFF);
-        if (expectingBadCertAlert && errorCode == SSL_ERROR_BAD_CERT_ALERT) {
-          info("Got bad cert alert as expected");
-          input.close();
-          output.close();
-          inputDeferred.resolve();
-        } else {
-          inputDeferred.reject(e);
+        if (expectingAlert) {
+          if (tlsVersion == Ci.nsITLSClientStatus.TLS_VERSION_1_2 &&
+              errorCode == SSL_ERROR_BAD_CERT_ALERT) {
+            info("Got bad cert alert as expected for tls 1.2");
+            input.close();
+            output.close();
+            inputDeferred.resolve();
+            return;
+          }
+          if (tlsVersion == Ci.nsITLSClientStatus.TLS_VERSION_1_3 &&
+              errorCode == SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT) {
+            info("Got cert required alert as expected for tls 1.3");
+            input.close();
+            output.close();
+            inputDeferred.resolve();
+            return;
+          }
         }
+        inputDeferred.reject(e);
       }
     },
 
@@ -184,32 +196,32 @@ const tests = [{
   expectingPeerCert: true,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUIRE_ALWAYS,
   sendClientCert: true,
-  expectingBadCertAlert: false
+  expectingAlert: false
 }, {
   expectingPeerCert: true,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUIRE_ALWAYS,
   sendClientCert: false,
-  expectingBadCertAlert: true
+  expectingAlert: true
 }, {
   expectingPeerCert: true,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_ALWAYS,
   sendClientCert: true,
-  expectingBadCertAlert: false
+  expectingAlert: false
 }, {
   expectingPeerCert: false,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_ALWAYS,
   sendClientCert: false,
-  expectingBadCertAlert: false
+  expectingAlert: false
 }, {
   expectingPeerCert: false,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_NEVER,
   sendClientCert: true,
-  expectingBadCertAlert: false
+  expectingAlert: false
 }, {
   expectingPeerCert: false,
   clientCertificateConfig: Ci.nsITLSServerSocket.REQUEST_NEVER,
   sendClientCert: false,
-  expectingBadCertAlert: false
+  expectingAlert: false
 }];
 
 const versions = [{
@@ -231,7 +243,7 @@ add_task(async function() {
                                v.versionStr);
       storeCertOverride(server.port, cert);
       await startClient(server.port, t.sendClientCert ? cert : null,
-                        t.expectingBadCertAlert);
+                        t.expectingAlert, v.version);
       server.close();
     }
   }

@@ -14,10 +14,6 @@
 namespace mozilla {
 namespace widget {
 
-// TODO: Bug 1467125 - We need to integrate wl_display_dispatch_queue_pending()
-// with compositor event loop.
-#define EVENT_LOOP_DELAY (1000 / 240)
-
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
 class nsWaylandDisplay {
@@ -25,9 +21,10 @@ class nsWaylandDisplay {
   explicit nsWaylandDisplay(wl_display* aDisplay);
   virtual ~nsWaylandDisplay();
 
-  bool DisplayLoop();
+  bool DispatchEventQueue();
   bool Matches(wl_display* aDisplay);
 
+  MessageLoop* GetDispatcherThreadLoop() { return mDispatcherThreadLoop; }
   wl_display* GetDisplay() { return mDisplay; };
   wl_event_queue* GetEventQueue() { return mEventQueue; };
   wl_subcompositor* GetSubcompositor(void) { return mSubcompositor; };
@@ -47,7 +44,10 @@ class nsWaylandDisplay {
   void SetPrimarySelectionDeviceManager(
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
 
+  void Shutdown();
+
  private:
+  MessageLoop* mDispatcherThreadLoop;
   PRThread* mThreadId;
   wl_display* mDisplay;
   wl_event_queue* mEventQueue;
@@ -59,6 +59,7 @@ class nsWaylandDisplay {
   wl_registry* mRegistry;
 };
 
+void WaylandDispatchDisplays();
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
 
 }  // namespace widget

@@ -30,6 +30,7 @@ CUSTOM_NSIS_PLUGINS = \
 	AccessControl.dll \
 	AppAssocReg.dll \
 	ApplicationID.dll \
+	BitsUtils.dll \
 	CertCheck.dll \
 	CityHash.dll \
 	ExecInExplorer.dll \

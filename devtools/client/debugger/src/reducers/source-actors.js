@@ -11,48 +11,47 @@ import {
   insertResources,
   removeResources,
   hasResource,
-  getItem,
-  createFieldByIDGetter,
-  createFieldReducer,
+  getResource,
+  makeIdQuery,
+  makeReduceAllQuery,
+  type Resource,
   type ResourceState,
-  type FieldReducer,
-  type FieldByIDGetter
+  type IdQuery,
+  type ReduceAllQuery
 } from "../utils/resource";
 
-export opaque type SourceActorId = string;
+export opaque type SourceActorId: string = string;
 export type SourceActor = {|
-  id: SourceActorId,
-  actor: string,
-  thread: ThreadId,
-  source: SourceId,
+  +id: SourceActorId,
+  +actor: string,
+  +thread: ThreadId,
+  +source: SourceId,
 
-  isBlackBoxed: boolean,
+  +isBlackBoxed: boolean,
 
   // The URL of the sourcemap for this source if there is one.
-  sourceMapURL: string | null,
+  +sourceMapURL: string | null,
 
   // The URL of the actor itself. If the source was from an "eval" or other
   // string-based source, this will not be known.
-  url: string | null,
+  +url: string | null,
 
   // If this script was introduced by an eval, this will be the URL of the
   // script that triggered the evaluation.
-  introductionUrl: string | null,
+  +introductionUrl: string | null,
 
   // The debugger's Debugger.Source API provides type information for the
   // cause of this source's creation.
-  introductionType: string | null
+  +introductionType: string | null
 |};
 
-type SourceActorResource = {|
-  item: SourceActor
-|};
+type SourceActorResource = Resource<{
+  ...SourceActor
+}>;
 export type SourceActorsState = ResourceState<SourceActorResource>;
 export type SourceActorOuterState = { sourceActors: SourceActorsState };
 
-const initial: SourceActorsState = createInitial({
-  item: {}
-});
+const initial: SourceActorsState = createInitial();
 
 export default function update(
   state: SourceActorsState = initial,
@@ -61,7 +60,7 @@ export default function update(
   switch (action.type) {
     case "INSERT_SOURCE_ACTORS": {
       const { items } = action;
-      state = insertResources(state, items.map(item => ({ item })));
+      state = insertResources(state, items);
       break;
     }
     case "REMOVE_SOURCE_ACTORS": {
@@ -77,6 +76,10 @@ export default function update(
   }
 
   return state;
+}
+
+export function resourceAsSourceActor(r: SourceActorResource): SourceActor {
+  return r;
 }
 
 // Because we are using an opaque type for our source actor IDs, these
@@ -98,41 +101,40 @@ export function getSourceActor(
   state: SourceActorOuterState,
   id: SourceActorId
 ): SourceActor {
-  return getItem(state.sourceActors, id);
+  return getResource(state.sourceActors, id);
 }
 
 /**
  * Get all of the source actors for a set of IDs. Caches based on the identity
  * of "ids" when possible.
  */
-const getSourceActorsById: FieldByIDGetter<
+const querySourceActorsById: IdQuery<
   SourceActorResource,
-  "item"
-> = createFieldByIDGetter("item");
+  SourceActor
+> = makeIdQuery(resourceAsSourceActor);
+
 export function getSourceActors(
   state: SourceActorOuterState,
   ids: Array<SourceActorId>
 ): Array<SourceActor> {
-  return getSourceActorsById(state.sourceActors, ids);
+  return querySourceActorsById(state.sourceActors, ids);
 }
 
-const getSourcesByThreadID: FieldReducer<
+const querySourcesByThreadID: ReduceAllQuery<
   SourceActorResource,
   { [ThreadId]: Array<SourceActor> }
-> = createFieldReducer(
-  "item",
-  (acc, item, id) => {
-    acc[item.thread] = acc[item.thread] || [];
-    acc[item.thread].push(item);
+> = makeReduceAllQuery(resourceAsSourceActor, actors => {
+  return actors.reduce((acc, actor) => {
+    acc[actor.thread] = acc[actor.thread] || [];
+    acc[actor.thread].push(actor);
     return acc;
-  },
-  () => ({})
-);
+  }, {});
+});
 export function getSourceActorsForThread(
   state: SourceActorOuterState,
   ids: ThreadId | Array<ThreadId>
 ): Array<SourceActor> {
-  const sourcesByThread = getSourcesByThreadID(state.sourceActors);
+  const sourcesByThread = querySourcesByThreadID(state.sourceActors);
 
   let sources = [];
   for (const id of Array.isArray(ids) ? ids : [ids]) {
@@ -141,25 +143,26 @@ export function getSourceActorsForThread(
   return sources;
 }
 
-const getThreadsBySourceObject: FieldReducer<
+const queryThreadsBySourceObject: ReduceAllQuery<
   SourceActorResource,
   { [SourceId]: Array<ThreadId> }
-> = createFieldReducer(
-  "item",
-  (acc, item, id) => {
-    let sourceThreads = acc[item.source];
-    if (!sourceThreads) {
-      sourceThreads = [];
-      acc[item.source] = sourceThreads;
-    }
+> = makeReduceAllQuery(
+  actor => ({ thread: actor.thread, source: actor.source }),
+  actors =>
+    actors.reduce((acc, { source, thread }) => {
+      let sourceThreads = acc[source];
+      if (!sourceThreads) {
+        sourceThreads = [];
+        acc[source] = sourceThreads;
+      }
 
-    sourceThreads.push(item.thread);
-    return acc;
-  },
-  () => ({})
+      sourceThreads.push(thread);
+      return acc;
+    }, {})
 );
+
 export function getThreadsBySource(
   state: SourceActorOuterState
 ): { [SourceId]: Array<ThreadId> } {
-  return getThreadsBySourceObject(state.sourceActors);
+  return queryThreadsBySourceObject(state.sourceActors);
 }

@@ -17,7 +17,7 @@ job-defaults:
       kind: build
       platform: linux64/opt
       tier: 1
-   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker-type: b-linux
    worker:
       implementation: docker-worker
       os: linux

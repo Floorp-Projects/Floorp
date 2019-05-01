@@ -21,11 +21,24 @@ namespace widget {
 static nsWaylandDisplay *gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplaysMutex;
 
+void WaylandDisplayShutdown() {
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  for (auto &display : gWaylandDisplays) {
+    if (display) {
+      display->Shutdown();
+    }
+  }
+}
+
 static void ReleaseDisplaysAtExit() {
   for (int i = 0; i < MAX_DISPLAY_CONNECTIONS; i++) {
     delete gWaylandDisplays[i];
     gWaylandDisplays[i] = nullptr;
   }
+}
+
+static void DispatchDisplay(nsWaylandDisplay *aDisplay) {
+  aDisplay->DispatchEventQueue();
 }
 
 // Each thread which is using wayland connection (wl_display) has to operate
@@ -35,7 +48,15 @@ static void ReleaseDisplaysAtExit() {
 // nsWaylandDisplay is our interface to wayland compositor. It provides wayland
 // global objects as we need (wl_display, wl_shm) and operates wl_event_queue on
 // compositor (not the main) thread.
-static void WaylandDisplayLoop(wl_display *aDisplay);
+void WaylandDispatchDisplays() {
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  for (auto &display : gWaylandDisplays) {
+    if (display && display->GetDispatcherThreadLoop()) {
+      display->GetDispatcherThreadLoop()->PostTask(NewRunnableFunction(
+          "WaylandDisplayDispatch", &DispatchDisplay, display));
+    }
+  }
+}
 
 // Get WaylandDisplay for given wl_display and actual calling thread.
 static nsWaylandDisplay *WaylandDisplayGetLocked(GdkDisplay *aGdkDisplay,
@@ -71,27 +92,6 @@ nsWaylandDisplay *WaylandDisplayGet(GdkDisplay *aGdkDisplay) {
 
   StaticMutexAutoLock lock(gWaylandDisplaysMutex);
   return WaylandDisplayGetLocked(aGdkDisplay, lock);
-}
-
-static void WaylandDisplayLoopLocked(wl_display *aDisplay,
-                                     const StaticMutexAutoLock &) {
-  for (auto &display : gWaylandDisplays) {
-    if (display && display->Matches(aDisplay)) {
-      if (display->DisplayLoop()) {
-        MessageLoop::current()->PostDelayedTask(
-            NewRunnableFunction("WaylandDisplayLoop", &WaylandDisplayLoop,
-                                aDisplay),
-            EVENT_LOOP_DELAY);
-      }
-      break;
-    }
-  }
-}
-
-static void WaylandDisplayLoop(wl_display *aDisplay) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
-  WaylandDisplayLoopLocked(aDisplay, lock);
 }
 
 void nsWaylandDisplay::SetShm(wl_shm *aShm) { mShm = aShm; }
@@ -158,7 +158,7 @@ static void global_registry_remover(void *data, wl_registry *registry,
 static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
-bool nsWaylandDisplay::DisplayLoop() {
+bool nsWaylandDisplay::DispatchEventQueue() {
   wl_display_dispatch_queue_pending(mDisplay, mEventQueue);
   return true;
 }
@@ -168,7 +168,8 @@ bool nsWaylandDisplay::Matches(wl_display *aDisplay) {
 }
 
 nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
-    : mThreadId(PR_GetCurrentThread()),
+    : mDispatcherThreadLoop(nullptr),
+      mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
       mEventQueue(nullptr),
       mDataDeviceManager(nullptr),
@@ -186,14 +187,15 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
     wl_display_roundtrip(mDisplay);
     wl_display_roundtrip(mDisplay);
   } else {
+    mDispatcherThreadLoop = MessageLoop::current();
     mEventQueue = wl_display_create_queue(mDisplay);
-    MessageLoop::current()->PostTask(NewRunnableFunction(
-        "WaylandDisplayLoop", &WaylandDisplayLoop, mDisplay));
     wl_proxy_set_queue((struct wl_proxy *)mRegistry, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
   }
 }
+
+void nsWaylandDisplay::Shutdown() { mDispatcherThreadLoop = nullptr; }
 
 nsWaylandDisplay::~nsWaylandDisplay() {
   // Owned by Gtk+, we don't need to release

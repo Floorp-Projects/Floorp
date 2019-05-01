@@ -1459,9 +1459,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
   uint8_t* buffer = bufferTexture->GetBuffer();
   IntSize size = bufferTexture->GetSize();
 
-  // We only support B8G8R8A8 for now.
   MOZ_ASSERT(buffer);
-  MOZ_ASSERT(bufferTexture->GetFormat() == SurfaceFormat::B8G8R8A8);
+  // For now the only formats we get here are RGBA and BGRA, and code below is
+  // assuming a bpp of 4. If we allow other formats, the code needs adjusting
+  // accordingly.
+  MOZ_ASSERT(BytesPerPixel(bufferTexture->GetFormat()) == 4);
   uint32_t buffer_size = size.width * size.height * 4;
 
   // Assert the stride of the buffer is what webrender expects
@@ -1470,7 +1472,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
   FlushSceneBuilds();
   FlushFrameGeneration();
   Api(wr::RenderRoot::Default)
-      ->Readback(start, size, Range<uint8_t>(buffer, buffer_size));
+      ->Readback(start, size, bufferTexture->GetFormat(),
+                 Range<uint8_t>(buffer, buffer_size));
 
   return IPC_OK();
 }

@@ -23,7 +23,7 @@ use gleam::gl;
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
     BinaryRecorder, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
-    PipelineInfo, ProfilerHooks, ReadPixelsFormat, Renderer, RendererOptions, RendererStats,
+    PipelineInfo, ProfilerHooks, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
     WrShaders, set_profiler_hooks,
 };
@@ -736,14 +736,14 @@ pub extern "C" fn wr_renderer_release_profiler_structures(renderer: &mut Rendere
 pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
                                               width: i32,
                                               height: i32,
+                                              format: ImageFormat,
                                               dst_buffer: *mut u8,
                                               buffer_size: usize) {
     assert!(is_in_render_thread());
 
     let mut slice = make_slice_mut(dst_buffer, buffer_size);
     renderer.read_pixels_into(FramebufferIntSize::new(width, height).into(),
-                              ReadPixelsFormat::Standard(ImageFormat::BGRA8),
-                              &mut slice);
+                              format, &mut slice);
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
