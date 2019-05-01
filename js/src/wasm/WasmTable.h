@@ -86,7 +86,6 @@ class Table : public ShareableBase<Table> {
   void setFuncRef(uint32_t index, void* code, const Instance* instance);
 
   AnyRef getAnyRef(uint32_t index) const;
-  const void* getShortlivedAnyRefLocForCompiledCode(uint32_t index) const;
   void setAnyRef(uint32_t index, AnyRef);
 
   void setNull(uint32_t index);
