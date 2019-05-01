@@ -7183,12 +7183,6 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
   pc_->functionScope().useAsVarScope(pc_);
 
-  // Push a LexicalScope on to the stack.
-  ParseContext::Scope lexicalScope(this);
-  if (!lexicalScope.init(pc_)) {
-    return null();
-  }
-
   auto stmtList = handler_.newStatementList(synthesizedBodyPos);
   if (!stmtList) {
     return null();
@@ -7253,7 +7247,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     handler_.addStatementToList(stmtList, exprStatement);
   }
 
-  auto initializerBody = finishLexicalScope(lexicalScope, stmtList);
+  auto initializerBody = finishLexicalScope(pc_->varScope(), stmtList);
   if (!initializerBody) {
     return null();
   }
@@ -7337,17 +7331,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     return null();
   }
 
-  // Push a VarScope on to the stack.
-  ParseContext::VarScope varScope(this);
-  if (!varScope.init(pc_)) {
-    return null();
-  }
-
-  // Push a LexicalScope on to the stack.
-  ParseContext::Scope lexicalScope(this);
-  if (!lexicalScope.init(pc_)) {
-    return null();
-  }
+  pc_->functionScope().useAsVarScope(pc_);
 
   Node initializerExpr;
   TokenPos wholeInitializerPos;
@@ -7468,7 +7452,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   // Set the function's body to the field assignment.
   LexicalScopeNodeType initializerBody =
-      finishLexicalScope(lexicalScope, statementList);
+      finishLexicalScope(pc_->varScope(), statementList);
   if (!initializerBody) {
     return null();
   }
