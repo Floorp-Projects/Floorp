@@ -3226,9 +3226,6 @@ pref("layout.idle_period.required_quiescent_frames", 2);
 // end and the start of the next tick to avoid jank.
 pref("layout.idle_period.time_limit", 1);
 
-// Is support for the core interfaces of Web Animations API enabled?
-pref("dom.animations-api.core.enabled", true);
-
 // Pref to throttle offsreen animations
 pref("dom.animations.offscreen-throttling", true);
 
