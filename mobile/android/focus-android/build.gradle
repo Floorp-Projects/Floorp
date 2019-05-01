@@ -6,10 +6,10 @@ buildscript {
     ext.espresso_version = '3.0.1'
     ext.kotlin_version = '1.3.0'
     ext.coroutines_version = '1.0.1'
-    ext.geckoview_revision = '9f56254cb36b05beeb9d7ecc233496eefb857e13'
-    ext.geckoview_version = '68.0.20190401094905' // GV 65 Rel Branch 1.20.2019
+    ext.geckoview_revision = '420e18a75314b8123b515d8a93cbacd145ecb03c'
+    ext.geckoview_version = '68.0.20190429095544' // GV 68 Nightly Branch 4.29.2019
     ext.spotbugs_version = '3.1.4'
-    ext.mozilla_components_version = '0.49.0'
+    ext.mozilla_components_version = '0.51.0'
 
     repositories {
         google()

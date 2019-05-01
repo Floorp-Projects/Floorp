@@ -688,7 +688,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
                 launch(IO) {
                     try {
-                        value?.toJSONObject()?.also {
+                        value?.also {
                             storage.save(it)
                         }
                     } catch (e: JSONException) {
@@ -739,7 +739,7 @@ class GeckoWebViewProvider : IWebViewProvider {
          * Provides an ErrorType corresponding to the error code provided.
          */
         @Suppress("ComplexMethod")
-        internal fun geckoErrorToErrorType(@WebRequestError.Error errorCode: Int) =
+        internal fun geckoErrorToErrorType(errorCode: Int) =
             when (errorCode) {
                 WebRequestError.ERROR_UNKNOWN -> ErrorType.UNKNOWN
                 WebRequestError.ERROR_SECURITY_SSL -> ErrorType.ERROR_SECURITY_SSL
