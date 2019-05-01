@@ -44,6 +44,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_blur_cache();
         self.test_capture();
         self.test_zero_height_window();
+        self.test_clear_cache();
     }
 
     fn render_and_get_pixels(&mut self, window_rect: FramebufferIntRect) -> Vec<u8> {
@@ -463,7 +464,7 @@ impl<'a> RawtestHarness<'a> {
     }
 
     fn test_offscreen_blob(&mut self) {
-        println!("\toffscreen blob update.");
+        println!("\toffscreen blob update...");
 
         assert_eq!(self.wrench.device_pixel_ratio, 1.);
 
@@ -1298,4 +1299,19 @@ impl<'a> RawtestHarness<'a> {
         test_rounded_rectangle(WorldPoint::new(200., 100.), WorldSize::new(100., 100.), (0, 5));
     }
 
+    fn test_clear_cache(&mut self) {
+        println!("\tclear cache test...");
+
+        self.wrench.api.send_message(ApiMsg::DebugCommand(DebugCommand::ClearCaches(ClearCache::all())));
+
+        let layout_size = LayoutSize::new(400., 400.);
+        let builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+
+        let txn = Transaction::new();
+        let mut epoch = Epoch(0);
+        self.submit_dl(&mut epoch, layout_size, builder, &txn.resource_updates);
+
+        self.rx.recv().unwrap();
+        self.wrench.render();
+    }
 }

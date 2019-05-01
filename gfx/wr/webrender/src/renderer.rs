@@ -3300,10 +3300,10 @@ impl Renderer {
         upload_time.profile(|| {
             for update_list in pending_texture_updates.drain(..) {
                 for allocation in update_list.allocations {
-                    let is_realloc = matches!(allocation.kind, TextureCacheAllocationKind::Realloc(..));
-                    match allocation.kind {
-                        TextureCacheAllocationKind::Alloc(info) |
-                        TextureCacheAllocationKind::Realloc(info) => {
+                    let old = match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(ref info) |
+                        TextureCacheAllocationKind::Realloc(ref info) |
+                        TextureCacheAllocationKind::Reset(ref info) => {
                             // Create a new native texture, as requested by the texture cache.
                             //
                             // Ensure no PBO is bound when creating the texture storage,
@@ -3332,20 +3332,31 @@ impl Renderer {
                                 }
                             }
 
-                            let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
-                            assert_eq!(old.is_some(), is_realloc, "Renderer and RenderBackend disagree");
-                            if let Some(old) = old {
-                                self.device.blit_renderable_texture(
-                                    self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
-                                    &old
-                                );
-                                self.device.delete_texture(old);
-                            }
-                        },
+                            self.texture_resolver.texture_cache_map.insert(allocation.id, texture)
+                        }
                         TextureCacheAllocationKind::Free => {
-                            let texture = self.texture_resolver.texture_cache_map.remove(&allocation.id).unwrap();
-                            self.device.delete_texture(texture);
-                        },
+                            self.texture_resolver.texture_cache_map.remove(&allocation.id)
+                        }
+                    };
+
+                    match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(_) => {
+                            assert!(old.is_none(), "Renderer and backend disagree!");
+                        }
+                        TextureCacheAllocationKind::Realloc(_) => {
+                            self.device.blit_renderable_texture(
+                                self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
+                                old.as_ref().unwrap(),
+                            );
+                        }
+                        TextureCacheAllocationKind::Reset(_) |
+                        TextureCacheAllocationKind::Free => {
+                            assert!(old.is_some(), "Renderer and backend disagree!");
+                        }
+                    }
+
+                    if let Some(old) = old {
+                        self.device.delete_texture(old);
                     }
                 }
 
