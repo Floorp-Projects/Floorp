@@ -15,7 +15,6 @@
 #include "Units.h"
 
 class nsChildView;
-class nsIPresShell;
 class nsIWidget;
 
 namespace mozilla {

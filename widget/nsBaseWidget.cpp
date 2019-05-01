@@ -1667,26 +1667,31 @@ void nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY) {
   }
 }
 
-void nsBaseWidget::NotifyPresShell(NotificationFunc aNotificationFunc) {
+void nsBaseWidget::NotifySizeMoveDone() {
   if (!mWidgetListener) {
     return;
   }
-
   if (PresShell* presShell = mWidgetListener->GetPresShell()) {
-    (presShell->*aNotificationFunc)();
+    presShell->WindowSizeMoveDone();
   }
 }
 
-void nsBaseWidget::NotifySizeMoveDone() {
-  NotifyPresShell(&nsIPresShell::WindowSizeMoveDone);
-}
-
 void nsBaseWidget::NotifySysColorChanged() {
-  NotifyPresShell(&nsIPresShell::SysColorChanged);
+  if (!mWidgetListener) {
+    return;
+  }
+  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
+    presShell->SysColorChanged();
+  }
 }
 
 void nsBaseWidget::NotifyThemeChanged() {
-  NotifyPresShell(&nsIPresShell::ThemeChanged);
+  if (!mWidgetListener) {
+    return;
+  }
+  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
+    presShell->ThemeChanged();
+  }
 }
 
 void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
