@@ -709,7 +709,7 @@ JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
         p = js_arena_calloc(arena, nbytes, 1);
         break;
       case AllocFunction::Realloc:
-        p = js_realloc(reallocPtr, nbytes);
+        p = js_arena_realloc(arena, reallocPtr, nbytes);
         break;
       default:
         MOZ_CRASH();

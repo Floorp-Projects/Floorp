@@ -313,9 +313,13 @@ static const struct FREEBLVectorStr vector =
       BLAKE2B_End,
       BLAKE2B_FlattenSize,
       BLAKE2B_Flatten,
-      BLAKE2B_Resurrect
+      BLAKE2B_Resurrect,
 
       /* End of Version 3.020 */
+
+      ChaCha20_Xor
+
+      /* End of version 3.021 */
 
     };
 

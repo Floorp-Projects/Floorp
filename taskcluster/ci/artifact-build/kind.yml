@@ -26,7 +26,7 @@ jobs:
             symbol: AB
             tier: 2
         run-on-projects: ['trunk', 'try']
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 3600
             env:

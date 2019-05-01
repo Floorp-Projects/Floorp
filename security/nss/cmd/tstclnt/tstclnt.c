@@ -221,7 +221,7 @@ PrintUsageHeader()
     fprintf(stderr,
             "Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
             "  [-D | -d certdir] [-C] [-b | -R root-module] \n"
-            "  [-n nickname] [-Bafosvx] [-c ciphers] [-Y] [-Z]\n"
+            "  [-n nickname] [-Bafosvx] [-c ciphers] [-Y] [-Z] [-E]\n"
             "  [-V [min-version]:[max-version]] [-K] [-T] [-U]\n"
             "  [-r N] [-w passwd] [-W pwfile] [-q [-t seconds]]\n"
             "  [-I groups] [-J signatureschemes]\n"
@@ -311,6 +311,9 @@ PrintParameterUsage()
     fprintf(stderr, "%-20s Use DTLS\n", "-P {client, server}");
     fprintf(stderr, "%-20s Exit after handshake\n", "-Q");
     fprintf(stderr, "%-20s Encrypted SNI Keys\n", "-N");
+    fprintf(stderr, "%-20s Enable post-handshake authentication\n"
+                    "%-20s for TLS 1.3; need to specify -n\n",
+            "-E", "");
 }
 
 static void
@@ -989,6 +992,7 @@ PRBool requestToExit = PR_FALSE;
 char *versionString = NULL;
 PRBool handshakeComplete = PR_FALSE;
 char *encryptedSNIKeys = NULL;
+PRBool enablePostHandshakeAuth = PR_FALSE;
 
 static int
 writeBytesToServer(PRFileDesc *s, const PRUint8 *buf, int nb)
@@ -1410,6 +1414,15 @@ run()
         goto done;
     }
 
+    if (enablePostHandshakeAuth) {
+        rv = SSL_OptionSet(s, SSL_ENABLE_POST_HANDSHAKE_AUTH, PR_TRUE);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "error enabling post-handshake auth");
+            error = 1;
+            goto done;
+        }
+    }
+
     if (enabledGroups) {
         rv = SSL_NamedGroupConfig(s, enabledGroups, enabledGroupsCount);
         if (rv < 0) {
@@ -1707,7 +1720,7 @@ main(int argc, char **argv)
      * Please leave some time before reusing these.
      */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:CDFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
+                                 "46A:CDEFGHI:J:KL:M:N:OP:QR:STUV:W:X:YZa:bc:d:fgh:m:n:op:qr:st:uvw:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1736,6 +1749,10 @@ main(int argc, char **argv)
 
             case 'D':
                 openDB = PR_FALSE;
+                break;
+
+            case 'E':
+                enablePostHandshakeAuth = PR_TRUE;
                 break;
 
             case 'F':
@@ -1985,6 +2002,11 @@ main(int argc, char **argv)
 
     if (rootModule && loadDefaultRootCAs) {
         fprintf(stderr, "%s: Cannot combine parameters -b and -R\n", progName);
+        exit(1);
+    }
+
+    if (enablePostHandshakeAuth && !nickname) {
+        fprintf(stderr, "%s: -E requires the use of -n\n", progName);
         exit(1);
     }
 

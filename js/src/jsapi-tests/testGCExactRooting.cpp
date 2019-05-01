@@ -249,7 +249,7 @@ END_TEST(testGCHandleHashMap)
 using ShapeVec = GCVector<Shape*>;
 
 BEGIN_TEST(testGCRootedVector) {
-  JS::Rooted<ShapeVec> shapes(cx, ShapeVec(cx));
+  JS::Rooted<ShapeVec> shapes(cx);
 
   for (size_t i = 0; i < 10; ++i) {
     RootedObject obj(cx, JS_NewObject(cx, nullptr));

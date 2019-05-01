@@ -28,7 +28,7 @@ jobs:
         shipping-product: firefox
         treeherder:
             platform: linux64-shippable/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             max-run-time: 7200
             env:

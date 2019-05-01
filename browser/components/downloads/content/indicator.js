@@ -51,6 +51,13 @@ const DownloadsButton = {
   _customizing: false,
 
   /**
+   * Indicates whether the button has been torn down.
+   * TODO: This is used for a temporary workaround for bug 1543537 and should be
+   * removed when fixed.
+   */
+  _uninitialized: false,
+
+  /**
    * This function is called asynchronously just after window initialization.
    *
    * NOTE: This function should limit the input/output it performs to improve
@@ -159,6 +166,9 @@ const DownloadsButton = {
   },
 
   checkForAutoHide() {
+    if (this._uninitialized) {
+      return;
+    }
     let button = this._placeholder;
     if (!this._customizing && this.autoHideDownloadsButton &&
         button && button.closest("toolbar")) {
@@ -213,6 +223,7 @@ const DownloadsButton = {
   },
 
   uninit() {
+    this._uninitialized = true;
     CustomizableUI.removeListener(this);
   },
 

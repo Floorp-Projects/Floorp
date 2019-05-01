@@ -144,6 +144,8 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 (wl_buffer/wl_surface).
 */
 
+#define EVENT_LOOP_DELAY (1000 / 240)
+
 #define BUFFER_BPP 4
 gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
 

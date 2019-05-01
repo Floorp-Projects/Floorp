@@ -1351,7 +1351,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
       return nullptr;
     }
 
-    ParseNode* list = statementList(YieldIsName);
+    ListNode* list = statementList(YieldIsName);
     if (!list) {
       return nullptr;
     }
@@ -4106,7 +4106,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::AssignmentNodeType
 GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
     NameNodeType binding, DeclarationKind declKind, bool initialDeclaration,
     YieldHandling yieldHandling, ParseNodeKind* forHeadKind,
@@ -4526,7 +4526,7 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
       // specifier to the list, with 'default' as the import name and
       // 'a' as the binding name. This is equivalent to
       // |import { default as a } from 'b'|.
-      Node importName = newName(cx_->names().default_);
+      NameNodeType importName = newName(cx_->names().default_);
       if (!importName) {
         return null();
       }
@@ -4536,7 +4536,7 @@ BinaryNode* Parser<FullParseHandler, Unit>::importDeclaration() {
         return null();
       }
 
-      Node bindingName = newName(bindingAtom);
+      NameNodeType bindingName = newName(bindingAtom);
       if (!bindingName) {
         return null();
       }
@@ -7070,7 +7070,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     }
 
     if (numFieldKeys > 0) {
-      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Var,
+      if (!noteDeclaredName(cx_->names().dotFieldKeys, DeclarationKind::Let,
                             namePos)) {
         return null();
       }
@@ -7511,7 +7511,7 @@ bool ParserBase::nextTokenContinuesLetDeclaration(TokenKind next) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::variableStatement(
     YieldHandling yieldHandling) {
   ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::VarStmt);

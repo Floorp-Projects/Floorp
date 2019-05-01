@@ -323,7 +323,6 @@ nsChildView::nsChildView()
       mParentWidget(nullptr),
       mViewTearDownLock("ChildViewTearDown"),
       mEffectsLock("WidgetEffects"),
-      mShowsResizeIndicator(false),
       mHasRoundedBottomCorners(false),
       mDevPixelCornerRadius{0},
       mIsCoveringTitlebar(false),
@@ -912,27 +911,6 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight, bo
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static const int32_t resizeIndicatorWidth = 15;
-static const int32_t resizeIndicatorHeight = 15;
-bool nsChildView::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) {
-  NSView *topLevelView = mView, *superView = nil;
-  while ((superView = [topLevelView superview])) topLevelView = superView;
-
-  if (![[topLevelView window] showsResizeIndicator] ||
-      !([[topLevelView window] styleMask] & NSResizableWindowMask))
-    return false;
-
-  if (aResizerRect) {
-    NSSize bounds = [topLevelView bounds].size;
-    NSPoint corner = NSMakePoint(bounds.width, [topLevelView isFlipped] ? bounds.height : 0);
-    corner = [topLevelView convertPoint:corner toView:mView];
-    aResizerRect->SetRect(NSToIntRound(corner.x) - resizeIndicatorWidth,
-                          NSToIntRound(corner.y) - resizeIndicatorHeight, resizeIndicatorWidth,
-                          resizeIndicatorHeight);
-  }
-  return true;
-}
-
 nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                int32_t aNativeKeyCode, uint32_t aModifierFlags,
                                                const nsAString& aCharacters,
@@ -1241,11 +1219,6 @@ bool nsChildView::ShouldUseOffMainThreadCompositing() {
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();
 }
 
-inline uint16_t COLOR8TOCOLOR16(uint8_t color8) {
-  // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
-  return (color8 << 8) | color8; /* (color8 * 257) == (color8 * 0x0101) */
-}
-
 #pragma mark -
 
 nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigurations) {
@@ -1338,6 +1311,34 @@ bool nsChildView::PaintWindow(LayoutDeviceIntRegion aRegion) {
   return returnValue;
 }
 
+bool nsChildView::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
+                                          const LayoutDeviceIntRegion& aRegion,
+                                          const gfx::IntSize& aSurfaceSize) {
+  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(aDT);
+  MOZ_ASSERT(targetContext);
+
+  // Set up the clip region and clear existing contents in the backing surface.
+  targetContext->NewPath();
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const LayoutDeviceIntRect& r = iter.Get();
+    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+    aDT->ClearRect(gfx::Rect(r.ToUnknownRect()));
+  }
+  targetContext->Clip();
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(mView);
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext,
+                                                          BufferMode::BUFFER_NONE);
+    return PaintWindow(aRegion);
+  }
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
+    // We only need this so that we actually get DidPaintWindow fired
+    return PaintWindow(aRegion);
+  }
+  return false;
+}
+
 bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                                        gfx::IntSize aSurfaceSize) {
   if (!mBackingSurface || mBackingSurface->GetSize() != aSurfaceSize) {
@@ -1348,28 +1349,7 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
     }
   }
 
-  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(mBackingSurface);
-  MOZ_ASSERT(targetContext);  // already checked the draw target above
-
-  // Set up the clip region and clear existing contents in the backing surface.
-  targetContext->NewPath();
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    const LayoutDeviceIntRect& r = iter.Get();
-    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
-    mBackingSurface->ClearRect(gfx::Rect(r.ToUnknownRect()));
-  }
-  targetContext->Clip();
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(mView);
-  bool painted = false;
-  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext,
-                                                          BufferMode::BUFFER_NONE);
-    painted = PaintWindow(aRegion);
-  } else if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-    // We only need this so that we actually get DidPaintWindow fired
-    painted = PaintWindow(aRegion);
-  }
+  bool painted = PaintWindowInDrawTarget(mBackingSurface, aRegion, aSurfaceSize);
 
   uint8_t* data;
   gfx::IntSize size;
@@ -1740,7 +1720,6 @@ void nsChildView::PrepareWindowEffects() {
   bool canBeOpaque;
   {
     MutexAutoLock lock(mEffectsLock);
-    mShowsResizeIndicator = ShowsResizeIndicator(&mResizeIndicatorRect);
     mHasRoundedBottomCorners = [mView hasRoundedBottomCorners];
     CGFloat cornerRadius = [mView cornerRadius];
     mDevPixelCornerRadius = cornerRadius * BackingScaleFactor();
@@ -1771,7 +1750,6 @@ void nsChildView::PrepareWindowEffects() {
 }
 
 void nsChildView::CleanupWindowEffects() {
-  mResizerImage = nullptr;
   mCornerMaskImage = nullptr;
   mTitlebarImage = nullptr;
 }
@@ -1860,7 +1838,6 @@ void nsChildView::DrawWindowOverlay(GLManager* aManager, LayoutDeviceIntRect aRe
   ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST, false);
 
   MaybeDrawTitlebar(aManager);
-  MaybeDrawResizeIndicator(aManager);
   MaybeDrawRoundedCorners(aManager, aRect);
 }
 
@@ -1868,60 +1845,6 @@ static void ClearRegion(gfx::DrawTarget* aDT, LayoutDeviceIntRegion aRegion) {
   gfxUtils::ClipToRegion(aDT, aRegion.ToUnknownRegion());
   aDT->ClearRect(gfx::Rect(0, 0, aDT->GetSize().width, aDT->GetSize().height));
   aDT->PopClip();
-}
-
-static void DrawResizer(CGContextRef aCtx) {
-  CGContextSetShouldAntialias(aCtx, false);
-  CGPoint points[6];
-  points[0] = CGPointMake(13.0f, 4.0f);
-  points[1] = CGPointMake(3.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 8.0f);
-  points[3] = CGPointMake(7.0f, 14.0f);
-  points[4] = CGPointMake(13.0f, 12.0f);
-  points[5] = CGPointMake(11.0f, 14.0f);
-  CGContextSetRGBStrokeColor(aCtx, 0.00f, 0.00f, 0.00f, 0.15f);
-  CGContextStrokeLineSegments(aCtx, points, 6);
-
-  points[0] = CGPointMake(13.0f, 5.0f);
-  points[1] = CGPointMake(4.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 9.0f);
-  points[3] = CGPointMake(8.0f, 14.0f);
-  points[4] = CGPointMake(13.0f, 13.0f);
-  points[5] = CGPointMake(12.0f, 14.0f);
-  CGContextSetRGBStrokeColor(aCtx, 0.13f, 0.13f, 0.13f, 0.54f);
-  CGContextStrokeLineSegments(aCtx, points, 6);
-
-  points[0] = CGPointMake(13.0f, 6.0f);
-  points[1] = CGPointMake(5.0f, 14.0f);
-  points[2] = CGPointMake(13.0f, 10.0f);
-  points[3] = CGPointMake(9.0f, 14.0f);
-  points[5] = CGPointMake(13.0f, 13.9f);
-  points[4] = CGPointMake(13.0f, 14.0f);
-  CGContextSetRGBStrokeColor(aCtx, 0.84f, 0.84f, 0.84f, 0.55f);
-  CGContextStrokeLineSegments(aCtx, points, 6);
-}
-
-void nsChildView::MaybeDrawResizeIndicator(GLManager* aManager) {
-  MutexAutoLock lock(mEffectsLock);
-  if (!mShowsResizeIndicator) {
-    return;
-  }
-
-  if (!mResizerImage) {
-    mResizerImage = MakeUnique<RectTextureImage>();
-  }
-
-  LayoutDeviceIntSize size = mResizeIndicatorRect.Size();
-  mResizerImage->UpdateIfNeeded(
-      size, LayoutDeviceIntRegion(),
-      ^(gfx::DrawTarget* drawTarget, const LayoutDeviceIntRegion& updateRegion) {
-        ClearRegion(drawTarget, updateRegion);
-        gfx::BorrowedCGContext borrow(drawTarget);
-        DrawResizer(borrow.cg);
-        borrow.Finish();
-      });
-
-  mResizerImage->Draw(aManager, mResizeIndicatorRect.TopLeft());
 }
 
 static CGContextRef CreateCGContext(const LayoutDeviceIntSize& aSize) {
@@ -2425,7 +2348,6 @@ void nsChildView::EndRemoteDrawing() {
 void nsChildView::CleanupRemoteDrawing() {
   mBasicCompositorImage = nullptr;
   mCornerMaskImage = nullptr;
-  mResizerImage = nullptr;
   mTitlebarImage = nullptr;
   mGLPresenter = nullptr;
 }

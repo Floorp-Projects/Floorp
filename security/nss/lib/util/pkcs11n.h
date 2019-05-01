@@ -230,6 +230,8 @@
 #define CKM_NSS_PKCS12_PBE_SHA384_HMAC_KEY_GEN (CKM_NSS + 31)
 #define CKM_NSS_PKCS12_PBE_SHA512_HMAC_KEY_GEN (CKM_NSS + 32)
 
+#define CKM_NSS_CHACHA20_CTR (CKM_NSS + 33)
+
 /*
  * HISTORICAL:
  * Do not attempt to use these. They are only used by NETSCAPE's internal

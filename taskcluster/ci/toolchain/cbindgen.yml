@@ -4,7 +4,7 @@
 
 job-defaults:
     description: "cbindgen toolchain build"
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
     run:
@@ -44,7 +44,7 @@ macosx64-cbindgen:
 win64-cbindgen:
     treeherder:
         symbol: TW64(cbindgen)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"

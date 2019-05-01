@@ -369,7 +369,7 @@ class nsChildView final : public nsBaseWidget {
   virtual void* GetNativeData(uint32_t aDataType) override;
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
-  virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
+  virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override { return false; }
 
   static bool ConvertStatus(nsEventStatus aStatus) {
     return aStatus == nsEventStatus_eConsumeNoDefault;
@@ -440,6 +440,8 @@ class nsChildView final : public nsBaseWidget {
 
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);
+  bool PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT, const LayoutDeviceIntRegion& aRegion,
+                               const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
 
@@ -553,7 +555,6 @@ class nsChildView final : public nsBaseWidget {
 
   // Overlay drawing functions for OpenGL drawing
   void DrawWindowOverlay(mozilla::layers::GLManager* aManager, LayoutDeviceIntRect aRect);
-  void MaybeDrawResizeIndicator(mozilla::layers::GLManager* aManager);
   void MaybeDrawRoundedCorners(mozilla::layers::GLManager* aManager,
                                const LayoutDeviceIntRect& aRect);
   void MaybeDrawTitlebar(mozilla::layers::GLManager* aManager);
@@ -599,8 +600,6 @@ class nsChildView final : public nsBaseWidget {
 
   // May be accessed from any thread, protected
   // by mEffectsLock.
-  bool mShowsResizeIndicator;
-  LayoutDeviceIntRect mResizeIndicatorRect;
   bool mHasRoundedBottomCorners;
   int mDevPixelCornerRadius;
   bool mIsCoveringTitlebar;
@@ -614,7 +613,6 @@ class nsChildView final : public nsBaseWidget {
   CGContextRef mTitlebarCGContext;
 
   // Compositor thread only
-  mozilla::UniquePtr<mozilla::widget::RectTextureImage> mResizerImage;
   mozilla::UniquePtr<mozilla::widget::RectTextureImage> mCornerMaskImage;
   mozilla::UniquePtr<mozilla::widget::RectTextureImage> mTitlebarImage;
   mozilla::UniquePtr<mozilla::widget::RectTextureImage> mBasicCompositorImage;

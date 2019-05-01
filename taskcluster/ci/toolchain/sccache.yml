@@ -15,7 +15,7 @@ job-defaults:
 linux64-sccache:
     treeherder:
         symbol: TL(sccache)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 1800
     run:
@@ -27,7 +27,7 @@ linux64-sccache:
 win64-sccache:
     treeherder:
         symbol: TW64(sccache)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         max-run-time: 3600
         env:

@@ -9,7 +9,7 @@ job-defaults:
         code-review: true
     worker-type:
         by-platform:
-            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+            linux64.*: t-linux-xlarge
     worker:
         docker-image: {in-tree: android-build}
         max-run-time: 5400

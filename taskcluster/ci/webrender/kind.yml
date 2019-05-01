@@ -28,7 +28,7 @@ job-defaults:
 jobs:
     lint-tidy:
         description: Runs linting checks on WebRender code
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
         run:
@@ -45,7 +45,7 @@ jobs:
 
     linux-release:
         description: Runs release-mode WebRender CI tests on a Linux worker
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
         toolchains:
@@ -70,7 +70,7 @@ jobs:
 
     linux-debug:
         description: Runs debug-mode WebRender CI tests on a Linux worker
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
         toolchains:
@@ -95,7 +95,7 @@ jobs:
 
     wrench-macos-build:
         description: Cross compilation of wrench for macOS on Linux
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
             env:
@@ -130,7 +130,7 @@ jobs:
 
     macos-release:
         description: Runs release-mode WebRender CI tests on a macOS worker
-        worker-type: releng-hardware/gecko-t-osx-1010
+        worker-type: t-osx-1010
         worker:
             max-run-time: 3600
             env:
@@ -157,7 +157,7 @@ jobs:
 
     cargotest-macos-build:
         description: Cross compilation of cargo tests for macOS on Linux
-        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker-type: b-linux
         worker:
             docker-image: {in-tree: webrender}
             env:
@@ -189,7 +189,7 @@ jobs:
 
     macos-debug:
         description: Runs debug-mode WebRender CI tests on a macOS worker
-        worker-type: releng-hardware/gecko-t-osx-1010
+        worker-type: t-osx-1010
         worker:
             max-run-time: 3600
             env:
@@ -215,7 +215,7 @@ jobs:
 
     windows:
         description: Runs WebRender CI tests on a Windows worker
-        worker-type: aws-provisioner-v1/gecko-t-win10-64
+        worker-type: t-win10-64
         worker:
             max-run-time: 5400
             env:

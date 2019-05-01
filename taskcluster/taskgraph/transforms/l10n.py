@@ -384,7 +384,7 @@ def make_job_description(config, jobs):
         if job.get('extra'):
             job_description['extra'] = job['extra']
 
-        if job['worker-type'].endswith("-b-win2012"):
+        if job['worker-type'] == "b-win2012":
             job_description['worker'] = {
                 'os': 'windows',
                 'max-run-time': 7200,
