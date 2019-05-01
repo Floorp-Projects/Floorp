@@ -387,7 +387,7 @@ struct ReflowInput : public SizeComputationInput {
   // orthogonal limit; when it finds such a reflow input, it will use its
   // orthogonal-limit value to constrain inline-size.
   // This is initialized to NS_UNCONSTRAINEDSIZE (so it will be ignored),
-  // but reset to a suitable value for the reflow root by nsPresShell.
+  // but reset to a suitable value for the reflow root by PresShell.
   nscoord mOrthogonalLimit = NS_UNCONSTRAINEDSIZE;
 
   // Accessors for the private fields below. Forcing all callers to use these

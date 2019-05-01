@@ -9,8 +9,6 @@
 
 #include "mozilla/TypedEnumBits.h"
 
-class nsIPresShell;
-
 struct CapturingContentInfo;
 
 namespace mozilla {

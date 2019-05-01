@@ -2238,7 +2238,7 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
   PresShell* presShell = aFrame->PresShell();
 
   // XXX Bug 1224748 - Update nsLayoutUtils functions to correctly handle
-  // nsPresShell resolution
+  // PresShell resolution
   widgetToView =
       widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(presShell));
 
