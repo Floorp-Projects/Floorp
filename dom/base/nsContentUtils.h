@@ -2351,11 +2351,6 @@ class nsContentUtils {
   }
 
   /**
-   * Returns true if the getBoxQuads API should be enabled.
-   */
-  static bool GetBoxQuadsEnabled() { return sGetBoxQuadsEnabled; }
-
-  /**
    * Returns true if the requestIdleCallback API should be enabled.
    */
   static bool RequestIdleCallbackEnabled() {
@@ -3438,7 +3433,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
   static bool sTailingEnabled;
