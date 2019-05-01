@@ -807,10 +807,11 @@ void DisplayListBuilder::PopStackingContext(bool aIsReferenceFrame) {
 }
 
 wr::WrClipChainId DisplayListBuilder::DefineClipChain(
-    const nsTArray<wr::WrClipId>& aClips, const wr::WrClipChainId* aParent) {
+    const nsTArray<wr::WrClipId>& aClips, bool aParentWithCurrentChain) {
   const uint64_t* parent = nullptr;
-  if (aParent && aParent->id != wr::ROOT_CLIP_CHAIN) {
-    parent = &aParent->id;
+  if (aParentWithCurrentChain &&
+      mCurrentSpaceAndClipChain.clip_chain != wr::ROOT_CLIP_CHAIN) {
+    parent = &mCurrentSpaceAndClipChain.clip_chain;
   }
   uint64_t clipchainId = wr_dp_define_clipchain(
       mWrState, parent, aClips.Elements(), aClips.Length());
@@ -1170,9 +1171,8 @@ void DisplayListBuilder::SuspendClipLeafMerging() {
     mSuspendedClipChainLeaf = mClipChainLeaf;
     mSuspendedSpaceAndClipChain = Some(mCurrentSpaceAndClipChain);
 
-    wr::WrClipChainId currentClipChainId{mCurrentSpaceAndClipChain.clip_chain};
     auto clipId = DefineClip(Nothing(), *mClipChainLeaf);
-    auto clipChainId = DefineClipChain({clipId}, &currentClipChainId);
+    auto clipChainId = DefineClipChain({clipId}, true);
 
     mCurrentSpaceAndClipChain.clip_chain = clipChainId.id;
     mClipChainLeaf = Nothing();
