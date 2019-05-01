@@ -3120,7 +3120,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
         PR_fprintf(PR_STDERR,
                    "%s -%c: specify a nickname (-n) or\n"
                    "   a key ID (-k).\n",
-                   commandToRun, progName);
+                   progName, commandToRun);
         return 255;
     }
 

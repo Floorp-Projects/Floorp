@@ -41,6 +41,10 @@ struct GCPolicy<mozilla::OwningNonNull<T>> {
       (*tp)->Trace(trc);
     }
   }
+
+  static bool isValid(const SmartPtrType& v) {
+    return !v.isInitialized() || GCPolicy<T>::isValid(v);
+  }
 };
 }  // namespace JS
 

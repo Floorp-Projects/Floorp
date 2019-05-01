@@ -2,6 +2,7 @@ import {_ASRouter, ASRouter} from "lib/ASRouter.jsm";
 import {FAKE_LOCAL_PROVIDER, FakeRemotePageManager} from "./constants";
 import {ASRouterFeed} from "lib/ASRouterFeed.jsm";
 import {actionTypes as at} from "common/Actions.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 
 describe("ASRouterFeed", () => {
   let Router;
@@ -9,9 +10,18 @@ describe("ASRouterFeed", () => {
   let channel;
   let sandbox;
   let storage;
+  let globals;
+  let FakeBookmarkPanelHub;
   beforeEach(() => {
-    Router = new _ASRouter({providers: [FAKE_LOCAL_PROVIDER]});
     sandbox = sinon.createSandbox();
+    globals = new GlobalOverrider();
+    FakeBookmarkPanelHub = {
+      init: sandbox.stub(),
+      uninit: sandbox.stub(),
+    };
+    globals.set("BookmarkPanelHub", FakeBookmarkPanelHub);
+
+    Router = new _ASRouter({providers: [FAKE_LOCAL_PROVIDER]});
     storage = {
       get: sandbox.stub().returns(Promise.resolve([])),
       set: sandbox.stub().returns(Promise.resolve()),

@@ -2061,6 +2061,16 @@ EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
 }
 
 SECStatus
+ChaCha20_Xor(unsigned char *output, const unsigned char *block, unsigned int len,
+             const unsigned char *k, const unsigned char *nonce, PRUint32 ctr)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
+        return SECFailure;
+    }
+    return (vector->p_ChaCha20_Xor)(output, block, len, k, nonce, ctr);
+}
+
+SECStatus
 ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,
                              const unsigned char *key, unsigned int keyLen,
                              unsigned int tagLen)

@@ -418,12 +418,15 @@ bool WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
 }
 
 void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
+                            const gfx::SurfaceFormat& aFormat,
                             const Range<uint8_t>& buffer) {
   class Readback : public RendererEvent {
    public:
     explicit Readback(layers::SynchronousTask* aTask, TimeStamp aStartTime,
-                      gfx::IntSize aSize, const Range<uint8_t>& aBuffer)
-        : mTask(aTask), mStartTime(aStartTime), mSize(aSize), mBuffer(aBuffer) {
+                      gfx::IntSize aSize, const gfx::SurfaceFormat& aFormat,
+                      const Range<uint8_t>& aBuffer)
+        : mTask(aTask), mStartTime(aStartTime), mSize(aSize), mFormat(aFormat),
+          mBuffer(aBuffer) {
       MOZ_COUNT_CTOR(Readback);
     }
 
@@ -432,6 +435,7 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
     void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       aRenderThread.UpdateAndRender(aWindowId, VsyncId(), mStartTime,
                                     /* aRender */ true, Some(mSize),
+                                    wr::SurfaceFormatToImageFormat(mFormat),
                                     Some(mBuffer), false);
       layers::AutoCompleteTask complete(mTask);
     }
@@ -439,6 +443,7 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
     layers::SynchronousTask* mTask;
     TimeStamp mStartTime;
     gfx::IntSize mSize;
+    gfx::SurfaceFormat mFormat;
     const Range<uint8_t>& mBuffer;
   };
 
@@ -446,7 +451,7 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
   UpdateDebugFlags(0);
 
   layers::SynchronousTask task("Readback");
-  auto event = MakeUnique<Readback>(&task, aStartTime, size, buffer);
+  auto event = MakeUnique<Readback>(&task, aStartTime, size, aFormat, buffer);
   // This event will be passed from wr_backend thread to renderer thread. That
   // implies that all frame data have been processed when the renderer runs this
   // read-back event. Then, we could make sure this read-back event gets the

@@ -33,7 +33,7 @@ job-template:
    name: release-partner-repack-chunking-dummy
    description: Dummy task to deal with fanning out Linux partner repacks
    run-on-projects: []
-   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker-type: b-linux
    worker:
       implementation: docker-worker
       os: linux

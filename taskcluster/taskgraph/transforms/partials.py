@@ -142,7 +142,7 @@ def make_task_description(config, jobs):
             'label': label,
             'description': "{} Partials".format(
                 dep_job.task["metadata"]["description"]),
-            'worker-type': 'aws-provisioner-v1/gecko-%s-b-linux' % level,
+            'worker-type': 'b-linux',
             'dependencies': dependencies,
             'scopes': [
                 'secrets:get:project/releng/gecko/build/level-%s/datadog-api-key' % level

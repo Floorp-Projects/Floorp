@@ -231,6 +231,7 @@ class WebRenderAPI final {
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
 
   void Readback(const TimeStamp& aStartTime, gfx::IntSize aSize,
+                const gfx::SurfaceFormat& aFormat,
                 const Range<uint8_t>& aBuffer);
 
   void ClearAllCaches();

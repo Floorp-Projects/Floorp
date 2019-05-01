@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 job-defaults:
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
+    worker-type: b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
@@ -14,7 +14,7 @@ linux64-clang-4.0:
     description: "Clang 4.0 toolchain build"
     treeherder:
         symbol: TL(clang4.0)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    worker-type: b-linux-large
     run:
         script: build-clang-4.0-linux.sh
         resources:
@@ -110,7 +110,7 @@ linux64-clang-8-aarch64-cross:
     description: "Clang 8 toolchain build with aarch64 runtime"
     treeherder:
         symbol: TL(clang8-aarch64)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
         docker-image: {in-tree: toolchain-arm64-build}
@@ -130,7 +130,7 @@ linux64-clang-8-macosx-cross:
     description: "Clang 8 toolchain build with MacOS Compiler RT libs"
     treeherder:
         symbol: TL(clang8-macosx-cross)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 3600
         env:
@@ -152,7 +152,7 @@ macosx64-clang:
     description: "Clang toolchain build"
     treeherder:
         symbol: TM(clang)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux-large
+    worker-type: b-linux-large
     worker:
         max-run-time: 3600
         env:
@@ -177,7 +177,7 @@ win64-clang-cl:
     description: "Clang-cl toolchain build"
     treeherder:
         symbol: TW64(clang-cl)
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker-type: b-win2012
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"

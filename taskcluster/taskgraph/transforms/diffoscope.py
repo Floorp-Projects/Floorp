@@ -124,8 +124,7 @@ def fill_template(config, tasks):
                 'kind': 'other',
                 'tier': 2,
             },
-            'worker-type': 'aws-provisioner-v1/gecko-{}-b-linux'.format(
-               config.params['level']),
+            'worker-type': 'b-linux',
             'worker': {
                 'docker-image': {'in-tree': 'diffoscope'},
                 'artifacts': [{

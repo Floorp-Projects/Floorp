@@ -350,6 +350,8 @@ class _ASRouter {
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
     this.onMessage = this.onMessage.bind(this);
+    this.handleMessageRequest = this.handleMessageRequest.bind(this);
+    this.addImpression = this.addImpression.bind(this);
     this._handleTargetingError = this._handleTargetingError.bind(this);
     this.onPrefChange = this.onPrefChange.bind(this);
   }
@@ -520,7 +522,7 @@ class _ASRouter {
 
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
-    BookmarkPanelHub.init(this.dispatch);
+    BookmarkPanelHub.init(this.handleMessageRequest, this.addImpression);
 
     const messageBlockList = await this._storage.get("messageBlockList") || [];
     const providerBlockList = await this._storage.get("providerBlockList") || [];
@@ -904,19 +906,20 @@ class _ASRouter {
     await this._sendMessageToTarget(message, target, trigger);
   }
 
-  async handleMessageRequest(trigger, target) {
+  handleMessageRequest(trigger) {
     const msgs = this._getUnblockedMessages();
-    const message = await this._findMessage(
-      msgs.filter(m => m.trigger && m.trigger.id === trigger.id),
-      trigger);
-    target.sendMessage({message});
+    return this._findMessage(msgs.filter(m => m.trigger && m.trigger.id === trigger.id), trigger);
   }
 
   async setMessageById(id, target, force = true, action = {}) {
     await this.setState({lastMessageId: id});
     const newMessage = this.getMessageById(id);
 
-    await this._sendMessageToTarget(newMessage, target, action.data, force);
+    if (newMessage && newMessage.provider === "cfr-fxa") {
+      BookmarkPanelHub._forceShowMessage(newMessage);
+    } else {
+      await this._sendMessageToTarget(newMessage, target, action.data, force);
+    }
   }
 
   async blockMessageById(idOrIds) {
@@ -1110,18 +1113,9 @@ class _ASRouter {
         target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {showDescription: true});
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
-        let url;
-        const entrypoint = action.entrypoint || "snippets";
-        switch (action.method) {
-          case "emailFirst":
-            url = await FxAccounts.config.promiseEmailFirstURI(entrypoint);
-            break;
-          default:
-            url = await FxAccounts.config.promiseSignUpURI(entrypoint);
-            break;
-        }
-        const where = action.where || "current";
-        target.browser.ownerGlobal.openLinkIn(url, where, {
+        const url = await FxAccounts.config.promiseSignUpURI("snippets");
+        // We want to replace the current tab.
+        target.browser.ownerGlobal.openLinkIn(url, "current", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
           csp: null,
@@ -1242,9 +1236,6 @@ class _ASRouter {
         break;
       case "FORCE_ATTRIBUTION":
         this.forceAttribution(action.data);
-        break;
-      case "MESSAGE_REQUEST":
-        this.handleMessageRequest(action.data.trigger, target);
         break;
       default:
         Cu.reportError("Unknown message received");

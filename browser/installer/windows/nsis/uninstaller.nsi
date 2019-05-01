@@ -4,6 +4,7 @@
 
 # Required Plugins:
 # AppAssocReg http://nsis.sourceforge.net/Application_Association_Registration_plug-in
+# BitsUtils   http://dxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/BitsUtils
 # CityHash    http://dxr.mozilla.org/mozilla-central/source/other-licenses/nsis/Contrib/CityHash
 # ShellLink   http://nsis.sourceforge.net/ShellLink_plug-in
 # UAC         http://nsis.sourceforge.net/UAC_plug-in
@@ -501,6 +502,11 @@ Section "Uninstall"
   Call un.UninstallServiceIfNotUsed
 !endif
 
+!ifdef MOZ_BITS_DOWNLOAD
+  BitsUtils::CancelBitsJobsByName "MozillaUpdate $AppUserModelID"
+  Pop $0
+!endif
+
   ${un.IsFirewallSvcRunning}
   Pop $0
   ${If} "$0" == "true"
@@ -530,6 +536,9 @@ Function un.preWelcome
     Delete "$PLUGINSDIR\modern-wizard.bmp"
     CopyFiles /SILENT "$INSTDIR\distribution\modern-wizard.bmp" "$PLUGINSDIR\modern-wizard.bmp"
   ${EndIf}
+!ifdef MOZ_BITS_DOWNLOAD
+  BitsUtils::StartBitsServiceBackground
+!endif
 FunctionEnd
 
 Function un.leaveWelcome

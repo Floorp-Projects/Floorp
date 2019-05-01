@@ -205,7 +205,7 @@
         <label data-l10n-id="fonts-minsize" control="minSize"/>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
-          <menulist id="minSize" oncommand="gFontsDialog.confirmMinSizeChange();">
+          <menulist id="minSize">
             <menupopup>
               <menuitem value="0" data-l10n-id="fonts-minsize-none"/>
               <menuitem value="9" label="9"/>

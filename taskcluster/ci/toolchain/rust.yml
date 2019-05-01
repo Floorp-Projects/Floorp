@@ -4,7 +4,7 @@
 
 job-defaults:
     description: "rust repack"
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker-type: b-linux
     worker:
         max-run-time: 7200
         env:
@@ -66,7 +66,7 @@ linux64-rust-nightly:
         symbol: TL(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2018-12-14',
+            '--channel', 'nightly-2019-03-03',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -115,7 +115,7 @@ linux64-rust-nightly-macos:
         symbol: TL(rust-nightly-macos)
     run:
         arguments: [
-            '--channel', 'nightly-2018-12-14',
+            '--channel', 'nightly-2019-03-03',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -168,7 +168,7 @@ win64-rust-nightly:
         symbol: TW64(rust-nightly)
     run:
         arguments: [
-            '--channel', 'nightly-2018-12-14',
+            '--channel', 'nightly-2019-03-03',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',

@@ -12,6 +12,7 @@ import updateSourceActors from "../source-actors";
 import type { Source, SourceActor } from "../../types";
 import { prefs } from "../../utils/prefs";
 import { makeMockSource, mockcx } from "../../utils/test-mockup";
+import { getResourceIds } from "../../utils/resource";
 
 const extensionSource = {
   ...makeMockSource(),
@@ -68,7 +69,7 @@ describe("sources reducer", () => {
       cx: mockcx,
       source: makeMockSource()
     });
-    expect(Object.keys(state.sources)).toHaveLength(1);
+    expect(getResourceIds(state.sources)).toHaveLength(1);
   });
 });
 
