@@ -250,7 +250,7 @@ yue{
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2440,7 +2440,7 @@ yue{
                     "大正",
                     "昭和",
                     "平成",
-                    "Qqqq",
+                    "令和",
                 }
             }
         }

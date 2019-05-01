@@ -2,7 +2,8 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 xh{
     Countries{
+        MK{"uMntla Macedonia"}
         ZA{"eMzantsi Afrika"}
     }
-    Version{"2.1.48.89"}
+    Version{"2.1.49.82"}
 }

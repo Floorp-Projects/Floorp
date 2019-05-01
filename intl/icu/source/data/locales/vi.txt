@@ -205,7 +205,7 @@ vi{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2533,7 +2533,7 @@ vi{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
                 narrow{
                     "Taika (645–650)",
@@ -2772,7 +2772,7 @@ vi{
                     "T",
                     "S",
                     "H",
-                    "Q",
+                    "R",
                 }
                 wide{
                     "Taika (645–650)",
@@ -3011,7 +3011,7 @@ vi{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
             }
             intervalFormats{

@@ -1153,8 +1153,19 @@ JS_PUBLIC_API void JS_freeop(JSFreeOp* fop, void* p) {
   return FreeOp::get(fop)->free_(p);
 }
 
-JS_PUBLIC_API void JS_updateMallocCounter(JSContext* cx, size_t nbytes) {
-  return cx->updateMallocCounter(nbytes);
+JS_PUBLIC_API void JS::AddAssociatedMemory(JSObject* obj, size_t nbytes,
+                                           JS::MemoryUse use) {
+  MOZ_ASSERT(obj);
+  Zone* zone = obj->zone();
+  zone->updateMallocCounter(nbytes);
+  zone->addCellMemory(obj, nbytes, use);
+  zone->runtimeFromMainThread()->gc.maybeAllocTriggerZoneGC(zone);
+}
+
+JS_PUBLIC_API void JS::RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
+                                              JS::MemoryUse use) {
+  MOZ_ASSERT(obj);
+  obj->zoneFromAnyThread()->removeCellMemory(obj, nbytes, use);
 }
 
 #undef JS_AddRoot

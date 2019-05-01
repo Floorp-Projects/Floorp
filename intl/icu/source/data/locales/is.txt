@@ -210,7 +210,7 @@ is{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{

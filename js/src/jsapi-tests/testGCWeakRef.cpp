@@ -12,7 +12,7 @@
 
 struct MyHeap {
   explicit MyHeap(JSObject* obj) : weak(obj) {}
-  js::WeakRef<JSObject*> weak;
+  js::WeakHeapPtrObject weak;
 
   void trace(JSTracer* trc) { js::TraceWeakEdge(trc, &weak, "weak"); }
 };

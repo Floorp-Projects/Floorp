@@ -220,7 +220,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     calendar{
         ethiopic{
             monthNames{
@@ -1317,7 +1317,7 @@ hi{
                     "ताईशो",
                     "शोवा",
                     "हेईसेई",
-                    "Qqqq",
+                    "रेइवा",
                 }
             }
         }

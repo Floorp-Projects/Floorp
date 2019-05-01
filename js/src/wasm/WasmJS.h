@@ -232,7 +232,7 @@ class WasmInstanceObject : public NativeObject {
   // to avoid holding scope objects alive. The scopes are normally created
   // during debugging.
   using ScopeMap =
-      JS::WeakCache<GCHashMap<uint32_t, ReadBarriered<WasmFunctionScope*>,
+      JS::WeakCache<GCHashMap<uint32_t, WeakHeapPtr<WasmFunctionScope*>,
                               DefaultHasher<uint32_t>, SystemAllocPolicy>>;
   ScopeMap& scopes() const;
 
@@ -293,8 +293,8 @@ class WasmMemoryObject : public NativeObject {
   static uint32_t growShared(HandleWasmMemoryObject memory, uint32_t delta);
 
   using InstanceSet = JS::WeakCache<GCHashSet<
-      ReadBarrieredWasmInstanceObject,
-      MovableCellHasher<ReadBarrieredWasmInstanceObject>, SystemAllocPolicy>>;
+      WeakHeapPtrWasmInstanceObject,
+      MovableCellHasher<WeakHeapPtrWasmInstanceObject>, SystemAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

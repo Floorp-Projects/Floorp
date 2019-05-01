@@ -76,7 +76,7 @@ class RegExpShared : public gc::TenuredCell {
   friend class RegExpZone;
 
   struct RegExpCompilation {
-    ReadBarriered<jit::JitCode*> jitCode;
+    WeakHeapPtr<jit::JitCode*> jitCode;
     uint8_t* byteCode;
 
     RegExpCompilation() : byteCode(nullptr) {}
@@ -209,7 +209,7 @@ class RegExpZone {
 
     Key() = default;
     Key(JSAtom* atom, JS::RegExpFlags flags) : atom(atom), flags(flags) {}
-    MOZ_IMPLICIT Key(const ReadBarriered<RegExpShared*>& shared)
+    MOZ_IMPLICIT Key(const WeakHeapPtr<RegExpShared*>& shared)
         : atom(shared.unbarrieredGet()->getSource()),
           flags(shared.unbarrieredGet()->getFlags()) {}
 
@@ -228,7 +228,7 @@ class RegExpZone {
    * that was not marked is deleted and removed from the set.
    */
   using Set = JS::WeakCache<
-      JS::GCHashSet<ReadBarriered<RegExpShared*>, Key, ZoneAllocPolicy>>;
+      JS::GCHashSet<WeakHeapPtr<RegExpShared*>, Key, ZoneAllocPolicy>>;
   Set set_;
 
  public:
@@ -261,7 +261,7 @@ class RegExpRealm {
    * if there is a result. This is used in CreateRegExpMatchResult to set
    * the input/index properties faster.
    */
-  ReadBarriered<ArrayObject*> matchResultTemplateObject_;
+  WeakHeapPtr<ArrayObject*> matchResultTemplateObject_;
 
   /*
    * The shape of RegExp.prototype object that satisfies following:
@@ -275,14 +275,14 @@ class RegExpRealm {
    *   * RegExp.prototype[@@match] is an own data property
    *   * RegExp.prototype[@@search] is an own data property
    */
-  ReadBarriered<Shape*> optimizableRegExpPrototypeShape_;
+  WeakHeapPtr<Shape*> optimizableRegExpPrototypeShape_;
 
   /*
    * The shape of RegExp instance that satisfies following:
    *   * lastProperty is lastIndex
    *   * prototype is RegExp.prototype
    */
-  ReadBarriered<Shape*> optimizableRegExpInstanceShape_;
+  WeakHeapPtr<Shape*> optimizableRegExpInstanceShape_;
 
   ArrayObject* createMatchResultTemplateObject(JSContext* cx);
 

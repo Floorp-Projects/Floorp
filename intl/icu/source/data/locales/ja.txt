@@ -227,7 +227,7 @@ ja{
         minimumGroupingDigits{"1"}
         traditional{"jpan"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2342,7 +2342,7 @@ ja{
                     "大正",
                     "昭和",
                     "平成",
-                    "ＱＱ",
+                    "令和",
                 }
                 narrow{
                     "大化",
@@ -2581,7 +2581,7 @@ ja{
                     "T",
                     "S",
                     "H",
-                    "Q",
+                    "R",
                 }
             }
         }

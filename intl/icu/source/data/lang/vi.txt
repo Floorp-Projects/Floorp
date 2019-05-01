@@ -1055,7 +1055,7 @@ vi{
         WADEGILE{"La Mã hóa Wade-Giles"}
         XSISTEMO{"XSISTEMO"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — tất cả"}
         category-list{"{0}: {1}"}
