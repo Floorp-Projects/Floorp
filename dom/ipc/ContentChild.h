@@ -489,6 +489,9 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvRefreshScreens(
       nsTArray<ScreenDetails>&& aScreens);
 
+  mozilla::ipc::IPCResult RecvNetworkLinkTypeChange(const uint32_t& aType);
+  uint32_t NetworkLinkType() const { return mNetworkLinkType; }
+
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value
   nsString& GetIndexedDBPath();
@@ -809,6 +812,8 @@ class ContentChild final : public PContentChild,
   // off-main-thread.
   mozilla::Atomic<uint32_t> mPendingInputEvents;
 #endif
+
+  uint32_t mNetworkLinkType = 0;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
