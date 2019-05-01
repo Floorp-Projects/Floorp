@@ -734,7 +734,10 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
         E: TElement,
     {
         if cfg!(debug_assertions) {
-            if element.map_or(false, |e| e.is_pseudo_element()) {
+            if element
+                .and_then(|e| e.implemented_pseudo_element())
+                .is_some()
+            {
                 // It'd be nice to assert `self.style.pseudo == Some(&pseudo)`,
                 // but we do resolve ::-moz-list pseudos on ::before / ::after
                 // content, sigh.

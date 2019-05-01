@@ -2516,8 +2516,9 @@ static void UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoStyleSet& aStyleSet,
              PseudoStyleType::backdrop);
 
   RefPtr<ComputedStyle> newStyle = aStyleSet.ResolvePseudoElementStyle(
-      *aFrame->GetContent()->AsElement(), PseudoStyleType::backdrop,
-      aFrame->Style());
+      aFrame->GetContent()->AsElement(), PseudoStyleType::backdrop,
+      aFrame->Style(),
+      /* aPseudoElement = */ nullptr);
 
   // NOTE(emilio): We can't use the changes handled for the owner of the
   // backdrop frame, since it's out of flow, and parented to the viewport or
@@ -2560,7 +2561,8 @@ static void UpdateOneAdditionalComputedStyle(nsIFrame* aFrame, uint32_t aIndex,
 
   RefPtr<ComputedStyle> newStyle =
       aRestyleState.StyleSet().ResolvePseudoElementStyle(
-          *aFrame->GetContent()->AsElement(), pseudoType, aFrame->Style());
+          aFrame->GetContent()->AsElement(), pseudoType, aFrame->Style(),
+          /* aPseudoElement = */ nullptr);
 
   uint32_t equalStructs;  // Not used, actually.
   nsChangeHint childHint =
@@ -2757,8 +2759,8 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
         styleFrame->IsBlockFrameOrSubclass() &&
         !nsLayoutUtils::GetMarkerPseudo(aElement)) {
       RefPtr<ComputedStyle> pseudoStyle =
-          aRestyleState.StyleSet().ProbeMarkerPseudoStyle(*aElement,
-                                                          *upToDateStyleIfRestyled);
+          aRestyleState.StyleSet().ProbePseudoElementStyle(
+              *aElement, PseudoStyleType::marker, upToDateStyleIfRestyled);
       if (pseudoStyle) {
         changeHint |= nsChangeHint_ReconstructFrame;
       }
