@@ -87,10 +87,10 @@ ifdef NS_USE_GCC
 NSPR_CONFIGURE_ENV = CC=gcc CXX=g++
 endif
 ifdef CC
-NSPR_CONFIGURE_ENV = CC=$(CC)
+NSPR_CONFIGURE_ENV = CC="$(CC)"
 endif
 ifdef CCC
-NSPR_CONFIGURE_ENV += CXX=$(CCC)
+NSPR_CONFIGURE_ENV += CXX="$(CCC)"
 endif
 # Remove -arch definitions. NSPR can't handle that.
 NSPR_CONFIGURE_ENV := $(filter-out -arch x86_64,$(NSPR_CONFIGURE_ENV))
