@@ -2576,8 +2576,7 @@ void nsTextEditorState::UpdateOverlayTextVisibility(bool aNotify) {
   mPreviewVisibility = valueIsEmpty && !previewValue.IsEmpty();
   mPlaceholderVisibility = valueIsEmpty && previewValue.IsEmpty();
 
-  if (mPlaceholderVisibility &&
-      !nsContentUtils::ShowInputPlaceholderOnFocus()) {
+  if (mPlaceholderVisibility && !StaticPrefs::dom_placeholder_show_on_focus()) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
     mPlaceholderVisibility = !nsContentUtils::IsFocusedContent(content);
   }

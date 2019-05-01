@@ -670,6 +670,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Whether we should show the placeholder when the element is focused but empty.
+VARCACHE_PREF(
+  "dom.placeholder.show_on_focus",
+   dom_placeholder_show_on_focus,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
