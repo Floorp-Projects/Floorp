@@ -370,42 +370,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                     }
                     is QuickActionAction.BookmarkPressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetBookmarkTapped)
-                        getSessionById()?.let { session ->
-                            CoroutineScope(IO).launch {
-                                val guid = requireComponents.core.bookmarksStorage
-                                    .addItem(
-                                        BookmarkRoot.Mobile.id,
-                                        session.url,
-                                        session.title,
-                                        null
-                                    )
-                                launch(Main) {
-                                    getManagedEmitter<QuickActionChange>()
-                                        .onNext(QuickActionChange.BookmarkedStateChange(true))
-                                    requireComponents.analytics.metrics.track(Event.AddBookmark)
-                                    view?.let {
-                                        FenixSnackbar.make(
-                                            it,
-                                            Snackbar.LENGTH_LONG
-                                        )
-                                            .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                                Navigation.findNavController(
-                                                    requireActivity(),
-                                                    R.id.container
-                                                )
-                                                    .navigate(
-                                                        BrowserFragmentDirections
-                                                            .actionBrowserFragmentToBookmarkEditFragment(
-                                                                guid
-                                                            )
-                                                    )
-                                            }
-                                            .setText(getString(R.string.bookmark_saved_snackbar))
-                                            .show()
-                                    }
-                                }
-                            }
-                        }
+                        bookmarkTapped()
                     }
                     is QuickActionAction.ReadPressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetReadTapped)
@@ -414,6 +379,58 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
                 }
             }
         assignSitePermissionsRules()
+    }
+
+    private fun bookmarkTapped() {
+        getSessionById()?.let { session ->
+            CoroutineScope(IO).launch {
+                val components = requireComponents
+                val existing = components.core.bookmarksStorage.getBookmarksWithUrl(session.url)
+                val found = existing.isNotEmpty() && existing[0].url == session.url
+                if (found) {
+                    launch(Main) {
+                        Navigation.findNavController(requireActivity(), R.id.container)
+                            .navigate(
+                                BrowserFragmentDirections
+                                    .actionBrowserFragmentToBookmarkEditFragment(existing[0].guid)
+                            )
+                    }
+                } else {
+                    val guid = components.core.bookmarksStorage
+                        .addItem(
+                            BookmarkRoot.Mobile.id,
+                            session.url,
+                            session.title,
+                            null
+                        )
+                    launch(Main) {
+                        getManagedEmitter<QuickActionChange>()
+                            .onNext(QuickActionChange.BookmarkedStateChange(true))
+                        requireComponents.analytics.metrics.track(Event.AddBookmark)
+                        view?.let {
+                            FenixSnackbar.make(
+                                it,
+                                Snackbar.LENGTH_LONG
+                            )
+                                .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                    Navigation.findNavController(
+                                        requireActivity(),
+                                        R.id.container
+                                    )
+                                        .navigate(
+                                            BrowserFragmentDirections
+                                                .actionBrowserFragmentToBookmarkEditFragment(
+                                                    guid
+                                                )
+                                        )
+                                }
+                                .setText(getString(R.string.bookmark_saved_snackbar))
+                                .show()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onStop() {
