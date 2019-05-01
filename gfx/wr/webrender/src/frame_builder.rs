@@ -130,6 +130,7 @@ pub struct FrameVisibilityState<'a> {
     pub retained_tiles: &'a mut RetainedTiles,
     pub data_stores: &'a mut DataStores,
     pub clip_chain_stack: ClipChainStack,
+    pub render_tasks: &'a mut RenderTaskTree,
 }
 
 pub struct FrameBuildingContext<'a> {
@@ -178,7 +179,6 @@ impl<'a> FrameBuildingState<'a> {
 pub struct PictureContext {
     pub pic_index: PictureIndex,
     pub apply_local_clip_rect: bool,
-    pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
     pub is_composite: bool,
     pub raster_space: RasterSpace,
@@ -343,6 +343,7 @@ impl FrameBuilder {
             screen_world_rect,
             clip_scroll_tree,
             global_device_pixel_scale,
+            true,
         );
         surfaces.push(root_surface);
 
@@ -390,6 +391,7 @@ impl FrameBuilder {
                 retained_tiles: &mut retained_tiles,
                 data_stores,
                 clip_chain_stack: ClipChainStack::new(),
+                render_tasks,
             };
 
             self.prim_store.update_visibility(
@@ -430,7 +432,6 @@ impl FrameBuilder {
                 root_spatial_node_index,
                 root_spatial_node_index,
                 ROOT_SURFACE_INDEX,
-                true,
                 &mut frame_state,
                 &frame_context,
             )
