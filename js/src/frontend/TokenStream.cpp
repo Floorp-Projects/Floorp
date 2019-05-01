@@ -1909,7 +1909,8 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::putIdentInCharBuffer(
 
     uint32_t codePoint;
     if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-      if (unicode::IsIdentifierPart(char16_t(unit))) {
+      if (unicode::IsIdentifierPart(char16_t(unit)) ||
+          (char16_t(unit) == '#')) {
         if (!this->charBuffer.append(unit)) {
           return false;
         }
