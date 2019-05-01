@@ -76,7 +76,7 @@
         '<(DEPTH)/lib/libpkix/libpkix.gyp:libpkix',
       ],
       'conditions': [
-        [ 'test_build==1', {
+        [ 'static_libs==1', {
           'dependencies': [
             '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
           ],
