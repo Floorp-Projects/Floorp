@@ -71,8 +71,6 @@ function run_test() {
 
   pm.addFromPrincipal(uri0_n, "test/matches", pm.ALLOW_ACTION);
   let perm_n = pm.getPermissionObject(uri0_n, "test/matches", true);
-  pm.addFromPrincipal(uri0_1000_n, "test/matches", pm.ALLOW_ACTION);
-  let perm_1000_n = pm.getPermissionObject(uri0_1000_n, "test/matches", true);
   pm.addFromPrincipal(uri0_y_, "test/matches", pm.ALLOW_ACTION);
   let perm_y_ = pm.getPermissionObject(uri0_y_, "test/matches", true);
   pm.addFromPrincipal(uri0_1, "test/matches", pm.ALLOW_ACTION);
@@ -83,31 +81,20 @@ function run_test() {
   matches_always(perm_n, [uri0_n, uri0_1, uri0_cnn]);
   matches_weak(perm_n, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_n, [uri2_n, uri3_n, uri4_n, uri5_n,
-                           uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                            uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                            uri2_1, uri3_1, uri4_1, uri5_1,
                            uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
-
-  matches_always(perm_1000_n, [uri0_1000_n]);
-  matches_weak(perm_1000_n, [uri1_1000_n]);
-  matches_never(perm_1000_n, [uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
-                              uri0_n, uri1_n, uri2_n, uri3_n, uri4_n, uri5_n,
-                              uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
-                              uri0_1, uri1_1, uri2_1, uri3_1, uri4_1, uri5_1,
-                              uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
   matches_always(perm_y_, [uri0_y_]);
   matches_weak(perm_y_, [uri1_y_]);
   matches_never(perm_y_, [uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                               uri0_n, uri1_n, uri2_n, uri3_n, uri4_n, uri5_n,
-                              uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                               uri0_1, uri1_1, uri2_1, uri3_1, uri4_1, uri5_1,
                               uri0_cnn, uri1_cnn, uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
 
   matches_always(perm_1, [uri0_n, uri0_1, uri0_cnn]);
   matches_weak(perm_1, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_1, [uri2_n, uri3_n, uri4_n, uri5_n,
-                         uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                          uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                          uri2_1, uri3_1, uri4_1, uri5_1,
                          uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
@@ -115,7 +102,6 @@ function run_test() {
   matches_always(perm_cnn, [uri0_n, uri0_1, uri0_cnn]);
   matches_weak(perm_cnn, [uri1_n, uri1_1, uri1_cnn]);
   matches_never(perm_cnn, [uri2_n, uri3_n, uri4_n, uri5_n,
-                           uri0_1000_n, uri1_1000_n, uri2_1000_n, uri3_1000_n, uri4_1000_n, uri5_1000_n,
                            uri0_y_, uri1_y_, uri2_y_, uri3_y_, uri4_y_, uri5_y_,
                            uri2_1, uri3_1, uri4_1, uri5_1,
                            uri2_cnn, uri3_cnn, uri4_cnn, uri5_cnn]);
