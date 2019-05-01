@@ -2341,13 +2341,6 @@ class nsContentUtils {
   static bool IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal);
 
   /*
-   * Returns true if notification should be sent for peformance timing events.
-   */
-  static bool SendPerformanceTimingNotifications() {
-    return sSendPerformanceTimingNotifications;
-  }
-
-  /*
    * Returns true if the browser should attempt to prevent the given caller type
    * from collecting distinctive information about the browser that could
    * be used to "fingerprint" and track the user across websites.
@@ -3460,7 +3453,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
   static bool sAnimationsAPICoreEnabled;
   static bool sGetBoxQuadsEnabled;
