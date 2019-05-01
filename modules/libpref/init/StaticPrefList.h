@@ -479,7 +479,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "dom.enable_performance",
    dom_enable_performance,
-  bool, true
+  RelaxedAtomicBool, true
 )
 
 // Enable Performance Observer API
