@@ -45,4 +45,5 @@ dependencies {
 
     implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_browser
+    implementation Dependencies.androidx_recyclerview
 }

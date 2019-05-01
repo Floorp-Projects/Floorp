@@ -41,5 +41,5 @@ dependencies {
     implementation project(':service-firefox-accounts')
     implementation project(':feature-sync')
 
-    implementation Dependencies.androidx_constraintlayout
+    implementation Dependencies.androidx_recyclerview
 }

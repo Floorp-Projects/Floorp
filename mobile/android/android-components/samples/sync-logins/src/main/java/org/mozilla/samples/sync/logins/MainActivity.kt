@@ -17,15 +17,17 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.SyncStatusObserver
-import mozilla.components.service.fxa.FxaAccountManager
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
 import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.Log
@@ -58,10 +60,11 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private lateinit var account: FirefoxAccount
     private val accountManager by lazy {
         FxaAccountManager(
-            applicationContext,
-            Config.release(CLIENT_ID, REDIRECT_URL),
-            arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
-            syncManager
+                applicationContext,
+                Config.release(CLIENT_ID, REDIRECT_URL),
+                arrayOf("profile", "https://identity.mozilla.com/apps/oldsync"),
+                DeviceTuple("A-C Logins Sync Sample", DeviceType.MOBILE, listOf()),
+                syncManager
         )
     }
 
