@@ -170,7 +170,6 @@ TASK_LABELS = [
     'test-linux64/opt-mochitest-browser-chrome-e10s',
     'test-linux64/opt-mochitest-browser-chrome-e10s-11',
     'test-linux64/opt-mochitest-chrome',
-    'test-linux64/opt-mochitest-clipboard',
     'test-linux64/opt-mochitest-devtools',
     'test-linux64/opt-mochitest-devtools-chrome',
     'test-linux64/opt-mochitest-gpu',
