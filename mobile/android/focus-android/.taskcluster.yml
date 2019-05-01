@@ -170,10 +170,10 @@ tasks:
                 --track alpha \
                 --commit \
                 --output /opt/focus-android/app/build/outputs/apk \
-                --apk focusX86/release/app-focus-x86-release-unsigned.apk \
-                --apk klarX86/release/app-klar-x86-release-unsigned.apk \
                 --apk focusArm/release/app-focus-arm-release-unsigned.apk \
-                --apk klarArm/release/app-klar-arm-release-unsigned.apk
+                --apk focusAarch64/release/app-focus-aarch64-release-unsigned.apk \
+                --apk klarArm/release/app-klar-arm-release-unsigned.apk \
+                --apk klarAarch64/release/app-klar-aarch64-release-unsigned.apk
           artifacts:
             public/task-graph.json:
               type: file
@@ -250,10 +250,10 @@ tasks:
                 --track nightly \
                 --commit \
                 --output /opt/focus-android/app/build/outputs/apk \
-                --apk klarArm/nightly/app-klar-arm-nightly-unsigned.apk \
-                --apk klarX86/nightly/app-klar-x86-nightly-unsigned.apk \
                 --apk focusArm/nightly/app-focus-arm-nightly-unsigned.apk \
-                --apk focusX86/nightly/app-focus-x86-nightly-unsigned.apk
+                --apk focusAarch64/nightly/app-focus-aarch64-nightly-unsigned.apk \
+                --apk klarArm/nightly/app-klar-arm-nightly-unsigned.apk \
+                --apk klarAarch64/nightly/app-klar-aarch64-nightly-unsigned.apk
           artifacts:
             public/task-graph.json:
               type: file
