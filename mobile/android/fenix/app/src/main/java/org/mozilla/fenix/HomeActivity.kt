@@ -251,11 +251,6 @@ open class HomeActivity : AppCompatActivity() {
                     it.register(singleSessionObserver)
                 }
             }
-
-            override fun onSessionSelected(session: Session) {
-                super.onSessionSelected(session)
-                updateThemeForSession(session)
-            }
         }.also { components.core.sessionManager.register(it) }
     }
 

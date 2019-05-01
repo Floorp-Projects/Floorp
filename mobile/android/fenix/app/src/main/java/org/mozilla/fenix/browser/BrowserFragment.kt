@@ -32,6 +32,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -85,6 +86,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     private lateinit var toolbarComponent: ToolbarComponent
 
     private var sessionObserver: Session.Observer? = null
+    private var sessionManagerObserver: SessionManager.Observer? = null
+
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
@@ -299,9 +302,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
 
     override fun onResume() {
         super.onResume()
-        getSessionById()?.let {
-            (activity as HomeActivity).updateThemeForSession(it)
-        }
         context?.components?.core?.let {
             val preferredColorScheme = it.getPreferredColorScheme()
             if (it.engine.settings.preferredColorScheme != preferredColorScheme) {
@@ -316,6 +316,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
     override fun onStart() {
         super.onStart()
         sessionObserver = subscribeToSession()
+        sessionManagerObserver = subscribeToSessions()
         updateToolbar()
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
@@ -419,6 +420,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         super.onStop()
         sessionObserver?.let {
             getSessionById()?.unregister(it)
+        }
+        sessionManagerObserver?.let {
+            requireComponents.core.sessionManager.unregister(it)
         }
     }
 
@@ -604,6 +608,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope,
         }
         getSessionById()?.register(observer)
         return observer
+    }
+
+    private fun subscribeToSessions(): SessionManager.Observer {
+        return object : SessionManager.Observer {
+            override fun onSessionSelected(session: Session) {
+                super.onSessionSelected(session)
+                (activity as HomeActivity).updateThemeForSession(session)
+            }
+        }.also { requireComponents.core.sessionManager.register(it) }
     }
 
     override fun onTouchExplorationStateChanged(enabled: Boolean) {
