@@ -488,6 +488,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Enable notification of performance timing
+VARCACHE_PREF(
+  "dom.performance.enable_notify_performance_timing",
+   dom_performance_enable_notify_performance_timing,
+  bool, false
+)
+
 // Render animations and videos as a solid color
 VARCACHE_PREF(
   "browser.measurement.render_anims_and_video_solid",
