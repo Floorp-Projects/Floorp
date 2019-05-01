@@ -440,55 +440,38 @@ static inline bool LazyPseudoIsCacheable(PseudoStyleType aType,
 }
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePseudoElementStyle(
-    const Element& aOriginatingElement, PseudoStyleType aType,
-    ComputedStyle* aParentStyle, IsProbe aIsProbe) {
+    Element* aOriginatingElement, PseudoStyleType aType,
+    ComputedStyle* aParentStyle, Element* aPseudoElement) {
   // Runs from frame construction, this should have clean styles already, except
   // with non-lazy FC...
   UpdateStylistIfNeeded();
   MOZ_ASSERT(PseudoStyle::IsPseudoElement(aType));
 
-  const bool cacheable =
-      LazyPseudoIsCacheable(aType, aOriginatingElement, aParentStyle);
-  RefPtr<ComputedStyle> style =
-      cacheable ? aParentStyle->GetCachedLazyPseudoStyle(aType) : nullptr;
+  RefPtr<ComputedStyle> computedValues;
 
-  const bool isProbe = aIsProbe == IsProbe::Yes;
+  if (aPseudoElement) {
+    MOZ_ASSERT(aType == aPseudoElement->GetPseudoElementType());
+    computedValues =
+        Servo_ResolveStyle(aPseudoElement, mRawSet.get()).Consume();
+  } else {
+    bool cacheable =
+        LazyPseudoIsCacheable(aType, *aOriginatingElement, aParentStyle);
+    computedValues =
+        cacheable ? aParentStyle->GetCachedLazyPseudoStyle(aType) : nullptr;
 
-  if (!style) {
-    // FIXME(emilio): Why passing null for probing as the parent style?
-    //
-    // There are callers which do pass the wrong parent style and it would
-    // assert (like ComputeSelectionStyle()). That's messy!
-    style = Servo_ResolvePseudoStyle(&aOriginatingElement, aType, isProbe,
-                                     isProbe ? nullptr : aParentStyle,
-                                     mRawSet.get())
-                .Consume();
-    if (!style) {
-      MOZ_ASSERT(isProbe);
-      return nullptr;
-    }
-    if (cacheable) {
-      aParentStyle->SetCachedLazyPseudoStyle(style);
+    if (!computedValues) {
+      computedValues = Servo_ResolvePseudoStyle(aOriginatingElement, aType,
+                                                /* is_probe = */ false,
+                                                aParentStyle, mRawSet.get())
+                           .Consume();
+      if (cacheable) {
+        aParentStyle->SetCachedLazyPseudoStyle(computedValues);
+      }
     }
   }
 
-  MOZ_ASSERT(style);
-
-  if (isProbe && !GeneratedContentPseudoExists(*aParentStyle, *style)) {
-    return nullptr;
-  }
-
-  return style.forget();
-}
-
-already_AddRefed<ComputedStyle> ServoStyleSet::ProbeMarkerPseudoStyle(
-    const dom::Element& aOriginatingElement, ComputedStyle& aParentStyle) {
-  RefPtr<ComputedStyle> markerStyle = ResolvePseudoElementStyle(
-      aOriginatingElement, PseudoStyleType::marker, &aParentStyle);
-  if (!GeneratedContentPseudoExists(aParentStyle, *markerStyle)) {
-    return nullptr;
-  }
-  return markerStyle.forget();
+  MOZ_ASSERT(computedValues);
+  return computedValues.forget();
 }
 
 already_AddRefed<ComputedStyle>
@@ -674,35 +657,66 @@ void ServoStyleSet::AddDocStyleSheet(StyleSheet* aSheet) {
   }
 }
 
-bool ServoStyleSet::GeneratedContentPseudoExists(
-    const ComputedStyle& aParentStyle, const ComputedStyle& aPseudoStyle) {
-  auto type = aPseudoStyle.GetPseudoType();
-  MOZ_ASSERT(type != PseudoStyleType::NotPseudo);
+already_AddRefed<ComputedStyle> ServoStyleSet::ProbePseudoElementStyle(
+    const Element& aOriginatingElement, PseudoStyleType aType,
+    ComputedStyle* aParentStyle) {
+  // Runs from frame construction, this should have clean styles already, except
+  // with non-lazy FC...
+  UpdateStylistIfNeeded();
 
-  if (type == PseudoStyleType::marker) {
+  // NB: We ignore aParentStyle, because in some cases
+  // (first-line/first-letter on anonymous box blocks) Gecko passes something
+  // nonsensical there.  In all other cases we want to inherit directly from
+  // aOriginatingElement's styles anyway.
+  MOZ_ASSERT(PseudoStyle::IsPseudoElement(aType));
+
+  bool cacheable =
+      LazyPseudoIsCacheable(aType, aOriginatingElement, aParentStyle);
+
+  RefPtr<ComputedStyle> computedValues =
+      cacheable ? aParentStyle->GetCachedLazyPseudoStyle(aType) : nullptr;
+  if (!computedValues) {
+    computedValues =
+        Servo_ResolvePseudoStyle(&aOriginatingElement, aType,
+                                 /* is_probe = */ true, nullptr, mRawSet.get())
+            .Consume();
+    if (!computedValues) {
+      return nullptr;
+    }
+
+    if (cacheable) {
+      // NB: We don't need to worry about the before/after handling below
+      // because those are eager and thus not |cacheable| anyway.
+      aParentStyle->SetCachedLazyPseudoStyle(computedValues);
+    }
+  }
+
+  if (aType == PseudoStyleType::marker) {
     // ::marker only exist for list items (for now).
-    if (aParentStyle.StyleDisplay()->mDisplay != StyleDisplay::ListItem) {
-      return false;
+    if (aParentStyle->StyleDisplay()->mDisplay != StyleDisplay::ListItem) {
+      return nullptr;
     }
     // display:none is equivalent to not having the pseudo-element at all.
-    if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
-      return false;
+    if (computedValues->StyleDisplay()->mDisplay == StyleDisplay::None) {
+      return nullptr;
     }
   }
 
   // For :before and :after pseudo-elements, having display: none or no
   // 'content' property is equivalent to not having the pseudo-element
   // at all.
-  if (type == PseudoStyleType::before || type == PseudoStyleType::after) {
-    if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
-      return false;
-    }
-    if (!aPseudoStyle.StyleContent()->ContentCount()) {
-      return false;
+  bool isBeforeOrAfter =
+      aType == PseudoStyleType::before || aType == PseudoStyleType::after;
+  if (isBeforeOrAfter) {
+    const nsStyleDisplay* display = computedValues->StyleDisplay();
+    const nsStyleContent* content = computedValues->StyleContent();
+    if (display->mDisplay == StyleDisplay::None ||
+        content->ContentCount() == 0) {
+      return nullptr;
     }
   }
 
-  return true;
+  return computedValues.forget();
 }
 
 bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
