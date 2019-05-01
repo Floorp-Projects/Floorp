@@ -3188,10 +3188,6 @@ class nsContentUtils {
    */
   static bool GetUserIsInteracting();
 
-  // Check pref "dom.script_loader.bytecode_cache.enabled" to see
-  // if we want to cache JS bytecode on the cache entry.
-  static bool IsBytecodeCacheEnabled() { return sIsBytecodeCacheEnabled; }
-
   // Check pref "dom.script_loader.bytecode_cache.strategy" to see which
   // heuristic strategy should be used to trigger the caching of the bytecode.
   static int32_t BytecodeCacheStrategy() { return sBytecodeCacheStrategy; }
@@ -3407,7 +3403,6 @@ class nsContentUtils {
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif
-  static bool sIsBytecodeCacheEnabled;
   static int32_t sBytecodeCacheStrategy;
   static bool sAntiTrackingControlCenterUIEnabled;
 
