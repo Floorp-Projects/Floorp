@@ -1,0 +1,10 @@
+<script>
+window.onload = function() {
+  a.getComputedTextLength()
+}
+</script>
+<body>
+<svg>
+<switch>
+<hatch>
+<text id="a">A</text>
