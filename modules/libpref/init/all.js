@@ -6028,6 +6028,14 @@ pref("asanreporter.clientid", "unknown");
 pref("toolkit.telemetry.overrideUpdateChannel", "nightly-asan");
 #endif
 
+#if defined(XP_WIN)
+pref("layers.mlgpu.enabled", true);
+
+// Both this and the master "enabled" pref must be on to use Advanced Layers
+// on Windows 7.
+pref("layers.mlgpu.enable-on-windows7", true);
+#endif
+
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", true);
 
