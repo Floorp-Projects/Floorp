@@ -136,51 +136,413 @@ class PresShell final : public nsIPresShell,
 #endif  // #ifdef ACCESSIBILITY
 
   void Init(Document*, nsPresContext*, nsViewManager*);
-  void Destroy() override;
 
-  NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,
-                                    dom::Selection** aSelection) override;
-  dom::Selection* GetSelection(RawSelectionType aRawSelectionType) override;
+  /**
+   * All callers are responsible for calling |Destroy| after calling
+   * |EndObservingDocument|.  It needs to be separate only because form
+   * controls incorrectly store their data in the frames rather than the
+   * content model and printing calls |EndObservingDocument| multiple
+   * times to make form controls behave nicely when printed.
+   */
+  void Destroy();
 
-  dom::Selection* GetCurrentSelection(SelectionType aSelectionType) override;
+  bool IsDestroying() { return mIsDestroying; }
 
-  already_AddRefed<nsISelectionController>
-  GetSelectionControllerForFocusedContent(
-      nsIContent** aFocusedContent = nullptr) override;
+  /**
+   * All frames owned by the shell are allocated from an arena.  They
+   * are also recycled using free lists.  Separate free lists are
+   * maintained for each frame type (aID), which must always correspond
+   * to the same aSize value.  AllocateFrame is infallible and will abort
+   * on out-of-memory.
+   */
+  void* AllocateFrame(nsQueryFrame::FrameIID aID, size_t aSize) {
+    void* result = mFrameArena.AllocateByFrameID(aID, aSize);
+    RecordAlloc(result);
+    return result;
+  }
 
-  NS_IMETHOD SetDisplaySelection(int16_t aToggle) override;
-  NS_IMETHOD GetDisplaySelection(int16_t* aToggle) override;
-  NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
-                                     SelectionRegion aRegion,
-                                     int16_t aFlags) override;
-  NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
+  void FreeFrame(nsQueryFrame::FrameIID aID, void* aPtr) {
+    RecordFree(aPtr);
+    if (!mIsDestroying) {
+      mFrameArena.FreeByFrameID(aID, aPtr);
+    }
+  }
 
-  nsresult Initialize() override;
-  MOZ_CAN_RUN_SCRIPT nsresult ResizeReflow(
-      nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
-      nscoord aOldHeight = 0,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption) override;
+  /**
+   * This is for allocating other types of objects (not frames).  Separate free
+   * lists are maintained for each type (aID), which must always correspond to
+   * the same aSize value.  AllocateByObjectID is infallible and will abort on
+   * out-of-memory.
+   */
+  void* AllocateByObjectID(ArenaObjectID aID, size_t aSize) {
+    void* result = mFrameArena.AllocateByObjectID(aID, aSize);
+    RecordAlloc(result);
+    return result;
+  }
+
+  void FreeByObjectID(ArenaObjectID aID, void* aPtr) {
+    RecordFree(aPtr);
+    if (!mIsDestroying) {
+      mFrameArena.FreeByObjectID(aID, aPtr);
+    }
+  }
+
+  Document* GetDocument() const { return mDocument; }
+
+  nsPresContext* GetPresContext() const { return mPresContext; }
+
+  nsViewManager* GetViewManager() const { return mViewManager; }
+
+  nsRefreshDriver* GetRefreshDriver() const;
+
+  nsCSSFrameConstructor* FrameConstructor() const {
+    return mFrameConstructor.get();
+  }
+
+  /**
+   * FrameSelection will return the Frame based selection API.
+   * You cannot go back and forth anymore with QI between nsIDOM sel and
+   * nsIFrame sel.
+   */
+  already_AddRefed<nsFrameSelection> FrameSelection();
+
+  /**
+   * ConstFrameSelection returns an object which methods are safe to use for
+   * example in nsIFrame code.
+   */
+  const nsFrameSelection* ConstFrameSelection() const { return mSelection; }
+
+  // Start receiving notifications from our document. If called after Destroy,
+  // this will be ignored.
+  void BeginObservingDocument();
+
+  // Stop receiving notifications from our document. If called after Destroy,
+  // this will be ignored.
+  void EndObservingDocument();
+
+  bool IsObservingDocument() const { return mIsObservingDocument; }
+
+  /**
+   * Return whether Initialize() was previously called.
+   */
+  bool DidInitialize() const { return mDidInitialize; }
+
+  /**
+   * Perform initialization. Constructs the frame for the root content
+   * object and then enqueues a reflow of the frame model.
+   *
+   * Callers of this method must hold a reference to this shell that
+   * is guaranteed to survive through arbitrary script execution.
+   * Calling Initialize can execute arbitrary script.
+   */
+  nsresult Initialize();
+
+  /**
+   * Reflow the frame model into a new width and height.  The
+   * coordinates for aWidth and aHeight must be in standard nscoord's.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  ResizeReflow(nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
+               nscoord aOldHeight = 0,
+               ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption);
   MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
-      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption) override;
+      ResizeReflowOptions aOptions = ResizeReflowOptions::NoOption);
 
+  /**
+   * Returns true if the platform/pref or docshell require a meta viewport.
+   */
+  bool GetIsViewportOverridden() { return (mMobileViewportManager != nullptr); }
+
+  /**
+   * Note that the assumptions that determine the need for a meta viewport
+   * may have changed.
+   */
+  void UpdateViewportOverridden(bool aAfterInitialization);
+
+  /**
+   * Get the MobileViewportManager used to manage the document's mobile
+   * viewport. Will return null in situations where we don't have a mobile
+   * viewport, and for documents that are not the root content document.
+   */
+  RefPtr<MobileViewportManager> GetMobileViewportManager() const;
+
+  /**
+   * Return true if the presshell expects layout flush.
+   */
+  bool IsLayoutFlushObserver() {
+    return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
+  }
+
+  /**
+   * Called when document load completes.
+   */
+  void LoadComplete();
+  /**
+   * This calls through to the frame manager to get the root frame.
+   */
+  nsIFrame* GetRootFrame() const { return mFrameManager->GetRootFrame(); }
+
+  /*
+   * Get root scroll frame from FrameManager()->GetRootFrame().
+   */
+  nsIFrame* GetRootScrollFrame() const;
+
+  /*
+   * The same as GetRootScrollFrame, but returns an nsIScrollableFrame
+   */
+  nsIScrollableFrame* GetRootScrollFrameAsScrollable() const;
+
+  /**
+   * Get the current focused content or DOM selection that should be the
+   * target for scrolling.
+   */
+  already_AddRefed<nsIContent> GetContentForScrolling() const;
+
+  /**
+   * Get the DOM selection that should be the target for scrolling, if there
+   * is no focused content.
+   */
+  already_AddRefed<nsIContent> GetSelectedContentForScrolling() const;
+
+  /**
+   * Gets nearest scrollable frame from the specified content node. The frame
+   * is scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
+   */
+  nsIScrollableFrame* GetScrollableFrameToScrollForContent(
+      nsIContent* aContent, ScrollableDirection aDirection);
+
+  /**
+   * Gets nearest scrollable frame from current focused content or DOM
+   * selection if there is no focused content. The frame is scrollable with
+   * overflow:scroll or overflow:auto in some direction when aDirection is
+   * eEither.  Otherwise, this returns a nearest frame that is scrollable in
+   * the specified direction.
+   */
+  nsIScrollableFrame* GetScrollableFrameToScroll(
+      ScrollableDirection aDirection);
+
+  /**
+   * Gets nearest ancestor scrollable frame from aFrame.  The frame is
+   * scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
+   */
+  nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                ScrollableDirection aDirection);
+
+  /**
+   * Returns the page sequence frame associated with the frame hierarchy.
+   * Returns nullptr if not a paginated view.
+   */
+  nsIPageSequenceFrame* GetPageSequenceFrame() const;
+
+  /**
+   * Returns the canvas frame associated with the frame hierarchy.
+   * Returns nullptr if is XUL document.
+   */
+  nsCanvasFrame* GetCanvasFrame() const;
+
+  void PostPendingScrollAnchorSelection(
+      layout::ScrollAnchorContainer* aContainer);
+  void FlushPendingScrollAnchorSelections();
+  void PostPendingScrollAnchorAdjustment(
+      layout::ScrollAnchorContainer* aContainer);
+
+  void CancelAllPendingReflows();
+
+  void NotifyCounterStylesAreDirty();
+
+  bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
+
+  /**
+   * Destroy the frames for aElement, and reconstruct them asynchronously if
+   * needed.
+   *
+   * Note that this may destroy frames for an ancestor instead.
+   */
+  void DestroyFramesForAndRestyle(Element* aElement);
+
+  /**
+   * Handles all the layout stuff needed when the slot assignment for an element
+   * is about to change.
+   *
+   * Only called when the slot attribute of the element changes, the rest of
+   * the changes should be handled in ShadowRoot.
+   */
+  void SlotAssignmentWillChange(Element& aElement,
+                                dom::HTMLSlotElement* aOldSlot,
+                                dom::HTMLSlotElement* aNewSlot);
+
+  void PostRecreateFramesFor(Element*);
+  void RestyleForAnimation(Element*, RestyleHint);
+
+  /**
+   * Determine if it is safe to flush all pending notifications.
+   */
+  bool IsSafeToFlush() const;
+
+  /**
+   * Informs the document's FontFaceSet that the refresh driver ticked,
+   * flushing style and layout.
+   */
+  void NotifyFontFaceSetOnRefresh();
+
+  // Removes ourself from the list of layout / style / and resize refresh driver
+  // observers.
+  //
+  // Right now this is only used for documents in the BFCache, so if you want to
+  // use this for anything else you need to ensure we don't end up in those
+  // lists after calling this, but before calling StartObservingRefreshDriver
+  // again.
+  //
+  // That is handled by the mDocument->GetBFCacheEntry checks in
+  // DoObserve*Flushes functions, though that could conceivably become a boolean
+  // member in the shell if needed.
+  //
+  // Callers are responsible of manually calling StartObservingRefreshDriver
+  // again.
+  void StopObservingRefreshDriver();
+  void StartObservingRefreshDriver();
+
+  bool ObservingStyleFlushes() const { return mObservingStyleFlushes; }
+  bool ObservingLayoutFlushes() const { return mObservingLayoutFlushes; }
+
+  void ObserveStyleFlushes() {
+    if (!ObservingStyleFlushes()) {
+      DoObserveStyleFlushes();
+    }
+  }
+
+  /**
+   * Callbacks will be called even if reflow itself fails for
+   * some reason.
+   */
+  nsresult PostReflowCallback(nsIReflowCallback* aCallback);
+  void CancelReflowCallback(nsIReflowCallback* aCallback);
+
+  void ScheduleBeforeFirstPaint();
+  void UnsuppressAndInvalidate();
+
+  void ClearFrameRefs(nsIFrame* aFrame);
+
+  /**
+   * Get a reference rendering context. This is a context that should not
+   * be rendered to, but is suitable for measuring text and performing
+   * other non-rendering operations. Guaranteed to return non-null.
+   */
+  already_AddRefed<gfxContext> CreateReferenceRenderingContext();
+
+  /**
+   * Scrolls the view of the document so that the given area of a frame
+   * is visible, if possible. Layout is not flushed before scrolling.
+   *
+   * @param aRect relative to aFrame
+   * @param aVertical see ScrollContentIntoView and ScrollAxis
+   * @param aHorizontal see ScrollContentIntoView and ScrollAxis
+   * @param aScrollFlags if SCROLL_FIRST_ANCESTOR_ONLY is set, only the
+   * nearest scrollable ancestor is scrolled, otherwise all
+   * scrollable ancestors may be scrolled if necessary
+   * if SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a direction
+   * even if overflow:hidden is specified in that direction; otherwise
+   * we will not scroll in that direction when overflow:hidden is
+   * set for that direction
+   * If SCROLL_NO_PARENT_FRAMES is set then we only scroll
+   * nodes in this document, not in any parent documents which
+   * contain this document in a iframe or the like.
+   * If SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING is set we ignore scroll-margin
+   * value specified for |aFrame| and scroll-padding value for the scroll
+   * container. This option is typically used to locate poped-up frames into
+   * view.
+   * @return true if any scrolling happened, false if no scrolling happened
+   */
+  bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
+                               ScrollAxis aVertical, ScrollAxis aHorizontal,
+                               ScrollFlags aScrollFlags);
+
+  /**
+   * Determine if a rectangle specified in the frame's coordinate system
+   * intersects "enough" with the viewport to be considered visible. This
+   * is not a strict test against the viewport -- it's a test against
+   * the intersection of the viewport and the frame's ancestor scrollable
+   * frames. If it doesn't intersect enough, return a value indicating
+   * which direction the frame's topmost ancestor scrollable frame would
+   * need to be scrolled to bring the frame into view.
+   * @param aFrame frame that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to test for visibility
+   * @param aMinTwips is the minimum distance in from the edge of the
+   *                  visible area that an object must be to be counted
+   *                  visible
+   * @return RectVisibility::Visible if the rect is visible
+   *         RectVisibility::AboveViewport
+   *         RectVisibility::BelowViewport
+   *         RectVisibility::LeftOfViewport
+   *         RectVisibility::RightOfViewport rectangle is outside the
+   *         topmost ancestor scrollable frame in the specified direction
+   */
   RectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
-                                   nscoord aMinTwips) const override;
+                                   nscoord aMinTwips) const;
 
-  nsresult CaptureHistoryState(
-      nsILayoutHistoryState** aLayoutHistoryState) override;
+  /**
+   * Suppress notification of the frame manager that frames are
+   * being destroyed.
+   */
+  void SetIgnoreFrameDestruction(bool aIgnore);
 
-  void UnsuppressPainting() override;
+  /**
+   * Get the AccessibleCaretEventHub, if it exists. AddRefs it.
+   */
+  already_AddRefed<AccessibleCaretEventHub> GetAccessibleCaretEventHub() const;
 
-  nsresult AddOverrideStyleSheet(StyleSheet*) override;
-  nsresult RemoveOverrideStyleSheet(StyleSheet*) override;
+  /**
+   * Get the caret, if it exists. AddRefs it.
+   */
+  already_AddRefed<nsCaret> GetCaret() const;
 
+  /**
+   * Set the current caret to a new caret. To undo this, call RestoreCaret.
+   */
+  void SetCaret(nsCaret* aNewCaret);
+
+  /**
+   * Restore the caret to the original caret that this pres shell was created
+   * with.
+   */
+  void RestoreCaret();
+
+  dom::Selection* GetCurrentSelection(SelectionType aSelectionType);
+
+  /**
+   * Gets a selection controller for the focused content in the DOM window
+   * for mDocument.
+   *
+   * @param aFocusedContent     If there is focused content in the DOM window,
+   *                            the focused content will be returned.  This may
+   *                            be nullptr if it's not necessary.
+   * @return                    A selection controller for focused content.
+   *                            E.g., if an <input> element has focus, returns
+   *                            the independent selection controller of it.
+   *                            If the DOM window does not have focused content
+   *                            (similar to Document.activeElement), returns
+   *                            nullptr.
+   */
+  already_AddRefed<nsISelectionController>
+  GetSelectionControllerForFocusedContent(
+      nsIContent** aFocusedContent = nullptr);
+
+  /**
+   * Interface to dispatch events via the presshell
+   * @note The caller must have a strong reference to the PresShell.
+   */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult HandleEventWithTarget(
-      WidgetEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent,
-      nsEventStatus* aEventStatus, bool aIsHandlingNativeEvent = false,
-      nsIContent** aTargetContent = nullptr,
-      nsIContent* aOverrideClickTarget = nullptr) override {
+  nsresult HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
+                                 nsIContent* aContent,
+                                 nsEventStatus* aEventStatus,
+                                 bool aIsHandlingNativeEvent = false,
+                                 nsIContent** aTargetContent = nullptr,
+                                 nsIContent* aOverrideClickTarget = nullptr) {
     MOZ_ASSERT(aEvent);
     EventHandler eventHandler(*this);
     return eventHandler.HandleEventWithTarget(
@@ -188,35 +550,607 @@ class PresShell final : public nsIPresShell,
         aTargetContent, aOverrideClickTarget);
   }
 
-  void ReconstructFrames(void) override;
-  void Freeze() override;
-  void Thaw() override;
-  void FireOrClearDelayedEvents(bool aFireEvents) override;
+  /**
+   * Dispatch event to content only (NOT full processing)
+   * @note The caller must have a strong reference to the PresShell.
+   */
+  nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                    WidgetEvent* aEvent,
+                                    nsEventStatus* aStatus);
 
+  /**
+   * Dispatch event to content only (NOT full processing)
+   * @note The caller must have a strong reference to the PresShell.
+   */
+  nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                    dom::Event* aEvent, nsEventStatus* aStatus);
+
+  /**
+   * Return whether or not the event is valid to be dispatched
+   */
+  bool CanDispatchEvent(const WidgetGUIEvent* aEvent = nullptr) const;
+
+  /**
+   * Gets the current target event frame from the PresShell
+   */
+  nsIFrame* GetCurrentEventFrame();
+
+  /**
+   * Gets the current target event frame from the PresShell
+   */
+  already_AddRefed<nsIContent> GetEventTargetContent(WidgetEvent* aEvent);
+
+  /**
+   * Get and set the history state for the current document
+   */
+  nsresult CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
+
+  /**
+   * Determine if reflow is currently locked
+   * returns true if reflow is locked, false otherwise
+   */
+  bool IsReflowLocked() const { return mIsReflowing; }
+
+  /**
+   * Called to find out if painting is suppressed for this presshell.  If it is
+   * suppressd, we don't allow the painting of any layer but the background, and
+   * we don't recur into our children.
+   */
+  bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
+
+  /**
+   * Pause painting by freezing the refresh driver of this and all parent
+   * presentations. This may not have the desired effect if this pres shell
+   * has its own refresh driver.
+   */
+  void PausePainting();
+
+  /**
+   * Resume painting by thawing the refresh driver of this and all parent
+   * presentations. This may not have the desired effect if this pres shell
+   * has its own refresh driver.
+   */
+  void ResumePainting();
+
+  /**
+   * Unsuppress painting.
+   */
+  void UnsuppressPainting();
+
+  /**
+   * Add an override style sheet for this presentation
+   */
+  nsresult AddOverrideStyleSheet(StyleSheet* aSheet);
+
+  /**
+   * Remove an override style sheet
+   */
+  nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet);
+
+  /**
+   * Reconstruct frames for all elements in the document
+   */
+  void ReconstructFrames();
+
+  /**
+   * See if reflow verification is enabled. To enable reflow verification add
+   * "verifyreflow:1" to your MOZ_LOG environment variable (any non-zero
+   * debug level will work). Or, call SetVerifyReflowEnable with true.
+   */
+  static bool GetVerifyReflowEnable();
+
+  /**
+   * Set the verify-reflow enable flag.
+   */
+  static void SetVerifyReflowEnable(bool aEnabled);
+
+  nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
+
+#ifdef MOZ_REFLOW_PERF
+  void DumpReflows();
+  void CountReflows(const char* aName, nsIFrame* aFrame);
+  void PaintCount(const char* aName, gfxContext* aRenderingContext,
+                  nsPresContext* aPresContext, nsIFrame* aFrame,
+                  const nsPoint& aOffset, uint32_t aColor);
+  void SetPaintFrameCount(bool aOn);
+  bool IsPaintingFrameCounts();
+#endif  // #ifdef MOZ_REFLOW_PERF
+
+#ifdef DEBUG
+  // Debugging hooks
+  void ListComputedStyles(FILE* out, int32_t aIndent = 0);
+
+  void ListStyleSheets(FILE* out, int32_t aIndent = 0);
+#endif  // #ifdef DEBUG
+
+  /**
+   * Stop all active elements (plugins and the caret) in this presentation and
+   * in the presentations of subdocuments.  Resets painting to a suppressed
+   * state.
+   * XXX this should include image animations
+   */
+  void Freeze();
+  bool IsFrozen() { return mFrozen; }
+
+  /**
+   * Restarts active elements (plugins) in this presentation and in the
+   * presentations of subdocuments, then do a full invalidate of the content
+   * area.
+   */
+  void Thaw();
+
+  void FireOrClearDelayedEvents(bool aFireEvents);
+
+  /**
+   * When this shell is disconnected from its containing docshell, we
+   * lose our container pointer.  However, we'd still like to be able to target
+   * user events at the docshell's parent.  This pointer allows us to do that.
+   * It should not be used for any other purpose.
+   */
+  void SetForwardingContainer(const WeakPtr<nsDocShell>& aContainer);
+
+  /**
+   * Render the document into an arbitrary gfxContext
+   * Designed for getting a picture of a document or a piece of a document
+   * Note that callers will generally want to call FlushPendingNotifications
+   * to get an up-to-date view of the document
+   * @param aRect is the region to capture into the offscreen buffer, in the
+   * root frame's coordinate system (if aIgnoreViewportScrolling is false)
+   * or in the root scrolled frame's coordinate system
+   * (if aIgnoreViewportScrolling is true). The coordinates are in appunits.
+   * @param aFlags see below;
+   *   set RenderDocumentFlags::IsUntrusted if the contents may be passed to
+   * malicious agents. E.g. we might choose not to paint the contents of
+   * sensitive widgets such as the file name in a file upload widget, and we
+   * might choose not to paint themes.
+   *   set RenderDocumentFlags::IgnoreViewportScrolling to ignore clipping and
+   *  scrollbar painting due to scrolling in the viewport
+   *   set RenderDocumentFlags::DrawCaret to draw the caret if one would be
+   *  visible (by default the caret is never drawn)
+   *   set RenderDocumentFlags::UseWidgetLayers to force rendering to go
+   *  through the layer manager for the window. This may be unexpectedly slow
+   * (if the layer manager must read back data from the GPU) or low-quality
+   * (if the layer manager reads back pixel data and scales it
+   * instead of rendering using the appropriate scaling). It may also
+   * slow everything down if the area rendered does not correspond to the
+   * normal visible area of the window.
+   *   set RenderDocumentFlags::AsyncDecodeImages to avoid having images
+   * synchronously decoded during rendering.
+   * (by default images decode synchronously with RenderDocument)
+   *   set RenderDocumentFlags::DocumentRelative to render the document as if
+   * there has been no scrolling and interpret |aRect| relative to the document
+   * instead of the CSS viewport. Only considered if
+   * RenderDocumentFlags::IgnoreViewportScrolling is set or the document is in
+   * ignore viewport scrolling mode
+   * (PresShell::SetIgnoreViewportScrolling/IgnoringViewportScrolling).
+   * @param aBackgroundColor a background color to render onto
+   * @param aRenderedContext the gfxContext to render to. We render so that
+   * one CSS pixel in the source document is rendered to one unit in the current
+   * transform.
+   */
   nsresult RenderDocument(const nsRect& aRect, RenderDocumentFlags aFlags,
                           nscolor aBackgroundColor,
-                          gfxContext* aThebesContext) override;
+                          gfxContext* aRenderedContext);
 
-  already_AddRefed<SourceSurface> RenderNode(nsINode* aNode,
-                                             const Maybe<CSSIntRegion>& aRegion,
-                                             const LayoutDeviceIntPoint aPoint,
-                                             LayoutDeviceIntRect* aScreenRect,
-                                             RenderImageFlags aFlags) override;
+  /**
+   * Renders a node aNode to a surface and returns it. The aRegion may be used
+   * to clip the rendering. This region is measured in CSS pixels from the
+   * edge of the presshell area. The aPoint, aScreenRect and aFlags arguments
+   * function in a similar manner as RenderSelection.
+   */
+  already_AddRefed<gfx::SourceSurface> RenderNode(
+      nsINode* aNode, const Maybe<CSSIntRegion>& aRegion,
+      const LayoutDeviceIntPoint aPoint, LayoutDeviceIntRect* aScreenRect,
+      RenderImageFlags aFlags);
 
-  already_AddRefed<SourceSurface> RenderSelection(
+  /**
+   * Renders a selection to a surface and returns it. This method is primarily
+   * intended to create the drag feedback when dragging a selection.
+   *
+   * aScreenRect will be filled in with the bounding rectangle of the
+   * selection area on screen.
+   *
+   * If the area of the selection is large and the RenderImageFlags::AutoScale
+   * is set, the image will be scaled down. The argument aPoint is used in this
+   * case as a reference point when determining the new screen rectangle after
+   * scaling. Typically, this will be the mouse position, so that the screen
+   * rectangle is positioned such that the mouse is over the same point in the
+   * scaled image as in the original. When scaling does not occur, the mouse
+   * point isn't used because the position can be determined from the displayed
+   * frames.
+   */
+  already_AddRefed<gfx::SourceSurface> RenderSelection(
       dom::Selection* aSelection, const LayoutDeviceIntPoint aPoint,
-      LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags) override;
+      LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags);
 
-  already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() override;
+  void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame);
+  void AddWeakFrame(WeakFrame* aWeakFrame);
 
-  already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow()
-      override;
+  void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame);
+  void RemoveWeakFrame(WeakFrame* aWeakFrame);
 
-  LayerManager* GetLayerManager() override;
+  /**
+   * Stop or restart non synthetic test mouse event handling on *all*
+   * presShells.
+   *
+   * @param aDisable If true, disable all non synthetic test mouse
+   * events on all presShells.  Otherwise, enable them.
+   */
+  void DisableNonTestMouseEvents(bool aDisable);
 
-  bool AsyncPanZoomEnabled() override;
+  /**
+   * Record the background color of the most recently drawn canvas. This color
+   * is composited on top of the user's default background color and then used
+   * to draw the background color of the canvas. See PresShell::Paint,
+   * PresShell::PaintDefaultBackground, and nsDocShell::SetupNewViewer;
+   * bug 488242, bug 476557 and other bugs mentioned there.
+   */
+  void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
+  nscolor GetCanvasBackground() { return mCanvasBackgroundColor; }
 
-  void SetIgnoreViewportScrolling(bool aIgnore) override;
+  /**
+   * Use the current frame tree (if it exists) to update the background
+   * color of the most recently drawn canvas.
+   */
+  void UpdateCanvasBackground();
+
+  /**
+   * Add a solid color item to the bottom of aList with frame aFrame and
+   * bounds aBounds representing the dark grey background behind the page of a
+   * print preview presentation.
+   */
+  void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
+                                     nsDisplayList& aList, nsIFrame* aFrame,
+                                     const nsRect& aBounds);
+
+  /**
+   * Computes the backstop color for the view: transparent if in a transparent
+   * widget, otherwise the PresContext default background color. This color is
+   * only visible if the contents of the view as a whole are translucent.
+   */
+  nscolor ComputeBackstopColor(nsView* aDisplayRoot);
+
+  void ObserveNativeAnonMutationsForPrint(bool aObserve) {
+    mObservesMutationsForPrint = aObserve;
+  }
+  bool ObservesNativeAnonMutationsForPrint() {
+    return mObservesMutationsForPrint;
+  }
+
+  nsresult SetIsActive(bool aIsActive);
+
+  bool IsActive() { return mIsActive; }
+
+  /**
+   * Keep track of how many times this presshell has been rendered to
+   * a window.
+   */
+  uint64_t GetPaintCount() { return mPaintCount; }
+  void IncrementPaintCount() { ++mPaintCount; }
+
+  /**
+   * Get the root DOM window of this presShell.
+   */
+  already_AddRefed<nsPIDOMWindowOuter> GetRootWindow();
+
+  /**
+   * This returns the focused DOM window under our top level window.
+   * I.e., when we are deactive, this returns the *last* focused DOM window.
+   */
+  already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow();
+
+  /**
+   * Get the focused content under this window.
+   */
+  already_AddRefed<nsIContent> GetFocusedContentInOurWindow() const;
+
+  /**
+   * Get the layer manager for the widget of the root view, if it has
+   * one.
+   */
+  LayerManager* GetLayerManager();
+
+  /**
+   * Return true iff there is a widget rendering this presShell and that
+   * widget is APZ-enabled.
+   */
+  bool AsyncPanZoomEnabled();
+
+  /**
+   * Track whether we're ignoring viewport scrolling for the purposes
+   * of painting.  If we are ignoring, then layers aren't clipped to
+   * the CSS viewport and scrollbars aren't drawn.
+   */
+  void SetIgnoreViewportScrolling(bool aIgnore);
+  bool IgnoringViewportScrolling() const {
+    return mRenderFlags & STATE_IGNORING_VIEWPORT_SCROLLING;
+  }
+
+  float GetResolution() const { return mResolution.valueOr(1.0); }
+  float GetCumulativeResolution();
+
+  /**
+   * Accessors for a flag that tracks whether the most recent change to
+   * the pres shell's resolution was originated by the main thread.
+   */
+  bool IsResolutionUpdated() const { return mResolutionUpdated; }
+  void SetResolutionUpdated(bool aUpdated) { mResolutionUpdated = aUpdated; }
+
+  /**
+   * Returns true if the resolution has ever been changed by APZ.
+   */
+  bool IsResolutionUpdatedByApz() const { return mResolutionUpdatedByApz; }
+
+  /**
+   * Calculate the cumulative scale resolution from this document up to
+   * but not including the root document.
+   */
+  float GetCumulativeNonRootScaleResolution();
+
+  /**
+   * Used by session restore code to restore a resolution before the first
+   * paint.
+   */
+  void SetRestoreResolution(float aResolution,
+                            LayoutDeviceIntSize aDisplaySize);
+
+  /**
+   * Returns whether we are in a DrawWindow() call that used the
+   * DRAWWINDOW_DO_NOT_FLUSH flag.
+   */
+  bool InDrawWindowNotFlushing() const {
+    return mRenderFlags & STATE_DRAWWINDOW_NOT_FLUSHING;
+  }
+
+  /**
+   * Set the isFirstPaint flag.
+   */
+  void SetIsFirstPaint(bool aIsFirstPaint) { mIsFirstPaint = aIsFirstPaint; }
+
+  /**
+   * Get the isFirstPaint flag.
+   */
+  bool GetIsFirstPaint() const { return mIsFirstPaint; }
+
+  uint32_t GetPresShellId() { return mPresShellId; }
+
+  /**
+   * Dispatch a mouse move event based on the most recent mouse position if
+   * this PresShell is visible. This is used when the contents of the page
+   * moved (aFromScroll is false) or scrolled (aFromScroll is true).
+   */
+  void SynthesizeMouseMove(bool aFromScroll);
+
+  MOZ_CAN_RUN_SCRIPT
+  nsresult HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aEvent,
+                       bool aDontRetargetEvents, nsEventStatus* aEventStatus);
+  bool ShouldIgnoreInvalidation();
+  /**
+   * Notify that we're going to call Paint with PaintFlags::PaintComposite.
+   * Fires on the presshell for the painted widget.
+   * This is issued at a time when it's safe to modify widget geometry.
+   */
+  void WillPaintWindow();
+  /**
+   * Notify that we called Paint with PaintFlags::PaintComposite.
+   * Fires on the presshell for the painted widget.
+   * This is issued at a time when it's safe to modify widget geometry.
+   */
+  void DidPaintWindow();
+
+  bool IsVisible();
+  MOZ_CAN_RUN_SCRIPT
+  void DispatchSynthMouseMove(WidgetGUIEvent* aEvent);
+
+  /* Temporarily ignore the Displayport for better paint performance. We
+   * trigger a repaint once suppression is disabled. Without that
+   * the displayport may get left at the suppressed size for an extended
+   * period of time and result in unnecessary checkerboarding (see bug
+   * 1255054). */
+  void SuppressDisplayport(bool aEnabled);
+
+  /* Whether or not displayport suppression should be turned on. Note that
+   * this only affects the return value of |IsDisplayportSuppressed()|, and
+   * doesn't change the value of the internal counter.
+   */
+  void RespectDisplayportSuppression(bool aEnabled);
+
+  /* Whether or not the displayport is currently suppressed. */
+  bool IsDisplayportSuppressed();
+
+  void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
+
+  /**
+   * Methods that retrieve the cached font inflation preferences.
+   */
+  uint32_t FontSizeInflationEmPerLine() const {
+    return mFontSizeInflationEmPerLine;
+  }
+
+  uint32_t FontSizeInflationMinTwips() const {
+    return mFontSizeInflationMinTwips;
+  }
+
+  uint32_t FontSizeInflationLineThreshold() const {
+    return mFontSizeInflationLineThreshold;
+  }
+
+  bool FontSizeInflationForceEnabled() const {
+    return mFontSizeInflationForceEnabled;
+  }
+
+  bool FontSizeInflationDisabledInMasterProcess() const {
+    return mFontSizeInflationDisabledInMasterProcess;
+  }
+
+  bool FontSizeInflationEnabled() const { return mFontSizeInflationEnabled; }
+
+  /**
+   * Recomputes whether font-size inflation is enabled.
+   */
+  void RecomputeFontSizeInflationEnabled();
+
+  /**
+   * Return true if the most recent interruptible reflow was interrupted.
+   */
+  bool IsReflowInterrupted() const { return mWasLastReflowInterrupted; }
+
+  /**
+   * Return true if the the interruptible reflows have to be suppressed.
+   * This may happen only if if the most recent reflow was interrupted.
+   */
+  bool SuppressInterruptibleReflows() const {
+    return mWasLastReflowInterrupted;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Approximate frame visibility tracking public API.
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Schedule an update of the list of approximately visible frames "soon".
+   * This lets the refresh driver know that we want a visibility update in the
+   * near future. The refresh driver applies its own heuristics and throttling
+   * to decide when to actually perform the visibility update.
+   */
+  void ScheduleApproximateFrameVisibilityUpdateSoon();
+
+  /**
+   * Schedule an update of the list of approximately visible frames "now". The
+   * update runs asynchronously, but it will be posted to the event loop
+   * immediately. Prefer the "soon" variation of this method when possible, as
+   * this variation ignores the refresh driver's heuristics.
+   */
+  void ScheduleApproximateFrameVisibilityUpdateNow();
+
+  /**
+   * Clears the current list of approximately visible frames on this pres shell
+   * and replaces it with frames that are in the display list @aList.
+   */
+  void RebuildApproximateFrameVisibilityDisplayList(const nsDisplayList& aList);
+  void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
+                                         bool aRemoveOnly = false);
+
+  /**
+   * Ensures @aFrame is in the list of approximately visible frames.
+   */
+  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame);
+
+  /// Removes @aFrame from the list of approximately visible frames if present.
+  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame);
+
+  /// Whether we should assume all frames are visible.
+  bool AssumeAllFramesVisible();
+
+  /**
+   * Returns whether the document's style set's rule processor for the
+   * specified level of the cascade is shared by multiple style sets.
+   *
+   * @param aSheetType One of the nsIStyleSheetService.*_SHEET constants.
+   */
+  nsresult HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
+                                                   bool* aRetVal);
+
+  /**
+   * Returns whether or not the document has ever handled user input
+   */
+  bool HasHandledUserInput() const { return mHasHandledUserInput; }
+
+  void FireResizeEvent();
+
+  void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
+
+  /**
+   * See HTMLDocument.setKeyPressEventModel() in HTMLDocument.webidl for the
+   * detail.
+   */
+  void SetKeyPressEventModel(uint16_t aKeyPressEventModel) {
+    mForceUseLegacyKeyCodeAndCharCodeValues |=
+        aKeyPressEventModel ==
+        dom::HTMLDocument_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
+  }
+
+  bool AddRefreshObserver(nsARefreshObserver* aObserver, FlushType aFlushType);
+  bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
+                             FlushType aFlushType);
+
+  bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
+  bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);
+
+  // Represents an update to the visual scroll offset that will be sent to APZ.
+  // The update type is used to determine priority compared to other scroll
+  // updates.
+  struct VisualScrollUpdate {
+    nsPoint mVisualScrollOffset;
+    FrameMetrics::ScrollOffsetUpdateType mUpdateType;
+    bool mAcknowledged = false;
+  };
+
+  // Ask APZ in the next transaction to scroll to the given visual viewport
+  // offset (relative to the document).
+  // Use this sparingly, as it will clobber JS-driven scrolling that happens
+  // in the same frame. This is mostly intended to be used in special
+  // situations like "first paint" or session restore.
+  // If scrolling "far away", i.e. not just within the existing layout
+  // viewport, it's recommended to use both nsIScrollableFrame.ScrollTo*()
+  // (via window.scrollTo if calling from JS) *and* this function; otherwise,
+  // temporary checkerboarding may result.
+  // Please request APZ review if adding a new call site.
+  void ScrollToVisual(const nsPoint& aVisualViewportOffset,
+                      FrameMetrics::ScrollOffsetUpdateType aUpdateType,
+                      ScrollMode aMode);
+  void AcknowledgePendingVisualScrollUpdate();
+  void ClearPendingVisualScrollUpdate();
+  const Maybe<VisualScrollUpdate>& GetPendingVisualScrollUpdate() const {
+    return mPendingVisualScrollUpdate;
+  }
+
+  nsPoint GetLayoutViewportOffset() const;
+  nsSize GetLayoutViewportSize() const;
+
+  /**
+   * Documents belonging to an invisible DocShell must not be painted ever.
+   */
+  bool IsNeverPainting() { return mIsNeverPainting; }
+
+  void SetNeverPainting(bool aNeverPainting) {
+    mIsNeverPainting = aNeverPainting;
+  }
+
+  /**
+   * True if a reflow event has been scheduled, or is going to be scheduled
+   * to run in the future.
+   */
+  bool HasPendingReflow() const {
+    return mObservingLayoutFlushes || mReflowContinueTimer;
+  }
+
+  void SyncWindowProperties(nsView* aView);
+
+  Document* GetPrimaryContentDocument();
+
+  struct MOZ_RAII AutoAssertNoFlush {
+    explicit AutoAssertNoFlush(PresShell& aPresShell)
+        : mPresShell(aPresShell), mOldForbidden(mPresShell.mForbiddenToFlush) {
+      mPresShell.mForbiddenToFlush = true;
+    }
+
+    ~AutoAssertNoFlush() { mPresShell.mForbiddenToFlush = mOldForbidden; }
+
+    PresShell& mPresShell;
+    const bool mOldForbidden;
+  };
+
+  NS_IMETHOD GetSelectionFromScript(RawSelectionType aRawSelectionType,
+                                    dom::Selection** aSelection) override;
+  dom::Selection* GetSelection(RawSelectionType aRawSelectionType) override;
+
+  NS_IMETHOD SetDisplaySelection(int16_t aToggle) override;
+  NS_IMETHOD GetDisplaySelection(int16_t* aToggle) override;
+  NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
+                                     SelectionRegion aRegion,
+                                     int16_t aFlags) override;
+  NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   /**
    * Set a "resolution" for the document, which if not 1.0 will
@@ -238,40 +1172,17 @@ class PresShell final : public nsIPresShell,
   nsresult SetResolutionAndScaleTo(float aResolution,
                                    ResolutionChangeOrigin aOrigin);
 
-  float GetCumulativeResolution() override;
-  float GetCumulativeNonRootScaleResolution() override;
-  void SetRestoreResolution(float aResolution,
-                            LayoutDeviceIntSize aDisplaySize) override;
-
   // Widget notificiations
   void WindowSizeMoveDone();
   void SysColorChanged() { mPresContext->SysColorChanged(); }
   void ThemeChanged() { mPresContext->ThemeChanged(); }
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
-  void SynthesizeMouseMove(bool aFromScroll) override;
-
-  Document* GetPrimaryContentDocument() override;
-
-  void PausePainting() override;
-  void ResumePainting() override;
-
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              PaintFlags aFlags);
 
-  MOZ_CAN_RUN_SCRIPT nsresult HandleEvent(nsIFrame* aFrameForPresShell,
-                                          WidgetGUIEvent* aEvent,
-                                          bool aDontRetargetEvents,
-                                          nsEventStatus* aEventStatus) override;
-  nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                    WidgetEvent* aEvent,
-                                    nsEventStatus* aStatus) override;
-  nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                    dom::Event* aEvent,
-                                    nsEventStatus* aStatus) override;
-  bool ShouldIgnoreInvalidation() override;
   /**
    * Notify that we're going to call Paint with PaintFlags::PaintLayers
    * on the pres shell for a widget (which might not be this one, since
@@ -280,8 +1191,6 @@ class PresShell final : public nsIPresShell,
    * widget geometry.
    */
   MOZ_CAN_RUN_SCRIPT void WillPaint();
-  void WillPaintWindow() override;
-  void DidPaintWindow() override;
 
   /**
    * Ensures that the refresh driver is running, and schedules a view
@@ -293,11 +1202,6 @@ class PresShell final : public nsIPresShell,
    */
   void ScheduleViewManagerFlush(PaintType aType = PaintType::Default);
 
-  bool IsVisible() override;
-  void SuppressDisplayport(bool aEnabled) override;
-  void RespectDisplayportSuppression(bool aEnabled) override;
-  bool IsDisplayportSuppressed() override;
-
   // caret handling
   NS_IMETHOD SetCaretEnabled(bool aInEnable) override;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) override;
@@ -305,10 +1209,23 @@ class PresShell final : public nsIPresShell,
   NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) override;
   NS_IMETHOD GetCaretVisible(bool* _retval) override;
 
+  /**
+   * Should the images have borders etc.  Actual visual effects are determined
+   * by the frames.  Visual effects may not effect layout, only display.
+   * Takes effect on next repaint, does not force a repaint itself.
+   *
+   * @param aInEnable  if true, visual selection effects are enabled
+   *                   if false visual selection effects are disabled
+   */
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
   NS_IMETHOD GetSelectionFlags(int16_t* aOutEnable) override;
 
-  using nsIPresShell::GetSelectionFlags;
+  /**
+   * Gets the current state of non text selection effects
+   * @return   current state of non text selection,
+   *           as set by SetDisplayNonTextSelection
+   */
+  int16_t GetSelectionFlags() const { return mSelectionFlags; }
 
   // nsISelectionController
 
@@ -495,26 +1412,6 @@ class PresShell final : public nsIPresShell,
   bool DoReflow(nsIFrame* aFrame, bool aInterruptible,
                 OverflowChangedTracker* aOverflowTracker);
 
-#ifdef MOZ_REFLOW_PERF
-  void DumpReflows() override;
-  void CountReflows(const char* aName, nsIFrame* aFrame) override;
-  void PaintCount(const char* aName, gfxContext* aRenderingContext,
-                  nsPresContext* aPresContext, nsIFrame* aFrame,
-                  const nsPoint& aOffset, uint32_t aColor) override;
-  void SetPaintFrameCount(bool aOn) override;
-  bool IsPaintingFrameCounts() override;
-#endif
-
-#ifdef DEBUG
-  void ListComputedStyles(FILE* out, int32_t aIndent = 0) override;
-
-  void ListStyleSheets(FILE* out, int32_t aIndent = 0) override;
-#endif
-
-  void DisableNonTestMouseEvents(bool aDisable) override;
-
-  void UpdateCanvasBackground() override;
-
   /**
    * Add a solid color item to the bottom of aList with frame aFrame and bounds
    * aBounds. Checks first if this needs to be done by checking if aFrame is a
@@ -542,61 +1439,9 @@ class PresShell final : public nsIPresShell,
       AddCanvasBackgroundColorFlags aFlags =
           AddCanvasBackgroundColorFlags::None);
 
-  void AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
-                                     nsDisplayList& aList, nsIFrame* aFrame,
-                                     const nsRect& aBounds) override;
-
-  nscolor ComputeBackstopColor(nsView* aDisplayRoot) override;
-
-  nsresult SetIsActive(bool aIsActive) override;
-
-  bool GetIsViewportOverridden() override {
-    return (mMobileViewportManager != nullptr);
-  }
-
-  RefPtr<MobileViewportManager> GetMobileViewportManager() const override;
-
-  void UpdateViewportOverridden(bool aAfterInitialization) override;
-
-  bool IsLayoutFlushObserver() override {
-    return GetPresContext()->RefreshDriver()->IsLayoutFlushObserver(this);
-  }
-
-  void LoadComplete() override;
-
-  void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const override;
   size_t SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const;
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Approximate frame visibility tracking public API.
-  //////////////////////////////////////////////////////////////////////////////
-
-  void ScheduleApproximateFrameVisibilityUpdateSoon() override;
-  void ScheduleApproximateFrameVisibilityUpdateNow() override;
-
-  void RebuildApproximateFrameVisibilityDisplayList(
-      const nsDisplayList& aList) override;
-  void RebuildApproximateFrameVisibility(nsRect* aRect = nullptr,
-                                         bool aRemoveOnly = false) override;
-
-  void EnsureFrameInApproximatelyVisibleList(nsIFrame* aFrame) override;
-  void RemoveFrameFromApproximatelyVisibleList(nsIFrame* aFrame) override;
-
-  bool AssumeAllFramesVisible() override;
-
-  bool CanDispatchEvent(const WidgetGUIEvent* aEvent = nullptr) const override;
-
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
-
-  bool HasHandledUserInput() const override { return mHasHandledUserInput; }
-
-  void FireResizeEvent() override;
-
-  void SetKeyPressEventModel(uint16_t aKeyPressEventModel) override {
-    mForceUseLegacyKeyCodeAndCharCodeValues |=
-        aKeyPressEventModel ==
-        dom::HTMLDocument_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
-  }
 
   static PresShell* GetShellForEventTarget(nsIFrame* aFrame,
                                            nsIContent* aContent);
@@ -727,6 +1572,79 @@ class PresShell final : public nsIPresShell,
 
  private:
   ~PresShell();
+
+  /**
+   * Refresh observer management.
+   */
+  void DoObserveStyleFlushes();
+  void DoObserveLayoutFlushes();
+
+  /**
+   * Does the actual work of figuring out the current state of font size
+   * inflation.
+   */
+  bool DetermineFontSizeInflationState();
+
+  void RecordAlloc(void* aPtr) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(!mAllocatedPointers.Contains(aPtr));
+    mAllocatedPointers.PutEntry(aPtr);
+#endif
+  }
+
+  void RecordFree(void* aPtr) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(mAllocatedPointers.Contains(aPtr));
+    mAllocatedPointers.RemoveEntry(aPtr);
+#endif
+  }
+
+  void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
+  void PopCurrentEventInfo();
+  nsIContent* GetCurrentEventContent();
+
+  friend class ::nsRefreshDriver;
+  friend class ::nsAutoCauseReflowNotifier;
+
+  void WillCauseReflow();
+  void DidCauseReflow();
+
+  void CancelPostedReflowCallbacks();
+  void FlushPendingScrollAnchorAdjustments();
+
+  void SetPendingVisualScrollUpdate(
+      const nsPoint& aVisualViewportOffset,
+      FrameMetrics::ScrollOffsetUpdateType aUpdateType);
+
+#ifdef MOZ_REFLOW_PERF
+  UniquePtr<ReflowCountMgr> mReflowCountMgr;
+#endif
+
+  void WillDoReflow();
+
+  // This data is stored as a content property (nsGkAtoms::scrolling) on
+  // mContentToScrollTo when we have a pending ScrollIntoView.
+  struct ScrollIntoViewData {
+    ScrollAxis mContentScrollVAxis;
+    ScrollAxis mContentScrollHAxis;
+    ScrollFlags mContentToScrollToFlags;
+  };
+
+  static LazyLogModule gLog;
+
+  DOMHighResTimeStamp GetPerformanceNowUnclamped();
+
+  // The callback for the mReflowContinueTimer timer.
+  static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
+  bool ScheduleReflowOffTimer();
+  // MaybeScheduleReflow checks if posting a reflow is needed, then checks if
+  // the last reflow was interrupted. In the interrupted case ScheduleReflow is
+  // called off a timer, otherwise it is called directly.
+  void MaybeScheduleReflow();
+  // Actually schedules a reflow.  This should only be called by
+  // MaybeScheduleReflow and the reflow timer ScheduleReflowOffTimer
+  // sets up.
+  void ScheduleReflow();
 
   friend class ::AutoPointerEventTargetUpdater;
 
@@ -917,7 +1835,7 @@ class PresShell final : public nsIPresShell,
   already_AddRefed<PresShell> GetParentPresShellForEventHandling();
 
   /**
-   * EventHandler is implementation of nsIPresShell::HandleEvent().
+   * EventHandler is implementation of PresShell::HandleEvent().
    */
   class MOZ_STACK_CLASS EventHandler final {
    public:
@@ -1807,7 +2725,12 @@ class PresShell final : public nsIPresShell,
 
   nsSize mVisualViewportSize;
 
-  mozilla::Maybe<nsPoint> mVisualViewportOffset;
+  Maybe<nsPoint> mVisualViewportOffset;
+
+  // A pending visual scroll offset that we will ask APZ to scroll to
+  // during the next transaction. Cleared when we send the transaction.
+  // Only applicable to the RCD pres shell.
+  Maybe<VisualScrollUpdate> mPendingVisualScrollUpdate;
 
   TimeStamp mLastOSWake;
 

@@ -8935,7 +8935,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
                                   FrameMetrics::eRestore, ScrollMode::Instant);
       }
 
-      if (const Maybe<nsIPresShell::VisualScrollUpdate>& visualUpdate =
+      if (const Maybe<PresShell::VisualScrollUpdate>& visualUpdate =
               presShell->GetPendingVisualScrollUpdate()) {
         metrics.SetVisualViewportOffset(
             CSSPoint::FromAppUnits(visualUpdate->mVisualScrollOffset));
