@@ -140,6 +140,13 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for the core interfaces of Web Animations API enabled?
+VARCACHE_PREF(
+  "dom.animations-api.core.enabled",
+   dom_animations_api_core_enabled,
+  bool, true
+)
+
 // Is support for Document.getAnimations() and Element.getAnimations()
 // supported?
 //
