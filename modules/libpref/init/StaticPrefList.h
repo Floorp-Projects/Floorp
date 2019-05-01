@@ -714,6 +714,12 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  "dom.largeAllocation.forceEnable",
+   dom_largeAllocation_forceEnable,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
