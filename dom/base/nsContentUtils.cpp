@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
 bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
@@ -615,9 +614,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sUseActivityCursor, "ui.use_activity_cursor",
-                               false);
 
   Preferences::AddBoolVarCache(&sAnimationsAPICoreEnabled,
                                "dom.animations-api.core.enabled", false);
