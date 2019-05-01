@@ -940,7 +940,7 @@ impl<'a> DisplayListFlattener<'a> {
     ) -> Option<BuiltDisplayListIter<'a>> {
         match *item.item() {
             DisplayItem::Image(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -959,7 +959,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::YuvImage(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -975,7 +975,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Text(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1027,7 +1027,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Line(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.area,
                     apply_pipeline_clip,
@@ -1043,7 +1043,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Gradient(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1069,7 +1069,7 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             }
             DisplayItem::RadialGradient(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,
@@ -1097,7 +1097,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::BoxShadow(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.box_bounds,
                     apply_pipeline_clip,
@@ -1115,7 +1115,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             DisplayItem::Border(ref info) => {
-                let (mut layout, clip_and_scroll) = self.process_common_properties_with_bounds(
+                let (layout, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                     apply_pipeline_clip,

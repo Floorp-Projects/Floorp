@@ -875,7 +875,7 @@ impl RenderBackend {
 
                                 doc.removed_pipelines.append(&mut txn.removed_pipelines);
 
-                                if let Some(mut built_scene) = txn.built_scene.take() {
+                                if let Some(built_scene) = txn.built_scene.take() {
                                     doc.new_async_scene_ready(
                                         built_scene,
                                         &mut self.recycler,
