@@ -10,49 +10,134 @@
 #define mozilla_PresShell_h
 
 #include "mozilla/PresShellForwards.h"
-#include "nsIPresShell.h"
 
+#include <stdio.h>  // for FILE definition
+#include "FrameMetrics.h"
+#include "GeckoProfiler.h"
+#include "TouchManager.h"
+#include "Units.h"
+#include "ZoomConstraintsClient.h"
+#include "gfxPoint.h"
+#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/dom/HTMLDocumentBinding.h"
-#include "mozilla/layers/FocusTarget.h"
+#include "mozilla/FlushType.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
-#include "nsContentUtils.h"  // For AddScriptBlocker().
-#include "nsCRT.h"
+#include "mozilla/WeakPtr.h"
+#include "mozilla/dom/HTMLDocumentBinding.h"
+#include "mozilla/layers/FocusTarget.h"
+#include "nsChangeHint.h"
+#include "nsClassHashtable.h"
+#include "nsColor.h"
+#include "nsCOMArray.h"
+#include "nsCoord.h"
+#include "nsDOMNavigationTiming.h"
+#include "nsFrameManager.h"
+#include "nsFrameState.h"
+#include "nsHashKeys.h"
+#include "nsIContent.h"
+#include "nsIImageLoadingContent.h"
 #include "nsIObserver.h"
 #include "nsISelectionController.h"
 #include "nsIWidget.h"
+#include "nsQueryFrame.h"
+#include "nsMargin.h"
+#include "nsPresArena.h"
 #include "nsPresContext.h"
+#include "nsRect.h"
+#include "nsRefPtrHashtable.h"
 #include "nsRefreshDriver.h"
+#include "nsRegionFwd.h"
+#include "nsStringFwd.h"
 #include "nsStubDocumentObserver.h"
+#include "nsTHashtable.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
-#include "TouchManager.h"
-#include "ZoomConstraintsClient.h"
 
-class nsIDocShell;
-class nsRange;
-
-struct RangePaintInfo;
-
-class nsPresShellEventCB;
 class AutoPointerEventTargetUpdater;
+class AutoWeakFrame;
+class gfxContext;
 class MobileViewportManager;
+#ifdef ACCESSIBILITY
+class nsAccessibilityService;
+#endif
+class nsARefreshObserver;
+class nsAutoCauseReflowNotifier;
+class nsCanvasFrame;
+class nsCaret;
+class nsCSSFrameConstructor;
+class nsDisplayList;
+class nsDisplayListBuilder;
+class nsDocShell;
+class nsFrameSelection;
+class nsIDocShell;
+class nsIFrame;
+class nsILayoutHistoryState;
+class nsINode;
+class nsIPageSequenceFrame;
+class nsIReflowCallback;
+class nsIScrollableFrame;
+class nsITimer;
+class nsPIDOMWindowOuter;
+class nsAPostRefreshObserver;
+class nsPresShellEventCB;
+class nsRange;
+class nsRefreshDriver;
+class nsRegion;
+class nsView;
+class nsViewManager;
+class nsWindowSizes;
+struct RangePaintInfo;
+#ifdef MOZ_REFLOW_PERF
+class ReflowCountMgr;
+#endif
+class WeakFrame;
+
+template <class E>
+class nsCOMArray;
+
+struct nsCallbackEventRequest;
+struct nsPoint;
+struct nsRect;
 
 namespace mozilla {
+class AccessibleCaretEventHub;
+class EventStates;
+class GeckoMVMContext;
+class OverflowChangedTracker;
+class StyleSheet;
+
+#ifdef ACCESSIBILITY
+namespace a11y {
+class DocAccessible;
+}  // namespace a11y
+#endif
 
 namespace dom {
+class Document;
 class Element;
+class Event;
+class HTMLSlotElement;
 class Selection;
 }  // namespace dom
 
-class EventDispatchingCallback;
-class GeckoMVMContext;
-class OverflowChangedTracker;
+namespace gfx {
+class SourceSurface;
+}  // namespace gfx
+
+namespace layers {
+class LayerManager;
+}  // namespace layers
+
+namespace layout {
+class ScrollAnchorContainer;
+}  // namespace layout
 
 // 039d8ffc-fa55-42d7-a53a-388cb129b052
 #define NS_PRESSHELL_IID                             \
@@ -62,7 +147,19 @@ class OverflowChangedTracker;
     }                                                \
   }
 
-class PresShell final : public nsIPresShell,
+#undef NOISY_INTERRUPTIBLE_REFLOW
+
+/**
+ * Presentation shell. Presentation shells are the controlling point for
+ * managing the presentation of a document.  The presentation shell holds a
+ * live reference to the document, the presentation context, the style
+ * manager, the style set and the root frame.
+ *
+ * When this object is Release'd, it will release the document, the
+ * presentation context, the style manager, the style set and the root frame.
+ */
+
+class PresShell final : public nsStubDocumentObserver,
                         public nsISelectionController,
                         public nsIObserver,
                         public nsSupportsWeakReference {
@@ -742,10 +839,11 @@ class PresShell final : public nsIPresShell,
    * edge of the presshell area. The aPoint, aScreenRect and aFlags arguments
    * function in a similar manner as RenderSelection.
    */
-  already_AddRefed<gfx::SourceSurface> RenderNode(
-      nsINode* aNode, const Maybe<CSSIntRegion>& aRegion,
-      const LayoutDeviceIntPoint aPoint, LayoutDeviceIntRect* aScreenRect,
-      RenderImageFlags aFlags);
+  already_AddRefed<SourceSurface> RenderNode(nsINode* aNode,
+                                             const Maybe<CSSIntRegion>& aRegion,
+                                             const LayoutDeviceIntPoint aPoint,
+                                             LayoutDeviceIntRect* aScreenRect,
+                                             RenderImageFlags aFlags);
 
   /**
    * Renders a selection to a surface and returns it. This method is primarily
@@ -763,7 +861,7 @@ class PresShell final : public nsIPresShell,
    * point isn't used because the position can be determined from the displayed
    * frames.
    */
-  already_AddRefed<gfx::SourceSurface> RenderSelection(
+  already_AddRefed<SourceSurface> RenderSelection(
       dom::Selection* aSelection, const LayoutDeviceIntPoint aPoint,
       LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags);
 

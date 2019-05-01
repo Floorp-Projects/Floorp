@@ -2545,8 +2545,8 @@ void nsRootPresContext::InitApplyPluginGeometryTimer() {
   }
 
   // We'll apply the plugin geometry updates during the next compositing paint
-  // in this presContext (either from nsPresShell::WillPaintWindow or from
-  // nsPresShell::DidPaintWindow, depending on the platform).  But paints might
+  // in this presContext (either from PresShell::WillPaintWindow() or from
+  // PresShell::DidPaintWindow(), depending on the platform).  But paints might
   // get optimized away if the old plugin geometry covers the invalid region,
   // so set a backup timer to do this too.  We want to make sure this
   // won't fire before our normal paint notifications, if those would

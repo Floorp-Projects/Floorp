@@ -2761,8 +2761,8 @@ int16_t AutoCopyListener::sClipboardID = -1;
  * What we do now:
  * On every selection change, we copy to the clipboard anew, creating a
  * HTML buffer, a transferable, an nsISupportsString and
- * a huge mess every time.  This is basically what nsPresShell::DoCopy does
- * to move the selection into the clipboard for Edit->Copy.
+ * a huge mess every time.  This is basically what nsCopySupport::HTMLCopy()
+ * does to move the selection into the clipboard for Edit->Copy.
  *
  * What we should do, to make our end of the deal faster:
  * Create a singleton transferable with our own magic converter.  When selection
