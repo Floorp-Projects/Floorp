@@ -21,7 +21,7 @@
         android:clickable="true"
         android:contentDescription="@string/library_bookmarks"
         android:focusable="true"
-        app:listItemIcon="@drawable/bookmarks_circle_background_filled"
+        app:listItemIcon="@drawable/bookmarks_circle_background_outline"
         app:listItemTitle="@string/library_bookmarks" />
 
     <org.mozilla.fenix.library.LibraryListItem
