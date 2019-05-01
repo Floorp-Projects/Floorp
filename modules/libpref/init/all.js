@@ -154,9 +154,6 @@ pref("dom.serviceWorkers.update_delay", 1000);
 // Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
 pref("dom.serviceWorkers.testUpdateOverOneDay", false);
 
-// Whether resource timing will be gathered and returned by performance.GetEntries*
-pref("dom.enable_resource_timing", true);
-
 // Whether performance.GetEntries* will contain an entry for the active document
 pref("dom.enable_performance_navigation_timing", true);
 

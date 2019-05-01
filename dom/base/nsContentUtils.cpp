@@ -312,7 +312,6 @@ nsString* nsContentUtils::sModifierSeparator = nullptr;
 bool nsContentUtils::sInitialized = false;
 bool nsContentUtils::sIsUpgradableDisplayContentPrefEnabled = false;
 bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
-bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
@@ -627,9 +626,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sIsResourceTimingEnabled,
-                               "dom.enable_resource_timing", true);
 
   Preferences::AddBoolVarCache(&sIsPerformanceNavigationTimingEnabled,
                                "dom.enable_performance_navigation_timing",
