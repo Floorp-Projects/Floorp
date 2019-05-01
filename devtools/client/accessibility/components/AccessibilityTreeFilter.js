@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* global gTelemetry */
+
 // React
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -15,6 +17,7 @@ const actions = require("../actions/audit");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { FILTERS } = require("../constants");
 
+const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {
   [FILTERS.CONTRAST]: "accessibility.badge.contrast",
 };
@@ -33,6 +36,10 @@ class AccessibilityTreeFilter extends Component {
     const { dispatch, filters, walker } = this.props;
 
     if (!filters[filterKey]) {
+      if (gTelemetry) {
+        gTelemetry.keyedScalarAdd(TELEMETRY_AUDIT_ACTIVATED, filterKey, 1);
+      }
+
       dispatch(actions.auditing(filterKey));
       await dispatch(actions.audit(walker, filterKey));
     }
