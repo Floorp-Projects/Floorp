@@ -5075,7 +5075,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
     // Guard against relazification
     writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
   } else {
@@ -5245,7 +5245,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   FieldOffset calleeOffset = 0;
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
-    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
     writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
   } else {
     // Guard that object is a native function
@@ -5499,7 +5499,7 @@ AttachDecision CallIRGenerator::tryAttachConstStringSplit(
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardSpecificObject(calleeObjId, calleeFunc);
+  writer.guardSpecificFunction(calleeObjId, calleeFunc);
 
   // Guard that |this| is the expected string
   ValOperandId strValId =
