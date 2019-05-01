@@ -605,6 +605,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Allow cut/copy
+VARCACHE_PREF(
+  "dom.allow_cut_copy",
+   dom_allow_cut_copy,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
