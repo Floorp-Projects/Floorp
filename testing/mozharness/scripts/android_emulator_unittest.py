@@ -318,7 +318,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         all = [('mochitest', {'mochitest-plain': 'mochitest-plain',
                               'mochitest-chrome': 'mochitest-chrome',
                               'mochitest-media': 'mochitest-media',
-                              'mochitest-plain-clipboard': 'mochitest-plain-clipboard',
                               'mochitest-plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest',
                             'crashtest': 'crashtest',

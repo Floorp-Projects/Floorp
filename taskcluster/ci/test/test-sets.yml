@@ -28,7 +28,6 @@ common-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
@@ -235,7 +234,6 @@ windows-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
@@ -261,7 +259,6 @@ windows-aarch64-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
@@ -311,7 +308,6 @@ macosx64-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
     - mochitest-gpu
@@ -364,7 +360,6 @@ linux32-tests:
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
@@ -391,7 +386,6 @@ android-common-tests:
     - jsreftest
     - mochitest
     - mochitest-chrome
-    - mochitest-clipboard
     - mochitest-gpu
     - mochitest-media
     - reftest
@@ -416,7 +410,6 @@ android-x86_64-tests:
     - cppunit
     - jsreftest
     - marionette
-    - mochitest-clipboard
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
     # - reftest

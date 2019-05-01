@@ -263,7 +263,6 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
         # per-test mode: determine test suites to run
         all = [('mochitest', {'mochitest-plain': 'mochitest-plain',
                               'mochitest-chrome': 'mochitest-chrome',
-                              'mochitest-plain-clipboard': 'mochitest-plain-clipboard',
                               'mochitest-plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest', 'crashtest': 'crashtest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
