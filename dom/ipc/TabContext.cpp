@@ -12,8 +12,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 
-#define NO_APP_ID (nsIScriptSecurityManager::NO_APP_ID)
-
 using namespace mozilla::dom::ipc;
 using namespace mozilla::layout;
 

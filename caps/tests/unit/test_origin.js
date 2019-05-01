@@ -103,20 +103,6 @@ function run_test() {
   checkOriginAttributes(exampleOrg_firstPartyDomain, { firstPartyDomain: "example.org" }, "^firstPartyDomain=example.org");
   Assert.equal(exampleOrg_firstPartyDomain.origin, "http://example.org^firstPartyDomain=example.org");
 
-  // Make sure we don't crash when serializing principals with UNKNOWN_APP_ID.
-  try {
-    let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
-                       createInstance(Ci.nsIObjectOutputStream);
-    let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-    pipe.init(false, false, 0, 0xffffffff, null);
-    binaryStream.setOutputStream(pipe.outputStream);
-    binaryStream.writeCompoundObject(simplePrin, Ci.nsISupports, true); // eslint-disable-line no-undef
-    binaryStream.close();
-  } catch (e) {
-    Assert.ok(true);
-  }
-
-
   // Just userContext.
   var exampleOrg_userContext = ssm.createCodebasePrincipal(makeURI("http://example.org"), {userContextId: 42});
   checkOriginAttributes(exampleOrg_userContext, { userContextId: 42 }, "^userContextId=42");
