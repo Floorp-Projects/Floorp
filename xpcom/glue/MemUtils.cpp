@@ -8,28 +8,48 @@
 
 #if defined(XP_WIN)
 #  include <windows.h>
+#  include "mozilla/Maybe.h"
 #else
 #  include <sys/mman.h>
 #endif
 
-bool mozilla::MaybePrefetchMemory(uint8_t* aStart, size_t aNumBytes) {
+#if defined(XP_WIN)
+typedef BOOL(WINAPI* PrefetchVirtualMemoryFn)(HANDLE, ULONG_PTR, PVOID, ULONG);
+
+static mozilla::Maybe<PrefetchVirtualMemoryFn> sPrefetchVirtualMemory;
+
+void MaybeInitPrefetchVirtualMemory() {
+  if (sPrefetchVirtualMemory.isNothing()) {
+    sPrefetchVirtualMemory.emplace(
+        reinterpret_cast<PrefetchVirtualMemoryFn>(GetProcAddress(
+            GetModuleHandleW(L"kernel32.dll"), "PrefetchVirtualMemory")));
+  }
+}
+#endif
+
+bool mozilla::CanPrefetchMemory() {
+#if defined(XP_SOLARIS) || defined(XP_UNIX)
+  return true;
+#elif defined(XP_WIN)
+  MaybeInitPrefetchVirtualMemory();
+  return *sPrefetchVirtualMemory;
+#else
+  return false;
+#endif
+}
+
+void mozilla::PrefetchMemory(uint8_t* aStart, size_t aNumBytes) {
   if (aNumBytes == 0) {
-    return true;
+    return;
   }
 
 #if defined(XP_SOLARIS)
   posix_madvise(aStart, aNumBytes, POSIX_MADV_WILLNEED);
-  return true;
 #elif defined(XP_UNIX)
   madvise(aStart, aNumBytes, MADV_WILLNEED);
-  return true;
 #elif defined(XP_WIN)
-  static auto prefetchVirtualMemory =
-      reinterpret_cast<BOOL(WINAPI*)(HANDLE, ULONG_PTR, PVOID, ULONG)>(
-          GetProcAddress(GetModuleHandleW(L"kernel32.dll"),
-                         "PrefetchVirtualMemory"));
-
-  if (prefetchVirtualMemory) {
+  MaybeInitPrefetchVirtualMemory();
+  if (*sPrefetchVirtualMemory) {
     // Normally, we'd use WIN32_MEMORY_RANGE_ENTRY, but that requires
     // a different _WIN32_WINNT value before including windows.h, but
     // that causes complications with unified sources. It's a simple
@@ -40,11 +60,8 @@ bool mozilla::MaybePrefetchMemory(uint8_t* aStart, size_t aNumBytes) {
     } entry;
     entry.VirtualAddress = aStart;
     entry.NumberOfBytes = aNumBytes;
-    prefetchVirtualMemory(GetCurrentProcess(), 1, &entry, 0);
-    return true;
+    (*sPrefetchVirtualMemory)(GetCurrentProcess(), 1, &entry, 0);
+    return;
   }
-  return false;
-#else
-  return false;
 #endif
 }
