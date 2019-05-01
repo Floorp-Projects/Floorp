@@ -819,14 +819,10 @@ AVBitStreamFilter ff_noise_bsf;
 AVBitStreamFilter ff_remove_extradata_bsf;
 AVBitStreamFilter ff_text2movsub_bsf;
 
-void ff_fft_init_aarch64(FFTContext *s) {}
 void ff_fft_init_arm(FFTContext *s) {}
 void ff_fft_init_mips(FFTContext *s) {}
 void ff_fft_init_ppc(FFTContext *s) {}
 void ff_rdft_init_arm(RDFTContext *s) {}
-void ff_h264_pred_init_aarch64(H264PredContext *h, int codec_id,
-                               const int bit_depth,
-                               const int chroma_format_idc) {}
 void ff_h264_pred_init_arm(H264PredContext *h, int codec_id,
                            const int bit_depth, const int chroma_format_idc) {}
 void ff_h264_pred_init_mips(H264PredContext *h, int codec_id,
@@ -835,7 +831,6 @@ void ff_me_cmp_init_static(void) {}
 int ff_frame_thread_encoder_init(AVCodecContext *avctx, AVDictionary *options) { return 0; }
 void ff_frame_thread_encoder_free(AVCodecContext *avctx) {}
 int ff_thread_video_encode_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFrame *frame, int *got_packet_ptr) { return 0; }
-void ff_videodsp_init_aarch64(VideoDSPContext *ctx, int bpc) {}
 void ff_videodsp_init_arm(VideoDSPContext *ctx, int bpc) {}
 void ff_videodsp_init_ppc(VideoDSPContext *ctx, int bpc) {}
 void ff_videodsp_init_mips(VideoDSPContext *ctx, int bpc) {}
@@ -845,7 +840,6 @@ void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
-void ff_vp9dsp_init_aarch64(VP9DSPContext *dsp, int bpp) {}
 void ff_vp9dsp_init_arm(VP9DSPContext *dsp, int bpp) {}
 #if !defined(__arm__)
 void ff_flacdsp_init_arm(FLACDSPContext *c, enum AVSampleFormat fmt, int channels, int bps) {}
