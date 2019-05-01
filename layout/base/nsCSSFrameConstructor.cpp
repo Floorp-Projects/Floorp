@@ -1160,8 +1160,9 @@ void nsFrameConstructorState::ConstructBackdropFrameFor(nsIContent* aContent,
 
   RefPtr<ComputedStyle> style =
       mPresShell->StyleSet()->ResolvePseudoElementStyle(
-          *aContent->AsElement(), PseudoStyleType::backdrop,
-          /* aParentStyle */ nullptr);
+          aContent->AsElement(), PseudoStyleType::backdrop,
+          /* aParentComputedStyle */ nullptr,
+          /* aPseudoElement */ nullptr);
   MOZ_ASSERT(style->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_TOP);
   nsContainerFrame* parentFrame =
       GetGeometricParent(*style->StyleDisplay(), nullptr);
@@ -1702,36 +1703,29 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
   // Probe for the existence of the pseudo-element
-  RefPtr<ComputedStyle> pseudoStyle;
+  RefPtr<ComputedStyle> pseudoStyle = styleSet->ProbePseudoElementStyle(
+      aOriginatingElement, aPseudoElement, &aStyle);
+  if (!pseudoStyle) {
+    return;
+  }
+
   nsAtom* elemName = nullptr;
   nsAtom* property = nullptr;
   switch (aPseudoElement) {
     case PseudoStyleType::before:
-      pseudoStyle = styleSet->ProbePseudoElementStyle(aOriginatingElement,
-                                                      aPseudoElement, &aStyle);
       elemName = nsGkAtoms::mozgeneratedcontentbefore;
       property = nsGkAtoms::beforePseudoProperty;
       break;
     case PseudoStyleType::after:
-      pseudoStyle = styleSet->ProbePseudoElementStyle(aOriginatingElement,
-                                                      aPseudoElement, &aStyle);
       elemName = nsGkAtoms::mozgeneratedcontentafter;
       property = nsGkAtoms::afterPseudoProperty;
       break;
     case PseudoStyleType::marker:
-      // We want to get a marker style even if we match no rules, but we still
-      // want to check the result of GeneratedContentPseudoExists.
-      pseudoStyle = styleSet->ProbeMarkerPseudoStyle(aOriginatingElement,
-                                                     aStyle);
       elemName = nsGkAtoms::mozgeneratedcontentmarker;
       property = nsGkAtoms::markerPseudoProperty;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected aPseudoElement");
-  }
-
-  if (!pseudoStyle) {
-    return;
   }
 
   // |ProbePseudoStyleFor| checked the 'display' property and the
@@ -8718,7 +8712,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLetterStyle(
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
     return mPresShell->StyleSet()->ResolvePseudoElementStyle(
-        *aContent->AsElement(), PseudoStyleType::firstLetter, aComputedStyle);
+        aContent->AsElement(), PseudoStyleType::firstLetter, aComputedStyle,
+        nullptr);
   }
   return nullptr;
 }
@@ -8727,7 +8722,8 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::GetFirstLineStyle(
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
   if (aContent) {
     return mPresShell->StyleSet()->ResolvePseudoElementStyle(
-        *aContent->AsElement(), PseudoStyleType::firstLine, aComputedStyle);
+        aContent->AsElement(), PseudoStyleType::firstLine, aComputedStyle,
+        nullptr);
   }
   return nullptr;
 }
