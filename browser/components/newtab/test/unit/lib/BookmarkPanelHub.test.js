@@ -239,13 +239,14 @@ describe("BookmarkPanelHub", () => {
   describe("#_forceShowMessage", () => {
     it("should call showMessage with the correct args", () => {
       const msg = {content: "foo"};
+      const target = {infoButton: {disabled: false}};
       sandbox.stub(instance, "showMessage");
-      sandbox.stub(instance, "_response").value({target: "target", win: "win"});
+      sandbox.stub(instance, "_response").value({target, win: "win"});
 
       instance._forceShowMessage(msg);
 
       assert.calledOnce(instance.showMessage);
-      assert.calledWithExactly(instance.showMessage, "foo", "target", "win");
+      assert.calledWithExactly(instance.showMessage, "foo", target, "win");
     });
   });
   describe("#sendImpression", () => {

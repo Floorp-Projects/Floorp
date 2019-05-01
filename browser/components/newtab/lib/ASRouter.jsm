@@ -695,18 +695,34 @@ class _ASRouter {
   }
 
   async _getBundledMessages(originalMessage, target, trigger, force = false) {
-    let result = [{content: originalMessage.content, id: originalMessage.id, order: originalMessage.order || 0}];
+    let result = [];
+    let bundleLength;
+    let bundleTemplate;
+    let originalId;
+
+    if (originalMessage.includeBundle) {
+      // The original message is not part of the bundle, so don't include it
+      bundleLength = originalMessage.includeBundle.length;
+      bundleTemplate =  originalMessage.includeBundle.template;
+    } else {
+      // The original message is part of the bundle
+      bundleLength = originalMessage.bundled;
+      bundleTemplate =  originalMessage.template;
+      originalId = originalMessage.id;
+      // Add in a copy of the first message
+      result.push({content: originalMessage.content, id: originalMessage.id, order: originalMessage.order || 0});
+    }
 
     // First, find all messages of same template. These are potential matching targeting candidates
     let bundledMessagesOfSameTemplate = this._getUnblockedMessages()
-                                          .filter(msg => msg.bundled && msg.template === originalMessage.template && msg.id !== originalMessage.id);
+      .filter(msg => msg.bundled && msg.template === bundleTemplate && msg.id !== originalId);
 
     if (force) {
       // Forcefully show the messages without targeting matching - this is for about:newtab#asrouter to show the messages
       for (const message of bundledMessagesOfSameTemplate) {
         result.push({content: message.content, id: message.id});
         // Stop once we have enough messages to fill a bundle
-        if (result.length === originalMessage.bundled) {
+        if (result.length === bundleLength) {
           break;
         }
       }
@@ -723,14 +739,14 @@ class _ASRouter {
         result.push({content: message.content, id: message.id, order: message.order || 0});
         bundledMessagesOfSameTemplate.splice(bundledMessagesOfSameTemplate.findIndex(msg => msg.id === message.id), 1);
         // Stop once we have enough messages to fill a bundle
-        if (result.length === originalMessage.bundled) {
+        if (result.length === bundleLength) {
           break;
         }
       }
     }
 
     // If we did not find enough messages to fill the bundle, do not send the bundle down
-    if (result.length < originalMessage.bundled) {
+    if (result.length < bundleLength) {
       return null;
     }
 
@@ -739,7 +755,12 @@ class _ASRouter {
     // handle finding these strings on its own. See bug 1488973
     const extraTemplateStrings = await this._extraTemplateStrings(originalMessage);
 
-    return {bundle: this._orderBundle(result), ...(extraTemplateStrings && {extraTemplateStrings}), provider: originalMessage.provider, template: originalMessage.template};
+    return {
+      bundle: this._orderBundle(result),
+      ...(extraTemplateStrings && {extraTemplateStrings}),
+      provider: originalMessage.provider,
+      template: originalMessage.template,
+    };
   }
 
   async _extraTemplateStrings(originalMessage) {
@@ -776,7 +797,16 @@ class _ASRouter {
     } else if (message.bundled) {
       const bundledMessages = await this._getBundledMessages(message, target, trigger, force);
       const action = bundledMessages ? {type: "SET_BUNDLED_MESSAGES", data: bundledMessages} : {type: "CLEAR_ALL"};
-      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+      try {
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+      } catch (e) {}
+
+    // For nested bundled messages, look for the desired bundle
+    } else if (message.includeBundle) {
+      const bundledMessages = await this._getBundledMessages(message, target, message.includeBundle.trigger, force);
+      try {
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: {...message, bundle: bundledMessages && bundledMessages.bundle}});
+      } catch (e) {}
 
     // CFR doorhanger
     } else if (message.template === "cfr_doorhanger") {
@@ -788,7 +818,9 @@ class _ASRouter {
 
     // New tab single messages
     } else {
-      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
+      try {
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
+      } catch (e) {}
     }
   }
 
