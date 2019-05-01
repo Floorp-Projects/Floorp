@@ -7421,7 +7421,8 @@ void CodeGenerator::emitWasmCallBase(LWasmCallBase<Defs>* lir) {
       break;
     case wasm::CalleeDesc::BuiltinInstanceMethod:
       masm.wasmCallBuiltinInstanceMethod(desc, mir->instanceArg(),
-                                         callee.builtin());
+                                         callee.builtin(),
+                                         mir->builtinMethodFailureMode());
       switchRealm = false;
       break;
   }
@@ -14016,11 +14017,6 @@ void CodeGenerator::visitIonToWasmCallV(LIonToWasmCallV* lir) {
 
 void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
   masm.xorPtr(ToRegister(lir->output()), ToRegister(lir->output()));
-}
-
-void CodeGenerator::visitIsNullPointer(LIsNullPointer* lir) {
-  masm.cmpPtrSet(Assembler::Equal, ToRegister(lir->value()), ImmWord(0),
-                 ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {

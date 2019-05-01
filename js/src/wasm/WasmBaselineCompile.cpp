@@ -4648,14 +4648,15 @@ class BaseCompiler final : public BaseCompilerInterface {
     return callSymbolic(builtin, call);
   }
 
-  CodeOffset builtinInstanceMethodCall(SymbolicAddress builtin,
+  CodeOffset builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
                                        const ABIArg& instanceArg,
                                        const FunctionCall& call) {
     // Builtin method calls assume the TLS register has been set.
     masm.loadWasmTlsRegFromFrame();
 
     CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
-    return masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin);
+    return masm.wasmCallBuiltinInstanceMethod(
+        desc, instanceArg, builtin.identity, builtin.failureMode);
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -9801,7 +9802,7 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
     passArg(t, peek(numNonInstanceArgs - i), &baselineCall);
   }
   CodeOffset raOffset =
-      builtinInstanceMethodCall(builtin.identity, instanceArg, baselineCall);
+      builtinInstanceMethodCall(builtin, instanceArg, baselineCall);
   if (!createStackMap("emitInstanceCall", raOffset)) {
     return false;
   }
@@ -10163,7 +10164,6 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
     return true;
   }
 
-  // Returns -1 on trap, otherwise nonnegative result.
   switch (type.code()) {
     case ValType::I32:
       if (!emitInstanceCall(lineOrBytecode, SASigWaitI32)) {
@@ -10178,11 +10178,6 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
     default:
       MOZ_CRASH();
   }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
 
   return true;
 }
@@ -10200,17 +10195,7 @@ bool BaseCompiler::emitWake() {
     return true;
   }
 
-  // Returns -1 on trap, otherwise nonnegative result.
-  if (!emitInstanceCall(lineOrBytecode, SASigWake)) {
-    return false;
-  }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigWake);
 }
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
@@ -10229,7 +10214,6 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
     return true;
   }
 
-  // Returns -1 on trap, otherwise 0.
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
@@ -10245,11 +10229,6 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
       return false;
     }
   }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
 
   return true;
 }
@@ -10267,21 +10246,11 @@ bool BaseCompiler::emitDataOrElemDrop(bool isData) {
   }
 
   // Despite the cast to int32_t, the callee regards the value as unsigned.
-  //
-  // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
-  const SymbolicAddressSignature& callee =
-      isData ? SASigDataDrop : SASigElemDrop;
-  if (!emitInstanceCall(lineOrBytecode, callee, /*pushReturnedValue=*/false)) {
-    return false;
-  }
 
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode,
+                          isData ? SASigDataDrop : SASigElemDrop,
+                          /*pushReturnedValue=*/false);
 }
 
 bool BaseCompiler::emitMemFill() {
@@ -10296,18 +10265,8 @@ bool BaseCompiler::emitMemFill() {
     return true;
   }
 
-  // Returns -1 on trap, otherwise 0.
-  if (!emitInstanceCall(lineOrBytecode, SASigMemFill,
-                        /*pushReturnedValue=*/false)) {
-    return false;
-  }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigMemFill,
+                          /*pushReturnedValue=*/false);
 }
 
 bool BaseCompiler::emitMemOrTableInit(bool isMem) {
@@ -10325,7 +10284,6 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
     return true;
   }
 
-  // Returns -1 on trap, otherwise 0.
   pushI32(int32_t(segIndex));
   if (isMem) {
     if (!emitInstanceCall(lineOrBytecode, SASigMemInit,
@@ -10339,11 +10297,6 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
       return false;
     }
   }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
 
   return true;
 }
@@ -10364,20 +10317,9 @@ bool BaseCompiler::emitTableFill() {
   }
 
   // fill(start:u32, val:ref, len:u32, table:u32) -> u32
-  //
-  // Returns -1 on trap, otherwise 0.
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SASigTableFill,
-                        /*pushReturnedValue=*/false)) {
-    return false;
-  }
-
-  Label ok;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigTableFill,
+                          /*pushReturnedValue=*/false);
 }
 
 MOZ_MUST_USE
@@ -10393,17 +10335,13 @@ bool BaseCompiler::emitTableGet() {
   }
   // get(index:u32, table:u32) -> void*
   //
-  // Returns nullptr for error, otherwise a pointer to a nonmoveable memory
-  // location that holds the anyref value.
+  // Returns a pointer to a nonmoveable memory location that holds the anyref
+  // value.
   pushI32(tableIndex);
   if (!emitInstanceCall(lineOrBytecode, SASigTableGet,
                         /*pushReturnedValue=*/false)) {
     return false;
   }
-  Label noTrap;
-  masm.branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &noTrap);
-  trap(Trap::ThrowReported);
-  masm.bind(&noTrap);
 
   masm.loadPtr(Address(ReturnReg, 0), ReturnReg);
 
@@ -10429,8 +10367,6 @@ bool BaseCompiler::emitTableGrow() {
     return true;
   }
   // grow(initValue:anyref, delta:u32, table:u32) -> u32
-  //
-  // infallible.
   pushI32(tableIndex);
   return emitInstanceCall(lineOrBytecode, SASigTableGrow);
 }
@@ -10447,18 +10383,9 @@ bool BaseCompiler::emitTableSet() {
     return true;
   }
   // set(index:u32, value:ref, table:u32) -> i32
-  //
-  // Returns -1 on range error, otherwise 0 (which is then ignored).
   pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SASigTableSet,
-                        /*pushReturnedValue=*/false)) {
-    return false;
-  }
-  Label noTrap;
-  masm.branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &noTrap);
-  trap(Trap::ThrowReported);
-  masm.bind(&noTrap);
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigTableSet,
+                          /*pushReturnedValue=*/false);
 }
 
 MOZ_MUST_USE
@@ -10472,8 +10399,6 @@ bool BaseCompiler::emitTableSize() {
     return true;
   }
   // size(table:u32) -> u32
-  //
-  // infallible.
   pushI32(tableIndex);
   return emitInstanceCall(lineOrBytecode, SASigTableSize);
 }
@@ -10502,13 +10427,6 @@ bool BaseCompiler::emitStructNew() {
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
-
-  // Null pointer check.
-
-  Label ok;
-  masm.branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &ok);
-  trap(Trap::ThrowReported);
-  masm.bind(&ok);
 
   // As many arguments as there are fields.
 
@@ -10839,8 +10757,6 @@ bool BaseCompiler::emitStructNarrow() {
   bool mustUnboxAnyref = inputType == ValType::AnyRef;
 
   // Dynamic downcast (ref T) -> (ref U), leaves rp or null
-  //
-  // Infallible.
   const StructType& outputStruct =
       env_.types[outputType.refTypeIndex()].structType();
 
