@@ -119,9 +119,15 @@ class ReaderViewFeatureTest {
 
         messageHandler.value.onPortConnected(port)
         assertTrue(ReaderViewFeature.ports.containsValue(port))
+        verify(readerViewFeature).checkReaderable()
+        verify(readerViewFeature, never()).showReaderView()
 
-        val message = JSONObject().put("readerable", true)
-        messageHandler.value.onPortMessage(message, port)
+        `when`(session.readerMode).thenReturn(true)
+        messageHandler.value.onPortConnected(port)
+        verify(readerViewFeature).showReaderView()
+
+        val readerableMessage = JSONObject().put("readerable", true)
+        messageHandler.value.onPortMessage(readerableMessage, port)
         verify(session).readerable = true
 
         messageHandler.value.onPortDisconnected(port)
@@ -341,21 +347,6 @@ class ReaderViewFeatureTest {
         // Setting to the same value should not cause another message to be sent
         readerViewFeature.config.fontSize = 4
         verify(port, times(1)).postMessage(message.capture())
-    }
-
-    @Test
-    fun `reader view still shown after page reload`() {
-        val port: Port = mock()
-        val message = argumentCaptor<JSONObject>()
-        val selectedSession: Session = mock()
-        `when`(selectedSession.readerMode).thenReturn(true)
-
-        val readerViewFeature = prepareFeatureForTest(port, selectedSession)
-        readerViewFeature.observeSelected()
-        readerViewFeature.onLoadingStateChanged(selectedSession, false)
-
-        verify(port, times(1)).postMessage(message.capture())
-        assertEquals(ReaderViewFeature.ACTION_SHOW, message.value[ReaderViewFeature.ACTION_MESSAGE_KEY])
     }
 
     private fun prepareFeatureForTest(port: Port, session: Session = mock()): ReaderViewFeature {

@@ -137,14 +137,6 @@ class ReaderViewFeature(
         checkReaderable()
     }
 
-    override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-        // If the page was refreshed and reader mode was turned on before,
-        // make sure it is still turned on.
-        if (!loading && activeSession?.readerMode == true) {
-            showReaderView()
-        }
-    }
-
     override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
         onReaderViewAvailableChange(readerable)
     }
@@ -211,6 +203,9 @@ class ReaderViewFeature(
             override fun onPortConnected(port: Port) {
                 ports[port.engineSession] = port
                 checkReaderable()
+                if (activeSession?.readerMode == true) {
+                    showReaderView()
+                }
             }
 
             override fun onPortDisconnected(port: Port) {
