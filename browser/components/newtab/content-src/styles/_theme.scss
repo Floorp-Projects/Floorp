@@ -78,6 +78,12 @@ body {
   --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
+  // Trailhead
+  --trailhead-header-text-color: #{$trailhead-purple};
+  --trailhead-cards-background-color: #{$grey-20};
+  --trailhead-card-button-background-color: #{$grey-90-10};
+  --trailhead-card-button-background-hover-color: #{$grey-90-20};
+
   &[lwt-newtab-brighttext] {
     // General styles
     --newtab-background-color: #{$grey-80};
@@ -136,5 +142,11 @@ body {
     // Snippets
     --newtab-snippets-background-color: #{$grey-70};
     --newtab-snippets-hairline-color: #{$white-10};
+
+    // Trailhead
+    --trailhead-header-text-color: #{$white-60};
+    --trailhead-cards-background-color: #{$grey-90-10};
+    --trailhead-card-button-background-color: #{$grey-90-30};
+    --trailhead-card-button-background-hover-color: #{$grey-90-40};
   }
 }

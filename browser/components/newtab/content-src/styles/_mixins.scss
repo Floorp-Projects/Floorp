@@ -41,3 +41,10 @@
 
   border-bottom: 1px solid $grey-30;
 }
+
+@mixin ds-fade-in {
+  box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 5px $blue-50-30;
+  transition: box-shadow 150ms;
+  border-radius: 4px;
+  outline: none;
+}

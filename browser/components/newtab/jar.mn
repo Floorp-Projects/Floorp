@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+[localization] en-US.jar:
+  trailhead.ftl (./data/trailhead.wip)
+
 browser.jar:
 % resource activity-stream %res/activity-stream/ contentaccessible=yes
   res/activity-stream/lib/ (./lib/*)

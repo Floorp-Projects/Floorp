@@ -1,3 +1,4 @@
+import {actionCreators as ac} from "common/Actions.jsm";
 import {CardGrid} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
 import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {connect} from "react-redux";
@@ -168,10 +169,17 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   render() {
     // Select layout render data by adding spocs and position to recommendations
-    const layoutRender = selectLayoutRender(this.props.DiscoveryStream, this.props.Prefs.values, rickRollCache);
+    const {layoutRender, spocsFill} = selectLayoutRender(this.props.DiscoveryStream, this.props.Prefs.values, rickRollCache);
     const {config, feeds, spocs} = this.props.DiscoveryStream;
     if (!spocs.loaded || !feeds.loaded) {
       return null;
+    }
+
+    // Send SPOCS Fill if any. Note that it should not send it again if the same
+    // page gets re-rendered by state changes.
+    if (spocsFill.length && !this._spocsFillSent) {
+      this.props.dispatch(ac.DiscoveryStreamSpocsFill({spoc_fills: spocsFill}));
+      this._spocsFillSent = true;
     }
 
     // Allow rendering without extracting special components

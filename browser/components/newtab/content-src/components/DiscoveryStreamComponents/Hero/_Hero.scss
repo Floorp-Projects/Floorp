@@ -67,6 +67,10 @@ $card-header-in-hero-line-height: 20;
     padding-top: 16px;
     height: 100%;
 
+    &:focus {
+      @include ds-fade-in;
+    }
+
     @at-root .ds-hero-no-border .ds-hero-item .wrapper {
       border-top: 0;
       border-bottom: 0;
