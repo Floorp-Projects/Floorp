@@ -16,7 +16,7 @@ permalink: /changelog/
   * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
   ```kotlin
       val readerViewFeature = ReaderViewFeature(context, engine, sessionManager, controlsView) { available ->
-          // This lambda is invoked to indicate whether or not reader view is available 
+          // This lambda is invoked to indicate whether or not reader view is available
           // for the page loaded by the selected session (for the current tab)
       }
 
@@ -33,6 +33,9 @@ permalink: /changelog/
       readerViewFeature.hideControls()
   ```
 
+* **feature-readerview**
+ * Fix disappearing title in Custom Tab toolbar.
+
 * **feature-sitepermissions**
   * Do not save new site permissions in private sessions.
 
@@ -46,7 +49,7 @@ permalink: /changelog/
 
 * **browser-awesomebar**
   * Fixed an issue where new suggestions would leave you scrolled to the middle of the list
-  
+
 * **browser-errorpages**
   * Added `%backButton%` replacement for buttons that need the text "Go Back" instead of "Try Again"
 

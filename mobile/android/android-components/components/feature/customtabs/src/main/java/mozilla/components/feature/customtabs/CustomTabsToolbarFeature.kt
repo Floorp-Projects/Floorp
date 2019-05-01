@@ -73,9 +73,6 @@ class CustomTabsToolbarFeature(
             // Add menu items
             if (config.menuItems.isNotEmpty()) addMenuItems(session, config.menuItems, menuItemIndex)
 
-            // Explicitly set the title regardless of the customTabConfig settings
-            toolbar.titleTextSize = TITLE_TEXT_SIZE
-
             return true
         }
         return false
@@ -164,7 +161,7 @@ class CustomTabsToolbarFeature(
                 val newMenuItemList = mutableListOf<BrowserMenuItem>()
                 val maxIndex = builder.items.size
 
-                val insertIndex: Int = if (index in 0..maxIndex) {
+                val insertIndex = if (index in 0..maxIndex) {
                     index
                 } else {
                     maxIndex
@@ -186,9 +183,16 @@ class CustomTabsToolbarFeature(
 
     private val sessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
-            // Only shrink the urlTextSize if a title is displayed
-            toolbar.textSize = URL_TEXT_SIZE
-            toolbar.title = title
+            // Empty title check can be removed when the engine observer issue is fixed
+            // https://github.com/mozilla-mobile/android-components/issues/2898
+            if (title.isNotEmpty()) {
+                // Only shrink the urlTextSize if a title is displayed
+                toolbar.textSize = URL_TEXT_SIZE
+                toolbar.titleTextSize = TITLE_TEXT_SIZE
+
+                // Explicitly set the title regardless of the customTabConfig settings
+                toolbar.title = title
+            }
         }
     }
 

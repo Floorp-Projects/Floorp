@@ -448,4 +448,27 @@ class CustomTabsToolbarFeatureTest {
 
         assertEquals(Color.BLACK, feature.readableColor)
     }
+
+    @Test
+    fun `show title only if not empty`() {
+        val sessionManager: SessionManager = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val session = spy(Session("https://mozilla.org"))
+        val customTabConfig: CustomTabConfig = mock()
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") {})
+        val title = "Internet for people, not profit - Mozilla"
+
+        `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+
+        feature.start()
+
+        session.notifyObservers { onTitleChanged(session, "") }
+
+        assertEquals("", toolbar.title)
+
+        session.notifyObservers { onTitleChanged(session, title) }
+
+        assertEquals(title, toolbar.title)
+    }
 }
