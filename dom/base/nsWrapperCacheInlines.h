@@ -14,9 +14,9 @@ inline JSObject* nsWrapperCache::GetWrapperPreserveColor() const {
   JSObject* obj = GetWrapperMaybeDead();
   if (obj && js::gc::EdgeNeedsSweepUnbarriered(&obj)) {
     // The object has been found to be dead and is in the process of being
-    // finalized, so don't let the caller see it. As an optimisation, remove it
-    // from the cache so we don't have to do this check in future.
-    const_cast<nsWrapperCache*>(this)->ClearWrapper();
+    // finalized, so don't let the caller see it.
+    // Don't clear the cache though: this happens when a new wrapper is created
+    // for this native or when the wrapper is finalized.
     return nullptr;
   }
   MOZ_ASSERT(obj == mWrapper);

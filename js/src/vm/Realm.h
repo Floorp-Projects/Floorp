@@ -306,11 +306,11 @@ class JS::Realm : public JS::shadow::Realm {
   JS::RealmBehaviors behaviors_;
 
   friend struct ::JSContext;
-  js::ReadBarrieredGlobalObject global_;
+  js::WeakHeapPtrGlobalObject global_;
 
   // The global lexical environment. This is stored here instead of in
   // GlobalObject for easier/faster JIT access.
-  js::ReadBarriered<js::LexicalEnvironmentObject*> lexicalEnv_;
+  js::WeakHeapPtr<js::LexicalEnvironmentObject*> lexicalEnv_;
 
   // Note: this is private to enforce use of ObjectRealm::get(obj).
   js::ObjectRealm objects_;
@@ -363,10 +363,10 @@ class JS::Realm : public JS::shadow::Realm {
   // is true before running any code in this realm.
   bool* validAccessPtr_ = nullptr;
 
-  js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_{nullptr};
-  js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_{nullptr};
-  js::ReadBarriered<js::NativeObject*> iterResultTemplate_{nullptr};
-  js::ReadBarriered<js::NativeObject*> iterResultWithoutPrototypeTemplate_{
+  js::WeakHeapPtr<js::ArgumentsObject*> mappedArgumentsTemplate_{nullptr};
+  js::WeakHeapPtr<js::ArgumentsObject*> unmappedArgumentsTemplate_{nullptr};
+  js::WeakHeapPtr<js::NativeObject*> iterResultTemplate_{nullptr};
+  js::WeakHeapPtr<js::NativeObject*> iterResultWithoutPrototypeTemplate_{
       nullptr};
 
   // There are two ways to enter a realm:
@@ -427,7 +427,7 @@ class JS::Realm : public JS::shadow::Realm {
    * Lazily initialized script source object to use for scripts cloned
    * from the self-hosting global.
    */
-  js::ReadBarrieredScriptSourceObject selfHostingScriptSource{nullptr};
+  js::WeakHeapPtrScriptSourceObject selfHostingScriptSource{nullptr};
 
   // Last time at which an animation was played for this realm.
   js::MainThreadData<mozilla::TimeStamp> lastAnimationTime;

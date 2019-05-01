@@ -139,41 +139,132 @@ impl RenderTaskTree {
         }
     }
 
-    /// Assign the render tasks from the tree rooted at `id` to the `passes`
-    /// vector, so that the passes that we depend on end up _later_ in the pass
-    /// list.
-    ///
-    /// It is the caller's responsibility to reverse the list after calling into
-    /// us so that the passes end up in the right order.
-    pub fn assign_to_passes(
+    /// Assign this frame's render tasks to render passes ordered so that passes appear
+    /// earlier than the ones that depend on them.
+    pub fn generate_passes(
         &self,
-        id: RenderTaskId,
-        pass_index: usize,
+        main_render_task: Option<RenderTaskId>,
         screen_size: DeviceIntSize,
-        passes: &mut Vec<RenderPass>,
         gpu_supports_fast_clears: bool,
-    ) {
-        debug_assert!(pass_index < passes.len());
-        #[cfg(debug_assertions)]
-        debug_assert_eq!(self.frame_id, id.frame_id);
-        let task = &self.tasks[id.index as usize];
+    ) -> Vec<RenderPass> {
+        let mut passes = Vec::new();
 
-        if !task.children.is_empty() {
-            let child_index = pass_index + 1;
-            if passes.len() == child_index {
-                passes.push(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
+        if !self.cacheable_render_tasks.is_empty() {
+            self.generate_passes_impl(
+                &self.cacheable_render_tasks[..],
+                screen_size,
+                gpu_supports_fast_clears,
+                false,
+                &mut passes,
+            );
+        }
+
+        if let Some(main_task) = main_render_task {
+            self.generate_passes_impl(
+                &[main_task],
+                screen_size,
+                gpu_supports_fast_clears,
+                true,
+                &mut passes,
+            );
+        }
+
+        passes
+    }
+
+    /// Assign the render tasks from the tree rooted at root_task to render passes and
+    /// append them to the `passes` vector so that the passes that we depend on end up
+    /// _earlier_ in the pass list.
+    fn generate_passes_impl(
+        &self,
+        root_tasks: &[RenderTaskId],
+        screen_size: DeviceIntSize,
+        gpu_supports_fast_clears: bool,
+        for_main_framebuffer: bool,
+        passes: &mut Vec<RenderPass>,
+    ) {
+        // We recursively visit tasks from the roots (main and cached render tasks), to figure out
+        // which ones affect the frame and which passes they should be assigned to.
+        //
+        // We track the maximum depth of each task (how far it is from the roots) as well as the total
+        // maximum depth of the graph to determine each tasks' pass index. In a nutshell, depth 0 is
+        // for the last render pass (for example the main framebuffer), while the highest depth
+        // corresponds to the first pass.
+
+        fn assign_task_depth(
+            tasks: &[RenderTask],
+            task_id: RenderTaskId,
+            task_depth: i32,
+            task_max_depths: &mut [i32],
+            max_depth: &mut i32,
+        ) {
+            *max_depth = std::cmp::max(*max_depth, task_depth);
+
+            {
+                let task_max_depth = &mut task_max_depths[task_id.index as usize];
+                *task_max_depth = std::cmp::max(*task_max_depth, task_depth);
             }
+
+            let task = &tasks[task_id.index as usize];
             for child in &task.children {
-                self.assign_to_passes(*child, child_index, screen_size, passes, gpu_supports_fast_clears);
+                assign_task_depth(
+                    tasks,
+                    *child,
+                    task_depth + 1,
+                    task_max_depths,
+                    max_depth,
+                );
             }
         }
 
-        passes[pass_index].add_render_task(
-            id,
-            task.get_dynamic_size(),
-            task.target_kind(),
-            &task.location,
-        );
+        // The maximum depth of each task. Values that are still equal to -1 after recursively visiting
+        // the nodes correspond to tasks that don't contribute to the frame.
+        let mut task_max_depths = vec![-1; self.tasks.len()];
+        let mut max_depth = 0;
+
+        for root_task in root_tasks {
+            assign_task_depth(
+                &self.tasks,
+                *root_task,
+                0,
+                &mut task_max_depths,
+                &mut max_depth,
+            );
+        }
+
+        let offset = passes.len();
+
+        passes.reserve(max_depth as usize + 1);
+        for _ in 0..max_depth {
+            passes.push(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
+        }
+
+        if for_main_framebuffer {
+            passes.push(RenderPass::new_main_framebuffer(screen_size, gpu_supports_fast_clears));
+        } else {
+            passes.push(RenderPass::new_off_screen(screen_size, gpu_supports_fast_clears));
+        }
+
+        // Assign tasks to their render passes.
+        for task_index in 0..self.tasks.len() {
+            if task_max_depths[task_index] < 0 {
+                // The task wasn't visited, it means it doesn't contribute to this frame.
+                continue;
+            }
+            let pass_index = offset + (max_depth - task_max_depths[task_index]) as usize;
+            let task_id = RenderTaskId {
+                index: task_index as u32,
+                #[cfg(debug_assertions)]
+                frame_id: self.frame_id,
+            };
+            let task = &self.tasks[task_index];
+            passes[pass_index as usize].add_render_task(
+                task_id,
+                task.get_dynamic_size(),
+                task.target_kind(),
+                &task.location,
+            );
+        }
     }
 
     pub fn prepare_for_render(&mut self) {

@@ -2220,5 +2220,5 @@ zh_Hant{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
 }

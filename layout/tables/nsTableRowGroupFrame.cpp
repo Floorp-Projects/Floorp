@@ -1231,8 +1231,6 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         if (prevRowFrame) {
           spanningRowBottom = prevRowFrame->GetNormalRect().YMost();
           lastRowThisPage = prevRowFrame;
-          isTopOfPage = (lastRowThisPage == firstRowThisPage) &&
-                        aReflowInput.mFlags.mIsTopOfPage;
           aStatus.Reset();
           aStatus.SetIncomplete();
         } else {

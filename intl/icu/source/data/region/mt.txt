@@ -182,7 +182,7 @@ mt{
         MF{"Saint Martin"}
         MG{"Madagascar"}
         MH{"Gżejjer Marshall"}
-        MK{"l-Eks-Repubblika Jugoslava tal-Maċedonia"}
+        MK{"il-Maċedonja ta’ Fuq"}
         ML{"il-Mali"}
         MM{"il-Myanmar/Burma"}
         MN{"il-Mongolja"}
@@ -307,8 +307,7 @@ mt{
         CG{"ir-Repubblika tal-Kongo"}
         CZ{"Ir-Repubblika Ċeka"}
         FK{"Il-Gżejjer Falkland (il-Gżejjer Malvinas)"}
-        MK{"l-Eks Repubblika Jugoslava tal-Maċedonia"}
         TL{"Timor tal-Lvant"}
     }
-    Version{"2.1.47.72"}
+    Version{"2.1.49.82"}
 }

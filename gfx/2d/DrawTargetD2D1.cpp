@@ -1136,7 +1136,13 @@ already_AddRefed<GradientStops> DrawTargetD2D1::CreateGradientStops(
 
   RefPtr<ID2D1GradientStopCollection1> stopCollection;
 
-  HRESULT hr = Factory::GetD2DDeviceContext()->CreateGradientStopCollection(
+  RefPtr<ID2D1DeviceContext> dc = Factory::GetD2DDeviceContext();
+
+  if (!dc) {
+    return nullptr;
+  }
+
+  HRESULT hr = dc->CreateGradientStopCollection(
       stops, aNumStops, D2D1_COLOR_SPACE_SRGB, D2D1_COLOR_SPACE_SRGB,
       D2D1_BUFFER_PRECISION_8BPC_UNORM, D2DExtend(aExtendMode, Axis::BOTH),
       D2D1_COLOR_INTERPOLATION_MODE_PREMULTIPLIED,

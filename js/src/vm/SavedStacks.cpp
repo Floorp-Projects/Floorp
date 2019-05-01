@@ -1751,7 +1751,7 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
     return;
   }
 
-  mozilla::DebugOnly<ReadBarriered<Debugger*>*> begin = dbgs->begin();
+  mozilla::DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs->begin();
   mozilla::DebugOnly<bool> foundAnyDebuggers = false;
 
   double probability = 0;

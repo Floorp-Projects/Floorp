@@ -146,7 +146,7 @@ StreamBlobImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   MOZ_COLLECT_REPORT(
       "explicit/dom/memory-file-data/stream", KIND_HEAP, UNITS_BYTES,
-      stringInputStream->SizeOfIncludingThis(MallocSizeOf),
+      stringInputStream->SizeOfIncludingThisIfUnshared(MallocSizeOf),
       "Memory used to back a File/Blob based on an input stream.");
 
   return NS_OK;
@@ -159,7 +159,7 @@ size_t StreamBlobImpl::GetAllocationSize() const {
     return 0;
   }
 
-  return stringInputStream->SizeOfIncludingThis(MallocSizeOf);
+  return stringInputStream->SizeOfIncludingThisEvenIfShared(MallocSizeOf);
 }
 
 void StreamBlobImpl::GetBlobImplType(nsAString& aBlobImplType) const {

@@ -216,7 +216,7 @@ am{
         minimumGroupingDigits{"1"}
         traditional{"ethi"}
     }
-    Version{"2.1.48.18"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{

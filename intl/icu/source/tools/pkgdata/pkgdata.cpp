@@ -504,7 +504,6 @@ main(int argc, char* argv[]) {
     if (o.files != NULL) {
         pkg_deleteList(o.files);
     }
-
     return result;
 }
 
@@ -544,6 +543,7 @@ normal_command_mode:
     int result = system(cmd);
     if (result != 0) {
         fprintf(stderr, "-- return status = %d\n", result);
+        result = 1; // system() result code is platform specific.
     }
 
     if (cmd != cmdBuffer && cmd != command) {

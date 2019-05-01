@@ -1,12 +1,12 @@
 # Fractional UCA Table, generated from the UCA DUCET
-# 2019-02-14 [MS]
-# VERSION: UCA=12.0.0, UCD=12.0.0
+# 2019-04-01 [MS]
+# VERSION: UCA=12.1.0, UCD=12.1.0
 # © 2016 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html
 # For a description of the format and usage, see
 #   http://www.unicode.org/reports/tr35/tr35-collation.html
 
-[UCA version = 12.0.0]
+[UCA version = 12.1.0]
 # Unified_Ideograph: 87887 characters
 [Unified_Ideograph 4E00..9FEF FA0E..FA0F FA11 FA13..FA14 FA1F FA21 FA23..FA24 FA27..FA29 3400..4DB5 20000..2A6D6 2A700..2B734 2B740..2B81D 2B820..2CEA1 2CEB0..2EBE0]
 
@@ -61187,6 +61187,7 @@ F977; [U+4EAE]
 F9FD; [U+4EC0]
 2F819; [U+4ECC]
 F9A8; [U+4EE4]
+32FF; [U+4EE4, 31][U+548C, 31]
 32AD; [U+4F01, 1B]
 32A1; [U+4F11, 1B]
 2F804; [U+4F60]

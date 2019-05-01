@@ -183,7 +183,7 @@ cy{
         MF{"Saint Martin"}
         MG{"Madagascar"}
         MH{"Ynysoedd Marshall"}
-        MK{"Macedonia"}
+        MK{"Gogledd Macedonia"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
@@ -311,9 +311,8 @@ cy{
         CI{"Arfordir Ifori"}
         CZ{"Gweriniaeth Tsiec"}
         FK{"Ynysoedd y Falkland (Ynysoedd y Malfinas)"}
-        MK{"Macedonia (CWIM)"}
         SZ{"Gwlad Swazi"}
         TL{"Dwyrain Timor"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

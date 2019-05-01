@@ -9,7 +9,7 @@ gu{
                 "[reorder Gujr Deva Beng Guru Orya Taml Telu Knda Mlym Sinh]"
                 "&ૐ<ં<<ઁ<ઃ"
             }
-            Version{"35"}
+            Version{"35.1"}
         }
     }
 }

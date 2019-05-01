@@ -60,6 +60,38 @@ extern JS_PUBLIC_API void JS_string_free(JSContext* cx, void* p);
  */
 extern JS_PUBLIC_API void JS_freeop(JSFreeOp* fop, void* p);
 
-extern JS_PUBLIC_API void JS_updateMallocCounter(JSContext* cx, size_t nbytes);
+namespace JS {
+
+/**
+ * The different possible memory uses to pass to Add/RemoveAssociatedMemory.
+ */
+#define JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
+  _(XPCWrappedNative)                    \
+  _(DOMBinding)
+
+enum class MemoryUse : uint8_t {
+#define DEFINE_MEMORY_USE(Name) Name,
+  JS_FOR_EACH_PUBLIC_MEMORY_USE(DEFINE_MEMORY_USE)
+#undef DEFINE_MEMORY_USE
+};
+
+/**
+ * Advise the GC of external memory owned by a JSObject. This is used to
+ * determine when to collect zones. Calls must be matched by calls to
+ * RemoveAssociatedMemory() when the memory is deallocated or no longer owned by
+ * the object.
+ */
+extern JS_PUBLIC_API void AddAssociatedMemory(JSObject* obj, size_t nbytes,
+                                              MemoryUse use);
+
+/**
+ * Advise the GC that external memory reported by JS::AddAssociatedMemory() is
+ * no longer owned by a JSObject. Calls must match those to
+ * AddAssociatedMemory().
+ */
+extern JS_PUBLIC_API void RemoveAssociatedMemory(JSObject* obj, size_t nbytes,
+                                                 MemoryUse use);
+
+}  // namespace JS
 
 #endif /* js_MemoryFunctions_h */

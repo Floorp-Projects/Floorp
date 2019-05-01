@@ -829,7 +829,7 @@ UnownedBaseShape* BaseShape::baseUnowned() {
 }
 
 /* Entries for the per-zone baseShapes set of unowned base shapes. */
-struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>> {
+struct StackBaseShape : public DefaultHasher<WeakHeapPtr<UnownedBaseShape*>> {
   uint32_t flags;
   const Class* clasp;
 
@@ -851,7 +851,7 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>> {
       MOZ_ASSERT(!base->isOwned());
     }
 
-    explicit Lookup(const ReadBarriered<UnownedBaseShape*>& base)
+    explicit Lookup(const WeakHeapPtr<UnownedBaseShape*>& base)
         : flags(base.unbarrieredGet()->getObjectFlags()),
           clasp(base.unbarrieredGet()->clasp()) {
       MOZ_ASSERT(!base.unbarrieredGet()->isOwned());
@@ -861,7 +861,7 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>> {
   static HashNumber hash(const Lookup& lookup) {
     return mozilla::HashGeneric(lookup.flags, lookup.clasp);
   }
-  static inline bool match(const ReadBarriered<UnownedBaseShape*>& key,
+  static inline bool match(const WeakHeapPtr<UnownedBaseShape*>& key,
                            const Lookup& lookup) {
     return key.unbarrieredGet()->flags == lookup.flags &&
            key.unbarrieredGet()->clasp_ == lookup.clasp;
@@ -896,7 +896,7 @@ struct DefaultHasher<jsid> {
 namespace js {
 
 using BaseShapeSet =
-    JS::WeakCache<JS::GCHashSet<ReadBarriered<UnownedBaseShape*>,
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<UnownedBaseShape*>,
                                 StackBaseShape, SystemAllocPolicy>>;
 
 class Shape : public gc::TenuredCell {
@@ -1512,13 +1512,13 @@ struct InitialShapeEntry {
    * certain classes (e.g. String, RegExp) which may add certain baked-in
    * properties.
    */
-  ReadBarriered<Shape*> shape;
+  WeakHeapPtr<Shape*> shape;
 
   /*
    * Matching prototype for the entry. The shape of an object determines its
    * prototype, but the prototype cannot be determined from the shape itself.
    */
-  ReadBarriered<TaggedProto> proto;
+  WeakHeapPtr<TaggedProto> proto;
 
   /* State used to determine a match on an initial shape. */
   struct Lookup {

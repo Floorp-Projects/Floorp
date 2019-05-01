@@ -840,7 +840,7 @@ hi{
         POSIX{"कम्प्यूटर"}
         REVISED{"संशोधित वर्तनी"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — सभी"}
         category-list{"{0}: {1}"}

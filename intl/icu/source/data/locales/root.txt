@@ -174,7 +174,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.47.82"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -1818,7 +1818,7 @@ root{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
                 narrow{
                     "Taika (645–650)",
@@ -2057,7 +2057,7 @@ root{
                     "T",
                     "S",
                     "H",
-                    "Q",
+                    "R",
                 }
                 wide:alias{"/LOCALE/calendar/japanese/eras/abbreviated"}
             }

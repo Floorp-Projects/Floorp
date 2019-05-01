@@ -43,7 +43,7 @@ namespace wasm {
 
 class Instance {
   JS::Realm* const realm_;
-  ReadBarrieredWasmInstanceObject object_;
+  WeakHeapPtrWasmInstanceObject object_;
   void* jsJitArgsRectifier_;
   void* jsJitExceptionHandler_;
   void* preBarrierCode_;

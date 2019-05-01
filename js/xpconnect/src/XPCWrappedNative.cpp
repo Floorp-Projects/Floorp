@@ -222,8 +222,7 @@ nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
   wrapper->mScriptable = scrWrapper;
 
   // Set the JS object to the global we already created.
-  wrapper->mFlatJSObject = global;
-  wrapper->mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
+  wrapper->SetFlatJSObject(global);
 
   // Set the private to the XPCWrappedNative.
   JS_SetPrivate(global, wrapper);
@@ -543,6 +542,32 @@ void XPCWrappedNative::Destroy() {
   mMaybeScope = nullptr;
 }
 
+// A hack for bug 517665, increase the probability for GC.
+// TODO: Try removing this and just using the actual size of the object.
+static const size_t GCMemoryFactor = 2;
+
+inline void XPCWrappedNative::SetFlatJSObject(JSObject* object) {
+  MOZ_ASSERT(!mFlatJSObject);
+  MOZ_ASSERT(object);
+
+  JS::AddAssociatedMemory(object, sizeof(*this) * GCMemoryFactor,
+                          JS::MemoryUse::XPCWrappedNative);
+
+  mFlatJSObject = object;
+  mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
+}
+
+inline void XPCWrappedNative::UnsetFlatJSObject() {
+  MOZ_ASSERT(mFlatJSObject);
+
+  JS::RemoveAssociatedMemory(mFlatJSObject.unbarrieredGetPtr(),
+                             sizeof(*this) * GCMemoryFactor,
+                             JS::MemoryUse::XPCWrappedNative);
+
+  mFlatJSObject = nullptr;
+  mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
+}
+
 // This is factored out so that it can be called publicly.
 // static
 nsIXPCScriptable* XPCWrappedNative::GatherProtoScriptable(
@@ -626,13 +651,13 @@ bool XPCWrappedNative::Init(JSContext* cx, nsIXPCScriptable* aScriptable) {
     return false;
   }
 
-  mFlatJSObject = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject);
-  if (!mFlatJSObject) {
-    mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
+  JSObject* object = JS_NewObjectWithGivenProto(cx, jsclazz, protoJSObject);
+  if (!object) {
     return false;
   }
 
-  mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
+  SetFlatJSObject(object);
+
   JS_SetPrivate(mFlatJSObject, this);
 
   return FinishInit(cx);
@@ -644,9 +669,6 @@ bool XPCWrappedNative::FinishInit(JSContext* cx) {
   // mFlatJSObject;
   MOZ_ASSERT(1 == mRefCnt, "unexpected refcount value");
   NS_ADDREF(this);
-
-  // A hack for bug 517665, increase the probability for GC.
-  JS_updateMallocCounter(cx, 2 * sizeof(XPCWrappedNative));
 
   return true;
 }
@@ -756,8 +778,7 @@ void XPCWrappedNative::FlatJSObjectFinalized() {
     cache->ClearWrapper(mFlatJSObject.unbarrieredGetPtr());
   }
 
-  mFlatJSObject = nullptr;
-  mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
+  UnsetFlatJSObject();
 
   MOZ_ASSERT(mIdentity, "bad pointer!");
 #ifdef XP_WIN
@@ -802,8 +823,7 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
 
   // Short circuit future finalization.
   JS_SetPrivate(mFlatJSObject, nullptr);
-  mFlatJSObject = nullptr;
-  mFlatJSObject.unsetFlags(FLAT_JS_OBJECT_VALID);
+  UnsetFlatJSObject();
 
   XPCWrappedNativeProto* proto = GetProto();
 

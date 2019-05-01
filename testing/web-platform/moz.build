@@ -272,6 +272,8 @@ with Files("tests/dpub-aria/**"):
 with Files("tests/editing/**"):
     BUG_COMPONENT = ("Core", "Editor")
 
+with Files("tests/element-timing/**"):
+    BUG_COMPONENT = ("Core", "Performance")
 # as per Bug 746911
 with Files("tests/encoding/**"):
     BUG_COMPONENT = ("Core", "Internationalization")
@@ -581,6 +583,9 @@ with Files("tests/webusb/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/webvr/**"):
+    BUG_COMPONENT = ("Core", "DOM: WebVR")
+
+with Files("tests/webxr/**"):
     BUG_COMPONENT = ("Core", "DOM: WebVR")
 
 with Files("tests/webvtt/**"):

@@ -1394,6 +1394,7 @@ AC_OUTPUT
 if test -z "$PYTHON";
 then
     echo "" > data/rules.mk
+    echo "" > test/testdata/rules.mk
 else
     if test -f "$srcdir/data/locales/root.txt";
     then
@@ -1504,7 +1505,7 @@ fi
 
 if test -z "$PYTHON";
 then
-    echo "** Note: Python not found. You will not be able to build data from source."
+    echo "** Note: Python not found. You will not be able to build data from source or run tests."
 fi
 
 $as_unset _CXX_CXXSUFFIX

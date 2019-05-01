@@ -472,7 +472,7 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
 
 template <typename Key>
 struct IcStubCodeMapGCPolicy {
-  static bool needsSweep(Key*, ReadBarrieredJitCode* value) {
+  static bool needsSweep(Key*, WeakHeapPtrJitCode* value) {
     return IsAboutToBeFinalized(value);
   }
 };
@@ -490,7 +490,7 @@ class JitZone {
 
   // Map CacheIRStubKey to shared JitCode objects.
   using BaselineCacheIRStubCodeMap =
-      GCHashMap<CacheIRStubKey, ReadBarrieredJitCode, CacheIRStubKey,
+      GCHashMap<CacheIRStubKey, WeakHeapPtrJitCode, CacheIRStubKey,
                 SystemAllocPolicy, IcStubCodeMapGCPolicy<CacheIRStubKey>>;
   BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
 
@@ -541,7 +541,7 @@ class JitRealm {
 
   // Map ICStub keys to ICStub shared code objects.
   using ICStubCodeMap =
-      GCHashMap<uint32_t, ReadBarrieredJitCode, DefaultHasher<uint32_t>,
+      GCHashMap<uint32_t, WeakHeapPtrJitCode, DefaultHasher<uint32_t>,
                 ZoneAllocPolicy, IcStubCodeMapGCPolicy<uint32_t>>;
   ICStubCodeMap* stubCodes_;
 
@@ -563,7 +563,7 @@ class JitRealm {
     Count
   };
 
-  mozilla::EnumeratedArray<StubIndex, StubIndex::Count, ReadBarrieredJitCode>
+  mozilla::EnumeratedArray<StubIndex, StubIndex::Count, WeakHeapPtrJitCode>
       stubs_;
 
   bool stringsCanBeInNursery;
@@ -615,13 +615,13 @@ class JitRealm {
   void sweep(JS::Realm* realm);
 
   void discardStubs() {
-    for (ReadBarrieredJitCode& stubRef : stubs_) {
+    for (WeakHeapPtrJitCode& stubRef : stubs_) {
       stubRef = nullptr;
     }
   }
 
   bool hasStubs() const {
-    for (const ReadBarrieredJitCode& stubRef : stubs_) {
+    for (const WeakHeapPtrJitCode& stubRef : stubs_) {
       if (stubRef) {
         return true;
       }

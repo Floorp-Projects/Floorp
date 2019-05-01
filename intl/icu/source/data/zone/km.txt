@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 km{
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"អាប៊ីដ្យាន"}

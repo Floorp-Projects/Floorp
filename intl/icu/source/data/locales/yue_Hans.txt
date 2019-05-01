@@ -248,7 +248,7 @@ yue_Hans{
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.1.48.80"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2438,7 +2438,7 @@ yue_Hans{
                     "大正",
                     "昭和",
                     "平成",
-                    "Qqqq",
+                    "令和",
                 }
             }
         }
