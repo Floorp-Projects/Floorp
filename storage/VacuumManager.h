@@ -32,7 +32,7 @@ class VacuumManager final : public nsIObserver {
  private:
   ~VacuumManager();
 
-  static VacuumManager *gVacuumManager;
+  static VacuumManager* gVacuumManager;
 
   // Cache of components registered in "vacuum-participant" category.
   nsCategoryCache<mozIStorageVacuumParticipant> mParticipants;

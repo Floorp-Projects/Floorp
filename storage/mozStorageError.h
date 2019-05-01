@@ -19,7 +19,7 @@ class Error final : public mozIStorageError {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEERROR
 
-  Error(int aResult, const char *aMessage);
+  Error(int aResult, const char* aMessage);
 
  private:
   ~Error() {}

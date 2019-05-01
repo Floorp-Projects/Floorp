@@ -61,7 +61,7 @@ class nsIHTMLDocument : public nsISupports {
    * @param aChange +1 if the contentEditable attribute/property was changed to
    *                true, -1 if it was changed to false
    */
-  virtual nsresult ChangeContentEditableCount(nsIContent *aElement,
+  virtual nsresult ChangeContentEditableCount(nsIContent* aElement,
                                               int32_t aChange) = 0;
 
   enum EditingState {

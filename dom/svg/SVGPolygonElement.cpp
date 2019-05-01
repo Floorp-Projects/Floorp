@@ -17,8 +17,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
 namespace mozilla {
 namespace dom {
 
-JSObject *SVGPolygonElement::WrapNode(JSContext *aCx,
-                                      JS::Handle<JSObject *> aGivenProto) {
+JSObject* SVGPolygonElement::WrapNode(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return SVGPolygonElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -26,7 +26,7 @@ JSObject *SVGPolygonElement::WrapNode(JSContext *aCx,
 // Implementation
 
 SVGPolygonElement::SVGPolygonElement(
-    already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo)
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGPolygonElementBase(std::move(aNodeInfo)) {}
 
 //----------------------------------------------------------------------
@@ -37,15 +37,15 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPolygonElement)
 //----------------------------------------------------------------------
 // SVGGeometryElement methods
 
-void SVGPolygonElement::GetMarkPoints(nsTArray<SVGMark> *aMarks) {
+void SVGPolygonElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
   SVGPolyElement::GetMarkPoints(aMarks);
 
   if (aMarks->IsEmpty() || aMarks->LastElement().type != SVGMark::eEnd) {
     return;
   }
 
-  SVGMark *endMark = &aMarks->LastElement();
-  SVGMark *startMark = &aMarks->ElementAt(0);
+  SVGMark* endMark = &aMarks->LastElement();
+  SVGMark* startMark = &aMarks->ElementAt(0);
   float angle =
       std::atan2(startMark->y - endMark->y, startMark->x - endMark->x);
 
@@ -59,8 +59,8 @@ void SVGPolygonElement::GetMarkPoints(nsTArray<SVGMark> *aMarks) {
       SVGMark(startMark->x, startMark->y, startMark->angle, SVGMark::eEnd));
 }
 
-already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder *aBuilder) {
-  const SVGPointList &points = mPoints.GetAnimValue();
+already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder* aBuilder) {
+  const SVGPointList& points = mPoints.GetAnimValue();
 
   if (points.IsEmpty()) {
     return nullptr;

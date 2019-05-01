@@ -132,8 +132,8 @@ LRESULT CALLBACK PlatformUIThread::EventWindowProc(HWND hwnd, UINT uMsg,
     return 0;
   }
 
-  PlatformUIThread *twui =
-      static_cast<PlatformUIThread *>(GetPropW(hwnd, kThisProperty));
+  PlatformUIThread* twui =
+      static_cast<PlatformUIThread*>(GetPropW(hwnd, kThisProperty));
   if (!twui) {
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
   }

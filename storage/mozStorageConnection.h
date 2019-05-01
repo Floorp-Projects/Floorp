@@ -83,7 +83,7 @@ class Connection final : public mozIStorageConnection,
    *        corrupt) or produce wrong results without any indication that has
    *        happened.
    */
-  Connection(Service *aService, int aFlags,
+  Connection(Service* aService, int aFlags,
              ConnectionOperation aSupportedOperations,
              bool aIgnoreLockingMode = false);
 
@@ -99,7 +99,7 @@ class Connection final : public mozIStorageConnection,
    *        The nsIFile of the location of the database to open, or create if it
    *        does not exist.
    */
-  nsresult initialize(nsIFile *aDatabaseFile);
+  nsresult initialize(nsIFile* aDatabaseFile);
 
   /**
    * Creates the connection to the database.
@@ -108,12 +108,12 @@ class Connection final : public mozIStorageConnection,
    *        The nsIFileURL of the location of the database to open, or create if
    * it does not exist.
    */
-  nsresult initialize(nsIFileURL *aFileURL);
+  nsresult initialize(nsIFileURL* aFileURL);
 
   /**
    * Same as initialize, but to be used on the async thread.
    */
-  nsresult initializeOnAsyncThread(nsIFile *aStorageFile);
+  nsresult initializeOnAsyncThread(nsIFile* aStorageFile);
 
   /**
    * Fetches runtime status information for this connection.
@@ -125,7 +125,7 @@ class Connection final : public mozIStorageConnection,
    * @return the current value for the specified option.
    */
   int32_t getSqliteRuntimeStatus(int32_t aStatusOption,
-                                 int32_t *aMaxValue = nullptr);
+                                 int32_t* aMaxValue = nullptr);
   /**
    * Registers/unregisters a commit hook callback.
    *
@@ -134,7 +134,7 @@ class Connection final : public mozIStorageConnection,
    * @param [optional] aData if provided, will be passed to the callback.
    * @see http://sqlite.org/c3ref/commit_hook.html
    */
-  void setCommitHook(int (*aCallbackFn)(void *), void *aData = nullptr) {
+  void setCommitHook(int (*aCallbackFn)(void*), void* aData = nullptr) {
     MOZ_ASSERT(mDBConn, "A connection must exist at this point");
     ::sqlite3_commit_hook(mDBConn, aCallbackFn, aData);
   };
@@ -156,7 +156,7 @@ class Connection final : public mozIStorageConnection,
    * @return an event target suitable for asynchronous statement execution.
    * @note This method will return null once AsyncClose() has been called.
    */
-  nsIEventTarget *getAsyncExecutionTarget();
+  nsIEventTarget* getAsyncExecutionTarget();
 
   /**
    * Mutex used by asynchronous statements to protect state.  The mutex is
@@ -186,7 +186,7 @@ class Connection final : public mozIStorageConnection,
   /**
    * Closes the SQLite database, and warns about any non-finalized statements.
    */
-  nsresult internalClose(sqlite3 *aDBConn);
+  nsresult internalClose(sqlite3* aDBConn);
 
   /**
    * Shuts down the passed-in async thread.
@@ -209,8 +209,8 @@ class Connection final : public mozIStorageConnection,
    *        New sqlite3_stmt object.
    * @return the result from sqlite3_prepare_v2.
    */
-  int prepareStatement(sqlite3 *aNativeConnection, const nsCString &aSQL,
-                       sqlite3_stmt **_stmt);
+  int prepareStatement(sqlite3* aNativeConnection, const nsCString& aSQL,
+                       sqlite3_stmt** _stmt);
 
   /**
    * Performs a sqlite3_step on aStatement, while properly handling
@@ -222,7 +222,7 @@ class Connection final : public mozIStorageConnection,
    *        A pointer to a sqlite3_stmt object.
    * @return the result from sqlite3_step.
    */
-  int stepStatement(sqlite3 *aNativeConnection, sqlite3_stmt *aStatement);
+  int stepStatement(sqlite3* aNativeConnection, sqlite3_stmt* aStatement);
 
   /**
    * Raw connection transaction management.
@@ -230,10 +230,10 @@ class Connection final : public mozIStorageConnection,
    * @see BeginTransactionAs, CommitTransaction, RollbackTransaction.
    */
   nsresult beginTransactionInternal(
-      sqlite3 *aNativeConnection,
+      sqlite3* aNativeConnection,
       int32_t aTransactionType = TRANSACTION_DEFERRED);
-  nsresult commitTransactionInternal(sqlite3 *aNativeConnection);
-  nsresult rollbackTransactionInternal(sqlite3 *aNativeConnection);
+  nsresult commitTransactionInternal(sqlite3* aNativeConnection);
+  nsresult rollbackTransactionInternal(sqlite3* aNativeConnection);
 
   /**
    * Indicates if this database connection is open.
@@ -283,7 +283,7 @@ class Connection final : public mozIStorageConnection,
    * Same as isClosed(), but takes a proof-of-lock instead of locking
    * internally.
    */
-  bool isClosed(MutexAutoLock &lock);
+  bool isClosed(MutexAutoLock& lock);
 
   /**
    * True if the async execution thread is alive and able to be used (i.e., it
@@ -293,7 +293,7 @@ class Connection final : public mozIStorageConnection,
    */
   bool isAsyncExecutionThreadAvailable();
 
-  nsresult initializeClone(Connection *aClone, bool aReadOnly);
+  nsresult initializeClone(Connection* aClone, bool aReadOnly);
 
  private:
   ~Connection();
@@ -317,7 +317,7 @@ class Connection final : public mozIStorageConnection,
    *        SQL string to execute
    * @return the result from sqlite3_exec.
    */
-  int executeSql(sqlite3 *aNativeConnection, const char *aSqlString);
+  int executeSql(sqlite3* aNativeConnection, const char* aSqlString);
 
   /**
    * Describes a certain primitive type in the database.
@@ -338,11 +338,11 @@ class Connection final : public mozIStorageConnection,
    * @returns true if element exists, false otherwise
    */
   nsresult databaseElementExists(enum DatabaseElementType aElementType,
-                                 const nsACString &aElementName, bool *_exists);
+                                 const nsACString& aElementName, bool* _exists);
 
-  bool findFunctionByInstance(nsISupports *aInstance);
+  bool findFunctionByInstance(nsISupports* aInstance);
 
-  static int sProgressHelper(void *aArg);
+  static int sProgressHelper(void* aArg);
   // Generic progress handler
   // Dispatch call to registered progress handler,
   // if there is one. Do nothing in other cases.
@@ -354,7 +354,7 @@ class Connection final : public mozIStorageConnection,
    */
   nsresult ensureOperationSupported(ConnectionOperation aOperationType);
 
-  sqlite3 *mDBConn;
+  sqlite3* mDBConn;
   nsCOMPtr<nsIFileURL> mFileURL;
   nsCOMPtr<nsIFile> mDatabaseFile;
 
@@ -465,7 +465,7 @@ class CallbackComplete final : public Runnable {
    * @param aCallback The callback. It must already be owned by the
    *                  main thread.
    */
-  CallbackComplete(nsresult aStatus, nsISupports *aValue,
+  CallbackComplete(nsresult aStatus, nsISupports* aValue,
                    already_AddRefed<mozIStorageCompletionCallback> aCallback)
       : Runnable("storage::CallbackComplete"),
         mStatus(aStatus),
@@ -498,8 +498,8 @@ class CallbackComplete final : public Runnable {
  * Casting Connection to nsISupports is ambiguous.
  * This method handles that.
  */
-inline nsISupports *ToSupports(mozilla::storage::Connection *p) {
-  return NS_ISUPPORTS_CAST(mozIStorageAsyncConnection *, p);
+inline nsISupports* ToSupports(mozilla::storage::Connection* p) {
+  return NS_ISUPPORTS_CAST(mozIStorageAsyncConnection*, p);
 }
 
 #endif  // mozilla_storage_Connection_h

@@ -45,8 +45,8 @@ using namespace mozilla::places;
 /**
  * Creates a channel to obtain the default favicon.
  */
-static nsresult GetDefaultIcon(nsIChannel *aOriginalChannel,
-                               nsIChannel **aChannel) {
+static nsresult GetDefaultIcon(nsIChannel* aOriginalChannel,
+                               nsIChannel** aChannel) {
   nsCOMPtr<nsIURI> defaultIconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(defaultIconURI),
                           NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
@@ -78,7 +78,7 @@ namespace {
  */
 class faviconAsyncLoader : public AsyncStatementCallback {
  public:
-  faviconAsyncLoader(nsIChannel *aChannel, nsIStreamListener *aListener,
+  faviconAsyncLoader(nsIChannel* aChannel, nsIStreamListener* aListener,
                      uint16_t aPreferredSize)
       : mChannel(aChannel),
         mListener(aListener),
@@ -92,7 +92,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
   //////////////////////////////////////////////////////////////////////////////
   //// mozIStorageStatementCallback
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet *aResultSet) override {
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) override {
     nsCOMPtr<mozIStorageRow> row;
     while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
       int32_t width;
@@ -114,7 +114,7 @@ class faviconAsyncLoader : public AsyncStatementCallback {
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Obtain the binary blob that contains our favicon data.
-      uint8_t *data;
+      uint8_t* data;
       uint32_t dataLen;
       rv = row->GetBlob(0, &dataLen, &data);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -184,7 +184,7 @@ NS_IMPL_ISUPPORTS(nsAnnoProtocolHandler, nsIProtocolHandler)
 // nsAnnoProtocolHandler::GetScheme
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetScheme(nsACString &aScheme) {
+nsAnnoProtocolHandler::GetScheme(nsACString& aScheme) {
   aScheme.AssignLiteral("moz-anno");
   return NS_OK;
 }
@@ -194,7 +194,7 @@ nsAnnoProtocolHandler::GetScheme(nsACString &aScheme) {
 //    There is no default port for annotation URLs
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetDefaultPort(int32_t *aDefaultPort) {
+nsAnnoProtocolHandler::GetDefaultPort(int32_t* aDefaultPort) {
   *aDefaultPort = -1;
   return NS_OK;
 }
@@ -202,7 +202,7 @@ nsAnnoProtocolHandler::GetDefaultPort(int32_t *aDefaultPort) {
 // nsAnnoProtocolHandler::GetProtocolFlags
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags) {
+nsAnnoProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   *aProtocolFlags = (URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD |
                      URI_IS_LOCAL_RESOURCE);
   return NS_OK;
@@ -211,9 +211,9 @@ nsAnnoProtocolHandler::GetProtocolFlags(uint32_t *aProtocolFlags) {
 // nsAnnoProtocolHandler::NewURI
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewURI(const nsACString &aSpec,
-                              const char *aOriginCharset, nsIURI *aBaseURI,
-                              nsIURI **_retval) {
+nsAnnoProtocolHandler::NewURI(const nsACString& aSpec,
+                              const char* aOriginCharset, nsIURI* aBaseURI,
+                              nsIURI** _retval) {
   *_retval = nullptr;
   return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
       .SetSpec(aSpec)
@@ -224,8 +224,8 @@ nsAnnoProtocolHandler::NewURI(const nsACString &aSpec,
 //
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                  nsIChannel **_retval) {
+nsAnnoProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                  nsIChannel** _retval) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   // annotation info
@@ -246,8 +246,8 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
 //    Don't override any bans on bad ports.
 
 NS_IMETHODIMP
-nsAnnoProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                 bool *_retval) {
+nsAnnoProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                 bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
@@ -256,8 +256,8 @@ nsAnnoProtocolHandler::AllowPort(int32_t port, const char *scheme,
 //
 //    Splits an annotation URL into its URI and name parts
 
-nsresult nsAnnoProtocolHandler::ParseAnnoURI(nsIURI *aURI, nsIURI **aResultURI,
-                                             nsCString &aName) {
+nsresult nsAnnoProtocolHandler::ParseAnnoURI(nsIURI* aURI, nsIURI** aResultURI,
+                                             nsCString& aName) {
   nsresult rv;
   nsAutoCString path;
   rv = aURI->GetPathQueryRef(path);
@@ -273,16 +273,16 @@ nsresult nsAnnoProtocolHandler::ParseAnnoURI(nsIURI *aURI, nsIURI **aResultURI,
   return NS_OK;
 }
 
-nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI,
-                                                  nsIURI *aAnnotationURI,
-                                                  nsILoadInfo *aLoadInfo,
-                                                  nsIChannel **_channel) {
+nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
+                                                  nsIURI* aAnnotationURI,
+                                                  nsILoadInfo* aLoadInfo,
+                                                  nsIChannel** _channel) {
   // Create our channel.  We'll call SetContentType with the right type when
   // we know what it actually is.
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
       aURI, aLoadInfo, aAnnotationURI,
-      [](nsIStreamListener *listener, nsIChannel *channel,
-         nsIURI *annotationURI) {
+      [](nsIStreamListener* listener, nsIChannel* channel,
+         nsIURI* annotationURI) {
         auto fallback = [&]() -> RequestOrReason {
           nsCOMPtr<nsIChannel> chan;
           nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
@@ -297,7 +297,7 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI,
         // Now we go ahead and get our data asynchronously for the favicon.
         // Ignore the ref part of the URI before querying the database because
         // we may have added a size fragment for rendering purposes.
-        nsFaviconService *faviconService =
+        nsFaviconService* faviconService =
             nsFaviconService::GetFaviconService();
         nsAutoCString faviconSpec;
         nsresult rv = annotationURI->GetSpecIgnoringRef(faviconSpec);

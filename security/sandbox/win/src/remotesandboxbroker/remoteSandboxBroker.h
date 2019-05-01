@@ -27,10 +27,10 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   // Note: This should be called on the IPC launch thread, and this spins
   // the event loop. So this means potentially another IPC launch could occur
   // re-entrantly while calling this.
-  bool LaunchApp(const wchar_t *aPath, const wchar_t *aArguments,
-                 base::EnvironmentMap &aEnvironment,
+  bool LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
+                 base::EnvironmentMap& aEnvironment,
                  GeckoProcessType aProcessType, const bool aEnableLogging,
-                 void **aProcessHandle) override;
+                 void** aProcessHandle) override;
 
   // Security levels for different types of processes
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
@@ -39,7 +39,7 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   bool SetSecurityLevelForRDDProcess() override;
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel) override;
-  bool AllowReadFile(wchar_t const *file) override;
+  bool AllowReadFile(wchar_t const* file) override;
   void AddHandleToShare(HANDLE aHandle) override;
 
  private:

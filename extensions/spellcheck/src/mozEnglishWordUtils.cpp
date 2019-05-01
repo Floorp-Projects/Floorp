@@ -31,19 +31,19 @@ bool mozEnglishWordUtils::ucIsAlpha(char16_t aChar) {
   return nsUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
 }
 
-bool mozEnglishWordUtils::FindNextWord(const nsAString &aWord, uint32_t offset,
-                                       int32_t *begin, int32_t *end) {
+bool mozEnglishWordUtils::FindNextWord(const nsAString& aWord, uint32_t offset,
+                                       int32_t* begin, int32_t* end) {
   if (offset >= aWord.Length()) {
     *begin = -1;
     *end = -1;
     return false;
   }
 
-  const char16_t *word = aWord.BeginReading();
+  const char16_t* word = aWord.BeginReading();
   uint32_t length = aWord.Length();
-  const char16_t *p = word + offset;
-  const char16_t *endbuf = word + length;
-  const char16_t *startWord = p;
+  const char16_t* p = word + offset;
+  const char16_t* endbuf = word + length;
+  const char16_t* startWord = p;
 
   // XXX These loops should be modified to handle non-BMP characters.
   // if previous character is a word character, need to advance out of the

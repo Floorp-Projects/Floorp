@@ -34,16 +34,16 @@ class nsAutoConfig final : public nsITimerCallback,
   nsAutoConfig();
   nsresult Init();
 
-  void SetConfigURL(const char *aConfigURL);
+  void SetConfigURL(const char* aConfigURL);
 
  protected:
   virtual ~nsAutoConfig();
   nsresult downloadAutoConfig();
   nsresult readOfflineFile();
-  nsresult evaluateLocalFile(nsIFile *file);
+  nsresult evaluateLocalFile(nsIFile* file);
   nsresult writeFailoverFile();
-  nsresult getEmailAddr(nsACString &emailAddr);
-  nsresult PromptForEMailAddress(nsACString &emailAddress);
+  nsresult getEmailAddr(nsACString& emailAddr);
+  nsresult PromptForEMailAddress(nsACString& emailAddress);
   nsCString mBuf;
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   bool mLoaded;

@@ -17,16 +17,16 @@ namespace net {
 nsStreamLoader::nsStreamLoader() : mData() {}
 
 NS_IMETHODIMP
-nsStreamLoader::Init(nsIStreamLoaderObserver *aStreamObserver,
-                     nsIRequestObserver *aRequestObserver) {
+nsStreamLoader::Init(nsIStreamLoaderObserver* aStreamObserver,
+                     nsIRequestObserver* aRequestObserver) {
   NS_ENSURE_ARG_POINTER(aStreamObserver);
   mObserver = aStreamObserver;
   mRequestObserver = aRequestObserver;
   return NS_OK;
 }
 
-nsresult nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID,
-                                void **aResult) {
+nsresult nsStreamLoader::Create(nsISupports* aOuter, REFNSIID aIID,
+                                void** aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
   RefPtr<nsStreamLoader> it = new nsStreamLoader();
@@ -37,20 +37,20 @@ NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader, nsIRequestObserver,
                   nsIStreamListener, nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsStreamLoader::GetNumBytesRead(uint32_t *aNumBytes) {
+nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes) {
   *aNumBytes = mData.length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStreamLoader::GetRequest(nsIRequest **aRequest) {
+nsStreamLoader::GetRequest(nsIRequest** aRequest) {
   nsCOMPtr<nsIRequest> req = mRequest;
   req.forget(aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStartRequest(nsIRequest *request) {
+nsStreamLoader::OnStartRequest(nsIRequest* request) {
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     int64_t contentLength = -1;
@@ -77,14 +77,14 @@ nsStreamLoader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+nsStreamLoader::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsStreamLoader::OnStopRequest", NETWORK);
 
   if (mObserver) {
     // provide nsIStreamLoader::request during call to OnStreamComplete
     mRequest = request;
     size_t length = mData.length();
-    uint8_t *elems = mData.extractOrCopyRawBuffer();
+    uint8_t* elems = mData.extractOrCopyRawBuffer();
     nsresult rv =
         mObserver->OnStreamComplete(this, mContext, aStatus, length, elems);
     if (rv != NS_SUCCESS_ADOPTED_DATA) {
@@ -106,11 +106,11 @@ nsStreamLoader::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   return NS_OK;
 }
 
-nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr, void *closure,
-                                         const char *fromSegment,
+nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream* inStr, void* closure,
+                                         const char* fromSegment,
                                          uint32_t toOffset, uint32_t count,
-                                         uint32_t *writeCount) {
-  nsStreamLoader *self = (nsStreamLoader *)closure;
+                                         uint32_t* writeCount) {
+  nsStreamLoader* self = (nsStreamLoader*)closure;
 
   if (!self->mData.append(fromSegment, count)) {
     self->mData.clearAndFree();
@@ -123,7 +123,7 @@ nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr, void *closure,
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+nsStreamLoader::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                 uint64_t sourceOffset, uint32_t count) {
   uint32_t countRead;
   return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);

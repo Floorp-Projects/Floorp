@@ -15,14 +15,14 @@ nsIncrementalStreamLoader::nsIncrementalStreamLoader()
     : mData(), mBytesConsumed(0) {}
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver *observer) {
+nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver* observer) {
   NS_ENSURE_ARG_POINTER(observer);
   mObserver = observer;
   return NS_OK;
 }
 
-nsresult nsIncrementalStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID,
-                                           void **aResult) {
+nsresult nsIncrementalStreamLoader::Create(nsISupports* aOuter, REFNSIID aIID,
+                                           void** aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
   RefPtr<nsIncrementalStreamLoader> it = new nsIncrementalStreamLoader();
@@ -34,20 +34,20 @@ NS_IMPL_ISUPPORTS(nsIncrementalStreamLoader, nsIIncrementalStreamLoader,
                   nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::GetNumBytesRead(uint32_t *aNumBytes) {
+nsIncrementalStreamLoader::GetNumBytesRead(uint32_t* aNumBytes) {
   *aNumBytes = mBytesConsumed + mData.length();
   return NS_OK;
 }
 
 /* readonly attribute nsIRequest request; */
 NS_IMETHODIMP
-nsIncrementalStreamLoader::GetRequest(nsIRequest **aRequest) {
+nsIncrementalStreamLoader::GetRequest(nsIRequest** aRequest) {
   NS_IF_ADDREF(*aRequest = mRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request) {
+nsIncrementalStreamLoader::OnStartRequest(nsIRequest* request) {
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(request));
   if (chan) {
     int64_t contentLength = -1;
@@ -72,7 +72,7 @@ nsIncrementalStreamLoader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request,
+nsIncrementalStreamLoader::OnStopRequest(nsIRequest* request,
                                          nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsIncrementalStreamLoader::OnStopRequest", NETWORK);
 
@@ -81,7 +81,7 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request,
     // OnStreamComplete
     mRequest = request;
     size_t length = mData.length();
-    uint8_t *elems = mData.extractOrCopyRawBuffer();
+    uint8_t* elems = mData.extractOrCopyRawBuffer();
     nsresult rv =
         mObserver->OnStreamComplete(this, mContext, aStatus, length, elems);
     if (rv != NS_SUCCESS_ADOPTED_DATA) {
@@ -98,11 +98,11 @@ nsIncrementalStreamLoader::OnStopRequest(nsIRequest *request,
 }
 
 nsresult nsIncrementalStreamLoader::WriteSegmentFun(
-    nsIInputStream *inStr, void *closure, const char *fromSegment,
-    uint32_t toOffset, uint32_t count, uint32_t *writeCount) {
-  nsIncrementalStreamLoader *self = (nsIncrementalStreamLoader *)closure;
+    nsIInputStream* inStr, void* closure, const char* fromSegment,
+    uint32_t toOffset, uint32_t count, uint32_t* writeCount) {
+  nsIncrementalStreamLoader* self = (nsIncrementalStreamLoader*)closure;
 
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(fromSegment);
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(fromSegment);
   uint32_t consumedCount = 0;
   nsresult rv;
   if (self->mData.empty()) {
@@ -134,7 +134,7 @@ nsresult nsIncrementalStreamLoader::WriteSegmentFun(
     }
     size_t length = self->mData.length();
     uint32_t reportCount = length > UINT32_MAX ? UINT32_MAX : (uint32_t)length;
-    uint8_t *elems = self->mData.extractOrCopyRawBuffer();
+    uint8_t* elems = self->mData.extractOrCopyRawBuffer();
 
     rv = self->mObserver->OnIncrementalData(self, self->mContext, reportCount,
                                             elems, &consumedCount);
@@ -168,8 +168,8 @@ nsresult nsIncrementalStreamLoader::WriteSegmentFun(
 }
 
 NS_IMETHODIMP
-nsIncrementalStreamLoader::OnDataAvailable(nsIRequest *request,
-                                           nsIInputStream *inStr,
+nsIncrementalStreamLoader::OnDataAvailable(nsIRequest* request,
+                                           nsIInputStream* inStr,
                                            uint64_t sourceOffset,
                                            uint32_t count) {
   if (mObserver) {

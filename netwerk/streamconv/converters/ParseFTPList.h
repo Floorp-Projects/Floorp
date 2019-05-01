@@ -82,9 +82,9 @@ struct list_state {
 
 struct list_result {
   int32_t fe_type;        /* 'd'(dir) or 'l'(link) or 'f'(file) */
-  const char *fe_fname;   /* pointer to filename */
+  const char* fe_fname;   /* pointer to filename */
   uint32_t fe_fnlen;      /* length of filename */
-  const char *fe_lname;   /* pointer to symlink name */
+  const char* fe_lname;   /* pointer to symlink name */
   uint32_t fe_lnlen;      /* length of symlink name */
   char fe_size[40];       /* size of file in bytes (<= (2^128 - 1)) */
   PRExplodedTime fe_time; /* last-modified time */
@@ -94,8 +94,8 @@ struct list_result {
 
 typedef PRTime (*NowTimeFn)();
 
-int ParseFTPList(const char *line, struct list_state *state,
-                 struct list_result *result,
+int ParseFTPList(const char* line, struct list_state* state,
+                 struct list_result* result,
                  PRTimeParamFn timeParam = PR_LocalTimeParameters,
                  NowTimeFn nowTimeFn = PR_Now);
 

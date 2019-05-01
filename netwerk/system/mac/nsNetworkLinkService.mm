@@ -53,7 +53,7 @@ static OSStatus getErrorCodeBool(Boolean success) {
 }
 
 // If given a NULL pointer, return the error code.
-static OSStatus getErrorCodePtr(const void *value) { return getErrorCodeBool(value != nullptr); }
+static OSStatus getErrorCodePtr(const void* value) { return getErrorCodeBool(value != nullptr); }
 
 // Convenience function to allow NULL input.
 static void CFReleaseSafe(CFTypeRef cf) {
@@ -78,19 +78,19 @@ nsNetworkLinkService::nsNetworkLinkService()
 nsNetworkLinkService::~nsNetworkLinkService() = default;
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetIsLinkUp(bool *aIsUp) {
+nsNetworkLinkService::GetIsLinkUp(bool* aIsUp) {
   *aIsUp = mLinkUp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetLinkStatusKnown(bool *aIsUp) {
+nsNetworkLinkService::GetLinkStatusKnown(bool* aIsUp) {
   *aIsUp = mStatusKnown;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::GetLinkType(uint32_t *aLinkType) {
+nsNetworkLinkService::GetLinkType(uint32_t* aLinkType) {
   NS_ENSURE_ARG_POINTER(aLinkType);
 
   // XXX This function has not yet been implemented for this platform
@@ -99,18 +99,18 @@ nsNetworkLinkService::GetLinkType(uint32_t *aLinkType) {
 }
 
 #ifndef SA_SIZE
-#  define SA_SIZE(sa)                                  \
-    ((!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) \
-         ? sizeof(uint32_t)                            \
-         : 1 + ((((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(uint32_t) - 1)))
+#  define SA_SIZE(sa)                                 \
+    ((!(sa) || ((struct sockaddr*)(sa))->sa_len == 0) \
+         ? sizeof(uint32_t)                           \
+         : 1 + ((((struct sockaddr*)(sa))->sa_len - 1) | (sizeof(uint32_t) - 1)))
 #endif
 
-static char *getMac(struct sockaddr_dl *sdl, char *buf, size_t bufsize) {
-  char *cp;
+static char* getMac(struct sockaddr_dl* sdl, char* buf, size_t bufsize) {
+  char* cp;
   int n, p = 0;
 
   buf[0] = 0;
-  cp = (char *)LLADDR(sdl);
+  cp = (char*)LLADDR(sdl);
   n = sdl->sdl_alen;
   if (n > 0) {
     while (--n >= 0) {
@@ -121,7 +121,7 @@ static char *getMac(struct sockaddr_dl *sdl, char *buf, size_t bufsize) {
 }
 
 /* If the IP matches, get the MAC and return true */
-static bool matchIp(struct sockaddr_dl *sdl, struct sockaddr_inarp *addr, char *ip, char *buf,
+static bool matchIp(struct sockaddr_dl* sdl, struct sockaddr_inarp* addr, char* ip, char* buf,
                     size_t bufsize) {
   if (sdl->sdl_alen) {
     if (!strcmp(inet_ntoa(addr->sin_addr), ip)) {
@@ -138,7 +138,7 @@ static bool matchIp(struct sockaddr_dl *sdl, struct sockaddr_inarp *addr, char *
  *
  * Returns 'true' if it found the IP and returns a MAC.
  */
-static bool scanArp(char *ip, char *mac, size_t maclen) {
+static bool scanArp(char* ip, char* mac, size_t maclen) {
   int mib[6];
   char *lim, *next;
   int st;
@@ -177,11 +177,11 @@ static bool scanArp(char *ip, char *mac, size_t maclen) {
   }
   lim = &buf[needed];
 
-  struct rt_msghdr *rtm;
+  struct rt_msghdr* rtm;
   for (next = &buf[0]; next < lim; next += rtm->rtm_msglen) {
-    rtm = reinterpret_cast<struct rt_msghdr *>(next);
-    struct sockaddr_inarp *sin2 = reinterpret_cast<struct sockaddr_inarp *>(rtm + 1);
-    struct sockaddr_dl *sdl = reinterpret_cast<struct sockaddr_dl *>((char *)sin2 + SA_SIZE(sin2));
+    rtm = reinterpret_cast<struct rt_msghdr*>(next);
+    struct sockaddr_inarp* sin2 = reinterpret_cast<struct sockaddr_inarp*>(rtm + 1);
+    struct sockaddr_dl* sdl = reinterpret_cast<struct sockaddr_dl*>((char*)sin2 + SA_SIZE(sin2));
     if (matchIp(sdl, sin2, ip, mac, maclen)) {
       return true;
     }
@@ -190,12 +190,12 @@ static bool scanArp(char *ip, char *mac, size_t maclen) {
   return false;
 }
 
-static int routingTable(char *gw, size_t aGwLen) {
+static int routingTable(char* gw, size_t aGwLen) {
   size_t needed;
   int mib[6];
-  struct rt_msghdr *rtm;
-  struct sockaddr *sa;
-  struct sockaddr_in *sockin;
+  struct rt_msghdr* rtm;
+  struct sockaddr* sa;
+  struct sockaddr_in* sockin;
 
   mib[0] = CTL_NET;
   mib[1] = PF_ROUTE;
@@ -213,10 +213,10 @@ static int routingTable(char *gw, size_t aGwLen) {
     return 3;
   }
 
-  rtm = reinterpret_cast<struct rt_msghdr *>(&buf[0]);
-  sa = reinterpret_cast<struct sockaddr *>(rtm + 1);
-  sa = reinterpret_cast<struct sockaddr *>(SA_SIZE(sa) + (char *)sa);
-  sockin = reinterpret_cast<struct sockaddr_in *>(sa);
+  rtm = reinterpret_cast<struct rt_msghdr*>(&buf[0]);
+  sa = reinterpret_cast<struct sockaddr*>(rtm + 1);
+  sa = reinterpret_cast<struct sockaddr*>(SA_SIZE(sa) + (char*)sa);
+  sockin = reinterpret_cast<struct sockaddr_in*>(sa);
   inet_ntop(AF_INET, &sockin->sin_addr.s_addr, gw, aGwLen - 1);
 
   return 0;
@@ -246,7 +246,7 @@ void nsNetworkLinkService::calculateNetworkId(void) {
       sha1.update(combined.get(), combined.Length());
       uint8_t digest[SHA1Sum::kHashSize];
       sha1.finish(digest);
-      nsCString newString(reinterpret_cast<char *>(digest), SHA1Sum::kHashSize);
+      nsCString newString(reinterpret_cast<char*>(digest), SHA1Sum::kHashSize);
       nsresult rv = Base64Encode(newString, output);
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
       LOG(("networkid: id %s\n", output.get()));
@@ -268,7 +268,7 @@ void nsNetworkLinkService::calculateNetworkId(void) {
 }
 
 NS_IMETHODIMP
-nsNetworkLinkService::Observe(nsISupports *subject, const char *topic, const char16_t *data) {
+nsNetworkLinkService::Observe(nsISupports* subject, const char* topic, const char16_t* data) {
   if (!strcmp(topic, "xpcom-shutdown")) {
     Shutdown();
   }
@@ -278,8 +278,8 @@ nsNetworkLinkService::Observe(nsISupports *subject, const char *topic, const cha
 
 /* static */
 void nsNetworkLinkService::IPConfigChanged(SCDynamicStoreRef aStoreREf, CFArrayRef aChangedKeys,
-                                           void *aInfo) {
-  nsNetworkLinkService *service = static_cast<nsNetworkLinkService *>(aInfo);
+                                           void* aInfo) {
+  nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
   service->SendEvent(true);
 }
 
@@ -301,7 +301,7 @@ nsresult nsNetworkLinkService::Init(void) {
   bzero(&addr, sizeof(addr));
   addr.sin_len = sizeof(addr);
   addr.sin_family = AF_INET;
-  mReachability = ::SCNetworkReachabilityCreateWithAddress(nullptr, (struct sockaddr *)&addr);
+  mReachability = ::SCNetworkReachabilityCreateWithAddress(nullptr, (struct sockaddr*)&addr);
   if (!mReachability) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -339,7 +339,7 @@ nsresult nsNetworkLinkService::Init(void) {
   // that match that pattern list, then create our run loop
   // source.
   if (err == noErr) {
-    patternList = ::CFArrayCreate(nullptr, (const void **)patterns, 2, &kCFTypeArrayCallBacks);
+    patternList = ::CFArrayCreate(nullptr, (const void**)patterns, 2, &kCFTypeArrayCallBacks);
     if (!patternList) {
       err = -1;
     }
@@ -437,7 +437,7 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
     return;
   }
 
-  const char *event;
+  const char* event;
   if (aNetworkChanged) {
     if (!mAllowChangedEvent) {
       return;
@@ -450,14 +450,14 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
   }
   LOG(("SendEvent: network is '%s'\n", event));
 
-  observerService->NotifyObservers(static_cast<nsINetworkLinkService *>(this),
-                                   NS_NETWORK_LINK_TOPIC, NS_ConvertASCIItoUTF16(event).get());
+  observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this), NS_NETWORK_LINK_TOPIC,
+                                   NS_ConvertASCIItoUTF16(event).get());
 }
 
 /* static */
 void nsNetworkLinkService::ReachabilityChanged(SCNetworkReachabilityRef target,
-                                               SCNetworkConnectionFlags flags, void *info) {
-  nsNetworkLinkService *service = static_cast<nsNetworkLinkService *>(info);
+                                               SCNetworkConnectionFlags flags, void* info) {
+  nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(info);
 
   service->UpdateReachability();
   service->SendEvent(false);

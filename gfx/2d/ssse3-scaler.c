@@ -78,9 +78,9 @@ static force_inline int pixman_fixed_to_bilinear_weight(pixman_fixed_t x) {
          ((1 << BILINEAR_INTERPOLATION_BITS) - 1);
 }
 
-static void pixman_transform_point_31_16_3d(const pixman_transform_t *t,
-                                            const pixman_vector_48_16_t *v,
-                                            pixman_vector_48_16_t *result) {
+static void pixman_transform_point_31_16_3d(const pixman_transform_t* t,
+                                            const pixman_vector_48_16_t* v,
+                                            pixman_vector_48_16_t* result) {
   int i;
   int64_t tmp[3][2];
 
@@ -108,7 +108,7 @@ static void pixman_transform_point_31_16_3d(const pixman_transform_t *t,
 }
 
 static pixman_bool_t pixman_transform_point_3d(
-    const struct pixman_transform *transform, struct pixman_vector *vector) {
+    const struct pixman_transform* transform, struct pixman_vector* vector) {
   pixman_vector_48_16_t tmp;
   tmp.v[0] = vector->vector[0];
   tmp.v[1] = vector->vector[1];
@@ -125,9 +125,9 @@ static pixman_bool_t pixman_transform_point_3d(
 }
 
 struct bits_image_t {
-  uint32_t *bits;
+  uint32_t* bits;
   int rowstride;
-  pixman_transform_t *transform;
+  pixman_transform_t* transform;
 };
 
 typedef struct bits_image_t bits_image_t;
@@ -136,21 +136,21 @@ typedef struct {
 } pixman_iter_info_t;
 
 typedef struct pixman_iter_t pixman_iter_t;
-typedef void (*pixman_iter_fini_t)(pixman_iter_t *iter);
+typedef void (*pixman_iter_fini_t)(pixman_iter_t* iter);
 
 struct pixman_iter_t {
   int x, y;
   pixman_iter_fini_t fini;
-  bits_image_t *image;
-  uint32_t *buffer;
+  bits_image_t* image;
+  uint32_t* buffer;
   int width;
   int height;
-  void *data;
+  void* data;
 };
 
 typedef struct {
   int y;
-  uint64_t *buffer;
+  uint64_t* buffer;
 } line_t;
 
 typedef struct {
@@ -160,15 +160,15 @@ typedef struct {
   uint64_t data[1];
 } bilinear_info_t;
 
-static void ssse3_fetch_horizontal(bits_image_t *image, line_t *line, int y,
+static void ssse3_fetch_horizontal(bits_image_t* image, line_t* line, int y,
                                    pixman_fixed_t x, pixman_fixed_t ux, int n) {
-  uint32_t *bits = image->bits + y * image->rowstride;
+  uint32_t* bits = image->bits + y * image->rowstride;
   __m128i vx = _mm_set_epi16(-(x + 1), x, -(x + 1), x, -(x + ux + 1), x + ux,
                              -(x + ux + 1), x + ux);
   __m128i vux = _mm_set_epi16(-2 * ux, 2 * ux, -2 * ux, 2 * ux, -2 * ux, 2 * ux,
                               -2 * ux, 2 * ux);
   __m128i vaddc = _mm_set_epi16(1, 0, 1, 0, 1, 0, 1, 0);
-  __m128i *b = (__m128i *)line->buffer;
+  __m128i* b = (__m128i*)line->buffer;
   __m128i vrl0, vrl1;
 
   while ((n -= 2) >= 0) {
@@ -180,22 +180,22 @@ static void ssse3_fetch_horizontal(bits_image_t *image, line_t *line, int y,
     } else {
       if (pixman_fixed_to_int(x + ux) < 0) printf("underflow\n");
       vrl1 = _mm_loadl_epi64(
-          (__m128i *)(bits + (pixman_fixed_to_int(x + ux) < 0
-                                  ? 0
-                                  : pixman_fixed_to_int(x + ux))));
+          (__m128i*)(bits + (pixman_fixed_to_int(x + ux) < 0
+                                 ? 0
+                                 : pixman_fixed_to_int(x + ux))));
     }
 #else
-    vrl1 = _mm_loadl_epi64((__m128i *)(bits + pixman_fixed_to_int(x + ux)));
+    vrl1 = _mm_loadl_epi64((__m128i*)(bits + pixman_fixed_to_int(x + ux)));
 #endif
     /* vrl1: R1, L1 */
 
   final_pixel:
 #ifdef HACKY_PADDING
     vrl0 = _mm_loadl_epi64(
-        (__m128i *)(bits +
-                    (pixman_fixed_to_int(x) < 0 ? 0 : pixman_fixed_to_int(x))));
+        (__m128i*)(bits +
+                   (pixman_fixed_to_int(x) < 0 ? 0 : pixman_fixed_to_int(x))));
 #else
-    vrl0 = _mm_loadl_epi64((__m128i *)(bits + pixman_fixed_to_int(x)));
+    vrl0 = _mm_loadl_epi64((__m128i*)(bits + pixman_fixed_to_int(x)));
 #endif
     /* vrl0: R0, L0 */
 
@@ -277,10 +277,10 @@ static void ssse3_fetch_horizontal(bits_image_t *image, line_t *line, int y,
 }
 
 // scale a line of destination pixels
-static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
-                                            const uint32_t *mask) {
+static uint32_t* ssse3_fetch_bilinear_cover(pixman_iter_t* iter,
+                                            const uint32_t* mask) {
   pixman_fixed_t fx, ux;
-  bilinear_info_t *info = iter->data;
+  bilinear_info_t* info = iter->data;
   line_t *line0, *line1;
   int y0, y1;
   int32_t dist_y;
@@ -291,7 +291,7 @@ static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
   ux = iter->image->transform->matrix[0][0];
 
   y0 = pixman_fixed_to_int(info->y);
-  if (y0 < 0) *(volatile char *)0 = 9;
+  if (y0 < 0) *(volatile char*)0 = 9;
   y1 = y0 + 1;
 
   // clamping in y direction
@@ -335,10 +335,10 @@ static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
 #endif
 
   for (i = 0; i + 3 < iter->width; i += 4) {
-    __m128i top0 = _mm_load_si128((__m128i *)(line0->buffer + i));
-    __m128i bot0 = _mm_load_si128((__m128i *)(line1->buffer + i));
-    __m128i top1 = _mm_load_si128((__m128i *)(line0->buffer + i + 2));
-    __m128i bot1 = _mm_load_si128((__m128i *)(line1->buffer + i + 2));
+    __m128i top0 = _mm_load_si128((__m128i*)(line0->buffer + i));
+    __m128i bot0 = _mm_load_si128((__m128i*)(line1->buffer + i));
+    __m128i top1 = _mm_load_si128((__m128i*)(line0->buffer + i + 2));
+    __m128i bot1 = _mm_load_si128((__m128i*)(line1->buffer + i + 2));
 #ifdef PIXMAN_STYLE_INTERPOLATION
     __m128i r0, r1, tmp, p;
 
@@ -379,12 +379,12 @@ static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
 #endif
 
     p = _mm_packus_epi16(r0, r1);
-    _mm_storeu_si128((__m128i *)(iter->buffer + i), p);
+    _mm_storeu_si128((__m128i*)(iter->buffer + i), p);
   }
 
   while (i < iter->width) {
-    __m128i top0 = _mm_load_si128((__m128i *)(line0->buffer + i));
-    __m128i bot0 = _mm_load_si128((__m128i *)(line1->buffer + i));
+    __m128i top0 = _mm_load_si128((__m128i*)(line0->buffer + i));
+    __m128i bot0 = _mm_load_si128((__m128i*)(line1->buffer + i));
 
 #ifdef PIXMAN_STYLE_INTERPOLATION
     __m128i r0, tmp, p;
@@ -408,10 +408,10 @@ static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
     p = _mm_packus_epi16(r0, r0);
 
     if (iter->width - i == 1) {
-      *(uint32_t *)(iter->buffer + i) = _mm_cvtsi128_si32(p);
+      *(uint32_t*)(iter->buffer + i) = _mm_cvtsi128_si32(p);
       i++;
     } else {
-      _mm_storel_epi64((__m128i *)(iter->buffer + i), p);
+      _mm_storel_epi64((__m128i*)(iter->buffer + i), p);
       i += 2;
     }
   }
@@ -421,13 +421,13 @@ static uint32_t *ssse3_fetch_bilinear_cover(pixman_iter_t *iter,
   return iter->buffer;
 }
 
-static void ssse3_bilinear_cover_iter_fini(pixman_iter_t *iter) {
+static void ssse3_bilinear_cover_iter_fini(pixman_iter_t* iter) {
   free(iter->data);
 }
 
-static void ssse3_bilinear_cover_iter_init(pixman_iter_t *iter) {
+static void ssse3_bilinear_cover_iter_init(pixman_iter_t* iter) {
   int width = iter->width;
-  bilinear_info_t *info;
+  bilinear_info_t* info;
   pixman_vector_t v;
 
   if (iter->x > PIXMAN_FIXED_INT_MAX || iter->x < PIXMAN_FIXED_INT_MIN ||
@@ -447,7 +447,7 @@ static void ssse3_bilinear_cover_iter_init(pixman_iter_t *iter) {
   info->x = v.vector[0] - pixman_fixed_1 / 2;
   info->y = v.vector[1] - pixman_fixed_1 / 2;
 
-#define ALIGN(addr) ((void *)((((uintptr_t)(addr)) + 15) & (~15)))
+#define ALIGN(addr) ((void*)((((uintptr_t)(addr)) + 15) & (~15)))
 
   /* It is safe to set the y coordinates to -1 initially
    * because COVER_CLIP_BILINEAR ensures that we will only
@@ -473,8 +473,8 @@ fail:
 /* scale the src from src_width/height to dest_width/height drawn
  * into the rectangle x,y width,height
  * src_stride and dst_stride are 4 byte units */
-bool ssse3_scale_data(uint32_t *src, int src_width, int src_height,
-                      int src_stride, uint32_t *dest, int dest_width,
+bool ssse3_scale_data(uint32_t* src, int src_width, int src_height,
+                      int src_stride, uint32_t* dest, int dest_width,
                       int dest_height, int dest_stride, int x, int y, int width,
                       int height) {
   // XXX: assert(src_width > 1)

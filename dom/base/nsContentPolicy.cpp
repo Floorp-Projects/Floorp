@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS(nsContentPolicy, nsIContentPolicy)
 
 static mozilla::LazyLogModule gConPolLog("nsContentPolicy");
 
-nsresult NS_NewContentPolicy(nsIContentPolicy **aResult) {
+nsresult NS_NewContentPolicy(nsIContentPolicy** aResult) {
   *aResult = new nsContentPolicy;
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -64,10 +64,10 @@ nsContentPolicy::~nsContentPolicy() {}
 #endif  // defined(DEBUG)
 
 inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
-                                             nsIURI *contentLocation,
-                                             nsILoadInfo *loadInfo,
-                                             const nsACString &mimeType,
-                                             int16_t *decision) {
+                                             nsIURI* contentLocation,
+                                             nsILoadInfo* loadInfo,
+                                             const nsACString& mimeType,
+                                             int16_t* decision) {
   nsContentPolicyType contentType = loadInfo->InternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = loadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> requestPrincipal = loadInfo->TriggeringPrincipal();
@@ -120,7 +120,7 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
    * their permissions.
    */
   nsresult rv;
-  const nsCOMArray<nsIContentPolicy> &entries = mPolicies.GetCachedEntries();
+  const nsCOMArray<nsIContentPolicy>& entries = mPolicies.GetCachedEntries();
 
   nsCOMPtr<nsPIDOMWindowOuter> window;
   if (nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext)) {
@@ -176,7 +176,7 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
   }                                                                            \
   /* skip all this nonsense if the call failed or logging is disabled */       \
   if (NS_SUCCEEDED(rv) && MOZ_LOG_TEST(gConPolLog, LogLevel::Debug)) {         \
-    const char *resultName;                                                    \
+    const char* resultName;                                                    \
     if (decision) {                                                            \
       resultName = NS_CP_ResponseName(*decision);                              \
     } else {                                                                   \
@@ -193,8 +193,8 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
   PR_END_MACRO
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldLoad(nsIURI *contentLocation, nsILoadInfo *loadInfo,
-                            const nsACString &mimeType, int16_t *decision) {
+nsContentPolicy::ShouldLoad(nsIURI* contentLocation, nsILoadInfo* loadInfo,
+                            const nsACString& mimeType, int16_t* decision) {
   // ShouldProcess does not need a content location, but we do
   MOZ_ASSERT(contentLocation, "Must provide request location");
   nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldLoad, contentLocation,
@@ -205,8 +205,8 @@ nsContentPolicy::ShouldLoad(nsIURI *contentLocation, nsILoadInfo *loadInfo,
 }
 
 NS_IMETHODIMP
-nsContentPolicy::ShouldProcess(nsIURI *contentLocation, nsILoadInfo *loadInfo,
-                               const nsACString &mimeType, int16_t *decision) {
+nsContentPolicy::ShouldProcess(nsIURI* contentLocation, nsILoadInfo* loadInfo,
+                               const nsACString& mimeType, int16_t* decision) {
   nsresult rv = CheckPolicy(&nsIContentPolicy::ShouldProcess, contentLocation,
                             loadInfo, mimeType, decision);
   LOG_CHECK("ShouldProcess");

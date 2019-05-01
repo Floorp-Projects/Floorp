@@ -13,7 +13,7 @@ namespace gfx {
 
 using namespace std;
 
-void PathBuilderRecording::MoveTo(const Point &aPoint) {
+void PathBuilderRecording::MoveTo(const Point& aPoint) {
   PathOp op;
   op.mType = PathOp::OP_MOVETO;
   op.mP1 = aPoint;
@@ -21,7 +21,7 @@ void PathBuilderRecording::MoveTo(const Point &aPoint) {
   mPathBuilder->MoveTo(aPoint);
 }
 
-void PathBuilderRecording::LineTo(const Point &aPoint) {
+void PathBuilderRecording::LineTo(const Point& aPoint) {
   PathOp op;
   op.mType = PathOp::OP_LINETO;
   op.mP1 = aPoint;
@@ -29,8 +29,8 @@ void PathBuilderRecording::LineTo(const Point &aPoint) {
   mPathBuilder->LineTo(aPoint);
 }
 
-void PathBuilderRecording::BezierTo(const Point &aCP1, const Point &aCP2,
-                                    const Point &aCP3) {
+void PathBuilderRecording::BezierTo(const Point& aCP1, const Point& aCP2,
+                                    const Point& aCP3) {
   PathOp op;
   op.mType = PathOp::OP_BEZIERTO;
   op.mP1 = aCP1;
@@ -40,8 +40,8 @@ void PathBuilderRecording::BezierTo(const Point &aCP1, const Point &aCP2,
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
 }
 
-void PathBuilderRecording::QuadraticBezierTo(const Point &aCP1,
-                                             const Point &aCP2) {
+void PathBuilderRecording::QuadraticBezierTo(const Point& aCP1,
+                                             const Point& aCP2) {
   PathOp op;
   op.mType = PathOp::OP_QUADRATICBEZIERTO;
   op.mP1 = aCP1;
@@ -83,7 +83,7 @@ already_AddRefed<PathBuilder> PathRecording::CopyToBuilder(
 }
 
 already_AddRefed<PathBuilder> PathRecording::TransformedCopyToBuilder(
-    const Matrix &aTransform, FillRule aFillRule) const {
+    const Matrix& aTransform, FillRule aFillRule) const {
   RefPtr<PathBuilder> pathBuilder =
       mPath->TransformedCopyToBuilder(aTransform, aFillRule);
   RefPtr<PathBuilderRecording> recording =

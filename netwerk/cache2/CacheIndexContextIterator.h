@@ -14,13 +14,13 @@ namespace net {
 
 class CacheIndexContextIterator : public CacheIndexIterator {
  public:
-  CacheIndexContextIterator(CacheIndex *aIndex, bool aAddNew,
-                            nsILoadContextInfo *aInfo);
+  CacheIndexContextIterator(CacheIndex* aIndex, bool aAddNew,
+                            nsILoadContextInfo* aInfo);
   virtual ~CacheIndexContextIterator() = default;
 
  private:
-  virtual void AddRecord(CacheIndexRecord *aRecord) override;
-  virtual void AddRecords(const nsTArray<CacheIndexRecord *> &aRecords);
+  virtual void AddRecord(CacheIndexRecord* aRecord) override;
+  virtual void AddRecords(const nsTArray<CacheIndexRecord*>& aRecords);
 
   nsCOMPtr<nsILoadContextInfo> mInfo;
 };

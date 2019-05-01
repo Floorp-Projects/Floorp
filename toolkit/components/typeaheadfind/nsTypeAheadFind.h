@@ -50,31 +50,31 @@ class nsTypeAheadFind : public nsITypeAheadFind,
 
   void SaveFind();
   void PlayNotFoundSound();
-  nsresult GetWebBrowserFind(nsIDocShell *aDocShell,
-                             nsIWebBrowserFind **aWebBrowserFind);
+  nsresult GetWebBrowserFind(nsIDocShell* aDocShell,
+                             nsIWebBrowserFind** aWebBrowserFind);
 
-  void RangeStartsInsideLink(nsRange *aRange, bool *aIsInsideLink,
-                             bool *aIsStartingLink);
+  void RangeStartsInsideLink(nsRange* aRange, bool* aIsInsideLink,
+                             bool* aIsStartingLink);
 
-  void GetSelection(mozilla::PresShell *aPresShell,
-                    nsISelectionController **aSelCon,
-                    mozilla::dom::Selection **aDomSel);
+  void GetSelection(mozilla::PresShell* aPresShell,
+                    nsISelectionController** aSelCon,
+                    mozilla::dom::Selection** aDomSel);
   // *aNewRange may not be collapsed.  If you want to collapse it in a
   // particular way, you need to do it yourself.
-  bool IsRangeVisible(mozilla::PresShell *aPresShell,
-                      nsPresContext *aPresContext, nsRange *aRange,
+  bool IsRangeVisible(mozilla::PresShell* aPresShell,
+                      nsPresContext* aPresContext, nsRange* aRange,
                       bool aMustBeVisible, bool aGetTopVisibleLeaf,
-                      nsRange **aNewRange, bool *aUsesIndependentSelection);
-  bool IsRangeRendered(mozilla::PresShell *aPresShell,
-                       nsPresContext *aPresContext, nsRange *aRange);
+                      nsRange** aNewRange, bool* aUsesIndependentSelection);
+  bool IsRangeRendered(mozilla::PresShell* aPresShell,
+                       nsPresContext* aPresContext, nsRange* aRange);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult FindItNow(bool aIsLinksOnly, bool aIsFirstVisiblePreferred,
-                     bool aFindPrev, uint16_t *aResult);
-  nsresult GetSearchContainers(nsISupports *aContainer,
-                               nsISelectionController *aSelectionController,
+                     bool aFindPrev, uint16_t* aResult);
+  nsresult GetSearchContainers(nsISupports* aContainer,
+                               nsISelectionController* aSelectionController,
                                bool aIsFirstVisiblePreferred, bool aFindPrev,
-                               mozilla::PresShell **aPresShell,
-                               nsPresContext **aPresContext);
+                               mozilla::PresShell** aPresShell,
+                               nsPresContext** aPresContext);
 
   // Get the pres shell from mPresShell and return it only if it is still
   // attached to the DOM window.

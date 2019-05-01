@@ -21,7 +21,7 @@ typedef struct {
 } __m128i;
 
 MOZ_ALWAYS_INLINE
-__m128i loadUnaligned128(__m128i *p) {
+__m128i loadUnaligned128(__m128i* p) {
   __m128i v;
 
   asm volatile(
@@ -80,9 +80,9 @@ __m128i Divide(__m128i aValues, __m128i aDivisor) {
 }
 
 MOZ_ALWAYS_INLINE
-__m128i BlurFourPixels(const __m128i &aTopLeft, const __m128i &aTopRight,
-                       const __m128i &aBottomRight, const __m128i &aBottomLeft,
-                       const __m128i &aDivisor) {
+__m128i BlurFourPixels(const __m128i& aTopLeft, const __m128i& aTopRight,
+                       const __m128i& aBottomRight, const __m128i& aBottomLeft,
+                       const __m128i& aDivisor) {
   __m128i values;
 
   asm volatile(
@@ -99,7 +99,7 @@ __m128i BlurFourPixels(const __m128i &aTopLeft, const __m128i &aTopRight,
 }
 
 MOZ_ALWAYS_INLINE
-void LoadIntegralRowFromRow(uint32_t *aDest, const uint8_t *aSource,
+void LoadIntegralRowFromRow(uint32_t* aDest, const uint8_t* aSource,
                             int32_t aSourceWidth, int32_t aLeftInflation,
                             int32_t aRightInflation) {
   int32_t currentRowSum = 0;
@@ -155,9 +155,9 @@ __m128i AccumulatePixelSums(__m128i aPixels) {
 MOZ_ALWAYS_INLINE
 void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
                                int32_t aTopInflation, int32_t aBottomInflation,
-                               uint32_t *aIntegralImage,
-                               size_t aIntegralImageStride, uint8_t *aSource,
-                               int32_t aSourceStride, const IntSize &aSize) {
+                               uint32_t* aIntegralImage,
+                               size_t aIntegralImageStride, uint8_t* aSource,
+                               int32_t aSourceStride, const IntSize& aSize) {
   MOZ_ASSERT(!(aLeftInflation & 3));
 
   uint32_t stride32bit = aIntegralImageStride / 4;
@@ -169,9 +169,9 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
                          aRightInflation);
 
   for (int y = 1; y < aTopInflation + 1; y++) {
-    uint32_t *intRow = aIntegralImage + (y * stride32bit);
-    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-    uint32_t *intFirstRow = aIntegralImage;
+    uint32_t* intRow = aIntegralImage + (y * stride32bit);
+    uint32_t* intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+    uint32_t* intFirstRow = aIntegralImage;
 
     for (int x = 0; x < integralImageSize.width; x += 4) {
       __m128i firstRow, previousRow;
@@ -207,9 +207,9 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
         [ zeroh ] "=f"(zero.h), [ zerol ] "=f"(zero.l));
   for (int y = aTopInflation + 1; y < (aSize.height + aTopInflation); y++) {
     __m128i currentRowSum;
-    uint32_t *intRow = aIntegralImage + (y * stride32bit);
-    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-    uint8_t *sourceRow = aSource + aSourceStride * (y - aTopInflation);
+    uint32_t* intRow = aIntegralImage + (y * stride32bit);
+    uint32_t* intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+    uint8_t* sourceRow = aSource + aSourceStride * (y - aTopInflation);
     uint32_t pixel = sourceRow[0];
 
     asm volatile(
@@ -248,7 +248,7 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
       );
     }
     for (int x = aLeftInflation; x < (aSize.width + aLeftInflation); x += 4) {
-      uint32_t pixels = *(uint32_t *)(sourceRow + (x - aLeftInflation));
+      uint32_t pixels = *(uint32_t*)(sourceRow + (x - aLeftInflation));
       __m128i sumPixels, t;
 
       // It's important to shuffle here. When we exit this loop currentRowSum
@@ -293,7 +293,7 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
       // Deal with unaligned portion. Get the correct pixel from currentRowSum,
       // see explanation above.
       uint32_t intCurrentRowSum =
-          ((uint32_t *)&currentRowSum)[(aSize.width % 4) - 1];
+          ((uint32_t*)&currentRowSum)[(aSize.width % 4) - 1];
       for (; x < integralImageSize.width; x++) {
         // We could be unaligned here!
         if (!(x & 3)) {
@@ -364,11 +364,11 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
 
     for (int y = aSize.height + aTopInflation; y < integralImageSize.height;
          y++) {
-      __m128i *intRow = (__m128i *)(aIntegralImage + (y * stride32bit));
-      __m128i *intPrevRow = (__m128i *)(aIntegralImage + (y - 1) * stride32bit);
-      __m128i *intLastRow =
-          (__m128i *)(aIntegralImage +
-                      (integralImageSize.height - 1) * stride32bit);
+      __m128i* intRow = (__m128i*)(aIntegralImage + (y * stride32bit));
+      __m128i* intPrevRow = (__m128i*)(aIntegralImage + (y - 1) * stride32bit);
+      __m128i* intLastRow =
+          (__m128i*)(aIntegralImage +
+                     (integralImageSize.height - 1) * stride32bit);
 
       for (int x = 0; x < integralImageSize.width; x += 4) {
         __m128i t1, t2;
@@ -395,9 +395,9 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
 /**
  * Attempt to do an in-place box blur using an integral image.
  */
-void AlphaBoxBlur::BoxBlur_LS3(uint8_t *aData, int32_t aLeftLobe,
+void AlphaBoxBlur::BoxBlur_LS3(uint8_t* aData, int32_t aLeftLobe,
                                int32_t aRightLobe, int32_t aTopLobe,
-                               int32_t aBottomLobe, uint32_t *aIntegralImage,
+                               int32_t aBottomLobe, uint32_t* aIntegralImage,
                                size_t aIntegralImageStride) const {
   IntSize size = GetSize();
 
@@ -438,23 +438,23 @@ void AlphaBoxBlur::BoxBlur_LS3(uint8_t *aData, int32_t aLeftLobe,
 
   // This points to the start of the rectangle within the IntegralImage that
   // overlaps the surface being blurred.
-  uint32_t *innerIntegral =
+  uint32_t* innerIntegral =
       aIntegralImage + (aTopLobe * stride32bit) + leftInflation;
 
   IntRect skipRect = mSkipRect;
   int32_t stride = mStride;
-  uint8_t *data = aData;
+  uint8_t* data = aData;
   for (int32_t y = 0; y < size.height; y++) {
     bool inSkipRectY = y > skipRect.y && y < skipRect.YMost();
 
-    uint32_t *topLeftBase =
+    uint32_t* topLeftBase =
         innerIntegral + ((y - aTopLobe) * ptrdiff_t(stride32bit) - aLeftLobe);
-    uint32_t *topRightBase =
+    uint32_t* topRightBase =
         innerIntegral + ((y - aTopLobe) * ptrdiff_t(stride32bit) + aRightLobe);
-    uint32_t *bottomRightBase =
+    uint32_t* bottomRightBase =
         innerIntegral +
         ((y + aBottomLobe) * ptrdiff_t(stride32bit) + aRightLobe);
-    uint32_t *bottomLeftBase =
+    uint32_t* bottomLeftBase =
         innerIntegral +
         ((y + aBottomLobe) * ptrdiff_t(stride32bit) - aLeftLobe);
 
@@ -474,31 +474,31 @@ void AlphaBoxBlur::BoxBlur_LS3(uint8_t *aData, int32_t aLeftLobe,
       __m128i bottomRight;
       __m128i bottomLeft;
 
-      topLeft = loadUnaligned128((__m128i *)(topLeftBase + x));
-      topRight = loadUnaligned128((__m128i *)(topRightBase + x));
-      bottomRight = loadUnaligned128((__m128i *)(bottomRightBase + x));
-      bottomLeft = loadUnaligned128((__m128i *)(bottomLeftBase + x));
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x));
       __m128i result1 =
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
-      topLeft = loadUnaligned128((__m128i *)(topLeftBase + x + 4));
-      topRight = loadUnaligned128((__m128i *)(topRightBase + x + 4));
-      bottomRight = loadUnaligned128((__m128i *)(bottomRightBase + x + 4));
-      bottomLeft = loadUnaligned128((__m128i *)(bottomLeftBase + x + 4));
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 4));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 4));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 4));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 4));
       __m128i result2 =
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
-      topLeft = loadUnaligned128((__m128i *)(topLeftBase + x + 8));
-      topRight = loadUnaligned128((__m128i *)(topRightBase + x + 8));
-      bottomRight = loadUnaligned128((__m128i *)(bottomRightBase + x + 8));
-      bottomLeft = loadUnaligned128((__m128i *)(bottomLeftBase + x + 8));
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 8));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 8));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 8));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 8));
       __m128i result3 =
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
-      topLeft = loadUnaligned128((__m128i *)(topLeftBase + x + 12));
-      topRight = loadUnaligned128((__m128i *)(topRightBase + x + 12));
-      bottomRight = loadUnaligned128((__m128i *)(bottomRightBase + x + 12));
-      bottomLeft = loadUnaligned128((__m128i *)(bottomLeftBase + x + 12));
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 12));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 12));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 12));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 12));
       __m128i result4 =
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
 
@@ -535,10 +535,10 @@ void AlphaBoxBlur::BoxBlur_LS3(uint8_t *aData, int32_t aLeftLobe,
         inSkipRectY = false;
         continue;
       }
-      __m128i topLeft = loadUnaligned128((__m128i *)(topLeftBase + x));
-      __m128i topRight = loadUnaligned128((__m128i *)(topRightBase + x));
-      __m128i bottomRight = loadUnaligned128((__m128i *)(bottomRightBase + x));
-      __m128i bottomLeft = loadUnaligned128((__m128i *)(bottomLeftBase + x));
+      __m128i topLeft = loadUnaligned128((__m128i*)(topLeftBase + x));
+      __m128i topRight = loadUnaligned128((__m128i*)(topRightBase + x));
+      __m128i bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x));
+      __m128i bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x));
 
       __m128i result =
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);

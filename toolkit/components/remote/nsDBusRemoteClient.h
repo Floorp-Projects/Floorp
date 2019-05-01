@@ -17,17 +17,17 @@ class nsDBusRemoteClient : public nsRemoteClient {
   ~nsDBusRemoteClient();
 
   virtual nsresult Init() override;
-  virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
-                                   int32_t argc, char **argv,
-                                   const char *aDesktopStartupID,
-                                   char **aResponse, bool *aSucceeded) override;
+  virtual nsresult SendCommandLine(const char* aProgram, const char* aProfile,
+                                   int32_t argc, char** argv,
+                                   const char* aDesktopStartupID,
+                                   char** aResponse, bool* aSucceeded) override;
   void Shutdown();
 
  private:
-  bool GetRemoteDestinationName(const char *aProgram, const char *aProfile,
-                                nsCString &aDestinationName);
-  nsresult DoSendDBusCommandLine(const char *aProgram, const char *aProfile,
-                                 const char *aBuffer, int aLength);
+  bool GetRemoteDestinationName(const char* aProgram, const char* aProfile,
+                                nsCString& aDestinationName);
+  nsresult DoSendDBusCommandLine(const char* aProgram, const char* aProfile,
+                                 const char* aBuffer, int aLength);
   RefPtr<DBusConnection> mConnection;
 };
 

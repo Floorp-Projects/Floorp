@@ -33,12 +33,12 @@ class NullHttpChannel final : public nsINullChannel,
 
   // Copies the URI, Principal and Timing-Allow-Origin headers from the
   // passed channel to this object, to be used for resource timing checks
-  explicit NullHttpChannel(nsIHttpChannel *chan);
+  explicit NullHttpChannel(nsIHttpChannel* chan);
 
   // Same signature as nsHttpChannel::Init
-  MOZ_MUST_USE nsresult Init(nsIURI *aURI, uint32_t aCaps,
-                             nsProxyInfo *aProxyInfo,
-                             uint32_t aProxyResolveFlags, nsIURI *aProxyURI);
+  MOZ_MUST_USE nsresult Init(nsIURI* aURI, uint32_t aCaps,
+                             nsProxyInfo* aProxyInfo,
+                             uint32_t aProxyResolveFlags, nsIURI* aProxyURI);
 
  private:
   ~NullHttpChannel() = default;

@@ -29,14 +29,14 @@ using testing::Test;
 #define DEBUG_LUL_TEST_DWARF 0
 
 // LUL needs a callback for its logging sink.
-static void gtest_logging_sink_for_LulTestDwarf(const char *str) {
+static void gtest_logging_sink_for_LulTestDwarf(const char* str) {
   if (DEBUG_LUL_TEST_DWARF == 0) {
     return;
   }
   // Ignore any trailing \n, since LOG will add one anyway.
   size_t n = strlen(str);
   if (n > 0 && str[n - 1] == '\n') {
-    char *tmp = strdup(str);
+    char* tmp = strdup(str);
     tmp[n - 1] = 0;
     fprintf(stderr, "LUL-in-gtest: %s\n", tmp);
     free(tmp);
@@ -51,7 +51,7 @@ class MockCallFrameInfoHandler : public CallFrameInfo::Handler {
  public:
   MOCK_METHOD6(Entry,
                bool(size_t offset, uint64 address, uint64 length, uint8 version,
-                    const std::string &augmentation, unsigned return_address));
+                    const std::string& augmentation, unsigned return_address));
   MOCK_METHOD2(UndefinedRule, bool(uint64 address, int reg));
   MOCK_METHOD2(SameValueRule, bool(uint64 address, int reg));
   MOCK_METHOD4(OffsetRule,
@@ -60,9 +60,9 @@ class MockCallFrameInfoHandler : public CallFrameInfo::Handler {
                bool(uint64 address, int reg, int base_register, long offset));
   MOCK_METHOD3(RegisterRule, bool(uint64 address, int reg, int base_register));
   MOCK_METHOD3(ExpressionRule,
-               bool(uint64 address, int reg, const std::string &expression));
+               bool(uint64 address, int reg, const std::string& expression));
   MOCK_METHOD3(ValExpressionRule,
-               bool(uint64 address, int reg, const std::string &expression));
+               bool(uint64 address, int reg, const std::string& expression));
   MOCK_METHOD0(End, bool());
   MOCK_METHOD2(PersonalityRoutine, bool(uint64 address, bool indirect));
   MOCK_METHOD2(LanguageSpecificDataArea, bool(uint64 address, bool indirect));
@@ -79,7 +79,7 @@ class MockCallFrameErrorReporter : public CallFrameInfo::Reporter {
   MOCK_METHOD2(CIEPointerOutOfRange, void(uint64, uint64));
   MOCK_METHOD2(BadCIEId, void(uint64, uint64));
   MOCK_METHOD2(UnrecognizedVersion, void(uint64, int version));
-  MOCK_METHOD2(UnrecognizedAugmentation, void(uint64, const string &));
+  MOCK_METHOD2(UnrecognizedAugmentation, void(uint64, const string&));
   MOCK_METHOD2(InvalidPointerEncoding, void(uint64, uint8));
   MOCK_METHOD2(UnusablePointerEncoding, void(uint64, uint8));
   MOCK_METHOD2(RestoreInCIE, void(uint64, uint64));
@@ -557,7 +557,7 @@ struct CFIInsnFixture : public CFIFixture {
   //
   // On return, SECTION is ready to have FDE instructions appended to
   // it, and its FinishEntry member called.
-  void StockCIEAndFDE(CFISection *section) {
+  void StockCIEAndFDE(CFISection* section) {
     // Choose appropriate constants for our address size.
     if (section->AddressSize() == 4) {
       fde_start = 0xc628ecfbU;
@@ -598,8 +598,8 @@ struct CFIInsnFixture : public CFIFixture {
   // expecting parser.Start to return SUCCEEDS.  Caller may optionally
   // supply, via READER, its own ByteReader.  If that's absent, a
   // local one is used.
-  void ParseSection(CFISection *section, bool succeeds = true,
-                    ByteReader *reader = nullptr) {
+  void ParseSection(CFISection* section, bool succeeds = true,
+                    ByteReader* reader = nullptr) {
     string contents;
     EXPECT_TRUE(section->GetContents(&contents));
     lul::Endianness endianness;
@@ -610,7 +610,7 @@ struct CFIInsnFixture : public CFIFixture {
       endianness = ENDIANNESS_LITTLE;
     }
     ByteReader local_reader(endianness);
-    ByteReader *reader_to_use = reader ? reader : &local_reader;
+    ByteReader* reader_to_use = reader ? reader : &local_reader;
     reader_to_use->SetAddressSize(section->AddressSize());
     CallFrameInfo parser(contents.data(), contents.size(), reader_to_use,
                          &handler, &reporter);
@@ -2050,7 +2050,7 @@ struct EHFrameFixture : public CFIInsnFixture {
 
   // Parse CFIInsnFixture::ParseSection, but parse the section as
   // .eh_frame data, supplying stock base addresses.
-  void ParseEHFrameSection(CFISection *section, bool succeeds = true) {
+  void ParseEHFrameSection(CFISection* section, bool succeeds = true) {
     EXPECT_TRUE(section->ContainsEHFrame());
     string contents;
     EXPECT_TRUE(section->GetContents(&contents));
@@ -2538,7 +2538,7 @@ struct EvaluatePfxExprFixture {
     XX(0x55);
     XX(0x55);
     XX(0x55);
-    if (sizeof(void *) == 8) {
+    if (sizeof(void*) == 8) {
       // le64
       XX(0xEF);
       XX(0xBE);

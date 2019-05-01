@@ -40,7 +40,7 @@ static inline cairo_antialias_t GetCairoAntialiasOption(
   }
 }
 
-gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+gfxGDIFont::gfxGDIFont(GDIFontEntry* aFontEntry, const gfxFontStyle* aFontStyle,
                        AntialiasOption anAAOption)
     : gfxFont(nullptr, aFontEntry, aFontStyle, anAAOption),
       mFont(nullptr),
@@ -75,14 +75,14 @@ gfxGDIFont::~gfxGDIFont() {
 
 UniquePtr<gfxFont> gfxGDIFont::CopyWithAntialiasOption(
     AntialiasOption anAAOption) {
-  auto entry = static_cast<GDIFontEntry *>(mFontEntry.get());
+  auto entry = static_cast<GDIFontEntry*>(mFontEntry.get());
   return MakeUnique<gfxGDIFont>(entry, &mStyle, anAAOption);
 }
 
-bool gfxGDIFont::ShapeText(DrawTarget *aDrawTarget, const char16_t *aText,
+bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                            uint32_t aOffset, uint32_t aLength, Script aScript,
                            bool aVertical, RoundingFlags aRounding,
-                           gfxShapedText *aShapedText) {
+                           gfxShapedText* aShapedText) {
   if (!mIsValid) {
     NS_WARNING("invalid font! expect incorrect text rendering");
     return false;
@@ -100,11 +100,11 @@ bool gfxGDIFont::ShapeText(DrawTarget *aDrawTarget, const char16_t *aText,
                             aVertical, aRounding, aShapedText);
 }
 
-const gfxFont::Metrics &gfxGDIFont::GetHorizontalMetrics() { return *mMetrics; }
+const gfxFont::Metrics& gfxGDIFont::GetHorizontalMetrics() { return *mMetrics; }
 
 uint32_t gfxGDIFont::GetSpaceGlyph() { return mSpaceGlyph; }
 
-bool gfxGDIFont::SetupCairoFont(DrawTarget *aDrawTarget) {
+bool gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget) {
   if (!mScaledFont ||
       cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
     // Don't cairo_set_scaled_font as that would propagate the error to
@@ -115,7 +115,7 @@ bool gfxGDIFont::SetupCairoFont(DrawTarget *aDrawTarget) {
   return true;
 }
 
-already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(DrawTarget *aTarget) {
+already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     NativeFont nativeFont;
     nativeFont.mType = NativeFontType::GDI_LOGFONT;
@@ -132,11 +132,11 @@ already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(DrawTarget *aTarget) {
   return scaledFont.forget();
 }
 
-gfxFont::RunMetrics gfxGDIFont::Measure(const gfxTextRun *aTextRun,
+gfxFont::RunMetrics gfxGDIFont::Measure(const gfxTextRun* aTextRun,
                                         uint32_t aStart, uint32_t aEnd,
                                         BoundingBoxType aBoundingBoxType,
-                                        DrawTarget *aRefDrawTarget,
-                                        Spacing *aSpacing,
+                                        DrawTarget* aRefDrawTarget,
+                                        Spacing* aSpacing,
                                         gfx::ShapedTextFlags aOrientation) {
   gfxFont::RunMetrics metrics =
       gfxFont::Measure(aTextRun, aStart, aEnd, aBoundingBoxType, aRefDrawTarget,
@@ -218,7 +218,7 @@ void gfxGDIFont::Initialize() {
   // Get font metrics if size > 0
   if (mAdjustedSize > 0.0) {
     OUTLINETEXTMETRIC oMetrics;
-    TEXTMETRIC &metrics = oMetrics.otmTextMetrics;
+    TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
 
     if (0 < GetOutlineTextMetrics(dc.GetDC(), sizeof(oMetrics), &oMetrics)) {
       mMetrics->strikeoutSize = (double)oMetrics.otmsStrikeoutSize;
@@ -303,8 +303,8 @@ void gfxGDIFont::Initialize() {
                                      TRUETYPE_TAG('O', 'S', '/', '2'));
     if (os2Table) {
       uint32_t len;
-      const OS2Table *os2 =
-          reinterpret_cast<const OS2Table *>(hb_blob_get_data(os2Table, &len));
+      const OS2Table* os2 =
+          reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table, &len));
       if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
         const uint16_t kUseTypoMetricsMask = 1 << 7;
         if ((uint16_t(os2->fsSelection) & kUseTypoMetricsMask)) {
@@ -376,7 +376,7 @@ void gfxGDIFont::Initialize() {
   cairo_matrix_init_identity(&ctm);
   cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
 
-  cairo_font_options_t *fontOptions = cairo_font_options_create();
+  cairo_font_options_t* fontOptions = cairo_font_options_create();
   if (mAntialiasOption != kAntialiasDefault) {
     cairo_font_options_set_antialias(fontOptions,
                                      GetCairoAntialiasOption(mAntialiasOption));
@@ -412,8 +412,8 @@ void gfxGDIFont::Initialize() {
 #endif
 }
 
-void gfxGDIFont::FillLogFont(LOGFONTW &aLogFont, gfxFloat aSize) {
-  GDIFontEntry *fe = static_cast<GDIFontEntry *>(GetFontEntry());
+void gfxGDIFont::FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize) {
+  GDIFontEntry* fe = static_cast<GDIFontEntry*>(GetFontEntry());
 
   // Figure out the lfWeight value to use for GDI font selection,
   // or zero to use the entry's current LOGFONT value.
@@ -509,7 +509,7 @@ int32_t gfxGDIFont::GetGlyphWidth(uint16_t aGID) {
 }
 
 void gfxGDIFont::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes *aSizes) const {
+                                        FontCacheSizes* aSizes) const {
   gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
   aSizes->mFontInstances += aMallocSizeOf(mMetrics);
   if (mGlyphWidths) {
@@ -519,7 +519,7 @@ void gfxGDIFont::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
 }
 
 void gfxGDIFont::AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes *aSizes) const {
+                                        FontCacheSizes* aSizes) const {
   aSizes->mFontInstances += aMallocSizeOf(this);
   AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }

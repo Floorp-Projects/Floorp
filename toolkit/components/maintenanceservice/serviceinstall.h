@@ -11,7 +11,7 @@ BOOL SvcInstall(SvcInstallAction action);
 BOOL SvcUninstall();
 BOOL StopService();
 BOOL SetUserAccessServiceDACL(SC_HANDLE hService);
-DWORD SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
+DWORD SetUserAccessServiceDACL(SC_HANDLE hService, PACL& pNewAcl,
                                PSECURITY_DESCRIPTOR psd);
 
 struct MaintenanceServiceStringTable {

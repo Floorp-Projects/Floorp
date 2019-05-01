@@ -30,42 +30,42 @@ extern "C" {
 
 typedef struct {
   PRTime timestamp;
-  const char *event;
-  const char *file;
+  const char* event;
+  const char* file;
   unsigned int line;
-  const char *function;
+  const char* function;
 } TimecardEntry;
 
 typedef struct Timecard {
   size_t curr_entry;
   size_t entries_allocated;
-  TimecardEntry *entries;
+  TimecardEntry* entries;
   PRTime start_time;
 } Timecard;
 
 /**
  * Creates a new Timecard structure for tracking events.
  */
-Timecard *create_timecard();
+Timecard* create_timecard();
 
 /**
  * Frees the memory associated with a timecard. After returning, the
  * timecard pointed to by tc is no longer valid.
  */
-void destroy_timecard(Timecard *tc);
+void destroy_timecard(Timecard* tc);
 
 /**
  * Records a new event in the indicated timecard. This should not be
  * called directly; code should instead use the STAMP_TIMECARD macro,
  * above.
  */
-void stamp_timecard(Timecard *tc, const char *event, const char *file,
-                    unsigned int line, const char *function);
+void stamp_timecard(Timecard* tc, const char* event, const char* file,
+                    unsigned int line, const char* function);
 
 /**
  * Formats and outputs the contents of a timecard onto stdout.
  */
-void print_timecard(Timecard *tc);
+void print_timecard(Timecard* tc);
 
 #ifdef __cplusplus
 }

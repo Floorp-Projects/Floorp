@@ -21,18 +21,18 @@ uint16x4_t Divide(uint32x4_t aValues, uint32x2_t aDivisor) {
 }
 
 MOZ_ALWAYS_INLINE
-uint16x4_t BlurFourPixels(const uint32x4_t &aTopLeft,
-                          const uint32x4_t &aTopRight,
-                          const uint32x4_t &aBottomRight,
-                          const uint32x4_t &aBottomLeft,
-                          const uint32x2_t &aDivisor) {
+uint16x4_t BlurFourPixels(const uint32x4_t& aTopLeft,
+                          const uint32x4_t& aTopRight,
+                          const uint32x4_t& aBottomRight,
+                          const uint32x4_t& aBottomLeft,
+                          const uint32x2_t& aDivisor) {
   uint32x4_t values = vaddq_u32(
       vsubq_u32(vsubq_u32(aBottomRight, aTopRight), aBottomLeft), aTopLeft);
   return Divide(values, aDivisor);
 }
 
 MOZ_ALWAYS_INLINE
-void LoadIntegralRowFromRow(uint32_t *aDest, const uint8_t *aSource,
+void LoadIntegralRowFromRow(uint32_t* aDest, const uint8_t* aSource,
                             int32_t aSourceWidth, int32_t aLeftInflation,
                             int32_t aRightInflation) {
   int32_t currentRowSum = 0;
@@ -54,9 +54,9 @@ void LoadIntegralRowFromRow(uint32_t *aDest, const uint8_t *aSource,
 
 MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
     int32_t aLeftInflation, int32_t aRightInflation, int32_t aTopInflation,
-    int32_t aBottomInflation, uint32_t *aIntegralImage,
-    size_t aIntegralImageStride, uint8_t *aSource, int32_t aSourceStride,
-    const IntSize &aSize) {
+    int32_t aBottomInflation, uint32_t* aIntegralImage,
+    size_t aIntegralImageStride, uint8_t* aSource, int32_t aSourceStride,
+    const IntSize& aSize) {
   MOZ_ASSERT(!(aLeftInflation & 3));
 
   uint32_t stride32bit = aIntegralImageStride / 4;
@@ -67,9 +67,9 @@ MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
                          aRightInflation);
 
   for (int y = 1; y < aTopInflation + 1; y++) {
-    uint32_t *intRow = aIntegralImage + (y * stride32bit);
-    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-    uint32_t *intFirstRow = aIntegralImage;
+    uint32_t* intRow = aIntegralImage + (y * stride32bit);
+    uint32_t* intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+    uint32_t* intFirstRow = aIntegralImage;
 
     for (int x = 0; x < integralImageSize.width; x += 4) {
       uint32x4_t firstRow = vld1q_u32(intFirstRow + x);
@@ -80,9 +80,9 @@ MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
 
   for (int y = aTopInflation + 1; y < (aSize.height + aTopInflation); y++) {
     uint32x4_t currentRowSum = vdupq_n_u32(0);
-    uint32_t *intRow = aIntegralImage + (y * stride32bit);
-    uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-    uint8_t *sourceRow = aSource + aSourceStride * (y - aTopInflation);
+    uint32_t* intRow = aIntegralImage + (y * stride32bit);
+    uint32_t* intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+    uint8_t* sourceRow = aSource + aSourceStride * (y - aTopInflation);
 
     uint32_t pixel = sourceRow[0];
     for (int x = 0; x < aLeftInflation; x += 4) {
@@ -121,7 +121,7 @@ MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
       // Deal with unaligned portion. Get the correct pixel from currentRowSum,
       // see explanation above.
       uint32_t intCurrentRowSum =
-          ((uint32_t *)&currentRowSum)[(aSize.width % 4) - 1];
+          ((uint32_t*)&currentRowSum)[(aSize.width % 4) - 1];
       for (; x < integralImageSize.width; x++) {
         // We could be unaligned here!
         if (!(x & 3)) {
@@ -160,9 +160,9 @@ MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
 
     for (int y = aSize.height + aTopInflation; y < integralImageSize.height;
          y++) {
-      uint32_t *intRow = aIntegralImage + (y * stride32bit);
-      uint32_t *intPrevRow = aIntegralImage + (y - 1) * stride32bit;
-      uint32_t *intLastRow =
+      uint32_t* intRow = aIntegralImage + (y * stride32bit);
+      uint32_t* intPrevRow = aIntegralImage + (y - 1) * stride32bit;
+      uint32_t* intLastRow =
           aIntegralImage + (integralImageSize.height - 1) * stride32bit;
       for (int x = 0; x < integralImageSize.width; x += 4) {
         vst1q_u32(intRow + x, vaddq_u32(vld1q_u32(intLastRow + x),
@@ -175,9 +175,9 @@ MOZ_ALWAYS_INLINE void GenerateIntegralImage_NEON(
 /**
  * Attempt to do an in-place box blur using an integral image.
  */
-void AlphaBoxBlur::BoxBlur_NEON(uint8_t *aData, int32_t aLeftLobe,
+void AlphaBoxBlur::BoxBlur_NEON(uint8_t* aData, int32_t aLeftLobe,
                                 int32_t aRightLobe, int32_t aTopLobe,
-                                int32_t aBottomLobe, uint32_t *aIntegralImage,
+                                int32_t aBottomLobe, uint32_t* aIntegralImage,
                                 size_t aIntegralImageStride) const {
   IntSize size = GetSize();
 
@@ -208,22 +208,22 @@ void AlphaBoxBlur::BoxBlur_NEON(uint8_t *aData, int32_t aLeftLobe,
 
   // This points to the start of the rectangle within the IntegralImage that
   // overlaps the surface being blurred.
-  uint32_t *innerIntegral =
+  uint32_t* innerIntegral =
       aIntegralImage + (aTopLobe * stride32bit) + leftInflation;
   IntRect skipRect = mSkipRect;
   int32_t stride = mStride;
-  uint8_t *data = aData;
+  uint8_t* data = aData;
 
   for (int32_t y = 0; y < size.height; y++) {
     bool inSkipRectY = y > skipRect.y && y < skipRect.YMost();
-    uint32_t *topLeftBase =
+    uint32_t* topLeftBase =
         innerIntegral + ((y - aTopLobe) * ptrdiff_t(stride32bit) - aLeftLobe);
-    uint32_t *topRightBase =
+    uint32_t* topRightBase =
         innerIntegral + ((y - aTopLobe) * ptrdiff_t(stride32bit) + aRightLobe);
-    uint32_t *bottomRightBase =
+    uint32_t* bottomRightBase =
         innerIntegral +
         ((y + aBottomLobe) * ptrdiff_t(stride32bit) + aRightLobe);
-    uint32_t *bottomLeftBase =
+    uint32_t* bottomLeftBase =
         innerIntegral +
         ((y + aBottomLobe) * ptrdiff_t(stride32bit) - aLeftLobe);
 
@@ -294,7 +294,7 @@ void AlphaBoxBlur::BoxBlur_NEON(uint8_t *aData, int32_t aLeftLobe,
           BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
       uint32x2_t final =
           vreinterpret_u32_u8(vmovn_u16(vcombine_u16(result, vdup_n_u16(0))));
-      *(uint32_t *)(data + stride * y + x) = vget_lane_u32(final, 0);
+      *(uint32_t*)(data + stride * y + x) = vget_lane_u32(final, 0);
     }
   }
 }

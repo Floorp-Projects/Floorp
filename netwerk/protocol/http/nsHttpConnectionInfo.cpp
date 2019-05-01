@@ -22,7 +22,7 @@
 #include "nsNetCID.h"
 #include "prnetdb.h"
 
-static nsresult SHA256(const char *aPlainText, nsAutoCString &aResult) {
+static nsresult SHA256(const char* aPlainText, nsAutoCString& aResult) {
   nsresult rv;
   nsCOMPtr<nsICryptoHash> hasher =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
@@ -32,7 +32,7 @@ static nsresult SHA256(const char *aPlainText, nsAutoCString &aResult) {
   }
   rv = hasher->Init(nsICryptoHash::SHA256);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = hasher->Update((unsigned char *)aPlainText, strlen(aPlainText));
+  rv = hasher->Update((unsigned char*)aPlainText, strlen(aPlainText));
   NS_ENSURE_SUCCESS(rv, rv);
   return hasher->Finish(false, aResult);
 }
@@ -41,29 +41,29 @@ namespace mozilla {
 namespace net {
 
 nsHttpConnectionInfo::nsHttpConnectionInfo(
-    const nsACString &originHost, int32_t originPort,
-    const nsACString &npnToken, const nsACString &username,
-    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
-    const OriginAttributes &originAttributes, bool endToEndSSL, bool isolated)
+    const nsACString& originHost, int32_t originPort,
+    const nsACString& npnToken, const nsACString& username,
+    const nsACString& topWindowOrigin, nsProxyInfo* proxyInfo,
+    const OriginAttributes& originAttributes, bool endToEndSSL, bool isolated)
     : mRoutedPort(443), mIsolated(isolated), mLessThanTls13(false) {
   Init(originHost, originPort, npnToken, username, topWindowOrigin, proxyInfo,
        originAttributes, endToEndSSL);
 }
 
 nsHttpConnectionInfo::nsHttpConnectionInfo(
-    const nsACString &originHost, int32_t originPort,
-    const nsACString &npnToken, const nsACString &username,
-    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
-    const OriginAttributes &originAttributes, bool endToEndSSL)
+    const nsACString& originHost, int32_t originPort,
+    const nsACString& npnToken, const nsACString& username,
+    const nsACString& topWindowOrigin, nsProxyInfo* proxyInfo,
+    const OriginAttributes& originAttributes, bool endToEndSSL)
     : nsHttpConnectionInfo(originHost, originPort, npnToken, username,
                            topWindowOrigin, proxyInfo, originAttributes,
                            endToEndSSL, false) {}
 
 nsHttpConnectionInfo::nsHttpConnectionInfo(
-    const nsACString &originHost, int32_t originPort,
-    const nsACString &npnToken, const nsACString &username,
-    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
-    const OriginAttributes &originAttributes, const nsACString &routedHost,
+    const nsACString& originHost, int32_t originPort,
+    const nsACString& npnToken, const nsACString& username,
+    const nsACString& topWindowOrigin, nsProxyInfo* proxyInfo,
+    const OriginAttributes& originAttributes, const nsACString& routedHost,
     int32_t routedPort, bool isolated)
     : mIsolated(isolated), mLessThanTls13(false) {
   mEndToEndSSL = true;  // so DefaultPort() works
@@ -77,21 +77,21 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(
 }
 
 nsHttpConnectionInfo::nsHttpConnectionInfo(
-    const nsACString &originHost, int32_t originPort,
-    const nsACString &npnToken, const nsACString &username,
-    const nsACString &topWindowOrigin, nsProxyInfo *proxyInfo,
-    const OriginAttributes &originAttributes, const nsACString &routedHost,
+    const nsACString& originHost, int32_t originPort,
+    const nsACString& npnToken, const nsACString& username,
+    const nsACString& topWindowOrigin, nsProxyInfo* proxyInfo,
+    const OriginAttributes& originAttributes, const nsACString& routedHost,
     int32_t routedPort)
     : nsHttpConnectionInfo(originHost, originPort, npnToken, username,
                            topWindowOrigin, proxyInfo, originAttributes,
                            routedHost, routedPort, false) {}
 
-void nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
-                                const nsACString &npnToken,
-                                const nsACString &username,
-                                const nsACString &topWindowOrigin,
-                                nsProxyInfo *proxyInfo,
-                                const OriginAttributes &originAttributes,
+void nsHttpConnectionInfo::Init(const nsACString& host, int32_t port,
+                                const nsACString& npnToken,
+                                const nsACString& username,
+                                const nsACString& topWindowOrigin,
+                                nsProxyInfo* proxyInfo,
+                                const OriginAttributes& originAttributes,
                                 bool e2eSSL) {
   LOG(("Init nsHttpConnectionInfo @%p\n", this));
 
@@ -134,7 +134,7 @@ void nsHttpConnectionInfo::BuildHashKey() {
   // where we know we use anonymous connection (LOAD_ANONYMOUS load flag)
   //
 
-  const char *keyHost;
+  const char* keyHost;
   int32_t keyPort;
 
   if (mUsingHttpProxy && !mUsingConnect) {
@@ -204,7 +204,7 @@ void nsHttpConnectionInfo::BuildHashKey() {
     mHashKey.Append('[');
     mHashKey.Append(ProxyUsername());
     mHashKey.Append(':');
-    const char *password = ProxyPassword();
+    const char* password = ProxyPassword();
     if (strlen(password) > 0) {
       nsAutoCString digestedPassword;
       nsresult rv = SHA256(password, digestedPassword);
@@ -257,7 +257,7 @@ void nsHttpConnectionInfo::BuildHashKey() {
   mHashKey.Append(originAttributes);
 }
 
-void nsHttpConnectionInfo::SetOriginServer(const nsACString &host,
+void nsHttpConnectionInfo::SetOriginServer(const nsACString& host,
                                            int32_t port) {
   mOrigin = host;
   mOriginPort = port == -1 ? DefaultPort() : port;
@@ -293,7 +293,7 @@ already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
   return clone.forget();
 }
 
-void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI) {
+void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo** outCI) {
   if (mRoutedHost.IsEmpty()) {
     RefPtr<nsHttpConnectionInfo> clone = Clone();
     clone.forget(outCI);
@@ -318,7 +318,7 @@ void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI) {
   clone.forget(outCI);
 }
 
-nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam) {
+nsresult nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo** outParam) {
   // T???mozilla.org:443 (https:proxy.ducksong.com:3128) [specifc form]
   // TS??*:0 (https:proxy.ducksong.com:3128)   [wildcard form]
 

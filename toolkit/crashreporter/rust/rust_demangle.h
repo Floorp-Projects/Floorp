@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-extern char *rust_demangle(const char *);
-extern void free_rust_demangled_name(char *);
+extern char* rust_demangle(const char*);
+extern void free_rust_demangled_name(char*);
 
 #ifdef __cplusplus
 }

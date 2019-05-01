@@ -16,13 +16,13 @@ class nsFontInflationData {
   using ReflowInput = mozilla::ReflowInput;
 
  public:
-  static nsFontInflationData *FindFontInflationDataFor(const nsIFrame *aFrame);
+  static nsFontInflationData* FindFontInflationDataFor(const nsIFrame* aFrame);
 
   // Returns whether the usable width changed (which requires the
   // caller to mark its descendants dirty)
-  static bool UpdateFontInflationDataISizeFor(const ReflowInput &aReflowInput);
+  static bool UpdateFontInflationDataISizeFor(const ReflowInput& aReflowInput);
 
-  static void MarkFontInflationDataTextDirty(nsIFrame *aFrame);
+  static void MarkFontInflationDataTextDirty(nsIFrame* aFrame);
 
   bool InflationEnabled() {
     if (mTextDirty) {
@@ -34,14 +34,14 @@ class nsFontInflationData {
   nscoord UsableISize() const { return mUsableISize; }
 
  private:
-  explicit nsFontInflationData(nsIFrame *aBFCFrame);
+  explicit nsFontInflationData(nsIFrame* aBFCFrame);
 
-  nsFontInflationData(const nsFontInflationData &) = delete;
-  void operator=(const nsFontInflationData &) = delete;
+  nsFontInflationData(const nsFontInflationData&) = delete;
+  void operator=(const nsFontInflationData&) = delete;
 
-  void UpdateISize(const ReflowInput &aReflowInput);
+  void UpdateISize(const ReflowInput& aReflowInput);
   enum SearchDirection { eFromStart, eFromEnd };
-  static nsIFrame *FindEdgeInflatableFrameIn(nsIFrame *aFrame,
+  static nsIFrame* FindEdgeInflatableFrameIn(nsIFrame* aFrame,
                                              SearchDirection aDirection);
 
   void MarkTextDirty() { mTextDirty = true; }
@@ -51,16 +51,16 @@ class nsFontInflationData {
   // (yielding the inline-size that would be occupied by the characters if
   // they were all em squares).  But stop scanning if mTextAmount
   // crosses mTextThreshold.
-  void ScanTextIn(nsIFrame *aFrame);
+  void ScanTextIn(nsIFrame* aFrame);
 
-  static const nsIFrame *FlowRootFor(const nsIFrame *aFrame) {
+  static const nsIFrame* FlowRootFor(const nsIFrame* aFrame) {
     while (!(aFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT)) {
       aFrame = aFrame->GetParent();
     }
     return aFrame;
   }
 
-  nsIFrame *mBFCFrame;
+  nsIFrame* mBFCFrame;
   nscoord mUsableISize;
   nscoord mTextAmount, mTextThreshold;
   bool mInflationEnabled;  // for this BFC

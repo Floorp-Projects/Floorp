@@ -112,7 +112,7 @@ static punycode_uint adapt(punycode_uint delta, punycode_uint numpoints,
 enum punycode_status punycode_encode(punycode_uint input_length,
                                      const punycode_uint input[],
                                      const unsigned char case_flags[],
-                                     punycode_uint *output_length,
+                                     punycode_uint* output_length,
                                      char output[]) {
   punycode_uint n, delta, h, b, out, max_out, bias, j, m, q, k, t;
 
@@ -198,7 +198,7 @@ enum punycode_status punycode_encode(punycode_uint input_length,
 
 enum punycode_status punycode_decode(punycode_uint input_length,
                                      const char input[],
-                                     punycode_uint *output_length,
+                                     punycode_uint* output_length,
                                      punycode_uint output[],
                                      unsigned char case_flags[]) {
   punycode_uint n, out, i, max_out, bias, b, j, in, oldi, w, k, digit, t;

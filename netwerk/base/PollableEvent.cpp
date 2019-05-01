@@ -27,7 +27,7 @@ namespace net {
 #ifndef USEPIPE
 static PRDescIdentity sPollableEventLayerIdentity;
 static PRIOMethods sPollableEventLayerMethods;
-static PRIOMethods *sPollableEventLayerMethodsPtr = nullptr;
+static PRIOMethods* sPollableEventLayerMethodsPtr = nullptr;
 
 static void LazyInitSocket() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -39,7 +39,7 @@ static void LazyInitSocket() {
   sPollableEventLayerMethodsPtr = &sPollableEventLayerMethods;
 }
 
-static bool NewTCPSocketPair(PRFileDesc *fd[], bool aSetRecvBuff) {
+static bool NewTCPSocketPair(PRFileDesc* fd[], bool aSetRecvBuff) {
   // this is a replacement for PR_NewTCPSocketPair that manually
   // sets the recv buffer to 64K. A windows bug (1248358)
   // can result in using an incompatible rwin and window
@@ -48,9 +48,9 @@ static bool NewTCPSocketPair(PRFileDesc *fd[], bool aSetRecvBuff) {
   SOCKET_LOG(("NewTCPSocketPair %s a recv buffer tuning\n",
               aSetRecvBuff ? "with" : "without"));
 
-  PRFileDesc *listener = nullptr;
-  PRFileDesc *writer = nullptr;
-  PRFileDesc *reader = nullptr;
+  PRFileDesc* listener = nullptr;
+  PRFileDesc* writer = nullptr;
+  PRFileDesc* reader = nullptr;
   PRSocketOptionData recvBufferOpt;
   recvBufferOpt.option = PR_SockOpt_RecvBufferSize;
   recvBufferOpt.value.recv_buffer_size = 65535;
@@ -166,7 +166,7 @@ PollableEvent::PollableEvent()
   }
 #else
   SOCKET_LOG(("PollableEvent() using socket pair\n"));
-  PRFileDesc *fd[2];
+  PRFileDesc* fd[2];
   LazyInitSocket();
 
   // Try with a increased recv buffer first (bug 1248358).
@@ -200,7 +200,7 @@ PollableEvent::PollableEvent()
     // compatibility with LSPs such as McAfee that assume a NSPR
     // layer for read ala the nspr Pollable Event - Bug 698882. This layer is a
     // nop.
-    PRFileDesc *topLayer = PR_CreateIOLayerStub(sPollableEventLayerIdentity,
+    PRFileDesc* topLayer = PR_CreateIOLayerStub(sPollableEventLayerIdentity,
                                                 sPollableEventLayerMethodsPtr);
     if (topLayer) {
       if (PR_PushIOLayer(fd[0], PR_TOP_IO_LAYER, topLayer) == PR_FAILURE) {
@@ -376,7 +376,7 @@ void PollableEvent::AdjustFirstSignalTimestamp() {
   }
 }
 
-bool PollableEvent::IsSignallingAlive(TimeDuration const &timeout) {
+bool PollableEvent::IsSignallingAlive(TimeDuration const& timeout) {
   if (mWriteFailed) {
     return false;
   }

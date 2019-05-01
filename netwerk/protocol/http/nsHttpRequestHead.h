@@ -29,54 +29,54 @@ class nsHttpRequestHead {
   // The following function is only used in HttpChannelParent to avoid
   // copying headers. If you use it be careful to do it only under
   // nsHttpRequestHead lock!!!
-  const nsHttpHeaderArray &Headers() const;
+  const nsHttpHeaderArray& Headers() const;
   void Enter() { mRecursiveMutex.Lock(); }
   void Exit() { mRecursiveMutex.Unlock(); }
 
-  void SetHeaders(const nsHttpHeaderArray &aHeaders);
+  void SetHeaders(const nsHttpHeaderArray& aHeaders);
 
-  void SetMethod(const nsACString &method);
+  void SetMethod(const nsACString& method);
   void SetVersion(HttpVersion version);
-  void SetRequestURI(const nsACString &s);
-  void SetPath(const nsACString &s);
+  void SetRequestURI(const nsACString& s);
+  void SetPath(const nsACString& s);
   uint32_t HeaderCount();
 
   // Using this function it is possible to itereate through all headers
   // automatically under one lock.
   MOZ_MUST_USE nsresult VisitHeaders(
-      nsIHttpHeaderVisitor *visitor,
+      nsIHttpHeaderVisitor* visitor,
       nsHttpHeaderArray::VisitorFilter filter = nsHttpHeaderArray::eFilterAll);
-  void Method(nsACString &aMethod);
+  void Method(nsACString& aMethod);
   HttpVersion Version();
-  void RequestURI(nsACString &RequestURI);
-  void Path(nsACString &aPath);
+  void RequestURI(nsACString& RequestURI);
+  void Path(nsACString& aPath);
   void SetHTTPS(bool val);
   bool IsHTTPS();
 
-  void SetOrigin(const nsACString &scheme, const nsACString &host,
+  void SetOrigin(const nsACString& scheme, const nsACString& host,
                  int32_t port);
-  void Origin(nsACString &aOrigin);
+  void Origin(nsACString& aOrigin);
 
-  MOZ_MUST_USE nsresult SetHeader(const nsACString &h, const nsACString &v,
+  MOZ_MUST_USE nsresult SetHeader(const nsACString& h, const nsACString& v,
                                   bool m = false);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v,
+  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString& v,
                                   bool m = false);
-  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m,
+  MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString& v, bool m,
                                   nsHttpHeaderArray::HeaderVariety variety);
-  MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString &h);
-  MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString &v);
+  MOZ_MUST_USE nsresult SetEmptyHeader(const nsACString& h);
+  MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString& v);
 
   MOZ_MUST_USE nsresult ClearHeader(nsHttpAtom h);
   void ClearHeaders();
 
-  bool HasHeaderValue(nsHttpAtom h, const char *v);
+  bool HasHeaderValue(nsHttpAtom h, const char* v);
   // This function returns true if header is set even if it is an empty
   // header.
   bool HasHeader(nsHttpAtom h);
-  void Flatten(nsACString &, bool pruneProxyHeaders = false);
+  void Flatten(nsACString&, bool pruneProxyHeaders = false);
 
   // Don't allow duplicate values
-  MOZ_MUST_USE nsresult SetHeaderOnce(nsHttpAtom h, const char *v,
+  MOZ_MUST_USE nsresult SetHeaderOnce(nsHttpAtom h, const char* v,
                                       bool merge = false);
 
   bool IsSafeMethod();
@@ -101,7 +101,7 @@ class nsHttpRequestHead {
   bool IsHead() { return EqualsMethod(kMethod_Head); }
   bool IsPut() { return EqualsMethod(kMethod_Put); }
   bool IsTrace() { return EqualsMethod(kMethod_Trace); }
-  void ParseHeaderSet(const char *buffer);
+  void ParseHeaderSet(const char* buffer);
 
  private:
   // All members must be copy-constructable and assignable

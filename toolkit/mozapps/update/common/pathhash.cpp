@@ -14,9 +14,9 @@
  * @param hexString A buffer to store the hex string, must be of
  *                  size 2 * @hashSize
  */
-static void BinaryDataToHexString(const BYTE *hash, DWORD &hashSize,
+static void BinaryDataToHexString(const BYTE* hash, DWORD& hashSize,
                                   LPWSTR hexString) {
-  WCHAR *p = hexString;
+  WCHAR* p = hexString;
   for (DWORD i = 0; i < hashSize; ++i) {
     wsprintfW(p, L"%.2x", hash[i]);
     p += 2;
@@ -32,8 +32,8 @@ static void BinaryDataToHexString(const BYTE *hash, DWORD &hashSize,
  * @param  hashSize The number of bytes in the output buffer
  * @return TRUE on success
  */
-static BOOL CalculateMD5(const char *data, DWORD dataSize, BYTE **hash,
-                         DWORD &hashSize) {
+static BOOL CalculateMD5(const char* data, DWORD dataSize, BYTE** hash,
+                         DWORD& hashSize) {
   HCRYPTPROV hProv = 0;
   HCRYPTHASH hHash = 0;
 
@@ -54,13 +54,12 @@ static BOOL CalculateMD5(const char *data, DWORD dataSize, BYTE **hash,
     return FALSE;
   }
 
-  if (!CryptHashData(hHash, reinterpret_cast<const BYTE *>(data), dataSize,
-                     0)) {
+  if (!CryptHashData(hHash, reinterpret_cast<const BYTE*>(data), dataSize, 0)) {
     return FALSE;
   }
 
   DWORD dwCount = sizeof(DWORD);
-  if (!CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE *)&hashSize, &dwCount, 0)) {
+  if (!CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashSize, &dwCount, 0)) {
     return FALSE;
   }
 
@@ -105,14 +104,14 @@ BOOL CalculateRegistryPathFromFilePath(const LPCWSTR filePath,
   // Copying in the extra slash is OK because we calculate the hash
   // based on the filePathLen which excludes the slash.
   // +2 to account for the possibly trailing slash and the null terminator.
-  WCHAR *lowercasePath = new WCHAR[filePathLen + 2];
+  WCHAR* lowercasePath = new WCHAR[filePathLen + 2];
   memset(lowercasePath, 0, (filePathLen + 2) * sizeof(WCHAR));
   wcsncpy(lowercasePath, filePath, filePathLen + 1);
   _wcslwr(lowercasePath);
 
-  BYTE *hash;
+  BYTE* hash;
   DWORD hashSize = 0;
-  if (!CalculateMD5(reinterpret_cast<const char *>(lowercasePath),
+  if (!CalculateMD5(reinterpret_cast<const char*>(lowercasePath),
                     filePathLen * 2, &hash, hashSize)) {
     delete[] lowercasePath;
     return FALSE;

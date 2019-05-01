@@ -37,12 +37,12 @@ namespace {
  *         If aStr1 > aStr2, returns a positive number.  If aStr1 == aStr2,
  *         returns 0.
  */
-int localeCollationHelper8(void *aService, int aLen1, const void *aStr1,
-                           int aLen2, const void *aStr2,
+int localeCollationHelper8(void* aService, int aLen1, const void* aStr1,
+                           int aLen2, const void* aStr2,
                            int32_t aComparisonStrength) {
-  NS_ConvertUTF8toUTF16 str1(static_cast<const char *>(aStr1), aLen1);
-  NS_ConvertUTF8toUTF16 str2(static_cast<const char *>(aStr2), aLen2);
-  Service *serv = static_cast<Service *>(aService);
+  NS_ConvertUTF8toUTF16 str1(static_cast<const char*>(aStr1), aLen1);
+  NS_ConvertUTF8toUTF16 str2(static_cast<const char*>(aStr2), aLen2);
+  Service* serv = static_cast<Service*>(aService);
   return serv->localeCompareStrings(str1, str2, aComparisonStrength);
 }
 
@@ -67,11 +67,11 @@ int localeCollationHelper8(void *aService, int aLen1, const void *aStr1,
  *         If aStr1 > aStr2, returns a positive number.  If aStr1 == aStr2,
  *         returns 0.
  */
-int localeCollationHelper16(void *aService, int aLen1, const void *aStr1,
-                            int aLen2, const void *aStr2,
+int localeCollationHelper16(void* aService, int aLen1, const void* aStr1,
+                            int aLen2, const void* aStr2,
                             int32_t aComparisonStrength) {
-  const char16_t *buf1 = static_cast<const char16_t *>(aStr1);
-  const char16_t *buf2 = static_cast<const char16_t *>(aStr2);
+  const char16_t* buf1 = static_cast<const char16_t*>(aStr1);
+  const char16_t* buf2 = static_cast<const char16_t*>(aStr2);
 
   // The second argument to the nsDependentSubstring constructor is exclusive:
   // It points to the char16_t immediately following the last one in the target
@@ -79,16 +79,16 @@ int localeCollationHelper16(void *aService, int aLen1, const void *aStr1,
   // so that the pointer arithmetic is correct.
   nsDependentSubstring str1(buf1, buf1 + (aLen1 / sizeof(char16_t)));
   nsDependentSubstring str2(buf2, buf2 + (aLen2 / sizeof(char16_t)));
-  Service *serv = static_cast<Service *>(aService);
+  Service* serv = static_cast<Service*>(aService);
   return serv->localeCompareStrings(str1, str2, aComparisonStrength);
 }
 
 // This struct is used only by registerCollations below, but ISO C++98 forbids
 // instantiating a template dependent on a locally-defined type.  Boo-urns!
 struct Collations {
-  const char *zName;
+  const char* zName;
   int enc;
-  int (*xCompare)(void *, int, const void *, int, const void *);
+  int (*xCompare)(void*, int, const void*, int, const void*);
 };
 
 }  // namespace
@@ -96,7 +96,7 @@ struct Collations {
 ////////////////////////////////////////////////////////////////////////////////
 //// Exposed Functions
 
-int registerCollations(sqlite3 *aDB, Service *aService) {
+int registerCollations(sqlite3* aDB, Service* aService) {
   Collations collations[] = {
       {"locale", SQLITE_UTF8, localeCollation8},
       {"locale_case_sensitive", SQLITE_UTF8, localeCollationCaseSensitive8},
@@ -113,7 +113,7 @@ int registerCollations(sqlite3 *aDB, Service *aService) {
 
   int rv = SQLITE_OK;
   for (size_t i = 0; SQLITE_OK == rv && i < ArrayLength(collations); ++i) {
-    struct Collations *p = &collations[i];
+    struct Collations* p = &collations[i];
     rv = ::sqlite3_create_collation(aDB, p->zName, p->enc, aService,
                                     p->xCompare);
   }
@@ -124,54 +124,54 @@ int registerCollations(sqlite3 *aDB, Service *aService) {
 ////////////////////////////////////////////////////////////////////////////////
 //// SQL Collations
 
-int localeCollation8(void *aService, int aLen1, const void *aStr1, int aLen2,
-                     const void *aStr2) {
+int localeCollation8(void* aService, int aLen1, const void* aStr1, int aLen2,
+                     const void* aStr2) {
   return localeCollationHelper8(aService, aLen1, aStr1, aLen2, aStr2,
                                 nsICollation::kCollationCaseInSensitive);
 }
 
-int localeCollationCaseSensitive8(void *aService, int aLen1, const void *aStr1,
-                                  int aLen2, const void *aStr2) {
+int localeCollationCaseSensitive8(void* aService, int aLen1, const void* aStr1,
+                                  int aLen2, const void* aStr2) {
   return localeCollationHelper8(aService, aLen1, aStr1, aLen2, aStr2,
                                 nsICollation::kCollationAccentInsenstive);
 }
 
-int localeCollationAccentSensitive8(void *aService, int aLen1,
-                                    const void *aStr1, int aLen2,
-                                    const void *aStr2) {
+int localeCollationAccentSensitive8(void* aService, int aLen1,
+                                    const void* aStr1, int aLen2,
+                                    const void* aStr2) {
   return localeCollationHelper8(aService, aLen1, aStr1, aLen2, aStr2,
                                 nsICollation::kCollationCaseInsensitiveAscii);
 }
 
-int localeCollationCaseAccentSensitive8(void *aService, int aLen1,
-                                        const void *aStr1, int aLen2,
-                                        const void *aStr2) {
+int localeCollationCaseAccentSensitive8(void* aService, int aLen1,
+                                        const void* aStr1, int aLen2,
+                                        const void* aStr2) {
   return localeCollationHelper8(aService, aLen1, aStr1, aLen2, aStr2,
                                 nsICollation::kCollationCaseSensitive);
 }
 
-int localeCollation16(void *aService, int aLen1, const void *aStr1, int aLen2,
-                      const void *aStr2) {
+int localeCollation16(void* aService, int aLen1, const void* aStr1, int aLen2,
+                      const void* aStr2) {
   return localeCollationHelper16(aService, aLen1, aStr1, aLen2, aStr2,
                                  nsICollation::kCollationCaseInSensitive);
 }
 
-int localeCollationCaseSensitive16(void *aService, int aLen1, const void *aStr1,
-                                   int aLen2, const void *aStr2) {
+int localeCollationCaseSensitive16(void* aService, int aLen1, const void* aStr1,
+                                   int aLen2, const void* aStr2) {
   return localeCollationHelper16(aService, aLen1, aStr1, aLen2, aStr2,
                                  nsICollation::kCollationAccentInsenstive);
 }
 
-int localeCollationAccentSensitive16(void *aService, int aLen1,
-                                     const void *aStr1, int aLen2,
-                                     const void *aStr2) {
+int localeCollationAccentSensitive16(void* aService, int aLen1,
+                                     const void* aStr1, int aLen2,
+                                     const void* aStr2) {
   return localeCollationHelper16(aService, aLen1, aStr1, aLen2, aStr2,
                                  nsICollation::kCollationCaseInsensitiveAscii);
 }
 
-int localeCollationCaseAccentSensitive16(void *aService, int aLen1,
-                                         const void *aStr1, int aLen2,
-                                         const void *aStr2) {
+int localeCollationCaseAccentSensitive16(void* aService, int aLen1,
+                                         const void* aStr1, int aLen2,
+                                         const void* aStr2) {
   return localeCollationHelper16(aService, aLen1, aStr1, aLen2, aStr2,
                                  nsICollation::kCollationCaseSensitive);
 }

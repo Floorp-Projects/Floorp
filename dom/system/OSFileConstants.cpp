@@ -119,7 +119,7 @@ struct OSFileConstantsService::Paths {
  * @param aOutPath The path to the special directory. In case of error,
  * the string is set to void.
  */
-nsresult GetPathToSpecialDir(const char *aKey, nsString &aOutPath) {
+nsresult GetPathToSpecialDir(const char* aKey, nsString& aOutPath) {
   nsCOMPtr<nsIFile> file;
   nsresult rv = NS_GetSpecialDirectory(aKey, getter_AddRefs(file));
   if (NS_FAILED(rv) || !file) {
@@ -140,8 +140,8 @@ nsresult GetPathToSpecialDir(const char *aKey, nsString &aOutPath) {
  * and |mPaths->localProfileDir| once the profile is setup.
  */
 NS_IMETHODIMP
-OSFileConstantsService::Observe(nsISupports *, const char *aTopic,
-                                const char16_t *) {
+OSFileConstantsService::Observe(nsISupports*, const char* aTopic,
+                                const char16_t*) {
   if (!mInitialized) {
     // Initialization has not taken place, something is wrong,
     // don't make things worse.
@@ -725,9 +725,9 @@ static const dom::ConstantSpec gWinProperties[] = {
  * If the field does not exist, create it. If it exists but is not an
  * object, throw a JS error.
  */
-JSObject *GetOrCreateObjectProperty(JSContext *cx,
-                                    JS::Handle<JSObject *> aObject,
-                                    const char *aProperty) {
+JSObject* GetOrCreateObjectProperty(JSContext* cx,
+                                    JS::Handle<JSObject*> aObject,
+                                    const char* aProperty) {
   JS::Rooted<JS::Value> val(cx);
   if (!JS_GetProperty(cx, aObject, aProperty, &val)) {
     return nullptr;
@@ -750,12 +750,12 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx,
  *
  * If the nsString is void (i.e. IsVoid is true), do nothing.
  */
-bool SetStringProperty(JSContext *cx, JS::Handle<JSObject *> aObject,
-                       const char *aProperty, const nsString aValue) {
+bool SetStringProperty(JSContext* cx, JS::Handle<JSObject*> aObject,
+                       const char* aProperty, const nsString aValue) {
   if (aValue.IsVoid()) {
     return true;
   }
-  JSString *strValue = JS_NewUCStringCopyZ(cx, aValue.get());
+  JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   NS_ENSURE_TRUE(strValue, false);
   JS::Rooted<JS::Value> valValue(cx, JS::StringValue(strValue));
   return JS_SetProperty(cx, aObject, aProperty, valValue);
@@ -768,7 +768,7 @@ bool SetStringProperty(JSContext *cx, JS::Handle<JSObject *> aObject,
  * all its constants.
  */
 bool OSFileConstantsService::DefineOSFileConstants(
-    JSContext *aCx, JS::Handle<JSObject *> aGlobal) {
+    JSContext* aCx, JS::Handle<JSObject*> aGlobal) {
   if (!mInitialized) {
     JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                               JSMSG_CANT_OPEN, "OSFileConstants",
@@ -776,18 +776,18 @@ bool OSFileConstantsService::DefineOSFileConstants(
     return false;
   }
 
-  JS::Rooted<JSObject *> objOS(aCx);
+  JS::Rooted<JSObject*> objOS(aCx);
   if (!(objOS = GetOrCreateObjectProperty(aCx, aGlobal, "OS"))) {
     return false;
   }
-  JS::Rooted<JSObject *> objConstants(aCx);
+  JS::Rooted<JSObject*> objConstants(aCx);
   if (!(objConstants = GetOrCreateObjectProperty(aCx, objOS, "Constants"))) {
     return false;
   }
 
   // Build OS.Constants.libc
 
-  JS::Rooted<JSObject *> objLibc(aCx);
+  JS::Rooted<JSObject*> objLibc(aCx);
   if (!(objLibc = GetOrCreateObjectProperty(aCx, objConstants, "libc"))) {
     return false;
   }
@@ -798,7 +798,7 @@ bool OSFileConstantsService::DefineOSFileConstants(
 #if defined(XP_WIN)
   // Build OS.Constants.Win
 
-  JS::Rooted<JSObject *> objWin(aCx);
+  JS::Rooted<JSObject*> objWin(aCx);
   if (!(objWin = GetOrCreateObjectProperty(aCx, objConstants, "Win"))) {
     return false;
   }
@@ -809,7 +809,7 @@ bool OSFileConstantsService::DefineOSFileConstants(
 
   // Build OS.Constants.Sys
 
-  JS::Rooted<JSObject *> objSys(aCx);
+  JS::Rooted<JSObject*> objSys(aCx);
   if (!(objSys = GetOrCreateObjectProperty(aCx, objConstants, "Sys"))) {
     return false;
   }
@@ -821,7 +821,7 @@ bool OSFileConstantsService::DefineOSFileConstants(
     DebugOnly<nsresult> rv = runtime->GetOS(os);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    JSString *strVersion = JS_NewStringCopyZ(aCx, os.get());
+    JSString* strVersion = JS_NewStringCopyZ(aCx, os.get());
     if (!strVersion) {
       return false;
     }
@@ -856,7 +856,7 @@ bool OSFileConstantsService::DefineOSFileConstants(
 
   // Build OS.Constants.Path
 
-  JS::Rooted<JSObject *> objPath(aCx);
+  JS::Rooted<JSObject*> objPath(aCx);
   if (!(objPath = GetOrCreateObjectProperty(aCx, objConstants, "Path"))) {
     return false;
   }
@@ -961,7 +961,7 @@ OSFileConstantsService::~OSFileConstantsService() {
 }
 
 NS_IMETHODIMP
-OSFileConstantsService::Init(JSContext *aCx) {
+OSFileConstantsService::Init(JSContext* aCx) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv = InitOSFileConstants();
@@ -969,8 +969,8 @@ OSFileConstantsService::Init(JSContext *aCx) {
     return rv;
   }
 
-  mozJSComponentLoader *loader = mozJSComponentLoader::Get();
-  JS::Rooted<JSObject *> targetObj(aCx);
+  mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+  JS::Rooted<JSObject*> targetObj(aCx);
   loader->FindTargetObject(aCx, &targetObj);
 
   if (!DefineOSFileConstants(aCx, targetObj)) {

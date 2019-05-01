@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS(TRR, nsIHttpPushListener, nsIInterfaceRequestor,
 const uint8_t kDNS_CLASS_IN = 1;
 
 NS_IMETHODIMP
-TRR::Notify(nsITimer *aTimer) {
+TRR::Notify(nsITimer* aTimer) {
   if (aTimer == mTimeout) {
     mTimeout = nullptr;
     Cancel();
@@ -58,7 +58,7 @@ TRR::Notify(nsITimer *aTimer) {
 
 // convert a given host request to a DOH 'body'
 //
-nsresult TRR::DohEncode(nsCString &aBody, bool aDisableECS) {
+nsresult TRR::DohEncode(nsCString& aBody, bool aDisableECS) {
   aBody.Truncate();
   // Header
   aBody += '\0';
@@ -209,7 +209,7 @@ nsresult TRR::SendHTTPRequest() {
     /* For GET requests, the outgoing packet needs to be Base64url-encoded and
        then appended to the end of the URI. */
     rv = Base64URLEncode(tmp.Length(),
-                         reinterpret_cast<const unsigned char *>(tmp.get()),
+                         reinterpret_cast<const unsigned char*>(tmp.get()),
                          Base64URLEncodePaddingPolicy::Omit, body);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -319,7 +319,7 @@ nsresult TRR::SendHTTPRequest() {
 }
 
 NS_IMETHODIMP
-TRR::GetInterface(const nsIID &iid, void **result) {
+TRR::GetInterface(const nsIID& iid, void** result) {
   if (!iid.Equals(NS_GET_IID(nsIHttpPushListener))) {
     return NS_ERROR_NO_INTERFACE;
   }
@@ -329,8 +329,8 @@ TRR::GetInterface(const nsIID &iid, void **result) {
   return NS_OK;
 }
 
-nsresult TRR::DohDecodeQuery(const nsCString &query, nsCString &host,
-                             enum TrrType &type) {
+nsresult TRR::DohDecodeQuery(const nsCString& query, nsCString& host,
+                             enum TrrType& type) {
   FallibleTArray<uint8_t> binary;
   bool found_dns = false;
   LOG(("TRR::DohDecodeQuery %s!\n", query.get()));
@@ -339,7 +339,7 @@ nsresult TRR::DohDecodeQuery(const nsCString &query, nsCString &host,
   nsCCharSeparatedTokenizer tokenizer(query, '&');
   nsAutoCString data;
   while (tokenizer.hasMoreTokens()) {
-    const nsACString &token = tokenizer.nextToken();
+    const nsACString& token = tokenizer.nextToken();
     nsDependentCSubstring dns = Substring(token, 0, 4);
     nsAutoCString check(dns);
     if (check.Equals("dns=")) {
@@ -386,7 +386,7 @@ nsresult TRR::DohDecodeQuery(const nsCString &query, nsCString &host,
       if (avail < (index + 1 + length)) {
         return NS_ERROR_UNEXPECTED;
       }
-      host.Append((const char *)(&binary[0]) + index + 1, length);
+      host.Append((const char*)(&binary[0]) + index + 1, length);
     }
     index += 1 + length;  // skip length byte + label
   } while (length);
@@ -406,7 +406,7 @@ nsresult TRR::DohDecodeQuery(const nsCString &query, nsCString &host,
   return NS_OK;
 }
 
-nsresult TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec) {
+nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
   if (!mHostResolver) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -461,7 +461,7 @@ nsresult TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec) {
 }
 
 NS_IMETHODIMP
-TRR::OnPush(nsIHttpChannel *associated, nsIHttpChannel *pushed) {
+TRR::OnPush(nsIHttpChannel* associated, nsIHttpChannel* pushed) {
   LOG(("TRR::OnPush entry\n"));
   MOZ_ASSERT(associated == mChannel);
   if (!mRec) {
@@ -473,22 +473,22 @@ TRR::OnPush(nsIHttpChannel *associated, nsIHttpChannel *pushed) {
 }
 
 NS_IMETHODIMP
-TRR::OnStartRequest(nsIRequest *aRequest) {
+TRR::OnStartRequest(nsIRequest* aRequest) {
   LOG(("TRR::OnStartRequest %p %s %d\n", this, mHost.get(), mType));
   mStartTime = TimeStamp::Now();
   return NS_OK;
 }
 
-static uint16_t get16bit(unsigned char *aData, int index) {
+static uint16_t get16bit(unsigned char* aData, int index) {
   return ((aData[index] << 8) | aData[index + 1]);
 }
 
-static uint32_t get32bit(unsigned char *aData, int index) {
+static uint32_t get32bit(unsigned char* aData, int index) {
   return (aData[index] << 24) | (aData[index + 1] << 16) |
          (aData[index + 2] << 8) | aData[index + 3];
 }
 
-nsresult TRR::PassQName(unsigned int &index) {
+nsresult TRR::PassQName(unsigned int& index) {
   uint8_t length;
   do {
     if (mBodySize < (index + 1)) {
@@ -521,7 +521,7 @@ nsresult TRR::PassQName(unsigned int &index) {
 // GetQname: retrieves the qname (stores in 'aQname') and stores the index
 // after qname was parsed into the 'aIndex'.
 
-nsresult TRR::GetQname(nsAutoCString &aQname, unsigned int &aIndex) {
+nsresult TRR::GetQname(nsAutoCString& aQname, unsigned int& aIndex) {
   uint8_t clength = 0;
   unsigned int cindex = aIndex;
   unsigned int loop = 128;    // a valid DNS name can never loop this much
@@ -559,7 +559,7 @@ nsresult TRR::GetQname(nsAutoCString &aQname, unsigned int &aIndex) {
       if ((cindex + clength) > mBodySize) {
         return NS_ERROR_ILLEGAL_VALUE;
       }
-      aQname.Append((const char *)(&mResponse[cindex]), clength);
+      aQname.Append((const char*)(&mResponse[cindex]), clength);
       cindex += clength;  // skip label
     }
   } while (clength && --loop);
@@ -579,7 +579,7 @@ nsresult TRR::GetQname(nsAutoCString &aQname, unsigned int &aIndex) {
 //
 // DohDecode() collects the TTL and the IP addresses in the response
 //
-nsresult TRR::DohDecode(nsCString &aHost) {
+nsresult TRR::DohDecode(nsCString& aHost) {
   // The response has a 12 byte header followed by the question (returned)
   // and then the answer. The answer section itself contains the name, type
   // and class again and THEN the record data.
@@ -627,7 +627,7 @@ nsresult TRR::DohDecode(nsCString &aHost) {
         if (mBodySize < (index + 1 + length)) {
           return NS_ERROR_ILLEGAL_VALUE;
         }
-        host.Append(((char *)mResponse) + index + 1, length);
+        host.Append(((char*)mResponse) + index + 1, length);
       }
       index += 1 + length;  // skip length byte + label
     } while (length);
@@ -767,8 +767,7 @@ nsresult TRR::DohDecode(nsCString &aHost) {
               LOG(("TRR::DohDecode MALFORMED TXT RECORD\n"));
               break;
             }
-            txt.Append((const char *)(&mResponse[txtIndex]),
-                       characterStringLen);
+            txt.Append((const char*)(&mResponse[txtIndex]), characterStringLen);
             txtIndex += characterStringLen;
             available -= characterStringLen;
           }
@@ -876,12 +875,12 @@ nsresult TRR::ReturnData() {
   if (mType != TRRTYPE_TXT) {
     // create and populate an AddrInfo instance to pass on
     RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
-    DOHaddr *item;
+    DOHaddr* item;
     uint32_t ttl = AddrInfo::NO_TTL_DATA;
-    while ((item = static_cast<DOHaddr *>(mDNS.mAddresses.popFirst()))) {
+    while ((item = static_cast<DOHaddr*>(mDNS.mAddresses.popFirst()))) {
       PRNetAddr prAddr;
       NetAddrToPRNetAddr(&item->mNet, &prAddr);
-      auto *addrElement = new NetAddrElement(&prAddr);
+      auto* addrElement = new NetAddrElement(&prAddr);
       ai->AddAddress(addrElement);
       if (item->mTtl < ttl) {
         // While the DNS packet might return individual TTLs for each address,
@@ -965,7 +964,7 @@ nsresult TRR::On200Response() {
 }
 
 NS_IMETHODIMP
-TRR::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
+TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // The dtor will be run after the function returns
   LOG(("TRR:OnStopRequest %p %s %d failed=%d code=%X\n", this, mHost.get(),
        mType, mFailed, (unsigned int)aStatusCode));
@@ -1013,7 +1012,7 @@ TRR::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
 }
 
 NS_IMETHODIMP
-TRR::OnDataAvailable(nsIRequest *aRequest, nsIInputStream *aInputStream,
+TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                      uint64_t aOffset, const uint32_t aCount) {
   LOG(("TRR:OnDataAvailable %p %s %d failed=%d aCount=%u\n", this, mHost.get(),
        mType, mFailed, (unsigned int)aCount));
@@ -1030,7 +1029,7 @@ TRR::OnDataAvailable(nsIRequest *aRequest, nsIInputStream *aInputStream,
 
   uint32_t count;
   nsresult rv =
-      aInputStream->Read((char *)mResponse + mBodySize, aCount, &count);
+      aInputStream->Read((char*)mResponse + mBodySize, aCount, &count);
   if (NS_FAILED(rv)) {
     LOG(("TRR::OnDataAvailable:%d fail\n", __LINE__));
     mFailed = true;
@@ -1041,10 +1040,10 @@ TRR::OnDataAvailable(nsIRequest *aRequest, nsIInputStream *aInputStream,
   return NS_OK;
 }
 
-nsresult DOHresp::Add(uint32_t TTL, unsigned char *dns, int index, uint16_t len,
+nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, int index, uint16_t len,
                       bool aLocalAllowed) {
   nsAutoPtr<DOHaddr> doh(new DOHaddr);
-  NetAddr *addr = &doh->mNet;
+  NetAddr* addr = &doh->mNet;
   if (4 == len) {
     // IPv4
     addr->inet.family = AF_INET;
@@ -1079,7 +1078,7 @@ nsresult DOHresp::Add(uint32_t TTL, unsigned char *dns, int index, uint16_t len,
 
 class ProxyCancel : public Runnable {
  public:
-  explicit ProxyCancel(TRR *aTRR) : Runnable("proxyTrrCancel"), mTRR(aTRR) {}
+  explicit ProxyCancel(TRR* aTRR) : Runnable("proxyTrrCancel"), mTRR(aTRR) {}
 
   NS_IMETHOD Run() override {
     mTRR->Cancel();

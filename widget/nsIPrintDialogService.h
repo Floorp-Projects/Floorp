@@ -49,8 +49,8 @@ class nsIPrintDialogService : public nsISupports {
    * @return NS_ERROR_ABORT if the user indicated not to proceed
    * @return a suitable error for failures to show the print dialog.
    */
-  NS_IMETHOD Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSettings,
-                  nsIWebBrowserPrint *aWebBrowserPrint) = 0;
+  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings,
+                  nsIWebBrowserPrint* aWebBrowserPrint) = 0;
 
   /**
    * Show the page setup dialog. Note that there is no way to tell whether the
@@ -62,8 +62,8 @@ class nsIPrintDialogService : public nsISupports {
    * @return NS_OK if everything is OK.
    * @return a suitable error for failures to show the page setup dialog.
    */
-  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter *aParent,
-                           nsIPrintSettings *aSettings) = 0;
+  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent,
+                           nsIPrintSettings* aSettings) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrintDialogService, NS_IPRINTDIALOGSERVICE_IID)

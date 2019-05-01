@@ -14,25 +14,25 @@ class nsXRemoteClient : public nsRemoteClient {
   ~nsXRemoteClient();
 
   virtual nsresult Init() override;
-  virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
-                                   int32_t argc, char **argv,
-                                   const char *aDesktopStartupID,
-                                   char **aResponse, bool *aSucceeded) override;
+  virtual nsresult SendCommandLine(const char* aProgram, const char* aProfile,
+                                   int32_t argc, char** argv,
+                                   const char* aDesktopStartupID,
+                                   char** aResponse, bool* aSucceeded) override;
   void Shutdown();
 
  private:
   Window CheckWindow(Window aWindow);
   Window CheckChildren(Window aWindow);
-  nsresult GetLock(Window aWindow, bool *aDestroyed);
+  nsresult GetLock(Window aWindow, bool* aDestroyed);
   nsresult FreeLock(Window aWindow);
-  Window FindBestWindow(const char *aProgram, const char *aProfile);
-  nsresult DoSendCommandLine(Window aWindow, int32_t argc, char **argv,
-                             const char *aDesktopStartupID, char **aResponse,
-                             bool *aDestroyed);
-  bool WaitForResponse(Window aWindow, char **aResponse, bool *aDestroyed,
+  Window FindBestWindow(const char* aProgram, const char* aProfile);
+  nsresult DoSendCommandLine(Window aWindow, int32_t argc, char** argv,
+                             const char* aDesktopStartupID, char** aResponse,
+                             bool* aDestroyed);
+  bool WaitForResponse(Window aWindow, char** aResponse, bool* aDestroyed,
                        Atom aCommandAtom);
 
-  Display *mDisplay;
+  Display* mDisplay;
 
   Atom mMozVersionAtom;
   Atom mMozLockAtom;
@@ -43,7 +43,7 @@ class nsXRemoteClient : public nsRemoteClient {
   Atom mMozProfileAtom;
   Atom mMozProgramAtom;
 
-  char *mLockData;
+  char* mLockData;
 
   bool mInitialized;
 };

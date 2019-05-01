@@ -12,7 +12,7 @@
 //==============================================================================
 MachSendMessage::MachSendMessage(int32_t message_id) : MachMessage() { Initialize(message_id); }
 
-MachSendMessage::MachSendMessage(void *storage, size_t storage_length, int32_t message_id)
+MachSendMessage::MachSendMessage(void* storage, size_t storage_length, int32_t message_id)
     : MachMessage(storage, storage_length) {
   Initialize(message_id);
 }
@@ -40,8 +40,8 @@ MachMessage::MachMessage()
 }
 
 //==============================================================================
-MachMessage::MachMessage(void *storage, size_t storage_length)
-    : storage_(static_cast<MachMessageData *>(storage)),
+MachMessage::MachMessage(void* storage, size_t storage_length)
+    : storage_(static_cast<MachMessageData*>(storage)),
       storage_length_bytes_(storage_length),
       own_storage_(false) {
   DCHECK(storage);
@@ -67,7 +67,7 @@ int32_t MachMessage::GetMessageID() { return EndianU32_LtoN(GetDataPacket()->id)
 
 //==============================================================================
 // returns true if successful
-bool MachMessage::SetData(const void *data, int32_t data_length) {
+bool MachMessage::SetData(const void* data, int32_t data_length) {
   // Enforce the fact that it's only safe to call this method once on a
   // message.
   DCHECK(GetDataPacket()->data_length == 0);
@@ -109,22 +109,22 @@ int MachMessage::CalculateSize() {
 }
 
 //==============================================================================
-MachMessage::MessageDataPacket *MachMessage::GetDataPacket() {
+MachMessage::MessageDataPacket* MachMessage::GetDataPacket() {
   int desc_size = sizeof(MachMsgPortDescriptor) * GetDescriptorCount();
-  MessageDataPacket *packet = reinterpret_cast<MessageDataPacket *>(storage_->padding + desc_size);
+  MessageDataPacket* packet = reinterpret_cast<MessageDataPacket*>(storage_->padding + desc_size);
 
   return packet;
 }
 
 //==============================================================================
-void MachMessage::SetDescriptor(int n, const MachMsgPortDescriptor &desc) {
-  MachMsgPortDescriptor *desc_array = reinterpret_cast<MachMsgPortDescriptor *>(storage_->padding);
+void MachMessage::SetDescriptor(int n, const MachMsgPortDescriptor& desc) {
+  MachMsgPortDescriptor* desc_array = reinterpret_cast<MachMsgPortDescriptor*>(storage_->padding);
   desc_array[n] = desc;
 }
 
 //==============================================================================
 // returns true if successful otherwise there was not enough space
-bool MachMessage::AddDescriptor(const MachMsgPortDescriptor &desc) {
+bool MachMessage::AddDescriptor(const MachMsgPortDescriptor& desc) {
   // first check to make sure we have enough space
   int size = CalculateSize();
   int new_size = size + sizeof(MachMsgPortDescriptor);
@@ -135,7 +135,7 @@ bool MachMessage::AddDescriptor(const MachMsgPortDescriptor &desc) {
 
   // unfortunately, we need to move the data to allow space for the
   // new descriptor
-  u_int8_t *p = reinterpret_cast<u_int8_t *>(GetDataPacket());
+  u_int8_t* p = reinterpret_cast<u_int8_t*>(GetDataPacket());
   bcopy(p, p + sizeof(MachMsgPortDescriptor), GetDataLength() + 2 * sizeof(int32_t));
 
   SetDescriptor(GetDescriptorCount(), desc);
@@ -158,9 +158,9 @@ void MachMessage::SetDescriptorCount(int n) {
 }
 
 //==============================================================================
-MachMsgPortDescriptor *MachMessage::GetDescriptor(int n) {
+MachMsgPortDescriptor* MachMessage::GetDescriptor(int n) {
   if (n < GetDescriptorCount()) {
-    MachMsgPortDescriptor *desc = reinterpret_cast<MachMsgPortDescriptor *>(storage_->padding);
+    MachMsgPortDescriptor* desc = reinterpret_cast<MachMsgPortDescriptor*>(storage_->padding);
     return desc + n;
   }
 
@@ -179,7 +179,7 @@ mach_port_t MachMessage::GetTranslatedPort(int n) {
 
 //==============================================================================
 // create a new mach port for receiving messages and register a name for it
-ReceivePort::ReceivePort(const char *receive_port_name) {
+ReceivePort::ReceivePort(const char* receive_port_name) {
   mach_port_t current_task = mach_task_self();
 
   init_result_ = mach_port_allocate(current_task, MACH_PORT_RIGHT_RECEIVE, &port_);
@@ -190,8 +190,8 @@ ReceivePort::ReceivePort(const char *receive_port_name) {
 
   if (init_result_ != KERN_SUCCESS) return;
 
-  NSPort *ns_port = [NSMachPort portWithMachPort:port_];
-  NSString *port_name = [NSString stringWithUTF8String:receive_port_name];
+  NSPort* ns_port = [NSMachPort portWithMachPort:port_];
+  NSString* port_name = [NSString stringWithUTF8String:receive_port_name];
   [[NSMachBootstrapServer sharedInstance] registerPort:ns_port name:port_name];
 }
 
@@ -219,7 +219,7 @@ ReceivePort::~ReceivePort() {
 }
 
 //==============================================================================
-kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
+kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage* out_message,
                                           mach_msg_timeout_t timeout) {
   if (!out_message) {
     return KERN_INVALID_ARGUMENT;
@@ -245,7 +245,7 @@ kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
 
 //==============================================================================
 // send a message to this port
-kern_return_t ReceivePort::SendMessageToSelf(MachSendMessage &message, mach_msg_timeout_t timeout) {
+kern_return_t ReceivePort::SendMessageToSelf(MachSendMessage& message, mach_msg_timeout_t timeout) {
   if (message.Head()->msgh_size == 0) {
     NOTREACHED();
     return KERN_INVALID_VALUE;  // just for safety -- never should occur
@@ -268,14 +268,14 @@ kern_return_t ReceivePort::SendMessageToSelf(MachSendMessage &message, mach_msg_
 
 //==============================================================================
 // get a port with send rights corresponding to a named registered service
-MachPortSender::MachPortSender(const char *receive_port_name) {
+MachPortSender::MachPortSender(const char* receive_port_name) {
   mach_port_t bootstrap_port = 0;
   init_result_ = task_get_bootstrap_port(mach_task_self(), &bootstrap_port);
 
   if (init_result_ != KERN_SUCCESS) return;
 
   init_result_ =
-      bootstrap_look_up(bootstrap_port, const_cast<char *>(receive_port_name), &send_port_);
+      bootstrap_look_up(bootstrap_port, const_cast<char*>(receive_port_name), &send_port_);
 }
 
 //==============================================================================
@@ -283,7 +283,7 @@ MachPortSender::MachPortSender(mach_port_t send_port)
     : send_port_(send_port), init_result_(KERN_SUCCESS) {}
 
 //==============================================================================
-kern_return_t MachPortSender::SendMessage(MachSendMessage &message, mach_msg_timeout_t timeout) {
+kern_return_t MachPortSender::SendMessage(MachSendMessage& message, mach_msg_timeout_t timeout) {
   if (message.Head()->msgh_size == 0) {
     NOTREACHED();
     return KERN_INVALID_VALUE;  // just for safety -- never should occur

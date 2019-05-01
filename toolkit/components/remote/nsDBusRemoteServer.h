@@ -18,16 +18,16 @@ class nsDBusRemoteServer final : public nsRemoteServer,
   nsDBusRemoteServer() : mConnection(nullptr), mAppName(nullptr) {}
   ~nsDBusRemoteServer() override { Shutdown(); }
 
-  nsresult Startup(const char *aAppName, const char *aProfileName) override;
+  nsresult Startup(const char* aAppName, const char* aProfileName) override;
   void Shutdown() override;
 
-  DBusHandlerResult HandleDBusMessage(DBusConnection *aConnection,
-                                      DBusMessage *msg);
-  void UnregisterDBusInterface(DBusConnection *aConnection);
+  DBusHandlerResult HandleDBusMessage(DBusConnection* aConnection,
+                                      DBusMessage* msg);
+  void UnregisterDBusInterface(DBusConnection* aConnection);
 
  private:
-  DBusHandlerResult OpenURL(DBusMessage *msg);
-  DBusHandlerResult Introspect(DBusMessage *msg);
+  DBusHandlerResult OpenURL(DBusMessage* msg);
+  DBusHandlerResult Introspect(DBusMessage* msg);
 
   // The connection is owned by DBus library
   RefPtr<DBusConnection> mConnection;

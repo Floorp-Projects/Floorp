@@ -57,15 +57,15 @@ nsresult nsAutoConfig::Init() {
 
 nsAutoConfig::~nsAutoConfig() {}
 
-void nsAutoConfig::SetConfigURL(const char *aConfigURL) {
+void nsAutoConfig::SetConfigURL(const char* aConfigURL) {
   mConfigURL.Assign(aConfigURL);
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStartRequest(nsIRequest *request) { return NS_OK; }
+nsAutoConfig::OnStartRequest(nsIRequest* request) { return NS_OK; }
 
 NS_IMETHODIMP
-nsAutoConfig::OnDataAvailable(nsIRequest *request, nsIInputStream *aIStream,
+nsAutoConfig::OnDataAvailable(nsIRequest* request, nsIInputStream* aIStream,
                               uint64_t aSourceOffset, uint32_t aLength) {
   uint32_t amt, size;
   nsresult rv;
@@ -82,7 +82,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request, nsIInputStream *aIStream,
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+nsAutoConfig::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   nsresult rv;
 
   // If the request is failed, go read the failover.jsc file
@@ -128,13 +128,13 @@ nsAutoConfig::OnStopRequest(nsIRequest *request, nsresult aStatus) {
 }
 
 // Notify method as a TimerCallBack function
-NS_IMETHODIMP nsAutoConfig::Notify(nsITimer *timer) {
+NS_IMETHODIMP nsAutoConfig::Notify(nsITimer* timer) {
   downloadAutoConfig();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoConfig::GetName(nsACString &aName) {
+nsAutoConfig::GetName(nsACString& aName) {
   aName.AssignLiteral("nsAutoConfig");
   return NS_OK;
 }
@@ -144,8 +144,8 @@ nsAutoConfig::GetName(nsACString &aName) {
    creation time. Second time it calls  downloadAutoConfig().
 */
 
-NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject, const char *aTopic,
-                                    const char16_t *someData) {
+NS_IMETHODIMP nsAutoConfig::Observe(nsISupports* aSubject, const char* aTopic,
+                                    const char16_t* someData) {
   nsresult rv = NS_OK;
   if (!nsCRT::strcmp(aTopic, "profile-after-change")) {
     // We will be calling downloadAutoConfig even if there is no profile
@@ -344,7 +344,7 @@ nsresult nsAutoConfig::readOfflineFile() {
   return NS_OK;
 }
 
-nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file) {
+nsresult nsAutoConfig::evaluateLocalFile(nsIFile* file) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> inStr;
 
@@ -354,7 +354,7 @@ nsresult nsAutoConfig::evaluateLocalFile(nsIFile *file) {
   int64_t fileSize;
   file->GetFileSize(&fileSize);
   uint32_t fs = fileSize;  // Converting 64 bit structure to unsigned int
-  char *buf = (char *)malloc(fs * sizeof(char));
+  char* buf = (char*)malloc(fs * sizeof(char));
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
 
   uint32_t amt = 0;
@@ -386,7 +386,7 @@ nsresult nsAutoConfig::writeFailoverFile() {
   return rv;
 }
 
-nsresult nsAutoConfig::getEmailAddr(nsACString &emailAddr) {
+nsresult nsAutoConfig::getEmailAddr(nsACString& emailAddr) {
   nsresult rv;
   nsAutoCString prefValue;
 
@@ -427,7 +427,7 @@ nsresult nsAutoConfig::getEmailAddr(nsACString &emailAddr) {
   return NS_OK;
 }
 
-nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress) {
+nsresult nsAutoConfig::PromptForEMailAddress(nsACString& emailAddress) {
   nsresult rv;
   nsCOMPtr<nsIPromptService> promptService =
       do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);

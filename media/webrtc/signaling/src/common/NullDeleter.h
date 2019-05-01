@@ -10,5 +10,5 @@
  * objects which are really raw pointers.
  */
 struct null_deleter {
-  void operator()(void const *) const {}
+  void operator()(void const*) const {}
 };

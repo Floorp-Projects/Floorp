@@ -58,7 +58,7 @@ unsigned int _gdb_sleep_duration = 300;
 #    include "nsISupportsUtils.h"
 #    include "mozilla/StackWalk.h"
 
-static const char *gProgname = "huh?";
+static const char* gProgname = "huh?";
 
 // NB: keep me up to date with the same variable in
 // ipc/chromium/chrome/common/ipc_channel_posix.cc
@@ -66,8 +66,8 @@ static const int kClientChannelFd = 3;
 
 extern "C" {
 
-static void PrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
-                            void *aClosure) {
+static void PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
+                            void* aClosure) {
   char buf[1024];
   MozCodeAddressDetails details;
 
@@ -119,13 +119,13 @@ void child_ah_crap_handler(int signum) {
 static GLogFunc orig_log_func = nullptr;
 
 extern "C" {
-static void my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
-                             const gchar *message, gpointer user_data);
+static void my_glib_log_func(const gchar* log_domain, GLogLevelFlags log_level,
+                             const gchar* message, gpointer user_data);
 }
 
-/* static */ void my_glib_log_func(const gchar *log_domain,
+/* static */ void my_glib_log_func(const gchar* log_domain,
                                    GLogLevelFlags log_level,
-                                   const gchar *message, gpointer user_data) {
+                                   const gchar* message, gpointer user_data) {
   if (log_level &
       (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION)) {
     NS_DebugBreak(NS_DEBUG_ASSERTION, message, "glib assertion", __FILE__,
@@ -141,7 +141,7 @@ static void my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
 #  endif
 
 #  ifdef SA_SIGINFO
-static void fpehandler(int signum, siginfo_t *si, void *context) {
+static void fpehandler(int signum, siginfo_t* si, void* context) {
   /* Integer divide by zero or integer overflow. */
   /* Note: FPE_INTOVF is ignored on Intel, PowerPC and SPARC systems. */
   if (si->si_code == FPE_INTDIV || si->si_code == FPE_INTOVF) {
@@ -150,19 +150,19 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
   }
 
 #    ifdef XP_MACOSX
-  ucontext_t *uc = (ucontext_t *)context;
+  ucontext_t* uc = (ucontext_t*)context;
 
 #      if defined(__i386__) || defined(__amd64__)
-  _STRUCT_FP_CONTROL *ctrl = &uc->uc_mcontext->__fs.__fpu_fcw;
+  _STRUCT_FP_CONTROL* ctrl = &uc->uc_mcontext->__fs.__fpu_fcw;
   ctrl->__invalid = ctrl->__denorm = ctrl->__zdiv = ctrl->__ovrfl =
       ctrl->__undfl = ctrl->__precis = 1;
 
-  _STRUCT_FP_STATUS *status = &uc->uc_mcontext->__fs.__fpu_fsw;
+  _STRUCT_FP_STATUS* status = &uc->uc_mcontext->__fs.__fpu_fsw;
   status->__invalid = status->__denorm = status->__zdiv = status->__ovrfl =
       status->__undfl = status->__precis = status->__stkflt =
           status->__errsumm = 0;
 
-  uint32_t *mxcsr = &uc->uc_mcontext->__fs.__fpu_mxcsr;
+  uint32_t* mxcsr = &uc->uc_mcontext->__fs.__fpu_mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
 #      endif
@@ -170,53 +170,53 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
 #    if defined(LINUX) && !defined(ANDROID)
 
 #      if defined(__i386__)
-  ucontext_t *uc = (ucontext_t *)context;
+  ucontext_t* uc = (ucontext_t*)context;
   /*
    * It seems that we have no access to mxcsr on Linux. libc
    * seems to be translating cw/sw to mxcsr.
    */
-  unsigned long int *cw = &uc->uc_mcontext.fpregs->cw;
+  unsigned long int* cw = &uc->uc_mcontext.fpregs->cw;
   *cw |= FPU_EXCEPTION_MASK;
 
-  unsigned long int *sw = &uc->uc_mcontext.fpregs->sw;
+  unsigned long int* sw = &uc->uc_mcontext.fpregs->sw;
   *sw &= ~FPU_STATUS_FLAGS;
 #      endif
 #      if defined(__amd64__)
-  ucontext_t *uc = (ucontext_t *)context;
+  ucontext_t* uc = (ucontext_t*)context;
 
-  uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
+  uint16_t* cw = &uc->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
-  uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
+  uint16_t* sw = &uc->uc_mcontext.fpregs->swd;
   *sw &= ~FPU_STATUS_FLAGS;
 
-  uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
+  uint32_t* mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
 #      endif
 #    endif
 #    ifdef SOLARIS
-  ucontext_t *uc = (ucontext_t *)context;
+  ucontext_t* uc = (ucontext_t*)context;
 
 #      if defined(__i386)
-  uint32_t *cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[0];
+  uint32_t* cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[0];
   *cw |= FPU_EXCEPTION_MASK;
 
-  uint32_t *sw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[1];
+  uint32_t* sw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[1];
   *sw &= ~FPU_STATUS_FLAGS;
 
   /* address of the instruction that caused the exception */
-  uint32_t *ip = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[3];
+  uint32_t* ip = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.state[3];
   uc->uc_mcontext.gregs[REG_PC] = *ip;
 #      endif
 #      if defined(__amd64__)
-  uint16_t *cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.cw;
+  uint16_t* cw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.cw;
   *cw |= FPU_EXCEPTION_MASK;
 
-  uint16_t *sw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.sw;
+  uint16_t* sw = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.sw;
   *sw &= ~FPU_STATUS_FLAGS;
 
-  uint32_t *mxcsr = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.mxcsr;
+  uint32_t* mxcsr = &uc->uc_mcontext.fpregs.fp_reg_set.fpchip_state.mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
 #      endif
@@ -224,15 +224,15 @@ static void fpehandler(int signum, siginfo_t *si, void *context) {
 }
 #  endif
 
-void InstallSignalHandlers(const char *aProgname) {
+void InstallSignalHandlers(const char* aProgname) {
 #  if defined(CRAWL_STACK_ON_SIGSEGV)
-  const char *tmp = PL_strdup(aProgname);
+  const char* tmp = PL_strdup(aProgname);
   if (tmp) {
     gProgname = tmp;
   }
 #  endif  // CRAWL_STACK_ON_SIGSEGV
 
-  const char *gdbSleep = PR_GetEnv("MOZ_GDB_SLEEP");
+  const char* gdbSleep = PR_GetEnv("MOZ_GDB_SLEEP");
   if (gdbSleep && *gdbSleep) {
     unsigned int s;
     if (1 == sscanf(gdbSleep, "%u", &s)) {
@@ -271,7 +271,7 @@ void InstallSignalHandlers(const char *aProgname) {
   }
 
 #  if defined(DEBUG) && defined(LINUX)
-  const char *memLimit = PR_GetEnv("MOZ_MEM_LIMIT");
+  const char* memLimit = PR_GetEnv("MOZ_MEM_LIMIT");
   if (memLimit && *memLimit) {
     long m = atoi(memLimit);
     m *= (1024 * 1024);
@@ -285,7 +285,7 @@ void InstallSignalHandlers(const char *aProgname) {
 #  if defined(MOZ_WIDGET_GTK) && \
       (GLIB_MAJOR_VERSION > 2 || \
        (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
-  const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
+  const char* assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&
       (!strcmp(assertString, "suspend") || !strcmp(assertString, "stack") ||
        !strcmp(assertString, "abort") || !strcmp(assertString, "trap") ||
@@ -305,7 +305,7 @@ void InstallSignalHandlers(const char *aProgname) {
  * WinNT.h prior to SDK7 does not expose the structure of the ExtendedRegisters
  * for ia86. We known that MxCsr is at offset 0x18 and is a DWORD.
  */
-#    define MXCSR(ctx) (*(DWORD *)(((BYTE *)(ctx)->ExtendedRegisters) + 0x18))
+#    define MXCSR(ctx) (*(DWORD*)(((BYTE*)(ctx)->ExtendedRegisters) + 0x18))
 #  endif
 
 #  ifdef _M_X64
@@ -326,7 +326,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gFPEPreviousFilter;
 
 LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe) {
   PEXCEPTION_RECORD e = (PEXCEPTION_RECORD)pe->ExceptionRecord;
-  CONTEXT *c = (CONTEXT *)pe->ContextRecord;
+  CONTEXT* c = (CONTEXT*)pe->ContextRecord;
 
   switch (e->ExceptionCode) {
     case STATUS_FLOAT_DENORMAL_OPERAND:
@@ -356,13 +356,13 @@ LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe) {
   return action;
 }
 
-void InstallSignalHandlers(const char *aProgname) {
+void InstallSignalHandlers(const char* aProgname) {
   gFPEPreviousFilter = SetUnhandledExceptionFilter(FpeHandler);
 }
 
 #  else
 
-void InstallSignalHandlers(const char *aProgname) {}
+void InstallSignalHandlers(const char* aProgname) {}
 
 #  endif
 

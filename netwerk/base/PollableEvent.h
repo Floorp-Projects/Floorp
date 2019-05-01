@@ -39,13 +39,13 @@ class PollableEvent {
   // - PR_Write has failed
   // - no out_flags were signalled on the socket pair for too long after
   //   the earliest Signal()
-  bool IsSignallingAlive(TimeDuration const &timeout);
+  bool IsSignallingAlive(TimeDuration const& timeout);
 
-  PRFileDesc *PollableFD() { return mReadFD; }
+  PRFileDesc* PollableFD() { return mReadFD; }
 
  private:
-  PRFileDesc *mWriteFD;
-  PRFileDesc *mReadFD;
+  PRFileDesc* mWriteFD;
+  PRFileDesc* mReadFD;
   bool mSignaled;
   // true when PR_Write to the socket pair has failed (status < 1)
   bool mWriteFailed;

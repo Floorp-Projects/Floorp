@@ -20,12 +20,12 @@
 extern "C" {
 #endif
 
-MOZ_EXPORT int wl_display_roundtrip_queue(struct wl_display *display,
-                                          struct wl_event_queue *queue);
-MOZ_EXPORT uint32_t wl_proxy_get_version(struct wl_proxy *proxy);
-MOZ_EXPORT struct wl_proxy *wl_proxy_marshal_constructor(
-    struct wl_proxy *proxy, uint32_t opcode,
-    const struct wl_interface *interface, ...);
+MOZ_EXPORT int wl_display_roundtrip_queue(struct wl_display* display,
+                                          struct wl_event_queue* queue);
+MOZ_EXPORT uint32_t wl_proxy_get_version(struct wl_proxy* proxy);
+MOZ_EXPORT struct wl_proxy* wl_proxy_marshal_constructor(
+    struct wl_proxy* proxy, uint32_t opcode,
+    const struct wl_interface* interface, ...);
 
 /* We need implement some missing functions from wayland-client-protocol.h
  */
@@ -42,18 +42,18 @@ enum wl_data_device_manager_dnd_action {
 #  define WL_DATA_OFFER_SET_ACTIONS 4
 
 struct moz_wl_data_offer_listener {
-  void (*offer)(void *data, struct wl_data_offer *wl_data_offer,
-                const char *mime_type);
-  void (*source_actions)(void *data, struct wl_data_offer *wl_data_offer,
+  void (*offer)(void* data, struct wl_data_offer* wl_data_offer,
+                const char* mime_type);
+  void (*source_actions)(void* data, struct wl_data_offer* wl_data_offer,
                          uint32_t source_actions);
-  void (*action)(void *data, struct wl_data_offer *wl_data_offer,
+  void (*action)(void* data, struct wl_data_offer* wl_data_offer,
                  uint32_t dnd_action);
 };
 
 static inline void wl_data_offer_set_actions(
-    struct wl_data_offer *wl_data_offer, uint32_t dnd_actions,
+    struct wl_data_offer* wl_data_offer, uint32_t dnd_actions,
     uint32_t preferred_action) {
-  wl_proxy_marshal((struct wl_proxy *)wl_data_offer, WL_DATA_OFFER_SET_ACTIONS,
+  wl_proxy_marshal((struct wl_proxy*)wl_data_offer, WL_DATA_OFFER_SET_ACTIONS,
                    dnd_actions, preferred_action);
 }
 #else
@@ -78,33 +78,33 @@ extern const struct wl_interface wl_subcompositor_interface;
 #  define WL_SUBSURFACE_SET_SYNC 4
 #  define WL_SUBSURFACE_SET_DESYNC 5
 
-static inline struct wl_subsurface *wl_subcompositor_get_subsurface(
-    struct wl_subcompositor *wl_subcompositor, struct wl_surface *surface,
-    struct wl_surface *parent) {
-  struct wl_proxy *id;
+static inline struct wl_subsurface* wl_subcompositor_get_subsurface(
+    struct wl_subcompositor* wl_subcompositor, struct wl_surface* surface,
+    struct wl_surface* parent) {
+  struct wl_proxy* id;
 
   id = wl_proxy_marshal_constructor(
-      (struct wl_proxy *)wl_subcompositor, WL_SUBCOMPOSITOR_GET_SUBSURFACE,
+      (struct wl_proxy*)wl_subcompositor, WL_SUBCOMPOSITOR_GET_SUBSURFACE,
       &wl_subsurface_interface, NULL, surface, parent);
 
-  return (struct wl_subsurface *)id;
+  return (struct wl_subsurface*)id;
 }
 
 static inline void wl_subsurface_set_position(
-    struct wl_subsurface *wl_subsurface, int32_t x, int32_t y) {
-  wl_proxy_marshal((struct wl_proxy *)wl_subsurface, WL_SUBSURFACE_SET_POSITION,
+    struct wl_subsurface* wl_subsurface, int32_t x, int32_t y) {
+  wl_proxy_marshal((struct wl_proxy*)wl_subsurface, WL_SUBSURFACE_SET_POSITION,
                    x, y);
 }
 
 static inline void wl_subsurface_set_desync(
-    struct wl_subsurface *wl_subsurface) {
-  wl_proxy_marshal((struct wl_proxy *)wl_subsurface, WL_SUBSURFACE_SET_DESYNC);
+    struct wl_subsurface* wl_subsurface) {
+  wl_proxy_marshal((struct wl_proxy*)wl_subsurface, WL_SUBSURFACE_SET_DESYNC);
 }
 
-static inline void wl_subsurface_destroy(struct wl_subsurface *wl_subsurface) {
-  wl_proxy_marshal((struct wl_proxy *)wl_subsurface, WL_SUBSURFACE_DESTROY);
+static inline void wl_subsurface_destroy(struct wl_subsurface* wl_subsurface) {
+  wl_proxy_marshal((struct wl_proxy*)wl_subsurface, WL_SUBSURFACE_DESTROY);
 
-  wl_proxy_destroy((struct wl_proxy *)wl_subsurface);
+  wl_proxy_destroy((struct wl_proxy*)wl_subsurface);
 }
 #endif
 

@@ -19,11 +19,11 @@ typedef nsTArray<ObserverHandle> ObserverArray;
 
 class nsHttpActivityEvent : public Runnable {
  public:
-  nsHttpActivityEvent(nsISupports *aHttpChannel, uint32_t aActivityType,
+  nsHttpActivityEvent(nsISupports* aHttpChannel, uint32_t aActivityType,
                       uint32_t aActivitySubtype, PRTime aTimestamp,
                       uint64_t aExtraSizeData,
-                      const nsACString &aExtraStringData,
-                      ObserverArray *aObservers)
+                      const nsACString& aExtraStringData,
+                      ObserverArray* aObservers)
       : Runnable("net::nsHttpActivityEvent"),
         mHttpChannel(aHttpChannel),
         mActivityType(aActivityType),
@@ -62,12 +62,12 @@ nsHttpActivityDistributor::nsHttpActivityDistributor()
     : mLock("nsHttpActivityDistributor.mLock") {}
 
 NS_IMETHODIMP
-nsHttpActivityDistributor::ObserveActivity(nsISupports *aHttpChannel,
+nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
                                            uint32_t aActivityType,
                                            uint32_t aActivitySubtype,
                                            PRTime aTimestamp,
                                            uint64_t aExtraSizeData,
-                                           const nsACString &aExtraStringData) {
+                                           const nsACString& aExtraStringData) {
   nsCOMPtr<nsIRunnable> event;
   {
     MutexAutoLock lock(mLock);
@@ -83,7 +83,7 @@ nsHttpActivityDistributor::ObserveActivity(nsISupports *aHttpChannel,
 }
 
 NS_IMETHODIMP
-nsHttpActivityDistributor::GetIsActive(bool *isActive) {
+nsHttpActivityDistributor::GetIsActive(bool* isActive) {
   NS_ENSURE_ARG_POINTER(isActive);
   MutexAutoLock lock(mLock);
   *isActive = !!mObservers.Length();
@@ -91,7 +91,7 @@ nsHttpActivityDistributor::GetIsActive(bool *isActive) {
 }
 
 NS_IMETHODIMP
-nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver *aObserver) {
+nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver* aObserver) {
   MutexAutoLock lock(mLock);
 
   ObserverHandle observer(
@@ -102,7 +102,7 @@ nsHttpActivityDistributor::AddObserver(nsIHttpActivityObserver *aObserver) {
 }
 
 NS_IMETHODIMP
-nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver *aObserver) {
+nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
   MutexAutoLock lock(mLock);
 
   ObserverHandle observer(

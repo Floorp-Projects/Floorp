@@ -134,8 +134,8 @@ nsresult nsContentBlocker::Init() {
 #define LIMIT(x, low, high, default) \
   ((x) >= (low) && (x) <= (high) ? (x) : (default))
 
-void nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
-                                   const char *aPref) {
+void nsContentBlocker::PrefChanged(nsIPrefBranch* aPrefBranch,
+                                   const char* aPref) {
   int32_t val;
 
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
@@ -150,8 +150,8 @@ void nsContentBlocker::PrefChanged(nsIPrefBranch *aPrefBranch,
 
 // nsIContentPolicy Implementation
 NS_IMETHODIMP
-nsContentBlocker::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
-                             const nsACString &aMimeGuess, int16_t *aDecision) {
+nsContentBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
+                             const nsACString& aMimeGuess, int16_t* aDecision) {
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
   nsCOMPtr<nsIURI> requestingLocation;
@@ -205,10 +205,10 @@ nsContentBlocker::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsContentBlocker::ShouldProcess(nsIURI *aContentLocation,
-                                nsILoadInfo *aLoadInfo,
-                                const nsACString &aMimeGuess,
-                                int16_t *aDecision) {
+nsContentBlocker::ShouldProcess(nsIURI* aContentLocation,
+                                nsILoadInfo* aLoadInfo,
+                                const nsACString& aMimeGuess,
+                                int16_t* aDecision) {
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
   nsCOMPtr<nsISupports> requestingContext = aLoadInfo->GetLoadingContext();
   nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
@@ -264,10 +264,10 @@ nsContentBlocker::ShouldProcess(nsIURI *aContentLocation,
   return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }
 
-nsresult nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
-                                          nsIURI *aFirstURI,
+nsresult nsContentBlocker::TestPermission(nsIURI* aCurrentURI,
+                                          nsIURI* aFirstURI,
                                           int32_t aContentType,
-                                          bool *aPermission, bool *aFromPrefs) {
+                                          bool* aPermission, bool* aFromPrefs) {
   *aFromPrefs = false;
   nsresult rv;
 
@@ -345,7 +345,7 @@ nsresult nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
 
       // Get the domain, ie the last part of the host (www.domain.com ->
       // domain.com) This will break on co.uk
-      const nsACString &tail =
+      const nsACString& tail =
           Substring(currentHost, dot, currentHost.Length() - dot);
 
       nsAutoCString firstHost;
@@ -359,7 +359,7 @@ nsresult nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
       }
 
       // Get the last part of the firstUri with the same length as |tail|
-      const nsACString &firstTail = Substring(
+      const nsACString& firstTail = Substring(
           firstHost, firstHost.Length() - tail.Length(), tail.Length());
 
       // Check that both tails are the same, and that just before the tail in
@@ -376,8 +376,8 @@ nsresult nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
 }
 
 NS_IMETHODIMP
-nsContentBlocker::Observe(nsISupports *aSubject, const char *aTopic,
-                          const char16_t *aData) {
+nsContentBlocker::Observe(nsISupports* aSubject, const char* aTopic,
+                          const char16_t* aData) {
   NS_ASSERTION(!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
                "unexpected topic - we only deal with pref changes!");
 

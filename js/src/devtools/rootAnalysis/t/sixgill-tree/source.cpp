@@ -24,7 +24,7 @@ struct SpecialObject : public JSObject {
 
 struct ErrorResult {
   bool hasObj;
-  JSObject *obj;
+  JSObject* obj;
   void trace() {}
 } ANNOTATE("Suppressed GC Pointer");
 
@@ -34,7 +34,7 @@ struct OkContainer {
 };
 
 struct UnrootedPointer {
-  JSObject *obj;
+  JSObject* obj;
 };
 
 template <typename T>
@@ -46,22 +46,22 @@ extern void js_GC() ANNOTATE("GC Call") ANNOTATE("Slow");
 
 void js_GC() {}
 
-void root_arg(JSObject *obj, JSObject *random) {
+void root_arg(JSObject* obj, JSObject* random) {
   // Use all these types so they get included in the output.
   SpecialObject so;
   UnrootedPointer up;
   Bogon b;
   OkContainer okc;
-  Rooted<JSObject *> ro;
-  Rooted<SpecialObject *> rso;
+  Rooted<JSObject*> ro;
+  Rooted<SpecialObject*> rso;
 
   obj = random;
 
-  JSObject *other1 = obj;
+  JSObject* other1 = obj;
   js_GC();
 
   float MARKER1 = 0;
-  JSObject *other2 = obj;
+  JSObject* other2 = obj;
   other1->f = 1;
   other2->f = -1;
 

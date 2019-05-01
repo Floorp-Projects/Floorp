@@ -53,7 +53,7 @@ BOOL DoesFallbackKeyExist();
  *         is set to applying or not.
  * @return TRUE if the information was filled.
  */
-static BOOL IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying) {
+static BOOL IsStatusApplying(LPCWSTR updateDirPath, BOOL& isApplying) {
   isApplying = FALSE;
   WCHAR updateStatusFilePath[MAX_PATH + 1] = {L'\0'};
   wcsncpy(updateStatusFilePath, updateDirPath, MAX_PATH);
@@ -91,7 +91,7 @@ static BOOL IsStatusApplying(LPCWSTR updateDirPath, BOOL &isApplying) {
  * @param  argv    The argv value normally sent to updater.exe
  * @return boolean True if we're staging an update
  */
-static bool IsUpdateBeingStaged(int argc, LPWSTR *argv) {
+static bool IsUpdateBeingStaged(int argc, LPWSTR* argv) {
   // PID will be set to -1 if we're supposed to stage an update.
   return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
          (argc == 5 && !wcscmp(argv[4], L"-1"));
@@ -103,7 +103,7 @@ static bool IsUpdateBeingStaged(int argc, LPWSTR *argv) {
  * @param str     The string to check
  * @param boolean True if the param only contains digits
  */
-static bool IsDigits(WCHAR *str) {
+static bool IsDigits(WCHAR* str) {
   while (*str) {
     if (!iswdigit(*str++)) {
       return FALSE;
@@ -122,7 +122,7 @@ static bool IsDigits(WCHAR *str) {
  * @param boolean True if the command line contains just the directory to apply
  *                the update to
  */
-static bool IsOldCommandline(int argc, LPWSTR *argv) {
+static bool IsOldCommandline(int argc, LPWSTR* argv) {
   return (argc == 4 && !wcscmp(argv[3], L"-1")) ||
          (argc >= 4 && (wcsstr(argv[3], L"/replace") || IsDigits(argv[3])));
 }
@@ -134,7 +134,7 @@ static bool IsOldCommandline(int argc, LPWSTR *argv) {
  * @param argvTmp    The argv value normally sent to updater.exe
  * @param aResultDir Buffer to hold the installation directory.
  */
-static BOOL GetInstallationDir(int argcTmp, LPWSTR *argvTmp,
+static BOOL GetInstallationDir(int argcTmp, LPWSTR* argvTmp,
                                WCHAR aResultDir[MAX_PATH + 1]) {
   int index = 3;
   if (IsOldCommandline(argcTmp, argvTmp)) {
@@ -146,7 +146,7 @@ static BOOL GetInstallationDir(int argcTmp, LPWSTR *argvTmp,
   }
 
   wcsncpy(aResultDir, argvTmp[2], MAX_PATH);
-  WCHAR *backSlash = wcsrchr(aResultDir, L'\\');
+  WCHAR* backSlash = wcsrchr(aResultDir, L'\\');
   // Make sure that the path does not include trailing backslashes
   if (backSlash && (backSlash[1] == L'\0')) {
     *backSlash = L'\0';
@@ -173,8 +173,8 @@ static BOOL GetInstallationDir(int argcTmp, LPWSTR *argvTmp,
  * @param  userToken      User impersonation token to pass to the updater.
  * @return TRUE if the update process was run had a return code of 0.
  */
-BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
-                        BOOL &processStarted, nsAutoHandle &userToken) {
+BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
+                        BOOL& processStarted, nsAutoHandle& userToken) {
   processStarted = FALSE;
 
   LOG(("Starting update process as the service in session 0."));
@@ -182,7 +182,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
   ZeroMemory(&sie, sizeof(sie));
   sie.StartupInfo.cb = sizeof(sie);
 
-  STARTUPINFOW &si = sie.StartupInfo;
+  STARTUPINFOW& si = sie.StartupInfo;
   si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\Default");  // -Wwritable-strings
   PROCESS_INFORMATION pi = {0};
 
@@ -209,7 +209,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
   // Add an env var for MOZ_USING_SERVICE so the updater.exe can
   // do anything special that it needs to do for service updates.
   // Search in updater.cpp for more info on MOZ_USING_SERVICE.
-  putenv(const_cast<char *>("MOZ_USING_SERVICE=1"));
+  putenv(const_cast<char*>("MOZ_USING_SERVICE=1"));
 
 #ifndef DISABLE_USER_IMPERSONATION
   // Add an env var with a pointer to the impersonation token.
@@ -333,8 +333,8 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
   }
 
   // Empty value on putenv is how you remove an env variable in Windows
-  putenv(const_cast<char *>("MOZ_USING_SERVICE="));
-  putenv(const_cast<char *>(USER_TOKEN_VAR_NAME "="));
+  putenv(const_cast<char*>("MOZ_USING_SERVICE="));
+  putenv(const_cast<char*>(USER_TOKEN_VAR_NAME "="));
 
   return updateWasSuccessful;
 }
@@ -355,7 +355,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR *argv, LPCWSTR installDir,
  * @return true if updater is the path to a valid updater
  */
 static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
-                           nsAutoHandle &userToken) {
+                           nsAutoHandle& userToken) {
   // Make sure the path to the updater to use for the update is local.
   // We do this check to make sure that file locking is available for
   // race condition security checks.
@@ -491,8 +491,8 @@ static bool UpdaterIsValid(LPWSTR updater, LPWSTR installDir, LPWSTR updateDir,
  *
  * @return TRUE if the update was successful.
  */
-BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv,
-                                  nsAutoHandle &userToken) {
+BOOL ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR* argv,
+                                  nsAutoHandle& userToken) {
   BOOL result = TRUE;
   if (argc < 3) {
     LOG_WARN(
@@ -658,7 +658,7 @@ BOOL DeleteSecureUpdater(WCHAR serviceUpdaterPath[MAX_PATH + 1]) {
  *
  * @return FALSE if there was an error executing the service command.
  */
-BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
+BOOL ExecuteServiceCommand(int argc, LPWSTR* argv) {
   if (argc < 3) {
     LOG_WARN(
         ("Not enough command line arguments to execute a service command"));
@@ -890,7 +890,7 @@ BOOL ExecuteServiceCommand(int argc, LPWSTR *argv) {
 #ifndef DISABLE_USER_IMPERSONATION
     if (result) {
       userToken.own(GetUserProcessToken(installDirUpdater, argc - 3,
-                                        const_cast<LPCWSTR *>(argv + 3)));
+                                        const_cast<LPCWSTR*>(argv + 3)));
       result = !!userToken;
       if (!userToken) {
         LOG_WARN(("Could not get user process impersonation token"));

@@ -28,7 +28,7 @@ class MOZ_STACK_CLASS SpanningCellSorter {
 
   struct Item {
     int32_t row, col;
-    Item *next;
+    Item* next;
   };
 
   /**
@@ -43,7 +43,7 @@ class MOZ_STACK_CLASS SpanningCellSorter {
    * for a colspan value, and the lists are given in order from lowest
    * to highest colspan.  The colspan value is filled in to *aColSpan.
    */
-  Item *GetNext(int32_t *aColSpan);
+  Item* GetNext(int32_t* aColSpan);
 
  private:
   enum State { ADDING, ENUMERATING_ARRAY, ENUMERATING_HASH, DONE };
@@ -54,7 +54,7 @@ class MOZ_STACK_CLASS SpanningCellSorter {
 
   enum { ARRAY_BASE = 2 };
   enum { ARRAY_SIZE = 8 };
-  Item *mArray[ARRAY_SIZE];
+  Item* mArray[ARRAY_SIZE];
   int32_t SpanToIndex(int32_t aSpan) { return aSpan - ARRAY_BASE; }
   int32_t IndexToSpan(int32_t aIndex) { return aIndex + ARRAY_BASE; }
   bool UseArrayForSpan(int32_t aSpan) {
@@ -65,26 +65,26 @@ class MOZ_STACK_CLASS SpanningCellSorter {
   PLDHashTable mHashTable;
   struct HashTableEntry : public PLDHashEntryHdr {
     int32_t mColSpan;
-    Item *mItems;
+    Item* mItems;
   };
 
   static const PLDHashTableOps HashTableOps;
 
-  static PLDHashNumber HashTableHashKey(const void *key);
-  static bool HashTableMatchEntry(const PLDHashEntryHdr *hdr, const void *key);
+  static PLDHashNumber HashTableHashKey(const void* key);
+  static bool HashTableMatchEntry(const PLDHashEntryHdr* hdr, const void* key);
 
-  static int SortArray(const void *a, const void *b, void *closure);
+  static int SortArray(const void* a, const void* b, void* closure);
 
   /* state used only during enumeration */
   uint32_t mEnumerationIndex;  // into mArray or mSortedHashTable
-  HashTableEntry **mSortedHashTable;
+  HashTableEntry** mSortedHashTable;
 
   /*
    * operator new is forbidden since we use the pres shell's stack
    * memory, which much be pushed and popped at points matching a
    * push/pop on the C++ stack.
    */
-  void *operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
+  void* operator new(size_t sz) CPP_THROW_NEW { return nullptr; }
 };
 
 #endif

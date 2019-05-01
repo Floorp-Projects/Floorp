@@ -8,9 +8,9 @@
 #include "nsObjCExceptions.h"
 #include <math.h>
 
-static nsCursorManager *gInstance;
+static nsCursorManager* gInstance;
 static CGFloat sCursorScaleFactor = 0.0f;
-static imgIContainer *sCursorImgContainer = nullptr;
+static imgIContainer* sCursorImgContainer = nullptr;
 static const nsCursor sCustomCursor = eCursorCount;
 
 /*! @category nsCursorManager(PrivateMethods)
@@ -25,7 +25,7 @@ static const nsCursor sCustomCursor = eCursorCount;
     @param      aCursor the cursor to get
     @result     the Mac native implementation of the cursor
 */
-- (nsMacCursor *)getCursor:(nsCursor)aCursor;
+- (nsMacCursor*)getCursor:(nsCursor)aCursor;
 
 /*! @method     setMacCursor:
  @abstract   Set the current Mac native cursor
@@ -34,7 +34,7 @@ static const nsCursor sCustomCursor = eCursorCount;
  @param      aMacCursor the cursor to set
  @result     NS_OK
  */
-- (nsresult)setMacCursor:(nsMacCursor *)aMacCursor;
+- (nsresult)setMacCursor:(nsMacCursor*)aMacCursor;
 
 /*! @method     createCursor:
     @abstract   Create a Mac native representation of a cursor.
@@ -42,13 +42,13 @@ static const nsCursor sCustomCursor = eCursorCount;
     @param      aCursor the cursor to create
     @result     the Mac native implementation of the cursor
 */
-+ (nsMacCursor *)createCursor:(enum nsCursor)aCursor;
++ (nsMacCursor*)createCursor:(enum nsCursor)aCursor;
 
 @end
 
 @implementation nsCursorManager
 
-+ (nsCursorManager *)sharedInstance {
++ (nsCursorManager*)sharedInstance {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (!gInstance) {
@@ -68,7 +68,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-+ (nsMacCursor *)createCursor:(enum nsCursor)aCursor {
++ (nsMacCursor*)createCursor:(enum nsCursor)aCursor {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   switch (aCursor) {
@@ -212,7 +212,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-- (nsresult)setMacCursor:(nsMacCursor *)aMacCursor {
+- (nsresult)setMacCursor:(nsMacCursor*)aMacCursor {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Some plugins mess with our cursors and set a cursor that even
@@ -243,7 +243,7 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-- (nsresult)setCursorWithImage:(imgIContainer *)aCursorImage
+- (nsresult)setCursorWithImage:(imgIContainer*)aCursorImage
                       hotSpotX:(uint32_t)aHotspotX
                       hotSpotY:(uint32_t)aHotspotY
                    scaleFactor:(CGFloat)scaleFactor {
@@ -263,7 +263,7 @@ static const nsCursor sCustomCursor = eCursorCount;
     return NS_OK;
   }
 
-  NSImage *cursorImage;
+  NSImage* cursorImage;
   nsresult rv = nsCocoaUtils::CreateNSImageFromImageContainer(
       aCursorImage, imgIContainer::FRAME_FIRST, &cursorImage, scaleFactor);
   if (NS_FAILED(rv) || !cursorImage) {
@@ -290,10 +290,10 @@ static const nsCursor sCustomCursor = eCursorCount;
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-- (nsMacCursor *)getCursor:(enum nsCursor)aCursor {
+- (nsMacCursor*)getCursor:(enum nsCursor)aCursor {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  nsMacCursor *result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
+  nsMacCursor* result = [mCursors objectForKey:[NSNumber numberWithInt:aCursor]];
   if (!result) {
     result = [nsCursorManager createCursor:aCursor];
     [mCursors setObject:result forKey:[NSNumber numberWithInt:aCursor]];

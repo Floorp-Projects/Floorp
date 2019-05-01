@@ -32,14 +32,14 @@ class BorrowedCairoContext {
  public:
   BorrowedCairoContext() : mCairo(nullptr), mDT(nullptr) {}
 
-  explicit BorrowedCairoContext(DrawTarget *aDT) : mDT(aDT) {
+  explicit BorrowedCairoContext(DrawTarget* aDT) : mDT(aDT) {
     mCairo = BorrowCairoContextFromDrawTarget(aDT);
   }
 
   // We can optionally Init after construction in
   // case we don't know what the DT will be at construction
   // time.
-  cairo_t *Init(DrawTarget *aDT) {
+  cairo_t* Init(DrawTarget* aDT) {
     MOZ_ASSERT(!mDT, "Can't initialize twice!");
     mDT = aDT;
     return mCairo = BorrowCairoContextFromDrawTarget(aDT);
@@ -59,12 +59,12 @@ class BorrowedCairoContext {
 
   ~BorrowedCairoContext() { MOZ_ASSERT(!mCairo); }
 
-  cairo_t *mCairo;
+  cairo_t* mCairo;
 
  private:
-  static cairo_t *BorrowCairoContextFromDrawTarget(DrawTarget *aDT);
-  static void ReturnCairoContextToDrawTarget(DrawTarget *aDT, cairo_t *aCairo);
-  DrawTarget *mDT;
+  static cairo_t* BorrowCairoContextFromDrawTarget(DrawTarget* aDT);
+  static void ReturnCairoContextToDrawTarget(DrawTarget* aDT, cairo_t* aCairo);
+  DrawTarget* mDT;
 };
 
 #ifdef MOZ_X11
@@ -84,7 +84,7 @@ class BorrowedXlibDrawable {
         mVisual(nullptr),
         mXRenderFormat(nullptr) {}
 
-  explicit BorrowedXlibDrawable(DrawTarget *aDT)
+  explicit BorrowedXlibDrawable(DrawTarget* aDT)
       : mDT(nullptr),
         mDisplay(nullptr),
         mDrawable(X11None),
@@ -97,7 +97,7 @@ class BorrowedXlibDrawable {
   // We can optionally Init after construction in
   // case we don't know what the DT will be at construction
   // time.
-  bool Init(DrawTarget *aDT);
+  bool Init(DrawTarget* aDT);
 
   // The caller needs to call Finish if drawable is non-zero when
   // they are done with the context. This is currently explicit
@@ -108,22 +108,22 @@ class BorrowedXlibDrawable {
 
   ~BorrowedXlibDrawable() { MOZ_ASSERT(!mDrawable); }
 
-  Display *GetDisplay() const { return mDisplay; }
+  Display* GetDisplay() const { return mDisplay; }
   Drawable GetDrawable() const { return mDrawable; }
-  Screen *GetScreen() const { return mScreen; }
-  Visual *GetVisual() const { return mVisual; }
+  Screen* GetScreen() const { return mScreen; }
+  Visual* GetVisual() const { return mVisual; }
   IntSize GetSize() const { return mSize; }
   Point GetOffset() const { return mOffset; }
 
-  XRenderPictFormat *GetXRenderFormat() const { return mXRenderFormat; }
+  XRenderPictFormat* GetXRenderFormat() const { return mXRenderFormat; }
 
  private:
-  DrawTarget *mDT;
-  Display *mDisplay;
+  DrawTarget* mDT;
+  Display* mDisplay;
   Drawable mDrawable;
-  Screen *mScreen;
-  Visual *mVisual;
-  XRenderPictFormat *mXRenderFormat;
+  Screen* mScreen;
+  Visual* mVisual;
+  XRenderPictFormat* mXRenderFormat;
   IntSize mSize;
   Point mOffset;
 };
@@ -140,7 +140,7 @@ class BorrowedCGContext {
  public:
   BorrowedCGContext() : cg(nullptr), mDT(nullptr) {}
 
-  explicit BorrowedCGContext(DrawTarget *aDT) : mDT(aDT) {
+  explicit BorrowedCGContext(DrawTarget* aDT) : mDT(aDT) {
     MOZ_ASSERT(aDT, "Caller should check for nullptr");
     cg = BorrowCGContextFromDrawTarget(aDT);
   }
@@ -148,7 +148,7 @@ class BorrowedCGContext {
   // We can optionally Init after construction in
   // case we don't know what the DT will be at construction
   // time.
-  CGContextRef Init(DrawTarget *aDT) {
+  CGContextRef Init(DrawTarget* aDT) {
     MOZ_ASSERT(aDT, "Caller should check for nullptr");
     MOZ_ASSERT(!mDT, "Can't initialize twice!");
     mDT = aDT;
@@ -174,18 +174,18 @@ class BorrowedCGContext {
 
  private:
 #  ifdef USE_SKIA
-  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT);
-  static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg);
+  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget* aDT);
+  static void ReturnCGContextToDrawTarget(DrawTarget* aDT, CGContextRef cg);
 #  else
-  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT) {
+  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget* aDT) {
     MOZ_CRASH("Not supported without Skia");
   }
 
-  static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg) {
+  static void ReturnCGContextToDrawTarget(DrawTarget* aDT, CGContextRef cg) {
     MOZ_CRASH("not supported without Skia");
   }
 #  endif
-  DrawTarget *mDT;
+  DrawTarget* mDT;
 };
 #endif
 

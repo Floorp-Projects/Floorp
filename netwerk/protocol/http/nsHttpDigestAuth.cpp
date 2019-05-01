@@ -51,7 +51,7 @@ NS_IMPL_ISUPPORTS(nsHttpDigestAuth, nsIHttpAuthenticator)
 // nsHttpDigestAuth <protected>
 //-----------------------------------------------------------------------------
 
-nsresult nsHttpDigestAuth::MD5Hash(const char *buf, uint32_t len) {
+nsresult nsHttpDigestAuth::MD5Hash(const char* buf, uint32_t len) {
   nsresult rv;
 
   // Cache a reference to the nsICryptoHash instance since we'll be calling
@@ -67,7 +67,7 @@ nsresult nsHttpDigestAuth::MD5Hash(const char *buf, uint32_t len) {
   rv = mVerifier->Init(nsICryptoHash::MD5);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mVerifier->Update((unsigned char *)buf, len);
+  rv = mVerifier->Update((unsigned char*)buf, len);
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString hashString;
@@ -81,8 +81,8 @@ nsresult nsHttpDigestAuth::MD5Hash(const char *buf, uint32_t len) {
 }
 
 nsresult nsHttpDigestAuth::GetMethodAndPath(
-    nsIHttpAuthenticableChannel *authChannel, bool isProxyAuth,
-    nsCString &httpMethod, nsCString &path) {
+    nsIHttpAuthenticableChannel* authChannel, bool isProxyAuth,
+    nsCString& httpMethod, nsCString& path) {
   nsresult rv, rv2;
   nsCOMPtr<nsIURI> uri;
   rv = authChannel->GetURI(getter_AddRefs(uri));
@@ -138,11 +138,11 @@ nsresult nsHttpDigestAuth::GetMethodAndPath(
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
-                                    const char *challenge, bool isProxyAuth,
-                                    nsISupports **sessionState,
-                                    nsISupports **continuationState,
-                                    bool *result) {
+nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel* authChannel,
+                                    const char* challenge, bool isProxyAuth,
+                                    nsISupports** sessionState,
+                                    nsISupports** continuationState,
+                                    bool* result) {
   nsAutoCString realm, domain, nonce, opaque;
   bool stale;
   uint16_t algorithm, qop;
@@ -163,20 +163,20 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
 
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentialsAsync(
-    nsIHttpAuthenticableChannel *authChannel,
-    nsIHttpAuthenticatorCallback *aCallback, const char *challenge,
-    bool isProxyAuth, const char16_t *domain, const char16_t *username,
-    const char16_t *password, nsISupports *sessionState,
-    nsISupports *continuationState, nsICancelable **aCancellable) {
+    nsIHttpAuthenticableChannel* authChannel,
+    nsIHttpAuthenticatorCallback* aCallback, const char* challenge,
+    bool isProxyAuth, const char16_t* domain, const char16_t* username,
+    const char16_t* password, nsISupports* sessionState,
+    nsISupports* continuationState, nsICancelable** aCancellable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(
-    nsIHttpAuthenticableChannel *authChannel, const char *challenge,
-    bool isProxyAuth, const char16_t *userdomain, const char16_t *username,
-    const char16_t *password, nsISupports **sessionState,
-    nsISupports **continuationState, uint32_t *aFlags, char **creds)
+    nsIHttpAuthenticableChannel* authChannel, const char* challenge,
+    bool isProxyAuth, const char16_t* userdomain, const char16_t* username,
+    const char16_t* password, nsISupports** sessionState,
+    nsISupports** continuationState, uint32_t* aFlags, char** creds)
 
 {
   LOG(("nsHttpDigestAuth::GenerateCredentials [challenge=%s]\n", challenge));
@@ -380,7 +380,7 @@ nsHttpDigestAuth::GenerateCredentials(
 }
 
 NS_IMETHODIMP
-nsHttpDigestAuth::GetAuthFlags(uint32_t *flags) {
+nsHttpDigestAuth::GetAuthFlags(uint32_t* flags) {
   *flags = REQUEST_BASED | REUSABLE_CHALLENGE | IDENTITY_ENCRYPTED;
   //
   // NOTE: digest auth credentials must be uniquely computed for each request,
@@ -390,9 +390,9 @@ nsHttpDigestAuth::GetAuthFlags(uint32_t *flags) {
 }
 
 nsresult nsHttpDigestAuth::CalculateResponse(
-    const char *ha1_digest, const char *ha2_digest, const nsCString &nonce,
-    uint16_t qop, const char *nonce_count, const nsCString &cnonce,
-    char *result) {
+    const char* ha1_digest, const char* ha2_digest, const nsCString& nonce,
+    uint16_t qop, const char* nonce_count, const nsCString& cnonce,
+    char* result) {
   uint32_t len = 2 * EXPANDED_DIGEST_LENGTH + nonce.Length() + 2;
 
   if (qop & QOP_AUTH || qop & QOP_AUTH_INT) {
@@ -429,7 +429,7 @@ nsresult nsHttpDigestAuth::CalculateResponse(
   return rv;
 }
 
-nsresult nsHttpDigestAuth::ExpandToHex(const char *digest, char *result) {
+nsresult nsHttpDigestAuth::ExpandToHex(const char* digest, char* result) {
   int16_t index, value;
 
   for (index = 0; index < DIGEST_LENGTH; index++) {
@@ -450,12 +450,12 @@ nsresult nsHttpDigestAuth::ExpandToHex(const char *digest, char *result) {
   return NS_OK;
 }
 
-nsresult nsHttpDigestAuth::CalculateHA1(const nsCString &username,
-                                        const nsCString &password,
-                                        const nsCString &realm,
+nsresult nsHttpDigestAuth::CalculateHA1(const nsCString& username,
+                                        const nsCString& password,
+                                        const nsCString& realm,
                                         uint16_t algorithm,
-                                        const nsCString &nonce,
-                                        const nsCString &cnonce, char *result) {
+                                        const nsCString& nonce,
+                                        const nsCString& cnonce, char* result) {
   int16_t len = username.Length() + password.Length() + realm.Length() + 2;
   if (algorithm & ALGO_MD5_SESS) {
     int16_t exlen =
@@ -494,9 +494,9 @@ nsresult nsHttpDigestAuth::CalculateHA1(const nsCString &username,
   return ExpandToHex(mHashBuf, result);
 }
 
-nsresult nsHttpDigestAuth::CalculateHA2(const nsCString &method,
-                                        const nsCString &path, uint16_t qop,
-                                        const char *bodyDigest, char *result) {
+nsresult nsHttpDigestAuth::CalculateHA2(const nsCString& method,
+                                        const nsCString& path, uint16_t qop,
+                                        const char* bodyDigest, char* result) {
   uint16_t methodLen = method.Length();
   uint32_t pathLen = path.Length();
   uint32_t len = methodLen + pathLen + 1;
@@ -522,18 +522,18 @@ nsresult nsHttpDigestAuth::CalculateHA2(const nsCString &method,
   return rv;
 }
 
-nsresult nsHttpDigestAuth::ParseChallenge(const char *challenge,
-                                          nsACString &realm, nsACString &domain,
-                                          nsACString &nonce, nsACString &opaque,
-                                          bool *stale, uint16_t *algorithm,
-                                          uint16_t *qop) {
+nsresult nsHttpDigestAuth::ParseChallenge(const char* challenge,
+                                          nsACString& realm, nsACString& domain,
+                                          nsACString& nonce, nsACString& opaque,
+                                          bool* stale, uint16_t* algorithm,
+                                          uint16_t* qop) {
   // put an absurd, but maximum, length cap on the challenge so
   // that calculations are 32 bit safe
   if (strlen(challenge) > 16000000) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  const char *p = challenge + 6;  // first 6 characters are "Digest"
+  const char* p = challenge + 6;  // first 6 characters are "Digest"
 
   *stale = false;
   *algorithm = ALGO_MD5;  // default is MD5
@@ -623,8 +623,8 @@ nsresult nsHttpDigestAuth::ParseChallenge(const char *challenge,
   return NS_OK;
 }
 
-nsresult nsHttpDigestAuth::AppendQuotedString(const nsACString &value,
-                                              nsACString &aHeaderLine) {
+nsresult nsHttpDigestAuth::AppendQuotedString(const nsACString& value,
+                                              nsACString& aHeaderLine) {
   nsAutoCString quoted;
   nsACString::const_iterator s, e;
   value.BeginReading(s);

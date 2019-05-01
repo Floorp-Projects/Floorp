@@ -76,7 +76,7 @@ typedef struct OSVR_ImagingMetadata {
 
 typedef struct OSVR_ImagingState {
   OSVR_ImagingMetadata metadata;
-  OSVR_ImageBufferElement *data;
+  OSVR_ImageBufferElement* data;
 } OSVR_ImagingState;
 
 typedef struct OSVR_ImagingReport {

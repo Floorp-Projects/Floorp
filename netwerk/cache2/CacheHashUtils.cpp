@@ -19,7 +19,7 @@ namespace net {
  *  This algorithm is used to check the data integrity.
  */
 
-static inline void hashmix(uint32_t &a, uint32_t &b, uint32_t &c) {
+static inline void hashmix(uint32_t& a, uint32_t& b, uint32_t& c) {
   a -= b;
   a -= c;
   a ^= (c >> 13);
@@ -49,9 +49,9 @@ static inline void hashmix(uint32_t &a, uint32_t &b, uint32_t &c) {
   c ^= (b >> 15);
 }
 
-CacheHash::Hash32_t CacheHash::Hash(const char *aData, uint32_t aSize,
+CacheHash::Hash32_t CacheHash::Hash(const char* aData, uint32_t aSize,
                                     uint32_t aInitval) {
-  const uint8_t *k = reinterpret_cast<const uint8_t *>(aData);
+  const uint8_t* k = reinterpret_cast<const uint8_t*>(aData);
   uint32_t a, b, c, len;
 
   /* Set up the internal state */
@@ -115,7 +115,7 @@ CacheHash::Hash32_t CacheHash::Hash(const char *aData, uint32_t aSize,
   return c;
 }
 
-CacheHash::Hash16_t CacheHash::Hash16(const char *aData, uint32_t aSize,
+CacheHash::Hash16_t CacheHash::Hash16(const char* aData, uint32_t aSize,
                                       uint32_t aInitval) {
   Hash32_t hash = Hash(aData, aSize, aInitval);
   return (hash & 0xFFFF);
@@ -158,8 +158,8 @@ void CacheHash::Feed(uint32_t aVal, uint8_t aLen) {
   mLength += aLen;
 }
 
-void CacheHash::Update(const char *aData, uint32_t aLen) {
-  const uint8_t *data = reinterpret_cast<const uint8_t *>(aData);
+void CacheHash::Update(const char* aData, uint32_t aLen) {
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(aData);
 
   MOZ_ASSERT(!mFinalized);
 
@@ -219,7 +219,7 @@ CacheHash::Hash16_t CacheHash::GetHash16() {
   return (hash & 0xFFFF);
 }
 
-OriginAttrsHash GetOriginAttrsHash(const mozilla::OriginAttributes &aOA) {
+OriginAttrsHash GetOriginAttrsHash(const mozilla::OriginAttributes& aOA) {
   nsAutoCString suffix;
   aOA.CreateSuffix(suffix);
 

@@ -52,7 +52,7 @@ class BufferedStunSocketTest : public MtransportTest {
     ASSERT_EQ(0, r);
     dummy_ = dummy.forget();  // Now owned by test_socket_.
 
-    r = nr_str_port_to_transport_addr((char *)"192.0.2.133", 3333, IPPROTO_TCP,
+    r = nr_str_port_to_transport_addr((char*)"192.0.2.133", 3333, IPPROTO_TCP,
                                       &remote_addr_);
     ASSERT_EQ(0, r);
 
@@ -60,11 +60,11 @@ class BufferedStunSocketTest : public MtransportTest {
     ASSERT_EQ(0, r);
   }
 
-  nr_socket *socket() { return test_socket_; }
+  nr_socket* socket() { return test_socket_; }
 
  protected:
   RefPtr<DummySocket> dummy_;
-  nr_socket *test_socket_;
+  nr_socket* test_socket_;
   nr_transport_addr remote_addr_;
 };
 
@@ -154,8 +154,8 @@ TEST_F(BufferedStunSocketTest, TestSendToReject) {
 TEST_F(BufferedStunSocketTest, TestSendToWrongAddr) {
   nr_transport_addr addr;
 
-  int r = nr_str_port_to_transport_addr((char *)"192.0.2.134", 3333,
-                                        IPPROTO_TCP, &addr);
+  int r = nr_str_port_to_transport_addr((char*)"192.0.2.134", 3333, IPPROTO_TCP,
+                                        &addr);
   ASSERT_EQ(0, r);
 
   r = nr_socket_sendto(test_socket_, kStunMessage, kStunMessageLen, 0, &addr);
@@ -232,8 +232,8 @@ TEST_F(BufferedStunSocketTest, TestReceiveRecvFromReallyLong) {
   uint8_t garbage[4096];
   memset(garbage, 0xff, sizeof(garbage));
   memcpy(garbage, kStunMessage, kStunMessageLen);
-  nr_stun_message_header *hdr =
-      reinterpret_cast<nr_stun_message_header *>(garbage);
+  nr_stun_message_header* hdr =
+      reinterpret_cast<nr_stun_message_header*>(garbage);
   hdr->length = htons(3000);
 
   dummy_->SetReadBuffer(garbage, sizeof(garbage));

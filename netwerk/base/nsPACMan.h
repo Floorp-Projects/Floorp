@@ -51,19 +51,19 @@ class NS_NO_VTABLE nsPACManCallback : public nsISupports {
    *        before the query is evaluated again. At least one of pacString and
    *        newPACURL should be 0 length.
    */
-  virtual void OnQueryComplete(nsresult status, const nsACString &pacString,
-                               const nsACString &newPACURL) = 0;
+  virtual void OnQueryComplete(nsresult status, const nsACString& pacString,
+                               const nsACString& newPACURL) = 0;
 };
 
 class PendingPACQuery final : public Runnable,
                               public LinkedListElement<PendingPACQuery> {
  public:
-  PendingPACQuery(nsPACMan *pacMan, nsIURI *uri, nsPACManCallback *callback,
+  PendingPACQuery(nsPACMan* pacMan, nsIURI* uri, nsPACManCallback* callback,
                   bool mainThreadResponse);
 
   // can be called from either thread
-  void Complete(nsresult status, const nsACString &pacString);
-  void UseAlternatePACFile(const nsACString &pacURL);
+  void Complete(nsresult status, const nsACString& pacString);
+  void UseAlternatePACFile(const nsACString& pacURL);
 
   nsCString mSpec;
   nsCString mScheme;
@@ -73,7 +73,7 @@ class PendingPACQuery final : public Runnable,
   NS_IMETHOD Run(void) override; /* Runnable */
 
  private:
-  nsPACMan *mPACMan;  // weak reference
+  nsPACMan* mPACMan;  // weak reference
 
  private:
   RefPtr<nsPACManCallback> mCallback;
@@ -92,7 +92,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  explicit nsPACMan(nsIEventTarget *mainThreadEventTarget);
+  explicit nsPACMan(nsIEventTarget* mainThreadEventTarget);
 
   /**
    * This method may be called to shutdown the PAC manager.  Any async queries
@@ -114,7 +114,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    * @param mustCallbackOnMainThread
    *        If set to false the callback can be made from the PAC thread
    */
-  nsresult AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
+  nsresult AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,
                                bool mustCallbackOnMainThread);
 
   /**
@@ -126,7 +126,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    *        The non normalized uri spec of this URI used for comparison with
    *        system proxy settings to determine if the PAC uri has changed.
    */
-  nsresult LoadPACFromURI(const nsACString &aSpec);
+  nsresult LoadPACFromURI(const nsACString& aSpec);
 
   /**
    * Returns true if we are currently loading the PAC file.
@@ -141,12 +141,12 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    * should bypass the proxy (to fetch the pac file) or if the pac
    * configuration has changed (and we should reload the pac file)
    */
-  bool IsPACURI(const nsACString &spec) {
+  bool IsPACURI(const nsACString& spec) {
     return mPACURISpec.Equals(spec) || mPACURIRedirectSpec.Equals(spec) ||
            mNormalPACURISpec.Equals(spec);
   }
 
-  bool IsPACURI(nsIURI *uri) {
+  bool IsPACURI(nsIURI* uri) {
     if (mPACURISpec.IsEmpty() && mPACURIRedirectSpec.IsEmpty()) {
       return false;
     }
@@ -162,8 +162,8 @@ class nsPACMan final : public nsIStreamLoaderObserver,
 
   bool IsUsingWPAD() { return mAutoDetect; }
 
-  nsresult Init(nsISystemProxySettings *);
-  static nsPACMan *sInstance;
+  nsresult Init(nsISystemProxySettings*);
+  static nsPACMan* sInstance;
 
   // PAC thread operations only
   void ProcessPendingQ();
@@ -212,7 +212,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    *        A flag saying whether the exponential back-off for attempting to
    * reload the PAC should be reset.
    */
-  nsresult LoadPACFromURI(const nsACString &aSpec, bool aResetLoadFailureCount);
+  nsresult LoadPACFromURI(const nsACString& aSpec, bool aResetLoadFailureCount);
 
   /**
    * Reload the PAC file if there is reason to.
@@ -229,18 +229,18 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    * place a pendingPACQuery into the queue and potentially
    * execute the queue if it was otherwise empty
    */
-  nsresult PostQuery(PendingPACQuery *query);
+  nsresult PostQuery(PendingPACQuery* query);
 
   // Having found the PAC URI on the PAC thread, copy it to a string which
   // can be altered on the main thread.
-  void AssignPACURISpec(const nsACString &aSpec);
+  void AssignPACURISpec(const nsACString& aSpec);
 
   // PAC thread operations only
   void PostProcessPendingQ();
   void PostCancelPendingQ(nsresult, bool aShutdown = false);
   bool ProcessPending();
-  nsresult GetPACFromDHCP(nsACString &aSpec);
-  nsresult ConfigureWPAD(nsACString &aSpec);
+  nsresult GetPACFromDHCP(nsACString& aSpec);
+  nsresult ConfigureWPAD(nsACString& aSpec);
 
  private:
   /**

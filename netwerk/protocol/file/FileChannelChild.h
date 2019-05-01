@@ -20,7 +20,7 @@ class FileChannelChild : public nsFileChannel,
                          public nsIChildChannel,
                          public PFileChannelChild {
  public:
-  explicit FileChannelChild(nsIURI *uri);
+  explicit FileChannelChild(nsIURI* uri);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICHILDCHANNEL

@@ -37,7 +37,7 @@ class ZeroPole {
  public:
   ZeroPole() : m_zero(0), m_pole(0), m_lastX(0), m_lastY(0) {}
 
-  void process(const float *source, float *destination, int framesToProcess);
+  void process(const float* source, float* destination, int framesToProcess);
 
   // Reset filter state.
   void reset() {

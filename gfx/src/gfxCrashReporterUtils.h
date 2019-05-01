@@ -27,7 +27,7 @@ namespace mozilla {
  */
 class ScopedGfxFeatureReporter {
  public:
-  explicit ScopedGfxFeatureReporter(const char *aFeature, bool aForce = false)
+  explicit ScopedGfxFeatureReporter(const char* aFeature, bool aForce = false)
       : mFeature(aFeature), mStatusChar('-'), mStatusNumber(0) {
     WriteAppNote(aForce ? '!' : '?', 0);
   }
@@ -38,12 +38,12 @@ class ScopedGfxFeatureReporter {
     mStatusNumber = aNumber;
   }
 
-  static void AppNote(const nsACString &aMessage);
+  static void AppNote(const nsACString& aMessage);
 
   class AppNoteWritingRunnable;
 
  protected:
-  const char *mFeature;
+  const char* mFeature;
   char mStatusChar;
   int32_t mStatusNumber;
 

@@ -13,7 +13,7 @@
 //// variantToSQLiteT Implementation
 
 template <typename T>
-int variantToSQLiteT(T aObj, nsIVariant *aValue) {
+int variantToSQLiteT(T aObj, nsIVariant* aValue) {
   // Allow to return nullptr not wrapped to nsIVariant for speed.
   if (!aValue) return sqlite3_T_null(aObj);
 
@@ -84,7 +84,7 @@ int variantToSQLiteT(T aObj, nsIVariant *aValue) {
       uint16_t arrayType;
       nsIID iid;
       uint32_t count;
-      void *data;
+      void* data;
       nsresult rv = aValue->GetAsArray(&arrayType, &iid, &count, &data);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
 

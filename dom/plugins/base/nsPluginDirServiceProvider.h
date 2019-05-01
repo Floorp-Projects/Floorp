@@ -26,11 +26,11 @@ class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider {
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 #ifdef XP_WIN
-  static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
+  static nsresult GetPLIDDirectories(nsISimpleEnumerator** aEnumerator);
 
  private:
   static nsresult GetPLIDDirectoriesWithRootKey(uint32_t aKey,
-                                                nsCOMArray<nsIFile> &aDirs);
+                                                nsCOMArray<nsIFile>& aDirs);
 #endif
 
  protected:

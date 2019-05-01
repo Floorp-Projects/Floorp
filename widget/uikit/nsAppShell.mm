@@ -22,9 +22,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 
-nsAppShell *nsAppShell::gAppShell = NULL;
-UIWindow *nsAppShell::gWindow = nil;
-NSMutableArray *nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
+nsAppShell* nsAppShell::gAppShell = NULL;
+UIWindow* nsAppShell::gWindow = nil;
+NSMutableArray* nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
 
 #define ALOG(args...)    \
   fprintf(stderr, args); \
@@ -42,7 +42,7 @@ NSMutableArray *nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
   self.view = [[UIView alloc] initWithFrame:r];
   [self.view setBackgroundColor:[UIColor lightGrayColor]];
   // add all of the top level views as children
-  for (UIView *v in nsAppShell::gTopLevelViews) {
+  for (UIView* v in nsAppShell::gTopLevelViews) {
     ALOG("[ViewController.view addSubView:%p]", v);
     [self.view addSubview:v];
   }
@@ -57,13 +57,13 @@ NSMutableArray *nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
 
 @interface AppShellDelegate : NSObject <UIApplicationDelegate> {
 }
-@property(strong, nonatomic) UIWindow *window;
+@property(strong, nonatomic) UIWindow* window;
 @end
 
 @implementation AppShellDelegate
 
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+- (BOOL)application:(UIApplication*)application
+    didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   ALOG("[AppShellDelegate application:didFinishLaunchingWithOptions:]");
   // We only create one window, since we can only display one window at
   // a time anyway. Also, iOS 4 fails to display UIWindows if you
@@ -81,20 +81,20 @@ NSMutableArray *nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
   return YES;
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application {
+- (void)applicationWillTerminate:(UIApplication*)application {
   ALOG("[AppShellDelegate applicationWillTerminate:]");
   nsAppShell::gAppShell->WillTerminate();
 }
 
-- (void)applicationDidBecomeActive:(UIApplication *)application {
+- (void)applicationDidBecomeActive:(UIApplication*)application {
   ALOG("[AppShellDelegate applicationDidBecomeActive:]");
 }
 
-- (void)applicationWillResignActive:(UIApplication *)application {
+- (void)applicationWillResignActive:(UIApplication*)application {
   ALOG("[AppShellDelegate applicationWillResignActive:]");
 }
 
-- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application {
+- (void)applicationDidReceiveMemoryWarning:(UIApplication*)application {
   ALOG("[AppShellDelegate applicationDidReceiveMemoryWarning:]");
   NS_DispatchMemoryPressure(MemPressure_New);
 }
@@ -165,8 +165,8 @@ nsresult nsAppShell::Init() {
 // signalled from ScheduleNativeEventCallback.
 //
 // protected static
-void nsAppShell::ProcessGeckoEvents(void *aInfo) {
-  nsAppShell *self = static_cast<nsAppShell *>(aInfo);
+void nsAppShell::ProcessGeckoEvents(void* aInfo) {
+  nsAppShell* self = static_cast<nsAppShell*>(aInfo);
   self->NativeEventCallback();
   self->Release();
 }
@@ -205,10 +205,10 @@ void nsAppShell::ScheduleNativeEventCallback() {
 bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   if (mTerminated) return false;
 
-  NSString *currentMode = nil;
-  NSDate *waitUntil = nil;
+  NSString* currentMode = nil;
+  NSDate* waitUntil = nil;
   if (aMayWait) waitUntil = [NSDate distantFuture];
-  NSRunLoop *currentRunLoop = [NSRunLoop currentRunLoop];
+  NSRunLoop* currentRunLoop = [NSRunLoop currentRunLoop];
 
   BOOL eventProcessed = NO;
   do {
@@ -231,7 +231,7 @@ NS_IMETHODIMP
 nsAppShell::Run(void) {
   ALOG("nsAppShell::Run");
   char argv[1][4] = {"app"};
-  UIApplicationMain(1, (char **)argv, nil, @"AppShellDelegate");
+  UIApplicationMain(1, (char**)argv, nil, @"AppShellDelegate");
   // UIApplicationMain doesn't exit. :-(
   return NS_OK;
 }

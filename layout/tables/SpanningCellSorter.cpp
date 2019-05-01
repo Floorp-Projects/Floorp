@@ -30,14 +30,14 @@ SpanningCellSorter::~SpanningCellSorter() { delete[] mSortedHashTable; }
     PLDHashTable::ClearEntryStub, nullptr};
 
 /* static */
-PLDHashNumber SpanningCellSorter::HashTableHashKey(const void *key) {
+PLDHashNumber SpanningCellSorter::HashTableHashKey(const void* key) {
   return HashGeneric(key);
 }
 
 /* static */
-bool SpanningCellSorter::HashTableMatchEntry(const PLDHashEntryHdr *hdr,
-                                             const void *key) {
-  const HashTableEntry *entry = static_cast<const HashTableEntry *>(hdr);
+bool SpanningCellSorter::HashTableMatchEntry(const PLDHashEntryHdr* hdr,
+                                             const void* key) {
+  const HashTableEntry* entry = static_cast<const HashTableEntry*>(hdr);
   return NS_PTR_TO_INT32(key) == entry->mColSpan;
 }
 
@@ -45,7 +45,7 @@ bool SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol) {
   NS_ASSERTION(mState == ADDING, "cannot call AddCell after GetNext");
   NS_ASSERTION(aColSpan >= ARRAY_BASE, "cannot add cells with colspan<2");
 
-  Item *i = (Item *)mozilla::AutoStackArena::Allocate(sizeof(Item));
+  Item* i = (Item*)mozilla::AutoStackArena::Allocate(sizeof(Item));
   NS_ENSURE_TRUE(i != nullptr, false);
 
   i->row = aRow;
@@ -56,7 +56,7 @@ bool SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol) {
     i->next = mArray[index];
     mArray[index] = i;
   } else {
-    auto entry = static_cast<HashTableEntry *>(
+    auto entry = static_cast<HashTableEntry*>(
         mHashTable.Add(NS_INT32_TO_PTR(aColSpan), fallible));
     NS_ENSURE_TRUE(entry, false);
 
@@ -74,16 +74,16 @@ bool SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol) {
 }
 
 /* static */
-int SpanningCellSorter::SortArray(const void *a, const void *b, void *closure) {
-  int32_t spanA = (*static_cast<HashTableEntry *const *>(a))->mColSpan;
-  int32_t spanB = (*static_cast<HashTableEntry *const *>(b))->mColSpan;
+int SpanningCellSorter::SortArray(const void* a, const void* b, void* closure) {
+  int32_t spanA = (*static_cast<HashTableEntry* const*>(a))->mColSpan;
+  int32_t spanB = (*static_cast<HashTableEntry* const*>(b))->mColSpan;
 
   if (spanA < spanB) return -1;
   if (spanA == spanB) return 0;
   return 1;
 }
 
-SpanningCellSorter::Item *SpanningCellSorter::GetNext(int32_t *aColSpan) {
+SpanningCellSorter::Item* SpanningCellSorter::GetNext(int32_t* aColSpan) {
   NS_ASSERTION(mState != DONE, "done enumerating, stop calling");
 
   switch (mState) {
@@ -96,14 +96,14 @@ SpanningCellSorter::Item *SpanningCellSorter::GetNext(int32_t *aColSpan) {
       while (mEnumerationIndex < ARRAY_SIZE && !mArray[mEnumerationIndex])
         ++mEnumerationIndex;
       if (mEnumerationIndex < ARRAY_SIZE) {
-        Item *result = mArray[mEnumerationIndex];
+        Item* result = mArray[mEnumerationIndex];
         *aColSpan = IndexToSpan(mEnumerationIndex);
         NS_ASSERTION(result, "logic error");
 #ifdef DEBUG_SPANNING_CELL_SORTER
         printf(
             "SpanningCellSorter[%p]:"
             " returning list for colspan=%d from array\n",
-            static_cast<void *>(this), *aColSpan);
+            static_cast<void*>(this), *aColSpan);
 #endif
         ++mEnumerationIndex;
         return result;
@@ -112,10 +112,10 @@ SpanningCellSorter::Item *SpanningCellSorter::GetNext(int32_t *aColSpan) {
       mState = ENUMERATING_HASH;
       mEnumerationIndex = 0;
       if (mHashTable.EntryCount() > 0) {
-        HashTableEntry **sh = new HashTableEntry *[mHashTable.EntryCount()];
+        HashTableEntry** sh = new HashTableEntry*[mHashTable.EntryCount()];
         int32_t j = 0;
         for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
-          sh[j++] = static_cast<HashTableEntry *>(iter.Get());
+          sh[j++] = static_cast<HashTableEntry*>(iter.Get());
         }
         NS_QuickSort(sh, mHashTable.EntryCount(), sizeof(sh[0]), SortArray,
                      nullptr);
@@ -124,14 +124,14 @@ SpanningCellSorter::Item *SpanningCellSorter::GetNext(int32_t *aColSpan) {
       MOZ_FALLTHROUGH;
     case ENUMERATING_HASH:
       if (mEnumerationIndex < mHashTable.EntryCount()) {
-        Item *result = mSortedHashTable[mEnumerationIndex]->mItems;
+        Item* result = mSortedHashTable[mEnumerationIndex]->mItems;
         *aColSpan = mSortedHashTable[mEnumerationIndex]->mColSpan;
         NS_ASSERTION(result, "holes in hash table");
 #ifdef DEBUG_SPANNING_CELL_SORTER
         printf(
             "SpanningCellSorter[%p]:"
             " returning list for colspan=%d from hash\n",
-            static_cast<void *>(this), *aColSpan);
+            static_cast<void*>(this), *aColSpan);
 #endif
         ++mEnumerationIndex;
         return result;

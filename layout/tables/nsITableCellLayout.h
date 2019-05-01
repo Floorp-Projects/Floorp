@@ -25,7 +25,7 @@ class nsITableCellLayout {
 
   /** return the mapped cell's row and column indexes (starting at 0 for each)
    */
-  NS_IMETHOD GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex) = 0;
+  NS_IMETHOD GetCellIndexes(int32_t& aRowIndex, int32_t& aColIndex) = 0;
 };
 
 #endif
