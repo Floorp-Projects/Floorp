@@ -24,8 +24,8 @@
  * Child and Parent variants, but only Child variants are currently implemented.
  * The parent and child variants live in separate JSMs, and have separate class
  * names, each of which have Child or Parent appended to their names, as
- * appropriate. For instance, the Browser actor has a child instance named
- * BrowserChild which lives in BrowserChild.jsm.
+ * appropriate. For instance, the AudioPlayback actor has a child instance named
+ * AudioPlaybackChild which lives in AudioPlaybackChild.jsm.
  *
  *
  * Actors are defined by calling ActorManagerParent.addActors, with an object
@@ -41,8 +41,8 @@
  * - "module": The URI from which the modules is loaded. This should be a
  *   resource: URI, ideally beginning with "resource://gre/actors/" or
  *   "resource:///actors/", with a filename matching the name of the actor for
- *   the given side. So, the child side of the Browser actor should live at
- *   "resource://gre/actors/BrowserChild.jsm".
+ *   the given side. So, the child side of the AudioPlayback actor should live at
+ *   "resource://gre/actors/AudioPlaybackChild.jsm".
  *
  * - "group": A group name which restricts the message managers to which this
  *   actor may be attached. This should match the "messagemanagergroup"
@@ -101,6 +101,9 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {DefaultMap} = ExtensionUtils;
 
 let ACTORS = {
+};
+
+let LEGACY_ACTORS = {
   AudioPlayback: {
     child: {
       module: "resource://gre/actors/AudioPlaybackChild.jsm",
@@ -418,6 +421,12 @@ var ActorManagerParent = {
 
   addActors(actors) {
     for (let [actorName, actor] of Object.entries(actors)) {
+      ChromeUtils.registerWindowActor(actorName, actor);
+    }
+  },
+
+  addLegacyActors(actors) {
+    for (let [actorName, actor] of Object.entries(actors)) {
       let {child} = actor;
       {
         let actorSet;
@@ -455,3 +464,4 @@ var ActorManagerParent = {
 };
 
 ActorManagerParent.addActors(ACTORS);
+ActorManagerParent.addLegacyActors(LEGACY_ACTORS);
