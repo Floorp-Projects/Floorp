@@ -13,7 +13,7 @@ add_task(async function() {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",
     "nocert.example.com": "security-state-broken",
-    "localhost": "security-state-local",
+    "localhost": "security-state-secure",
   };
 
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL);
@@ -25,13 +25,17 @@ add_task(async function() {
   await performRequests();
 
   for (const subitemNode of Array.from(document.querySelectorAll(
-    "requests-list-column.requests-list-security-and-domain"))) {
-    const domain = subitemNode.querySelector(".requests-list-domain").textContent;
+    ".requests-list-column.requests-list-domain"))) {
+    // Skip header
+    const icon = subitemNode.querySelector(".requests-security-state-icon");
+    if (!icon) {
+      continue;
+    }
 
+    const domain = subitemNode.textContent;
     info("Found a request to " + domain);
-    ok(domain in EXPECTED_SECURITY_STATES, "Domain " + domain + " was expected.");
 
-    const classes = subitemNode.querySelector(".requests-security-state-icon").classList;
+    const classes = icon.classList;
     const expectedClass = EXPECTED_SECURITY_STATES[domain];
 
     info("Classes of security state icon are: " + classes);

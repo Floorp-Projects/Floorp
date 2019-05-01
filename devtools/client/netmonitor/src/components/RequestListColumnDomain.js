@@ -40,12 +40,17 @@ class RequestListColumnDomain extends Component {
     const title = host + (remoteAddress ?
       ` (${getFormattedIPAndPort(remoteAddress, remotePort)})` : "");
 
+    let realSecurityState = securityState;
+
+    // Locally delivered files such as http://localhost and file:// paths
+    // are considered to have been delivered securely.
     if (isLocal) {
-      iconClassList.push("security-state-local");
-      iconTitle = L10N.getStr("netmonitor.security.state.secure");
-    } else if (securityState) {
-      iconClassList.push(`security-state-${securityState}`);
-      iconTitle = L10N.getStr(`netmonitor.security.state.${securityState}`);
+      realSecurityState = "secure";
+    }
+
+    if (realSecurityState) {
+      iconClassList.push(`security-state-${realSecurityState}`);
+      iconTitle = L10N.getStr(`netmonitor.security.state.${realSecurityState}`);
     }
 
     return (
