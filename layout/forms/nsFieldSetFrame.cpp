@@ -196,7 +196,7 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
       nsTArray<mozilla::wr::ComplexClipRegion> array{region};
 
       auto clip = aBuilder.DefineClip(Nothing(), layoutRect, &array, nullptr);
-      auto clipChain = aBuilder.DefineClipChain({clip});
+      auto clipChain = aBuilder.DefineClipChain({clip}, true);
       clipOut.emplace(aBuilder, clipChain);
     }
   } else {
