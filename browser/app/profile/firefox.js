@@ -1316,6 +1316,12 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("trailhead.firstrun.cohort", 1);
+#else
+pref("trailhead.firstrun.cohort", 0);
+#endif
+
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

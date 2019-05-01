@@ -477,6 +477,18 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
+  createSpocsFillPing(data) {
+    return Object.assign(
+      this.createPing(null),
+      data,
+      {
+        impression_id: this._impressionId,
+        client_id: "n/a",
+        session_id: "n/a",
+      }
+    );
+  }
+
   createUserEvent(action) {
     return Object.assign(
       this.createPing(au.getPortIdOfSender(action)),
@@ -733,6 +745,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case at.DISCOVERY_STREAM_LOADED_CONTENT:
         this.handleDiscoveryStreamLoadedContent(au.getPortIdOfSender(action), action.data);
         break;
+      case at.DISCOVERY_STREAM_SPOCS_FILL:
+        this.handleDiscoveryStreamSpocsFill(action.data);
+        break;
       case at.TELEMETRY_UNDESIRED_EVENT:
         this.handleUndesiredEvent(action);
         break;
@@ -803,6 +818,33 @@ this.TelemetryFeed = class TelemetryFeed {
     data.tiles.forEach(tile => loadedContents.push({id: tile.id, pos: tile.pos}));
     loadedContentSets[data.source] = loadedContents;
     session.loadedContentSets = loadedContentSets;
+  }
+
+  /**
+   * Handl SPOCS Fill actions from Discovery Stream.
+   *
+   * @param {Object} data
+   *   The SPOCS Fill event structured as:
+   *   {
+   *     spoc_fills: [
+   *       {
+   *         id: 123,
+   *         displayed: 0,
+   *         reason: "frequency_cap",
+   *         full_recalc: 1
+   *        },
+   *        {
+   *          id: 124,
+   *          displayed: 1,
+   *          reason: "n/a",
+   *          full_recalc: 1
+   *        }
+   *      ]
+   *    }
+   */
+  handleDiscoveryStreamSpocsFill(data) {
+    const payload = this.createSpocsFillPing(data);
+    this.sendStructuredIngestionEvent(payload, "spocs-fills", "1");
   }
 
   /**

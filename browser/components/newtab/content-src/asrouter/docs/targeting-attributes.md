@@ -28,6 +28,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [sync](#sync)
 * [topFrecentSites](#topfrecentsites)
 * [totalBookmarksCount](#totalbookmarkscount)
+* [trailheadCohort](#trailheadcohort)
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallEnabled)
 * [hasPinnedTabs](#haspinnedtabs)
@@ -423,6 +424,11 @@ Total number of bookmarks.
 ```ts
 declare const totalBookmarksCount: number;
 ```
+
+### `trailheadCohort`
+
+(67+ only) Experiment cohort for special trailhead project
+
 
 ### `usesFirefoxSync`
 
