@@ -444,7 +444,7 @@ fn main() {
     let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
-            let mut items = s
+            let items = s
                 .split(',')
                 .map(|s| s.parse::<f32>().unwrap())
                 .collect::<Vec<_>>();
