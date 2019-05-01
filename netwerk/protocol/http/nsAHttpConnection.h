@@ -45,10 +45,10 @@ class nsAHttpConnection : public nsISupports {
   //
   // @return failure code to close the transaction.
   //
-  virtual MOZ_MUST_USE nsresult OnHeadersAvailable(nsAHttpTransaction *,
-                                                   nsHttpRequestHead *,
-                                                   nsHttpResponseHead *,
-                                                   bool *reset) = 0;
+  virtual MOZ_MUST_USE nsresult OnHeadersAvailable(nsAHttpTransaction*,
+                                                   nsHttpRequestHead*,
+                                                   nsHttpResponseHead*,
+                                                   bool* reset) = 0;
 
   //
   // called by a transaction to resume either sending or receiving data
@@ -69,13 +69,13 @@ class nsAHttpConnection : public nsISupports {
   // multiplexed protocols like SPDY - h1
   // implicitly has this information in a 1:1 relationship with the
   // transaction(s) they manage.
-  virtual void TransactionHasDataToWrite(nsAHttpTransaction *) {
+  virtual void TransactionHasDataToWrite(nsAHttpTransaction*) {
     // by default do nothing - only multiplexed protocols need to overload
   }
 
   // This is the companion to *HasDataToWrite() for the case
   // when a gecko caller has called ResumeRecv() after being paused
-  virtual void TransactionHasDataToRecv(nsAHttpTransaction *) {
+  virtual void TransactionHasDataToRecv(nsAHttpTransaction*) {
     // by default do nothing - only multiplexed protocols need to overload
   }
 
@@ -88,20 +88,20 @@ class nsAHttpConnection : public nsISupports {
   //        the reason for closing the transaction.  NS_BASE_STREAM_CLOSED
   //        is equivalent to NS_OK.
   //
-  virtual void CloseTransaction(nsAHttpTransaction *transaction,
+  virtual void CloseTransaction(nsAHttpTransaction* transaction,
                                 nsresult reason) = 0;
 
   // get a reference to the connection's connection info object.
-  virtual void GetConnectionInfo(nsHttpConnectionInfo **) = 0;
+  virtual void GetConnectionInfo(nsHttpConnectionInfo**) = 0;
 
   // get the transport level information for this connection. This may fail
   // if it is in use.
-  virtual MOZ_MUST_USE nsresult TakeTransport(nsISocketTransport **,
-                                              nsIAsyncInputStream **,
-                                              nsIAsyncOutputStream **) = 0;
+  virtual MOZ_MUST_USE nsresult TakeTransport(nsISocketTransport**,
+                                              nsIAsyncInputStream**,
+                                              nsIAsyncOutputStream**) = 0;
 
   // called by a transaction to get the security info from the socket.
-  virtual void GetSecurityInfo(nsISupports **) = 0;
+  virtual void GetSecurityInfo(nsISupports**) = 0;
 
   // called by a transaction to determine whether or not the connection is
   // persistent... important in determining the end of a response.
@@ -113,7 +113,7 @@ class nsAHttpConnection : public nsISupports {
 
   // called by a transaction when the transaction reads more from the socket
   // than it should have (eg. containing part of the next response).
-  virtual MOZ_MUST_USE nsresult PushBack(const char *data, uint32_t length) = 0;
+  virtual MOZ_MUST_USE nsresult PushBack(const char* data, uint32_t length) = 0;
 
   // Used to determine if the connection wants read events even though
   // it has not written out a transaction. Used when a connection has issued
@@ -134,7 +134,7 @@ class nsAHttpConnection : public nsISupports {
 
   // Get the nsISocketTransport used by the connection without changing
   //  references or ownership.
-  virtual nsISocketTransport *Transport() = 0;
+  virtual nsISocketTransport* Transport() = 0;
 
   // The number of transaction bytes written out on this HTTP Connection, does
   // not count CONNECT tunnel setup
@@ -142,7 +142,7 @@ class nsAHttpConnection : public nsISupports {
 
   // Update the callbacks used to provide security info. May be called on
   // any thread.
-  virtual void SetSecurityCallbacks(nsIInterfaceRequestor *aCallbacks) = 0;
+  virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
 
   // nsHttp.h version
   virtual HttpVersion Version() = 0;
@@ -157,81 +157,81 @@ class nsAHttpConnection : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
 
-#define NS_DECL_NSAHTTPCONNECTION(fwdObject)                                  \
-  MOZ_MUST_USE nsresult OnHeadersAvailable(                                   \
-      nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *,        \
-      bool *reset) override;                                                  \
-  void CloseTransaction(nsAHttpTransaction *, nsresult) override;             \
-  MOZ_MUST_USE nsresult TakeTransport(                                        \
-      nsISocketTransport **, nsIAsyncInputStream **, nsIAsyncOutputStream **) \
-      override;                                                               \
-  bool IsPersistent() override;                                               \
-  bool IsReused() override;                                                   \
-  void DontReuse() override;                                                  \
-  MOZ_MUST_USE nsresult PushBack(const char *, uint32_t) override;            \
-  already_AddRefed<nsHttpConnection> TakeHttpConnection() override;           \
-  already_AddRefed<nsHttpConnection> HttpConnection() override;               \
-  void TopLevelOuterContentWindowIdChanged(uint64_t windowId) override;       \
-  /*                                                                          \
-     Thes methods below have automatic definitions that just forward the      \
-     function to a lower level connection object                              \
-  */                                                                          \
-  void GetConnectionInfo(nsHttpConnectionInfo **result) override {            \
-    if (!(fwdObject)) {                                                       \
-      *result = nullptr;                                                      \
-      return;                                                                 \
-    }                                                                         \
-    return (fwdObject)->GetConnectionInfo(result);                            \
-  }                                                                           \
-  void GetSecurityInfo(nsISupports **result) override {                       \
-    if (!(fwdObject)) {                                                       \
-      *result = nullptr;                                                      \
-      return;                                                                 \
-    }                                                                         \
-    return (fwdObject)->GetSecurityInfo(result);                              \
-  }                                                                           \
-  MOZ_MUST_USE nsresult ResumeSend() override {                               \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                                \
-    return (fwdObject)->ResumeSend();                                         \
-  }                                                                           \
-  MOZ_MUST_USE nsresult ResumeRecv() override {                               \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                                \
-    return (fwdObject)->ResumeRecv();                                         \
-  }                                                                           \
-  MOZ_MUST_USE nsresult ForceSend() override {                                \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                                \
-    return (fwdObject)->ForceSend();                                          \
-  }                                                                           \
-  MOZ_MUST_USE nsresult ForceRecv() override {                                \
-    if (!(fwdObject)) return NS_ERROR_FAILURE;                                \
-    return (fwdObject)->ForceRecv();                                          \
-  }                                                                           \
-  nsISocketTransport *Transport() override {                                  \
-    if (!(fwdObject)) return nullptr;                                         \
-    return (fwdObject)->Transport();                                          \
-  }                                                                           \
-  HttpVersion Version() override {                                            \
-    return (fwdObject) ? (fwdObject)->Version()                               \
-                       : mozilla::net::HttpVersion::UNKNOWN;                  \
-  }                                                                           \
-  bool IsProxyConnectInProgress() override {                                  \
-    return (!fwdObject) ? false : (fwdObject)->IsProxyConnectInProgress();    \
-  }                                                                           \
-  bool LastTransactionExpectedNoContent() override {                          \
-    return (!fwdObject) ? false                                               \
-                        : (fwdObject)->LastTransactionExpectedNoContent();    \
-  }                                                                           \
-  void SetLastTransactionExpectedNoContent(bool val) override {               \
-    if (fwdObject) (fwdObject)->SetLastTransactionExpectedNoContent(val);     \
-  }                                                                           \
-  int64_t BytesWritten() override {                                           \
-    return fwdObject ? (fwdObject)->BytesWritten() : 0;                       \
-  }                                                                           \
-  void SetSecurityCallbacks(nsIInterfaceRequestor *aCallbacks) override {     \
-    if (fwdObject) (fwdObject)->SetSecurityCallbacks(aCallbacks);             \
-  }                                                                           \
-  void SetTrafficCategory(HttpTrafficCategory aCategory) override {           \
-    if (fwdObject) (fwdObject)->SetTrafficCategory(aCategory);                \
+#define NS_DECL_NSAHTTPCONNECTION(fwdObject)                               \
+  MOZ_MUST_USE nsresult OnHeadersAvailable(                                \
+      nsAHttpTransaction*, nsHttpRequestHead*, nsHttpResponseHead*,        \
+      bool* reset) override;                                               \
+  void CloseTransaction(nsAHttpTransaction*, nsresult) override;           \
+  MOZ_MUST_USE nsresult TakeTransport(                                     \
+      nsISocketTransport**, nsIAsyncInputStream**, nsIAsyncOutputStream**) \
+      override;                                                            \
+  bool IsPersistent() override;                                            \
+  bool IsReused() override;                                                \
+  void DontReuse() override;                                               \
+  MOZ_MUST_USE nsresult PushBack(const char*, uint32_t) override;          \
+  already_AddRefed<nsHttpConnection> TakeHttpConnection() override;        \
+  already_AddRefed<nsHttpConnection> HttpConnection() override;            \
+  void TopLevelOuterContentWindowIdChanged(uint64_t windowId) override;    \
+  /*                                                                       \
+     Thes methods below have automatic definitions that just forward the   \
+     function to a lower level connection object                           \
+  */                                                                       \
+  void GetConnectionInfo(nsHttpConnectionInfo** result) override {         \
+    if (!(fwdObject)) {                                                    \
+      *result = nullptr;                                                   \
+      return;                                                              \
+    }                                                                      \
+    return (fwdObject)->GetConnectionInfo(result);                         \
+  }                                                                        \
+  void GetSecurityInfo(nsISupports** result) override {                    \
+    if (!(fwdObject)) {                                                    \
+      *result = nullptr;                                                   \
+      return;                                                              \
+    }                                                                      \
+    return (fwdObject)->GetSecurityInfo(result);                           \
+  }                                                                        \
+  MOZ_MUST_USE nsresult ResumeSend() override {                            \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
+    return (fwdObject)->ResumeSend();                                      \
+  }                                                                        \
+  MOZ_MUST_USE nsresult ResumeRecv() override {                            \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
+    return (fwdObject)->ResumeRecv();                                      \
+  }                                                                        \
+  MOZ_MUST_USE nsresult ForceSend() override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
+    return (fwdObject)->ForceSend();                                       \
+  }                                                                        \
+  MOZ_MUST_USE nsresult ForceRecv() override {                             \
+    if (!(fwdObject)) return NS_ERROR_FAILURE;                             \
+    return (fwdObject)->ForceRecv();                                       \
+  }                                                                        \
+  nsISocketTransport* Transport() override {                               \
+    if (!(fwdObject)) return nullptr;                                      \
+    return (fwdObject)->Transport();                                       \
+  }                                                                        \
+  HttpVersion Version() override {                                         \
+    return (fwdObject) ? (fwdObject)->Version()                            \
+                       : mozilla::net::HttpVersion::UNKNOWN;               \
+  }                                                                        \
+  bool IsProxyConnectInProgress() override {                               \
+    return (!fwdObject) ? false : (fwdObject)->IsProxyConnectInProgress(); \
+  }                                                                        \
+  bool LastTransactionExpectedNoContent() override {                       \
+    return (!fwdObject) ? false                                            \
+                        : (fwdObject)->LastTransactionExpectedNoContent(); \
+  }                                                                        \
+  void SetLastTransactionExpectedNoContent(bool val) override {            \
+    if (fwdObject) (fwdObject)->SetLastTransactionExpectedNoContent(val);  \
+  }                                                                        \
+  int64_t BytesWritten() override {                                        \
+    return fwdObject ? (fwdObject)->BytesWritten() : 0;                    \
+  }                                                                        \
+  void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) override {  \
+    if (fwdObject) (fwdObject)->SetSecurityCallbacks(aCallbacks);          \
+  }                                                                        \
+  void SetTrafficCategory(HttpTrafficCategory aCategory) override {        \
+    if (fwdObject) (fwdObject)->SetTrafficCategory(aCategory);             \
   }
 
 // ThrottleResponse deliberately ommited since we want different implementation

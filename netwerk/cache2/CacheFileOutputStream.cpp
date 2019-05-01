@@ -45,7 +45,7 @@ NS_INTERFACE_MAP_BEGIN(CacheFileOutputStream)
 NS_INTERFACE_MAP_END
 
 CacheFileOutputStream::CacheFileOutputStream(
-    CacheFile *aFile, CacheOutputCloseListener *aCloseListener,
+    CacheFile* aFile, CacheOutputCloseListener* aCloseListener,
     bool aAlternativeData)
     : mFile(aFile),
       mCloseListener(aCloseListener),
@@ -80,8 +80,8 @@ CacheFileOutputStream::Flush() {
 }
 
 NS_IMETHODIMP
-CacheFileOutputStream::Write(const char *aBuf, uint32_t aCount,
-                             uint32_t *_retval) {
+CacheFileOutputStream::Write(const char* aBuf, uint32_t aCount,
+                             uint32_t* _retval) {
   CacheFileAutoLock lock(mFile);
 
   LOG(("CacheFileOutputStream::Write() [this=%p, count=%d]", this, aCount));
@@ -154,8 +154,8 @@ CacheFileOutputStream::Write(const char *aBuf, uint32_t aCount,
 }
 
 NS_IMETHODIMP
-CacheFileOutputStream::WriteFrom(nsIInputStream *aFromStream, uint32_t aCount,
-                                 uint32_t *_retval) {
+CacheFileOutputStream::WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
+                                 uint32_t* _retval) {
   LOG(
       ("CacheFileOutputStream::WriteFrom() - NOT_IMPLEMENTED [this=%p, from=%p"
        ", count=%d]",
@@ -165,8 +165,8 @@ CacheFileOutputStream::WriteFrom(nsIInputStream *aFromStream, uint32_t aCount,
 }
 
 NS_IMETHODIMP
-CacheFileOutputStream::WriteSegments(nsReadSegmentFun aReader, void *aClosure,
-                                     uint32_t aCount, uint32_t *_retval) {
+CacheFileOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
+                                     uint32_t aCount, uint32_t* _retval) {
   LOG(
       ("CacheFileOutputStream::WriteSegments() - NOT_IMPLEMENTED [this=%p, "
        "count=%d]",
@@ -176,7 +176,7 @@ CacheFileOutputStream::WriteSegments(nsReadSegmentFun aReader, void *aClosure,
 }
 
 NS_IMETHODIMP
-CacheFileOutputStream::IsNonBlocking(bool *_retval) {
+CacheFileOutputStream::IsNonBlocking(bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
@@ -221,9 +221,9 @@ nsresult CacheFileOutputStream::CloseWithStatusLocked(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
-CacheFileOutputStream::AsyncWait(nsIOutputStreamCallback *aCallback,
+CacheFileOutputStream::AsyncWait(nsIOutputStreamCallback* aCallback,
                                  uint32_t aFlags, uint32_t aRequestedCount,
-                                 nsIEventTarget *aEventTarget) {
+                                 nsIEventTarget* aEventTarget) {
   CacheFileAutoLock lock(mFile);
 
   LOG(
@@ -295,7 +295,7 @@ CacheFileOutputStream::SetEOF() {
 
 // nsITellableStream
 NS_IMETHODIMP
-CacheFileOutputStream::Tell(int64_t *_retval) {
+CacheFileOutputStream::Tell(int64_t* _retval) {
   CacheFileAutoLock lock(mFile);
 
   if (mClosed) {
@@ -316,25 +316,25 @@ CacheFileOutputStream::Tell(int64_t *_retval) {
 
 // CacheFileChunkListener
 nsresult CacheFileOutputStream::OnChunkRead(nsresult aResult,
-                                            CacheFileChunk *aChunk) {
+                                            CacheFileChunk* aChunk) {
   MOZ_CRASH("CacheFileOutputStream::OnChunkRead should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
 nsresult CacheFileOutputStream::OnChunkWritten(nsresult aResult,
-                                               CacheFileChunk *aChunk) {
+                                               CacheFileChunk* aChunk) {
   MOZ_CRASH("CacheFileOutputStream::OnChunkWritten should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
 nsresult CacheFileOutputStream::OnChunkAvailable(nsresult aResult,
                                                  uint32_t aChunkIdx,
-                                                 CacheFileChunk *aChunk) {
+                                                 CacheFileChunk* aChunk) {
   MOZ_CRASH("CacheFileOutputStream::OnChunkAvailable should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileOutputStream::OnChunkUpdated(CacheFileChunk *aChunk) {
+nsresult CacheFileOutputStream::OnChunkUpdated(CacheFileChunk* aChunk) {
   MOZ_CRASH("CacheFileOutputStream::OnChunkUpdated should not be called!");
   return NS_ERROR_UNEXPECTED;
 }

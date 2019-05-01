@@ -61,8 +61,8 @@ static unsigned int kDefaultTimeout = 7000;
 
 class IcePeer {
  public:
-  IcePeer(const char *name, TestNat *nat, UINT4 flags,
-          MtransportTestUtils *test_utils)
+  IcePeer(const char* name, TestNat* nat, UINT4 flags,
+          MtransportTestUtils* test_utils)
       : name_(name),
         ice_checking_(false),
         ice_connected_(false),
@@ -74,10 +74,10 @@ class IcePeer {
         peer_ctx_(nullptr),
         nat_(nat),
         test_utils_(test_utils) {
-    nr_ice_ctx_create(const_cast<char *>(name_.c_str()), flags, &ice_ctx_);
+    nr_ice_ctx_create(const_cast<char*>(name_.c_str()), flags, &ice_ctx_);
 
     if (nat_) {
-      nr_socket_factory *factory;
+      nr_socket_factory* factory;
       nat_->create_socket_factory(&factory);
       nr_ice_ctx_set_socket_factory(ice_ctx_, factory);
     }
@@ -97,10 +97,10 @@ class IcePeer {
     ice_handler_->obj = this;
 
     nr_ice_peer_ctx_create(ice_ctx_, ice_handler_,
-                           const_cast<char *>(name_.c_str()), &peer_ctx_);
+                           const_cast<char*>(name_.c_str()), &peer_ctx_);
 
-    nr_ice_add_media_stream(ice_ctx_, const_cast<char *>(name_.c_str()),
-                            "ufrag", "pass", 2, &ice_media_stream_);
+    nr_ice_add_media_stream(ice_ctx_, const_cast<char*>(name_.c_str()), "ufrag",
+                            "pass", 2, &ice_media_stream_);
     EXPECT_EQ(2UL, GetStreamAttributes().size());
 
     nr_ice_media_stream_initialize(ice_ctx_, ice_media_stream_);
@@ -140,7 +140,7 @@ class IcePeer {
   }
 
   std::vector<std::string> GetStreamAttributes_s() {
-    char **attrs = nullptr;
+    char** attrs = nullptr;
     int attrct;
     std::vector<std::string> ret;
 
@@ -166,7 +166,7 @@ class IcePeer {
   }
 
   std::vector<std::string> GetGlobalAttributes_s() {
-    char **attrs = nullptr;
+    char** attrs = nullptr;
     int attrct;
     std::vector<std::string> ret;
 
@@ -182,10 +182,10 @@ class IcePeer {
   }
 
   void ParseGlobalAttributes(std::vector<std::string> attrs) {
-    std::vector<char *> attrs_in;
+    std::vector<char*> attrs_in;
     attrs_in.reserve(attrs.size());
-    for (auto &attr : attrs) {
-      attrs_in.push_back(const_cast<char *>(attr.c_str()));
+    for (auto& attr : attrs) {
+      attrs_in.push_back(const_cast<char*>(attr.c_str()));
     }
 
     int r = nr_ice_peer_ctx_parse_global_attributes(
@@ -206,10 +206,10 @@ class IcePeer {
   void SetRemoteAttributes_s(std::vector<std::string> attributes) {
     int r;
 
-    std::vector<char *> attrs;
+    std::vector<char*> attrs;
     attrs.reserve(attributes.size());
-    for (auto &attr : attributes) {
-      attrs.push_back(const_cast<char *>(attr.c_str()));
+    for (auto& attr : attributes) {
+      attrs.push_back(const_cast<char*>(attr.c_str()));
     }
 
     if (!attrs.empty()) {
@@ -233,50 +233,50 @@ class IcePeer {
   }
 
   // Handler callbacks
-  static int select_pair(void *obj, nr_ice_media_stream *stream,
-                         int component_id, nr_ice_cand_pair **potentials,
+  static int select_pair(void* obj, nr_ice_media_stream* stream,
+                         int component_id, nr_ice_cand_pair** potentials,
                          int potential_ct) {
     return 0;
   }
 
-  static int stream_ready(void *obj, nr_ice_media_stream *stream) {
-    IcePeer *peer = static_cast<IcePeer *>(obj);
+  static int stream_ready(void* obj, nr_ice_media_stream* stream) {
+    IcePeer* peer = static_cast<IcePeer*>(obj);
     peer->stream_ready_ = true;
     return 0;
   }
 
-  static int stream_failed(void *obj, nr_ice_media_stream *stream) {
-    IcePeer *peer = static_cast<IcePeer *>(obj);
+  static int stream_failed(void* obj, nr_ice_media_stream* stream) {
+    IcePeer* peer = static_cast<IcePeer*>(obj);
     peer->stream_failed_ = true;
     return 0;
   }
 
-  static int ice_checking(void *obj, nr_ice_peer_ctx *pctx) {
-    IcePeer *peer = static_cast<IcePeer *>(obj);
+  static int ice_checking(void* obj, nr_ice_peer_ctx* pctx) {
+    IcePeer* peer = static_cast<IcePeer*>(obj);
     peer->ice_checking_ = true;
     return 0;
   }
 
-  static int ice_connected(void *obj, nr_ice_peer_ctx *pctx) {
-    IcePeer *peer = static_cast<IcePeer *>(obj);
+  static int ice_connected(void* obj, nr_ice_peer_ctx* pctx) {
+    IcePeer* peer = static_cast<IcePeer*>(obj);
     peer->ice_connected_ = true;
     return 0;
   }
 
-  static int ice_disconnected(void *obj, nr_ice_peer_ctx *pctx) {
-    IcePeer *peer = static_cast<IcePeer *>(obj);
+  static int ice_disconnected(void* obj, nr_ice_peer_ctx* pctx) {
+    IcePeer* peer = static_cast<IcePeer*>(obj);
     peer->ice_disconnected_ = true;
     return 0;
   }
 
-  static int msg_recvd(void *obj, nr_ice_peer_ctx *pctx,
-                       nr_ice_media_stream *stream, int component_id,
-                       UCHAR *msg, int len) {
+  static int msg_recvd(void* obj, nr_ice_peer_ctx* pctx,
+                       nr_ice_media_stream* stream, int component_id,
+                       UCHAR* msg, int len) {
     return 0;
   }
 
-  static void gather_cb(NR_SOCKET s, int h, void *arg) {
-    IcePeer *peer = static_cast<IcePeer *>(arg);
+  static void gather_cb(NR_SOCKET s, int h, void* arg) {
+    IcePeer* peer = static_cast<IcePeer*>(arg);
     peer->gather_cb_ = true;
   }
 
@@ -289,13 +289,13 @@ class IcePeer {
   bool stream_ready_;
   bool stream_failed_;
 
-  nr_ice_ctx *ice_ctx_;
-  nr_ice_handler *ice_handler_;
-  nr_ice_handler_vtbl *ice_handler_vtbl_;
-  nr_ice_media_stream *ice_media_stream_;
-  nr_ice_peer_ctx *peer_ctx_;
-  TestNat *nat_;
-  MtransportTestUtils *test_utils_;
+  nr_ice_ctx* ice_ctx_;
+  nr_ice_handler* ice_handler_;
+  nr_ice_handler_vtbl* ice_handler_vtbl_;
+  nr_ice_media_stream* ice_media_stream_;
+  nr_ice_peer_ctx* peer_ctx_;
+  TestNat* nat_;
+  MtransportTestUtils* test_utils_;
 };
 
 class TestNrSocketIceUnitTest : public ::testing::Test {
@@ -315,8 +315,8 @@ class TestNrSocketIceUnitTest : public ::testing::Test {
     delete test_utils2_;
   }
 
-  MtransportTestUtils *test_utils_;
-  MtransportTestUtils *test_utils2_;
+  MtransportTestUtils* test_utils_;
+  MtransportTestUtils* test_utils2_;
 };
 
 TEST_F(TestNrSocketIceUnitTest, TestIcePeer) {
@@ -367,12 +367,12 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeersPacketLoss) {
    public:
     NatDelegate() : messages(0) {}
 
-    int on_read(TestNat *nat, void *buf, size_t maxlen, size_t *len) override {
+    int on_read(TestNat* nat, void* buf, size_t maxlen, size_t* len) override {
       return 0;
     }
 
-    int on_sendto(TestNat *nat, const void *msg, size_t len, int flags,
-                  nr_transport_addr *to) override {
+    int on_sendto(TestNat* nat, const void* msg, size_t len, int flags,
+                  nr_transport_addr* to) override {
       ++messages;
       // 25% packet loss
       if (messages % 4 == 0) {
@@ -381,8 +381,8 @@ TEST_F(TestNrSocketIceUnitTest, TestIcePeersPacketLoss) {
       return 0;
     }
 
-    int on_write(TestNat *nat, const void *msg, size_t len,
-                 size_t *written) override {
+    int on_write(TestNat* nat, const void* msg, size_t len,
+                 size_t* written) override {
       return 0;
     }
 

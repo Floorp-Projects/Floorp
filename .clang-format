@@ -27,3 +27,10 @@ SortIncludes: false
 IndentPPDirectives: AfterHash
 StatementMacros: [MARKUPMAP, ASSERT_TRUE, ASSERT_FALSE, TEST, CHECK]
 
+# The Google coding style states:
+# You should do this consistently within a single file, so, when modifying an
+# existing file, use the style in that file.
+# Let's be more prescriptive and default to the one used in the Mozilla
+# coding style
+DerivePointerAlignment: false
+PointerAlignment: Left

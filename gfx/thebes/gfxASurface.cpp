@@ -108,28 +108,28 @@ nsrefcnt gfxASurface::Release(void) {
   return mFloatingRefs;
 }
 
-void gfxASurface::SurfaceDestroyFunc(void *data) {
-  gfxASurface *surf = (gfxASurface *)data;
+void gfxASurface::SurfaceDestroyFunc(void* data) {
+  gfxASurface* surf = (gfxASurface*)data;
   // fprintf (stderr, "Deleting wrapper for %p (wrapper: %p)\n", surf->mSurface,
   //          data);
   delete surf;
 }
 
-gfxASurface *gfxASurface::GetSurfaceWrapper(cairo_surface_t *csurf) {
+gfxASurface* gfxASurface::GetSurfaceWrapper(cairo_surface_t* csurf) {
   if (!csurf) return nullptr;
-  return (gfxASurface *)cairo_surface_get_user_data(csurf,
-                                                    &gfxasurface_pointer_key);
+  return (gfxASurface*)cairo_surface_get_user_data(csurf,
+                                                   &gfxasurface_pointer_key);
 }
 
-void gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf,
-                                    gfxASurface *asurf) {
+void gfxASurface::SetSurfaceWrapper(cairo_surface_t* csurf,
+                                    gfxASurface* asurf) {
   if (!csurf) return;
   cairo_surface_set_user_data(csurf, &gfxasurface_pointer_key, asurf,
                               SurfaceDestroyFunc);
 }
 
-already_AddRefed<gfxASurface> gfxASurface::Wrap(cairo_surface_t *csurf,
-                                                const IntSize &aSize) {
+already_AddRefed<gfxASurface> gfxASurface::Wrap(cairo_surface_t* csurf,
+                                                const IntSize& aSize) {
   RefPtr<gfxASurface> result;
 
   /* Do we already have a wrapper for this surface? */
@@ -170,7 +170,7 @@ already_AddRefed<gfxASurface> gfxASurface::Wrap(cairo_surface_t *csurf,
   return result.forget();
 }
 
-void gfxASurface::Init(cairo_surface_t *surface, bool existingSurface) {
+void gfxASurface::Init(cairo_surface_t* surface, bool existingSurface) {
   SetSurfaceWrapper(surface, this);
   MOZ_ASSERT(surface, "surface should be a valid pointer");
 
@@ -206,7 +206,7 @@ gfxContentType gfxASurface::GetContentType() const {
   return (gfxContentType)cairo_surface_get_content(mSurface);
 }
 
-void gfxASurface::SetDeviceOffset(const gfxPoint &offset) {
+void gfxASurface::SetDeviceOffset(const gfxPoint& offset) {
   if (!mSurfaceValid) return;
   cairo_surface_set_device_offset(mSurface, offset.x, offset.y);
 }
@@ -221,7 +221,7 @@ gfxPoint gfxASurface::GetDeviceOffset() const {
 void gfxASurface::Flush() const {
   if (!mSurfaceValid) return;
   cairo_surface_flush(mSurface);
-  gfxPlatform::ClearSourceSurfaceForSurface(const_cast<gfxASurface *>(this));
+  gfxPlatform::ClearSourceSurfaceForSurface(const_cast<gfxASurface*>(this));
 }
 
 void gfxASurface::MarkDirty() {
@@ -230,20 +230,20 @@ void gfxASurface::MarkDirty() {
   gfxPlatform::ClearSourceSurfaceForSurface(this);
 }
 
-void gfxASurface::MarkDirty(const gfxRect &r) {
+void gfxASurface::MarkDirty(const gfxRect& r) {
   if (!mSurfaceValid) return;
   cairo_surface_mark_dirty_rectangle(mSurface, (int)r.X(), (int)r.Y(),
                                      (int)r.Width(), (int)r.Height());
   gfxPlatform::ClearSourceSurfaceForSurface(this);
 }
 
-void gfxASurface::SetData(const cairo_user_data_key_t *key, void *user_data,
+void gfxASurface::SetData(const cairo_user_data_key_t* key, void* user_data,
                           thebes_destroy_func_t destroy) {
   if (!mSurfaceValid) return;
   cairo_surface_set_user_data(mSurface, key, user_data, destroy);
 }
 
-void *gfxASurface::GetData(const cairo_user_data_key_t *key) {
+void* gfxASurface::GetData(const cairo_user_data_key_t* key) {
   if (!mSurfaceValid) return nullptr;
   return cairo_surface_get_user_data(mSurface, key);
 }
@@ -254,12 +254,12 @@ void gfxASurface::Finish() {
 }
 
 already_AddRefed<gfxASurface> gfxASurface::CreateSimilarSurface(
-    gfxContentType aContent, const IntSize &aSize) {
+    gfxContentType aContent, const IntSize& aSize) {
   if (!mSurface || !mSurfaceValid) {
     return nullptr;
   }
 
-  cairo_surface_t *surface = cairo_surface_create_similar(
+  cairo_surface_t* surface = cairo_surface_create_similar(
       mSurface, cairo_content_t(int(aContent)), aSize.width, aSize.height);
   if (cairo_surface_status(surface)) {
     cairo_surface_destroy(surface);
@@ -297,8 +297,8 @@ int gfxASurface::CairoStatus() {
   return cairo_surface_status(mSurface);
 }
 
-nsresult gfxASurface::BeginPrinting(const nsAString &aTitle,
-                                    const nsAString &aPrintToFileName) {
+nsresult gfxASurface::BeginPrinting(const nsAString& aTitle,
+                                    const nsAString& aPrintToFileName) {
   return NS_OK;
 }
 
@@ -343,12 +343,12 @@ int32_t gfxASurface::BytePerPixelFromFormat(gfxImageFormat format) {
 
 /** Memory reporting **/
 
-static const char *sDefaultSurfaceDescription =
+static const char* sDefaultSurfaceDescription =
     "Memory used by gfx surface of the given type.";
 
 struct SurfaceMemoryReporterAttrs {
-  const char *path;
-  const char *description;
+  const char* path;
+  const char* description;
 };
 
 static const SurfaceMemoryReporterAttrs sSurfaceMemoryReporterAttrs[] = {
@@ -416,15 +416,15 @@ class SurfaceMemoryReporter final : public nsIMemoryReporter {
   // threadsafe.
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports *aData, bool aAnonymize) override {
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override {
     const size_t len = ArrayLength(sSurfaceMemoryReporterAttrs);
     for (size_t i = 0; i < len; i++) {
       int64_t amount = sSurfaceMemoryUsed[i];
 
       if (amount != 0) {
-        const char *path = sSurfaceMemoryReporterAttrs[i].path;
-        const char *desc = sSurfaceMemoryReporterAttrs[i].description;
+        const char* path = sSurfaceMemoryReporterAttrs[i].path;
+        const char* desc = sSurfaceMemoryReporterAttrs[i].description;
         if (!desc) {
           desc = sDefaultSurfaceDescription;
         }
@@ -498,7 +498,7 @@ uint8_t gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat) {
   }
 }
 
-void gfxASurface::SetOpaqueRect(const gfxRect &aRect) {
+void gfxASurface::SetOpaqueRect(const gfxRect& aRect) {
   if (aRect.IsEmpty()) {
     mOpaqueRect = nullptr;
   } else if (!!mOpaqueRect) {
@@ -508,7 +508,7 @@ void gfxASurface::SetOpaqueRect(const gfxRect &aRect) {
   }
 }
 
-/* static */ const gfxRect &gfxASurface::GetEmptyOpaqueRect() {
+/* static */ const gfxRect& gfxASurface::GetEmptyOpaqueRect() {
   static const gfxRect empty(0, 0, 0, 0);
   return empty;
 }

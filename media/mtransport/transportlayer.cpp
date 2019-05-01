@@ -29,7 +29,7 @@ nsresult TransportLayer::Init() {
   return NS_OK;
 }
 
-void TransportLayer::Chain(TransportLayer *downward) {
+void TransportLayer::Chain(TransportLayer* downward) {
   downward_ = downward;
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Inserted: downward='"
                                  << (downward ? downward->id() : "none")
@@ -38,7 +38,7 @@ void TransportLayer::Chain(TransportLayer *downward) {
   WasInserted();
 }
 
-void TransportLayer::SetState(State state, const char *file, unsigned line) {
+void TransportLayer::SetState(State state, const char* file, unsigned line) {
   if (state != state_) {
     MOZ_MTLOG(state == TS_ERROR ? ML_ERROR : ML_DEBUG,
               file << ":" << line << ": " << LAYER_INFO << "state " << state_

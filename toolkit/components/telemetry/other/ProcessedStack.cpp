@@ -15,11 +15,11 @@ struct StackFrame {
 };
 
 #ifdef MOZ_GECKO_PROFILER
-static bool CompareByPC(const StackFrame &a, const StackFrame &b) {
+static bool CompareByPC(const StackFrame& a, const StackFrame& b) {
   return a.mPC < b.mPC;
 }
 
-static bool CompareByIndex(const StackFrame &a, const StackFrame &b) {
+static bool CompareByIndex(const StackFrame& a, const StackFrame& b) {
   return a.mIndex < b.mIndex;
 }
 #endif
@@ -37,23 +37,23 @@ size_t ProcessedStack::GetStackSize() const { return mStack.size(); }
 
 size_t ProcessedStack::GetNumModules() const { return mModules.size(); }
 
-bool ProcessedStack::Module::operator==(const Module &aOther) const {
+bool ProcessedStack::Module::operator==(const Module& aOther) const {
   return mName == aOther.mName && mBreakpadId == aOther.mBreakpadId;
 }
 
-const ProcessedStack::Frame &ProcessedStack::GetFrame(unsigned aIndex) const {
+const ProcessedStack::Frame& ProcessedStack::GetFrame(unsigned aIndex) const {
   MOZ_ASSERT(aIndex < mStack.size());
   return mStack[aIndex];
 }
 
-void ProcessedStack::AddFrame(const Frame &aFrame) { mStack.push_back(aFrame); }
+void ProcessedStack::AddFrame(const Frame& aFrame) { mStack.push_back(aFrame); }
 
-const ProcessedStack::Module &ProcessedStack::GetModule(unsigned aIndex) const {
+const ProcessedStack::Module& ProcessedStack::GetModule(unsigned aIndex) const {
   MOZ_ASSERT(aIndex < mModules.size());
   return mModules[aIndex];
 }
 
-void ProcessedStack::AddModule(const Module &aModule) {
+void ProcessedStack::AddModule(const Module& aModule) {
   mModules.push_back(aModule);
 }
 
@@ -62,7 +62,7 @@ void ProcessedStack::Clear() {
   mStack.clear();
 }
 
-ProcessedStack GetStackAndModules(const std::vector<uintptr_t> &aPCs) {
+ProcessedStack GetStackAndModules(const std::vector<uintptr_t>& aPCs) {
   return BatchProcessedStackGenerator().GetStackAndModules(aPCs);
 }
 
@@ -77,7 +77,7 @@ BatchProcessedStackGenerator::BatchProcessedStackGenerator()
 }
 
 ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
-    const std::vector<uintptr_t> &aPCs) {
+    const std::vector<uintptr_t>& aPCs) {
   std::vector<StackFrame> rawStack;
   auto stackEnd = aPCs.begin() + std::min(aPCs.size(), kMaxChromeStackDepth);
   for (auto i = aPCs.begin(); i != stackEnd; ++i) {
@@ -97,7 +97,7 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
   size_t stackSize = rawStack.size();
 
   while (moduleIndex < rawModules.GetSize()) {
-    const SharedLibrary &module = rawModules.GetEntry(moduleIndex);
+    const SharedLibrary& module = rawModules.GetEntry(moduleIndex);
     uintptr_t moduleStart = module.GetStart();
     uintptr_t moduleEnd = module.GetEnd() - 1;
     // the interval is [moduleStart, moduleEnd)
@@ -139,7 +139,7 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
 
   // Copy the information to the return value.
   ProcessedStack Ret;
-  for (auto &rawFrame : rawStack) {
+  for (auto& rawFrame : rawStack) {
     mozilla::Telemetry::ProcessedStack::Frame frame = {rawFrame.mPC,
                                                        rawFrame.mModIndex};
     Ret.AddFrame(frame);
@@ -147,7 +147,7 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
 
 #ifdef MOZ_GECKO_PROFILER
   for (unsigned i = 0, n = rawModules.GetSize(); i != n; ++i) {
-    const SharedLibrary &info = rawModules.GetEntry(i);
+    const SharedLibrary& info = rawModules.GetEntry(i);
     mozilla::Telemetry::ProcessedStack::Module module = {info.GetDebugName(),
                                                          info.GetBreakpadId()};
     Ret.AddModule(module);

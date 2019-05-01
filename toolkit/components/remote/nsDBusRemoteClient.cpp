@@ -52,14 +52,14 @@ void nsDBusRemoteClient::Shutdown(void) {
 }
 
 nsresult nsDBusRemoteClient::SendCommandLine(
-    const char *aProgram, const char *aProfile, int32_t argc, char **argv,
-    const char *aDesktopStartupID, char **aResponse, bool *aWindowFound) {
+    const char* aProgram, const char* aProfile, int32_t argc, char** argv,
+    const char* aDesktopStartupID, char** aResponse, bool* aWindowFound) {
   NS_ENSURE_TRUE(aProgram, NS_ERROR_INVALID_ARG);
 
   MOZ_LOG(sRemoteLm, LogLevel::Debug, ("nsDBusRemoteClient::SendCommandLine"));
 
   int commandLineLength;
-  char *commandLine =
+  char* commandLine =
       ConstructCommandLine(argc, argv, aDesktopStartupID, &commandLineLength);
   if (!commandLine) return NS_ERROR_FAILURE;
 
@@ -74,9 +74,9 @@ nsresult nsDBusRemoteClient::SendCommandLine(
   return rv;
 }
 
-bool nsDBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
-                                                  const char *aProfile,
-                                                  nsCString &aDestinationName) {
+bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
+                                                  const char* aProfile,
+                                                  nsCString& aDestinationName) {
   // We have a profile name - just create the destination.
   // D-Bus names can contain only [a-z][A-Z][0-9]_
   // characters so adjust the profile string properly.
@@ -90,7 +90,7 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
   if (aDestinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
     aDestinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
-  static auto sDBusValidateBusName = (bool (*)(const char *, DBusError *))dlsym(
+  static auto sDBusValidateBusName = (bool (*)(const char*, DBusError*))dlsym(
       RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
     return false;
@@ -110,9 +110,9 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
   return true;
 }
 
-nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char *aProgram,
-                                                   const char *aProfile,
-                                                   const char *aBuffer,
+nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
+                                                   const char* aProfile,
+                                                   const char* aBuffer,
                                                    int aLength) {
   nsAutoCString destinationName;
   if (!GetRemoteDestinationName(aProgram, aProfile, destinationName))

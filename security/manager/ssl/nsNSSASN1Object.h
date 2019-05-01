@@ -54,10 +54,10 @@ class nsNSSASN1PrintableItem : public nsIASN1PrintableItem {
   nsString mValue;
   uint32_t mType;
   uint32_t mTag;
-  unsigned char *mData;
+  unsigned char* mData;
   uint32_t mLen;
 };
 
-nsresult CreateFromDER(unsigned char *data, unsigned int len,
-                       nsIASN1Object **retval);
+nsresult CreateFromDER(unsigned char* data, unsigned int len,
+                       nsIASN1Object** retval);
 #endif  //_NSSASN_H_

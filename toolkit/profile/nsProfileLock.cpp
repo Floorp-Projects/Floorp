@@ -58,9 +58,9 @@ nsProfileLock::nsProfileLock()
 #endif
 }
 
-nsProfileLock::nsProfileLock(nsProfileLock &src) { *this = src; }
+nsProfileLock::nsProfileLock(nsProfileLock& src) { *this = src; }
 
-nsProfileLock &nsProfileLock::operator=(nsProfileLock &rhs) {
+nsProfileLock& nsProfileLock::operator=(nsProfileLock& rhs) {
   Unlock();
 
   mHaveLock = rhs.mHaveLock;
@@ -95,7 +95,7 @@ PRCList nsProfileLock::mPidLockList =
 
 void nsProfileLock::RemovePidLockFiles(bool aFatalSignal) {
   while (!PR_CLIST_IS_EMPTY(&mPidLockList)) {
-    nsProfileLock *lock = static_cast<nsProfileLock *>(mPidLockList.next);
+    nsProfileLock* lock = static_cast<nsProfileLock*>(mPidLockList.next);
     lock->Unlock(aFatalSignal);
   }
 }
@@ -111,14 +111,14 @@ static struct sigaction SIGTERM_oldact;
 void nsProfileLock::FatalSignalHandler(int signo
 #  ifdef SA_SIGINFO
                                        ,
-                                       siginfo_t *info, void *context
+                                       siginfo_t* info, void* context
 #  endif
 ) {
   // Remove any locks still held.
   RemovePidLockFiles(true);
 
   // Chain to the old handler, which may exit.
-  struct sigaction *oldact = nullptr;
+  struct sigaction* oldact = nullptr;
 
   switch (signo) {
     case SIGHUP:
@@ -179,7 +179,7 @@ void nsProfileLock::FatalSignalHandler(int signo
   _exit(signo);
 }
 
-nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile) {
+nsresult nsProfileLock::LockWithFcntl(nsIFile* aLockFile) {
   nsresult rv = NS_OK;
 
   nsAutoCString lockFilePath;
@@ -228,7 +228,7 @@ nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile) {
   return rv;
 }
 
-static bool IsSymlinkStaleLock(struct in_addr *aAddr, const char *aFileName,
+static bool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
                                bool aHaveFcntlLock) {
   // the link exists; see if it's from this machine, and if
   // so if the process is still active
@@ -236,7 +236,7 @@ static bool IsSymlinkStaleLock(struct in_addr *aAddr, const char *aFileName,
   int len = readlink(aFileName, buf, sizeof buf - 1);
   if (len > 0) {
     buf[len] = '\0';
-    char *colon = strchr(buf, ':');
+    char* colon = strchr(buf, ':');
     if (colon) {
       *colon++ = '\0';
       unsigned long addr = inet_addr(buf);
@@ -248,7 +248,7 @@ static bool IsSymlinkStaleLock(struct in_addr *aAddr, const char *aFileName,
           return true;
         }
 
-        char *after = nullptr;
+        char* after = nullptr;
         pid_t pid = strtol(colon, &after, 0);
         if (pid != 0 && *after == '\0') {
           if (addr != aAddr->s_addr) {
@@ -272,7 +272,7 @@ static bool IsSymlinkStaleLock(struct in_addr *aAddr, const char *aFileName,
   return true;
 }
 
-nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile,
+nsresult nsProfileLock::LockWithSymlink(nsIFile* aLockFile,
                                         bool aHaveFcntlLock) {
   nsresult rv;
   nsAutoCString lockFilePath;
@@ -301,7 +301,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile,
   mozilla::SmprintfPointer signature =
       mozilla::Smprintf("%s:%s%lu", inet_ntoa(inaddr),
                         aHaveFcntlLock ? "+" : "", (unsigned long)getpid());
-  const char *fileName = lockFilePath.get();
+  const char* fileName = lockFilePath.get();
   int symlink_rv, symlink_errno = 0, tries = 0;
 
   // use ns4.x-compatible symlinks if the FS supports them
@@ -376,13 +376,13 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile,
 }
 #endif /* XP_UNIX */
 
-nsresult nsProfileLock::GetReplacedLockTime(PRTime *aResult) {
+nsresult nsProfileLock::GetReplacedLockTime(PRTime* aResult) {
   *aResult = mReplacedLockTime;
   return NS_OK;
 }
 
-nsresult nsProfileLock::Lock(nsIFile *aProfileDir,
-                             nsIProfileUnlocker **aUnlocker) {
+nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
+                             nsIProfileUnlocker** aUnlocker) {
 #if defined(XP_MACOSX)
   NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
   NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "parent.lock");
@@ -435,7 +435,7 @@ nsresult nsProfileLock::Lock(nsIFile *aProfileDir,
       unsigned long launchDate;
     };
 
-    PRFileDesc *fd = nullptr;
+    PRFileDesc* fd = nullptr;
     int32_t ioBytes;
     ProcessInfoRec processInfo;
     LockProcessInfo lockProcessInfo;

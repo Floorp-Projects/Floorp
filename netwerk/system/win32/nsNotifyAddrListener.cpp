@@ -46,11 +46,11 @@ static LazyLogModule gNotifyAddrLog("nsNotifyAddr");
 #define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 
 static HMODULE sNetshell;
-static decltype(NcFreeNetconProperties) *sNcFreeNetconProperties;
+static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 
 static HMODULE sIphlpapi;
-static decltype(NotifyIpInterfaceChange) *sNotifyIpInterfaceChange;
-static decltype(CancelMibChangeNotify2) *sCancelMibChangeNotify2;
+static decltype(NotifyIpInterfaceChange)* sNotifyIpInterfaceChange;
+static decltype(CancelMibChangeNotify2)* sCancelMibChangeNotify2;
 
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 #define NETWORK_NOTIFY_IPV6_PREF "network.notify.IPv6"
@@ -64,10 +64,10 @@ static void InitIphlpapi(void) {
     sIphlpapi = LoadLibraryW(L"Iphlpapi.dll");
     if (sIphlpapi) {
       sNotifyIpInterfaceChange =
-          (decltype(NotifyIpInterfaceChange) *)GetProcAddress(
+          (decltype(NotifyIpInterfaceChange)*)GetProcAddress(
               sIphlpapi, "NotifyIpInterfaceChange");
       sCancelMibChangeNotify2 =
-          (decltype(CancelMibChangeNotify2) *)GetProcAddress(
+          (decltype(CancelMibChangeNotify2)*)GetProcAddress(
               sIphlpapi, "CancelMibChangeNotify2");
     } else {
       NS_WARNING(
@@ -82,7 +82,7 @@ static void InitNetshellLibrary(void) {
     sNetshell = LoadLibraryW(L"Netshell.dll");
     if (sNetshell) {
       sNcFreeNetconProperties =
-          (decltype(NcFreeNetconProperties) *)GetProcAddress(
+          (decltype(NcFreeNetconProperties)*)GetProcAddress(
               sNetshell, "NcFreeNetconProperties");
     }
   }
@@ -125,7 +125,7 @@ nsNotifyAddrListener::~nsNotifyAddrListener() {
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetIsLinkUp(bool *aIsUp) {
+nsNotifyAddrListener::GetIsLinkUp(bool* aIsUp) {
   if (!mCheckAttempted && !mStatusKnown) {
     mCheckAttempted = true;
     CheckLinkStatus();
@@ -136,13 +136,13 @@ nsNotifyAddrListener::GetIsLinkUp(bool *aIsUp) {
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetLinkStatusKnown(bool *aIsUp) {
+nsNotifyAddrListener::GetLinkStatusKnown(bool* aIsUp) {
   *aIsUp = mStatusKnown;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::GetLinkType(uint32_t *aLinkType) {
+nsNotifyAddrListener::GetLinkType(uint32_t* aLinkType) {
   NS_ENSURE_ARG_POINTER(aLinkType);
 
   // XXX This function has not yet been implemented for this platform
@@ -150,7 +150,7 @@ nsNotifyAddrListener::GetLinkType(uint32_t *aLinkType) {
   return NS_OK;
 }
 
-static bool macAddr(BYTE addr[], DWORD len, char *buf, size_t buflen) {
+static bool macAddr(BYTE addr[], DWORD len, char* buf, size_t buflen) {
   buf[0] = '\0';
   if (!addr || !len || (len * 3 > buflen)) {
     return false;
@@ -163,7 +163,7 @@ static bool macAddr(BYTE addr[], DWORD len, char *buf, size_t buflen) {
   return true;
 }
 
-bool nsNotifyAddrListener::findMac(char *gateway) {
+bool nsNotifyAddrListener::findMac(char* gateway) {
   // query for buffer size needed
   DWORD dwActualSize = 0;
   bool found = FALSE;
@@ -202,7 +202,7 @@ bool nsNotifyAddrListener::findMac(char *gateway) {
           sha1.update(combined.get(), combined.Length());
           uint8_t digest[SHA1Sum::kHashSize];
           sha1.finish(digest);
-          nsCString newString(reinterpret_cast<char *>(digest),
+          nsCString newString(reinterpret_cast<char*>(digest),
                               SHA1Sum::kHashSize);
           nsresult rv = Base64Encode(newString, output);
           if (NS_FAILED(rv)) {
@@ -228,7 +228,7 @@ bool nsNotifyAddrListener::findMac(char *gateway) {
 }
 
 // returns 'true' when the gw is found and stored
-static bool defaultgw(char *aGateway, size_t aGatewayLen) {
+static bool defaultgw(char* aGateway, size_t aGatewayLen) {
   PMIB_IPFORWARDTABLE pIpForwardTable = NULL;
 
   DWORD dwSize = 0;
@@ -249,7 +249,7 @@ static bool defaultgw(char *aGateway, size_t aGatewayLen) {
       struct in_addr IpAddr;
       IpAddr.S_un.S_addr =
           static_cast<u_long>(pIpForwardTable->table[i].dwForwardDest);
-      char *ipStr = inet_ntoa(IpAddr);
+      char* ipStr = inet_ntoa(IpAddr);
       if (ipStr && !strcmp("0.0.0.0", ipStr)) {
         // Default gateway!
         IpAddr.S_un.S_addr =
@@ -289,8 +289,8 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
 static void WINAPI OnInterfaceChange(PVOID callerContext,
                                      PMIB_IPINTERFACE_ROW row,
                                      MIB_NOTIFICATION_TYPE notificationType) {
-  nsNotifyAddrListener *notify =
-      static_cast<nsNotifyAddrListener *>(callerContext);
+  nsNotifyAddrListener* notify =
+      static_cast<nsNotifyAddrListener*>(callerContext);
   notify->CheckLinkStatus();
 }
 
@@ -375,8 +375,8 @@ nsNotifyAddrListener::Run() {
 }
 
 NS_IMETHODIMP
-nsNotifyAddrListener::Observe(nsISupports *subject, const char *topic,
-                              const char16_t *data) {
+nsNotifyAddrListener::Observe(nsISupports* subject, const char* topic,
+                              const char16_t* data) {
   if (!strcmp("xpcom-shutdown-threads", topic)) Shutdown();
 
   return NS_OK;
@@ -451,7 +451,7 @@ nsresult nsNotifyAddrListener::NetworkChanged() {
 /* Sends the given event.  Assumes aEventID never goes out of scope (static
  * strings are ideal).
  */
-nsresult nsNotifyAddrListener::SendEvent(const char *aEventID) {
+nsresult nsNotifyAddrListener::SendEvent(const char* aEventID) {
   if (!aEventID) return NS_ERROR_NULL_POINTER;
 
   LOG(("SendEvent: network is '%s'\n", aEventID));
@@ -547,7 +547,7 @@ bool nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName) {
               IID_INetConnection, getter_AddRefs(connection)))) {
         connectionVariant.punkVal->Release();
 
-        NETCON_PROPERTIES *properties;
+        NETCON_PROPERTIES* properties;
         if (SUCCEEDED(connection->GetProperties(&properties))) {
           if (!wcscmp(properties->pszwName, aAdapterName))
             isICSGatewayAdapter = true;
@@ -614,9 +614,9 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
       // Add bytes from each socket address to the checksum.
       for (PIP_ADAPTER_UNICAST_ADDRESS pip = adapter->FirstUnicastAddress; pip;
            pip = pip->Next) {
-        SOCKET_ADDRESS *sockAddr = &pip->Address;
+        SOCKET_ADDRESS* sockAddr = &pip->Address;
         for (int i = 0; i < sockAddr->iSockaddrLength; ++i) {
-          sum += (reinterpret_cast<unsigned char *>(sockAddr->lpSockaddr))[i];
+          sum += (reinterpret_cast<unsigned char*>(sockAddr->lpSockaddr))[i];
         }
       }
       linkUp = true;
@@ -644,7 +644,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
  */
 void nsNotifyAddrListener::CheckLinkStatus(void) {
   DWORD ret;
-  const char *event;
+  const char* event;
   bool prevLinkUp = mLinkUp;
   ULONG prevCsum = mIPInterfaceChecksum;
 

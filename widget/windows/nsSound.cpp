@@ -36,12 +36,12 @@ static mozilla::LazyLogModule gWin32SoundLog("nsSound");
 
 class nsSoundPlayer : public mozilla::Runnable {
  public:
-  explicit nsSoundPlayer(const nsAString &aSoundName)
+  explicit nsSoundPlayer(const nsAString& aSoundName)
       : mozilla::Runnable("nsSoundPlayer"),
         mSoundName(aSoundName),
         mSoundData(nullptr) {}
 
-  nsSoundPlayer(const uint8_t *aData, size_t aSize)
+  nsSoundPlayer(const uint8_t* aData, size_t aSize)
       : mozilla::Runnable("nsSoundPlayer"), mSoundName(EmptyString()) {
     MOZ_ASSERT(aSize > 0, "Size should not be zero");
     MOZ_ASSERT(aData, "Data shoud not be null");
@@ -57,7 +57,7 @@ class nsSoundPlayer : public mozilla::Runnable {
   ~nsSoundPlayer();
 
   nsString mSoundName;
-  uint8_t *mSoundData;
+  uint8_t* mSoundData;
 };
 
 NS_IMETHODIMP
@@ -136,9 +136,9 @@ NS_IMETHODIMP nsSound::Beep() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
-                                        nsISupports *context, nsresult aStatus,
-                                        uint32_t dataLen, const uint8_t *data) {
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader* aLoader,
+                                        nsISupports* context, nsresult aStatus,
+                                        uint32_t dataLen, const uint8_t* data) {
   MOZ_ASSERT(mPlayerThread, "player thread should not be null ");
   // print a load error on bad status
   if (NS_FAILED(aStatus)) {
@@ -179,11 +179,11 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSound::Play(nsIURL *aURL) {
+NS_IMETHODIMP nsSound::Play(nsIURL* aURL) {
   nsresult rv;
 
 #ifdef DEBUG_SOUND
-  char *url;
+  char* url;
   aURL->GetSpec(&url);
   MOZ_LOG(gWin32SoundLog, LogLevel::Info, ("%s\n", url));
 #endif
@@ -218,8 +218,8 @@ nsresult nsSound::CreatePlayerThread() {
 }
 
 NS_IMETHODIMP
-nsSound::Observe(nsISupports *aSubject, const char *aTopic,
-                 const char16_t *aData) {
+nsSound::Observe(nsISupports* aSubject, const char* aTopic,
+                 const char16_t* aData) {
   if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
     PurgeLastSound();
 
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId) {
   MOZ_ASSERT(mPlayerThread, "player thread should not be null ");
   PurgeLastSound();
 
-  const wchar_t *sound = nullptr;
+  const wchar_t* sound = nullptr;
   switch (aEventId) {
     case EVENT_NEW_MAIL_RECEIVED:
       sound = L"MailBeep";

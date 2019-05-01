@@ -20,7 +20,7 @@ class nsStreamListenerWrapper final
     : public nsIStreamListener,
       public nsIThreadRetargetableStreamListener {
  public:
-  explicit nsStreamListenerWrapper(nsIStreamListener *listener)
+  explicit nsStreamListenerWrapper(nsIStreamListener* listener)
       : mListener(listener) {
     MOZ_ASSERT(mListener, "no stream listener specified");
   }

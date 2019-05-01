@@ -42,7 +42,7 @@ Logging Logging::Singleton;
  * The entries are going to be read out of order.
  */
 ZIP_DATA(TEST_ZIP, "test.zip");
-const char *test_entries[] = {"baz", "foo", "bar", "qux"};
+const char* test_entries[] = {"baz", "foo", "bar", "qux"};
 
 /**
  * no_central_dir.zip is a hand crafted test zip with no central directory
@@ -59,13 +59,13 @@ const char *test_entries[] = {"baz", "foo", "bar", "qux"};
  * - Fourth entry is a file "d", STOREd.
  */
 ZIP_DATA(NO_CENTRAL_DIR_ZIP, "no_central_dir.zip");
-const char *no_central_dir_entries[] = {"a", "b", "c", "d"};
+const char* no_central_dir_entries[] = {"a", "b", "c", "d"};
 
 TEST(Zip, TestZip)
 {
   Zip::Stream s;
-  RefPtr<Zip> z = Zip::Create((void *)TEST_ZIP, TEST_ZIP_SIZE);
-  for (auto &entry : test_entries) {
+  RefPtr<Zip> z = Zip::Create((void*)TEST_ZIP, TEST_ZIP_SIZE);
+  for (auto& entry : test_entries) {
     ASSERT_TRUE(z->GetStream(entry, &s))
     << "Could not get entry \"" << entry << "\"";
   }
@@ -75,8 +75,8 @@ TEST(Zip, NoCentralDir)
 {
   Zip::Stream s;
   RefPtr<Zip> z =
-      Zip::Create((void *)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
-  for (auto &entry : no_central_dir_entries) {
+      Zip::Create((void*)NO_CENTRAL_DIR_ZIP, NO_CENTRAL_DIR_ZIP_SIZE);
+  for (auto& entry : no_central_dir_entries) {
     ASSERT_TRUE(z->GetStream(entry, &s))
     << "Could not get entry \"" << entry << "\"";
   }

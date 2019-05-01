@@ -263,7 +263,7 @@ static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
                                        aDisplayPortMargins, 0);
   if (!hadDisplayPort) {
     nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-        aContent->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::Repaint);
+        aContent->GetPrimaryFrame());
   }
 
   nsRect base(0, 0, aDisplayPortBase.width * AppUnitsPerCSSPixel(),
@@ -422,11 +422,10 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
     nsLayoutUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
     // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
-    nsLayoutUtils::SetDisplayPortMargins(
-        content, aPresShell, ScreenMargin(), 0,
-        nsLayoutUtils::RepaintMode::DoNotRepaint);
+    nsLayoutUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(),
+                                         0);
     nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-        content->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::DoNotRepaint);
+        content->GetPrimaryFrame());
   }
 }
 
@@ -736,8 +735,7 @@ static bool PrepareForSetTargetAPZCNotification(
   }
 
   nsIFrame* frame = do_QueryFrame(scrollAncestor);
-  nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-      frame, nsLayoutUtils::RepaintMode::Repaint);
+  nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
 
   return true;
 }

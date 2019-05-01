@@ -60,19 +60,19 @@ static PRDescIdentity transport_layer_identity = PR_INVALID_IO_LAYER;
 // All of this stuff is assumed to happen solely in a single thread
 // (generally the SocketTransportService thread)
 
-void TransportLayerNSPRAdapter::PacketReceived(MediaPacket &packet) {
+void TransportLayerNSPRAdapter::PacketReceived(MediaPacket& packet) {
   if (enabled_) {
     input_.push(new MediaPacket(std::move(packet)));
   }
 }
 
-int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
+int32_t TransportLayerNSPRAdapter::Recv(void* buf, int32_t buflen) {
   if (input_.empty()) {
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
     return -1;
   }
 
-  MediaPacket *front = input_.front();
+  MediaPacket* front = input_.front();
   int32_t count = static_cast<int32_t>(front->len());
 
   if (buflen < count) {
@@ -89,7 +89,7 @@ int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
   return count;
 }
 
-int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
+int32_t TransportLayerNSPRAdapter::Write(const void* buf, int32_t length) {
   if (!enabled_) {
     MOZ_MTLOG(ML_WARNING, "Writing to disabled transport layer");
     return -1;
@@ -97,7 +97,7 @@ int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
 
   MediaPacket packet;
   // Copies. Oh well.
-  packet.Copy(static_cast<const uint8_t *>(buf), static_cast<size_t>(length));
+  packet.Copy(static_cast<const uint8_t*>(buf), static_cast<size_t>(length));
   packet.SetType(MediaPacket::DTLS);
 
   TransportResult r = output_->SendPacket(packet);
@@ -115,100 +115,100 @@ int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
 }
 
 // Implementation of NSPR methods
-static PRStatus TransportLayerClose(PRFileDesc *f) {
+static PRStatus TransportLayerClose(PRFileDesc* f) {
   f->dtor(f);
   return PR_SUCCESS;
 }
 
-static int32_t TransportLayerRead(PRFileDesc *f, void *buf, int32_t length) {
+static int32_t TransportLayerRead(PRFileDesc* f, void* buf, int32_t length) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int32_t TransportLayerWrite(PRFileDesc *f, const void *buf,
+static int32_t TransportLayerWrite(PRFileDesc* f, const void* buf,
                                    int32_t length) {
-  TransportLayerNSPRAdapter *io =
-      reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
+  TransportLayerNSPRAdapter* io =
+      reinterpret_cast<TransportLayerNSPRAdapter*>(f->secret);
   return io->Write(buf, length);
 }
 
-static int32_t TransportLayerAvailable(PRFileDesc *f) {
+static int32_t TransportLayerAvailable(PRFileDesc* f) {
   UNIMPLEMENTED;
   return -1;
 }
 
-int64_t TransportLayerAvailable64(PRFileDesc *f) {
+int64_t TransportLayerAvailable64(PRFileDesc* f) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static PRStatus TransportLayerSync(PRFileDesc *f) {
+static PRStatus TransportLayerSync(PRFileDesc* f) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static int32_t TransportLayerSeek(PRFileDesc *f, int32_t offset,
+static int32_t TransportLayerSeek(PRFileDesc* f, int32_t offset,
                                   PRSeekWhence how) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int64_t TransportLayerSeek64(PRFileDesc *f, int64_t offset,
+static int64_t TransportLayerSeek64(PRFileDesc* f, int64_t offset,
                                     PRSeekWhence how) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static PRStatus TransportLayerFileInfo(PRFileDesc *f, PRFileInfo *info) {
+static PRStatus TransportLayerFileInfo(PRFileDesc* f, PRFileInfo* info) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static PRStatus TransportLayerFileInfo64(PRFileDesc *f, PRFileInfo64 *info) {
+static PRStatus TransportLayerFileInfo64(PRFileDesc* f, PRFileInfo64* info) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static int32_t TransportLayerWritev(PRFileDesc *f, const PRIOVec *iov,
+static int32_t TransportLayerWritev(PRFileDesc* f, const PRIOVec* iov,
                                     int32_t iov_size, PRIntervalTime to) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static PRStatus TransportLayerConnect(PRFileDesc *f, const PRNetAddr *addr,
+static PRStatus TransportLayerConnect(PRFileDesc* f, const PRNetAddr* addr,
                                       PRIntervalTime to) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static PRFileDesc *TransportLayerAccept(PRFileDesc *sd, PRNetAddr *addr,
+static PRFileDesc* TransportLayerAccept(PRFileDesc* sd, PRNetAddr* addr,
                                         PRIntervalTime to) {
   UNIMPLEMENTED;
   return nullptr;
 }
 
-static PRStatus TransportLayerBind(PRFileDesc *f, const PRNetAddr *addr) {
+static PRStatus TransportLayerBind(PRFileDesc* f, const PRNetAddr* addr) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static PRStatus TransportLayerListen(PRFileDesc *f, int32_t depth) {
+static PRStatus TransportLayerListen(PRFileDesc* f, int32_t depth) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static PRStatus TransportLayerShutdown(PRFileDesc *f, int32_t how) {
+static PRStatus TransportLayerShutdown(PRFileDesc* f, int32_t how) {
   // This is only called from NSS when we are the server and the client refuses
   // to provide a certificate.  In this case, the handshake is destined for
   // failure, so we will just let this pass.
-  TransportLayerNSPRAdapter *io =
-      reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
+  TransportLayerNSPRAdapter* io =
+      reinterpret_cast<TransportLayerNSPRAdapter*>(f->secret);
   io->SetEnabled(false);
   return PR_SUCCESS;
 }
 
 // This function does not support peek, or waiting until `to`
-static int32_t TransportLayerRecv(PRFileDesc *f, void *buf, int32_t buflen,
+static int32_t TransportLayerRecv(PRFileDesc* f, void* buf, int32_t buflen,
                                   int32_t flags, PRIntervalTime to) {
   MOZ_ASSERT(flags == 0);
   if (flags != 0) {
@@ -216,55 +216,55 @@ static int32_t TransportLayerRecv(PRFileDesc *f, void *buf, int32_t buflen,
     return -1;
   }
 
-  TransportLayerNSPRAdapter *io =
-      reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
+  TransportLayerNSPRAdapter* io =
+      reinterpret_cast<TransportLayerNSPRAdapter*>(f->secret);
   return io->Recv(buf, buflen);
 }
 
 // Note: this is always nonblocking and assumes a zero timeout.
-static int32_t TransportLayerSend(PRFileDesc *f, const void *buf,
+static int32_t TransportLayerSend(PRFileDesc* f, const void* buf,
                                   int32_t amount, int32_t flags,
                                   PRIntervalTime to) {
   int32_t written = TransportLayerWrite(f, buf, amount);
   return written;
 }
 
-static int32_t TransportLayerRecvfrom(PRFileDesc *f, void *buf, int32_t amount,
-                                      int32_t flags, PRNetAddr *addr,
+static int32_t TransportLayerRecvfrom(PRFileDesc* f, void* buf, int32_t amount,
+                                      int32_t flags, PRNetAddr* addr,
                                       PRIntervalTime to) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int32_t TransportLayerSendto(PRFileDesc *f, const void *buf,
+static int32_t TransportLayerSendto(PRFileDesc* f, const void* buf,
                                     int32_t amount, int32_t flags,
-                                    const PRNetAddr *addr, PRIntervalTime to) {
+                                    const PRNetAddr* addr, PRIntervalTime to) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int16_t TransportLayerPoll(PRFileDesc *f, int16_t in_flags,
-                                  int16_t *out_flags) {
+static int16_t TransportLayerPoll(PRFileDesc* f, int16_t in_flags,
+                                  int16_t* out_flags) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int32_t TransportLayerAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
-                                        PRNetAddr **raddr, void *buf,
+static int32_t TransportLayerAcceptRead(PRFileDesc* sd, PRFileDesc** nd,
+                                        PRNetAddr** raddr, void* buf,
                                         int32_t amount, PRIntervalTime t) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static int32_t TransportLayerTransmitFile(PRFileDesc *sd, PRFileDesc *f,
-                                          const void *headers, int32_t hlen,
+static int32_t TransportLayerTransmitFile(PRFileDesc* sd, PRFileDesc* f,
+                                          const void* headers, int32_t hlen,
                                           PRTransmitFileFlags flags,
                                           PRIntervalTime t) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static PRStatus TransportLayerGetpeername(PRFileDesc *f, PRNetAddr *addr) {
+static PRStatus TransportLayerGetpeername(PRFileDesc* f, PRNetAddr* addr) {
   // TODO: Modify to return unique names for each channel
   // somehow, as opposed to always the same static address. The current
   // implementation messes up the session cache, which is why it's off
@@ -276,13 +276,13 @@ static PRStatus TransportLayerGetpeername(PRFileDesc *f, PRNetAddr *addr) {
   return PR_SUCCESS;
 }
 
-static PRStatus TransportLayerGetsockname(PRFileDesc *f, PRNetAddr *addr) {
+static PRStatus TransportLayerGetsockname(PRFileDesc* f, PRNetAddr* addr) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static PRStatus TransportLayerGetsockoption(PRFileDesc *f,
-                                            PRSocketOptionData *opt) {
+static PRStatus TransportLayerGetsockoption(PRFileDesc* f,
+                                            PRSocketOptionData* opt) {
   switch (opt->option) {
     case PR_SockOpt_Nonblocking:
       opt->value.non_blocking = PR_TRUE;
@@ -296,8 +296,8 @@ static PRStatus TransportLayerGetsockoption(PRFileDesc *f,
 }
 
 // Imitate setting socket options. These are mostly noops.
-static PRStatus TransportLayerSetsockoption(PRFileDesc *f,
-                                            const PRSocketOptionData *opt) {
+static PRStatus TransportLayerSetsockoption(PRFileDesc* f,
+                                            const PRSocketOptionData* opt) {
   switch (opt->option) {
     case PR_SockOpt_Nonblocking:
       return PR_SUCCESS;
@@ -311,19 +311,19 @@ static PRStatus TransportLayerSetsockoption(PRFileDesc *f,
   return PR_FAILURE;
 }
 
-static int32_t TransportLayerSendfile(PRFileDesc *out, PRSendFileData *in,
+static int32_t TransportLayerSendfile(PRFileDesc* out, PRSendFileData* in,
                                       PRTransmitFileFlags flags,
                                       PRIntervalTime to) {
   UNIMPLEMENTED;
   return -1;
 }
 
-static PRStatus TransportLayerConnectContinue(PRFileDesc *f, int16_t flags) {
+static PRStatus TransportLayerConnectContinue(PRFileDesc* f, int16_t flags) {
   UNIMPLEMENTED;
   return PR_FAILURE;
 }
 
-static int32_t TransportLayerReserved(PRFileDesc *f) {
+static int32_t TransportLayerReserved(PRFileDesc* f) {
   UNIMPLEMENTED;
   return -1;
 }
@@ -409,8 +409,8 @@ void TransportLayerDtls::WasInserted() {
 // if ALPN is not negotiated.
 // Note: we only support Unicode strings here, which are encoded into UTF-8,
 // even though ALPN ostensibly allows arbitrary octet sequences.
-nsresult TransportLayerDtls::SetAlpn(const std::set<std::string> &alpn_allowed,
-                                     const std::string &alpn_default) {
+nsresult TransportLayerDtls::SetAlpn(const std::set<std::string>& alpn_allowed,
+                                     const std::string& alpn_default) {
   alpn_allowed_ = alpn_allowed;
   alpn_default_ = alpn_default;
 
@@ -426,7 +426,7 @@ nsresult TransportLayerDtls::SetVerificationAllowAll() {
   return NS_OK;
 }
 
-nsresult TransportLayerDtls::SetVerificationDigest(const DtlsDigest &digest) {
+nsresult TransportLayerDtls::SetVerificationDigest(const DtlsDigest& digest) {
   // Defensive programming
   if (verification_mode_ != VERIFY_UNSET &&
       verification_mode_ != VERIFY_DIGEST) {
@@ -474,7 +474,7 @@ bool TransportLayerDtls::Setup() {
       PR_CreateIOLayerStub(transport_layer_identity, &TransportLayerMethods));
   MOZ_ASSERT(pr_fd != nullptr);
   if (!pr_fd) return false;
-  pr_fd->secret = reinterpret_cast<PRFilePrivate *>(nspr_io_adapter_.get());
+  pr_fd->secret = reinterpret_cast<PRFilePrivate*>(nspr_io_adapter_.get());
 
   UniquePRFileDesc ssl_fd(DTLS_ImportFD(nullptr, pr_fd.get()));
   MOZ_ASSERT(ssl_fd != nullptr);  // This should never happen
@@ -590,7 +590,7 @@ bool TransportLayerDtls::Setup() {
 
   // Certificate validation
   rv = SSL_AuthCertificateHook(ssl_fd.get(), AuthCertificateHook,
-                               reinterpret_cast<void *>(this));
+                               reinterpret_cast<void*>(this));
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't set certificate validation hook");
     return false;
@@ -621,7 +621,7 @@ bool TransportLayerDtls::Setup() {
   return true;
 }
 
-bool TransportLayerDtls::SetupAlpn(UniquePRFileDesc &ssl_fd) const {
+bool TransportLayerDtls::SetupAlpn(UniquePRFileDesc& ssl_fd) const {
   if (alpn_allowed_.empty()) {
     return true;
   }
@@ -640,7 +640,7 @@ bool TransportLayerDtls::SetupAlpn(UniquePRFileDesc &ssl_fd) const {
 
   unsigned char buf[MAX_ALPN_LENGTH];
   size_t offset = 0;
-  for (const auto &tag : alpn_allowed_) {
+  for (const auto& tag : alpn_allowed_) {
     if ((offset + 1 + tag.length()) >= sizeof(buf)) {
       MOZ_MTLOG(ML_ERROR, "ALPN too long");
       return false;
@@ -728,7 +728,7 @@ static const uint32_t DisabledCiphers[] = {
     TLS_RSA_WITH_NULL_MD5,
 };
 
-bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc &ssl_fd) {
+bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc& ssl_fd) {
   SECStatus rv;
 
   // Set the SRTP ciphers
@@ -742,7 +742,7 @@ bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc &ssl_fd) {
     }
   }
 
-  for (const auto &cipher : EnabledCiphers) {
+  for (const auto& cipher : EnabledCiphers) {
     MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Enabling: " << cipher);
     rv = SSL_CipherPrefSet(ssl_fd.get(), cipher, PR_TRUE);
     if (rv != SECSuccess) {
@@ -751,7 +751,7 @@ bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc &ssl_fd) {
     }
   }
 
-  for (const auto &cipher : DisabledCiphers) {
+  for (const auto& cipher : DisabledCiphers) {
     MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Disabling: " << cipher);
 
     PRBool enabled = false;
@@ -774,7 +774,7 @@ bool TransportLayerDtls::SetupCipherSuites(UniquePRFileDesc &ssl_fd) {
   return true;
 }
 
-nsresult TransportLayerDtls::GetCipherSuite(uint16_t *cipherSuite) const {
+nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
   CheckThread();
   if (!cipherSuite) {
     MOZ_MTLOG(ML_ERROR, LAYER_INFO << "GetCipherSuite passed a nullptr");
@@ -810,7 +810,7 @@ std::vector<uint16_t> TransportLayerDtls::GetDefaultSrtpCiphers() {
   return ciphers;
 }
 
-void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
+void TransportLayerDtls::StateChange(TransportLayer* layer, State state) {
   switch (state) {
     case TS_NONE:
       MOZ_ASSERT(false);  // Can't happen
@@ -914,7 +914,7 @@ void TransportLayerDtls::Handshake() {
         }
         break;
       default:
-        const char *err_msg = PR_ErrorToName(err);
+        const char* err_msg = PR_ErrorToName(err);
         MOZ_MTLOG(ML_ERROR, LAYER_INFO << "DTLS handshake error " << err << " ("
                                        << err_msg << ")");
         TL_SET_STATE(TS_ERROR);
@@ -935,7 +935,7 @@ bool TransportLayerDtls::CheckAlpn() {
   char chosenAlpn[MAX_ALPN_LENGTH];
   unsigned int chosenAlpnLen;
   SECStatus rv = SSL_GetNextProto(ssl_fd_.get(), &alpnState,
-                                  reinterpret_cast<unsigned char *>(chosenAlpn),
+                                  reinterpret_cast<unsigned char*>(chosenAlpn),
                                   &chosenAlpnLen, sizeof(chosenAlpn));
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, LAYER_INFO << "ALPN error");
@@ -983,8 +983,8 @@ bool TransportLayerDtls::CheckAlpn() {
   return true;
 }
 
-void TransportLayerDtls::PacketReceived(TransportLayer *layer,
-                                        MediaPacket &packet) {
+void TransportLayerDtls::PacketReceived(TransportLayer* layer,
+                                        MediaPacket& packet) {
   CheckThread();
   MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "PacketReceived(" << packet.len() << ")");
 
@@ -1048,7 +1048,7 @@ void TransportLayerDtls::GetDecryptedPackets() {
   }
 }
 
-void TransportLayerDtls::SetState(State state, const char *file,
+void TransportLayerDtls::SetState(State state, const char* file,
                                   unsigned line) {
   if (timer_) {
     switch (state) {
@@ -1073,7 +1073,7 @@ void TransportLayerDtls::SetState(State state, const char *file,
   TransportLayer::SetState(state, file, line);
 }
 
-TransportResult TransportLayerDtls::SendPacket(MediaPacket &packet) {
+TransportResult TransportLayerDtls::SendPacket(MediaPacket& packet) {
   CheckThread();
   if (state_ != TS_OPEN) {
     MOZ_MTLOG(ML_ERROR,
@@ -1109,11 +1109,11 @@ TransportResult TransportLayerDtls::SendPacket(MediaPacket &packet) {
 }
 
 SECStatus TransportLayerDtls::GetClientAuthDataHook(
-    void *arg, PRFileDesc *fd, CERTDistNames *caNames,
-    CERTCertificate **pRetCert, SECKEYPrivateKey **pRetKey) {
+    void* arg, PRFileDesc* fd, CERTDistNames* caNames,
+    CERTCertificate** pRetCert, SECKEYPrivateKey** pRetKey) {
   MOZ_MTLOG(ML_DEBUG, "Server requested client auth");
 
-  TransportLayerDtls *stream = reinterpret_cast<TransportLayerDtls *>(arg);
+  TransportLayerDtls* stream = reinterpret_cast<TransportLayerDtls*>(arg);
   stream->CheckThread();
 
   if (!stream->identity_) {
@@ -1140,12 +1140,12 @@ SECStatus TransportLayerDtls::GetClientAuthDataHook(
 }
 
 nsresult TransportLayerDtls::SetSrtpCiphers(
-    const std::vector<uint16_t> &ciphers) {
+    const std::vector<uint16_t>& ciphers) {
   enabled_srtp_ciphers_ = std::move(ciphers);
   return NS_OK;
 }
 
-nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
+nsresult TransportLayerDtls::GetSrtpCipher(uint16_t* cipher) const {
   CheckThread();
   if (srtp_cipher_ == 0) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1154,13 +1154,13 @@ nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
   return NS_OK;
 }
 
-static uint8_t *WriteUint16(uint8_t *cursor, uint16_t v) {
+static uint8_t* WriteUint16(uint8_t* cursor, uint16_t v) {
   *cursor++ = v >> 8;
   *cursor++ = v & 0xff;
   return cursor;
 }
 
-static SSLHandshakeType SrtpXtnServerMessage(PRFileDesc *fd) {
+static SSLHandshakeType SrtpXtnServerMessage(PRFileDesc* fd) {
   SSLPreliminaryChannelInfo preinfo;
   SECStatus rv = SSL_GetPreliminaryChannelInfo(fd, &preinfo, sizeof(preinfo));
   if (rv != SECSuccess) {
@@ -1173,11 +1173,11 @@ static SSLHandshakeType SrtpXtnServerMessage(PRFileDesc *fd) {
 }
 
 /* static */
-PRBool TransportLayerDtls::WriteSrtpXtn(PRFileDesc *fd,
-                                        SSLHandshakeType message, uint8_t *data,
-                                        unsigned int *len, unsigned int max_len,
-                                        void *arg) {
-  auto self = reinterpret_cast<TransportLayerDtls *>(arg);
+PRBool TransportLayerDtls::WriteSrtpXtn(PRFileDesc* fd,
+                                        SSLHandshakeType message, uint8_t* data,
+                                        unsigned int* len, unsigned int max_len,
+                                        void* arg) {
+  auto self = reinterpret_cast<TransportLayerDtls*>(arg);
 
   // ClientHello: send all supported versions.
   if (message == ssl_hs_client_hello) {
@@ -1189,7 +1189,7 @@ PRBool TransportLayerDtls::WriteSrtpXtn(PRFileDesc *fd,
       MOZ_ASSERT(false, "Not enough space to send SRTP extension");
       return false;
     }
-    uint8_t *cursor = WriteUint16(data, self->enabled_srtp_ciphers_.size() * 2);
+    uint8_t* cursor = WriteUint16(data, self->enabled_srtp_ciphers_.size() * 2);
     for (auto cs : self->enabled_srtp_ciphers_) {
       cursor = WriteUint16(cursor, cs);
     }
@@ -1209,7 +1209,7 @@ PRBool TransportLayerDtls::WriteSrtpXtn(PRFileDesc *fd,
       return false;
     }
 
-    uint8_t *cursor = WriteUint16(data, 2);  // Length = 2.
+    uint8_t* cursor = WriteUint16(data, 2);  // Length = 2.
     cursor = WriteUint16(cursor, self->srtp_cipher_);
     *cursor++ = 0;  // No MKI
     *len = cursor - data;
@@ -1221,14 +1221,14 @@ PRBool TransportLayerDtls::WriteSrtpXtn(PRFileDesc *fd,
 
 class TlsParser {
  public:
-  TlsParser(const uint8_t *data, size_t len) : cursor_(data), remaining_(len) {}
+  TlsParser(const uint8_t* data, size_t len) : cursor_(data), remaining_(len) {}
 
   bool error() const { return error_; }
   size_t remaining() const { return remaining_; }
 
   template <typename T,
             class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-  void Read(T *v, size_t sz = sizeof(T)) {
+  void Read(T* v, size_t sz = sizeof(T)) {
     MOZ_ASSERT(sz <= sizeof(T),
                "Type is too small to hold the value requested");
     if (remaining_ < sz) {
@@ -1246,7 +1246,7 @@ class TlsParser {
 
   template <typename T,
             class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-  void ReadVector(std::vector<T> *v, size_t w) {
+  void ReadVector(std::vector<T>* v, size_t w) {
     MOZ_ASSERT(v->empty(), "vector needs to be empty");
 
     uint32_t len;
@@ -1284,21 +1284,21 @@ class TlsParser {
   }
 
  private:
-  const uint8_t *cursor_;
+  const uint8_t* cursor_;
   size_t remaining_;
   bool error_ = false;
 };
 
 /* static */
 SECStatus TransportLayerDtls::HandleSrtpXtn(
-    PRFileDesc *fd, SSLHandshakeType message, const uint8_t *data,
-    unsigned int len, SSLAlertDescription *alert, void *arg) {
+    PRFileDesc* fd, SSLHandshakeType message, const uint8_t* data,
+    unsigned int len, SSLAlertDescription* alert, void* arg) {
   static const uint8_t kTlsAlertHandshakeFailure = 40;
   static const uint8_t kTlsAlertIllegalParameter = 47;
   static const uint8_t kTlsAlertDecodeError = 50;
   static const uint8_t kTlsAlertUnsupportedExtension = 110;
 
-  auto self = reinterpret_cast<TransportLayerDtls *>(arg);
+  auto self = reinterpret_cast<TransportLayerDtls*>(arg);
 
   // Parse the extension.
   TlsParser parser(data, len);
@@ -1346,10 +1346,10 @@ SECStatus TransportLayerDtls::HandleSrtpXtn(
   return SECFailure;
 }
 
-nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string &label,
+nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string& label,
                                                   bool use_context,
-                                                  const std::string &context,
-                                                  unsigned char *out,
+                                                  const std::string& context,
+                                                  unsigned char* out,
                                                   unsigned int outlen) {
   CheckThread();
   if (state_ != TS_OPEN) {
@@ -1358,7 +1358,7 @@ nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string &label,
   }
   SECStatus rv = SSL_ExportKeyingMaterial(
       ssl_fd_.get(), label.c_str(), label.size(), use_context,
-      reinterpret_cast<const unsigned char *>(context.c_str()), context.size(),
+      reinterpret_cast<const unsigned char*>(context.c_str()), context.size(),
       out, outlen);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_ERROR, "Couldn't export SSL keying material");
@@ -1368,16 +1368,16 @@ nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string &label,
   return NS_OK;
 }
 
-SECStatus TransportLayerDtls::AuthCertificateHook(void *arg, PRFileDesc *fd,
+SECStatus TransportLayerDtls::AuthCertificateHook(void* arg, PRFileDesc* fd,
                                                   PRBool checksig,
                                                   PRBool isServer) {
-  TransportLayerDtls *stream = reinterpret_cast<TransportLayerDtls *>(arg);
+  TransportLayerDtls* stream = reinterpret_cast<TransportLayerDtls*>(arg);
   stream->CheckThread();
   return stream->AuthCertificateHook(fd, checksig, isServer);
 }
 
 SECStatus TransportLayerDtls::CheckDigest(
-    const DtlsDigest &digest, UniqueCERTCertificate &peer_cert) const {
+    const DtlsDigest& digest, UniqueCERTCertificate& peer_cert) const {
   DtlsDigest computed_digest(digest.algorithm_);
 
   MOZ_MTLOG(ML_DEBUG,
@@ -1400,7 +1400,7 @@ SECStatus TransportLayerDtls::CheckDigest(
   return SECSuccess;
 }
 
-SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
+SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc* fd,
                                                   PRBool checksig,
                                                   PRBool isServer) {
   CheckThread();
@@ -1450,8 +1450,8 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
   return SECFailure;
 }
 
-void TransportLayerDtls::TimerCallback(nsITimer *timer, void *arg) {
-  TransportLayerDtls *dtls = reinterpret_cast<TransportLayerDtls *>(arg);
+void TransportLayerDtls::TimerCallback(nsITimer* timer, void* arg) {
+  TransportLayerDtls* dtls = reinterpret_cast<TransportLayerDtls*>(arg);
 
   MOZ_MTLOG(ML_DEBUG, "DTLS timer expired");
 

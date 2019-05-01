@@ -52,25 +52,25 @@ class nsJARURI final : public nsIJARURI,
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_JARURI_IMPL_CID)
 
   // nsJARURI
-  nsresult FormatSpec(const nsACString &entryPath, nsACString &result,
+  nsresult FormatSpec(const nsACString& entryPath, nsACString& result,
                       bool aIncludeScheme = true);
-  nsresult CreateEntryURL(const nsACString &entryFilename, const char *charset,
-                          nsIURL **url);
+  nsresult CreateEntryURL(const nsACString& entryFilename, const char* charset,
+                          nsIURL** url);
 
  protected:
   nsJARURI();
   virtual ~nsJARURI();
-  nsresult SetJAREntry(const nsACString &entryPath);
-  nsresult Init(const char *charsetHint);
-  nsresult SetSpecWithBase(const nsACString &aSpec, nsIURI *aBaseURL);
+  nsresult SetJAREntry(const nsACString& entryPath);
+  nsresult Init(const char* charsetHint);
+  nsresult SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL);
 
   // enum used in a few places to specify how .ref attribute should be handled
   enum RefHandlingEnum { eIgnoreRef, eHonorRef, eReplaceRef };
 
   // Helper to share code between Equals methods.
-  virtual nsresult EqualsInternal(nsIURI *other,
+  virtual nsresult EqualsInternal(nsIURI* other,
                                   RefHandlingEnum refHandlingMode,
-                                  bool *result);
+                                  bool* result);
 
   nsCOMPtr<nsIURI> mJARFile;
   // mJarEntry stored as a URL so that we can easily access things
@@ -79,27 +79,27 @@ class nsJARURI final : public nsIJARURI,
   nsCString mCharsetHint;
 
  private:
-  nsresult Clone(nsIURI **aURI);
-  nsresult SetSpecInternal(const nsACString &input);
-  nsresult SetScheme(const nsACString &input);
-  nsresult SetUserPass(const nsACString &input);
-  nsresult SetUsername(const nsACString &input);
-  nsresult SetPassword(const nsACString &input);
-  nsresult SetHostPort(const nsACString &aValue);
-  nsresult SetHost(const nsACString &input);
+  nsresult Clone(nsIURI** aURI);
+  nsresult SetSpecInternal(const nsACString& input);
+  nsresult SetScheme(const nsACString& input);
+  nsresult SetUserPass(const nsACString& input);
+  nsresult SetUsername(const nsACString& input);
+  nsresult SetPassword(const nsACString& input);
+  nsresult SetHostPort(const nsACString& aValue);
+  nsresult SetHost(const nsACString& input);
   nsresult SetPort(int32_t port);
-  nsresult SetPathQueryRef(const nsACString &input);
-  nsresult SetRef(const nsACString &input);
-  nsresult SetFilePath(const nsACString &input);
-  nsresult SetQuery(const nsACString &input);
-  nsresult SetQueryWithEncoding(const nsACString &input,
-                                const mozilla::Encoding *encoding);
-  bool Deserialize(const mozilla::ipc::URIParams &);
-  nsresult ReadPrivate(nsIObjectInputStream *aStream);
+  nsresult SetPathQueryRef(const nsACString& input);
+  nsresult SetRef(const nsACString& input);
+  nsresult SetFilePath(const nsACString& input);
+  nsresult SetQuery(const nsACString& input);
+  nsresult SetQueryWithEncoding(const nsACString& input,
+                                const mozilla::Encoding* encoding);
+  bool Deserialize(const mozilla::ipc::URIParams&);
+  nsresult ReadPrivate(nsIObjectInputStream* aStream);
 
-  nsresult SetFileNameInternal(const nsACString &fileName);
-  nsresult SetFileBaseNameInternal(const nsACString &fileBaseName);
-  nsresult SetFileExtensionInternal(const nsACString &fileExtension);
+  nsresult SetFileNameInternal(const nsACString& fileName);
+  nsresult SetFileBaseNameInternal(const nsACString& fileBaseName);
+  nsresult SetFileExtensionInternal(const nsACString& fileExtension);
 
  public:
   class Mutator final : public nsIURIMutator,
@@ -113,17 +113,17 @@ class nsJARURI final : public nsIJARURI,
     NS_DECL_NSIURLMUTATOR
 
     NS_IMETHOD
-    Write(nsIObjectOutputStream *aOutputStream) override {
+    Write(nsIObjectOutputStream* aOutputStream) override {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream *aStream) override {
+    MOZ_MUST_USE NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
       return InitFromInputStream(aStream);
     }
 
     NS_IMETHOD
-    SetSpecBaseCharset(const nsACString &aSpec, nsIURI *aBaseURI,
-                       const char *aCharset) override {
+    SetSpecBaseCharset(const nsACString& aSpec, nsIURI* aBaseURI,
+                       const char* aCharset) override {
       RefPtr<nsJARURI> uri;
       if (mURI) {
         mURI.swap(uri);

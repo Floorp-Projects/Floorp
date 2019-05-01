@@ -216,6 +216,21 @@ var gSync = {
     this.populateSendTabToDevicesView(panelViewNode, this.populateSendTabToDevicesView.bind(this));
   },
 
+  showSendToDeviceViewFromFxaMenu(anchor) {
+    this.showSendToDeviceView(anchor);
+    this.emitFxaToolbarTelemetry("send_tab", anchor);
+  },
+
+  showRemoteTabsFromFxaMenu(panel) {
+    PanelUI.showSubView("PanelUI-remotetabs", panel);
+    this.emitFxaToolbarTelemetry("sync_tabs", panel);
+  },
+
+  showSidebarFromFxaMenu(panel) {
+    SidebarUI.toggle("viewTabsSidebar");
+    this.emitFxaToolbarTelemetry("sync_tabs_sidebar", panel);
+  },
+
   populateSendTabToDevicesView(panelViewNode, reloadFunc) {
     let bodyNode = panelViewNode.querySelector(".panel-subview-body");
     let panelNode = panelViewNode.closest("panel");
@@ -294,7 +309,7 @@ var gSync = {
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
     } else {
-      this.emitFxaToolbarTelemetry("toolbar_icon");
+      this.emitFxaToolbarTelemetry("toolbar_icon", anchor);
       PanelUI.showSubView(viewId, anchor, aEvent);
     }
   },
@@ -355,16 +370,29 @@ var gSync = {
     }
   },
 
-  emitFxaToolbarTelemetry(type) {
-    if (!gFxaToolbarEnabled) {
-      return;
-    }
-    if (UIState.isReady()) {
+  emitFxaToolbarTelemetry(type, panel) {
+    if (UIState.isReady() && panel) {
       const state = UIState.get();
       const hasAvatar = state.avatarURL && !state.avatarURL.includes(FXA_NO_AVATAR_ZEROS);
       let extraOptions = {"fxa_status": state.status, "fxa_avatar": hasAvatar ? "true" : "false"};
-      Services.telemetry.recordEvent("fxa_avatar_menu", "click", type, null, extraOptions);
+
+      // When the fxa avatar panel is within the Firefox app menu,
+      // we emit different telemetry.
+      let eventName = "fxa_avatar_menu";
+      if (this.isPanelInsideAppMenu(panel)) {
+        eventName = "fxa_app_menu";
+      }
+
+      Services.telemetry.recordEvent(eventName, "click", type, null, extraOptions);
     }
+  },
+
+  isPanelInsideAppMenu(panel = undefined) {
+    const appMenuPanel = document.getElementById("appMenu-popup");
+    if (panel && appMenuPanel.contains(panel)) {
+      return true;
+    }
+    return false;
   },
 
   updatePanelPopup(state) {
@@ -447,6 +475,7 @@ var gSync = {
     switch (this.appMenuContainer.getAttribute("fxastatus")) {
     case "signedin":
       const panel = document.getElementById("appMenu-fxa-status");
+      this.emitFxaToolbarTelemetry("toolbar_icon", panel);
       PanelUI.showSubView("PanelUI-fxa", panel);
       break;
     case "error":
@@ -485,6 +514,15 @@ var gSync = {
     openTrustedLinkIn(url, "tab");
   },
 
+  async openConnectAnotherDeviceFromFxaMenu(panel = undefined) {
+    this.emitFxaToolbarTelemetry("cad", panel);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isPanelInsideAppMenu(panel)) {
+      entryPoint = "fxa_app_menu";
+    }
+    this.openConnectAnotherDevice(entryPoint);
+  },
+
   openSendToDevicePromo() {
     let url = this.PRODUCT_INFO_BASE_URL;
     url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
@@ -496,9 +534,27 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
+  async openFxAEmailFirstPageFromFxaMenu(panel = undefined) {
+    this.emitFxaToolbarTelemetry("login", panel);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isPanelInsideAppMenu(panel)) {
+        entryPoint = "fxa_app_menu";
+    }
+    this.openFxAEmailFirstPage(entryPoint);
+  },
+
   async openFxAManagePage(entryPoint) {
     const url = await FxAccounts.config.promiseManageURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });
+  },
+
+  async openFxAManagePageFromFxaMenu(panel = undefined) {
+    this.emitFxaToolbarTelemetry("account_settings", panel);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isPanelInsideAppMenu(panel)) {
+        entryPoint = "fxa_app_menu";
+    }
+    this.openFxAManagePage(entryPoint);
   },
 
   async sendTabToDevice(url, targets, title) {
@@ -847,8 +903,22 @@ var gSync = {
     }
   },
 
+  doSyncFromFxaMenu(panel) {
+    this.doSync();
+    this.emitFxaToolbarTelemetry("sync_now", panel);
+  },
+
   openPrefs(entryPoint = "syncbutton", origin = undefined) {
     window.openPreferences("paneSync", { origin, urlParams: { entrypoint: entryPoint } });
+  },
+
+  openPrefsFromFxaMenu(type, panel) {
+    this.emitFxaToolbarTelemetry(type, panel);
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isPanelInsideAppMenu(panel)) {
+      entryPoint = "fxa_app_menu";
+    }
+    this.openPrefs(entryPoint);
   },
 
   openSyncedTabsPanel() {

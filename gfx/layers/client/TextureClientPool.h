@@ -35,7 +35,7 @@ class TextureClientAllocator {
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  virtual void ReturnTextureClientDeferred(TextureClient *aClient) = 0;
+  virtual void ReturnTextureClientDeferred(TextureClient* aClient) = 0;
 
   virtual void ReportClientLost() = 0;
 };
@@ -49,7 +49,7 @@ class TextureClientPool final : public TextureClientAllocator {
                     gfx::IntSize aSize, TextureFlags aFlags,
                     uint32_t aShrinkTimeoutMsec, uint32_t aClearTimeoutMsec,
                     uint32_t aInitialPoolSize, uint32_t aPoolUnusedSize,
-                    TextureForwarder *aAllocator);
+                    TextureForwarder* aAllocator);
 
   /**
    * Gets an allocated TextureClient of size and format that are determined
@@ -66,13 +66,13 @@ class TextureClientPool final : public TextureClientAllocator {
    * Return a TextureClient that is no longer being used and is ready for
    * immediate re-use or destruction.
    */
-  void ReturnTextureClient(TextureClient *aClient);
+  void ReturnTextureClient(TextureClient* aClient);
 
   /**
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  void ReturnTextureClientDeferred(TextureClient *aClient) override;
+  void ReturnTextureClientDeferred(TextureClient* aClient) override;
 
   /**
    * Return any clients to the pool that were previously returned in
@@ -160,7 +160,7 @@ class TextureClientPool final : public TextureClientAllocator {
   RefPtr<nsITimer> mShrinkTimer;
   RefPtr<nsITimer> mClearTimer;
   // This mSurfaceAllocator owns us, so no need to hold a ref to it
-  TextureForwarder *mSurfaceAllocator;
+  TextureForwarder* mSurfaceAllocator;
 
   // Keep track of whether this pool has been destroyed or not. If it has,
   // we won't accept returns of TextureClients anymore, and the refcounting

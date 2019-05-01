@@ -25,7 +25,7 @@ class ADivertableParentChannel : public nsISupports {
   // i.e. OnStartRequest, OnDataAvailable and OnStopRequest, as if it had been
   // passed to AsyncOpen for the channel. A reference to the listener will be
   // added and kept until OnStopRequest has completed.
-  virtual void DivertTo(nsIStreamListener *aListener) = 0;
+  virtual void DivertTo(nsIStreamListener* aListener) = 0;
 
   // Called to suspend parent channel in ChannelDiverterParent constructor.
   virtual nsresult SuspendForDiversion() = 0;

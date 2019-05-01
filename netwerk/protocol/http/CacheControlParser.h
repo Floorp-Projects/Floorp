@@ -14,18 +14,18 @@ namespace net {
 
 class CacheControlParser final : Tokenizer {
  public:
-  explicit CacheControlParser(nsACString const &header);
+  explicit CacheControlParser(nsACString const& header);
 
-  MOZ_MUST_USE bool MaxAge(uint32_t *seconds);
-  MOZ_MUST_USE bool MaxStale(uint32_t *seconds);
-  MOZ_MUST_USE bool MinFresh(uint32_t *seconds);
+  MOZ_MUST_USE bool MaxAge(uint32_t* seconds);
+  MOZ_MUST_USE bool MaxStale(uint32_t* seconds);
+  MOZ_MUST_USE bool MinFresh(uint32_t* seconds);
   bool NoCache();
   bool NoStore();
 
  private:
   void Directive();
   void IgnoreDirective();
-  MOZ_MUST_USE bool SecondsValue(uint32_t *seconds, uint32_t defaultVal = 0);
+  MOZ_MUST_USE bool SecondsValue(uint32_t* seconds, uint32_t defaultVal = 0);
 
   bool mMaxAgeSet;
   uint32_t mMaxAge;

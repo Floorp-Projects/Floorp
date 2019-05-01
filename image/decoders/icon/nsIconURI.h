@@ -41,22 +41,22 @@ class nsMozIconURI final : public nsIMozIconURI, public nsINestedURI {
                        // kStateStrings
 
  private:
-  nsresult Clone(nsIURI **aURI);
-  nsresult SetSpecInternal(const nsACString &input);
-  nsresult SetScheme(const nsACString &input);
-  nsresult SetUserPass(const nsACString &input);
-  nsresult SetUsername(const nsACString &input);
-  nsresult SetPassword(const nsACString &input);
-  nsresult SetHostPort(const nsACString &aValue);
-  nsresult SetHost(const nsACString &input);
+  nsresult Clone(nsIURI** aURI);
+  nsresult SetSpecInternal(const nsACString& input);
+  nsresult SetScheme(const nsACString& input);
+  nsresult SetUserPass(const nsACString& input);
+  nsresult SetUsername(const nsACString& input);
+  nsresult SetPassword(const nsACString& input);
+  nsresult SetHostPort(const nsACString& aValue);
+  nsresult SetHost(const nsACString& input);
   nsresult SetPort(int32_t port);
-  nsresult SetPathQueryRef(const nsACString &input);
-  nsresult SetRef(const nsACString &input);
-  nsresult SetFilePath(const nsACString &input);
-  nsresult SetQuery(const nsACString &input);
-  nsresult SetQueryWithEncoding(const nsACString &input,
-                                const mozilla::Encoding *encoding);
-  bool Deserialize(const mozilla::ipc::URIParams &);
+  nsresult SetPathQueryRef(const nsACString& input);
+  nsresult SetRef(const nsACString& input);
+  nsresult SetFilePath(const nsACString& input);
+  nsresult SetQuery(const nsACString& input);
+  nsresult SetQueryWithEncoding(const nsACString& input,
+                                const mozilla::Encoding* encoding);
+  bool Deserialize(const mozilla::ipc::URIParams&);
 
  public:
   class Mutator final : public nsIURIMutator,
@@ -64,17 +64,17 @@ class nsMozIconURI final : public nsIMozIconURI, public nsINestedURI {
     NS_DECL_ISUPPORTS
     NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
 
-    NS_IMETHOD Deserialize(const mozilla::ipc::URIParams &aParams) override {
+    NS_IMETHOD Deserialize(const mozilla::ipc::URIParams& aParams) override {
       return InitFromIPCParams(aParams);
     }
 
-    NS_IMETHOD Finalize(nsIURI **aURI) override {
+    NS_IMETHOD Finalize(nsIURI** aURI) override {
       mURI.forget(aURI);
       return NS_OK;
     }
 
-    NS_IMETHOD SetSpec(const nsACString &aSpec,
-                       nsIURIMutator **aMutator) override {
+    NS_IMETHOD SetSpec(const nsACString& aSpec,
+                       nsIURIMutator** aMutator) override {
       if (aMutator) {
         nsCOMPtr<nsIURIMutator> mutator = this;
         mutator.forget(aMutator);

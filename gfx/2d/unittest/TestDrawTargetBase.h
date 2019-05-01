@@ -27,11 +27,11 @@ class TestDrawTargetBase : public TestBase {
 
   void RefreshSnapshot();
 
-  void VerifyAllPixels(const mozilla::gfx::Color &aColor);
-  void VerifyPixel(const mozilla::gfx::IntPoint &aPoint,
-                   mozilla::gfx::Color &aColor);
+  void VerifyAllPixels(const mozilla::gfx::Color& aColor);
+  void VerifyPixel(const mozilla::gfx::IntPoint& aPoint,
+                   mozilla::gfx::Color& aColor);
 
-  uint32_t RGBAPixelFromColor(const mozilla::gfx::Color &aColor);
+  uint32_t RGBAPixelFromColor(const mozilla::gfx::Color& aColor);
 
   RefPtr<mozilla::gfx::DrawTarget> mDT;
   RefPtr<mozilla::gfx::DataSourceSurface> mDataSnapshot;

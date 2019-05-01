@@ -29,7 +29,7 @@ class GeneralPattern final {
  public:
   explicit GeneralPattern() = default;
 
-  GeneralPattern(const GeneralPattern &aOther) {}
+  GeneralPattern(const GeneralPattern& aOther) {}
 
   ~GeneralPattern() {
     if (mPattern) {
@@ -37,24 +37,24 @@ class GeneralPattern final {
     }
   }
 
-  Pattern *Init(const Pattern &aPattern) {
+  Pattern* Init(const Pattern& aPattern) {
     MOZ_ASSERT(!mPattern);
     switch (aPattern.GetType()) {
       case PatternType::COLOR:
         mPattern = new (mColorPattern.addr())
-            ColorPattern(static_cast<const ColorPattern &>(aPattern));
+            ColorPattern(static_cast<const ColorPattern&>(aPattern));
         break;
       case PatternType::LINEAR_GRADIENT:
         mPattern = new (mLinearGradientPattern.addr()) LinearGradientPattern(
-            static_cast<const LinearGradientPattern &>(aPattern));
+            static_cast<const LinearGradientPattern&>(aPattern));
         break;
       case PatternType::RADIAL_GRADIENT:
         mPattern = new (mRadialGradientPattern.addr()) RadialGradientPattern(
-            static_cast<const RadialGradientPattern &>(aPattern));
+            static_cast<const RadialGradientPattern&>(aPattern));
         break;
       case PatternType::SURFACE:
         mPattern = new (mSurfacePattern.addr())
-            SurfacePattern(static_cast<const SurfacePattern &>(aPattern));
+            SurfacePattern(static_cast<const SurfacePattern&>(aPattern));
         break;
       default:
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown pattern type");
@@ -62,46 +62,46 @@ class GeneralPattern final {
     return mPattern;
   }
 
-  ColorPattern *InitColorPattern(const Color &aColor) {
+  ColorPattern* InitColorPattern(const Color& aColor) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mColorPattern.addr()) ColorPattern(aColor);
     return mColorPattern.addr();
   }
 
-  LinearGradientPattern *InitLinearGradientPattern(
-      const Point &aBegin, const Point &aEnd, GradientStops *aStops,
-      const Matrix &aMatrix = Matrix()) {
+  LinearGradientPattern* InitLinearGradientPattern(
+      const Point& aBegin, const Point& aEnd, GradientStops* aStops,
+      const Matrix& aMatrix = Matrix()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mLinearGradientPattern.addr())
         LinearGradientPattern(aBegin, aEnd, aStops, aMatrix);
     return mLinearGradientPattern.addr();
   }
 
-  RadialGradientPattern *InitRadialGradientPattern(
-      const Point &aCenter1, const Point &aCenter2, Float aRadius1,
-      Float aRadius2, GradientStops *aStops, const Matrix &aMatrix = Matrix()) {
+  RadialGradientPattern* InitRadialGradientPattern(
+      const Point& aCenter1, const Point& aCenter2, Float aRadius1,
+      Float aRadius2, GradientStops* aStops, const Matrix& aMatrix = Matrix()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mRadialGradientPattern.addr()) RadialGradientPattern(
         aCenter1, aCenter2, aRadius1, aRadius2, aStops, aMatrix);
     return mRadialGradientPattern.addr();
   }
 
-  SurfacePattern *InitSurfacePattern(
-      SourceSurface *aSourceSurface, ExtendMode aExtendMode,
-      const Matrix &aMatrix = Matrix(),
+  SurfacePattern* InitSurfacePattern(
+      SourceSurface* aSourceSurface, ExtendMode aExtendMode,
+      const Matrix& aMatrix = Matrix(),
       SamplingFilter aSamplingFilter = SamplingFilter::GOOD,
-      const IntRect &aSamplingRect = IntRect()) {
+      const IntRect& aSamplingRect = IntRect()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mSurfacePattern.addr()) SurfacePattern(
         aSourceSurface, aExtendMode, aMatrix, aSamplingFilter, aSamplingRect);
     return mSurfacePattern.addr();
   }
 
-  Pattern *GetPattern() { return mPattern; }
+  Pattern* GetPattern() { return mPattern; }
 
-  const Pattern *GetPattern() const { return mPattern; }
+  const Pattern* GetPattern() const { return mPattern; }
 
-  operator Pattern &() {
+  operator Pattern&() {
     if (!mPattern) {
       MOZ_CRASH("GFX: GeneralPattern not initialized");
     }
@@ -115,7 +115,7 @@ class GeneralPattern final {
     AlignedStorage2<RadialGradientPattern> mRadialGradientPattern;
     AlignedStorage2<SurfacePattern> mSurfacePattern;
   };
-  Pattern *mPattern = nullptr;
+  Pattern* mPattern = nullptr;
 };
 
 }  // namespace gfx

@@ -31,17 +31,17 @@ class DOHaddr : public LinkedListElement<DOHaddr> {
 };
 
 class TRRService;
-extern TRRService *gTRRService;
+extern TRRService* gTRRService;
 
 class DOHresp {
  public:
   ~DOHresp() {
-    DOHaddr *el;
+    DOHaddr* el;
     while ((el = mAddresses.popLast())) {
       delete el;
     }
   }
-  nsresult Add(uint32_t TTL, unsigned char *dns, int index, uint16_t len,
+  nsresult Add(uint32_t TTL, unsigned char* dns, int index, uint16_t len,
                bool aLocalAllowed);
   LinkedList<DOHaddr> mAddresses;
 };
@@ -67,7 +67,7 @@ class TRR : public Runnable,
   static const unsigned int kCnameChaseMax = 64;
 
   // when firing off a normal A or AAAA query
-  explicit TRR(AHostResolver *aResolver, nsHostRecord *aRec, enum TrrType aType)
+  explicit TRR(AHostResolver* aResolver, nsHostRecord* aRec, enum TrrType aType)
       : mozilla::Runnable("TRR"),
         mRec(aRec),
         mHostResolver(aResolver),
@@ -83,8 +83,8 @@ class TRR : public Runnable,
   }
 
   // when following CNAMEs
-  explicit TRR(AHostResolver *aResolver, nsHostRecord *aRec, nsCString &aHost,
-               enum TrrType &aType, unsigned int aLoopCount, bool aPB)
+  explicit TRR(AHostResolver* aResolver, nsHostRecord* aRec, nsCString& aHost,
+               enum TrrType& aType, unsigned int aLoopCount, bool aPB)
       : mozilla::Runnable("TRR"),
         mHost(aHost),
         mRec(aRec),
@@ -99,7 +99,7 @@ class TRR : public Runnable,
         mOriginSuffix(aRec ? aRec->originSuffix : EmptyCString()) {}
 
   // used on push
-  explicit TRR(AHostResolver *aResolver, bool aPB)
+  explicit TRR(AHostResolver* aResolver, bool aPB)
       : mozilla::Runnable("TRR"),
         mHostResolver(aResolver),
         mType(TRRTYPE_A),
@@ -111,8 +111,8 @@ class TRR : public Runnable,
         mTxtTtl(UINT32_MAX) {}
 
   // to verify a domain
-  explicit TRR(AHostResolver *aResolver, nsACString &aHost, enum TrrType aType,
-               const nsACString &aOriginSuffix, bool aPB)
+  explicit TRR(AHostResolver* aResolver, nsACString& aHost, enum TrrType aType,
+               const nsACString& aOriginSuffix, bool aPB)
       : mozilla::Runnable("TRR"),
         mHost(aHost),
         mRec(nullptr),
@@ -136,10 +136,10 @@ class TRR : public Runnable,
  private:
   ~TRR() = default;
   nsresult SendHTTPRequest();
-  nsresult DohEncode(nsCString &target, bool aDisableECS);
-  nsresult PassQName(unsigned int &index);
-  nsresult GetQname(nsAutoCString &aQname, unsigned int &aIndex);
-  nsresult DohDecode(nsCString &aHost);
+  nsresult DohEncode(nsCString& target, bool aDisableECS);
+  nsresult PassQName(unsigned int& index);
+  nsresult GetQname(nsAutoCString& aQname, unsigned int& aIndex);
+  nsresult DohDecode(nsCString& aHost);
   nsresult ReturnData();
 
   // FailData() must be called to signal that the asynch TRR resolve is
@@ -149,9 +149,9 @@ class TRR : public Runnable,
   // other error codes must be used. This distinction is important for the
   // subsequent logic to separate the error reasons.
   nsresult FailData(nsresult error);
-  nsresult DohDecodeQuery(const nsCString &query, nsCString &host,
-                          enum TrrType &type);
-  nsresult ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec);
+  nsresult DohDecodeQuery(const nsCString& query, nsCString& host,
+                          enum TrrType& type);
+  nsresult ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec);
   nsresult On200Response();
 
   nsCOMPtr<nsIChannel> mChannel;

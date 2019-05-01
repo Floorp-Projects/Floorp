@@ -44,8 +44,8 @@ NS_IMPL_ISUPPORTS(nsSocketProviderService, nsISocketProviderService)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsSocketProviderService::GetSocketProvider(const char *type,
-                                           nsISocketProvider **result) {
+nsSocketProviderService::GetSocketProvider(const char* type,
+                                           nsISocketProvider** result) {
   nsCOMPtr<nsISocketProvider> inst;
   if (!nsCRT::strcmp(type, "ssl") && XRE_IsParentProcess() &&
       EnsureNSSInitializedChromeOrContent()) {

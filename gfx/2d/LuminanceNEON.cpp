@@ -24,16 +24,16 @@ using namespace mozilla::gfx;
 #  define GFX_ARGB32_OFFSET_B 0
 #endif
 
-void ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
-                                   int32_t aSourceStride, uint8_t *aDestData,
-                                   int32_t aDestStride, const IntSize &aSize,
+void ComputesRGBLuminanceMask_NEON(const uint8_t* aSourceData,
+                                   int32_t aSourceStride, uint8_t* aDestData,
+                                   int32_t aDestStride, const IntSize& aSize,
                                    float aOpacity) {
   int32_t redFactor = 55 * aOpacity;     // 255 * 0.2125 * opacity
   int32_t greenFactor = 183 * aOpacity;  // 255 * 0.7154 * opacity
   int32_t blueFactor = 18 * aOpacity;    // 255 * 0.0721
-  const uint8_t *sourcePixel = aSourceData;
+  const uint8_t* sourcePixel = aSourceData;
   int32_t sourceOffset = aSourceStride - 4 * aSize.width;
-  uint8_t *destPixel = aDestData;
+  uint8_t* destPixel = aDestData;
   int32_t destOffset = aDestStride - aSize.width;
 
   sourcePixel = aSourceData;

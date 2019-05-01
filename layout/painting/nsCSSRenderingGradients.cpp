@@ -518,31 +518,42 @@ static void ClampColorStops(nsTArray<ColorStop>& aStops) {
 
 namespace mozilla {
 
-static Maybe<double> GetSpecifiedGradientPosition(const nsStyleCoord& aCoord,
-                                                  int32_t aAppUnitsPerPixel,
-                                                  gfxFloat aLineLength) {
-  auto GetCoord = [&](nscoord aCoord) -> double {
+static Color GetSpecifiedColor(const StyleGradientItem& aItem,
+                               const ComputedStyle& aStyle) {
+  if (aItem.IsInterpolationHint()) {
+    return Color();
+  }
+  const StyleColor& color = aItem.IsSimpleColorStop()
+                                ? aItem.AsSimpleColorStop()
+                                : aItem.AsComplexColorStop().color;
+  return Color::FromABGR(color.CalcColor(aStyle));
+}
+
+static Maybe<double> GetSpecifiedGradientPosition(
+    const StyleGradientItem& aItem, int32_t aAppUnitsPerPixel,
+    gfxFloat aLineLength) {
+  auto GetCoord = [&](CSSCoord aCoord) -> double {
     if (aLineLength < 1e-6) {
       return 0.0;
     }
-    return NSAppUnitsToFloatPixels(aCoord, aAppUnitsPerPixel) / aLineLength;
+    return NSAppUnitsToFloatPixels(CSSPixel::ToAppUnits(aCoord),
+                                   aAppUnitsPerPixel) /
+           aLineLength;
   };
 
-  switch (aCoord.GetUnit()) {
-    case eStyleUnit_None:
-      return Nothing();
-    case eStyleUnit_Percent:
-      return Some(aCoord.GetPercentValue());
-    case eStyleUnit_Coord:
-      return Some(GetCoord(aCoord.GetCoordValue()));
-    case eStyleUnit_Calc: {
-      const nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
-      return Some(calc->mPercent + GetCoord(calc->mLength));
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown unit in gradient color stop position?");
-      return Nothing();
+  if (aItem.IsSimpleColorStop()) {
+    return Nothing();
   }
+
+  const LengthPercentage& pos = aItem.IsComplexColorStop()
+                                    ? aItem.AsComplexColorStop().position
+                                    : aItem.AsInterpolationHint();
+
+  if (pos.ConvertsToPercentage()) {
+    return Some(pos.ToPercentage());
+  }
+
+  return Some(pos.Percentage() + GetCoord(pos.LengthInCSSPixels()));
 }
 
 static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
@@ -559,11 +570,11 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
   // it's -1.
   int32_t firstUnsetPosition = -1;
   for (uint32_t i = 0; i < aGradient.mStops.Length(); ++i) {
-    const nsStyleGradientStop& stop = aGradient.mStops[i];
+    const StyleGradientItem& stop = aGradient.mStops[i];
     double position;
 
-    Maybe<double> specifiedPosition = GetSpecifiedGradientPosition(
-        stop.mLocation, aAppUnitsPerPixel, aLineLength);
+    Maybe<double> specifiedPosition =
+        GetSpecifiedGradientPosition(stop, aAppUnitsPerPixel, aLineLength);
 
     if (specifiedPosition) {
       position = *specifiedPosition;
@@ -581,9 +592,10 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
       if (firstUnsetPosition < 0) {
         firstUnsetPosition = i;
       }
-      auto stopColor = stop.mColor.CalcColor(*aComputedStyle);
-      stops.AppendElement(
-          ColorStop(0, stop.mIsInterpolationHint, Color::FromABGR(stopColor)));
+      MOZ_ASSERT(!stop.IsInterpolationHint(),
+                 "Interpolation hints always specify position");
+      auto color = GetSpecifiedColor(stop, *aComputedStyle);
+      stops.AppendElement(ColorStop(0, false, color));
       continue;
     }
 
@@ -595,9 +607,9 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
                                     : stops[i - 1].mPosition;
       position = std::max(position, previousPosition);
     }
-    auto stopColor = stop.mColor.CalcColor(*aComputedStyle);
-    stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
-                                  Color::FromABGR(stopColor)));
+    auto stopColor = GetSpecifiedColor(stop, *aComputedStyle);
+    stops.AppendElement(
+        ColorStop(position, stop.IsInterpolationHint(), stopColor));
     if (firstUnsetPosition > 0) {
       // Interpolate positions for all stops that didn't have a specified
       // position

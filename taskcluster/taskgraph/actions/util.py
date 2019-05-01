@@ -17,7 +17,7 @@ from six import text_type
 from requests.exceptions import HTTPError
 
 from taskgraph import create
-from taskgraph.decision import read_artifact, write_artifact
+from taskgraph.decision import read_artifact, write_artifact, rename_artifact
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.optimize import optimize_task_graph
 from taskgraph.util.taskcluster import (
@@ -169,16 +169,44 @@ def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
     return label_to_taskid
 
 
+def _update_reducer(accumulator, new_value):
+    "similar to set or dict `update` method, but returning the modified object"
+    accumulator.update(new_value)
+    return accumulator
+
+
 def combine_task_graph_files(suffixes):
     """Combine task-graph-{suffix}.json files into a single task-graph.json file.
 
     Since Chain of Trust verification requires a task-graph.json file that
     contains all children tasks, we can combine the various task-graph-0.json
-    type files into a master task-graph.json file at the end."""
-    all = {}
-    for suffix in suffixes:
-        all.update(read_artifact('task-graph-{}.json'.format(suffix)))
-    write_artifact('task-graph.json', all)
+    type files into a master task-graph.json file at the end.
+
+    Actions also look for various artifacts, so we combine those in a similar
+    fashion.
+
+    In the case where there is only one suffix, we simply rename it to avoid the
+    additional cost of uploading two copies of the same data.
+    """
+
+    if len(suffixes) == 1:
+        for filename in ['task-graph', 'label-to-taskid', 'to-run']:
+            rename_artifact(
+                "{}-{}.json".format(filename, suffixes[0]),
+                "{}.json".format(filename))
+        return
+
+    def combine(file_contents, base):
+        return reduce(_update_reducer, file_contents, base)
+
+    files = [read_artifact("task-graph-{}.json".format(suffix)) for suffix in suffixes]
+    write_artifact("task-graph.json", combine(files, dict()))
+
+    files = [read_artifact("label-to-taskid-{}.json".format(suffix)) for suffix in suffixes]
+    write_artifact("label-to-taskid.json", combine(files, dict()))
+
+    files = [read_artifact("to-run-{}.json".format(suffix)) for suffix in suffixes]
+    write_artifact("to-run.json", list(combine(files, set())))
 
 
 def relativize_datestamps(task_def):

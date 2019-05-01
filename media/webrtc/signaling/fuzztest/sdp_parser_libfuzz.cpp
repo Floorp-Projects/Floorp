@@ -17,10 +17,10 @@ using namespace mozilla;
 static mozilla::UniquePtr<Sdp> sdpPtr;
 static SipccSdpParser mParser;
 
-int FuzzingInitSdpParser(int *argc, char ***argv) { return 0; }
+int FuzzingInitSdpParser(int* argc, char*** argv) { return 0; }
 
-static int RunSdpParserFuzzing(const uint8_t *data, size_t size) {
-  std::string message(reinterpret_cast<const char *>(data), size);
+static int RunSdpParserFuzzing(const uint8_t* data, size_t size) {
+  std::string message(reinterpret_cast<const char*>(data), size);
 
   sdpPtr = mParser.Parse(message);
 

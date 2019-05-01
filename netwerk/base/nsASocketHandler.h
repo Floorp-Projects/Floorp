@@ -52,7 +52,7 @@ class nsASocketHandler : public nsISupports {
   //   outFlags  - value of PR_PollDesc::out_flags after PR_Poll returns
   //               or -1 if a timeout occurred
   //
-  virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags) = 0;
+  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) = 0;
 
   //
   // called when a socket is no longer under the control of the socket
@@ -60,21 +60,21 @@ class nsASocketHandler : public nsISupports {
   // point.  after this call returns, the handler will no longer be owned
   // by the socket transport service.
   //
-  virtual void OnSocketDetached(PRFileDesc *fd) = 0;
+  virtual void OnSocketDetached(PRFileDesc* fd) = 0;
 
   //
   // called to determine if the socket is for a local peer.
   // when used for server sockets, indicates if it only accepts local
   // connections.
   //
-  virtual void IsLocal(bool *aIsLocal) = 0;
+  virtual void IsLocal(bool* aIsLocal) = 0;
 
   //
   // called to determine if this socket should not be terminated when Gecko
   // is turned offline. This is mostly useful for the debugging server
   // socket.
   //
-  virtual void KeepWhenOffline(bool *aKeepWhenOffline) {
+  virtual void KeepWhenOffline(bool* aKeepWhenOffline) {
     *aKeepWhenOffline = false;
   }
 

@@ -59,7 +59,7 @@ void AltDataOutputStreamChild::ReleaseIPDLReference() {
 }
 
 bool AltDataOutputStreamChild::WriteDataInChunks(
-    const nsDependentCSubstring &data) {
+    const nsDependentCSubstring& data) {
   const uint32_t kChunkSize = 128 * 1024;
   uint32_t next = std::min(data.Length(), kChunkSize);
   for (uint32_t i = 0; i < data.Length();
@@ -90,8 +90,8 @@ AltDataOutputStreamChild::Flush() {
 }
 
 NS_IMETHODIMP
-AltDataOutputStreamChild::Write(const char *aBuf, uint32_t aCount,
-                                uint32_t *_retval) {
+AltDataOutputStreamChild::Write(const char* aBuf, uint32_t aCount,
+                                uint32_t* _retval) {
   if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -106,26 +106,26 @@ AltDataOutputStreamChild::Write(const char *aBuf, uint32_t aCount,
 }
 
 NS_IMETHODIMP
-AltDataOutputStreamChild::WriteFrom(nsIInputStream *aFromStream,
-                                    uint32_t aCount, uint32_t *_retval) {
+AltDataOutputStreamChild::WriteFrom(nsIInputStream* aFromStream,
+                                    uint32_t aCount, uint32_t* _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 AltDataOutputStreamChild::WriteSegments(nsReadSegmentFun aReader,
-                                        void *aClosure, uint32_t aCount,
-                                        uint32_t *_retval) {
+                                        void* aClosure, uint32_t aCount,
+                                        uint32_t* _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-AltDataOutputStreamChild::IsNonBlocking(bool *_retval) {
+AltDataOutputStreamChild::IsNonBlocking(bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
 
 mozilla::ipc::IPCResult AltDataOutputStreamChild::RecvError(
-    const nsresult &err) {
+    const nsresult& err) {
   mError = err;
   return IPC_OK();
 }
@@ -151,9 +151,9 @@ AltDataOutputStreamChild::CloseWithStatus(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
-AltDataOutputStreamChild::AsyncWait(nsIOutputStreamCallback *aCallback,
+AltDataOutputStreamChild::AsyncWait(nsIOutputStreamCallback* aCallback,
                                     uint32_t aFlags, uint32_t aRequestedCount,
-                                    nsIEventTarget *aEventTarget) {
+                                    nsIEventTarget* aEventTarget) {
   mCallback = aCallback;
   mCallbackFlags = aFlags;
   mCallbackTarget = aEventTarget;

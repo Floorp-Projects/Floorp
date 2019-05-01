@@ -44,9 +44,9 @@ class nsSyncLoader : public nsIStreamListener,
 
   NS_DECL_ISUPPORTS
 
-  nsresult LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
+  nsresult LoadDocument(nsIChannel* aChannel, bool aChannelIsSync,
                         bool aForceToXML, ReferrerPolicy aReferrerPolicy,
-                        Document **aResult);
+                        Document** aResult);
 
   NS_FORWARD_NSISTREAMLISTENER(mListener->)
   NS_DECL_NSIREQUESTOBSERVER
@@ -58,8 +58,8 @@ class nsSyncLoader : public nsIStreamListener,
  private:
   virtual ~nsSyncLoader();
 
-  nsresult PushAsyncStream(nsIStreamListener *aListener);
-  nsresult PushSyncStream(nsIStreamListener *aListener);
+  nsresult PushAsyncStream(nsIStreamListener* aListener);
+  nsresult PushSyncStream(nsIStreamListener* aListener);
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mListener;
@@ -71,7 +71,7 @@ class nsForceXMLListener : public nsIStreamListener {
   virtual ~nsForceXMLListener();
 
  public:
-  explicit nsForceXMLListener(nsIStreamListener *aListener);
+  explicit nsForceXMLListener(nsIStreamListener* aListener);
 
   NS_DECL_ISUPPORTS
   NS_FORWARD_NSISTREAMLISTENER(mListener->)
@@ -81,7 +81,7 @@ class nsForceXMLListener : public nsIStreamListener {
   nsCOMPtr<nsIStreamListener> mListener;
 };
 
-nsForceXMLListener::nsForceXMLListener(nsIStreamListener *aListener)
+nsForceXMLListener::nsForceXMLListener(nsIStreamListener* aListener)
     : mListener(aListener) {}
 
 nsForceXMLListener::~nsForceXMLListener() {}
@@ -89,7 +89,7 @@ nsForceXMLListener::~nsForceXMLListener() {}
 NS_IMPL_ISUPPORTS(nsForceXMLListener, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
+nsForceXMLListener::OnStartRequest(nsIRequest* aRequest) {
   nsresult status;
   aRequest->GetStatus(&status);
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -101,7 +101,7 @@ nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
+nsForceXMLListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   return mListener->OnStopRequest(aRequest, aStatusCode);
 }
 
@@ -115,10 +115,10 @@ NS_IMPL_ISUPPORTS(nsSyncLoader, nsIStreamListener, nsIRequestObserver,
                   nsIChannelEventSink, nsIInterfaceRequestor,
                   nsISupportsWeakReference)
 
-nsresult nsSyncLoader::LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
+nsresult nsSyncLoader::LoadDocument(nsIChannel* aChannel, bool aChannelIsSync,
                                     bool aForceToXML,
                                     ReferrerPolicy aReferrerPolicy,
-                                    Document **aResult) {
+                                    Document** aResult) {
   NS_ENSURE_ARG(aChannel);
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;
@@ -195,7 +195,7 @@ nsresult nsSyncLoader::LoadDocument(nsIChannel *aChannel, bool aChannelIsSync,
   return NS_OK;
 }
 
-nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener *aListener) {
+nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener) {
   mListener = aListener;
 
   mAsyncLoadStatus = NS_OK;
@@ -206,7 +206,7 @@ nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener *aListener) {
   if (NS_SUCCEEDED(rv)) {
     // process events until we're finished.
     mLoading = true;
-    nsIThread *thread = NS_GetCurrentThread();
+    nsIThread* thread = NS_GetCurrentThread();
     while (mLoading && NS_SUCCEEDED(rv)) {
       bool processedEvent;
       rv = thread->ProcessNextEvent(true, &processedEvent);
@@ -224,7 +224,7 @@ nsresult nsSyncLoader::PushAsyncStream(nsIStreamListener *aListener) {
   return mAsyncLoadStatus;
 }
 
-nsresult nsSyncLoader::PushSyncStream(nsIStreamListener *aListener) {
+nsresult nsSyncLoader::PushSyncStream(nsIStreamListener* aListener) {
   nsCOMPtr<nsIInputStream> in;
   nsresult rv = mChannel->Open(getter_AddRefs(in));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -238,12 +238,12 @@ nsresult nsSyncLoader::PushSyncStream(nsIStreamListener *aListener) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStartRequest(nsIRequest *aRequest) {
+nsSyncLoader::OnStartRequest(nsIRequest* aRequest) {
   return mListener->OnStartRequest(aRequest);
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
+nsSyncLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(aStatusCode)) {
     mAsyncLoadStatus = aStatusCode;
   }
@@ -257,9 +257,9 @@ nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
-                                     nsIChannel *aNewChannel, uint32_t aFlags,
-                                     nsIAsyncVerifyRedirectCallback *callback) {
+nsSyncLoader::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                     nsIChannel* aNewChannel, uint32_t aFlags,
+                                     nsIAsyncVerifyRedirectCallback* callback) {
   MOZ_ASSERT(aNewChannel, "Redirecting to null channel?");
 
   mChannel = aNewChannel;
@@ -269,16 +269,16 @@ nsSyncLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 }
 
 NS_IMETHODIMP
-nsSyncLoader::GetInterface(const nsIID &aIID, void **aResult) {
+nsSyncLoader::GetInterface(const nsIID& aIID, void** aResult) {
   return QueryInterface(aIID, aResult);
 }
 
 /* static */
 nsresult nsSyncLoadService::LoadDocument(
-    nsIURI *aURI, nsContentPolicyType aContentPolicyType,
-    nsIPrincipal *aLoaderPrincipal, nsSecurityFlags aSecurityFlags,
-    nsILoadGroup *aLoadGroup, nsICookieSettings *aCookieSettings,
-    bool aForceToXML, ReferrerPolicy aReferrerPolicy, Document **aResult) {
+    nsIURI* aURI, nsContentPolicyType aContentPolicyType,
+    nsIPrincipal* aLoaderPrincipal, nsSecurityFlags aSecurityFlags,
+    nsILoadGroup* aLoadGroup, nsICookieSettings* aCookieSettings,
+    bool aForceToXML, ReferrerPolicy aReferrerPolicy, Document** aResult) {
   nsCOMPtr<nsIChannel> channel;
   nsresult rv =
       NS_NewChannel(getter_AddRefs(channel), aURI, aLoaderPrincipal,
@@ -304,8 +304,8 @@ nsresult nsSyncLoadService::LoadDocument(
 
 /* static */
 nsresult nsSyncLoadService::PushSyncStreamToListener(
-    already_AddRefed<nsIInputStream> aIn, nsIStreamListener *aListener,
-    nsIChannel *aChannel) {
+    already_AddRefed<nsIInputStream> aIn, nsIStreamListener* aListener,
+    nsIChannel* aChannel) {
   nsCOMPtr<nsIInputStream> in = std::move(aIn);
 
   // Set up buffering stream

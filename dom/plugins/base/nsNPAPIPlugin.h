@@ -27,13 +27,13 @@ class nsNPAPIPlugin final {
 
   // Constructs and initializes an nsNPAPIPlugin object. A nullptr file path
   // will prevent this from calling NP_Initialize.
-  static nsresult CreatePlugin(nsPluginTag *aPluginTag,
-                               nsNPAPIPlugin **aResult);
+  static nsresult CreatePlugin(nsPluginTag* aPluginTag,
+                               nsNPAPIPlugin** aResult);
 
-  PluginLibrary *GetLibrary();
+  PluginLibrary* GetLibrary();
   // PluginFuncs() can't fail but results are only valid if GetLibrary()
   // succeeds
-  NPPluginFuncs *PluginFuncs();
+  NPPluginFuncs* PluginFuncs();
 
 #if defined(XP_MACOSX) && !defined(__LP64__)
   void SetPluginRefNum(short aRefNum);
@@ -43,18 +43,18 @@ class nsNPAPIPlugin final {
   // crashes and is no longer usable. pluginDumpID/browserDumpID are
   // the IDs of respective minidumps that were written, or empty if no
   // minidump was written.
-  void PluginCrashed(const nsAString &pluginDumpID,
-                     const nsAString &browserDumpID);
+  void PluginCrashed(const nsAString& pluginDumpID,
+                     const nsAString& browserDumpID);
 
   nsresult Shutdown();
 
-  static nsresult RetainStream(NPStream *pstream, nsISupports **aRetainedPeer);
+  static nsresult RetainStream(NPStream* pstream, nsISupports** aRetainedPeer);
 
  private:
   ~nsNPAPIPlugin();
 
   NPPluginFuncs mPluginFuncs;
-  PluginLibrary *mLibrary;
+  PluginLibrary* mLibrary;
 };
 
 namespace mozilla {
@@ -78,11 +78,11 @@ inline bool NPIdentifierIsString(NPIdentifier id) {
   return JSID_IS_STRING(NPIdentifierToJSId(id));
 }
 
-inline JSString *NPIdentifierToString(NPIdentifier id) {
+inline JSString* NPIdentifierToString(NPIdentifier id) {
   return JSID_TO_STRING(NPIdentifierToJSId(id));
 }
 
-inline NPIdentifier StringToNPIdentifier(JSContext *cx, JSString *str) {
+inline NPIdentifier StringToNPIdentifier(JSContext* cx, JSString* str) {
   return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(cx, str));
 }
 
@@ -98,7 +98,7 @@ inline NPIdentifier IntToNPIdentifier(int i) {
   return JSIdToNPIdentifier(INT_TO_JSID(i));
 }
 
-JSContext *GetJSContext(NPP npp);
+JSContext* GetJSContext(NPP npp);
 
 inline bool NPStringIdentifierIsPermanent(NPIdentifier id) {
   AutoSafeJSContext cx;
@@ -107,68 +107,68 @@ inline bool NPStringIdentifierIsPermanent(NPIdentifier id) {
 
 #define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))
 
-NPObject *_getwindowobject(NPP npp);
+NPObject* _getwindowobject(NPP npp);
 
-NPObject *_getpluginelement(NPP npp);
+NPObject* _getpluginelement(NPP npp);
 
-NPIdentifier _getstringidentifier(const NPUTF8 *name);
+NPIdentifier _getstringidentifier(const NPUTF8* name);
 
-void _getstringidentifiers(const NPUTF8 **names, int32_t nameCount,
-                           NPIdentifier *identifiers);
+void _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
+                           NPIdentifier* identifiers);
 
 bool _identifierisstring(NPIdentifier identifiers);
 
 NPIdentifier _getintidentifier(int32_t intid);
 
-NPUTF8 *_utf8fromidentifier(NPIdentifier identifier);
+NPUTF8* _utf8fromidentifier(NPIdentifier identifier);
 
 int32_t _intfromidentifier(NPIdentifier identifier);
 
-NPObject *_createobject(NPP npp, NPClass *aClass);
+NPObject* _createobject(NPP npp, NPClass* aClass);
 
-NPObject *_retainobject(NPObject *npobj);
+NPObject* _retainobject(NPObject* npobj);
 
-void _releaseobject(NPObject *npobj);
+void _releaseobject(NPObject* npobj);
 
-bool _invoke(NPP npp, NPObject *npobj, NPIdentifier method,
-             const NPVariant *args, uint32_t argCount, NPVariant *result);
+bool _invoke(NPP npp, NPObject* npobj, NPIdentifier method,
+             const NPVariant* args, uint32_t argCount, NPVariant* result);
 
-bool _invokeDefault(NPP npp, NPObject *npobj, const NPVariant *args,
-                    uint32_t argCount, NPVariant *result);
+bool _invokeDefault(NPP npp, NPObject* npobj, const NPVariant* args,
+                    uint32_t argCount, NPVariant* result);
 
-bool _evaluate(NPP npp, NPObject *npobj, NPString *script, NPVariant *result);
+bool _evaluate(NPP npp, NPObject* npobj, NPString* script, NPVariant* result);
 
-bool _getproperty(NPP npp, NPObject *npobj, NPIdentifier property,
-                  NPVariant *result);
+bool _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
+                  NPVariant* result);
 
-bool _setproperty(NPP npp, NPObject *npobj, NPIdentifier property,
-                  const NPVariant *value);
+bool _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
+                  const NPVariant* value);
 
-bool _removeproperty(NPP npp, NPObject *npobj, NPIdentifier property);
+bool _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property);
 
-bool _hasproperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
+bool _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName);
 
-bool _hasmethod(NPP npp, NPObject *npobj, NPIdentifier methodName);
+bool _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName);
 
-bool _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
-                uint32_t *count);
+bool _enumerate(NPP npp, NPObject* npobj, NPIdentifier** identifier,
+                uint32_t* count);
 
-bool _construct(NPP npp, NPObject *npobj, const NPVariant *args,
-                uint32_t argCount, NPVariant *result);
+bool _construct(NPP npp, NPObject* npobj, const NPVariant* args,
+                uint32_t argCount, NPVariant* result);
 
-void _releasevariantvalue(NPVariant *variant);
+void _releasevariantvalue(NPVariant* variant);
 
-void _setexception(NPObject *npobj, const NPUTF8 *message);
+void _setexception(NPObject* npobj, const NPUTF8* message);
 
 void _pushpopupsenabledstate(NPP npp, NPBool enabled);
 
 void _poppopupsenabledstate(NPP npp);
 
-NPError _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
-                        char **value, uint32_t *len);
+NPError _getvalueforurl(NPP instance, NPNURLVariable variable, const char* url,
+                        char** value, uint32_t* len);
 
-NPError _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
-                        const char *value, uint32_t len);
+NPError _setvalueforurl(NPP instance, NPNURLVariable variable, const char* url,
+                        const char* value, uint32_t len);
 
 typedef void (*PluginTimerFunc)(NPP npp, uint32_t timerID);
 
@@ -177,70 +177,70 @@ uint32_t _scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
 
 void _unscheduletimer(NPP instance, uint32_t timerID);
 
-NPError _popupcontextmenu(NPP instance, NPMenu *menu);
+NPError _popupcontextmenu(NPP instance, NPMenu* menu);
 
 NPBool _convertpoint(NPP instance, double sourceX, double sourceY,
-                     NPCoordinateSpace sourceSpace, double *destX,
-                     double *destY, NPCoordinateSpace destSpace);
+                     NPCoordinateSpace sourceSpace, double* destX,
+                     double* destY, NPCoordinateSpace destSpace);
 
-NPError _requestread(NPStream *pstream, NPByteRange *rangeList);
+NPError _requestread(NPStream* pstream, NPByteRange* rangeList);
 
-NPError _geturlnotify(NPP npp, const char *relativeURL, const char *target,
-                      void *notifyData);
+NPError _geturlnotify(NPP npp, const char* relativeURL, const char* target,
+                      void* notifyData);
 
-NPError _getvalue(NPP npp, NPNVariable variable, void *r_value);
+NPError _getvalue(NPP npp, NPNVariable variable, void* r_value);
 
-NPError _setvalue(NPP npp, NPPVariable variable, void *r_value);
+NPError _setvalue(NPP npp, NPPVariable variable, void* r_value);
 
-NPError _geturl(NPP npp, const char *relativeURL, const char *target);
+NPError _geturl(NPP npp, const char* relativeURL, const char* target);
 
-NPError _posturlnotify(NPP npp, const char *relativeURL, const char *target,
-                       uint32_t len, const char *buf, NPBool file,
-                       void *notifyData);
+NPError _posturlnotify(NPP npp, const char* relativeURL, const char* target,
+                       uint32_t len, const char* buf, NPBool file,
+                       void* notifyData);
 
-NPError _posturl(NPP npp, const char *relativeURL, const char *target,
-                 uint32_t len, const char *buf, NPBool file);
+NPError _posturl(NPP npp, const char* relativeURL, const char* target,
+                 uint32_t len, const char* buf, NPBool file);
 
-void _status(NPP npp, const char *message);
+void _status(NPP npp, const char* message);
 
-void _memfree(void *ptr);
+void _memfree(void* ptr);
 
 uint32_t _memflush(uint32_t size);
 
 void _reloadplugins(NPBool reloadPages);
 
-void _invalidaterect(NPP npp, NPRect *invalidRect);
+void _invalidaterect(NPP npp, NPRect* invalidRect);
 
 void _invalidateregion(NPP npp, NPRegion invalidRegion);
 
 void _forceredraw(NPP npp);
 
-const char *_useragent(NPP npp);
+const char* _useragent(NPP npp);
 
-void *_memalloc(uint32_t size);
+void* _memalloc(uint32_t size);
 
 // Deprecated entry points for the old Java plugin.
-void * /* OJI type: JRIEnv* */
+void* /* OJI type: JRIEnv* */
 _getJavaEnv();
 
-void * /* OJI type: jref */
+void* /* OJI type: jref */
 _getJavaPeer(NPP npp);
 
-void _urlredirectresponse(NPP instance, void *notifyData, NPBool allow);
+void _urlredirectresponse(NPP instance, void* notifyData, NPBool allow);
 
-NPError _initasyncsurface(NPP instance, NPSize *size, NPImageFormat format,
-                          void *initData, NPAsyncSurface *surface);
+NPError _initasyncsurface(NPP instance, NPSize* size, NPImageFormat format,
+                          void* initData, NPAsyncSurface* surface);
 
-NPError _finalizeasyncsurface(NPP instance, NPAsyncSurface *surface);
+NPError _finalizeasyncsurface(NPP instance, NPAsyncSurface* surface);
 
-void _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface,
-                             NPRect *changed);
+void _setcurrentasyncsurface(NPP instance, NPAsyncSurface* surface,
+                             NPRect* changed);
 
 } /* namespace parent */
 } /* namespace plugins */
 } /* namespace mozilla */
 
-const char *PeekException();
+const char* PeekException();
 
 void PopException();
 
@@ -283,7 +283,7 @@ class NPPExceptionAutoHolder {
   ~NPPExceptionAutoHolder();
 
  protected:
-  char *mOldException;
+  char* mOldException;
 };
 
 #endif  // nsNPAPIPlugin_h_

@@ -25,35 +25,35 @@ using namespace mozilla;
  */
 NS_IMPL_ISUPPORTS(nsZipHeader, nsIZipEntry)
 
-NS_IMETHODIMP nsZipHeader::GetCompression(uint16_t *aCompression) {
+NS_IMETHODIMP nsZipHeader::GetCompression(uint16_t* aCompression) {
   NS_ASSERTION(mInited, "Not initalised");
 
   *aCompression = mMethod;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetSize(uint32_t *aSize) {
+NS_IMETHODIMP nsZipHeader::GetSize(uint32_t* aSize) {
   NS_ASSERTION(mInited, "Not initalised");
 
   *aSize = mCSize;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetRealSize(uint32_t *aRealSize) {
+NS_IMETHODIMP nsZipHeader::GetRealSize(uint32_t* aRealSize) {
   NS_ASSERTION(mInited, "Not initalised");
 
   *aRealSize = mUSize;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetCRC32(uint32_t *aCRC32) {
+NS_IMETHODIMP nsZipHeader::GetCRC32(uint32_t* aCRC32) {
   NS_ASSERTION(mInited, "Not initalised");
 
   *aCRC32 = mCRC;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory) {
+NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool* aIsDirectory) {
   NS_ASSERTION(mInited, "Not initalised");
 
   if (mName.Last() == '/')
@@ -63,12 +63,12 @@ NS_IMETHODIMP nsZipHeader::GetIsDirectory(bool *aIsDirectory) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime) {
+NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime* aLastModifiedTime) {
   NS_ASSERTION(mInited, "Not initalised");
 
   // Try to read timestamp from extra field
   uint16_t blocksize;
-  const uint8_t *tsField =
+  const uint8_t* tsField =
       GetExtraField(ZIP_EXTENDED_TIMESTAMP_FIELD, false, &blocksize);
   if (tsField && blocksize >= 5) {
     uint32_t pos = 4;
@@ -108,14 +108,14 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic) {
+NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool* aIsSynthetic) {
   NS_ASSERTION(mInited, "Not initalised");
 
   *aIsSynthetic = false;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t *aPermissions) {
+NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t* aPermissions) {
   NS_ASSERTION(mInited, "Not initalised");
 
   // Always give user read access at least, this matches nsIZipReader's
@@ -124,7 +124,7 @@ NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t *aPermissions) {
   return NS_OK;
 }
 
-void nsZipHeader::Init(const nsACString &aPath, PRTime aDate, uint32_t aAttr,
+void nsZipHeader::Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
                        uint32_t aOffset) {
   NS_ASSERTION(!mInited, "Already initalised");
 
@@ -169,7 +169,7 @@ uint32_t nsZipHeader::GetFileHeaderLength() {
   return ZIP_FILE_HEADER_SIZE + mName.Length() + mLocalFieldLength;
 }
 
-nsresult nsZipHeader::WriteFileHeader(nsIOutputStream *aStream) {
+nsresult nsZipHeader::WriteFileHeader(nsIOutputStream* aStream) {
   NS_ASSERTION(mInited, "Not initalised");
 
   uint8_t buf[ZIP_FILE_HEADER_SIZE];
@@ -186,14 +186,14 @@ nsresult nsZipHeader::WriteFileHeader(nsIOutputStream *aStream) {
   WRITE16(buf, &pos, mName.Length());
   WRITE16(buf, &pos, mLocalFieldLength);
 
-  nsresult rv = ZW_WriteData(aStream, (const char *)buf, pos);
+  nsresult rv = ZW_WriteData(aStream, (const char*)buf, pos);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ZW_WriteData(aStream, mName.get(), mName.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mLocalFieldLength) {
-    rv = ZW_WriteData(aStream, (const char *)mLocalExtraField.get(),
+    rv = ZW_WriteData(aStream, (const char*)mLocalExtraField.get(),
                       mLocalFieldLength);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -206,7 +206,7 @@ uint32_t nsZipHeader::GetCDSHeaderLength() {
          mFieldLength;
 }
 
-nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream *aStream) {
+nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream* aStream) {
   NS_ASSERTION(mInited, "Not initalised");
 
   uint8_t buf[ZIP_CDS_HEADER_SIZE];
@@ -229,24 +229,24 @@ nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream *aStream) {
   WRITE32(buf, &pos, mEAttr);
   WRITE32(buf, &pos, mOffset);
 
-  nsresult rv = ZW_WriteData(aStream, (const char *)buf, pos);
+  nsresult rv = ZW_WriteData(aStream, (const char*)buf, pos);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ZW_WriteData(aStream, mName.get(), mName.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   if (mExtraField) {
-    rv = ZW_WriteData(aStream, (const char *)mExtraField.get(), mFieldLength);
+    rv = ZW_WriteData(aStream, (const char*)mExtraField.get(), mFieldLength);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return ZW_WriteData(aStream, mComment.get(), mComment.Length());
 }
 
-nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream) {
+nsresult nsZipHeader::ReadCDSHeader(nsIInputStream* stream) {
   NS_ASSERTION(!mInited, "Already initalised");
 
   uint8_t buf[ZIP_CDS_HEADER_SIZE];
 
-  nsresult rv = ZW_ReadData(stream, (char *)buf, ZIP_CDS_HEADER_SIZE);
+  nsresult rv = ZW_ReadData(stream, (char*)buf, ZIP_CDS_HEADER_SIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t pos = 0;
@@ -282,7 +282,7 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream) {
   if (mFieldLength > 0) {
     mExtraField = MakeUnique<uint8_t[]>(mFieldLength);
     NS_ENSURE_TRUE(mExtraField, NS_ERROR_OUT_OF_MEMORY);
-    rv = ZW_ReadData(stream, (char *)mExtraField.get(), mFieldLength);
+    rv = ZW_ReadData(stream, (char*)mExtraField.get(), mFieldLength);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -299,9 +299,9 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream) {
   return NS_OK;
 }
 
-const uint8_t *nsZipHeader::GetExtraField(uint16_t aTag, bool aLocal,
-                                          uint16_t *aBlockSize) {
-  const uint8_t *buf = aLocal ? mLocalExtraField.get() : mExtraField.get();
+const uint8_t* nsZipHeader::GetExtraField(uint16_t aTag, bool aLocal,
+                                          uint16_t* aBlockSize) {
+  const uint8_t* buf = aLocal ? mLocalExtraField.get() : mExtraField.get();
   uint32_t buflen = aLocal ? mLocalFieldLength : mFieldLength;
   uint32_t pos = 0;
   uint16_t tag, blocksize;

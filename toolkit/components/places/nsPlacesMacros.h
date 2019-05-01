@@ -19,7 +19,7 @@
   PR_BEGIN_MACRO                                                   \
   if (canFire) {                                                   \
     for (uint32_t idx = 0; idx < array.Length(); ++idx) {          \
-      const nsCOMPtr<nsINavBookmarkObserver> &e =                  \
+      const nsCOMPtr<nsINavBookmarkObserver>& e =                  \
           array.ElementAt(idx).GetValue();                         \
       if (e) {                                                     \
         if (skipIf(e)) continue;                                   \
@@ -30,7 +30,7 @@
   PR_END_MACRO;
 
 #define PLACES_FACTORY_SINGLETON_IMPLEMENTATION(_className, _sInstance)     \
-  _className *_className::_sInstance = nullptr;                             \
+  _className* _className::_sInstance = nullptr;                             \
                                                                             \
   already_AddRefed<_className> _className::GetSingleton() {                 \
     if (_sInstance) {                                                       \

@@ -53,7 +53,7 @@ PowerManagerService::~PowerManagerService() {
 }
 
 void PowerManagerService::ComputeWakeLockState(
-    const WakeLockInformation &aWakeLockInfo, nsAString &aState) {
+    const WakeLockInformation& aWakeLockInfo, nsAString& aState) {
   WakeLockState state = hal::ComputeWakeLockState(aWakeLockInfo.numLocks(),
                                                   aWakeLockInfo.numHidden());
   switch (state) {
@@ -69,7 +69,7 @@ void PowerManagerService::ComputeWakeLockState(
   }
 }
 
-void PowerManagerService::Notify(const WakeLockInformation &aWakeLockInfo) {
+void PowerManagerService::Notify(const WakeLockInformation& aWakeLockInfo) {
   nsAutoString state;
   ComputeWakeLockState(aWakeLockInfo, state);
 
@@ -87,7 +87,7 @@ void PowerManagerService::Notify(const WakeLockInformation &aWakeLockInfo) {
 }
 
 NS_IMETHODIMP
-PowerManagerService::AddWakeLockListener(nsIDOMMozWakeLockListener *aListener) {
+PowerManagerService::AddWakeLockListener(nsIDOMMozWakeLockListener* aListener) {
   if (mWakeLockListeners.Contains(aListener)) return NS_OK;
 
   mWakeLockListeners.AppendElement(aListener);
@@ -96,14 +96,14 @@ PowerManagerService::AddWakeLockListener(nsIDOMMozWakeLockListener *aListener) {
 
 NS_IMETHODIMP
 PowerManagerService::RemoveWakeLockListener(
-    nsIDOMMozWakeLockListener *aListener) {
+    nsIDOMMozWakeLockListener* aListener) {
   mWakeLockListeners.RemoveElement(aListener);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PowerManagerService::GetWakeLockState(const nsAString &aTopic,
-                                      nsAString &aState) {
+PowerManagerService::GetWakeLockState(const nsAString& aTopic,
+                                      nsAString& aState) {
   WakeLockInformation info;
   GetWakeLockInfo(aTopic, &info);
 
@@ -113,8 +113,8 @@ PowerManagerService::GetWakeLockState(const nsAString &aTopic,
 }
 
 already_AddRefed<WakeLock> PowerManagerService::NewWakeLock(
-    const nsAString &aTopic, nsPIDOMWindowInner *aWindow,
-    mozilla::ErrorResult &aRv) {
+    const nsAString& aTopic, nsPIDOMWindowInner* aWindow,
+    mozilla::ErrorResult& aRv) {
   RefPtr<WakeLock> wakelock = new WakeLock();
   aRv = wakelock->Init(aTopic, aWindow);
   if (aRv.Failed()) {
@@ -125,9 +125,9 @@ already_AddRefed<WakeLock> PowerManagerService::NewWakeLock(
 }
 
 NS_IMETHODIMP
-PowerManagerService::NewWakeLock(const nsAString &aTopic,
-                                 mozIDOMWindow *aWindow,
-                                 nsIWakeLock **aWakeLock) {
+PowerManagerService::NewWakeLock(const nsAString& aTopic,
+                                 mozIDOMWindow* aWindow,
+                                 nsIWakeLock** aWakeLock) {
   mozilla::ErrorResult rv;
   RefPtr<WakeLock> wakelock =
       NewWakeLock(aTopic, nsPIDOMWindowInner::From(aWindow), rv);
@@ -140,7 +140,7 @@ PowerManagerService::NewWakeLock(const nsAString &aTopic,
 }
 
 already_AddRefed<WakeLock> PowerManagerService::NewWakeLockOnBehalfOfProcess(
-    const nsAString &aTopic, ContentParent *aContentParent) {
+    const nsAString& aTopic, ContentParent* aContentParent) {
   RefPtr<WakeLock> wakelock = new WakeLock();
   nsresult rv = wakelock->Init(aTopic, aContentParent);
   NS_ENSURE_SUCCESS(rv, nullptr);

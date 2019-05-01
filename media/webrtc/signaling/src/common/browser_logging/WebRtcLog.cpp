@@ -23,8 +23,8 @@
 using mozilla::LogLevel;
 
 #if defined(ANDROID)
-static const char *default_tmp_dir = "/dev/null";
-static const char *default_log_name = "nspr";
+static const char* default_tmp_dir = "/dev/null";
+static const char* default_log_name = "nspr";
 #else  // Assume a POSIX environment
 NS_NAMED_LITERAL_CSTRING(default_log_name, "WebRTC.log");
 #endif
@@ -37,7 +37,7 @@ class LogSinkImpl : public rtc::LogSink {
   LogSinkImpl() {}
 
  private:
-  void OnLogMessage(const std::string &message) override {
+  void OnLogMessage(const std::string& message) override {
     MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message.data()));
   }
 };
@@ -51,7 +51,7 @@ void GetWebRtcLogPrefs() {
 }
 
 mozilla::LogLevel CheckOverrides() {
-  mozilla::LogModule *log_info = sWebRtcLog;
+  mozilla::LogModule* log_info = sWebRtcLog;
   mozilla::LogLevel log_level = log_info->Level();
 
   log_info = sLogAEC;

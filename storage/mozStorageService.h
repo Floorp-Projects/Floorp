@@ -46,7 +46,7 @@ class Service : public mozIStorageService,
    *         number.  If aStr1 > aStr2, returns a positive number.  If
    *         aStr1 == aStr2, returns 0.
    */
-  int localeCompareStrings(const nsAString &aStr1, const nsAString &aStr2,
+  int localeCompareStrings(const nsAString& aStr1, const nsAString& aStr2,
                            int32_t aComparisonStrength);
 
   static already_AddRefed<Service> getSingleton();
@@ -87,7 +87,7 @@ class Service : public mozIStorageService,
    * @param  aConnection
    *         The connection to register.
    */
-  void registerConnection(Connection *aConnection);
+  void registerConnection(Connection* aConnection);
 
   /**
    * Unregisters the connection with the storage service.
@@ -97,7 +97,7 @@ class Service : public mozIStorageService,
    * @param  aConnection
    *         The connection to unregister.
    */
-  void unregisterConnection(Connection *aConnection);
+  void unregisterConnection(Connection* aConnection);
 
   /**
    * Gets the list of open connections.  Note that you must test each
@@ -111,7 +111,7 @@ class Service : public mozIStorageService,
    *         it.
    * @return The open connections.
    */
-  void getConnections(nsTArray<RefPtr<Connection> > &aConnections);
+  void getConnections(nsTArray<RefPtr<Connection> >& aConnections);
 
  private:
   Service();
@@ -124,7 +124,7 @@ class Service : public mozIStorageService,
    */
   Mutex mMutex;
 
-  sqlite3_vfs *mSqliteVFS;
+  sqlite3_vfs* mSqliteVFS;
 
   /**
    * Protects mConnections.
@@ -150,7 +150,7 @@ class Service : public mozIStorageService,
    * execute outside the lifetime of the Service, this method returns a raw
    * pointer.
    */
-  nsICollation *getLocaleCollation();
+  nsICollation* getLocaleCollation();
 
   /**
    * Lazily created collation that all statements of all Connections of this
@@ -165,7 +165,7 @@ class Service : public mozIStorageService,
 
   nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
 
-  static Service *gService;
+  static Service* gService;
 
   static int32_t sSynchronousPref;
   static int32_t sDefaultPageSize;

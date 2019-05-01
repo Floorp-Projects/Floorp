@@ -45,7 +45,7 @@ class nsConverterInputStream : public nsIConverterInputStream,
  private:
   virtual ~nsConverterInputStream() { Close(); }
 
-  uint32_t Fill(nsresult *aErrorCode);
+  uint32_t Fill(nsresult* aErrorCode);
 
   mozilla::UniquePtr<mozilla::Decoder> mConverter;
   FallibleTArray<char> mByteData;

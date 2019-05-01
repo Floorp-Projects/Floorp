@@ -120,8 +120,8 @@ int likeCompare(nsAString::const_iterator aPatternItr,
  *        an outparam that will receive the edit distance between the arguments
  * @return a Sqlite result code, e.g. SQLITE_OK, SQLITE_NOMEM, etc.
  */
-int levenshteinDistance(const nsAString &aStringS, const nsAString &aStringT,
-                        int *_result) {
+int levenshteinDistance(const nsAString& aStringS, const nsAString& aStringT,
+                        int* _result) {
   // Set the result to a non-sensical value in case we encounter an error.
   *_result = -1;
 
@@ -159,14 +159,14 @@ int levenshteinDistance(const nsAString &aStringS, const nsAString &aStringT,
   AutoTArray<int, nsAutoString::kStorageSize> row2;
 
   // Declare the raw pointers that will actually be used to access the memory.
-  int *prevRow = row1.AppendElements(sLen + 1);
-  int *currRow = row2.AppendElements(sLen + 1);
+  int* prevRow = row1.AppendElements(sLen + 1);
+  int* currRow = row2.AppendElements(sLen + 1);
 
   // Initialize the first row.
   for (uint32_t i = 0; i <= sLen; i++) prevRow[i] = i;
 
-  const char16_t *s = aStringS.BeginReading();
-  const char16_t *t = aStringT.BeginReading();
+  const char16_t* s = aStringS.BeginReading();
+  const char16_t* t = aStringT.BeginReading();
 
   // Compute the empty cells in the "matrix" row-by-row, starting with
   // the second row.
@@ -199,7 +199,7 @@ int levenshteinDistance(const nsAString &aStringS, const nsAString &aStringT,
     // row and we recycle the old previous row as the new current row.
     // We don't need to re-initialize the new current row since we will
     // rewrite all of its cells anyway.
-    int *oldPrevRow = prevRow;
+    int* oldPrevRow = prevRow;
     prevRow = currRow;
     currRow = oldPrevRow;
   }
@@ -213,11 +213,11 @@ int levenshteinDistance(const nsAString &aStringS, const nsAString &aStringT,
 // This struct is used only by registerFunctions below, but ISO C++98 forbids
 // instantiating a template dependent on a locally-defined type.  Boo-urns!
 struct Functions {
-  const char *zName;
+  const char* zName;
   int nArg;
   int enc;
-  void *pContext;
-  void (*xFunc)(::sqlite3_context *, int, sqlite3_value **);
+  void* pContext;
+  void (*xFunc)(::sqlite3_context*, int, sqlite3_value**);
 };
 
 }  // namespace
@@ -225,12 +225,12 @@ struct Functions {
 ////////////////////////////////////////////////////////////////////////////////
 //// Exposed Functions
 
-int registerFunctions(sqlite3 *aDB) {
+int registerFunctions(sqlite3* aDB) {
   Functions functions[] = {
       {"lower", 1, SQLITE_UTF16, 0, caseFunction},
       {"lower", 1, SQLITE_UTF8, 0, caseFunction},
-      {"upper", 1, SQLITE_UTF16, (void *)1, caseFunction},
-      {"upper", 1, SQLITE_UTF8, (void *)1, caseFunction},
+      {"upper", 1, SQLITE_UTF16, (void*)1, caseFunction},
+      {"upper", 1, SQLITE_UTF8, (void*)1, caseFunction},
 
       {"like", 2, SQLITE_UTF16, 0, likeFunction},
       {"like", 2, SQLITE_UTF8, 0, likeFunction},
@@ -246,7 +246,7 @@ int registerFunctions(sqlite3 *aDB) {
 
   int rv = SQLITE_OK;
   for (size_t i = 0; SQLITE_OK == rv && i < ArrayLength(functions); ++i) {
-    struct Functions *p = &functions[i];
+    struct Functions* p = &functions[i];
     rv = ::sqlite3_create_function(aDB, p->zName, p->nArg, p->enc, p->pContext,
                                    p->xFunc, nullptr, nullptr);
   }
@@ -257,11 +257,11 @@ int registerFunctions(sqlite3 *aDB) {
 ////////////////////////////////////////////////////////////////////////////////
 //// SQL Functions
 
-void caseFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
+void caseFunction(sqlite3_context* aCtx, int aArgc, sqlite3_value** aArgv) {
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
-  const char16_t *value =
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  const char16_t* value =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0]));
   nsAutoString data(value,
                     ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t));
   bool toUpper = ::sqlite3_user_data(aCtx) ? true : false;
@@ -281,7 +281,7 @@ void caseFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
  * The SQL statement 'A LIKE B' is implemented as 'like(B, A)', and if there is
  * an escape character, say E, it is implemented as 'like(B, A, E)'.
  */
-void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
+void likeFunction(sqlite3_context* aCtx, int aArgc, sqlite3_value** aArgv) {
   NS_ASSERTION(2 == aArgc || 3 == aArgc, "Invalid number of arguments!");
 
   if (::sqlite3_value_bytes(aArgv[0]) > SQLITE_MAX_LIKE_PATTERN_LENGTH) {
@@ -293,20 +293,20 @@ void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
   if (!::sqlite3_value_text16(aArgv[0]) || !::sqlite3_value_text16(aArgv[1]))
     return;
 
-  const char16_t *a =
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
+  const char16_t* a =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[1]));
   int aLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
   nsDependentString A(a, aLen);
 
-  const char16_t *b =
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  const char16_t* b =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0]));
   int bLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
   nsDependentString B(b, bLen);
   NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
   char16_t E = 0;
   if (3 == aArgc)
-    E = static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[2]))[0];
+    E = static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[2]))[0];
 
   nsAString::const_iterator itrString, endString;
   A.BeginReading(itrString);
@@ -318,8 +318,8 @@ void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
       aCtx, likeCompare(itrPattern, endPattern, itrString, endString, E));
 }
 
-void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
-                                 sqlite3_value **aArgv) {
+void levenshteinDistanceFunction(sqlite3_context* aCtx, int aArgc,
+                                 sqlite3_value** aArgv) {
   NS_ASSERTION(2 == aArgc, "Invalid number of arguments!");
 
   // If either argument is a SQL NULL, then return SQL NULL.
@@ -329,12 +329,12 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
     return;
   }
 
-  const char16_t *a =
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  const char16_t* a =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0]));
   int aLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
 
-  const char16_t *b =
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
+  const char16_t* b =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[1]));
   int bLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
 
   // Compute the Levenshtein Distance, and return the result (or error).
@@ -351,8 +351,8 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
   }
 }
 
-void utf16LengthFunction(sqlite3_context *aCtx, int aArgc,
-                         sqlite3_value **aArgv) {
+void utf16LengthFunction(sqlite3_context* aCtx, int aArgc,
+                         sqlite3_value** aArgv) {
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
   int len = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);

@@ -25,15 +25,15 @@ class CookieServiceParent : public PCookieServiceParent {
   CookieServiceParent();
   virtual ~CookieServiceParent() = default;
 
-  void TrackCookieLoad(nsIChannel *aChannel);
+  void TrackCookieLoad(nsIChannel* aChannel);
 
-  void RemoveBatchDeletedCookies(nsIArray *aCookieList);
+  void RemoveBatchDeletedCookies(nsIArray* aCookieList);
 
   void RemoveAll();
 
-  void RemoveCookie(nsICookie *aCookie);
+  void RemoveCookie(nsICookie* aCookie);
 
-  void AddCookie(nsICookie *aCookie);
+  void AddCookie(nsICookie* aCookie);
 
   // This will return true if the CookieServiceParent is currently processing
   // an update from the content process. This is used in ContentParent to make
@@ -45,23 +45,23 @@ class CookieServiceParent : public PCookieServiceParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvSetCookieString(
-      const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
-      const Maybe<LoadInfoArgs> &aLoadInfoArgs, const bool &aIsForeign,
-      const bool &aIsTrackingResource,
-      const bool &aFirstPartyStorageAccessGranted,
-      const OriginAttributes &aAttrs, const nsCString &aCookieString,
-      const nsCString &aServerTime, const bool &aFromHttp);
+      const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
+      const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
+      const bool& aIsTrackingResource,
+      const bool& aFirstPartyStorageAccessGranted,
+      const OriginAttributes& aAttrs, const nsCString& aCookieString,
+      const nsCString& aServerTime, const bool& aFromHttp);
 
   mozilla::ipc::IPCResult RecvPrepareCookieList(
-      const URIParams &aHost, const bool &aIsForeign,
-      const bool &aIsTrackingResource,
-      const bool &aFirstPartyStorageAccessGranted,
-      const bool &aIsSafeTopLevelNav, const bool &aIsSameSiteForeign,
-      const OriginAttributes &aAttrs);
+      const URIParams& aHost, const bool& aIsForeign,
+      const bool& aIsTrackingResource,
+      const bool& aFirstPartyStorageAccessGranted,
+      const bool& aIsSafeTopLevelNav, const bool& aIsSameSiteForeign,
+      const OriginAttributes& aAttrs);
 
-  void SerialializeCookieList(const nsTArray<nsCookie *> &aFoundCookieList,
-                              nsTArray<CookieStruct> &aCookiesList,
-                              nsIURI *aHostURI);
+  void SerialializeCookieList(const nsTArray<nsCookie*>& aFoundCookieList,
+                              nsTArray<CookieStruct>& aCookiesList,
+                              nsIURI* aHostURI);
 
   RefPtr<nsCookieService> mCookieService;
   bool mProcessingCookie;

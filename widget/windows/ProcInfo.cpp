@@ -9,18 +9,18 @@
 #include <psapi.h>
 #include <tlhelp32.h>
 
-typedef HRESULT(WINAPI *GETTHREADDESCRIPTION)(HANDLE hThread,
-                                              PWSTR *threadDescription);
+typedef HRESULT(WINAPI* GETTHREADDESCRIPTION)(HANDLE hThread,
+                                              PWSTR* threadDescription);
 
 namespace mozilla {
 
-uint64_t ToNanoSeconds(const FILETIME &aFileTime) {
+uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
   // FILETIME values are 100-nanoseconds units, converting
   ULARGE_INTEGER usec = {{aFileTime.dwLowDateTime, aFileTime.dwHighDateTime}};
   return usec.QuadPart * 100;
 }
 
-void AppendThreads(ProcInfo *info) {
+void AppendThreads(ProcInfo* info) {
   THREADENTRY32 te32;
   auto getThreadDescription =
       reinterpret_cast<GETTHREADDESCRIPTION>(::GetProcAddress(
@@ -72,7 +72,7 @@ void AppendThreads(ProcInfo *info) {
 }
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType &type) {
+                                    const ProcType& type) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
 

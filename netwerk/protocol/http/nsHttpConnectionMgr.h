@@ -45,7 +45,7 @@ struct HttpRetParams;
 
 // message handlers have this signature
 class nsHttpConnectionMgr;
-typedef void (nsHttpConnectionMgr::*nsConnEventHandler)(int32_t, ARefBase *);
+typedef void (nsHttpConnectionMgr::*nsConnEventHandler)(int32_t, ARefBase*);
 
 class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
  public:
@@ -93,7 +93,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   void PruneDeadConnectionsAfter(uint32_t time);
 
   // this cancels all outstanding transactions but does not shut down the mgr
-  void AbortAndCloseAllConnections(int32_t, ARefBase *);
+  void AbortAndCloseAllConnections(int32_t, ARefBase*);
 
   // Stops timer scheduled for next pruning of dead connections if
   // there are no more idle connections or active spdy ones
@@ -104,25 +104,25 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   void ConditionallyStopTimeoutTick();
 
   // adds a transaction to the list of managed transactions.
-  MOZ_MUST_USE nsresult AddTransaction(nsHttpTransaction *, int32_t priority);
+  MOZ_MUST_USE nsresult AddTransaction(nsHttpTransaction*, int32_t priority);
 
   // Add a new transaction with a sticky connection from |transWithStickyConn|.
   MOZ_MUST_USE nsresult
-  AddTransactionWithStickyConn(nsHttpTransaction *trans, int32_t priority,
-                               nsHttpTransaction *transWithStickyConn);
+  AddTransactionWithStickyConn(nsHttpTransaction* trans, int32_t priority,
+                               nsHttpTransaction* transWithStickyConn);
 
   // called to reschedule the given transaction.  it must already have been
   // added to the connection manager via AddTransaction.
-  MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction *,
+  MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction*,
                                               int32_t priority);
 
   // TOOD
-  void UpdateClassOfServiceOnTransaction(nsHttpTransaction *,
+  void UpdateClassOfServiceOnTransaction(nsHttpTransaction*,
                                          uint32_t classOfService);
 
   // cancels a transaction w/ the given reason.
-  MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction *, nsresult reason);
-  MOZ_MUST_USE nsresult CancelTransactions(nsHttpConnectionInfo *,
+  MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction*, nsresult reason);
+  MOZ_MUST_USE nsresult CancelTransactions(nsHttpConnectionInfo*,
                                            nsresult reason);
 
   // called to force the connection manager to prune its list of idle
@@ -140,11 +140,11 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // Close all idle persistent connections and prevent any active connections
   // from being reused. Optional connection info resets CI specific
   // information such as Happy Eyeballs history.
-  MOZ_MUST_USE nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *);
+  MOZ_MUST_USE nsresult DoShiftReloadConnectionCleanup(nsHttpConnectionInfo*);
 
   // called to get a reference to the socket transport service.  the socket
   // transport service is not available when the connection manager is down.
-  MOZ_MUST_USE nsresult GetSocketThreadTarget(nsIEventTarget **);
+  MOZ_MUST_USE nsresult GetSocketThreadTarget(nsIEventTarget**);
 
   // called to indicate a transaction for the connectionInfo is likely coming
   // soon. The connection manager may use this information to start a TCP
@@ -152,15 +152,15 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // ready when the transaction is submitted. No obligation is taken on by the
   // connection manager, nor is the submitter obligated to actually submit a
   // real transaction for this connectionInfo.
-  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo *,
-                                           nsIInterfaceRequestor *,
+  MOZ_MUST_USE nsresult SpeculativeConnect(nsHttpConnectionInfo*,
+                                           nsIInterfaceRequestor*,
                                            uint32_t caps = 0,
-                                           NullHttpTransaction * = nullptr);
+                                           NullHttpTransaction* = nullptr);
 
   // called when a connection is done processing a transaction.  if the
   // connection can be reused then it will be added to the idle list, else
   // it will be closed.
-  MOZ_MUST_USE nsresult ReclaimConnection(nsHttpConnection *conn);
+  MOZ_MUST_USE nsresult ReclaimConnection(nsHttpConnection* conn);
 
   // called by the main thread to execute the taketransport() logic on the
   // socket thread after a 101 response has been received and the socket
@@ -169,7 +169,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // @param aTrans: a transaction that contains a sticky connection. We'll
   //                take the transport of this connection.
   MOZ_MUST_USE nsresult CompleteUpgrade(
-      nsHttpTransaction *aTrans, nsIHttpUpgradeListener *aUpgradeListener);
+      nsHttpTransaction* aTrans, nsIHttpUpgradeListener* aUpgradeListener);
 
   // called to update a parameter after the connection manager has already
   // been initialized.
@@ -177,12 +177,12 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
   // called from main thread to post a new request token bucket
   // to the socket thread
-  MOZ_MUST_USE nsresult UpdateRequestTokenBucket(EventTokenBucket *aBucket);
+  MOZ_MUST_USE nsresult UpdateRequestTokenBucket(EventTokenBucket* aBucket);
 
   // clears the connection history mCT
   MOZ_MUST_USE nsresult ClearConnectionHistory();
 
-  void ReportFailedToProcess(nsIURI *uri);
+  void ReportFailedToProcess(nsIURI* uri);
 
   // Causes a large amount of connection diagnostic information to be
   // printed to the javascript console
@@ -194,14 +194,14 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
   // called to change the connection entry associated with conn from specific
   // into a wildcard (i.e. http2 proxy friendy) mapping
-  void MoveToWildCardConnEntry(nsHttpConnectionInfo *specificCI,
-                               nsHttpConnectionInfo *wildcardCI,
-                               nsHttpConnection *conn);
+  void MoveToWildCardConnEntry(nsHttpConnectionInfo* specificCI,
+                               nsHttpConnectionInfo* wildcardCI,
+                               nsHttpConnection* conn);
 
   // called to force the transaction queue to be processed once more, giving
   // preference to the specified connection.
-  MOZ_MUST_USE nsresult ProcessPendingQ(nsHttpConnectionInfo *);
-  MOZ_MUST_USE bool ProcessPendingQForEntry(nsHttpConnectionInfo *);
+  MOZ_MUST_USE nsresult ProcessPendingQ(nsHttpConnectionInfo*);
+  MOZ_MUST_USE bool ProcessPendingQForEntry(nsHttpConnectionInfo*);
 
   // Try and process all pending transactions
   MOZ_MUST_USE nsresult ProcessPendingQ();
@@ -209,17 +209,17 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
   // that the network peer has closed the transport.
-  MOZ_MUST_USE nsresult CloseIdleConnection(nsHttpConnection *);
-  MOZ_MUST_USE nsresult RemoveIdleConnection(nsHttpConnection *);
+  MOZ_MUST_USE nsresult CloseIdleConnection(nsHttpConnection*);
+  MOZ_MUST_USE nsresult RemoveIdleConnection(nsHttpConnection*);
 
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
   // bit different.
-  void ReportSpdyConnection(nsHttpConnection *, bool usingSpdy);
+  void ReportSpdyConnection(nsHttpConnection*, bool usingSpdy);
 
-  bool GetConnectionData(nsTArray<HttpRetParams> *);
+  bool GetConnectionData(nsTArray<HttpRetParams>*);
 
-  void ResetIPFamilyPreference(nsHttpConnectionInfo *);
+  void ResetIPFamilyPreference(nsHttpConnectionInfo*);
 
   uint16_t MaxRequestDelay() { return mMaxRequestDelay; }
 
@@ -229,16 +229,16 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   nsresult UpdateCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
 
   // tracks and untracks active transactions according their throttle status
-  void AddActiveTransaction(nsHttpTransaction *aTrans);
-  void RemoveActiveTransaction(nsHttpTransaction *aTrans,
-                               Maybe<bool> const &aOverride = Nothing());
-  void UpdateActiveTransaction(nsHttpTransaction *aTrans);
+  void AddActiveTransaction(nsHttpTransaction* aTrans);
+  void RemoveActiveTransaction(nsHttpTransaction* aTrans,
+                               Maybe<bool> const& aOverride = Nothing());
+  void UpdateActiveTransaction(nsHttpTransaction* aTrans);
 
   // called by nsHttpTransaction::WriteSegments.  decides whether the
   // transaction should limit reading its reponse data.  There are various
   // conditions this methods evaluates.  If called by an active-tab
   // non-throttled transaction, the throttling window time will be prolonged.
-  bool ShouldThrottle(nsHttpTransaction *aTrans);
+  bool ShouldThrottle(nsHttpTransaction* aTrans);
 
   // prolongs the throttling time window to now + the window preferred delay.
   // called when:
@@ -251,13 +251,13 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // it's mainly used to disallow throttling (limit reading) of a response
   // belonging to the same conn info to free up a connection ASAP.
   // NOTE: relatively expensive to call, there are two hashtable lookups.
-  bool IsConnEntryUnderPressure(nsHttpConnectionInfo *);
+  bool IsConnEntryUnderPressure(nsHttpConnectionInfo*);
 
   uint64_t CurrentTopLevelOuterContentWindowId() {
     return mCurrentTopLevelOuterContentWindowId;
   }
 
-  void BlacklistSpdy(const nsHttpConnectionInfo *ci);
+  void BlacklistSpdy(const nsHttpConnectionInfo* ci);
 
  private:
   virtual ~nsHttpConnectionMgr();
@@ -274,7 +274,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   class nsConnectionEntry {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsConnectionEntry)
-    explicit nsConnectionEntry(nsHttpConnectionInfo *ci);
+    explicit nsConnectionEntry(nsHttpConnectionInfo* ci);
 
     RefPtr<nsHttpConnectionInfo> mConnInfo;
     nsTArray<RefPtr<PendingTransactionInfo>>
@@ -290,8 +290,8 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
         mPendingTransactionTable;
     nsTArray<RefPtr<nsHttpConnection>> mActiveConns;  // active connections
     nsTArray<RefPtr<nsHttpConnection>>
-        mIdleConns;                           // idle persistent connections
-    nsTArray<nsHalfOpenSocket *> mHalfOpens;  // half open connections
+        mIdleConns;                          // idle persistent connections
+    nsTArray<nsHalfOpenSocket*> mHalfOpens;  // half open connections
     nsTArray<RefPtr<nsHalfOpenSocket>>
         mHalfOpenFastOpenBackups;  // backup half open connections for
                                    // connection in fast open phase
@@ -303,7 +303,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     uint32_t UnconnectedHalfOpens();
 
     // Remove a particular half open socket from the mHalfOpens array
-    void RemoveHalfOpen(nsHalfOpenSocket *);
+    void RemoveHalfOpen(nsHalfOpenSocket*);
 
     // Spdy sometimes resolves the address in the socket manager in order
     // to re-coalesce sharded HTTP hosts. The dotted decimal address is
@@ -357,21 +357,21 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     // Add a transaction information into the pending queue in
     // |mPendingTransactionTable| according to the transaction's
     // top level outer content window id.
-    void InsertTransaction(PendingTransactionInfo *info,
+    void InsertTransaction(PendingTransactionInfo* info,
                            bool aInsertAsFirstForTheSamePriority = false);
 
     // Append transactions to the |result| whose window id
     // is equal to |windowId|.
     // NOTE: maxCount == 0 will get all transactions in the queue.
     void AppendPendingQForFocusedWindow(
-        uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>> &result,
+        uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>>& result,
         uint32_t maxCount = 0);
 
     // Append transactions whose window id isn't equal to |windowId|.
     // NOTE: windowId == 0 will get all transactions for both
     // focused and non-focused windows.
     void AppendPendingQForNonFocusedWindows(
-        uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>> &result,
+        uint64_t windowId, nsTArray<RefPtr<PendingTransactionInfo>>& result,
         uint32_t maxCount = 0);
 
     // Remove the empty pendingQ in |mPendingTransactionTable|.
@@ -382,8 +382,8 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   };
 
  public:
-  static nsAHttpConnection *MakeConnectionHandle(nsHttpConnection *aWrapped);
-  void RegisterOriginCoalescingKey(nsHttpConnection *, const nsACString &host,
+  static nsAHttpConnection* MakeConnectionHandle(nsHttpConnection* aWrapped);
+  void RegisterOriginCoalescingKey(nsHttpConnection*, const nsACString& host,
                                    int32_t port);
 
  private:
@@ -408,23 +408,23 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     NS_DECL_NSITIMERCALLBACK
     NS_DECL_NSINAMED
 
-    nsHalfOpenSocket(nsConnectionEntry *ent, nsAHttpTransaction *trans,
+    nsHalfOpenSocket(nsConnectionEntry* ent, nsAHttpTransaction* trans,
                      uint32_t caps, bool speculative, bool isFromPredictor,
                      bool urgentStart);
 
-    MOZ_MUST_USE nsresult SetupStreams(nsISocketTransport **,
-                                       nsIAsyncInputStream **,
-                                       nsIAsyncOutputStream **, bool isBackup);
+    MOZ_MUST_USE nsresult SetupStreams(nsISocketTransport**,
+                                       nsIAsyncInputStream**,
+                                       nsIAsyncOutputStream**, bool isBackup);
     MOZ_MUST_USE nsresult SetupPrimaryStreams();
     MOZ_MUST_USE nsresult SetupBackupStreams();
     void SetupBackupTimer();
     void CancelBackupTimer();
     void Abandon();
     double Duration(TimeStamp epoch);
-    nsISocketTransport *SocketTransport() { return mSocketTransport; }
-    nsISocketTransport *BackupTransport() { return mBackupTransport; }
+    nsISocketTransport* SocketTransport() { return mSocketTransport; }
+    nsISocketTransport* BackupTransport() { return mBackupTransport; }
 
-    nsAHttpTransaction *Transaction() { return mTransaction; }
+    nsAHttpTransaction* Transaction() { return mTransaction; }
 
     bool IsSpeculative() { return mSpeculative; }
 
@@ -435,12 +435,12 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
     bool HasConnected() { return mHasConnected; }
 
-    void PrintDiagnostics(nsCString &log);
+    void PrintDiagnostics(nsCString& log);
 
     // Checks whether the transaction can be dispatched using this
     // half-open's connection.  If this half-open is marked as urgent-start,
     // it only accepts urgent start transactions.  Call only before Claim().
-    bool AcceptsTransaction(nsHttpTransaction *trans);
+    bool AcceptsTransaction(nsHttpTransaction* trans);
     bool Claim();
     void Unclaim();
 
@@ -452,7 +452,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     void CancelFastOpenConnection();
 
    private:
-    nsresult SetupConn(nsIAsyncOutputStream *out, bool aFastOpen);
+    nsresult SetupConn(nsIAsyncOutputStream* out, bool aFastOpen);
 
     // To find out whether |mTransaction| is still in the connection entry's
     // pending queue. If the transaction is found and |removeWhenFound| is
@@ -519,12 +519,12 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
   class PendingTransactionInfo final : public ARefBase {
    public:
-    explicit PendingTransactionInfo(nsHttpTransaction *trans)
+    explicit PendingTransactionInfo(nsHttpTransaction* trans)
         : mTransaction(trans) {}
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PendingTransactionInfo, override)
 
-    void PrintDiagnostics(nsCString &log);
+    void PrintDiagnostics(nsCString& log);
 
    public:  // meant to be public.
     RefPtr<nsHttpTransaction> mTransaction;
@@ -538,8 +538,8 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
   class PendingComparator {
    public:
-    bool Equals(const PendingTransactionInfo *aPendingTrans,
-                const nsAHttpTransaction *aTrans) const {
+    bool Equals(const PendingTransactionInfo* aPendingTrans,
+                const nsAHttpTransaction* aTrans) const {
       return aPendingTrans->mTransaction.get() == aTrans;
     }
   };
@@ -571,10 +571,10 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // NOTE: these members are only accessed on the socket transport thread
   //-------------------------------------------------------------------------
 
-  MOZ_MUST_USE bool ProcessPendingQForEntry(nsConnectionEntry *,
+  MOZ_MUST_USE bool ProcessPendingQForEntry(nsConnectionEntry*,
                                             bool considerAll);
-  bool DispatchPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
-                        nsConnectionEntry *ent, bool considerAll);
+  bool DispatchPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+                        nsConnectionEntry* ent, bool considerAll);
 
   // This function selects transactions from mPendingTransactionTable to
   // dispatch according to the following conditions:
@@ -585,112 +585,111 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // 3. If |considerAll| is true, fill the |pendingQ| with the transactions from
   //    both focused window and non-focused window queues.
   void PreparePendingQForDispatching(
-      nsConnectionEntry *ent,
-      nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ, bool considerAll);
+      nsConnectionEntry* ent,
+      nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ, bool considerAll);
 
   // Return total active connection count, which is the sum of
   // active connections and unconnected half open connections.
-  uint32_t TotalActiveConnections(nsConnectionEntry *ent) const;
+  uint32_t TotalActiveConnections(nsConnectionEntry* ent) const;
 
   // Return |mMaxPersistConnsPerProxy| or |mMaxPersistConnsPerHost|,
   // depending whether the proxy is used.
-  uint32_t MaxPersistConnections(nsConnectionEntry *ent) const;
+  uint32_t MaxPersistConnections(nsConnectionEntry* ent) const;
 
-  bool AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
+  bool AtActiveConnectionLimit(nsConnectionEntry*, uint32_t caps);
   MOZ_MUST_USE nsresult
-  TryDispatchTransaction(nsConnectionEntry *ent, bool onlyReusedConnection,
-                         PendingTransactionInfo *pendingTransInfo);
+  TryDispatchTransaction(nsConnectionEntry* ent, bool onlyReusedConnection,
+                         PendingTransactionInfo* pendingTransInfo);
   MOZ_MUST_USE nsresult TryDispatchTransactionOnIdleConn(
-      nsConnectionEntry *ent, PendingTransactionInfo *pendingTransInfo,
-      bool respectUrgency, bool *allUrgent = nullptr);
-  MOZ_MUST_USE nsresult DispatchTransaction(nsConnectionEntry *,
-                                            nsHttpTransaction *,
-                                            nsHttpConnection *);
-  MOZ_MUST_USE nsresult DispatchAbstractTransaction(nsConnectionEntry *,
-                                                    nsAHttpTransaction *,
-                                                    uint32_t,
-                                                    nsHttpConnection *,
+      nsConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo,
+      bool respectUrgency, bool* allUrgent = nullptr);
+  MOZ_MUST_USE nsresult DispatchTransaction(nsConnectionEntry*,
+                                            nsHttpTransaction*,
+                                            nsHttpConnection*);
+  MOZ_MUST_USE nsresult DispatchAbstractTransaction(nsConnectionEntry*,
+                                                    nsAHttpTransaction*,
+                                                    uint32_t, nsHttpConnection*,
                                                     int32_t);
-  bool RestrictConnections(nsConnectionEntry *);
-  MOZ_MUST_USE nsresult ProcessNewTransaction(nsHttpTransaction *);
+  bool RestrictConnections(nsConnectionEntry*);
+  MOZ_MUST_USE nsresult ProcessNewTransaction(nsHttpTransaction*);
   MOZ_MUST_USE nsresult EnsureSocketThreadTarget();
-  void ClosePersistentConnections(nsConnectionEntry *ent);
-  void ReportProxyTelemetry(nsConnectionEntry *ent);
+  void ClosePersistentConnections(nsConnectionEntry* ent);
+  void ReportProxyTelemetry(nsConnectionEntry* ent);
   MOZ_MUST_USE nsresult
-  CreateTransport(nsConnectionEntry *, nsAHttpTransaction *, uint32_t, bool,
-                  bool, bool, bool, PendingTransactionInfo *pendingTransInfo);
-  void AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
-  void DecrementActiveConnCount(nsHttpConnection *);
+  CreateTransport(nsConnectionEntry*, nsAHttpTransaction*, uint32_t, bool, bool,
+                  bool, bool, PendingTransactionInfo* pendingTransInfo);
+  void AddActiveConn(nsHttpConnection*, nsConnectionEntry*);
+  void DecrementActiveConnCount(nsHttpConnection*);
   void StartedConnect();
   void RecvdConnect();
 
   // This function will unclaim the claimed connection or set a halfOpen
   // socket to the speculative state if the transaction claiming them ends up
   // using another connection.
-  void ReleaseClaimedSockets(nsConnectionEntry *ent,
-                             PendingTransactionInfo *pendingTransInfo);
+  void ReleaseClaimedSockets(nsConnectionEntry* ent,
+                             PendingTransactionInfo* pendingTransInfo);
 
   void InsertTransactionSorted(
-      nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
-      PendingTransactionInfo *pendingTransInfo,
+      nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+      PendingTransactionInfo* pendingTransInfo,
       bool aInsertAsFirstForTheSamePriority = false);
 
-  nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *,
+  nsConnectionEntry* GetOrCreateConnectionEntry(nsHttpConnectionInfo*,
                                                 bool allowWildCard);
 
   MOZ_MUST_USE nsresult MakeNewConnection(
-      nsConnectionEntry *ent, PendingTransactionInfo *pendingTransInfo);
+      nsConnectionEntry* ent, PendingTransactionInfo* pendingTransInfo);
 
   // Manage h2 connection coalescing
   // The hashtable contains arrays of weak pointers to nsHttpConnections
   nsClassHashtable<nsCStringHashKey, nsTArray<nsWeakPtr>> mCoalescingHash;
 
-  nsHttpConnection *FindCoalescableConnection(nsConnectionEntry *ent,
+  nsHttpConnection* FindCoalescableConnection(nsConnectionEntry* ent,
                                               bool justKidding);
-  nsHttpConnection *FindCoalescableConnectionByHashKey(nsConnectionEntry *ent,
-                                                       const nsCString &key,
+  nsHttpConnection* FindCoalescableConnectionByHashKey(nsConnectionEntry* ent,
+                                                       const nsCString& key,
                                                        bool justKidding);
-  void UpdateCoalescingForNewConn(nsHttpConnection *conn,
-                                  nsConnectionEntry *ent);
-  nsHttpConnection *GetSpdyActiveConn(nsConnectionEntry *ent);
+  void UpdateCoalescingForNewConn(nsHttpConnection* conn,
+                                  nsConnectionEntry* ent);
+  nsHttpConnection* GetSpdyActiveConn(nsConnectionEntry* ent);
 
-  void ProcessSpdyPendingQ(nsConnectionEntry *ent);
-  void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
-                            nsConnectionEntry *ent, nsHttpConnection *conn);
+  void ProcessSpdyPendingQ(nsConnectionEntry* ent);
+  void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+                            nsConnectionEntry* ent, nsHttpConnection* conn);
   // used to marshall events to the socket transport thread.
   MOZ_MUST_USE nsresult PostEvent(nsConnEventHandler handler,
                                   int32_t iparam = 0,
-                                  ARefBase *vparam = nullptr);
+                                  ARefBase* vparam = nullptr);
 
   // Used to close all transactions in the |pendingQ| with the given |reason|.
   // Note that the |pendingQ| will be also cleared.
   void CancelTransactionsHelper(
-      nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
-      const nsHttpConnectionInfo *ci, const nsConnectionEntry *ent,
+      nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,
+      const nsHttpConnectionInfo* ci, const nsConnectionEntry* ent,
       nsresult reason);
 
   // message handlers
-  void OnMsgShutdown(int32_t, ARefBase *);
-  void OnMsgShutdownConfirm(int32_t, ARefBase *);
-  void OnMsgNewTransaction(int32_t, ARefBase *);
-  void OnMsgNewTransactionWithStickyConn(int32_t, ARefBase *);
-  void OnMsgReschedTransaction(int32_t, ARefBase *);
-  void OnMsgUpdateClassOfServiceOnTransaction(int32_t, ARefBase *);
-  void OnMsgCancelTransaction(int32_t, ARefBase *);
-  void OnMsgCancelTransactions(int32_t, ARefBase *);
-  void OnMsgProcessPendingQ(int32_t, ARefBase *);
-  void OnMsgPruneDeadConnections(int32_t, ARefBase *);
-  void OnMsgSpeculativeConnect(int32_t, ARefBase *);
-  void OnMsgReclaimConnection(int32_t, ARefBase *);
-  void OnMsgCompleteUpgrade(int32_t, ARefBase *);
-  void OnMsgUpdateParam(int32_t, ARefBase *);
-  void OnMsgDoShiftReloadConnectionCleanup(int32_t, ARefBase *);
-  void OnMsgProcessFeedback(int32_t, ARefBase *);
-  void OnMsgProcessAllSpdyPendingQ(int32_t, ARefBase *);
-  void OnMsgUpdateRequestTokenBucket(int32_t, ARefBase *);
-  void OnMsgVerifyTraffic(int32_t, ARefBase *);
-  void OnMsgPruneNoTraffic(int32_t, ARefBase *);
-  void OnMsgUpdateCurrentTopLevelOuterContentWindowId(int32_t, ARefBase *);
+  void OnMsgShutdown(int32_t, ARefBase*);
+  void OnMsgShutdownConfirm(int32_t, ARefBase*);
+  void OnMsgNewTransaction(int32_t, ARefBase*);
+  void OnMsgNewTransactionWithStickyConn(int32_t, ARefBase*);
+  void OnMsgReschedTransaction(int32_t, ARefBase*);
+  void OnMsgUpdateClassOfServiceOnTransaction(int32_t, ARefBase*);
+  void OnMsgCancelTransaction(int32_t, ARefBase*);
+  void OnMsgCancelTransactions(int32_t, ARefBase*);
+  void OnMsgProcessPendingQ(int32_t, ARefBase*);
+  void OnMsgPruneDeadConnections(int32_t, ARefBase*);
+  void OnMsgSpeculativeConnect(int32_t, ARefBase*);
+  void OnMsgReclaimConnection(int32_t, ARefBase*);
+  void OnMsgCompleteUpgrade(int32_t, ARefBase*);
+  void OnMsgUpdateParam(int32_t, ARefBase*);
+  void OnMsgDoShiftReloadConnectionCleanup(int32_t, ARefBase*);
+  void OnMsgProcessFeedback(int32_t, ARefBase*);
+  void OnMsgProcessAllSpdyPendingQ(int32_t, ARefBase*);
+  void OnMsgUpdateRequestTokenBucket(int32_t, ARefBase*);
+  void OnMsgVerifyTraffic(int32_t, ARefBase*);
+  void OnMsgPruneNoTraffic(int32_t, ARefBase*);
+  void OnMsgUpdateCurrentTopLevelOuterContentWindowId(int32_t, ARefBase*);
 
   // Total number of active connections in all of the ConnectionEntry objects
   // that are accessed from mCT connection table.
@@ -732,7 +731,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   void TimeoutTick();
 
   // For diagnostics
-  void OnMsgPrintDiagnostics(int32_t, ARefBase *);
+  void OnMsgPrintDiagnostics(int32_t, ARefBase*);
 
   nsCString mLogData;
   uint64_t mCurrentTopLevelOuterContentWindowId;
@@ -799,9 +798,9 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
   // Simple helpers, iterates the given hash/array and resume.
   // @param excludeActive: skip active tabid transactions.
   void ResumeReadOf(
-      nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<nsHttpTransaction>>> &,
+      nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<nsHttpTransaction>>>&,
       bool excludeActive = false);
-  void ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>> *);
+  void ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>>*);
 
   // Cached status of the active tab active transactions existence,
   // saves a lot of hashtable lookups
@@ -810,8 +809,8 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
 
   void LogActiveTransactions(char);
 
-  nsTArray<RefPtr<PendingTransactionInfo>> *GetTransactionPendingQHelper(
-      nsConnectionEntry *ent, nsAHttpTransaction *trans);
+  nsTArray<RefPtr<PendingTransactionInfo>>* GetTransactionPendingQHelper(
+      nsConnectionEntry* ent, nsAHttpTransaction* trans);
 
   // When current active tab is changed, this function uses
   // |previousWindowId| to select background transactions and

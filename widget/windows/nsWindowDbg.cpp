@@ -42,7 +42,7 @@ void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves) {
 }
 
 #ifdef DEBUG
-void DDError(const char *msg, HRESULT hr) {
+void DDError(const char* msg, HRESULT hr) {
   /*XXX make nicer */
   MOZ_LOG(gWindowsLog, LogLevel::Error,
           ("direct draw error %s: 0x%08lx\n", msg, hr));

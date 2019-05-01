@@ -29,8 +29,8 @@ namespace {
 
 // Ignore failures from this function, as they only affect whether we do or
 // don't show a dialog box in private browsing mode if the user sets a pref.
-nsresult CreateDummyChannel(nsIURI *aHostURI, nsILoadInfo *aLoadInfo,
-                            nsIChannel **aChannel) {
+nsresult CreateDummyChannel(nsIURI* aHostURI, nsILoadInfo* aLoadInfo,
+                            nsIChannel** aChannel) {
   nsCOMPtr<nsIChannel> dummyChannel;
   nsresult rv =
       NS_NewChannelInternal(getter_AddRefs(dummyChannel), aHostURI, aLoadInfo);
@@ -58,7 +58,7 @@ CookieServiceParent::CookieServiceParent() {
   mProcessingCookie = false;
 }
 
-void GetInfoFromCookie(nsCookie *aCookie, CookieStruct &aCookieStruct) {
+void GetInfoFromCookie(nsCookie* aCookie, CookieStruct& aCookieStruct) {
   aCookieStruct.name() = aCookie->Name();
   aCookieStruct.value() = aCookie->Value();
   aCookieStruct.host() = aCookie->Host();
@@ -72,7 +72,7 @@ void GetInfoFromCookie(nsCookie *aCookie, CookieStruct &aCookieStruct) {
   aCookieStruct.sameSite() = aCookie->SameSite();
 }
 
-void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray *aCookieList) {
+void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
   uint32_t len = 0;
   aCookieList->GetLength(&len);
   OriginAttributes attrs;
@@ -81,7 +81,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray *aCookieList) {
   nsTArray<OriginAttributes> attrsList;
   for (uint32_t i = 0; i < len; i++) {
     nsCOMPtr<nsICookie> xpcCookie = do_QueryElementAt(aCookieList, i);
-    auto cookie = static_cast<nsCookie *>(xpcCookie.get());
+    auto cookie = static_cast<nsCookie*>(xpcCookie.get());
     attrs = cookie->OriginAttributesRef();
     GetInfoFromCookie(cookie, cookieStruct);
     if (cookie->IsHttpOnly()) {
@@ -96,8 +96,8 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray *aCookieList) {
 
 void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 
-void CookieServiceParent::RemoveCookie(nsICookie *aCookie) {
-  auto cookie = static_cast<nsCookie *>(aCookie);
+void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
+  auto cookie = static_cast<nsCookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct;
   GetInfoFromCookie(cookie, cookieStruct);
@@ -107,8 +107,8 @@ void CookieServiceParent::RemoveCookie(nsICookie *aCookie) {
   Unused << SendRemoveCookie(cookieStruct, attrs);
 }
 
-void CookieServiceParent::AddCookie(nsICookie *aCookie) {
-  auto cookie = static_cast<nsCookie *>(aCookie);
+void CookieServiceParent::AddCookie(nsICookie* aCookie) {
+  auto cookie = static_cast<nsCookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
   CookieStruct cookieStruct;
   GetInfoFromCookie(cookie, cookieStruct);
@@ -118,7 +118,7 @@ void CookieServiceParent::AddCookie(nsICookie *aCookie) {
   Unused << SendAddCookie(cookieStruct, attrs);
 }
 
-void CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel) {
+void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
 
@@ -149,7 +149,7 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel) {
     }
   }
 
-  nsTArray<nsCookie *> foundCookieList;
+  nsTArray<nsCookie*> foundCookieList;
   mCookieService->GetCookiesForURI(
       uri, aChannel, isForeign, isTrackingResource, storageAccessGranted,
       isSafeTopLevelNav, aIsSameSiteForeign, false, attrs, foundCookieList);
@@ -159,11 +159,11 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel) {
 }
 
 void CookieServiceParent::SerialializeCookieList(
-    const nsTArray<nsCookie *> &aFoundCookieList,
-    nsTArray<CookieStruct> &aCookiesList, nsIURI *aHostURI) {
+    const nsTArray<nsCookie*>& aFoundCookieList,
+    nsTArray<CookieStruct>& aCookiesList, nsIURI* aHostURI) {
   for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
-    nsCookie *cookie = aFoundCookieList.ElementAt(i);
-    CookieStruct *cookieStruct = aCookiesList.AppendElement();
+    nsCookie* cookie = aFoundCookieList.ElementAt(i);
+    CookieStruct* cookieStruct = aCookiesList.AppendElement();
     cookieStruct->name() = cookie->Name();
     if (!cookie->IsHttpOnly()) {
       cookieStruct->value() = cookie->Value();
@@ -180,14 +180,14 @@ void CookieServiceParent::SerialializeCookieList(
 }
 
 mozilla::ipc::IPCResult CookieServiceParent::RecvPrepareCookieList(
-    const URIParams &aHost, const bool &aIsForeign,
-    const bool &aIsTrackingResource,
-    const bool &aFirstPartyStorageAccessGranted, const bool &aIsSafeTopLevelNav,
-    const bool &aIsSameSiteForeign, const OriginAttributes &aAttrs) {
+    const URIParams& aHost, const bool& aIsForeign,
+    const bool& aIsTrackingResource,
+    const bool& aFirstPartyStorageAccessGranted, const bool& aIsSafeTopLevelNav,
+    const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs) {
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
 
   // Send matching cookies to Child.
-  nsTArray<nsCookie *> foundCookieList;
+  nsTArray<nsCookie*> foundCookieList;
   // Note: passing nullptr as aChannel to GetCookiesForURI() here is fine since
   // this argument is only used for proper reporting of cookie loads, but the
   // child process already does the necessary reporting in this case for us.
@@ -207,12 +207,12 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
-    const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
-    const Maybe<LoadInfoArgs> &aLoadInfoArgs, const bool &aIsForeign,
-    const bool &aIsTrackingResource,
-    const bool &aFirstPartyStorageAccessGranted, const OriginAttributes &aAttrs,
-    const nsCString &aCookieString, const nsCString &aServerTime,
-    const bool &aFromHttp) {
+    const URIParams& aHost, const Maybe<URIParams>& aChannelURI,
+    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
+    const bool& aIsTrackingResource,
+    const bool& aFirstPartyStorageAccessGranted, const OriginAttributes& aAttrs,
+    const nsCString& aCookieString, const nsCString& aServerTime,
+    const bool& aFromHttp) {
   if (!mCookieService) return IPC_OK();
 
   // Deserialize URI. Having a host URI is mandatory and should always be

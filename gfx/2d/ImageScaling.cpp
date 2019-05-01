@@ -43,7 +43,7 @@ inline uint32_t Avg2(uint32_t a, uint32_t b) {
   return ((sum & mask) >> 1) + carry;
 }
 
-void ImageHalfScaler::ScaleForSize(const IntSize &aSize) {
+void ImageHalfScaler::ScaleForSize(const IntSize& aSize) {
   uint32_t horizontalDownscales = 0;
   uint32_t verticalDownscales = 0;
 
@@ -86,8 +86,8 @@ void ImageHalfScaler::ScaleForSize(const IntSize &aSize) {
 
   if (uintptr_t(mDataStorage) % 16) {
     // Our storage does not start at a 16-byte boundary. Make sure mData does!
-    mData = (uint8_t *)(uintptr_t(mDataStorage) +
-                        (16 - (uintptr_t(mDataStorage) % 16)));
+    mData = (uint8_t*)(uintptr_t(mDataStorage) +
+                       (16 - (uintptr_t(mDataStorage) % 16)));
   } else {
     mData = mDataStorage;
   }
@@ -101,7 +101,7 @@ void ImageHalfScaler::ScaleForSize(const IntSize &aSize) {
    */
   IntSize currentSampledSize = mOrigSize;
   uint32_t currentSampledStride = mOrigStride;
-  uint8_t *currentSampledData = mOrigData;
+  uint8_t* currentSampledData = mOrigData;
 
   while (verticalDownscales && horizontalDownscales) {
     if (currentSampledSize.width % 2) {
@@ -151,8 +151,8 @@ void ImageHalfScaler::ScaleForSize(const IntSize &aSize) {
   }
 }
 
-void ImageHalfScaler::HalfImage2D(uint8_t *aSource, int32_t aSourceStride,
-                                  const IntSize &aSourceSize, uint8_t *aDest,
+void ImageHalfScaler::HalfImage2D(uint8_t* aSource, int32_t aSourceStride,
+                                  const IntSize& aSourceSize, uint8_t* aDest,
                                   uint32_t aDestStride) {
 #ifdef USE_SSE2
   if (Factory::HasSSE2()) {
@@ -164,9 +164,9 @@ void ImageHalfScaler::HalfImage2D(uint8_t *aSource, int32_t aSourceStride,
   }
 }
 
-void ImageHalfScaler::HalfImageVertical(uint8_t *aSource, int32_t aSourceStride,
-                                        const IntSize &aSourceSize,
-                                        uint8_t *aDest, uint32_t aDestStride) {
+void ImageHalfScaler::HalfImageVertical(uint8_t* aSource, int32_t aSourceStride,
+                                        const IntSize& aSourceSize,
+                                        uint8_t* aDest, uint32_t aDestStride) {
 #ifdef USE_SSE2
   if (Factory::HasSSE2()) {
     HalfImageVertical_SSE2(aSource, aSourceStride, aSourceSize, aDest,
@@ -179,10 +179,10 @@ void ImageHalfScaler::HalfImageVertical(uint8_t *aSource, int32_t aSourceStride,
   }
 }
 
-void ImageHalfScaler::HalfImageHorizontal(uint8_t *aSource,
+void ImageHalfScaler::HalfImageHorizontal(uint8_t* aSource,
                                           int32_t aSourceStride,
-                                          const IntSize &aSourceSize,
-                                          uint8_t *aDest,
+                                          const IntSize& aSourceSize,
+                                          uint8_t* aDest,
                                           uint32_t aDestStride) {
 #ifdef USE_SSE2
   if (Factory::HasSSE2()) {
@@ -196,47 +196,47 @@ void ImageHalfScaler::HalfImageHorizontal(uint8_t *aSource,
   }
 }
 
-void ImageHalfScaler::HalfImage2D_C(uint8_t *aSource, int32_t aSourceStride,
-                                    const IntSize &aSourceSize, uint8_t *aDest,
+void ImageHalfScaler::HalfImage2D_C(uint8_t* aSource, int32_t aSourceStride,
+                                    const IntSize& aSourceSize, uint8_t* aDest,
                                     uint32_t aDestStride) {
   for (int y = 0; y < aSourceSize.height; y += 2) {
-    uint32_t *storage = (uint32_t *)(aDest + (y / 2) * aDestStride);
+    uint32_t* storage = (uint32_t*)(aDest + (y / 2) * aDestStride);
     for (int x = 0; x < aSourceSize.width; x += 2) {
-      uint8_t *upperRow = aSource + (y * aSourceStride + x * 4);
-      uint8_t *lowerRow = aSource + ((y + 1) * aSourceStride + x * 4);
+      uint8_t* upperRow = aSource + (y * aSourceStride + x * 4);
+      uint8_t* lowerRow = aSource + ((y + 1) * aSourceStride + x * 4);
 
-      *storage++ = Avg2x2(*(uint32_t *)upperRow, *((uint32_t *)upperRow + 1),
-                          *(uint32_t *)lowerRow, *((uint32_t *)lowerRow + 1));
+      *storage++ = Avg2x2(*(uint32_t*)upperRow, *((uint32_t*)upperRow + 1),
+                          *(uint32_t*)lowerRow, *((uint32_t*)lowerRow + 1));
     }
   }
 }
 
-void ImageHalfScaler::HalfImageVertical_C(uint8_t *aSource,
+void ImageHalfScaler::HalfImageVertical_C(uint8_t* aSource,
                                           int32_t aSourceStride,
-                                          const IntSize &aSourceSize,
-                                          uint8_t *aDest,
+                                          const IntSize& aSourceSize,
+                                          uint8_t* aDest,
                                           uint32_t aDestStride) {
   for (int y = 0; y < aSourceSize.height; y += 2) {
-    uint32_t *storage = (uint32_t *)(aDest + (y / 2) * aDestStride);
+    uint32_t* storage = (uint32_t*)(aDest + (y / 2) * aDestStride);
     for (int x = 0; x < aSourceSize.width; x++) {
-      uint32_t *upperRow = (uint32_t *)(aSource + (y * aSourceStride + x * 4));
-      uint32_t *lowerRow =
-          (uint32_t *)(aSource + ((y + 1) * aSourceStride + x * 4));
+      uint32_t* upperRow = (uint32_t*)(aSource + (y * aSourceStride + x * 4));
+      uint32_t* lowerRow =
+          (uint32_t*)(aSource + ((y + 1) * aSourceStride + x * 4));
 
       *storage++ = Avg2(*upperRow, *lowerRow);
     }
   }
 }
 
-void ImageHalfScaler::HalfImageHorizontal_C(uint8_t *aSource,
+void ImageHalfScaler::HalfImageHorizontal_C(uint8_t* aSource,
                                             int32_t aSourceStride,
-                                            const IntSize &aSourceSize,
-                                            uint8_t *aDest,
+                                            const IntSize& aSourceSize,
+                                            uint8_t* aDest,
                                             uint32_t aDestStride) {
   for (int y = 0; y < aSourceSize.height; y++) {
-    uint32_t *storage = (uint32_t *)(aDest + y * aDestStride);
+    uint32_t* storage = (uint32_t*)(aDest + y * aDestStride);
     for (int x = 0; x < aSourceSize.width; x += 2) {
-      uint32_t *pixels = (uint32_t *)(aSource + (y * aSourceStride + x * 4));
+      uint32_t* pixels = (uint32_t*)(aSource + (y * aSourceStride + x * 4));
 
       *storage++ = Avg2(*pixels, *(pixels + 1));
     }

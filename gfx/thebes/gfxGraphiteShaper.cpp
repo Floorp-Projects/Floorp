@@ -28,7 +28,7 @@ using namespace mozilla;  // for AutoSwap_* types
  * Creation and destruction; on deletion, release any font tables we're holding
  */
 
-gfxGraphiteShaper::gfxGraphiteShaper(gfxFont *aFont)
+gfxGraphiteShaper::gfxGraphiteShaper(gfxFont* aFont)
     : gfxFontShaper(aFont),
       mGrFace(mFont->GetFontEntry()->GetGrFace()),
       mGrFont(nullptr),
@@ -44,9 +44,9 @@ gfxGraphiteShaper::~gfxGraphiteShaper() {
 }
 
 /*static*/
-float gfxGraphiteShaper::GrGetAdvance(const void *appFontHandle,
+float gfxGraphiteShaper::GrGetAdvance(const void* appFontHandle,
                                       uint16_t glyphid) {
-  const CallbackData *cb = static_cast<const CallbackData *>(appFontHandle);
+  const CallbackData* cb = static_cast<const CallbackData*>(appFontHandle);
   return FixedToFloat(cb->mFont->GetGlyphWidth(glyphid));
 }
 
@@ -62,30 +62,30 @@ static inline uint32_t MakeGraphiteLangTag(uint32_t aTag) {
 }
 
 struct GrFontFeatures {
-  gr_face *mFace;
-  gr_feature_val *mFeatures;
+  gr_face* mFace;
+  gr_feature_val* mFeatures;
 };
 
-static void AddFeature(const uint32_t &aTag, uint32_t &aValue, void *aUserArg) {
-  GrFontFeatures *f = static_cast<GrFontFeatures *>(aUserArg);
+static void AddFeature(const uint32_t& aTag, uint32_t& aValue, void* aUserArg) {
+  GrFontFeatures* f = static_cast<GrFontFeatures*>(aUserArg);
 
-  const gr_feature_ref *fref = gr_face_find_fref(f->mFace, aTag);
+  const gr_feature_ref* fref = gr_face_find_fref(f->mFace, aTag);
   if (fref) {
     gr_fref_set_feature_value(fref, aValue, f->mFeatures);
   }
 }
 
-bool gfxGraphiteShaper::ShapeText(DrawTarget *aDrawTarget,
-                                  const char16_t *aText, uint32_t aOffset,
+bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
+                                  const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
                                   bool aVertical, RoundingFlags aRounding,
-                                  gfxShapedText *aShapedText) {
+                                  gfxShapedText* aShapedText) {
   // some font back-ends require this in order to get proper hinted metrics
   if (!mFont->SetupCairoFont(aDrawTarget)) {
     return false;
   }
 
-  const gfxFontStyle *style = mFont->GetStyle();
+  const gfxFontStyle* style = mFont->GetStyle();
 
   if (!mGrFont) {
     if (!mGrFace) {
@@ -122,7 +122,7 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget *aDrawTarget,
     }
   }
 
-  gfxFontEntry *entry = mFont->GetFontEntry();
+  gfxFontEntry* entry = mFont->GetFontEntry();
   uint32_t grLang = 0;
   if (style->languageOverride) {
     grLang = MakeGraphiteLangTag(style->languageOverride);
@@ -133,7 +133,7 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget *aDrawTarget,
     style->language->ToUTF8String(langString);
     grLang = GetGraphiteTagForLang(langString);
   }
-  gr_feature_val *grFeatures = gr_face_featureval_for_lang(mGrFace, grLang);
+  gr_feature_val* grFeatures = gr_face_featureval_for_lang(mGrFace, grLang);
 
   // insert any merged features into Graphite feature list
   GrFontFeatures f = {mGrFace, grFeatures};
@@ -161,7 +161,7 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget *aDrawTarget,
       gr_count_unicode_characters(gr_utf16, aText, aText + aLength, nullptr);
   gr_bidirtl grBidi = gr_bidirtl(
       aShapedText->IsRightToLeft() ? (gr_rtl | gr_nobidi) : gr_nobidi);
-  gr_segment *seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures, gr_utf16,
+  gr_segment* seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures, gr_utf16,
                                 aText, numChars, grBidi);
 
   gr_featureval_destroy(grFeatures);
@@ -191,8 +191,8 @@ struct Cluster {
 };
 
 nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
-    gfxShapedText *aShapedText, uint32_t aOffset, uint32_t aLength,
-    const char16_t *aText, gr_segment *aSegment, RoundingFlags aRounding) {
+    gfxShapedText* aShapedText, uint32_t aOffset, uint32_t aLength,
+    const char16_t* aText, gr_segment* aSegment, RoundingFlags aRounding) {
   typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
   int32_t dev2appUnits = aShapedText->GetAppUnitsPerDevUnit();
@@ -217,7 +217,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
   // each is associated with
   uint32_t gIndex = 0;  // glyph slot index
   uint32_t cIndex = 0;  // current cluster index
-  for (const gr_slot *slot = gr_seg_first_slot(aSegment); slot != nullptr;
+  for (const gr_slot* slot = gr_seg_first_slot(aSegment); slot != nullptr;
        slot = gr_slot_next_in_segment(slot), gIndex++) {
     uint32_t before =
         gr_cinfo_base(gr_seg_cinfo(aSegment, gr_slot_before(slot)));
@@ -240,7 +240,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     if (gr_slot_can_insert_before(slot) && clusters[cIndex].nChars &&
         before >= clusters[cIndex].baseChar + clusters[cIndex].nChars) {
       NS_ASSERTION(cIndex < aLength - 1, "cIndex at end of word");
-      Cluster &c = clusters[cIndex + 1];
+      Cluster& c = clusters[cIndex + 1];
       c.baseChar = clusters[cIndex].baseChar + clusters[cIndex].nChars;
       c.nChars = before - c.baseChar;
       c.baseGlyph = gIndex;
@@ -263,14 +263,14 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     }
   }
 
-  CompressedGlyph *charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
+  CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
   bool roundX = bool(aRounding & RoundingFlags::kRoundX);
   bool roundY = bool(aRounding & RoundingFlags::kRoundY);
 
   // now put glyphs into the textrun, one cluster at a time
   for (uint32_t i = 0; i <= cIndex; ++i) {
-    const Cluster &c = clusters[i];
+    const Cluster& c = clusters[i];
 
     float adv;  // total advance of the cluster
     if (rtl) {
@@ -307,7 +307,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
       AutoTArray<gfxShapedText::DetailedGlyph, 8> details;
       float clusterLoc;
       for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
-        gfxShapedText::DetailedGlyph *d = details.AppendElement();
+        gfxShapedText::DetailedGlyph* d = details.AppendElement();
         d->mGlyphID = gids[j];
         d->mOffset.y = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits
                               : -yLocs[j] * dev2appUnits;
@@ -331,7 +331,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
 
     for (uint32_t j = c.baseChar + 1; j < c.baseChar + c.nChars; ++j) {
       NS_ASSERTION(j < aLength, "unexpected offset");
-      CompressedGlyph &g = charGlyphs[j];
+      CompressedGlyph& g = charGlyphs[j];
       NS_ASSERTION(!g.IsSimpleGlyph(), "overwriting a simple glyph");
       g.SetComplex(g.IsClusterStart(), false, 0);
     }
@@ -345,10 +345,10 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
 // for language tag validation - include list of tags from the IANA registry
 #include "gfxLanguageTagList.cpp"
 
-nsTHashtable<nsUint32HashKey> *gfxGraphiteShaper::sLanguageTags;
+nsTHashtable<nsUint32HashKey>* gfxGraphiteShaper::sLanguageTags;
 
 /*static*/
-uint32_t gfxGraphiteShaper::GetGraphiteTagForLang(const nsCString &aLang) {
+uint32_t gfxGraphiteShaper::GetGraphiteTagForLang(const nsCString& aLang) {
   int len = aLang.Length();
   if (len < 2) {
     return 0;
@@ -383,7 +383,7 @@ uint32_t gfxGraphiteShaper::GetGraphiteTagForLang(const nsCString &aLang) {
     // store the registered IANA tags in a hash for convenient validation
     sLanguageTags =
         new nsTHashtable<nsUint32HashKey>(ArrayLength(sLanguageTagList));
-    for (const uint32_t *tag = sLanguageTagList; *tag != 0; ++tag) {
+    for (const uint32_t* tag = sLanguageTagList; *tag != 0; ++tag) {
       sLanguageTags->PutEntry(*tag);
     }
   }

@@ -53,13 +53,13 @@
  * @return OK on success, CERT_VERIFY_ERROR on failure.
  */
 template <uint32_t SIZE>
-int VerifyLoadedCert(MarFile *archive, const uint8_t (&certData)[SIZE]) {
+int VerifyLoadedCert(MarFile* archive, const uint8_t (&certData)[SIZE]) {
   (void)archive;
   (void)certData;
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
   const uint32_t size = SIZE;
-  const uint8_t *const data = &certData[0];
+  const uint8_t* const data = &certData[0];
   if (mar_verify_signatures(archive, &data, &size, 1)) {
     return CERT_VERIFY_ERROR;
   }
@@ -122,8 +122,8 @@ int ArchiveReader::VerifySignature() {
  *                                           this updater is newer than the
  *                                           one in the MAR.
  */
-int ArchiveReader::VerifyProductInformation(const char *MARChannelID,
-                                            const char *appVersion) {
+int ArchiveReader::VerifyProductInformation(const char* MARChannelID,
+                                            const char* appVersion) {
   if (!mArchive) {
     return ARCHIVE_NOT_OPEN;
   }
@@ -138,12 +138,12 @@ int ArchiveReader::VerifyProductInformation(const char *MARChannelID,
   // the update-settings.ini file.
   if (MARChannelID && strlen(MARChannelID)) {
     // Check for at least one match in the comma separated list of values.
-    const char *delimiter = " ,\t";
+    const char* delimiter = " ,\t";
     // Make a copy of the string in case a read only memory buffer
     // was specified.  strtok modifies the input buffer.
     char channelCopy[512] = {0};
     strncpy(channelCopy, MARChannelID, sizeof(channelCopy) - 1);
-    char *channel = strtok(channelCopy, delimiter);
+    char* channel = strtok(channelCopy, delimiter);
     rv = MAR_CHANNEL_MISMATCH_ERROR;
     while (channel) {
       if (!strcmp(channel, productInfoBlock.MARChannelID)) {
@@ -171,22 +171,22 @@ int ArchiveReader::VerifyProductInformation(const char *MARChannelID,
     }
   }
 
-  free((void *)productInfoBlock.MARChannelID);
-  free((void *)productInfoBlock.productVersion);
+  free((void*)productInfoBlock.MARChannelID);
+  free((void*)productInfoBlock.productVersion);
   return rv;
 }
 
-int ArchiveReader::Open(const NS_tchar *path) {
+int ArchiveReader::Open(const NS_tchar* path) {
   if (mArchive) {
     Close();
   }
 
   if (!mInBuf) {
-    mInBuf = (uint8_t *)malloc(mInBufSize);
+    mInBuf = (uint8_t*)malloc(mInBufSize);
     if (!mInBuf) {
       // Try again with a smaller buffer.
       mInBufSize = 1024;
-      mInBuf = (uint8_t *)malloc(mInBufSize);
+      mInBuf = (uint8_t*)malloc(mInBufSize);
       if (!mInBuf) {
         return ARCHIVE_READER_MEM_ERROR;
       }
@@ -194,11 +194,11 @@ int ArchiveReader::Open(const NS_tchar *path) {
   }
 
   if (!mOutBuf) {
-    mOutBuf = (uint8_t *)malloc(mOutBufSize);
+    mOutBuf = (uint8_t*)malloc(mOutBufSize);
     if (!mOutBuf) {
       // Try again with a smaller buffer.
       mOutBufSize = 1024;
-      mOutBuf = (uint8_t *)malloc(mOutBufSize);
+      mOutBuf = (uint8_t*)malloc(mOutBufSize);
       if (!mOutBuf) {
         return ARCHIVE_READER_MEM_ERROR;
       }
@@ -237,21 +237,21 @@ void ArchiveReader::Close() {
   }
 }
 
-int ArchiveReader::ExtractFile(const char *name, const NS_tchar *dest) {
-  const MarItem *item = mar_find_item(mArchive, name);
+int ArchiveReader::ExtractFile(const char* name, const NS_tchar* dest) {
+  const MarItem* item = mar_find_item(mArchive, name);
   if (!item) {
     return READ_ERROR;
   }
 
 #ifdef XP_WIN
-  FILE *fp = _wfopen(dest, L"wb+");
+  FILE* fp = _wfopen(dest, L"wb+");
 #else
   int fd = creat(dest, item->flags);
   if (fd == -1) {
     return WRITE_ERROR;
   }
 
-  FILE *fp = fdopen(fd, "wb");
+  FILE* fp = fdopen(fd, "wb");
 #endif
   if (!fp) {
     return WRITE_ERROR;
@@ -263,8 +263,8 @@ int ArchiveReader::ExtractFile(const char *name, const NS_tchar *dest) {
   return rv;
 }
 
-int ArchiveReader::ExtractFileToStream(const char *name, FILE *fp) {
-  const MarItem *item = mar_find_item(mArchive, name);
+int ArchiveReader::ExtractFileToStream(const char* name, FILE* fp) {
+  const MarItem* item = mar_find_item(mArchive, name);
   if (!item) {
     return READ_ERROR;
   }
@@ -272,14 +272,14 @@ int ArchiveReader::ExtractFileToStream(const char *name, FILE *fp) {
   return ExtractItemToStream(item, fp);
 }
 
-int ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp) {
+int ArchiveReader::ExtractItemToStream(const MarItem* item, FILE* fp) {
   /* decompress the data chunk by chunk */
 
   int offset, inlen, ret = OK;
   struct xz_buf strm = {0};
   enum xz_ret xz_rv = XZ_OK;
 
-  struct xz_dec *dec = xz_dec_init(XZ_DYNALLOC, 64 * 1024 * 1024);
+  struct xz_dec* dec = xz_dec_init(XZ_DYNALLOC, 64 * 1024 * 1024);
   if (!dec) {
     return UNEXPECTED_XZ_ERROR;
   }

@@ -153,5 +153,5 @@ typedef struct _D3DKMTQS {
 } D3DKMTQS;
 
 extern "C" {
-typedef __checkReturn NTSTATUS(APIENTRY *PFND3DKMTQS)(const D3DKMTQS *);
+typedef __checkReturn NTSTATUS(APIENTRY* PFND3DKMTQS)(const D3DKMTQS*);
 }

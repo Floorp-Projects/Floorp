@@ -14,7 +14,7 @@ extern "C" {
  */
 JNIEXPORT jbyteArray JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
-    JNIEnv *, jclass, jbyteArray, jbyteArray, jint, jint);
+    JNIEnv*, jclass, jbyteArray, jbyteArray, jint, jint);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
@@ -22,7 +22,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
  * Signature: ([B)[B
  */
 JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(JNIEnv *, jclass,
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(JNIEnv*, jclass,
                                                                jbyteArray);
 
 /*
@@ -31,7 +31,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(JNIEnv *, jclass,
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(JNIEnv *,
+Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(JNIEnv*,
                                                                      jclass);
 
 /*
@@ -41,7 +41,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(JNIEnv *,
  */
 JNIEXPORT void JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update(
-    JNIEnv *, jclass, jbyteArray, jbyteArray, jint);
+    JNIEnv*, jclass, jbyteArray, jbyteArray, jint);
 
 /*
  * Class:     org_mozilla_gecko_background_nativecode_NativeCrypto
@@ -50,7 +50,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update(
  */
 JNIEXPORT jbyteArray JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256finalize(
-    JNIEnv *, jclass, jbyteArray);
+    JNIEnv*, jclass, jbyteArray);
 
 #  ifdef __cplusplus
 }

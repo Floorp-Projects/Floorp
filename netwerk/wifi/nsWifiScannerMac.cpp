@@ -23,7 +23,7 @@ using namespace mozilla;
 // basically replaces accesspoints in the passed reference
 // it lives in a separate file so that we can use objective c.
 extern nsresult GetAccessPointsFromWLAN(
-    nsCOMArray<nsWifiAccessPoint> &accessPoints);
+    nsCOMArray<nsWifiAccessPoint>& accessPoints);
 
 nsresult nsWifiMonitor::DoScan() {
   // Regularly get the access point data.

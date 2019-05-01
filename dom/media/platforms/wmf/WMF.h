@@ -58,29 +58,29 @@ HRESULT MFShutdown();
 // All functions below are wrappers around the corresponding WMF function,
 // and automatically locate and call the corresponding function in the WMF DLLs.
 
-HRESULT MFCreateMediaType(IMFMediaType **aOutMFType);
+HRESULT MFCreateMediaType(IMFMediaType** aOutMFType);
 
 HRESULT MFGetStrideForBitmapInfoHeader(DWORD aFormat, DWORD aWidth,
-                                       LONG *aOutStride);
+                                       LONG* aOutStride);
 
-HRESULT MFGetService(IUnknown *punkObject, REFGUID guidService, REFIID riid,
-                     LPVOID *ppvObject);
+HRESULT MFGetService(IUnknown* punkObject, REFGUID guidService, REFIID riid,
+                     LPVOID* ppvObject);
 
 HRESULT DXVA2CreateDirect3DDeviceManager9(
-    UINT *pResetToken, IDirect3DDeviceManager9 **ppDXVAManager);
+    UINT* pResetToken, IDirect3DDeviceManager9** ppDXVAManager);
 
-HRESULT MFCreateDXGIDeviceManager(UINT *pResetToken,
-                                  IMFDXGIDeviceManager **ppDXVAManager);
+HRESULT MFCreateDXGIDeviceManager(UINT* pResetToken,
+                                  IMFDXGIDeviceManager** ppDXVAManager);
 
-HRESULT MFCreateSample(IMFSample **ppIMFSample);
+HRESULT MFCreateSample(IMFSample** ppIMFSample);
 
 HRESULT MFCreateAlignedMemoryBuffer(DWORD cbMaxLength, DWORD fAlignmentFlags,
-                                    IMFMediaBuffer **ppBuffer);
+                                    IMFMediaBuffer** ppBuffer);
 
-HRESULT MFCreateDXGISurfaceBuffer(REFIID riid, IUnknown *punkSurface,
+HRESULT MFCreateDXGISurfaceBuffer(REFIID riid, IUnknown* punkSurface,
                                   UINT uSubresourceIndex,
                                   BOOL fButtomUpWhenLinear,
-                                  IMFMediaBuffer **ppBuffer);
+                                  IMFMediaBuffer** ppBuffer);
 
 }  // end namespace wmf
 }  // end namespace mozilla

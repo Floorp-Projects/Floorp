@@ -141,8 +141,8 @@ namespace net {
 
 LazyLogModule gHttpLog("nsHttp");
 
-static nsresult NewURI(const nsACString &aSpec, const char *aCharset,
-                       nsIURI *aBaseURI, int32_t aDefaultPort, nsIURI **aURI) {
+static nsresult NewURI(const nsACString& aSpec, const char* aCharset,
+                       nsIURI* aBaseURI, int32_t aDefaultPort, nsIURI** aURI) {
   nsCOMPtr<nsIURI> base(aBaseURI);
   return NS_MutateURI(new nsStandardURL::Mutator())
       .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
@@ -371,7 +371,7 @@ void nsHttpHandler::SetFastOpenOSSupport() {
     nsCCharSeparatedTokenizer tokenizer(version, '.');
     while ((inx < 2) && tokenizer.hasMoreTokens()) {
       nsAutoCString token(tokenizer.nextToken());
-      const char *nondigit = NS_strspnp("0123456789", token.get());
+      const char* nondigit = NS_strspnp("0123456789", token.get());
       if (nondigit && *nondigit) {
         break;
       }
@@ -435,7 +435,7 @@ nsHttpHandler::~nsHttpHandler() {
   nsHttp::DestroyAtomTable();
 }
 
-static const char *gCallbackPrefs[] = {
+static const char* gCallbackPrefs[] = {
     HTTP_PREF_PREFIX,
     UA_PREF_PREFIX,
     INTL_ACCEPT_LANGUAGES,
@@ -545,7 +545,7 @@ nsresult nsHttpHandler::Init() {
   // Bring alive the objects in the http-protocol-startup category
   NS_CreateServicesFromCategory(
       NS_HTTP_STARTUP_CATEGORY,
-      static_cast<nsISupports *>(static_cast<void *>(this)),
+      static_cast<nsISupports*>(static_cast<void*>(this)),
       NS_HTTP_STARTUP_TOPIC);
 
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
@@ -633,7 +633,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
 }
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
-    nsHttpRequestHead *request, bool isSecure,
+    nsHttpRequestHead* request, bool isSecure,
     nsContentPolicyType aContentPolicyType) {
   nsresult rv;
 
@@ -696,7 +696,7 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
   return NS_OK;
 }
 
-nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead *request,
+nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead* request,
                                             uint32_t caps) {
   // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
   // and "Keep-alive" request headers should not be sent by HTTP/1.1
@@ -706,7 +706,7 @@ nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead *request,
   NS_NAMED_LITERAL_CSTRING(close, "close");
   NS_NAMED_LITERAL_CSTRING(keepAlive, "keep-alive");
 
-  const nsLiteralCString *connectionType = &close;
+  const nsLiteralCString* connectionType = &close;
   if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
     connectionType = &keepAlive;
   }
@@ -714,7 +714,7 @@ nsresult nsHttpHandler::AddConnectionHeader(nsHttpRequestHead *request,
   return request->SetHeader(nsHttp::Connection, *connectionType);
 }
 
-bool nsHttpHandler::IsAcceptableEncoding(const char *enc, bool isSecure) {
+bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
   if (!enc) return false;
 
   // we used to accept x-foo anytime foo was acceptable, but that's just
@@ -771,7 +771,7 @@ void nsHttpHandler::IncrementFastOpenStallsCounter() {
 }
 
 nsresult nsHttpHandler::GetStreamConverterService(
-    nsIStreamConverterService **result) {
+    nsIStreamConverterService** result) {
   if (!mStreamConvSvc) {
     nsresult rv;
     nsCOMPtr<nsIStreamConverterService> service =
@@ -785,7 +785,7 @@ nsresult nsHttpHandler::GetStreamConverterService(
   return NS_OK;
 }
 
-nsISiteSecurityService *nsHttpHandler::GetSSService() {
+nsISiteSecurityService* nsHttpHandler::GetSSService() {
   if (!mSSService) {
     nsCOMPtr<nsISiteSecurityService> service =
         do_GetService(NS_SSSERVICE_CONTRACTID);
@@ -795,7 +795,7 @@ nsISiteSecurityService *nsHttpHandler::GetSSService() {
   return mSSService;
 }
 
-nsICookieService *nsHttpHandler::GetCookieService() {
+nsICookieService* nsHttpHandler::GetCookieService() {
   if (!mCookieService) {
     nsCOMPtr<nsICookieService> service =
         do_GetService(NS_COOKIESERVICE_CONTRACTID);
@@ -805,7 +805,7 @@ nsICookieService *nsHttpHandler::GetCookieService() {
   return mCookieService;
 }
 
-nsresult nsHttpHandler::GetIOService(nsIIOService **result) {
+nsresult nsHttpHandler::GetIOService(nsIIOService** result) {
   NS_ENSURE_ARG_POINTER(result);
 
   NS_ADDREF(*result = mIOService);
@@ -831,15 +831,15 @@ uint32_t nsHttpHandler::Get32BitsOfPseudoRandom() {
 #endif
 }
 
-void nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event) {
+void nsHttpHandler::NotifyObservers(nsIHttpChannel* chan, const char* event) {
   LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   if (obsService) obsService->NotifyObservers(chan, event, nullptr);
 }
 
 nsresult nsHttpHandler::AsyncOnChannelRedirect(
-    nsIChannel *oldChan, nsIChannel *newChan, uint32_t flags,
-    nsIEventTarget *mainThreadEventTarget) {
+    nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
+    nsIEventTarget* mainThreadEventTarget) {
   MOZ_ASSERT(NS_IsMainThread() && (oldChan && newChan));
 
   nsCOMPtr<nsIURI> newURI;
@@ -864,8 +864,8 @@ nsresult nsHttpHandler::AsyncOnChannelRedirect(
 }
 
 /* static */
-nsresult nsHttpHandler::GenerateHostPort(const nsCString &host, int32_t port,
-                                         nsACString &hostLine) {
+nsresult nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
+                                         nsACString& hostLine) {
   return NS_GenerateHostPort(host, port, hostLine);
 }
 
@@ -873,7 +873,7 @@ nsresult nsHttpHandler::GenerateHostPort(const nsCString &host, int32_t port,
 // nsHttpHandler <private>
 //-----------------------------------------------------------------------------
 
-const nsCString &nsHttpHandler::UserAgent() {
+const nsCString& nsHttpHandler::UserAgent() {
   if (nsContentUtils::ShouldResistFingerprinting() &&
       !mSpoofedUserAgent.IsEmpty()) {
     LOG(("using spoofed userAgent : %s\n", mSpoofedUserAgent.get()));
@@ -1037,7 +1037,7 @@ void nsHttpHandler::InitUserAgentComponents() {
 #    pragma warning(disable : 4996)
   if (GetVersionEx(&info)) {
 #    pragma warning(pop)
-    const char *format;
+    const char* format;
 #    if defined _M_IA64
     format = WNT_BASE W64_PREFIX "; IA64";
 #    elif defined _M_X64 || defined _M_AMD64
@@ -1071,10 +1071,10 @@ void nsHttpHandler::InitUserAgentComponents() {
   int ret = uname(&name);
   if (ret >= 0) {
     nsAutoCString buf;
-    buf = (char *)name.sysname;
+    buf = (char*)name.sysname;
 
     if (strcmp(name.machine, "x86_64") == 0 &&
-        sizeof(void *) == sizeof(int32_t)) {
+        sizeof(void*) == sizeof(int32_t)) {
       // We're running 32-bit code on x86_64. Make this browser
       // look like it's running on i686 hardware, but append "
       // (x86_64)" to the end of the oscpu identifier to be able
@@ -1089,11 +1089,11 @@ void nsHttpHandler::InitUserAgentComponents() {
       // AIX uname returns machine specific info in the uname.machine
       // field and does not return the cpu type like other platforms.
       // We use the AIX version and release numbers instead.
-      buf += (char *)name.version;
+      buf += (char*)name.version;
       buf += '.';
-      buf += (char *)name.release;
+      buf += (char*)name.release;
 #    else
-      buf += (char *)name.machine;
+      buf += (char*)name.machine;
 #    endif
     }
 
@@ -1121,7 +1121,7 @@ uint32_t nsHttpHandler::MaxSocketCount() {
   return maxCount;
 }
 
-void nsHttpHandler::PrefsChanged(const char *pref) {
+void nsHttpHandler::PrefsChanged(const char* pref) {
   nsresult rv = NS_OK;
   int32_t val;
 
@@ -1964,8 +1964,8 @@ void nsHttpHandler::PrefsChanged(const char *pref) {
  *      passing: "en, ja, fr_CA"
  *      returns: "en,ja;q=0.7,fr_CA;q=0.3"
  */
-static nsresult PrepareAcceptLanguages(const char *i_AcceptLanguages,
-                                       nsACString &o_AcceptLanguages) {
+static nsresult PrepareAcceptLanguages(const char* i_AcceptLanguages,
+                                       nsACString& o_AcceptLanguages) {
   if (!i_AcceptLanguages) return NS_OK;
 
   const nsAutoCString ns_accept_languages(i_AcceptLanguages);
@@ -1987,7 +1987,7 @@ nsresult nsHttpHandler::SetAcceptLanguages() {
   return rv;
 }
 
-nsresult nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings,
+nsresult nsHttpHandler::SetAcceptEncodings(const char* aAcceptEncodings,
                                            bool isSecure) {
   if (isSecure) {
     mHttpsAcceptEncodings = aAcceptEncodings;
@@ -2015,33 +2015,33 @@ NS_IMPL_ISUPPORTS(nsHttpHandler, nsIHttpProtocolHandler,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::GetScheme(nsACString &aScheme) {
+nsHttpHandler::GetScheme(nsACString& aScheme) {
   aScheme.AssignLiteral("http");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetDefaultPort(int32_t *result) {
+nsHttpHandler::GetDefaultPort(int32_t* result) {
   *result = NS_HTTP_DEFAULT_PORT;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetProtocolFlags(uint32_t *result) {
+nsHttpHandler::GetProtocolFlags(uint32_t* result) {
   *result = NS_HTTP_PROTOCOL_FLAGS;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::NewURI(const nsACString &aSpec, const char *aCharset,
-                      nsIURI *aBaseURI, nsIURI **aURI) {
+nsHttpHandler::NewURI(const nsACString& aSpec, const char* aCharset,
+                      nsIURI* aBaseURI, nsIURI** aURI) {
   return mozilla::net::NewURI(aSpec, aCharset, aBaseURI, NS_HTTP_DEFAULT_PORT,
                               aURI);
 }
 
 NS_IMETHODIMP
-nsHttpHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                          nsIChannel **result) {
+nsHttpHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                          nsIChannel** result) {
   LOG(("nsHttpHandler::NewChannel\n"));
 
   NS_ENSURE_ARG_POINTER(uri);
@@ -2065,7 +2065,7 @@ nsHttpHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsHttpHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
+nsHttpHandler::AllowPort(int32_t port, const char* scheme, bool* _retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;
@@ -2076,9 +2076,9 @@ nsHttpHandler::AllowPort(int32_t port, const char *scheme, bool *_retval) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
-                                 uint32_t proxyResolveFlags, nsIURI *proxyURI,
-                                 nsILoadInfo *aLoadInfo, nsIChannel **result) {
+nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
+                                 uint32_t proxyResolveFlags, nsIURI* proxyURI,
+                                 nsILoadInfo* aLoadInfo, nsIChannel** result) {
   RefPtr<HttpBaseChannel> httpChannel;
 
   LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n", givenProxyInfo));
@@ -2146,37 +2146,37 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *givenProxyInfo,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::GetUserAgent(nsACString &value) {
+nsHttpHandler::GetUserAgent(nsACString& value) {
   value = UserAgent();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetAppName(nsACString &value) {
+nsHttpHandler::GetAppName(nsACString& value) {
   value = mLegacyAppName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetAppVersion(nsACString &value) {
+nsHttpHandler::GetAppVersion(nsACString& value) {
   value = mLegacyAppVersion;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetPlatform(nsACString &value) {
+nsHttpHandler::GetPlatform(nsACString& value) {
   value = mPlatform;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetOscpu(nsACString &value) {
+nsHttpHandler::GetOscpu(nsACString& value) {
   value = mOscpu;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpHandler::GetMisc(nsACString &value) {
+nsHttpHandler::GetMisc(nsACString& value) {
   value = mMisc;
   return NS_OK;
 }
@@ -2186,8 +2186,8 @@ nsHttpHandler::GetMisc(nsACString &value) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::Observe(nsISupports *subject, const char *topic,
-                       const char16_t *data) {
+nsHttpHandler::Observe(nsISupports* subject, const char* topic,
+                       const char16_t* data) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 
@@ -2399,7 +2399,7 @@ void nsHttpHandler::MaybeEnableSpeculativeConnect() {
 }
 
 nsresult nsHttpHandler::SpeculativeConnectInternal(
-    nsIURI *aURI, nsIPrincipal *aPrincipal, nsIInterfaceRequestor *aCallbacks,
+    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
     bool anonymous) {
   if (IsNeckoChild()) {
     ipc::URIParams params;
@@ -2418,9 +2418,9 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
     // feature
     obsService->NotifyObservers(nullptr, "speculative-connect-request",
                                 nullptr);
-    for (auto *cp :
+    for (auto* cp :
          dom::ContentParent::AllProcesses(dom::ContentParent::eLive)) {
-      PNeckoParent *neckoParent =
+      PNeckoParent* neckoParent =
           SingleManagedOrNull(cp->ManagedPNeckoParent());
       if (!neckoParent) {
         continue;
@@ -2429,7 +2429,7 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
     }
   }
 
-  nsISiteSecurityService *sss = gHttpHandler->GetSSService();
+  nsISiteSecurityService* sss = gHttpHandler->GetSSService();
   bool isStsHost = false;
   if (!sss) return NS_OK;
 
@@ -2509,19 +2509,19 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
 }
 
 NS_IMETHODIMP
-nsHttpHandler::SpeculativeConnect(nsIURI *aURI, nsIPrincipal *aPrincipal,
-                                  nsIInterfaceRequestor *aCallbacks) {
+nsHttpHandler::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                  nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
 }
 
 NS_IMETHODIMP
-nsHttpHandler::SpeculativeAnonymousConnect(nsIURI *aURI,
-                                           nsIPrincipal *aPrincipal,
-                                           nsIInterfaceRequestor *aCallbacks) {
+nsHttpHandler::SpeculativeAnonymousConnect(nsIURI* aURI,
+                                           nsIPrincipal* aPrincipal,
+                                           nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
 }
 
-void nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb) {
+void nsHttpHandler::TickleWifi(nsIInterfaceRequestor* cb) {
   if (!cb || !mWifiTickler) return;
 
   // If B2G requires a similar mechanism nsINetworkManager, currently only avail
@@ -2562,40 +2562,40 @@ nsresult nsHttpsHandler::Init() {
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::GetScheme(nsACString &aScheme) {
+nsHttpsHandler::GetScheme(nsACString& aScheme) {
   aScheme.AssignLiteral("https");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::GetDefaultPort(int32_t *aPort) {
+nsHttpsHandler::GetDefaultPort(int32_t* aPort) {
   *aPort = NS_HTTPS_DEFAULT_PORT;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::GetProtocolFlags(uint32_t *aProtocolFlags) {
+nsHttpsHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS | URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::NewURI(const nsACString &aSpec, const char *aOriginCharset,
-                       nsIURI *aBaseURI, nsIURI **_retval) {
+nsHttpsHandler::NewURI(const nsACString& aSpec, const char* aOriginCharset,
+                       nsIURI* aBaseURI, nsIURI** _retval) {
   return mozilla::net::NewURI(aSpec, aOriginCharset, aBaseURI,
                               NS_HTTPS_DEFAULT_PORT, _retval);
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                           nsIChannel **_retval) {
+nsHttpsHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                           nsIChannel** _retval) {
   MOZ_ASSERT(gHttpHandler);
   if (!gHttpHandler) return NS_ERROR_UNEXPECTED;
   return gHttpHandler->NewChannel(aURI, aLoadInfo, _retval);
 }
 
 NS_IMETHODIMP
-nsHttpsHandler::AllowPort(int32_t aPort, const char *aScheme, bool *_retval) {
+nsHttpsHandler::AllowPort(int32_t aPort, const char* aScheme, bool* _retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;
@@ -2628,12 +2628,12 @@ nsresult nsHttpHandler::EnsureHSTSDataReadyNative(
 }
 
 NS_IMETHODIMP
-nsHttpHandler::EnsureHSTSDataReady(JSContext *aCx, Promise **aPromise) {
+nsHttpHandler::EnsureHSTSDataReady(JSContext* aCx, Promise** aPromise) {
   if (NS_WARN_IF(!aCx)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsIGlobalObject *globalObject = xpc::CurrentNativeGlobal(aCx);
+  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aCx);
   if (NS_WARN_IF(!globalObject)) {
     return NS_ERROR_FAILURE;
   }
@@ -2648,7 +2648,7 @@ nsHttpHandler::EnsureHSTSDataReady(JSContext *aCx, Promise **aPromise) {
     gNeckoChild->SendEnsureHSTSData()->Then(
         GetMainThreadSerialEventTarget(), __func__,
         [promise(promise)](
-            NeckoChild::EnsureHSTSDataPromise::ResolveOrRejectValue &&aResult) {
+            NeckoChild::EnsureHSTSDataPromise::ResolveOrRejectValue&& aResult) {
           if (aResult.IsResolve()) {
             promise->MaybeResolve(aResult.ResolveValue());
           } else {
@@ -2681,7 +2681,7 @@ void nsHttpHandler::ShutdownConnectionManager() {
   }
 }
 
-nsresult nsHttpHandler::NewChannelId(uint64_t &channelId) {
+nsresult nsHttpHandler::NewChannelId(uint64_t& channelId) {
   MOZ_ASSERT(NS_IsMainThread());
   channelId =
       ((static_cast<uint64_t>(mProcessId) << 32) & 0xFFFFFFFF00000000LL) |
@@ -2699,7 +2699,7 @@ TimeStamp const nsHttpHandler::GetLastActiveTabLoadOptimizationHit() {
   return mLastActiveTabLoadOptimizationHit;
 }
 
-void nsHttpHandler::SetLastActiveTabLoadOptimizationHit(TimeStamp const &when) {
+void nsHttpHandler::SetLastActiveTabLoadOptimizationHit(TimeStamp const& when) {
   MutexAutoLock lock(mLastActiveTabLoadOptimizationLock);
 
   if (mLastActiveTabLoadOptimizationHit.IsNull() ||
@@ -2709,23 +2709,23 @@ void nsHttpHandler::SetLastActiveTabLoadOptimizationHit(TimeStamp const &when) {
 }
 
 bool nsHttpHandler::IsBeforeLastActiveTabLoadOptimization(
-    TimeStamp const &when) {
+    TimeStamp const& when) {
   MutexAutoLock lock(mLastActiveTabLoadOptimizationLock);
 
   return !mLastActiveTabLoadOptimizationHit.IsNull() &&
          when <= mLastActiveTabLoadOptimizationHit;
 }
 
-void nsHttpHandler::BlacklistSpdy(const nsHttpConnectionInfo *ci) {
+void nsHttpHandler::BlacklistSpdy(const nsHttpConnectionInfo* ci) {
   mConnMgr->BlacklistSpdy(ci);
   mBlacklistedSpdyOrigins.PutEntry(ci->GetOrigin());
 }
 
-bool nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo *ci) {
+bool nsHttpHandler::IsSpdyBlacklisted(const nsHttpConnectionInfo* ci) {
   return mBlacklistedSpdyOrigins.Contains(ci->GetOrigin());
 }
 
-HttpTrafficAnalyzer *nsHttpHandler::GetHttpTrafficAnalyzer() {
+HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (!StaticPrefs::network_traffic_analyzer_enabled()) {

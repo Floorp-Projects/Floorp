@@ -134,8 +134,7 @@ class TurnClient : public MtransportTest {
     r = nr_socket_getfd(net_socket_, &net_fd_);
     ASSERT_EQ(0, r);
 
-    NR_ASYNC_WAIT(net_fd_, NR_ASYNC_WAIT_READ, socket_readable_cb,
-                  (void *)this);
+    NR_ASYNC_WAIT(net_fd_, NR_ASYNC_WAIT_READ, socket_readable_cb, (void*)this);
   }
 
   void TearDown_s() {
@@ -206,7 +205,7 @@ class TurnClient : public MtransportTest {
                   NS_DISPATCH_SYNC);
   }
 
-  void RequestPermission_s(const std::string &target) {
+  void RequestPermission_s(const std::string& target) {
     nr_transport_addr addr;
     int r;
 
@@ -227,13 +226,13 @@ class TurnClient : public MtransportTest {
     ASSERT_EQ(0, r);
   }
 
-  void RequestPermission(const std::string &target) {
+  void RequestPermission(const std::string& target) {
     RUN_ON_THREAD(test_utils_->sts_target(),
                   WrapRunnable(this, &TurnClient::RequestPermission_s, target),
                   NS_DISPATCH_SYNC);
   }
 
-  void Readable(NR_SOCKET s, int how, void *arg) {
+  void Readable(NR_SOCKET s, int how, void* arg) {
     // Re-arm
     std::cerr << "Socket is readable" << std::endl;
     NR_ASYNC_WAIT(s, how, socket_readable_cb, arg);
@@ -287,7 +286,7 @@ class TurnClient : public MtransportTest {
     }
   }
 
-  void SendTo_s(const std::string &target, int expect_return) {
+  void SendTo_s(const std::string& target, int expect_return) {
     nr_transport_addr addr;
     int r;
 
@@ -317,7 +316,7 @@ class TurnClient : public MtransportTest {
     }
   }
 
-  void SendTo(const std::string &target, int expect_return = 0) {
+  void SendTo(const std::string& target, int expect_return = 0) {
     RUN_ON_THREAD(
         test_utils_->sts_target(),
         WrapRunnable(this, &TurnClient::SendTo_s, target, expect_return),
@@ -326,21 +325,21 @@ class TurnClient : public MtransportTest {
 
   int received() const { return received_; }
 
-  static void socket_readable_cb(NR_SOCKET s, int how, void *arg) {
-    static_cast<TurnClient *>(arg)->Readable(s, how, arg);
+  static void socket_readable_cb(NR_SOCKET s, int how, void* arg) {
+    static_cast<TurnClient*>(arg)->Readable(s, how, arg);
   }
 
-  static void allocate_success_cb(NR_SOCKET s, int how, void *arg) {
-    static_cast<TurnClient *>(arg)->Allocated();
+  static void allocate_success_cb(NR_SOCKET s, int how, void* arg) {
+    static_cast<TurnClient*>(arg)->Allocated();
   }
 
  protected:
   std::string turn_server_;
-  nr_socket *real_socket_;
-  nr_socket *net_socket_;
-  nr_socket *buffered_socket_;
+  nr_socket* real_socket_;
+  nr_socket* net_socket_;
+  nr_socket* buffered_socket_;
   NR_SOCKET net_fd_;
-  nr_turn_client_ctx *turn_ctx_;
+  nr_turn_client_ctx* turn_ctx_;
   std::string relay_addr_;
   bool allocated_;
   int received_;
@@ -397,7 +396,7 @@ TEST_F(TurnClient, PermissionDenied) {
   PR_Sleep(1000);
 
   /* Fake a 403 response */
-  nr_turn_permission *perm;
+  nr_turn_permission* perm;
   perm = STAILQ_FIRST(&turn_ctx_->permissions);
   ASSERT_TRUE(perm);
   while (perm) {

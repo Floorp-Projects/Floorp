@@ -23,7 +23,7 @@ struct _maiRedundantObjectFactoryClass {
 
 GType mai_redundant_object_factory_get_type();
 
-AtkObjectFactory *mai_redundant_object_factory_new();
+AtkObjectFactory* mai_redundant_object_factory_new();
 
 G_END_DECLS
 

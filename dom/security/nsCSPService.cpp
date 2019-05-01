@@ -34,7 +34,7 @@ CSPService::~CSPService() {}
 NS_IMPL_ISUPPORTS(CSPService, nsIContentPolicy, nsIChannelEventSink)
 
 // Helper function to identify protocols and content types not subject to CSP.
-bool subjectToCSP(nsIURI *aURI, nsContentPolicyType aContentType) {
+bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   nsContentPolicyType contentType =
       nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
 
@@ -115,8 +115,8 @@ bool subjectToCSP(nsIURI *aURI, nsContentPolicyType aContentType) {
 
 /* nsIContentPolicy implementation */
 NS_IMETHODIMP
-CSPService::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
-                       const nsACString &aMimeTypeGuess, int16_t *aDecision) {
+CSPService::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
+                       const nsACString& aMimeTypeGuess, int16_t* aDecision) {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
   }
@@ -228,9 +228,9 @@ CSPService::ShouldLoad(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-CSPService::ShouldProcess(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
-                          const nsACString &aMimeTypeGuess,
-                          int16_t *aDecision) {
+CSPService::ShouldProcess(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
+                          const nsACString& aMimeTypeGuess,
+                          int16_t* aDecision) {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
   }
@@ -260,9 +260,9 @@ CSPService::ShouldProcess(nsIURI *aContentLocation, nsILoadInfo *aLoadInfo,
 
 /* nsIChannelEventSink implementation */
 NS_IMETHODIMP
-CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
-                                   nsIChannel *newChannel, uint32_t flags,
-                                   nsIAsyncVerifyRedirectCallback *callback) {
+CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
+                                   nsIChannel* newChannel, uint32_t flags,
+                                   nsIAsyncVerifyRedirectCallback* callback) {
   net::nsAsyncRedirectAutoCallback autoCallback(callback);
 
   nsCOMPtr<nsIURI> newUri;

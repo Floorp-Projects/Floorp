@@ -12,7 +12,7 @@
 
 using namespace mozilla;
 
-gfxMathTable::gfxMathTable(hb_face_t *aFace, gfxFloat aSize) {
+gfxMathTable::gfxMathTable(hb_face_t* aFace, gfxFloat aSize) {
   mMathVariantCache.vertical = false;
   mHBFont = hb_font_create(aFace);
   if (mHBFont) {

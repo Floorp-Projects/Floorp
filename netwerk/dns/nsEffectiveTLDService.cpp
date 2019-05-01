@@ -36,7 +36,7 @@ NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
 
 // ----------------------------------------------------------------------
 
-static nsEffectiveTLDService *gService = nullptr;
+static nsEffectiveTLDService* gService = nullptr;
 
 nsEffectiveTLDService::nsEffectiveTLDService()
     : mIDNService(), mGraph(etld_dafsa::kDafsa) {}
@@ -65,7 +65,7 @@ nsEffectiveTLDService::~nsEffectiveTLDService() {
 }
 
 // static
-nsEffectiveTLDService *nsEffectiveTLDService::GetInstance() {
+nsEffectiveTLDService* nsEffectiveTLDService::GetInstance() {
   if (gService) {
     return gService;
   }
@@ -87,8 +87,8 @@ MOZ_DEFINE_MALLOC_SIZE_OF(EffectiveTLDServiceMallocSizeOf)
 // Nonetheless, we keep this code here in anticipation of bug 1083971 which will
 // change ETLDEntries::entries to a heap-allocated array modifiable at runtime.
 NS_IMETHODIMP
-nsEffectiveTLDService::CollectReports(nsIHandleReportCallback *aHandleReport,
-                                      nsISupports *aData, bool aAnonymize) {
+nsEffectiveTLDService::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                      nsISupports* aData, bool aAnonymize) {
   MOZ_COLLECT_REPORT("explicit/network/effective-TLD-service", KIND_HEAP,
                      UNITS_BYTES,
                      SizeOfIncludingThis(EffectiveTLDServiceMallocSizeOf),
@@ -112,8 +112,8 @@ size_t nsEffectiveTLDService::SizeOfIncludingThis(
 // Pulls out the host portion from an nsIURI, and calls through to
 // GetPublicSuffixFromHost().
 NS_IMETHODIMP
-nsEffectiveTLDService::GetPublicSuffix(nsIURI *aURI,
-                                       nsACString &aPublicSuffix) {
+nsEffectiveTLDService::GetPublicSuffix(nsIURI* aURI,
+                                       nsACString& aPublicSuffix) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsAutoCString host;
@@ -129,8 +129,8 @@ nsEffectiveTLDService::GetPublicSuffix(nsIURI *aURI,
 // Pulls out the host portion from an nsIURI, and calls through to
 // GetBaseDomainFromHost().
 NS_IMETHODIMP
-nsEffectiveTLDService::GetBaseDomain(nsIURI *aURI, uint32_t aAdditionalParts,
-                                     nsACString &aBaseDomain) {
+nsEffectiveTLDService::GetBaseDomain(nsIURI* aURI, uint32_t aAdditionalParts,
+                                     nsACString& aBaseDomain) {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_TRUE(((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
 
@@ -146,8 +146,8 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI *aURI, uint32_t aAdditionalParts,
 // External function for dealing with a host string directly: finds the public
 // suffix (e.g. co.uk) for the given hostname. See GetBaseDomainInternal().
 NS_IMETHODIMP
-nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString &aHostname,
-                                               nsACString &aPublicSuffix) {
+nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString& aHostname,
+                                               nsACString& aPublicSuffix) {
   // Create a mutable copy of the hostname and normalize it to ACE.
   // This will fail if the hostname includes invalid characters.
   nsAutoCString normHostname(aHostname);
@@ -161,9 +161,9 @@ nsEffectiveTLDService::GetPublicSuffixFromHost(const nsACString &aHostname,
 // domain (e.g. www.co.uk) for the given hostname and number of subdomain parts
 // requested. See GetBaseDomainInternal().
 NS_IMETHODIMP
-nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
+nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString& aHostname,
                                              uint32_t aAdditionalParts,
-                                             nsACString &aBaseDomain) {
+                                             nsACString& aBaseDomain) {
   NS_ENSURE_TRUE(((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
 
   // Create a mutable copy of the hostname and normalize it to ACE.
@@ -176,8 +176,8 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
 }
 
 NS_IMETHODIMP
-nsEffectiveTLDService::GetNextSubDomain(const nsACString &aHostname,
-                                        nsACString &aBaseDomain) {
+nsEffectiveTLDService::GetNextSubDomain(const nsACString& aHostname,
+                                        nsACString& aBaseDomain) {
   // Create a mutable copy of the hostname and normalize it to ACE.
   // This will fail if the hostname includes invalid characters.
   nsAutoCString normHostname(aHostname);
@@ -192,9 +192,9 @@ nsEffectiveTLDService::GetNextSubDomain(const nsACString &aHostname,
 // if more subdomain parts are requested than are available, or if the hostname
 // includes characters that are not valid in a URL. Normalization is performed
 // on the host string and the result will be in UTF8.
-nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
+nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString& aHostname,
                                                       int32_t aAdditionalParts,
-                                                      nsACString &aBaseDomain) {
+                                                      nsACString& aBaseDomain) {
   const int kExceptionRule = 1;
   const int kWildcardRule = 2;
 
@@ -247,12 +247,12 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
   // Walk up the domain tree, most specific to least specific,
   // looking for matches at each level.  Note that a given level may
   // have multiple attributes (e.g. IsWild() and IsNormal()).
-  const char *prevDomain = nullptr;
-  const char *currDomain = aHostname.get();
-  const char *nextDot = strchr(currDomain, '.');
-  const char *end = currDomain + aHostname.Length();
+  const char* prevDomain = nullptr;
+  const char* currDomain = aHostname.get();
+  const char* nextDot = strchr(currDomain, '.');
+  const char* end = currDomain + aHostname.Length();
   // Default value of *eTLD is currDomain as set in the while loop below
-  const char *eTLD = nullptr;
+  const char* eTLD = nullptr;
   while (true) {
     // sanity check the string we're about to look up: it should not begin with
     // a '.'; this would mean the hostname began with a '.' or had an
@@ -353,7 +353,7 @@ nsresult nsEffectiveTLDService::GetBaseDomainInternal(nsCString &aHostname,
 // Normalizes the given hostname, component by component.  ASCII/ACE
 // components are lower-cased, and UTF-8 components are normalized per
 // RFC 3454 and converted to ACE.
-nsresult nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname) {
+nsresult nsEffectiveTLDService::NormalizeHostname(nsCString& aHostname) {
   if (!IsASCII(aHostname)) {
     nsresult rv = mIDNService->ConvertUTF8toACE(aHostname, aHostname);
     if (NS_FAILED(rv)) return rv;
@@ -364,8 +364,8 @@ nsresult nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname) {
 }
 
 NS_IMETHODIMP
-nsEffectiveTLDService::HasRootDomain(const nsACString &aInput,
-                                     const nsACString &aHost, bool *aResult) {
+nsEffectiveTLDService::HasRootDomain(const nsACString& aInput,
+                                     const nsACString& aHost, bool* aResult) {
   if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_FAILURE;
   }

@@ -19,19 +19,19 @@
 class FormatEtc {
  public:
   FormatEtc() { memset(&mFormat, 0, sizeof(FORMATETC)); }
-  FormatEtc(const FormatEtc &copy) { CopyIn(&copy.mFormat); }
+  FormatEtc(const FormatEtc& copy) { CopyIn(&copy.mFormat); }
   ~FormatEtc() {
     if (mFormat.ptd) CoTaskMemFree(mFormat.ptd);
   }
 
-  void CopyIn(const FORMATETC *aSrc) {
+  void CopyIn(const FORMATETC* aSrc) {
     if (!aSrc) {
       memset(&mFormat, 0, sizeof(FORMATETC));
       return;
     }
     mFormat = *aSrc;
     if (aSrc->ptd) {
-      mFormat.ptd = (DVTARGETDEVICE *)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
+      mFormat.ptd = (DVTARGETDEVICE*)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
       *(mFormat.ptd) = *(aSrc->ptd);
     }
   }
@@ -40,7 +40,7 @@ class FormatEtc {
     if (!aDest) return;
     *aDest = mFormat;
     if (mFormat.ptd) {
-      aDest->ptd = (DVTARGETDEVICE *)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
+      aDest->ptd = (DVTARGETDEVICE*)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
       *(aDest->ptd) = *(mFormat.ptd);
     }
   }
@@ -59,20 +59,20 @@ class FormatEtc {
 
 class CEnumFormatEtc final : public IEnumFORMATETC {
  public:
-  explicit CEnumFormatEtc(nsTArray<FormatEtc> &aArray);
+  explicit CEnumFormatEtc(nsTArray<FormatEtc>& aArray);
   CEnumFormatEtc();
   ~CEnumFormatEtc();
 
   // IUnknown impl.
-  STDMETHODIMP QueryInterface(REFIID riid, LPVOID *ppv);
+  STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv);
   STDMETHODIMP_(ULONG) AddRef();
   STDMETHODIMP_(ULONG) Release();
 
   // IEnumFORMATETC impl.
-  STDMETHODIMP Next(ULONG aMaxToFetch, FORMATETC *aResult, ULONG *aNumFetched);
+  STDMETHODIMP Next(ULONG aMaxToFetch, FORMATETC* aResult, ULONG* aNumFetched);
   STDMETHODIMP Skip(ULONG aSkipNum);
   STDMETHODIMP Reset();
-  STDMETHODIMP Clone(LPENUMFORMATETC *aResult);  // Addrefs
+  STDMETHODIMP Clone(LPENUMFORMATETC* aResult);  // Addrefs
 
   // Utils
   void AddFormatEtc(LPFORMATETC aFormat);

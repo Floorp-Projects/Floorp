@@ -55,7 +55,7 @@
 #  define SSIZE_MAX LONG_MAX
 #endif
 
-int MBS_ReadHeader(FILE *file, MBSPatchHeader *header) {
+int MBS_ReadHeader(FILE* file, MBSPatchHeader* header) {
   size_t s = fread(header, 1, sizeof(MBSPatchHeader), file);
   if (s != sizeof(MBSPatchHeader)) {
     return READ_ERROR;
@@ -110,13 +110,13 @@ int MBS_ReadHeader(FILE *file, MBSPatchHeader *header) {
   return OK;
 }
 
-int MBS_ApplyPatch(const MBSPatchHeader *header, FILE *patchFile,
-                   unsigned char *fbuffer, FILE *file) {
-  unsigned char *fbufstart = fbuffer;
-  unsigned char *fbufend = fbuffer + header->slen;
+int MBS_ApplyPatch(const MBSPatchHeader* header, FILE* patchFile,
+                   unsigned char* fbuffer, FILE* file) {
+  unsigned char* fbufstart = fbuffer;
+  unsigned char* fbufend = fbuffer + header->slen;
 
-  unsigned char *buf = (unsigned char *)malloc(header->cblen + header->difflen +
-                                               header->extralen);
+  unsigned char* buf = (unsigned char*)malloc(header->cblen + header->difflen +
+                                              header->extralen);
   if (!buf) {
     return BSPATCH_MEM_ERROR;
   }
@@ -124,7 +124,7 @@ int MBS_ApplyPatch(const MBSPatchHeader *header, FILE *patchFile,
   int rv = OK;
 
   size_t r = header->cblen + header->difflen + header->extralen;
-  unsigned char *wb = buf;
+  unsigned char* wb = buf;
   while (r) {
     const size_t count = (r > SSIZE_MAX) ? SSIZE_MAX : r;
     size_t c = fread(wb, 1, count, patchFile);
@@ -143,18 +143,18 @@ int MBS_ApplyPatch(const MBSPatchHeader *header, FILE *patchFile,
   }
 
   {
-    MBSPatchTriple *ctrlsrc = (MBSPatchTriple *)buf;
+    MBSPatchTriple* ctrlsrc = (MBSPatchTriple*)buf;
     if (header->cblen % sizeof(MBSPatchTriple) != 0) {
       rv = UNEXPECTED_BSPATCH_ERROR;
       goto end;
     }
 
-    unsigned char *diffsrc = buf + header->cblen;
-    unsigned char *extrasrc = diffsrc + header->difflen;
+    unsigned char* diffsrc = buf + header->cblen;
+    unsigned char* extrasrc = diffsrc + header->difflen;
 
-    MBSPatchTriple *ctrlend = (MBSPatchTriple *)diffsrc;
-    unsigned char *diffend = extrasrc;
-    unsigned char *extraend = extrasrc + header->extralen;
+    MBSPatchTriple* ctrlend = (MBSPatchTriple*)diffsrc;
+    unsigned char* diffend = extrasrc;
+    unsigned char* extraend = extrasrc + header->extralen;
 
     while (ctrlsrc < ctrlend) {
       ctrlsrc->x = ntohl(ctrlsrc->x);

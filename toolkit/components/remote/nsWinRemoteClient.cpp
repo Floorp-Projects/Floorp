@@ -15,8 +15,8 @@ using namespace mozilla;
 nsresult nsWinRemoteClient::Init() { return NS_OK; }
 
 nsresult nsWinRemoteClient::SendCommandLine(
-    const char *aProgram, const char *aProfile, int32_t argc, char **argv,
-    const char *aDesktopStartupID, char **aResponse, bool *aSucceeded) {
+    const char* aProgram, const char* aProfile, int32_t argc, char** argv,
+    const char* aDesktopStartupID, char** aResponse, bool* aSucceeded) {
   *aSucceeded = false;
 
   nsString className;
@@ -28,21 +28,21 @@ nsresult nsWinRemoteClient::SendCommandLine(
     return NS_OK;
   }
 
-  WCHAR *cmd = ::GetCommandLineW();
+  WCHAR* cmd = ::GetCommandLineW();
   WCHAR cwd[MAX_PATH];
   _wgetcwd(cwd, MAX_PATH);
 
   // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
   NS_ConvertUTF16toUTF8 utf8buffer(cmd);
   utf8buffer.Append('\0');
-  WCHAR *cwdPtr = cwd;
-  AppendUTF16toUTF8(MakeStringSpan(reinterpret_cast<char16_t *>(cwdPtr)),
+  WCHAR* cwdPtr = cwd;
+  AppendUTF16toUTF8(MakeStringSpan(reinterpret_cast<char16_t*>(cwdPtr)),
                     utf8buffer);
   utf8buffer.Append('\0');
 
   // We used to set dwData to zero, when we didn't send the working dir.
   // Now we're using it as a version number.
-  COPYDATASTRUCT cds = {1, utf8buffer.Length(), (void *)utf8buffer.get()};
+  COPYDATASTRUCT cds = {1, utf8buffer.Length(), (void*)utf8buffer.get()};
   // Bring the already running Mozilla process to the foreground.
   // nsWindow will restore the window (if minimized) and raise it.
   ::SetForegroundWindow(handle);

@@ -44,7 +44,7 @@ LazyLogModule gFTPLog("nsFtp");
 #define QOS_DATA_PREF "network.ftp.data.qos"
 #define QOS_CONTROL_PREF "network.ftp.control.qos"
 
-nsFtpProtocolHandler *gFtpHandler = nullptr;
+nsFtpProtocolHandler* gFtpHandler = nullptr;
 
 //-----------------------------------------------------------------------------
 
@@ -122,33 +122,33 @@ nsresult nsFtpProtocolHandler::Init() {
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetScheme(nsACString &result) {
+nsFtpProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("ftp");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetDefaultPort(int32_t *result) {
+nsFtpProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = 21;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::GetProtocolFlags(uint32_t *result) {
+nsFtpProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP | URI_LOADABLE_BY_ANYONE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
-                             nsIURI *aBaseURI, nsIURI **result) {
+nsFtpProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
+                             nsIURI* aBaseURI, nsIURI** result) {
   if (!mEnabled) {
     return NS_ERROR_UNKNOWN_PROTOCOL;
   }
   nsAutoCString spec(aSpec);
   spec.Trim(" \t\n\r");  // Match NS_IsAsciiWhitespace instead of HTML5
 
-  char *fwdPtr = spec.BeginWriting();
+  char* fwdPtr = spec.BeginWriting();
 
   // now unescape it... %xx reduced inline to resulting character
 
@@ -171,17 +171,17 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewChannel(nsIURI *url, nsILoadInfo *aLoadInfo,
-                                 nsIChannel **result) {
+nsFtpProtocolHandler::NewChannel(nsIURI* url, nsILoadInfo* aLoadInfo,
+                                 nsIChannel** result) {
   return NewProxiedChannel(url, nullptr, 0, nullptr, aLoadInfo, result);
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *proxyInfo,
+nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
                                         uint32_t proxyResolveFlags,
-                                        nsIURI *proxyURI,
-                                        nsILoadInfo *aLoadInfo,
-                                        nsIChannel **result) {
+                                        nsIURI* proxyURI,
+                                        nsILoadInfo* aLoadInfo,
+                                        nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(uri);
   RefPtr<nsBaseChannel> channel;
   if (IsNeckoChild())
@@ -205,15 +205,15 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *proxyInfo,
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                bool *_retval) {
+nsFtpProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                bool* _retval) {
   *_retval = (port == 21 || port == 22);
   return NS_OK;
 }
 
 // connection cache methods
 
-void nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure) {
+void nsFtpProtocolHandler::Timeout(nsITimer* aTimer, void* aClosure) {
   LOG(("FTP:timeout reached for %p\n", aClosure));
 
   bool found = gFtpHandler->mRootConnectionList.RemoveElement(aClosure);
@@ -222,12 +222,12 @@ void nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure) {
     return;
   }
 
-  timerStruct *s = (timerStruct *)aClosure;
+  timerStruct* s = (timerStruct*)aClosure;
   delete s;
 }
 
 nsresult nsFtpProtocolHandler::RemoveConnection(
-    nsIURI *aKey, nsFtpControlConnection **_retval) {
+    nsIURI* aKey, nsFtpControlConnection** _retval) {
   NS_ASSERTION(_retval, "null pointer");
   NS_ASSERTION(aKey, "null pointer");
 
@@ -238,7 +238,7 @@ nsresult nsFtpProtocolHandler::RemoveConnection(
 
   LOG(("FTP:removing connection for %s\n", spec.get()));
 
-  timerStruct *ts = nullptr;
+  timerStruct* ts = nullptr;
   uint32_t i;
   bool found = false;
 
@@ -260,8 +260,8 @@ nsresult nsFtpProtocolHandler::RemoveConnection(
   return NS_OK;
 }
 
-nsresult nsFtpProtocolHandler::InsertConnection(nsIURI *aKey,
-                                                nsFtpControlConnection *aConn) {
+nsresult nsFtpProtocolHandler::InsertConnection(nsIURI* aKey,
+                                                nsFtpControlConnection* aConn) {
   NS_ASSERTION(aConn, "null pointer");
   NS_ASSERTION(aKey, "null pointer");
 
@@ -272,7 +272,7 @@ nsresult nsFtpProtocolHandler::InsertConnection(nsIURI *aKey,
 
   LOG(("FTP:inserting connection for %s\n", spec.get()));
 
-  timerStruct *ts = new timerStruct();
+  timerStruct* ts = new timerStruct();
   if (!ts) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsITimer> timer;
@@ -303,7 +303,7 @@ nsresult nsFtpProtocolHandler::InsertConnection(nsIURI *aKey,
   if (mRootConnectionList.Length() == IDLE_CONNECTION_LIMIT) {
     uint32_t i;
     for (i = 0; i < mRootConnectionList.Length(); ++i) {
-      timerStruct *candidate = mRootConnectionList[i];
+      timerStruct* candidate = mRootConnectionList[i];
       if (strcmp(candidate->key, ts->key) == 0) {
         mRootConnectionList.RemoveElementAt(i);
         delete candidate;
@@ -311,7 +311,7 @@ nsresult nsFtpProtocolHandler::InsertConnection(nsIURI *aKey,
       }
     }
     if (mRootConnectionList.Length() == IDLE_CONNECTION_LIMIT) {
-      timerStruct *eldest = mRootConnectionList[0];
+      timerStruct* eldest = mRootConnectionList[0];
       mRootConnectionList.RemoveElementAt(0);
       delete eldest;
     }
@@ -325,8 +325,8 @@ nsresult nsFtpProtocolHandler::InsertConnection(nsIURI *aKey,
 // nsIObserver
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::Observe(nsISupports *aSubject, const char *aTopic,
-                              const char16_t *aData) {
+nsFtpProtocolHandler::Observe(nsISupports* aSubject, const char* aTopic,
+                              const char16_t* aData) {
   LOG(("FTP:observing [%s]\n", aTopic));
 
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {

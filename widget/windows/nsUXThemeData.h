@@ -89,7 +89,7 @@ class nsUXThemeData {
   static SIZE sCommandButtonBoxMetrics;
   static bool sCommandButtonBoxMetricsInitialized;
 
-  static const wchar_t *GetClassName(nsUXThemeClass);
+  static const wchar_t* GetClassName(nsUXThemeClass);
   static void EnsureCommandButtonMetrics();
   static void EnsureCommandButtonBoxMetrics();
 

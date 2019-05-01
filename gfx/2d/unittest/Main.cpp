@@ -16,7 +16,7 @@
 #include <sstream>
 
 struct TestObject {
-  TestBase *test;
+  TestBase* test;
   std::string name;
 };
 

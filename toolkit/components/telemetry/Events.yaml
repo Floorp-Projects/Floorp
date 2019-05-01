@@ -367,6 +367,31 @@ fxa_avatar_menu:
         "signedin" and "login_failed".
       fxa_avatar: Boolean for whether or not account has set an avatar
 
+fxa_app_menu:
+  click:
+    objects: [
+      "account_settings",
+      "cad",
+      "send_tab",
+      "sync_now",
+      "sync_settings",
+      "sync_tabs",
+      "sync_tabs_sidebar",
+      "toolbar_icon"
+      ]
+    methods: ["click"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: This is recorded on interactions with the FxA menu in the app (hamburger) menu
+    bug_numbers: [1542334]
+    notification_emails: ["vbudhram@mozilla.com", "loines@mozilla.com"]
+    expiry_version: "73"
+    extra_keys:
+      fxa_status: >
+        The current state of the user. Possible states are "not_configured", "unverified",
+        "signedin" and "login_failed".
+      fxa_avatar: Boolean for whether or not account has set an avatar
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:

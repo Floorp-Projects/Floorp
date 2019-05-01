@@ -23,10 +23,10 @@ class nsProtectedAuthThread : public nsIProtectedAuthThread {
   bool mIAmRunning;
   bool mLoginReady;
 
-  PRThread *mThreadHandle;
+  PRThread* mThreadHandle;
 
   // Slot to do authentication on
-  PK11SlotInfo *mSlot;
+  PK11SlotInfo* mSlot;
 
   // Result of the authentication
   SECStatus mLoginResult;
@@ -38,7 +38,7 @@ class nsProtectedAuthThread : public nsIProtectedAuthThread {
   NS_DECL_NSIPROTECTEDAUTHTHREAD
 
   // Sets parameters for the thread
-  void SetParams(PK11SlotInfo *slot);
+  void SetParams(PK11SlotInfo* slot);
 
   // Gets result of the protected authentication operation
   SECStatus GetResult();

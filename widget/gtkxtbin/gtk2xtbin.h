@@ -30,10 +30,10 @@ extern "C" {
 typedef struct _XtClient XtClient;
 
 struct _XtClient {
-  Display *xtdisplay;
+  Display* xtdisplay;
   Widget top_widget;   /* The toplevel widget */
   Widget child_widget; /* The embedded widget */
-  Visual *xtvisual;
+  Visual* xtvisual;
   int xtdepth;
   Colormap xtcolormap;
   Window oldwindow;
@@ -54,8 +54,8 @@ typedef struct _GtkXtBinClass GtkXtBinClass;
 
 struct _GtkXtBin {
   GtkSocket gsocket;
-  GdkWindow *parent_window;
-  Display *xtdisplay; /* Xt Toolkit Display */
+  GdkWindow* parent_window;
+  Display* xtdisplay; /* Xt Toolkit Display */
 
   Window xtwindow;   /* Xt Toolkit XWindow */
   XtClient xtclient; /* Xt Client for XEmbed */
@@ -66,13 +66,13 @@ struct _GtkXtBinClass {
 };
 
 GTKXTBIN_API(GType) gtk_xtbin_get_type(void);
-GTKXTBIN_API(GtkWidget *) gtk_xtbin_new(GdkWindow *parent_window, String *f);
+GTKXTBIN_API(GtkWidget*) gtk_xtbin_new(GdkWindow* parent_window, String* f);
 #endif
 
 typedef struct _XtTMRec {
   XtTranslations translations;       /* private to Translation Manager    */
   XtBoundActions proc_table;         /* procedure bindings for actions    */
-  struct _XtStateRec *current_state; /* Translation Manager state ptr     */
+  struct _XtStateRec* current_state; /* Translation Manager state ptr     */
   unsigned long lastEventTime;
 } XtTMRec, *XtTM;
 
@@ -98,7 +98,7 @@ typedef struct _CorePart {
   WidgetList popup_list;            /* list of popups                    */
   Cardinal num_popups;              /* how many popups                   */
   String name;                      /* widget resource name              */
-  Screen *screen;                   /* window's screen                   */
+  Screen* screen;                   /* window's screen                   */
   Colormap colormap;                /* colormap                          */
   Window window;                    /* window ID                         */
   Cardinal depth;                   /* number of planes in window        */
@@ -113,15 +113,15 @@ typedef struct _WidgetRec {
 } WidgetRec, CoreRec;
 
 /* Exported functions, used by Xt plugins */
-void xt_client_create(XtClient *xtclient, Window embeder, int height,
+void xt_client_create(XtClient* xtclient, Window embeder, int height,
                       int width);
-void xt_client_unrealize(XtClient *xtclient);
-void xt_client_destroy(XtClient *xtclient);
-void xt_client_init(XtClient *xtclient, Visual *xtvisual, Colormap xtcolormap,
+void xt_client_unrealize(XtClient* xtclient);
+void xt_client_destroy(XtClient* xtclient);
+void xt_client_init(XtClient* xtclient, Visual* xtvisual, Colormap xtcolormap,
                     int xtdepth);
 void xt_client_xloop_create(void);
 void xt_client_xloop_destroy(void);
-Display *xt_client_get_display(void);
+Display* xt_client_get_display(void);
 
 #ifdef __cplusplus
 }

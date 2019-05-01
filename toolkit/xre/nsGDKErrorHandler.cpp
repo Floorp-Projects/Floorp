@@ -24,12 +24,12 @@
  * so we have to utilize the Gdk error handler to avoid
  * false alarms in Gtk3.
  */
-static void GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
-                            const gchar *message, gpointer user_data) {
+static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
+                            const gchar* message, gpointer user_data) {
   if (strstr(message, "X Window System error")) {
     XErrorEvent event;
     nsDependentCString buffer(message);
-    char *endptr;
+    char* endptr;
 
     /* Parse Gdk X Window error message which has this format:
      * (Details: serial XXXX error_code XXXX request_code XXXX (XXXX) minor_code

@@ -13,12 +13,12 @@ using namespace mozilla::net;
 NS_IMPL_ISUPPORTS(nsNetAddr, nsINetAddr)
 
 /* Makes a copy of |addr| */
-nsNetAddr::nsNetAddr(NetAddr *addr) {
+nsNetAddr::nsNetAddr(NetAddr* addr) {
   NS_ASSERTION(addr, "null addr");
   mAddr = *addr;
 }
 
-NS_IMETHODIMP nsNetAddr::GetFamily(uint16_t *aFamily) {
+NS_IMETHODIMP nsNetAddr::GetFamily(uint16_t* aFamily) {
   switch (mAddr.raw.family) {
     case AF_INET:
       *aFamily = nsINetAddr::FAMILY_INET;
@@ -38,7 +38,7 @@ NS_IMETHODIMP nsNetAddr::GetFamily(uint16_t *aFamily) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetAddress(nsACString &aAddress) {
+NS_IMETHODIMP nsNetAddr::GetAddress(nsACString& aAddress) {
   switch (mAddr.raw.family) {
     /* PR_NetAddrToString can handle INET and INET6, but not LOCAL. */
     case AF_INET:
@@ -64,7 +64,7 @@ NS_IMETHODIMP nsNetAddr::GetAddress(nsACString &aAddress) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetPort(uint16_t *aPort) {
+NS_IMETHODIMP nsNetAddr::GetPort(uint16_t* aPort) {
   switch (mAddr.raw.family) {
     case AF_INET:
       *aPort = ntohs(mAddr.inet.port);
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsNetAddr::GetPort(uint16_t *aPort) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetFlow(uint32_t *aFlow) {
+NS_IMETHODIMP nsNetAddr::GetFlow(uint32_t* aFlow) {
   switch (mAddr.raw.family) {
     case AF_INET6:
       *aFlow = ntohl(mAddr.inet6.flowinfo);
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsNetAddr::GetFlow(uint32_t *aFlow) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetScope(uint32_t *aScope) {
+NS_IMETHODIMP nsNetAddr::GetScope(uint32_t* aScope) {
   switch (mAddr.raw.family) {
     case AF_INET6:
       *aScope = ntohl(mAddr.inet6.scope_id);
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsNetAddr::GetScope(uint32_t *aScope) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetIsV4Mapped(bool *aIsV4Mapped) {
+NS_IMETHODIMP nsNetAddr::GetIsV4Mapped(bool* aIsV4Mapped) {
   switch (mAddr.raw.family) {
     case AF_INET6:
       *aIsV4Mapped = IPv6ADDR_IS_V4MAPPED(&mAddr.inet6.ip);
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsNetAddr::GetIsV4Mapped(bool *aIsV4Mapped) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNetAddr::GetNetAddr(NetAddr *aResult) {
+NS_IMETHODIMP nsNetAddr::GetNetAddr(NetAddr* aResult) {
   memcpy(aResult, &mAddr, sizeof(mAddr));
   return NS_OK;
 }

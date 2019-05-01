@@ -2041,10 +2041,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
     // active scroll containers so that we paint by whole tile increments
     // when scrolling.
     nsLayoutUtils::SetDisplayPortMargins(
-        mOuter->GetContent(), mOuter->PresShell(), ScreenMargin(), 0,
-        nsLayoutUtils::RepaintMode::DoNotRepaint);
-    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-        mOuter, nsLayoutUtils::RepaintMode::DoNotRepaint);
+        mOuter->GetContent(), mOuter->PresShell(), ScreenMargin(), 0);
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(mOuter);
   }
 }
 
@@ -3641,7 +3639,11 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                  aBuilder->IsPaintingToWindow());
       if (!mWillBuildScrollableLayer) {
         // Set a displayport so next paint we don't have to force layerization
-        // after the fact.
+        // after the fact. It's ok to pass DoNotRepaint here, since we've
+        // already painted the change and we're just optimizing it to be
+        // detected earlier. We also won't confuse RetainedDisplayLists
+        // with the silent change, since we explicitly request partial updates
+        // to be disabled on the next paint.
         nsLayoutUtils::SetDisplayPortMargins(
             mOuter->GetContent(), mOuter->PresShell(), ScreenMargin(), 0,
             nsLayoutUtils::RepaintMode::DoNotRepaint);
@@ -3889,7 +3891,8 @@ bool ScrollFrameHelper::DecideScrollableLayer(
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
       *aVisibleRect = displayPort;
-      if (!aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree()) {
+      if (!aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree() ||
+          mOuter->IsFrameModified()) {
         *aDirtyRect = displayPort;
         if (aDirtyRectHasBeenOverriden) {
           *aDirtyRectHasBeenOverriden = true;
@@ -3928,6 +3931,10 @@ bool ScrollFrameHelper::DecideScrollableLayer(
   // date if we just introduced a new animated geometry root.
   if (oldWillBuildScrollableLayer != mWillBuildScrollableLayer) {
     aBuilder->RecomputeCurrentAnimatedGeometryRoot();
+    MOZ_DIAGNOSTIC_ASSERT(!aBuilder->IsPartialUpdate() ||
+                              aBuilder->InInvalidSubtree() ||
+                              mOuter->IsFrameModified(),
+                          "Displayport changed without an invalidation");
   }
 
   mIsScrollableLayerInRootContainer =
@@ -7070,11 +7077,9 @@ void ScrollFrameHelper::ApzSmoothScrollTo(const nsPoint& aDestination,
     // this smooth scroll request. We should set a displayport on this
     // frame to force an APZC which can handle the request.
     nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-        mOuter->GetScrollTargetFrame(),
-        nsLayoutUtils::RepaintMode::DoNotRepaint);
+        mOuter->GetScrollTargetFrame(), nsLayoutUtils::RepaintMode::Repaint);
     nsIFrame* frame = do_QueryFrame(mOuter->GetScrollTargetFrame());
-    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-        frame, nsLayoutUtils::RepaintMode::DoNotRepaint);
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame);
   }
 
   // Schedule a paint to ensure that the frame metrics get updated on

@@ -31,13 +31,13 @@ nsSound::Beep() {
 }
 
 NS_IMETHODIMP
-nsSound::OnStreamComplete(nsIStreamLoader *aLoader, nsISupports *context, nsresult aStatus,
-                          uint32_t dataLen, const uint8_t *data) {
+nsSound::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* context, nsresult aStatus,
+                          uint32_t dataLen, const uint8_t* data) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSData *value = [NSData dataWithBytes:data length:dataLen];
+  NSData* value = [NSData dataWithBytes:data length:dataLen];
 
-  NSSound *sound = [[NSSound alloc] initWithData:value];
+  NSSound* sound = [[NSSound alloc] initWithData:value];
 
   [sound play];
 
@@ -49,7 +49,7 @@ nsSound::OnStreamComplete(nsIStreamLoader *aLoader, nsISupports *context, nsresu
 }
 
 NS_IMETHODIMP
-nsSound::Play(nsIURL *aURL) {
+nsSound::Play(nsIURL* aURL) {
   nsCOMPtr<nsIURI> uri(aURL);
   nsCOMPtr<nsIStreamLoader> loader;
   return NS_NewStreamLoader(getter_AddRefs(loader), uri,
