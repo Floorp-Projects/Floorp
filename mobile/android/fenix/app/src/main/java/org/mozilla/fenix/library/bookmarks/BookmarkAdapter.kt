@@ -282,9 +282,6 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
                     is BookmarkItemMenu.Item.Select -> {
                         actionEmitter.onNext(BookmarkAction.Select(item))
                     }
-                    is BookmarkItemMenu.Item.Copy -> {
-                        actionEmitter.onNext(BookmarkAction.Copy(item))
-                    }
                     is BookmarkItemMenu.Item.Delete -> {
                         actionEmitter.onNext(BookmarkAction.Delete(item))
                     }

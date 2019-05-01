@@ -42,7 +42,7 @@ class BookmarkItemMenu(
                     onItemTapped.invoke(BookmarkItemMenu.Item.Select)
                 }
             } else null,
-            if (item.type in listOf(BookmarkNodeType.ITEM, BookmarkNodeType.FOLDER)) {
+            if (item.type == BookmarkNodeType.ITEM) {
                 SimpleBrowserMenuItem(context.getString(R.string.bookmark_menu_copy_button)) {
                     onItemTapped.invoke(BookmarkItemMenu.Item.Copy)
                 }
