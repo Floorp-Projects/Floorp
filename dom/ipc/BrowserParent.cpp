@@ -485,11 +485,17 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   // out-of-process iframe.
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (frameLoader && !mBrowserBridgeParent) {
+  if (frameLoader) {
     nsCOMPtr<Element> frameElement(mFrameElement);
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr,
                    nullptr);
-    frameLoader->DestroyComplete();
+
+    if (!mBrowsingContext->GetParent()) {
+      // If this is a top-level BrowsingContext, tell the frameloader it's time
+      // to go away. Otherwise, this is a subframe crash, and we can keep the
+      // frameloader around.
+      frameLoader->DestroyComplete();
+    }
 
     if (why == AbnormalShutdown && os) {
       os->NotifyObservers(ToSupports(frameLoader), "oop-frameloader-crashed",
@@ -513,6 +519,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
           init.mBubbles = true;
           init.mCancelable = true;
           init.mBrowsingContextId = mBrowsingContext->Id();
+          init.mIsTopFrame = !mBrowsingContext->GetParent();
 
           RefPtr<dom::FrameCrashedEvent> event =
               dom::FrameCrashedEvent::Constructor(frameElement->OwnerDoc(),
