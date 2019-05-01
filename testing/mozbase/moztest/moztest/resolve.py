@@ -87,13 +87,6 @@ TEST_SUITES = {
         'task_regex': ['mochitest-browser-chrome($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
-    'mochitest-browser-chrome-clipboard': {
-        'aliases': ('cl', 'clipboard',),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'browser-chrome', 'subsuite': 'clipboard', 'test_paths': None},
-        'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
-                       'test-verify($|.*(-1|[^0-9])$)'],
-    },
     'mochitest-browser-chrome-screenshots': {
         'aliases': ('ss', 'screenshots-chrome'),
         'mach_command': 'mochitest',
@@ -105,13 +98,6 @@ TEST_SUITES = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': None, 'e10s': False},
         'task_regex': ['mochitest-chrome($|.*(-1|[^0-9])$)',
-                       'test-verify($|.*(-1|[^0-9])$)'],
-    },
-    'mochitest-chrome-clipboard': {
-        'aliases': ('cl', 'clipboard',),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'chrome', 'subsuite': 'clipboard', 'test_paths': None, 'e10s': False},
-        'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-chrome-gpu': {
@@ -139,14 +125,7 @@ TEST_SUITES = {
         'aliases': ('mp', 'plain',),
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'plain', 'test_paths': None},
-        'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-clip|-devtools|-gpu|-harness|-media|-screen|-webgl)($|.*(-1|[^0-9])$)',  # noqa
-                       'test-verify($|.*(-1|[^0-9])$)'],
-    },
-    'mochitest-plain-clipboard': {
-        'aliases': ('cl', 'clipboard',),
-        'mach_command': 'mochitest',
-        'kwargs': {'flavor': 'plain', 'subsuite': 'clipboard', 'test_paths': None},
-        'task_regex': ['mochitest-clipboard($|.*(-1|[^0-9])$)',
+        'task_regex': ['mochitest(?!-a11y|-browser|-chrome|-devtools|-gpu|-harness|-media|-screen|-webgl)($|.*(-1|[^0-9])$)',  # noqa
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
     'mochitest-plain-gpu': {
@@ -250,13 +229,10 @@ _test_flavors = {
 }
 
 _test_subsuites = {
-    ('browser-chrome', 'clipboard'): 'mochitest-browser-chrome-clipboard',
     ('browser-chrome', 'devtools'): 'mochitest-devtools-chrome',
     ('browser-chrome', 'gpu'): 'mochitest-browser-chrome-gpu',
     ('browser-chrome', 'screenshots'): 'mochitest-browser-chrome-screenshots',
-    ('chrome', 'clipboard'): 'mochitest-chrome-clipboard',
     ('chrome', 'gpu'): 'mochitest-chrome-gpu',
-    ('mochitest', 'clipboard'): 'mochitest-plain-clipboard',
     ('mochitest', 'gpu'): 'mochitest-plain-gpu',
     ('mochitest', 'media'): 'mochitest-media',
     ('mochitest', 'robocop'): 'robocop',

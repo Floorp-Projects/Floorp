@@ -87,8 +87,6 @@ UNITTEST_ALIASES = {
     'mochitest-gl-e10s': alias_prefix('mochitest-webgl-e10s'),
     'mochitest-gpu': alias_prefix('mochitest-gpu'),
     'mochitest-gpu-e10s': alias_prefix('mochitest-gpu-e10s'),
-    'mochitest-clipboard': alias_prefix('mochitest-clipboard'),
-    'mochitest-clipboard-e10s': alias_prefix('mochitest-clipboard-e10s'),
     'mochitest-media': alias_prefix('mochitest-media'),
     'mochitest-media-e10s': alias_prefix('mochitest-media-e10s'),
     'mochitest-vg': alias_prefix('mochitest-valgrind'),
