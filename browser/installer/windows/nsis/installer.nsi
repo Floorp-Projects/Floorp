@@ -490,7 +490,13 @@ Section "-Application" APP_IDX
   ${EndIf}
 
 !ifdef MOZ_LAUNCHER_PROCESS
-  ${DisableLauncherProcessByDefault}
+  ; Launcher telemetry is opt-out, so we always enable it by default in new
+  ; installs. We always use HKCU because this value is a reflection of a pref
+  ; from the user profile. While this is not a perfect abstraction (given the
+  ; possibility of multiple Firefox profiles owned by the same Windows user), it
+  ; is more accurate than a machine-wide setting, and should be accurate in the
+  ; majority of cases.
+  WriteRegDWORD HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry" 1
 !endif
 
   ; Create shortcuts
