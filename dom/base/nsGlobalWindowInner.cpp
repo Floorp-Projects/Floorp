@@ -2881,7 +2881,7 @@ bool nsGlobalWindowInner::OfflineCacheAllowedForContext(JSContext* aCx,
 bool nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx,
                                                        JSObject* aObj) {
   // The requestIdleCallback should always be enabled for system code.
-  return nsContentUtils::RequestIdleCallbackEnabled() ||
+  return StaticPrefs::dom_requestIdleCallback_enabled() ||
          nsContentUtils::IsSystemCaller(aCx);
 }
 

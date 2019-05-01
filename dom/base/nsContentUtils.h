@@ -2351,13 +2351,6 @@ class nsContentUtils {
   }
 
   /**
-   * Returns true if the requestIdleCallback API should be enabled.
-   */
-  static bool RequestIdleCallbackEnabled() {
-    return sRequestIdleCallbackEnabled;
-  }
-
-  /**
    * Returns true if CSSOM origin check should be skipped for WebDriver
    * based crawl to be able to collect data from cross-origin CSS style
    * sheets. This can be enabled by setting environment variable
@@ -3425,7 +3418,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sRequestIdleCallbackEnabled;
   static bool sTailingEnabled;
   static bool sShowInputPlaceholderOnFocus;
   static bool sAutoFocusEnabled;

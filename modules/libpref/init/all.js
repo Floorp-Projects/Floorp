@@ -172,9 +172,6 @@ pref("dom.performance.time_to_dom_content_flushed.enabled", false);
 // Enable exposing timeToFirstInteractive
 pref("dom.performance.time_to_first_interactive.enabled", false);
 
-// Enable requestIdleCallback API
-pref("dom.requestIdleCallback.enabled", true);
-
 // Enable Pointer Lock API
 // This is added for accessibility purpose. When user has no way to exit
 // pointer lock (e.g. no keyboard available), they can use this pref to
