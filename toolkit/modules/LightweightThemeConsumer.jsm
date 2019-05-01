@@ -220,7 +220,15 @@ LightweightThemeConsumer.prototype = {
     }
 
     this._setExperiment(active, themeData.experiment, theme.experimental);
-    _setImage(root, active, "--lwt-header-image", theme.headerURL);
+
+    if (theme.headerImage) {
+      this._doc.mozSetImageElement("lwt-header-image", theme.headerImage);
+      root.style.setProperty("--lwt-header-image", "-moz-element(#lwt-header-image)");
+    } else {
+      this._doc.mozSetImageElement("lwt-header-image", null);
+      root.style.removeProperty("--lwt-header-image");
+    }
+
     _setImage(root, active, "--lwt-additional-images", theme.additionalBackgrounds);
     _setProperties(root, active, theme);
 
