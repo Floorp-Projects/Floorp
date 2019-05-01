@@ -358,6 +358,10 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
     return;
   }
 #if defined(XP_WIN)
+  if (!CanPrefetchMemory()) {
+    ReadAheadFile(aFilePath);
+    return;
+  }
   nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr,
                               OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN,
                               nullptr));
@@ -382,11 +386,8 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
       MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (size_t)fileSize.QuadPart);
   auto guard = MakeScopeExit([=]() { UnmapViewOfFile(data); });
 
-  if (data && !MaybePrefetchMemory((uint8_t*)data, (size_t)fileSize.QuadPart)) {
-    volatile uint8_t read = 0;
-    for (size_t i = 0; i < (size_t)fileSize.QuadPart; i += 4096) {
-      read += ((uint8_t*)data)[i];
-    }
+  if (data) {
+    PrefetchMemory((uint8_t*)data, (size_t)fileSize.QuadPart);
   }
 
 #elif defined(LINUX) && !defined(ANDROID)
