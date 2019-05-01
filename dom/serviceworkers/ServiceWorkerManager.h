@@ -328,9 +328,8 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   GetServiceWorkerRegistrationInfo(const nsACString& aScopeKey,
                                    nsIURI* aURI) const;
 
-  // This method generates a key using appId and isInElementBrowser from the
-  // principal. We don't use the origin because it can change during the
-  // loading.
+  // This method generates a key using isInElementBrowser from the principal. We
+  // don't use the origin because it can change during the loading.
   static nsresult PrincipalToScopeKey(nsIPrincipal* aPrincipal,
                                       nsACString& aKey);
 

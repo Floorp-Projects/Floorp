@@ -85,11 +85,7 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
         return nullptr;
       }
 
-      OriginAttributes attrs;
-      if (info.attrs().mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-        attrs = info.attrs();
-      }
-      principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      principal = BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
       if (NS_WARN_IF(!principal)) {
         return nullptr;
       }

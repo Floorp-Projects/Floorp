@@ -137,7 +137,7 @@ add_task(async function test() {
   let created7 = [
     insertOrigin("https://foo.com", "A", 2, 0, 0, 0),
     insertOrigin("http://foo.com", "A", 2, 0, 0, 0),
-    insertOrigin("http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0),
+    insertOrigin("http://foo.com^inBrowser=1", "A", 2, 0, 0, 0),
     insertOrigin("https://192.0.2.235", "A", 2, 0, 0),
   ];
 
@@ -178,7 +178,7 @@ add_task(async function test() {
     // We should have kept the previously migrated entries
     ["https://foo.com", "A", 2, 0, 0, 0],
     ["http://foo.com", "A", 2, 0, 0, 0],
-    ["http://foo.com^appId=1000&inBrowser=1", "A", 2, 0, 0, 0],
+    ["http://foo.com^inBrowser=1", "A", 2, 0, 0, 0],
 
     // Make sure that we also support localhost, and IP addresses
     ["https://localhost:8080", "A", 1, 0, 0],

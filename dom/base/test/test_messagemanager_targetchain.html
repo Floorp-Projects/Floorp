@@ -102,12 +102,9 @@
       var principal = SpecialPowers.wrap(document).nodePrincipal;
       SpecialPowers.pushPermissions([
         { type: "browser", allow: 1, context: { url: principal.URI.spec,
-                                                originAttributes: {
-                                                  appId: principal.appId
-                                                }}},
+                                                originAttributes: {}}},
         { type: "browser", allow: 1, context: { url: principal.URI.spec,
                                                 originAttributes: {
-                                                  appId: principal.appId,
                                                   inIsolatedMozBrowser: true }}}
       ], () => {
         SpecialPowers.pushPrefEnv({

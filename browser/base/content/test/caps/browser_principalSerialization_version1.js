@@ -113,7 +113,6 @@ add_task(async function test_realHistoryCheck() {
       "output": {
         "URI": false,
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,
@@ -128,7 +127,6 @@ add_task(async function test_realHistoryCheck() {
         "cspJSON": "{\"csp-policies\":[{\"child-src\":[\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://www.youtube-nocookie.com\",\"https://trackertest.org\",\"https://www.surveygizmo.com\",\"https://accounts.firefox.com\",\"https://accounts.firefox.com.cn\",\"https://www.youtube.com\"],\"connect-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://accounts.firefox.com/\",\"https://accounts.firefox.com.cn/\"],\"default-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\"],\"frame-src\":[\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://www.youtube-nocookie.com\",\"https://trackertest.org\",\"https://www.surveygizmo.com\",\"https://accounts.firefox.com\",\"https://accounts.firefox.com.cn\",\"https://www.youtube.com\"],\"img-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"data:\",\"https://mozilla.org\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://adservice.google.com\",\"https://adservice.google.de\",\"https://adservice.google.dk\",\"https://creativecommons.org\",\"https://ad.doubleclick.net\"],\"report-only\":false,\"script-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"'unsafe-inline'\",\"'unsafe-eval'\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://tagmanager.google.com\",\"https://www.youtube.com\",\"https://s.ytimg.com\"],\"style-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"'unsafe-inline'\"]}]}",
         "URISpec": "https://www.mozilla.org/en-US/",
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,
@@ -141,7 +139,6 @@ add_task(async function test_realHistoryCheck() {
       "output": {
         "URISpec": "https://www.mozilla.org/en-US/firefox/accounts/",
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,
@@ -155,7 +152,6 @@ add_task(async function test_realHistoryCheck() {
       "output": {
         "URISpec": "https://developer.mozilla.org/en-US/?utm_source=www.mozilla.org&utm_medium=referral&utm_campaign=nav&utm_content=developers",
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,
@@ -169,7 +165,6 @@ add_task(async function test_realHistoryCheck() {
       "output": {
         "URI": false,
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,
@@ -183,7 +178,6 @@ add_task(async function test_realHistoryCheck() {
       "output": {
         "URISpec": "moz-nullprincipal:{045ca18d-436c-4744-bbb6-b1a15366df79}",
         "originAttributes": {
-          "appId": 0,
           "firstPartyDomain": "",
           "inIsolatedMozBrowser": false,
           "privateBrowsingId": 0,

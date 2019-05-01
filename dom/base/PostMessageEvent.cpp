@@ -99,9 +99,6 @@ PostMessageEvent::Run() {
       OriginAttributes targetAttrs = targetPrin->OriginAttributesRef();
 
       MOZ_DIAGNOSTIC_ASSERT(
-          sourceAttrs.mAppId == targetAttrs.mAppId,
-          "Target and source should have the same mAppId attribute.");
-      MOZ_DIAGNOSTIC_ASSERT(
           sourceAttrs.mUserContextId == targetAttrs.mUserContextId,
           "Target and source should have the same userContextId attribute.");
       MOZ_DIAGNOSTIC_ASSERT(sourceAttrs.mInIsolatedMozBrowser ==

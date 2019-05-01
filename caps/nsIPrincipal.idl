@@ -268,24 +268,6 @@ interface nsIPrincipal : nsISerializable
     readonly attribute ACString baseDomain;
 
     /**
-     * Gets the id of the app this principal is inside.  If this principal is
-     * not inside an app, returns nsIScriptSecurityManager::NO_APP_ID.
-     *
-     * Note that this principal does not necessarily have the permissions of
-     * the app identified by appId.  For example, this principal might
-     * correspond to an iframe whose origin differs from that of the app frame
-     * containing it.  In this case, the iframe will have the appId of its
-     * containing app frame, but the iframe must not run with the app's
-     * permissions.
-     *
-     * Similarly, this principal might correspond to an <iframe mozbrowser>
-     * inside an app frame; in this case, the content inside the iframe should
-     * not have any of the app's permissions, even if the iframe is at the same
-     * origin as the app.
-     */
-    [infallible] readonly attribute unsigned long appId;
-
-    /**
      * Gets the ID of the add-on this principal belongs to.
      */
     readonly attribute AString addonId;

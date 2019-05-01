@@ -30,7 +30,7 @@ add_task(async function test_unregister_not_found() {
   let result = await PushService.unregister({
     scope: "https://example.net/nonexistent",
     originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
+      { inIsolatedMozBrowser: false }),
   });
   ok(result === false, "unregister should resolve with false for nonexistent scope");
 });
