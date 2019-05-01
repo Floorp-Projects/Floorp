@@ -244,12 +244,10 @@ class PresShell final : public nsIPresShell,
                             LayoutDeviceIntSize aDisplaySize) override;
 
   // Widget notificiations
-  void WindowSizeMoveDone() override;
-  void SysColorChanged() override { mPresContext->SysColorChanged(); }
-  void ThemeChanged() override { mPresContext->ThemeChanged(); }
-  void BackingScaleFactorChanged() override {
-    mPresContext->UIResolutionChangedSync();
-  }
+  void WindowSizeMoveDone();
+  void SysColorChanged() { mPresContext->SysColorChanged(); }
+  void ThemeChanged() { mPresContext->ThemeChanged(); }
+  void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
   void SynthesizeMouseMove(bool aFromScroll) override;
 
