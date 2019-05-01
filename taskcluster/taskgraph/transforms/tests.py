@@ -158,18 +158,20 @@ TEST_VARIANTS = {
         'description': "{description} with serviceworker-e10s redesign enabled",
         'filterfn': runs_on_central,
         'suffix': 'sw',
-        'config': {
+        'replace': {
             'run-on-projects': ['mozilla-central'],
+        },
+        'merge': {
             'tier': 2,
             'mozharness': {
                 'extra-options': ['--setpref="dom.serviceWorkers.parent_intercept=true"'],
             },
-        }
+        },
     },
     'socketprocess': {
         'description': "{description} with socket process enabled",
         'suffix': 'spi',
-        'config': {
+        'merge': {
             'mozharness': {
                 'extra-options': [
                     '--setpref="media.peerconnection.mtransport_process=true"',
@@ -995,7 +997,8 @@ def split_variants(config, tests):
                 symbol += suffix
             testv['treeherder-symbol'] = join_symbol(group, symbol)
 
-            yield merge(testv, variant['config'])
+            testv.update(variant.get('replace', {}))
+            yield merge(testv, variant.get('merge', {}))
 
 
 @transforms.add
