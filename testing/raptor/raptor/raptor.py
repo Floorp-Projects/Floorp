@@ -436,6 +436,69 @@ class RaptorDesktop(Raptor):
         self.control_server.browser_proc = proc
 
     def run_test(self, test, timeout=None):
+        # tests will be run warm (i.e. NO browser restart between page-cycles)
+        # unless otheriwse specified in the test INI by using 'cold = true'
+        if test.get('cold', False) is True:
+            self.run_test_cold(test, timeout)
+        else:
+            self.run_test_warm(test, timeout)
+
+    def run_test_cold(self, test, timeout=None):
+        '''
+        Run the Raptor test but restart the entire browser app between page-cycles.
+
+        Note: For page-load tests, playback will only be started once - at the beginning of all
+        browser cycles, and then stopped after all cycles are finished. That includes the import
+        of the mozproxy ssl cert and turning on the browser proxy.
+
+        Since we're running in cold-mode, before this point (in manifest.py) the
+        'expected-browser-cycles' value was already set to the initial 'page-cycles' value;
+        and the 'page-cycles' value was set to 1 as we want to perform one page-cycle per
+        browser restart.
+
+        The 'browser-cycle' value is the current overall browser start iteration. The control
+        server will receive the current 'browser-cycle' and the 'expected-browser-cycles' in
+        each results set received; and will pass that on as part of the results so that the
+        results processing will know results for multiple browser cycles are being received.
+
+        The default will be to run in warm mode; unless 'cold = true' is set in the test INI.
+        '''
+        self.log.info("test %s is running in cold mode; browser WILL be restarted between "
+                      "page cycles" % test['name'])
+
+        for test['browser_cycle'] in range(1, test['expected_browser_cycles'] + 1):
+
+            self.log.info("begin browser cycle %d of %d for test %s"
+                          % (test['browser_cycle'], test['expected_browser_cycles'], test['name']))
+
+            self.run_test_setup(test)
+
+            if test['browser_cycle'] == 1:
+
+                if test.get('playback') is not None:
+                    self.start_playback(test)
+
+                if self.config['host'] not in ('localhost', '127.0.0.1'):
+                    self.delete_proxy_settings_from_profile()
+
+            else:
+                # initial browser profile was already created before run_test was called;
+                # now additional browser cycles we want to create a new one each time
+                self.create_browser_profile()
+
+                self.run_test_setup(test)
+
+            # now start the browser/app under test
+            self.launch_desktop_browser(test)
+
+            # set our control server flag to indicate we are running the browser/app
+            self.control_server._finished = False
+
+            self.wait_for_test_finish(test, timeout)
+
+        self.run_test_teardown()
+
+    def run_test_warm(self, test, timeout=None):
         self.run_test_setup(test)
 
         try:

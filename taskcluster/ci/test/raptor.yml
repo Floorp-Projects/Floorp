@@ -1471,3 +1471,39 @@ raptor-wasm-godot-ion-firefox-profiling:
         extra-options:
             - --test=raptor-wasm-godot-ion
             - --gecko-profile
+
+raptor-tp6-1-firefox-cold:
+    description: "Raptor tp6-1 cold page-load on Firefox"
+    try-name: raptor-tp6-1-firefox-cold
+    treeherder-symbol: Rap(tp6-c-1)
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-1
+
+raptor-tp6-2-firefox-cold:
+    description: "Raptor tp6-2 cold page-load on Firefox"
+    try-name: raptor-tp6-2-firefox-cold
+    treeherder-symbol: Rap(tp6-c-2)
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-2
+
+raptor-tp6-3-firefox-cold:
+    description: "Raptor tp6-3 cold page-load on Firefox"
+    try-name: raptor-tp6-3-firefox-cold
+    treeherder-symbol: Rap(tp6-c-3)
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-3
+
+raptor-tp6-4-firefox-cold:
+    description: "Raptor tp6-4 cold page-load on Firefox"
+    try-name: raptor-tp6-4-firefox-cold
+    treeherder-symbol: Rap(tp6-c-4)
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-4
