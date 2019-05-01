@@ -4722,11 +4722,6 @@ void LIRGenerator::visitWasmNullConstant(MWasmNullConstant* ins) {
   define(new (alloc()) LWasmNullConstant(), ins);
 }
 
-void LIRGenerator::visitIsNullPointer(MIsNullPointer* ins) {
-  define(new (alloc()) LIsNullPointer(useRegisterAtStart(ins->getOperand(0))),
-         ins);
-}
-
 void LIRGenerator::visitWasmFloatConstant(MWasmFloatConstant* ins) {
   switch (ins->type()) {
     case MIRType::Double:
