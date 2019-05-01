@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/StaticPrefs.h"
 
 #include "nsImageModule.h"
 #include "imgRequestProxy.h"
@@ -2222,7 +2223,7 @@ nsresult imgLoader::LoadImage(
         cos->AddClassFlags(nsIClassOfService::UrgentStart);
       }
 
-      if (nsContentUtils::IsTailingEnabled() &&
+      if (StaticPrefs::network_http_tailing_enabled() &&
           aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON) {
         cos->AddClassFlags(nsIClassOfService::Throttleable |
                            nsIClassOfService::Tail);
