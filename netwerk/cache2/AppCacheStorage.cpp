@@ -22,8 +22,8 @@
 namespace mozilla {
 namespace net {
 
-AppCacheStorage::AppCacheStorage(nsILoadContextInfo *aInfo,
-                                 nsIApplicationCache *aAppCache)
+AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
+                                 nsIApplicationCache* aAppCache)
     : CacheStorage(aInfo, true /* disk */, false /* lookup app cache */,
                    false /* skip size check */, false /* pin */),
       mAppCache(aAppCache) {}
@@ -33,8 +33,8 @@ AppCacheStorage::~AppCacheStorage() {
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
-    nsIURI *aURI, const nsACString &aIdExtension, uint32_t aFlags,
-    nsICacheEntryOpenCallback *aCallback) {
+    nsIURI* aURI, const nsACString& aIdExtension, uint32_t aFlags,
+    nsICacheEntryOpenCallback* aCallback) {
   if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   NS_ENSURE_ARG(aURI);
@@ -86,22 +86,22 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(
   return NS_OK;
 }
 
-NS_IMETHODIMP AppCacheStorage::OpenTruncate(nsIURI *aURI,
-                                            const nsACString &aIdExtension,
-                                            nsICacheEntry **aCacheEntry) {
+NS_IMETHODIMP AppCacheStorage::OpenTruncate(nsIURI* aURI,
+                                            const nsACString& aIdExtension,
+                                            nsICacheEntry** aCacheEntry) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP AppCacheStorage::Exists(nsIURI *aURI,
-                                      const nsACString &aIdExtension,
-                                      bool *aResult) {
+NS_IMETHODIMP AppCacheStorage::Exists(nsIURI* aURI,
+                                      const nsACString& aIdExtension,
+                                      bool* aResult) {
   *aResult = false;
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
-    nsIURI *aURI, const nsACString &aIdExtension,
-    nsICacheEntryDoomCallback *aCallback) {
+    nsIURI* aURI, const nsACString& aIdExtension,
+    nsICacheEntryDoomCallback* aCallback) {
   if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   if (!mAppCache) {
@@ -114,7 +114,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
-    nsICacheEntryDoomCallback *aCallback) {
+    nsICacheEntryDoomCallback* aCallback) {
   if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
@@ -143,7 +143,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(
 }
 
 NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
-    nsICacheStorageVisitor *aVisitor, bool aVisitEntries) {
+    nsICacheStorageVisitor* aVisitor, bool aVisitEntries) {
   if (!CacheStorageService::Self()) return NS_ERROR_NOT_INITIALIZED;
 
   LOG(("AppCacheStorage::AsyncVisitStorage [this=%p, cb=%p]", this, aVisitor));
@@ -163,8 +163,8 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(
 }
 
 NS_IMETHODIMP AppCacheStorage::GetCacheIndexEntryAttrs(
-    nsIURI *aURI, const nsACString &aIdExtension, bool *aHasAltData,
-    uint32_t *aSizeInKB) {
+    nsIURI* aURI, const nsACString& aIdExtension, bool* aHasAltData,
+    uint32_t* aSizeInKB) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -20,7 +20,7 @@ namespace mozilla {
 namespace scache {
 
 nsresult NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
-                                        nsIObjectInputStream **stream) {
+                                        nsIObjectInputStream** stream) {
   nsCOMPtr<nsIInputStream> stringStream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream),
                                       MakeSpan(buffer.release(), len),
@@ -35,7 +35,7 @@ nsresult NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
 }
 
 nsresult NewObjectOutputWrappedStorageStream(
-    nsIObjectOutputStream **wrapperStream, nsIStorageStream **stream,
+    nsIObjectOutputStream** wrapperStream, nsIStorageStream** stream,
     bool wantDebugStream) {
   nsCOMPtr<nsIStorageStream> storageStream;
 
@@ -52,7 +52,7 @@ nsresult NewObjectOutputWrappedStorageStream(
   if (wantDebugStream) {
     // Wrap in debug stream to detect unsupported writes of
     // multiply-referenced non-singleton objects
-    StartupCache *sc = StartupCache::GetSingleton();
+    StartupCache* sc = StartupCache::GetSingleton();
     NS_ENSURE_TRUE(sc, NS_ERROR_UNEXPECTED);
     nsCOMPtr<nsIObjectOutputStream> debugStream;
     sc->GetDebugObjectOutputStream(objectOutput, getter_AddRefs(debugStream));
@@ -68,8 +68,8 @@ nsresult NewObjectOutputWrappedStorageStream(
   return NS_OK;
 }
 
-nsresult NewBufferFromStorageStream(nsIStorageStream *storageStream,
-                                    UniquePtr<char[]> *buffer, uint32_t *len) {
+nsresult NewBufferFromStorageStream(nsIStorageStream* storageStream,
+                                    UniquePtr<char[]>* buffer, uint32_t* len) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
   rv = storageStream->NewInputStream(0, getter_AddRefs(inputStream));
@@ -97,7 +97,7 @@ nsresult NewBufferFromStorageStream(nsIStorageStream *storageStream,
 
 static const char baseName[2][5] = {"gre/", "app/"};
 
-static inline bool canonicalizeBase(nsAutoCString &spec, nsACString &out) {
+static inline bool canonicalizeBase(nsAutoCString& spec, nsACString& out) {
   nsAutoCString greBase, appBase;
   nsresult rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, greBase);
   if (NS_FAILED(rv) || !greBase.Length()) return false;
@@ -135,7 +135,7 @@ static inline bool canonicalizeBase(nsAutoCString &spec, nsACString &out) {
  * ResolveURI transforms a chrome: or resource: URI into the URI for its
  * underlying resource, or returns any other URI unchanged.
  */
-nsresult ResolveURI(nsIURI *in, nsIURI **out) {
+nsresult ResolveURI(nsIURI* in, nsIURI** out) {
   bool equals;
   nsresult rv;
 
@@ -194,7 +194,7 @@ nsresult ResolveURI(nsIURI *in, nsIURI **out) {
  *  jar:file://$PROFILE_DIR/extensions/some.xpi!/components/component.js becomes
  *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js
  */
-nsresult PathifyURI(nsIURI *in, nsACString &out) {
+nsresult PathifyURI(nsIURI* in, nsACString& out) {
   bool equals;
   nsresult rv;
 

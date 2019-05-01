@@ -27,7 +27,7 @@ class AsyncStatementJSHelper : public nsIXPCScriptable {
   NS_DECL_NSIXPCSCRIPTABLE
 
  private:
-  nsresult getParams(AsyncStatement *, JSContext *, JSObject *, JS::Value *);
+  nsresult getParams(AsyncStatement*, JSContext*, JSObject*, JS::Value*);
 };
 
 /**
@@ -39,10 +39,10 @@ class AsyncStatementParamsHolder final : public nsISupports {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit AsyncStatementParamsHolder(AsyncStatementParams *aParams)
+  explicit AsyncStatementParamsHolder(AsyncStatementParams* aParams)
       : mParams(aParams) {}
 
-  AsyncStatementParams *Get() const {
+  AsyncStatementParams* Get() const {
     MOZ_ASSERT(mParams);
     return mParams;
   }

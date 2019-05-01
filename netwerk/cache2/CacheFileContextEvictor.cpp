@@ -36,7 +36,7 @@ CacheFileContextEvictor::~CacheFileContextEvictor() {
   LOG(("CacheFileContextEvictor::~CacheFileContextEvictor() [this=%p]", this));
 }
 
-nsresult CacheFileContextEvictor::Init(nsIFile *aCacheDirectory) {
+nsresult CacheFileContextEvictor::Init(nsIFile* aCacheDirectory) {
   LOG(("CacheFileContextEvictor::Init()"));
 
   nsresult rv;
@@ -83,8 +83,8 @@ uint32_t CacheFileContextEvictor::ContextsCount() {
 }
 
 nsresult CacheFileContextEvictor::AddContext(
-    nsILoadContextInfo *aLoadContextInfo, bool aPinned,
-    const nsAString &aOrigin) {
+    nsILoadContextInfo* aLoadContextInfo, bool aPinned,
+    const nsAString& aOrigin) {
   LOG(
       ("CacheFileContextEvictor::AddContext() [this=%p, loadContextInfo=%p, "
        "pinned=%d]",
@@ -94,7 +94,7 @@ nsresult CacheFileContextEvictor::AddContext(
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
-  CacheFileContextEvictorEntry *entry = nullptr;
+  CacheFileContextEvictorEntry* entry = nullptr;
   if (aLoadContextInfo) {
     for (uint32_t i = 0; i < mEntries.Length(); ++i) {
       if (mEntries[i]->mInfo && mEntries[i]->mInfo->Equals(aLoadContextInfo) &&
@@ -201,10 +201,10 @@ nsresult CacheFileContextEvictor::CacheIndexStateChanged() {
   return NS_OK;
 }
 
-nsresult CacheFileContextEvictor::WasEvicted(const nsACString &aKey,
-                                             nsIFile *aFile,
-                                             bool *aEvictedAsPinned,
-                                             bool *aEvictedAsNonPinned) {
+nsresult CacheFileContextEvictor::WasEvicted(const nsACString& aKey,
+                                             nsIFile* aFile,
+                                             bool* aEvictedAsPinned,
+                                             bool* aEvictedAsNonPinned) {
   LOG(("CacheFileContextEvictor::WasEvicted() [key=%s]",
        PromiseFlatCString(aKey).get()));
 
@@ -223,7 +223,7 @@ nsresult CacheFileContextEvictor::WasEvicted(const nsACString &aKey,
   }
 
   for (uint32_t i = 0; i < mEntries.Length(); ++i) {
-    CacheFileContextEvictorEntry *entry = mEntries[i];
+    CacheFileContextEvictorEntry* entry = mEntries[i];
 
     if (entry->mInfo && !info->Equals(entry->mInfo)) {
       continue;
@@ -260,8 +260,8 @@ nsresult CacheFileContextEvictor::WasEvicted(const nsACString &aKey,
 }
 
 nsresult CacheFileContextEvictor::PersistEvictionInfoToDisk(
-    nsILoadContextInfo *aLoadContextInfo, bool aPinned,
-    const nsAString &aOrigin) {
+    nsILoadContextInfo* aLoadContextInfo, bool aPinned,
+    const nsAString& aOrigin) {
   LOG(
       ("CacheFileContextEvictor::PersistEvictionInfoToDisk() [this=%p, "
        "loadContextInfo=%p]",
@@ -279,7 +279,7 @@ nsresult CacheFileContextEvictor::PersistEvictionInfoToDisk(
 
   nsCString path = file->HumanReadablePath();
 
-  PRFileDesc *fd;
+  PRFileDesc* fd;
   rv =
       file->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -301,8 +301,8 @@ nsresult CacheFileContextEvictor::PersistEvictionInfoToDisk(
 }
 
 nsresult CacheFileContextEvictor::RemoveEvictInfoFromDisk(
-    nsILoadContextInfo *aLoadContextInfo, bool aPinned,
-    const nsAString &aOrigin) {
+    nsILoadContextInfo* aLoadContextInfo, bool aPinned,
+    const nsAString& aOrigin) {
   LOG(
       ("CacheFileContextEvictor::RemoveEvictInfoFromDisk() [this=%p, "
        "loadContextInfo=%p]",
@@ -433,7 +433,7 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
       continue;
     }
 
-    CacheFileContextEvictorEntry *entry = new CacheFileContextEvictorEntry();
+    CacheFileContextEvictorEntry* entry = new CacheFileContextEvictorEntry();
     entry->mInfo = info;
     entry->mPinned = pinned;
     CopyUTF8toUTF16(origin, entry->mOrigin);
@@ -445,8 +445,8 @@ nsresult CacheFileContextEvictor::LoadEvictInfoFromDisk() {
 }
 
 nsresult CacheFileContextEvictor::GetContextFile(
-    nsILoadContextInfo *aLoadContextInfo, bool aPinned,
-    const nsAString &aOrigin, nsIFile **_retval) {
+    nsILoadContextInfo* aLoadContextInfo, bool aPinned,
+    const nsAString& aOrigin, nsIFile** _retval) {
   nsresult rv;
 
   nsAutoCString leafName;
@@ -648,7 +648,7 @@ nsresult CacheFileContextEvictor::EvictEntries() {
 
     CacheIndex::EntryStatus status;
     bool pinned = false;
-    auto callback = [&pinned](const CacheIndexEntry *aEntry) {
+    auto callback = [&pinned](const CacheIndexEntry* aEntry) {
       pinned = aEntry->IsPinned();
     };
     rv = CacheIndex::HasEntry(hash, &status, callback);

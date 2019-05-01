@@ -42,13 +42,13 @@
 
 //-----------------------------------------------------------------------------
 
-static const wchar_t *const pTypeName[] = {L"Kerberos", L"Negotiate", L"NTLM"};
+static const wchar_t* const pTypeName[] = {L"Kerberos", L"Negotiate", L"NTLM"};
 
 #ifdef DEBUG
 #  define CASE_(_x) \
     case _x:        \
       return #_x;
-static const char *MapErrorCode(int rc) {
+static const char* MapErrorCode(int rc) {
   switch (rc) {
     CASE_(SEC_E_OK)
     CASE_(SEC_I_CONTINUE_NEEDED)
@@ -89,7 +89,7 @@ static nsresult InitSSPI() {
 
 //-----------------------------------------------------------------------------
 
-nsresult nsAuthSSPI::MakeSN(const char *principal, nsCString &result) {
+nsresult nsAuthSSPI::MakeSN(const char* principal, nsCString& result) {
   nsresult rv;
 
   nsAutoCString buf(principal);
@@ -104,7 +104,7 @@ nsresult nsAuthSSPI::MakeSN(const char *principal, nsCString &result) {
       do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  auto dns = static_cast<nsDNSService *>(dnsService.get());
+  auto dns = static_cast<nsDNSService*>(dnsService.get());
 
   // This could be expensive if our DNS cache cannot satisfy the request.
   // However, we should have at least hit the OS resolver once prior to
@@ -173,9 +173,9 @@ void nsAuthSSPI::Reset() {
 NS_IMPL_ISUPPORTS(nsAuthSSPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsAuthSSPI::Init(const char *serviceName, uint32_t serviceFlags,
-                 const char16_t *domain, const char16_t *username,
-                 const char16_t *password) {
+nsAuthSSPI::Init(const char* serviceName, uint32_t serviceFlags,
+                 const char16_t* domain, const char16_t* username,
+                 const char16_t* password) {
   LOG(("  nsAuthSSPI::Init\n"));
 
   mIsFirst = true;
@@ -193,9 +193,9 @@ nsAuthSSPI::Init(const char *serviceName, uint32_t serviceFlags,
     rv = InitSSPI();
     if (NS_FAILED(rv)) return rv;
   }
-  SEC_WCHAR *package;
+  SEC_WCHAR* package;
 
-  package = (SEC_WCHAR *)pTypeName[(int)mPackage];
+  package = (SEC_WCHAR*)pTypeName[(int)mPackage];
 
   if (mPackage == PACKAGE_TYPE_NTLM) {
     // (bug 535193) For NTLM, just use the uri host, do not do canonical host
@@ -229,7 +229,7 @@ nsAuthSSPI::Init(const char *serviceName, uint32_t serviceFlags,
   MS_TimeStamp useBefore;
 
   SEC_WINNT_AUTH_IDENTITY_W ai;
-  SEC_WINNT_AUTH_IDENTITY_W *pai = nullptr;
+  SEC_WINNT_AUTH_IDENTITY_W* pai = nullptr;
 
   // domain, username, and password will be null if nsHttpNTLMAuth's
   // ChallengeReceived returns false for identityInvalid. Use default
@@ -239,11 +239,11 @@ nsAuthSSPI::Init(const char *serviceName, uint32_t serviceFlags,
     mUsername.Assign(username);
     mPassword.Assign(password);
     mDomain.Assign(domain);
-    ai.Domain = reinterpret_cast<unsigned short *>(mDomain.BeginWriting());
+    ai.Domain = reinterpret_cast<unsigned short*>(mDomain.BeginWriting());
     ai.DomainLength = mDomain.Length();
-    ai.User = reinterpret_cast<unsigned short *>(mUsername.BeginWriting());
+    ai.User = reinterpret_cast<unsigned short*>(mUsername.BeginWriting());
     ai.UserLength = mUsername.Length();
-    ai.Password = reinterpret_cast<unsigned short *>(mPassword.BeginWriting());
+    ai.Password = reinterpret_cast<unsigned short*>(mPassword.BeginWriting());
     ai.PasswordLength = mPassword.Length();
     ai.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
     pai = &ai;
@@ -271,8 +271,8 @@ nsAuthSSPI::Init(const char *serviceName, uint32_t serviceFlags,
 // certificate (when available) in the first call of the function. The
 // second time these arguments hold an input token.
 NS_IMETHODIMP
-nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
-                         void **outToken, uint32_t *outTokenLen) {
+nsAuthSSPI::GetNextToken(const void* inToken, uint32_t inTokenLen,
+                         void** outToken, uint32_t* outTokenLen) {
   // String for end-point bindings.
   const char end_point[] = "tls-server-end-point:";
   const int end_point_length = sizeof(end_point) - 1;
@@ -283,12 +283,12 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
   MS_TimeStamp ignored;
 
   DWORD ctxAttr, ctxReq = 0;
-  CtxtHandle *ctxIn;
+  CtxtHandle* ctxIn;
   SecBufferDesc ibd, obd;
   // Optional second input buffer for the CBT (Channel Binding Token)
   SecBuffer ib[2], ob;
   // Pointer to the block of memory that stores the CBT
-  char *sspi_cbt = nullptr;
+  char* sspi_cbt = nullptr;
   SEC_CHANNEL_BINDINGS pendpoint_binding;
 
   LOG(("entering nsAuthSSPI::GetNextToken()\n"));
@@ -348,10 +348,10 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
         ib[ibd.cBuffers].cbBuffer = pendpoint_binding.cbApplicationDataLength +
                                     pendpoint_binding.dwApplicationDataOffset;
 
-        sspi_cbt = (char *)moz_xmalloc(ib[ibd.cBuffers].cbBuffer);
+        sspi_cbt = (char*)moz_xmalloc(ib[ibd.cBuffers].cbBuffer);
 
         // Helper to write in the memory block that stores the CBT
-        char *sspi_cbt_ptr = sspi_cbt;
+        char* sspi_cbt_ptr = sspi_cbt;
 
         ib[ibd.cBuffers].pvBuffer = sspi_cbt;
         ibd.cBuffers++;
@@ -372,7 +372,7 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
         crypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) rv = crypto->Init(nsICryptoHash::SHA256);
         if (NS_SUCCEEDED(rv))
-          rv = crypto->Update((unsigned char *)mCertDERData, mCertDERLength);
+          rv = crypto->Update((unsigned char*)mCertDERData, mCertDERLength);
         if (NS_SUCCEEDED(rv)) rv = crypto->Finish(false, hashString);
         if (NS_FAILED(rv)) {
           free(mCertDERData);
@@ -396,7 +396,7 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
       // We always need this SECBUFFER.
       ib[ibd.cBuffers].BufferType = SECBUFFER_TOKEN;
       ib[ibd.cBuffers].cbBuffer = inTokenLen;
-      ib[ibd.cBuffers].pvBuffer = (void *)inToken;
+      ib[ibd.cBuffers].pvBuffer = (void*)inToken;
       ibd.cBuffers++;
       ctxIn = &mCtxt;
     }
@@ -422,7 +422,7 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
   memset(ob.pvBuffer, 0, ob.cbBuffer);
 
   NS_ConvertUTF8toUTF16 wSN(mServiceName);
-  SEC_WCHAR *sn = (SEC_WCHAR *)wSN.get();
+  SEC_WCHAR* sn = (SEC_WCHAR*)wSN.get();
 
   rc = (sspi->InitializeSecurityContextW)(
       &mCred, ctxIn, sn, ctxReq, 0, SECURITY_NATIVE_DREP,
@@ -454,8 +454,8 @@ nsAuthSSPI::GetNextToken(const void *inToken, uint32_t inTokenLen,
 }
 
 NS_IMETHODIMP
-nsAuthSSPI::Unwrap(const void *inToken, uint32_t inTokenLen, void **outToken,
-                   uint32_t *outTokenLen) {
+nsAuthSSPI::Unwrap(const void* inToken, uint32_t inTokenLen, void** outToken,
+                   uint32_t* outTokenLen) {
   SECURITY_STATUS rc;
   SecBufferDesc ibd;
   SecBuffer ib[2];
@@ -516,8 +516,8 @@ class secBuffers {
 };
 
 NS_IMETHODIMP
-nsAuthSSPI::Wrap(const void *inToken, uint32_t inTokenLen, bool confidential,
-                 void **outToken, uint32_t *outTokenLen) {
+nsAuthSSPI::Wrap(const void* inToken, uint32_t inTokenLen, bool confidential,
+                 void** outToken, uint32_t* outTokenLen) {
   SECURITY_STATUS rc;
 
   SecBufferDesc ibd;
@@ -554,9 +554,9 @@ nsAuthSSPI::Wrap(const void *inToken, uint32_t inTokenLen, bool confidential,
 
   if (SEC_SUCCESS(rc)) {
     int len = bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer + bufs.ib[2].cbBuffer;
-    char *p = (char *)moz_xmalloc(len);
+    char* p = (char*)moz_xmalloc(len);
 
-    *outToken = (void *)p;
+    *outToken = (void*)p;
     *outTokenLen = len;
 
     memcpy(p, bufs.ib[0].pvBuffer, bufs.ib[0].cbBuffer);

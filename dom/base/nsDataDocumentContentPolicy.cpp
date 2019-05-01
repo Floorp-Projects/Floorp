@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS(nsDataDocumentContentPolicy, nsIContentPolicy)
 // Helper method for ShouldLoad()
 // Checks a URI for the given flags.  Returns true if the URI has the flags,
 // and false if not (or if we weren't able to tell).
-static bool HasFlags(nsIURI *aURI, uint32_t aURIFlags) {
+static bool HasFlags(nsIURI* aURI, uint32_t aURIFlags) {
   bool hasFlags;
   nsresult rv = NS_URIChainHasFlags(aURI, aURIFlags, &hasFlags);
   return NS_SUCCEEDED(rv) && hasFlags;
@@ -36,10 +36,10 @@ static bool HasFlags(nsIURI *aURI, uint32_t aURIFlags) {
 // CHECK_PRINCIPAL_AND_DATA in nsContentPolicyUtils is still valid.
 // nsContentPolicyUtils may not pass all the parameters to ShouldLoad.
 NS_IMETHODIMP
-nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
-                                        nsILoadInfo *aLoadInfo,
-                                        const nsACString &aMimeGuess,
-                                        int16_t *aDecision) {
+nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
+                                        nsILoadInfo* aLoadInfo,
+                                        const nsACString& aMimeGuess,
+                                        int16_t* aDecision) {
   auto setBlockingReason = MakeScopeExit([&]() {
     if (NS_CP_REJECTED(*aDecision)) {
       NS_SetRequestBlockingReason(
@@ -82,7 +82,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
     }
   }
 
-  mozilla::dom::Document *docToCheckForImage = doc->GetDisplayDocument();
+  mozilla::dom::Document* docToCheckForImage = doc->GetDisplayDocument();
   if (!docToCheckForImage) {
     docToCheckForImage = doc;
   }
@@ -104,7 +104,7 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 
       // Report error, if we can.
       if (node) {
-        nsIPrincipal *requestingPrincipal = node->NodePrincipal();
+        nsIPrincipal* requestingPrincipal = node->NodePrincipal();
         RefPtr<nsIURI> principalURI;
         nsresult rv = requestingPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv) && principalURI) {
@@ -153,9 +153,9 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 }
 
 NS_IMETHODIMP
-nsDataDocumentContentPolicy::ShouldProcess(nsIURI *aContentLocation,
-                                           nsILoadInfo *aLoadInfo,
-                                           const nsACString &aMimeGuess,
-                                           int16_t *aDecision) {
+nsDataDocumentContentPolicy::ShouldProcess(nsIURI* aContentLocation,
+                                           nsILoadInfo* aLoadInfo,
+                                           const nsACString& aMimeGuess,
+                                           int16_t* aDecision) {
   return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }

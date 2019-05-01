@@ -21,7 +21,7 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-GLBlitTextureImageHelper::GLBlitTextureImageHelper(CompositorOGL *aCompositor)
+GLBlitTextureImageHelper::GLBlitTextureImageHelper(CompositorOGL* aCompositor)
     : mCompositor(aCompositor),
       mBlitProgram(0),
       mBlitFramebuffer(0)
@@ -29,17 +29,17 @@ GLBlitTextureImageHelper::GLBlitTextureImageHelper(CompositorOGL *aCompositor)
 {}
 
 GLBlitTextureImageHelper::~GLBlitTextureImageHelper() {
-  GLContext *gl = mCompositor->gl();
+  GLContext* gl = mCompositor->gl();
   // Likely used by OGL Layers.
   gl->fDeleteProgram(mBlitProgram);
   gl->fDeleteFramebuffers(1, &mBlitFramebuffer);
 }
 
-void GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc,
-                                                const gfx::IntRect &aSrcRect,
-                                                TextureImage *aDst,
-                                                const gfx::IntRect &aDstRect) {
-  GLContext *gl = mCompositor->gl();
+void GLBlitTextureImageHelper::BlitTextureImage(TextureImage* aSrc,
+                                                const gfx::IntRect& aSrcRect,
+                                                TextureImage* aDst,
+                                                const gfx::IntRect& aDstRect) {
+  GLContext* gl = mCompositor->gl();
 
   if (!aSrc || !aDst || aSrcRect.IsEmpty() || aDstRect.IsEmpty()) return;
 
@@ -145,7 +145,7 @@ void GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc,
 
         // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
         // from the 0..1 that it comes out of decompose
-        InfallibleTArray<RectTriangles::coord> &coords = rects.vertCoords();
+        InfallibleTArray<RectTriangles::coord>& coords = rects.vertCoords();
 
         for (unsigned int i = 0; i < coords.Length(); ++i) {
           coords[i].x = (coords[i].x * (dx1 - dx0)) + dx0;
@@ -175,7 +175,7 @@ void GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc,
 
 void GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(
     GLuint aTexture) {
-  GLContext *gl = mCompositor->gl();
+  GLContext* gl = mCompositor->gl();
   if (!mBlitFramebuffer) {
     gl->fGenFramebuffers(1, &mBlitFramebuffer);
   }
@@ -202,7 +202,7 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
   // so we need to Reset the program
   mCompositor->ResetProgram();
 
-  GLContext *gl = mCompositor->gl();
+  GLContext* gl = mCompositor->gl();
   if (mBlitProgram) {
     gl->fUseProgram(mBlitProgram);
     return;
@@ -214,7 +214,7 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
   shaders[0] = gl->fCreateShader(LOCAL_GL_VERTEX_SHADER);
   shaders[1] = gl->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
 
-  const char *blitVSSrc =
+  const char* blitVSSrc =
       "attribute vec2 aVertex;"
       "attribute vec2 aTexCoord;"
       "varying vec2 vTexCoord;"
@@ -222,7 +222,7 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
       "  vTexCoord = aTexCoord;"
       "  gl_Position = vec4(aVertex, 0.0, 1.0);"
       "}";
-  const char *blitFSSrc =
+  const char* blitFSSrc =
       "#ifdef GL_ES\nprecision mediump float;\n#endif\n"
       "uniform sampler2D uSrcTexture;"
       "varying vec2 vTexCoord;"
@@ -230,8 +230,8 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
       "  gl_FragColor = texture2D(uSrcTexture, vTexCoord);"
       "}";
 
-  gl->fShaderSource(shaders[0], 1, (const GLchar **)&blitVSSrc, nullptr);
-  gl->fShaderSource(shaders[1], 1, (const GLchar **)&blitFSSrc, nullptr);
+  gl->fShaderSource(shaders[0], 1, (const GLchar**)&blitVSSrc, nullptr);
+  gl->fShaderSource(shaders[1], 1, (const GLchar**)&blitFSSrc, nullptr);
 
   for (int i = 0; i < 2; ++i) {
     GLint success, len = 0;
@@ -242,10 +242,10 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
 
     if (!success) {
       nsAutoCString log;
-      gl->fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
+      gl->fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&len);
       log.SetLength(len);
-      gl->fGetShaderInfoLog(shaders[i], len, (GLint *)&len,
-                            (char *)log.BeginWriting());
+      gl->fGetShaderInfoLog(shaders[i], len, (GLint*)&len,
+                            (char*)log.BeginWriting());
 
       printf_stderr("Shader %d compilation failed:\n%s\n", i, log.get());
       return;
@@ -266,10 +266,10 @@ void GLBlitTextureImageHelper::UseBlitProgram() {
 
   if (!success) {
     nsAutoCString log;
-    gl->fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
+    gl->fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&len);
     log.SetLength(len);
-    gl->fGetProgramInfoLog(mBlitProgram, len, (GLint *)&len,
-                           (char *)log.BeginWriting());
+    gl->fGetProgramInfoLog(mBlitProgram, len, (GLint*)&len,
+                           (char*)log.BeginWriting());
 
     printf_stderr("Program linking failed:\n%s\n", log.get());
     return;

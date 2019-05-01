@@ -28,9 +28,9 @@
 using namespace mozilla;
 
 static nsresult FreeBSDGetAccessPointData(
-    nsCOMArray<nsWifiAccessPoint> &accessPoints) {
+    nsCOMArray<nsWifiAccessPoint>& accessPoints) {
   // get list of interfaces
-  struct ifaddrs *ifal;
+  struct ifaddrs* ifal;
   if (getifaddrs(&ifal) < 0) {
     return NS_ERROR_FAILURE;
   }
@@ -39,7 +39,7 @@ static nsresult FreeBSDGetAccessPointData(
 
   // loop through the interfaces
   nsresult rv = NS_ERROR_FAILURE;
-  struct ifaddrs *ifa;
+  struct ifaddrs* ifa;
   for (ifa = ifal; ifa; ifa = ifa->ifa_next) {
     // limit to one interface per address
     if (ifa->ifa_addr->sa_family != AF_LINK) {
@@ -92,14 +92,14 @@ static nsresult FreeBSDGetAccessPointData(
     close(s);
 
     // loop through WiFi networks and build geoloc-lookup structure
-    char *vsr = (char *)i802r.i_data;
+    char* vsr = (char*)i802r.i_data;
     unsigned len = i802r.i_len;
     while (len >= sizeof(struct ieee80211req_scan_result)) {
-      struct ieee80211req_scan_result *isr =
-          (struct ieee80211req_scan_result *)vsr;
+      struct ieee80211req_scan_result* isr =
+          (struct ieee80211req_scan_result*)vsr;
 
       // determine size of this entry
-      char *id;
+      char* id;
       int idlen;
       if (isr->isr_meshid_len) {
         id = vsr + isr->isr_ie_off + isr->isr_ssid_len;
@@ -113,7 +113,7 @@ static nsresult FreeBSDGetAccessPointData(
       char ssid[IEEE80211_NWID_LEN + 1];
       strncpy(ssid, id, idlen);
       ssid[idlen] = '\0';
-      nsWifiAccessPoint *ap = new nsWifiAccessPoint();
+      nsWifiAccessPoint* ap = new nsWifiAccessPoint();
       ap->setSSID(ssid, strlen(ssid));
       ap->setMac(isr->isr_bssid);
       ap->setSignal(isr->isr_rssi);

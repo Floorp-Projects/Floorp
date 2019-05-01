@@ -24,32 +24,32 @@ NS_IMPL_ISUPPORTS_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIHandlerApp
 
-NS_IMETHODIMP nsDBusHandlerApp::GetName(nsAString &aName) {
+NS_IMETHODIMP nsDBusHandlerApp::GetName(nsAString& aName) {
   aName.Assign(mName);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::SetName(const nsAString &aName) {
+NS_IMETHODIMP nsDBusHandlerApp::SetName(const nsAString& aName) {
   mName.Assign(aName);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDBusHandlerApp::SetDetailedDescription(
-    const nsAString &aDescription) {
+    const nsAString& aDescription) {
   mDetailedDescription.Assign(aDescription);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDBusHandlerApp::GetDetailedDescription(
-    nsAString &aDescription) {
+    nsAString& aDescription) {
   aDescription.Assign(mDetailedDescription);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval) {
+nsDBusHandlerApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
   NS_ENSURE_ARG_POINTER(aHandlerApp);
 
   // If the handler app isn't a dbus handler app, then it's not the same app.
@@ -77,12 +77,12 @@ nsDBusHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *_retval) {
 }
 
 NS_IMETHODIMP
-nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
-                                nsIInterfaceRequestor *aWindowContext) {
+nsDBusHandlerApp::LaunchWithURI(nsIURI* aURI,
+                                nsIInterfaceRequestor* aWindowContext) {
   nsAutoCString spec;
   nsresult rv = aURI->GetAsciiSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  const char *uri = spec.get();
+  const char* uri = spec.get();
 
   DBusError err;
   dbus_error_init(&err);
@@ -123,42 +123,42 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIDBusHandlerApp
 
-NS_IMETHODIMP nsDBusHandlerApp::GetService(nsACString &aService) {
+NS_IMETHODIMP nsDBusHandlerApp::GetService(nsACString& aService) {
   aService.Assign(mService);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::SetService(const nsACString &aService) {
+NS_IMETHODIMP nsDBusHandlerApp::SetService(const nsACString& aService) {
   mService.Assign(aService);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::GetMethod(nsACString &aMethod) {
+NS_IMETHODIMP nsDBusHandlerApp::GetMethod(nsACString& aMethod) {
   aMethod.Assign(mMethod);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::SetMethod(const nsACString &aMethod) {
+NS_IMETHODIMP nsDBusHandlerApp::SetMethod(const nsACString& aMethod) {
   mMethod.Assign(aMethod);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::GetDBusInterface(nsACString &aInterface) {
+NS_IMETHODIMP nsDBusHandlerApp::GetDBusInterface(nsACString& aInterface) {
   aInterface.Assign(mInterface);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::SetDBusInterface(const nsACString &aInterface) {
+NS_IMETHODIMP nsDBusHandlerApp::SetDBusInterface(const nsACString& aInterface) {
   mInterface.Assign(aInterface);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::GetObjectPath(nsACString &aObjpath) {
+NS_IMETHODIMP nsDBusHandlerApp::GetObjectPath(nsACString& aObjpath) {
   aObjpath.Assign(mObjpath);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBusHandlerApp::SetObjectPath(const nsACString &aObjpath) {
+NS_IMETHODIMP nsDBusHandlerApp::SetObjectPath(const nsACString& aObjpath) {
   mObjpath.Assign(aObjpath);
   return NS_OK;
 }

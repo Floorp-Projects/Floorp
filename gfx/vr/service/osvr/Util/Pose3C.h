@@ -59,7 +59,7 @@ typedef struct OSVR_Pose3 {
 } OSVR_Pose3;
 
 /** @brief Set a pose to identity */
-OSVR_INLINE void osvrPose3SetIdentity(OSVR_Pose3 *pose) {
+OSVR_INLINE void osvrPose3SetIdentity(OSVR_Pose3* pose) {
   osvrQuatSetIdentity(&(pose->rotation));
   osvrVec3Zero(&(pose->translation));
 }

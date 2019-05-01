@@ -49,11 +49,11 @@ nsKeygenThread::~nsKeygenThread() {
   if (usedSlot) PK11_FreeSlot(usedSlot);
 }
 
-void nsKeygenThread::SetParams(PK11SlotInfo *a_slot, PK11AttrFlags a_flags,
-                               PK11SlotInfo *a_alternative_slot,
+void nsKeygenThread::SetParams(PK11SlotInfo* a_slot, PK11AttrFlags a_flags,
+                               PK11SlotInfo* a_alternative_slot,
                                PK11AttrFlags a_alternative_flags,
-                               uint32_t a_keyGenMechanism, void *a_params,
-                               void *a_wincx) {
+                               uint32_t a_keyGenMechanism, void* a_params,
+                               void* a_wincx) {
   MutexAutoLock lock(mutex);
 
   if (!alreadyReceivedParams) {
@@ -69,9 +69,9 @@ void nsKeygenThread::SetParams(PK11SlotInfo *a_slot, PK11AttrFlags a_flags,
   }
 }
 
-nsresult nsKeygenThread::ConsumeResult(PK11SlotInfo **a_used_slot,
-                                       SECKEYPrivateKey **a_privateKey,
-                                       SECKEYPublicKey **a_publicKey) {
+nsresult nsKeygenThread::ConsumeResult(PK11SlotInfo** a_used_slot,
+                                       SECKEYPrivateKey** a_privateKey,
+                                       SECKEYPublicKey** a_publicKey) {
   if (!a_used_slot || !a_privateKey || !a_publicKey) {
     return NS_ERROR_FAILURE;
   }
@@ -101,14 +101,14 @@ nsresult nsKeygenThread::ConsumeResult(PK11SlotInfo **a_used_slot,
   return rv;
 }
 
-static void nsKeygenThreadRunner(void *arg) {
+static void nsKeygenThreadRunner(void* arg) {
   AUTO_PROFILER_REGISTER_THREAD("Keygen");
   NS_SetCurrentThreadName("Keygen");
-  nsKeygenThread *self = static_cast<nsKeygenThread *>(arg);
+  nsKeygenThread* self = static_cast<nsKeygenThread*>(arg);
   self->Run();
 }
 
-nsresult nsKeygenThread::StartKeyGeneration(nsIObserver *aObserver) {
+nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver) {
   if (!NS_IsMainThread()) {
     NS_ERROR("nsKeygenThread::StartKeyGeneration called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
@@ -129,7 +129,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver *aObserver) {
   iAmRunning = true;
 
   threadHandle = PR_CreateThread(PR_USER_THREAD, nsKeygenThreadRunner,
-                                 static_cast<void *>(this), PR_PRIORITY_NORMAL,
+                                 static_cast<void*>(this), PR_PRIORITY_NORMAL,
                                  PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 
   // bool thread_started_ok = (threadHandle != nullptr);
@@ -138,7 +138,7 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver *aObserver) {
   return NS_OK;
 }
 
-nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog) {
+nsresult nsKeygenThread::UserCanceled(bool* threadAlreadyClosedDialog) {
   if (!threadAlreadyClosedDialog) return NS_OK;
 
   *threadAlreadyClosedDialog = false;

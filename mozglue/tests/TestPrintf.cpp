@@ -13,7 +13,7 @@
 // PrintfTarget::print.
 class TestPrintfTarget : public mozilla::PrintfTarget {
  public:
-  static const char *test_string;
+  static const char* test_string;
 
   TestPrintfTarget() : mOut(0) { memset(mBuffer, '\0', sizeof(mBuffer)); }
 
@@ -22,7 +22,7 @@ class TestPrintfTarget : public mozilla::PrintfTarget {
     MOZ_RELEASE_ASSERT(strncmp(mBuffer, test_string, strlen(test_string)) == 0);
   }
 
-  bool append(const char *sp, size_t len) override {
+  bool append(const char* sp, size_t len) override {
     if (mOut + len < sizeof(mBuffer)) {
       memcpy(&mBuffer[mOut], sp, len);
     }
@@ -35,7 +35,7 @@ class TestPrintfTarget : public mozilla::PrintfTarget {
   size_t mOut;
 };
 
-const char *TestPrintfTarget::test_string = "test string";
+const char* TestPrintfTarget::test_string = "test string";
 
 static void TestPrintfTargetPrint() {
   TestPrintfTarget checker;
@@ -43,7 +43,7 @@ static void TestPrintfTargetPrint() {
 }
 
 static bool MOZ_FORMAT_PRINTF(2, 3)
-    print_one(const char *expect, const char *fmt, ...) {
+    print_one(const char* expect, const char* fmt, ...) {
   va_list ap;
 
   va_start(ap, fmt);
@@ -53,7 +53,7 @@ static bool MOZ_FORMAT_PRINTF(2, 3)
   return output && !strcmp(output.get(), expect);
 }
 
-static const char *zero() { return nullptr; }
+static const char* zero() { return nullptr; }
 
 static void TestPrintfFormats() {
   MOZ_RELEASE_ASSERT(print_one("0", "%d", 0));
@@ -103,7 +103,7 @@ static void TestPrintfFormats() {
   MOZ_RELEASE_ASSERT(print_one("hello", "%.*s", 5, "hello there"));
   MOZ_RELEASE_ASSERT(print_one("", "%.*s", 0, "hello there"));
   MOZ_RELEASE_ASSERT(print_one("%%", "%%%%"));
-  MOZ_RELEASE_ASSERT(print_one("0", "%p", (char *)0));
+  MOZ_RELEASE_ASSERT(print_one("0", "%p", (char*)0));
   MOZ_RELEASE_ASSERT(print_one("h", "%c", 'h'));
   MOZ_RELEASE_ASSERT(print_one("1.500000", "%f", 1.5f));
   MOZ_RELEASE_ASSERT(print_one("1.5", "%g", 1.5));

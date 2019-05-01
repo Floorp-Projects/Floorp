@@ -40,17 +40,17 @@ class TransportLayerIce : public TransportLayer {
   void RestoreOldStream();  // called after unsuccessful ice restart
 
   // Transport layer overrides.
-  TransportResult SendPacket(MediaPacket &packet) override;
+  TransportResult SendPacket(MediaPacket& packet) override;
 
   // Slots for ICE
-  void IceCandidate(NrIceMediaStream *stream, const std::string &);
-  void IceReady(NrIceMediaStream *stream);
-  void IceFailed(NrIceMediaStream *stream);
-  void IcePacketReceived(NrIceMediaStream *stream, int component,
-                         const unsigned char *data, int len);
+  void IceCandidate(NrIceMediaStream* stream, const std::string&);
+  void IceReady(NrIceMediaStream* stream);
+  void IceFailed(NrIceMediaStream* stream);
+  void IcePacketReceived(NrIceMediaStream* stream, int component,
+                         const unsigned char* data, int len);
 
   // Useful for capturing encrypted packets
-  sigslot::signal2<TransportLayer *, MediaPacket &> SignalPacketSending;
+  sigslot::signal2<TransportLayer*, MediaPacket&> SignalPacketSending;
 
   TRANSPORT_LAYER_ID("ice")
 

@@ -18,11 +18,11 @@ class nsServerTiming final : public nsIServerTiming {
 
   nsServerTiming() = default;
 
-  void SetName(const nsACString &aName) { mName = aName; }
+  void SetName(const nsACString& aName) { mName = aName; }
 
   void SetDuration(double aDuration) { mDuration = aDuration; }
 
-  void SetDescription(const nsACString &aDescription) {
+  void SetDescription(const nsACString& aDescription) {
     mDescription = aDescription;
   }
 
@@ -39,9 +39,9 @@ namespace net {
 
 class ServerTimingParser {
  public:
-  explicit ServerTimingParser(const nsCString &value) : mValue(value) {}
+  explicit ServerTimingParser(const nsCString& value) : mValue(value) {}
   void Parse();
-  nsTArray<nsCOMPtr<nsIServerTiming>> &&TakeServerTimingHeaders();
+  nsTArray<nsCOMPtr<nsIServerTiming>>&& TakeServerTimingHeaders();
 
  private:
   nsCString mValue;

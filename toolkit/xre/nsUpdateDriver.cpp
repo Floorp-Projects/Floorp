@@ -73,7 +73,7 @@ static LazyLogModule sUpdateLog("updatedriver");
 #endif
 
 #ifdef XP_MACOSX
-static void UpdateDriverSetupMacCommandLine(int &argc, char **&argv,
+static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
                                             bool restart) {
   if (NS_IsMainThread()) {
     CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
@@ -112,7 +112,7 @@ static void UpdateDriverSetupMacCommandLine(int &argc, char **&argv,
 }
 #endif
 
-static nsresult GetCurrentWorkingDir(char *buf, size_t size) {
+static nsresult GetCurrentWorkingDir(char* buf, size_t size) {
   // Cannot use NS_GetSpecialDirectory because XPCOM is not yet initialized.
   // This code is duplicated from xpcom/io/SpecialSystemDirectory.cpp:
 
@@ -134,7 +134,7 @@ static nsresult GetCurrentWorkingDir(char *buf, size_t size) {
  * @param appDir         the application directory file object
  * @param installDirPath the path to the installation directory
  */
-static nsresult GetInstallDirPath(nsIFile *appDir, nsACString &installDirPath) {
+static nsresult GetInstallDirPath(nsIFile* appDir, nsACString& installDirPath) {
   nsresult rv;
 #ifdef XP_MACOSX
   nsCOMPtr<nsIFile> parentDir1, parentDir2;
@@ -163,8 +163,8 @@ static nsresult GetInstallDirPath(nsIFile *appDir, nsACString &installDirPath) {
   return NS_OK;
 }
 
-static bool GetFile(nsIFile *dir, const nsACString &name,
-                    nsCOMPtr<nsIFile> &result) {
+static bool GetFile(nsIFile* dir, const nsACString& name,
+                    nsCOMPtr<nsIFile>& result) {
   nsresult rv;
 
   nsCOMPtr<nsIFile> file;
@@ -178,7 +178,7 @@ static bool GetFile(nsIFile *dir, const nsACString &name,
   return true;
 }
 
-static bool GetStatusFile(nsIFile *dir, nsCOMPtr<nsIFile> &result) {
+static bool GetStatusFile(nsIFile* dir, nsCOMPtr<nsIFile>& result) {
   return GetFile(dir, NS_LITERAL_CSTRING("update.status"), result);
 }
 
@@ -191,12 +191,12 @@ static bool GetStatusFile(nsIFile *dir, nsCOMPtr<nsIFile> &result) {
  * @return true if successful, false otherwise.
  */
 template <size_t Size>
-static bool GetStatusFileContents(nsIFile *statusFile, char (&buf)[Size]) {
+static bool GetStatusFileContents(nsIFile* statusFile, char (&buf)[Size]) {
   static_assert(
       Size > 16,
       "Buffer needs to be large enough to hold the known status codes");
 
-  PRFileDesc *fd = nullptr;
+  PRFileDesc* fd = nullptr;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv)) return false;
 
@@ -224,8 +224,8 @@ typedef enum {
  *
  * @return the update action to be performed.
  */
-static UpdateStatus GetUpdateStatus(nsIFile *dir,
-                                    nsCOMPtr<nsIFile> &statusFile) {
+static UpdateStatus GetUpdateStatus(nsIFile* dir,
+                                    nsCOMPtr<nsIFile>& statusFile) {
   if (GetStatusFile(dir, statusFile)) {
     char buf[32];
     if (GetStatusFileContents(statusFile, buf)) {
@@ -254,14 +254,14 @@ static UpdateStatus GetUpdateStatus(nsIFile *dir,
   return eNoUpdateAction;
 }
 
-static bool GetVersionFile(nsIFile *dir, nsCOMPtr<nsIFile> &result) {
+static bool GetVersionFile(nsIFile* dir, nsCOMPtr<nsIFile>& result) {
   return GetFile(dir, NS_LITERAL_CSTRING("update.version"), result);
 }
 
 // Compares the current application version with the update's application
 // version.
-static bool IsOlderVersion(nsIFile *versionFile, const char *appVersion) {
-  PRFileDesc *fd = nullptr;
+static bool IsOlderVersion(nsIFile* versionFile, const char* appVersion) {
+  PRFileDesc* fd = nullptr;
   nsresult rv = versionFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
   if (NS_FAILED(rv)) return true;
 
@@ -285,8 +285,8 @@ static bool IsOlderVersion(nsIFile *versionFile, const char *appVersion) {
 }
 
 #if defined(XP_MACOSX)
-static bool CopyFileIntoUpdateDir(nsIFile *parentDir, const nsACString &leaf,
-                                  nsIFile *updateDir) {
+static bool CopyFileIntoUpdateDir(nsIFile* parentDir, const nsACString& leaf,
+                                  nsIFile* updateDir) {
   nsCOMPtr<nsIFile> file;
 
   // Make sure there is not an existing file in the target location.
@@ -307,9 +307,9 @@ static bool CopyFileIntoUpdateDir(nsIFile *parentDir, const nsACString &leaf,
   return true;
 }
 
-static bool CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir,
-                                     nsIFile *updateDir,
-                                     nsCOMPtr<nsIFile> &updater) {
+static bool CopyUpdaterIntoUpdateDir(nsIFile* greDir, nsIFile* appDir,
+                                     nsIFile* updateDir,
+                                     nsCOMPtr<nsIFile>& updater) {
   // Copy the updater application from the GRE and the updater ini from the app.
   if (!CopyFileIntoUpdateDir(appDir, NS_LITERAL_CSTRING(UPDATER_APP),
                              updateDir))
@@ -344,9 +344,9 @@ static bool CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir,
  * @param outpid (out) parameter holding the handle to the updater application
  *                     when staging updates
  */
-static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
-                        int appArgc, char **appArgv, bool restart,
-                        bool isStaged, ProcessType *outpid) {
+static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
+                        int appArgc, char** appArgv, bool restart,
+                        bool isStaged, ProcessType* outpid) {
   // The following determines the update operation to perform.
   // 1. When restart is false the update will be staged.
   // 2. When restart is true and isStaged is false the update will apply the mar
@@ -566,25 +566,25 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
       argc += 1;
     }
   }
-  char **argv = static_cast<char **>(malloc((argc + 1) * sizeof(char *)));
+  char** argv = static_cast<char**>(malloc((argc + 1) * sizeof(char*)));
   if (!argv) {
     return;
   }
-  argv[0] = (char *)updaterPath.get();
-  argv[1] = (char *)updateDirPath.get();
-  argv[2] = (char *)installDirPath.get();
-  argv[3] = (char *)applyToDirPath.get();
-  argv[4] = (char *)pid.get();
+  argv[0] = (char*)updaterPath.get();
+  argv[1] = (char*)updateDirPath.get();
+  argv[2] = (char*)installDirPath.get();
+  argv[3] = (char*)applyToDirPath.get();
+  argv[4] = (char*)pid.get();
   if (restart && appArgc) {
     argv[5] = workingDirPath;
-    argv[6] = (char *)appFilePath.get();
+    argv[6] = (char*)appFilePath.get();
     for (int i = 1; i < appArgc; ++i) {
       argv[6 + i] = appArgv[i];
     }
     if (gRestartedByOS) {
       // We haven't truly started up, restore this argument so that we will have
       // it upon restart.
-      argv[6 + appArgc] = const_cast<char *>("-os-restarted");
+      argv[6 + appArgc] = const_cast<char*>("-os-restarted");
     }
   }
   argv[argc] = nullptr;
@@ -710,9 +710,9 @@ static bool ProcessHasTerminated(ProcessType pt) {
 #endif
 }
 
-nsresult ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
-                        int argc, char **argv, const char *appVersion,
-                        bool restart, ProcessType *pid) {
+nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
+                        int argc, char** argv, const char* appVersion,
+                        bool restart, ProcessType* pid) {
   nsresult rv;
 
   nsCOMPtr<nsIFile> updatesDir;
@@ -855,8 +855,8 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
 
   class FixUpdateDirectoryPermsRunnable final : public mozilla::Runnable {
    public:
-    FixUpdateDirectoryPermsRunnable(const char *aName, bool aShouldUseService,
-                                    const nsAutoString &aInstallPath)
+    FixUpdateDirectoryPermsRunnable(const char* aName, bool aShouldUseService,
+                                    const nsAutoString& aInstallPath)
         : Runnable(aName),
           mShouldUseService(aShouldUseService),
           mState(State::Initializing) {

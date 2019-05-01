@@ -25,7 +25,7 @@ using namespace mozilla;
 #if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
 @protocol NSUserNotificationCenterDelegate
 @end
-static NSString *const NSUserNotificationDefaultSoundName = @"DefaultSoundName";
+static NSString* const NSUserNotificationDefaultSoundName = @"DefaultSoundName";
 enum {
   NSUserNotificationActivationTypeNone = 0,
   NSUserNotificationActivationTypeContentsClicked = 1,
@@ -44,31 +44,31 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 #endif
 
 @protocol FakeNSUserNotification <NSObject>
-@property(copy) NSString *title;
-@property(copy) NSString *subtitle;
-@property(copy) NSString *informativeText;
-@property(copy) NSString *actionButtonTitle;
-@property(copy) NSDictionary *userInfo;
-@property(copy) NSDate *deliveryDate;
-@property(copy) NSTimeZone *deliveryTimeZone;
-@property(copy) NSDateComponents *deliveryRepeatInterval;
-@property(readonly) NSDate *actualDeliveryDate;
+@property(copy) NSString* title;
+@property(copy) NSString* subtitle;
+@property(copy) NSString* informativeText;
+@property(copy) NSString* actionButtonTitle;
+@property(copy) NSDictionary* userInfo;
+@property(copy) NSDate* deliveryDate;
+@property(copy) NSTimeZone* deliveryTimeZone;
+@property(copy) NSDateComponents* deliveryRepeatInterval;
+@property(readonly) NSDate* actualDeliveryDate;
 @property(readonly, getter=isPresented) BOOL presented;
 @property(readonly, getter=isRemote) BOOL remote;
-@property(copy) NSString *soundName;
+@property(copy) NSString* soundName;
 @property BOOL hasActionButton;
 @property(readonly) NSUserNotificationActivationType activationType;
-@property(copy) NSString *otherButtonTitle;
-@property(copy) NSImage *contentImage;
+@property(copy) NSString* otherButtonTitle;
+@property(copy) NSImage* contentImage;
 @end
 
 @protocol FakeNSUserNotificationCenter <NSObject>
 + (id<FakeNSUserNotificationCenter>)defaultUserNotificationCenter;
 @property(assign) id<NSUserNotificationCenterDelegate> delegate;
-@property(copy) NSArray *scheduledNotifications;
+@property(copy) NSArray* scheduledNotifications;
 - (void)scheduleNotification:(id<FakeNSUserNotification>)notification;
 - (void)removeScheduledNotification:(id<FakeNSUserNotification>)notification;
-@property(readonly) NSArray *deliveredNotifications;
+@property(readonly) NSArray* deliveredNotifications;
 - (void)deliverNotification:(id<FakeNSUserNotification>)notification;
 - (void)removeDeliveredNotification:(id<FakeNSUserNotification>)notification;
 - (void)removeAllDeliveredNotifications;
@@ -77,14 +77,14 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 @end
 
 @interface mozNotificationCenterDelegate : NSObject <NSUserNotificationCenterDelegate> {
-  OSXNotificationCenter *mOSXNC;
+  OSXNotificationCenter* mOSXNC;
 }
-- (id)initWithOSXNC:(OSXNotificationCenter *)osxnc;
+- (id)initWithOSXNC:(OSXNotificationCenter*)osxnc;
 @end
 
 @implementation mozNotificationCenterDelegate
 
-- (id)initWithOSXNC:(OSXNotificationCenter *)osxnc {
+- (id)initWithOSXNC:(OSXNotificationCenter*)osxnc {
   [super init];
   // We should *never* outlive this OSXNotificationCenter.
   mOSXNC = osxnc;
@@ -99,8 +99,7 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
        didActivateNotification:(id<FakeNSUserNotification>)notification {
   unsigned long long additionalActionIndex = ULLONG_MAX;
   if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
-    NSNumber *alternateActionIndex =
-        [(NSObject *)notification valueForKey:@"_alternateActionIndex"];
+    NSNumber* alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
     additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
   }
   mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"], notification.activationType,
@@ -115,9 +114,9 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 // This is an undocumented method that we need for parity with Safari.
 // Apple bug #15440664.
 - (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
-    didRemoveDeliveredNotifications:(NSArray *)notifications {
+    didRemoveDeliveredNotifications:(NSArray*)notifications {
   for (id<FakeNSUserNotification> notification in notifications) {
-    NSString *name = [[notification userInfo] valueForKey:@"name"];
+    NSString* name = [[notification userInfo] valueForKey:@"name"];
     mOSXNC->CloseAlertCocoaString(name);
   }
 }
@@ -125,7 +124,7 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
 // This is an undocumented method that we need to be notified if a user clicks the close button.
 - (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
                didDismissAlert:(id<FakeNSUserNotification>)notification {
-  NSString *name = [[notification userInfo] valueForKey:@"name"];
+  NSString* name = [[notification userInfo] valueForKey:@"name"];
   mOSXNC->CloseAlertCocoaString(name);
 }
 
@@ -144,9 +143,9 @@ class OSXNotificationInfo final : public nsISupports {
 
  public:
   NS_DECL_ISUPPORTS
-  OSXNotificationInfo(NSString *name, nsIObserver *observer, const nsAString &alertCookie);
+  OSXNotificationInfo(NSString* name, nsIObserver* observer, const nsAString& alertCookie);
 
-  NSString *mName;
+  NSString* mName;
   nsCOMPtr<nsIObserver> mObserver;
   nsString mCookie;
   RefPtr<nsICancelable> mIconRequest;
@@ -155,8 +154,8 @@ class OSXNotificationInfo final : public nsISupports {
 
 NS_IMPL_ISUPPORTS0(OSXNotificationInfo)
 
-OSXNotificationInfo::OSXNotificationInfo(NSString *name, nsIObserver *observer,
-                                         const nsAString &alertCookie) {
+OSXNotificationInfo::OSXNotificationInfo(NSString* name, nsIObserver* observer,
+                                         const nsAString& alertCookie) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NS_ASSERTION(name, "Cannot create OSXNotificationInfo without a name!");
@@ -217,10 +216,10 @@ nsresult OSXNotificationCenter::Init() {
 
 NS_IMETHODIMP
 OSXNotificationCenter::ShowAlertNotification(
-    const nsAString &aImageUrl, const nsAString &aAlertTitle, const nsAString &aAlertText,
-    bool aAlertTextClickable, const nsAString &aAlertCookie, nsIObserver *aAlertListener,
-    const nsAString &aAlertName, const nsAString &aBidi, const nsAString &aLang,
-    const nsAString &aData, nsIPrincipal *aPrincipal, bool aInPrivateBrowsing,
+    const nsAString& aImageUrl, const nsAString& aAlertTitle, const nsAString& aAlertText,
+    bool aAlertTextClickable, const nsAString& aAlertCookie, nsIObserver* aAlertListener,
+    const nsAString& aAlertName, const nsAString& aBidi, const nsAString& aLang,
+    const nsAString& aData, nsIPrincipal* aPrincipal, bool aInPrivateBrowsing,
     bool aRequireInteraction) {
   nsCOMPtr<nsIAlertNotification> alert = do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
   NS_ENSURE_TRUE(alert, NS_ERROR_FAILURE);
@@ -232,21 +231,21 @@ OSXNotificationCenter::ShowAlertNotification(
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::ShowPersistentNotification(const nsAString &aPersistentData,
-                                                  nsIAlertNotification *aAlert,
-                                                  nsIObserver *aAlertListener) {
+OSXNotificationCenter::ShowPersistentNotification(const nsAString& aPersistentData,
+                                                  nsIAlertNotification* aAlert,
+                                                  nsIObserver* aAlertListener) {
   return ShowAlert(aAlert, aAlertListener);
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::ShowAlert(nsIAlertNotification *aAlert, nsIObserver *aAlertListener) {
+OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert, nsIObserver* aAlertListener) {
   return ShowAlertWithIconData(aAlert, aAlertListener, 0, nullptr);
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
-                                             nsIObserver *aAlertListener, uint32_t aIconSize,
-                                             const uint8_t *aIconData) {
+OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
+                                             nsIObserver* aAlertListener, uint32_t aIconSize,
+                                             const uint8_t* aIconData) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NS_ENSURE_ARG(aAlert);
@@ -267,7 +266,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
   sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
 
   if (!hostPort.IsEmpty() && bundle) {
-    const char16_t *formatStrings[] = {hostPort.get()};
+    const char16_t* formatStrings[] = {hostPort.get()};
     nsAutoString notificationSource;
     bundle->FormatStringFromName("source.label", formatStrings, ArrayLength(formatStrings),
                                  notificationSource);
@@ -290,7 +289,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
     bundle->GetStringFromName("closeButton.title", closeButtonTitle);
     bundle->GetStringFromName("actionButton.label", actionButtonTitle);
     if (!hostPort.IsEmpty()) {
-      const char16_t *formatStrings[] = {hostPort.get()};
+      const char16_t* formatStrings[] = {hostPort.get()};
       bundle->FormatStringFromName("webActions.disableForOrigin.label", formatStrings,
                                    ArrayLength(formatStrings), disableButtonTitle);
     }
@@ -307,12 +306,12 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
       notification.hasActionButton = YES;
       notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
 
-      [(NSObject *)notification setValue:@(YES) forKey:@"_showsButtons"];
-      [(NSObject *)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
-      [(NSObject *)notification setValue:@[
+      [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
+      [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
+      [(NSObject*)notification setValue:@[
         nsCocoaUtils::ToNSString(disableButtonTitle), nsCocoaUtils::ToNSString(settingsButtonTitle)
       ]
-                                  forKey:@"_alternateActionButtonTitles"];
+                                 forKey:@"_alternateActionButtonTitles"];
     }
   }
   nsAutoString name;
@@ -325,7 +324,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
-  NSString *alertName = nsCocoaUtils::ToNSString(name);
+  NSString* alertName = nsCocoaUtils::ToNSString(name);
   if (!alertName) {
     return NS_ERROR_FAILURE;
   }
@@ -337,16 +336,16 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
   rv = aAlert->GetCookie(cookie);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OSXNotificationInfo *osxni = new OSXNotificationInfo(alertName, aAlertListener, cookie);
+  OSXNotificationInfo* osxni = new OSXNotificationInfo(alertName, aAlertListener, cookie);
 
   // Show the favicon if supported on this version of OS X.
   if (aIconSize > 0 && [notification respondsToSelector:@selector(set_identityImage:)] &&
       [notification respondsToSelector:@selector(set_identityImageHasBorder:)]) {
-    NSData *iconData = [NSData dataWithBytes:aIconData length:aIconSize];
-    NSImage *icon = [[[NSImage alloc] initWithData:iconData] autorelease];
+    NSData* iconData = [NSData dataWithBytes:aIconData length:aIconSize];
+    NSImage* icon = [[[NSImage alloc] initWithData:iconData] autorelease];
 
-    [(NSObject *)notification setValue:icon forKey:@"_identityImage"];
-    [(NSObject *)notification setValue:@(NO) forKey:@"_identityImageHasBorder"];
+    [(NSObject*)notification setValue:icon forKey:@"_identityImage"];
+    [(NSObject*)notification setValue:@(NO) forKey:@"_identityImageHasBorder"];
   }
 
   bool inPrivateBrowsing;
@@ -379,26 +378,26 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification *aAlert,
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::CloseAlert(const nsAString &aAlertName, nsIPrincipal *aPrincipal) {
+OSXNotificationCenter::CloseAlert(const nsAString& aAlertName, nsIPrincipal* aPrincipal) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSString *alertName = nsCocoaUtils::ToNSString(aAlertName);
+  NSString* alertName = nsCocoaUtils::ToNSString(aAlertName);
   CloseAlertCocoaString(alertName);
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void OSXNotificationCenter::CloseAlertCocoaString(NSString *aAlertName) {
+void OSXNotificationCenter::CloseAlertCocoaString(NSString* aAlertName) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!aAlertName) {
     return;  // Can't do anything without a name
   }
 
-  NSArray *notifications = [GetNotificationCenter() deliveredNotifications];
+  NSArray* notifications = [GetNotificationCenter() deliveredNotifications];
   for (id<FakeNSUserNotification> notification in notifications) {
-    NSString *name = [[notification userInfo] valueForKey:@"name"];
+    NSString* name = [[notification userInfo] valueForKey:@"name"];
     if ([name isEqualToString:aAlertName]) {
       [GetNotificationCenter() removeDeliveredNotification:notification];
       [GetNotificationCenter() _removeDisplayedNotification:notification];
@@ -407,7 +406,7 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString *aAlertName) {
   }
 
   for (unsigned int i = 0; i < mActiveAlerts.Length(); i++) {
-    OSXNotificationInfo *osxni = mActiveAlerts[i];
+    OSXNotificationInfo* osxni = mActiveAlerts[i];
     if ([aAlertName isEqualToString:osxni->mName]) {
       if (osxni->mObserver) {
         osxni->mObserver->Observe(nullptr, "alertfinished", osxni->mCookie.get());
@@ -424,7 +423,7 @@ void OSXNotificationCenter::CloseAlertCocoaString(NSString *aAlertName) {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void OSXNotificationCenter::OnActivate(NSString *aAlertName,
+void OSXNotificationCenter::OnActivate(NSString* aAlertName,
                                        NSUserNotificationActivationType aActivationType,
                                        unsigned long long aAdditionalActionIndex) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -434,7 +433,7 @@ void OSXNotificationCenter::OnActivate(NSString *aAlertName,
   }
 
   for (unsigned int i = 0; i < mActiveAlerts.Length(); i++) {
-    OSXNotificationInfo *osxni = mActiveAlerts[i];
+    OSXNotificationInfo* osxni = mActiveAlerts[i];
     if ([aAlertName isEqualToString:osxni->mName]) {
       if (osxni->mObserver) {
         switch ((int)aActivationType) {
@@ -464,7 +463,7 @@ void OSXNotificationCenter::OnActivate(NSString *aAlertName,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo *osxni) {
+void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo* osxni) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (osxni->mIconRequest) {
@@ -495,10 +494,10 @@ void OSXNotificationCenter::ShowPendingNotification(OSXNotificationInfo *osxni) 
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::OnImageMissing(nsISupports *aUserData) {
+OSXNotificationCenter::OnImageMissing(nsISupports* aUserData) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  OSXNotificationInfo *osxni = static_cast<OSXNotificationInfo *>(aUserData);
+  OSXNotificationInfo* osxni = static_cast<OSXNotificationInfo*>(aUserData);
   if (osxni->mPendingNotification) {
     // If there was an error getting the image, or the request timed out, show
     // the notification without a content image.
@@ -510,7 +509,7 @@ OSXNotificationCenter::OnImageMissing(nsISupports *aUserData) {
 }
 
 NS_IMETHODIMP
-OSXNotificationCenter::OnImageReady(nsISupports *aUserData, imgIRequest *aRequest) {
+OSXNotificationCenter::OnImageReady(nsISupports* aUserData, imgIRequest* aRequest) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsCOMPtr<imgIContainer> image;
@@ -519,12 +518,12 @@ OSXNotificationCenter::OnImageReady(nsISupports *aUserData, imgIRequest *aReques
     return rv;
   }
 
-  OSXNotificationInfo *osxni = static_cast<OSXNotificationInfo *>(aUserData);
+  OSXNotificationInfo* osxni = static_cast<OSXNotificationInfo*>(aUserData);
   if (!osxni->mPendingNotification) {
     return NS_ERROR_FAILURE;
   }
 
-  NSImage *cocoaImage = nil;
+  NSImage* cocoaImage = nil;
   nsCocoaUtils::CreateNSImageFromImageContainer(image, imgIContainer::FRAME_FIRST, &cocoaImage,
                                                 1.0f);
   (osxni->mPendingNotification).contentImage = cocoaImage;

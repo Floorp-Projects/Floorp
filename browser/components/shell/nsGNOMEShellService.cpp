@@ -44,13 +44,13 @@
 using namespace mozilla;
 
 struct ProtocolAssociation {
-  const char *name;
+  const char* name;
   bool essential;
 };
 
 struct MimeTypeAssociation {
-  const char *mimeType;
-  const char *extensions;
+  const char* mimeType;
+  const char* extensions;
 };
 
 static const ProtocolAssociation appProtocols[] = {
@@ -115,15 +115,15 @@ NS_IMPL_ISUPPORTS(nsGNOMEShellService, nsIGNOMEShellService, nsIShellService,
                   nsIToolkitShellService)
 
 bool nsGNOMEShellService::GetAppPathFromLauncher() {
-  gchar *tmp;
+  gchar* tmp;
 
-  const char *launcher = PR_GetEnv("MOZ_APP_LAUNCHER");
+  const char* launcher = PR_GetEnv("MOZ_APP_LAUNCHER");
   if (!launcher) return false;
 
   if (g_path_is_absolute(launcher)) {
     mAppPath = launcher;
     tmp = g_path_get_basename(launcher);
-    gchar *fullpath = g_find_program_in_path(tmp);
+    gchar* fullpath = g_find_program_in_path(tmp);
     if (fullpath && mAppPath.Equals(fullpath)) mAppIsInPath = true;
     g_free(fullpath);
   } else {
@@ -137,10 +137,10 @@ bool nsGNOMEShellService::GetAppPathFromLauncher() {
   return true;
 }
 
-bool nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const {
-  gchar *commandPath;
+bool nsGNOMEShellService::KeyMatchesAppName(const char* aKeyValue) const {
+  gchar* commandPath;
   if (mUseLocaleFilenames) {
-    gchar *nativePath =
+    gchar* nativePath =
         g_filename_from_utf8(aKeyValue, -1, nullptr, nullptr, nullptr);
     if (!nativePath) {
       NS_ERROR("Error converting path to filesystem encoding");
@@ -161,9 +161,9 @@ bool nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const {
 }
 
 bool nsGNOMEShellService::CheckHandlerMatchesAppName(
-    const nsACString &handler) const {
+    const nsACString& handler) const {
   gint argc;
-  gchar **argv;
+  gchar** argv;
   nsAutoCString command(handler);
 
   // The string will be something of the form: [/path/to/]browser "%s"
@@ -182,17 +182,17 @@ bool nsGNOMEShellService::CheckHandlerMatchesAppName(
 
 NS_IMETHODIMP
 nsGNOMEShellService::IsDefaultBrowser(bool aForAllTypes,
-                                      bool *aIsDefaultBrowser) {
+                                      bool* aIsDefaultBrowser) {
   *aIsDefaultBrowser = false;
 
   if (IsRunningAsASnap()) {
-    const gchar *argv[] = {"xdg-settings", "check", "default-web-browser",
+    const gchar* argv[] = {"xdg-settings", "check", "default-web-browser",
                            "firefox.desktop", nullptr};
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);
-    gchar *output = nullptr;
+    gchar* output = nullptr;
     gint exit_status = 0;
-    if (!g_spawn_sync(nullptr, (gchar **)argv, nullptr, flags, nullptr, nullptr,
+    if (!g_spawn_sync(nullptr, (gchar**)argv, nullptr, flags, nullptr, nullptr,
                       &output, nullptr, &exit_status, nullptr)) {
       return NS_OK;
     }
@@ -243,12 +243,12 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers) {
 #endif
 
   if (IsRunningAsASnap()) {
-    const gchar *argv[] = {"xdg-settings", "set", "default-web-browser",
+    const gchar* argv[] = {"xdg-settings", "set", "default-web-browser",
                            "firefox.desktop", nullptr};
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDOUT_TO_DEV_NULL |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);
-    g_spawn_sync(nullptr, (gchar **)argv, nullptr, flags, nullptr, nullptr,
+    g_spawn_sync(nullptr, (gchar**)argv, nullptr, flags, nullptr, nullptr,
                  nullptr, nullptr, nullptr, nullptr);
     return NS_OK;
   }
@@ -312,16 +312,16 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers) {
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::GetCanSetDesktopBackground(bool *aResult) {
+nsGNOMEShellService::GetCanSetDesktopBackground(bool* aResult) {
   // setting desktop background is currently only supported
   // for Gnome or desktops using the same GSettings keys
-  const char *currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop && strstr(currentDesktop, "GNOME") != nullptr) {
     *aResult = true;
     return NS_OK;
   }
 
-  const char *gnomeSession = getenv("GNOME_DESKTOP_SESSION_ID");
+  const char* gnomeSession = getenv("GNOME_DESKTOP_SESSION_ID");
   if (gnomeSession) {
     *aResult = true;
   } else {
@@ -331,7 +331,7 @@ nsGNOMEShellService::GetCanSetDesktopBackground(bool *aResult) {
   return NS_OK;
 }
 
-static nsresult WriteImage(const nsCString &aPath, imgIContainer *aImage) {
+static nsresult WriteImage(const nsCString& aPath, imgIContainer* aImage) {
 #if !defined(MOZ_WIDGET_GTK)
   return NS_ERROR_NOT_AVAILABLE;
 #else
@@ -339,7 +339,7 @@ static nsresult WriteImage(const nsCString &aPath, imgIContainer *aImage) {
       do_GetService("@mozilla.org/widget/image-to-gdk-pixbuf;1");
   if (!imgToPixbuf) return NS_ERROR_NOT_AVAILABLE;
 
-  GdkPixbuf *pixbuf = imgToPixbuf->ConvertImageToPixbuf(aImage);
+  GdkPixbuf* pixbuf = imgToPixbuf->ConvertImageToPixbuf(aImage);
   if (!pixbuf) return NS_ERROR_NOT_AVAILABLE;
 
   gboolean res = gdk_pixbuf_save(pixbuf, aPath.get(), "png", nullptr, nullptr);
@@ -350,9 +350,9 @@ static nsresult WriteImage(const nsCString &aPath, imgIContainer *aImage) {
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::SetDesktopBackground(dom::Element *aElement,
+nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
                                           int32_t aPosition,
-                                          const nsACString &aImageName) {
+                                          const nsACString& aImageName) {
   nsresult rv;
   nsCOMPtr<nsIImageLoadingContent> imageContent =
       do_QueryInterface(aElement, &rv);
@@ -415,7 +415,7 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element *aElement,
     gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(kDesktopBGSchema),
                                       getter_AddRefs(background_settings));
     if (background_settings) {
-      gchar *file_uri = g_filename_to_uri(filePath.get(), nullptr, nullptr);
+      gchar* file_uri = g_filename_to_uri(filePath.get(), nullptr, nullptr);
       if (!file_uri) return NS_ERROR_FAILURE;
 
       background_settings->SetString(NS_LITERAL_CSTRING(kDesktopOptionGSKey),
@@ -437,7 +437,7 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element *aElement,
 #define COLOR_8_TO_16_BIT(_c) ((_c) << 8 | (_c))
 
 NS_IMETHODIMP
-nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t *aColor) {
+nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t* aColor) {
   nsCOMPtr<nsIGSettingsService> gsettings =
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   nsCOMPtr<nsIGSettingsCollection> background_settings;
@@ -467,10 +467,10 @@ nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t *aColor) {
   return NS_OK;
 }
 
-static void ColorToCString(uint32_t aColor, nsCString &aResult) {
+static void ColorToCString(uint32_t aColor, nsCString& aResult) {
   // The #rrrrggggbbbb format is used to match gdk_color_to_string()
   aResult.SetLength(13);
-  char *buf = aResult.BeginWriting();
+  char* buf = aResult.BeginWriting();
   if (!buf) return;
 
   uint16_t red = COLOR_8_TO_16_BIT((aColor >> 16) & 0xff);
@@ -523,8 +523,8 @@ nsGNOMEShellService::OpenApplication(int32_t aApplication) {
 }
 
 NS_IMETHODIMP
-nsGNOMEShellService::OpenApplicationWithURI(nsIFile *aApplication,
-                                            const nsACString &aURI) {
+nsGNOMEShellService::OpenApplicationWithURI(nsIFile* aApplication,
+                                            const nsACString& aURI) {
   nsresult rv;
   nsCOMPtr<nsIProcess> process =
       do_CreateInstance("@mozilla.org/process/util;1", &rv);
@@ -534,6 +534,6 @@ nsGNOMEShellService::OpenApplicationWithURI(nsIFile *aApplication,
   if (NS_FAILED(rv)) return rv;
 
   const nsCString spec(aURI);
-  const char *specStr = spec.get();
+  const char* specStr = spec.get();
   return process->Run(false, &specStr, 1);
 }

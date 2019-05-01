@@ -20,9 +20,9 @@ using namespace mozilla;
 
 /////////////////////////////////////////////////////////////////////////////
 
-nsresult nsUrlClassifierDBServiceConstructor(nsISupports *aOuter,
-                                             const nsIID &aIID,
-                                             void **aResult) {
+nsresult nsUrlClassifierDBServiceConstructor(nsISupports* aOuter,
+                                             const nsIID& aIID,
+                                             void** aResult) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_NO_AGGREGATION(aOuter);

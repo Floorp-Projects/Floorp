@@ -13,8 +13,8 @@
 
 class nsISupports;
 
-nsresult nsAppShellConstructor(nsISupports *outer, const nsIID &iid,
-                               void **result);
+nsresult nsAppShellConstructor(nsISupports* outer, const nsIID& iid,
+                               void** result);
 
 nsresult nsWidgetGtk2ModuleCtor();
 void nsWidgetGtk2ModuleDtor();

@@ -31,17 +31,17 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
 
   nsIndexedToHTML();
 
-  nsresult Init(nsIStreamListener *aListener);
+  nsresult Init(nsIStreamListener* aListener);
 
-  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
  protected:
-  void FormatSizeString(int64_t inSize, nsCString &outSizeString);
-  nsresult SendToListener(nsIRequest *aRequest, nsISupports *aContext,
-                          const nsACString &aBuffer);
+  void FormatSizeString(int64_t inSize, nsCString& outSizeString);
+  nsresult SendToListener(nsIRequest* aRequest, nsISupports* aContext,
+                          const nsACString& aBuffer);
   // Helper to properly implement OnStartRequest
-  nsresult DoOnStartRequest(nsIRequest *request, nsISupports *aContext,
-                            nsCString &aBuffer);
+  nsresult DoOnStartRequest(nsIRequest* request, nsISupports* aContext,
+                            nsCString& aBuffer);
 
  protected:
   nsCOMPtr<nsIDirIndexParser> mParser;

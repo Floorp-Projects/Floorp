@@ -51,10 +51,10 @@ class CacheFileMetadataHeader {
   uint32_t mKeySize;
   uint32_t mFlags;
 
-  void WriteToBuf(void *aBuf) {
+  void WriteToBuf(void* aBuf) {
     EnsureCorrectClassSize();
 
-    uint8_t *ptr = static_cast<uint8_t *>(aBuf);
+    uint8_t* ptr = static_cast<uint8_t*>(aBuf);
     MOZ_ASSERT(mVersion == kCacheEntryVersion);
     NetworkEndian::writeUint32(ptr, mVersion);
     ptr += sizeof(uint32_t);
@@ -73,10 +73,10 @@ class CacheFileMetadataHeader {
     NetworkEndian::writeUint32(ptr, mFlags);
   }
 
-  void ReadFromBuf(const void *aBuf) {
+  void ReadFromBuf(const void* aBuf) {
     EnsureCorrectClassSize();
 
-    const uint8_t *ptr = static_cast<const uint8_t *>(aBuf);
+    const uint8_t* ptr = static_cast<const uint8_t*>(aBuf);
     mVersion = BigEndian::readUint32(ptr);
     ptr += sizeof(uint32_t);
     mFetchCount = BigEndian::readUint32(ptr);
@@ -135,29 +135,29 @@ class CacheFileMetadata final : public CacheFileIOListener,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CacheFileMetadata(CacheFileHandle *aHandle, const nsACString &aKey);
-  CacheFileMetadata(bool aMemoryOnly, bool aPinned, const nsACString &aKey);
+  CacheFileMetadata(CacheFileHandle* aHandle, const nsACString& aKey);
+  CacheFileMetadata(bool aMemoryOnly, bool aPinned, const nsACString& aKey);
   CacheFileMetadata();
 
-  void SetHandle(CacheFileHandle *aHandle);
+  void SetHandle(CacheFileHandle* aHandle);
 
-  nsresult GetKey(nsACString &_retval);
+  nsresult GetKey(nsACString& _retval);
 
-  nsresult ReadMetadata(CacheFileMetadataListener *aListener);
+  nsresult ReadMetadata(CacheFileMetadataListener* aListener);
   uint32_t CalcMetadataSize(uint32_t aElementsSize, uint32_t aHashCount);
   nsresult WriteMetadata(uint32_t aOffset,
-                         CacheFileMetadataListener *aListener);
-  nsresult SyncReadMetadata(nsIFile *aFile);
+                         CacheFileMetadataListener* aListener);
+  nsresult SyncReadMetadata(nsIFile* aFile);
 
   bool IsAnonymous() const { return mAnonymous; }
-  mozilla::OriginAttributes const &OriginAttributes() const {
+  mozilla::OriginAttributes const& OriginAttributes() const {
     return mOriginAttributes;
   }
   bool Pinned() const { return !!(mMetaHdr.mFlags & kCacheEntryIsPinned); }
 
-  const char *GetElement(const char *aKey);
-  nsresult SetElement(const char *aKey, const char *aValue);
-  nsresult Visit(nsICacheEntryMetaDataVisitor *aVisitor);
+  const char* GetElement(const char* aKey);
+  nsresult SetElement(const char* aKey, const char* aValue);
+  nsresult Visit(nsICacheEntryMetaDataVisitor* aVisitor);
 
   CacheHash::Hash16_t GetHash(uint32_t aIndex);
   nsresult SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
@@ -165,14 +165,14 @@ class CacheFileMetadata final : public CacheFileIOListener,
 
   nsresult AddFlags(uint32_t aFlags);
   nsresult RemoveFlags(uint32_t aFlags);
-  nsresult GetFlags(uint32_t *_retval);
+  nsresult GetFlags(uint32_t* _retval);
   nsresult SetExpirationTime(uint32_t aExpirationTime);
-  nsresult GetExpirationTime(uint32_t *_retval);
+  nsresult GetExpirationTime(uint32_t* _retval);
   nsresult SetFrecency(uint32_t aFrecency);
-  nsresult GetFrecency(uint32_t *_retval);
-  nsresult GetLastModified(uint32_t *_retval);
-  nsresult GetLastFetched(uint32_t *_retval);
-  nsresult GetFetchCount(uint32_t *_retval);
+  nsresult GetFrecency(uint32_t* _retval);
+  nsresult GetLastModified(uint32_t* _retval);
+  nsresult GetLastFetched(uint32_t* _retval);
+  nsresult GetFetchCount(uint32_t* _retval);
   // Called by upper layers to indicate the entry this metadata belongs
   // with has been fetched, i.e. delivered to the consumer.
   nsresult OnFetched();
@@ -185,14 +185,14 @@ class CacheFileMetadata final : public CacheFileIOListener,
     return sizeof(CacheFileMetadata) + mHashArraySize + mBufSize;
   }
 
-  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override;
-  NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
+  NS_IMETHOD OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) override;
+  NS_IMETHOD OnDataWritten(CacheFileHandle* aHandle, const char* aBuf,
                            nsresult aResult) override;
-  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf,
+  NS_IMETHOD OnDataRead(CacheFileHandle* aHandle, char* aBuf,
                         nsresult aResult) override;
-  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
-  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileDoomed(CacheFileHandle* aHandle, nsresult aResult) override;
+  NS_IMETHOD OnEOFSet(CacheFileHandle* aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileRenamed(CacheFileHandle* aHandle, nsresult aResult) override;
   virtual bool IsKilled() override {
     return mListener && mListener->IsKilled();
   }
@@ -207,20 +207,20 @@ class CacheFileMetadata final : public CacheFileIOListener,
 
   nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
                          bool aHaveKey);
-  nsresult CheckElements(const char *aBuf, uint32_t aSize);
+  nsresult CheckElements(const char* aBuf, uint32_t aSize);
   nsresult EnsureBuffer(uint32_t aSize);
-  nsresult ParseKey(const nsACString &aKey);
+  nsresult ParseKey(const nsACString& aKey);
 
   RefPtr<CacheFileHandle> mHandle;
   nsCString mKey;
-  CacheHash::Hash16_t *mHashArray;
+  CacheHash::Hash16_t* mHashArray;
   uint32_t mHashArraySize;
   uint32_t mHashCount;
   int64_t mOffset;
-  char *mBuf;  // used for parsing, then points
+  char* mBuf;  // used for parsing, then points
                // to elements
   uint32_t mBufSize;
-  char *mWriteBuf;
+  char* mWriteBuf;
   CacheFileMetadataHeader mMetaHdr;
   uint32_t mElementsSize;
   bool mIsDirty : 1;

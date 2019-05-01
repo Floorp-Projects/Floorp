@@ -53,7 +53,7 @@ class Logging {
 
  public:
   static void Init() {
-    const char *env = getenv("MOZ_DEBUG_LINKER");
+    const char* env = getenv("MOZ_DEBUG_LINKER");
     if (env && *env == '1') Singleton.verbose = true;
   }
 

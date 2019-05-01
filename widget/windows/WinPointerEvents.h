@@ -138,25 +138,25 @@ class WinPointerEvents final {
   uint32_t GetPointerId(WPARAM aWParam) {
     return GET_POINTERID_WPARAM(aWParam);
   }
-  bool GetPointerType(uint32_t aPointerId, POINTER_INPUT_TYPE *aPointerType);
+  bool GetPointerType(uint32_t aPointerId, POINTER_INPUT_TYPE* aPointerType);
   POINTER_INPUT_TYPE GetPointerType(uint32_t aPointerId);
-  bool GetPointerInfo(uint32_t aPointerId, POINTER_INFO *aPointerInfo);
-  bool GetPointerPenInfo(uint32_t aPointerId, POINTER_PEN_INFO *aPenInfo);
+  bool GetPointerInfo(uint32_t aPointerId, POINTER_INFO* aPointerInfo);
+  bool GetPointerPenInfo(uint32_t aPointerId, POINTER_PEN_INFO* aPenInfo);
   bool ShouldEnableInkCollector();
   bool ShouldRollupOnPointerEvent(UINT aMsg, WPARAM aWParam);
   bool ShouldFirePointerEventByWinPointerMessages();
-  WinPointerInfo *GetCachedPointerInfo(UINT aMsg, WPARAM aWParam);
+  WinPointerInfo* GetCachedPointerInfo(UINT aMsg, WPARAM aWParam);
   void ConvertAndCachePointerInfo(UINT aMsg, WPARAM aWParam);
-  void ConvertAndCachePointerInfo(WPARAM aWParam, WinPointerInfo *aInfo);
+  void ConvertAndCachePointerInfo(WPARAM aWParam, WinPointerInfo* aInfo);
 
  private:
   // Function prototypes
-  typedef BOOL(WINAPI *GetPointerTypePtr)(uint32_t aPointerId,
-                                          POINTER_INPUT_TYPE *aPointerType);
-  typedef BOOL(WINAPI *GetPointerInfoPtr)(uint32_t aPointerId,
-                                          POINTER_INFO *aPointerInfo);
-  typedef BOOL(WINAPI *GetPointerPenInfoPtr)(uint32_t aPointerId,
-                                             POINTER_PEN_INFO *aPenInfo);
+  typedef BOOL(WINAPI* GetPointerTypePtr)(uint32_t aPointerId,
+                                          POINTER_INPUT_TYPE* aPointerType);
+  typedef BOOL(WINAPI* GetPointerInfoPtr)(uint32_t aPointerId,
+                                          POINTER_INFO* aPointerInfo);
+  typedef BOOL(WINAPI* GetPointerPenInfoPtr)(uint32_t aPointerId,
+                                             POINTER_PEN_INFO* aPenInfo);
 
   void InitLibrary();
 

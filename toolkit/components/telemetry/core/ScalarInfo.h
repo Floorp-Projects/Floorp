@@ -39,8 +39,8 @@ struct BaseScalarInfo {
         builtin(aBuiltin) {}
   virtual ~BaseScalarInfo() {}
 
-  virtual const char *name() const = 0;
-  virtual const char *expiration() const = 0;
+  virtual const char* name() const = 0;
+  virtual const char* expiration() const = 0;
 
   virtual uint32_t storeOffset() const = 0;
 
@@ -76,8 +76,8 @@ struct ScalarInfo : BaseScalarInfo {
         store_count(aStoreCount),
         store_offset(aStoreOffset) {}
 
-  const char *name() const override;
-  const char *expiration() const override;
+  const char* name() const override;
+  const char* expiration() const override;
 
   uint32_t storeOffset() const override { return store_offset; };
 

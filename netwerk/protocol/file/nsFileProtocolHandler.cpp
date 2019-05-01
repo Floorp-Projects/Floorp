@@ -44,7 +44,7 @@ NS_IMPL_ISUPPORTS(nsFileProtocolHandler, nsIFileProtocolHandler,
 
 #if defined(XP_WIN)
 NS_IMETHODIMP
-nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI) {
   nsAutoString path;
   nsresult rv = aFile->GetPath(path);
   if (NS_FAILED(rv)) return rv;
@@ -57,13 +57,13 @@ nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
 
   rv = NS_ERROR_NOT_AVAILABLE;
 
-  IUniformResourceLocatorW *urlLink = nullptr;
+  IUniformResourceLocatorW* urlLink = nullptr;
   result =
       ::CoCreateInstance(CLSID_InternetShortcut, nullptr, CLSCTX_INPROC_SERVER,
-                         IID_IUniformResourceLocatorW, (void **)&urlLink);
+                         IID_IUniformResourceLocatorW, (void**)&urlLink);
   if (SUCCEEDED(result) && urlLink) {
-    IPersistFile *urlFile = nullptr;
-    result = urlLink->QueryInterface(IID_IPersistFile, (void **)&urlFile);
+    IPersistFile* urlFile = nullptr;
+    result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
     if (SUCCEEDED(result) && urlFile) {
       result = urlFile->Load(path.get(), STGM_READ);
       if (SUCCEEDED(result)) {
@@ -87,7 +87,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
 
 #elif defined(XP_UNIX)
 NS_IMETHODIMP
-nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI) {
   // We only support desktop files that end in ".desktop" like the spec says:
   // http://standards.freedesktop.org/desktop-entry-spec/latest/ar01s02.html
   nsAutoCString leafName;
@@ -119,33 +119,33 @@ nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
 
 #else   // other platforms
 NS_IMETHODIMP
-nsFileProtocolHandler::ReadURLFile(nsIFile *aFile, nsIURI **aURI) {
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 #endif  // ReadURLFile()
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetScheme(nsACString &result) {
+nsFileProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("file");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetDefaultPort(int32_t *result) {
+nsFileProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = -1;  // no port for file: URLs
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetProtocolFlags(uint32_t *result) {
+nsFileProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NOAUTH | URI_IS_LOCAL_FILE | URI_IS_LOCAL_RESOURCE |
             URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewURI(const nsACString &spec, const char *charset,
-                              nsIURI *aBaseURI, nsIURI **result) {
+nsFileProtocolHandler::NewURI(const nsACString& spec, const char* charset,
+                              nsIURI* aBaseURI, nsIURI** result) {
   nsAutoCString buf(spec);
 #if defined(XP_WIN)
   buf.Truncate();
@@ -164,8 +164,8 @@ nsFileProtocolHandler::NewURI(const nsACString &spec, const char *charset,
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                  nsIChannel **result) {
+nsFileProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                  nsIChannel** result) {
   nsresult rv;
 
   RefPtr<nsFileChannel> chan;
@@ -193,8 +193,8 @@ nsFileProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                 bool *result) {
+nsFileProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                 bool* result) {
   // don't override anything.
   *result = false;
   return NS_OK;
@@ -204,7 +204,7 @@ nsFileProtocolHandler::AllowPort(int32_t port, const char *scheme,
 // nsIFileProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewFileURI(nsIFile *aFile, nsIURI **aResult) {
+nsFileProtocolHandler::NewFileURI(nsIFile* aFile, nsIURI** aResult) {
   NS_ENSURE_ARG_POINTER(aFile);
 
   RefPtr<nsIFile> file(aFile);
@@ -216,8 +216,8 @@ nsFileProtocolHandler::NewFileURI(nsIFile *aFile, nsIURI **aResult) {
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewFileURIMutator(nsIFile *aFile,
-                                         nsIURIMutator **aResult) {
+nsFileProtocolHandler::NewFileURIMutator(nsIFile* aFile,
+                                         nsIURIMutator** aResult) {
   NS_ENSURE_ARG_POINTER(aFile);
   nsresult rv;
 
@@ -239,26 +239,26 @@ nsFileProtocolHandler::NewFileURIMutator(nsIFile *aFile,
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURLSpecFromFile(nsIFile *file, nsACString &result) {
+nsFileProtocolHandler::GetURLSpecFromFile(nsIFile* file, nsACString& result) {
   NS_ENSURE_ARG_POINTER(file);
   return net_GetURLSpecFromFile(file, result);
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURLSpecFromActualFile(nsIFile *file,
-                                                nsACString &result) {
+nsFileProtocolHandler::GetURLSpecFromActualFile(nsIFile* file,
+                                                nsACString& result) {
   NS_ENSURE_ARG_POINTER(file);
   return net_GetURLSpecFromActualFile(file, result);
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetURLSpecFromDir(nsIFile *file, nsACString &result) {
+nsFileProtocolHandler::GetURLSpecFromDir(nsIFile* file, nsACString& result) {
   NS_ENSURE_ARG_POINTER(file);
   return net_GetURLSpecFromDir(file, result);
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetFileFromURLSpec(const nsACString &spec,
-                                          nsIFile **result) {
+nsFileProtocolHandler::GetFileFromURLSpec(const nsACString& spec,
+                                          nsIFile** result) {
   return net_GetFileFromURLSpec(spec, result);
 }

@@ -17,8 +17,8 @@ using mozilla::OriginAttributes;
 
 NS_IMPL_ISUPPORTS(nsSOCKSSocketProvider, nsISocketProvider)
 
-nsresult nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID,
-                                         void **aResult) {
+nsresult nsSOCKSSocketProvider::CreateV4(nsISupports* aOuter, REFNSIID aIID,
+                                         void** aResult) {
   nsresult rv;
   nsCOMPtr<nsISocketProvider> inst =
       new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
@@ -29,8 +29,8 @@ nsresult nsSOCKSSocketProvider::CreateV4(nsISupports *aOuter, REFNSIID aIID,
   return rv;
 }
 
-nsresult nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID,
-                                         void **aResult) {
+nsresult nsSOCKSSocketProvider::CreateV5(nsISupports* aOuter, REFNSIID aIID,
+                                         void** aResult) {
   nsresult rv;
   nsCOMPtr<nsISocketProvider> inst =
       new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
@@ -47,8 +47,8 @@ nsresult nsSOCKSSocketProvider::CreateV5(nsISupports *aOuter, REFNSIID aIID,
 #if defined(XP_WIN)
 // The proxy host on Windows may be a named pipe uri, in which
 // case a named-pipe (rather than a socket) should be returned
-static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
-  PRFileDesc *sock = nullptr;
+static PRFileDesc* OpenTCPSocket(int32_t family, nsIProxyInfo* proxy) {
+  PRFileDesc* sock = nullptr;
 
   nsAutoCString proxyHost;
   proxy->GetHost(proxyHost);
@@ -69,7 +69,7 @@ static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
 // with the proper family, but we want to do it early here so that
 // we can enforce seccomp policy to blacklist socket(AF_INET) calls
 // to prevent the content sandbox from creating network requests
-static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
+static PRFileDesc* OpenTCPSocket(int32_t family, nsIProxyInfo* proxy) {
   nsAutoCString proxyHost;
   proxy->GetHost(proxyHost);
   if (StringBeginsWith(proxyHost, NS_LITERAL_CSTRING("file://"))) {
@@ -80,18 +80,18 @@ static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *proxy) {
 }
 #else
 // Default, pass-through to PR_OpenTCPSocket
-static PRFileDesc *OpenTCPSocket(int32_t family, nsIProxyInfo *) {
+static PRFileDesc* OpenTCPSocket(int32_t family, nsIProxyInfo*) {
   return PR_OpenTCPSocket(family);
 }
 #endif
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::NewSocket(int32_t family, const char *host, int32_t port,
-                                 nsIProxyInfo *proxy,
-                                 const OriginAttributes &originAttributes,
+nsSOCKSSocketProvider::NewSocket(int32_t family, const char* host, int32_t port,
+                                 nsIProxyInfo* proxy,
+                                 const OriginAttributes& originAttributes,
                                  uint32_t flags, uint32_t tlsFlags,
-                                 PRFileDesc **result, nsISupports **socksInfo) {
-  PRFileDesc *sock = OpenTCPSocket(family, proxy);
+                                 PRFileDesc** result, nsISupports** socksInfo) {
+  PRFileDesc* sock = OpenTCPSocket(family, proxy);
   if (!sock) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -107,11 +107,11 @@ nsSOCKSSocketProvider::NewSocket(int32_t family, const char *host, int32_t port,
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketProvider::AddToSocket(int32_t family, const char *host,
-                                   int32_t port, nsIProxyInfo *proxy,
-                                   const OriginAttributes &originAttributes,
+nsSOCKSSocketProvider::AddToSocket(int32_t family, const char* host,
+                                   int32_t port, nsIProxyInfo* proxy,
+                                   const OriginAttributes& originAttributes,
                                    uint32_t flags, uint32_t tlsFlags,
-                                   PRFileDesc *sock, nsISupports **socksInfo) {
+                                   PRFileDesc* sock, nsISupports** socksInfo) {
   nsresult rv = nsSOCKSIOLayerAddToSocket(family, host, port, proxy, mVersion,
                                           flags, tlsFlags, sock, socksInfo);
 

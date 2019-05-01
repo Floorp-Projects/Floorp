@@ -30,10 +30,10 @@ class nsContentBlocker final : public nsIContentPolicy,
  private:
   ~nsContentBlocker() {}
 
-  void PrefChanged(nsIPrefBranch *, const char *);
-  nsresult TestPermission(nsIURI *aCurrentURI, nsIURI *aFirstURI,
-                          int32_t aContentType, bool *aPermission,
-                          bool *aFromPrefs);
+  void PrefChanged(nsIPrefBranch*, const char*);
+  nsresult TestPermission(nsIURI* aCurrentURI, nsIURI* aFirstURI,
+                          int32_t aContentType, bool* aPermission,
+                          bool* aFromPrefs);
 
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
   nsCOMPtr<nsIPrefBranch> mPrefBranchInternal;

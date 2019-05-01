@@ -24,8 +24,8 @@ class nsHttpAuthManager : public nsIHttpAuthManager {
  protected:
   virtual ~nsHttpAuthManager() = default;
 
-  nsHttpAuthCache *mAuthCache;
-  nsHttpAuthCache *mPrivateAuthCache;
+  nsHttpAuthCache* mAuthCache;
+  nsHttpAuthCache* mPrivateAuthCache;
 };
 
 }  // namespace net

@@ -25,11 +25,11 @@ class CallObserveActivity final : public nsIRunnable {
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  CallObserveActivity(nsIHttpActivityObserver *aActivityDistributor,
-                      const nsCString &aHost, int32_t aPort, bool aEndToEndSSL,
+  CallObserveActivity(nsIHttpActivityObserver* aActivityDistributor,
+                      const nsCString& aHost, int32_t aPort, bool aEndToEndSSL,
                       uint32_t aActivityType, uint32_t aActivitySubtype,
                       PRTime aTimestamp, uint64_t aExtraSizeData,
-                      const nsACString &aExtraStringData)
+                      const nsACString& aExtraStringData)
       : mActivityDistributor(aActivityDistributor),
         mHost(aHost),
         mPort(aPort),
@@ -84,8 +84,8 @@ NS_IMPL_ISUPPORTS(CallObserveActivity, nsIRunnable)
 NS_IMPL_ISUPPORTS(NullHttpTransaction, NullHttpTransaction,
                   nsISupportsWeakReference)
 
-NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
-                                         nsIInterfaceRequestor *callbacks,
+NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo* ci,
+                                         nsIInterfaceRequestor* callbacks,
                                          uint32_t caps)
     : mStatus(NS_OK),
       mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE),
@@ -133,20 +133,20 @@ bool NullHttpTransaction::Claim() {
 
 void NullHttpTransaction::Unclaim() { mClaimed = false; }
 
-void NullHttpTransaction::SetConnection(nsAHttpConnection *conn) {
+void NullHttpTransaction::SetConnection(nsAHttpConnection* conn) {
   mConnection = conn;
 }
 
-nsAHttpConnection *NullHttpTransaction::Connection() {
+nsAHttpConnection* NullHttpTransaction::Connection() {
   return mConnection.get();
 }
 
-void NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB) {
+void NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor** outCB) {
   nsCOMPtr<nsIInterfaceRequestor> copyCB(mCallbacks);
   *outCB = copyCB.forget().take();
 }
 
-void NullHttpTransaction::OnTransportStatus(nsITransport *transport,
+void NullHttpTransaction::OnTransportStatus(nsITransport* transport,
                                             nsresult status, int64_t progress) {
   if (status == NS_NET_STATUS_RESOLVING_HOST) {
     if (mTimings.domainLookupStart.IsNull()) {
@@ -203,24 +203,24 @@ void NullHttpTransaction::SetDNSWasRefreshed() {
   mCapsToClear |= NS_HTTP_REFRESH_DNS;
 }
 
-nsresult NullHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
+nsresult NullHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
                                            uint32_t count,
-                                           uint32_t *countRead) {
+                                           uint32_t* countRead) {
   *countRead = 0;
   mIsDone = true;
   return NS_BASE_STREAM_CLOSED;
 }
 
-nsresult NullHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
+nsresult NullHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
                                             uint32_t count,
-                                            uint32_t *countWritten) {
+                                            uint32_t* countWritten) {
   *countWritten = 0;
   return NS_BASE_STREAM_CLOSED;
 }
 
 uint32_t NullHttpTransaction::Http1xTransactionCount() { return 0; }
 
-nsHttpRequestHead *NullHttpTransaction::RequestHead() {
+nsHttpRequestHead* NullHttpTransaction::RequestHead() {
   // We suport a requesthead at all so that a CONNECT tunnel transaction
   // can obtain a Host header from it, but we lazy-popualate that header.
 
@@ -257,7 +257,7 @@ nsHttpRequestHead *NullHttpTransaction::RequestHead() {
 }
 
 nsresult NullHttpTransaction::TakeSubTransactions(
-    nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions) {
+    nsTArray<RefPtr<nsAHttpTransaction> >& outTransactions) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -278,7 +278,7 @@ void NullHttpTransaction::Close(nsresult reason) {
   }
 }
 
-nsHttpConnectionInfo *NullHttpTransaction::ConnectionInfo() {
+nsHttpConnectionInfo* NullHttpTransaction::ConnectionInfo() {
   return mConnectionInfo;
 }
 

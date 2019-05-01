@@ -16,9 +16,9 @@
 #endif
 
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass,
+Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv* jenv, jclass,
                                                   jstring map) {
-  const char *str;
+  const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
   str = jenv->GetStringUTFChars(map, nullptr);
@@ -28,9 +28,9 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass,
 }
 
 extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_verifyCRCs(JNIEnv *jenv, jclass,
+Java_org_mozilla_gecko_mozglue_GeckoLoader_verifyCRCs(JNIEnv* jenv, jclass,
                                                       jstring jApkName) {
-  const char *str;
+  const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
   str = jenv->GetStringUTFChars(jApkName, nullptr);
@@ -46,9 +46,9 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_verifyCRCs(JNIEnv *jenv, jclass,
 
 extern "C" __attribute__((visibility("default"))) jobject MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(
-    JNIEnv *jenv, jclass, jlong size) {
+    JNIEnv* jenv, jclass, jlong size) {
   jobject buffer = nullptr;
-  void *mem = malloc(size);
+  void* mem = malloc(size);
   if (mem) {
     buffer = jenv->NewDirectByteBuffer(mem, size);
     if (!buffer) free(mem);
@@ -58,14 +58,14 @@ Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(
 
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeFreeDirectBuffer(
-    JNIEnv *jenv, jclass, jobject buf) {
+    JNIEnv* jenv, jclass, jobject buf) {
   free(jenv->GetDirectBufferAddress(buf));
 }
 
 extern "C" __attribute__((visibility("default"))) jlong MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass,
+Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv* jenv, jclass,
                                                 jstring path) {
-  const char *str;
+  const char* str;
   str = jenv->GetStringUTFChars(path, nullptr);
   if (!str || !*str) {
     if (str) jenv->ReleaseStringUTFChars(path, str);
@@ -83,10 +83,10 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass,
 }
 
 extern "C" __attribute__((visibility("default"))) jlong MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv,
+Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv* jenv,
                                                               jclass,
                                                               jobject buffer) {
-  void *buf = jenv->GetDirectBufferAddress(buffer);
+  void* buf = jenv->GetDirectBufferAddress(buffer);
   size_t size = jenv->GetDirectBufferCapacity(buffer);
   RefPtr<Zip> zip = Zip::Create(buf, size);
   if (!zip) {
@@ -97,19 +97,19 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv,
 }
 
 extern "C" __attribute__((visibility("default"))) void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_NativeZip__1release(JNIEnv *jenv, jclass,
+Java_org_mozilla_gecko_mozglue_NativeZip__1release(JNIEnv* jenv, jclass,
                                                    jlong obj) {
-  Zip *zip = (Zip *)obj;
+  Zip* zip = (Zip*)obj;
   zip->Release();
 }
 
 extern "C" __attribute__((visibility("default"))) jobject MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv,
+Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv* jenv,
                                                           jobject jzip,
                                                           jlong obj,
                                                           jstring path) {
-  Zip *zip = (Zip *)obj;
-  const char *str;
+  Zip* zip = (Zip*)obj;
+  const char* str;
   str = jenv->GetStringUTFChars(path, nullptr);
 
   Zip::Stream stream;
@@ -118,8 +118,8 @@ Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv,
   if (!res) {
     return nullptr;
   }
-  jobject buf = jenv->NewDirectByteBuffer(
-      const_cast<void *>(stream.GetBuffer()), stream.GetSize());
+  jobject buf = jenv->NewDirectByteBuffer(const_cast<void*>(stream.GetBuffer()),
+                                          stream.GetSize());
   if (!buf) {
     JNI_Throw(jenv, "java/lang/RuntimeException",
               "Failed to create ByteBuffer");
@@ -139,8 +139,8 @@ Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv,
 
 extern "C" __attribute__((visibility("default"))) jboolean MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_MinidumpAnalyzer_GenerateStacks(
-    JNIEnv *jenv, jclass, jstring minidumpPath, jboolean fullStacks) {
-  const char *str;
+    JNIEnv* jenv, jclass, jstring minidumpPath, jboolean fullStacks) {
+  const char* str;
   str = jenv->GetStringUTFChars(minidumpPath, nullptr);
 
   bool res = CrashReporter::GenerateStacks(str, fullStacks);

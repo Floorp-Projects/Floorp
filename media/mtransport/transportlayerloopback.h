@@ -40,7 +40,7 @@ class TransportLayerLoopback : public TransportLayer {
 
   ~TransportLayerLoopback() {
     while (!packets_.empty()) {
-      MediaPacket *packet = packets_.front();
+      MediaPacket* packet = packets_.front();
       packets_.pop();
       delete packet;
     }
@@ -55,11 +55,11 @@ class TransportLayerLoopback : public TransportLayer {
   nsresult Init();
 
   // Connect to the other side
-  void Connect(TransportLayerLoopback *peer);
+  void Connect(TransportLayerLoopback* peer);
 
   // Disconnect
   void Disconnect() {
-    TransportLayerLoopback *peer = peer_;
+    TransportLayerLoopback* peer = peer_;
 
     peer_ = nullptr;
     if (peer) {
@@ -70,7 +70,7 @@ class TransportLayerLoopback : public TransportLayer {
   void CombinePackets(bool combine) { combinePackets_ = combine; }
 
   // Overrides for TransportLayer
-  TransportResult SendPacket(MediaPacket &packet) override;
+  TransportResult SendPacket(MediaPacket& packet) override;
 
   // Deliver queued packets
   void DeliverPackets();
@@ -84,7 +84,7 @@ class TransportLayerLoopback : public TransportLayer {
   // Fires every 100 ms
   class Deliverer : public nsITimerCallback, public nsINamed {
    public:
-    explicit Deliverer(TransportLayerLoopback *layer) : layer_(layer) {}
+    explicit Deliverer(TransportLayerLoopback* layer) : layer_(layer) {}
     void Detach() { layer_ = nullptr; }
 
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -96,16 +96,16 @@ class TransportLayerLoopback : public TransportLayer {
 
     DISALLOW_COPY_ASSIGN(Deliverer);
 
-    TransportLayerLoopback *layer_;
+    TransportLayerLoopback* layer_;
   };
 
   // Queue a packet for delivery
-  nsresult QueuePacket(MediaPacket &packet);
+  nsresult QueuePacket(MediaPacket& packet);
 
-  TransportLayerLoopback *peer_;
+  TransportLayerLoopback* peer_;
   nsCOMPtr<nsITimer> timer_;
-  std::queue<MediaPacket *> packets_;
-  PRLock *packets_lock_;
+  std::queue<MediaPacket*> packets_;
+  PRLock* packets_lock_;
   RefPtr<Deliverer> deliverer_;
   bool combinePackets_;
 };

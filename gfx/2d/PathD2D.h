@@ -19,7 +19,7 @@ class PathD2D;
 class PathBuilderD2D : public PathBuilder {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderD2D, override)
-  PathBuilderD2D(ID2D1GeometrySink *aSink, ID2D1PathGeometry *aGeom,
+  PathBuilderD2D(ID2D1GeometrySink* aSink, ID2D1PathGeometry* aGeom,
                  FillRule aFillRule, BackendType aBackendType)
       : mSink(aSink),
         mGeometry(aGeom),
@@ -28,13 +28,13 @@ class PathBuilderD2D : public PathBuilder {
         mBackendType(aBackendType) {}
   virtual ~PathBuilderD2D();
 
-  virtual void MoveTo(const Point &aPoint);
-  virtual void LineTo(const Point &aPoint);
-  virtual void BezierTo(const Point &aCP1, const Point &aCP2,
-                        const Point &aCP3);
-  virtual void QuadraticBezierTo(const Point &aCP1, const Point &aCP2);
+  virtual void MoveTo(const Point& aPoint);
+  virtual void LineTo(const Point& aPoint);
+  virtual void BezierTo(const Point& aCP1, const Point& aCP2,
+                        const Point& aCP3);
+  virtual void QuadraticBezierTo(const Point& aCP1, const Point& aCP2);
   virtual void Close();
-  virtual void Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
+  virtual void Arc(const Point& aOrigin, Float aRadius, Float aStartAngle,
                    Float aEndAngle, bool aAntiClockwise = false);
   virtual Point CurrentPoint() const;
 
@@ -42,14 +42,14 @@ class PathBuilderD2D : public PathBuilder {
 
   virtual BackendType GetBackendType() const { return mBackendType; }
 
-  ID2D1GeometrySink *GetSink() { return mSink; }
+  ID2D1GeometrySink* GetSink() { return mSink; }
 
   bool IsFigureActive() const { return mFigureActive; }
 
  private:
   friend class PathD2D;
 
-  void EnsureActive(const Point &aPoint);
+  void EnsureActive(const Point& aPoint);
 
   RefPtr<ID2D1GeometrySink> mSink;
   RefPtr<ID2D1PathGeometry> mGeometry;
@@ -64,8 +64,8 @@ class PathBuilderD2D : public PathBuilder {
 class PathD2D : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathD2D, override)
-  PathD2D(ID2D1PathGeometry *aGeometry, bool aEndedActive,
-          const Point &aEndPoint, FillRule aFillRule, BackendType aBackendType)
+  PathD2D(ID2D1PathGeometry* aGeometry, bool aEndedActive,
+          const Point& aEndPoint, FillRule aFillRule, BackendType aBackendType)
       : mGeometry(aGeometry),
         mEndedActive(aEndedActive),
         mEndPoint(aEndPoint),
@@ -76,25 +76,25 @@ class PathD2D : public Path {
 
   virtual already_AddRefed<PathBuilder> CopyToBuilder(FillRule aFillRule) const;
   virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(
-      const Matrix &aTransform, FillRule aFillRule) const;
+      const Matrix& aTransform, FillRule aFillRule) const;
 
-  virtual bool ContainsPoint(const Point &aPoint,
-                             const Matrix &aTransform) const;
+  virtual bool ContainsPoint(const Point& aPoint,
+                             const Matrix& aTransform) const;
 
-  virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
-                                   const Point &aPoint,
-                                   const Matrix &aTransform) const;
+  virtual bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                                   const Point& aPoint,
+                                   const Matrix& aTransform) const;
 
-  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const;
+  virtual Rect GetBounds(const Matrix& aTransform = Matrix()) const;
 
-  virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
-                                const Matrix &aTransform = Matrix()) const;
+  virtual Rect GetStrokedBounds(const StrokeOptions& aStrokeOptions,
+                                const Matrix& aTransform = Matrix()) const;
 
-  virtual void StreamToSink(PathSink *aSink) const;
+  virtual void StreamToSink(PathSink* aSink) const;
 
   virtual FillRule GetFillRule() const { return mFillRule; }
 
-  ID2D1Geometry *GetGeometry() { return mGeometry; }
+  ID2D1Geometry* GetGeometry() { return mGeometry; }
 
  private:
   friend class DrawTargetD2D;

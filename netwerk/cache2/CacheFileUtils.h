@@ -18,29 +18,29 @@ namespace mozilla {
 namespace net {
 namespace CacheFileUtils {
 
-extern const char *kAltDataKey;
+extern const char* kAltDataKey;
 
-already_AddRefed<nsILoadContextInfo> ParseKey(const nsACString &aKey,
-                                              nsACString *aIdEnhance = nullptr,
-                                              nsACString *aURISpec = nullptr);
+already_AddRefed<nsILoadContextInfo> ParseKey(const nsACString& aKey,
+                                              nsACString* aIdEnhance = nullptr,
+                                              nsACString* aURISpec = nullptr);
 
-void AppendKeyPrefix(nsILoadContextInfo *aInfo, nsACString &_retval);
+void AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString& _retval);
 
-void AppendTagWithValue(nsACString &aTarget, char const aTag,
-                        const nsACString &aValue);
+void AppendTagWithValue(nsACString& aTarget, char const aTag,
+                        const nsACString& aValue);
 
-nsresult KeyMatchesLoadContextInfo(const nsACString &aKey,
-                                   nsILoadContextInfo *aInfo, bool *_retval);
+nsresult KeyMatchesLoadContextInfo(const nsACString& aKey,
+                                   nsILoadContextInfo* aInfo, bool* _retval);
 
 class ValidityPair {
  public:
   ValidityPair(uint32_t aOffset, uint32_t aLen);
 
-  ValidityPair &operator=(const ValidityPair &aOther) = default;
+  ValidityPair& operator=(const ValidityPair& aOther) = default;
 
   // Returns true when two pairs can be merged, i.e. they do overlap or the one
   // ends exactly where the other begins.
-  bool CanBeMerged(const ValidityPair &aOther) const;
+  bool CanBeMerged(const ValidityPair& aOther) const;
 
   // Returns true when aOffset is placed anywhere in the validity interval or
   // exactly after its end.
@@ -49,10 +49,10 @@ class ValidityPair {
   // Returns true when this pair has lower offset than the other pair. In case
   // both pairs have the same offset it returns true when this pair has a
   // shorter length.
-  bool LessThan(const ValidityPair &aOther) const;
+  bool LessThan(const ValidityPair& aOther) const;
 
   // Merges two pair into one.
-  void Merge(const ValidityPair &aOther);
+  void Merge(const ValidityPair& aOther);
 
   uint32_t Offset() const { return mOffset; }
   uint32_t Len() const { return mLen; }
@@ -79,7 +79,7 @@ class ValidityMap {
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  ValidityPair &operator[](uint32_t aIdx);
+  ValidityPair& operator[](uint32_t aIdx);
 
  private:
   nsTArray<ValidityPair> mMap;
@@ -155,7 +155,7 @@ class CachePerfStats {
   static uint32_t GetAverage(EDataType aType, bool aFiltered);
   static uint32_t GetStdDev(EDataType aType, bool aFiltered);
   static bool IsCacheSlow();
-  static void GetSlowStats(uint32_t *aSlow, uint32_t *aNotSlow);
+  static void GetSlowStats(uint32_t* aSlow, uint32_t* aNotSlow);
 
  private:
   // This class computes average and standard deviation, it returns an
@@ -209,13 +209,13 @@ class CachePerfStats {
   static uint32_t sCacheNotSlowCnt;
 };
 
-void FreeBuffer(void *aBuf);
+void FreeBuffer(void* aBuf);
 
-nsresult ParseAlternativeDataInfo(const char *aInfo, int64_t *_offset,
-                                  nsACString *_type);
+nsresult ParseAlternativeDataInfo(const char* aInfo, int64_t* _offset,
+                                  nsACString* _type);
 
-void BuildAlternativeDataInfo(const char *aInfo, int64_t aOffset,
-                              nsACString &_retval);
+void BuildAlternativeDataInfo(const char* aInfo, int64_t aOffset,
+                              nsACString& _retval);
 
 // Parses base domain access info. If the info cannot be parsed (e.g. it's
 // corrupted or it's invalid because aTrID has changed) an error is thrown.
@@ -223,16 +223,16 @@ void BuildAlternativeDataInfo(const char *aInfo, int64_t aOffset,
 // in the info is returned in _count.
 // If aSearchSiteID is passed, then _count argument is ignored. It only searches
 // siteID in the info and returns the result in _found.
-nsresult ParseBaseDomainAccessInfo(const char *aInfo, uint32_t aTrID,
-                                   const uint32_t *aSearchSiteID, bool *_found,
-                                   uint16_t *_count);
+nsresult ParseBaseDomainAccessInfo(const char* aInfo, uint32_t aTrID,
+                                   const uint32_t* aSearchSiteID, bool* _found,
+                                   uint16_t* _count);
 
 // If aOldInfo is null then new base domain access info containing aSiteID is
 // built. If an old base domain access info is passed in aOldInfo, then only
 // aSiteID is appended to it. Note that this function doesn't parse the old base
 // domain info, i.e. it assumes that it's valid and it doesn't contain aSiteID.
-void BuildOrAppendBaseDomainAccessInfo(const char *aOldInfo, uint32_t aTrID,
-                                       uint32_t aSiteID, nsACString &_retval);
+void BuildOrAppendBaseDomainAccessInfo(const char* aOldInfo, uint32_t aTrID,
+                                       uint32_t aSiteID, nsACString& _retval);
 
 }  // namespace CacheFileUtils
 }  // namespace net

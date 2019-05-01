@@ -66,8 +66,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
     nsCOMPtr<nsIProtocolProxyFilter> filter;
     nsCOMPtr<nsIProtocolProxyChannelFilter> channelFilter;
 
-    FilterLink(uint32_t p, nsIProtocolProxyFilter *f);
-    FilterLink(uint32_t p, nsIProtocolProxyChannelFilter *cf);
+    FilterLink(uint32_t p, nsIProtocolProxyFilter* f);
+    FilterLink(uint32_t p, nsIProtocolProxyChannelFilter* cf);
 
    private:
     ~FilterLink();
@@ -89,7 +89,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *        This can be the name of a fully-qualified preference, or it can
    *        be null, in which case all preferences will be initialized.
    */
-  void PrefsChanged(nsIPrefBranch *prefs, const char *name);
+  void PrefsChanged(nsIPrefBranch* prefs, const char* name);
 
   /**
    * This method is called to create a nsProxyInfo instance from the given
@@ -107,8 +107,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *
    * @return A pointer beyond the parsed proxy string (never null).
    */
-  const char *ExtractProxyInfo(const char *proxy, uint32_t aResolveFlags,
-                               nsProxyInfo **result);
+  const char* ExtractProxyInfo(const char* proxy, uint32_t aResolveFlags,
+                               nsProxyInfo** result);
 
   /**
    * Load the specified PAC file.
@@ -116,7 +116,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param pacURI
    *        The URI spec of the PAC file to load.
    */
-  nsresult ConfigureFromPAC(const nsCString &pacURI, bool forceReload);
+  nsresult ConfigureFromPAC(const nsCString& pacURI, bool forceReload);
 
   /**
    * This method builds a list of nsProxyInfo objects from the given PAC-
@@ -130,8 +130,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param result
    *        The resulting list of proxy info objects.
    */
-  void ProcessPACString(const nsCString &pacString, uint32_t aResolveFlags,
-                        nsIProxyInfo **result);
+  void ProcessPACString(const nsCString& pacString, uint32_t aResolveFlags,
+                        nsIProxyInfo** result);
 
   /**
    * This method generates a string valued identifier for the given
@@ -142,7 +142,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param result
    *        Upon return, this parameter holds the generated key.
    */
-  void GetProxyKey(nsProxyInfo *pi, nsCString &result);
+  void GetProxyKey(nsProxyInfo* pi, nsCString& result);
 
   /**
    * @return Seconds since start of session.
@@ -155,7 +155,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param pi
    *        The nsProxyInfo object identifying the proxy to enable.
    */
-  void EnableProxy(nsProxyInfo *pi);
+  void EnableProxy(nsProxyInfo* pi);
 
   /**
    * This method adds the specified proxy to the disabled list.
@@ -163,7 +163,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param pi
    *        The nsProxyInfo object identifying the proxy to disable.
    */
-  void DisableProxy(nsProxyInfo *pi);
+  void DisableProxy(nsProxyInfo* pi);
 
   /**
    * This method tests to see if the given proxy is disabled.
@@ -173,7 +173,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *
    * @return True if the specified proxy is disabled.
    */
-  bool IsProxyDisabled(nsProxyInfo *pi);
+  bool IsProxyDisabled(nsProxyInfo* pi);
 
   /**
    * This method queries the protocol handler for the given scheme to check
@@ -186,7 +186,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *        of structure when you call this method.  This parameter must not
    *        be null.
    */
-  nsresult GetProtocolInfo(nsIURI *uri, nsProtocolInfo *result);
+  nsresult GetProtocolInfo(nsIURI* uri, nsProtocolInfo* result);
 
   /**
    * This method is an internal version nsIProtocolProxyService::newProxyInfo
@@ -213,11 +213,11 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param result
    *        The resulting nsIProxyInfo object.
    */
-  nsresult NewProxyInfo_Internal(const char *type, const nsACString &host,
-                                 int32_t port, const nsACString &username,
-                                 const nsACString &password, uint32_t flags,
-                                 uint32_t timeout, nsIProxyInfo *next,
-                                 uint32_t aResolveFlags, nsIProxyInfo **result);
+  nsresult NewProxyInfo_Internal(const char* type, const nsACString& host,
+                                 int32_t port, const nsACString& username,
+                                 const nsACString& password, uint32_t flags,
+                                 uint32_t timeout, nsIProxyInfo* next,
+                                 uint32_t aResolveFlags, nsIProxyInfo** result);
 
   /**
    * This method is an internal version of Resolve that does not query PAC.
@@ -237,25 +237,25 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param result
    *        The resulting proxy info or null.
    */
-  nsresult Resolve_Internal(nsIChannel *channel, const nsProtocolInfo &info,
-                            uint32_t flags, bool *usePAC,
-                            nsIProxyInfo **result);
+  nsresult Resolve_Internal(nsIChannel* channel, const nsProtocolInfo& info,
+                            uint32_t flags, bool* usePAC,
+                            nsIProxyInfo** result);
 
   /**
    * Shallow copy of the current list of registered filters so that
    * we can safely let them asynchronously process a single proxy
    * resolution request.
    */
-  void CopyFilters(nsTArray<RefPtr<FilterLink>> &aCopy);
+  void CopyFilters(nsTArray<RefPtr<FilterLink>>& aCopy);
 
   /**
    * This method applies the provided filter to the given proxy info
    * list, and expects |callback| be called on (synchronously or
    * asynchronously) to provide the updated proxyinfo list.
    */
-  bool ApplyFilter(FilterLink const *filterLink, nsIChannel *channel,
-                   const nsProtocolInfo &info, nsCOMPtr<nsIProxyInfo> proxyInfo,
-                   nsIProxyProtocolFilterResult *callback);
+  bool ApplyFilter(FilterLink const* filterLink, nsIChannel* channel,
+                   const nsProtocolInfo& info, nsCOMPtr<nsIProxyInfo> proxyInfo,
+                   nsIProxyProtocolFilterResult* callback);
 
   /**
    * This method prunes out disabled and disallowed proxies from a given
@@ -266,15 +266,15 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param proxyInfo
    *        The proxy info list to be modified.  This is an inout param.
    */
-  void PruneProxyInfo(const nsProtocolInfo &info, nsIProxyInfo **proxyInfo);
+  void PruneProxyInfo(const nsProtocolInfo& info, nsIProxyInfo** proxyInfo);
 
   /**
    * This method is a simple wrapper around PruneProxyInfo that takes the
    * proxy info list inout param as a nsCOMPtr.
    */
-  void PruneProxyInfo(const nsProtocolInfo &info,
-                      nsCOMPtr<nsIProxyInfo> &proxyInfo) {
-    nsIProxyInfo *pi = nullptr;
+  void PruneProxyInfo(const nsProtocolInfo& info,
+                      nsCOMPtr<nsIProxyInfo>& proxyInfo) {
+    nsIProxyInfo* pi = nullptr;
     proxyInfo.swap(pi);
     PruneProxyInfo(info, &pi);
     proxyInfo.swap(pi);
@@ -286,7 +286,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param hostFilters
    *        A "no-proxy-for" exclusion list.
    */
-  void LoadHostFilters(const nsACString &hostFilters);
+  void LoadHostFilters(const nsACString& hostFilters);
 
   /**
    * This method checks the given URI against mHostFiltersArray.
@@ -298,7 +298,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    *
    * @return True if the URI can use the specified proxy.
    */
-  bool CanUseProxy(nsIURI *uri, int32_t defaultPort);
+  bool CanUseProxy(nsIURI* uri, int32_t defaultPort);
 
   /**
    * Disable Prefetch in the DNS service if a proxy is in use.
@@ -306,16 +306,16 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
    * @param aProxy
    *        The proxy information
    */
-  void MaybeDisableDNSPrefetch(nsIProxyInfo *aProxy);
+  void MaybeDisableDNSPrefetch(nsIProxyInfo* aProxy);
 
  private:
-  nsresult SetupPACThread(nsIEventTarget *mainThreadEventTarget = nullptr);
+  nsresult SetupPACThread(nsIEventTarget* mainThreadEventTarget = nullptr);
   nsresult ResetPACThread();
   nsresult ReloadNetworkPAC();
 
   nsresult AsyncConfigureFromPAC(bool aForceReload, bool aResetPACThread);
   nsresult OnAsyncGetPACURI(bool aForceReload, bool aResetPACThread,
-                            nsresult aResult, const nsACString &aUri);
+                            nsresult aResult, const nsACString& aUri);
 
  public:
   // The Sun Forte compiler and others implement older versions of the
@@ -329,7 +329,7 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   };
 
   struct HostInfoName {
-    char *host;
+    char* host;
     uint32_t host_len;
   };
 
@@ -354,8 +354,8 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
 
  private:
   // Private methods to insert and remove FilterLinks from the FilterLink chain.
-  nsresult InsertFilterLink(RefPtr<FilterLink> &&link);
-  nsresult RemoveFilterLink(nsISupports *givenObject);
+  nsresult InsertFilterLink(RefPtr<FilterLink>&& link);
+  nsresult RemoveFilterLink(nsISupports* givenObject);
 
  protected:
   // Indicates if local hosts (plain hostnames, no dots) should use the proxy
@@ -396,10 +396,10 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   int32_t mFailedProxyTimeout;
 
  private:
-  nsresult AsyncResolveInternal(nsIChannel *channel, uint32_t flags,
-                                nsIProtocolProxyCallback *callback,
-                                nsICancelable **result, bool isSyncOK,
-                                nsIEventTarget *mainThreadEventTarget);
+  nsresult AsyncResolveInternal(nsIChannel* channel, uint32_t flags,
+                                nsIProtocolProxyCallback* callback,
+                                nsICancelable** result, bool isSyncOK,
+                                nsIEventTarget* mainThreadEventTarget);
   bool mIsShutdown;
   nsCOMPtr<nsIEventTarget> mProxySettingTarget;
 };

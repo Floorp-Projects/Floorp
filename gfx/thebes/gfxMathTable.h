@@ -17,7 +17,7 @@ class gfxMathTable {
    * @param aFace The HarfBuzz face containing the math table.
    * @param aSize The font size to pass to HarfBuzz.
    */
-  gfxMathTable(hb_face_t *aFace, gfxFloat aSize);
+  gfxMathTable(hb_face_t* aFace, gfxFloat aSize);
 
   /**
    * Releases our reference to the MATH table and cleans up everything else.
@@ -134,7 +134,7 @@ class gfxMathTable {
 
  private:
   // size-specific font object, owned by the gfxMathTable
-  hb_font_t *mHBFont;
+  hb_font_t* mHBFont;
 
   static const unsigned int kMaxCachedSizeCount = 10;
   struct MathVariantCacheEntry {

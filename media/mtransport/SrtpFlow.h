@@ -42,22 +42,22 @@ class SrtpFlow {
   static unsigned int SaltSize(int cipher_suite);
 
   static RefPtr<SrtpFlow> Create(int cipher_suite, bool inbound,
-                                 const void *key, size_t key_len);
+                                 const void* key, size_t key_len);
 
-  nsresult ProtectRtp(void *in, int in_len, int max_len, int *out_len);
-  nsresult UnprotectRtp(void *in, int in_len, int max_len, int *out_len);
-  nsresult ProtectRtcp(void *in, int in_len, int max_len, int *out_len);
-  nsresult UnprotectRtcp(void *in, int in_len, int max_len, int *out_len);
+  nsresult ProtectRtp(void* in, int in_len, int max_len, int* out_len);
+  nsresult UnprotectRtp(void* in, int in_len, int max_len, int* out_len);
+  nsresult ProtectRtcp(void* in, int in_len, int max_len, int* out_len);
+  nsresult UnprotectRtcp(void* in, int in_len, int max_len, int* out_len);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SrtpFlow)
 
-  static void srtp_event_handler(srtp_event_data_t *data);
+  static void srtp_event_handler(srtp_event_data_t* data);
 
  private:
   SrtpFlow() : session_(nullptr) {}
 
-  nsresult CheckInputs(bool protect, void *in, int in_len, int max_len,
-                       int *out_len);
+  nsresult CheckInputs(bool protect, void* in, int in_len, int max_len,
+                       int* out_len);
 
   static nsresult Init();
   static bool initialized;  // Was libsrtp initialized? Only happens once.

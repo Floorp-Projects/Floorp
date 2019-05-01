@@ -33,7 +33,7 @@
 extern "C" {
 #endif  // __cplusplus
 
-inline void printf_stderr(const char *fmt, ...) MOZ_FORMAT_PRINTF(1, 2) {
+inline void printf_stderr(const char* fmt, ...) MOZ_FORMAT_PRINTF(1, 2) {
 #if defined(XP_WIN)
   if (IsDebuggerPresent()) {
     char buf[2048];
@@ -45,7 +45,7 @@ inline void printf_stderr(const char *fmt, ...) MOZ_FORMAT_PRINTF(1, 2) {
   }
 #endif  // defined(XP_WIN)
 
-  FILE *fp = _fdopen(_dup(2), "a");
+  FILE* fp = _fdopen(_dup(2), "a");
   if (!fp) return;
 
   va_list args;

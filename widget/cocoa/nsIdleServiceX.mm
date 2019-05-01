@@ -7,7 +7,7 @@
 #include "nsIServiceManager.h"
 #import <Foundation/Foundation.h>
 
-bool nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime) {
+bool nsIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   kern_return_t rval;
@@ -27,8 +27,8 @@ bool nsIdleServiceX::PollIdleTime(uint32_t *aIdleTime) {
 
   IOObjectRelease(hidItr);
 
-  NSMutableDictionary *hidProps;
-  rval = IORegistryEntryCreateCFProperties(entry, (CFMutableDictionaryRef *)&hidProps,
+  NSMutableDictionary* hidProps;
+  rval = IORegistryEntryCreateCFProperties(entry, (CFMutableDictionaryRef*)&hidProps,
                                            kCFAllocatorDefault, 0);
   if (rval != KERN_SUCCESS) return false;
   NS_ASSERTION(hidProps, "HIDProperties is null, but no error was returned.");

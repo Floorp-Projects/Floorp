@@ -34,7 +34,7 @@ void print_err(nsresult err) {
   }
 }
 
-nsresult Register(nsIComponentRegistrar *registrar, const char *path) {
+nsresult Register(nsIComponentRegistrar* registrar, const char* path) {
   nsCOMPtr<nsIFile> file;
   nsresult rv =
       NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), true, getter_AddRefs(file));
@@ -43,7 +43,7 @@ nsresult Register(nsIComponentRegistrar *registrar, const char *path) {
   return rv;
 }
 
-nsresult Unregister(const char *path) {
+nsresult Unregister(const char* path) {
   /* NEEDS IMPLEMENTATION */
 #if 0
     nsresult res = nsComponentManager::AutoUnregisterComponent(path);
@@ -53,7 +53,7 @@ nsresult Unregister(const char *path) {
 #endif
 }
 
-int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[]) {
+int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char* argv[]) {
   int i = 1;
   nsresult res;
 
@@ -96,7 +96,7 @@ int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[]) {
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int ret = 0;
   nsresult rv;
   {

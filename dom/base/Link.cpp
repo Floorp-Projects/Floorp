@@ -39,7 +39,7 @@ namespace dom {
 using places::History;
 #endif
 
-Link::Link(Element *aElement)
+Link::Link(Element* aElement)
     : mElement(aElement),
       mLinkState(eLinkState_NotLink),
       mNeedsRegistration(false),
@@ -95,10 +95,10 @@ void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
   }
 }
 
-void Link::GetContentPolicyMimeTypeMedia(nsAttrValue &aAsAttr,
-                                         nsContentPolicyType &aPolicyType,
-                                         nsString &aMimeType,
-                                         nsAString &aMedia) {
+void Link::GetContentPolicyMimeTypeMedia(nsAttrValue& aAsAttr,
+                                         nsContentPolicyType& aPolicyType,
+                                         nsString& aMimeType,
+                                         nsAString& aMedia) {
   nsAutoString as;
   mElement->GetAttr(kNameSpaceID_None, nsGkAtoms::as, as);
   Link::ParseAsValue(as, aAsAttr);
@@ -185,8 +185,8 @@ void Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
   }
 }
 
-void Link::UpdatePreload(nsAtom *aName, const nsAttrValue *aValue,
-                         const nsAttrValue *aOldValue) {
+void Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
+                         const nsAttrValue* aOldValue) {
   MOZ_ASSERT(mElement->IsInComposedDoc());
 
   if (!ElementHasHref()) {
@@ -340,9 +340,9 @@ void Link::SetLinkState(nsLinkState aState) {
 EventStates Link::LinkState() const {
   // We are a constant method, but we are just lazily doing things and have to
   // track that state.  Cast away that constness!
-  Link *self = const_cast<Link *>(this);
+  Link* self = const_cast<Link*>(this);
 
-  Element *element = self->mElement;
+  Element* element = self->mElement;
 
   // If we have not yet registered for notifications and need to,
   // due to our href changing, register now!
@@ -362,7 +362,7 @@ EventStates Link::LinkState() const {
 #ifdef ANDROID
       nsCOMPtr<IHistory> history = services::GetHistoryService();
 #elif defined(MOZ_PLACES)
-      History *history = History::GetService();
+      History* history = History::GetService();
 #else
       nsCOMPtr<IHistory> history;
 #endif
@@ -390,21 +390,21 @@ EventStates Link::LinkState() const {
   return EventStates();
 }
 
-nsIURI *Link::GetURI() const {
+nsIURI* Link::GetURI() const {
   // If we have this URI cached, use it.
   if (mCachedURI) {
     return mCachedURI;
   }
 
   // Otherwise obtain it.
-  Link *self = const_cast<Link *>(this);
-  Element *element = self->mElement;
+  Link* self = const_cast<Link*>(this);
+  Element* element = self->mElement;
   mCachedURI = element->GetHrefURI();
 
   return mCachedURI;
 }
 
-void Link::SetProtocol(const nsAString &aProtocol) {
+void Link::SetProtocol(const nsAString& aProtocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -426,7 +426,7 @@ void Link::SetProtocol(const nsAString &aProtocol) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetPassword(const nsAString &aPassword) {
+void Link::SetPassword(const nsAString& aPassword) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -441,7 +441,7 @@ void Link::SetPassword(const nsAString &aPassword) {
   }
 }
 
-void Link::SetUsername(const nsAString &aUsername) {
+void Link::SetUsername(const nsAString& aUsername) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -456,7 +456,7 @@ void Link::SetUsername(const nsAString &aUsername) {
   }
 }
 
-void Link::SetHost(const nsAString &aHost) {
+void Link::SetHost(const nsAString& aHost) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -471,7 +471,7 @@ void Link::SetHost(const nsAString &aHost) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetHostname(const nsAString &aHostname) {
+void Link::SetHostname(const nsAString& aHostname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -486,7 +486,7 @@ void Link::SetHostname(const nsAString &aHostname) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetPathname(const nsAString &aPathname) {
+void Link::SetPathname(const nsAString& aPathname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
@@ -503,7 +503,7 @@ void Link::SetPathname(const nsAString &aPathname) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetSearch(const nsAString &aSearch) {
+void Link::SetSearch(const nsAString& aSearch) {
   nsCOMPtr<nsIURI> uri(GetURI());
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
   if (!url) {
@@ -522,7 +522,7 @@ void Link::SetSearch(const nsAString &aSearch) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetPort(const nsAString &aPort) {
+void Link::SetPort(const nsAString& aPort) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -548,7 +548,7 @@ void Link::SetPort(const nsAString &aPort) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetHash(const nsAString &aHash) {
+void Link::SetHash(const nsAString& aHash) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -564,7 +564,7 @@ void Link::SetHash(const nsAString &aHash) {
   SetHrefAttribute(uri);
 }
 
-void Link::GetOrigin(nsAString &aOrigin) {
+void Link::GetOrigin(nsAString& aOrigin) {
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -577,7 +577,7 @@ void Link::GetOrigin(nsAString &aOrigin) {
   aOrigin.Assign(origin);
 }
 
-void Link::GetProtocol(nsAString &_protocol) {
+void Link::GetProtocol(nsAString& _protocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     _protocol.AssignLiteral("http");
@@ -589,7 +589,7 @@ void Link::GetProtocol(nsAString &_protocol) {
   _protocol.Append(char16_t(':'));
 }
 
-void Link::GetUsername(nsAString &aUsername) {
+void Link::GetUsername(nsAString& aUsername) {
   aUsername.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -602,7 +602,7 @@ void Link::GetUsername(nsAString &aUsername) {
   CopyASCIItoUTF16(username, aUsername);
 }
 
-void Link::GetPassword(nsAString &aPassword) {
+void Link::GetPassword(nsAString& aPassword) {
   aPassword.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -615,7 +615,7 @@ void Link::GetPassword(nsAString &aPassword) {
   CopyASCIItoUTF16(password, aPassword);
 }
 
-void Link::GetHost(nsAString &_host) {
+void Link::GetHost(nsAString& _host) {
   _host.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -631,7 +631,7 @@ void Link::GetHost(nsAString &_host) {
   }
 }
 
-void Link::GetHostname(nsAString &_hostname) {
+void Link::GetHostname(nsAString& _hostname) {
   _hostname.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -643,7 +643,7 @@ void Link::GetHostname(nsAString &_hostname) {
   nsContentUtils::GetHostOrIPv6WithBrackets(uri, _hostname);
 }
 
-void Link::GetPathname(nsAString &_pathname) {
+void Link::GetPathname(nsAString& _pathname) {
   _pathname.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -661,7 +661,7 @@ void Link::GetPathname(nsAString &_pathname) {
   }
 }
 
-void Link::GetSearch(nsAString &_search) {
+void Link::GetSearch(nsAString& _search) {
   _search.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -680,7 +680,7 @@ void Link::GetSearch(nsAString &_search) {
   }
 }
 
-void Link::GetPort(nsAString &_port) {
+void Link::GetPort(nsAString& _port) {
   _port.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -700,7 +700,7 @@ void Link::GetPort(nsAString &_port) {
   }
 }
 
-void Link::GetHash(nsAString &_hash) {
+void Link::GetHash(nsAString& _hash) {
   _hash.Truncate();
 
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -732,7 +732,7 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   // currently registered; in either case, we should remove ourself
   // from the doc and the history.
   if (!mNeedsRegistration && mLinkState != eLinkState_NotLink) {
-    Document *doc = mElement->GetComposedDoc();
+    Document* doc = mElement->GetComposedDoc();
     if (doc && (mRegistered || mLinkState == eLinkState_Visited)) {
       // Tell the document to forget about this link if we've registered
       // with it before.
@@ -780,7 +780,7 @@ void Link::UnregisterFromHistory() {
 #ifdef ANDROID
     nsCOMPtr<IHistory> history = services::GetHistoryService();
 #elif defined(MOZ_PLACES)
-    History *history = History::GetService();
+    History* history = History::GetService();
 #else
     nsCOMPtr<IHistory> history;
 #endif
@@ -795,7 +795,7 @@ void Link::UnregisterFromHistory() {
   }
 }
 
-void Link::SetHrefAttribute(nsIURI *aURI) {
+void Link::SetHrefAttribute(nsIURI* aURI) {
   NS_ASSERTION(aURI, "Null URI is illegal!");
 
   // if we change this code to not reserialize we need to do something smarter
@@ -807,7 +807,7 @@ void Link::SetHrefAttribute(nsIURI *aURI) {
                           NS_ConvertUTF8toUTF16(href), true);
 }
 
-size_t Link::SizeOfExcludingThis(mozilla::SizeOfState &aState) const {
+size_t Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const {
   size_t n = 0;
 
   if (mCachedURI) {
@@ -831,7 +831,7 @@ static const nsAttrValue::EnumTable kAsAttributeTable[] = {
     {"fetch", DESTINATION_FETCH},   {nullptr, 0}};
 
 /* static */
-void Link::ParseAsValue(const nsAString &aValue, nsAttrValue &aResult) {
+void Link::ParseAsValue(const nsAString& aValue, nsAttrValue& aResult) {
   DebugOnly<bool> success =
       aResult.ParseEnumValue(aValue, kAsAttributeTable, false,
                              // default value is a empty string
@@ -842,7 +842,7 @@ void Link::ParseAsValue(const nsAString &aValue, nsAttrValue &aResult) {
 }
 
 /* static */
-nsContentPolicyType Link::AsValueToContentPolicy(const nsAttrValue &aValue) {
+nsContentPolicyType Link::AsValueToContentPolicy(const nsAttrValue& aValue) {
   switch (aValue.GetEnumValue()) {
     case DESTINATION_INVALID:
       return nsIContentPolicy::TYPE_INVALID;

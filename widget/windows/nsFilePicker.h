@@ -24,10 +24,10 @@ class nsILoadContext;
 
 class nsBaseWinFilePicker : public nsBaseFilePicker {
  public:
-  NS_IMETHOD GetDefaultString(nsAString &aDefaultString) override;
-  NS_IMETHOD SetDefaultString(const nsAString &aDefaultString) override;
-  NS_IMETHOD GetDefaultExtension(nsAString &aDefaultExtension) override;
-  NS_IMETHOD SetDefaultExtension(const nsAString &aDefaultExtension) override;
+  NS_IMETHOD GetDefaultString(nsAString& aDefaultString) override;
+  NS_IMETHOD SetDefaultString(const nsAString& aDefaultString) override;
+  NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension) override;
+  NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension) override;
 
  protected:
   nsString mDefaultFilePath;
@@ -45,51 +45,51 @@ class nsFilePicker : public IFileDialogEvents, public nsBaseWinFilePicker {
  public:
   nsFilePicker();
 
-  NS_IMETHOD Init(mozIDOMWindowProxy *aParent, const nsAString &aTitle,
+  NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
                   int16_t aMode) override;
 
   NS_DECL_ISUPPORTS
 
   // IUnknown's QueryInterface
-  STDMETHODIMP QueryInterface(REFIID refiid, void **ppvResult);
+  STDMETHODIMP QueryInterface(REFIID refiid, void** ppvResult);
 
   // nsIFilePicker (less what's in nsBaseFilePicker and nsBaseWinFilePicker)
-  NS_IMETHOD GetFilterIndex(int32_t *aFilterIndex) override;
+  NS_IMETHOD GetFilterIndex(int32_t* aFilterIndex) override;
   NS_IMETHOD SetFilterIndex(int32_t aFilterIndex) override;
-  NS_IMETHOD GetFile(nsIFile **aFile) override;
-  NS_IMETHOD GetFileURL(nsIURI **aFileURL) override;
-  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles) override;
-  NS_IMETHOD AppendFilter(const nsAString &aTitle,
-                          const nsAString &aFilter) override;
+  NS_IMETHOD GetFile(nsIFile** aFile) override;
+  NS_IMETHOD GetFileURL(nsIURI** aFileURL) override;
+  NS_IMETHOD GetFiles(nsISimpleEnumerator** aFiles) override;
+  NS_IMETHOD AppendFilter(const nsAString& aTitle,
+                          const nsAString& aFilter) override;
 
   // IFileDialogEvents
-  HRESULT STDMETHODCALLTYPE OnFileOk(IFileDialog *pfd);
-  HRESULT STDMETHODCALLTYPE OnFolderChanging(IFileDialog *pfd,
-                                             IShellItem *psiFolder);
-  HRESULT STDMETHODCALLTYPE OnFolderChange(IFileDialog *pfd);
-  HRESULT STDMETHODCALLTYPE OnSelectionChange(IFileDialog *pfd);
+  HRESULT STDMETHODCALLTYPE OnFileOk(IFileDialog* pfd);
+  HRESULT STDMETHODCALLTYPE OnFolderChanging(IFileDialog* pfd,
+                                             IShellItem* psiFolder);
+  HRESULT STDMETHODCALLTYPE OnFolderChange(IFileDialog* pfd);
+  HRESULT STDMETHODCALLTYPE OnSelectionChange(IFileDialog* pfd);
   HRESULT STDMETHODCALLTYPE
-  OnShareViolation(IFileDialog *pfd, IShellItem *psi,
-                   FDE_SHAREVIOLATION_RESPONSE *pResponse);
-  HRESULT STDMETHODCALLTYPE OnTypeChange(IFileDialog *pfd);
-  HRESULT STDMETHODCALLTYPE OnOverwrite(IFileDialog *pfd, IShellItem *psi,
-                                        FDE_OVERWRITE_RESPONSE *pResponse);
+  OnShareViolation(IFileDialog* pfd, IShellItem* psi,
+                   FDE_SHAREVIOLATION_RESPONSE* pResponse);
+  HRESULT STDMETHODCALLTYPE OnTypeChange(IFileDialog* pfd);
+  HRESULT STDMETHODCALLTYPE OnOverwrite(IFileDialog* pfd, IShellItem* psi,
+                                        FDE_OVERWRITE_RESPONSE* pResponse);
 
  protected:
   /* method from nsBaseFilePicker */
-  virtual void InitNative(nsIWidget *aParent, const nsAString &aTitle) override;
-  nsresult Show(int16_t *aReturnVal) override;
-  nsresult ShowW(int16_t *aReturnVal);
-  void GetFilterListArray(nsString &aFilterList);
-  bool ShowFolderPicker(const nsString &aInitialDir);
-  bool ShowFilePicker(const nsString &aInitialDir);
+  virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) override;
+  nsresult Show(int16_t* aReturnVal) override;
+  nsresult ShowW(int16_t* aReturnVal);
+  void GetFilterListArray(nsString& aFilterList);
+  bool ShowFolderPicker(const nsString& aInitialDir);
+  bool ShowFilePicker(const nsString& aInitialDir);
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();
   bool IsDefaultPathLink();
   bool IsDefaultPathHtml();
   void SetDialogHandle(HWND aWnd);
   bool ClosePickerIfNeeded();
-  static void PickerCallbackTimerFunc(nsITimer *aTimer, void *aPicker);
+  static void PickerCallbackTimerFunc(nsITimer* aTimer, void* aPicker);
 
   nsCOMPtr<nsILoadContext> mLoadContext;
   nsCOMPtr<nsIWidget> mParentWidget;
@@ -100,7 +100,7 @@ class nsFilePicker : public IFileDialogEvents, public nsBaseWinFilePicker {
   nsCOMArray<nsIFile> mFiles;
   static char mLastUsedDirectory[];
   nsString mUnicodeFile;
-  static char16_t *mLastUsedUnicodeDirectory;
+  static char16_t* mLastUsedUnicodeDirectory;
   HWND mDlgWnd;
 
   class ComDlgFilterSpec {
@@ -112,9 +112,9 @@ class nsFilePicker : public IFileDialogEvents, public nsBaseWinFilePicker {
 
     const bool IsEmpty() { return (mSpecList.Length() == 0); }
 
-    const COMDLG_FILTERSPEC *get() { return mSpecList.Elements(); }
+    const COMDLG_FILTERSPEC* get() { return mSpecList.Elements(); }
 
-    void Append(const nsAString &aTitle, const nsAString &aFilter);
+    void Append(const nsAString& aTitle, const nsAString& aFilter);
 
    private:
     AutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;

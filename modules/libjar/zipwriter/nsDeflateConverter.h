@@ -52,7 +52,7 @@ class nsDeflateConverter final : public nsIStreamConverter {
   unsigned char mWriteBuffer[kZipBufLen];
 
   nsresult Init();
-  nsresult PushAvailableData(nsIRequest *aRequest, nsISupports *aContext);
+  nsresult PushAvailableData(nsIRequest* aRequest, nsISupports* aContext);
 };
 
 #endif

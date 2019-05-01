@@ -31,7 +31,7 @@ class nsBlockOnBackgroundThreadEvent : public Runnable {
   }
 };
 
-nsDeleteDir *nsDeleteDir::gInstance = nullptr;
+nsDeleteDir* nsDeleteDir::gInstance = nullptr;
 
 nsDeleteDir::nsDeleteDir()
     : mLock("nsDeleteDir.mLock"),
@@ -69,8 +69,8 @@ nsresult nsDeleteDir::Shutdown(bool finishDeleting) {
       nsCOMPtr<nsITimer> timer = gInstance->mTimers[i - 1];
       gInstance->mTimers.RemoveObjectAt(i - 1);
 
-      nsCOMArray<nsIFile> *arg;
-      timer->GetClosure((reinterpret_cast<void **>(&arg)));
+      nsCOMArray<nsIFile>* arg;
+      timer->GetClosure((reinterpret_cast<void**>(&arg)));
       timer->Cancel();
 
       if (finishDeleting) dirsToRemove.AppendObjects(*arg);
@@ -133,7 +133,7 @@ void nsDeleteDir::DestroyThread() {
   mThread = nullptr;
 }
 
-void nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg) {
+void nsDeleteDir::TimerCallback(nsITimer* aTimer, void* arg) {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR> timer;
   {
     MutexAutoLock lock(gInstance->mLock);
@@ -148,7 +148,7 @@ void nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg) {
   }
 
   nsAutoPtr<nsCOMArray<nsIFile> > dirList;
-  dirList = static_cast<nsCOMArray<nsIFile> *>(arg);
+  dirList = static_cast<nsCOMArray<nsIFile>*>(arg);
 
   bool shuttingDown = false;
 
@@ -169,7 +169,7 @@ void nsDeleteDir::TimerCallback(nsITimer *aTimer, void *arg) {
   }
 }
 
-nsresult nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash,
+nsresult nsDeleteDir::DeleteDir(nsIFile* dirIn, bool moveToTrash,
                                 uint32_t delay) {
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_TRASHRENAME> timer;
 
@@ -237,11 +237,11 @@ nsresult nsDeleteDir::DeleteDir(nsIFile *dirIn, bool moveToTrash,
   return NS_OK;
 }
 
-nsresult nsDeleteDir::GetTrashDir(nsIFile *target, nsCOMPtr<nsIFile> *result) {
+nsresult nsDeleteDir::GetTrashDir(nsIFile* target, nsCOMPtr<nsIFile>* result) {
   nsresult rv;
 #if defined(MOZ_WIDGET_ANDROID)
   // Try to use the app cache folder for cache trash on Android
-  char *cachePath = getenv("CACHE_DIRECTORY");
+  char* cachePath = getenv("CACHE_DIRECTORY");
   if (cachePath) {
     rv = NS_NewNativeLocalFile(nsDependentCString(cachePath), true,
                                getter_AddRefs(*result));
@@ -266,7 +266,7 @@ nsresult nsDeleteDir::GetTrashDir(nsIFile *target, nsCOMPtr<nsIFile> *result) {
   return (*result)->SetNativeLeafName(leaf);
 }
 
-nsresult nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir) {
+nsresult nsDeleteDir::RemoveOldTrashes(nsIFile* cacheDir) {
   if (!gInstance) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
@@ -316,7 +316,7 @@ nsresult nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir) {
   return NS_OK;
 }
 
-nsresult nsDeleteDir::PostTimer(void *arg, uint32_t delay) {
+nsresult nsDeleteDir::PostTimer(void* arg, uint32_t delay) {
   nsresult rv;
 
   MutexAutoLock lock(mLock);
@@ -334,7 +334,7 @@ nsresult nsDeleteDir::PostTimer(void *arg, uint32_t delay) {
   return NS_OK;
 }
 
-nsresult nsDeleteDir::RemoveDir(nsIFile *file, bool *stopDeleting) {
+nsresult nsDeleteDir::RemoveDir(nsIFile* file, bool* stopDeleting) {
   nsresult rv;
   bool isLink;
 

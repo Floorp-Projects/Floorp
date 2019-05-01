@@ -45,28 +45,28 @@ class nsAboutCacheEntry final : public nsIAboutModule {
     virtual ~Channel() = default;
 
    public:
-    MOZ_MUST_USE nsresult Init(nsIURI *uri, nsILoadInfo *aLoadInfo);
+    MOZ_MUST_USE nsresult Init(nsIURI* uri, nsILoadInfo* aLoadInfo);
 
-    MOZ_MUST_USE nsresult GetContentStream(nsIURI *, nsIInputStream **);
-    MOZ_MUST_USE nsresult OpenCacheEntry(nsIURI *);
+    MOZ_MUST_USE nsresult GetContentStream(nsIURI*, nsIInputStream**);
+    MOZ_MUST_USE nsresult OpenCacheEntry(nsIURI*);
     MOZ_MUST_USE nsresult OpenCacheEntry();
-    MOZ_MUST_USE nsresult WriteCacheEntryDescription(nsICacheEntry *);
+    MOZ_MUST_USE nsresult WriteCacheEntryDescription(nsICacheEntry*);
     MOZ_MUST_USE nsresult WriteCacheEntryUnavailable();
-    MOZ_MUST_USE nsresult ParseURI(nsIURI *uri, nsACString &storageName,
-                                   nsILoadContextInfo **loadInfo,
-                                   nsCString &enahnceID, nsIURI **cacheUri);
+    MOZ_MUST_USE nsresult ParseURI(nsIURI* uri, nsACString& storageName,
+                                   nsILoadContextInfo** loadInfo,
+                                   nsCString& enahnceID, nsIURI** cacheUri);
     void CloseContent();
 
     static MOZ_MUST_USE nsresult PrintCacheData(
-        nsIInputStream *aInStream, void *aClosure, const char *aFromSegment,
-        uint32_t aToOffset, uint32_t aCount, uint32_t *aWriteCount);
+        nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
+        uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount);
 
    private:
     nsCString mStorageName, mEnhanceId;
     nsCOMPtr<nsILoadContextInfo> mLoadInfo;
     nsCOMPtr<nsIURI> mCacheURI;
 
-    nsCString *mBuffer;
+    nsCString* mBuffer;
     nsCOMPtr<nsIAsyncOutputStream> mOutputStream;
     bool mWaitingForData;
     uint32_t mHexDumpState;

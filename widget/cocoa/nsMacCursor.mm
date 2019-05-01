@@ -56,7 +56,7 @@
    frame. Determines which frame should occur next and sets the cursor to that frame.
     @param      aTimer the timer causing the animation
 */
-- (void)advanceAnimatedCursor:(NSTimer *)aTimer;
+- (void)advanceAnimatedCursor:(NSTimer*)aTimer;
 
 /*! @method     setFrame:
     @abstract   Sets the current cursor, using an index to determine which frame in the animation to
@@ -80,8 +80,8 @@
 */
 @interface nsCocoaCursor : nsMacCursor {
  @private
-  NSArray *mFrames;
-  NSCursor *mLastSetCocoaCursor;
+  NSArray* mFrames;
+  NSCursor* mLastSetCocoaCursor;
 }
 
 /*! @method     initWithFrames:
@@ -93,7 +93,7 @@
     @param      aType the corresponding <code>nsCursor</code> constant
     @result     an instance of <code>nsCocoaCursor</code> that will animate the given cursor frames
  */
-- (id)initWithFrames:(NSArray *)aCursorFrames type:(nsCursor)aType;
+- (id)initWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType;
 
 /*! @method     initWithCursor:
     @abstract   Create a cursor by specifying a Cocoa <code>NSCursor</code>.
@@ -103,7 +103,7 @@
     @result     an instance of <code>nsCocoaCursor</code> representing the given
    <code>NSCursor</code>
 */
-- (id)initWithCursor:(NSCursor *)aCursor type:(nsCursor)aType;
+- (id)initWithCursor:(NSCursor*)aCursor type:(nsCursor)aType;
 
 /*! @method     initWithImageNamed:hotSpot:
     @abstract   Create a cursor by specifying the name of an image resource to use for the cursor
@@ -117,13 +117,13 @@
     @param      aType the corresponding <code>nsCursor</code> constant
     @result     an instance of <code>nsCocoaCursor</code> that uses the given image and hotspot
 */
-- (id)initWithImageNamed:(NSString *)aCursorImage hotSpot:(NSPoint)aPoint type:(nsCursor)aType;
+- (id)initWithImageNamed:(NSString*)aCursorImage hotSpot:(NSPoint)aPoint type:(nsCursor)aType;
 
 @end
 
 @implementation nsMacCursor
 
-+ (nsMacCursor *)cursorWithCursor:(NSCursor *)aCursor type:(nsCursor)aType {
++ (nsMacCursor*)cursorWithCursor:(NSCursor*)aCursor type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [[[nsCocoaCursor alloc] initWithCursor:aCursor type:aType] autorelease];
@@ -131,9 +131,9 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-+ (nsMacCursor *)cursorWithImageNamed:(NSString *)aCursorImage
-                              hotSpot:(NSPoint)aPoint
-                                 type:(nsCursor)aType {
++ (nsMacCursor*)cursorWithImageNamed:(NSString*)aCursorImage
+                             hotSpot:(NSPoint)aPoint
+                                type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [[[nsCocoaCursor alloc] initWithImageNamed:aCursorImage hotSpot:aPoint
@@ -142,7 +142,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-+ (nsMacCursor *)cursorWithFrames:(NSArray *)aCursorFrames type:(nsCursor)aType {
++ (nsMacCursor*)cursorWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [[[nsCocoaCursor alloc] initWithFrames:aCursorFrames type:aType] autorelease];
@@ -150,7 +150,7 @@
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-+ (NSCursor *)cocoaCursorWithImageNamed:(NSString *)imageName hotSpot:(NSPoint)aPoint {
++ (NSCursor*)cocoaCursorWithImageNamed:(NSString*)imageName hotSpot:(NSPoint)aPoint {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   nsCOMPtr<nsIFile> resDir;
@@ -166,7 +166,7 @@
   rv = resDir->GetNativePath(resPath);
   if (NS_FAILED(rv)) goto INIT_FAILURE;
 
-  pathToImage = [NSString stringWithUTF8String:(const char *)resPath.get()];
+  pathToImage = [NSString stringWithUTF8String:(const char*)resPath.get()];
   if (!pathToImage) goto INIT_FAILURE;
   pathToImage = [pathToImage stringByAppendingPathComponent:imageName];
   pathToHiDpiImage = [pathToImage stringByAppendingString:@"@2x"];
@@ -186,7 +186,7 @@
   // unless it is exactly twice the size of the lowdpi image.
   hiDpiCursorImage = [[[NSImage alloc] initWithContentsOfFile:pathToHiDpiImage] autorelease];
   if (hiDpiCursorImage) {
-    NSImageRep *imageRep = [[hiDpiCursorImage representations] objectAtIndex:0];
+    NSImageRep* imageRep = [[hiDpiCursorImage representations] objectAtIndex:0];
     [cursorImage addRepresentation:imageRep];
   }
   return [[[NSCursor alloc] initWithImage:cursorImage hotSpot:aPoint] autorelease];
@@ -258,7 +258,7 @@ INIT_FAILURE:
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void)advanceAnimatedCursor:(NSTimer *)aTimer {
+- (void)advanceAnimatedCursor:(NSTimer*)aTimer {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ([aTimer isValid]) {
@@ -289,12 +289,12 @@ INIT_FAILURE:
 
 @implementation nsCocoaCursor
 
-- (id)initWithFrames:(NSArray *)aCursorFrames type:(nsCursor)aType {
+- (id)initWithFrames:(NSArray*)aCursorFrames type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   self = [super init];
-  NSEnumerator *it = [aCursorFrames objectEnumerator];
-  NSObject *frame = nil;
+  NSEnumerator* it = [aCursorFrames objectEnumerator];
+  NSObject* frame = nil;
   while ((frame = [it nextObject])) {
     NS_ASSERTION([frame isKindOfClass:[NSCursor class]],
                  "Invalid argument: All frames must be of type NSCursor");
@@ -307,16 +307,16 @@ INIT_FAILURE:
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)initWithCursor:(NSCursor *)aCursor type:(nsCursor)aType {
+- (id)initWithCursor:(NSCursor*)aCursor type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSArray *frame = [NSArray arrayWithObjects:aCursor, nil];
+  NSArray* frame = [NSArray arrayWithObjects:aCursor, nil];
   return [self initWithFrames:frame type:aType];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (id)initWithImageNamed:(NSString *)aCursorImage hotSpot:(NSPoint)aPoint type:(nsCursor)aType {
+- (id)initWithImageNamed:(NSString*)aCursorImage hotSpot:(NSPoint)aPoint type:(nsCursor)aType {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [self initWithCursor:[nsMacCursor cocoaCursorWithImageNamed:aCursorImage hotSpot:aPoint]
@@ -332,7 +332,7 @@ INIT_FAILURE:
 - (void)setFrame:(int)aFrameIndex {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSCursor *newCursor = [mFrames objectAtIndex:aFrameIndex];
+  NSCursor* newCursor = [mFrames objectAtIndex:aFrameIndex];
   [newCursor set];
   mLastSetCocoaCursor = newCursor;
 
@@ -347,7 +347,7 @@ INIT_FAILURE:
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-- (NSString *)description {
+- (NSString*)description {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   return [mFrames description];

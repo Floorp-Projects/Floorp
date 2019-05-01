@@ -60,18 +60,18 @@ nsresult nsDeflateConverter::Init() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeflateConverter::Convert(nsIInputStream *aFromStream,
-                                          const char *aFromType,
-                                          const char *aToType,
-                                          nsISupports *aCtxt,
-                                          nsIInputStream **_retval) {
+NS_IMETHODIMP nsDeflateConverter::Convert(nsIInputStream* aFromStream,
+                                          const char* aFromType,
+                                          const char* aToType,
+                                          nsISupports* aCtxt,
+                                          nsIInputStream** _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
-                                                   const char *aToType,
-                                                   nsIStreamListener *aListener,
-                                                   nsISupports *aCtxt) {
+NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char* aFromType,
+                                                   const char* aToType,
+                                                   nsIStreamListener* aListener,
+                                                   nsISupports* aCtxt) {
   if (mListener) return NS_ERROR_ALREADY_INITIALIZED;
 
   NS_ENSURE_ARG_POINTER(aListener);
@@ -92,8 +92,8 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
   return rv;
 }
 
-NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
-                                                  nsIInputStream *aInputStream,
+NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest* aRequest,
+                                                  nsIInputStream* aInputStream,
                                                   uint64_t aOffset,
                                                   uint32_t aCount) {
   if (!mListener) return NS_ERROR_NOT_INITIALIZED;
@@ -106,7 +106,7 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
 
   // make sure we aren't reading too much
   mZstream.avail_in = aCount;
-  mZstream.next_in = (unsigned char *)buffer.get();
+  mZstream.next_in = (unsigned char*)buffer.get();
 
   int zerr = Z_OK;
   // deflate loop
@@ -124,13 +124,13 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest *aRequest) {
+NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest* aRequest) {
   if (!mListener) return NS_ERROR_NOT_INITIALIZED;
 
   return mListener->OnStartRequest(aRequest);
 }
 
-NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,
+NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest* aRequest,
                                                 nsresult aStatusCode) {
   if (!mListener) return NS_ERROR_NOT_INITIALIZED;
 
@@ -148,8 +148,8 @@ NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,
   return mListener->OnStopRequest(aRequest, aStatusCode);
 }
 
-nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
-                                               nsISupports *aContext) {
+nsresult nsDeflateConverter::PushAvailableData(nsIRequest* aRequest,
+                                               nsISupports* aContext) {
   uint32_t bytesToWrite = sizeof(mWriteBuffer) - mZstream.avail_out;
   // We don't need to do anything if there isn't any data
   if (bytesToWrite == 0) return NS_OK;
@@ -157,7 +157,7 @@ nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
   MOZ_ASSERT(bytesToWrite <= INT32_MAX);
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(stream), MakeSpan((char *)mWriteBuffer, bytesToWrite),
+      getter_AddRefs(stream), MakeSpan((char*)mWriteBuffer, bytesToWrite),
       NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 

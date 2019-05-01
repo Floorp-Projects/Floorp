@@ -19,8 +19,8 @@ namespace {
 
 class NetAddrCompare {
  public:
-  bool operator()(const mozilla::net::NetAddr &lhs,
-                  const mozilla::net::NetAddr &rhs) const {
+  bool operator()(const mozilla::net::NetAddr& lhs,
+                  const mozilla::net::NetAddr& rhs) const {
     if (lhs.raw.family != rhs.raw.family) {
       return lhs.raw.family < rhs.raw.family;
     }
@@ -45,13 +45,13 @@ class NetAddrCompare {
 
 class PendingSTUNRequest {
  public:
-  PendingSTUNRequest(const mozilla::net::NetAddr &netaddr, const UINT12 &id)
+  PendingSTUNRequest(const mozilla::net::NetAddr& netaddr, const UINT12& id)
       : id_(id), net_addr_(netaddr), is_id_set_(true) {}
 
-  MOZ_IMPLICIT PendingSTUNRequest(const mozilla::net::NetAddr &netaddr)
+  MOZ_IMPLICIT PendingSTUNRequest(const mozilla::net::NetAddr& netaddr)
       : id_(), net_addr_(netaddr), is_id_set_(false) {}
 
-  bool operator<(const PendingSTUNRequest &rhs) const {
+  bool operator<(const PendingSTUNRequest& rhs) const {
     if (NetAddrCompare()(net_addr_, rhs.net_addr_)) {
       return true;
     }
@@ -92,11 +92,11 @@ class STUNUDPSocketFilter : public nsISocketFilter {
  private:
   virtual ~STUNUDPSocketFilter() {}
 
-  bool filter_incoming_packet(const mozilla::net::NetAddr *remote_addr,
-                              const uint8_t *data, uint32_t len);
+  bool filter_incoming_packet(const mozilla::net::NetAddr* remote_addr,
+                              const uint8_t* data, uint32_t len);
 
-  bool filter_outgoing_packet(const mozilla::net::NetAddr *remote_addr,
-                              const uint8_t *data, uint32_t len);
+  bool filter_outgoing_packet(const mozilla::net::NetAddr* remote_addr,
+                              const uint8_t* data, uint32_t len);
 
   std::set<mozilla::net::NetAddr, NetAddrCompare> white_list_;
   std::set<PendingSTUNRequest> pending_requests_;
@@ -106,9 +106,9 @@ class STUNUDPSocketFilter : public nsISocketFilter {
 NS_IMPL_ISUPPORTS(STUNUDPSocketFilter, nsISocketFilter)
 
 NS_IMETHODIMP
-STUNUDPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
-                                  const uint8_t *data, uint32_t len,
-                                  int32_t direction, bool *result) {
+STUNUDPSocketFilter::FilterPacket(const mozilla::net::NetAddr* remote_addr,
+                                  const uint8_t* data, uint32_t len,
+                                  int32_t direction, bool* result) {
   switch (direction) {
     case nsISocketFilter::SF_INCOMING:
       *result = filter_incoming_packet(remote_addr, data, len);
@@ -123,7 +123,7 @@ STUNUDPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
 }
 
 bool STUNUDPSocketFilter::filter_incoming_packet(
-    const mozilla::net::NetAddr *remote_addr, const uint8_t *data,
+    const mozilla::net::NetAddr* remote_addr, const uint8_t* data,
     uint32_t len) {
   // Check white list
   if (white_list_.find(*remote_addr) != white_list_.end()) {
@@ -133,9 +133,9 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
   // If it is a STUN response message and we can match its id with one of the
   // pending requests, we can add this address into whitelist.
   if (nr_is_stun_response_message(
-          reinterpret_cast<UCHAR *>(const_cast<uint8_t *>(data)), len)) {
-    const nr_stun_message_header *msg =
-        reinterpret_cast<const nr_stun_message_header *>(data);
+          reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header* msg =
+        reinterpret_cast<const nr_stun_message_header*>(data);
     PendingSTUNRequest pending_req(*remote_addr, msg->id);
     std::set<PendingSTUNRequest>::iterator it =
         pending_requests_.find(pending_req);
@@ -149,9 +149,9 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
   // If it's an incoming STUN request we let it pass and add it to the list of
   // pending response for white listing once we answer.
   if (nr_is_stun_request_message(
-          reinterpret_cast<UCHAR *>(const_cast<uint8_t *>(data)), len)) {
-    const nr_stun_message_header *msg =
-        reinterpret_cast<const nr_stun_message_header *>(data);
+          reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header* msg =
+        reinterpret_cast<const nr_stun_message_header*>(data);
     response_allowed_.insert(PendingSTUNRequest(*remote_addr, msg->id));
     return true;
   }
@@ -168,7 +168,7 @@ bool STUNUDPSocketFilter::filter_incoming_packet(
 }
 
 bool STUNUDPSocketFilter::filter_outgoing_packet(
-    const mozilla::net::NetAddr *remote_addr, const uint8_t *data,
+    const mozilla::net::NetAddr* remote_addr, const uint8_t* data,
     uint32_t len) {
   // Check white list
   if (white_list_.find(*remote_addr) != white_list_.end()) {
@@ -178,9 +178,9 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
   // Check if it is a stun packet. If yes, we put it into a pending list and
   // wait for response packet.
   if (nr_is_stun_request_message(
-          reinterpret_cast<UCHAR *>(const_cast<uint8_t *>(data)), len)) {
-    const nr_stun_message_header *msg =
-        reinterpret_cast<const nr_stun_message_header *>(data);
+          reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header* msg =
+        reinterpret_cast<const nr_stun_message_header*>(data);
     pending_requests_.insert(PendingSTUNRequest(*remote_addr, msg->id));
     return true;
   }
@@ -188,9 +188,9 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
   // If it is a stun response packet, and we had received the request before, we
   // can allow it packet to pass filter.
   if (nr_is_stun_response_message(
-          reinterpret_cast<UCHAR *>(const_cast<uint8_t *>(data)), len)) {
-    const nr_stun_message_header *msg =
-        reinterpret_cast<const nr_stun_message_header *>(data);
+          reinterpret_cast<UCHAR*>(const_cast<uint8_t*>(data)), len)) {
+    const nr_stun_message_header* msg =
+        reinterpret_cast<const nr_stun_message_header*>(data);
     std::set<PendingSTUNRequest>::iterator it =
         response_allowed_.find(PendingSTUNRequest(*remote_addr, msg->id));
     if (it != response_allowed_.end()) {
@@ -205,9 +205,9 @@ bool STUNUDPSocketFilter::filter_outgoing_packet(
 
 class PendingSTUNId {
  public:
-  explicit PendingSTUNId(const UINT12 &id) : id_(id) {}
+  explicit PendingSTUNId(const UINT12& id) : id_(id) {}
 
-  bool operator<(const PendingSTUNId &rhs) const {
+  bool operator<(const PendingSTUNId& rhs) const {
     return memcmp(id_.octet, rhs.id_.octet, sizeof(id_.octet)) < 0;
   }
 
@@ -227,9 +227,9 @@ class STUNTCPSocketFilter : public nsISocketFilter {
  private:
   virtual ~STUNTCPSocketFilter() {}
 
-  bool filter_incoming_packet(const uint8_t *data, uint32_t len);
+  bool filter_incoming_packet(const uint8_t* data, uint32_t len);
 
-  bool filter_outgoing_packet(const uint8_t *data, uint32_t len);
+  bool filter_outgoing_packet(const uint8_t* data, uint32_t len);
 
   bool white_listed_;
   std::set<PendingSTUNId> pending_request_ids_;
@@ -239,9 +239,9 @@ class STUNTCPSocketFilter : public nsISocketFilter {
 NS_IMPL_ISUPPORTS(STUNTCPSocketFilter, nsISocketFilter)
 
 NS_IMETHODIMP
-STUNTCPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
-                                  const uint8_t *data, uint32_t len,
-                                  int32_t direction, bool *result) {
+STUNTCPSocketFilter::FilterPacket(const mozilla::net::NetAddr* remote_addr,
+                                  const uint8_t* data, uint32_t len,
+                                  int32_t direction, bool* result) {
   switch (direction) {
     case nsISocketFilter::SF_INCOMING:
       *result = filter_incoming_packet(data, len);
@@ -255,14 +255,14 @@ STUNTCPSocketFilter::FilterPacket(const mozilla::net::NetAddr *remote_addr,
   return NS_OK;
 }
 
-bool STUNTCPSocketFilter::filter_incoming_packet(const uint8_t *data,
+bool STUNTCPSocketFilter::filter_incoming_packet(const uint8_t* data,
                                                  uint32_t len) {
   // check if white listed already
   if (white_listed_) {
     return true;
   }
 
-  UCHAR *stun = const_cast<uint8_t *>(data);
+  UCHAR* stun = const_cast<uint8_t*>(data);
   uint32_t length = len;
   if (!nr_is_stun_message(stun, length)) {
     stun += 2;
@@ -278,8 +278,8 @@ bool STUNTCPSocketFilter::filter_incoming_packet(const uint8_t *data,
     }
   }
 
-  const nr_stun_message_header *msg =
-      reinterpret_cast<const nr_stun_message_header *>(stun);
+  const nr_stun_message_header* msg =
+      reinterpret_cast<const nr_stun_message_header*>(stun);
 
   // If it is a STUN response message and we can match its id with one of the
   // pending requests, we can add this address into whitelist.
@@ -299,14 +299,14 @@ bool STUNTCPSocketFilter::filter_incoming_packet(const uint8_t *data,
   return true;
 }
 
-bool STUNTCPSocketFilter::filter_outgoing_packet(const uint8_t *data,
+bool STUNTCPSocketFilter::filter_outgoing_packet(const uint8_t* data,
                                                  uint32_t len) {
   // check if white listed already
   if (white_listed_) {
     return true;
   }
 
-  UCHAR *stun = const_cast<uint8_t *>(data);
+  UCHAR* stun = const_cast<uint8_t*>(data);
   uint32_t length = len;
   if (!nr_is_stun_message(stun, length)) {
     stun += 2;
@@ -316,8 +316,8 @@ bool STUNTCPSocketFilter::filter_outgoing_packet(const uint8_t *data,
     }
   }
 
-  const nr_stun_message_header *msg =
-      reinterpret_cast<const nr_stun_message_header *>(stun);
+  const nr_stun_message_header* msg =
+      reinterpret_cast<const nr_stun_message_header*>(stun);
 
   // Check if it is a stun request. If yes, we put it into a pending list and
   // wait for response packet.
@@ -346,8 +346,8 @@ bool STUNTCPSocketFilter::filter_outgoing_packet(const uint8_t *data,
 NS_IMPL_ISUPPORTS(nsStunUDPSocketFilterHandler, nsISocketFilterHandler)
 
 NS_IMETHODIMP nsStunUDPSocketFilterHandler::NewFilter(
-    nsISocketFilter **result) {
-  nsISocketFilter *ret = new STUNUDPSocketFilter();
+    nsISocketFilter** result) {
+  nsISocketFilter* ret = new STUNUDPSocketFilter();
   NS_ADDREF(*result = ret);
   return NS_OK;
 }
@@ -355,8 +355,8 @@ NS_IMETHODIMP nsStunUDPSocketFilterHandler::NewFilter(
 NS_IMPL_ISUPPORTS(nsStunTCPSocketFilterHandler, nsISocketFilterHandler)
 
 NS_IMETHODIMP nsStunTCPSocketFilterHandler::NewFilter(
-    nsISocketFilter **result) {
-  nsISocketFilter *ret = new STUNTCPSocketFilter();
+    nsISocketFilter** result) {
+  nsISocketFilter* ret = new STUNTCPSocketFilter();
   NS_ADDREF(*result = ret);
   return NS_OK;
 }

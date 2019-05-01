@@ -17,8 +17,8 @@ HeadlessClipboard::HeadlessClipboard()
     : mClipboard(MakeUnique<HeadlessClipboardData>()) {}
 
 NS_IMETHODIMP
-HeadlessClipboard::SetData(nsITransferable *aTransferable,
-                           nsIClipboardOwner *anOwner,
+HeadlessClipboard::SetData(nsITransferable* aTransferable,
+                           nsIClipboardOwner* anOwner,
                            int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -46,7 +46,7 @@ HeadlessClipboard::SetData(nsITransferable *aTransferable,
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::GetData(nsITransferable *aTransferable,
+HeadlessClipboard::GetData(nsITransferable* aTransferable,
                            int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -77,17 +77,17 @@ HeadlessClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::HasDataMatchingFlavors(const char **aFlavorList,
+HeadlessClipboard::HasDataMatchingFlavors(const char** aFlavorList,
                                           uint32_t aLength,
                                           int32_t aWhichClipboard,
-                                          bool *aHasType) {
+                                          bool* aHasType) {
   *aHasType = false;
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   // Retrieve the union of all aHasType in aFlavorList
   for (uint32_t i = 0; i < aLength; ++i) {
-    const char *flavor = aFlavorList[i];
+    const char* flavor = aFlavorList[i];
     if (!flavor) {
       continue;
     }
@@ -99,13 +99,13 @@ HeadlessClipboard::HasDataMatchingFlavors(const char **aFlavorList,
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::SupportsSelectionClipboard(bool *aIsSupported) {
+HeadlessClipboard::SupportsSelectionClipboard(bool* aIsSupported) {
   *aIsSupported = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::SupportsFindClipboard(bool *_retval) {
+HeadlessClipboard::SupportsFindClipboard(bool* _retval) {
   NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = false;

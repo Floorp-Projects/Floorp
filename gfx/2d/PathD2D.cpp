@@ -19,19 +19,19 @@ namespace gfx {
 // continued.
 class OpeningGeometrySink : public ID2D1SimplifiedGeometrySink {
  public:
-  explicit OpeningGeometrySink(ID2D1SimplifiedGeometrySink *aSink)
+  explicit OpeningGeometrySink(ID2D1SimplifiedGeometrySink* aSink)
       : mSink(aSink), mNeedsFigureEnded(false) {}
 
-  HRESULT STDMETHODCALLTYPE QueryInterface(const IID &aIID, void **aPtr) {
+  HRESULT STDMETHODCALLTYPE QueryInterface(const IID& aIID, void** aPtr) {
     if (!aPtr) {
       return E_POINTER;
     }
 
     if (aIID == IID_IUnknown) {
-      *aPtr = static_cast<IUnknown *>(this);
+      *aPtr = static_cast<IUnknown*>(this);
       return S_OK;
     } else if (aIID == IID_ID2D1SimplifiedGeometrySink) {
-      *aPtr = static_cast<ID2D1SimplifiedGeometrySink *>(this);
+      *aPtr = static_cast<ID2D1SimplifiedGeometrySink*>(this);
       return S_OK;
     }
 
@@ -52,12 +52,12 @@ class OpeningGeometrySink : public ID2D1SimplifiedGeometrySink {
     EnsureFigureEnded();
     return mSink->BeginFigure(aPoint, aBegin);
   }
-  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F *aLines, UINT aCount) {
+  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F* aLines, UINT aCount) {
     EnsureFigureEnded();
     return mSink->AddLines(aLines, aCount);
   }
   STDMETHOD_(void, AddBeziers)
-  (const D2D1_BEZIER_SEGMENT *aSegments, UINT aCount) {
+  (const D2D1_BEZIER_SEGMENT* aSegments, UINT aCount) {
     EnsureFigureEnded();
     return mSink->AddBeziers(aSegments, aCount);
   }
@@ -87,13 +87,13 @@ class OpeningGeometrySink : public ID2D1SimplifiedGeometrySink {
     }
   }
 
-  ID2D1SimplifiedGeometrySink *mSink;
+  ID2D1SimplifiedGeometrySink* mSink;
   bool mNeedsFigureEnded;
 };
 
 PathBuilderD2D::~PathBuilderD2D() {}
 
-void PathBuilderD2D::MoveTo(const Point &aPoint) {
+void PathBuilderD2D::MoveTo(const Point& aPoint) {
   if (mFigureActive) {
     mSink->EndFigure(D2D1_FIGURE_END_OPEN);
     mFigureActive = false;
@@ -102,15 +102,15 @@ void PathBuilderD2D::MoveTo(const Point &aPoint) {
   mCurrentPoint = aPoint;
 }
 
-void PathBuilderD2D::LineTo(const Point &aPoint) {
+void PathBuilderD2D::LineTo(const Point& aPoint) {
   EnsureActive(aPoint);
   mSink->AddLine(D2DPoint(aPoint));
 
   mCurrentPoint = aPoint;
 }
 
-void PathBuilderD2D::BezierTo(const Point &aCP1, const Point &aCP2,
-                              const Point &aCP3) {
+void PathBuilderD2D::BezierTo(const Point& aCP1, const Point& aCP2,
+                              const Point& aCP3) {
   EnsureActive(aCP1);
   mSink->AddBezier(
       D2D1::BezierSegment(D2DPoint(aCP1), D2DPoint(aCP2), D2DPoint(aCP3)));
@@ -118,7 +118,7 @@ void PathBuilderD2D::BezierTo(const Point &aCP1, const Point &aCP2,
   mCurrentPoint = aCP3;
 }
 
-void PathBuilderD2D::QuadraticBezierTo(const Point &aCP1, const Point &aCP2) {
+void PathBuilderD2D::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
   EnsureActive(aCP1);
   mSink->AddQuadraticBezier(
       D2D1::QuadraticBezierSegment(D2DPoint(aCP1), D2DPoint(aCP2)));
@@ -136,7 +136,7 @@ void PathBuilderD2D::Close() {
   }
 }
 
-void PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
+void PathBuilderD2D::Arc(const Point& aOrigin, Float aRadius, Float aStartAngle,
                          Float aEndAngle, bool aAntiClockwise) {
   MOZ_ASSERT(aRadius >= 0);
 
@@ -225,7 +225,7 @@ void PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
 
 Point PathBuilderD2D::CurrentPoint() const { return mCurrentPoint; }
 
-void PathBuilderD2D::EnsureActive(const Point &aPoint) {
+void PathBuilderD2D::EnsureActive(const Point& aPoint) {
   if (!mFigureActive) {
     mSink->BeginFigure(D2DPoint(aPoint), D2D1_FIGURE_BEGIN_FILLED);
     mBeginPoint = aPoint;
@@ -253,7 +253,7 @@ already_AddRefed<PathBuilder> PathD2D::CopyToBuilder(FillRule aFillRule) const {
 }
 
 already_AddRefed<PathBuilder> PathD2D::TransformedCopyToBuilder(
-    const Matrix &aTransform, FillRule aFillRule) const {
+    const Matrix& aTransform, FillRule aFillRule) const {
   RefPtr<ID2D1PathGeometry> path;
   HRESULT hr =
       DrawTargetD2D1::factory()->CreatePathGeometry(getter_AddRefs(path));
@@ -302,7 +302,7 @@ already_AddRefed<PathBuilder> PathD2D::TransformedCopyToBuilder(
   return pathBuilder.forget();
 }
 
-void PathD2D::StreamToSink(PathSink *aSink) const {
+void PathD2D::StreamToSink(PathSink* aSink) const {
   HRESULT hr;
 
   StreamingGeometrySink sink(aSink);
@@ -316,8 +316,8 @@ void PathD2D::StreamToSink(PathSink *aSink) const {
   }
 }
 
-bool PathD2D::ContainsPoint(const Point &aPoint,
-                            const Matrix &aTransform) const {
+bool PathD2D::ContainsPoint(const Point& aPoint,
+                            const Matrix& aTransform) const {
   BOOL result;
 
   HRESULT hr = mGeometry->FillContainsPoint(
@@ -331,9 +331,9 @@ bool PathD2D::ContainsPoint(const Point &aPoint,
   return !!result;
 }
 
-bool PathD2D::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
-                                  const Point &aPoint,
-                                  const Matrix &aTransform) const {
+bool PathD2D::StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                                  const Point& aPoint,
+                                  const Matrix& aTransform) const {
   BOOL result;
 
   RefPtr<ID2D1StrokeStyle> strokeStyle =
@@ -350,7 +350,7 @@ bool PathD2D::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
   return !!result;
 }
 
-Rect PathD2D::GetBounds(const Matrix &aTransform) const {
+Rect PathD2D::GetBounds(const Matrix& aTransform) const {
   D2D1_RECT_F d2dBounds;
 
   HRESULT hr = mGeometry->GetBounds(D2DMatrix(aTransform), &d2dBounds);
@@ -364,8 +364,8 @@ Rect PathD2D::GetBounds(const Matrix &aTransform) const {
   return bounds;
 }
 
-Rect PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
-                               const Matrix &aTransform) const {
+Rect PathD2D::GetStrokedBounds(const StrokeOptions& aStrokeOptions,
+                               const Matrix& aTransform) const {
   D2D1_RECT_F d2dBounds;
 
   RefPtr<ID2D1StrokeStyle> strokeStyle =

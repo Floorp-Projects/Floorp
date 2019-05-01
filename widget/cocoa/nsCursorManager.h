@@ -19,8 +19,8 @@
  */
 @interface nsCursorManager : NSObject {
  @private
-  NSMutableDictionary *mCursors;
-  nsMacCursor *mCurrentMacCursor;
+  NSMutableDictionary* mCursors;
+  nsMacCursor* mCurrentMacCursor;
 }
 
 /*! @method     setCursor:
@@ -40,7 +40,7 @@
  @param aHotSpotY the y coordinate of the cursor's hotspot
  @param scaleFactor the scale factor of the target display (2 for a retina display)
  */
-- (nsresult)setCursorWithImage:(imgIContainer *)aCursorImage
+- (nsresult)setCursorWithImage:(imgIContainer*)aCursorImage
                       hotSpotX:(uint32_t)aHotspotX
                       hotSpotY:(uint32_t)aHotspotY
                    scaleFactor:(CGFloat)scaleFactor;
@@ -50,7 +50,7 @@
     @discussion Use this method to obtain a reference to the cursor manager.
     @result a reference to the cursor manager
 */
-+ (nsCursorManager *)sharedInstance;
++ (nsCursorManager*)sharedInstance;
 
 /*! @method     dispose
     @abstract   Releases the shared instance of the cursor manager.
@@ -62,7 +62,7 @@
 @interface NSCursor (Undocumented)
 // busyButClickableCursor is an undocumented NSCursor API, but has been in use since
 // at least OS X 10.4 and through 10.9.
-+ (NSCursor *)busyButClickableCursor;
++ (NSCursor*)busyButClickableCursor;
 @end
 
 #endif  // nsCursorManager_h_

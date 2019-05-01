@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
 nsClipboard::nsClipboard() {}
 
 NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable *aTransferable, nsIClipboardOwner *anOwner,
+nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
                      int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -36,7 +36,7 @@ nsClipboard::SetData(nsITransferable *aTransferable, nsIClipboardOwner *anOwner,
   nsAutoString html;
   nsAutoString text;
 
-  for (auto &flavorStr : flavors) {
+  for (auto& flavorStr : flavors) {
     if (flavorStr.EqualsLiteral(kUnicodeMime)) {
       nsCOMPtr<nsISupports> item;
       nsresult rv =
@@ -76,7 +76,7 @@ nsClipboard::SetData(nsITransferable *aTransferable, nsIClipboardOwner *anOwner,
 }
 
 NS_IMETHODIMP
-nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard) {
+nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
   if (!jni::IsAvailable()) {
@@ -86,7 +86,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard) {
   nsTArray<nsCString> flavors;
   aTransferable->FlavorsTransferableCanImport(flavors);
 
-  for (auto &flavorStr : flavors) {
+  for (auto& flavorStr : flavors) {
     if (flavorStr.EqualsLiteral(kUnicodeMime) ||
         flavorStr.EqualsLiteral(kHTMLMime)) {
       auto text =
@@ -126,8 +126,8 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char **aFlavorList, uint32_t aLength,
-                                    int32_t aWhichClipboard, bool *aHasText) {
+nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
+                                    int32_t aWhichClipboard, bool* aHasText) {
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;
 
@@ -149,13 +149,13 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList, uint32_t aLength,
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool *aIsSupported) {
+nsClipboard::SupportsSelectionClipboard(bool* aIsSupported) {
   *aIsSupported = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsFindClipboard(bool *_retval) {
+nsClipboard::SupportsFindClipboard(bool* _retval) {
   *_retval = false;
   return NS_OK;
 }

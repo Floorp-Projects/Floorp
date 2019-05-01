@@ -17,7 +17,7 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// ArgValueArray
 
-ArgValueArray::ArgValueArray(int32_t aArgc, sqlite3_value **aArgv)
+ArgValueArray::ArgValueArray(int32_t aArgc, sqlite3_value** aArgv)
     : mArgc(aArgc), mArgv(aArgv) {}
 
 NS_IMPL_ISUPPORTS(ArgValueArray, mozIStorageValueArray)
@@ -26,13 +26,13 @@ NS_IMPL_ISUPPORTS(ArgValueArray, mozIStorageValueArray)
 //// mozIStorageValueArray
 
 NS_IMETHODIMP
-ArgValueArray::GetNumEntries(uint32_t *_size) {
+ArgValueArray::GetNumEntries(uint32_t* _size) {
   *_size = mArgc;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetTypeOfIndex(uint32_t aIndex, int32_t *_type) {
+ArgValueArray::GetTypeOfIndex(uint32_t aIndex, int32_t* _type) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   int t = ::sqlite3_value_type(mArgv[aIndex]);
@@ -60,7 +60,7 @@ ArgValueArray::GetTypeOfIndex(uint32_t aIndex, int32_t *_type) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetInt32(uint32_t aIndex, int32_t *_value) {
+ArgValueArray::GetInt32(uint32_t aIndex, int32_t* _value) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   *_value = ::sqlite3_value_int(mArgv[aIndex]);
@@ -68,7 +68,7 @@ ArgValueArray::GetInt32(uint32_t aIndex, int32_t *_value) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetInt64(uint32_t aIndex, int64_t *_value) {
+ArgValueArray::GetInt64(uint32_t aIndex, int64_t* _value) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   *_value = ::sqlite3_value_int64(mArgv[aIndex]);
@@ -76,7 +76,7 @@ ArgValueArray::GetInt64(uint32_t aIndex, int64_t *_value) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetDouble(uint32_t aIndex, double *_value) {
+ArgValueArray::GetDouble(uint32_t aIndex, double* _value) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   *_value = ::sqlite3_value_double(mArgv[aIndex]);
@@ -84,7 +84,7 @@ ArgValueArray::GetDouble(uint32_t aIndex, double *_value) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetUTF8String(uint32_t aIndex, nsACString &_value) {
+ArgValueArray::GetUTF8String(uint32_t aIndex, nsACString& _value) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   if (::sqlite3_value_type(mArgv[aIndex]) == SQLITE_NULL) {
@@ -93,14 +93,14 @@ ArgValueArray::GetUTF8String(uint32_t aIndex, nsACString &_value) {
     _value.SetIsVoid(true);
   } else {
     _value.Assign(
-        reinterpret_cast<const char *>(::sqlite3_value_text(mArgv[aIndex])),
+        reinterpret_cast<const char*>(::sqlite3_value_text(mArgv[aIndex])),
         ::sqlite3_value_bytes(mArgv[aIndex]));
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetString(uint32_t aIndex, nsAString &_value) {
+ArgValueArray::GetString(uint32_t aIndex, nsAString& _value) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   if (::sqlite3_value_type(mArgv[aIndex]) == SQLITE_NULL) {
@@ -108,8 +108,8 @@ ArgValueArray::GetString(uint32_t aIndex, nsAString &_value) {
     // string.
     _value.SetIsVoid(true);
   } else {
-    const char16_t *string =
-        static_cast<const char16_t *>(::sqlite3_value_text16(mArgv[aIndex]));
+    const char16_t* string =
+        static_cast<const char16_t*>(::sqlite3_value_text16(mArgv[aIndex]));
     _value.Assign(string,
                   ::sqlite3_value_bytes16(mArgv[aIndex]) / sizeof(char16_t));
   }
@@ -117,28 +117,28 @@ ArgValueArray::GetString(uint32_t aIndex, nsAString &_value) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetBlob(uint32_t aIndex, uint32_t *_size, uint8_t **_blob) {
+ArgValueArray::GetBlob(uint32_t aIndex, uint32_t* _size, uint8_t** _blob) {
   ENSURE_INDEX_VALUE(aIndex, mArgc);
 
   int size = ::sqlite3_value_bytes(mArgv[aIndex]);
-  void *blob = moz_xmemdup(::sqlite3_value_blob(mArgv[aIndex]), size);
-  *_blob = static_cast<uint8_t *>(blob);
+  void* blob = moz_xmemdup(::sqlite3_value_blob(mArgv[aIndex]), size);
+  *_blob = static_cast<uint8_t*>(blob);
   *_size = size;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetBlobAsString(uint32_t aIndex, nsAString &aValue) {
+ArgValueArray::GetBlobAsString(uint32_t aIndex, nsAString& aValue) {
   return DoGetBlobAsString(this, aIndex, aValue);
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetBlobAsUTF8String(uint32_t aIndex, nsACString &aValue) {
+ArgValueArray::GetBlobAsUTF8String(uint32_t aIndex, nsACString& aValue) {
   return DoGetBlobAsString(this, aIndex, aValue);
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetIsNull(uint32_t aIndex, bool *_isNull) {
+ArgValueArray::GetIsNull(uint32_t aIndex, bool* _isNull) {
   // GetTypeOfIndex will check aIndex for us, so we don't have to.
   int32_t type;
   nsresult rv = GetTypeOfIndex(aIndex, &type);
@@ -149,10 +149,9 @@ ArgValueArray::GetIsNull(uint32_t aIndex, bool *_isNull) {
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetSharedUTF8String(uint32_t aIndex, uint32_t *_byteLength,
-                                   const char **_string) {
-  *_string =
-      reinterpret_cast<const char *>(::sqlite3_value_text(mArgv[aIndex]));
+ArgValueArray::GetSharedUTF8String(uint32_t aIndex, uint32_t* _byteLength,
+                                   const char** _string) {
+  *_string = reinterpret_cast<const char*>(::sqlite3_value_text(mArgv[aIndex]));
   if (_byteLength) {
     *_byteLength = ::sqlite3_value_bytes(mArgv[aIndex]);
   }
@@ -160,10 +159,10 @@ ArgValueArray::GetSharedUTF8String(uint32_t aIndex, uint32_t *_byteLength,
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetSharedString(uint32_t aIndex, uint32_t *_byteLength,
-                               const char16_t **_string) {
+ArgValueArray::GetSharedString(uint32_t aIndex, uint32_t* _byteLength,
+                               const char16_t** _string) {
   *_string =
-      static_cast<const char16_t *>(::sqlite3_value_text16(mArgv[aIndex]));
+      static_cast<const char16_t*>(::sqlite3_value_text16(mArgv[aIndex]));
   if (_byteLength) {
     *_byteLength = ::sqlite3_value_bytes16(mArgv[aIndex]);
   }
@@ -171,9 +170,9 @@ ArgValueArray::GetSharedString(uint32_t aIndex, uint32_t *_byteLength,
 }
 
 NS_IMETHODIMP
-ArgValueArray::GetSharedBlob(uint32_t aIndex, uint32_t *_byteLength,
-                             const uint8_t **_blob) {
-  *_blob = static_cast<const uint8_t *>(::sqlite3_value_blob(mArgv[aIndex]));
+ArgValueArray::GetSharedBlob(uint32_t aIndex, uint32_t* _byteLength,
+                             const uint8_t** _blob) {
+  *_blob = static_cast<const uint8_t*>(::sqlite3_value_blob(mArgv[aIndex]));
   if (_byteLength) {
     *_byteLength = ::sqlite3_value_bytes(mArgv[aIndex]);
   }

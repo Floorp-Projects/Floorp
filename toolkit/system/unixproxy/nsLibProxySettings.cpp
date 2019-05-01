@@ -28,28 +28,28 @@ class nsUnixSystemProxySettings : public nsISystemProxySettings {
     if (mProxyFactory) px_proxy_factory_free(mProxyFactory);
   }
 
-  pxProxyFactory *mProxyFactory;
+  pxProxyFactory* mProxyFactory;
 };
 
 NS_IMPL_ISUPPORTS(nsUnixSystemProxySettings, nsISystemProxySettings)
 
 NS_IMETHODIMP
-nsUnixSystemProxySettings::GetMainThreadOnly(bool *aMainThreadOnly) {
+nsUnixSystemProxySettings::GetMainThreadOnly(bool* aMainThreadOnly) {
   *aMainThreadOnly = false;
   return NS_OK;
 }
 
-nsresult nsUnixSystemProxySettings::GetPACURI(nsACString &aResult) {
+nsresult nsUnixSystemProxySettings::GetPACURI(nsACString& aResult) {
   // Make sure we return an empty result.
   aResult.Truncate();
   return NS_OK;
 }
 
-nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString &aSpec,
-                                                   const nsACString &aScheme,
-                                                   const nsACString &aHost,
+nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
+                                                   const nsACString& aScheme,
+                                                   const nsACString& aHost,
                                                    const int32_t aPort,
-                                                   nsACString &aResult) {
+                                                   nsACString& aResult) {
   nsresult rv;
 
   if (!mProxyFactory) {
@@ -57,7 +57,7 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString &aSpec,
   }
   NS_ENSURE_TRUE(mProxyFactory, NS_ERROR_NOT_AVAILABLE);
 
-  char **proxyArray = nullptr;
+  char** proxyArray = nullptr;
   proxyArray = px_proxy_factory_get_proxies(mProxyFactory,
                                             PromiseFlatCString(aSpec).get());
   NS_ENSURE_TRUE(proxyArray, NS_ERROR_NOT_AVAILABLE);
@@ -80,7 +80,7 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString &aSpec,
 
     // figure out the scheme, and we can't use nsIIOService::NewURI because
     // this is not the main thread.
-    char *colon = strchr(proxyArray[c], ':');
+    char* colon = strchr(proxyArray[c], ':');
     uint32_t schemelen = colon ? colon - proxyArray[c] : 0;
     if (schemelen < 1) {
       c++;

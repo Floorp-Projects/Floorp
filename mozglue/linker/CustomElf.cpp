@@ -22,18 +22,18 @@ using namespace Elf;
  * crash reporter */
 #ifdef ANDROID
 extern "C" {
-void report_mapping(char *name, void *base, uint32_t len, uint32_t offset);
-void delete_mapping(const char *name);
+void report_mapping(char* name, void* base, uint32_t len, uint32_t offset);
+void delete_mapping(const char* name);
 }
 #else
 #  define report_mapping(...)
 #  define delete_mapping(...)
 #endif
 
-const Ehdr *Ehdr::validate(const void *buf) {
+const Ehdr* Ehdr::validate(const void* buf) {
   if (!buf || buf == MAP_FAILED) return nullptr;
 
-  const Ehdr *ehdr = reinterpret_cast<const Ehdr *>(buf);
+  const Ehdr* ehdr = reinterpret_cast<const Ehdr*>(buf);
 
   /* Only support ELF executables or libraries for the host system */
   if (memcmp(ELFMAG, &ehdr->e_ident, SELFMAG) ||
@@ -54,7 +54,7 @@ const Ehdr *Ehdr::validate(const void *buf) {
 
 namespace {
 
-void debug_phdr(const char *type, const Phdr *phdr) {
+void debug_phdr(const char* type, const Phdr* phdr) {
   DEBUG_LOG("%s @0x%08" PRIxPTR
             " ("
             "filesz: 0x%08" PRIxPTR
@@ -83,20 +83,20 @@ static int p_flags_to_mprot(Word flags) {
  */
 class Mappable1stPagePtr : public GenericMappedPtr<Mappable1stPagePtr> {
  public:
-  explicit Mappable1stPagePtr(Mappable *mappable)
+  explicit Mappable1stPagePtr(Mappable* mappable)
       : GenericMappedPtr<Mappable1stPagePtr>(
             mappable->mmap(nullptr, PageSize(), PROT_READ, MAP_PRIVATE, 0)),
         mappable(mappable) {}
 
  private:
   friend class GenericMappedPtr<Mappable1stPagePtr>;
-  void munmap(void *buf, size_t length) { mappable->munmap(buf, length); }
+  void munmap(void* buf, size_t length) { mappable->munmap(buf, length); }
 
   RefPtr<Mappable> mappable;
 };
 
-already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
-                                            const char *path, int flags) {
+already_AddRefed<LibHandle> CustomElf::Load(Mappable* mappable,
+                                            const char* path, int flags) {
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = ...", path, flags);
   if (!mappable) return nullptr;
   /* Keeping a RefPtr of the CustomElf is going to free the appropriate
@@ -106,23 +106,23 @@ already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
   Mappable1stPagePtr ehdr_raw(mappable);
   if (ehdr_raw == MAP_FAILED) return nullptr;
 
-  const Ehdr *ehdr = Ehdr::validate(ehdr_raw);
+  const Ehdr* ehdr = Ehdr::validate(ehdr_raw);
   if (!ehdr) return nullptr;
 
   /* Scan Elf Program Headers and gather some information about them */
-  std::vector<const Phdr *> pt_loads;
+  std::vector<const Phdr*> pt_loads;
   Addr min_vaddr = (Addr)-1;  // We want to find the lowest and biggest
   Addr max_vaddr = 0;         // virtual address used by this Elf.
-  const Phdr *dyn = nullptr;
+  const Phdr* dyn = nullptr;
 
-  const Phdr *first_phdr = reinterpret_cast<const Phdr *>(
-      reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
-  const Phdr *end_phdr = &first_phdr[ehdr->e_phnum];
+  const Phdr* first_phdr = reinterpret_cast<const Phdr*>(
+      reinterpret_cast<const char*>(ehdr) + ehdr->e_phoff);
+  const Phdr* end_phdr = &first_phdr[ehdr->e_phnum];
 #ifdef __ARM_EABI__
-  const Phdr *arm_exidx_phdr = nullptr;
+  const Phdr* arm_exidx_phdr = nullptr;
 #endif
 
-  for (const Phdr *phdr = first_phdr; phdr < end_phdr; phdr++) {
+  for (const Phdr* phdr = first_phdr; phdr < end_phdr; phdr++) {
     switch (phdr->p_type) {
       case PT_LOAD:
         debug_phdr("PT_LOAD", phdr);
@@ -200,14 +200,14 @@ already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
   }
 
   /* Load and initialize library */
-  for (std::vector<const Phdr *>::iterator it = pt_loads.begin();
+  for (std::vector<const Phdr*>::iterator it = pt_loads.begin();
        it < pt_loads.end(); ++it)
     if (!elf->LoadSegment(*it)) return nullptr;
 
   /* We're not going to mmap anymore */
   mappable->finalize();
 
-  report_mapping(const_cast<char *>(elf->GetName()), elf->base,
+  report_mapping(const_cast<char*>(elf->GetName()), elf->base,
                  (max_vaddr + PAGE_SIZE - 1) & PAGE_MASK, 0);
 
   elf->l_addr = elf->base;
@@ -218,7 +218,7 @@ already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
   if (!elf->InitDyn(dyn)) return nullptr;
 
   if (elf->has_text_relocs) {
-    for (std::vector<const Phdr *>::iterator it = pt_loads.begin();
+    for (std::vector<const Phdr*>::iterator it = pt_loads.begin();
          it < pt_loads.end(); ++it)
       mprotect(PageAlignedPtr(elf->GetPtr((*it)->p_vaddr)),
                PageAlignedEndPtr((*it)->p_memsz),
@@ -228,7 +228,7 @@ already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
   if (!elf->Relocate() || !elf->RelocateJumps()) return nullptr;
 
   if (elf->has_text_relocs) {
-    for (std::vector<const Phdr *>::iterator it = pt_loads.begin();
+    for (std::vector<const Phdr*>::iterator it = pt_loads.begin();
          it < pt_loads.end(); ++it)
       mprotect(PageAlignedPtr(elf->GetPtr((*it)->p_vaddr)),
                PageAlignedEndPtr((*it)->p_memsz),
@@ -244,13 +244,13 @@ already_AddRefed<LibHandle> CustomElf::Load(Mappable *mappable,
 #endif
 
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = %p", path, flags,
-            static_cast<void *>(elf));
+            static_cast<void*>(elf));
   return elf.forget();
 }
 
 CustomElf::~CustomElf() {
-  DEBUG_LOG("CustomElf::~CustomElf(%p [\"%s\"])",
-            reinterpret_cast<void *>(this), GetPath());
+  DEBUG_LOG("CustomElf::~CustomElf(%p [\"%s\"])", reinterpret_cast<void*>(this),
+            GetPath());
   CallFini();
   /* Normally, __cxa_finalize is called by the .fini function. However,
    * Android NDK before r6b doesn't do that. Our wrapped cxa_finalize only
@@ -260,7 +260,7 @@ CustomElf::~CustomElf() {
   delete_mapping(GetName());
 }
 
-void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
+void* CustomElf::GetSymbolPtrInDeps(const char* symbol) const {
   /* Resolve dlopen and related functions to point to ours */
   if (symbol[0] == 'd' && symbol[1] == 'l') {
     if (strcmp(symbol + 2, "open") == 0) return FunctionPtr(__wrap_dlopen);
@@ -282,7 +282,7 @@ void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
     if (strcmp(symbol + 2, "cxa_finalize") == 0)
       return FunctionPtr(&ElfLoader::__wrap_cxa_finalize);
     if (strcmp(symbol + 2, "dso_handle") == 0)
-      return const_cast<CustomElf *>(this);
+      return const_cast<CustomElf*>(this);
 #ifdef __ARM_EABI__
     if (strcmp(symbol + 2, "gnu_Unwind_Find_exidx") == 0)
       return FunctionPtr(__wrap___gnu_Unwind_Find_exidx);
@@ -292,7 +292,7 @@ void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
     if (strcmp(symbol + 2, "gaction") == 0) return FunctionPtr(sigaction);
   }
 
-  void *sym;
+  void* sym;
 
   unsigned long hash = Hash(symbol);
 
@@ -300,7 +300,7 @@ void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
   if (ElfLoader::Singleton.self_elf) {
     /* We consider the library containing this code a permanent LD_PRELOAD,
      * so, check if the symbol exists here first. */
-    sym = static_cast<BaseElf *>(ElfLoader::Singleton.self_elf.get())
+    sym = static_cast<BaseElf*>(ElfLoader::Singleton.self_elf.get())
               ->GetSymbolPtr(symbol, hash);
     if (sym) return sym;
   }
@@ -317,7 +317,7 @@ void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
     /* Skip if it's the library containing this code, since we've already
      * looked at it above. */
     if (*it == ElfLoader::Singleton.self_elf) continue;
-    if (BaseElf *be = (*it)->AsBaseElf()) {
+    if (BaseElf* be = (*it)->AsBaseElf()) {
       sym = be->GetSymbolPtr(symbol, hash);
     } else {
       sym = (*it)->GetSymbolPtr(symbol);
@@ -327,7 +327,7 @@ void *CustomElf::GetSymbolPtrInDeps(const char *symbol) const {
   return nullptr;
 }
 
-bool CustomElf::LoadSegment(const Phdr *pt_load) const {
+bool CustomElf::LoadSegment(const Phdr* pt_load) const {
   if (pt_load->p_type != PT_LOAD) {
     DEBUG_LOG("%s: Elf::LoadSegment only takes PT_LOAD program headers",
               GetPath());
@@ -383,7 +383,7 @@ bool CustomElf::LoadSegment(const Phdr *pt_load) const {
     Addr mem_end = pt_load->p_vaddr + pt_load->p_memsz;
     Addr next_page = PageAlignedEndPtr(file_end);
     if (next_page > file_end) {
-      void *ptr = GetPtr(file_end);
+      void* ptr = GetPtr(file_end);
       memset(ptr, 0, next_page - file_end);
     }
     if (mem_end > next_page) {
@@ -398,19 +398,19 @@ bool CustomElf::LoadSegment(const Phdr *pt_load) const {
 
 namespace {
 
-void debug_dyn(const char *type, const Dyn *dyn) {
+void debug_dyn(const char* type, const Dyn* dyn) {
   DEBUG_LOG("%s 0x%08" PRIxPTR, type, uintptr_t(dyn->d_un.d_val));
 }
 
 } /* anonymous namespace */
 
-bool CustomElf::InitDyn(const Phdr *pt_dyn) {
+bool CustomElf::InitDyn(const Phdr* pt_dyn) {
   /* Scan PT_DYNAMIC segment and gather some information */
-  const Dyn *first_dyn = GetPtr<Dyn>(pt_dyn->p_vaddr);
-  const Dyn *end_dyn = GetPtr<Dyn>(pt_dyn->p_vaddr + pt_dyn->p_filesz);
+  const Dyn* first_dyn = GetPtr<Dyn>(pt_dyn->p_vaddr);
+  const Dyn* end_dyn = GetPtr<Dyn>(pt_dyn->p_vaddr + pt_dyn->p_filesz);
   std::vector<Word> dt_needed;
   size_t symnum = 0;
-  for (const Dyn *dyn = first_dyn; dyn < end_dyn && dyn->d_tag; dyn++) {
+  for (const Dyn* dyn = first_dyn; dyn < end_dyn && dyn->d_tag; dyn++) {
     switch (dyn->d_tag) {
       case DT_NEEDED:
         debug_dyn("DT_NEEDED", dyn);
@@ -418,7 +418,7 @@ bool CustomElf::InitDyn(const Phdr *pt_dyn) {
         break;
       case DT_HASH: {
         debug_dyn("DT_HASH", dyn);
-        const Word *hash_table_header = GetPtr<Word>(dyn->d_un.d_ptr);
+        const Word* hash_table_header = GetPtr<Word>(dyn->d_un.d_ptr);
         symnum = hash_table_header[1];
         buckets.Init(&hash_table_header[2], hash_table_header[0]);
         chains.Init(&*buckets.end());
@@ -568,7 +568,7 @@ bool CustomElf::InitDyn(const Phdr *pt_dyn) {
 
   /* Load dependent libraries */
   for (size_t i = 0; i < dt_needed.size(); i++) {
-    const char *name = strtab.GetStringAt(dt_needed[i]);
+    const char* name = strtab.GetStringAt(dt_needed[i]);
     RefPtr<LibHandle> handle =
         ElfLoader::Singleton.Load(name, RTLD_GLOBAL | RTLD_LAZY, this);
     if (!handle) return false;
@@ -579,17 +579,17 @@ bool CustomElf::InitDyn(const Phdr *pt_dyn) {
 }
 
 bool CustomElf::Relocate() {
-  DEBUG_LOG("Relocate %s @%p", GetPath(), static_cast<void *>(base));
+  DEBUG_LOG("Relocate %s @%p", GetPath(), static_cast<void*>(base));
   uint32_t symtab_index = (uint32_t)-1;
-  void *symptr = nullptr;
+  void* symptr = nullptr;
   for (Array<Reloc>::iterator rel = relocations.begin();
        rel < relocations.end(); ++rel) {
     /* Location of the relocation */
-    void *ptr = GetPtr(rel->r_offset);
+    void* ptr = GetPtr(rel->r_offset);
 
     /* R_*_RELATIVE relocations apply directly at the given location */
     if (ELF_R_TYPE(rel->r_info) == R_RELATIVE) {
-      *(void **)ptr = GetPtr(rel->GetAddend(base));
+      *(void**)ptr = GetPtr(rel->GetAddend(base));
       continue;
     }
     /* Other relocation types need a symbol resolution */
@@ -613,11 +613,11 @@ bool CustomElf::Relocate() {
     switch (ELF_R_TYPE(rel->r_info)) {
       case R_GLOB_DAT:
         /* R_*_GLOB_DAT relocations simply use the symbol value */
-        *(void **)ptr = symptr;
+        *(void**)ptr = symptr;
         break;
       case R_ABS:
         /* R_*_ABS* relocations add the relocation added to the symbol value */
-        *(const char **)ptr = (const char *)symptr + rel->GetAddend(base);
+        *(const char**)ptr = (const char*)symptr + rel->GetAddend(base);
         break;
       default:
         ERROR("%s: Unsupported relocation type: 0x%" PRIxPTR, GetPath(),
@@ -633,7 +633,7 @@ bool CustomElf::RelocateJumps() {
   for (Array<Reloc>::iterator rel = jumprels.begin(); rel < jumprels.end();
        ++rel) {
     /* Location of the relocation */
-    void *ptr = GetPtr(rel->r_offset);
+    void* ptr = GetPtr(rel->r_offset);
 
     /* Only R_*_JMP_SLOT relocations are expected */
     if (ELF_R_TYPE(rel->r_info) != R_JMP_SLOT) {
@@ -643,7 +643,7 @@ bool CustomElf::RelocateJumps() {
 
     /* TODO: Avoid code duplication with the relocations above */
     const Sym sym = symtab[ELF_R_SYM(rel->r_info)];
-    void *symptr;
+    void* symptr;
     if (sym.st_shndx != SHN_UNDEF)
       symptr = GetPtr(sym.st_value);
     else
@@ -662,7 +662,7 @@ bool CustomElf::RelocateJumps() {
       }
     }
     /* Apply relocation */
-    *(void **)ptr = symptr;
+    *(void**)ptr = symptr;
   }
   return true;
 }
@@ -670,10 +670,10 @@ bool CustomElf::RelocateJumps() {
 bool CustomElf::CallInit() {
   if (init) CallFunction(init);
 
-  for (Array<void *>::iterator it = init_array.begin(); it < init_array.end();
+  for (Array<void*>::iterator it = init_array.begin(); it < init_array.end();
        ++it) {
     /* Android x86 NDK wrongly puts 0xffffffff in INIT_ARRAY */
-    if (*it && *it != reinterpret_cast<void *>(-1)) CallFunction(*it);
+    if (*it && *it != reinterpret_cast<void*>(-1)) CallFunction(*it);
   }
   initialized = true;
   return true;
@@ -681,15 +681,15 @@ bool CustomElf::CallInit() {
 
 void CustomElf::CallFini() {
   if (!initialized) return;
-  for (Array<void *>::reverse_iterator it = fini_array.rbegin();
+  for (Array<void*>::reverse_iterator it = fini_array.rbegin();
        it < fini_array.rend(); ++it) {
     /* Android x86 NDK wrongly puts 0xffffffff in FINI_ARRAY */
-    if (*it && *it != reinterpret_cast<void *>(-1)) CallFunction(*it);
+    if (*it && *it != reinterpret_cast<void*>(-1)) CallFunction(*it);
   }
   if (fini) CallFunction(fini);
 }
 
-Mappable *CustomElf::GetMappable() const {
+Mappable* CustomElf::GetMappable() const {
   if (!mappable) return nullptr;
   if (mappable->GetKind() == Mappable::MAPPABLE_EXTRACT_FILE) return mappable;
   return ElfLoader::GetMappableFromPath(GetPath());

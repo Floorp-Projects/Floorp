@@ -29,8 +29,8 @@ NS_IMPL_ISUPPORTS(nsAboutCache::Channel, nsIChannel, nsIRequest,
                   nsICacheStorageVisitor)
 
 NS_IMETHODIMP
-nsAboutCache::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                         nsIChannel **result) {
+nsAboutCache::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                         nsIChannel** result) {
   nsresult rv;
 
   NS_ENSURE_ARG_POINTER(aURI);
@@ -44,7 +44,7 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsILoadInfo *aLoadInfo,
   return NS_OK;
 }
 
-nsresult nsAboutCache::Channel::Init(nsIURI *aURI, nsILoadInfo *aLoadInfo) {
+nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
   nsresult rv;
 
   mCancel = false;
@@ -126,7 +126,7 @@ nsresult nsAboutCache::Channel::Init(nsIURI *aURI, nsILoadInfo *aLoadInfo) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener *aListener) {
+NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener* aListener) {
   nsresult rv;
 
   if (!mChannel) {
@@ -143,11 +143,11 @@ NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener *aListener) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAboutCache::Channel::Open(nsIInputStream **_retval) {
+NS_IMETHODIMP nsAboutCache::Channel::Open(nsIInputStream** _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsAboutCache::Channel::ParseURI(nsIURI *uri, nsACString &storage) {
+nsresult nsAboutCache::Channel::ParseURI(nsIURI* uri, nsACString& storage) {
   //
   // about:cache[?storage=<storage-name>[&context=<context-key>]]
   //
@@ -231,7 +231,7 @@ void nsAboutCache::Channel::FireVisitStorage() {
   }
 }
 
-nsresult nsAboutCache::Channel::VisitStorage(nsACString const &storageName) {
+nsresult nsAboutCache::Channel::VisitStorage(nsACString const& storageName) {
   nsresult rv;
 
   rv = GetStorage(storageName, mLoadInfo, getter_AddRefs(mStorage));
@@ -244,9 +244,9 @@ nsresult nsAboutCache::Channel::VisitStorage(nsACString const &storageName) {
 }
 
 // static
-nsresult nsAboutCache::GetStorage(nsACString const &storageName,
-                                  nsILoadContextInfo *loadInfo,
-                                  nsICacheStorage **storage) {
+nsresult nsAboutCache::GetStorage(nsACString const& storageName,
+                                  nsILoadContextInfo* loadInfo,
+                                  nsICacheStorage** storage) {
   nsresult rv;
 
   nsCOMPtr<nsICacheStorageService> cacheService =
@@ -276,7 +276,7 @@ NS_IMETHODIMP
 nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount,
                                           uint64_t aConsumption,
                                           uint64_t aCapacity,
-                                          nsIFile *aDirectory) {
+                                          nsIFile* aDirectory) {
   // We need mStream for this
   if (!mStream) {
     return NS_ERROR_FAILURE;
@@ -371,12 +371,12 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount,
 }
 
 NS_IMETHODIMP
-nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI,
-                                        const nsACString &aIdEnhance,
+nsAboutCache::Channel::OnCacheEntryInfo(nsIURI* aURI,
+                                        const nsACString& aIdEnhance,
                                         int64_t aDataSize, int32_t aFetchCount,
                                         uint32_t aLastModified,
                                         uint32_t aExpirationTime, bool aPinned,
-                                        nsILoadContextInfo *aInfo) {
+                                        nsILoadContextInfo* aInfo) {
   // We need mStream for this
   if (!mStream || mCancel) {
     // Returning a failure from this callback stops the iteration
@@ -544,14 +544,14 @@ nsresult nsAboutCache::Channel::FlushBuffer() {
 }
 
 NS_IMETHODIMP
-nsAboutCache::GetURIFlags(nsIURI *aURI, uint32_t *result) {
+nsAboutCache::GetURIFlags(nsIURI* aURI, uint32_t* result) {
   *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
   return NS_OK;
 }
 
 // static
-nsresult nsAboutCache::Create(nsISupports *aOuter, REFNSIID aIID,
-                              void **aResult) {
+nsresult nsAboutCache::Create(nsISupports* aOuter, REFNSIID aIID,
+                              void** aResult) {
   RefPtr<nsAboutCache> about = new nsAboutCache();
   return about->QueryInterface(aIID, aResult);
 }

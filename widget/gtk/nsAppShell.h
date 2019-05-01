@@ -24,7 +24,7 @@ class nsAppShell : public nsBaseAppShell {
  private:
   virtual ~nsAppShell();
 
-  static gboolean EventProcessorCallback(GIOChannel *source,
+  static gboolean EventProcessorCallback(GIOChannel* source,
                                          GIOCondition condition, gpointer data);
 
   int mPipeFDs[2];

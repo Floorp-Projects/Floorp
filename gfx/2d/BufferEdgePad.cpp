@@ -15,10 +15,10 @@
 namespace mozilla {
 namespace gfx {
 
-void PadDrawTargetOutFromRegion(DrawTarget *aDrawTarget,
-                                const nsIntRegion &aRegion) {
+void PadDrawTargetOutFromRegion(DrawTarget* aDrawTarget,
+                                const nsIntRegion& aRegion) {
   struct LockedBits {
-    uint8_t *data;
+    uint8_t* data;
     IntSize size;
     int32_t stride;
     SurfaceFormat format;
@@ -28,8 +28,8 @@ void PadDrawTargetOutFromRegion(DrawTarget *aDrawTarget,
       return x;
     }
 
-    static void ensure_memcpy(uint8_t *dst, uint8_t *src, size_t n,
-                              uint8_t *bitmap, int stride, int height) {
+    static void ensure_memcpy(uint8_t* dst, uint8_t* src, size_t n,
+                              uint8_t* bitmap, int stride, int height) {
       if (src + n > bitmap + stride * height) {
         MOZ_CRASH("GFX: long src memcpy");
       }
@@ -44,10 +44,10 @@ void PadDrawTargetOutFromRegion(DrawTarget *aDrawTarget,
       }
     }
 
-    static void visitor(void *closure, VisitSide side, int x1, int y1, int x2,
+    static void visitor(void* closure, VisitSide side, int x1, int y1, int x2,
                         int y2) {
-      LockedBits *lb = static_cast<LockedBits *>(closure);
-      uint8_t *bitmap = lb->data;
+      LockedBits* lb = static_cast<LockedBits*>(closure);
+      uint8_t* bitmap = lb->data;
       const int bpp = gfx::BytesPerPixel(lb->format);
       const int stride = lb->stride;
       const int width = lb->size.width;

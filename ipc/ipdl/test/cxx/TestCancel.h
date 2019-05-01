@@ -25,7 +25,7 @@ class TestCancelParent : public PTestCancelParent {
   mozilla::ipc::IPCResult RecvTest3_2();
   mozilla::ipc::IPCResult RecvDone();
 
-  mozilla::ipc::IPCResult RecvCheckParent(uint32_t *reply);
+  mozilla::ipc::IPCResult RecvCheckParent(uint32_t* reply);
 
   virtual void ActorDestroy(ActorDestroyReason why) override {
     passed("ok");
@@ -43,7 +43,7 @@ class TestCancelChild : public PTestCancelChild {
   mozilla::ipc::IPCResult RecvTest2_2();
   mozilla::ipc::IPCResult RecvTest3_1();
 
-  mozilla::ipc::IPCResult RecvCheckChild(uint32_t *reply);
+  mozilla::ipc::IPCResult RecvCheckChild(uint32_t* reply);
 
   virtual void ActorDestroy(ActorDestroyReason why) override { QuitChild(); }
 };

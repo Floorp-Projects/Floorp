@@ -22,8 +22,8 @@ static SVGAttrTearoffTable<SVGAnimatedInteger,
                            SVGAnimatedInteger::DOMAnimatedInteger>
     sSVGAnimatedIntegerTearoffTable;
 
-nsresult SVGAnimatedInteger::SetBaseValueString(const nsAString &aValueAsString,
-                                                SVGElement *aSVGElement) {
+nsresult SVGAnimatedInteger::SetBaseValueString(const nsAString& aValueAsString,
+                                                SVGElement* aSVGElement) {
   bool success;
   auto token = SVGContentUtils::GetAndEnsureOneToken(aValueAsString, success);
 
@@ -47,12 +47,12 @@ nsresult SVGAnimatedInteger::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void SVGAnimatedInteger::GetBaseValueString(nsAString &aValueAsString) {
+void SVGAnimatedInteger::GetBaseValueString(nsAString& aValueAsString) {
   aValueAsString.Truncate();
   aValueAsString.AppendInt(mBaseVal);
 }
 
-void SVGAnimatedInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
+void SVGAnimatedInteger::SetBaseValue(int aValue, SVGElement* aSVGElement) {
   // We can't just rely on SetParsedAttrValue (as called by DidChangeInteger)
   // detecting redundant changes since it will compare false if the existing
   // attribute value has an associated serialized version (a string value) even
@@ -71,7 +71,7 @@ void SVGAnimatedInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidChangeInteger(mAttrEnum);
 }
 
-void SVGAnimatedInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
+void SVGAnimatedInteger::SetAnimValue(int aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -81,7 +81,7 @@ void SVGAnimatedInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
 }
 
 already_AddRefed<DOMSVGAnimatedInteger>
-SVGAnimatedInteger::ToDOMAnimatedInteger(SVGElement *aSVGElement) {
+SVGAnimatedInteger::ToDOMAnimatedInteger(SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       sSVGAnimatedIntegerTearoffTable.GetTearoff(this);
   if (!domAnimatedInteger) {
@@ -96,13 +96,13 @@ SVGAnimatedInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
   sSVGAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGAnimatedInteger::ToSMILAttr(SVGElement *aSVGElement) {
+UniquePtr<SMILAttr> SVGAnimatedInteger::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILInteger>(this, aSVGElement);
 }
 
 nsresult SVGAnimatedInteger::SMILInteger::ValueFromString(
-    const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
-    SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
+    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
+    SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   int32_t val;
 
   if (!SVGContentUtils::ParseInteger(aStr, val)) {
@@ -131,7 +131,7 @@ void SVGAnimatedInteger::SMILInteger::ClearAnimValue() {
 }
 
 nsresult SVGAnimatedInteger::SMILInteger::SetAnimValue(
-    const SMILValue &aValue) {
+    const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILIntegerType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILIntegerType::Singleton()) {

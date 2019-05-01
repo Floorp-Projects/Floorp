@@ -24,17 +24,17 @@
 namespace mozilla {
 
 // TODO(bug 1522632): This function should be moved to NSS
-static SECItem *ExportDEREncryptedPrivateKeyInfo(
-    PK11SlotInfo *slot,    /* optional, encrypt key in this slot */
+static SECItem* ExportDEREncryptedPrivateKeyInfo(
+    PK11SlotInfo* slot,    /* optional, encrypt key in this slot */
     SECOidTag algTag,      /* encrypt key with this algorithm */
-    const SECItem *pwitem, /* password for PBE encryption */
-    SECKEYPrivateKey *pk,  /* encrypt this private key */
+    const SECItem* pwitem, /* password for PBE encryption */
+    SECKEYPrivateKey* pk,  /* encrypt this private key */
     int iteration,         /* interations for PBE alg */
-    void *wincx)           /* context for password callback ? */
+    void* wincx)           /* context for password callback ? */
 {
-  SECKEYEncryptedPrivateKeyInfo *pki = PK11_ExportEncryptedPrivKeyInfo(
-      slot, algTag, const_cast<SECItem *>(pwitem), pk, iteration, wincx);
-  SECItem *derPKI;
+  SECKEYEncryptedPrivateKeyInfo* pki = PK11_ExportEncryptedPrivKeyInfo(
+      slot, algTag, const_cast<SECItem*>(pwitem), pk, iteration, wincx);
+  SECItem* derPKI;
 
   if (!pki) {
     return NULL;
@@ -48,11 +48,11 @@ static SECItem *ExportDEREncryptedPrivateKeyInfo(
 
 // This function should be moved to NSS
 static SECStatus ImportDEREncryptedPrivateKeyInfoAndReturnKey(
-    PK11SlotInfo *slot, SECItem *derPKI, SECItem *pwitem, SECItem *nickname,
-    SECItem *publicValue, PRBool isPerm, PRBool isPrivate, KeyType type,
-    unsigned int keyUsage, SECKEYPrivateKey **privk, void *wincx) {
-  SECKEYEncryptedPrivateKeyInfo *epki = NULL;
-  PLArenaPool *temparena = NULL;
+    PK11SlotInfo* slot, SECItem* derPKI, SECItem* pwitem, SECItem* nickname,
+    SECItem* publicValue, PRBool isPerm, PRBool isPrivate, KeyType type,
+    unsigned int keyUsage, SECKEYPrivateKey** privk, void* wincx) {
+  SECKEYEncryptedPrivateKeyInfo* epki = NULL;
+  PLArenaPool* temparena = NULL;
   SECStatus rv = SECFailure;
 
   temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -93,8 +93,8 @@ static SECStatus ImportDEREncryptedPrivateKeyInfoAndReturnKey(
   return rv;
 }
 
-nsresult DtlsIdentity::Serialize(nsTArray<uint8_t> *aKeyDer,
-                                 nsTArray<uint8_t> *aCertDer) {
+nsresult DtlsIdentity::Serialize(nsTArray<uint8_t>* aKeyDer,
+                                 nsTArray<uint8_t>* aCertDer) {
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     MOZ_ASSERT(false);
@@ -120,7 +120,7 @@ nsresult DtlsIdentity::Serialize(nsTArray<uint8_t> *aKeyDer,
 
 /* static */
 RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
-    const nsTArray<uint8_t> &aKeyDer, const nsTArray<uint8_t> &aCertDer,
+    const nsTArray<uint8_t>& aKeyDer, const nsTArray<uint8_t>& aCertDer,
     SSLKEAType authType) {
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
@@ -128,7 +128,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
     return nullptr;
   }
 
-  SECItem certDer = {siBuffer, const_cast<uint8_t *>(aCertDer.Elements()),
+  SECItem certDer = {siBuffer, const_cast<uint8_t*>(aCertDer.Elements()),
                      static_cast<unsigned int>(aCertDer.Length())};
   UniqueCERTCertificate cert(CERT_NewTempCertificate(
       CERT_GetDefaultCertDB(), &certDer, nullptr, true, true));
@@ -137,7 +137,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
   // (why did we not need this for encryption?)
   ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
   // This is a pointer to data inside publicKey
-  SECItem *publicValue = nullptr;
+  SECItem* publicValue = nullptr;
   switch (publicKey->keyType) {
     case dsaKey:
       publicValue = &publicKey->u.dsa.publicValue;
@@ -156,12 +156,12 @@ RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
       return nullptr;
   }
 
-  SECItem derPKI = {siBuffer, const_cast<uint8_t *>(aKeyDer.Elements()),
+  SECItem derPKI = {siBuffer, const_cast<uint8_t*>(aKeyDer.Elements()),
                     static_cast<unsigned int>(aKeyDer.Length())};
 
   // See comment in Serialize about this dummy password stuff
   SECItem dummyPassword = {siBuffer, nullptr, 0};
-  SECKEYPrivateKey *privateKey;
+  SECKEYPrivateKey* privateKey;
   if (ImportDEREncryptedPrivateKeyInfoAndReturnKey(
           slot.get(), &derPKI, &dummyPassword, nullptr, publicValue, false,
           false, publicKey->keyType, KU_ALL, &privateKey,
@@ -201,7 +201,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
 
   unsigned char paramBuf[12];  // OIDs are small
   SECItem ecdsaParams = {siBuffer, paramBuf, sizeof(paramBuf)};
-  SECOidData *oidData = SECOID_FindOIDByTag(SEC_OID_SECG_EC_SECP256R1);
+  SECOidData* oidData = SECOID_FindOIDByTag(SEC_OID_SECG_EC_SECP256R1);
   if (!oidData || (oidData->oid.len > (sizeof(paramBuf) - 2))) {
     return nullptr;
   }
@@ -210,7 +210,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   memcpy(ecdsaParams.data + 2, oidData->oid.data, oidData->oid.len);
   ecdsaParams.len = oidData->oid.len + 2;
 
-  SECKEYPublicKey *pubkey;
+  SECKEYPublicKey* pubkey;
   UniqueSECKEYPrivateKey private_key(
       PK11_GenerateKeyPair(slot.get(), CKM_EC_KEY_PAIR_GEN, &ecdsaParams,
                            &pubkey, PR_FALSE, PR_TRUE, nullptr));
@@ -252,7 +252,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   unsigned long serial;
   // Note: This serial in principle could collide, but it's unlikely
   rv = PK11_GenerateRandomOnSlot(
-      slot.get(), reinterpret_cast<unsigned char *>(&serial), sizeof(serial));
+      slot.get(), reinterpret_cast<unsigned char*>(&serial), sizeof(serial));
   if (rv != SECSuccess) {
     return nullptr;
   }
@@ -263,7 +263,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
     return nullptr;
   }
 
-  PLArenaPool *arena = certificate->arena;
+  PLArenaPool* arena = certificate->arena;
 
   rv = SECOID_SetAlgorithmID(arena, &certificate->signature,
                              SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE, nullptr);
@@ -282,7 +282,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
     return nullptr;
   }
 
-  SECItem *signedCert = PORT_ArenaZNew(arena, SECItem);
+  SECItem* signedCert = PORT_ArenaZNew(arena, SECItem);
   if (!signedCert) {
     return nullptr;
   }
@@ -302,15 +302,15 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
 
 const std::string DtlsIdentity::DEFAULT_HASH_ALGORITHM = "sha-256";
 
-nsresult DtlsIdentity::ComputeFingerprint(DtlsDigest *digest) const {
-  const UniqueCERTCertificate &c = cert();
+nsresult DtlsIdentity::ComputeFingerprint(DtlsDigest* digest) const {
+  const UniqueCERTCertificate& c = cert();
   MOZ_ASSERT(c);
 
   return ComputeFingerprint(c, digest);
 }
 
-nsresult DtlsIdentity::ComputeFingerprint(const UniqueCERTCertificate &cert,
-                                          DtlsDigest *digest) {
+nsresult DtlsIdentity::ComputeFingerprint(const UniqueCERTCertificate& cert,
+                                          DtlsDigest* digest) {
   MOZ_ASSERT(cert);
 
   HASH_HashType ht;
@@ -329,7 +329,7 @@ nsresult DtlsIdentity::ComputeFingerprint(const UniqueCERTCertificate &cert,
     return NS_ERROR_INVALID_ARG;
   }
 
-  const SECHashObject *ho = HASH_GetHashObject(ht);
+  const SECHashObject* ho = HASH_GetHashObject(ht);
   MOZ_ASSERT(ho);
   if (!ho) {
     return NS_ERROR_INVALID_ARG;

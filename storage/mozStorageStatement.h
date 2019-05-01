@@ -52,13 +52,13 @@ class Statement final : public mozIStorageStatement,
    * @param aSQLStatement
    *        The SQL statement to prepare that this object will represent.
    */
-  nsresult initialize(Connection *aDBConnection, sqlite3 *aNativeConnection,
-                      const nsACString &aSQLStatement);
+  nsresult initialize(Connection* aDBConnection, sqlite3* aNativeConnection,
+                      const nsACString& aSQLStatement);
 
   /**
    * Obtains the native statement pointer.
    */
-  inline sqlite3_stmt *nativeStatement() { return mDBStatement; }
+  inline sqlite3_stmt* nativeStatement() { return mDBStatement; }
 
   /**
    * Obtains and transfers ownership of the array of parameters that are bound
@@ -71,7 +71,7 @@ class Statement final : public mozIStorageStatement,
  private:
   ~Statement();
 
-  sqlite3_stmt *mDBStatement;
+  sqlite3_stmt* mDBStatement;
   uint32_t mParamCount;
   uint32_t mResultColumnCount;
   nsTArray<nsCString> mColumnNames;
@@ -81,7 +81,7 @@ class Statement final : public mozIStorageStatement,
    * @return a pointer to the BindingParams object to use with our Bind*
    *         method.
    */
-  mozIStorageBindingParams *getParams();
+  mozIStorageBindingParams* getParams();
 
   /**
    * Holds the array of parameters to bind to this statement when we execute
@@ -109,8 +109,8 @@ class Statement final : public mozIStorageStatement,
   friend class StatementJSHelper;
 };
 
-inline nsISupports *ToSupports(Statement *p) {
-  return NS_ISUPPORTS_CAST(mozIStorageStatement *, p);
+inline nsISupports* ToSupports(Statement* p) {
+  return NS_ISUPPORTS_CAST(mozIStorageStatement*, p);
 }
 
 }  // namespace storage

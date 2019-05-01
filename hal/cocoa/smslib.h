@@ -118,11 +118,11 @@ int smsStartup(id logObject, SEL logSelector);
 int smsDebugStartup(id logObject, SEL logSelector);
 
 // Returns the current calibration values.
-void smsGetCalibration(sms_calibration *calibrationRecord);
+void smsGetCalibration(sms_calibration* calibrationRecord);
 
 // Sets the calibration, but does NOT store it as a preference. If the argument
 // is nil then the current calibration is set from the built-in value table.
-void smsSetCalibration(sms_calibration *calibrationRecord);
+void smsSetCalibration(sms_calibration* calibrationRecord);
 
 // Stores the current calibration values as a stored preference.
 void smsStoreCalibration(void);
@@ -137,22 +137,22 @@ void smsDeleteCalibration(void);
 
 // Fills in the accel record with calibrated acceleration data. Takes
 // 1-2ms to return a value. Returns 0 if success, error number if failure.
-int smsGetData(sms_acceleration *accel);
+int smsGetData(sms_acceleration* accel);
 
 // Fills in the accel record with uncalibrated acceleration data.
 // Returns 0 if success, error number if failure.
-int smsGetUncalibratedData(sms_acceleration *accel);
+int smsGetUncalibratedData(sms_acceleration* accel);
 
 // Returns the length of a raw block of data for the current type of sensor.
 int smsGetBufferLength(void);
 
 // Takes a pointer to accelGetRawLength() bytes; sets those bytes
 // to return value from sensor. Make darn sure the buffer length is right!
-void smsGetBufferData(char *buffer);
+void smsGetBufferData(char* buffer);
 
 // This returns an NSString describing the current calibration in
 // human-readable form. Also include a description of the machine.
-NSString *smsGetCalibrationDescription(void);
+NSString* smsGetCalibrationDescription(void);
 
 // Shuts down the accelerometer.
 void smsShutdown(void);

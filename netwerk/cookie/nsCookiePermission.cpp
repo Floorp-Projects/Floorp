@@ -65,7 +65,7 @@ bool nsCookiePermission::Init() {
 }
 
 NS_IMETHODIMP
-nsCookiePermission::SetAccess(nsIURI *aURI, nsCookieAccess aAccess) {
+nsCookiePermission::SetAccess(nsIURI* aURI, nsCookieAccess aAccess) {
   // Lazily initialize ourselves
   if (!EnsureInitialized()) return NS_ERROR_UNEXPECTED;
 
@@ -79,9 +79,9 @@ nsCookiePermission::SetAccess(nsIURI *aURI, nsCookieAccess aAccess) {
 }
 
 NS_IMETHODIMP
-nsCookiePermission::CanSetCookie(nsIURI *aURI, nsIChannel *aChannel,
-                                 nsICookie2 *aCookie, bool *aIsSession,
-                                 int64_t *aExpiry, bool *aResult) {
+nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
+                                 nsICookie2* aCookie, bool* aIsSession,
+                                 int64_t* aExpiry, bool* aResult) {
   NS_ASSERTION(aURI, "null uri");
 
   *aResult = kDefaultPolicy;

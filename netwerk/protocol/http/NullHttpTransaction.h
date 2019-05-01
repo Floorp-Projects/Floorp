@@ -39,15 +39,15 @@ class NullHttpTransaction : public nsAHttpTransaction {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
 
-  NullHttpTransaction(nsHttpConnectionInfo *ci,
-                      nsIInterfaceRequestor *callbacks, uint32_t caps);
+  NullHttpTransaction(nsHttpConnectionInfo* ci,
+                      nsIInterfaceRequestor* callbacks, uint32_t caps);
 
   MOZ_MUST_USE bool Claim();
   void Unclaim();
 
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() final { return true; }
-  NullHttpTransaction *QueryNullTransaction() final { return this; }
+  NullHttpTransaction* QueryNullTransaction() final { return this; }
   bool ResponseTimeoutEnabled() const final { return true; }
   PRIntervalTime ResponseTimeout() final { return PR_SecondsToInterval(15); }
 
@@ -76,7 +76,7 @@ class NullHttpTransaction : public nsAHttpTransaction {
 
  protected:
   uint32_t mCaps;
-  nsHttpRequestHead *mRequestHead;
+  nsHttpRequestHead* mRequestHead;
 
  private:
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset

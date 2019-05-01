@@ -17,13 +17,13 @@
 
 #  ifdef IRIX4
 extern "C" {
-extern char *demangle(char const *in);
+extern char* demangle(char const* in);
 };
 #  else
 #    include <dem.h>
 #  endif
 
-static char *Demangle(char *rawName) {
+static char* Demangle(char* rawName) {
 #  ifdef IRIX4
   return strdup(demangle(rawName));
 #  else
@@ -33,8 +33,8 @@ static char *Demangle(char *rawName) {
 #  endif
 }
 
-void leaky::readSymbols(const char *fileName) {
-  LDFILE *ldptr;
+void leaky::readSymbols(const char* fileName) {
+  LDFILE* ldptr;
 
   ldptr = ldopen(fileName, nullptr);
   if (!ldptr) {
@@ -52,9 +52,9 @@ void leaky::readSymbols(const char *fileName) {
   long iMax = isymMax + iextMax;
 
   long alloced = 10000;
-  Symbol *syms = (Symbol *)malloc(sizeof(Symbol) * 10000);
-  Symbol *sp = syms;
-  Symbol *last = syms + alloced;
+  Symbol* syms = (Symbol*)malloc(sizeof(Symbol) * 10000);
+  Symbol* sp = syms;
+  Symbol* last = syms + alloced;
   SYMR symr;
 
   for (long isym = 0; isym < iMax; isym++) {
@@ -73,7 +73,7 @@ void leaky::readSymbols(const char *fileName) {
         sp++;
         if (sp >= last) {
           long n = alloced + 10000;
-          syms = (Symbol *)realloc(syms, (size_t)(sizeof(Symbol) * n));
+          syms = (Symbol*)realloc(syms, (size_t)(sizeof(Symbol) * n));
           last = syms + n;
           sp = syms + alloced;
           alloced = n;

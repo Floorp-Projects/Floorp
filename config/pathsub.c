@@ -27,9 +27,9 @@
 #  include "sunos4.h"
 #endif
 
-char *program;
+char* program;
 
-void fail(const char *format, ...) {
+void fail(const char* format, ...) {
   int error;
   va_list ap;
 
@@ -55,7 +55,7 @@ void fail(const char *format, ...) {
   exit(1);
 }
 
-char *getcomponent(char *path, char *name) {
+char* getcomponent(char* path, char* name) {
   if (*path == '\0') return 0;
   if (*path == '/') {
     *name++ = '/';
@@ -74,19 +74,19 @@ char *getcomponent(char *path, char *name) {
 /*
 ** The static buffer in Unixware's readdir is too small.
 */
-struct dirent *readdir(DIR *d) {
-  static struct dirent *buf = NULL;
+struct dirent* readdir(DIR* d) {
+  static struct dirent* buf = NULL;
 
   if (buf == NULL)
-    buf = (struct dirent *)malloc(sizeof(struct dirent) + MAXPATHLEN);
+    buf = (struct dirent*)malloc(sizeof(struct dirent) + MAXPATHLEN);
   return (readdir_r(d, buf));
 }
 #endif
 
-char *ino2name(ino_t ino) {
-  DIR *dp;
-  struct dirent *ep;
-  char *name;
+char* ino2name(ino_t ino) {
+  DIR* dp;
+  struct dirent* ep;
+  char* name;
 
   dp = opendir("..");
   if (!dp) fail("cannot read parent directory");
@@ -99,27 +99,27 @@ char *ino2name(ino_t ino) {
   return name;
 }
 
-void *xmalloc(size_t size) {
-  void *p = malloc(size);
+void* xmalloc(size_t size) {
+  void* p = malloc(size);
   if (!p) fail("cannot allocate %u bytes", size);
   return p;
 }
 
-char *xstrdup(char *s) { return strcpy(xmalloc(strlen(s) + 1), s); }
+char* xstrdup(char* s) { return strcpy(xmalloc(strlen(s) + 1), s); }
 
-char *xbasename(char *path) {
-  char *cp;
+char* xbasename(char* path) {
+  char* cp;
 
   while ((cp = strrchr(path, '/')) && cp[1] == '\0') *cp = '\0';
   if (!cp) return path;
   return cp + 1;
 }
 
-void xchdir(const char *dir) {
+void xchdir(const char* dir) {
   if (chdir(dir) < 0) fail("cannot change directory to %s", dir);
 }
 
-int relatepaths(char *from, char *to, char *outpath) {
+int relatepaths(char* from, char* to, char* outpath) {
   char *cp, *cp2;
   int len;
   char buf[NAME_MAX];
@@ -149,7 +149,7 @@ int relatepaths(char *from, char *to, char *outpath) {
   return len;
 }
 
-void reversepath(char *inpath, char *name, int len, char *outpath) {
+void reversepath(char* inpath, char* name, int len, char* outpath) {
   char *cp, *cp2;
   char buf[NAME_MAX];
   struct stat sb;

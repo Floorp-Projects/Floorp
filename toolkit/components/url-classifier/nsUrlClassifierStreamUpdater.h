@@ -51,16 +51,16 @@ class nsUrlClassifierStreamUpdater final
   void DownloadDone();
 
   // Disallow copy constructor
-  nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater &);
+  nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater&);
 
-  nsresult AddRequestBody(const nsACString &aRequestBody);
+  nsresult AddRequestBody(const nsACString& aRequestBody);
 
   // Fetches an update for a single table.
-  nsresult FetchUpdate(nsIURI *aURI, const nsACString &aRequest,
-                       bool aIsPostRequest, const nsACString &aTable);
+  nsresult FetchUpdate(nsIURI* aURI, const nsACString& aRequest,
+                       bool aIsPostRequest, const nsACString& aTable);
   // Dumb wrapper so we don't have to create URIs.
-  nsresult FetchUpdate(const nsACString &aURI, const nsACString &aRequest,
-                       bool aIsPostRequest, const nsACString &aTable);
+  nsresult FetchUpdate(const nsACString& aURI, const nsACString& aRequest,
+                       bool aIsPostRequest, const nsACString& aTable);
 
   // Fetches the next table, from mPendingUpdates.
   nsresult FetchNext();
@@ -77,13 +77,13 @@ class nsUrlClassifierStreamUpdater final
     nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
   };
   // Utility function to create an update request.
-  void BuildUpdateRequest(const nsACString &aRequestTables,
-                          const nsACString &aRequestPayload,
-                          bool aIsPostRequest, const nsACString &aUpdateUrl,
-                          nsIUrlClassifierCallback *aSuccessCallback,
-                          nsIUrlClassifierCallback *aUpdateErrorCallback,
-                          nsIUrlClassifierCallback *aDownloadErrorCallback,
-                          UpdateRequest *aRequest);
+  void BuildUpdateRequest(const nsACString& aRequestTables,
+                          const nsACString& aRequestPayload,
+                          bool aIsPostRequest, const nsACString& aUpdateUrl,
+                          nsIUrlClassifierCallback* aSuccessCallback,
+                          nsIUrlClassifierCallback* aUpdateErrorCallback,
+                          nsIUrlClassifierCallback* aDownloadErrorCallback,
+                          UpdateRequest* aRequest);
 
   bool mIsUpdating;
   bool mInitialized;

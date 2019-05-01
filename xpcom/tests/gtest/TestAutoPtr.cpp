@@ -11,9 +11,9 @@ class TestObjectBaseA {
  public:
   // Virtual dtor for deleting through base class pointer
   virtual ~TestObjectBaseA() {}
-  void MemberFunction(int, int *, int &) {}
-  virtual void VirtualMemberFunction(int, int *, int &){};
-  virtual void VirtualConstMemberFunction(int, int *, int &) const {};
+  void MemberFunction(int, int*, int&) {}
+  virtual void VirtualMemberFunction(int, int*, int&){};
+  virtual void VirtualConstMemberFunction(int, int*, int&) const {};
   int fooA;
 };
 
@@ -31,34 +31,34 @@ class TestObject : public TestObjectBaseA, public TestObjectBaseB {
   // Virtual dtor for deleting through base class pointer
   virtual ~TestObject() { destructed++; }
 
-  virtual void VirtualMemberFunction(int, int *, int &) override {}
-  virtual void VirtualConstMemberFunction(int, int *, int &) const override {}
+  virtual void VirtualMemberFunction(int, int*, int&) override {}
+  virtual void VirtualConstMemberFunction(int, int*, int&) const override {}
 
   static int destructed;
-  static const void *last_ptr;
+  static const void* last_ptr;
 };
 
 int TestObject::destructed = 0;
-const void *TestObject::last_ptr = nullptr;
+const void* TestObject::last_ptr = nullptr;
 
-static void CreateTestObject(TestObject **aResult) {
+static void CreateTestObject(TestObject** aResult) {
   *aResult = new TestObject();
 }
 
-static void DoSomethingWithTestObject(TestObject *aIn) {
-  TestObject::last_ptr = static_cast<void *>(aIn);
+static void DoSomethingWithTestObject(TestObject* aIn) {
+  TestObject::last_ptr = static_cast<void*>(aIn);
 }
 
-static void DoSomethingWithConstTestObject(const TestObject *aIn) {
-  TestObject::last_ptr = static_cast<const void *>(aIn);
+static void DoSomethingWithConstTestObject(const TestObject* aIn) {
+  TestObject::last_ptr = static_cast<const void*>(aIn);
 }
 
-static void DoSomethingWithTestObjectBaseB(TestObjectBaseB *aIn) {
-  TestObject::last_ptr = static_cast<void *>(aIn);
+static void DoSomethingWithTestObjectBaseB(TestObjectBaseB* aIn) {
+  TestObject::last_ptr = static_cast<void*>(aIn);
 }
 
-static void DoSomethingWithConstTestObjectBaseB(const TestObjectBaseB *aIn) {
-  TestObject::last_ptr = static_cast<const void *>(aIn);
+static void DoSomethingWithConstTestObjectBaseB(const TestObjectBaseB* aIn) {
+  TestObject::last_ptr = static_cast<const void*>(aIn);
 }
 
 TEST(AutoPtr, Assignment)
@@ -94,13 +94,13 @@ TEST(AutoPtr, Casting)
 {
   // This comparison is always false, as it should be. The extra parens
   // suppress a -Wunreachable-code warning about printf being unreachable.
-  ASSERT_NE(((void *)(TestObject *)0x1000),
-            ((void *)(TestObjectBaseB *)(TestObject *)0x1000));
+  ASSERT_NE(((void*)(TestObject*)0x1000),
+            ((void*)(TestObjectBaseB*)(TestObject*)0x1000));
 
   {
     nsAutoPtr<TestObject> p1(new TestObject());
-    TestObjectBaseB *p2 = p1;
-    ASSERT_NE(static_cast<void *>(p1), static_cast<void *>(p2));
+    TestObjectBaseB* p2 = p1;
+    ASSERT_NE(static_cast<void*>(p1), static_cast<void*>(p2));
     ASSERT_EQ(p1, p2);
     ASSERT_FALSE(p1 != p2);
     ASSERT_EQ(p2, p1);
@@ -108,7 +108,7 @@ TEST(AutoPtr, Casting)
   }
 
   {
-    TestObject *p1 = new TestObject();
+    TestObject* p1 = new TestObject();
     nsAutoPtr<TestObjectBaseB> p2(p1);
     ASSERT_EQ(p1, p2);
     ASSERT_FALSE(p1 != p2);
@@ -186,11 +186,11 @@ TEST(AutoPtr, ArrowOperator)
 
   {
     int test = 1;
-    void (TestObjectBaseA::*fPtr)(int, int *, int &) =
+    void (TestObjectBaseA::*fPtr)(int, int*, int&) =
         &TestObjectBaseA::MemberFunction;
-    void (TestObjectBaseA::*fVPtr)(int, int *, int &) =
+    void (TestObjectBaseA::*fVPtr)(int, int*, int&) =
         &TestObjectBaseA::VirtualMemberFunction;
-    void (TestObjectBaseA::*fVCPtr)(int, int *, int &) const =
+    void (TestObjectBaseA::*fVCPtr)(int, int*, int&) const =
         &TestObjectBaseA::VirtualConstMemberFunction;
     nsAutoPtr<TestObjectBaseA> pobj(new TestObject());
     (pobj->*fPtr)(test, &test, test);

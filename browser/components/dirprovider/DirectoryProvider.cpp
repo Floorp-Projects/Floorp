@@ -34,8 +34,8 @@ NS_IMPL_ISUPPORTS(DirectoryProvider, nsIDirectoryServiceProvider,
                   nsIDirectoryServiceProvider2)
 
 NS_IMETHODIMP
-DirectoryProvider::GetFile(const char *aKey, bool *aPersist,
-                           nsIFile **aResult) {
+DirectoryProvider::GetFile(const char* aKey, bool* aPersist,
+                           nsIFile** aResult) {
   return NS_ERROR_FAILURE;
 }
 
@@ -56,8 +56,8 @@ DirectoryProvider::GetFile(const char *aKey, bool *aPersist,
 // "distribution.searchplugins.defaultLocale"
 // which specifies a default locale to use.
 
-static void AppendDistroSearchDirs(nsIProperties *aDirSvc,
-                                   nsCOMArray<nsIFile> &array) {
+static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
+                                   nsCOMArray<nsIFile>& array) {
   nsCOMPtr<nsIFile> searchPlugins;
   nsresult rv = aDirSvc->Get(XRE_APP_DISTRIBUTION_DIR, NS_GET_IID(nsIFile),
                              getter_AddRefs(searchPlugins));
@@ -118,7 +118,7 @@ static void AppendDistroSearchDirs(nsIProperties *aDirSvc,
 }
 
 NS_IMETHODIMP
-DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator **aResult) {
+DirectoryProvider::GetFiles(const char* aKey, nsISimpleEnumerator** aResult) {
   if (!strcmp(aKey, NS_APP_DISTRIBUTION_SEARCH_DIR_LIST)) {
     nsCOMPtr<nsIProperties> dirSvc(
         do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
@@ -134,13 +134,13 @@ DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator **aResult) {
 }
 
 NS_IMETHODIMP
-DirectoryProvider::AppendingEnumerator::HasMoreElements(bool *aResult) {
+DirectoryProvider::AppendingEnumerator::HasMoreElements(bool* aResult) {
   *aResult = mNext ? true : false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DirectoryProvider::AppendingEnumerator::GetNext(nsISupports **aResult) {
+DirectoryProvider::AppendingEnumerator::GetNext(nsISupports** aResult) {
   if (aResult) NS_ADDREF(*aResult = mNext);
 
   mNext = nullptr;
@@ -160,7 +160,7 @@ DirectoryProvider::AppendingEnumerator::GetNext(nsISupports **aResult) {
     nextbase->Clone(getter_AddRefs(mNext));
     if (!mNext) continue;
 
-    char const *const *i = mAppendList;
+    char const* const* i = mAppendList;
     while (*i) {
       mNext->AppendNative(nsDependentCString(*i));
       ++i;
@@ -177,7 +177,7 @@ DirectoryProvider::AppendingEnumerator::GetNext(nsISupports **aResult) {
 }
 
 DirectoryProvider::AppendingEnumerator::AppendingEnumerator(
-    nsISimpleEnumerator *aBase, char const *const *aAppendList)
+    nsISimpleEnumerator* aBase, char const* const* aAppendList)
     : mBase(aBase), mAppendList(aAppendList) {
   // Initialize mNext to begin.
   GetNext(nullptr);

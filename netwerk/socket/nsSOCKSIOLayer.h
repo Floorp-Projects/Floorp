@@ -11,12 +11,12 @@
 #include "nscore.h"
 #include "nsIProxyInfo.h"
 
-nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
-                                   int32_t port, nsIProxyInfo *proxyInfo,
+nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
+                                   int32_t port, nsIProxyInfo* proxyInfo,
                                    int32_t socksVersion, uint32_t flags,
-                                   uint32_t tlsFlags, PRFileDesc *fd,
-                                   nsISupports **info);
+                                   uint32_t tlsFlags, PRFileDesc* fd,
+                                   nsISupports** info);
 
-bool IsHostLocalTarget(const nsACString &aHost);
+bool IsHostLocalTarget(const nsACString& aHost);
 
 #endif /* nsSOCKSIOLayer_h__ */

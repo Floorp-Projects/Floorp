@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace net {
 
-CacheIndexIterator::CacheIndexIterator(CacheIndex *aIndex, bool aAddNew)
+CacheIndexIterator::CacheIndexIterator(CacheIndex* aIndex, bool aAddNew)
     : mStatus(NS_OK), mIndex(aIndex), mAddNew(aAddNew) {
   LOG(("CacheIndexIterator::CacheIndexIterator() [this=%p]", this));
 }
@@ -22,7 +22,7 @@ CacheIndexIterator::~CacheIndexIterator() {
   Close();
 }
 
-nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash *aHash) {
+nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash* aHash) {
   LOG(("CacheIndexIterator::GetNextHash() [this=%p]", this));
 
   StaticMutexAutoLock lock(CacheIndex::sLock);
@@ -71,21 +71,21 @@ nsresult CacheIndexIterator::CloseInternal(nsresult aStatus) {
   return NS_OK;
 }
 
-void CacheIndexIterator::AddRecord(CacheIndexRecord *aRecord) {
+void CacheIndexIterator::AddRecord(CacheIndexRecord* aRecord) {
   LOG(("CacheIndexIterator::AddRecord() [this=%p, record=%p]", this, aRecord));
 
   mRecords.AppendElement(aRecord);
 }
 
-bool CacheIndexIterator::RemoveRecord(CacheIndexRecord *aRecord) {
+bool CacheIndexIterator::RemoveRecord(CacheIndexRecord* aRecord) {
   LOG(("CacheIndexIterator::RemoveRecord() [this=%p, record=%p]", this,
        aRecord));
 
   return mRecords.RemoveElement(aRecord);
 }
 
-bool CacheIndexIterator::ReplaceRecord(CacheIndexRecord *aOldRecord,
-                                       CacheIndexRecord *aNewRecord) {
+bool CacheIndexIterator::ReplaceRecord(CacheIndexRecord* aOldRecord,
+                                       CacheIndexRecord* aNewRecord) {
   LOG(
       ("CacheIndexIterator::ReplaceRecord() [this=%p, oldRecord=%p, "
        "newRecord=%p]",

@@ -1151,7 +1151,7 @@ TEST(Gfx, RegionContains)
 #define REGION_VALUE 0xff
 
 struct RegionBitmap {
-  RegionBitmap(unsigned char *bitmap, int width, int height)
+  RegionBitmap(unsigned char* bitmap, int width, int height)
       : bitmap(bitmap), width(width), height(height) {}
 
   void clear() {
@@ -1162,10 +1162,10 @@ struct RegionBitmap {
     }
   }
 
-  void set(nsRegion &region) {
+  void set(nsRegion& region) {
     clear();
     for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
-      const nsRect &r = iter.Get();
+      const nsRect& r = iter.Get();
       for (int y = r.Y(); y < r.YMost(); y++) {
         for (int x = r.X(); x < r.XMost(); x++) {
           bitmap[x + y * width] = REGION_VALUE;
@@ -1188,7 +1188,7 @@ struct RegionBitmap {
       }
     }
   }
-  void compare(RegionBitmap &reference) {
+  void compare(RegionBitmap& reference) {
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         EXPECT_EQ(bitmap[x + y * width], reference.bitmap[x + y * width]);
@@ -1196,16 +1196,16 @@ struct RegionBitmap {
     }
   }
 
-  unsigned char *bitmap;
+  unsigned char* bitmap;
   int width;
   int height;
 };
 
-static void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2,
+static void VisitEdge(void* closure, VisitSide side, int x1, int y1, int x2,
                       int y2) {
   EXPECT_GE(x2, x1);
-  RegionBitmap *visitor = static_cast<RegionBitmap *>(closure);
-  unsigned char *bitmap = visitor->bitmap;
+  RegionBitmap* visitor = static_cast<RegionBitmap*>(closure);
+  unsigned char* bitmap = visitor->bitmap;
   const int width = visitor->width;
 
   if (side == VisitSide::TOP) {
@@ -1231,7 +1231,7 @@ static void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2,
   }
 }
 
-static void TestVisit(nsRegion &r) {
+static void TestVisit(nsRegion& r) {
   auto reference = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   auto result = mozilla::MakeUnique<unsigned char[]>(600 * 600);
   RegionBitmap ref(reference.get(), 600, 600);

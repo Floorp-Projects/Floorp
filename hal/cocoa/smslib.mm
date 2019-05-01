@@ -66,8 +66,8 @@ typedef struct axisStruct {
 
 // Represents the configuration of a type of sensor.
 typedef struct sensorSpec {
-  const char *model;      // Prefix of model to be tested
-  const char *name;       // Name of device to be read
+  const char* model;      // Prefix of model to be tested
+  const char* name;       // Name of device to be read
   unsigned int function;  // Kernel function index
   int recordSize;         // Size of record to be sent/received
   axisStruct axes[3];     // Description of three axes (X, Y, Z)
@@ -221,20 +221,20 @@ static const sensorSpec sensors[] = {
 
 #pragma mark Internal prototypes
 
-static int getData(sms_acceleration *accel, int calibrated, id logObject, SEL logSelector);
+static int getData(sms_acceleration* accel, int calibrated, id logObject, SEL logSelector);
 static float getAxis(int which, int calibrated);
 static int signExtend(int value, int size);
-static NSString *getModelName(void);
-static NSString *getOSVersion(void);
+static NSString* getModelName(void);
+static NSString* getOSVersion(void);
 static BOOL loadCalibration(void);
 static void storeCalibration(void);
 static void defaultCalibration(void);
 static void deleteCalibration(void);
-static int prefIntRead(NSString *prefName, BOOL *success);
-static void prefIntWrite(NSString *prefName, int prefValue);
-static float prefFloatRead(NSString *prefName, BOOL *success);
-static void prefFloatWrite(NSString *prefName, float prefValue);
-static void prefDelete(NSString *prefName);
+static int prefIntRead(NSString* prefName, BOOL* success);
+static void prefIntWrite(NSString* prefName, int prefValue);
+static float prefFloatRead(NSString* prefName, BOOL* success);
+static void prefFloatWrite(NSString* prefName, float prefValue);
+static void prefDelete(NSString* prefName);
 static void prefSynchronize(void);
 // static long getMicroseconds(void);
 float fakeData(NSTimeInterval time);
@@ -245,7 +245,7 @@ static int debugging = NO;          // True if debugging (synthetic data)
 static io_connect_t connection;     // Connection for reading accel values
 static int running = NO;            // True if we successfully started
 static unsigned int sensorNum = 0;  // The current index into sensors[]
-static const char *serviceName;     // The name of the current service
+static const char* serviceName;     // The name of the current service
 static char *iRecord, *oRecord;     // Pointers to read/write records for sensor
 static int recordSize;              // Size of read/write records
 static unsigned int function;       // Which kernel function should be used
@@ -310,7 +310,7 @@ int smsStartup(id logObject, SEL logSelector) {
   running = NO;
   debugging = NO;
 
-  NSString *modelName = getModelName();
+  NSString* modelName = getModelName();
 
   LOG_ARG(@"Machine model: %@\n", modelName);
   LOG_ARG(@"OS X version: %@\n", getOSVersion());
@@ -325,7 +325,7 @@ int smsStartup(id logObject, SEL logSelector) {
     LOG_3ARG(@"Trying service \"%s\" with selector %d and %d byte record:\n", serviceName, function,
              recordSize);
 
-    NSString *targetName = [NSString stringWithCString:sensors[sensorNum].model
+    NSString* targetName = [NSString stringWithCString:sensors[sensorNum].model
                                               encoding:NSMacOSRomanStringEncoding];
     LOG_ARG(@"    Comparing model name to target \"%@\": ", targetName);
     if ([targetName length] == 0 || [modelName hasPrefix:targetName]) {
@@ -400,8 +400,8 @@ int smsStartup(id logObject, SEL logSelector) {
 
     defaultCalibration();
 
-    iRecord = (char *)malloc(recordSize);
-    oRecord = (char *)malloc(recordSize);
+    iRecord = (char*)malloc(recordSize);
+    oRecord = (char*)malloc(recordSize);
 
     running = YES;
     result = getData(&accel, true, logObject, logSelector);
@@ -439,7 +439,7 @@ int smsDebugStartup(id logObject, SEL logSelector) {
 }
 
 // Returns the current calibration values.
-void smsGetCalibration(sms_calibration *calibrationRecord) {
+void smsGetCalibration(sms_calibration* calibrationRecord) {
   int x;
 
   for (x = 0; x < 3; x++) {
@@ -450,7 +450,7 @@ void smsGetCalibration(sms_calibration *calibrationRecord) {
 
 // Sets the calibration, but does NOT store it as a preference. If the argument
 // is nil then the current calibration is set from the built-in value table.
-void smsSetCalibration(sms_calibration *calibrationRecord) {
+void smsSetCalibration(sms_calibration* calibrationRecord) {
   int x;
 
   if (!debugging) {
@@ -494,7 +494,7 @@ void smsDeleteCalibration(void) {
 
 // Fills in the accel record with calibrated acceleration data. Takes
 // 1-2ms to return a value. Returns 0 if success, error number if failure.
-int smsGetData(sms_acceleration *accel) {
+int smsGetData(sms_acceleration* accel) {
   NSTimeInterval time;
   if (debugging) {
     usleep(1500);  // Usually takes 1-2 milliseconds
@@ -510,7 +510,7 @@ int smsGetData(sms_acceleration *accel) {
 
 // Fills in the accel record with uncalibrated acceleration data.
 // Returns 0 if success, error number if failure.
-int smsGetUncalibratedData(sms_acceleration *accel) {
+int smsGetUncalibratedData(sms_acceleration* accel) {
   NSTimeInterval time;
   if (debugging) {
     usleep(1500);  // Usually takes 1-2 milliseconds
@@ -537,7 +537,7 @@ int smsGetBufferLength(void) {
 
 // Takes a pointer to accelGetRawLength() bytes; sets those bytes
 // to return value from sensor. Make darn sure the buffer length is right!
-void smsGetBufferData(char *buffer) {
+void smsGetBufferData(char* buffer) {
   IOItemCount iSize = recordSize;
   IOByteCount oSize = recordSize;
   kern_return_t result;
@@ -551,10 +551,10 @@ void smsGetBufferData(char *buffer) {
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
   const size_t InStructSize = recordSize;
   size_t OutStructSize = recordSize;
-  result = IOConnectCallStructMethod(connection,
-                                     function,  // magic kernel function number
-                                     (const void *)iRecord, InStructSize, (void *)buffer,
-                                     &OutStructSize);
+  result =
+      IOConnectCallStructMethod(connection,
+                                function,  // magic kernel function number
+                                (const void*)iRecord, InStructSize, (void*)buffer, &OutStructSize);
 #else   // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
   result = IOConnectMethodStructureIStructureO(connection,
                                                function,  // magic kernel function number
@@ -568,9 +568,9 @@ void smsGetBufferData(char *buffer) {
 
 // This returns an NSString describing the current calibration in
 // human-readable form. Also include a description of the machine.
-NSString *smsGetCalibrationDescription(void) {
+NSString* smsGetCalibrationDescription(void) {
   BOOL success;
-  NSMutableString *s = [[NSMutableString alloc] init];
+  NSMutableString* s = [[NSMutableString alloc] init];
 
   if (debugging) {
     [s release];
@@ -667,7 +667,7 @@ static void deleteCalibration(void) {
 
 // Read a named floating point value from the stored preferences. Sets
 // the success boolean based on, you guessed it, whether it succeeds.
-static float prefFloatRead(NSString *prefName, BOOL *success) {
+static float prefFloatRead(NSString* prefName, BOOL* success) {
   float result = 0.0f;
 
   CFPropertyListRef ref = CFPreferencesCopyAppValue((CFStringRef)prefName, APP_ID);
@@ -682,7 +682,7 @@ static float prefFloatRead(NSString *prefName, BOOL *success) {
     // Is it a floating point number?
     if (CFNumberIsFloatType((CFNumberRef)ref)) {
       // Yup: grab it.
-      *success = CFNumberGetValue((__CFNumber *)ref, kCFNumberFloat32Type, &result);
+      *success = CFNumberGetValue((__CFNumber*)ref, kCFNumberFloat32Type, &result);
     } else {
       // Nope: grab as an integer, and convert to a float.
       long num;
@@ -706,14 +706,14 @@ static float prefFloatRead(NSString *prefName, BOOL *success) {
 }
 
 // Writes a named floating point value to the stored preferences.
-static void prefFloatWrite(NSString *prefName, float prefValue) {
+static void prefFloatWrite(NSString* prefName, float prefValue) {
   CFNumberRef cfFloat = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &prefValue);
   CFPreferencesSetAppValue((CFStringRef)prefName, cfFloat, APP_ID);
   CFRelease(cfFloat);
 }
 
 // Reads a named integer value from the stored preferences.
-static int prefIntRead(NSString *prefName, BOOL *success) {
+static int prefIntRead(NSString* prefName, BOOL* success) {
   Boolean internalSuccess;
   CFIndex result = CFPreferencesGetAppIntegerValue((CFStringRef)prefName, APP_ID, &internalSuccess);
   *success = internalSuccess;
@@ -722,13 +722,13 @@ static int prefIntRead(NSString *prefName, BOOL *success) {
 }
 
 // Writes a named integer value to the stored preferences.
-static void prefIntWrite(NSString *prefName, int prefValue) {
+static void prefIntWrite(NSString* prefName, int prefValue) {
   CFPreferencesSetAppValue((CFStringRef)prefName, (CFNumberRef)[NSNumber numberWithInt:prefValue],
                            APP_ID);
 }
 
 // Deletes the named preference values.
-static void prefDelete(NSString *prefName) {
+static void prefDelete(NSString* prefName) {
   CFPreferencesSetAppValue((CFStringRef)prefName, NULL, APP_ID);
 }
 
@@ -736,7 +736,7 @@ static void prefDelete(NSString *prefName) {
 static void prefSynchronize(void) { CFPreferencesAppSynchronize(APP_ID); }
 
 // Internal version of accelGetData, with logging
-int getData(sms_acceleration *accel, int calibrated, id logObject, SEL logSelector) {
+int getData(sms_acceleration* accel, int calibrated, id logObject, SEL logSelector) {
   IOItemCount iSize = recordSize;
   IOByteCount oSize = recordSize;
   kern_return_t result;
@@ -754,10 +754,10 @@ int getData(sms_acceleration *accel, int calibrated, id logObject, SEL logSelect
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
   const size_t InStructSize = recordSize;
   size_t OutStructSize = recordSize;
-  result = IOConnectCallStructMethod(connection,
-                                     function,  // magic kernel function number
-                                     (const void *)iRecord, InStructSize, (void *)oRecord,
-                                     &OutStructSize);
+  result =
+      IOConnectCallStructMethod(connection,
+                                function,  // magic kernel function number
+                                (const void*)iRecord, InStructSize, (void*)oRecord, &OutStructSize);
 #else   // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
   result = IOConnectMethodStructureIStructureO(connection,
                                                function,  // magic kernel function number
@@ -793,7 +793,7 @@ float getAxis(int which, int calibrated) {
   // endianness, we still have to get it into the proper end of value.
 #if (BYTE_ORDER == BIG_ENDIAN)
   // On PowerPC processors
-  memcpy(((char *)&value) + (sizeof(int) - size), &oRecord[indx], size);
+  memcpy(((char*)&value) + (sizeof(int) - size), &oRecord[indx], size);
 #endif
 #if (BYTE_ORDER == LITTLE_ENDIAN)
   // On Intel processors
@@ -828,11 +828,11 @@ int signExtend(int value, int size) {
 }
 
 // Returns the model name of the computer (e.g. "MacBookPro1,1")
-NSString *getModelName(void) {
+NSString* getModelName(void) {
   char model[32];
   size_t len = sizeof(model);
   int name[2] = {CTL_HW, HW_MODEL};
-  NSString *result;
+  NSString* result;
 
   if (sysctl(name, 2, &model, &len, NULL, 0) == 0) {
     result = [NSString stringWithFormat:@"%s", model];
@@ -844,12 +844,12 @@ NSString *getModelName(void) {
 }
 
 // Returns the current OS X version and build (e.g. "10.4.7 (build 8J2135a)")
-NSString *getOSVersion(void) {
-  NSDictionary *dict = [NSDictionary
+NSString* getOSVersion(void) {
+  NSDictionary* dict = [NSDictionary
       dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-  NSString *versionString = [dict objectForKey:@"ProductVersion"];
-  NSString *buildString = [dict objectForKey:@"ProductBuildVersion"];
-  NSString *wholeString = [NSString stringWithFormat:@"%@ (build %@)", versionString, buildString];
+  NSString* versionString = [dict objectForKey:@"ProductVersion"];
+  NSString* buildString = [dict objectForKey:@"ProductBuildVersion"];
+  NSString* wholeString = [NSString stringWithFormat:@"%@ (build %@)", versionString, buildString];
   return wholeString;
 }
 

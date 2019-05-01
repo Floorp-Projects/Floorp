@@ -44,7 +44,7 @@ class FontInfoLoadCompleteEvent : public Runnable {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(FontInfoLoadCompleteEvent, Runnable)
 
-  explicit FontInfoLoadCompleteEvent(FontInfoData *aFontInfo)
+  explicit FontInfoLoadCompleteEvent(FontInfoData* aFontInfo)
       : mozilla::Runnable("FontInfoLoadCompleteEvent"), mFontInfo(aFontInfo) {}
 
   NS_IMETHOD Run() override;
@@ -59,7 +59,7 @@ class AsyncFontInfoLoader : public Runnable {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(AsyncFontInfoLoader, Runnable)
 
-  explicit AsyncFontInfoLoader(FontInfoData *aFontInfo)
+  explicit AsyncFontInfoLoader(FontInfoData* aFontInfo)
       : mozilla::Runnable("AsyncFontInfoLoader"), mFontInfo(aFontInfo) {
     mCompleteEvent = new FontInfoLoadCompleteEvent(aFontInfo);
   }
@@ -77,7 +77,7 @@ class ShutdownThreadEvent : public Runnable {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ShutdownThreadEvent, Runnable)
 
-  explicit ShutdownThreadEvent(nsIThread *aThread)
+  explicit ShutdownThreadEvent(nsIThread* aThread)
       : mozilla::Runnable("ShutdownThreadEvent"), mThread(aThread) {}
   NS_IMETHOD Run() override {
     mThread->Shutdown();
@@ -90,8 +90,8 @@ class ShutdownThreadEvent : public Runnable {
 
 // runs on main thread after async font info loading is done
 nsresult FontInfoLoadCompleteEvent::Run() {
-  gfxFontInfoLoader *loader =
-      static_cast<gfxFontInfoLoader *>(gfxPlatformFontList::PlatformFontList());
+  gfxFontInfoLoader* loader =
+      static_cast<gfxFontInfoLoader*>(gfxPlatformFontList::PlatformFontList());
 
   loader->FinalizeLoader(mFontInfo);
 
@@ -112,9 +112,9 @@ nsresult AsyncFontInfoLoader::Run() {
 NS_IMPL_ISUPPORTS(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 
 NS_IMETHODIMP
-gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports *aSubject,
-                                             const char *aTopic,
-                                             const char16_t *someData) {
+gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports* aSubject,
+                                             const char* aTopic,
+                                             const char16_t* someData) {
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
     mLoader->CancelLoader();
   } else {
@@ -177,7 +177,7 @@ void gfxFontInfoLoader::StartLoader(uint32_t aDelay, uint32_t aInterval) {
   }
 }
 
-void gfxFontInfoLoader::FinalizeLoader(FontInfoData *aFontInfo) {
+void gfxFontInfoLoader::FinalizeLoader(FontInfoData* aFontInfo) {
   // Avoid loading data if loader has already been canceled.
   // This should mean that CancelLoader() ran and the Load
   // thread has already Shutdown(), and likely before processing

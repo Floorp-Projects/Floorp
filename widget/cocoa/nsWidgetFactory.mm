@@ -44,7 +44,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-static nsresult nsClipboardConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
+static nsresult nsClipboardConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult) {
   nsCOMPtr<nsIClipboard> inst;
 
   *aResult = nullptr;

@@ -52,7 +52,7 @@ class nsTransform2D {
    * @param      pt, Point to return translation values in
    **/
 
-  void GetTranslationCoord(nscoord *ptX, nscoord *ptY) const {
+  void GetTranslationCoord(nscoord* ptX, nscoord* ptY) const {
     *ptX = NSToCoordRound(m20);
     *ptY = NSToCoordRound(m21);
   }
@@ -63,7 +63,7 @@ class nsTransform2D {
    * @param    pt Point to transform
    **/
 
-  void TransformCoord(nscoord *ptX, nscoord *ptY) const;
+  void TransformCoord(nscoord* ptX, nscoord* ptY) const;
 
   /**
    * apply matrix to rect
@@ -71,8 +71,8 @@ class nsTransform2D {
    * @param    rect Rect to transform
    **/
 
-  void TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth,
-                      nscoord *aHeight) const;
+  void TransformCoord(nscoord* aX, nscoord* aY, nscoord* aWidth,
+                      nscoord* aHeight) const;
 
   /**
    * add a scale to a Transform via x, y pair

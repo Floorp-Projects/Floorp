@@ -41,7 +41,7 @@ class AxisPhysicsMSDModel : public AxisPhysicsModel {
   bool IsFinished(double aSmallestVisibleIncrement);
 
  protected:
-  double Acceleration(const State &aState) override;
+  double Acceleration(const State& aState) override;
 
  private:
   /**

@@ -30,15 +30,15 @@ class nsCacheEntryDescriptor;
  *******************************************************************************/
 class nsCacheEntry : public PRCList {
  public:
-  nsCacheEntry(const nsACString &key, bool streamBased,
+  nsCacheEntry(const nsACString& key, bool streamBased,
                nsCacheStoragePolicy storagePolicy);
   ~nsCacheEntry();
 
-  static nsresult Create(const char *key, bool streamBased,
+  static nsresult Create(const char* key, bool streamBased,
                          nsCacheStoragePolicy storagePolicy,
-                         nsCacheDevice *device, nsCacheEntry **result);
+                         nsCacheDevice* device, nsCacheEntry** result);
 
-  nsCString *Key() { return &mKey; }
+  nsCString* Key() { return &mKey; }
 
   int32_t FetchCount() { return mFetchCount; }
   void SetFetchCount(int32_t count) { mFetchCount = count; }
@@ -55,17 +55,17 @@ class nsCacheEntry : public PRCList {
 
   uint32_t Size() { return mDataSize + mMetaData.Size() + mKey.Length(); }
 
-  nsCacheDevice *CacheDevice() { return mCacheDevice; }
-  void SetCacheDevice(nsCacheDevice *device) { mCacheDevice = device; }
-  void SetCustomCacheDevice(nsCacheDevice *device) { mCustomDevice = device; }
-  nsCacheDevice *CustomCacheDevice() { return mCustomDevice; }
-  const char *GetDeviceID();
+  nsCacheDevice* CacheDevice() { return mCacheDevice; }
+  void SetCacheDevice(nsCacheDevice* device) { mCacheDevice = device; }
+  void SetCustomCacheDevice(nsCacheDevice* device) { mCustomDevice = device; }
+  nsCacheDevice* CustomCacheDevice() { return mCustomDevice; }
+  const char* GetDeviceID();
 
   /**
    * Data accessors
    */
-  nsISupports *Data() { return mData; }
-  void SetData(nsISupports *data);
+  nsISupports* Data() { return mData; }
+  void SetData(nsISupports* data);
 
   int64_t PredictedDataSize() { return mPredictedDataSize; }
   void SetPredictedDataSize(int64_t size) { mPredictedDataSize = size; }
@@ -78,19 +78,19 @@ class nsCacheEntry : public PRCList {
   /**
    * Meta data accessors
    */
-  const char *GetMetaDataElement(const char *key) {
+  const char* GetMetaDataElement(const char* key) {
     return mMetaData.GetElement(key);
   }
-  nsresult SetMetaDataElement(const char *key, const char *value) {
+  nsresult SetMetaDataElement(const char* key, const char* value) {
     return mMetaData.SetElement(key, value);
   }
-  nsresult VisitMetaDataElements(nsICacheMetaDataVisitor *visitor) {
+  nsresult VisitMetaDataElements(nsICacheMetaDataVisitor* visitor) {
     return mMetaData.VisitElements(visitor);
   }
-  nsresult FlattenMetaData(char *buffer, uint32_t bufSize) {
+  nsresult FlattenMetaData(char* buffer, uint32_t bufSize) {
     return mMetaData.FlattenMetaData(buffer, bufSize);
   }
-  nsresult UnflattenMetaData(const char *buffer, uint32_t bufSize) {
+  nsresult UnflattenMetaData(const char* buffer, uint32_t bufSize) {
     return mMetaData.UnflattenMetaData(buffer, bufSize);
   }
   uint32_t MetaDataSize() { return mMetaData.Size(); }
@@ -100,8 +100,8 @@ class nsCacheEntry : public PRCList {
   /**
    * Security Info accessors
    */
-  nsISupports *SecurityInfo() { return mSecurityInfo; }
-  void SetSecurityInfo(nsISupports *info) { mSecurityInfo = info; }
+  nsISupports* SecurityInfo() { return mSecurityInfo; }
+  void SetSecurityInfo(nsISupports* info) { mSecurityInfo = info; }
 
   // XXX enumerate MetaData method
 
@@ -178,17 +178,17 @@ class nsCacheEntry : public PRCList {
   }
 
   // methods for nsCacheService
-  nsresult RequestAccess(nsCacheRequest *request,
-                         nsCacheAccessMode *accessGranted);
-  nsresult CreateDescriptor(nsCacheRequest *request,
+  nsresult RequestAccess(nsCacheRequest* request,
+                         nsCacheAccessMode* accessGranted);
+  nsresult CreateDescriptor(nsCacheRequest* request,
                             nsCacheAccessMode accessGranted,
-                            nsICacheEntryDescriptor **result);
+                            nsICacheEntryDescriptor** result);
 
-  bool RemoveRequest(nsCacheRequest *request);
-  bool RemoveDescriptor(nsCacheEntryDescriptor *descriptor, bool *doomEntry);
+  bool RemoveRequest(nsCacheRequest* request);
+  bool RemoveDescriptor(nsCacheEntryDescriptor* descriptor, bool* doomEntry);
 
   void GetDescriptors(
-      nsTArray<RefPtr<nsCacheEntryDescriptor> > &outDescriptors);
+      nsTArray<RefPtr<nsCacheEntryDescriptor> >& outDescriptors);
 
  private:
   friend class nsCacheEntryHashTable;
@@ -212,10 +212,10 @@ class nsCacheEntry : public PRCList {
   uint32_t mFlags;                      // 4
   int64_t mPredictedDataSize;           // Size given by ContentLength.
   uint32_t mDataSize;                   // 4
-  nsCacheDevice *mCacheDevice;          // 4
-  nsCacheDevice *mCustomDevice;         // 4
+  nsCacheDevice* mCacheDevice;          // 4
+  nsCacheDevice* mCustomDevice;         // 4
   nsCOMPtr<nsISupports> mSecurityInfo;  //
-  nsISupports *mData;                   // strong ref
+  nsISupports* mData;                   // strong ref
   nsCOMPtr<nsIEventTarget> mEventTarget;
   nsCacheMetaData mMetaData;  // 4
   PRCList mRequestQ;          // 8
@@ -230,12 +230,12 @@ class nsCacheEntryInfo : public nsICacheEntryInfo {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEENTRYINFO
 
-  explicit nsCacheEntryInfo(nsCacheEntry *entry) : mCacheEntry(entry) {}
+  explicit nsCacheEntryInfo(nsCacheEntry* entry) : mCacheEntry(entry) {}
 
   void DetachEntry() { mCacheEntry = nullptr; }
 
  private:
-  nsCacheEntry *mCacheEntry;
+  nsCacheEntry* mCacheEntry;
 
   virtual ~nsCacheEntryInfo() = default;
 };
@@ -245,7 +245,7 @@ class nsCacheEntryInfo : public nsICacheEntryInfo {
  *******************************************************************************/
 
 struct nsCacheEntryHashTableEntry : public PLDHashEntryHdr {
-  nsCacheEntry *cacheEntry;
+  nsCacheEntry* cacheEntry;
 };
 
 class nsCacheEntryHashTable {
@@ -256,24 +256,24 @@ class nsCacheEntryHashTable {
   void Init();
   void Shutdown();
 
-  nsCacheEntry *GetEntry(const nsCString *key) const;
-  nsresult AddEntry(nsCacheEntry *entry);
-  void RemoveEntry(nsCacheEntry *entry);
+  nsCacheEntry* GetEntry(const nsCString* key) const;
+  nsresult AddEntry(nsCacheEntry* entry);
+  void RemoveEntry(nsCacheEntry* entry);
 
   PLDHashTable::Iterator Iter();
 
  private:
   // PLDHashTable operation callbacks
-  static PLDHashNumber HashKey(const void *key);
+  static PLDHashNumber HashKey(const void* key);
 
-  static bool MatchEntry(const PLDHashEntryHdr *entry, const void *key);
+  static bool MatchEntry(const PLDHashEntryHdr* entry, const void* key);
 
-  static void MoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
-                        PLDHashEntryHdr *to);
+  static void MoveEntry(PLDHashTable* table, const PLDHashEntryHdr* from,
+                        PLDHashEntryHdr* to);
 
-  static void ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
+  static void ClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry);
 
-  static void Finalize(PLDHashTable *table);
+  static void Finalize(PLDHashTable* table);
 
   // member variables
   static const PLDHashTableOps ops;

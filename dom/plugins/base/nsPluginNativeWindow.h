@@ -33,27 +33,27 @@ class nsPluginNativeWindow : public NPWindow {
    */
 
  public:
-  nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
+  nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance>& aPluginInstance) {
     aPluginInstance = mPluginInstance;
     return NS_OK;
   }
-  nsresult SetPluginInstance(nsNPAPIPluginInstance *aPluginInstance) {
+  nsresult SetPluginInstance(nsNPAPIPluginInstance* aPluginInstance) {
     if (mPluginInstance != aPluginInstance) mPluginInstance = aPluginInstance;
     return NS_OK;
   }
 
-  nsresult GetPluginWidget(nsIWidget **aWidget) const {
+  nsresult GetPluginWidget(nsIWidget** aWidget) const {
     NS_IF_ADDREF(*aWidget = mWidget);
     return NS_OK;
   }
-  nsresult SetPluginWidget(nsIWidget *aWidget) {
+  nsresult SetPluginWidget(nsIWidget* aWidget) {
     mWidget = aWidget;
     return NS_OK;
   }
 
  public:
   virtual nsresult CallSetWindow(
-      RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
+      RefPtr<nsNPAPIPluginInstance>& aPluginInstance) {
     // null aPluginInstance means that we want to call SetWindow(null)
     if (aPluginInstance)
       aPluginInstance->SetWindow(this);
@@ -69,8 +69,8 @@ class nsPluginNativeWindow : public NPWindow {
   nsCOMPtr<nsIWidget> mWidget;
 };
 
-nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow **aPluginNativeWindow);
+nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow** aPluginNativeWindow);
 nsresult PLUG_DeletePluginNativeWindow(
-    nsPluginNativeWindow *aPluginNativeWindow);
+    nsPluginNativeWindow* aPluginNativeWindow);
 
 #endif  //_nsPluginNativeWindow_h_

@@ -32,7 +32,7 @@ class Row final : public mozIStorageRow {
    * @param aStatement
    *        The sqlite statement to pull results from.
    */
-  nsresult initialize(sqlite3_stmt *aStatement);
+  nsresult initialize(sqlite3_stmt* aStatement);
 
  private:
   ~Row() {}

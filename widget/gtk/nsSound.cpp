@@ -34,26 +34,26 @@
 #include <unistd.h>
 
 #include <gtk/gtk.h>
-static PRLibrary *libcanberra = nullptr;
+static PRLibrary* libcanberra = nullptr;
 
 /* used to play sounds with libcanberra. */
 typedef struct _ca_context ca_context;
 typedef struct _ca_proplist ca_proplist;
 
-typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code,
-                                     void *userdata);
+typedef void (*ca_finish_callback_t)(ca_context* c, uint32_t id, int error_code,
+                                     void* userdata);
 
-typedef int (*ca_context_create_fn)(ca_context **);
-typedef int (*ca_context_destroy_fn)(ca_context *);
-typedef int (*ca_context_play_fn)(ca_context *c, uint32_t id, ...);
-typedef int (*ca_context_change_props_fn)(ca_context *c, ...);
-typedef int (*ca_proplist_create_fn)(ca_proplist **);
-typedef int (*ca_proplist_destroy_fn)(ca_proplist *);
-typedef int (*ca_proplist_sets_fn)(ca_proplist *c, const char *key,
-                                   const char *value);
-typedef int (*ca_context_play_full_fn)(ca_context *c, uint32_t id,
-                                       ca_proplist *p, ca_finish_callback_t cb,
-                                       void *userdata);
+typedef int (*ca_context_create_fn)(ca_context**);
+typedef int (*ca_context_destroy_fn)(ca_context*);
+typedef int (*ca_context_play_fn)(ca_context* c, uint32_t id, ...);
+typedef int (*ca_context_change_props_fn)(ca_context* c, ...);
+typedef int (*ca_proplist_create_fn)(ca_proplist**);
+typedef int (*ca_proplist_destroy_fn)(ca_proplist*);
+typedef int (*ca_proplist_sets_fn)(ca_proplist* c, const char* key,
+                                   const char* value);
+typedef int (*ca_context_play_full_fn)(ca_context* c, uint32_t id,
+                                       ca_proplist* p, ca_finish_callback_t cb,
+                                       void* userdata);
 
 static ca_context_create_fn ca_context_create;
 static ca_context_destroy_fn ca_context_destroy;
@@ -65,7 +65,7 @@ static ca_proplist_sets_fn ca_proplist_sets;
 static ca_context_play_full_fn ca_context_play_full;
 
 struct ScopedCanberraFile {
-  explicit ScopedCanberraFile(nsIFile *file) : mFile(file){};
+  explicit ScopedCanberraFile(nsIFile* file) : mFile(file){};
 
   ~ScopedCanberraFile() {
     if (mFile) {
@@ -74,18 +74,18 @@ struct ScopedCanberraFile {
   }
 
   void forget() { mozilla::Unused << mFile.forget(); }
-  nsIFile *operator->() { return mFile; }
-  operator nsIFile *() { return mFile; }
+  nsIFile* operator->() { return mFile; }
+  operator nsIFile*() { return mFile; }
 
   nsCOMPtr<nsIFile> mFile;
 };
 
-static ca_context *ca_context_get_default() {
+static ca_context* ca_context_get_default() {
   // This allows us to avoid race conditions with freeing the context by handing
   // that responsibility to Glib, and still use one context at a time
   static GStaticPrivate ctx_static_private = G_STATIC_PRIVATE_INIT;
 
-  ca_context *ctx = (ca_context *)g_static_private_get(&ctx_static_private);
+  ca_context* ctx = (ca_context*)g_static_private_get(&ctx_static_private);
 
   if (ctx) {
     return ctx;
@@ -99,10 +99,10 @@ static ca_context *ca_context_get_default() {
   g_static_private_set(&ctx_static_private, ctx,
                        (GDestroyNotify)ca_context_destroy);
 
-  GtkSettings *settings = gtk_settings_get_default();
+  GtkSettings* settings = gtk_settings_get_default();
   if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
                                    "gtk-sound-theme-name")) {
-    gchar *sound_theme_name = nullptr;
+    gchar* sound_theme_name = nullptr;
     g_object_get(settings, "gtk-sound-theme-name", &sound_theme_name, nullptr);
 
     if (sound_theme_name) {
@@ -131,9 +131,9 @@ static ca_context *ca_context_get_default() {
   return ctx;
 }
 
-static void ca_finish_cb(ca_context *c, uint32_t id, int error_code,
-                         void *userdata) {
-  nsIFile *file = reinterpret_cast<nsIFile *>(userdata);
+static void ca_finish_cb(ca_context* c, uint32_t id, int error_code,
+                         void* userdata) {
+  nsIFile* file = reinterpret_cast<nsIFile*>(userdata);
   if (file) {
     file->Remove(false);
     NS_RELEASE(file);
@@ -217,9 +217,9 @@ already_AddRefed<nsISound> nsSound::GetInstance() {
   return service.forget();
 }
 
-NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
-                                        nsISupports *context, nsresult aStatus,
-                                        uint32_t dataLen, const uint8_t *data) {
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader* aLoader,
+                                        nsISupports* context, nsresult aStatus,
+                                        uint32_t dataLen, const uint8_t* data) {
   // print a load error on bad status, and return
   if (NS_FAILED(aStatus)) {
 #ifdef DEBUG
@@ -276,12 +276,12 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     data += amount;
   }
 
-  ca_context *ctx = ca_context_get_default();
+  ca_context* ctx = ca_context_get_default();
   if (!ctx) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  ca_proplist *p;
+  ca_proplist* p;
   ca_proplist_create(&p);
   if (!p) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -308,7 +308,7 @@ NS_IMETHODIMP nsSound::Beep() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSound::Play(nsIURL *aURL) {
+NS_IMETHODIMP nsSound::Play(nsIURL* aURL) {
   if (!mInited) Init();
 
   if (!libcanberra) return NS_ERROR_NOT_AVAILABLE;
@@ -316,7 +316,7 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL) {
   bool isFile;
   nsresult rv = aURL->SchemeIs("file", &isFile);
   if (NS_SUCCEEDED(rv) && isFile) {
-    ca_context *ctx = ca_context_get_default();
+    ca_context* ctx = ca_context_get_default();
     if (!ctx) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL) {
     if (NS_FAILED(rv)) {
       return rv;
     }
-    gchar *path = g_filename_from_uri(spec.get(), nullptr, nullptr);
+    gchar* path = g_filename_from_uri(spec.get(), nullptr, nullptr);
     if (!path) {
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
@@ -351,7 +351,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId) {
   if (!libcanberra) return NS_OK;
 
   // Do we even want alert sounds?
-  GtkSettings *settings = gtk_settings_get_default();
+  GtkSettings* settings = gtk_settings_get_default();
 
   if (g_object_class_find_property(G_OBJECT_GET_CLASS(settings),
                                    "gtk-enable-event-sounds")) {
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId) {
     }
   }
 
-  ca_context *ctx = ca_context_get_default();
+  ca_context* ctx = ca_context_get_default();
   if (!ctx) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

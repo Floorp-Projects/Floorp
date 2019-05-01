@@ -21,7 +21,7 @@
 #include "nsCommandLine.h"
 #include "nsIDocShell.h"
 
-HWND hwndForDOMWindow(mozIDOMWindowProxy *window) {
+HWND hwndForDOMWindow(mozIDOMWindowProxy* window) {
   if (!window) {
     return 0;
   }
@@ -39,7 +39,7 @@ HWND hwndForDOMWindow(mozIDOMWindowProxy *window) {
   return (HWND)(ppWidget->GetNativeData(NS_NATIVE_WIDGET));
 }
 
-static nsresult GetMostRecentWindow(mozIDOMWindowProxy **aWindow) {
+static nsresult GetMostRecentWindow(mozIDOMWindowProxy** aWindow) {
   nsresult rv;
   nsCOMPtr<nsIWindowMediator> med(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
@@ -50,17 +50,17 @@ static nsresult GetMostRecentWindow(mozIDOMWindowProxy **aWindow) {
   return NS_ERROR_FAILURE;
 }
 
-void HandleCommandLine(const char *aCmdLineString, nsIFile *aWorkingDir,
+void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir,
                        uint32_t aState) {
   nsresult rv;
 
   int justCounting = 1;
-  char **argv = 0;
+  char** argv = 0;
   // Flags, etc.
   int init = 1;
   int between, quoted, bSlashCount;
   int argc;
-  const char *p;
+  const char* p;
   nsAutoCString arg;
 
   nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
@@ -176,7 +176,7 @@ void HandleCommandLine(const char *aCmdLineString, nsIFile *aWorkingDir,
       // If on first pass, go on to second.
       if (justCounting) {
         // Allocate argv array.
-        argv = new char *[argc];
+        argv = new char*[argc];
 
         // Start second pass
         justCounting = 0;
@@ -207,11 +207,11 @@ void HandleCommandLine(const char *aCmdLineString, nsIFile *aWorkingDir,
 LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
   if (msg == WM_COPYDATA) {
     // This is an incoming request.
-    COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lp;
+    COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
     nsCOMPtr<nsIFile> workingDir;
 
     if (1 >= cds->dwData) {
-      char *wdpath = (char *)cds->lpData;
+      char* wdpath = (char*)cds->lpData;
       // skip the command line, and get the working dir of the
       // other process, which is after the first null char
       while (*wdpath) ++wdpath;
@@ -221,7 +221,7 @@ LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
       NS_NewLocalFile(NS_ConvertUTF8toUTF16(wdpath), false,
                       getter_AddRefs(workingDir));
     }
-    HandleCommandLine((char *)cds->lpData, workingDir,
+    HandleCommandLine((char*)cds->lpData, workingDir,
                       nsICommandLine::STATE_REMOTE_AUTO);
 
     // Get current window and return its window handle.
@@ -232,8 +232,8 @@ LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
   return DefWindowProc(msgWindow, msg, wp, lp);
 }
 
-nsresult nsWinRemoteServer::Startup(const char *aAppName,
-                                    const char *aProfileName) {
+nsresult nsWinRemoteServer::Startup(const char* aAppName,
+                                    const char* aProfileName) {
   nsString className;
   BuildClassName(aAppName, aProfileName, className);
 

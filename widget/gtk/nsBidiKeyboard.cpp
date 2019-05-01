@@ -21,10 +21,10 @@ nsBidiKeyboard::Reset() {
   // simply assume that we don't have bidi keyboards.
   mHaveBidiKeyboards = false;
 
-  GdkDisplay *display = gdk_display_get_default();
+  GdkDisplay* display = gdk_display_get_default();
   if (!display) return NS_OK;
 
-  GdkKeymap *keymap = gdk_keymap_get_for_display(display);
+  GdkKeymap* keymap = gdk_keymap_get_for_display(display);
   mHaveBidiKeyboards = keymap && gdk_keymap_have_bidi_layouts(keymap);
   return NS_OK;
 }
@@ -32,7 +32,7 @@ nsBidiKeyboard::Reset() {
 nsBidiKeyboard::~nsBidiKeyboard() {}
 
 NS_IMETHODIMP
-nsBidiKeyboard::IsLangRTL(bool *aIsRTL) {
+nsBidiKeyboard::IsLangRTL(bool* aIsRTL) {
   if (!mHaveBidiKeyboards) return NS_ERROR_FAILURE;
 
   *aIsRTL = (gdk_keymap_get_direction(gdk_keymap_get_default()) ==
@@ -41,7 +41,7 @@ nsBidiKeyboard::IsLangRTL(bool *aIsRTL) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool *aResult) {
+NS_IMETHODIMP nsBidiKeyboard::GetHaveBidiKeyboards(bool* aResult) {
   // not implemented yet
   return NS_ERROR_NOT_IMPLEMENTED;
 }

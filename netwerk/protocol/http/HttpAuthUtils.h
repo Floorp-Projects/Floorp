@@ -24,7 +24,7 @@ namespace auth {
  *
  * Will return true if the URI matches any of the patterns, or false otherwise.
  */
-bool URIMatchesPrefPattern(nsIURI *uri, const char *pref);
+bool URIMatchesPrefPattern(nsIURI* uri, const char* pref);
 
 }  // namespace auth
 }  // namespace net

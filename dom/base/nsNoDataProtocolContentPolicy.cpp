@@ -23,10 +23,10 @@
 NS_IMPL_ISUPPORTS(nsNoDataProtocolContentPolicy, nsIContentPolicy)
 
 NS_IMETHODIMP
-nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
-                                          nsILoadInfo *aLoadInfo,
-                                          const nsACString &aMimeGuess,
-                                          int16_t *aDecision) {
+nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI* aContentLocation,
+                                          nsILoadInfo* aLoadInfo,
+                                          const nsACString& aMimeGuess,
+                                          int16_t* aDecision) {
   uint32_t contentType = aLoadInfo->GetExternalContentPolicyType();
 
   MOZ_ASSERT(contentType == nsContentUtils::InternalContentPolicyTypeToExternal(
@@ -67,9 +67,9 @@ nsNoDataProtocolContentPolicy::ShouldLoad(nsIURI *aContentLocation,
 }
 
 NS_IMETHODIMP
-nsNoDataProtocolContentPolicy::ShouldProcess(nsIURI *aContentLocation,
-                                             nsILoadInfo *aLoadInfo,
-                                             const nsACString &aMimeGuess,
-                                             int16_t *aDecision) {
+nsNoDataProtocolContentPolicy::ShouldProcess(nsIURI* aContentLocation,
+                                             nsILoadInfo* aLoadInfo,
+                                             const nsACString& aMimeGuess,
+                                             int16_t* aDecision) {
   return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }

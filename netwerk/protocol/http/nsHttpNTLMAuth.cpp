@@ -49,7 +49,7 @@ static const char kSSOinPBmode[] = "network.auth.private-browsing-sso";
 
 StaticRefPtr<nsHttpNTLMAuth> nsHttpNTLMAuth::gSingleton;
 
-static bool IsNonFqdn(nsIURI *uri) {
+static bool IsNonFqdn(nsIURI* uri) {
   nsAutoCString host;
   PRNetAddr addr;
 
@@ -73,7 +73,7 @@ static bool ForceGenericNTLM() {
 }
 
 // Check to see if we should use default credentials for this host or proxy.
-static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
+static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel* channel,
                                      bool isProxyAuth) {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs) {
@@ -153,11 +153,11 @@ already_AddRefed<nsIHttpAuthenticator> nsHttpNTLMAuth::GetOrCreate() {
 NS_IMPL_ISUPPORTS(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
-                                  const char *challenge, bool isProxyAuth,
-                                  nsISupports **sessionState,
-                                  nsISupports **continuationState,
-                                  bool *identityInvalid) {
+nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel* channel,
+                                  const char* challenge, bool isProxyAuth,
+                                  nsISupports** sessionState,
+                                  nsISupports** continuationState,
+                                  bool* identityInvalid) {
   LOG(("nsHttpNTLMAuth::ChallengeReceived [ss=%p cs=%p]\n", *sessionState,
        *continuationState));
 
@@ -248,22 +248,22 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 
 NS_IMETHODIMP
 nsHttpNTLMAuth::GenerateCredentialsAsync(
-    nsIHttpAuthenticableChannel *authChannel,
-    nsIHttpAuthenticatorCallback *aCallback, const char *challenge,
-    bool isProxyAuth, const char16_t *domain, const char16_t *username,
-    const char16_t *password, nsISupports *sessionState,
-    nsISupports *continuationState, nsICancelable **aCancellable) {
+    nsIHttpAuthenticableChannel* authChannel,
+    nsIHttpAuthenticatorCallback* aCallback, const char* challenge,
+    bool isProxyAuth, const char16_t* domain, const char16_t* username,
+    const char16_t* password, nsISupports* sessionState,
+    nsISupports* continuationState, nsICancelable** aCancellable) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
-                                    const char *challenge, bool isProxyAuth,
-                                    const char16_t *domain,
-                                    const char16_t *user, const char16_t *pass,
-                                    nsISupports **sessionState,
-                                    nsISupports **continuationState,
-                                    uint32_t *aFlags, char **creds)
+nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel* authChannel,
+                                    const char* challenge, bool isProxyAuth,
+                                    const char16_t* domain,
+                                    const char16_t* user, const char16_t* pass,
+                                    nsISupports** sessionState,
+                                    nsISupports** continuationState,
+                                    uint32_t* aFlags, char** creds)
 
 {
   LOG(("nsHttpNTLMAuth::GenerateCredentials\n"));
@@ -332,7 +332,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
       if (NS_FAILED(rv)) return rv;
 
       uint32_t length;
-      uint8_t *certArray;
+      uint8_t* certArray;
       rv = cert->GetRawDER(&length, &certArray);
       if (NS_FAILED(rv)) return rv;
 
@@ -361,7 +361,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     while (challenge[len - 1] == '=') len--;
 
     // decode into the input secbuffer
-    rv = Base64Decode(challenge, len, (char **)&inBuf, &inBufLen);
+    rv = Base64Decode(challenge, len, (char**)&inBuf, &inBufLen);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -377,9 +377,9 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
     if (!credsLen.isValid()) {
       rv = NS_ERROR_FAILURE;
     } else {
-      *creds = (char *)moz_xmalloc(credsLen.value());
+      *creds = (char*)moz_xmalloc(credsLen.value());
       memcpy(*creds, "NTLM ", 5);
-      PL_Base64Encode((char *)outBuf, outBufLen, *creds + 5);
+      PL_Base64Encode((char*)outBuf, outBufLen, *creds + 5);
       (*creds)[credsLen.value() - 1] = '\0';  // null terminate
     }
 
@@ -393,7 +393,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GetAuthFlags(uint32_t *flags) {
+nsHttpNTLMAuth::GetAuthFlags(uint32_t* flags) {
   *flags = CONNECTION_BASED | IDENTITY_INCLUDES_DOMAIN | IDENTITY_ENCRYPTED;
   return NS_OK;
 }

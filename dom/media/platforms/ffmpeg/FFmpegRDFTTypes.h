@@ -20,9 +20,9 @@ enum RDFTransformType {
 
 extern "C" {
 
-typedef RDFTContext *(*AvRdftInitFn)(int nbits, enum RDFTransformType trans);
-typedef void (*AvRdftCalcFn)(RDFTContext *s, FFTSample *data);
-typedef void (*AvRdftEndFn)(RDFTContext *s);
+typedef RDFTContext* (*AvRdftInitFn)(int nbits, enum RDFTransformType trans);
+typedef void (*AvRdftCalcFn)(RDFTContext* s, FFTSample* data);
+typedef void (*AvRdftEndFn)(RDFTContext* s);
 }
 
 struct FFmpegRDFTFuncs {

@@ -34,12 +34,12 @@ void RemoteSandboxBroker::Shutdown() {
       }));
 }
 
-bool RemoteSandboxBroker::LaunchApp(const wchar_t *aPath,
-                                    const wchar_t *aArguments,
-                                    base::EnvironmentMap &aEnvironment,
+bool RemoteSandboxBroker::LaunchApp(const wchar_t* aPath,
+                                    const wchar_t* aArguments,
+                                    base::EnvironmentMap& aEnvironment,
                                     GeckoProcessType aProcessType,
                                     const bool aEnableLogging,
-                                    void **aProcessHandle) {
+                                    void** aProcessHandle) {
   // Note: we expect to be called on the IPC launch thread from
   // GeckoChildProcesHost while it's launching a child process. We can't
   // run a synchronous launch here as that blocks the calling thread while
@@ -56,7 +56,7 @@ bool RemoteSandboxBroker::LaunchApp(const wchar_t *aPath,
   mParameters.path() = nsDependentString(aPath);
   mParameters.args() = nsDependentString(aArguments);
 
-  auto toNsString = [](const std::wstring &s) {
+  auto toNsString = [](const std::wstring& s) {
     return nsDependentString(s.c_str());
   };
   for (auto itr : aEnvironment) {
@@ -106,7 +106,7 @@ bool RemoteSandboxBroker::LaunchApp(const wchar_t *aPath,
     return false;
   }
 
-  *aProcessHandle = (void **)(ourChildHandle);
+  *aProcessHandle = (void**)(ourChildHandle);
 
   base::ProcessHandle process = *aProcessHandle;
   SandboxBroker::AddTargetPeer(process);
@@ -119,7 +119,7 @@ bool RemoteSandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel) {
   return true;
 }
 
-bool RemoteSandboxBroker::AllowReadFile(wchar_t const *aFile) {
+bool RemoteSandboxBroker::AllowReadFile(wchar_t const* aFile) {
   mParameters.allowedReadFiles().AppendElement(nsDependentString(aFile));
   return true;
 }
@@ -150,7 +150,7 @@ bool RemoteSandboxBroker::SetSecurityLevelForPluginProcess(
       "RemoteSandboxBroker::SetSecurityLevelForPluginProcess not Implemented");
 }
 
-AbstractSandboxBroker *CreateRemoteSandboxBroker() {
+AbstractSandboxBroker* CreateRemoteSandboxBroker() {
   return new RemoteSandboxBroker();
 }
 

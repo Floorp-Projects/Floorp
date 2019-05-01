@@ -14,7 +14,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 /* static */
-nsresult FontTableURIProtocolHandler::GenerateURIString(nsACString &aUri) {
+nsresult FontTableURIProtocolHandler::GenerateURIString(nsACString& aUri) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);
@@ -42,46 +42,46 @@ NS_IMPL_ISUPPORTS(FontTableURIProtocolHandler, nsIProtocolHandler,
                   nsISupportsWeakReference)
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::GetDefaultPort(int32_t *result) {
+FontTableURIProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = -1;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::GetProtocolFlags(uint32_t *result) {
+FontTableURIProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_SUBSUMERS |
             URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::GetFlagsForURI(nsIURI *aURI, uint32_t *aResult) {
+FontTableURIProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
   return FontTableURIProtocolHandler::GetProtocolFlags(aResult);
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                        nsIChannel **result) {
+FontTableURIProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                        nsIChannel** result) {
   return NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                       bool *_retval) {
+FontTableURIProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                       bool* _retval) {
   *_retval = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::GetScheme(nsACString &result) {
+FontTableURIProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral(FONTTABLEURI_SCHEME);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FontTableURIProtocolHandler::NewURI(const nsACString &aSpec,
-                                    const char *aCharset, nsIURI *aBaseURI,
-                                    nsIURI **aResult) {
+FontTableURIProtocolHandler::NewURI(const nsACString& aSpec,
+                                    const char* aCharset, nsIURI* aBaseURI,
+                                    nsIURI** aResult) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 

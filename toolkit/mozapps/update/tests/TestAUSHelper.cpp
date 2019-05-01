@@ -24,8 +24,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-static void WriteMsg(const NS_tchar *path, const char *status) {
-  FILE *outFP = NS_tfopen(path, NS_T("wb"));
+static void WriteMsg(const NS_tchar* path, const char* status) {
+  FILE* outFP = NS_tfopen(path, NS_T("wb"));
   if (!outFP) {
     return;
   }
@@ -35,8 +35,8 @@ static void WriteMsg(const NS_tchar *path, const char *status) {
   outFP = nullptr;
 }
 
-static bool CheckMsg(const NS_tchar *path, const char *expected) {
-  FILE *inFP = NS_tfopen(path, NS_T("rb"));
+static bool CheckMsg(const NS_tchar* path, const char* expected) {
+  FILE* inFP = NS_tfopen(path, NS_T("rb"));
   if (!inFP) {
     return false;
   }
@@ -48,7 +48,7 @@ static bool CheckMsg(const NS_tchar *path, const char *expected) {
     return false;
   }
 
-  char *mbuf = (char *)malloc(ms.st_size + 1);
+  char* mbuf = (char*)malloc(ms.st_size + 1);
   if (!mbuf) {
     fclose(inFP);
     inFP = nullptr;
@@ -56,7 +56,7 @@ static bool CheckMsg(const NS_tchar *path, const char *expected) {
   }
 
   size_t r = ms.st_size;
-  char *rb = mbuf;
+  char* rb = mbuf;
   size_t c = fread(rb, sizeof(char), 50, inFP);
   r -= c;
   if (c == 0 && r) {
@@ -75,7 +75,7 @@ static bool CheckMsg(const NS_tchar *path, const char *expected) {
   return isMatch;
 }
 
-int NS_main(int argc, NS_tchar **argv) {
+int NS_main(int argc, NS_tchar** argv) {
   if (argc == 2) {
     if (!NS_tstrcmp(argv[1], NS_T("post-update-async")) ||
         !NS_tstrcmp(argv[1], NS_T("post-update-sync"))) {
@@ -206,7 +206,7 @@ int NS_main(int argc, NS_tchar **argv) {
                        argv[4])) {
       return 1;
     }
-    FILE *file = NS_tfopen(path, NS_T("w"));
+    FILE* file = NS_tfopen(path, NS_T("w"));
     if (file) {
       fputs(NS_T("test"), file);
       fclose(file);
@@ -333,7 +333,7 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[1], NS_T("launch-service"))) {
 #ifdef XP_WIN
     DWORD ret =
-        LaunchServiceSoftwareUpdateCommand(argc - 2, (LPCWSTR *)argv + 2);
+        LaunchServiceSoftwareUpdateCommand(argc - 2, (LPCWSTR*)argv + 2);
     if (ret != ERROR_SUCCESS) {
       // 192 is used to avoid reusing a possible return value from the call to
       // WaitForServiceStop
@@ -371,7 +371,7 @@ int NS_main(int argc, NS_tchar **argv) {
   if (!NS_tstrcmp(argv[4], NS_T("-s"))) {
     // Note: glibc's getcwd() allocates the buffer dynamically using malloc(3)
     // if buf (the 1st param) is NULL so free cwd when it is no longer needed.
-    NS_tchar *cwd = NS_tgetcwd(nullptr, 0);
+    NS_tchar* cwd = NS_tgetcwd(nullptr, 0);
     NS_tchar inFilePath[MAXPATHLEN];
     if (!NS_tvsnprintf(inFilePath, sizeof(inFilePath) / sizeof(inFilePath[0]),
                        NS_T("%s/%s"), cwd, argv[2])) {
@@ -426,7 +426,7 @@ int NS_main(int argc, NS_tchar **argv) {
       return 1;
     }
 
-    FILE *logFP = NS_tfopen(logFilePath, NS_T("wb"));
+    FILE* logFP = NS_tfopen(logFilePath, NS_T("wb"));
     if (!logFP) {
       return 1;
     }

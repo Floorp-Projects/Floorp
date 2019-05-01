@@ -43,17 +43,17 @@ class SVGLength {
     NS_ASSERTION(IsValid(), "Constructed an invalid length");
   }
 
-  bool operator==(const SVGLength &rhs) const {
+  bool operator==(const SVGLength& rhs) const {
     return mValue == rhs.mValue && mUnit == rhs.mUnit;
   }
 
-  void GetValueAsString(nsAString &aValue) const;
+  void GetValueAsString(nsAString& aValue) const;
 
   /**
    * This method returns true, unless there was a parse failure, in which
    * case it returns false (and the length is left unchanged).
    */
-  bool SetValueFromString(const nsAString &aString);
+  bool SetValueFromString(const nsAString& aString);
 
   /**
    * This will usually return a valid, finite number. There is one exception
@@ -87,7 +87,7 @@ class SVGLength {
    * If it's not possible to convert this length's value to user units, then
    * this method will return numeric_limits<float>::quiet_NaN().
    */
-  float GetValueInUserUnits(const dom::SVGElement *aElement,
+  float GetValueInUserUnits(const dom::SVGElement* aElement,
                             uint8_t aAxis) const {
     return mValue * GetUserUnitsPerUnit(aElement, aAxis);
   }
@@ -98,7 +98,7 @@ class SVGLength {
    * This method returns numeric_limits<float>::quiet_NaN() if it is not
    * possible to convert the value to the specified unit.
    */
-  float GetValueInSpecifiedUnit(uint8_t aUnit, const dom::SVGElement *aElement,
+  float GetValueInSpecifiedUnit(uint8_t aUnit, const dom::SVGElement* aElement,
                                 uint8_t aAxis) const;
 
   bool IsPercentage() const {
@@ -117,7 +117,7 @@ class SVGLength {
    * factor between the length's current unit and user units is undefined (see
    * the comments for GetUserUnitsPerInch and GetUserUnitsPerPercent).
    */
-  float GetUserUnitsPerUnit(const dom::SVGElement *aElement,
+  float GetUserUnitsPerUnit(const dom::SVGElement* aElement,
                             uint8_t aAxis) const;
 
  private:
@@ -140,7 +140,7 @@ class SVGLength {
    * This function returns a non-negative value if the conversion factor is
    * defined, otherwise it returns numeric_limits<float>::quiet_NaN().
    */
-  static float GetUserUnitsPerPercent(const dom::SVGElement *aElement,
+  static float GetUserUnitsPerPercent(const dom::SVGElement* aElement,
                                       uint8_t aAxis);
 
   float mValue;

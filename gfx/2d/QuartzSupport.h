@@ -49,34 +49,34 @@ class nsCARenderer : public mozilla::RefCounted<nsCARenderer> {
   // smallest fully addressable part of a display.  But in HiDPI modes each
   // "display pixel" corresponds to more than one device pixel.  Multiply
   // display pixels by aContentsScaleFactor to get device pixels.
-  nsresult SetupRenderer(void *aCALayer, int aWidth, int aHeight,
+  nsresult SetupRenderer(void* aCALayer, int aWidth, int aHeight,
                          double aContentsScaleFactor,
                          AllowOfflineRendererEnum aAllowOfflineRenderer);
   // aWidth and aHeight are in "display pixels".  Multiply by
   // aContentsScaleFactor to get device pixels.
   nsresult Render(int aWidth, int aHeight, double aContentsScaleFactor,
-                  CGImageRef *aOutCAImage);
+                  CGImageRef* aOutCAImage);
   bool isInit() { return mCARenderer != nullptr; }
   /*
    * Render the CALayer to an IOSurface. If no IOSurface
    * is attached then an internal pixel buffer will be
    * used.
    */
-  void AttachIOSurface(MacIOSurface *aSurface);
+  void AttachIOSurface(MacIOSurface* aSurface);
   IOSurfaceID GetIOSurfaceID();
   // aX, aY, aWidth and aHeight are in "display pixels".  Multiply by
   // surf->GetContentsScaleFactor() to get device pixels.
   static nsresult DrawSurfaceToCGContext(CGContextRef aContext,
-                                         MacIOSurface *surf,
+                                         MacIOSurface* surf,
                                          CGColorSpaceRef aColorSpace, int aX,
                                          int aY, size_t aWidth, size_t aHeight);
 
   // Remove & Add the layer without destroying
   // the renderer for fast back buffer swapping.
   void DetachCALayer();
-  void AttachCALayer(void *aCALayer);
+  void AttachCALayer(void* aCALayer);
 #  ifdef DEBUG
-  static void SaveToDisk(MacIOSurface *surf);
+  static void SaveToDisk(MacIOSurface* surf);
 #  endif
  private:
   // aWidth and aHeight are in "display pixels".  Multiply by
@@ -87,12 +87,12 @@ class nsCARenderer : public mozilla::RefCounted<nsCARenderer> {
   void SetViewport(int aWidth, int aHeight);
   void Destroy();
 
-  void *mCARenderer;
-  void *mWrapperCALayer;
+  void* mCARenderer;
+  void* mWrapperCALayer;
   GLuint mFBOTexture;
-  _CGLContextObject *mOpenGLContext;
+  _CGLContextObject* mOpenGLContext;
   CGImageRef mCGImage;
-  void *mCGData;
+  void* mCGData;
   RefPtr<MacIOSurface> mIOSurface;
   uint32_t mFBO;
   uint32_t mIOTexture;

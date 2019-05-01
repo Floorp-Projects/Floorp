@@ -20,7 +20,7 @@
  */
 extern "C" JNIEXPORT jbyteArray MOZ_JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
-    JNIEnv *env, jclass jc, jbyteArray jpassword, jbyteArray jsalt, jint c,
+    JNIEnv* env, jclass jc, jbyteArray jpassword, jbyteArray jsalt, jint c,
     jint dkLen) {
   if (dkLen < 0) {
     env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
@@ -28,14 +28,14 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
     return nullptr;
   }
 
-  jbyte *password = env->GetByteArrayElements(jpassword, nullptr);
+  jbyte* password = env->GetByteArrayElements(jpassword, nullptr);
   size_t passwordLen = env->GetArrayLength(jpassword);
 
-  jbyte *salt = env->GetByteArrayElements(jsalt, nullptr);
+  jbyte* salt = env->GetByteArrayElements(jsalt, nullptr);
   size_t saltLen = env->GetArrayLength(jsalt);
 
   uint8_t hashResult[dkLen];
-  PBKDF2_SHA256((uint8_t *)password, passwordLen, (uint8_t *)salt, saltLen,
+  PBKDF2_SHA256((uint8_t*)password, passwordLen, (uint8_t*)salt, saltLen,
                 (uint64_t)c, hashResult, (size_t)dkLen);
 
   env->ReleaseByteArrayElements(jpassword, password, JNI_ABORT);
@@ -45,7 +45,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256(
   if (out == nullptr) {
     return nullptr;
   }
-  env->SetByteArrayRegion(out, 0, dkLen, (jbyte *)hashResult);
+  env->SetByteArrayRegion(out, 0, dkLen, (jbyte*)hashResult);
 
   return out;
 }
@@ -57,13 +57,13 @@ using namespace mozilla;
  */
 extern "C" JNIEXPORT jbyteArray MOZ_JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(
-    JNIEnv *env, jclass jc, jbyteArray jstr) {
-  jbyte *str = env->GetByteArrayElements(jstr, nullptr);
+    JNIEnv* env, jclass jc, jbyteArray jstr) {
+  jbyte* str = env->GetByteArrayElements(jstr, nullptr);
   size_t strLen = env->GetArrayLength(jstr);
 
   SHA1Sum sha1;
   SHA1Sum::Hash hashResult;
-  sha1.update((void *)str, (uint32_t)strLen);
+  sha1.update((void*)str, (uint32_t)strLen);
   sha1.finish(hashResult);
 
   env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
@@ -72,7 +72,7 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(
   if (out == nullptr) {
     return nullptr;
   }
-  env->SetByteArrayRegion(out, 0, SHA1Sum::kHashSize, (jbyte *)hashResult);
+  env->SetByteArrayRegion(out, 0, SHA1Sum::kHashSize, (jbyte*)hashResult);
 
   return out;
 }
@@ -82,17 +82,16 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1(
  */
 extern "C" JNIEXPORT jbyteArray MOZ_JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(
-    JNIEnv *env, jclass jc) {
+    JNIEnv* env, jclass jc) {
   jbyteArray out = env->NewByteArray(sizeof(SHA256_CTX));
   if (nullptr == out) {
     return nullptr;
   }
 
-  SHA256_CTX *shaContext =
-      (SHA256_CTX *)env->GetByteArrayElements(out, nullptr);
+  SHA256_CTX* shaContext = (SHA256_CTX*)env->GetByteArrayElements(out, nullptr);
   SHA256_Init(shaContext);
 
-  env->ReleaseByteArrayElements(out, (jbyte *)shaContext, 0);
+  env->ReleaseByteArrayElements(out, (jbyte*)shaContext, 0);
 
   return out;
 }
@@ -102,16 +101,16 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init(
  */
 extern "C" JNIEXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update(
-    JNIEnv *env, jclass jc, jbyteArray jctx, jbyteArray jstr, jint len) {
-  jbyte *str = env->GetByteArrayElements(jstr, nullptr);
+    JNIEnv* env, jclass jc, jbyteArray jctx, jbyteArray jstr, jint len) {
+  jbyte* str = env->GetByteArrayElements(jstr, nullptr);
 
-  SHA256_CTX *shaContext =
-      (SHA256_CTX *)env->GetByteArrayElements(jctx, nullptr);
+  SHA256_CTX* shaContext =
+      (SHA256_CTX*)env->GetByteArrayElements(jctx, nullptr);
 
-  SHA256_Update(shaContext, (void *)str, (size_t)len);
+  SHA256_Update(shaContext, (void*)str, (size_t)len);
 
   env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
-  env->ReleaseByteArrayElements(jctx, (jbyte *)shaContext, 0);
+  env->ReleaseByteArrayElements(jctx, (jbyte*)shaContext, 0);
 
   return;
 }
@@ -121,18 +120,18 @@ Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update(
  */
 extern "C" JNIEXPORT jbyteArray MOZ_JNICALL
 Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256finalize(
-    JNIEnv *env, jclass jc, jbyteArray jctx) {
-  SHA256_CTX *shaContext =
-      (SHA256_CTX *)env->GetByteArrayElements(jctx, nullptr);
+    JNIEnv* env, jclass jc, jbyteArray jctx) {
+  SHA256_CTX* shaContext =
+      (SHA256_CTX*)env->GetByteArrayElements(jctx, nullptr);
 
-  unsigned char *digest = new unsigned char[32];
+  unsigned char* digest = new unsigned char[32];
   SHA256_Final(digest, shaContext);
 
-  env->ReleaseByteArrayElements(jctx, (jbyte *)shaContext, JNI_ABORT);
+  env->ReleaseByteArrayElements(jctx, (jbyte*)shaContext, JNI_ABORT);
 
   jbyteArray out = env->NewByteArray(32);
   if (nullptr != out) {
-    env->SetByteArrayRegion(out, 0, 32, (jbyte *)digest);
+    env->SetByteArrayRegion(out, 0, 32, (jbyte*)digest);
   }
 
   delete[] digest;

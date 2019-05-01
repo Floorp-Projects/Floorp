@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace layers {
 
-static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
+static gfx::Matrix4x4 GetRootTransform(Layer* aLayer) {
   gfx::Matrix4x4 layerTrans = aLayer->GetTransform();
   layerTrans.ProjectTo2D();
   if (aLayer->GetParent() != nullptr) {
@@ -23,10 +23,10 @@ static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
   return layerTrans;
 }
 
-void RenderTraceLayers(Layer *aLayer, const char *aColor,
+void RenderTraceLayers(Layer* aLayer, const char* aColor,
                        const gfx::Matrix4x4 aRootTransform) {
   int colorId = 0;
-  ForEachNode<ForwardIterator>(aLayer, [&colorId](Layer *layer) {
+  ForEachNode<ForwardIterator>(aLayer, [&colorId](Layer* layer) {
     gfx::Matrix4x4 trans = aRootTransform * layer->GetTransform();
     trans.ProjectTo2D();
     gfx::IntRect clipRect = layer->GetLocalVisibleRegion().GetBounds();
@@ -44,7 +44,7 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor,
   });
 }
 
-void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor,
+void RenderTraceInvalidateStart(Layer* aLayer, const char* aColor,
                                 const gfx::IntRect aRect) {
   gfx::Matrix4x4 trans = GetRootTransform(aLayer);
   gfx::Rect rect(aRect.x, aRect.y, aRect.width, aRect.height);
@@ -54,22 +54,22 @@ void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor,
                 (int)PR_IntervalNow(), aColor, (int)rect.x, (int)rect.y,
                 (int)rect.width, (int)rect.height);
 }
-void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {
+void RenderTraceInvalidateEnd(Layer* aLayer, const char* aColor) {
   // Clear with an empty rect
   RenderTraceInvalidateStart(aLayer, aColor, gfx::IntRect());
 }
 
-void renderTraceEventStart(const char *aComment, const char *aColor) {
+void renderTraceEventStart(const char* aComment, const char* aColor) {
   printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 10 10\n", aComment,
                 (int)PR_IntervalNow(), aColor);
 }
 
-void renderTraceEventEnd(const char *aComment, const char *aColor) {
+void renderTraceEventEnd(const char* aComment, const char* aColor) {
   printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 0 0\n", aComment,
                 (int)PR_IntervalNow(), aColor);
 }
 
-void renderTraceEventEnd(const char *aColor) {
+void renderTraceEventEnd(const char* aColor) {
   renderTraceEventEnd("", aColor);
 }
 

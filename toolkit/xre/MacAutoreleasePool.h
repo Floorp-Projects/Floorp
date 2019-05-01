@@ -20,10 +20,10 @@ class MacAutoreleasePool {
   ~MacAutoreleasePool();
 
  private:
-  NSAutoreleasePool *mPool;
+  NSAutoreleasePool* mPool;
 
-  MacAutoreleasePool(const MacAutoreleasePool &);
-  void operator=(const MacAutoreleasePool &);
+  MacAutoreleasePool(const MacAutoreleasePool&);
+  void operator=(const MacAutoreleasePool&);
 };
 
 }  // namespace mozilla

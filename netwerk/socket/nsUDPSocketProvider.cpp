@@ -11,15 +11,15 @@ using mozilla::OriginAttributes;
 NS_IMPL_ISUPPORTS(nsUDPSocketProvider, nsISocketProvider)
 
 NS_IMETHODIMP
-nsUDPSocketProvider::NewSocket(int32_t aFamily, const char *aHost,
-                               int32_t aPort, nsIProxyInfo *aProxy,
-                               const OriginAttributes &originAttributes,
+nsUDPSocketProvider::NewSocket(int32_t aFamily, const char* aHost,
+                               int32_t aPort, nsIProxyInfo* aProxy,
+                               const OriginAttributes& originAttributes,
                                uint32_t aFlags, uint32_t aTlsFlags,
-                               PRFileDesc **aFileDesc,
-                               nsISupports **aSecurityInfo) {
+                               PRFileDesc** aFileDesc,
+                               nsISupports** aSecurityInfo) {
   NS_ENSURE_ARG_POINTER(aFileDesc);
 
-  PRFileDesc *udpFD = PR_OpenUDPSocket(aFamily);
+  PRFileDesc* udpFD = PR_OpenUDPSocket(aFamily);
   if (!udpFD) return NS_ERROR_FAILURE;
 
   *aFileDesc = udpFD;
@@ -27,12 +27,12 @@ nsUDPSocketProvider::NewSocket(int32_t aFamily, const char *aHost,
 }
 
 NS_IMETHODIMP
-nsUDPSocketProvider::AddToSocket(int32_t aFamily, const char *aHost,
-                                 int32_t aPort, nsIProxyInfo *aProxy,
-                                 const OriginAttributes &originAttributes,
+nsUDPSocketProvider::AddToSocket(int32_t aFamily, const char* aHost,
+                                 int32_t aPort, nsIProxyInfo* aProxy,
+                                 const OriginAttributes& originAttributes,
                                  uint32_t aFlags, uint32_t aTlsFlags,
-                                 struct PRFileDesc *aFileDesc,
-                                 nsISupports **aSecurityInfo) {
+                                 struct PRFileDesc* aFileDesc,
+                                 nsISupports** aSecurityInfo) {
   // does not make sense to strap a UDP socket onto an existing socket
   MOZ_ASSERT_UNREACHABLE("Cannot layer UDP socket on an existing socket");
   return NS_ERROR_UNEXPECTED;

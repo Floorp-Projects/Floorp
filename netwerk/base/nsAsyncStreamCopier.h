@@ -25,8 +25,8 @@ class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
   // nsIAsyncStreamCopier2
   // We declare it by hand instead of NS_DECL_NSIASYNCSTREAMCOPIER2
   // as nsIAsyncStreamCopier2 duplicates methods of nsIAsyncStreamCopier
-  NS_IMETHOD Init(nsIInputStream *aSource, nsIOutputStream *aSink,
-                  nsIEventTarget *aTarget, uint32_t aChunkSize,
+  NS_IMETHOD Init(nsIInputStream* aSource, nsIOutputStream* aSink,
+                  nsIEventTarget* aTarget, uint32_t aChunkSize,
                   bool aCloseSource, bool aCloseSink) override;
 
   nsAsyncStreamCopier();
@@ -34,21 +34,21 @@ class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
   //-------------------------------------------------------------------------
   // these methods may be called on any thread
 
-  bool IsComplete(nsresult *status = nullptr);
+  bool IsComplete(nsresult* status = nullptr);
   void Complete(nsresult status);
 
  private:
   virtual ~nsAsyncStreamCopier();
 
-  nsresult InitInternal(nsIInputStream *source, nsIOutputStream *sink,
-                        nsIEventTarget *target, uint32_t chunkSize,
+  nsresult InitInternal(nsIInputStream* source, nsIOutputStream* sink,
+                        nsIEventTarget* target, uint32_t chunkSize,
                         bool closeSource, bool closeSink);
 
-  static void OnAsyncCopyComplete(void *, nsresult);
+  static void OnAsyncCopyComplete(void*, nsresult);
 
   void AsyncCopyInternal();
   nsresult ApplyBufferingPolicy();
-  nsIRequest *AsRequest();
+  nsIRequest* AsRequest();
 
   nsCOMPtr<nsIInputStream> mSource;
   nsCOMPtr<nsIOutputStream> mSink;

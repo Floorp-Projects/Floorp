@@ -37,7 +37,7 @@ using namespace mozilla;
 static_assert(DEFAULT_TIMEOUT_MS > DEFAULT_RESPONSE_TIMEOUT_MS,
               "General timeout must be greater than reponse timeout");
 
-static const char *gQuitApplicationMessage = "quit-application";
+static const char* gQuitApplicationMessage = "quit-application";
 
 static uint32_t sResponseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS;
 static uint32_t sTimeoutMs = DEFAULT_TIMEOUT_MS;
@@ -60,7 +60,7 @@ static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog(
 
 // Calls nsIURLFormatter::TrimSensitiveURLs to remove sensitive
 // info from the logging message.
-static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char *aFmt, ...) {
+static MOZ_FORMAT_PRINTF(1, 2) void TrimAndLog(const char* aFmt, ...) {
   nsString raw;
 
   va_list ap;
@@ -119,8 +119,8 @@ void nsUrlClassifierStreamUpdater::DownloadDone() {
 // nsIUrlClassifierStreamUpdater implementation
 
 nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
-    nsIURI *aUpdateUrl, const nsACString &aRequestPayload, bool aIsPostRequest,
-    const nsACString &aStreamTable) {
+    nsIURI* aUpdateUrl, const nsACString& aRequestPayload, bool aIsPostRequest,
+    const nsACString& aStreamTable) {
 #ifdef DEBUG
   LOG(("Fetching update %s from %s", aRequestPayload.Data(),
        aUpdateUrl->GetSpecOrDefault().get()));
@@ -233,8 +233,8 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
 }
 
 nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
-    const nsACString &aUpdateUrl, const nsACString &aRequestPayload,
-    bool aIsPostRequest, const nsACString &aStreamTable) {
+    const nsACString& aUpdateUrl, const nsACString& aRequestPayload,
+    bool aIsPostRequest, const nsACString& aStreamTable) {
   LOG(("(pre) Fetching update from %s\n",
        PromiseFlatCString(aUpdateUrl).get()));
 
@@ -257,11 +257,11 @@ nsresult nsUrlClassifierStreamUpdater::FetchUpdate(
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::DownloadUpdates(
-    const nsACString &aRequestTables, const nsACString &aRequestPayload,
-    bool aIsPostRequest, const nsACString &aUpdateUrl,
-    nsIUrlClassifierCallback *aSuccessCallback,
-    nsIUrlClassifierCallback *aUpdateErrorCallback,
-    nsIUrlClassifierCallback *aDownloadErrorCallback, bool *_retval) {
+    const nsACString& aRequestTables, const nsACString& aRequestPayload,
+    bool aIsPostRequest, const nsACString& aUpdateUrl,
+    nsIUrlClassifierCallback* aSuccessCallback,
+    nsIUrlClassifierCallback* aUpdateErrorCallback,
+    nsIUrlClassifierCallback* aDownloadErrorCallback, bool* _retval) {
   NS_ENSURE_ARG(aSuccessCallback);
   NS_ENSURE_ARG(aUpdateErrorCallback);
   NS_ENSURE_ARG(aDownloadErrorCallback);
@@ -270,7 +270,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Already updating, queueing update %s from %s", aRequestPayload.Data(),
          aUpdateUrl.Data()));
     *_retval = false;
-    UpdateRequest *request = mPendingRequests.AppendElement(fallible);
+    UpdateRequest* request = mPendingRequests.AppendElement(fallible);
     if (!request) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -308,7 +308,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Service busy, already updating, queuing update %s from %s",
          aRequestPayload.Data(), aUpdateUrl.Data()));
     *_retval = false;
-    UpdateRequest *request = mPendingRequests.AppendElement(fallible);
+    UpdateRequest* request = mPendingRequests.AppendElement(fallible);
     if (!request) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -329,7 +329,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     return rv;
   }
 
-  nsUrlClassifierUtils *urlUtil = nsUrlClassifierUtils::GetInstance();
+  nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
   if (NS_WARN_IF(!urlUtil)) {
     return NS_ERROR_FAILURE;
   }
@@ -357,11 +357,11 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 // nsIUrlClassifierUpdateObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
-                                                 const nsACString &aTable) {
+nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString& aUrl,
+                                                 const nsACString& aTable) {
   LOG(("Queuing requested update from %s\n", PromiseFlatCString(aUrl).get()));
 
-  PendingUpdate *update = mPendingUpdates.AppendElement(fallible);
+  PendingUpdate* update = mPendingUpdates.AppendElement(fallible);
   if (!update) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -390,7 +390,7 @@ nsresult nsUrlClassifierStreamUpdater::FetchNext() {
     return NS_OK;
   }
 
-  PendingUpdate &update = mPendingUpdates[0];
+  PendingUpdate& update = mPendingUpdates[0];
   LOG(("Fetching update url: %s\n", update.mUrl.get()));
   nsresult rv =
       FetchUpdate(update.mUrl, EmptyCString(),
@@ -432,11 +432,11 @@ nsresult nsUrlClassifierStreamUpdater::FetchNextRequest() {
 }
 
 void nsUrlClassifierStreamUpdater::BuildUpdateRequest(
-    const nsACString &aRequestTables, const nsACString &aRequestPayload,
-    bool aIsPostRequest, const nsACString &aUpdateUrl,
-    nsIUrlClassifierCallback *aSuccessCallback,
-    nsIUrlClassifierCallback *aUpdateErrorCallback,
-    nsIUrlClassifierCallback *aDownloadErrorCallback, UpdateRequest *aRequest) {
+    const nsACString& aRequestTables, const nsACString& aRequestPayload,
+    bool aIsPostRequest, const nsACString& aUpdateUrl,
+    nsIUrlClassifierCallback* aSuccessCallback,
+    nsIUrlClassifierCallback* aUpdateErrorCallback,
+    nsIUrlClassifierCallback* aDownloadErrorCallback, UpdateRequest* aRequest) {
   MOZ_ASSERT(aRequest);
 
   aRequest->mTables = aRequestTables;
@@ -543,7 +543,7 @@ nsUrlClassifierStreamUpdater::UpdateError(nsresult result) {
 }
 
 nsresult nsUrlClassifierStreamUpdater::AddRequestBody(
-    const nsACString &aRequestBody) {
+    const nsACString& aRequestBody) {
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> strStream =
       do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
@@ -572,7 +572,7 @@ nsresult nsUrlClassifierStreamUpdater::AddRequestBody(
 // nsIStreamListenerObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request) {
+nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest* request) {
   nsresult rv;
   bool downloadError = false;
   nsAutoCString strStatus;
@@ -666,8 +666,8 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
-                                              nsIInputStream *aIStream,
+nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest* request,
+                                              nsIInputStream* aIStream,
                                               uint64_t aSourceOffset,
                                               uint32_t aLength) {
   if (!mDBService) return NS_ERROR_NOT_INITIALIZED;
@@ -697,7 +697,7 @@ nsUrlClassifierStreamUpdater::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request,
+nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest* request,
                                             nsresult aStatus) {
   if (!mDBService) return NS_ERROR_NOT_INITIALIZED;
 
@@ -757,8 +757,8 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request,
 // nsIObserver implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
-                                      const char16_t *aData) {
+nsUrlClassifierStreamUpdater::Observe(nsISupports* aSubject, const char* aTopic,
+                                      const char16_t* aData) {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
     if (mIsUpdating && mChannel) {
       LOG(("Cancel download"));
@@ -793,15 +793,15 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
 // nsIInterfaceRequestor implementation
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::GetInterface(const nsIID &eventSinkIID,
-                                           void **_retval) {
+nsUrlClassifierStreamUpdater::GetInterface(const nsIID& eventSinkIID,
+                                           void** _retval) {
   return QueryInterface(eventSinkIID, _retval);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsITimerCallback implementation
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::Notify(nsITimer *timer) {
+nsUrlClassifierStreamUpdater::Notify(nsITimer* timer) {
   LOG(("nsUrlClassifierStreamUpdater::Notify [%p]", this));
 
   if (timer == mFetchNextRequestTimer) {
@@ -872,7 +872,7 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer *timer) {
 //// nsINamed
 
 NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::GetName(nsACString &aName) {
+nsUrlClassifierStreamUpdater::GetName(nsACString& aName) {
   aName.AssignLiteral("nsUrlClassifierStreamUpdater");
   return NS_OK;
 }

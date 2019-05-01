@@ -43,16 +43,16 @@ using namespace mozilla;
 // nsCoreUtils
 ////////////////////////////////////////////////////////////////////////////////
 
-bool nsCoreUtils::IsLabelWithControl(nsIContent *aContent) {
-  dom::HTMLLabelElement *label = dom::HTMLLabelElement::FromNode(aContent);
+bool nsCoreUtils::IsLabelWithControl(nsIContent* aContent) {
+  dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromNode(aContent);
   if (label && label->GetControl()) return true;
 
   return false;
 }
 
-bool nsCoreUtils::HasClickListener(nsIContent *aContent) {
+bool nsCoreUtils::HasClickListener(nsIContent* aContent) {
   NS_ENSURE_TRUE(aContent, false);
-  EventListenerManager *listenerManager =
+  EventListenerManager* listenerManager =
       aContent->GetExistingListenerManager();
 
   return listenerManager &&
@@ -61,13 +61,13 @@ bool nsCoreUtils::HasClickListener(nsIContent *aContent) {
           listenerManager->HasListenersFor(nsGkAtoms::onmouseup));
 }
 
-void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
-                                     nsTreeColumn *aColumn,
-                                     const nsAString &aPseudoElt) {
+void nsCoreUtils::DispatchClickEvent(XULTreeElement* aTree, int32_t aRowIndex,
+                                     nsTreeColumn* aColumn,
+                                     const nsAString& aPseudoElt) {
   RefPtr<dom::Element> tcElm = aTree->GetTreeBody();
   if (!tcElm) return;
 
-  Document *document = tcElm->GetUncomposedDoc();
+  Document* document = tcElm->GetUncomposedDoc();
   if (!document) return;
 
   RefPtr<PresShell> presShell = document->GetPresShell();
@@ -92,7 +92,7 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
 
   // Dispatch mouse events.
   AutoWeakFrame tcFrame = tcElm->GetPrimaryFrame();
-  nsIFrame *rootFrame = presShell->GetRootFrame();
+  nsIFrame* rootFrame = presShell->GetRootFrame();
 
   nsPoint offset;
   nsCOMPtr<nsIWidget> rootWidget =
@@ -114,9 +114,9 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
 }
 
 void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
-                                     int32_t aY, nsIContent *aContent,
-                                     nsIFrame *aFrame, PresShell *aPresShell,
-                                     nsIWidget *aRootWidget) {
+                                     int32_t aY, nsIContent* aContent,
+                                     nsIFrame* aFrame, PresShell* aPresShell,
+                                     nsIWidget* aRootWidget) {
   WidgetMouseEvent event(true, aMessage, aRootWidget, WidgetMouseEvent::eReal,
                          WidgetMouseEvent::eNormal);
 
@@ -132,10 +132,10 @@ void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
 }
 
 void nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX,
-                                     int32_t aY, nsIContent *aContent,
-                                     nsIFrame *aFrame, PresShell *aPresShell,
-                                     nsIWidget *aRootWidget) {
-  nsIDocShell *docShell = nullptr;
+                                     int32_t aY, nsIContent* aContent,
+                                     nsIFrame* aFrame, PresShell* aPresShell,
+                                     nsIWidget* aRootWidget) {
+  nsIDocShell* docShell = nullptr;
   if (aPresShell->GetDocument()) {
     docShell = aPresShell->GetDocument()->GetDocShell();
   }
@@ -156,7 +156,7 @@ void nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX,
   aPresShell->HandleEventWithTarget(&event, aFrame, aContent, &status);
 }
 
-uint32_t nsCoreUtils::GetAccessKeyFor(nsIContent *aContent) {
+uint32_t nsCoreUtils::GetAccessKeyFor(nsIContent* aContent) {
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
   // EventStateManager::GetRegisteredAccessKey() method.
@@ -164,16 +164,16 @@ uint32_t nsCoreUtils::GetAccessKeyFor(nsIContent *aContent) {
       !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
-  nsPresContext *presContext = aContent->OwnerDoc()->GetPresContext();
+  nsPresContext* presContext = aContent->OwnerDoc()->GetPresContext();
   if (!presContext) return 0;
 
-  EventStateManager *esm = presContext->EventStateManager();
+  EventStateManager* esm = presContext->EventStateManager();
   if (!esm) return 0;
 
   return esm->GetRegisteredAccessKey(aContent->AsElement());
 }
 
-nsIContent *nsCoreUtils::GetDOMElementFor(nsIContent *aContent) {
+nsIContent* nsCoreUtils::GetDOMElementFor(nsIContent* aContent) {
   if (aContent->IsElement()) return aContent;
 
   if (aContent->IsText()) return aContent->GetFlattenedTreeParent();
@@ -181,7 +181,7 @@ nsIContent *nsCoreUtils::GetDOMElementFor(nsIContent *aContent) {
   return nullptr;
 }
 
-nsINode *nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode *aNode, uint32_t aOffset) {
+nsINode* nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode* aNode, uint32_t aOffset) {
   if (aNode && aNode->IsElement()) {
     uint32_t childCount = aNode->GetChildCount();
     NS_ASSERTION(aOffset <= childCount, "Wrong offset of the DOM point!");
@@ -195,12 +195,12 @@ nsINode *nsCoreUtils::GetDOMNodeFromDOMPoint(nsINode *aNode, uint32_t aOffset) {
   return aNode;
 }
 
-bool nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
-                               nsINode *aPossibleDescendantNode,
-                               nsINode *aRootNode) {
+bool nsCoreUtils::IsAncestorOf(nsINode* aPossibleAncestorNode,
+                               nsINode* aPossibleDescendantNode,
+                               nsINode* aRootNode) {
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, false);
 
-  nsINode *parentNode = aPossibleDescendantNode;
+  nsINode* parentNode = aPossibleDescendantNode;
   while ((parentNode = parentNode->GetParentNode()) &&
          parentNode != aRootNode) {
     if (parentNode == aPossibleAncestorNode) return true;
@@ -209,7 +209,7 @@ bool nsCoreUtils::IsAncestorOf(nsINode *aPossibleAncestorNode,
   return false;
 }
 
-nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
+nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                                         uint32_t aScrollType) {
   ScrollAxis vertical, horizontal;
   ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
@@ -217,14 +217,14 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
   return ScrollSubstringTo(aFrame, aRange, vertical, horizontal);
 }
 
-nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
+nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                                         ScrollAxis aVertical,
                                         ScrollAxis aHorizontal) {
   if (!aFrame || !aRange) {
     return NS_ERROR_FAILURE;
   }
 
-  nsPresContext *presContext = aFrame->PresContext();
+  nsPresContext* presContext = aFrame->PresContext();
 
   nsCOMPtr<nsISelectionController> selCon;
   aFrame->GetSelectionController(presContext, getter_AddRefs(selCon));
@@ -245,10 +245,10 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame, nsRange *aRange,
   return NS_OK;
 }
 
-void nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
-                                     nsIFrame *aFrame,
-                                     const nsIntPoint &aPoint) {
-  nsIScrollableFrame *scrollableFrame = do_QueryFrame(aScrollableFrame);
+void nsCoreUtils::ScrollFrameToPoint(nsIFrame* aScrollableFrame,
+                                     nsIFrame* aFrame,
+                                     const nsIntPoint& aPoint) {
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
   if (!scrollableFrame) return;
 
   nsPoint point =
@@ -263,8 +263,8 @@ void nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
 }
 
 void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
-                                              ScrollAxis *aVertical,
-                                              ScrollAxis *aHorizontal) {
+                                              ScrollAxis* aVertical,
+                                              ScrollAxis* aHorizontal) {
   WhereToScroll whereY, whereX;
   WhenToScroll whenY, whenX;
   switch (aScrollType) {
@@ -314,7 +314,7 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
   *aHorizontal = ScrollAxis(whereX, whenX);
 }
 
-nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode) {
+nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
   nsIntPoint coords(0, 0);
   nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellFor(aNode));
   if (!treeItem) return coords;
@@ -330,14 +330,14 @@ nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode *aNode) {
   return coords;
 }
 
-already_AddRefed<nsIDocShell> nsCoreUtils::GetDocShellFor(nsINode *aNode) {
+already_AddRefed<nsIDocShell> nsCoreUtils::GetDocShellFor(nsINode* aNode) {
   if (!aNode) return nullptr;
 
   nsCOMPtr<nsIDocShell> docShell = aNode->OwnerDoc()->GetDocShell();
   return docShell.forget();
 }
 
-bool nsCoreUtils::IsRootDocument(Document *aDocument) {
+bool nsCoreUtils::IsRootDocument(Document* aDocument) {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell for document!");
 
@@ -347,14 +347,14 @@ bool nsCoreUtils::IsRootDocument(Document *aDocument) {
   return !parentTreeItem;
 }
 
-bool nsCoreUtils::IsContentDocument(Document *aDocument) {
+bool nsCoreUtils::IsContentDocument(Document* aDocument) {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell tree item for document!");
 
   return (docShellTreeItem->ItemType() == nsIDocShellTreeItem::typeContent);
 }
 
-bool nsCoreUtils::IsTabDocument(Document *aDocumentNode) {
+bool nsCoreUtils::IsTabDocument(Document* aDocumentNode) {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
@@ -370,8 +370,8 @@ bool nsCoreUtils::IsTabDocument(Document *aDocumentNode) {
   return parentTreeItem == rootTreeItem;
 }
 
-bool nsCoreUtils::IsErrorPage(Document *aDocument) {
-  nsIURI *uri = aDocument->GetDocumentURI();
+bool nsCoreUtils::IsErrorPage(Document* aDocument) {
+  nsIURI* uri = aDocument->GetDocumentURI();
   bool isAboutScheme = false;
   uri->SchemeIs("about", &isAboutScheme);
   if (!isAboutScheme) return false;
@@ -385,13 +385,13 @@ bool nsCoreUtils::IsErrorPage(Document *aDocument) {
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
-bool nsCoreUtils::GetID(nsIContent *aContent, nsAString &aID) {
+bool nsCoreUtils::GetID(nsIContent* aContent, nsAString& aID) {
   return aContent->IsElement() &&
          aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);
 }
 
-bool nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsAtom *aAttr,
-                              int32_t *aUInt) {
+bool nsCoreUtils::GetUIntAttr(nsIContent* aContent, nsAtom* aAttr,
+                              int32_t* aUInt) {
   nsAutoString value;
   if (!aContent->IsElement()) {
     return false;
@@ -409,11 +409,11 @@ bool nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsAtom *aAttr,
   return false;
 }
 
-void nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
-                                 nsAString &aLanguage) {
+void nsCoreUtils::GetLanguageFor(nsIContent* aContent, nsIContent* aRootContent,
+                                 nsAString& aLanguage) {
   aLanguage.Truncate();
 
-  nsIContent *walkUp = aContent;
+  nsIContent* walkUp = aContent;
   while (walkUp && walkUp != aRootContent &&
          (!walkUp->IsElement() ||
           !walkUp->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
@@ -421,9 +421,9 @@ void nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
     walkUp = walkUp->GetParent();
 }
 
-XULTreeElement *nsCoreUtils::GetTree(nsIContent *aContent) {
+XULTreeElement* nsCoreUtils::GetTree(nsIContent* aContent) {
   // Find DOMNode's parents recursively until reach the <tree> tag
-  nsIContent *currentContent = aContent;
+  nsIContent* currentContent = aContent;
   while (currentContent) {
     if (currentContent->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {
       return XULTreeElement::FromNode(currentContent);
@@ -435,7 +435,7 @@ XULTreeElement *nsCoreUtils::GetTree(nsIContent *aContent) {
 }
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
-    XULTreeElement *aTree) {
+    XULTreeElement* aTree) {
   RefPtr<nsTreeColumns> cols = aTree->GetColumns();
   if (!cols) return nullptr;
 
@@ -445,13 +445,13 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetFirstSensibleColumn(
   return column.forget();
 }
 
-uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement *aTree) {
+uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement* aTree) {
   uint32_t count = 0;
 
   RefPtr<nsTreeColumns> cols = aTree->GetColumns();
   if (!cols) return count;
 
-  nsTreeColumn *column = cols->GetFirstColumn();
+  nsTreeColumn* column = cols->GetFirstColumn();
 
   while (column) {
     if (!IsColumnHidden(column)) count++;
@@ -463,7 +463,7 @@ uint32_t nsCoreUtils::GetSensibleColumnCount(XULTreeElement *aTree) {
 }
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetSensibleColumnAt(
-    XULTreeElement *aTree, uint32_t aIndex) {
+    XULTreeElement* aTree, uint32_t aIndex) {
   uint32_t idx = aIndex;
 
   nsCOMPtr<nsTreeColumn> column = GetFirstSensibleColumn(aTree);
@@ -478,7 +478,7 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetSensibleColumnAt(
 }
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetNextSensibleColumn(
-    nsTreeColumn *aColumn) {
+    nsTreeColumn* aColumn) {
   RefPtr<nsTreeColumn> nextColumn = aColumn->GetNext();
 
   while (nextColumn && IsColumnHidden(nextColumn)) {
@@ -489,7 +489,7 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetNextSensibleColumn(
 }
 
 already_AddRefed<nsTreeColumn> nsCoreUtils::GetPreviousSensibleColumn(
-    nsTreeColumn *aColumn) {
+    nsTreeColumn* aColumn) {
   RefPtr<nsTreeColumn> prevColumn = aColumn->GetPrevious();
 
   while (prevColumn && IsColumnHidden(prevColumn)) {
@@ -499,13 +499,13 @@ already_AddRefed<nsTreeColumn> nsCoreUtils::GetPreviousSensibleColumn(
   return prevColumn.forget();
 }
 
-bool nsCoreUtils::IsColumnHidden(nsTreeColumn *aColumn) {
-  Element *element = aColumn->Element();
+bool nsCoreUtils::IsColumnHidden(nsTreeColumn* aColumn) {
+  Element* element = aColumn->Element();
   return element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                               nsGkAtoms::_true, eCaseMatters);
 }
 
-void nsCoreUtils::ScrollTo(PresShell *aPresShell, nsIContent *aContent,
+void nsCoreUtils::ScrollTo(PresShell* aPresShell, nsIContent* aContent,
                            uint32_t aScrollType) {
   ScrollAxis vertical, horizontal;
   ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
@@ -513,7 +513,7 @@ void nsCoreUtils::ScrollTo(PresShell *aPresShell, nsIContent *aContent,
                                     ScrollFlags::ScrollOverflowHidden);
 }
 
-bool nsCoreUtils::IsWhitespaceString(const nsAString &aString) {
+bool nsCoreUtils::IsWhitespaceString(const nsAString& aString) {
   nsAString::const_char_iterator iterBegin, iterEnd;
 
   aString.BeginReading(iterBegin);

@@ -47,7 +47,7 @@ int IntCount::countAdd(int index, int increment) {
     }
 
     int i;
-    IntPair *tpair = new IntPair[numInts + 1];
+    IntPair* tpair = new IntPair[numInts + 1];
     for (i = 0; i < divPoint; i++) {
       tpair[i] = iPair[i];
     }

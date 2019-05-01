@@ -82,7 +82,7 @@ nsresult GetXPCOMFromNSSError(PRErrorCode code) {
 }
 
 NS_IMETHODIMP
-NSSErrorsService::IsNSSErrorCode(int32_t aNSPRCode, bool *_retval) {
+NSSErrorsService::IsNSSErrorCode(int32_t aNSPRCode, bool* _retval) {
   if (!_retval) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -93,7 +93,7 @@ NSSErrorsService::IsNSSErrorCode(int32_t aNSPRCode, bool *_retval) {
 
 NS_IMETHODIMP
 NSSErrorsService::GetXPCOMFromNSSError(int32_t aNSPRCode,
-                                       nsresult *aXPCOMErrorCode) {
+                                       nsresult* aXPCOMErrorCode) {
   if (!aXPCOMErrorCode) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -109,7 +109,7 @@ NSSErrorsService::GetXPCOMFromNSSError(int32_t aNSPRCode,
 
 NS_IMETHODIMP
 NSSErrorsService::GetErrorClass(nsresult aXPCOMErrorCode,
-                                uint32_t *aErrorClass) {
+                                uint32_t* aErrorClass) {
   NS_ENSURE_ARG(aErrorClass);
 
   if (NS_ERROR_GET_MODULE(aXPCOMErrorCode) != NS_ERROR_MODULE_SECURITY ||
@@ -158,7 +158,7 @@ bool ErrorIsOverridable(PRErrorCode code) {
   }
 }
 
-static const char *getOverrideErrorStringName(PRErrorCode aErrorCode) {
+static const char* getOverrideErrorStringName(PRErrorCode aErrorCode) {
   switch (aErrorCode) {
     case SSL_ERROR_SSL_DISABLED:
       return "PSMERR_SSL_Disabled";
@@ -175,7 +175,7 @@ static const char *getOverrideErrorStringName(PRErrorCode aErrorCode) {
 
 NS_IMETHODIMP
 NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode,
-                                  nsAString &aErrorMessage) {
+                                  nsAString& aErrorMessage) {
   if (NS_ERROR_GET_MODULE(aXPCOMErrorCode) != NS_ERROR_MODULE_SECURITY ||
       NS_ERROR_GET_SEVERITY(aXPCOMErrorCode) != NS_ERROR_SEVERITY_ERROR) {
     return NS_ERROR_FAILURE;
@@ -188,7 +188,7 @@ NSSErrorsService::GetErrorMessage(nsresult aXPCOMErrorCode,
   }
 
   nsCOMPtr<nsIStringBundle> theBundle = mPIPNSSBundle;
-  const char *idStr = getOverrideErrorStringName(aNSPRCode);
+  const char* idStr = getOverrideErrorStringName(aNSPRCode);
 
   if (!idStr) {
     idStr = PR_ErrorToName(aNSPRCode);

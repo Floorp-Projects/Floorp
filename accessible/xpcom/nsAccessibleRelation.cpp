@@ -14,21 +14,21 @@
 
 using namespace mozilla::a11y;
 
-nsAccessibleRelation::nsAccessibleRelation(uint32_t aType, Relation *aRel)
+nsAccessibleRelation::nsAccessibleRelation(uint32_t aType, Relation* aRel)
     : mType(aType) {
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  Accessible *targetAcc = nullptr;
+  Accessible* targetAcc = nullptr;
   while ((targetAcc = aRel->Next()))
-    mTargets->AppendElement(static_cast<nsIAccessible *>(ToXPC(targetAcc)));
+    mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)));
 }
 
 nsAccessibleRelation::nsAccessibleRelation(
-    uint32_t aType, const nsTArray<ProxyAccessible *> *aTargets)
+    uint32_t aType, const nsTArray<ProxyAccessible*>* aTargets)
     : mType(aType) {
   mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (uint32_t idx = 0; idx < aTargets->Length(); ++idx) {
     mTargets->AppendElement(
-        static_cast<nsIAccessible *>(ToXPC(aTargets->ElementAt(idx))));
+        static_cast<nsIAccessible*>(ToXPC(aTargets->ElementAt(idx))));
   }
 }
 
@@ -39,21 +39,21 @@ NS_IMPL_ISUPPORTS(nsAccessibleRelation, nsIAccessibleRelation)
 
 // nsIAccessibleRelation
 NS_IMETHODIMP
-nsAccessibleRelation::GetRelationType(uint32_t *aType) {
+nsAccessibleRelation::GetRelationType(uint32_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAccessibleRelation::GetTargetsCount(uint32_t *aCount) {
+nsAccessibleRelation::GetTargetsCount(uint32_t* aCount) {
   NS_ENSURE_ARG_POINTER(aCount);
   *aCount = 0;
   return mTargets->GetLength(aCount);
 }
 
 NS_IMETHODIMP
-nsAccessibleRelation::GetTarget(uint32_t aIndex, nsIAccessible **aTarget) {
+nsAccessibleRelation::GetTarget(uint32_t aIndex, nsIAccessible** aTarget) {
   NS_ENSURE_ARG_POINTER(aTarget);
   nsresult rv = NS_OK;
   nsCOMPtr<nsIAccessible> target = do_QueryElementAt(mTargets, aIndex, &rv);
@@ -62,7 +62,7 @@ nsAccessibleRelation::GetTarget(uint32_t aIndex, nsIAccessible **aTarget) {
 }
 
 NS_IMETHODIMP
-nsAccessibleRelation::GetTargets(nsIArray **aTargets) {
+nsAccessibleRelation::GetTargets(nsIArray** aTargets) {
   NS_ENSURE_ARG_POINTER(aTargets);
   NS_ADDREF(*aTargets = mTargets);
   return NS_OK;

@@ -26,8 +26,8 @@ using namespace mozilla;
  */
 NS_IMPL_ISUPPORTS(nsZipDataStream, nsIStreamListener, nsIRequestObserver)
 
-nsresult nsZipDataStream::Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
-                               nsZipHeader *aHeader, int32_t aCompression) {
+nsresult nsZipDataStream::Init(nsZipWriter* aWriter, nsIOutputStream* aStream,
+                               nsZipHeader* aHeader, int32_t aCompression) {
   mWriter = aWriter;
   mHeader = aHeader;
   mStream = aStream;
@@ -55,8 +55,8 @@ nsresult nsZipDataStream::Init(nsZipWriter *aWriter, nsIOutputStream *aStream,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
-                                               nsIInputStream *aInputStream,
+NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest* aRequest,
+                                               nsIInputStream* aInputStream,
                                                uint64_t aOffset,
                                                uint32_t aCount) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
@@ -70,13 +70,13 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
   return ProcessData(aRequest, nullptr, buffer.get(), aOffset, aCount);
 }
 
-NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest *aRequest) {
+NS_IMETHODIMP nsZipDataStream::OnStartRequest(nsIRequest* aRequest) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
   return mOutput->OnStartRequest(aRequest);
 }
 
-NS_IMETHODIMP nsZipDataStream::OnStopRequest(nsIRequest *aRequest,
+NS_IMETHODIMP nsZipDataStream::OnStopRequest(nsIRequest* aRequest,
                                              nsresult aStatusCode) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
@@ -109,11 +109,11 @@ inline nsresult nsZipDataStream::CompleteEntry() {
   return NS_OK;
 }
 
-nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
-                                      nsISupports *aContext, char *aBuffer,
+nsresult nsZipDataStream::ProcessData(nsIRequest* aRequest,
+                                      nsISupports* aContext, char* aBuffer,
                                       uint64_t aOffset, uint32_t aCount) {
   mHeader->mCRC = crc32(
-      mHeader->mCRC, reinterpret_cast<const unsigned char *>(aBuffer), aCount);
+      mHeader->mCRC, reinterpret_cast<const unsigned char*>(aBuffer), aCount);
 
   MOZ_ASSERT(aCount <= INT32_MAX);
   nsCOMPtr<nsIInputStream> stream;
@@ -127,7 +127,7 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
   return rv;
 }
 
-nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream) {
+nsresult nsZipDataStream::ReadStream(nsIInputStream* aStream) {
   if (!mOutput) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv = OnStartRequest(nullptr);

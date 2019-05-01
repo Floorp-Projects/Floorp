@@ -22,13 +22,13 @@ class PathBuilderCairo : public PathBuilder {
 
   explicit PathBuilderCairo(FillRule aFillRule);
 
-  void MoveTo(const Point &aPoint) override;
-  void LineTo(const Point &aPoint) override;
-  void BezierTo(const Point &aCP1, const Point &aCP2,
-                const Point &aCP3) override;
-  void QuadraticBezierTo(const Point &aCP1, const Point &aCP2) override;
+  void MoveTo(const Point& aPoint) override;
+  void LineTo(const Point& aPoint) override;
+  void BezierTo(const Point& aCP1, const Point& aCP2,
+                const Point& aCP3) override;
+  void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) override;
   void Close() override;
-  void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
+  void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
            float aEndAngle, bool aAntiClockwise = false) override;
   Point CurrentPoint() const override;
   already_AddRefed<Path> Finish() override;
@@ -50,9 +50,9 @@ class PathCairo : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCairo, override)
 
-  PathCairo(FillRule aFillRule, std::vector<cairo_path_data_t> &aPathData,
-            const Point &aCurrentPoint);
-  explicit PathCairo(cairo_t *aContext);
+  PathCairo(FillRule aFillRule, std::vector<cairo_path_data_t>& aPathData,
+            const Point& aCurrentPoint);
+  explicit PathCairo(cairo_t* aContext);
   virtual ~PathCairo();
 
   BackendType GetBackendType() const override { return BackendType::CAIRO; }
@@ -60,35 +60,35 @@ class PathCairo : public Path {
   already_AddRefed<PathBuilder> CopyToBuilder(
       FillRule aFillRule) const override;
   already_AddRefed<PathBuilder> TransformedCopyToBuilder(
-      const Matrix &aTransform, FillRule aFillRule) const override;
+      const Matrix& aTransform, FillRule aFillRule) const override;
 
-  bool ContainsPoint(const Point &aPoint,
-                     const Matrix &aTransform) const override;
+  bool ContainsPoint(const Point& aPoint,
+                     const Matrix& aTransform) const override;
 
-  bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
-                           const Point &aPoint,
-                           const Matrix &aTransform) const override;
+  bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                           const Point& aPoint,
+                           const Matrix& aTransform) const override;
 
-  Rect GetBounds(const Matrix &aTransform = Matrix()) const override;
+  Rect GetBounds(const Matrix& aTransform = Matrix()) const override;
 
-  Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
-                        const Matrix &aTransform = Matrix()) const override;
+  Rect GetStrokedBounds(const StrokeOptions& aStrokeOptions,
+                        const Matrix& aTransform = Matrix()) const override;
 
-  void StreamToSink(PathSink *aSink) const override;
+  void StreamToSink(PathSink* aSink) const override;
 
   FillRule GetFillRule() const override { return mFillRule; }
 
-  void SetPathOnContext(cairo_t *aContext) const;
+  void SetPathOnContext(cairo_t* aContext) const;
 
-  void AppendPathToBuilder(PathBuilderCairo *aBuilder,
-                           const Matrix *aTransform = nullptr) const;
+  void AppendPathToBuilder(PathBuilderCairo* aBuilder,
+                           const Matrix* aTransform = nullptr) const;
 
  private:
-  void EnsureContainingContext(const Matrix &aTransform) const;
+  void EnsureContainingContext(const Matrix& aTransform) const;
 
   FillRule mFillRule;
   std::vector<cairo_path_data_t> mPathData;
-  mutable cairo_t *mContainingContext;
+  mutable cairo_t* mContainingContext;
   mutable Matrix mContainingTransform;
   Point mCurrentPoint;
 };

@@ -30,56 +30,56 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSITHREADRETARGETABLEREQUEST
 
-  NS_IMETHOD QueryInterface(const nsIID &uuid, void **result) override = 0;
+  NS_IMETHOD QueryInterface(const nsIID& uuid, void** result) override = 0;
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release(void) override = 0;
 
   // Partial implementation of nsIWebSocketChannel
   //
-  NS_IMETHOD GetOriginalURI(nsIURI **aOriginalURI) override;
-  NS_IMETHOD GetURI(nsIURI **aURI) override;
+  NS_IMETHOD GetOriginalURI(nsIURI** aOriginalURI) override;
+  NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetNotificationCallbacks(
-      nsIInterfaceRequestor **aNotificationCallbacks) override;
+      nsIInterfaceRequestor** aNotificationCallbacks) override;
   NS_IMETHOD SetNotificationCallbacks(
-      nsIInterfaceRequestor *aNotificationCallbacks) override;
-  NS_IMETHOD GetLoadGroup(nsILoadGroup **aLoadGroup) override;
-  NS_IMETHOD SetLoadGroup(nsILoadGroup *aLoadGroup) override;
-  NS_IMETHOD SetLoadInfo(nsILoadInfo *aLoadInfo) override;
-  NS_IMETHOD GetLoadInfo(nsILoadInfo **aLoadInfo) override;
-  NS_IMETHOD GetExtensions(nsACString &aExtensions) override;
-  NS_IMETHOD GetProtocol(nsACString &aProtocol) override;
-  NS_IMETHOD SetProtocol(const nsACString &aProtocol) override;
-  NS_IMETHOD GetPingInterval(uint32_t *aSeconds) override;
+      nsIInterfaceRequestor* aNotificationCallbacks) override;
+  NS_IMETHOD GetLoadGroup(nsILoadGroup** aLoadGroup) override;
+  NS_IMETHOD SetLoadGroup(nsILoadGroup* aLoadGroup) override;
+  NS_IMETHOD SetLoadInfo(nsILoadInfo* aLoadInfo) override;
+  NS_IMETHOD GetLoadInfo(nsILoadInfo** aLoadInfo) override;
+  NS_IMETHOD GetExtensions(nsACString& aExtensions) override;
+  NS_IMETHOD GetProtocol(nsACString& aProtocol) override;
+  NS_IMETHOD SetProtocol(const nsACString& aProtocol) override;
+  NS_IMETHOD GetPingInterval(uint32_t* aSeconds) override;
   NS_IMETHOD SetPingInterval(uint32_t aSeconds) override;
-  NS_IMETHOD GetPingTimeout(uint32_t *aSeconds) override;
+  NS_IMETHOD GetPingTimeout(uint32_t* aSeconds) override;
   NS_IMETHOD SetPingTimeout(uint32_t aSeconds) override;
-  NS_IMETHOD InitLoadInfoNative(nsINode *aLoadingNode,
-                                nsIPrincipal *aLoadingPrincipal,
-                                nsIPrincipal *aTriggeringPrincipal,
-                                nsICookieSettings *aCookieSettings,
+  NS_IMETHOD InitLoadInfoNative(nsINode* aLoadingNode,
+                                nsIPrincipal* aLoadingPrincipal,
+                                nsIPrincipal* aTriggeringPrincipal,
+                                nsICookieSettings* aCookieSettings,
                                 uint32_t aSecurityFlags,
                                 uint32_t aContentPolicyType) override;
-  NS_IMETHOD InitLoadInfo(nsINode *aLoadingNode,
-                          nsIPrincipal *aLoadingPrincipal,
-                          nsIPrincipal *aTriggeringPrincipal,
+  NS_IMETHOD InitLoadInfo(nsINode* aLoadingNode,
+                          nsIPrincipal* aLoadingPrincipal,
+                          nsIPrincipal* aTriggeringPrincipal,
                           uint32_t aSecurityFlags,
                           uint32_t aContentPolicyType) override;
-  NS_IMETHOD GetSerial(uint32_t *aSerial) override;
+  NS_IMETHOD GetSerial(uint32_t* aSerial) override;
   NS_IMETHOD SetSerial(uint32_t aSerial) override;
   NS_IMETHOD SetServerParameters(
-      nsITransportProvider *aProvider,
-      const nsACString &aNegotiatedExtensions) override;
+      nsITransportProvider* aProvider,
+      const nsACString& aNegotiatedExtensions) override;
 
   // Off main thread URI access.
-  virtual void GetEffectiveURL(nsAString &aEffectiveURL) const = 0;
+  virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
   virtual bool IsEncrypted() const = 0;
 
   class ListenerAndContextContainer final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ListenerAndContextContainer)
 
-    ListenerAndContextContainer(nsIWebSocketListener *aListener,
-                                nsISupports *aContext);
+    ListenerAndContextContainer(nsIWebSocketListener* aListener,
+                                nsISupports* aContext);
 
     nsCOMPtr<nsIWebSocketListener> mListener;
     nsCOMPtr<nsISupports> mContext;

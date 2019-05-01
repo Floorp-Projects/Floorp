@@ -44,35 +44,35 @@ class nsDNSService final : public nsPIDNSService,
   friend class nsAuthSSPI;
 
   nsresult DeprecatedSyncResolve(
-      const nsACString &aHostname, uint32_t flags,
-      const mozilla::OriginAttributes &aOriginAttributes,
-      nsIDNSRecord **result);
+      const nsACString& aHostname, uint32_t flags,
+      const mozilla::OriginAttributes& aOriginAttributes,
+      nsIDNSRecord** result);
 
  private:
   ~nsDNSService();
 
-  nsresult ReadPrefs(const char *name);
+  nsresult ReadPrefs(const char* name);
   static already_AddRefed<nsDNSService> GetSingleton();
 
-  uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
+  uint16_t GetAFForLookup(const nsACString& host, uint32_t flags);
 
-  nsresult PreprocessHostname(bool aLocalDomain, const nsACString &aInput,
-                              nsIIDNService *aIDN, nsACString &aACE);
+  nsresult PreprocessHostname(bool aLocalDomain, const nsACString& aInput,
+                              nsIIDNService* aIDN, nsACString& aACE);
 
   nsresult AsyncResolveInternal(
-      const nsACString &aHostname, uint16_t type, uint32_t flags,
-      nsIDNSListener *aListener, nsIEventTarget *target_,
-      const mozilla::OriginAttributes &aOriginAttributes,
-      nsICancelable **result);
+      const nsACString& aHostname, uint16_t type, uint32_t flags,
+      nsIDNSListener* aListener, nsIEventTarget* target_,
+      const mozilla::OriginAttributes& aOriginAttributes,
+      nsICancelable** result);
 
   nsresult CancelAsyncResolveInternal(
-      const nsACString &aHostname, uint16_t aType, uint32_t aFlags,
-      nsIDNSListener *aListener, nsresult aReason,
-      const mozilla::OriginAttributes &aOriginAttributes);
+      const nsACString& aHostname, uint16_t aType, uint32_t aFlags,
+      nsIDNSListener* aListener, nsresult aReason,
+      const mozilla::OriginAttributes& aOriginAttributes);
 
-  nsresult ResolveInternal(const nsACString &aHostname, uint32_t flags,
-                           const mozilla::OriginAttributes &aOriginAttributes,
-                           nsIDNSRecord **result);
+  nsresult ResolveInternal(const nsACString& aHostname, uint32_t flags,
+                           const mozilla::OriginAttributes& aOriginAttributes,
+                           nsIDNSRecord** result);
 
   RefPtr<nsHostResolver> mResolver;
   nsCOMPtr<nsIIDNService> mIDN;

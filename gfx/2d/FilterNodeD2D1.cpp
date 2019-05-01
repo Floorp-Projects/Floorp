@@ -142,8 +142,8 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode) {
   return D2D1_CHANNEL_SELECTOR_R;
 }
 
-already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT,
-                                                      SourceSurface *aSurface) {
+already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget* aDT,
+                                                      SourceSurface* aSurface) {
   if (aDT->IsTiledDrawTarget() || aDT->IsDualDrawTarget() ||
       aDT->IsCaptureDT()) {
     gfxDevCrash(LogReason::FilterNodeD2D1Target)
@@ -153,7 +153,7 @@ already_AddRefed<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT,
   }
   switch (aDT->GetBackendType()) {
     case BackendType::DIRECT2D1_1:
-      return static_cast<DrawTargetD2D1 *>(aDT)->GetImageForSurface(
+      return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(
           aSurface, ExtendMode::CLAMP);
     default:
       gfxDevCrash(LogReason::FilterNodeD2D1Backend)
@@ -207,7 +207,7 @@ uint32_t ConvertValue(FilterType aType, uint32_t aAttribute, uint32_t aValue) {
   return aValue;
 }
 
-void ConvertValue(FilterType aType, uint32_t aAttribute, IntSize &aValue) {
+void ConvertValue(FilterType aType, uint32_t aAttribute, IntSize& aValue) {
   switch (aType) {
     case FilterType::MORPHOLOGY:
       if (aAttribute == ATT_MORPHOLOGY_RADII) {
@@ -498,7 +498,7 @@ GetD2D1PropForAttribute(FilterType aType, uint32_t aIndex) {
 }
 
 bool GetD2D1PropsForIntSize(FilterType aType, uint32_t aIndex,
-                            UINT32 *aPropWidth, UINT32 *aPropHeight) {
+                            UINT32* aPropWidth, UINT32* aPropHeight) {
   switch (aType) {
     case FilterType::MORPHOLOGY:
       if (aIndex == ATT_MORPHOLOGY_RADII) {
@@ -604,7 +604,7 @@ static bool HasUnboundedOutputRegion(FilterType aType) {
 }
 
 /* static */
-already_AddRefed<FilterNode> FilterNodeD2D1::Create(ID2D1DeviceContext *aDC,
+already_AddRefed<FilterNode> FilterNodeD2D1::Create(ID2D1DeviceContext* aDC,
                                                     FilterType aType) {
   if (aType == FilterType::CONVOLVE_MATRIX) {
     return MakeAndAddRef<FilterNodeConvolveD2D1>(aDC);
@@ -657,9 +657,9 @@ void FilterNodeD2D1::InitUnmappedProperties() {
   }
 }
 
-void FilterNodeD2D1::SetInput(uint32_t aIndex, SourceSurface *aSurface) {
+void FilterNodeD2D1::SetInput(uint32_t aIndex, SourceSurface* aSurface) {
   UINT32 input = GetD2D1InputForInput(mType, aIndex);
-  ID2D1Effect *effect = InputEffect();
+  ID2D1Effect* effect = InputEffect();
   MOZ_ASSERT(input < effect->GetInputCount());
 
   if (mType == FilterType::COMPOSITE) {
@@ -691,9 +691,9 @@ void FilterNodeD2D1::SetInput(uint32_t aIndex, SourceSurface *aSurface) {
   effect->SetInput(input, nullptr);
 }
 
-void FilterNodeD2D1::SetInput(uint32_t aIndex, FilterNode *aFilter) {
+void FilterNodeD2D1::SetInput(uint32_t aIndex, FilterNode* aFilter) {
   UINT32 input = GetD2D1InputForInput(mType, aIndex);
-  ID2D1Effect *effect = InputEffect();
+  ID2D1Effect* effect = InputEffect();
 
   if (mType == FilterType::COMPOSITE) {
     UINT32 inputCount = effect->GetInputCount();
@@ -713,7 +713,7 @@ void FilterNodeD2D1::SetInput(uint32_t aIndex, FilterNode *aFilter) {
     return;
   }
 
-  FilterNodeD2D1 *filter = static_cast<FilterNodeD2D1 *>(aFilter);
+  FilterNodeD2D1* filter = static_cast<FilterNodeD2D1*>(aFilter);
 
   mInputSurfaces.resize(effect->GetInputCount());
   mInputFilters.resize(effect->GetInputCount());
@@ -727,12 +727,12 @@ void FilterNodeD2D1::SetInput(uint32_t aIndex, FilterNode *aFilter) {
   }
 }
 
-void FilterNodeD2D1::WillDraw(DrawTarget *aDT) {
+void FilterNodeD2D1::WillDraw(DrawTarget* aDT) {
   // Convert input SourceSurfaces into ID2D1Images and set them on the effect.
   for (size_t inputIndex = 0; inputIndex < mInputSurfaces.size();
        inputIndex++) {
     if (mInputSurfaces[inputIndex]) {
-      ID2D1Effect *effect = InputEffect();
+      ID2D1Effect* effect = InputEffect();
       RefPtr<ID2D1Image> image =
           GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
       effect->SetInput(inputIndex, image);
@@ -772,35 +772,35 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, Float aValue) {
   mEffect->SetValue(input, aValue);
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Point &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Point& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DPoint(aValue));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix5x4& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DMatrix5x4(aValue));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Point3D &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Point3D& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DVector3D(aValue));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Size &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Size& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2D1::Vector2F(aValue.width, aValue.height));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntSize &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntSize& aValue) {
   UINT32 widthProp, heightProp;
 
   if (!GetD2D1PropsForIntSize(mType, aIndex, &widthProp, &heightProp)) {
@@ -814,7 +814,7 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntSize &aValue) {
   mEffect->SetValue(heightProp, (UINT)value.height);
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Color &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Color& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
@@ -834,14 +834,14 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Color &aValue) {
   }
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Rect &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Rect& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DRect(aValue));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect& aValue) {
   if (mType == FilterType::TURBULENCE) {
     MOZ_ASSERT(aIndex == ATT_TURBULENCE_RECT);
 
@@ -868,22 +868,22 @@ void FilterNodeD2D1::SetAttribute(uint32_t aIndex, bool aValue) {
   mEffect->SetValue(input, (BOOL)aValue);
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Float *aValues,
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Float* aValues,
                                   uint32_t aSize) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
-  mEffect->SetValue(input, (BYTE *)aValues, sizeof(Float) * aSize);
+  mEffect->SetValue(input, (BYTE*)aValues, sizeof(Float) * aSize);
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntPoint &aValue) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntPoint& aValue) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DPoint(aValue));
 }
 
-void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix &aMatrix) {
+void FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix& aMatrix) {
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
@@ -900,7 +900,7 @@ void FilterNodeOpacityD2D1::SetAttribute(uint32_t aIndex, Float aValue) {
                     D2D1_COLORMATRIX_ALPHA_MODE_STRAIGHT);
 }
 
-FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
+FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext* aDC)
     : FilterNodeD2D1(nullptr, FilterType::CONVOLVE_MATRIX),
       mEdgeMode(EDGE_MODE_DUPLICATE) {
   // Correctly handling the interaction of edge mode and source rect is a bit
@@ -948,7 +948,7 @@ FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
   UpdateSourceRect();
 }
 
-void FilterNodeConvolveD2D1::SetInput(uint32_t aIndex, FilterNode *aFilter) {
+void FilterNodeConvolveD2D1::SetInput(uint32_t aIndex, FilterNode* aFilter) {
   FilterNodeD2D1::SetInput(aIndex, aFilter);
 
   UpdateChain();
@@ -964,7 +964,7 @@ void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex, uint32_t aValue) {
   UpdateChain();
 }
 
-ID2D1Effect *FilterNodeConvolveD2D1::InputEffect() {
+ID2D1Effect* FilterNodeConvolveD2D1::InputEffect() {
   return mEdgeMode == EDGE_MODE_NONE ? mEffect.get() : mExtendInputEffect.get();
 }
 
@@ -1003,7 +1003,7 @@ void FilterNodeConvolveD2D1::UpdateChain() {
 }
 
 void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex,
-                                          const IntSize &aValue) {
+                                          const IntSize& aValue) {
   if (aIndex != ATT_CONVOLVE_MATRIX_KERNEL_SIZE) {
     MOZ_ASSERT(false);
     return;
@@ -1018,7 +1018,7 @@ void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex,
 }
 
 void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex,
-                                          const IntPoint &aValue) {
+                                          const IntPoint& aValue) {
   if (aIndex != ATT_CONVOLVE_MATRIX_TARGET) {
     MOZ_ASSERT(false);
     return;
@@ -1030,7 +1030,7 @@ void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex,
 }
 
 void FilterNodeConvolveD2D1::SetAttribute(uint32_t aIndex,
-                                          const IntRect &aValue) {
+                                          const IntRect& aValue) {
   if (aIndex != ATT_CONVOLVE_MATRIX_SOURCE_RECT) {
     MOZ_ASSERT(false);
     return;
@@ -1057,7 +1057,7 @@ void FilterNodeConvolveD2D1::UpdateSourceRect() {
 }
 
 FilterNodeExtendInputAdapterD2D1::FilterNodeExtendInputAdapterD2D1(
-    ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType)
+    ID2D1DeviceContext* aDC, FilterNodeD2D1* aFilterNode, FilterType aType)
     : FilterNodeD2D1(aFilterNode->MainEffect(), aType),
       mWrappedFilterNode(aFilterNode) {
   // We have an mEffect that looks at the bounds of the input effect, and we
@@ -1080,7 +1080,7 @@ FilterNodeExtendInputAdapterD2D1::FilterNodeExtendInputAdapterD2D1(
 }
 
 FilterNodePremultiplyAdapterD2D1::FilterNodePremultiplyAdapterD2D1(
-    ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType)
+    ID2D1DeviceContext* aDC, FilterNodeD2D1* aFilterNode, FilterType aType)
     : FilterNodeD2D1(aFilterNode->MainEffect(), aType) {
   // D2D1 component transfer effects do strange things when it comes to
   // premultiplication.

@@ -22,7 +22,7 @@ namespace gfx {
 struct TileInternal : public Tile {
   TileInternal() : mClippedOut(false) {}
 
-  explicit TileInternal(const Tile &aOther)
+  explicit TileInternal(const Tile& aOther)
       : Tile(aOther), mClippedOut(false) {}
 
   bool mClippedOut;
@@ -32,7 +32,7 @@ class DrawTargetTiled : public DrawTarget {
  public:
   DrawTargetTiled();
 
-  bool Init(const TileSet &mTiles);
+  bool Init(const TileSet& mTiles);
 
   bool IsTiledDrawTarget() const override { return true; }
 
@@ -54,88 +54,88 @@ class DrawTargetTiled : public DrawTarget {
   IntRect GetRect() const override { return mRect; }
 
   void Flush() override;
-  void DrawSurface(SourceSurface *aSurface, const Rect &aDest,
-                   const Rect &aSource, const DrawSurfaceOptions &aSurfOptions,
-                   const DrawOptions &aOptions) override;
-  void DrawFilter(FilterNode *aNode, const Rect &aSourceRect,
-                  const Point &aDestPoint,
-                  const DrawOptions &aOptions = DrawOptions()) override;
+  void DrawSurface(SourceSurface* aSurface, const Rect& aDest,
+                   const Rect& aSource, const DrawSurfaceOptions& aSurfOptions,
+                   const DrawOptions& aOptions) override;
+  void DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
+                  const Point& aDestPoint,
+                  const DrawOptions& aOptions = DrawOptions()) override;
   void DrawSurfaceWithShadow(
-      SourceSurface *aSurface, const Point &aDest, const Color &aColor,
-      const Point &aOffset, Float aSigma,
+      SourceSurface* aSurface, const Point& aDest, const Color& aColor,
+      const Point& aOffset, Float aSigma,
       CompositionOp aOperator) override { /* Not implemented */
     MOZ_CRASH("GFX: DrawSurfaceWithShadow");
   }
 
-  void ClearRect(const Rect &aRect) override;
-  void MaskSurface(const Pattern &aSource, SourceSurface *aMask, Point aOffset,
-                   const DrawOptions &aOptions = DrawOptions()) override;
+  void ClearRect(const Rect& aRect) override;
+  void MaskSurface(const Pattern& aSource, SourceSurface* aMask, Point aOffset,
+                   const DrawOptions& aOptions = DrawOptions()) override;
 
-  void CopySurface(SourceSurface *aSurface, const IntRect &aSourceRect,
-                   const IntPoint &aDestination) override;
+  void CopySurface(SourceSurface* aSurface, const IntRect& aSourceRect,
+                   const IntPoint& aDestination) override;
 
-  void FillRect(const Rect &aRect, const Pattern &aPattern,
-                const DrawOptions &aOptions = DrawOptions()) override;
-  void StrokeRect(const Rect &aRect, const Pattern &aPattern,
-                  const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                  const DrawOptions &aOptions = DrawOptions()) override;
-  void StrokeLine(const Point &aStart, const Point &aEnd,
-                  const Pattern &aPattern,
-                  const StrokeOptions &aStrokeOptions = StrokeOptions(),
-                  const DrawOptions &aOptions = DrawOptions()) override;
-  void Stroke(const Path *aPath, const Pattern &aPattern,
-              const StrokeOptions &aStrokeOptions = StrokeOptions(),
-              const DrawOptions &aOptions = DrawOptions()) override;
-  void Fill(const Path *aPath, const Pattern &aPattern,
-            const DrawOptions &aOptions = DrawOptions()) override;
-  void FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer,
-                  const Pattern &aPattern,
-                  const DrawOptions &aOptions = DrawOptions()) override;
-  void Mask(const Pattern &aSource, const Pattern &aMask,
-            const DrawOptions &aOptions = DrawOptions()) override;
-  void PushClip(const Path *aPath) override;
-  void PushClipRect(const Rect &aRect) override;
+  void FillRect(const Rect& aRect, const Pattern& aPattern,
+                const DrawOptions& aOptions = DrawOptions()) override;
+  void StrokeRect(const Rect& aRect, const Pattern& aPattern,
+                  const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                  const DrawOptions& aOptions = DrawOptions()) override;
+  void StrokeLine(const Point& aStart, const Point& aEnd,
+                  const Pattern& aPattern,
+                  const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                  const DrawOptions& aOptions = DrawOptions()) override;
+  void Stroke(const Path* aPath, const Pattern& aPattern,
+              const StrokeOptions& aStrokeOptions = StrokeOptions(),
+              const DrawOptions& aOptions = DrawOptions()) override;
+  void Fill(const Path* aPath, const Pattern& aPattern,
+            const DrawOptions& aOptions = DrawOptions()) override;
+  void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+                  const Pattern& aPattern,
+                  const DrawOptions& aOptions = DrawOptions()) override;
+  void Mask(const Pattern& aSource, const Pattern& aMask,
+            const DrawOptions& aOptions = DrawOptions()) override;
+  void PushClip(const Path* aPath) override;
+  void PushClipRect(const Rect& aRect) override;
   void PopClip() override;
-  void PushLayer(bool aOpaque, Float aOpacity, SourceSurface *aMask,
-                 const Matrix &aMaskTransform,
-                 const IntRect &aBounds = IntRect(),
+  void PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                 const Matrix& aMaskTransform,
+                 const IntRect& aBounds = IntRect(),
                  bool aCopyBackground = false) override;
-  void PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface *aMask,
-                          const Matrix &aMaskTransform,
-                          const IntRect &aBounds = IntRect(),
+  void PushLayerWithBlend(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                          const Matrix& aMaskTransform,
+                          const IntRect& aBounds = IntRect(),
                           bool aCopyBackground = false,
                           CompositionOp = CompositionOp::OP_OVER) override;
   void PopLayer() override;
 
-  void PadEdges(const IntRegion &aRegion) override;
+  void PadEdges(const IntRegion& aRegion) override;
 
-  void SetTransform(const Matrix &aTransform) override;
+  void SetTransform(const Matrix& aTransform) override;
 
   void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
 
   already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(
-      unsigned char *aData, const IntSize &aSize, int32_t aStride,
+      unsigned char* aData, const IntSize& aSize, int32_t aStride,
       SurfaceFormat aFormat) const override {
     return mTiles[0].mDrawTarget->CreateSourceSurfaceFromData(aData, aSize,
                                                               aStride, aFormat);
   }
   already_AddRefed<SourceSurface> OptimizeSourceSurface(
-      SourceSurface *aSurface) const override {
+      SourceSurface* aSurface) const override {
     return mTiles[0].mDrawTarget->OptimizeSourceSurface(aSurface);
   }
 
   already_AddRefed<SourceSurface> CreateSourceSurfaceFromNativeSurface(
-      const NativeSurface &aSurface) const override {
+      const NativeSurface& aSurface) const override {
     return mTiles[0].mDrawTarget->CreateSourceSurfaceFromNativeSurface(
         aSurface);
   }
 
   already_AddRefed<DrawTarget> CreateSimilarDrawTarget(
-      const IntSize &aSize, SurfaceFormat aFormat) const override {
+      const IntSize& aSize, SurfaceFormat aFormat) const override {
     return mTiles[0].mDrawTarget->CreateSimilarDrawTarget(aSize, aFormat);
   }
 
-  bool CanCreateSimilarDrawTarget(const IntSize &aSize,
+  bool CanCreateSimilarDrawTarget(const IntSize& aSize,
                                   SurfaceFormat aFormat) const override {
     return mTiles[0].mDrawTarget->CanCreateSimilarDrawTarget(aSize, aFormat);
   }
@@ -146,7 +146,7 @@ class DrawTargetTiled : public DrawTarget {
   }
 
   already_AddRefed<GradientStops> CreateGradientStops(
-      GradientStop *aStops, uint32_t aNumStops,
+      GradientStop* aStops, uint32_t aNumStops,
       ExtendMode aExtendMode = ExtendMode::CLAMP) const override {
     return mTiles[0].mDrawTarget->CreateGradientStops(aStops, aNumStops,
                                                       aExtendMode);
@@ -175,7 +175,7 @@ class DrawTargetTiled : public DrawTarget {
 
 class SnapshotTiled : public SourceSurface {
  public:
-  SnapshotTiled(const std::vector<TileInternal> &aTiles, const IntRect &aRect)
+  SnapshotTiled(const std::vector<TileInternal>& aTiles, const IntRect& aRect)
       : mRect(aRect) {
     for (size_t i = 0; i < aTiles.size(); i++) {
       mSnapshots.push_back(aTiles[i].mDrawTarget->Snapshot());

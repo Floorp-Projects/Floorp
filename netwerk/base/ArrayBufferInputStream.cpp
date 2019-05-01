@@ -28,7 +28,7 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JS::Rooted<JSObject *> arrayBuffer(RootingCx(), &aBuffer.toObject());
+  JS::Rooted<JSObject*> arrayBuffer(RootingCx(), &aBuffer.toObject());
   if (!JS::IsArrayBufferObject(arrayBuffer)) {
     return NS_ERROR_FAILURE;
   }
@@ -46,8 +46,8 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
 
   JS::AutoCheckCannotGC nogc;
   bool isShared;
-  char *src =
-      (char *)JS::GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
+  char* src =
+      (char*)JS::GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
   memcpy(&mArrayBuffer[0], src, mBufferLength);
   return NS_OK;
 }
@@ -59,7 +59,7 @@ ArrayBufferInputStream::Close() {
 }
 
 NS_IMETHODIMP
-ArrayBufferInputStream::Available(uint64_t *aCount) {
+ArrayBufferInputStream::Available(uint64_t* aCount) {
   if (mClosed) {
     return NS_BASE_STREAM_CLOSED;
   }
@@ -72,14 +72,14 @@ ArrayBufferInputStream::Available(uint64_t *aCount) {
 }
 
 NS_IMETHODIMP
-ArrayBufferInputStream::Read(char *aBuf, uint32_t aCount,
-                             uint32_t *aReadCount) {
+ArrayBufferInputStream::Read(char* aBuf, uint32_t aCount,
+                             uint32_t* aReadCount) {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, aReadCount);
 }
 
 NS_IMETHODIMP
-ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                                     uint32_t aCount, uint32_t *result) {
+ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
+                                     uint32_t aCount, uint32_t* result) {
   NS_ASSERTION(result, "null ptr");
   NS_ASSERTION(mBufferLength >= mPos, "bad stream state");
 
@@ -119,7 +119,7 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-ArrayBufferInputStream::IsNonBlocking(bool *aNonBlocking) {
+ArrayBufferInputStream::IsNonBlocking(bool* aNonBlocking) {
   *aNonBlocking = true;
   return NS_OK;
 }

@@ -17,7 +17,7 @@ namespace mozilla {
 namespace scache {
 
 nsresult NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
-                                        nsIObjectInputStream **stream);
+                                        nsIObjectInputStream** stream);
 
 // We can't retrieve the wrapped stream from the objectOutputStream later,
 // so we return it here. We give callers in debug builds the option
@@ -26,18 +26,18 @@ nsresult NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
 // This could cause them to be deserialized incorrectly (as multiple copies
 // instead of references).
 nsresult NewObjectOutputWrappedStorageStream(
-    nsIObjectOutputStream **wrapperStream, nsIStorageStream **stream,
+    nsIObjectOutputStream** wrapperStream, nsIStorageStream** stream,
     bool wantDebugStream);
 
 // Creates a buffer for storing the stream into the cache. The buffer is
 // allocated with 'new []'.  After calling this function, the caller would
 // typically call StartupCache::PutBuffer with the returned buffer.
-nsresult NewBufferFromStorageStream(nsIStorageStream *storageStream,
-                                    UniquePtr<char[]> *buffer, uint32_t *len);
+nsresult NewBufferFromStorageStream(nsIStorageStream* storageStream,
+                                    UniquePtr<char[]>* buffer, uint32_t* len);
 
-nsresult ResolveURI(nsIURI *in, nsIURI **out);
+nsresult ResolveURI(nsIURI* in, nsIURI** out);
 
-nsresult PathifyURI(nsIURI *in, nsACString &out);
+nsresult PathifyURI(nsIURI* in, nsACString& out);
 }  // namespace scache
 }  // namespace mozilla
 

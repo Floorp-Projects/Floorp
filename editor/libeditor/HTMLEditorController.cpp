@@ -12,16 +12,16 @@
 
 namespace mozilla {
 
-#define NS_REGISTER_COMMAND(_cmdClass, _cmdName)                        \
-  {                                                                     \
-    aCommandTable->RegisterCommand(                                     \
-        _cmdName,                                                       \
-        static_cast<nsIControllerCommand *>(_cmdClass::GetInstance())); \
+#define NS_REGISTER_COMMAND(_cmdClass, _cmdName)                       \
+  {                                                                    \
+    aCommandTable->RegisterCommand(                                    \
+        _cmdName,                                                      \
+        static_cast<nsIControllerCommand*>(_cmdClass::GetInstance())); \
   }
 
 // static
 nsresult HTMLEditorController::RegisterEditorDocStateCommands(
-    nsControllerCommandTable *aCommandTable) {
+    nsControllerCommandTable* aCommandTable) {
   // observer commands for document state
   NS_REGISTER_COMMAND(DocumentStateCommand, "obs_documentCreated")
   NS_REGISTER_COMMAND(DocumentStateCommand, "obs_documentWillBeDestroyed")
@@ -43,7 +43,7 @@ nsresult HTMLEditorController::RegisterEditorDocStateCommands(
 
 // static
 nsresult HTMLEditorController::RegisterHTMLEditorCommands(
-    nsControllerCommandTable *aCommandTable) {
+    nsControllerCommandTable* aCommandTable) {
   // Edit menu
   NS_REGISTER_COMMAND(PasteNoFormattingCommand, "cmd_pasteNoFormatting");
 

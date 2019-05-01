@@ -31,9 +31,9 @@ class nsCertOverride {
   nsCertOverride()
       : mPort(-1), mIsTemporary(false), mOverrideBits(OverrideBits::None) {}
 
-  nsCertOverride(const nsCertOverride &other) { this->operator=(other); }
+  nsCertOverride(const nsCertOverride& other) { this->operator=(other); }
 
-  nsCertOverride &operator=(const nsCertOverride &other) {
+  nsCertOverride& operator=(const nsCertOverride& other) {
     mAsciiHost = other.mAsciiHost;
     mPort = other.mPort;
     mIsTemporary = other.mIsTemporary;
@@ -52,8 +52,8 @@ class nsCertOverride {
   nsCString mDBKey;
   nsCOMPtr<nsIX509Cert> mCert;
 
-  static void convertBitsToString(OverrideBits ob, nsACString &str);
-  static void convertStringToBits(const nsACString &str, OverrideBits &ob);
+  static void convertBitsToString(OverrideBits ob, nsACString& str);
+  static void convertStringToBits(const nsACString& str, OverrideBits& ob);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsCertOverride::OverrideBits)
@@ -62,13 +62,13 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsCertOverride::OverrideBits)
 class nsCertOverrideEntry final : public PLDHashEntryHdr {
  public:
   // Hash methods
-  typedef const char *KeyType;
-  typedef const char *KeyTypePointer;
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
 
   // do nothing with aHost - we require mHead to be set before we're live!
   explicit nsCertOverrideEntry(KeyTypePointer aHostWithPortUTF8) {}
 
-  nsCertOverrideEntry(nsCertOverrideEntry &&toMove)
+  nsCertOverrideEntry(nsCertOverrideEntry&& toMove)
       : PLDHashEntryHdr(std::move(toMove)),
         mSettings(std::move(toMove.mSettings)),
         mHostWithPort(std::move(toMove.mHostWithPort)) {}
@@ -92,7 +92,7 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = false };
 
   // get methods
-  inline const nsCString &HostWithPort() const { return mHostWithPort; }
+  inline const nsCString& HostWithPort() const { return mHostWithPort; }
 
   inline KeyTypePointer HostWithPortPtr() const { return mHostWithPort.get(); }
 
@@ -113,20 +113,20 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsresult Init();
   void RemoveAllTemporaryOverrides();
 
-  typedef void (*CertOverrideEnumerator)(const nsCertOverride &aSettings,
-                                         void *aUserData);
+  typedef void (*CertOverrideEnumerator)(const nsCertOverride& aSettings,
+                                         void* aUserData);
 
   // aCert == null: return all overrides
   // aCert != null: return overrides that match the given cert
-  nsresult EnumerateCertOverrides(nsIX509Cert *aCert,
+  nsresult EnumerateCertOverrides(nsIX509Cert* aCert,
                                   CertOverrideEnumerator enumerator,
-                                  void *aUserData);
+                                  void* aUserData);
 
   // Concates host name and the port number. If the port number is -1 then
   // port 443 is automatically used. This method ensures there is always a port
   // number separated with colon.
-  static void GetHostWithPort(const nsACString &aHostName, int32_t aPort,
-                              nsACString &_retval);
+  static void GetHostWithPort(const nsACString& aHostName, int32_t aPort,
+                              nsACString& _retval);
 
  protected:
   ~nsCertOverrideService();
@@ -136,17 +136,17 @@ class nsCertOverrideService final : public nsICertOverrideService,
   nsTHashtable<nsCertOverrideEntry> mSettingsTable;
 
   void CountPermanentOverrideTelemetry(
-      const mozilla::MutexAutoLock &aProofOfLock);
+      const mozilla::MutexAutoLock& aProofOfLock);
 
   void RemoveAllFromMemory();
-  nsresult Read(const mozilla::MutexAutoLock &aProofOfLock);
-  nsresult Write(const mozilla::MutexAutoLock &aProofOfLock);
-  nsresult AddEntryToList(const nsACString &host, int32_t port,
-                          nsIX509Cert *aCert, const bool aIsTemporary,
-                          const nsACString &fingerprint,
+  nsresult Read(const mozilla::MutexAutoLock& aProofOfLock);
+  nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
+  nsresult AddEntryToList(const nsACString& host, int32_t port,
+                          nsIX509Cert* aCert, const bool aIsTemporary,
+                          const nsACString& fingerprint,
                           nsCertOverride::OverrideBits ob,
-                          const nsACString &dbKey,
-                          const mozilla::MutexAutoLock &aProofOfLock);
+                          const nsACString& dbKey,
+                          const mozilla::MutexAutoLock& aProofOfLock);
 };
 
 #define NS_CERTOVERRIDE_CID                          \

@@ -14,7 +14,7 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(DataChannelParent, nsIParentChannel, nsIStreamListener)
 
-bool DataChannelParent::Init(const uint32_t &channelId) {
+bool DataChannelParent::Init(const uint32_t& channelId) {
   nsCOMPtr<nsIChannel> channel;
   MOZ_ALWAYS_SUCCEEDS(
       NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel)));
@@ -23,7 +23,7 @@ bool DataChannelParent::Init(const uint32_t &channelId) {
 }
 
 NS_IMETHODIMP
-DataChannelParent::SetParentListener(HttpChannelParentListener *aListener) {
+DataChannelParent::SetParentListener(HttpChannelParentListener* aListener) {
   // Nothing to do.
   return NS_OK;
 }
@@ -62,9 +62,9 @@ DataChannelParent::NotifyFlashPluginStateChanged(
 }
 
 NS_IMETHODIMP
-DataChannelParent::SetClassifierMatchedInfo(const nsACString &aList,
-                                            const nsACString &aProvider,
-                                            const nsACString &aFullHash) {
+DataChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
+                                            const nsACString& aProvider,
+                                            const nsACString& aFullHash) {
   // nothing to do
   return NS_OK;
 }
@@ -85,7 +85,7 @@ DataChannelParent::Delete() {
 void DataChannelParent::ActorDestroy(ActorDestroyReason why) {}
 
 NS_IMETHODIMP
-DataChannelParent::OnStartRequest(nsIRequest *aRequest) {
+DataChannelParent::OnStartRequest(nsIRequest* aRequest) {
   // We don't have a way to prevent nsBaseChannel from calling AsyncOpen on
   // the created nsDataChannel. We don't have anywhere to send the data in the
   // parent, so abort the binding.
@@ -93,15 +93,15 @@ DataChannelParent::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
+DataChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnDataAvailable(nsIRequest *aRequest,
-                                   nsIInputStream *aInputStream,
+DataChannelParent::OnDataAvailable(nsIRequest* aRequest,
+                                   nsIInputStream* aInputStream,
                                    uint64_t aOffset, uint32_t aCount) {
   // See above.
   MOZ_CRASH("Should never be called");

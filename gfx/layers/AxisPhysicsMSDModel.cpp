@@ -40,7 +40,7 @@ AxisPhysicsMSDModel::AxisPhysicsMSDModel(double aInitialPosition,
 
 AxisPhysicsMSDModel::~AxisPhysicsMSDModel() {}
 
-double AxisPhysicsMSDModel::Acceleration(const State &aState) {
+double AxisPhysicsMSDModel::Acceleration(const State& aState) {
   // Simulate a Mass-Damper-Spring Model; assume a unit mass
 
   // Hooke’s Law: http://en.wikipedia.org/wiki/Hooke%27s_law

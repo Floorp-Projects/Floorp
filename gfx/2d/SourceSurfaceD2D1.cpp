@@ -10,15 +10,15 @@
 namespace mozilla {
 namespace gfx {
 
-SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image *aImage,
-                                     ID2D1DeviceContext *aDC,
+SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image* aImage,
+                                     ID2D1DeviceContext* aDC,
                                      SurfaceFormat aFormat,
-                                     const IntSize &aSize, DrawTargetD2D1 *aDT)
+                                     const IntSize& aSize, DrawTargetD2D1* aDT)
     : mImage(aImage),
       mDC(aDC),
       mDevice(Factory::GetD2D1Device()),
       mDrawTarget(aDT) {
-  aImage->QueryInterface((ID2D1Bitmap1 **)getter_AddRefs(mRealizedBitmap));
+  aImage->QueryInterface((ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   mFormat = aFormat;
   mSize = aSize;
@@ -56,7 +56,7 @@ already_AddRefed<DataSourceSurface> SourceSurfaceD2D1::GetDataSurface() {
   props.bitmapOptions =
       D2D1_BITMAP_OPTIONS_CANNOT_DRAW | D2D1_BITMAP_OPTIONS_CPU_READ;
   hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props,
-                         (ID2D1Bitmap1 **)getter_AddRefs(softwareBitmap));
+                         (ID2D1Bitmap1**)getter_AddRefs(softwareBitmap));
 
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to create software bitmap: " << mSize
@@ -100,7 +100,7 @@ bool SourceSurfaceD2D1::EnsureRealizedBitmap() {
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
   dc->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props,
-                   (ID2D1Bitmap1 **)getter_AddRefs(mRealizedBitmap));
+                   (ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   dc->SetTarget(mRealizedBitmap);
 
@@ -128,7 +128,7 @@ void SourceSurfaceD2D1::DrawTargetWillChange() {
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
   HRESULT hr =
       mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props,
-                        (ID2D1Bitmap1 **)getter_AddRefs(mRealizedBitmap));
+                        (ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   if (FAILED(hr)) {
     gfxCriticalError()
@@ -160,7 +160,7 @@ void SourceSurfaceD2D1::MarkIndependent() {
   }
 }
 
-DataSourceSurfaceD2D1::DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap,
+DataSourceSurfaceD2D1::DataSourceSurfaceD2D1(ID2D1Bitmap1* aMappableBitmap,
                                              SurfaceFormat aFormat)
     : mBitmap(aMappableBitmap),
       mFormat(aFormat),
@@ -179,14 +179,14 @@ IntSize DataSourceSurfaceD2D1::GetSize() const {
   return IntSize(int32_t(size.width), int32_t(size.height));
 }
 
-uint8_t *DataSourceSurfaceD2D1::GetData() {
+uint8_t* DataSourceSurfaceD2D1::GetData() {
   EnsureMapped();
 
   return mMap.bits;
 }
 
 bool DataSourceSurfaceD2D1::Map(MapType aMapType,
-                                MappedSurface *aMappedSurface) {
+                                MappedSurface* aMappedSurface) {
   // DataSourceSurfaces used with the new Map API should not be used with
   // GetData!!
   MOZ_ASSERT(!mImplicitMapped);

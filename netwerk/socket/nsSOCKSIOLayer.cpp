@@ -71,15 +71,15 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
   NS_DECL_NSISOCKSSOCKETINFO
   NS_DECL_NSIDNSLISTENER
 
-  void Init(int32_t version, int32_t family, nsIProxyInfo *proxy,
-            const char *destinationHost, uint32_t flags, uint32_t tlsFlags);
+  void Init(int32_t version, int32_t family, nsIProxyInfo* proxy,
+            const char* destinationHost, uint32_t flags, uint32_t tlsFlags);
 
   void SetConnectTimeout(PRIntervalTime to);
-  PRStatus DoHandshake(PRFileDesc *fd, int16_t oflags = -1);
+  PRStatus DoHandshake(PRFileDesc* fd, int16_t oflags = -1);
   int16_t GetPollFlags() const;
   bool IsConnected() const { return mState == SOCKS_CONNECTED; }
   void ForgetFD() { mFD = nullptr; }
-  void SetNamedPipeFD(PRFileDesc *fd) { mFD = fd; }
+  void SetNamedPipeFD(PRFileDesc* fd) { mFD = fd; }
 
  private:
   virtual ~nsSOCKSSocketInfo() {
@@ -88,10 +88,10 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
   }
 
   void HandshakeFinished(PRErrorCode err = 0);
-  PRStatus StartDNS(PRFileDesc *fd);
-  PRStatus ConnectToProxy(PRFileDesc *fd);
-  void FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy);
-  PRStatus ContinueConnectingToProxy(PRFileDesc *fd, int16_t oflags);
+  PRStatus StartDNS(PRFileDesc* fd);
+  PRStatus ConnectToProxy(PRFileDesc* fd);
+  void FixupAddressFamily(PRFileDesc* fd, NetAddr* proxy);
+  PRStatus ContinueConnectingToProxy(PRFileDesc* fd, int16_t oflags);
   PRStatus WriteV4ConnectRequest();
   PRStatus ReadV4ConnectResponse();
   PRStatus WriteV5AuthRequest();
@@ -99,19 +99,19 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
   PRStatus WriteV5UsernameRequest();
   PRStatus ReadV5UsernameResponse();
   PRStatus WriteV5ConnectRequest();
-  PRStatus ReadV5AddrTypeAndLength(uint8_t *type, uint32_t *len);
+  PRStatus ReadV5AddrTypeAndLength(uint8_t* type, uint32_t* len);
   PRStatus ReadV5ConnectResponseTop();
   PRStatus ReadV5ConnectResponseBottom();
 
   uint8_t ReadUint8();
   uint16_t ReadUint16();
   uint32_t ReadUint32();
-  void ReadNetAddr(NetAddr *addr, uint16_t fam);
-  void ReadNetPort(NetAddr *addr);
+  void ReadNetAddr(NetAddr* addr, uint16_t fam);
+  void ReadNetPort(NetAddr* addr);
 
   void WantRead(uint32_t sz);
-  PRStatus ReadFromSocket(PRFileDesc *fd);
-  PRStatus WriteToSocket(PRFileDesc *fd);
+  PRStatus ReadFromSocket(PRFileDesc* fd);
+  PRStatus WriteToSocket(PRFileDesc* fd);
 
   bool IsLocalProxy() {
     nsAutoCString proxyHost;
@@ -119,8 +119,8 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
     return IsHostLocalTarget(proxyHost);
   }
 
-  nsresult SetLocalProxyPath(const nsACString &aLocalProxyPath,
-                             NetAddr *aProxyAddr) {
+  nsresult SetLocalProxyPath(const nsACString& aLocalProxyPath,
+                             NetAddr* aProxyAddr) {
 #ifdef XP_UNIX
     nsresult rv;
     MOZ_ASSERT(aProxyAddr);
@@ -176,7 +176,7 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
 #endif
   }
 
-  bool SetupNamedPipeLayer(PRFileDesc *fd) {
+  bool SetupNamedPipeLayer(PRFileDesc* fd) {
 #if defined(XP_WIN)
     if (IsLocalProxy()) {
       // nsSOCKSIOLayer handshaking only works under blocking mode
@@ -190,15 +190,15 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
 
  private:
   State mState;
-  uint8_t *mData;
-  uint8_t *mDataIoPtr;
+  uint8_t* mData;
+  uint8_t* mDataIoPtr;
   uint32_t mDataLength;
   uint32_t mReadOffset;
   uint32_t mAmountToRead;
   nsCOMPtr<nsIDNSRecord> mDnsRec;
   nsCOMPtr<nsICancelable> mLookup;
   nsresult mLookupStatus;
-  PRFileDesc *mFD;
+  PRFileDesc* mFD;
 
   nsCString mDestinationHost;
   nsCOMPtr<nsIProxyInfo> mProxy;
@@ -293,11 +293,11 @@ class Buffer {
  public:
   Buffer() : mBuf(nullptr), mLength(0) {}
 
-  explicit Buffer(uint8_t *aBuf, size_t aLength = 0)
+  explicit Buffer(uint8_t* aBuf, size_t aLength = 0)
       : mBuf(aBuf), mLength(aLength) {}
 
   template <size_t Size2>
-  MOZ_IMPLICIT Buffer(const Buffer<Size2> &aBuf)
+  MOZ_IMPLICIT Buffer(const Buffer<Size2>& aBuf)
       : mBuf(aBuf.mBuf), mLength(aBuf.mLength) {
     static_assert(Size2 > Size, "Cannot cast buffer");
   }
@@ -314,11 +314,11 @@ class Buffer {
     return Write(aValue);
   }
 
-  Buffer<Size - sizeof(uint16_t)> WriteNetPort(const NetAddr *aAddr) {
+  Buffer<Size - sizeof(uint16_t)> WriteNetPort(const NetAddr* aAddr) {
     return WriteUint16(aAddr->inet.port);
   }
 
-  Buffer<Size - sizeof(IPv6Addr)> WriteNetAddr(const NetAddr *aAddr) {
+  Buffer<Size - sizeof(IPv6Addr)> WriteNetAddr(const NetAddr* aAddr) {
     if (aAddr->raw.family == AF_INET) {
       return Write(aAddr->inet.ip);
     } else if (aAddr->raw.family == AF_INET6) {
@@ -329,7 +329,7 @@ class Buffer {
   }
 
   template <size_t MaxLength>
-  Buffer<Size - MaxLength> WriteString(const nsACString &aStr) {
+  Buffer<Size - MaxLength> WriteString(const nsACString& aStr) {
     if (aStr.Length() > MaxLength) {
       return Buffer<Size - MaxLength>(nullptr);
     }
@@ -348,12 +348,12 @@ class Buffer {
   friend class Buffer;
 
   template <typename T>
-  Buffer<Size - sizeof(T)> Write(T &aValue) {
+  Buffer<Size - sizeof(T)> Write(T& aValue) {
     return WritePtr<T, sizeof(T)>(&aValue, sizeof(T));
   }
 
   template <typename T, size_t Length>
-  Buffer<Size - Length> WritePtr(const T *aValue, size_t aCopyLength) {
+  Buffer<Size - Length> WritePtr(const T* aValue, size_t aCopyLength) {
     static_assert(Size >= Length, "Cannot write that much");
     MOZ_ASSERT(aCopyLength <= Length);
     MOZ_ASSERT(mBuf);
@@ -364,12 +364,12 @@ class Buffer {
     return result;
   }
 
-  uint8_t *mBuf;
+  uint8_t* mBuf;
   size_t mLength;
 };
 
 void nsSOCKSSocketInfo::Init(int32_t version, int32_t family,
-                             nsIProxyInfo *proxy, const char *host,
+                             nsIProxyInfo* proxy, const char* host,
                              uint32_t flags, uint32_t tlsFlags) {
   mVersion = version;
   mDestinationFamily = family;
@@ -383,37 +383,37 @@ void nsSOCKSSocketInfo::Init(int32_t version, int32_t family,
 NS_IMPL_ISUPPORTS(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr **aExternalProxyAddr) {
+nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr** aExternalProxyAddr) {
   memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(NetAddr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::SetExternalProxyAddr(NetAddr *aExternalProxyAddr) {
+nsSOCKSSocketInfo::SetExternalProxyAddr(NetAddr* aExternalProxyAddr) {
   memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(NetAddr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::GetDestinationAddr(NetAddr **aDestinationAddr) {
+nsSOCKSSocketInfo::GetDestinationAddr(NetAddr** aDestinationAddr) {
   memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(NetAddr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::SetDestinationAddr(NetAddr *aDestinationAddr) {
+nsSOCKSSocketInfo::SetDestinationAddr(NetAddr* aDestinationAddr) {
   memcpy(&mDestinationAddr, aDestinationAddr, sizeof(NetAddr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::GetInternalProxyAddr(NetAddr **aInternalProxyAddr) {
+nsSOCKSSocketInfo::GetInternalProxyAddr(NetAddr** aInternalProxyAddr) {
   memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(NetAddr));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::SetInternalProxyAddr(NetAddr *aInternalProxyAddr) {
+nsSOCKSSocketInfo::SetInternalProxyAddr(NetAddr* aInternalProxyAddr) {
   memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(NetAddr));
   return NS_OK;
 }
@@ -456,7 +456,7 @@ void nsSOCKSSocketInfo::HandshakeFinished(PRErrorCode err) {
   }
 }
 
-PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc *fd) {
+PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc* fd) {
   MOZ_ASSERT(!mDnsRec && mState == SOCKS_INITIAL,
              "Must be in initial state to make DNS Lookup");
 
@@ -483,8 +483,8 @@ PRStatus nsSOCKSSocketInfo::StartDNS(PRFileDesc *fd) {
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::OnLookupComplete(nsICancelable *aRequest,
-                                    nsIDNSRecord *aRecord, nsresult aStatus) {
+nsSOCKSSocketInfo::OnLookupComplete(nsICancelable* aRequest,
+                                    nsIDNSRecord* aRecord, nsresult aStatus) {
   MOZ_ASSERT(aRequest == mLookup, "wrong DNS query");
   mLookup = nullptr;
   mLookupStatus = aStatus;
@@ -498,13 +498,13 @@ nsSOCKSSocketInfo::OnLookupComplete(nsICancelable *aRequest,
 }
 
 NS_IMETHODIMP
-nsSOCKSSocketInfo::OnLookupByTypeComplete(nsICancelable *aRequest,
-                                          nsIDNSByTypeRecord *res,
+nsSOCKSSocketInfo::OnLookupByTypeComplete(nsICancelable* aRequest,
+                                          nsIDNSByTypeRecord* res,
                                           nsresult aStatus) {
   return NS_OK;
 }
 
-PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd) {
+PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc* fd) {
   PRStatus status;
   nsresult rv;
 
@@ -592,7 +592,7 @@ PRStatus nsSOCKSSocketInfo::ConnectToProxy(PRFileDesc *fd) {
   return WriteV5AuthRequest();
 }
 
-void nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy) {
+void nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc* fd, NetAddr* proxy) {
   int32_t proxyFamily = mInternalProxyAddr.raw.family;
   // Do nothing if the address family is already matched
   if (proxyFamily == mDestinationFamily) {
@@ -609,10 +609,10 @@ void nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy) {
   if (mDestinationFamily == AF_INET6 && !ipv6Supported) {
     proxy->inet6.family = AF_INET6;
     proxy->inet6.port = mInternalProxyAddr.inet.port;
-    uint8_t *proxyp = proxy->inet6.ip.u8;
+    uint8_t* proxyp = proxy->inet6.ip.u8;
     memset(proxyp, 0, 10);
     memset(proxyp + 10, 0xff, 2);
-    memcpy(proxyp + 12, (char *)&mInternalProxyAddr.inet.ip, 4);
+    memcpy(proxyp + 12, (char*)&mInternalProxyAddr.inet.ip, 4);
     // mDestinationFamily should not be updated
     return;
   }
@@ -629,7 +629,7 @@ void nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy) {
   }
 
   // Create a new FileDesc with a specified family
-  PRFileDesc *tmpfd = PR_OpenTCPSocket(proxyFamily);
+  PRFileDesc* tmpfd = PR_OpenTCPSocket(proxyFamily);
   if (!tmpfd) {
     return;
   }
@@ -650,7 +650,7 @@ void nsSOCKSSocketInfo::FixupAddressFamily(PRFileDesc *fd, NetAddr *proxy) {
   mDestinationFamily = proxyFamily;
 }
 
-PRStatus nsSOCKSSocketInfo::ContinueConnectingToProxy(PRFileDesc *fd,
+PRStatus nsSOCKSSocketInfo::ContinueConnectingToProxy(PRFileDesc* fd,
                                                       int16_t oflags) {
   PRStatus status;
 
@@ -684,7 +684,7 @@ PRStatus nsSOCKSSocketInfo::WriteV4ConnectRequest() {
     return PR_FAILURE;
   }
 
-  NetAddr *addr = &mDestinationAddr;
+  NetAddr* addr = &mDestinationAddr;
   int32_t proxy_resolve;
 
   MOZ_ASSERT(mState == SOCKS_CONNECTING_TO_PROXY, "Invalid state!");
@@ -873,7 +873,7 @@ PRStatus nsSOCKSSocketInfo::ReadV5UsernameResponse() {
 
 PRStatus nsSOCKSSocketInfo::WriteV5ConnectRequest() {
   // Send SOCKS 5 connect request
-  NetAddr *addr = &mDestinationAddr;
+  NetAddr* addr = &mDestinationAddr;
   int32_t proxy_resolve;
   proxy_resolve = mFlags & nsISocketProvider::PROXY_RESOLVES_HOST;
 
@@ -922,8 +922,8 @@ PRStatus nsSOCKSSocketInfo::WriteV5ConnectRequest() {
   return PR_SUCCESS;
 }
 
-PRStatus nsSOCKSSocketInfo::ReadV5AddrTypeAndLength(uint8_t *type,
-                                                    uint32_t *len) {
+PRStatus nsSOCKSSocketInfo::ReadV5AddrTypeAndLength(uint8_t* type,
+                                                    uint32_t* len) {
   MOZ_ASSERT(mState == SOCKS5_READ_CONNECT_RESPONSE_TOP ||
                  mState == SOCKS5_READ_CONNECT_RESPONSE_BOTTOM,
              "Invalid state!");
@@ -1071,7 +1071,7 @@ PRStatus nsSOCKSSocketInfo::ReadV5ConnectResponseBottom() {
 
 void nsSOCKSSocketInfo::SetConnectTimeout(PRIntervalTime to) { mTimeout = to; }
 
-PRStatus nsSOCKSSocketInfo::DoHandshake(PRFileDesc *fd, int16_t oflags) {
+PRStatus nsSOCKSSocketInfo::DoHandshake(PRFileDesc* fd, int16_t oflags) {
   LOGDEBUG(("socks: DoHandshake(), state = %d", mState));
 
   switch (mState) {
@@ -1197,9 +1197,9 @@ inline uint32_t nsSOCKSSocketInfo::ReadUint32() {
   return rv;
 }
 
-void nsSOCKSSocketInfo::ReadNetAddr(NetAddr *addr, uint16_t fam) {
+void nsSOCKSSocketInfo::ReadNetAddr(NetAddr* addr, uint16_t fam) {
   uint32_t amt = 0;
-  const uint8_t *ip = mData + mReadOffset;
+  const uint8_t* ip = mData + mReadOffset;
 
   addr->raw.family = fam;
   if (fam == AF_INET) {
@@ -1217,7 +1217,7 @@ void nsSOCKSSocketInfo::ReadNetAddr(NetAddr *addr, uint16_t fam) {
   mReadOffset += amt;
 }
 
-void nsSOCKSSocketInfo::ReadNetPort(NetAddr *addr) {
+void nsSOCKSSocketInfo::ReadNetPort(NetAddr* addr) {
   addr->inet.port = ReadUint16();
 }
 
@@ -1228,9 +1228,9 @@ void nsSOCKSSocketInfo::WantRead(uint32_t sz) {
   mAmountToRead = sz;
 }
 
-PRStatus nsSOCKSSocketInfo::ReadFromSocket(PRFileDesc *fd) {
+PRStatus nsSOCKSSocketInfo::ReadFromSocket(PRFileDesc* fd) {
   int32_t rc;
-  const uint8_t *end;
+  const uint8_t* end;
 
   if (!mAmountToRead) {
     LOGDEBUG(("socks: ReadFromSocket(), nothing to do"));
@@ -1272,9 +1272,9 @@ PRStatus nsSOCKSSocketInfo::ReadFromSocket(PRFileDesc *fd) {
   return PR_FAILURE;
 }
 
-PRStatus nsSOCKSSocketInfo::WriteToSocket(PRFileDesc *fd) {
+PRStatus nsSOCKSSocketInfo::WriteToSocket(PRFileDesc* fd) {
   int32_t rc;
-  const uint8_t *end;
+  const uint8_t* end;
 
   if (!mDataLength) {
     LOGDEBUG(("socks: WriteToSocket(), nothing to do"));
@@ -1307,17 +1307,17 @@ PRStatus nsSOCKSSocketInfo::WriteToSocket(PRFileDesc *fd) {
   return PR_FAILURE;
 }
 
-static PRStatus nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr,
+static PRStatus nsSOCKSIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                                       PRIntervalTime to) {
   PRStatus status;
   NetAddr dst;
 
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
   if (info == nullptr) return PR_FAILURE;
 
   if (addr->raw.family == PR_AF_INET6 &&
       PR_IsNetAddrType(addr, PR_IpAddrV4Mapped)) {
-    const uint8_t *srcp;
+    const uint8_t* srcp;
 
     LOGDEBUG(("socks: converting ipv4-mapped ipv6 address to ipv4"));
 
@@ -1343,10 +1343,10 @@ static PRStatus nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr,
   return status;
 }
 
-static PRStatus nsSOCKSIOLayerConnectContinue(PRFileDesc *fd, int16_t oflags) {
+static PRStatus nsSOCKSIOLayerConnectContinue(PRFileDesc* fd, int16_t oflags) {
   PRStatus status;
 
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
   if (info == nullptr) return PR_FAILURE;
 
   do {
@@ -1356,9 +1356,9 @@ static PRStatus nsSOCKSIOLayerConnectContinue(PRFileDesc *fd, int16_t oflags) {
   return status;
 }
 
-static int16_t nsSOCKSIOLayerPoll(PRFileDesc *fd, int16_t in_flags,
-                                  int16_t *out_flags) {
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+static int16_t nsSOCKSIOLayerPoll(PRFileDesc* fd, int16_t in_flags,
+                                  int16_t* out_flags) {
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
   if (info == nullptr) return PR_FAILURE;
 
   if (!info->IsConnected()) {
@@ -1369,8 +1369,8 @@ static int16_t nsSOCKSIOLayerPoll(PRFileDesc *fd, int16_t in_flags,
   return fd->lower->methods->poll(fd->lower, in_flags, out_flags);
 }
 
-static PRStatus nsSOCKSIOLayerClose(PRFileDesc *fd) {
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+static PRStatus nsSOCKSIOLayerClose(PRFileDesc* fd) {
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
   PRDescIdentity id = PR_GetLayersIdentity(fd);
 
   if (info && id == nsSOCKSIOLayerIdentity) {
@@ -1382,14 +1382,14 @@ static PRStatus nsSOCKSIOLayerClose(PRFileDesc *fd) {
   return fd->lower->methods->close(fd->lower);
 }
 
-static PRFileDesc *nsSOCKSIOLayerAccept(PRFileDesc *fd, PRNetAddr *addr,
+static PRFileDesc* nsSOCKSIOLayerAccept(PRFileDesc* fd, PRNetAddr* addr,
                                         PRIntervalTime timeout) {
   // TODO: implement SOCKS support for accept
   return fd->lower->methods->accept(fd->lower, addr, timeout);
 }
 
-static int32_t nsSOCKSIOLayerAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
-                                        PRNetAddr **raddr, void *buf,
+static int32_t nsSOCKSIOLayerAcceptRead(PRFileDesc* sd, PRFileDesc** nd,
+                                        PRNetAddr** raddr, void* buf,
                                         int32_t amount,
                                         PRIntervalTime timeout) {
   // TODO: implement SOCKS support for accept, then read from it
@@ -1397,17 +1397,17 @@ static int32_t nsSOCKSIOLayerAcceptRead(PRFileDesc *sd, PRFileDesc **nd,
                                         timeout);
 }
 
-static PRStatus nsSOCKSIOLayerBind(PRFileDesc *fd, const PRNetAddr *addr) {
+static PRStatus nsSOCKSIOLayerBind(PRFileDesc* fd, const PRNetAddr* addr) {
   // TODO: implement SOCKS support for bind (very similar to connect)
   return fd->lower->methods->bind(fd->lower, addr);
 }
 
-static PRStatus nsSOCKSIOLayerGetName(PRFileDesc *fd, PRNetAddr *addr) {
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+static PRStatus nsSOCKSIOLayerGetName(PRFileDesc* fd, PRNetAddr* addr) {
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
 
   if (info != nullptr && addr != nullptr) {
     NetAddr temp;
-    NetAddr *tempPtr = &temp;
+    NetAddr* tempPtr = &temp;
     if (info->GetExternalProxyAddr(&tempPtr) == NS_OK) {
       NetAddrToPRNetAddr(tempPtr, addr);
       return PR_SUCCESS;
@@ -1417,12 +1417,12 @@ static PRStatus nsSOCKSIOLayerGetName(PRFileDesc *fd, PRNetAddr *addr) {
   return PR_FAILURE;
 }
 
-static PRStatus nsSOCKSIOLayerGetPeerName(PRFileDesc *fd, PRNetAddr *addr) {
-  nsSOCKSSocketInfo *info = (nsSOCKSSocketInfo *)fd->secret;
+static PRStatus nsSOCKSIOLayerGetPeerName(PRFileDesc* fd, PRNetAddr* addr) {
+  nsSOCKSSocketInfo* info = (nsSOCKSSocketInfo*)fd->secret;
 
   if (info != nullptr && addr != nullptr) {
     NetAddr temp;
-    NetAddr *tempPtr = &temp;
+    NetAddr* tempPtr = &temp;
     if (info->GetDestinationAddr(&tempPtr) == NS_OK) {
       NetAddrToPRNetAddr(tempPtr, addr);
       return PR_SUCCESS;
@@ -1432,24 +1432,24 @@ static PRStatus nsSOCKSIOLayerGetPeerName(PRFileDesc *fd, PRNetAddr *addr) {
   return PR_FAILURE;
 }
 
-static PRStatus nsSOCKSIOLayerListen(PRFileDesc *fd, int backlog) {
+static PRStatus nsSOCKSIOLayerListen(PRFileDesc* fd, int backlog) {
   // TODO: implement SOCKS support for listen
   return fd->lower->methods->listen(fd->lower, backlog);
 }
 
 // add SOCKS IO layer to an existing socket
-nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
-                                   int32_t port, nsIProxyInfo *proxy,
+nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
+                                   int32_t port, nsIProxyInfo* proxy,
                                    int32_t socksVersion, uint32_t flags,
-                                   uint32_t tlsFlags, PRFileDesc *fd,
-                                   nsISupports **info) {
+                                   uint32_t tlsFlags, PRFileDesc* fd,
+                                   nsISupports** info) {
   NS_ENSURE_TRUE((socksVersion == 4) || (socksVersion == 5),
                  NS_ERROR_NOT_INITIALIZED);
 
   if (firstTime) {
     // XXX hack until NSPR provides an official way to detect system IPv6
     // support (bug 388519)
-    PRFileDesc *tmpfd = PR_OpenTCPSocket(PR_AF_INET6);
+    PRFileDesc* tmpfd = PR_OpenTCPSocket(PR_AF_INET6);
     if (!tmpfd) {
       ipv6Supported = false;
     } else {
@@ -1478,7 +1478,7 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
 
   LOGDEBUG(("Entering nsSOCKSIOLayerAddToSocket()."));
 
-  PRFileDesc *layer;
+  PRFileDesc* layer;
   PRStatus rv;
 
   layer = PR_CreateIOLayerStub(nsSOCKSIOLayerIdentity, &nsSOCKSIOLayerMethods);
@@ -1487,7 +1487,7 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
     return NS_ERROR_FAILURE;
   }
 
-  nsSOCKSSocketInfo *infoObject = new nsSOCKSSocketInfo();
+  nsSOCKSSocketInfo* infoObject = new nsSOCKSSocketInfo();
   if (!infoObject) {
     // clean up IOLayerStub
     LOGERROR(("Failed to create nsSOCKSSocketInfo()."));
@@ -1497,7 +1497,7 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
 
   NS_ADDREF(infoObject);
   infoObject->Init(socksVersion, family, proxy, host, flags, tlsFlags);
-  layer->secret = (PRFilePrivate *)infoObject;
+  layer->secret = (PRFilePrivate*)infoObject;
 
   PRDescIdentity fdIdentity = PR_GetLayersIdentity(fd);
 #if defined(XP_WIN)
@@ -1516,12 +1516,12 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char *host,
     return NS_ERROR_FAILURE;
   }
 
-  *info = static_cast<nsISOCKSSocketInfo *>(infoObject);
+  *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
   NS_ADDREF(*info);
   return NS_OK;
 }
 
-bool IsHostLocalTarget(const nsACString &aHost) {
+bool IsHostLocalTarget(const nsACString& aHost) {
 #if defined(XP_UNIX)
   return StringBeginsWith(aHost, NS_LITERAL_CSTRING("file:"));
 #elif defined(XP_WIN)

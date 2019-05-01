@@ -84,7 +84,7 @@ using mozilla::dom::ServiceWorkerDescriptor;
 
 #define MAX_RECURSION_COUNT 50
 
-nsIOService *gIOService;
+nsIOService* gIOService;
 static bool gHasWarnedUploadChannel2;
 static bool gCaptivePortalEnabled = false;
 static LazyLogModule gIOServiceLog("nsIOService");
@@ -207,7 +207,7 @@ nsIOService::nsIOService()
       mNetTearingDownStarted(0),
       mSocketProcess(nullptr) {}
 
-static const char *gCallbackPrefs[] = {
+static const char* gCallbackPrefs[] = {
     PORT_PREF_PREFIX,
     MANAGE_OFFLINE_STATUS_PREF,
     NECKO_BUFFER_CACHE_COUNT_PREF,
@@ -217,7 +217,7 @@ static const char *gCallbackPrefs[] = {
     nullptr,
 };
 
-static const char *gCallbackPrefsForSocketProcess[] = {
+static const char* gCallbackPrefsForSocketProcess[] = {
     WEBRTC_PREF_PREFIX,
     nullptr,
 };
@@ -288,7 +288,7 @@ nsresult nsIOService::InitializeCaptivePortalService() {
 
   mCaptivePortalService = do_GetService(NS_CAPTIVEPORTAL_CID);
   if (mCaptivePortalService) {
-    return static_cast<CaptivePortalService *>(mCaptivePortalService.get())
+    return static_cast<CaptivePortalService*>(mCaptivePortalService.get())
         ->Initialize();
   }
 
@@ -370,7 +370,7 @@ already_AddRefed<nsIOService> nsIOService::GetInstance() {
 class SocketProcessListenerProxy : public SocketProcessHost::Listener {
  public:
   SocketProcessListenerProxy() = default;
-  void OnProcessLaunchComplete(SocketProcessHost *aHost, bool aSucceeded) {
+  void OnProcessLaunchComplete(SocketProcessHost* aHost, bool aSucceeded) {
     if (!gIOService) {
       return;
     }
@@ -378,7 +378,7 @@ class SocketProcessListenerProxy : public SocketProcessHost::Listener {
     gIOService->OnProcessLaunchComplete(aHost, aSucceeded);
   }
 
-  void OnProcessUnexpectedShutdown(SocketProcessHost *aHost) {
+  void OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
     if (!gIOService) {
       return;
     }
@@ -439,7 +439,7 @@ bool nsIOService::SocketProcessReady() {
   return mSocketProcess && mSocketProcess->IsConnected();
 }
 
-void nsIOService::NotifySocketProcessPrefsChanged(const char *aName) {
+void nsIOService::NotifySocketProcessPrefsChanged(const char* aName) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!XRE_IsParentProcess()) {
@@ -455,7 +455,7 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char *aName) {
   CallOrWaitForSocketProcess(sendPrefUpdate);
 }
 
-void nsIOService::OnProcessLaunchComplete(SocketProcessHost *aHost,
+void nsIOService::OnProcessLaunchComplete(SocketProcessHost* aHost,
                                           bool aSucceeded) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -470,14 +470,14 @@ void nsIOService::OnProcessLaunchComplete(SocketProcessHost *aHost,
   if (!mPendingEvents.IsEmpty()) {
     nsTArray<std::function<void()>> pendingEvents;
     mPendingEvents.SwapElements(pendingEvents);
-    for (auto &func : pendingEvents) {
+    for (auto& func : pendingEvents) {
       func();
     }
   }
 }
 
 void nsIOService::CallOrWaitForSocketProcess(
-    const std::function<void()> &aFunc) {
+    const std::function<void()>& aFunc) {
   MOZ_ASSERT(NS_IsMainThread());
   if (IsSocketProcessLaunchComplete() && SocketProcessReady()) {
     aFunc();
@@ -490,7 +490,7 @@ int32_t nsIOService::SocketProcessPid() {
   if (!mSocketProcess) {
     return 0;
   }
-  if (SocketProcessParent *actor = mSocketProcess->GetActor()) {
+  if (SocketProcessParent* actor = mSocketProcess->GetActor()) {
     return (int32_t)actor->OtherPid();
   }
   return 0;
@@ -501,7 +501,7 @@ bool nsIOService::IsSocketProcessLaunchComplete() {
   return mSocketProcessLaunchComplete;
 }
 
-void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost *aHost) {
+void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
   MOZ_ASSERT(NS_IsMainThread());
 
   LOG(("nsIOService::OnProcessUnexpectedShutdown\n"));
@@ -544,7 +544,7 @@ nsresult nsIOService::RecheckCaptivePortal() {
   return NS_DispatchToMainThread(task);
 }
 
-nsresult nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel *newChan) {
+nsresult nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel* newChan) {
   nsresult rv;
 
   if (!mCaptivePortalService) {
@@ -581,8 +581,8 @@ nsresult nsIOService::RecheckCaptivePortalIfLocalRedirect(nsIChannel *newChan) {
 }
 
 nsresult nsIOService::AsyncOnChannelRedirect(
-    nsIChannel *oldChan, nsIChannel *newChan, uint32_t flags,
-    nsAsyncRedirectVerifyHelper *helper) {
+    nsIChannel* oldChan, nsIChannel* newChan, uint32_t flags,
+    nsAsyncRedirectVerifyHelper* helper) {
   // If a redirect to a local network address occurs, then chances are we
   // are in a captive portal, so we trigger a recheck.
   RecheckCaptivePortalIfLocalRedirect(newChan);
@@ -610,8 +610,8 @@ nsresult nsIOService::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-nsresult nsIOService::CacheProtocolHandler(const char *scheme,
-                                           nsIProtocolHandler *handler) {
+nsresult nsIOService::CacheProtocolHandler(const char* scheme,
+                                           nsIProtocolHandler* handler) {
   MOZ_ASSERT(NS_IsMainThread());
 
   for (unsigned int i = 0; i < NS_N(gScheme); i++) {
@@ -638,8 +638,8 @@ nsresult nsIOService::CacheProtocolHandler(const char *scheme,
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsIOService::GetCachedProtocolHandler(const char *scheme,
-                                               nsIProtocolHandler **result,
+nsresult nsIOService::GetCachedProtocolHandler(const char* scheme,
+                                               nsIProtocolHandler** result,
                                                uint32_t start, uint32_t end) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -658,7 +658,7 @@ nsresult nsIOService::GetCachedProtocolHandler(const char *scheme,
   return NS_ERROR_FAILURE;
 }
 
-static bool UsesExternalProtocolHandler(const char *aScheme) {
+static bool UsesExternalProtocolHandler(const char* aScheme) {
   if (NS_LITERAL_CSTRING("file").Equals(aScheme) ||
       NS_LITERAL_CSTRING("chrome").Equals(aScheme) ||
       NS_LITERAL_CSTRING("resource").Equals(aScheme)) {
@@ -668,7 +668,7 @@ static bool UsesExternalProtocolHandler(const char *aScheme) {
     return false;
   }
 
-  for (const auto &forcedExternalScheme : gForcedExternalSchemes) {
+  for (const auto& forcedExternalScheme : gForcedExternalSchemes) {
     if (!nsCRT::strcasecmp(forcedExternalScheme, aScheme)) {
       return true;
     }
@@ -681,8 +681,8 @@ static bool UsesExternalProtocolHandler(const char *aScheme) {
 }
 
 NS_IMETHODIMP
-nsIOService::GetProtocolHandler(const char *scheme,
-                                nsIProtocolHandler **result) {
+nsIOService::GetProtocolHandler(const char* scheme,
+                                nsIProtocolHandler** result) {
   nsresult rv;
 
   NS_ENSURE_ARG_POINTER(scheme);
@@ -739,12 +739,12 @@ nsIOService::GetProtocolHandler(const char *scheme,
 }
 
 NS_IMETHODIMP
-nsIOService::ExtractScheme(const nsACString &inURI, nsACString &scheme) {
+nsIOService::ExtractScheme(const nsACString& inURI, nsACString& scheme) {
   return net_ExtractURLScheme(inURI, scheme);
 }
 
 NS_IMETHODIMP
-nsIOService::HostnameIsLocalIPAddress(nsIURI *aURI, bool *aResult) {
+nsIOService::HostnameIsLocalIPAddress(nsIURI* aURI, bool* aResult) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
@@ -772,7 +772,7 @@ nsIOService::HostnameIsLocalIPAddress(nsIURI *aURI, bool *aResult) {
 }
 
 NS_IMETHODIMP
-nsIOService::GetProtocolFlags(const char *scheme, uint32_t *flags) {
+nsIOService::GetProtocolFlags(const char* scheme, uint32_t* flags) {
   nsCOMPtr<nsIProtocolHandler> handler;
   nsresult rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
   if (NS_FAILED(rv)) return rv;
@@ -790,15 +790,15 @@ nsIOService::GetProtocolFlags(const char *scheme, uint32_t *flags) {
 
 class AutoIncrement {
  public:
-  explicit AutoIncrement(uint32_t *var) : mVar(var) { ++*var; }
+  explicit AutoIncrement(uint32_t* var) : mVar(var) { ++*var; }
   ~AutoIncrement() { --*mVar; }
 
  private:
-  uint32_t *mVar;
+  uint32_t* mVar;
 };
 
-nsresult nsIOService::NewURI(const nsACString &aSpec, const char *aCharset,
-                             nsIURI *aBaseURI, nsIURI **result) {
+nsresult nsIOService::NewURI(const nsACString& aSpec, const char* aCharset,
+                             nsIURI* aBaseURI, nsIURI** result) {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
   static uint32_t recursionCount = 0;
@@ -830,7 +830,7 @@ nsresult nsIOService::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsIOService::NewFileURI(nsIFile *file, nsIURI **result) {
+nsIOService::NewFileURI(nsIFile* file, nsIURI** result) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(file);
 
@@ -846,12 +846,12 @@ nsIOService::NewFileURI(nsIFile *file, nsIURI **result) {
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURI(nsIURI *aURI, nsINode *aLoadingNode,
-                               nsIPrincipal *aLoadingPrincipal,
-                               nsIPrincipal *aTriggeringPrincipal,
+nsIOService::NewChannelFromURI(nsIURI* aURI, nsINode* aLoadingNode,
+                               nsIPrincipal* aLoadingPrincipal,
+                               nsIPrincipal* aTriggeringPrincipal,
                                uint32_t aSecurityFlags,
                                uint32_t aContentPolicyType,
-                               nsIChannel **result) {
+                               nsIChannel** result) {
   return NewChannelFromURIWithProxyFlags(aURI,
                                          nullptr,  // aProxyURI
                                          0,        // aProxyFlags
@@ -860,11 +860,11 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsINode *aLoadingNode,
                                          aContentPolicyType, result);
 }
 nsresult nsIOService::NewChannelFromURIWithClientAndController(
-    nsIURI *aURI, nsINode *aLoadingNode, nsIPrincipal *aLoadingPrincipal,
-    nsIPrincipal *aTriggeringPrincipal,
-    const Maybe<ClientInfo> &aLoadingClientInfo,
-    const Maybe<ServiceWorkerDescriptor> &aController, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, nsIChannel **aResult) {
+    nsIURI* aURI, nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
+    nsIPrincipal* aTriggeringPrincipal,
+    const Maybe<ClientInfo>& aLoadingClientInfo,
+    const Maybe<ServiceWorkerDescriptor>& aController, uint32_t aSecurityFlags,
+    uint32_t aContentPolicyType, nsIChannel** aResult) {
   return NewChannelFromURIWithProxyFlagsInternal(
       aURI,
       nullptr,  // aProxyURI
@@ -874,8 +874,8 @@ nsresult nsIOService::NewChannelFromURIWithClientAndController(
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURIWithLoadInfo(nsIURI *aURI, nsILoadInfo *aLoadInfo,
-                                           nsIChannel **result) {
+nsIOService::NewChannelFromURIWithLoadInfo(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                           nsIChannel** result) {
   return NewChannelFromURIWithProxyFlagsInternal(aURI,
                                                  nullptr,  // aProxyURI
                                                  0,        // aProxyFlags
@@ -883,12 +883,12 @@ nsIOService::NewChannelFromURIWithLoadInfo(nsIURI *aURI, nsILoadInfo *aLoadInfo,
 }
 
 nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
-    nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
-    nsINode *aLoadingNode, nsIPrincipal *aLoadingPrincipal,
-    nsIPrincipal *aTriggeringPrincipal,
-    const Maybe<ClientInfo> &aLoadingClientInfo,
-    const Maybe<ServiceWorkerDescriptor> &aController, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, nsIChannel **result) {
+    nsIURI* aURI, nsIURI* aProxyURI, uint32_t aProxyFlags,
+    nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
+    nsIPrincipal* aTriggeringPrincipal,
+    const Maybe<ClientInfo>& aLoadingClientInfo,
+    const Maybe<ServiceWorkerDescriptor>& aController, uint32_t aSecurityFlags,
+    uint32_t aContentPolicyType, nsIChannel** result) {
   // Ideally all callers of NewChannelFromURIWithProxyFlagsInternal provide
   // the necessary arguments to create a loadinfo.
   //
@@ -909,7 +909,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
                             aLoadingClientInfo, aController);
   }
   if (!loadInfo) {
-    JSContext *cx = nsContentUtils::GetCurrentJSContext();
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
     // if coming from JS we like to know the JS stack, otherwise
     // we just assert that we are able to create a valid loadinfo!
     if (cx) {
@@ -930,8 +930,8 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
 }
 
 nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
-    nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
-    nsILoadInfo *aLoadInfo, nsIChannel **result) {
+    nsIURI* aURI, nsIURI* aProxyURI, uint32_t aProxyFlags,
+    nsILoadInfo* aLoadInfo, nsIChannel** result) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
 
@@ -1003,10 +1003,10 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
 
 NS_IMETHODIMP
 nsIOService::NewChannelFromURIWithProxyFlags(
-    nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
-    nsINode *aLoadingNode, nsIPrincipal *aLoadingPrincipal,
-    nsIPrincipal *aTriggeringPrincipal, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, nsIChannel **result) {
+    nsIURI* aURI, nsIURI* aProxyURI, uint32_t aProxyFlags,
+    nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
+    nsIPrincipal* aTriggeringPrincipal, uint32_t aSecurityFlags,
+    uint32_t aContentPolicyType, nsIChannel** result) {
   return NewChannelFromURIWithProxyFlagsInternal(
       aURI, aProxyURI, aProxyFlags, aLoadingNode, aLoadingPrincipal,
       aTriggeringPrincipal, Maybe<ClientInfo>(),
@@ -1015,12 +1015,12 @@ nsIOService::NewChannelFromURIWithProxyFlags(
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset,
-                        nsIURI *aBaseURI, nsINode *aLoadingNode,
-                        nsIPrincipal *aLoadingPrincipal,
-                        nsIPrincipal *aTriggeringPrincipal,
+nsIOService::NewChannel(const nsACString& aSpec, const char* aCharset,
+                        nsIURI* aBaseURI, nsINode* aLoadingNode,
+                        nsIPrincipal* aLoadingPrincipal,
+                        nsIPrincipal* aTriggeringPrincipal,
                         uint32_t aSecurityFlags, uint32_t aContentPolicyType,
-                        nsIChannel **result) {
+                        nsIChannel** result) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   rv = NewURI(aSpec, aCharset, aBaseURI, getter_AddRefs(uri));
@@ -1050,7 +1050,7 @@ bool nsIOService::IsLinkUp() {
 }
 
 NS_IMETHODIMP
-nsIOService::GetOffline(bool *offline) {
+nsIOService::GetOffline(bool* offline) {
   if (mOfflineMirrorsConnectivity) {
     *offline = mOffline || !mConnectivity;
   } else {
@@ -1090,7 +1090,7 @@ nsIOService::SetOffline(bool offline) {
     }
   }
 
-  nsIIOService *subject = static_cast<nsIIOService *>(this);
+  nsIIOService* subject = static_cast<nsIIOService*>(this);
   while (mSetOfflineValue != mOffline) {
     offline = mSetOfflineValue;
 
@@ -1142,7 +1142,7 @@ nsIOService::SetOffline(bool offline) {
 }
 
 NS_IMETHODIMP
-nsIOService::GetConnectivity(bool *aConnectivity) {
+nsIOService::GetConnectivity(bool* aConnectivity) {
   *aConnectivity = mConnectivity;
   return NS_OK;
 }
@@ -1174,9 +1174,9 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
   if (mCaptivePortalService) {
     if (aConnectivity && gCaptivePortalEnabled) {
       // This will also trigger a captive portal check for the new network
-      static_cast<CaptivePortalService *>(mCaptivePortalService.get())->Start();
+      static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Start();
     } else {
-      static_cast<CaptivePortalService *>(mCaptivePortalService.get())->Stop();
+      static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
     }
   }
 
@@ -1199,16 +1199,16 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
   if (aConnectivity) {
     // If we were previously offline due to connectivity=false,
     // send the ONLINE notification
-    observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+    observerService->NotifyObservers(static_cast<nsIIOService*>(this),
                                      NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                      (u"" NS_IOSERVICE_ONLINE));
   } else {
     // If we were previously online and lost connectivity
     // send the OFFLINE notification
-    observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+    observerService->NotifyObservers(static_cast<nsIIOService*>(this),
                                      NS_IOSERVICE_GOING_OFFLINE_TOPIC,
                                      u"" NS_IOSERVICE_OFFLINE);
-    observerService->NotifyObservers(static_cast<nsIIOService *>(this),
+    observerService->NotifyObservers(static_cast<nsIIOService*>(this),
                                      NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                      u"" NS_IOSERVICE_OFFLINE);
   }
@@ -1216,7 +1216,7 @@ nsresult nsIOService::SetConnectivityInternal(bool aConnectivity) {
 }
 
 NS_IMETHODIMP
-nsIOService::AllowPort(int32_t inPort, const char *scheme, bool *_retval) {
+nsIOService::AllowPort(int32_t inPort, const char* scheme, bool* _retval) {
   int16_t port = inPort;
   if (port == -1) {
     *_retval = true;
@@ -1252,7 +1252,7 @@ nsIOService::AllowPort(int32_t inPort, const char *scheme, bool *_retval) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void nsIOService::PrefsChanged(const char *pref) {
+void nsIOService::PrefsChanged(const char* pref) {
   // Look for extra ports to block
   if (!pref || strcmp(pref, PORT_PREF("banned")) == 0)
     ParsePortList(PORT_PREF("banned"), false);
@@ -1306,17 +1306,16 @@ void nsIOService::PrefsChanged(const char *pref) {
                                        &gCaptivePortalEnabled);
     if (NS_SUCCEEDED(rv) && mCaptivePortalService) {
       if (gCaptivePortalEnabled) {
-        static_cast<CaptivePortalService *>(mCaptivePortalService.get())
+        static_cast<CaptivePortalService*>(mCaptivePortalService.get())
             ->Start();
       } else {
-        static_cast<CaptivePortalService *>(mCaptivePortalService.get())
-            ->Stop();
+        static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
       }
     }
   }
 }
 
-void nsIOService::ParsePortList(const char *pref, bool remove) {
+void nsIOService::ParsePortList(const char* pref, bool remove) {
   nsAutoCString portList;
 
   // Get a pref string and chop it up into a list of ports.
@@ -1357,7 +1356,7 @@ void nsIOService::ParsePortList(const char *pref, bool remove) {
 
 class nsWakeupNotifier : public Runnable {
  public:
-  explicit nsWakeupNotifier(nsIIOServiceInternal *ioService)
+  explicit nsWakeupNotifier(nsIIOServiceInternal* ioService)
       : Runnable("net::nsWakeupNotifier"), mIOService(ioService) {}
 
   NS_IMETHOD Run() override { return mIOService->NotifyWakeup(); }
@@ -1392,8 +1391,8 @@ void nsIOService::SetHttpHandlerAlreadyShutingDown() {
 
 // nsIObserver interface
 NS_IMETHODIMP
-nsIOService::Observe(nsISupports *subject, const char *topic,
-                     const char16_t *data) {
+nsIOService::Observe(nsISupports* subject, const char* topic,
+                     const char16_t* data) {
   if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
     if (!mHttpHandlerAlreadyShutingDown) {
       mNetTearingDownStarted = PR_IntervalNow();
@@ -1445,7 +1444,7 @@ nsIOService::Observe(nsISupports *subject, const char *topic,
     SetOffline(true);
 
     if (mCaptivePortalService) {
-      static_cast<CaptivePortalService *>(mCaptivePortalService.get())->Stop();
+      static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
       mCaptivePortalService = nullptr;
     }
 
@@ -1469,24 +1468,24 @@ nsIOService::Observe(nsISupports *subject, const char *topic,
 
 // nsINetUtil interface
 NS_IMETHODIMP
-nsIOService::ParseRequestContentType(const nsACString &aTypeHeader,
-                                     nsACString &aCharset, bool *aHadCharset,
-                                     nsACString &aContentType) {
+nsIOService::ParseRequestContentType(const nsACString& aTypeHeader,
+                                     nsACString& aCharset, bool* aHadCharset,
+                                     nsACString& aContentType) {
   net_ParseRequestContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
   return NS_OK;
 }
 
 // nsINetUtil interface
 NS_IMETHODIMP
-nsIOService::ParseResponseContentType(const nsACString &aTypeHeader,
-                                      nsACString &aCharset, bool *aHadCharset,
-                                      nsACString &aContentType) {
+nsIOService::ParseResponseContentType(const nsACString& aTypeHeader,
+                                      nsACString& aCharset, bool* aHadCharset,
+                                      nsACString& aContentType) {
   net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::ProtocolHasFlags(nsIURI *uri, uint32_t flags, bool *result) {
+nsIOService::ProtocolHasFlags(nsIURI* uri, uint32_t flags, bool* result) {
   NS_ENSURE_ARG(uri);
 
   *result = false;
@@ -1507,7 +1506,7 @@ nsIOService::ProtocolHasFlags(nsIURI *uri, uint32_t flags, bool *result) {
 }
 
 NS_IMETHODIMP
-nsIOService::URIChainHasFlags(nsIURI *uri, uint32_t flags, bool *result) {
+nsIOService::URIChainHasFlags(nsIURI* uri, uint32_t flags, bool* result) {
   nsresult rv = ProtocolHasFlags(uri, flags, result);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1555,13 +1554,13 @@ nsIOService::SetManageOfflineStatus(bool aManage) {
 }
 
 NS_IMETHODIMP
-nsIOService::GetManageOfflineStatus(bool *aManage) {
+nsIOService::GetManageOfflineStatus(bool* aManage) {
   *aManage = mManageLinkStatus;
   return NS_OK;
 }
 
 // input argument 'data' is already UTF8'ed
-nsresult nsIOService::OnNetworkLinkEvent(const char *data) {
+nsresult nsIOService::OnNetworkLinkEvent(const char* data) {
   if (IsNeckoChild() || IsSocketProcessChild()) {
     // There is nothing IO service could do on the child process
     // with this at the moment.  Feel free to add functionality
@@ -1574,9 +1573,9 @@ nsresult nsIOService::OnNetworkLinkEvent(const char *data) {
   }
 
   nsCString dataAsString(data);
-  for (auto *cp : mozilla::dom::ContentParent::AllProcesses(
+  for (auto* cp : mozilla::dom::ContentParent::AllProcesses(
            mozilla::dom::ContentParent::eLive)) {
-    PNeckoParent *neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+    PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
     if (!neckoParent) {
       continue;
     }
@@ -1617,8 +1616,8 @@ nsresult nsIOService::OnNetworkLinkEvent(const char *data) {
 }
 
 NS_IMETHODIMP
-nsIOService::EscapeString(const nsACString &aString, uint32_t aEscapeType,
-                          nsACString &aResult) {
+nsIOService::EscapeString(const nsACString& aString, uint32_t aEscapeType,
+                          nsACString& aResult) {
   NS_ENSURE_ARG_MAX(aEscapeType, 4);
 
   nsAutoCString stringCopy(aString);
@@ -1633,8 +1632,8 @@ nsIOService::EscapeString(const nsACString &aString, uint32_t aEscapeType,
 }
 
 NS_IMETHODIMP
-nsIOService::EscapeURL(const nsACString &aStr, uint32_t aFlags,
-                       nsACString &aResult) {
+nsIOService::EscapeURL(const nsACString& aStr, uint32_t aFlags,
+                       nsACString& aResult) {
   aResult.Truncate();
   NS_EscapeURL(aStr.BeginReading(), aStr.Length(), aFlags | esc_AlwaysCopy,
                aResult);
@@ -1642,8 +1641,8 @@ nsIOService::EscapeURL(const nsACString &aStr, uint32_t aFlags,
 }
 
 NS_IMETHODIMP
-nsIOService::UnescapeString(const nsACString &aStr, uint32_t aFlags,
-                            nsACString &aResult) {
+nsIOService::UnescapeString(const nsACString& aStr, uint32_t aFlags,
+                            nsACString& aResult) {
   aResult.Truncate();
   NS_UnescapeURL(aStr.BeginReading(), aStr.Length(), aFlags | esc_AlwaysCopy,
                  aResult);
@@ -1651,11 +1650,11 @@ nsIOService::UnescapeString(const nsACString &aStr, uint32_t aFlags,
 }
 
 NS_IMETHODIMP
-nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
-                                           nsACString &aCharset,
-                                           int32_t *aCharsetStart,
-                                           int32_t *aCharsetEnd,
-                                           bool *aHadCharset) {
+nsIOService::ExtractCharsetFromContentType(const nsACString& aTypeHeader,
+                                           nsACString& aCharset,
+                                           int32_t* aCharsetStart,
+                                           int32_t* aCharsetEnd,
+                                           bool* aHadCharset) {
   nsAutoCString ignored;
   net_ParseContentType(aTypeHeader, ignored, aCharset, aHadCharset,
                        aCharsetStart, aCharsetEnd);
@@ -1667,15 +1666,15 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
 
 // parse policyString to policy enum value (see ReferrerPolicy.h)
 NS_IMETHODIMP
-nsIOService::ParseAttributePolicyString(const nsAString &policyString,
-                                        uint32_t *outPolicyEnum) {
+nsIOService::ParseAttributePolicyString(const nsAString& policyString,
+                                        uint32_t* outPolicyEnum) {
   NS_ENSURE_ARG(outPolicyEnum);
   *outPolicyEnum = (uint32_t)AttributeReferrerPolicyFromString(policyString);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::GetReferrerPolicyString(uint32_t aPolicy, nsACString &aResult) {
+nsIOService::GetReferrerPolicyString(uint32_t aPolicy, nsACString& aResult) {
   if (aPolicy >= ArrayLength(kReferrerPolicyString)) {
     aResult.AssignLiteral("unknown");
     return NS_ERROR_INVALID_ARG;
@@ -1694,8 +1693,8 @@ class IOServiceProxyCallback final : public nsIProtocolProxyCallback {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROTOCOLPROXYCALLBACK
 
-  IOServiceProxyCallback(nsIInterfaceRequestor *aCallbacks,
-                         nsIOService *aIOService)
+  IOServiceProxyCallback(nsIInterfaceRequestor* aCallbacks,
+                         nsIOService* aIOService)
       : mCallbacks(aCallbacks), mIOService(aIOService) {}
 
  private:
@@ -1706,8 +1705,8 @@ class IOServiceProxyCallback final : public nsIProtocolProxyCallback {
 NS_IMPL_ISUPPORTS(IOServiceProxyCallback, nsIProtocolProxyCallback)
 
 NS_IMETHODIMP
-IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request,
-                                         nsIChannel *channel, nsIProxyInfo *pi,
+IOServiceProxyCallback::OnProxyAvailable(nsICancelable* request,
+                                         nsIChannel* channel, nsIProxyInfo* pi,
                                          nsresult status) {
   // Checking proxy status for speculative connect
   nsAutoCString type;
@@ -1750,7 +1749,7 @@ IOServiceProxyCallback::OnProxyAvailable(nsICancelable *request,
 }
 
 nsresult nsIOService::SpeculativeConnectInternal(
-    nsIURI *aURI, nsIPrincipal *aPrincipal, nsIInterfaceRequestor *aCallbacks,
+    nsIURI* aURI, nsIPrincipal* aPrincipal, nsIInterfaceRequestor* aCallbacks,
     bool aAnonymous) {
   NS_ENSURE_ARG(aURI);
 
@@ -1821,14 +1820,14 @@ nsresult nsIOService::SpeculativeConnectInternal(
 }
 
 NS_IMETHODIMP
-nsIOService::SpeculativeConnect(nsIURI *aURI, nsIPrincipal *aPrincipal,
-                                nsIInterfaceRequestor *aCallbacks) {
+nsIOService::SpeculativeConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, false);
 }
 
 NS_IMETHODIMP
-nsIOService::SpeculativeAnonymousConnect(nsIURI *aURI, nsIPrincipal *aPrincipal,
-                                         nsIInterfaceRequestor *aCallbacks) {
+nsIOService::SpeculativeAnonymousConnect(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                                         nsIInterfaceRequestor* aCallbacks) {
   return SpeculativeConnectInternal(aURI, aPrincipal, aCallbacks, true);
 }
 

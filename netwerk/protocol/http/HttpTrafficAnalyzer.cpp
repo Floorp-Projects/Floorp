@@ -130,7 +130,7 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
 }
 
 nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
-    nsTArray<HttpTrafficCategory> &&aCategories) {
+    nsTArray<HttpTrafficCategory>&& aCategories) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(StaticPrefs::network_traffic_analyzer_enabled());
   MOZ_ASSERT(!aCategories.IsEmpty(), "empty category");

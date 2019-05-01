@@ -17,19 +17,19 @@
   }
 
 #define NS_DECL_NSLOCALFILE_UNICODE_METHODS                           \
-  nsresult AppendUnicode(const char16_t *aNode);                      \
-  nsresult GetUnicodeLeafName(char16_t **aLeafName);                  \
-  nsresult SetUnicodeLeafName(const char16_t *aLeafName);             \
-  nsresult CopyToUnicode(nsIFile *aNewParentDir,                      \
-                         const char16_t *aNewLeafName);               \
-  nsresult CopyToFollowingLinksUnicode(nsIFile *aNewParentDir,        \
-                                       const char16_t *aNewLeafName); \
-  nsresult MoveToUnicode(nsIFile *aNewParentDir,                      \
-                         const char16_t *aNewLeafName);               \
-  nsresult GetUnicodeTarget(char16_t **aTarget);                      \
-  nsresult GetUnicodePath(char16_t **aPath);                          \
-  nsresult InitWithUnicodePath(const char16_t *aPath);                \
-  nsresult AppendRelativeUnicodePath(const char16_t *aRelativePath);
+  nsresult AppendUnicode(const char16_t* aNode);                      \
+  nsresult GetUnicodeLeafName(char16_t** aLeafName);                  \
+  nsresult SetUnicodeLeafName(const char16_t* aLeafName);             \
+  nsresult CopyToUnicode(nsIFile* aNewParentDir,                      \
+                         const char16_t* aNewLeafName);               \
+  nsresult CopyToFollowingLinksUnicode(nsIFile* aNewParentDir,        \
+                                       const char16_t* aNewLeafName); \
+  nsresult MoveToUnicode(nsIFile* aNewParentDir,                      \
+                         const char16_t* aNewLeafName);               \
+  nsresult GetUnicodeTarget(char16_t** aTarget);                      \
+  nsresult GetUnicodePath(char16_t** aPath);                          \
+  nsresult InitWithUnicodePath(const char16_t* aPath);                \
+  nsresult AppendRelativeUnicodePath(const char16_t* aRelativePath);
 
 // XPCOMInit needs to know about how we are implemented,
 // so here we will export it.  Other users should not depend

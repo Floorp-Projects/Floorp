@@ -9,11 +9,11 @@
 #define nsGtkCursors_h__
 
 typedef struct {
-  const unsigned char *bits;
-  const unsigned char *mask_bits;
+  const unsigned char* bits;
+  const unsigned char* mask_bits;
   int hot_x;
   int hot_y;
-  const char *hash;
+  const char* hash;
 } nsGtkCursor;
 
 /* MOZ_CURSOR_HAND_GRAB */

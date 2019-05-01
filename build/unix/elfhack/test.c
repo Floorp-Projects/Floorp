@@ -91,7 +91,7 @@ DEF(times)
 #  include "test.c"
 #  undef DEF
 
-const char *strings[] = {
+const char* strings[] = {
 #  define DEF(w) str_##w,
 #  include "test.c"
 #  include "test.c"
@@ -101,7 +101,7 @@ const char *strings[] = {
 /* Create a hole between two zones of relative relocations */
 const int hole[] = {42, 42, 42, 42};
 
-const char *strings2[] = {
+const char* strings2[] = {
 #  include "test.c"
 #  include "test.c"
 #  include "test.c"

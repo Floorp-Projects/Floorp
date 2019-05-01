@@ -23,7 +23,7 @@ typedef HANDLE ProcessType;
 typedef pid_t ProcessType;
 #else
 #  include "prproces.h"
-typedef PRProcess *ProcessType;
+typedef PRProcess* ProcessType;
 #endif
 
 /**
@@ -46,9 +46,9 @@ typedef PRProcess *ProcessType;
  *
  * This function does not modify appDir.
  */
-nsresult ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
-                        int argc, char **argv, const char *appVersion,
-                        bool restart = true, ProcessType *pid = nullptr);
+nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
+                        int argc, char** argv, const char* appVersion,
+                        bool restart = true, ProcessType* pid = nullptr);
 
 // The implementation of the update processor handles the task of loading the
 // updater application for staging an update.
@@ -77,7 +77,7 @@ class nsUpdateProcessor final : public nsIUpdateProcessor {
     nsCOMPtr<nsIFile> mAppDir;
     nsCOMPtr<nsIFile> mUpdateRoot;
     int mArgc;
-    char **mArgv;
+    char** mArgv;
     nsCString mAppVersion;
   };
 

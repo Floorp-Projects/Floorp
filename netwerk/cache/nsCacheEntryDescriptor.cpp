@@ -25,8 +25,8 @@
 
 class nsAsyncDoomEvent : public mozilla::Runnable {
  public:
-  nsAsyncDoomEvent(nsCacheEntryDescriptor *descriptor,
-                   nsICacheListener *listener)
+  nsAsyncDoomEvent(nsCacheEntryDescriptor* descriptor,
+                   nsICacheListener* listener)
       : mozilla::Runnable("nsAsyncDoomEvent") {
     mDescriptor = descriptor;
     mListener = listener;
@@ -64,14 +64,14 @@ class nsAsyncDoomEvent : public mozilla::Runnable {
 
  private:
   RefPtr<nsCacheEntryDescriptor> mDescriptor;
-  nsICacheListener *mListener;
+  nsICacheListener* mListener;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 NS_IMPL_ISUPPORTS(nsCacheEntryDescriptor, nsICacheEntryDescriptor,
                   nsICacheEntryInfo)
 
-nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry *entry,
+nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry* entry,
                                                nsCacheAccessMode accessGranted)
     : mCacheEntry(entry),
       mAccessGranted(accessGranted),
@@ -99,7 +99,7 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor() {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetClientID(nsACString &aClientID) {
+nsCacheEntryDescriptor::GetClientID(nsACString& aClientID) {
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETCLIENTID));
   if (!mCacheEntry) {
     aClientID.Truncate();
@@ -110,7 +110,7 @@ nsCacheEntryDescriptor::GetClientID(nsACString &aClientID) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetDeviceID(nsACString &aDeviceID) {
+nsCacheEntryDescriptor::GetDeviceID(nsACString& aDeviceID) {
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDEVICEID));
   if (!mCacheEntry) {
     aDeviceID.Truncate();
@@ -122,7 +122,7 @@ nsCacheEntryDescriptor::GetDeviceID(nsACString &aDeviceID) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetKey(nsACString &result) {
+nsCacheEntryDescriptor::GetKey(nsACString& result) {
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETKEY));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
@@ -130,7 +130,7 @@ nsCacheEntryDescriptor::GetKey(nsACString &result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetFetchCount(int32_t *result) {
+nsCacheEntryDescriptor::GetFetchCount(int32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETFETCHCOUNT));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
@@ -140,7 +140,7 @@ nsCacheEntryDescriptor::GetFetchCount(int32_t *result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastFetched(uint32_t *result) {
+nsCacheEntryDescriptor::GetLastFetched(uint32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTFETCHED));
@@ -151,7 +151,7 @@ nsCacheEntryDescriptor::GetLastFetched(uint32_t *result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastModified(uint32_t *result) {
+nsCacheEntryDescriptor::GetLastModified(uint32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETLASTMODIFIED));
@@ -162,7 +162,7 @@ nsCacheEntryDescriptor::GetLastModified(uint32_t *result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetExpirationTime(uint32_t *result) {
+nsCacheEntryDescriptor::GetExpirationTime(uint32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETEXPIRATIONTIME));
@@ -183,7 +183,7 @@ nsCacheEntryDescriptor::SetExpirationTime(uint32_t expirationTime) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool *result) {
+NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_ISSTREAMBASED));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(bool *result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(int64_t *result) {
+NS_IMETHODIMP nsCacheEntryDescriptor::GetPredictedDataSize(int64_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETPREDICTEDDATASIZE));
@@ -212,12 +212,12 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetPredictedDataSize(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(uint32_t *result) {
+NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(uint32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETDATASIZE));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
-  const char *val = mCacheEntry->GetMetaDataElement("uncompressed-len");
+  const char* val = mCacheEntry->GetMetaDataElement("uncompressed-len");
   if (!val) {
     *result = mCacheEntry->DataSize();
   } else {
@@ -227,7 +227,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(uint32_t *result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(uint32_t *result) {
+NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(uint32_t* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSTORAGEDATASIZE));
@@ -280,7 +280,7 @@ nsCacheEntryDescriptor::SetDataSize(uint32_t dataSize) {
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::OpenInputStream(uint32_t offset,
-                                        nsIInputStream **result) {
+                                        nsIInputStream** result) {
   NS_ENSURE_ARG_POINTER(result);
 
   RefPtr<nsInputStreamWrapper> cacheInput;
@@ -298,7 +298,7 @@ nsCacheEntryDescriptor::OpenInputStream(uint32_t offset,
     if (!(mAccessGranted & nsICache::ACCESS_READ))
       return NS_ERROR_CACHE_READ_ACCESS_DENIED;
 
-    const char *val;
+    const char* val;
     val = mCacheEntry->GetMetaDataElement("uncompressed-len");
     if (val) {
       cacheInput = new nsDecompressInputStreamWrapper(this, offset);
@@ -316,7 +316,7 @@ nsCacheEntryDescriptor::OpenInputStream(uint32_t offset,
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset,
-                                         nsIOutputStream **result) {
+                                         nsIOutputStream** result) {
   NS_ENSURE_ARG_POINTER(result);
 
   RefPtr<nsOutputStreamWrapper> cacheOutput;
@@ -335,7 +335,7 @@ nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset,
       return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
 
     int32_t compressionLevel = nsCacheService::CacheCompressionLevel();
-    const char *val;
+    const char* val;
     val = mCacheEntry->GetMetaDataElement("uncompressed-len");
     if ((compressionLevel > 0) && val) {
       cacheOutput = new nsCompressOutputStreamWrapper(this, offset);
@@ -356,7 +356,7 @@ nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset,
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetCacheElement(nsISupports **result) {
+nsCacheEntryDescriptor::GetCacheElement(nsISupports** result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETCACHEELEMENT));
@@ -368,7 +368,7 @@ nsCacheEntryDescriptor::GetCacheElement(nsISupports **result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetCacheElement(nsISupports *cacheElement) {
+nsCacheEntryDescriptor::SetCacheElement(nsISupports* cacheElement) {
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETCACHEELEMENT));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
@@ -378,14 +378,14 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports *cacheElement) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode *result) {
+nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode* result) {
   NS_ENSURE_ARG_POINTER(result);
   *result = mAccessGranted;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *result) {
+nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy* result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSTORAGEPOLICY));
@@ -420,7 +420,7 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetFile(nsIFile **result) {
+nsCacheEntryDescriptor::GetFile(nsIFile** result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETFILE));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
@@ -429,7 +429,7 @@ nsCacheEntryDescriptor::GetFile(nsIFile **result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetSecurityInfo(nsISupports **result) {
+nsCacheEntryDescriptor::GetSecurityInfo(nsISupports** result) {
   NS_ENSURE_ARG_POINTER(result);
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETSECURITYINFO));
@@ -441,7 +441,7 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports **result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetSecurityInfo(nsISupports *securityInfo) {
+nsCacheEntryDescriptor::SetSecurityInfo(nsISupports* securityInfo) {
   nsCacheServiceAutoLock lock(
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_SETSECURITYINFO));
   if (!mCacheEntry) return NS_ERROR_NOT_AVAILABLE;
@@ -469,7 +469,7 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::AsyncDoom(nsICacheListener *listener) {
+nsCacheEntryDescriptor::AsyncDoom(nsICacheListener* listener) {
   bool asyncDoomPending;
   {
     mozilla::MutexAutoLock lock(mLock);
@@ -547,7 +547,7 @@ nsCacheEntryDescriptor::Close() {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result) {
+nsCacheEntryDescriptor::GetMetaDataElement(const char* key, char** result) {
   NS_ENSURE_ARG_POINTER(key);
   *result = nullptr;
 
@@ -555,7 +555,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result) {
       LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_GETMETADATAELEMENT));
   NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
-  const char *value;
+  const char* value;
 
   value = mCacheEntry->GetMetaDataElement(key);
   if (!value) return NS_ERROR_NOT_AVAILABLE;
@@ -566,7 +566,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value) {
+nsCacheEntryDescriptor::SetMetaDataElement(const char* key, const char* value) {
   NS_ENSURE_ARG_POINTER(key);
 
   nsCacheServiceAutoLock lock(
@@ -581,7 +581,7 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value) {
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor *visitor) {
+nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor* visitor) {
   nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_VISITMETADATA));
   // XXX check callers, we're calling out of module
   NS_ENSURE_ARG_POINTER(visitor);
@@ -652,7 +652,7 @@ nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::LazyInit() {
 
   NS_ENSURE_TRUE(mode & nsICache::ACCESS_READ, NS_ERROR_UNEXPECTED);
 
-  nsCacheEntry *cacheEntry = mDescriptor->CacheEntry();
+  nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
   if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
   rv = nsCacheService::OpenInputStreamForEntry(cacheEntry, mode, mStartOffset,
@@ -718,7 +718,7 @@ nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Close_Locked() {
 }
 
 nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Available(
-    uint64_t *avail) {
+    uint64_t* avail) {
   mozilla::MutexAutoLock lock(mLock);
 
   nsresult rv = EnsureInit();
@@ -728,14 +728,14 @@ nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Available(
 }
 
 nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Read(
-    char *buf, uint32_t count, uint32_t *countRead) {
+    char* buf, uint32_t count, uint32_t* countRead) {
   mozilla::MutexAutoLock lock(mLock);
 
   return Read_Locked(buf, count, countRead);
 }
 
 nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Read_Locked(
-    char *buf, uint32_t count, uint32_t *countRead) {
+    char* buf, uint32_t count, uint32_t* countRead) {
   nsresult rv = EnsureInit();
   if (NS_SUCCEEDED(rv)) rv = mInput->Read(buf, count, countRead);
 
@@ -748,14 +748,14 @@ nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::Read_Locked(
 }
 
 nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::ReadSegments(
-    nsWriteSegmentFun writer, void *closure, uint32_t count,
-    uint32_t *countRead) {
+    nsWriteSegmentFun writer, void* closure, uint32_t count,
+    uint32_t* countRead) {
   // cache stream not buffered
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCacheEntryDescriptor::nsInputStreamWrapper::IsNonBlocking(
-    bool *result) {
+    bool* result) {
   // cache streams will never return NS_BASE_STREAM_WOULD_BLOCK
   *result = false;
   return NS_OK;
@@ -812,7 +812,7 @@ NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsDecompressInputStreamWrapper)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Read(
-    char *buf, uint32_t count, uint32_t *countRead) {
+    char* buf, uint32_t count, uint32_t* countRead) {
   mozilla::MutexAutoLock lock(mLock);
 
   int zerr = Z_OK;
@@ -825,7 +825,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Read(
     }
   }
 
-  mZstream.next_out = (Bytef *)buf;
+  mZstream.next_out = (Bytef*)buf;
   mZstream.avail_out = count;
 
   if (mReadBufferLen < count) {
@@ -835,7 +835,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Read(
     // to the request size is not necessary, but helps minimize the
     // number of read requests to the input stream.
     uint32_t newBufLen = std::max(count, (uint32_t)kMinDecompressReadBufLen);
-    mReadBuffer = (unsigned char *)moz_xrealloc(mReadBuffer, newBufLen);
+    mReadBuffer = (unsigned char*)moz_xrealloc(mReadBuffer, newBufLen);
     mReadBufferLen = newBufLen;
     if (!mReadBuffer) {
       mReadBufferLen = 0;
@@ -848,8 +848,8 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Read(
   while (NS_SUCCEEDED(rv) && zerr == Z_OK && mZstream.avail_out > 0 &&
          count > 0) {
     if (mZstream.avail_in == 0) {
-      rv = nsInputStreamWrapper::Read_Locked(
-          (char *)mReadBuffer, mReadBufferLen, &mZstream.avail_in);
+      rv = nsInputStreamWrapper::Read_Locked((char*)mReadBuffer, mReadBufferLen,
+                                             &mZstream.avail_in);
       if (NS_FAILED(rv) || !mZstream.avail_in) {
         break;
       }
@@ -861,9 +861,9 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Read(
       // chunks/streams. To allow for this case, re-initialize
       // the inflate stream and continue decompressing from
       // the next byte.
-      Bytef *saveNextIn = mZstream.next_in;
+      Bytef* saveNextIn = mZstream.next_in;
       unsigned int saveAvailIn = mZstream.avail_in;
-      Bytef *saveNextOut = mZstream.next_out;
+      Bytef* saveNextOut = mZstream.next_out;
       unsigned int saveAvailOut = mZstream.avail_out;
       inflateReset(&mZstream);
       mZstream.next_in = saveNextIn;
@@ -983,7 +983,7 @@ nsresult nsCacheEntryDescriptor::nsOutputStreamWrapper::LazyInit() {
 
   NS_ENSURE_TRUE(mode & nsICache::ACCESS_WRITE, NS_ERROR_UNEXPECTED);
 
-  nsCacheEntry *cacheEntry = mDescriptor->CacheEntry();
+  nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
   if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
 
   NS_ASSERTION(mOutput == nullptr, "mOutput set in LazyInit");
@@ -993,7 +993,7 @@ nsresult nsCacheEntryDescriptor::nsOutputStreamWrapper::LazyInit() {
                                                 getter_AddRefs(stream));
   if (NS_FAILED(rv)) return rv;
 
-  nsCacheDevice *device = cacheEntry->CacheDevice();
+  nsCacheDevice* device = cacheEntry->CacheDevice();
   if (device) {
     // the entry has been truncated to mStartOffset bytes, inform device
     int32_t size = cacheEntry->DataSize();
@@ -1083,13 +1083,13 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsOutputStreamWrapper::Flush() {
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsOutputStreamWrapper::Write(
-    const char *buf, uint32_t count, uint32_t *result) {
+    const char* buf, uint32_t count, uint32_t* result) {
   mozilla::MutexAutoLock lock(mLock);
   return Write_Locked(buf, count, result);
 }
 
 nsresult nsCacheEntryDescriptor::nsOutputStreamWrapper::Write_Locked(
-    const char *buf, uint32_t count, uint32_t *result) {
+    const char* buf, uint32_t count, uint32_t* result) {
   nsresult rv = EnsureInit();
   if (NS_FAILED(rv)) return rv;
 
@@ -1100,17 +1100,17 @@ nsresult nsCacheEntryDescriptor::nsOutputStreamWrapper::Write_Locked(
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsOutputStreamWrapper::WriteFrom(
-    nsIInputStream *inStr, uint32_t count, uint32_t *result) {
+    nsIInputStream* inStr, uint32_t count, uint32_t* result) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsOutputStreamWrapper::WriteSegments(
-    nsReadSegmentFun reader, void *closure, uint32_t count, uint32_t *result) {
+    nsReadSegmentFun reader, void* closure, uint32_t count, uint32_t* result) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsOutputStreamWrapper::IsNonBlocking(
-    bool *result) {
+    bool* result) {
   // cache streams will never return NS_BASE_STREAM_WOULD_BLOCK
   *result = false;
   return NS_OK;
@@ -1164,7 +1164,7 @@ NS_INTERFACE_MAP_BEGIN(nsCacheEntryDescriptor::nsCompressOutputStreamWrapper)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Write(
-    const char *buf, uint32_t count, uint32_t *result) {
+    const char* buf, uint32_t count, uint32_t* result) {
   mozilla::MutexAutoLock lock(mLock);
 
   int zerr = Z_OK;
@@ -1182,7 +1182,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Write(
     // cannot be grown. We use 2x(initial write request) to approximate
     // a stream buffer size proportional to request buffers.
     mWriteBufferLen = std::max(count * 2, (uint32_t)kMinCompressWriteBufLen);
-    mWriteBuffer = (unsigned char *)moz_xmalloc(mWriteBufferLen);
+    mWriteBuffer = (unsigned char*)moz_xmalloc(mWriteBufferLen);
     mZstream.next_out = mWriteBuffer;
     mZstream.avail_out = mWriteBufferLen;
   }
@@ -1190,7 +1190,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Write(
   // Compress (deflate) the requested buffer. Keep going
   // until the entire buffer has been deflated.
   mZstream.avail_in = count;
-  mZstream.next_in = (Bytef *)buf;
+  mZstream.next_in = (Bytef*)buf;
   while (mZstream.avail_in > 0) {
     zerr = deflate(&mZstream, Z_NO_FLUSH);
     if (zerr == Z_STREAM_ERROR) {
@@ -1300,7 +1300,7 @@ nsresult nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::WriteBuffer() {
   uint32_t bytesToWrite = mWriteBufferLen - mZstream.avail_out;
   uint32_t result = 0;
   nsresult rv = nsCacheEntryDescriptor::nsOutputStreamWrapper::Write_Locked(
-      (const char *)mWriteBuffer, bytesToWrite, &result);
+      (const char*)mWriteBuffer, bytesToWrite, &result);
   mZstream.next_out = mWriteBuffer;
   mZstream.avail_out = mWriteBufferLen;
   return rv;

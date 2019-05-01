@@ -15,7 +15,7 @@ namespace net {
 
 // This is only for windows. This layer will be attached jus before PR_CLose
 // is call and it will only call shutdown(sock).
-extern nsresult AttachShutdownLayer(PRFileDesc *fd);
+extern nsresult AttachShutdownLayer(PRFileDesc* fd);
 
 }  // namespace net
 }  // namespace mozilla

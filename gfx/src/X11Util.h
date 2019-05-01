@@ -25,7 +25,7 @@ namespace mozilla {
 /**
  * Return the default X Display created and used by the UI toolkit.
  */
-inline Display *DefaultXDisplay() {
+inline Display* DefaultXDisplay() {
 #if defined(MOZ_WIDGET_GTK)
   return GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
 #endif
@@ -37,8 +37,8 @@ inline Display *DefaultXDisplay() {
  * to nullptr and 0 respectively.  Both out-parameter pointers are assumed
  * non-nullptr.
  */
-void FindVisualAndDepth(Display *aDisplay, VisualID aVisualID, Visual **aVisual,
-                        int *aDepth);
+void FindVisualAndDepth(Display* aDisplay, VisualID aVisualID, Visual** aVisual,
+                        int* aDepth);
 
 /**
  * Ensure that all X requests have been processed.
@@ -49,7 +49,7 @@ void FindVisualAndDepth(Display *aDisplay, VisualID aVisualID, Visual **aVisual,
  * intermediate requests.
  */
 
-void FinishX(Display *aDisplay);
+void FinishX(Display* aDisplay);
 
 /**
  * Invoke XFree() on a pointer to memory allocated by Xlib (if the
@@ -57,9 +57,9 @@ void FinishX(Display *aDisplay);
  */
 template <typename T>
 struct ScopedXFreePtrTraits {
-  typedef T *type;
-  static T *empty() { return nullptr; }
-  static void release(T *ptr) {
+  typedef T* type;
+  static T* empty() { return nullptr; }
+  static void release(T* ptr) {
     if (ptr != nullptr) XFree(ptr);
   }
 };
@@ -100,16 +100,16 @@ class ScopedXErrorHandler {
   ErrorEvent mXError;
 
   // static pointer for use by the error handler
-  static ErrorEvent *sXErrorPtr;
+  static ErrorEvent* sXErrorPtr;
 
   // what to restore sXErrorPtr to on destruction
-  ErrorEvent *mOldXErrorPtr;
+  ErrorEvent* mOldXErrorPtr;
 
   // what to restore the error handler to on destruction
-  int (*mOldErrorHandler)(Display *, XErrorEvent *);
+  int (*mOldErrorHandler)(Display*, XErrorEvent*);
 
  public:
-  static int ErrorHandler(Display *, XErrorEvent *ev);
+  static int ErrorHandler(Display*, XErrorEvent* ev);
 
   /**
    * @param aAllowOffMainThread whether to warn if used off main thread
@@ -126,7 +126,7 @@ class ScopedXErrorHandler {
    * XErrorEvent object. If multiple errors occurred, the first one will be
    * returned.
    */
-  bool SyncAndGetError(Display *dpy, XErrorEvent *ev = nullptr);
+  bool SyncAndGetError(Display* dpy, XErrorEvent* ev = nullptr);
 };
 
 class OffMainThreadScopedXErrorHandler : public ScopedXErrorHandler {

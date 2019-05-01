@@ -94,7 +94,7 @@ class EventTokenBucket : public nsITimerCallback,
   void Stop();
 
   // The returned cancelable event can only be canceled from the socket thread
-  nsresult SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelable);
+  nsresult SubmitEvent(ATokenBucketEvent* event, nsICancelable** cancelable);
 
  private:
   virtual ~EventTokenBucket();
@@ -103,7 +103,7 @@ class EventTokenBucket : public nsITimerCallback,
   friend class RunNotifyEvent;
   friend class SetTimerEvent;
 
-  bool TryImmediateDispatch(TokenBucketCancelable *event);
+  bool TryImmediateDispatch(TokenBucketCancelable* event);
   void SetRate(uint32_t eventsPerSecond, uint32_t burstSize);
 
   void DispatchEvents();

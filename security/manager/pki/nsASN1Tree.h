@@ -54,32 +54,32 @@ class nsNSSASN1Tree : public nsIASN1Tree {
    public:
     nsCOMPtr<nsIASN1Object> obj;
     nsCOMPtr<nsIASN1Sequence> seq;
-    myNode *child;
-    myNode *next;
-    myNode *parent;
+    myNode* child;
+    myNode* next;
+    myNode* parent;
 
     myNode() { child = next = parent = nullptr; }
   };
 
-  myNode *mTopNode;
+  myNode* mTopNode;
 
   nsCOMPtr<nsIASN1Object> mASN1Object;
   nsCOMPtr<nsITreeSelection> mSelection;
   RefPtr<mozilla::dom::XULTreeElement> mTree;
 
   void InitNodes();
-  void InitChildsRecursively(myNode *n);
+  void InitChildsRecursively(myNode* n);
 
   void ClearNodes();
-  void ClearNodesRecursively(myNode *n);
+  void ClearNodesRecursively(myNode* n);
 
-  int32_t CountVisibleNodes(myNode *n);
-  myNode *FindNodeFromIndex(myNode *n, int32_t wantedIndex,
-                            int32_t &index_counter, int32_t &level_counter,
-                            int32_t *optionalOutParentIndex,
-                            int32_t *optionalOutLevel);
-  myNode *FindNodeFromIndex(int32_t wantedIndex,
-                            int32_t *optionalOutParentIndex = nullptr,
-                            int32_t *optionalOutLevel = nullptr);
+  int32_t CountVisibleNodes(myNode* n);
+  myNode* FindNodeFromIndex(myNode* n, int32_t wantedIndex,
+                            int32_t& index_counter, int32_t& level_counter,
+                            int32_t* optionalOutParentIndex,
+                            int32_t* optionalOutLevel);
+  myNode* FindNodeFromIndex(int32_t wantedIndex,
+                            int32_t* optionalOutParentIndex = nullptr,
+                            int32_t* optionalOutLevel = nullptr);
 };
 #endif  //_NSSASNTREE_H_

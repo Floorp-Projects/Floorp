@@ -23,28 +23,28 @@ class PathBuilderRecording : public PathBuilder {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderRecording, override)
 
-  PathBuilderRecording(PathBuilder *aBuilder, FillRule aFillRule)
+  PathBuilderRecording(PathBuilder* aBuilder, FillRule aFillRule)
       : mPathBuilder(aBuilder), mFillRule(aFillRule) {}
 
   /* Move the current point in the path, any figure currently being drawn will
    * be considered closed during fill operations, however when stroking the
    * closing line segment will not be drawn.
    */
-  virtual void MoveTo(const Point &aPoint) override;
+  virtual void MoveTo(const Point& aPoint) override;
   /* Add a linesegment to the current figure */
-  virtual void LineTo(const Point &aPoint) override;
+  virtual void LineTo(const Point& aPoint) override;
   /* Add a cubic bezier curve to the current figure */
-  virtual void BezierTo(const Point &aCP1, const Point &aCP2,
-                        const Point &aCP3) override;
+  virtual void BezierTo(const Point& aCP1, const Point& aCP2,
+                        const Point& aCP3) override;
   /* Add a quadratic bezier curve to the current figure */
-  virtual void QuadraticBezierTo(const Point &aCP1, const Point &aCP2) override;
+  virtual void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) override;
   /* Close the current figure, this will essentially generate a line segment
    * from the current point to the starting point for the current figure
    */
   virtual void Close() override;
 
   /* Add an arc to the current figure */
-  virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
+  virtual void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
                    float aEndAngle, bool aAntiClockwise) override {
     ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
                 aAntiClockwise);
@@ -73,7 +73,7 @@ class PathRecording : public Path {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording, override)
 
-  PathRecording(Path *aPath, const std::vector<PathOp> aOps, FillRule aFillRule)
+  PathRecording(Path* aPath, const std::vector<PathOp> aOps, FillRule aFillRule)
       : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule) {}
 
   ~PathRecording();
@@ -84,35 +84,35 @@ class PathRecording : public Path {
   virtual already_AddRefed<PathBuilder> CopyToBuilder(
       FillRule aFillRule) const override;
   virtual already_AddRefed<PathBuilder> TransformedCopyToBuilder(
-      const Matrix &aTransform, FillRule aFillRule) const override;
-  virtual bool ContainsPoint(const Point &aPoint,
-                             const Matrix &aTransform) const override {
+      const Matrix& aTransform, FillRule aFillRule) const override;
+  virtual bool ContainsPoint(const Point& aPoint,
+                             const Matrix& aTransform) const override {
     return mPath->ContainsPoint(aPoint, aTransform);
   }
-  virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
-                                   const Point &aPoint,
-                                   const Matrix &aTransform) const override {
+  virtual bool StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
+                                   const Point& aPoint,
+                                   const Matrix& aTransform) const override {
     return mPath->StrokeContainsPoint(aStrokeOptions, aPoint, aTransform);
   }
 
-  virtual Rect GetBounds(const Matrix &aTransform = Matrix()) const override {
+  virtual Rect GetBounds(const Matrix& aTransform = Matrix()) const override {
     return mPath->GetBounds(aTransform);
   }
 
   virtual Rect GetStrokedBounds(
-      const StrokeOptions &aStrokeOptions,
-      const Matrix &aTransform = Matrix()) const override {
+      const StrokeOptions& aStrokeOptions,
+      const Matrix& aTransform = Matrix()) const override {
     return mPath->GetStrokedBounds(aStrokeOptions, aTransform);
   }
 
-  virtual void StreamToSink(PathSink *aSink) const override {
+  virtual void StreamToSink(PathSink* aSink) const override {
     mPath->StreamToSink(aSink);
   }
 
   virtual FillRule GetFillRule() const override { return mFillRule; }
 
-  void StorePath(std::ostream &aStream) const;
-  static void ReadPathToBuilder(std::istream &aStream, PathBuilder *aBuilder);
+  void StorePath(std::ostream& aStream) const;
+  static void ReadPathToBuilder(std::istream& aStream, PathBuilder* aBuilder);
 
  private:
   friend class DrawTargetWrapAndRecord;

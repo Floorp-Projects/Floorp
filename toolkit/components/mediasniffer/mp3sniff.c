@@ -25,7 +25,7 @@ typedef struct {
 } mp3_header;
 
 /* Parse the 4-byte header in p and fill in the header struct. */
-static void mp3_parse(const uint8_t *p, mp3_header *header) {
+static void mp3_parse(const uint8_t* p, mp3_header* header) {
   const int bitrates[2][16] = {
       /* MPEG version 1 layer 3 bitrates. */
       {0, 32000, 40000, 48000, 56000, 64000, 80000, 96000, 112000, 128000,
@@ -56,7 +56,7 @@ static void mp3_parse(const uint8_t *p, mp3_header *header) {
 }
 
 /* calculate the size of an mp3 frame from its header */
-static int mp3_framesize(mp3_header *header) {
+static int mp3_framesize(mp3_header* header) {
   int size;
   int scale;
 
@@ -70,7 +70,7 @@ static int mp3_framesize(mp3_header *header) {
   return size;
 }
 
-static int is_mp3(const uint8_t *p, long length) {
+static int is_mp3(const uint8_t* p, long length) {
   /* Do we have enough room to see a 4 byte header? */
   if (length < 4) return 0;
   /* Do we have a sync pattern? */
@@ -88,7 +88,7 @@ static int is_mp3(const uint8_t *p, long length) {
 
 /* Identify an ID3 tag based on its header. */
 /* http://id3.org/id3v2.4.0-structure */
-static int is_id3(const uint8_t *p, long length) {
+static int is_id3(const uint8_t* p, long length) {
   /* Do we have enough room to see the header? */
   if (length < 10) return 0;
   /* Do we have a sync pattern? */
@@ -103,7 +103,7 @@ static int is_id3(const uint8_t *p, long length) {
 }
 
 /* Calculate the size of an id3 tag structure from its header. */
-static int id3_framesize(const uint8_t *p, long length) {
+static int id3_framesize(const uint8_t* p, long length) {
   int size;
 
   /* Header is 10 bytes. */
@@ -116,9 +116,9 @@ static int id3_framesize(const uint8_t *p, long length) {
   return size;
 }
 
-int mp3_sniff(const uint8_t *buf, long length) {
+int mp3_sniff(const uint8_t* buf, long length) {
   mp3_header header;
-  const uint8_t *p;
+  const uint8_t* p;
   long skip;
   long avail;
 

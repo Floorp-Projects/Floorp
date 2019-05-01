@@ -42,20 +42,20 @@ class nsDeleteDir {
    * renamed immediately if 'moveToTrash' is passed, so upon return it is safe
    * to create a directory with the same name).
    */
-  static nsresult DeleteDir(nsIFile *dir, bool moveToTrash, uint32_t delay = 0);
+  static nsresult DeleteDir(nsIFile* dir, bool moveToTrash, uint32_t delay = 0);
 
   /**
    * Returns the trash directory corresponding to the given directory.
    */
-  static nsresult GetTrashDir(nsIFile *dir, nsCOMPtr<nsIFile> *result);
+  static nsresult GetTrashDir(nsIFile* dir, nsCOMPtr<nsIFile>* result);
 
   /**
    * Remove all trashes left from previous run. This function does nothing when
    * called second and more times.
    */
-  static nsresult RemoveOldTrashes(nsIFile *cacheDir);
+  static nsresult RemoveOldTrashes(nsIFile* cacheDir);
 
-  static void TimerCallback(nsITimer *aTimer, void *arg);
+  static void TimerCallback(nsITimer* aTimer, void* arg);
 
  private:
   friend class nsBlockOnBackgroundThreadEvent;
@@ -63,10 +63,10 @@ class nsDeleteDir {
 
   nsresult InitThread();
   void DestroyThread();
-  nsresult PostTimer(void *arg, uint32_t delay);
-  nsresult RemoveDir(nsIFile *file, bool *stopDeleting);
+  nsresult PostTimer(void* arg, uint32_t delay);
+  nsresult RemoveDir(nsIFile* file, bool* stopDeleting);
 
-  static nsDeleteDir *gInstance;
+  static nsDeleteDir* gInstance;
   mozilla::Mutex mLock;
   mozilla::CondVar mCondVar;
   bool mNotified;

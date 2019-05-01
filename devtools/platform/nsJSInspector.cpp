@@ -62,7 +62,7 @@ nsJSInspector::~nsJSInspector() {
 
 NS_IMETHODIMP
 nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor,
-                                    uint32_t *out) {
+                                    uint32_t* out) {
   nsresult rv = NS_OK;
 
   mLastRequestor = requestor;
@@ -88,7 +88,7 @@ nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor,
 }
 
 NS_IMETHODIMP
-nsJSInspector::ExitNestedEventLoop(uint32_t *out) {
+nsJSInspector::ExitNestedEventLoop(uint32_t* out) {
   if (mNestedLoopLevel > 0) {
     mRequestors.RemoveElementAt(--mNestedLoopLevel);
     if (mNestedLoopLevel > 0)
@@ -105,7 +105,7 @@ nsJSInspector::ExitNestedEventLoop(uint32_t *out) {
 }
 
 NS_IMETHODIMP
-nsJSInspector::GetEventLoopNestLevel(uint32_t *out) {
+nsJSInspector::GetEventLoopNestLevel(uint32_t* out) {
   *out = mNestedLoopLevel;
   return NS_OK;
 }

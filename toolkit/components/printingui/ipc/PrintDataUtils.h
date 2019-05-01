@@ -22,7 +22,7 @@ namespace embedding {
 
 class MockWebBrowserPrint final : public nsIWebBrowserPrint {
  public:
-  explicit MockWebBrowserPrint(const PrintData &aData);
+  explicit MockWebBrowserPrint(const PrintData& aData);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBBROWSERPRINT

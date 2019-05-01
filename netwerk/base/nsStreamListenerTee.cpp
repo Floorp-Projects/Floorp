@@ -12,7 +12,7 @@ NS_IMPL_ISUPPORTS(nsStreamListenerTee, nsIStreamListener, nsIRequestObserver,
                   nsIStreamListenerTee, nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
+nsStreamListenerTee::OnStartRequest(nsIRequest* request) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   nsresult rv1 = mListener->OnStartRequest(request);
   nsresult rv2 = NS_OK;
@@ -23,7 +23,7 @@ nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsresult status) {
+nsStreamListenerTee::OnStopRequest(nsIRequest* request, nsresult status) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   // it is critical that we close out the input stream tee
   if (mInputTee) {
@@ -45,7 +45,7 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsresult status) {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnDataAvailable(nsIRequest *request, nsIInputStream *input,
+nsStreamListenerTee::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
                                      uint64_t offset, uint32_t count) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
@@ -97,8 +97,8 @@ nsStreamListenerTee::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::Init(nsIStreamListener *listener, nsIOutputStream *sink,
-                          nsIRequestObserver *requestObserver) {
+nsStreamListenerTee::Init(nsIStreamListener* listener, nsIOutputStream* sink,
+                          nsIRequestObserver* requestObserver) {
   NS_ENSURE_ARG_POINTER(listener);
   NS_ENSURE_ARG_POINTER(sink);
   mListener = listener;
@@ -108,10 +108,10 @@ nsStreamListenerTee::Init(nsIStreamListener *listener, nsIOutputStream *sink,
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::InitAsync(nsIStreamListener *listener,
-                               nsIEventTarget *eventTarget,
-                               nsIOutputStream *sink,
-                               nsIRequestObserver *requestObserver) {
+nsStreamListenerTee::InitAsync(nsIStreamListener* listener,
+                               nsIEventTarget* eventTarget,
+                               nsIOutputStream* sink,
+                               nsIRequestObserver* requestObserver) {
   NS_ENSURE_ARG_POINTER(eventTarget);
   mEventTarget = eventTarget;
   return Init(listener, sink, requestObserver);

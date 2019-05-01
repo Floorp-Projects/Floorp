@@ -50,7 +50,7 @@ OSVR_EXTERN_C_BEGIN
 
     You are required to clean up this handle with osvrClientShutdown().
 */
-typedef struct OSVR_ClientContextObject *OSVR_ClientContext;
+typedef struct OSVR_ClientContextObject* OSVR_ClientContext;
 
 /** @brief Opaque handle to an interface used for registering callbacks and
    getting status.
@@ -60,7 +60,7 @@ typedef struct OSVR_ClientContextObject *OSVR_ClientContext;
    using osvrClientFreeInterface() to inform the context that you no longer need
    this interface.
 */
-typedef struct OSVR_ClientInterfaceObject *OSVR_ClientInterface;
+typedef struct OSVR_ClientInterfaceObject* OSVR_ClientInterface;
 
 /** @} */
 

@@ -19,10 +19,10 @@ static gboolean sQuit = FALSE;
 static gboolean sEnableUI;
 static guint sTimerID;
 
-static GtkWidget *sWin;
-static GtkWidget *sLabel;
-static GtkWidget *sProgressBar;
-static GdkPixbuf *sPixbuf;
+static GtkWidget* sWin;
+static GtkWidget* sLabel;
+static GtkWidget* sProgressBar;
+static GdkPixbuf* sPixbuf;
 
 StringTable sStrings;
 
@@ -40,12 +40,12 @@ static gboolean UpdateDialog(gpointer data) {
   return TRUE;
 }
 
-static gboolean OnDeleteEvent(GtkWidget *widget, GdkEvent *event,
+static gboolean OnDeleteEvent(GtkWidget* widget, GdkEvent* event,
                               gpointer user_data) {
   return TRUE;
 }
 
-int InitProgressUI(int *pargc, char ***pargv) {
+int InitProgressUI(int* pargc, char*** pargv) {
   sEnableUI = gtk_init_check(pargc, pargv);
   if (sEnableUI) {
     // Prepare to show the UI here in case the files are modified by the update.
@@ -94,7 +94,7 @@ int ShowProgressUI() {
   gtk_window_set_icon(GTK_WINDOW(sWin), sPixbuf);
   g_object_unref(sPixbuf);
 
-  GtkWidget *vbox = gtk_vbox_new(TRUE, 6);
+  GtkWidget* vbox = gtk_vbox_new(TRUE, 6);
   sLabel = gtk_label_new(sStrings.info);
   gtk_misc_set_alignment(GTK_MISC(sLabel), 0.0f, 0.0f);
   sProgressBar = gtk_progress_bar_new();

@@ -55,7 +55,7 @@ mozilla::ipc::IPCResult TestCancelParent::RecvDone() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TestCancelParent::RecvCheckParent(uint32_t *reply) {
+mozilla::ipc::IPCResult TestCancelParent::RecvCheckParent(uint32_t* reply) {
   *reply = 12;
   return IPC_OK();
 }
@@ -102,7 +102,7 @@ mozilla::ipc::IPCResult TestCancelChild::RecvTest3_1() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TestCancelChild::RecvCheckChild(uint32_t *reply) {
+mozilla::ipc::IPCResult TestCancelChild::RecvCheckChild(uint32_t* reply) {
   *reply = 12;
   return IPC_OK();
 }

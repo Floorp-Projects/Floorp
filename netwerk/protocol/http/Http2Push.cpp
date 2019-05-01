@@ -25,8 +25,8 @@ namespace net {
 
 class CallChannelOnPush final : public Runnable {
  public:
-  CallChannelOnPush(nsIHttpChannelInternal *associatedChannel,
-                    const nsACString &pushedURI, Http2PushedStream *pushStream)
+  CallChannelOnPush(nsIHttpChannelInternal* associatedChannel,
+                    const nsACString& pushedURI, Http2PushedStream* pushStream)
       : Runnable("net::CallChannelOnPush"),
         mAssociatedChannel(associatedChannel),
         mPushedURI(pushedURI),
@@ -49,7 +49,7 @@ class CallChannelOnPush final : public Runnable {
  private:
   nsCOMPtr<nsIHttpChannelInternal> mAssociatedChannel;
   const nsCString mPushedURI;
-  Http2PushedStream *mPushedStream;
+  Http2PushedStream* mPushedStream;
 };
 
 //////////////////////////////////////////
@@ -57,8 +57,8 @@ class CallChannelOnPush final : public Runnable {
 //////////////////////////////////////////
 
 Http2PushedStream::Http2PushedStream(
-    Http2PushTransactionBuffer *aTransaction, Http2Session *aSession,
-    Http2Stream *aAssociatedStream, uint32_t aID,
+    Http2PushTransactionBuffer* aTransaction, Http2Session* aSession,
+    Http2Stream* aAssociatedStream, uint32_t aID,
     uint64_t aCurrentForegroundTabOuterContentWindowId)
     : Http2Stream(aTransaction, aSession, 0,
                   aCurrentForegroundTabOuterContentWindowId),
@@ -92,9 +92,9 @@ Http2PushedStream::Http2PushedStream(
 
 bool Http2PushedStream::GetPushComplete() { return mPushCompleted; }
 
-nsresult Http2PushedStream::WriteSegments(nsAHttpSegmentWriter *writer,
+nsresult Http2PushedStream::WriteSegments(nsAHttpSegmentWriter* writer,
                                           uint32_t count,
-                                          uint32_t *countWritten) {
+                                          uint32_t* countWritten) {
   nsresult rv = Http2Stream::WriteSegments(writer, count, countWritten);
   if (NS_SUCCEEDED(rv) && *countWritten) {
     mLastRead = TimeStamp::Now();
@@ -135,7 +135,7 @@ bool Http2PushedStream::DeferCleanup(nsresult status) {
 
 // return true if channel implements nsIHttpPushListener
 bool Http2PushedStream::TryOnPush() {
-  nsHttpTransaction *trans = mAssociatedTransaction->QueryHttpTransaction();
+  nsHttpTransaction* trans = mAssociatedTransaction->QueryHttpTransaction();
   if (!trans) {
     return false;
   }
@@ -158,15 +158,15 @@ bool Http2PushedStream::TryOnPush() {
 
 // side effect free static method to determine if Http2Stream implements
 // nsIHttpPushListener
-bool Http2PushedStream::TestOnPush(Http2Stream *stream) {
+bool Http2PushedStream::TestOnPush(Http2Stream* stream) {
   if (!stream) {
     return false;
   }
-  nsAHttpTransaction *abstractTransaction = stream->Transaction();
+  nsAHttpTransaction* abstractTransaction = stream->Transaction();
   if (!abstractTransaction) {
     return false;
   }
-  nsHttpTransaction *trans = abstractTransaction->QueryHttpTransaction();
+  nsHttpTransaction* trans = abstractTransaction->QueryHttpTransaction();
   if (!trans) {
     return false;
   }
@@ -178,8 +178,8 @@ bool Http2PushedStream::TestOnPush(Http2Stream *stream) {
   return (trans->Caps() & NS_HTTP_ONPUSH_LISTENER);
 }
 
-nsresult Http2PushedStream::ReadSegments(nsAHttpSegmentReader *reader, uint32_t,
-                                         uint32_t *count) {
+nsresult Http2PushedStream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t,
+                                         uint32_t* count) {
   nsresult rv = NS_OK;
   *count = 0;
 
@@ -238,7 +238,7 @@ void Http2PushedStream::AdjustInitialWindow() {
   // anyway, so we're good to go.
 }
 
-void Http2PushedStream::SetConsumerStream(Http2Stream *consumer) {
+void Http2PushedStream::SetConsumerStream(Http2Stream* consumer) {
   LOG3(("Http2PushedStream::SetConsumerStream this=%p consumer=%p", this,
         consumer));
 
@@ -246,14 +246,14 @@ void Http2PushedStream::SetConsumerStream(Http2Stream *consumer) {
   mDeferCleanupOnPush = false;
 }
 
-bool Http2PushedStream::GetHashKey(nsCString &key) {
+bool Http2PushedStream::GetHashKey(nsCString& key) {
   if (mHashKey.IsEmpty()) return false;
 
   key = mHashKey;
   return true;
 }
 
-void Http2PushedStream::ConnectPushedStream(Http2Stream *stream) {
+void Http2PushedStream::ConnectPushedStream(Http2Stream* stream) {
   mSession->ConnectPushedStream(stream);
 }
 
@@ -279,8 +279,8 @@ bool Http2PushedStream::IsOrphaned(TimeStamp now) {
   return rv;
 }
 
-nsresult Http2PushedStream::GetBufferedData(char *buf, uint32_t count,
-                                            uint32_t *countWritten) {
+nsresult Http2PushedStream::GetBufferedData(char* buf, uint32_t count,
+                                            uint32_t* countWritten) {
   if (NS_FAILED(mStatus)) return mStatus;
 
   nsresult rv = mBufferedPush->GetBufferedData(buf, count, countWritten);
@@ -344,20 +344,20 @@ Http2PushTransactionBuffer::~Http2PushTransactionBuffer() {
   delete mRequestHead;
 }
 
-void Http2PushTransactionBuffer::SetConnection(nsAHttpConnection *conn) {}
+void Http2PushTransactionBuffer::SetConnection(nsAHttpConnection* conn) {}
 
-nsAHttpConnection *Http2PushTransactionBuffer::Connection() { return nullptr; }
+nsAHttpConnection* Http2PushTransactionBuffer::Connection() { return nullptr; }
 
 void Http2PushTransactionBuffer::GetSecurityCallbacks(
-    nsIInterfaceRequestor **outCB) {
+    nsIInterfaceRequestor** outCB) {
   *outCB = nullptr;
 }
 
-void Http2PushTransactionBuffer::OnTransportStatus(nsITransport *transport,
+void Http2PushTransactionBuffer::OnTransportStatus(nsITransport* transport,
                                                    nsresult status,
                                                    int64_t progress) {}
 
-nsHttpConnectionInfo *Http2PushTransactionBuffer::ConnectionInfo() {
+nsHttpConnectionInfo* Http2PushTransactionBuffer::ConnectionInfo() {
   if (!mPushStream) {
     return nullptr;
   }
@@ -380,16 +380,16 @@ uint64_t Http2PushTransactionBuffer::Available() {
   return mBufferedHTTP1Used - mBufferedHTTP1Consumed;
 }
 
-nsresult Http2PushTransactionBuffer::ReadSegments(nsAHttpSegmentReader *reader,
+nsresult Http2PushTransactionBuffer::ReadSegments(nsAHttpSegmentReader* reader,
                                                   uint32_t count,
-                                                  uint32_t *countRead) {
+                                                  uint32_t* countRead) {
   *countRead = 0;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
+nsresult Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter* writer,
                                                    uint32_t count,
-                                                   uint32_t *countWritten) {
+                                                   uint32_t* countWritten) {
   if ((mBufferedHTTP1Size - mBufferedHTTP1Used) < 20480) {
     EnsureBuffer(mBufferedHTTP1, mBufferedHTTP1Size + kDefaultBufferSize,
                  mBufferedHTTP1Used, mBufferedHTTP1Size);
@@ -405,7 +405,7 @@ nsresult Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
   }
 
   if (Available() || mIsDone) {
-    Http2Stream *consumer = mPushStream->GetConsumerStream();
+    Http2Stream* consumer = mPushStream->GetConsumerStream();
 
     if (consumer) {
       LOG3(
@@ -421,13 +421,13 @@ nsresult Http2PushTransactionBuffer::WriteSegments(nsAHttpSegmentWriter *writer,
 
 uint32_t Http2PushTransactionBuffer::Http1xTransactionCount() { return 0; }
 
-nsHttpRequestHead *Http2PushTransactionBuffer::RequestHead() {
+nsHttpRequestHead* Http2PushTransactionBuffer::RequestHead() {
   if (!mRequestHead) mRequestHead = new nsHttpRequestHead();
   return mRequestHead;
 }
 
 nsresult Http2PushTransactionBuffer::TakeSubTransactions(
-    nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions) {
+    nsTArray<RefPtr<nsAHttpTransaction> >& outTransactions) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -438,8 +438,8 @@ void Http2PushTransactionBuffer::Close(nsresult reason) {
   mIsDone = true;
 }
 
-nsresult Http2PushTransactionBuffer::GetBufferedData(char *buf, uint32_t count,
-                                                     uint32_t *countWritten) {
+nsresult Http2PushTransactionBuffer::GetBufferedData(char* buf, uint32_t count,
+                                                     uint32_t* countWritten) {
   *countWritten = std::min(count, static_cast<uint32_t>(Available()));
   if (*countWritten) {
     memcpy(buf, &mBufferedHTTP1[mBufferedHTTP1Consumed], *countWritten);

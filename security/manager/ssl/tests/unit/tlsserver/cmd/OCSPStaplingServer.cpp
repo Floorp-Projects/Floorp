@@ -98,9 +98,9 @@ const OCSPHost sOCSPHosts[] = {
      "multi-tls-feature-bad-ee"},
     {nullptr, ORTNull, nullptr, nullptr}};
 
-int32_t DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
-                          uint32_t aSrvNameArrSize, void *aArg) {
-  const OCSPHost *host =
+int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
+                          uint32_t aSrvNameArrSize, void* aArg) {
+  const OCSPHost* host =
       GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sOCSPHosts);
   if (!host) {
     return SSL_SNI_SEND_ALERT;
@@ -110,7 +110,7 @@ int32_t DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
     fprintf(stderr, "found pre-defined host '%s'\n", host->mHostName);
   }
 
-  const char *certNickname =
+  const char* certNickname =
       host->mServerCertName ? host->mServerCertName : DEFAULT_CERT_NICKNAME;
 
   UniqueCERTCertificate cert;
@@ -132,7 +132,7 @@ int32_t DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   }
 
   // response is contained by the arena - freeing the arena will free it
-  SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena,
+  SECItemArray* response = GetOCSPResponseForType(host->mORT, cert, arena,
                                                   host->mAdditionalCertName, 0);
   if (!response) {
     return SSL_SNI_SEND_ALERT;
@@ -148,7 +148,7 @@ int32_t DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   if (argc != 2) {
     fprintf(stderr, "usage: %s <NSS DB directory>\n", argv[0]);
     return 1;

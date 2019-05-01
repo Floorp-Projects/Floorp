@@ -40,13 +40,13 @@ class nsSecurityHeaderParser {
   // The input to this class must be null-terminated, and must have a lifetime
   // greater than or equal to the lifetime of the created
   // nsSecurityHeaderParser.
-  explicit nsSecurityHeaderParser(const nsCString &aHeader);
+  explicit nsSecurityHeaderParser(const nsCString& aHeader);
   ~nsSecurityHeaderParser();
 
   // Only call Parse once.
   nsresult Parse();
   // The caller does not take ownership of the memory returned here.
-  mozilla::LinkedList<nsSecurityHeaderDirective> *GetDirectives();
+  mozilla::LinkedList<nsSecurityHeaderDirective>* GetDirectives();
 
  private:
   bool Accept(char aChr);
@@ -68,8 +68,8 @@ class nsSecurityHeaderParser {
   void LWS();          // Handles the 1*( SP | HT ) part of LWS
 
   mozilla::LinkedList<nsSecurityHeaderDirective> mDirectives;
-  const char *mCursor;
-  nsSecurityHeaderDirective *mDirective;
+  const char* mCursor;
+  nsSecurityHeaderDirective* mDirective;
 
   nsCString mOutput;
   bool mError;

@@ -9,8 +9,8 @@
 #include "gfxTypes.h"
 #include "nsRect.h"
 
-typedef void *EGLImageKHR;
-typedef void *EGLClientBuffer;
+typedef void* EGLImageKHR;
+typedef void* EGLClientBuffer;
 
 namespace mozilla {
 
@@ -37,8 +37,8 @@ class AndroidGraphicBuffer {
                        gfxImageFormat format);
   virtual ~AndroidGraphicBuffer();
 
-  int Lock(uint32_t usage, unsigned char **bits);
-  int Lock(uint32_t usage, const nsIntRect &rect, unsigned char **bits);
+  int Lock(uint32_t usage, unsigned char** bits);
+  int Lock(uint32_t usage, const nsIntRect& rect, unsigned char** bits);
   int Unlock();
   bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxImageFormat aFormat);
 
@@ -64,8 +64,8 @@ class AndroidGraphicBuffer {
   uint32_t GetAndroidUsage(uint32_t aUsage);
   uint32_t GetAndroidFormat(gfxImageFormat aFormat);
 
-  void *mHandle;
-  void *mEGLImage;
+  void* mHandle;
+  void* mEGLImage;
 };
 
 }  // namespace mozilla

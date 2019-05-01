@@ -65,7 +65,7 @@ static LazyLogModule prlog("BackgroundFileSaver");
  */
 class NotifyTargetChangeRunnable final : public Runnable {
  public:
-  NotifyTargetChangeRunnable(BackgroundFileSaver *aSaver, nsIFile *aTarget)
+  NotifyTargetChangeRunnable(BackgroundFileSaver* aSaver, nsIFile* aTarget)
       : Runnable("net::NotifyTargetChangeRunnable"),
         mSaver(aSaver),
         mTarget(aTarget) {}
@@ -139,7 +139,7 @@ nsresult BackgroundFileSaver::Init() {
 
 // Called on the control thread.
 NS_IMETHODIMP
-BackgroundFileSaver::GetObserver(nsIBackgroundFileSaverObserver **aObserver) {
+BackgroundFileSaver::GetObserver(nsIBackgroundFileSaverObserver** aObserver) {
   NS_ENSURE_ARG_POINTER(aObserver);
   *aObserver = mObserver;
   NS_IF_ADDREF(*aObserver);
@@ -148,7 +148,7 @@ BackgroundFileSaver::GetObserver(nsIBackgroundFileSaverObserver **aObserver) {
 
 // Called on the control thread.
 NS_IMETHODIMP
-BackgroundFileSaver::SetObserver(nsIBackgroundFileSaverObserver *aObserver) {
+BackgroundFileSaver::SetObserver(nsIBackgroundFileSaverObserver* aObserver) {
   mObserver = aObserver;
   return NS_OK;
 }
@@ -166,7 +166,7 @@ BackgroundFileSaver::EnableAppend() {
 
 // Called on the control thread.
 NS_IMETHODIMP
-BackgroundFileSaver::SetTarget(nsIFile *aTarget, bool aKeepPartial) {
+BackgroundFileSaver::SetTarget(nsIFile* aTarget, bool aKeepPartial) {
   NS_ENSURE_ARG(aTarget);
   {
     MutexAutoLock lock(mLock);
@@ -226,7 +226,7 @@ BackgroundFileSaver::EnableSha256() {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaver::GetSha256Hash(nsACString &aHash) {
+BackgroundFileSaver::GetSha256Hash(nsACString& aHash) {
   MOZ_ASSERT(NS_IsMainThread(), "Can't inspect sha256 off the main thread");
   // We acquire a lock because mSha256 is written on the worker thread.
   MutexAutoLock lock(mLock);
@@ -250,7 +250,7 @@ BackgroundFileSaver::EnableSignatureInfo() {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaver::GetSignatureInfo(nsIArray **aSignatureInfo) {
+BackgroundFileSaver::GetSignatureInfo(nsIArray** aSignatureInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Can't inspect signature off the main thread");
   // We acquire a lock because mSignatureInfo is written on the worker thread.
   MutexAutoLock lock(mLock);
@@ -308,12 +308,12 @@ nsresult BackgroundFileSaver::GetWorkerThreadAttention(
 
 // Called on the worker thread.
 // static
-void BackgroundFileSaver::AsyncCopyCallback(void *aClosure, nsresult aStatus) {
+void BackgroundFileSaver::AsyncCopyCallback(void* aClosure, nsresult aStatus) {
   // We called NS_ADDREF_THIS when NS_AsyncCopy started, to keep the object
   // alive even if other references disappeared.  At the end of this method,
   // we've finished using the object and can safely release our reference.
   RefPtr<BackgroundFileSaver> self =
-      dont_AddRef((BackgroundFileSaver *)aClosure);
+      dont_AddRef((BackgroundFileSaver*)aClosure);
   {
     MutexAutoLock lock(self->mLock);
 
@@ -540,7 +540,7 @@ nsresult BackgroundFileSaver::ProcessStateChange() {
 
         nsresult rv = MapSECStatus(
             PK11_DigestOp(mDigestContext.get(),
-                          BitwiseCast<unsigned char *, char *>(buffer), count));
+                          BitwiseCast<unsigned char*, char*>(buffer), count));
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -674,7 +674,7 @@ bool BackgroundFileSaver::CheckCompletion() {
     if (NS_SUCCEEDED(rv)) {
       MutexAutoLock lock(mLock);
       mSha256 = nsDependentCSubstring(
-          BitwiseCast<char *, unsigned char *>(d.get().data), d.get().len);
+          BitwiseCast<char*, unsigned char*>(d.get().data), d.get().len);
     }
   }
 
@@ -703,7 +703,7 @@ bool BackgroundFileSaver::CheckCompletion() {
 }
 
 // Called on the control thread.
-nsresult BackgroundFileSaver::NotifyTargetChange(nsIFile *aTarget) {
+nsresult BackgroundFileSaver::NotifyTargetChange(nsIFile* aTarget) {
   if (mObserver) {
     (void)mObserver->OnTargetChange(this, aTarget);
   }
@@ -753,7 +753,7 @@ nsresult BackgroundFileSaver::NotifySaveComplete() {
   return NS_OK;
 }
 
-nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString &filePath) {
+nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
   MOZ_ASSERT(!NS_IsMainThread(), "Cannot extract signature on main thread");
   {
     MutexAutoLock lock(mLock);
@@ -796,7 +796,7 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString &filePath) {
   // Check if the file is signed by something that is trusted. If the file is
   // not signed, this is a no-op.
   LONG ret = WinVerifyTrust(nullptr, &policyGUID, &trustData);
-  CRYPT_PROVIDER_DATA *cryptoProviderData = nullptr;
+  CRYPT_PROVIDER_DATA* cryptoProviderData = nullptr;
   // According to the Windows documentation, we should check against 0 instead
   // of ERROR_SUCCESS, which is an HRESULT.
   if (ret == 0) {
@@ -809,13 +809,13 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString &filePath) {
     // A binary may have multiple signers. Each signer may have multiple certs
     // in the chain.
     for (DWORD i = 0; i < cryptoProviderData->csSigners; ++i) {
-      const CERT_CHAIN_CONTEXT *certChainContext =
+      const CERT_CHAIN_CONTEXT* certChainContext =
           cryptoProviderData->pasSigners[i].pChainContext;
       if (!certChainContext) {
         break;
       }
       for (DWORD j = 0; j < certChainContext->cChain; ++j) {
-        const CERT_SIMPLE_CHAIN *certSimpleChain =
+        const CERT_SIMPLE_CHAIN* certSimpleChain =
             certChainContext->rgpChain[j];
         if (!certSimpleChain) {
           break;
@@ -827,14 +827,14 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString &filePath) {
         }
         bool extractionSuccess = true;
         for (DWORD k = 0; k < certSimpleChain->cElement; ++k) {
-          CERT_CHAIN_ELEMENT *certChainElement = certSimpleChain->rgpElement[k];
+          CERT_CHAIN_ELEMENT* certChainElement = certSimpleChain->rgpElement[k];
           if (certChainElement->pCertContext->dwCertEncodingType !=
               X509_ASN_ENCODING) {
             continue;
           }
           nsCOMPtr<nsIX509Cert> nssCert = nullptr;
           nsDependentCSubstring certDER(
-              reinterpret_cast<char *>(
+              reinterpret_cast<char*>(
                   certChainElement->pCertContext->pbCertEncoded),
               certChainElement->pCertContext->cbCertEncoded);
           rv = certDB->ConstructX509(certDER, getter_AddRefs(nssCert));
@@ -892,26 +892,26 @@ NS_IMETHODIMP
 BackgroundFileSaverOutputStream::Flush() { return mPipeOutputStream->Flush(); }
 
 NS_IMETHODIMP
-BackgroundFileSaverOutputStream::Write(const char *aBuf, uint32_t aCount,
-                                       uint32_t *_retval) {
+BackgroundFileSaverOutputStream::Write(const char* aBuf, uint32_t aCount,
+                                       uint32_t* _retval) {
   return mPipeOutputStream->Write(aBuf, aCount, _retval);
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverOutputStream::WriteFrom(nsIInputStream *aFromStream,
-                                           uint32_t aCount, uint32_t *_retval) {
+BackgroundFileSaverOutputStream::WriteFrom(nsIInputStream* aFromStream,
+                                           uint32_t aCount, uint32_t* _retval) {
   return mPipeOutputStream->WriteFrom(aFromStream, aCount, _retval);
 }
 
 NS_IMETHODIMP
 BackgroundFileSaverOutputStream::WriteSegments(nsReadSegmentFun aReader,
-                                               void *aClosure, uint32_t aCount,
-                                               uint32_t *_retval) {
+                                               void* aClosure, uint32_t aCount,
+                                               uint32_t* _retval) {
   return mPipeOutputStream->WriteSegments(aReader, aClosure, aCount, _retval);
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverOutputStream::IsNonBlocking(bool *_retval) {
+BackgroundFileSaverOutputStream::IsNonBlocking(bool* _retval) {
   return mPipeOutputStream->IsNonBlocking(_retval);
 }
 
@@ -921,10 +921,10 @@ BackgroundFileSaverOutputStream::CloseWithStatus(nsresult reason) {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverOutputStream::AsyncWait(nsIOutputStreamCallback *aCallback,
+BackgroundFileSaverOutputStream::AsyncWait(nsIOutputStreamCallback* aCallback,
                                            uint32_t aFlags,
                                            uint32_t aRequestedCount,
-                                           nsIEventTarget *aEventTarget) {
+                                           nsIEventTarget* aEventTarget) {
   NS_ENSURE_STATE(!mAsyncWaitCallback);
 
   mAsyncWaitCallback = aCallback;
@@ -935,7 +935,7 @@ BackgroundFileSaverOutputStream::AsyncWait(nsIOutputStreamCallback *aCallback,
 
 NS_IMETHODIMP
 BackgroundFileSaverOutputStream::OnOutputStreamReady(
-    nsIAsyncOutputStream *aStream) {
+    nsIAsyncOutputStream* aStream) {
   NS_ENSURE_STATE(mAsyncWaitCallback);
 
   nsCOMPtr<nsIOutputStreamCallback> asyncWaitCallback = nullptr;
@@ -965,14 +965,14 @@ BackgroundFileSaverStreamListener::GetProgressCallback() {
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverStreamListener::OnStartRequest(nsIRequest *aRequest) {
+BackgroundFileSaverStreamListener::OnStartRequest(nsIRequest* aRequest) {
   NS_ENSURE_ARG(aRequest);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverStreamListener::OnStopRequest(nsIRequest *aRequest,
+BackgroundFileSaverStreamListener::OnStopRequest(nsIRequest* aRequest,
                                                  nsresult aStatusCode) {
   // If an error occurred, cancel the operation immediately.  On success, wait
   // until the caller has determined whether the file should be renamed.
@@ -984,8 +984,8 @@ BackgroundFileSaverStreamListener::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-BackgroundFileSaverStreamListener::OnDataAvailable(nsIRequest *aRequest,
-                                                   nsIInputStream *aInputStream,
+BackgroundFileSaverStreamListener::OnDataAvailable(nsIRequest* aRequest,
+                                                   nsIInputStream* aInputStream,
                                                    uint64_t aOffset,
                                                    uint32_t aCount) {
   nsresult rv;
@@ -1031,9 +1031,9 @@ BackgroundFileSaverStreamListener::OnDataAvailable(nsIRequest *aRequest,
 // Called on the worker thread.
 // static
 void BackgroundFileSaverStreamListener::AsyncCopyProgressCallback(
-    void *aClosure, uint32_t aCount) {
-  BackgroundFileSaverStreamListener *self =
-      (BackgroundFileSaverStreamListener *)aClosure;
+    void* aClosure, uint32_t aCount) {
+  BackgroundFileSaverStreamListener* self =
+      (BackgroundFileSaverStreamListener*)aClosure;
 
   // Wait if the control thread is in the process of suspending or resuming.
   MutexAutoLock lock(self->mSuspensionLock);
@@ -1092,8 +1092,8 @@ nsresult BackgroundFileSaverStreamListener::NotifySuspendOrResume() {
 //// DigestOutputStream
 NS_IMPL_ISUPPORTS(DigestOutputStream, nsIOutputStream)
 
-DigestOutputStream::DigestOutputStream(nsIOutputStream *aStream,
-                                       PK11Context *aContext)
+DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
+                                       PK11Context* aContext)
     : mOutputStream(aStream), mDigestContext(aContext) {
   MOZ_ASSERT(mDigestContext, "Can't have null digest context");
   MOZ_ASSERT(mOutputStream, "Can't have null output stream");
@@ -1106,9 +1106,9 @@ NS_IMETHODIMP
 DigestOutputStream::Flush() { return mOutputStream->Flush(); }
 
 NS_IMETHODIMP
-DigestOutputStream::Write(const char *aBuf, uint32_t aCount, uint32_t *retval) {
+DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval) {
   nsresult rv = MapSECStatus(PK11_DigestOp(
-      mDigestContext, BitwiseCast<const unsigned char *, const char *>(aBuf),
+      mDigestContext, BitwiseCast<const unsigned char*, const char*>(aBuf),
       aCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1116,8 +1116,8 @@ DigestOutputStream::Write(const char *aBuf, uint32_t aCount, uint32_t *retval) {
 }
 
 NS_IMETHODIMP
-DigestOutputStream::WriteFrom(nsIInputStream *aFromStream, uint32_t aCount,
-                              uint32_t *retval) {
+DigestOutputStream::WriteFrom(nsIInputStream* aFromStream, uint32_t aCount,
+                              uint32_t* retval) {
   // Not supported. We could read the stream to a buf, call DigestOp on the
   // result, seek back and pass the stream on, but it's not worth it since our
   // application (NS_AsyncCopy) doesn't invoke this on the sink.
@@ -1125,13 +1125,13 @@ DigestOutputStream::WriteFrom(nsIInputStream *aFromStream, uint32_t aCount,
 }
 
 NS_IMETHODIMP
-DigestOutputStream::WriteSegments(nsReadSegmentFun aReader, void *aClosure,
-                                  uint32_t aCount, uint32_t *retval) {
+DigestOutputStream::WriteSegments(nsReadSegmentFun aReader, void* aClosure,
+                                  uint32_t aCount, uint32_t* retval) {
   MOZ_CRASH("DigestOutputStream::WriteSegments not implemented");
 }
 
 NS_IMETHODIMP
-DigestOutputStream::IsNonBlocking(bool *retval) {
+DigestOutputStream::IsNonBlocking(bool* retval) {
   return mOutputStream->IsNonBlocking(retval);
 }
 

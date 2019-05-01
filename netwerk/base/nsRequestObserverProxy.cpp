@@ -24,7 +24,7 @@ static LazyLogModule gRequestObserverProxyLog("nsRequestObserverProxy");
 // nsARequestObserverEvent internal class...
 //-----------------------------------------------------------------------------
 
-nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request)
+nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest* request)
     : Runnable("net::nsARequestObserverEvent"), mRequest(request) {
   MOZ_ASSERT(mRequest, "null pointer");
 }
@@ -37,7 +37,7 @@ class nsOnStartRequestEvent : public nsARequestObserverEvent {
   RefPtr<nsRequestObserverProxy> mProxy;
 
  public:
-  nsOnStartRequestEvent(nsRequestObserverProxy *proxy, nsIRequest *request)
+  nsOnStartRequestEvent(nsRequestObserverProxy* proxy, nsIRequest* request)
       : nsARequestObserverEvent(request), mProxy(proxy) {
     MOZ_ASSERT(mProxy, "null pointer");
   }
@@ -75,7 +75,7 @@ class nsOnStopRequestEvent : public nsARequestObserverEvent {
   RefPtr<nsRequestObserverProxy> mProxy;
 
  public:
-  nsOnStopRequestEvent(nsRequestObserverProxy *proxy, nsIRequest *request)
+  nsOnStopRequestEvent(nsRequestObserverProxy* proxy, nsIRequest* request)
       : nsARequestObserverEvent(request), mProxy(proxy) {
     MOZ_ASSERT(mProxy, "null pointer");
   }
@@ -118,11 +118,11 @@ NS_IMPL_ISUPPORTS(nsRequestObserverProxy, nsIRequestObserver,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStartRequest(nsIRequest *request) {
+nsRequestObserverProxy::OnStartRequest(nsIRequest* request) {
   LOG(("nsRequestObserverProxy::OnStartRequest [this=%p req=%p]\n", this,
        request));
 
-  nsOnStartRequestEvent *ev = new nsOnStartRequestEvent(this, request);
+  nsOnStartRequestEvent* ev = new nsOnStartRequestEvent(this, request);
   if (!ev) return NS_ERROR_OUT_OF_MEMORY;
 
   LOG(("post startevent=%p\n", ev));
@@ -132,7 +132,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsresult status) {
+nsRequestObserverProxy::OnStopRequest(nsIRequest* request, nsresult status) {
   LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(status)));
@@ -142,7 +142,7 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsresult status) {
   // To make sure that an accurate status code is always used, GetStatus() is
   // called when the OnStopRequestEvent is actually processed (see above).
 
-  nsOnStopRequestEvent *ev = new nsOnStopRequestEvent(this, request);
+  nsOnStopRequestEvent* ev = new nsOnStopRequestEvent(this, request);
   if (!ev) return NS_ERROR_OUT_OF_MEMORY;
 
   LOG(("post stopevent=%p\n", ev));
@@ -156,8 +156,8 @@ nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsresult status) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRequestObserverProxy::Init(nsIRequestObserver *observer,
-                             nsISupports *context) {
+nsRequestObserverProxy::Init(nsIRequestObserver* observer,
+                             nsISupports* context) {
   NS_ENSURE_ARG_POINTER(observer);
   mObserver = new nsMainThreadPtrHolder<nsIRequestObserver>(
       "nsRequestObserverProxy::mObserver", observer);
@@ -171,7 +171,7 @@ nsRequestObserverProxy::Init(nsIRequestObserver *observer,
 // nsRequestObserverProxy implementation...
 //-----------------------------------------------------------------------------
 
-nsresult nsRequestObserverProxy::FireEvent(nsARequestObserverEvent *event) {
+nsresult nsRequestObserverProxy::FireEvent(nsARequestObserverEvent* event) {
   nsCOMPtr<nsIEventTarget> mainThread(GetMainThreadEventTarget());
   return mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }

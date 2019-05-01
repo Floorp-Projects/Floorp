@@ -63,25 +63,25 @@ MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(SqliteMallocSizeOfOnFree)
 
 #  endif
 
-static void *sqliteMemMalloc(int n) {
-  void *p = ::malloc(n);
+static void* sqliteMemMalloc(int n) {
+  void* p = ::malloc(n);
 #  ifdef MOZ_DMD
   gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
 #  endif
   return p;
 }
 
-static void sqliteMemFree(void *p) {
+static void sqliteMemFree(void* p) {
 #  ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
 #  endif
   ::free(p);
 }
 
-static void *sqliteMemRealloc(void *p, int n) {
+static void* sqliteMemRealloc(void* p, int n) {
 #  ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
-  void *pnew = ::realloc(p, n);
+  void* pnew = ::realloc(p, n);
   if (pnew) {
     gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(pnew);
   } else {
@@ -94,7 +94,7 @@ static void *sqliteMemRealloc(void *p, int n) {
 #  endif
 }
 
-static int sqliteMemSize(void *p) { return ::moz_malloc_usable_size(p); }
+static int sqliteMemSize(void* p) { return ::moz_malloc_usable_size(p); }
 
 static int sqliteMemRoundup(int n) {
   n = malloc_good_size(n);
@@ -105,9 +105,9 @@ static int sqliteMemRoundup(int n) {
   return n <= 8 ? 8 : n;
 }
 
-static int sqliteMemInit(void *p) { return 0; }
+static int sqliteMemInit(void* p) { return 0; }
 
-static void sqliteMemShutdown(void *p) {}
+static void sqliteMemShutdown(void* p) {}
 
 const sqlite3_mem_methods memMethods = {
     &sqliteMemMalloc,  &sqliteMemFree, &sqliteMemRealloc,  &sqliteMemSize,

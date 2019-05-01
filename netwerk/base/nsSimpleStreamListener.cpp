@@ -22,12 +22,12 @@ NS_IMPL_ISUPPORTS(nsSimpleStreamListener, nsISimpleStreamListener,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest) {
+nsSimpleStreamListener::OnStartRequest(nsIRequest* aRequest) {
   return mObserver ? mObserver->OnStartRequest(aRequest) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+nsSimpleStreamListener::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   return mObserver ? mObserver->OnStopRequest(request, aStatus) : NS_OK;
 }
 
@@ -37,8 +37,8 @@ nsSimpleStreamListener::OnStopRequest(nsIRequest *request, nsresult aStatus) {
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::OnDataAvailable(nsIRequest *request,
-                                        nsIInputStream *aSource,
+nsSimpleStreamListener::OnDataAvailable(nsIRequest* request,
+                                        nsIInputStream* aSource,
                                         uint64_t aOffset, uint32_t aCount) {
   uint32_t writeCount;
   nsresult rv = mSink->WriteFrom(aSource, aCount, &writeCount);
@@ -55,8 +55,8 @@ nsSimpleStreamListener::OnDataAvailable(nsIRequest *request,
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSimpleStreamListener::Init(nsIOutputStream *aSink,
-                             nsIRequestObserver *aObserver) {
+nsSimpleStreamListener::Init(nsIOutputStream* aSink,
+                             nsIRequestObserver* aObserver) {
   MOZ_ASSERT(aSink, "null output stream");
 
   mSink = aSink;

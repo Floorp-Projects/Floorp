@@ -15,11 +15,11 @@ template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 class SVGTurbulenceRenderer {
  public:
-  SVGTurbulenceRenderer(const Size &aBaseFrequency, int32_t aSeed,
-                        int aNumOctaves, const Rect &aTileRect);
+  SVGTurbulenceRenderer(const Size& aBaseFrequency, int32_t aSeed,
+                        int aNumOctaves, const Rect& aTileRect);
 
-  already_AddRefed<DataSourceSurface> Render(const IntSize &aSize,
-                                             const Point &aOffset) const;
+  already_AddRefed<DataSourceSurface> Render(const IntSize& aSize,
+                                             const Point& aOffset) const;
 
  private:
   /* The turbulence calculation code is an adapted version of what
@@ -37,13 +37,13 @@ class SVGTurbulenceRenderer {
   const static int sBSize = 0x100;
   const static int sBM = 0xff;
   void InitFromSeed(int32_t aSeed);
-  void AdjustBaseFrequencyForStitch(const Rect &aTileRect);
+  void AdjustBaseFrequencyForStitch(const Rect& aTileRect);
   IntPoint AdjustForStitch(IntPoint aLatticePoint,
-                           const StitchInfo &aStitchInfo) const;
-  StitchInfo CreateStitchInfo(const Rect &aTileRect) const;
-  f32x4_t Noise2(Point aVec, const StitchInfo &aStitchInfo) const;
-  i32x4_t Turbulence(const Point &aPoint) const;
-  Point EquivalentNonNegativeOffset(const Point &aOffset) const;
+                           const StitchInfo& aStitchInfo) const;
+  StitchInfo CreateStitchInfo(const Rect& aTileRect) const;
+  f32x4_t Noise2(Point aVec, const StitchInfo& aStitchInfo) const;
+  i32x4_t Turbulence(const Point& aPoint) const;
+  Point EquivalentNonNegativeOffset(const Point& aOffset) const;
 
   Size mBaseFrequency;
   int32_t mNumOctaves;
@@ -97,8 +97,8 @@ struct RandomNumberSource {
 template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::
-    SVGTurbulenceRenderer(const Size &aBaseFrequency, int32_t aSeed,
-                          int aNumOctaves, const Rect &aTileRect)
+    SVGTurbulenceRenderer(const Size& aBaseFrequency, int32_t aSeed,
+                          int aNumOctaves, const Rect& aTileRect)
     : mBaseFrequency(aBaseFrequency),
       mNumOctaves(aNumOctaves),
       mStitchInfo(),
@@ -169,7 +169,7 @@ static inline float AdjustForLength(float aFreq, float aLength) {
 template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 void SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::
-    AdjustBaseFrequencyForStitch(const Rect &aTileRect) {
+    AdjustBaseFrequencyForStitch(const Rect& aTileRect) {
   mBaseFrequency =
       Size(AdjustForLength(mBaseFrequency.width, aTileRect.Width()),
            AdjustForLength(mBaseFrequency.height, aTileRect.Height()));
@@ -180,7 +180,7 @@ template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
 typename SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t,
                                u8x16_t>::StitchInfo
 SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t,
-                      u8x16_t>::CreateStitchInfo(const Rect &aTileRect) const {
+                      u8x16_t>::CreateStitchInfo(const Rect& aTileRect) const {
   StitchInfo stitch;
   stitch.width =
       int32_t(floorf(aTileRect.Width() * mBaseFrequency.width + 0.5f));
@@ -198,8 +198,8 @@ static MOZ_ALWAYS_INLINE Point SCurve(Point t) {
 }
 
 template <typename f32x4_t>
-static MOZ_ALWAYS_INLINE f32x4_t BiMix(const f32x4_t &aa, const f32x4_t &ab,
-                                       const f32x4_t &ba, const f32x4_t &bb,
+static MOZ_ALWAYS_INLINE f32x4_t BiMix(const f32x4_t& aa, const f32x4_t& ab,
+                                       const f32x4_t& ba, const f32x4_t& bb,
                                        Point s) {
   return simd::MixF32(simd::MixF32(aa, ab, s.x), simd::MixF32(ba, bb, s.x),
                       s.y);
@@ -209,7 +209,7 @@ template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 IntPoint
 SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::AdjustForStitch(
-    IntPoint aLatticePoint, const StitchInfo &aStitchInfo) const {
+    IntPoint aLatticePoint, const StitchInfo& aStitchInfo) const {
   if (Stitch) {
     if (aLatticePoint.x >= aStitchInfo.wrapX) {
       aLatticePoint.x -= aStitchInfo.width;
@@ -224,7 +224,7 @@ SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::AdjustForStitch(
 template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 f32x4_t SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::Noise2(
-    Point aVec, const StitchInfo &aStitchInfo) const {
+    Point aVec, const StitchInfo& aStitchInfo) const {
   // aVec is guaranteed to be non-negative, so casting to int32_t always
   // rounds towards negative infinity.
   IntPoint topLeftLatticePoint(int32_t(aVec.x), int32_t(aVec.y));
@@ -236,10 +236,10 @@ f32x4_t SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::Noise2(
   uint8_t i = mLatticeSelector[b0.x & sBM];
   uint8_t j = mLatticeSelector[b1.x & sBM];
 
-  const f32x4_t *qua = mGradient[(i + b0.y) & sBM];
-  const f32x4_t *qub = mGradient[(i + b1.y) & sBM];
-  const f32x4_t *qva = mGradient[(j + b0.y) & sBM];
-  const f32x4_t *qvb = mGradient[(j + b1.y) & sBM];
+  const f32x4_t* qua = mGradient[(i + b0.y) & sBM];
+  const f32x4_t* qub = mGradient[(i + b1.y) & sBM];
+  const f32x4_t* qva = mGradient[(j + b0.y) & sBM];
+  const f32x4_t* qvb = mGradient[(j + b1.y) & sBM];
 
   return BiMix(simd::WSumF32(qua[0], qua[1], r.x, r.y),
                simd::WSumF32(qva[0], qva[1], r.x - 1.f, r.y),
@@ -267,7 +267,7 @@ static inline i32x4_t ColorToBGRA(f32x4_t aUnscaledUnpreFloat) {
 template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 i32x4_t SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t,
-                              u8x16_t>::Turbulence(const Point &aPoint) const {
+                              u8x16_t>::Turbulence(const Point& aPoint) const {
   StitchInfo stitchInfo = mStitchInfo;
   f32x4_t sum = simd::FromF32<f32x4_t>(0);
   Point vec(aPoint.x * mBaseFrequency.width, aPoint.y * mBaseFrequency.height);
@@ -317,7 +317,7 @@ static inline Float FiniteDivide(Float aValue, Float aDivisor) {
 template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 Point SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::
-    EquivalentNonNegativeOffset(const Point &aOffset) const {
+    EquivalentNonNegativeOffset(const Point& aOffset) const {
   Size basePeriod = Stitch ? Size(mStitchInfo.width, mStitchInfo.height)
                            : Size(sBSize, sBSize);
   Size repeatingSize(FiniteDivide(basePeriod.width, mBaseFrequency.width),
@@ -330,7 +330,7 @@ template <TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t,
           typename u8x16_t>
 already_AddRefed<DataSourceSurface>
 SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::Render(
-    const IntSize &aSize, const Point &aOffset) const {
+    const IntSize& aSize, const Point& aOffset) const {
   RefPtr<DataSourceSurface> target =
       Factory::CreateDataSourceSurface(aSize, SurfaceFormat::B8G8R8A8);
   if (!target) {
@@ -338,7 +338,7 @@ SVGTurbulenceRenderer<Type, Stitch, f32x4_t, i32x4_t, u8x16_t>::Render(
   }
 
   DataSourceSurface::ScopedMap map(target, DataSourceSurface::READ_WRITE);
-  uint8_t *targetData = map.GetData();
+  uint8_t* targetData = map.GetData();
   uint32_t stride = map.GetStride();
 
   Point startOffset = EquivalentNonNegativeOffset(aOffset);

@@ -37,7 +37,7 @@ unsigned int SrtpFlow::SaltSize(int cipher_suite) {
 }
 
 RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite, bool inbound,
-                                  const void *key, size_t key_len) {
+                                  const void* key, size_t key_len) {
   nsresult res = Init();
   if (!NS_SUCCEEDED(res)) return nullptr;
 
@@ -89,7 +89,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite, bool inbound,
   // This key is copied into the srtp_t object, so we don't
   // need to keep it.
   policy.key =
-      const_cast<unsigned char *>(static_cast<const unsigned char *>(key));
+      const_cast<unsigned char*>(static_cast<const unsigned char*>(key));
   policy.ssrc.type = inbound ? ssrc_any_inbound : ssrc_any_outbound;
   policy.ssrc.value = 0;
   policy.ekt = nullptr;
@@ -108,8 +108,8 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite, bool inbound,
   return flow;
 }
 
-nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len, int max_len,
-                               int *out_len) {
+nsresult SrtpFlow::CheckInputs(bool protect, void* in, int in_len, int max_len,
+                               int* out_len) {
   MOZ_ASSERT(in);
   if (!in) {
     MOZ_MTLOG(ML_ERROR, "NULL input value");
@@ -142,7 +142,7 @@ nsresult SrtpFlow::CheckInputs(bool protect, void *in, int in_len, int max_len,
   return NS_OK;
 }
 
-nsresult SrtpFlow::ProtectRtp(void *in, int in_len, int max_len, int *out_len) {
+nsresult SrtpFlow::ProtectRtp(void* in, int in_len, int max_len, int* out_len) {
   nsresult res = CheckInputs(true, in, in_len, max_len, out_len);
   if (NS_FAILED(res)) return res;
 
@@ -163,8 +163,8 @@ nsresult SrtpFlow::ProtectRtp(void *in, int in_len, int max_len, int *out_len) {
   return NS_OK;
 }
 
-nsresult SrtpFlow::UnprotectRtp(void *in, int in_len, int max_len,
-                                int *out_len) {
+nsresult SrtpFlow::UnprotectRtp(void* in, int in_len, int max_len,
+                                int* out_len) {
   nsresult res = CheckInputs(false, in, in_len, max_len, out_len);
   if (NS_FAILED(res)) return res;
 
@@ -185,8 +185,8 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len, int max_len,
   return NS_OK;
 }
 
-nsresult SrtpFlow::ProtectRtcp(void *in, int in_len, int max_len,
-                               int *out_len) {
+nsresult SrtpFlow::ProtectRtcp(void* in, int in_len, int max_len,
+                               int* out_len) {
   nsresult res = CheckInputs(true, in, in_len, max_len, out_len);
   if (NS_FAILED(res)) return res;
 
@@ -207,8 +207,8 @@ nsresult SrtpFlow::ProtectRtcp(void *in, int in_len, int max_len,
   return NS_OK;
 }
 
-nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len, int max_len,
-                                 int *out_len) {
+nsresult SrtpFlow::UnprotectRtcp(void* in, int in_len, int max_len,
+                                 int* out_len) {
   nsresult res = CheckInputs(false, in, in_len, max_len, out_len);
   if (NS_FAILED(res)) return res;
 
@@ -230,7 +230,7 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len, int max_len,
 }
 
 // Statics
-void SrtpFlow::srtp_event_handler(srtp_event_data_t *data) {
+void SrtpFlow::srtp_event_handler(srtp_event_data_t* data) {
   // TODO(ekr@rtfm.com): Implement this
   MOZ_CRASH();
 }

@@ -6,7 +6,7 @@
 
 #include <Foundation/Foundation.h>
 
-static NSAutoreleasePool *pool = NULL;
+static NSAutoreleasePool* pool = NULL;
 
 void InitAutoreleasePool() { pool = [[NSAutoreleasePool alloc] init]; }
 

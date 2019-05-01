@@ -38,7 +38,7 @@ class nsInputStreamTransport : public nsITransport, public nsIInputStream {
   NS_DECL_NSITRANSPORT
   NS_DECL_NSIINPUTSTREAM
 
-  nsInputStreamTransport(nsIInputStream *source, bool closeWhenDone)
+  nsInputStreamTransport(nsIInputStream* source, bool closeWhenDone)
       : mSource(source),
         mOffset(0),
         mCloseWhenDone(closeWhenDone),
@@ -68,7 +68,7 @@ NS_IMPL_ISUPPORTS(nsInputStreamTransport, nsITransport, nsIInputStream)
 NS_IMETHODIMP
 nsInputStreamTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
                                         uint32_t segcount,
-                                        nsIInputStream **result) {
+                                        nsIInputStream** result) {
   NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
 
   nsresult rv;
@@ -102,7 +102,7 @@ nsInputStreamTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
 NS_IMETHODIMP
 nsInputStreamTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
                                          uint32_t segcount,
-                                         nsIOutputStream **result) {
+                                         nsIOutputStream** result) {
   // this transport only supports reading!
   MOZ_ASSERT_UNREACHABLE("nsInputStreamTransport::OpenOutputStream");
   return NS_ERROR_UNEXPECTED;
@@ -116,8 +116,8 @@ nsInputStreamTransport::Close(nsresult reason) {
 }
 
 NS_IMETHODIMP
-nsInputStreamTransport::SetEventSink(nsITransportEventSink *sink,
-                                     nsIEventTarget *target) {
+nsInputStreamTransport::SetEventSink(nsITransportEventSink* sink,
+                                     nsIEventTarget* target) {
   NS_ENSURE_TRUE(!mInProgress, NS_ERROR_IN_PROGRESS);
 
   if (target)
@@ -140,12 +140,12 @@ nsInputStreamTransport::Close() {
 }
 
 NS_IMETHODIMP
-nsInputStreamTransport::Available(uint64_t *result) {
+nsInputStreamTransport::Available(uint64_t* result) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamTransport::Read(char *buf, uint32_t count, uint32_t *result) {
+nsInputStreamTransport::Read(char* buf, uint32_t count, uint32_t* result) {
   nsresult rv = mSource->Read(buf, count, result);
 
   if (NS_SUCCEEDED(rv)) {
@@ -157,13 +157,13 @@ nsInputStreamTransport::Read(char *buf, uint32_t count, uint32_t *result) {
 }
 
 NS_IMETHODIMP
-nsInputStreamTransport::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                                     uint32_t count, uint32_t *result) {
+nsInputStreamTransport::ReadSegments(nsWriteSegmentFun writer, void* closure,
+                                     uint32_t count, uint32_t* result) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsInputStreamTransport::IsNonBlocking(bool *result) {
+nsInputStreamTransport::IsNonBlocking(bool* result) {
   *result = false;
   return NS_OK;
 }
@@ -195,7 +195,7 @@ NS_IMPL_ISUPPORTS(nsStreamTransportService, nsIStreamTransportService,
                   nsIEventTarget, nsIObserver)
 
 NS_IMETHODIMP
-nsStreamTransportService::DispatchFromScript(nsIRunnable *task,
+nsStreamTransportService::DispatchFromScript(nsIRunnable* task,
                                              uint32_t flags) {
   nsCOMPtr<nsIRunnable> event(task);
   return Dispatch(event.forget(), flags);
@@ -237,7 +237,7 @@ nsStreamTransportService::IsOnCurrentThreadInfallible() {
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::IsOnCurrentThread(bool *result) {
+nsStreamTransportService::IsOnCurrentThread(bool* result) {
   nsCOMPtr<nsIThreadPool> pool;
   {
     mozilla::MutexAutoLock lock(mShutdownLock);
@@ -251,10 +251,10 @@ nsStreamTransportService::IsOnCurrentThread(bool *result) {
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::CreateInputTransport(nsIInputStream *stream,
+nsStreamTransportService::CreateInputTransport(nsIInputStream* stream,
                                                bool closeWhenDone,
-                                               nsITransport **result) {
-  nsInputStreamTransport *trans =
+                                               nsITransport** result) {
+  nsInputStreamTransport* trans =
       new nsInputStreamTransport(stream, closeWhenDone);
   if (!trans) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*result = trans);
@@ -262,8 +262,8 @@ nsStreamTransportService::CreateInputTransport(nsIInputStream *stream,
 }
 
 NS_IMETHODIMP
-nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
-                                  const char16_t *data) {
+nsStreamTransportService::Observe(nsISupports* subject, const char* topic,
+                                  const char16_t* data) {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 
   {
@@ -280,7 +280,7 @@ nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
 
 class AvailableEvent final : public Runnable {
  public:
-  AvailableEvent(nsIInputStream *stream, nsIInputAvailableCallback *callback)
+  AvailableEvent(nsIInputStream* stream, nsIInputAvailableCallback* callback)
       : Runnable("net::AvailableEvent"),
         mStream(stream),
         mCallback(callback),
@@ -320,8 +320,8 @@ class AvailableEvent final : public Runnable {
 };
 
 NS_IMETHODIMP
-nsStreamTransportService::InputAvailable(nsIInputStream *stream,
-                                         nsIInputAvailableCallback *callback) {
+nsStreamTransportService::InputAvailable(nsIInputStream* stream,
+                                         nsIInputAvailableCallback* callback) {
   nsCOMPtr<nsIThreadPool> pool;
   {
     mozilla::MutexAutoLock lock(mShutdownLock);

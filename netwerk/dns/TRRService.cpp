@@ -29,7 +29,7 @@ namespace net {
 extern mozilla::LazyLogModule gHostResolverLog;
 #define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
-TRRService *gTRRService = nullptr;
+TRRService* gTRRService = nullptr;
 
 NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
@@ -116,13 +116,13 @@ bool TRRService::Enabled() {
   return (mConfirmationState == CONFIRM_OK);
 }
 
-void TRRService::GetPrefBranch(nsIPrefBranch **result) {
+void TRRService::GetPrefBranch(nsIPrefBranch** result) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   *result = nullptr;
   CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
-nsresult TRRService::ReadPrefs(const char *name) {
+nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (!name || !strcmp(name, TRR_PREF("mode"))) {
     // 0 - off, 1 - parallel, 2 - TRR first, 3 - TRR only, 4 - shadow,
@@ -164,7 +164,7 @@ nsresult TRRService::ReadPrefs(const char *name) {
           nsAutoCString prefix(openBrace.nextToken());
 
           // if there is an open brace, there's another token
-          const nsACString &endBrace = openBrace.nextToken();
+          const nsACString& endBrace = openBrace.nextToken();
           nsCCharSeparatedTokenizer closeBrace(endBrace, '}');
           if (closeBrace.hasMoreTokens()) {
             // there is a close brace as well, make a URI out of the prefix
@@ -281,13 +281,13 @@ nsresult TRRService::ReadPrefs(const char *name) {
   return NS_OK;
 }
 
-nsresult TRRService::GetURI(nsCString &result) {
+nsresult TRRService::GetURI(nsCString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateURI;
   return NS_OK;
 }
 
-nsresult TRRService::GetCredentials(nsCString &result) {
+nsresult TRRService::GetCredentials(nsCString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateCred;
   return NS_OK;
@@ -308,8 +308,8 @@ TRRService::~TRRService() {
 }
 
 NS_IMETHODIMP
-TRRService::Observe(nsISupports *aSubject, const char *aTopic,
-                    const char16_t *aData) {
+TRRService::Observe(nsISupports* aSubject, const char* aTopic,
+                    const char16_t* aData) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
@@ -380,7 +380,7 @@ void TRRService::MaybeConfirm_locked() {
     LOG(
         ("TRRService:MaybeConfirm mode=%d, mConfirmer=%p "
          "mConfirmationState=%d\n",
-         (int)mMode, (void *)mConfirmer, (int)mConfirmationState));
+         (int)mMode, (void*)mConfirmer, (int)mConfirmationState));
     return;
   }
 
@@ -397,8 +397,8 @@ void TRRService::MaybeConfirm_locked() {
   }
 }
 
-bool TRRService::MaybeBootstrap(const nsACString &aPossible,
-                                nsACString &aResult) {
+bool TRRService::MaybeBootstrap(const nsACString& aPossible,
+                                nsACString& aResult) {
   MutexAutoLock lock(mLock);
   if (TRR_DISABLED(mMode) || mBootstrapAddr.IsEmpty()) {
     return false;
@@ -429,8 +429,8 @@ bool TRRService::MaybeBootstrap(const nsACString &aPossible,
 
 // When running in TRR-only mode, the blacklist is not used and it will also
 // try resolving the localhost / .local names.
-bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
-                                  const nsACString &aOriginSuffix,
+bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
+                                  const nsACString& aOriginSuffix,
                                   bool aPrivateBrowsing,
                                   bool aParentsToo)  // false if domain
 {
@@ -509,7 +509,7 @@ bool TRRService::IsTRRBlacklisted(const nsACString &aHost,
   return false;
 }
 
-bool TRRService::IsExcludedFromTRR(const nsACString &aHost) {
+bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
   if (mExcludedDomains.GetEntry(aHost)) {
     LOG(("Host [%s] Is Excluded From TRR via pref\n", aHost.BeginReading()));
     return true;
@@ -533,8 +533,8 @@ bool TRRService::IsExcludedFromTRR(const nsACString &aHost) {
 
 class ProxyBlacklist : public Runnable {
  public:
-  ProxyBlacklist(TRRService *service, const nsACString &aHost,
-                 const nsACString &aOriginSuffix, bool pb, bool aParentsToo)
+  ProxyBlacklist(TRRService* service, const nsACString& aHost,
+                 const nsACString& aOriginSuffix, bool pb, bool aParentsToo)
       : mozilla::Runnable("proxyBlackList"),
         mService(service),
         mHost(aHost),
@@ -556,8 +556,8 @@ class ProxyBlacklist : public Runnable {
   bool mParentsToo;
 };
 
-void TRRService::TRRBlacklist(const nsACString &aHost,
-                              const nsACString &aOriginSuffix,
+void TRRService::TRRBlacklist(const nsACString& aHost,
+                              const nsACString& aOriginSuffix,
                               bool privateBrowsing, bool aParentsToo) {
   {
     MutexAutoLock lock(mLock);
@@ -609,7 +609,7 @@ void TRRService::TRRBlacklist(const nsACString &aHost,
 }
 
 NS_IMETHODIMP
-TRRService::Notify(nsITimer *aTimer) {
+TRRService::Notify(nsITimer* aTimer) {
   if (aTimer == mRetryConfirmTimer) {
     mRetryConfirmTimer = nullptr;
     if (mConfirmationState == CONFIRM_FAILED) {
@@ -648,8 +648,8 @@ void TRRService::TRRIsOkay(enum TrrOkay aReason) {
 }
 
 AHostResolver::LookupStatus TRRService::CompleteLookup(
-    nsHostRecord *rec, nsresult status, AddrInfo *aNewRRSet, bool pb,
-    const nsACString &aOriginSuffix) {
+    nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
+    const nsACString& aOriginSuffix) {
   // this is an NS check for the TRR blacklist or confirmationNS check
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -705,7 +705,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
 }
 
 AHostResolver::LookupStatus TRRService::CompleteLookupByType(
-    nsHostRecord *, nsresult, const nsTArray<nsCString> *aResult, uint32_t aTtl,
+    nsHostRecord*, nsresult, const nsTArray<nsCString>* aResult, uint32_t aTtl,
     bool aPb) {
   return LOOKUP_OK;
 }

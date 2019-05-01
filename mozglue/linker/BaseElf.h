@@ -17,21 +17,21 @@ class BaseElf : public LibHandle {
   /**
    * Hash function for symbol lookup, as defined in ELF standard for System V.
    */
-  static unsigned long Hash(const char *symbol);
+  static unsigned long Hash(const char* symbol);
 
   /**
    * Returns the address corresponding to the given symbol name (with a
    * pre-computed hash).
    */
-  void *GetSymbolPtr(const char *symbol, unsigned long hash) const;
+  void* GetSymbolPtr(const char* symbol, unsigned long hash) const;
 
   /**
    * Returns a pointer to the Elf Symbol in the Dynamic Symbol table
    * corresponding to the given symbol name (with a pre-computed hash).
    */
-  const Elf::Sym *GetSymbol(const char *symbol, unsigned long hash) const;
+  const Elf::Sym* GetSymbol(const char* symbol, unsigned long hash) const;
 
-  explicit BaseElf(const char *path, Mappable *mappable = nullptr)
+  explicit BaseElf(const char* path, Mappable* mappable = nullptr)
       : LibHandle(path), mappable(mappable) {}
 
  protected:
@@ -39,15 +39,15 @@ class BaseElf : public LibHandle {
    * Inherited from LibHandle. Those are temporary and are not supposed to
    * be used.
    */
-  virtual void *GetSymbolPtr(const char *symbol) const;
-  virtual bool Contains(void *addr) const;
-  virtual void *GetBase() const { return GetPtr(0); }
+  virtual void* GetSymbolPtr(const char* symbol) const;
+  virtual bool Contains(void* addr) const;
+  virtual void* GetBase() const { return GetPtr(0); }
 
 #ifdef __ARM_EABI__
-  virtual const void *FindExidx(int *pcount) const;
+  virtual const void* FindExidx(int* pcount) const;
 #endif
 
-  virtual Mappable *GetMappable() const { return NULL; };
+  virtual Mappable* GetMappable() const { return NULL; };
 
  public:
   /* private: */
@@ -55,9 +55,9 @@ class BaseElf : public LibHandle {
    * Returns a pointer relative to the base address where the library is
    * loaded.
    */
-  void *GetPtr(const Elf::Addr offset) const {
-    if (reinterpret_cast<void *>(offset) > base)
-      return reinterpret_cast<void *>(offset);
+  void* GetPtr(const Elf::Addr offset) const {
+    if (reinterpret_cast<void*>(offset) > base)
+      return reinterpret_cast<void*>(offset);
     return base + offset;
   }
 
@@ -65,10 +65,10 @@ class BaseElf : public LibHandle {
    * Like the above, but returns a typed (const) pointer
    */
   template <typename T>
-  const T *GetPtr(const Elf::Addr offset) const {
-    if (reinterpret_cast<void *>(offset) > base)
-      return reinterpret_cast<const T *>(offset);
-    return reinterpret_cast<const T *>(base + offset);
+  const T* GetPtr(const Elf::Addr offset) const {
+    if (reinterpret_cast<void*>(offset) > base)
+      return reinterpret_cast<const T*>(offset);
+    return reinterpret_cast<const T*>(base + offset);
   }
 
   /* Appropriated Mappable */
@@ -105,10 +105,10 @@ class LoadedElf : public BaseElf {
    * Returns a LoadedElf corresponding to the already loaded ELF
    * at the given base address.
    */
-  static already_AddRefed<LibHandle> Create(const char *path, void *base_addr);
+  static already_AddRefed<LibHandle> Create(const char* path, void* base_addr);
 
  private:
-  explicit LoadedElf(const char *path) : BaseElf(path) {}
+  explicit LoadedElf(const char* path) : BaseElf(path) {}
 
   ~LoadedElf() {
     /* Avoid base's destructor unmapping something that doesn't actually
@@ -122,7 +122,7 @@ class LoadedElf : public BaseElf {
    * PT_DYNAMIC header.
    * Returns whether this succeeded or failed.
    */
-  bool InitDyn(const Elf::Phdr *pt_dyn);
+  bool InitDyn(const Elf::Phdr* pt_dyn);
 };
 
 #endif /* BaseElf_h */

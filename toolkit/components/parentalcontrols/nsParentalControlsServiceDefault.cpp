@@ -17,41 +17,41 @@ nsParentalControlsService::nsParentalControlsService() : mEnabled(false) {
 nsParentalControlsService::~nsParentalControlsService() = default;
 
 NS_IMETHODIMP
-nsParentalControlsService::GetParentalControlsEnabled(bool *aResult) {
+nsParentalControlsService::GetParentalControlsEnabled(bool* aResult) {
   *aResult = false;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult) {
+nsParentalControlsService::GetBlockFileDownloadsEnabled(bool* aResult) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::GetLoggingEnabled(bool *aResult) {
+nsParentalControlsService::GetLoggingEnabled(bool* aResult) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
 nsParentalControlsService::Log(int16_t aEntryType, bool blocked,
-                               nsIURI *aSource, nsIFile *aTarget) {
+                               nsIURI* aSource, nsIFile* aTarget) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
 nsParentalControlsService::RequestURIOverride(
-    nsIURI *aTarget, nsIInterfaceRequestor *aWindowContext, bool *_retval) {
+    nsIURI* aTarget, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
 nsParentalControlsService::RequestURIOverrides(
-    nsIArray *aTargets, nsIInterfaceRequestor *aWindowContext, bool *_retval) {
+    nsIArray* aTargets, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI *aUri,
-                                     bool *_retval) {
+nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI* aUri,
+                                     bool* _retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }

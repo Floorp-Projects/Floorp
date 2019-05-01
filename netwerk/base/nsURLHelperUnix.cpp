@@ -10,7 +10,7 @@
 #include "nsIFile.h"
 #include "nsNativeCharsetUtils.h"
 
-nsresult net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result) {
+nsresult net_GetURLSpecFromActualFile(nsIFile* aFile, nsACString& result) {
   nsresult rv;
   nsAutoCString nativePath, ePath;
   nsAutoString path;
@@ -45,7 +45,7 @@ nsresult net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result) {
   return NS_OK;
 }
 
-nsresult net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result) {
+nsresult net_GetFileFromURLSpec(const nsACString& aURL, nsIFile** result) {
   // NOTE: See also the implementation in nsURLHelperOSX.cpp,
   // which is based on this.
 

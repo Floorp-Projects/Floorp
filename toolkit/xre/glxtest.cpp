@@ -37,11 +37,11 @@
 #include "mozilla/Unused.h"
 
 // stuff from glx.h
-typedef struct __GLXcontextRec *GLXContext;
+typedef struct __GLXcontextRec* GLXContext;
 typedef XID GLXPixmap;
 typedef XID GLXDrawable;
 /* GLX 1.3 and later */
-typedef struct __GLXFBConfigRec *GLXFBConfig;
+typedef struct __GLXFBConfigRec* GLXFBConfig;
 typedef XID GLXFBConfigID;
 typedef XID GLXContextID;
 typedef XID GLXWindow;
@@ -90,17 +90,17 @@ static int write_end_of_the_pipe = -1;
 // to function pointer types. So the work-around is to convert first to size_t.
 // http://www.trilithium.com/johan/2004/12/problem-with-dlsym/
 template <typename func_ptr_type>
-static func_ptr_type cast(void *ptr) {
+static func_ptr_type cast(void* ptr) {
   return reinterpret_cast<func_ptr_type>(reinterpret_cast<size_t>(ptr));
 }
 
-static void fatal_error(const char *str) {
+static void fatal_error(const char* str) {
   mozilla::Unused << write(write_end_of_the_pipe, str, strlen(str));
   mozilla::Unused << write(write_end_of_the_pipe, "\n", 1);
   _exit(EXIT_FAILURE);
 }
 
-static int x_error_handler(Display *, XErrorEvent *ev) {
+static int x_error_handler(Display*, XErrorEvent* ev) {
   enum { bufsize = 1024 };
   char buf[bufsize];
   int length = snprintf(buf, bufsize,
@@ -137,42 +137,42 @@ void glxtest() {
 #else
 #  define LIBGL_FILENAME "libGL.so.1"
 #endif
-  void *libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
+  void* libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl) fatal_error("Unable to load " LIBGL_FILENAME);
 
-  typedef void *(*PFNGLXGETPROCADDRESS)(const char *);
+  typedef void* (*PFNGLXGETPROCADDRESS)(const char*);
   PFNGLXGETPROCADDRESS glXGetProcAddress =
       cast<PFNGLXGETPROCADDRESS>(dlsym(libgl, "glXGetProcAddress"));
 
   if (!glXGetProcAddress)
     fatal_error("Unable to find glXGetProcAddress in " LIBGL_FILENAME);
 
-  typedef GLXFBConfig *(*PFNGLXQUERYEXTENSION)(Display *, int *, int *);
+  typedef GLXFBConfig* (*PFNGLXQUERYEXTENSION)(Display*, int*, int*);
   PFNGLXQUERYEXTENSION glXQueryExtension =
       cast<PFNGLXQUERYEXTENSION>(glXGetProcAddress("glXQueryExtension"));
 
-  typedef GLXFBConfig *(*PFNGLXQUERYVERSION)(Display *, int *, int *);
+  typedef GLXFBConfig* (*PFNGLXQUERYVERSION)(Display*, int*, int*);
   PFNGLXQUERYVERSION glXQueryVersion =
       cast<PFNGLXQUERYVERSION>(dlsym(libgl, "glXQueryVersion"));
 
-  typedef XVisualInfo *(*PFNGLXCHOOSEVISUAL)(Display *, int, int *);
+  typedef XVisualInfo* (*PFNGLXCHOOSEVISUAL)(Display*, int, int*);
   PFNGLXCHOOSEVISUAL glXChooseVisual =
       cast<PFNGLXCHOOSEVISUAL>(glXGetProcAddress("glXChooseVisual"));
 
-  typedef GLXContext (*PFNGLXCREATECONTEXT)(Display *, XVisualInfo *,
-                                            GLXContext, Bool);
+  typedef GLXContext (*PFNGLXCREATECONTEXT)(Display*, XVisualInfo*, GLXContext,
+                                            Bool);
   PFNGLXCREATECONTEXT glXCreateContext =
       cast<PFNGLXCREATECONTEXT>(glXGetProcAddress("glXCreateContext"));
 
-  typedef Bool (*PFNGLXMAKECURRENT)(Display *, GLXDrawable, GLXContext);
+  typedef Bool (*PFNGLXMAKECURRENT)(Display*, GLXDrawable, GLXContext);
   PFNGLXMAKECURRENT glXMakeCurrent =
       cast<PFNGLXMAKECURRENT>(glXGetProcAddress("glXMakeCurrent"));
 
-  typedef void (*PFNGLXDESTROYCONTEXT)(Display *, GLXContext);
+  typedef void (*PFNGLXDESTROYCONTEXT)(Display*, GLXContext);
   PFNGLXDESTROYCONTEXT glXDestroyContext =
       cast<PFNGLXDESTROYCONTEXT>(glXGetProcAddress("glXDestroyContext"));
 
-  typedef GLubyte *(*PFNGLGETSTRING)(GLenum);
+  typedef GLubyte* (*PFNGLGETSTRING)(GLenum);
   PFNGLGETSTRING glGetString =
       cast<PFNGLGETSTRING>(glXGetProcAddress("glGetString"));
 
@@ -182,7 +182,7 @@ void glxtest() {
     fatal_error("glXGetProcAddress couldn't find required functions");
   }
   ///// Open a connection to the X server /////
-  Display *dpy = XOpenDisplay(nullptr);
+  Display* dpy = XOpenDisplay(nullptr);
   if (!dpy) fatal_error("Unable to open a connection to the X server");
 
   ///// Check that the GLX extension is present /////
@@ -194,7 +194,7 @@ void glxtest() {
   ///// Get a visual /////
   int attribs[] = {GLX_RGBA, GLX_RED_SIZE,  1, GLX_GREEN_SIZE,
                    1,        GLX_BLUE_SIZE, 1, None};
-  XVisualInfo *vInfo = glXChooseVisual(dpy, DefaultScreen(dpy), attribs);
+  XVisualInfo* vInfo = glXChooseVisual(dpy, DefaultScreen(dpy), attribs);
   if (!vInfo) fatal_error("No visuals found");
 
   // using a X11 Window instead of a GLXPixmap does not crash
@@ -214,14 +214,14 @@ void glxtest() {
   glXMakeCurrent(dpy, window, context);
 
   ///// Look for this symbol to determine texture_from_pixmap support /////
-  void *glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT");
+  void* glXBindTexImageEXT = glXGetProcAddress("glXBindTexImageEXT");
 
   ///// Get GL vendor/renderer/versions strings /////
   enum { bufsize = 2048 };
   char buf[bufsize];
-  const GLubyte *versionString = glGetString(GL_VERSION);
-  const GLubyte *vendorString = glGetString(GL_VENDOR);
-  const GLubyte *rendererString = glGetString(GL_RENDERER);
+  const GLubyte* versionString = glGetString(GL_VERSION);
+  const GLubyte* vendorString = glGetString(GL_VENDOR);
+  const GLubyte* rendererString = glGetString(GL_RENDERER);
 
   if (!versionString || !vendorString || !rendererString)
     fatal_error("glGetString returned null");
@@ -235,7 +235,7 @@ void glxtest() {
 
   // If GLX_MESA_query_renderer is available, populate additional data.
   typedef Bool (*PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC)(
-      int attribute, unsigned int *value);
+      int attribute, unsigned int* value);
   PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC
   glXQueryCurrentRendererIntegerMESAProc =
       cast<PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC>(
@@ -268,11 +268,11 @@ void glxtest() {
   }
 
   // From Mesa's GL/internal/dri_interface.h, to be used by DRI clients.
-  typedef const char *(*PFNGLXGETSCREENDRIVERPROC)(Display * dpy, int scrNum);
+  typedef const char* (*PFNGLXGETSCREENDRIVERPROC)(Display * dpy, int scrNum);
   PFNGLXGETSCREENDRIVERPROC glXGetScreenDriverProc =
       cast<PFNGLXGETSCREENDRIVERPROC>(glXGetProcAddress("glXGetScreenDriver"));
   if (glXGetScreenDriverProc) {
-    const char *driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
+    const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
     if (driDriver) {
       length += snprintf(buf + length, bufsize, "DRI_DRIVER\n%s\n", driDriver);
       if (length >= bufsize)

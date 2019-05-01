@@ -27,20 +27,20 @@
  * Convert UTF8 to UTF16 without using the normal XPCOM goop, which we
  * can't link to updater.exe.
  */
-static char16_t *AllocConvertUTF8toUTF16(const char *arg) {
+static char16_t* AllocConvertUTF8toUTF16(const char* arg) {
   // UTF16 can't be longer in units than UTF8
   size_t len = strlen(arg);
-  char16_t *s = new char16_t[(len + 1) * sizeof(char16_t)];
+  char16_t* s = new char16_t[(len + 1) * sizeof(char16_t)];
   if (!s) return nullptr;
 
   size_t dstLen = ::MultiByteToWideChar(CP_UTF8, 0, arg, len,
-                                        reinterpret_cast<wchar_t *>(s), len);
+                                        reinterpret_cast<wchar_t*>(s), len);
   s[dstLen] = 0;
 
   return s;
 }
 
-static void FreeAllocStrings(int argc, wchar_t **argv) {
+static void FreeAllocStrings(int argc, wchar_t** argv) {
   while (argc) {
     --argc;
     delete[] argv[argc];
@@ -49,13 +49,13 @@ static void FreeAllocStrings(int argc, wchar_t **argv) {
   delete[] argv;
 }
 
-static wchar_t **AllocConvertUTF8toUTF16Strings(int argc, char **argv) {
-  wchar_t **argvConverted = new wchar_t *[argc];
+static wchar_t** AllocConvertUTF8toUTF16Strings(int argc, char** argv) {
+  wchar_t** argvConverted = new wchar_t*[argc];
   if (!argvConverted) return nullptr;
 
   for (int i = 0; i < argc; ++i) {
     argvConverted[i] =
-        reinterpret_cast<wchar_t *>(AllocConvertUTF8toUTF16(argv[i]));
+        reinterpret_cast<wchar_t*>(AllocConvertUTF8toUTF16(argv[i]));
     if (!argvConverted[i]) {
       FreeAllocStrings(i, argvConverted);
       return nullptr;
@@ -70,12 +70,12 @@ static wchar_t **AllocConvertUTF8toUTF16Strings(int argc, char **argv) {
  * @note The form of this function that takes char **argv expects UTF-8
  */
 
-BOOL WinLaunchChild(const wchar_t *exePath, int argc, wchar_t **argv,
-                    HANDLE userToken = nullptr, HANDLE *hProcess = nullptr);
+BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
+                    HANDLE userToken = nullptr, HANDLE* hProcess = nullptr);
 
-BOOL WinLaunchChild(const wchar_t *exePath, int argc, char **argv,
-                    HANDLE userToken, HANDLE *hProcess) {
-  wchar_t **argvConverted = AllocConvertUTF8toUTF16Strings(argc, argv);
+BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
+                    HANDLE userToken, HANDLE* hProcess) {
+  wchar_t** argvConverted = AllocConvertUTF8toUTF16Strings(argc, argv);
   if (!argvConverted) return FALSE;
 
   BOOL ok = WinLaunchChild(exePath, argc, argvConverted, userToken, hProcess);
@@ -83,8 +83,8 @@ BOOL WinLaunchChild(const wchar_t *exePath, int argc, char **argv,
   return ok;
 }
 
-BOOL WinLaunchChild(const wchar_t *exePath, int argc, wchar_t **argv,
-                    HANDLE userToken, HANDLE *hProcess) {
+BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
+                    HANDLE userToken, HANDLE* hProcess) {
   BOOL ok;
 
   mozilla::UniquePtr<wchar_t[]> cl(mozilla::MakeCommandLine(argc, argv));
@@ -143,7 +143,7 @@ BOOL WinLaunchChild(const wchar_t *exePath, int argc, wchar_t **argv,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf,
                   0, nullptr);
     wprintf(L"Error restarting: %s\n",
-            lpMsgBuf ? static_cast<const wchar_t *>(lpMsgBuf) : L"(null)");
+            lpMsgBuf ? static_cast<const wchar_t*>(lpMsgBuf) : L"(null)");
     if (lpMsgBuf) LocalFree(lpMsgBuf);
   }
 

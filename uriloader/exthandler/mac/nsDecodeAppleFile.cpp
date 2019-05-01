@@ -17,7 +17,7 @@ NS_INTERFACE_MAP_END
 nsDecodeAppleFile::nsDecodeAppleFile() {
   m_state = parseHeaders;
   m_dataBufferLength = 0;
-  m_dataBuffer = (unsigned char *)malloc(MAX_BUFFERSIZE);
+  m_dataBuffer = (unsigned char*)malloc(MAX_BUFFERSIZE);
   m_entries = nullptr;
   m_rfRefNum = -1;
   m_totalDataForkWritten = 0;
@@ -36,8 +36,8 @@ nsDecodeAppleFile::~nsDecodeAppleFile() {
   if (m_entries) delete[] m_entries;
 }
 
-NS_IMETHODIMP nsDecodeAppleFile::Initialize(nsIOutputStream *output,
-                                            nsIFile *file) {
+NS_IMETHODIMP nsDecodeAppleFile::Initialize(nsIOutputStream* output,
+                                            nsIFile* file) {
   m_output = output;
 
   nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(file);
@@ -78,10 +78,10 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void) {
       }
 
     if (dataOk && resourceOk) {
-      HFileInfo *fpb;
+      HFileInfo* fpb;
       CInfoPBRec cipbr;
 
-      fpb = (HFileInfo *)&cipbr;
+      fpb = (HFileInfo*)&cipbr;
       fpb->ioVRefNum = m_fsFileSpec.vRefNum;
       fpb->ioDirID = m_fsFileSpec.parID;
       fpb->ioNamePtr = m_fsFileSpec.name;
@@ -108,13 +108,13 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void) {
       GetVolParmsInfoBuffer vp;
       DTPBRec dtp;
 
-      memset((void *)&vinfo, 0, sizeof(vinfo));
+      memset((void*)&vinfo, 0, sizeof(vinfo));
       vinfo.ioVRefNum = fpb->ioVRefNum;
       vinfo.ioBuffer = (Ptr)&vp;
       vinfo.ioReqCount = sizeof(vp);
       if (PBHGetVolParmsSync((HParmBlkPtr)&vinfo) == noErr &&
           ((vp.vMAttrib >> bHasDesktopMgr) & 1)) {
-        memset((void *)&dtp, 0, sizeof(dtp));
+        memset((void*)&dtp, 0, sizeof(dtp));
         dtp.ioVRefNum = fpb->ioVRefNum;
         if (PBDTGetPath(&dtp) == noErr) {
           dtp.ioDTBuffer = (Ptr)&m_comment[1];
@@ -132,27 +132,27 @@ NS_IMETHODIMP nsDecodeAppleFile::Close(void) {
 
 NS_IMETHODIMP nsDecodeAppleFile::Flush(void) { return m_output->Flush(); }
 
-NS_IMETHODIMP nsDecodeAppleFile::WriteFrom(nsIInputStream *inStr,
-                                           uint32_t count, uint32_t *_retval) {
+NS_IMETHODIMP nsDecodeAppleFile::WriteFrom(nsIInputStream* inStr,
+                                           uint32_t count, uint32_t* _retval) {
   return m_output->WriteFrom(inStr, count, _retval);
 }
 
 NS_IMETHODIMP nsDecodeAppleFile::WriteSegments(nsReadSegmentFun reader,
-                                               void *closure, uint32_t count,
-                                               uint32_t *_retval) {
+                                               void* closure, uint32_t count,
+                                               uint32_t* _retval) {
   return m_output->WriteSegments(reader, closure, count, _retval);
 }
 
-NS_IMETHODIMP nsDecodeAppleFile::IsNonBlocking(bool *aNonBlocking) {
+NS_IMETHODIMP nsDecodeAppleFile::IsNonBlocking(bool* aNonBlocking) {
   return m_output->IsNonBlocking(aNonBlocking);
 }
 
-NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, uint32_t bufferSize,
-                                       uint32_t *writeCount) {
+NS_IMETHODIMP nsDecodeAppleFile::Write(const char* buffer, uint32_t bufferSize,
+                                       uint32_t* writeCount) {
   /* WARNING: to simplify my life, I presume that I should get all appledouble
      headers in the first block, else I would have to implement a buffer */
 
-  const char *buffPtr = buffer;
+  const char* buffPtr = buffer;
   uint32_t dataCount;
   int32_t i;
   nsresult rv = NS_OK;
@@ -308,7 +308,7 @@ NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, uint32_t bufferSize,
 
         if (m_output) {
           uint32_t writeCount;
-          rv = m_output->Write((const char *)buffPtr, dataCount, &writeCount);
+          rv = m_output->Write((const char*)buffPtr, dataCount, &writeCount);
           if (dataCount != writeCount) rv = NS_ERROR_FAILURE;
           m_totalDataForkWritten += dataCount;
         }
@@ -337,7 +337,7 @@ NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, uint32_t bufferSize,
         dataCount = bufferSize;
         if (m_output) {
           uint32_t writeCount;
-          rv = m_output->Write((const char *)buffPtr, dataCount, &writeCount);
+          rv = m_output->Write((const char*)buffPtr, dataCount, &writeCount);
           if (dataCount != writeCount) rv = NS_ERROR_FAILURE;
         }
         break;

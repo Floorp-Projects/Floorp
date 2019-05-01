@@ -36,8 +36,8 @@ nsWifiMonitor::nsWifiMonitor()
 }
 
 NS_IMETHODIMP
-nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
-                       const char16_t *data) {
+nsWifiMonitor::Observe(nsISupports* subject, const char* topic,
+                       const char16_t* data) {
   if (!strcmp(topic, "xpcom-shutdown")) {
     LOG(("Shutting down\n"));
 
@@ -49,7 +49,7 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener) {
+NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener* aListener) {
   LOG(("nsWifiMonitor::StartWatching %p thread %p listener %p\n", this,
        mThread.get(), aListener));
   MOZ_ASSERT(NS_IsMainThread());
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener) {
+NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener* aListener) {
   LOG(("nsWifiMonitor::StopWatching %p thread %p listener %p\n", this,
        mThread.get(), aListener));
   MOZ_ASSERT(NS_IsMainThread());
@@ -173,13 +173,13 @@ class nsCallWifiListeners final : public nsIRunnable {
   NS_DECL_NSIRUNNABLE
 
   nsCallWifiListeners(nsAutoPtr<WifiListenerArray> aListeners,
-                      nsAutoPtr<nsTArray<nsIWifiAccessPoint *> > aAccessPoints)
+                      nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > aAccessPoints)
       : mListeners(aListeners), mAccessPoints(aAccessPoints) {}
 
  private:
   ~nsCallWifiListeners() = default;
   nsAutoPtr<WifiListenerArray> mListeners;
-  nsAutoPtr<nsTArray<nsIWifiAccessPoint *> > mAccessPoints;
+  nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > mAccessPoints;
 };
 
 NS_IMPL_ISUPPORTS(nsCallWifiListeners, nsIRunnable)
@@ -194,7 +194,7 @@ NS_IMETHODIMP nsCallWifiListeners::Run() {
 }
 
 nsresult nsWifiMonitor::CallWifiListeners(
-    const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
+    const nsCOMArray<nsWifiAccessPoint>& aAccessPoints,
     bool aAccessPointsChanged) {
   nsAutoPtr<WifiListenerArray> currentListeners;
   {
@@ -212,8 +212,8 @@ nsresult nsWifiMonitor::CallWifiListeners(
 
   if (currentListeners->Length() > 0) {
     uint32_t resultCount = aAccessPoints.Count();
-    nsAutoPtr<nsTArray<nsIWifiAccessPoint *> > accessPoints(
-        new nsTArray<nsIWifiAccessPoint *>(resultCount));
+    nsAutoPtr<nsTArray<nsIWifiAccessPoint*> > accessPoints(
+        new nsTArray<nsIWifiAccessPoint*>(resultCount));
     if (!accessPoints) return NS_ERROR_OUT_OF_MEMORY;
 
     for (uint32_t i = 0; i < resultCount; i++)

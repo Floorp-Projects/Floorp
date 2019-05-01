@@ -20,14 +20,14 @@ struct UserDataKey {
 
 /* this class is basically a clone of the user data concept from cairo */
 class UserData {
-  typedef void (*destroyFunc)(void *data);
+  typedef void (*destroyFunc)(void* data);
 
  public:
   UserData() : count(0), entries(nullptr) {}
 
   /* Attaches untyped userData associated with key. destroy is called on
    * destruction */
-  void Add(UserDataKey *key, void *userData, destroyFunc destroy) {
+  void Add(UserDataKey* key, void* userData, destroyFunc destroy) {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
         if (entries[i].destroy) {
@@ -44,7 +44,7 @@ class UserData {
     // do (see bug 666609). Plus, the entries array is expect to stay small
     // so doing a realloc everytime we add a new entry shouldn't be too costly
     entries =
-        static_cast<Entry *>(realloc(entries, sizeof(Entry) * (count + 1)));
+        static_cast<Entry*>(realloc(entries, sizeof(Entry) * (count + 1)));
 
     if (!entries) {
       MOZ_CRASH("GFX: UserData::Add");
@@ -58,10 +58,10 @@ class UserData {
   }
 
   /* Remove and return user data associated with key, without destroying it */
-  void *Remove(UserDataKey *key) {
+  void* Remove(UserDataKey* key) {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
-        void *userData = entries[i].userData;
+        void* userData = entries[i].userData;
         // decrement before looping so entries[i+1] doesn't read past the end:
         --count;
         for (; i < count; i++) {
@@ -74,7 +74,7 @@ class UserData {
   }
 
   /* Remove and destroy a given key */
-  void RemoveAndDestroy(UserDataKey *key) {
+  void RemoveAndDestroy(UserDataKey* key) {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
         if (entries[i].destroy) {
@@ -90,7 +90,7 @@ class UserData {
   }
 
   /* Retrives the userData for the associated key */
-  void *Get(UserDataKey *key) const {
+  void* Get(UserDataKey* key) const {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
         return entries[i].userData;
@@ -99,7 +99,7 @@ class UserData {
     return nullptr;
   }
 
-  bool Has(UserDataKey *key) {
+  bool Has(UserDataKey* key) {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
         return true;
@@ -123,13 +123,13 @@ class UserData {
 
  private:
   struct Entry {
-    const UserDataKey *key;
-    void *userData;
+    const UserDataKey* key;
+    void* userData;
     destroyFunc destroy;
   };
 
   int count;
-  Entry *entries;
+  Entry* entries;
 };
 
 }  // namespace gfx

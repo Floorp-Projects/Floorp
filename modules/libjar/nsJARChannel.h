@@ -49,17 +49,17 @@ class nsJARChannel final : public nsIJARChannel,
 
   nsJARChannel();
 
-  nsresult Init(nsIURI *uri);
+  nsresult Init(nsIURI* uri);
 
-  void SetFile(nsIFile *file);
+  void SetFile(nsIFile* file);
 
  private:
   virtual ~nsJARChannel();
 
-  nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
+  nsresult CreateJarInput(nsIZipReaderCache*, nsJARInputThunk**);
   nsresult LookupFile();
   nsresult OpenLocalFile();
-  nsresult ContinueOpenLocalFile(nsJARInputThunk *aInput, bool aIsSyncCall);
+  nsresult ContinueOpenLocalFile(nsJARInputThunk* aInput, bool aIsSyncCall);
   nsresult OnOpenLocalFileComplete(nsresult aResult, bool aIsSyncCall);
   nsresult CheckPendingEvents();
   void NotifyError(nsresult aError);

@@ -41,7 +41,7 @@ class TransportTestPeer;
 
 class SendPeriodic : public nsITimerCallback {
  public:
-  SendPeriodic(TransportTestPeer *peer, int to_send)
+  SendPeriodic(TransportTestPeer* peer, int to_send)
       : peer_(peer), to_send_(to_send) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -50,7 +50,7 @@ class SendPeriodic : public nsITimerCallback {
  protected:
   virtual ~SendPeriodic() {}
 
-  TransportTestPeer *peer_;
+  TransportTestPeer* peer_;
   int to_send_;
 };
 
@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS(SendPeriodic, nsITimerCallback)
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
   TransportTestPeer(std::string name, int local_port, int remote_port,
-                    MtransportTestUtils *utils)
+                    MtransportTestUtils* utils)
       : name_(name),
         connected_(false),
         sent_(0),
@@ -72,10 +72,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
         periodic_(nullptr),
         test_utils_(utils) {
     std::cerr << "Creating TransportTestPeer; flow="
-              << static_cast<void *>(flow_.get()) << " local=" << local_port
+              << static_cast<void*>(flow_.get()) << " local=" << local_port
               << " remote=" << remote_port << std::endl;
 
-    usrsctp_register_address(static_cast<void *>(this));
+    usrsctp_register_address(static_cast<void*>(this));
     int r = usrsctp_set_non_blocking(sctp_, 1);
     EXPECT_GE(r, 0);
 
@@ -102,7 +102,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     local_addr_.sconn_len = sizeof(struct sockaddr_conn);
 #endif
     local_addr_.sconn_port = htons(local_port);
-    local_addr_.sconn_addr = static_cast<void *>(this);
+    local_addr_.sconn_addr = static_cast<void*>(this);
 
     memset(&remote_addr_, 0, sizeof(remote_addr_));
     remote_addr_.sconn_family = AF_CONN;
@@ -111,7 +111,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     remote_addr_.sconn_len = sizeof(struct sockaddr_conn);
 #endif
     remote_addr_.sconn_port = htons(remote_port);
-    remote_addr_.sconn_addr = static_cast<void *>(this);
+    remote_addr_.sconn_addr = static_cast<void*>(this);
 
     nsresult res;
     res = loopback_->Init();
@@ -120,9 +120,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   ~TransportTestPeer() {
     std::cerr << "Destroying sctp connection flow="
-              << static_cast<void *>(flow_.get()) << std::endl;
+              << static_cast<void*>(flow_.get()) << std::endl;
     usrsctp_close(sctp_);
-    usrsctp_deregister_address(static_cast<void *>(this));
+    usrsctp_deregister_address(static_cast<void*>(this));
 
     test_utils_->sts_target()->Dispatch(
         WrapRunnable(this, &TransportTestPeer::Disconnect_s), NS_DISPATCH_SYNC);
@@ -130,13 +130,13 @@ class TransportTestPeer : public sigslot::has_slots<> {
     std::cerr << "~TransportTestPeer() completed" << std::endl;
   }
 
-  void ConnectSocket(TransportTestPeer *peer) {
+  void ConnectSocket(TransportTestPeer* peer) {
     test_utils_->sts_target()->Dispatch(
         WrapRunnable(this, &TransportTestPeer::ConnectSocket_s, peer),
         NS_DISPATCH_SYNC);
   }
 
-  void ConnectSocket_s(TransportTestPeer *peer) {
+  void ConnectSocket_s(TransportTestPeer* peer) {
     loopback_->Connect(peer->loopback_);
     ASSERT_EQ((nsresult)NS_OK, loopback_->Init());
     flow_->PushLayer(loopback_);
@@ -148,13 +148,13 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(sctp_);
     std::cerr << "Calling usrsctp_bind()" << std::endl;
     int r =
-        usrsctp_bind(sctp_, reinterpret_cast<struct sockaddr *>(&local_addr_),
+        usrsctp_bind(sctp_, reinterpret_cast<struct sockaddr*>(&local_addr_),
                      sizeof(local_addr_));
     ASSERT_GE(0, r);
 
     std::cerr << "Calling usrsctp_connect()" << std::endl;
     r = usrsctp_connect(sctp_,
-                        reinterpret_cast<struct sockaddr *>(&remote_addr_),
+                        reinterpret_cast<struct sockaddr*>(&remote_addr_),
                         sizeof(remote_addr_));
     ASSERT_GE(0, r);
   }
@@ -186,7 +186,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     info.snd_assoc_id = 0;
 
     int r = usrsctp_sendv(sctp_, buf, sizeof(buf), nullptr, 0,
-                          static_cast<void *>(&info), sizeof(info),
+                          static_cast<void*>(&info), sizeof(info),
                           SCTP_SENDV_SNDINFO, 0);
     ASSERT_TRUE(r >= 0);
     ASSERT_EQ(sizeof(buf), (size_t)r);
@@ -199,12 +199,12 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool connected() const { return connected_; }
 
   static TransportResult SendPacket_s(nsAutoPtr<MediaPacket> packet,
-                                      const RefPtr<TransportFlow> &flow,
-                                      TransportLayer *layer) {
+                                      const RefPtr<TransportFlow>& flow,
+                                      TransportLayer* layer) {
     return layer->SendPacket(*packet);
   }
 
-  TransportResult SendPacket(const unsigned char *data, size_t len) {
+  TransportResult SendPacket(const unsigned char* data, size_t len) {
     nsAutoPtr<MediaPacket> packet(new MediaPacket);
     packet->Copy(data, len);
 
@@ -222,21 +222,20 @@ class TransportTestPeer : public sigslot::has_slots<> {
     return 0;
   }
 
-  void PacketReceived(TransportLayer *layer, MediaPacket &packet) {
+  void PacketReceived(TransportLayer* layer, MediaPacket& packet) {
     std::cerr << "Received " << packet.len() << " bytes" << std::endl;
 
     // Pass the data to SCTP
 
-    usrsctp_conninput(static_cast<void *>(this), packet.data(), packet.len(),
-                      0);
+    usrsctp_conninput(static_cast<void*>(this), packet.data(), packet.len(), 0);
   }
 
   // Process SCTP notification
-  void Notification(union sctp_notification *msg, size_t len) {
+  void Notification(union sctp_notification* msg, size_t len) {
     ASSERT_EQ(msg->sn_header.sn_length, len);
 
     if (msg->sn_header.sn_type == SCTP_ASSOC_CHANGE) {
-      struct sctp_assoc_change *change = &msg->sn_assoc_change;
+      struct sctp_assoc_change* change = &msg->sn_assoc_change;
 
       if (change->sac_state == SCTP_COMM_UP) {
         std::cerr << "Connection up" << std::endl;
@@ -250,25 +249,25 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   void SetConnected(bool state) { connected_ = state; }
 
-  static int conn_output(void *addr, void *buffer, size_t length, uint8_t tos,
+  static int conn_output(void* addr, void* buffer, size_t length, uint8_t tos,
                          uint8_t set_df) {
-    TransportTestPeer *peer = static_cast<TransportTestPeer *>(addr);
+    TransportTestPeer* peer = static_cast<TransportTestPeer*>(addr);
 
-    peer->SendPacket(static_cast<unsigned char *>(buffer), length);
+    peer->SendPacket(static_cast<unsigned char*>(buffer), length);
 
     return 0;
   }
 
-  static int receive_cb(struct socket *sock, union sctp_sockstore addr,
-                        void *data, size_t datalen, struct sctp_rcvinfo rcv,
-                        int flags, void *ulp_info) {
-    TransportTestPeer *me =
-        static_cast<TransportTestPeer *>(addr.sconn.sconn_addr);
+  static int receive_cb(struct socket* sock, union sctp_sockstore addr,
+                        void* data, size_t datalen, struct sctp_rcvinfo rcv,
+                        int flags, void* ulp_info) {
+    TransportTestPeer* me =
+        static_cast<TransportTestPeer*>(addr.sconn.sconn_addr);
     MOZ_ASSERT(me);
 
     if (flags & MSG_NOTIFICATION) {
-      union sctp_notification *notif =
-          static_cast<union sctp_notification *>(data);
+      union sctp_notification* notif =
+          static_cast<union sctp_notification*>(data);
 
       me->Notification(notif, datalen);
       return 0;
@@ -290,18 +289,18 @@ class TransportTestPeer : public sigslot::has_slots<> {
   size_t received_;
   // Owns the TransportLayerLoopback, but basically does nothing else.
   RefPtr<TransportFlow> flow_;
-  TransportLayerLoopback *loopback_;
+  TransportLayerLoopback* loopback_;
 
   struct sockaddr_conn local_addr_;
   struct sockaddr_conn remote_addr_;
-  struct socket *sctp_;
+  struct socket* sctp_;
   nsCOMPtr<nsITimer> timer_;
   RefPtr<SendPeriodic> periodic_;
-  MtransportTestUtils *test_utils_;
+  MtransportTestUtils* test_utils_;
 };
 
 // Implemented here because it calls a method of TransportTestPeer
-NS_IMETHODIMP SendPeriodic::Notify(nsITimer *timer) {
+NS_IMETHODIMP SendPeriodic::Notify(nsITimer* timer) {
   peer_->SendOne();
   --to_send_;
   if (!to_send_) {
@@ -316,7 +315,7 @@ class SctpTransportTest : public MtransportTest {
 
   ~SctpTransportTest() {}
 
-  static void debug_printf(const char *format, ...) {
+  static void debug_printf(const char* format, ...) {
     va_list ap;
 
     va_start(ap, format);
@@ -364,8 +363,8 @@ class SctpTransportTest : public MtransportTest {
   }
 
  protected:
-  TransportTestPeer *p1_;
-  TransportTestPeer *p2_;
+  TransportTestPeer* p1_;
+  TransportTestPeer* p2_;
 };
 
 TEST_F(SctpTransportTest, TestConnect) { ConnectSocket(); }

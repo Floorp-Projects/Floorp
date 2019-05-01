@@ -16,31 +16,31 @@ nsBaseScreen::nsBaseScreen() {}
 nsBaseScreen::~nsBaseScreen() {}
 
 NS_IMETHODIMP
-nsBaseScreen::GetRectDisplayPix(int32_t *outLeft, int32_t *outTop,
-                                int32_t *outWidth, int32_t *outHeight) {
+nsBaseScreen::GetRectDisplayPix(int32_t* outLeft, int32_t* outTop,
+                                int32_t* outWidth, int32_t* outHeight) {
   return GetRect(outLeft, outTop, outWidth, outHeight);
 }
 
 NS_IMETHODIMP
-nsBaseScreen::GetAvailRectDisplayPix(int32_t *outLeft, int32_t *outTop,
-                                     int32_t *outWidth, int32_t *outHeight) {
+nsBaseScreen::GetAvailRectDisplayPix(int32_t* outLeft, int32_t* outTop,
+                                     int32_t* outWidth, int32_t* outHeight) {
   return GetAvailRect(outLeft, outTop, outWidth, outHeight);
 }
 
 NS_IMETHODIMP
-nsBaseScreen::GetContentsScaleFactor(double *aContentsScaleFactor) {
+nsBaseScreen::GetContentsScaleFactor(double* aContentsScaleFactor) {
   *aContentsScaleFactor = 1.0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseScreen::GetDefaultCSSScaleFactor(double *aScaleFactor) {
+nsBaseScreen::GetDefaultCSSScaleFactor(double* aScaleFactor) {
   *aScaleFactor = 1.0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseScreen::GetDpi(float *aDPI) {
+nsBaseScreen::GetDpi(float* aDPI) {
   *aDPI = 96;
   return NS_OK;
 }

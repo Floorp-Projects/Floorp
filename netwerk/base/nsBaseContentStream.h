@@ -50,7 +50,7 @@ class nsBaseContentStream : public nsIAsyncInputStream {
   bool HasPendingCallback() { return mCallback != nullptr; }
 
   // The current dispatch target (may be null) for the pending callback if any.
-  nsIEventTarget *CallbackTarget() { return mCallbackTarget; }
+  nsIEventTarget* CallbackTarget() { return mCallbackTarget; }
 
   // Called to dispatch a pending callback.  If there is no pending callback,
   // then this function does nothing.  Pass true to this function to cause the

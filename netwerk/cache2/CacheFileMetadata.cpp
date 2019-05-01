@@ -39,8 +39,8 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(CacheFileMetadata, CacheFileIOListener)
 
-CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle,
-                                     const nsACString &aKey)
+CacheFileMetadata::CacheFileMetadata(CacheFileHandle* aHandle,
+                                     const nsACString& aKey)
     : CacheMemoryConsumer(NORMAL),
       mHandle(aHandle),
       mHashArray(nullptr),
@@ -69,7 +69,7 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle,
 }
 
 CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, bool aPinned,
-                                     const nsACString &aKey)
+                                     const nsACString& aKey)
     : CacheMemoryConsumer(aMemoryOnly ? MEMORY_ONLY : NORMAL),
       mHandle(nullptr),
       mHashArray(nullptr),
@@ -139,7 +139,7 @@ CacheFileMetadata::~CacheFileMetadata() {
   }
 }
 
-void CacheFileMetadata::SetHandle(CacheFileHandle *aHandle) {
+void CacheFileMetadata::SetHandle(CacheFileHandle* aHandle) {
   LOG(("CacheFileMetadata::SetHandle() [this=%p, handle=%p]", this, aHandle));
 
   MOZ_ASSERT(!mHandle);
@@ -147,12 +147,12 @@ void CacheFileMetadata::SetHandle(CacheFileHandle *aHandle) {
   mHandle = aHandle;
 }
 
-nsresult CacheFileMetadata::GetKey(nsACString &_retval) {
+nsresult CacheFileMetadata::GetKey(nsACString& _retval) {
   _retval = mKey;
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener *aListener) {
+nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener* aListener) {
   LOG(("CacheFileMetadata::ReadMetadata() [this=%p, listener=%p]", this,
        aListener));
 
@@ -203,7 +203,7 @@ nsresult CacheFileMetadata::ReadMetadata(CacheFileMetadataListener *aListener) {
   offset = (offset / kAlignSize) * kAlignSize;
 
   mBufSize = size - offset;
-  mBuf = static_cast<char *>(moz_xmalloc(mBufSize));
+  mBuf = static_cast<char*>(moz_xmalloc(mBufSize));
 
   DoMemoryReport(MemoryUsage());
 
@@ -242,7 +242,7 @@ uint32_t CacheFileMetadata::CalcMetadataSize(uint32_t aElementsSize,
 }
 
 nsresult CacheFileMetadata::WriteMetadata(
-    uint32_t aOffset, CacheFileMetadataListener *aListener) {
+    uint32_t aOffset, CacheFileMetadataListener* aListener) {
   LOG(("CacheFileMetadata::WriteMetadata() [this=%p, offset=%d, listener=%p]",
        this, aOffset, aListener));
 
@@ -254,12 +254,12 @@ nsresult CacheFileMetadata::WriteMetadata(
   mIsDirty = false;
 
   mWriteBuf =
-      static_cast<char *>(malloc(CalcMetadataSize(mElementsSize, mHashCount)));
+      static_cast<char*>(malloc(CalcMetadataSize(mElementsSize, mHashCount)));
   if (!mWriteBuf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char *p = mWriteBuf + sizeof(uint32_t);
+  char* p = mWriteBuf + sizeof(uint32_t);
   if (mHashCount) {
     memcpy(p, mHashArray, mHashCount * sizeof(CacheHash::Hash16_t));
     p += mHashCount * sizeof(CacheHash::Hash16_t);
@@ -283,7 +283,7 @@ nsresult CacheFileMetadata::WriteMetadata(
   NetworkEndian::writeUint32(p, aOffset);
   p += sizeof(uint32_t);
 
-  char *writeBuffer = mWriteBuf;
+  char* writeBuffer = mWriteBuf;
   if (aListener) {
     mListener = aListener;
   } else {
@@ -313,7 +313,7 @@ nsresult CacheFileMetadata::WriteMetadata(
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::SyncReadMetadata(nsIFile *aFile) {
+nsresult CacheFileMetadata::SyncReadMetadata(nsIFile* aFile) {
   LOG(("CacheFileMetadata::SyncReadMetadata() [this=%p]", this));
 
   MOZ_ASSERT(!mListener);
@@ -332,7 +332,7 @@ nsresult CacheFileMetadata::SyncReadMetadata(nsIFile *aFile) {
     return rv;
   }
 
-  PRFileDesc *fd;
+  PRFileDesc* fd;
   rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0600, &fd);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -355,7 +355,7 @@ nsresult CacheFileMetadata::SyncReadMetadata(nsIFile *aFile) {
     return NS_ERROR_FAILURE;
   }
 
-  mBuf = static_cast<char *>(malloc(fileSize - metaOffset));
+  mBuf = static_cast<char*>(malloc(fileSize - metaOffset));
   if (!mBuf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -381,9 +381,9 @@ nsresult CacheFileMetadata::SyncReadMetadata(nsIFile *aFile) {
   return NS_OK;
 }
 
-const char *CacheFileMetadata::GetElement(const char *aKey) {
-  const char *data = mBuf;
-  const char *limit = mBuf + mElementsSize;
+const char* CacheFileMetadata::GetElement(const char* aKey) {
+  const char* data = mBuf;
+  const char* limit = mBuf + mElementsSize;
 
   while (data != limit) {
     size_t maxLen = limit - data;
@@ -395,7 +395,7 @@ const char *CacheFileMetadata::GetElement(const char *aKey) {
                        "Metadata elements corrupted. "
                        "There is no value for the key!");
 
-    const char *value = data + keyLen + 1;
+    const char* value = data + keyLen + 1;
     maxLen = limit - value;
     size_t valueLen = strnlen(value, maxLen);
     MOZ_RELEASE_ASSERT(valueLen != maxLen,
@@ -416,7 +416,7 @@ const char *CacheFileMetadata::GetElement(const char *aKey) {
   return nullptr;
 }
 
-nsresult CacheFileMetadata::SetElement(const char *aKey, const char *aValue) {
+nsresult CacheFileMetadata::SetElement(const char* aKey, const char* aValue) {
   LOG(("CacheFileMetadata::SetElement() [this=%p, key=%s, value=%p]", this,
        aKey, aValue));
 
@@ -425,7 +425,7 @@ nsresult CacheFileMetadata::SetElement(const char *aKey, const char *aValue) {
   nsresult rv;
 
   const uint32_t keySize = strlen(aKey) + 1;
-  char *pos = const_cast<char *>(GetElement(aKey));
+  char* pos = const_cast<char*>(GetElement(aKey));
 
   if (!aValue) {
     // No value means remove the key/value pair completely, if existing
@@ -478,13 +478,13 @@ nsresult CacheFileMetadata::SetElement(const char *aKey, const char *aValue) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::Visit(nsICacheEntryMetaDataVisitor *aVisitor) {
-  const char *data = mBuf;
-  const char *limit = mBuf + mElementsSize;
+nsresult CacheFileMetadata::Visit(nsICacheEntryMetaDataVisitor* aVisitor) {
+  const char* data = mBuf;
+  const char* limit = mBuf + mElementsSize;
 
   while (data < limit) {
     // Point to the value part
-    const char *value = data + strlen(data) + 1;
+    const char* value = data + strlen(data) + 1;
     MOZ_ASSERT(value < limit, "Metadata elements corrupted");
 
     aVisitor->OnMetaDataElement(data, value);
@@ -522,7 +522,7 @@ nsresult CacheFileMetadata::SetHash(uint32_t aIndex,
       } else {
         mHashArraySize *= 2;
       }
-      mHashArray = static_cast<CacheHash::Hash16_t *>(
+      mHashArray = static_cast<CacheHash::Hash16_t*>(
           moz_xrealloc(mHashArray, mHashArraySize));
     }
 
@@ -563,7 +563,7 @@ nsresult CacheFileMetadata::RemoveFlags(uint32_t aFlags) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetFlags(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetFlags(uint32_t* _retval) {
   *_retval = mMetaHdr.mFlags;
   return NS_OK;
 }
@@ -577,7 +577,7 @@ nsresult CacheFileMetadata::SetExpirationTime(uint32_t aExpirationTime) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetExpirationTime(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetExpirationTime(uint32_t* _retval) {
   *_retval = mMetaHdr.mExpirationTime;
   return NS_OK;
 }
@@ -591,22 +591,22 @@ nsresult CacheFileMetadata::SetFrecency(uint32_t aFrecency) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetFrecency(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetFrecency(uint32_t* _retval) {
   *_retval = mMetaHdr.mFrecency;
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetLastModified(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetLastModified(uint32_t* _retval) {
   *_retval = mMetaHdr.mLastModified;
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetLastFetched(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetLastFetched(uint32_t* _retval) {
   *_retval = mMetaHdr.mLastFetched;
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::GetFetchCount(uint32_t *_retval) {
+nsresult CacheFileMetadata::GetFetchCount(uint32_t* _retval) {
   *_retval = mMetaHdr.mFetchCount;
   return NS_OK;
 }
@@ -626,14 +626,14 @@ void CacheFileMetadata::MarkDirty(bool aUpdateLastModified) {
   }
 }
 
-nsresult CacheFileMetadata::OnFileOpened(CacheFileHandle *aHandle,
+nsresult CacheFileMetadata::OnFileOpened(CacheFileHandle* aHandle,
                                          nsresult aResult) {
   MOZ_CRASH("CacheFileMetadata::OnFileOpened should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileMetadata::OnDataWritten(CacheFileHandle *aHandle,
-                                          const char *aBuf, nsresult aResult) {
+nsresult CacheFileMetadata::OnDataWritten(CacheFileHandle* aHandle,
+                                          const char* aBuf, nsresult aResult) {
   LOG(
       ("CacheFileMetadata::OnDataWritten() [this=%p, handle=%p, "
        "result=0x%08" PRIx32 "]",
@@ -655,7 +655,7 @@ nsresult CacheFileMetadata::OnDataWritten(CacheFileHandle *aHandle,
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
+nsresult CacheFileMetadata::OnDataRead(CacheFileHandle* aHandle, char* aBuf,
                                        nsresult aResult) {
   LOG((
       "CacheFileMetadata::OnDataRead() [this=%p, handle=%p, result=0x%08" PRIx32
@@ -729,7 +729,7 @@ nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   if (realOffset < usedOffset) {
     uint32_t missing = usedOffset - realOffset;
     // we need to read more data
-    char *newBuf = static_cast<char *>(realloc(mBuf, mBufSize + missing));
+    char* newBuf = static_cast<char*>(realloc(mBuf, mBufSize + missing));
     if (!newBuf) {
       LOG(
           ("CacheFileMetadata::OnDataRead() - Error allocating %d more bytes "
@@ -789,7 +789,7 @@ nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     InitEmptyMetadata();
   } else {
     // Shrink elements buffer.
-    mBuf = static_cast<char *>(moz_xrealloc(mBuf, mElementsSize));
+    mBuf = static_cast<char*>(moz_xrealloc(mBuf, mElementsSize));
     mBufSize = mElementsSize;
 
     // There is usually no or just one call to SetMetadataElement() when the
@@ -804,19 +804,19 @@ nsresult CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::OnFileDoomed(CacheFileHandle *aHandle,
+nsresult CacheFileMetadata::OnFileDoomed(CacheFileHandle* aHandle,
                                          nsresult aResult) {
   MOZ_CRASH("CacheFileMetadata::OnFileDoomed should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileMetadata::OnEOFSet(CacheFileHandle *aHandle,
+nsresult CacheFileMetadata::OnEOFSet(CacheFileHandle* aHandle,
                                      nsresult aResult) {
   MOZ_CRASH("CacheFileMetadata::OnEOFSet should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileMetadata::OnFileRenamed(CacheFileHandle *aHandle,
+nsresult CacheFileMetadata::OnFileRenamed(CacheFileHandle* aHandle,
                                           nsresult aResult) {
   MOZ_CRASH("CacheFileMetadata::OnFileRenamed should not be called!");
   return NS_ERROR_UNEXPECTED;
@@ -977,8 +977,7 @@ nsresult CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset,
   mHashArraySize = hashesLen;
   mHashCount = hashCount;
   if (mHashArraySize) {
-    mHashArray =
-        static_cast<CacheHash::Hash16_t *>(moz_xmalloc(mHashArraySize));
+    mHashArray = static_cast<CacheHash::Hash16_t*>(moz_xmalloc(mHashArraySize));
     memcpy(mHashArray, mBuf + hashesOffset, mHashArraySize);
   }
 
@@ -993,7 +992,7 @@ nsresult CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset,
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::CheckElements(const char *aBuf, uint32_t aSize) {
+nsresult CacheFileMetadata::CheckElements(const char* aBuf, uint32_t aSize) {
   if (aSize) {
     // Check if the metadata ends with a zero byte.
     if (aBuf[aSize - 1] != 0) {
@@ -1047,7 +1046,7 @@ nsresult CacheFileMetadata::EnsureBuffer(uint32_t aSize) {
       aSize = kInitialBufSize;
     }
 
-    char *newBuf = static_cast<char *>(realloc(mBuf, aSize));
+    char* newBuf = static_cast<char*>(realloc(mBuf, aSize));
     if (!newBuf) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1060,7 +1059,7 @@ nsresult CacheFileMetadata::EnsureBuffer(uint32_t aSize) {
   return NS_OK;
 }
 
-nsresult CacheFileMetadata::ParseKey(const nsACString &aKey) {
+nsresult CacheFileMetadata::ParseKey(const nsACString& aKey) {
   nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(aKey);
   NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
 

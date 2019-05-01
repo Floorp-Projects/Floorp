@@ -7,13 +7,13 @@
 #include "nsCacheMetaData.h"
 #include "nsICacheEntryDescriptor.h"
 
-const char *nsCacheMetaData::GetElement(const char *key) {
-  const char *data = mBuffer;
-  const char *limit = mBuffer + mMetaSize;
+const char* nsCacheMetaData::GetElement(const char* key) {
+  const char* data = mBuffer;
+  const char* limit = mBuffer + mMetaSize;
 
   while (data < limit) {
     // Point to the value part
-    const char *value = data + strlen(data) + 1;
+    const char* value = data + strlen(data) + 1;
     MOZ_ASSERT(value < limit, "Cache Metadata corrupted");
     if (strcmp(data, key) == 0) return value;
 
@@ -24,9 +24,9 @@ const char *nsCacheMetaData::GetElement(const char *key) {
   return nullptr;
 }
 
-nsresult nsCacheMetaData::SetElement(const char *key, const char *value) {
+nsresult nsCacheMetaData::SetElement(const char* key, const char* value) {
   const uint32_t keySize = strlen(key) + 1;
-  char *pos = (char *)GetElement(key);
+  char* pos = (char*)GetElement(key);
 
   if (!value) {
     // No value means remove the key/value pair completely, if existing
@@ -75,7 +75,7 @@ nsresult nsCacheMetaData::SetElement(const char *key, const char *value) {
   return NS_OK;
 }
 
-nsresult nsCacheMetaData::FlattenMetaData(char *buffer, uint32_t bufSize) {
+nsresult nsCacheMetaData::FlattenMetaData(char* buffer, uint32_t bufSize) {
   if (mMetaSize > bufSize) {
     NS_ERROR("buffer size too small for meta data.");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -85,7 +85,7 @@ nsresult nsCacheMetaData::FlattenMetaData(char *buffer, uint32_t bufSize) {
   return NS_OK;
 }
 
-nsresult nsCacheMetaData::UnflattenMetaData(const char *data, uint32_t size) {
+nsresult nsCacheMetaData::UnflattenMetaData(const char* data, uint32_t size) {
   if (data && size) {
     // Check if the metadata ends with a zero byte.
     if (data[size - 1] != '\0') {
@@ -112,12 +112,12 @@ nsresult nsCacheMetaData::UnflattenMetaData(const char *data, uint32_t size) {
   return NS_OK;
 }
 
-nsresult nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor *visitor) {
-  const char *data = mBuffer;
-  const char *limit = mBuffer + mMetaSize;
+nsresult nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor* visitor) {
+  const char* data = mBuffer;
+  const char* limit = mBuffer + mMetaSize;
 
   while (data < limit) {
-    const char *key = data;
+    const char* key = data;
     // Skip key part
     data += strlen(data) + 1;
     MOZ_ASSERT(data < limit, "Metadata corrupted");
@@ -134,7 +134,7 @@ nsresult nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor *visitor) {
 
 nsresult nsCacheMetaData::EnsureBuffer(uint32_t bufSize) {
   if (mBufferSize < bufSize) {
-    char *buf = (char *)realloc(mBuffer, bufSize);
+    char* buf = (char*)realloc(mBuffer, bufSize);
     if (!buf) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

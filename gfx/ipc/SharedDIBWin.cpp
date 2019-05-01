@@ -75,10 +75,10 @@ nsresult SharedDIBWin::Attach(Handle aHandle, uint32_t aWidth, uint32_t aHeight,
 
 uint32_t SharedDIBWin::SetupBitmapHeader(uint32_t aWidth, uint32_t aHeight,
                                          bool aTransparent,
-                                         BITMAPV4HEADER *aHeader) {
+                                         BITMAPV4HEADER* aHeader) {
   // D3D cannot handle an offscreen memory that pitch (SysMemPitch) is negative.
   // So we create top-to-bottom DIB.
-  memset((void *)aHeader, 0, sizeof(BITMAPV4HEADER));
+  memset((void*)aHeader, 0, sizeof(BITMAPV4HEADER));
   aHeader->bV4Size = sizeof(BITMAPV4HEADER);
   aHeader->bV4Width = aWidth;
   aHeader->bV4Height = -LONG(aHeight);  // top-to-buttom DIB
@@ -95,14 +95,13 @@ uint32_t SharedDIBWin::SetupBitmapHeader(uint32_t aWidth, uint32_t aHeight,
           (-aHeader->bV4Height * aHeader->bV4Width * kBytesPerPixel));
 }
 
-nsresult SharedDIBWin::SetupSurface(HDC aHdc, BITMAPV4HEADER *aHdr) {
+nsresult SharedDIBWin::SetupSurface(HDC aHdc, BITMAPV4HEADER* aHdr) {
   mSharedHdc = ::CreateCompatibleDC(aHdc);
 
   if (!mSharedHdc) return NS_ERROR_FAILURE;
 
-  mSharedBmp =
-      ::CreateDIBSection(mSharedHdc, (BITMAPINFO *)aHdr, DIB_RGB_COLORS,
-                         &mBitmapBits, mShMem->handle(), kHeaderBytes);
+  mSharedBmp = ::CreateDIBSection(mSharedHdc, (BITMAPINFO*)aHdr, DIB_RGB_COLORS,
+                                  &mBitmapBits, mShMem->handle(), kHeaderBytes);
   if (!mSharedBmp) return NS_ERROR_FAILURE;
 
   mOldObj = SelectObject(mSharedHdc, mSharedBmp);

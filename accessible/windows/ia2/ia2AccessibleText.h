@@ -25,60 +25,60 @@ class ia2AccessibleText : public IAccessibleText {
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
       /* [in] */ long offset,
-      /* [out] */ long *startOffset,
-      /* [out] */ long *endOffset,
-      /* [retval][out] */ BSTR *textAttributes);
+      /* [out] */ long* startOffset,
+      /* [out] */ long* endOffset,
+      /* [retval][out] */ BSTR* textAttributes);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_caretOffset(
-      /* [retval][out] */ long *offset);
+      /* [retval][out] */ long* offset);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_characterExtents(
       /* [in] */ long offset,
       /* [in] */ enum IA2CoordinateType coordType,
-      /* [out] */ long *x,
-      /* [out] */ long *y,
-      /* [out] */ long *width,
-      /* [retval][out] */ long *height);
+      /* [out] */ long* x,
+      /* [out] */ long* y,
+      /* [out] */ long* width,
+      /* [retval][out] */ long* height);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nSelections(
-      /* [retval][out] */ long *nSelections);
+      /* [retval][out] */ long* nSelections);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_offsetAtPoint(
       /* [in] */ long x,
       /* [in] */ long y,
       /* [in] */ enum IA2CoordinateType coordType,
-      /* [retval][out] */ long *offset);
+      /* [retval][out] */ long* offset);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_selection(
       /* [in] */ long selectionIndex,
-      /* [out] */ long *startOffset,
-      /* [retval][out] */ long *endOffset);
+      /* [out] */ long* startOffset,
+      /* [retval][out] */ long* endOffset);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_text(
       /* [in] */ long startOffset,
       /* [in] */ long endOffset,
-      /* [retval][out] */ BSTR *text);
+      /* [retval][out] */ BSTR* text);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_textBeforeOffset(
       /* [in] */ long offset,
       /* [in] */ enum IA2TextBoundaryType boundaryType,
-      /* [out] */ long *startOffset,
-      /* [out] */ long *endOffset,
-      /* [retval][out] */ BSTR *text);
+      /* [out] */ long* startOffset,
+      /* [out] */ long* endOffset,
+      /* [retval][out] */ BSTR* text);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_textAfterOffset(
       /* [in] */ long offset,
       /* [in] */ enum IA2TextBoundaryType boundaryType,
-      /* [out] */ long *startOffset,
-      /* [out] */ long *endOffset,
-      /* [retval][out] */ BSTR *text);
+      /* [out] */ long* startOffset,
+      /* [out] */ long* endOffset,
+      /* [retval][out] */ BSTR* text);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_textAtOffset(
       /* [in] */ long offset,
       /* [in] */ enum IA2TextBoundaryType boundaryType,
-      /* [out] */ long *startOffset,
-      /* [out] */ long *endOffset,
-      /* [retval][out] */ BSTR *text);
+      /* [out] */ long* startOffset,
+      /* [out] */ long* endOffset,
+      /* [retval][out] */ BSTR* text);
 
   virtual HRESULT STDMETHODCALLTYPE removeSelection(
       /* [in] */ long selectionIndex);
@@ -92,7 +92,7 @@ class ia2AccessibleText : public IAccessibleText {
       /* [in] */ long endOffset);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nCharacters(
-      /* [retval][out] */ long *nCharacters);
+      /* [retval][out] */ long* nCharacters);
 
   virtual HRESULT STDMETHODCALLTYPE scrollSubstringTo(
       /* [in] */ long startIndex,
@@ -107,14 +107,14 @@ class ia2AccessibleText : public IAccessibleText {
       /* [in] */ long y);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_newText(
-      /* [retval][out] */ IA2TextSegment *newText);
+      /* [retval][out] */ IA2TextSegment* newText);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_oldText(
-      /* [retval][out] */ IA2TextSegment *oldText);
+      /* [retval][out] */ IA2TextSegment* oldText);
 
   static void InitTextChangeData();
-  static void UpdateTextChangeData(HyperTextAccessibleWrap *aAcc, bool aInsert,
-                                   const nsString &aStr, int32_t aStart,
+  static void UpdateTextChangeData(HyperTextAccessibleWrap* aAcc, bool aInsert,
+                                   const nsString& aStr, int32_t aStart,
                                    uint32_t aLen);
 
  protected:
@@ -125,7 +125,7 @@ class ia2AccessibleText : public IAccessibleText {
   static uint32_t sLastTextChangeEnd;
 
  private:
-  HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment *aNewText);
+  HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment* aNewText);
   AccessibleTextBoundary GetGeckoTextBoundary(
       enum IA2TextBoundaryType coordinateType);
 };
@@ -140,58 +140,58 @@ class ia2AccessibleText : public IAccessibleText {
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_attributes(                            \
-      long offset, long *startOffset, long *endOffset, BSTR *textAttributes) { \
+      long offset, long* startOffset, long* endOffset, BSTR* textAttributes) { \
     return Class::get_attributes(offset, startOffset, endOffset,               \
                                  textAttributes);                              \
   }                                                                            \
                                                                                \
-  virtual HRESULT STDMETHODCALLTYPE get_caretOffset(long *offset) {            \
+  virtual HRESULT STDMETHODCALLTYPE get_caretOffset(long* offset) {            \
     return Class::get_caretOffset(offset);                                     \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_characterExtents(                      \
-      long offset, enum IA2CoordinateType coordType, long *x, long *y,         \
-      long *width, long *height) {                                             \
+      long offset, enum IA2CoordinateType coordType, long* x, long* y,         \
+      long* width, long* height) {                                             \
     return Class::get_characterExtents(offset, coordType, x, y, width,         \
                                        height);                                \
   }                                                                            \
                                                                                \
-  virtual HRESULT STDMETHODCALLTYPE get_nSelections(long *nSelections) {       \
+  virtual HRESULT STDMETHODCALLTYPE get_nSelections(long* nSelections) {       \
     return Class::get_nSelections(nSelections);                                \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_offsetAtPoint(                         \
-      long x, long y, enum IA2CoordinateType coordType, long *offset) {        \
+      long x, long y, enum IA2CoordinateType coordType, long* offset) {        \
     return Class::get_offsetAtPoint(x, y, coordType, offset);                  \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_selection(                             \
-      long selectionIndex, long *startOffset, long *endOffset) {               \
+      long selectionIndex, long* startOffset, long* endOffset) {               \
     return Class::get_selection(selectionIndex, startOffset, endOffset);       \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_text(long startOffset, long endOffset, \
-                                             BSTR *text) {                     \
+                                             BSTR* text) {                     \
     return Class::get_text(startOffset, endOffset, text);                      \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_textBeforeOffset(                      \
-      long offset, enum IA2TextBoundaryType boundaryType, long *startOffset,   \
-      long *endOffset, BSTR *text) {                                           \
+      long offset, enum IA2TextBoundaryType boundaryType, long* startOffset,   \
+      long* endOffset, BSTR* text) {                                           \
     return Class::get_textBeforeOffset(offset, boundaryType, startOffset,      \
                                        endOffset, text);                       \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_textAfterOffset(                       \
-      long offset, enum IA2TextBoundaryType boundaryType, long *startOffset,   \
-      long *endOffset, BSTR *text) {                                           \
+      long offset, enum IA2TextBoundaryType boundaryType, long* startOffset,   \
+      long* endOffset, BSTR* text) {                                           \
     return Class::get_textAfterOffset(offset, boundaryType, startOffset,       \
                                       endOffset, text);                        \
   }                                                                            \
                                                                                \
   virtual HRESULT STDMETHODCALLTYPE get_textAtOffset(                          \
-      long offset, enum IA2TextBoundaryType boundaryType, long *startOffset,   \
-      long *endOffset, BSTR *text) {                                           \
+      long offset, enum IA2TextBoundaryType boundaryType, long* startOffset,   \
+      long* endOffset, BSTR* text) {                                           \
     return Class::get_textAtOffset(offset, boundaryType, startOffset,          \
                                    endOffset, text);                           \
   }                                                                            \
@@ -209,7 +209,7 @@ class ia2AccessibleText : public IAccessibleText {
     return Class::setSelection(selectionIndex, startOffset, endOffset);        \
   }                                                                            \
                                                                                \
-  virtual HRESULT STDMETHODCALLTYPE get_nCharacters(long *nCharacters) {       \
+  virtual HRESULT STDMETHODCALLTYPE get_nCharacters(long* nCharacters) {       \
     return Class::get_nCharacters(nCharacters);                                \
   }                                                                            \
                                                                                \
@@ -225,11 +225,11 @@ class ia2AccessibleText : public IAccessibleText {
                                          x, y);                                \
   }                                                                            \
                                                                                \
-  virtual HRESULT STDMETHODCALLTYPE get_newText(IA2TextSegment *newText) {     \
+  virtual HRESULT STDMETHODCALLTYPE get_newText(IA2TextSegment* newText) {     \
     return Class::get_newText(newText);                                        \
   }                                                                            \
                                                                                \
-  virtual HRESULT STDMETHODCALLTYPE get_oldText(IA2TextSegment *oldText) {     \
+  virtual HRESULT STDMETHODCALLTYPE get_oldText(IA2TextSegment* oldText) {     \
     return Class::get_oldText(oldText);                                        \
   }
 

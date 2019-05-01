@@ -11,7 +11,7 @@
 
 #include "hyphen.h"
 
-nsHyphenator::nsHyphenator(nsIURI *aURI) : mDict(nullptr) {
+nsHyphenator::nsHyphenator(nsIURI* aURI) : mDict(nullptr) {
   nsCString uriSpec;
   nsresult rv = aURI->GetSpec(uriSpec);
   if (NS_FAILED(rv)) {
@@ -27,15 +27,15 @@ nsHyphenator::nsHyphenator(nsIURI *aURI) : mDict(nullptr) {
 
 nsHyphenator::~nsHyphenator() {
   if (mDict != nullptr) {
-    hnj_hyphen_free((HyphenDict *)mDict);
+    hnj_hyphen_free((HyphenDict*)mDict);
     mDict = nullptr;
   }
 }
 
 bool nsHyphenator::IsValid() { return (mDict != nullptr); }
 
-nsresult nsHyphenator::Hyphenate(const nsAString &aString,
-                                 nsTArray<bool> &aHyphens) {
+nsresult nsHyphenator::Hyphenate(const nsAString& aString,
+                                 nsTArray<bool>& aHyphens) {
   if (!aHyphens.SetLength(aString.Length(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -73,9 +73,9 @@ nsresult nsHyphenator::Hyphenate(const nsAString &aString,
       // Convert the word to utf-8 for libhyphen, lowercasing it as we go
       // so that it will match the (lowercased) patterns (bug 1105644).
       nsAutoCString utf8;
-      const char16_t *const begin = aString.BeginReading();
-      const char16_t *cur = begin + wordStart;
-      const char16_t *end = begin + wordLimit;
+      const char16_t* const begin = aString.BeginReading();
+      const char16_t* cur = begin + wordStart;
+      const char16_t* end = begin + wordLimit;
       while (cur < end) {
         uint32_t ch = *cur++;
 
@@ -113,10 +113,10 @@ nsresult nsHyphenator::Hyphenate(const nsAString &aString,
 
       AutoTArray<char, 200> utf8hyphens;
       utf8hyphens.SetLength(utf8.Length() + 5);
-      char **rep = nullptr;
-      int *pos = nullptr;
-      int *cut = nullptr;
-      int err = hnj_hyphen_hyphenate2((HyphenDict *)mDict, utf8.BeginReading(),
+      char** rep = nullptr;
+      int* pos = nullptr;
+      int* cut = nullptr;
+      int err = hnj_hyphen_hyphenate2((HyphenDict*)mDict, utf8.BeginReading(),
                                       utf8.Length(), utf8hyphens.Elements(),
                                       nullptr, &rep, &pos, &cut);
       if (!err) {
@@ -124,9 +124,9 @@ nsresult nsHyphenator::Hyphenate(const nsAString &aString,
         // from utf8 code unit indexing (which would match the utf8 input
         // string directly) to Unicode character indexing.
         // We then need to convert this to utf16 code unit offsets for Gecko.
-        const char *hyphPtr = utf8hyphens.Elements();
-        const char16_t *cur = begin + wordStart;
-        const char16_t *end = begin + wordLimit;
+        const char* hyphPtr = utf8hyphens.Elements();
+        const char16_t* cur = begin + wordStart;
+        const char16_t* end = begin + wordLimit;
         while (cur < end) {
           if (*hyphPtr & 0x01) {
             aHyphens[cur - begin] = true;

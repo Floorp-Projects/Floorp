@@ -30,16 +30,16 @@ class gfxAlphaRecovery {
    * The surfaces must have format RGB24 or ARGB32.
    * Returns true on success.
    */
-  static bool RecoverAlpha(gfxImageSurface *blackSurface,
-                           const gfxImageSurface *whiteSurface);
+  static bool RecoverAlpha(gfxImageSurface* blackSurface,
+                           const gfxImageSurface* whiteSurface);
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   /* This does the same as the previous function, but uses SSE2
    * optimizations. Usually this should not be called directly.  Be sure to
    * check mozilla::supports_sse2() before calling this function.
    */
-  static bool RecoverAlphaSSE2(gfxImageSurface *blackSurface,
-                               const gfxImageSurface *whiteSurface);
+  static bool RecoverAlphaSSE2(gfxImageSurface* blackSurface,
+                               const gfxImageSurface* whiteSurface);
 
   /**
    * A common use-case for alpha recovery is to paint into a
@@ -53,10 +53,10 @@ class gfxAlphaRecovery {
    * The returned rect is always a superset of |aRect|.
    */
   static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
-      const mozilla::gfx::IntRect &aRect, gfxImageSurface *aSurface);
+      const mozilla::gfx::IntRect& aRect, gfxImageSurface* aSurface);
 #else
   static mozilla::gfx::IntRect AlignRectForSubimageRecovery(
-      const mozilla::gfx::IntRect &aRect, gfxImageSurface *) {
+      const mozilla::gfx::IntRect& aRect, gfxImageSurface*) {
     return aRect;
   }
 #endif

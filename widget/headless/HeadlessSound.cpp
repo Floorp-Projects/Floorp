@@ -18,17 +18,17 @@ HeadlessSound::~HeadlessSound() {}
 NS_IMETHODIMP
 HeadlessSound::Init() { return NS_OK; }
 
-NS_IMETHODIMP HeadlessSound::OnStreamComplete(nsIStreamLoader *aLoader,
-                                              nsISupports *context,
+NS_IMETHODIMP HeadlessSound::OnStreamComplete(nsIStreamLoader* aLoader,
+                                              nsISupports* context,
                                               nsresult aStatus,
                                               uint32_t dataLen,
-                                              const uint8_t *data) {
+                                              const uint8_t* data) {
   return NS_OK;
 }
 
 NS_IMETHODIMP HeadlessSound::Beep() { return NS_OK; }
 
-NS_IMETHODIMP HeadlessSound::Play(nsIURL *aURL) { return NS_OK; }
+NS_IMETHODIMP HeadlessSound::Play(nsIURL* aURL) { return NS_OK; }
 
 NS_IMETHODIMP HeadlessSound::PlayEventSound(uint32_t aEventId) { return NS_OK; }
 

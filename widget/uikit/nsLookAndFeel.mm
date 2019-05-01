@@ -17,10 +17,10 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel(), mInitialized(false) {}
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
-static nscolor GetColorFromUIColor(UIColor *aColor) {
+static nscolor GetColorFromUIColor(UIColor* aColor) {
   CGColorRef cgColor = [aColor CGColor];
   CGColorSpaceModel model = CGColorSpaceGetModel(CGColorGetColorSpace(cgColor));
-  const CGFloat *components = CGColorGetComponents(cgColor);
+  const CGFloat* components = CGColorGetComponents(cgColor);
   if (model == kCGColorSpaceModelRGB) {
     return NS_RGB((unsigned int)(components[0] * 255.0), (unsigned int)(components[1] * 255.0),
                   (unsigned int)(components[2] * 255.0));
@@ -40,7 +40,7 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult) {
+nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor& aResult) {
   EnsureInit();
 
   nsresult res = NS_OK;
@@ -257,7 +257,7 @@ nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor &aResult) {
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult) {
+nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
   if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
@@ -352,7 +352,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult) {
 }
 
 NS_IMETHODIMP
-nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
+nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
   if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
@@ -372,7 +372,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
   return res;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName, gfxFontStyle &aFontStyle) {
+bool nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
   // hack for now
   if (aID == eFont_Window || aID == eFont_Document) {
     aFontStyle.style = FontSlantStyle::Normal();

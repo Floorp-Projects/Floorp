@@ -14,7 +14,7 @@ class nsNSSCertTrust {
  public:
   nsNSSCertTrust();
   nsNSSCertTrust(unsigned int ssl, unsigned int email);
-  explicit nsNSSCertTrust(CERTCertTrust *t);
+  explicit nsNSSCertTrust(CERTCertTrust* t);
   virtual ~nsNSSCertTrust();
 
   /* query */
@@ -43,11 +43,11 @@ class nsNSSCertTrust {
   /* set p <--> P */
   void AddPeerTrust(bool ssl, bool email);
 
-  CERTCertTrust &GetTrust() { return mTrust; }
+  CERTCertTrust& GetTrust() { return mTrust; }
 
  private:
-  void addTrust(unsigned int *t, unsigned int v);
-  void removeTrust(unsigned int *t, unsigned int v);
+  void addTrust(unsigned int* t, unsigned int v);
+  void removeTrust(unsigned int* t, unsigned int v);
   bool hasTrust(unsigned int t, unsigned int v);
   CERTCertTrust mTrust;
 };

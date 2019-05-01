@@ -17,7 +17,7 @@ namespace a11y {
 
 class sdnDocAccessible final : public ISimpleDOMDocument {
  public:
-  explicit sdnDocAccessible(DocAccessibleWrap *aAccessible)
+  explicit sdnDocAccessible(DocAccessibleWrap* aAccessible)
       : mAccessible(aAccessible){};
   ~sdnDocAccessible(){};
 
@@ -25,23 +25,23 @@ class sdnDocAccessible final : public ISimpleDOMDocument {
 
   // ISimpleDOMDocument
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL(
-      /* [out] */ BSTR __RPC_FAR *url);
+      /* [out] */ BSTR __RPC_FAR* url);
 
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_title(
-      /* [out] */ BSTR __RPC_FAR *title);
+      /* [out] */ BSTR __RPC_FAR* title);
 
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_mimeType(
-      /* [out] */ BSTR __RPC_FAR *mimeType);
+      /* [out] */ BSTR __RPC_FAR* mimeType);
 
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_docType(
-      /* [out] */ BSTR __RPC_FAR *docType);
+      /* [out] */ BSTR __RPC_FAR* docType);
 
   virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nameSpaceURIForID(
       /* [in] */ short nameSpaceID,
-      /* [out] */ BSTR __RPC_FAR *nameSpaceURI);
+      /* [out] */ BSTR __RPC_FAR* nameSpaceURI);
 
   virtual /* [id] */ HRESULT STDMETHODCALLTYPE put_alternateViewMediaTypes(
-      /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes);
+      /* [in] */ BSTR __RPC_FAR* commaSeparatedMediaTypes);
 
  protected:
   RefPtr<DocAccessibleWrap> mAccessible;

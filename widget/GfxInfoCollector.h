@@ -21,18 +21,18 @@ class MOZ_STACK_CLASS InfoObject {
   friend class GfxInfoBase;
 
  public:
-  void DefineProperty(const char *name, int value);
-  void DefineProperty(const char *name, nsAString &value);
-  void DefineProperty(const char *name, const char *value);
+  void DefineProperty(const char* name, int value);
+  void DefineProperty(const char* name, nsAString& value);
+  void DefineProperty(const char* name, const char* value);
 
  private:
   // We need to ensure that this object lives on the stack so that GC sees it
   // properly
-  explicit InfoObject(JSContext *aCx);
-  InfoObject(InfoObject &);
+  explicit InfoObject(JSContext* aCx);
+  InfoObject(InfoObject&);
 
-  JSContext *mCx;
-  JS::Rooted<JSObject *> mObj;
+  JSContext* mCx;
+  JS::Rooted<JSObject*> mObj;
   bool mOk;
 };
 
@@ -66,20 +66,20 @@ class MOZ_STACK_CLASS InfoObject {
 class GfxInfoCollectorBase {
  public:
   GfxInfoCollectorBase();
-  virtual void GetInfo(InfoObject &obj) = 0;
+  virtual void GetInfo(InfoObject& obj) = 0;
   virtual ~GfxInfoCollectorBase();
 };
 
 template <class T>
 class GfxInfoCollector : public GfxInfoCollectorBase {
  public:
-  GfxInfoCollector(T *aPointer, void (T::*aFunc)(InfoObject &obj))
+  GfxInfoCollector(T* aPointer, void (T::*aFunc)(InfoObject& obj))
       : mPointer(aPointer), mFunc(aFunc) {}
-  virtual void GetInfo(InfoObject &obj) override { (mPointer->*mFunc)(obj); }
+  virtual void GetInfo(InfoObject& obj) override { (mPointer->*mFunc)(obj); }
 
  protected:
-  T *mPointer;
-  void (T::*mFunc)(InfoObject &obj);
+  T* mPointer;
+  void (T::*mFunc)(InfoObject& obj);
 };
 
 }  // namespace widget

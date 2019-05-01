@@ -77,13 +77,13 @@ nsresult convertResultCode(int aSQLiteResultCode) {
   return NS_ERROR_FAILURE;
 }
 
-void checkAndLogStatementPerformance(sqlite3_stmt *aStatement) {
+void checkAndLogStatementPerformance(sqlite3_stmt* aStatement) {
   // Check to see if the query performed sorting operations or not.  If it
   // did, it may need to be optimized!
   int count = ::sqlite3_stmt_status(aStatement, SQLITE_STMTSTATUS_SORT, 1);
   if (count <= 0) return;
 
-  const char *sql = ::sqlite3_sql(aStatement);
+  const char* sql = ::sqlite3_sql(aStatement);
 
   // Check to see if this is marked to not warn
   if (::strstr(sql, "/* do not warn (bug ")) return;
@@ -108,7 +108,7 @@ void checkAndLogStatementPerformance(sqlite3_stmt *aStatement) {
   NS_WARNING(message.get());
 }
 
-nsIVariant *convertJSValToVariant(JSContext *aCtx, const JS::Value &aValue) {
+nsIVariant* convertJSValToVariant(JSContext* aCtx, const JS::Value& aValue) {
   if (aValue.isInt32()) return new IntegerVariant(aValue.toInt32());
 
   if (aValue.isDouble()) return new FloatVariant(aValue.toDouble());
@@ -124,7 +124,7 @@ nsIVariant *convertJSValToVariant(JSContext *aCtx, const JS::Value &aValue) {
   if (aValue.isNull()) return new NullVariant();
 
   if (aValue.isObject()) {
-    JS::Rooted<JSObject *> obj(aCtx, &aValue.toObject());
+    JS::Rooted<JSObject*> obj(aCtx, &aValue.toObject());
     // We only support Date instances, all others fail.
     bool valid;
     if (!js::DateIsValid(aCtx, obj, &valid) || !valid) return nullptr;
@@ -141,7 +141,7 @@ nsIVariant *convertJSValToVariant(JSContext *aCtx, const JS::Value &aValue) {
   return nullptr;
 }
 
-Variant_base *convertVariantToStorageVariant(nsIVariant *aVariant) {
+Variant_base* convertVariantToStorageVariant(nsIVariant* aVariant) {
   RefPtr<Variant_base> variant = do_QueryObject(aVariant);
   if (variant) {
     // JS helpers already convert the JS representation to a Storage Variant,
@@ -198,12 +198,12 @@ Variant_base *convertVariantToStorageVariant(nsIVariant *aVariant) {
       uint16_t type;
       nsIID iid;
       uint32_t len;
-      void *rawArray;
+      void* rawArray;
       // Note this copies the array data.
       nsresult rv = aVariant->GetAsArray(&type, &iid, &len, &rawArray);
       NS_ENSURE_SUCCESS(rv, nullptr);
       if (type == nsIDataType::VTYPE_UINT8) {
-        std::pair<uint8_t *, int> v(static_cast<uint8_t *>(rawArray), len);
+        std::pair<uint8_t*, int> v(static_cast<uint8_t*>(rawArray), len);
         // Take ownership of the data avoiding a further copy.
         return new AdoptedBlobVariant(v);
       }
@@ -227,7 +227,7 @@ Variant_base *convertVariantToStorageVariant(nsIVariant *aVariant) {
 namespace {
 class CallbackEvent : public Runnable {
  public:
-  explicit CallbackEvent(mozIStorageCompletionCallback *aCallback)
+  explicit CallbackEvent(mozIStorageCompletionCallback* aCallback)
       : Runnable("storage::CallbackEvent"), mCallback(aCallback) {}
 
   NS_IMETHOD Run() override {
@@ -240,7 +240,7 @@ class CallbackEvent : public Runnable {
 };
 }  // namespace
 already_AddRefed<nsIRunnable> newCompletionEvent(
-    mozIStorageCompletionCallback *aCallback) {
+    mozIStorageCompletionCallback* aCallback) {
   NS_ASSERTION(aCallback, "Passing a null callback is a no-no!");
   nsCOMPtr<nsIRunnable> event = new CallbackEvent(aCallback);
   return event.forget();

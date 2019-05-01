@@ -29,7 +29,7 @@ extern "C" {
  * interface would make more sense if that were a requirement.  Currently, this
  * is good enough for the applications we care about.
  */
-void md4sum(const uint8_t *input, uint32_t inputLen, uint8_t *result);
+void md4sum(const uint8_t* input, uint32_t inputLen, uint8_t* result);
 
 #ifdef __cplusplus
 }

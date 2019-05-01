@@ -28,14 +28,14 @@ struct StringTable {
 /**
  * This function reads in localized strings from updater.ini
  */
-int ReadStrings(const NS_tchar *path, StringTable *results);
+int ReadStrings(const NS_tchar* path, StringTable* results);
 
 /**
  * This function reads in localized strings corresponding to the keys from a
  * given .ini
  */
-int ReadStrings(const NS_tchar *path, const char *keyList,
+int ReadStrings(const NS_tchar* path, const char* keyList,
                 unsigned int numStrings, char results[][MAX_TEXT_LEN],
-                const char *section = nullptr);
+                const char* section = nullptr);
 
 #endif  // READSTRINGS_H__

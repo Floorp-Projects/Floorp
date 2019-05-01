@@ -18,18 +18,18 @@ static float sProgressVal;  // between 0 and 100
 static BOOL sQuit = NO;
 static BOOL sIndeterminate = NO;
 static StringTable sLabels;
-static const char *sUpdatePath;
+static const char* sUpdatePath;
 
 @interface UpdaterUI : NSObject {
-  IBOutlet NSProgressIndicator *progressBar;
-  IBOutlet NSTextField *progressTextField;
+  IBOutlet NSProgressIndicator* progressBar;
+  IBOutlet NSTextField* progressTextField;
 }
 @end
 
 @implementation UpdaterUI
 
 - (void)awakeFromNib {
-  NSWindow *w = [progressBar window];
+  NSWindow* w = [progressBar window];
 
   [w setTitle:[NSString stringWithUTF8String:sLabels.title]];
   [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info]];
@@ -62,7 +62,7 @@ static const char *sUpdatePath;
 }
 
 // called when the timer goes off
-- (void)updateProgressUI:(NSTimer *)aTimer {
+- (void)updateProgressUI:(NSTimer*)aTimer {
   if (sQuit) {
     [aTimer invalidate];
     [aTimer release];
@@ -83,13 +83,13 @@ static const char *sUpdatePath;
 
 // leave this as returning a BOOL instead of NSApplicationTerminateReply
 // for backward compatibility
-- (BOOL)applicationShouldTerminate:(NSApplication *)sender {
+- (BOOL)applicationShouldTerminate:(NSApplication*)sender {
   return sQuit;
 }
 
 @end
 
-int InitProgressUI(int *pargc, char ***pargv) {
+int InitProgressUI(int* pargc, char*** pargv) {
   sUpdatePath = (*pargv)[1];
 
   return 0;
