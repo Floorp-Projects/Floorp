@@ -148,12 +148,6 @@ AnyRef Table::getAnyRef(uint32_t index) const {
   return AnyRef::fromJSObject(objects_[index]);
 }
 
-const void* Table::getShortlivedAnyRefLocForCompiledCode(uint32_t index) const {
-  MOZ_ASSERT(!isFunction());
-  return const_cast<HeapPtr<JSObject*>&>(objects_[index])
-      .unsafeUnbarrieredForTracing();
-}
-
 void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
   MOZ_ASSERT(isFunction());
 
