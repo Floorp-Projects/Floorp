@@ -130,3 +130,14 @@
 -keepclassmembernames class kotlinx.** {
     volatile <fields>;
 }
+-dontwarn kotlinx.atomicfu.**
+
+####################################################################################################
+# snakeyaml
+####################################################################################################
+
+-dontwarn java.beans.PropertyDescriptor
+-dontwarn java.beans.Introspector
+-dontwarn java.beans.BeanInfo
+-dontwarn java.beans.IntrospectionException
+-dontwarn java.beans.FeatureDescriptor
