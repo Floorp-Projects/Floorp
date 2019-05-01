@@ -310,7 +310,6 @@ nsString* nsContentUtils::sAltText = nullptr;
 nsString* nsContentUtils::sModifierSeparator = nullptr;
 
 bool nsContentUtils::sInitialized = false;
-bool nsContentUtils::sIsCutCopyAllowed = true;
 bool nsContentUtils::sIsUpgradableDisplayContentPrefEnabled = false;
 bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
 bool nsContentUtils::sIsPerformanceTimingEnabled = false;
@@ -629,8 +628,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sIsCutCopyAllowed, "dom.allow_cut_copy", true);
 
   Preferences::AddBoolVarCache(&sIsPerformanceTimingEnabled,
                                "dom.enable_performance", true);
@@ -6678,7 +6675,8 @@ bool nsContentUtils::IsRequestFullscreenAllowed(CallerType aCallerType) {
 
 /* static */
 bool nsContentUtils::IsCutCopyAllowed(nsIPrincipal* aSubjectPrincipal) {
-  if (!IsCutCopyRestricted() && EventStateManager::IsHandlingUserInput()) {
+  if (StaticPrefs::dom_allow_cut_copy() &&
+      EventStateManager::IsHandlingUserInput()) {
     return true;
   }
 
