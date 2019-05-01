@@ -708,6 +708,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "dom.presentation.testing.simulate-receiver",
+   dom_presentation_testing_simulate_receiver,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
