@@ -81,17 +81,11 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     return true;
   }
 
-  // Get calling script file and line for logging.
+  // Don't show canvas prompt for PDF.js
   JS::AutoFilename scriptFile;
-  unsigned scriptLine = 0;
-  bool isScriptKnown = false;
-  if (JS::DescribeScriptedCaller(aCx, &scriptFile, &scriptLine)) {
-    isScriptKnown = true;
-    // Don't show canvas prompt for PDF.js
-    if (scriptFile.get() &&
-        strcmp(scriptFile.get(), "resource://pdf.js/build/pdf.js") == 0) {
-      return true;
-    }
+  if (JS::DescribeScriptedCaller(aCx, &scriptFile) && scriptFile.get() &&
+      strcmp(scriptFile.get(), "resource://pdf.js/build/pdf.js") == 0) {
+    return true;
   }
 
   Document* topLevelDocument = aDocument->GetTopLevelContentDocument();
@@ -114,12 +108,8 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   NS_ENSURE_SUCCESS(rv, false);
   if (isThirdParty) {
     nsAutoString message;
-    message.AppendPrintf(
-        "Blocked third party %s in page %s from extracting canvas data.",
-        docURISpec.get(), topLevelDocURISpec.get());
-    if (isScriptKnown) {
-      message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
-    }
+    message.AppendPrintf("Blocked third party %s from extracting canvas data.",
+                         docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
         message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
         aDocument);
@@ -158,12 +148,9 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   if (isAutoBlockCanvas) {
     nsAutoString message;
     message.AppendPrintf(
-        "Blocked %s in page %s from extracting canvas data because no user "
-        "input was detected.",
-        docURISpec.get(), topLevelDocURISpec.get());
-    if (isScriptKnown) {
-      message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
-    }
+        "Blocked %s from extracting canvas data because no user input was "
+        "detected.",
+        docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
         message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
         aDocument);
@@ -171,12 +158,8 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
     // It was in response to user input, so log and display the prompt.
     nsAutoString message;
     message.AppendPrintf(
-        "Blocked %s in page %s from extracting canvas data, but prompting the "
-        "user.",
-        docURISpec.get(), topLevelDocURISpec.get());
-    if (isScriptKnown) {
-      message.AppendPrintf(" %s:%u.", scriptFile.get(), scriptLine);
-    }
+        "Blocked %s from extracting canvas data, but prompting the user.",
+        docURISpec.get());
     nsContentUtils::ReportToConsoleNonLocalized(
         message, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Security"),
         aDocument);
