@@ -1800,8 +1800,7 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
 a11y::Accessible* nsBaseWidget::GetRootAccessible() {
   NS_ENSURE_TRUE(mWidgetListener, nullptr);
 
-  PresShell* presShell =
-      static_cast<PresShell*>(mWidgetListener->GetPresShell());
+  PresShell* presShell = mWidgetListener->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
 
   // If container is null then the presshell is not active. This often happens

@@ -427,18 +427,18 @@ struct nsCallbackEventRequest {
 // bfcache, but font pref changes don't care about that, and maybe / probably
 // shouldn't.
 #ifdef DEBUG
-#  define ASSERT_REFLOW_SCHEDULED_STATE()                                    \
-    {                                                                        \
-      if (ObservingLayoutFlushes()) {                                        \
-        MOZ_ASSERT(mDocument->GetBFCacheEntry() ||                           \
-                       mPresContext->RefreshDriver()->IsLayoutFlushObserver( \
-                           static_cast<PresShell*>(this)),                   \
-                   "Unexpected state");                                      \
-      } else {                                                               \
-        MOZ_ASSERT(!mPresContext->RefreshDriver()->IsLayoutFlushObserver(    \
-                       static_cast<PresShell*>(this)),                       \
-                   "Unexpected state");                                      \
-      }                                                                      \
+#  define ASSERT_REFLOW_SCHEDULED_STATE()                                   \
+    {                                                                       \
+      if (ObservingLayoutFlushes()) {                                       \
+        MOZ_ASSERT(                                                         \
+            mDocument->GetBFCacheEntry() ||                                 \
+                mPresContext->RefreshDriver()->IsLayoutFlushObserver(this), \
+            "Unexpected state");                                            \
+      } else {                                                              \
+        MOZ_ASSERT(                                                         \
+            !mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),    \
+            "Unexpected state");                                            \
+      }                                                                     \
     }
 #else
 #  define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
@@ -858,7 +858,6 @@ NS_INTERFACE_TABLE_HEAD(PresShell)
     // QI for weak reference.  Therefore, the case needed by do_QueryReferent()
     // should be tested first.
     NS_INTERFACE_TABLE_ENTRY(PresShell, PresShell)
-    NS_INTERFACE_TABLE_ENTRY(PresShell, nsIPresShell)
     NS_INTERFACE_TABLE_ENTRY(PresShell, nsIDocumentObserver)
     NS_INTERFACE_TABLE_ENTRY(PresShell, nsISelectionController)
     NS_INTERFACE_TABLE_ENTRY(PresShell, nsISelectionDisplay)
@@ -1369,26 +1368,26 @@ void PresShell::Destroy() {
 void PresShell::StopObservingRefreshDriver() {
   nsRefreshDriver* rd = mPresContext->RefreshDriver();
   if (mResizeEventPending) {
-    rd->RemoveResizeEventFlushObserver(static_cast<PresShell*>(this));
+    rd->RemoveResizeEventFlushObserver(this);
   }
   if (mObservingLayoutFlushes) {
-    rd->RemoveLayoutFlushObserver(static_cast<PresShell*>(this));
+    rd->RemoveLayoutFlushObserver(this);
   }
   if (mObservingStyleFlushes) {
-    rd->RemoveStyleFlushObserver(static_cast<PresShell*>(this));
+    rd->RemoveStyleFlushObserver(this);
   }
 }
 
 void PresShell::StartObservingRefreshDriver() {
   nsRefreshDriver* rd = mPresContext->RefreshDriver();
   if (mResizeEventPending) {
-    rd->AddResizeEventFlushObserver(static_cast<PresShell*>(this));
+    rd->AddResizeEventFlushObserver(this);
   }
   if (mObservingLayoutFlushes) {
-    rd->AddLayoutFlushObserver(static_cast<PresShell*>(this));
+    rd->AddLayoutFlushObserver(this);
   }
   if (mObservingStyleFlushes) {
-    rd->AddStyleFlushObserver(static_cast<PresShell*>(this));
+    rd->AddStyleFlushObserver(this);
   }
 }
 
@@ -2806,8 +2805,7 @@ void PresShell::CancelAllPendingReflows() {
   mDirtyRoots.Clear();
 
   if (mObservingLayoutFlushes) {
-    GetPresContext()->RefreshDriver()->RemoveLayoutFlushObserver(
-        static_cast<PresShell*>(this));
+    GetPresContext()->RefreshDriver()->RemoveLayoutFlushObserver(this);
     mObservingLayoutFlushes = false;
   }
 
@@ -2955,7 +2953,7 @@ void PresShell::ClearFrameRefs(nsIFrame* aFrame) {
     AutoWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
     if (weakFrame->GetFrame() == aFrame) {
       // This removes weakFrame from mAutoWeakFrames.
-      weakFrame->Clear(static_cast<PresShell*>(this));
+      weakFrame->Clear(this);
     }
     weakFrame = prev;
   }
@@ -2968,7 +2966,7 @@ void PresShell::ClearFrameRefs(nsIFrame* aFrame) {
     }
   }
   for (WeakFrame* weakFrame : toRemove) {
-    weakFrame->Clear(static_cast<PresShell*>(this));
+    weakFrame->Clear(this);
   }
 }
 
@@ -4378,7 +4376,7 @@ void PresShell::ContentRemoved(nsIContent* aChild,
 }
 
 void PresShell::NotifyCounterStylesAreDirty() {
-  nsAutoCauseReflowNotifier reflowNotifier(static_cast<PresShell*>(this));
+  nsAutoCauseReflowNotifier reflowNotifier(this);
   mFrameConstructor->NotifyCounterStylesAreDirty();
 }
 
@@ -9252,8 +9250,8 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   if (tp) {
     if (tp->current.numChars > 100) {
       TimeDuration reflowTime = TimeStamp::Now() - timeStart;
-      LogTextPerfStats(tp, static_cast<PresShell*>(this), tp->current,
-                       reflowTime.ToMilliseconds(), eLog_reflow, nullptr);
+      LogTextPerfStats(tp, this, tp->current, reflowTime.ToMilliseconds(),
+                       eLog_reflow, nullptr);
     }
     tp->Accumulate();
   }
@@ -9483,8 +9481,7 @@ void PresShell::DoObserveStyleFlushes() {
   mObservingStyleFlushes = true;
 
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-    mPresContext->RefreshDriver()->AddStyleFlushObserver(
-        static_cast<PresShell*>(this));
+    mPresContext->RefreshDriver()->AddStyleFlushObserver(this);
   }
 }
 
@@ -9493,8 +9490,7 @@ void PresShell::DoObserveLayoutFlushes() {
   mObservingLayoutFlushes = true;
 
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-    mPresContext->RefreshDriver()->AddLayoutFlushObserver(
-        static_cast<PresShell*>(this));
+    mPresContext->RefreshDriver()->AddLayoutFlushObserver(this);
   }
 }
 
@@ -9814,7 +9810,7 @@ bool PresShell::VerifyIncrementalReflow() {
                // reflowing the test frame tree
   vm->SetPresShell(presShell);
   {
-    nsAutoCauseReflowNotifier crNotifier(static_cast<PresShell*>(this));
+    nsAutoCauseReflowNotifier crNotifier(this);
     presShell->Initialize();
   }
   mDocument->BindingManager()->ProcessAttachedQueue();
@@ -10708,8 +10704,7 @@ bool PresShell::DetermineFontSizeInflationState() {
 
   // Force-enabling font inflation always trumps the heuristics here.
   if (!FontSizeInflationForceEnabled()) {
-    if (BrowserChild* tab =
-            BrowserChild::GetFrom(static_cast<PresShell*>(this))) {
+    if (BrowserChild* tab = BrowserChild::GetFrom(this)) {
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
       if (!tab->AsyncPanZoomEnabled()) {
