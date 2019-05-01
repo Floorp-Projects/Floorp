@@ -544,7 +544,7 @@ kok{
             tibt{"तिबेतियन"}
         }
     }
-    Version{"2.1.48.4"}
+    Version{"2.1.49.82"}
     codePatterns{
         language{"भाशा: {0}"}
         script{"लिपी: {0}"}

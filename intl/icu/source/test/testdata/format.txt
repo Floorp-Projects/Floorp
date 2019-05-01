@@ -489,41 +489,41 @@ format:table(nofallback) {
                },
 
 				// Japanese
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G y",
-                    "YEAR=8",
-                    "Heisei 8"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yy",
-                    "YEAR=8",
-                    "Heisei 08"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyy",
-                    "YEAR=8",
-                    "Heisei 008"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyyy",
-                    "YEAR=8",
-                    "Heisei 0008"
-               },
-               {
-                    "en_US@calendar=japanese",         
-                    "",
-                    "PATTERN=G yyyyy",
-                    "YEAR=8",
-                    "Heisei 00008"
-               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G y",
+//                    "YEAR=8",
+//                    "Heisei 8"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yy",
+//                    "YEAR=8",
+//                    "Heisei 08"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyy",
+//                    "YEAR=8",
+//                    "Heisei 008"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyyy",
+//                    "YEAR=8",
+//                    "Heisei 0008"
+//               },
+//               {
+//                    "en_US@calendar=japanese",         
+//                    "",
+//                    "PATTERN=G yyyyy",
+//                    "YEAR=8",
+//                    "Heisei 00008"
+//               },
 
             }
         }

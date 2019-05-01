@@ -2635,7 +2635,7 @@ bool DebugEnvironments::addDebugEnvironment(
   MissingEnvironmentKey key(ei);
   MOZ_ASSERT(!envs->missingEnvs.has(key));
   if (!envs->missingEnvs.put(key,
-                             ReadBarriered<DebugEnvironmentProxy*>(debugEnv))) {
+                             WeakHeapPtr<DebugEnvironmentProxy*>(debugEnv))) {
     ReportOutOfMemory(cx);
     return false;
   }

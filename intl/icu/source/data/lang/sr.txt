@@ -849,7 +849,7 @@ sr{
         TARASK{"Тараскијевичка ортографија"}
         VALENCIA{"Валенцијска"}
     }
-    Version{"2.1.48.42"}
+    Version{"2.1.49.82"}
     characterLabelPattern{
         all{"{0} — све"}
         category-list{"{0}: {1}"}

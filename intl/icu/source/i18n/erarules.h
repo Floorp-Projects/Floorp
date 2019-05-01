@@ -75,7 +75,8 @@ public:
 
     /**
      * Gets the current era index. This is calculated only once for an instance of
-     * EraRules.
+     * EraRules. The current era calculation is based on the default time zone at
+     * the time of instantiation.
      *
      * @return era index of current era (or 0, when current date is before the first era)
      */

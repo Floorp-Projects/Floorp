@@ -1,5 +1,5 @@
-# NormalizationTest-12.0.0.txt
-# Date: 2019-01-22, 08:18:33 GMT
+# NormalizationTest-12.1.0.txt
+# Date: 2019-04-01, 09:10:28 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
@@ -2149,6 +2149,7 @@
 32FC;32FC;32FC;30F0;30F0;
 32FD;32FD;32FD;30F1;30F1;
 32FE;32FE;32FE;30F2;30F2;
+32FF;32FF;32FF;4EE4 548C;4EE4 548C;
 3300;3300;3300;30A2 30D1 30FC 30C8;30A2 30CF 309A 30FC 30C8;
 3301;3301;3301;30A2 30EB 30D5 30A1;30A2 30EB 30D5 30A1;
 3302;3302;3302;30A2 30F3 30DA 30A2;30A2 30F3 30D8 309A 30A2;

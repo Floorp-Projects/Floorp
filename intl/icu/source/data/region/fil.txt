@@ -183,7 +183,7 @@ fil{
         MF{"Saint Martin"}
         MG{"Madagascar"}
         MH{"Marshall Islands"}
-        MK{"Macedonia"}
+        MK{"North Macedonia"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
@@ -311,8 +311,7 @@ fil{
         CI{"Ivory Coast"}
         CZ{"Czech Republic"}
         FK{"Falkland Islands (Islas Malvinas)"}
-        MK{"Macedonia (FYROM)"}
         TL{"East Timor"}
     }
-    Version{"2.1.48.20"}
+    Version{"2.1.49.82"}
 }

@@ -183,7 +183,7 @@ eu{
         MF{"San Martin"}
         MG{"Madagaskar"}
         MH{"Marshall Uharteak"}
-        MK{"Mazedonia"}
+        MK{"Ipar Mazedonia"}
         ML{"Mali"}
         MM{"Myanmar (Birmania)"}
         MN{"Mongolia"}
@@ -308,8 +308,7 @@ eu{
         CI{"CI"}
         CZ{"Txekiar Errepublika"}
         FK{"Falklandak (Malvinak)"}
-        MK{"Mazedoniako Jugoslaviar Errepublika Ohia"}
         TL{"TL"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

@@ -12,7 +12,7 @@
 #ifdef INCLUDED_FROM_NORMALIZER2_CPP
 
 static const UVersionInfo norm2_nfc_data_formatVersion={4,0,0,0};
-static const UVersionInfo norm2_nfc_data_dataVersion={0xc,0,0,0};
+static const UVersionInfo norm2_nfc_data_dataVersion={0xc,1,0,0};
 
 static const int32_t norm2_nfc_data_indexes[Normalizer2Impl::IX_COUNT]={
 0x50,0x4ae0,0x8738,0x8838,0x8838,0x8838,0x8838,0x8838,0xc0,0x300,0xadc,0x29d0,0x3c56,0xfc00,0x1282,0x3b8c,

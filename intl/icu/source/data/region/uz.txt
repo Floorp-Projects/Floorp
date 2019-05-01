@@ -183,7 +183,7 @@ uz{
         MF{"Sent-Martin"}
         MG{"Madagaskar"}
         MH{"Marshall orollari"}
-        MK{"Makedoniya"}
+        MK{"Shimoliy Makedoniya"}
         ML{"Mali"}
         MM{"Myanma (Birma)"}
         MN{"Mongoliya"}
@@ -309,8 +309,7 @@ uz{
         CI{"Fil suyagi qirg‘og‘i"}
         CZ{"Chexiya Respublikasi"}
         FK{"Folklend (Malvin) orollari"}
-        MK{"Makedoniya (SYRM)"}
         TL{"Sharqiy Timor"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
 }

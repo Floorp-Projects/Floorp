@@ -1684,8 +1684,16 @@ class ScriptSource::LoadSourceMatcher {
       return true;
     }
 
-    // The argument is just for overloading -- its value doesn't matter.
-    return tryLoadAndSetSource(Unit('0'));
+    size_t length;
+
+    // The first argument is just for overloading -- its value doesn't matter.
+    if (!tryLoadAndSetSource(Unit('0'), &length)) {
+      return false;
+    }
+
+    cx_->updateMallocCounter(length * sizeof(Unit));
+
+    return true;
   }
 
   bool operator()(const Missing&) const {
@@ -1703,11 +1711,10 @@ class ScriptSource::LoadSourceMatcher {
   }
 
  private:
-  bool tryLoadAndSetSource(const Utf8Unit&) const {
+  bool tryLoadAndSetSource(const Utf8Unit&, size_t* length) const {
     char* utf8Source;
-    size_t length;
     if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), nullptr,
-                                          &utf8Source, &length)) {
+                                          &utf8Source, length)) {
       return false;
     }
 
@@ -1719,7 +1726,7 @@ class ScriptSource::LoadSourceMatcher {
     if (!ss_->setRetrievedSource(
              cx_,
              EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
-             length)) {
+             *length)) {
       return false;
     }
 
@@ -1727,11 +1734,10 @@ class ScriptSource::LoadSourceMatcher {
     return true;
   }
 
-  bool tryLoadAndSetSource(const char16_t&) const {
+  bool tryLoadAndSetSource(const char16_t&, size_t* length) const {
     char16_t* utf16Source;
-    size_t length;
     if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &utf16Source,
-                                          nullptr, &length)) {
+                                          nullptr, length)) {
       return false;
     }
 
@@ -1741,7 +1747,7 @@ class ScriptSource::LoadSourceMatcher {
     }
 
     if (!ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(utf16Source),
-                                 length)) {
+                                 *length)) {
       return false;
     }
 

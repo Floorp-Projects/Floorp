@@ -2526,7 +2526,7 @@ bool Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj,
                                            mozilla::TimeStamp when,
                                            GlobalObject::DebuggerVector& dbgs) {
   MOZ_ASSERT(!dbgs.empty());
-  mozilla::DebugOnly<ReadBarriered<Debugger*>*> begin = dbgs.begin();
+  mozilla::DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs.begin();
 
   // Root all the Debuggers while we're iterating over them;
   // appendAllocationSite calls Compartment::wrap, and thus can GC.
@@ -4399,12 +4399,12 @@ static T* findDebuggerInVector(Debugger* dbg,
   return p;
 }
 
-// a ReadBarriered version for findDebuggerInVector
+// a WeakHeapPtr version for findDebuggerInVector
 // TODO: Bug 1515934 - findDebuggerInVector<T> triggers read barriers.
-static ReadBarriered<Debugger*>* findDebuggerInVector(
+static WeakHeapPtr<Debugger*>* findDebuggerInVector(
     Debugger* dbg,
-    Vector<ReadBarriered<Debugger*>, 0, js::SystemAllocPolicy>* vec) {
-  ReadBarriered<Debugger*>* p;
+    Vector<WeakHeapPtr<Debugger*>, 0, js::SystemAllocPolicy>* vec) {
+  WeakHeapPtr<Debugger*>* p;
   for (p = vec->begin(); p != vec->end(); p++) {
     if (p->unbarrieredGet() == dbg) {
       break;

@@ -35,7 +35,7 @@ tt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.47.85"}
+    Version{"2.1.49.82"}
     calendar{
         generic{
             DateTimePatterns{

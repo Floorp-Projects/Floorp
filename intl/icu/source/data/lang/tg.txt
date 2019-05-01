@@ -183,7 +183,7 @@ tg{
             latn{"Рақамҳои ғарбӣ"}
         }
     }
-    Version{"2.1.47.96"}
+    Version{"2.1.49.82"}
     codePatterns{
         language{"{0}"}
         script{"{0}"}

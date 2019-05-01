@@ -1,5 +1,5 @@
-# DerivedCoreProperties-12.0.0.txt
-# Date: 2019-01-22, 08:18:27 GMT
+# DerivedCoreProperties-12.1.0.txt
+# Date: 2019-03-10, 10:53:06 GMT
 # © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
@@ -11071,8 +11071,7 @@ E0100..E01EF  ; Grapheme_Extend
 3280..3289    ; Grapheme_Base
 328A..32B0    ; Grapheme_Base
 32B1..32BF    ; Grapheme_Base
-32C0..32FE    ; Grapheme_Base
-3300..33FF    ; Grapheme_Base
+32C0..33FF    ; Grapheme_Base
 3400..4DB5    ; Grapheme_Base
 4DC0..4DFF    ; Grapheme_Base
 4E00..9FEF    ; Grapheme_Base
@@ -11819,7 +11818,7 @@ FFFC..FFFD    ; Grapheme_Base
 2CEB0..2EBE0  ; Grapheme_Base
 2F800..2FA1D  ; Grapheme_Base
 
-# Total code points: 135897
+# Total code points: 135898
 
 # ================================================
 

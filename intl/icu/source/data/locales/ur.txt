@@ -230,7 +230,7 @@ ur{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.48.20"}
+    Version{"2.1.49.82"}
     calendar{
         coptic{
             eras{

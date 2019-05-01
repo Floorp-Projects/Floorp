@@ -251,7 +251,7 @@ ArgumentsObject* Realm::maybeArgumentsTemplateObject(bool mapped) const {
 
 ArgumentsObject* Realm::getOrCreateArgumentsTemplateObject(JSContext* cx,
                                                            bool mapped) {
-  ReadBarriered<ArgumentsObject*>& obj =
+  WeakHeapPtr<ArgumentsObject*>& obj =
       mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
 
   ArgumentsObject* templateObj = obj;

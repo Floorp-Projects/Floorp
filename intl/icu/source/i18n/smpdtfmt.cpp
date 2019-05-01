@@ -863,7 +863,7 @@ SimpleDateFormat::initialize(const Locale& locale,
 
     // Simple-minded hack to force Gannen year numbering for ja@calendar=japanese
     // if format is non-numeric (includes 年) and fDateOverride is not already specified.
-    // This does not update if applyPattern subsequently changes the pattern type.
+    // Now this does get updated if applyPattern subsequently changes the pattern type.
     if (fDateOverride.isBogus() && fHasHanYearChar &&
             fCalendar != nullptr && uprv_strcmp(fCalendar->getType(),"japanese") == 0 &&
             uprv_strcmp(fLocale.getLanguage(),"ja") == 0) {
@@ -3885,6 +3885,42 @@ SimpleDateFormat::applyPattern(const UnicodeString& pattern)
 {
     fPattern = pattern;
     parsePattern();
+
+    // Hack to update use of Gannen year numbering for ja@calendar=japanese -
+    // use only if format is non-numeric (includes 年) and no other fDateOverride.
+    if (fCalendar != nullptr && uprv_strcmp(fCalendar->getType(),"japanese") == 0 &&
+            uprv_strcmp(fLocale.getLanguage(),"ja") == 0) {
+        if (fDateOverride==UnicodeString(u"y=jpanyear") && !fHasHanYearChar) {
+            // Gannen numbering is set but new pattern should not use it, unset;
+            // use procedure from adoptNumberFormat to clear overrides
+            if (fSharedNumberFormatters) {
+                freeSharedNumberFormatters(fSharedNumberFormatters);
+                fSharedNumberFormatters = NULL;
+            }
+            fDateOverride.setToBogus(); // record status
+        } else if (fDateOverride.isBogus() && fHasHanYearChar) {
+            // No current override (=> no Gannen numbering) but new pattern needs it;
+            // use procedures from initNUmberFormatters / adoptNumberFormat
+            umtx_lock(LOCK());
+            if (fSharedNumberFormatters == NULL) {
+                fSharedNumberFormatters = allocSharedNumberFormatters();
+            }
+            umtx_unlock(LOCK());
+            if (fSharedNumberFormatters != NULL) {
+                Locale ovrLoc(fLocale.getLanguage(),fLocale.getCountry(),fLocale.getVariant(),"numbers=jpanyear");
+                UErrorCode status = U_ZERO_ERROR;
+                const SharedNumberFormat *snf = createSharedNumberFormat(ovrLoc, status);
+                if (U_SUCCESS(status)) {
+                    // Now that we have an appropriate number formatter, fill in the
+                    // appropriate slot in the number formatters table.
+                    UDateFormatField patternCharIndex = DateFormatSymbols::getPatternCharIndex(u'y');
+                    SharedObject::copyPtr(snf, fSharedNumberFormatters[patternCharIndex]);
+                    snf->deleteIfZeroRefCount();
+                    fDateOverride.setTo(u"y=jpanyear", -1); // record status
+                }
+            }
+        }
+    }
 }
 
 //----------------------------------------------------------------------

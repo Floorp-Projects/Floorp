@@ -11,6 +11,7 @@
 #include "unicode/ucal.h"
 #include "unicode/ures.h"
 #include "unicode/ustring.h"
+#include "unicode/timezone.h"
 #include "cmemory.h"
 #include "cstring.h"
 #include "erarules.h"
@@ -290,9 +291,22 @@ int32_t EraRules::getEraIndex(int32_t year, int32_t month, int32_t day, UErrorCo
 }
 
 void EraRules::initCurrentEra() {
-    UDate now = ucal_getNow();
+    // Compute local wall time in millis using ICU's default time zone.
+    UErrorCode ec = U_ZERO_ERROR;
+    UDate localMillis = ucal_getNow();
+
+    int32_t rawOffset, dstOffset;
+    TimeZone* zone = TimeZone::createDefault();
+    // If we failed to create the default time zone, we are in a bad state and don't
+    // really have many options. Carry on using UTC millis as a fallback.
+    if (zone != nullptr) {
+        zone->getOffset(localMillis, FALSE, rawOffset, dstOffset, ec);
+        delete zone;
+        localMillis += (rawOffset + dstOffset);
+    }
+
     int year, month0, dom, dow, doy, mid;
-    Grego::timeToFields(now, year, month0, dom, dow, doy, mid);
+    Grego::timeToFields(localMillis, year, month0, dom, dow, doy, mid);
     int currentEncodedDate = encodeDate(year, month0 + 1 /* changes to 1-base */, dom);
     int eraIdx = numEras - 1;
     while (eraIdx > 0) {
@@ -303,7 +317,8 @@ void EraRules::initCurrentEra() {
     }
     // Note: current era could be before the first era.
     // In this case, this implementation returns the first era index (0).
-    currentEra = eraIdx;}
+    currentEra = eraIdx;
+}
 
 U_NAMESPACE_END
 #endif /* #if !UCONFIG_NO_FORMATTING */

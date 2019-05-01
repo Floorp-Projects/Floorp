@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sd{
-    AuxExemplarCharacters{"[ئ]"}
+    AuxExemplarCharacters{"[\u064E \u064F \u0650 ئ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -210,7 +210,7 @@ sd{
         }
         native{"arab"}
     }
-    Version{"2.1.48.17"}
+    Version{"2.1.49.82"}
     calendar{
         generic{
             DateTimePatterns{

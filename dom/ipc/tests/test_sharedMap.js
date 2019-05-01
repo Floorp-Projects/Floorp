@@ -26,6 +26,10 @@ function getKey(key, sharedData = Services.cpmm.sharedData) {
   return sharedData.get(key);
 }
 
+function hasKey(key, sharedData = Services.cpmm.sharedData) {
+  return sharedData.has(key);
+}
+
 function getContents(sharedMap = Services.cpmm.sharedData) {
   return {
     keys: Array.from(sharedMap.keys()),
@@ -198,6 +202,15 @@ add_task(async function test_sharedMap() {
 
   checkParentMap(expected);
   await checkContentMaps(expected);
+
+  // Test that has() rebuilds map after a flush.
+  sharedData.set("grick", true);
+  sharedData.flush();
+  equal(await contentPage.spawn("grick", hasKey), true, "has() should see key after flush");
+
+  sharedData.set("grack", true);
+  sharedData.flush();
+  equal(await contentPage.spawn("gruck", hasKey), false, "has() should return false for nonexistent key");
 });
 
 add_task(async function test_blobs() {

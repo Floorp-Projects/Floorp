@@ -173,7 +173,7 @@ th{
         minimumGroupingDigits{"1"}
         native{"thai"}
     }
-    Version{"2.1.48.86"}
+    Version{"2.1.49.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2118,7 +2118,7 @@ th{
                     "ทะอิโช",
                     "โชวะ",
                     "เฮเซ",
-                    "Qqqq",
+                    "เรวะ",
                 }
             }
         }

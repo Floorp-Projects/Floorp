@@ -72,12 +72,12 @@ struct GCPolicy<js::HeapPtr<T>> {
 };
 
 template <typename T>
-struct GCPolicy<js::ReadBarriered<T>> {
-  static void trace(JSTracer* trc, js::ReadBarriered<T>* thingp,
+struct GCPolicy<js::WeakHeapPtr<T>> {
+  static void trace(JSTracer* trc, js::WeakHeapPtr<T>* thingp,
                     const char* name) {
     js::TraceEdge(trc, thingp, name);
   }
-  static bool needsSweep(js::ReadBarriered<T>* thingp) {
+  static bool needsSweep(js::WeakHeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
   }
 };
