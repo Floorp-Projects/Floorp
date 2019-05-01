@@ -2334,12 +2334,6 @@ class nsContentUtils {
   static bool IsRequestFullscreenAllowed(mozilla::dom::CallerType aCallerType);
 
   /**
-   * Returns true if calling execCommand with 'cut' or 'copy' arguments
-   * is restricted to chrome code.
-   */
-  static bool IsCutCopyRestricted() { return !sIsCutCopyAllowed; }
-
-  /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments is
    * allowed for the given subject principal. These are only allowed if the user
    * initiated them (like with a mouse-click or key press).
@@ -3490,7 +3484,6 @@ class nsContentUtils {
 
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
-  static bool sIsCutCopyAllowed;
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
