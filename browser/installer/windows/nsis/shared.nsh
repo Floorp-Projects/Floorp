@@ -171,7 +171,7 @@
 !endif
 
 !ifdef MOZ_LAUNCHER_PROCESS
-  ${DisableLauncherProcessByDefault}
+  ${ResetLauncherProcessDefaults}
 !endif
 
 !macroend
@@ -1582,22 +1582,13 @@ FunctionEnd
 !endif ; NO_LOG
 
 !ifdef MOZ_LAUNCHER_PROCESS
-!macro DisableLauncherProcessByDefault
-  ClearErrors
-  ${ReadRegQWORD} $0 HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Launcher"
-  ${If} ${Errors}
-    ClearErrors
-    ${ReadRegQWORD} $0 HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser"
-    ${If} ${Errors}
-      ClearErrors
-      ReadRegDWORD $0 HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Image"
-      ${If} ${Errors}
-        ClearErrors
-        ; New install that hasn't seen this yet; disable by default
-        ${WriteRegQWORD} HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser" 0
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
+!macro ResetLauncherProcessDefaults
+  # By deleting these values, we remove remnants of any force-disable settings
+  # that may have been set during the SHIELD study in 67. Note that this setting
+  # was only intended to distinguish between test and control groups for the
+  # purposes of the study, not as a user preference.
+  DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Launcher"
+  DeleteRegValue HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Browser"
 !macroend
-!define DisableLauncherProcessByDefault "!insertmacro DisableLauncherProcessByDefault"
+!define ResetLauncherProcessDefaults "!insertmacro ResetLauncherProcessDefaults"
 !endif
