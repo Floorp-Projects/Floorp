@@ -6,11 +6,11 @@
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -25,8 +25,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled", BROWSER_SEARCH_PRE
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
-
-XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest", "URLSearchParams"]);
 
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
@@ -113,30 +111,13 @@ var OS_UNSUPPORTED_PARAMS = [
 ];
 
 /**
- * Prefixed to all search debug output.
- */
-const SEARCH_LOG_PREFIX = "*** Search: ";
-
-/**
  * Outputs text to the JavaScript console as well as to stdout.
  */
 function LOG(text) {
   if (loggingEnabled) {
-    dump(SEARCH_LOG_PREFIX + text + "\n");
+    dump("*** Search: " + text + "\n");
     Services.console.logStringMessage(text);
   }
-}
-
-/**
- * Presents an assertion dialog in non-release builds and throws.
- * @param  message
- *         A message to display
- * @param  resultCode
- *         The NS_ERROR_* value to throw.
- * @throws resultCode
- */
-function ERROR(message, resultCode) {
-  throw Components.Exception(message, resultCode);
 }
 
 /**
@@ -356,15 +337,6 @@ function getDir(key, iface) {
 }
 
 /**
- * Gets the current value of the locale.  It's possible for this preference to
- * be localized, so we have to do a little extra work here.  Similar code
- * exists in nsHttpHandler.cpp when building the UA string.
- */
-function getLocale() {
-  return Services.locale.requestedLocale;
-}
-
-/**
  * Sanitizes a name so that it can be used as a filename. If it cannot be
  * sanitized (e.g. no valid characters), then it returns a random name.
  *
@@ -466,7 +438,7 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
     if (name.startsWith("moz:") && engine._isDefault) {
       // {moz:locale} and {moz:distributionID} are common
       if (name == MOZ_PARAM_LOCALE)
-        return getLocale();
+        return Services.locale.requestedLocale;
       if (name == MOZ_PARAM_DIST_ID) {
         return Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID",
                                           Services.appinfo.distributionID || "");
@@ -482,7 +454,7 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
 
     // Handle the less common OpenSearch parameters we're confident about.
     if (name == OS_PARAM_LANGUAGE)
-      return getLocale() || OS_PARAM_LANGUAGE_DEF;
+      return Services.locale.requestedLocale || OS_PARAM_LANGUAGE_DEF;
     if (name == OS_PARAM_OUTPUT_ENCODING)
       return OS_PARAM_OUTPUT_ENCODING_DEF;
 
@@ -710,23 +682,50 @@ EngineURL.prototype = {
 
 /**
  * nsISearchEngine constructor.
- * @param {nsIFile|nsIURI} location
+ *
+ * @param {object} options
+ *   The options for this search engine. At least one of options.name,
+ *   options.fileURI or options.uri are required.
+ * @param {string} [options.name]
+ *   The short name to use for the search engine.
+ * @param {nsIFile} [options.fileURI]
+ *   The file URI that points to the search engine data.
+ * @param {nsIURI|string} [options.uri]
  *   Represents the location of the search engine data file.
- * @param {boolean} isReadOnly
+ * @param {boolean} [options.sanitizeName]
+ *   Only applies when options.name is specified, will santize the name so
+ *   it can be used as a file name, defaults to false.
+ * @param {boolean} options.readOnly
  *   Indicates whether the engine should be treated as read-only.
  */
-function SearchEngine(location, isReadOnly) {
-  this._readOnly = isReadOnly;
+function SearchEngine(options = {}) {
+  if (!("readOnly" in options)) {
+    throw new Error("readOnly missing from options.");
+  }
+  this._readOnly = options.readOnly;
   this._urls = [];
   this._metaData = {};
 
   let file, uri;
-  if (typeof location == "string") {
-    this._shortName = location;
-  } else if (location instanceof Ci.nsIFile) {
-    file = location;
-  } else if (location instanceof Ci.nsIURI) {
-    switch (location.scheme) {
+  if ("name" in options) {
+    if ("sanitizeName" in options && options.sanitizeName) {
+      this._shortName = sanitizeName(options.name);
+    } else {
+      this._shortName = options.name;
+    }
+  } else if ("fileURI" in options && options.fileURI instanceof Ci.nsIFile) {
+    file = options.fileURI;
+  } else if ("uri" in options) {
+    let optionsURI = options.uri;
+    if (typeof optionsURI == "string") {
+      optionsURI = makeURI(optionsURI);
+    }
+    // makeURI can return null if the URI is invalid.
+    if (!optionsURI || !(optionsURI instanceof Ci.nsIURI)) {
+      throw new Components.Exception("options.uri isn't a string nor an nsIURI",
+                                     Cr.NS_ERROR_INVALID_ARG);
+    }
+    switch (optionsURI.scheme) {
       case "https":
       case "http":
       case "ftp":
@@ -734,15 +733,15 @@ function SearchEngine(location, isReadOnly) {
       case "file":
       case "resource":
       case "chrome":
-        uri = location;
+        uri = optionsURI;
         break;
       default:
-        ERROR("Invalid URI passed to the nsISearchEngine constructor",
-              Cr.NS_ERROR_INVALID_ARG);
+        throw Components.Exception("Invalid URI passed to SearchEngine constructor",
+                                   Cr.NS_ERROR_INVALID_ARG);
     }
   } else {
-    ERROR("Engine location is neither a File nor a URI object",
-          Cr.NS_ERROR_INVALID_ARG);
+    throw Components.Exception("Invalid name/fileURI/uri options passed to SearchEngine",
+                               Cr.NS_ERROR_INVALID_ARG);
   }
 
   if (!this._shortName) {
@@ -752,8 +751,8 @@ function SearchEngine(location, isReadOnly) {
     if (file) {
       shortName = file.leafName;
     } else if (uri && uri instanceof Ci.nsIURL) {
-      if (isReadOnly || (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
-                          uri.scheme == "resource")) {
+      if (this._readOnly || (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
+                             uri.scheme == "resource")) {
         shortName = uri.fileName;
       }
     }
@@ -762,7 +761,7 @@ function SearchEngine(location, isReadOnly) {
     }
     this._loadPath = this.getAnonymizedLoadPath(file, uri);
 
-    if (!shortName && !isReadOnly) {
+    if (!shortName && !this._readOnly) {
       // We are in the process of downloading and installing the engine.
       // We'll have the shortName and id once we are done parsing it.
      return;
@@ -776,7 +775,7 @@ function SearchEngine(location, isReadOnly) {
       // They aren't default engines (because they aren't app-shipped), but we
       // still need to give their id an [app] prefix for backward compat.
       this._id = "[app]/" + this._shortName + ".xml";
-    } else if (!isReadOnly) {
+    } else if (!this._readOnly) {
       this._id = "[profile]/" + this._shortName + ".xml";
     } else {
       // If the engine is neither a default one, nor a user-installed one,
@@ -866,23 +865,24 @@ SearchEngine.prototype = {
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
    * disk, and notifies the search service once initialization is complete.
    *
-   * @param uri The uri to load the search plugin from.
+   * @param {string|nsIURI} uri The uri to load the search plugin from.
    */
   _initFromURIAndLoad(uri) {
-    ENSURE_WARN(uri instanceof Ci.nsIURI,
+    let loadURI = uri instanceof Ci.nsIURI ? uri : makeURI(uri);
+    ENSURE_WARN(loadURI,
                 "Must have URI when calling _initFromURIAndLoad!",
                 Cr.NS_ERROR_UNEXPECTED);
 
-    LOG("_initFromURIAndLoad: Downloading engine from: \"" + uri.spec + "\".");
+    LOG("_initFromURIAndLoad: Downloading engine from: \"" + loadURI.spec + "\".");
 
-    var chan = makeChannel(uri);
+    var chan = makeChannel(loadURI);
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
       var lastModified = this._engineToUpdate.getAttr("updatelastmodified");
       if (lastModified)
         chan.setRequestHeader("If-Modified-Since", lastModified, false);
     }
-    this._uri = uri;
+    this._uri = loadURI;
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener);
@@ -2169,4 +2169,4 @@ Submission.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsISearchSubmission]),
 };
 
-var EXPORTED_SYMBOLS = ["SearchEngine"];
+var EXPORTED_SYMBOLS = ["SearchEngine", "getVerificationHash"];

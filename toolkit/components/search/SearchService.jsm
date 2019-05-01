@@ -6,25 +6,30 @@
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+  getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
-  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled", BROWSER_SEARCH_PREF + "log", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled",
+  BROWSER_SEARCH_PREF + "log", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "gGeoSpecificDefaultsEnabled",
+  BROWSER_SEARCH_PREF + "geoSpecificDefaults", false);
+
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
 XPCOMUtils.defineLazyGetter(this, "distroID", () => {
@@ -106,11 +111,6 @@ const MULTI_LOCALE_ENGINES = [
 const DEFAULT_TAG = "default";
 
 /**
- * Prefixed to all search debug output.
- */
-const SEARCH_LOG_PREFIX = "*** Search: ";
-
-/**
  * This is the Remote Settings key that we use to get the ignore lists for
  * engines.
  */
@@ -121,7 +121,7 @@ const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";
  */
 function LOG(text) {
   if (loggingEnabled) {
-    dump(SEARCH_LOG_PREFIX + text + "\n");
+    dump("*** Search: " + text + "\n");
     Services.console.logStringMessage(text);
   }
 }
@@ -214,11 +214,6 @@ function isPartnerBuild() {
   return distroID && !distroID.startsWith("mozilla");
 }
 
-// Method to determine if we should be using geo-specific defaults
-function geoSpecificDefaultsEnabled() {
-  return Services.prefs.getBoolPref("browser.search.geoSpecificDefaults", false);
-}
-
 // A method that tries to determine if this user is in a US geography.
 function isUSTimezone() {
   // Timezone assumptions! We assume that if the system clock's timezone is
@@ -247,7 +242,7 @@ var ensureKnownRegion = async function(ss) {
       // storeRegion if it gets a result (even if that happens after the
       // promise resolves) and fetchRegionDefault.
       await fetchRegion(ss);
-    } else if (geoSpecificDefaultsEnabled()) {
+    } else if (gGeoSpecificDefaultsEnabled) {
       // The territory default we have already fetched may have expired.
       let expired = (ss.getGlobalAttr("searchDefaultExpir") || 0) <= Date.now();
       // If we have a default engine or a list of visible default engines
@@ -405,7 +400,7 @@ function fetchRegion(ss) {
         resolve();
       };
 
-      if (result && geoSpecificDefaultsEnabled()) {
+      if (result && gGeoSpecificDefaultsEnabled) {
         fetchRegionDefault(ss).then(callback).catch(err => {
           Cu.reportError(err);
           callback();
@@ -560,31 +555,6 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
   request.send();
 });
 
-function getVerificationHash(name) {
-  let disclaimer = "By modifying this file, I agree that I am doing so " +
-    "only within $appName itself, using official, user-driven search " +
-    "engine selection processes, and in a way which does not circumvent " +
-    "user consent. I acknowledge that any attempt to change this file " +
-    "from outside of $appName is a malicious act, and will be responded " +
-    "to accordingly.";
-
-  let salt = OS.Path.basename(OS.Constants.Path.profileDir) + name +
-             disclaimer.replace(/\$appName/g, Services.appinfo.name);
-
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-
-  // Data is an array of bytes.
-  let data = converter.convertToByteArray(salt, {});
-  let hasher = Cc["@mozilla.org/security/hash;1"]
-                 .createInstance(Ci.nsICryptoHash);
-  hasher.init(hasher.SHA256);
-  hasher.update(data, data.length);
-
-  return hasher.finish(true);
-}
-
 /**
  * Wrapper function for nsIIOService::newURI.
  * @param {string} urlSpec
@@ -620,30 +590,6 @@ function makeChannel(url) {
 }
 
 /**
- * Gets a directory from the directory service.
- * @param {string} key
- *   The directory service key indicating the directory to get.
- * @param {nsIIDRef} iface
- *   The expected interface type of the directory information.
- * @returns {object}
- */
-function getDir(key, iface) {
-  if (!key)
-    FAIL("getDir requires a directory key!");
-
-  return Services.dirsvc.get(key, iface || Ci.nsIFile);
-}
-
-/**
- * Gets the current value of the locale.  It's possible for this preference to
- * be localized, so we have to do a little extra work here.  Similar code
- * exists in nsHttpHandler.cpp when building the UA string.
- */
-function getLocale() {
-  return Services.locale.requestedLocale;
-}
-
-/**
  * Wrapper for nsIPrefBranch::getComplexValue.
  * @param {string} prefName
  *   The name of the pref to get.
@@ -659,30 +605,6 @@ function getLocalizedPref(prefName, defaultValue) {
   } catch (ex) {}
 
   return defaultValue;
-}
-
-/**
- * Sanitizes a name so that it can be used as a filename. If it cannot be
- * sanitized (e.g. no valid characters), then it returns a random name.
- *
- * @param {string} name
- *  The name to be sanitized.
- * @returns {string}
- *  The sanitized name.
- */
-function sanitizeName(name) {
-  const maxLength = 60;
-  const minLength = 1;
-  var result = name.toLowerCase();
-  result = result.replace(/\s+/g, "-");
-  result = result.replace(/[^-a-z0-9]/g, "");
-
-  // Use a random name if our input had no valid characters.
-  if (result.length < minLength)
-    result = Math.random().toString(36).replace(/^.*\./, "");
-
-  // Force max length.
-  return result.substring(0, maxLength);
 }
 
 /**
@@ -1013,7 +935,7 @@ SearchService.prototype = {
       this._batchTask.disarm();
 
     let cache = {};
-    let locale = getLocale();
+    let locale = Services.locale.requestedLocale;
     let buildID = Services.appinfo.platformBuildID;
     let appVersion = Services.appinfo.version;
 
@@ -1068,8 +990,8 @@ SearchService.prototype = {
     let distDirs = [];
     let locations;
     try {
-      locations = getDir(NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
-                         Ci.nsISimpleEnumerator);
+      locations = Services.dirsvc.get(NS_APP_DISTRIBUTION_SEARCH_DIR_LIST,
+                                      Ci.nsISimpleEnumerator);
     } catch (e) {
       // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
       // so this throws during unit tests (but not xpcshell tests).
@@ -1116,7 +1038,7 @@ SearchService.prototype = {
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache = !cache.engines ||
                        cache.version != CACHE_VERSION ||
-                       cache.locale != getLocale() ||
+                       cache.locale != Services.locale.requestedLocale ||
                        cache.buildID != buildID ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                        this._visibleDefaultEngines.some(notInCacheVisibleEngines);
@@ -1337,7 +1259,7 @@ SearchService.prototype = {
         throw new Error("no engine in the file");
       // Reset search default expiration on major releases
       if (json.appVersion != Services.appinfo.version &&
-          geoSpecificDefaultsEnabled() &&
+          gGeoSpecificDefaultsEnabled &&
           json.metaData) {
         json.metaData.searchDefaultExpir = 0;
       }
@@ -1460,7 +1382,10 @@ SearchService.prototype = {
 
   _loadEngineFromCache(json) {
     try {
-      let engine = new SearchEngine(json._shortName, json._readOnly == undefined);
+      let engine = new SearchEngine({
+        name: json._shortName,
+        readOnly: json._readOnly == undefined,
+      });
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
     } catch (ex) {
@@ -1504,7 +1429,10 @@ SearchService.prototype = {
       try {
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(osfile.path);
-        addedEngine = new SearchEngine(file, false);
+        addedEngine = new SearchEngine({
+          fileURI: file,
+          readOnly: false,
+        });
         await addedEngine._initFromFile(file);
         engines.push(addedEngine);
       } catch (ex) {
@@ -1530,7 +1458,10 @@ SearchService.prototype = {
       try {
         LOG("_loadFromChromeURLs: loading engine from chrome url: " + url);
         let uri = Services.io.newURI(APP_SEARCH_PREFIX + url + ".xml");
-        let engine = new SearchEngine(uri, true);
+        let engine = new SearchEngine({
+          uri,
+          readOnly: true,
+        });
         await engine._initFromURI(uri);
         // If there is an existing engine with the same name then update that engine.
         // Only do this during reloads so it doesnt interfere with distribution
@@ -2060,7 +1991,11 @@ SearchService.prototype = {
       }
     }
 
-    let newEngine = new SearchEngine(sanitizeName(name), isBuiltin);
+    let newEngine = new SearchEngine({
+      name,
+      readOnly: isBuiltin,
+      sanitizeName: true,
+    });
     newEngine._initFromMetadata(name, params);
     newEngine._loadPath = "[other]addEngineWithDetails";
     if (params.extensionID) {
@@ -2173,8 +2108,10 @@ SearchService.prototype = {
     await this.init(true);
     let errCode;
     try {
-      var uri = makeURI(engineURL);
-      var engine = new SearchEngine(uri, false);
+      var engine = new SearchEngine({
+        uri: engineURL,
+        readOnly: false,
+      });
       engine._setIcon(iconURL, false);
       engine._confirm = confirm;
       if (extensionID) {
@@ -2186,7 +2123,7 @@ SearchService.prototype = {
           // Clear the reference to the callback now that it's been invoked.
           engine._installCallback = null;
         };
-        engine._initFromURIAndLoad(uri);
+        engine._initFromURIAndLoad(engineURL);
       });
       if (errCode) {
         throw errCode;
@@ -2928,7 +2865,10 @@ var engineUpdateService = {
       }
 
       ULOG("updating " + engine.name + " from " + updateURI.spec);
-      testEngine = new SearchEngine(updateURI, false);
+      testEngine = new SearchEngine({
+        uri: updateURI,
+        readOnly: false,
+      });
       testEngine._engineToUpdate = engine;
       testEngine._initFromURIAndLoad(updateURI);
     } else {
