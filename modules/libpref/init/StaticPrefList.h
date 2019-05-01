@@ -646,6 +646,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "full-screen-api.allow-trusted-requests-only",
+   full_screen_api_allow_trusted_requests_only,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Preference stylesheet prefs.
 //---------------------------------------------------------------------------
