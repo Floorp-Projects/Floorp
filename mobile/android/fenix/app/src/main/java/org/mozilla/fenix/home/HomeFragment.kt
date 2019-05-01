@@ -22,8 +22,10 @@ import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -103,10 +105,19 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         setupHomeMenu()
 
-        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
-            requireContext()
-        ).let {
-            BitmapDrawable(resources, it.icon)
+        launch(Dispatchers.Default) {
+            val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
+
+            val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
+                requireContext()
+            ).let {
+                BitmapDrawable(resources, it.icon)
+            }
+            searchIcon.setBounds(0, 0, iconSize, iconSize)
+
+            runBlocking(Dispatchers.Main) {
+                view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
+            }
         }
 
         view.menuButton.setOnClickListener {
@@ -115,10 +126,6 @@ class HomeFragment : Fragment(), CoroutineScope {
                 orientation = BrowserMenu.Orientation.DOWN
             )
         }
-
-        val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
-        searchIcon.setBounds(0, 0, iconSize, iconSize)
-        view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
         val roundToInt = (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {

@@ -17,6 +17,11 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.ext.components
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -160,35 +165,47 @@ private val Event.wrapper
 
 class GleanMetricsService(private val context: Context) : MetricsService {
     private var initialized = false
+    /*
+     * We need to keep an eye on when we are done starting so that we don't
+     * accidentally stop ourselves before we've ever started.
+     */
+    private lateinit var starter: Job
 
     override fun start() {
-        Glean.setUploadEnabled(true)
+
         if (initialized) return
-
-        Glean.initialize(context)
-
-        Metrics.apply {
-            defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
-            defaultMozBrowser.set(MozillaProductDetector.getMozillaBrowserDefault(context) ?: "")
-            mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
-        }
-
-        SearchDefaultEngine.apply {
-            val defaultEngine = context
-                .components
-                .search
-                .searchEngineManager
-                .defaultSearchEngine ?: return@apply
-
-            code.set(defaultEngine.identifier)
-            name.set(defaultEngine.name)
-            submissionUrl.set(defaultEngine.buildSearchUrl(""))
-        }
-
         initialized = true
+
+        starter = CoroutineScope(Dispatchers.Default).launch {
+            Glean.initialize(context)
+
+            Metrics.apply {
+                defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
+                defaultMozBrowser.set(MozillaProductDetector.getMozillaBrowserDefault(context) ?: "")
+                mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+            }
+
+            SearchDefaultEngine.apply {
+                val defaultEngine = context
+                    .components
+                    .search
+                    .searchEngineManager
+                    .defaultSearchEngine ?: return@apply
+
+                code.set(defaultEngine.identifier)
+                name.set(defaultEngine.name)
+                submissionUrl.set(defaultEngine.buildSearchUrl(""))
+
+                Glean.setUploadEnabled(true)
+            }
+        }
     }
 
     override fun stop() {
+        /*
+         * We cannot stop until we're done starting.
+         */
+        runBlocking { starter.join(); }
         Glean.setUploadEnabled(false)
     }
 
