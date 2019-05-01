@@ -46,7 +46,7 @@ impl Default for ChasePrimitive {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameBuilderConfig {
@@ -58,6 +58,8 @@ pub struct FrameBuilderConfig {
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
     pub gpu_supports_fast_clears: bool,
+    pub gpu_supports_advanced_blend: bool,
+    pub advanced_blend_is_coherent: bool,
 }
 
 /// A set of common / global resources that are retained between
@@ -221,6 +223,8 @@ impl FrameBuilder {
                 enable_picture_caching: false,
                 testing: false,
                 gpu_supports_fast_clears: false,
+                gpu_supports_advanced_blend: false,
+                advanced_blend_is_coherent: false,
             },
         }
     }
@@ -584,6 +588,8 @@ impl FrameBuilder {
                     prim_store: &self.prim_store,
                     resource_cache,
                     use_dual_source_blending,
+                    use_advanced_blending: self.config.gpu_supports_advanced_blend,
+                    break_advanced_blend_batches: !self.config.advanced_blend_is_coherent,
                     clip_scroll_tree,
                     data_stores,
                     surfaces: &surfaces,

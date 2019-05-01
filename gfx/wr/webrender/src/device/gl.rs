@@ -4,7 +4,7 @@
 
 use super::super::shader_source::SHADERS;
 use api::{ColorF, ImageDescriptor, ImageFormat, MemoryReport};
-use api::{TextureTarget, VoidPtrToSizeFn};
+use api::{MixBlendMode, TextureTarget, VoidPtrToSizeFn};
 use api::units::*;
 use euclid::Transform3D;
 use gleam::gl;
@@ -3050,6 +3050,31 @@ impl Device {
     pub fn set_blend_mode_show_overdraw(&self) {
         self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
         self.gl.blend_equation(gl::FUNC_ADD);
+    }
+
+    pub fn set_blend_mode_advanced(&self, mode: MixBlendMode) {
+        self.gl.blend_equation(match mode {
+            MixBlendMode::Normal => {
+                // blend factor only make sense for the normal mode
+                self.gl.blend_func_separate(gl::ZERO, gl::SRC_COLOR, gl::ZERO, gl::SRC_ALPHA);
+                gl::FUNC_ADD
+            },
+            MixBlendMode::Multiply => gl::MULTIPLY_KHR,
+            MixBlendMode::Screen => gl::SCREEN_KHR,
+            MixBlendMode::Overlay => gl::OVERLAY_KHR,
+            MixBlendMode::Darken => gl::DARKEN_KHR,
+            MixBlendMode::Lighten => gl::LIGHTEN_KHR,
+            MixBlendMode::ColorDodge => gl::COLORDODGE_KHR,
+            MixBlendMode::ColorBurn => gl::COLORBURN_KHR,
+            MixBlendMode::HardLight => gl::HARDLIGHT_KHR,
+            MixBlendMode::SoftLight => gl::SOFTLIGHT_KHR,
+            MixBlendMode::Difference => gl::DIFFERENCE_KHR,
+            MixBlendMode::Exclusion => gl::EXCLUSION_KHR,
+            MixBlendMode::Hue => gl::HSL_HUE_KHR,
+            MixBlendMode::Saturation => gl::HSL_SATURATION_KHR,
+            MixBlendMode::Color => gl::HSL_COLOR_KHR,
+            MixBlendMode::Luminosity => gl::HSL_LUMINOSITY_KHR,
+        });
     }
 
     pub fn supports_extension(&self, extension: &str) -> bool {
