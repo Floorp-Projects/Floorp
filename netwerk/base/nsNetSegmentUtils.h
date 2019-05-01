@@ -10,8 +10,8 @@
 /**
  * applies defaults to segment params in a consistent way.
  */
-static inline void net_ResolveSegmentParams(uint32_t &segsize,
-                                            uint32_t &segcount) {
+static inline void net_ResolveSegmentParams(uint32_t& segsize,
+                                            uint32_t& segcount) {
   if (!segsize) segsize = mozilla::net::nsIOService::gDefaultSegmentSize;
 
   if (!segcount) segcount = mozilla::net::nsIOService::gDefaultSegmentCount;

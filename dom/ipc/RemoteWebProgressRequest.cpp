@@ -10,8 +10,8 @@ namespace dom {
 NS_IMPL_ISUPPORTS(RemoteWebProgressRequest, nsIRequest, nsIChannel,
                   nsIClassifiedChannel, nsIRemoteWebProgressRequest)
 
-NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI *aURI, nsIURI *aOriginalURI,
-                                             const nsACString &aMatchedList) {
+NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI* aURI, nsIURI* aOriginalURI,
+                                             const nsACString& aMatchedList) {
   mURI = aURI;
   mOriginalURI = aOriginalURI;
   mMatchedList = aMatchedList;
@@ -21,67 +21,67 @@ NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI *aURI, nsIURI *aOriginalURI,
 
 // nsIChannel methods
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetOriginalURI(nsIURI **aOriginalURI) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetOriginalURI(nsIURI** aOriginalURI) {
   NS_ENSURE_ARG_POINTER(aOriginalURI);
   NS_ADDREF(*aOriginalURI = mOriginalURI);
   return NS_OK;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::SetOriginalURI(nsIURI *aOriginalURI) {
+NS_IMETHODIMP RemoteWebProgressRequest::SetOriginalURI(nsIURI* aOriginalURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetURI(nsIURI **aURI) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetURI(nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ADDREF(*aURI = mURI);
   return NS_OK;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetOwner(nsISupports **aOwner) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetOwner(nsISupports** aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::SetOwner(nsISupports *aOwner) {
+NS_IMETHODIMP RemoteWebProgressRequest::SetOwner(nsISupports* aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetNotificationCallbacks(
-    nsIInterfaceRequestor **aNotificationCallbacks) {
+    nsIInterfaceRequestor** aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::SetNotificationCallbacks(
-    nsIInterfaceRequestor *aNotificationCallbacks) {
+    nsIInterfaceRequestor* aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetSecurityInfo(
-    nsISupports **aSecurityInfo) {
+    nsISupports** aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentType(
-    nsACString &aContentType) {
+    nsACString& aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::SetContentType(
-    const nsACString &aContentType) {
+    const nsACString& aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentCharset(
-    nsACString &aContentCharset) {
+    nsACString& aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::SetContentCharset(
-    const nsACString &aContentCharset) {
+    const nsACString& aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentLength(
-    int64_t *aContentLength) {
+    int64_t* aContentLength) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -90,17 +90,17 @@ NS_IMETHODIMP RemoteWebProgressRequest::SetContentLength(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::Open(nsIInputStream **_retval) {
+NS_IMETHODIMP RemoteWebProgressRequest::Open(nsIInputStream** _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::AsyncOpen(
-    nsIStreamListener *aListener) {
+    nsIStreamListener* aListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentDisposition(
-    uint32_t *aContentDisposition) {
+    uint32_t* aContentDisposition) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -110,53 +110,53 @@ NS_IMETHODIMP RemoteWebProgressRequest::SetContentDisposition(
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentDispositionFilename(
-    nsAString &aContentDispositionFilename) {
+    nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::SetContentDispositionFilename(
-    const nsAString &aContentDispositionFilename) {
+    const nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetContentDispositionHeader(
-    nsACString &aContentDispositionHeader) {
+    nsACString& aContentDispositionHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetLoadInfo(nsILoadInfo **aLoadInfo) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetLoadInfo(nsILoadInfo** aLoadInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+NS_IMETHODIMP RemoteWebProgressRequest::SetLoadInfo(nsILoadInfo* aLoadInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetIsDocument(bool *aIsDocument) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetIsDocument(bool* aIsDocument) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIClassifiedChannel methods
 
 NS_IMETHODIMP RemoteWebProgressRequest::SetMatchedInfo(
-    const nsACString &aList, const nsACString &aProvider,
-    const nsACString &aFullHash) {
+    const nsACString& aList, const nsACString& aProvider,
+    const nsACString& aFullHash) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedList(
-    nsACString &aMatchedList) {
+    nsACString& aMatchedList) {
   aMatchedList = mMatchedList;
   return NS_OK;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedProvider(
-    nsACString &aMatchedProvider) {
+    nsACString& aMatchedProvider) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedFullHash(
-    nsACString &aMatchedFullHash) {
+    nsACString& aMatchedFullHash) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -176,15 +176,15 @@ NS_IMETHODIMP RemoteWebProgressRequest::GetMatchedTrackingFullHashes(
 }
 // nsIRequest methods
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetName(nsACString &aName) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetName(nsACString& aName) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::IsPending(bool *_retval) {
+NS_IMETHODIMP RemoteWebProgressRequest::IsPending(bool* _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetStatus(nsresult *aStatus) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetStatus(nsresult* aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -201,15 +201,15 @@ NS_IMETHODIMP RemoteWebProgressRequest::Resume(void) {
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetLoadGroup(
-    nsILoadGroup **aLoadGroup) {
+    nsILoadGroup** aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::SetLoadGroup(nsILoadGroup *aLoadGroup) {
+NS_IMETHODIMP RemoteWebProgressRequest::SetLoadGroup(nsILoadGroup* aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP RemoteWebProgressRequest::GetLoadFlags(nsLoadFlags *aLoadFlags) {
+NS_IMETHODIMP RemoteWebProgressRequest::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

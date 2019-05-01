@@ -53,10 +53,10 @@ class nsRemoteClient {
    * @return true if succeeded, false if no running instance was found.
    *
    */
-  virtual nsresult SendCommandLine(const char *aProgram, const char *aProfile,
-                                   int32_t argc, char **argv,
-                                   const char *aDesktopStartupID,
-                                   char **aResponse, bool *aSucceeded) = 0;
+  virtual nsresult SendCommandLine(const char* aProgram, const char* aProfile,
+                                   int32_t argc, char** argv,
+                                   const char* aDesktopStartupID,
+                                   char** aResponse, bool* aSucceeded) = 0;
 };
 
 #endif  // nsRemoteClient_h__

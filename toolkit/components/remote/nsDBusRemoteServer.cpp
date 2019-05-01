@@ -27,7 +27,7 @@
 
 #include <dlfcn.h>
 
-const char *introspect_template =
+const char* introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
     "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\";>\n"
@@ -44,8 +44,8 @@ const char *introspect_template =
     " </interface>\n"
     "</node>\n";
 
-DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage *msg) {
-  DBusMessage *reply;
+DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage* msg) {
+  DBusMessage* reply;
 
   reply = dbus_message_new_method_return(msg);
   if (!reply) return DBUS_HANDLER_RESULT_NEED_MEMORY;
@@ -53,7 +53,7 @@ DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage *msg) {
   nsAutoCString introspect_xml;
   introspect_xml = nsPrintfCString(introspect_template, mAppName.get());
 
-  const char *message = introspect_xml.get();
+  const char* message = introspect_xml.get();
   dbus_message_append_args(reply, DBUS_TYPE_STRING, &message,
                            DBUS_TYPE_INVALID);
 
@@ -63,9 +63,9 @@ DBusHandlerResult nsDBusRemoteServer::Introspect(DBusMessage *msg) {
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-DBusHandlerResult nsDBusRemoteServer::OpenURL(DBusMessage *msg) {
-  DBusMessage *reply = nullptr;
-  const char *commandLine;
+DBusHandlerResult nsDBusRemoteServer::OpenURL(DBusMessage* msg) {
+  DBusMessage* reply = nullptr;
+  const char* commandLine;
   int length;
 
   if (!dbus_message_get_args(msg, nullptr, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE,
@@ -90,11 +90,11 @@ DBusHandlerResult nsDBusRemoteServer::OpenURL(DBusMessage *msg) {
 }
 
 DBusHandlerResult nsDBusRemoteServer::HandleDBusMessage(
-    DBusConnection *aConnection, DBusMessage *msg) {
+    DBusConnection* aConnection, DBusMessage* msg) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
 
-  const char *method = dbus_message_get_member(msg);
-  const char *iface = dbus_message_get_interface(msg);
+  const char* method = dbus_message_get_member(msg);
+  const char* iface = dbus_message_get_interface(msg);
 
   if ((strcmp("Introspect", method) == 0) &&
       (strcmp("org.freedesktop.DBus.Introspectable", iface) == 0)) {
@@ -112,19 +112,19 @@ DBusHandlerResult nsDBusRemoteServer::HandleDBusMessage(
   return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-void nsDBusRemoteServer::UnregisterDBusInterface(DBusConnection *aConnection) {
+void nsDBusRemoteServer::UnregisterDBusInterface(DBusConnection* aConnection) {
   NS_ASSERTION(mConnection == aConnection, "Wrong D-Bus connection.");
   // Not implemented
 }
 
-static DBusHandlerResult message_handler(DBusConnection *conn, DBusMessage *msg,
-                                         void *user_data) {
-  auto interface = static_cast<nsDBusRemoteServer *>(user_data);
+static DBusHandlerResult message_handler(DBusConnection* conn, DBusMessage* msg,
+                                         void* user_data) {
+  auto interface = static_cast<nsDBusRemoteServer*>(user_data);
   return interface->HandleDBusMessage(conn, msg);
 }
 
-static void unregister(DBusConnection *conn, void *user_data) {
-  auto interface = static_cast<nsDBusRemoteServer *>(user_data);
+static void unregister(DBusConnection* conn, void* user_data) {
+  auto interface = static_cast<nsDBusRemoteServer*>(user_data);
   interface->UnregisterDBusInterface(conn);
 }
 
@@ -133,8 +133,8 @@ static DBusObjectPathVTable remoteHandlersTable = {
     .message_function = message_handler,
 };
 
-nsresult nsDBusRemoteServer::Startup(const char *aAppName,
-                                     const char *aProfileName) {
+nsresult nsDBusRemoteServer::Startup(const char* aAppName,
+                                     const char* aProfileName) {
   if (mConnection && dbus_connection_get_is_connected(mConnection)) {
     // We're already connected so we don't need to reconnect
     return NS_ERROR_ALREADY_INITIALIZED;
@@ -169,7 +169,7 @@ nsresult nsDBusRemoteServer::Startup(const char *aAppName,
   if (busName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
     busName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
-  static auto sDBusValidateBusName = (bool (*)(const char *, DBusError *))dlsym(
+  static auto sDBusValidateBusName = (bool (*)(const char*, DBusError*))dlsym(
       RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
     return NS_ERROR_FAILURE;

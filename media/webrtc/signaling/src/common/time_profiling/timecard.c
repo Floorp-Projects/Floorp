@@ -9,25 +9,25 @@
 #include "timecard.h"
 #include "mozilla/mozalloc.h"
 
-Timecard *create_timecard() {
-  Timecard *tc = moz_xcalloc(1, sizeof(Timecard));
+Timecard* create_timecard() {
+  Timecard* tc = moz_xcalloc(1, sizeof(Timecard));
   tc->entries_allocated = TIMECARD_INITIAL_TABLE_SIZE;
   tc->entries = moz_xcalloc(tc->entries_allocated, sizeof(TimecardEntry));
   tc->start_time = PR_Now();
   return tc;
 }
 
-void destroy_timecard(Timecard *tc) {
+void destroy_timecard(Timecard* tc) {
   free(tc->entries);
   free(tc);
 }
 
-void stamp_timecard(Timecard *tc, const char *event, const char *file,
-                    unsigned int line, const char *function) {
-  TimecardEntry *entry = NULL;
+void stamp_timecard(Timecard* tc, const char* event, const char* file,
+                    unsigned int line, const char* function) {
+  TimecardEntry* entry = NULL;
 
   /* Trim the path component from the filename */
-  const char *last_slash = file;
+  const char* last_slash = file;
   while (*file) {
     if (*file == '/' || *file == '\\') {
       last_slash = file;
@@ -56,9 +56,9 @@ void stamp_timecard(Timecard *tc, const char *event, const char *file,
   tc->curr_entry++;
 }
 
-void print_timecard(Timecard *tc) {
+void print_timecard(Timecard* tc) {
   size_t i;
-  TimecardEntry *entry;
+  TimecardEntry* entry;
   size_t event_width = 5;
   size_t file_width = 4;
   size_t function_width = 8;

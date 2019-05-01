@@ -9,10 +9,10 @@
 
 #include "mozilla/gfx/Point.h"
 
-void ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
-                                   int32_t aSourceStride, uint8_t *aDestData,
+void ComputesRGBLuminanceMask_NEON(const uint8_t* aSourceData,
+                                   int32_t aSourceStride, uint8_t* aDestData,
                                    int32_t aDestStride,
-                                   const mozilla::gfx::IntSize &aSize,
+                                   const mozilla::gfx::IntSize& aSize,
                                    float aOpacity);
 
 #endif /* __LUMINANCENEON_H__ */

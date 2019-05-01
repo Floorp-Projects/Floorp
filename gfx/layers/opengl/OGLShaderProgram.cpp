@@ -26,9 +26,9 @@ using namespace std;
 #define GAUSSIAN_KERNEL_HALF_WIDTH 11
 #define GAUSSIAN_KERNEL_STEP 0.2
 
-static void AddUniforms(ProgramProfileOGL &aProfile) {
+static void AddUniforms(ProgramProfileOGL& aProfile) {
   // This needs to be kept in sync with the KnownUniformName enum
-  static const char *sKnownUniformNames[] = {"uLayerTransform",
+  static const char* sKnownUniformNames[] = {"uLayerTransform",
                                              "uLayerTransformInverse",
                                              "uMaskTransform",
                                              "uBackdropTransform",
@@ -367,8 +367,8 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
     fs << "varying vec2 vBackdropCoord;" << endl;
   }
 
-  const char *sampler2D = "sampler2D";
-  const char *texture2D = "texture2D";
+  const char* sampler2D = "sampler2D";
+  const char* texture2D = "texture2D";
 
   if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
     fs << "uniform vec2 uTexCoordMultiplier;" << endl;
@@ -380,8 +380,8 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
     texture2D = "texture2DRect";
   }
 
-  const char *maskSampler2D = "sampler2D";
-  const char *maskTexture2D = "texture2D";
+  const char* maskSampler2D = "sampler2D";
+  const char* maskTexture2D = "texture2D";
 
   if (aConfig.mFeatures & ENABLE_MASK &&
       aConfig.mFeatures & ENABLE_MASK_TEXTURE_RECT) {
@@ -616,8 +616,8 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
   return result;
 }
 
-void ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL &aConfig,
-                                        std::ostringstream &fs) {
+void ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL& aConfig,
+                                        std::ostringstream& fs) {
   // From the "Compositing and Blending Level 1" spec.
   // Generate helper functions first.
   switch (aConfig.mCompositionOp) {
@@ -833,8 +833,8 @@ void ProgramProfileOGL::BuildMixBlender(const ShaderConfigOGL &aConfig,
   fs << "}" << endl;
 }
 
-ShaderProgramOGL::ShaderProgramOGL(GLContext *aGL,
-                                   const ProgramProfileOGL &aProfile)
+ShaderProgramOGL::ShaderProgramOGL(GLContext* aGL,
+                                   const ProgramProfileOGL& aProfile)
     : mGL(aGL), mProgram(0), mProfile(aProfile), mProgramState(STATE_NEW) {}
 
 ShaderProgramOGL::~ShaderProgramOGL() {
@@ -878,14 +878,14 @@ bool ShaderProgramOGL::Initialize() {
 }
 
 GLint ShaderProgramOGL::CreateShader(GLenum aShaderType,
-                                     const char *aShaderSource) {
+                                     const char* aShaderSource) {
   GLint success, len = 0;
 
   GLint sh = mGL->fCreateShader(aShaderType);
-  mGL->fShaderSource(sh, 1, (const GLchar **)&aShaderSource, nullptr);
+  mGL->fShaderSource(sh, 1, (const GLchar**)&aShaderSource, nullptr);
   mGL->fCompileShader(sh);
   mGL->fGetShaderiv(sh, LOCAL_GL_COMPILE_STATUS, &success);
-  mGL->fGetShaderiv(sh, LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
+  mGL->fGetShaderiv(sh, LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&len);
   /* Even if compiling is successful, there may still be warnings.  Print them
    * in a debug build.  The > 10 is to catch silly compilers that might put
    * some whitespace in the log but otherwise leave it empty.
@@ -897,7 +897,7 @@ GLint ShaderProgramOGL::CreateShader(GLenum aShaderType,
   ) {
     nsAutoCString log;
     log.SetLength(len);
-    mGL->fGetShaderInfoLog(sh, len, (GLint *)&len, (char *)log.BeginWriting());
+    mGL->fGetShaderInfoLog(sh, len, (GLint*)&len, (char*)log.BeginWriting());
     log.Truncate(len);
 
     if (!success) {
@@ -919,8 +919,8 @@ GLint ShaderProgramOGL::CreateShader(GLenum aShaderType,
   return sh;
 }
 
-bool ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
-                                     const char *aFragmentShaderString) {
+bool ShaderProgramOGL::CreateProgram(const char* aVertexShaderString,
+                                     const char* aFragmentShaderString) {
   GLuint vertexShader =
       CreateShader(LOCAL_GL_VERTEX_SHADER, aVertexShaderString);
   GLuint fragmentShader =
@@ -932,7 +932,7 @@ bool ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   mGL->fAttachShader(result, vertexShader);
   mGL->fAttachShader(result, fragmentShader);
 
-  for (Pair<nsCString, GLuint> &attribute : mProfile.mAttributes) {
+  for (Pair<nsCString, GLuint>& attribute : mProfile.mAttributes) {
     mGL->fBindAttribLocation(result, attribute.second(),
                              attribute.first().get());
   }
@@ -941,7 +941,7 @@ bool ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
 
   GLint success, len;
   mGL->fGetProgramiv(result, LOCAL_GL_LINK_STATUS, &success);
-  mGL->fGetProgramiv(result, LOCAL_GL_INFO_LOG_LENGTH, (GLint *)&len);
+  mGL->fGetProgramiv(result, LOCAL_GL_INFO_LOG_LENGTH, (GLint*)&len);
   /* Even if linking is successful, there may still be warnings.  Print them
    * in a debug build.  The > 10 is to catch silly compilers that might put
    * some whitespace in the log but otherwise leave it empty.
@@ -953,8 +953,8 @@ bool ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   ) {
     nsAutoCString log;
     log.SetLength(len);
-    mGL->fGetProgramInfoLog(result, len, (GLint *)&len,
-                            (char *)log.BeginWriting());
+    mGL->fGetProgramInfoLog(result, len, (GLint*)&len,
+                            (char*)log.BeginWriting());
 
     if (!success) {
       printf_stderr("=== PROGRAM LINKING FAILED ===\n");
@@ -1011,7 +1011,7 @@ void ShaderProgramOGL::SetBlurRadius(float aRX, float aRY) {
 }
 
 void ShaderProgramOGL::SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace) {
-  const float *yuvToRgb =
+  const float* yuvToRgb =
       gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);
 }

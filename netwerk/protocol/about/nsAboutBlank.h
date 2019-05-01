@@ -16,7 +16,7 @@ class nsAboutBlank : public nsIAboutModule {
 
   nsAboutBlank() = default;
 
-  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
  private:
   virtual ~nsAboutBlank() = default;

@@ -24,8 +24,8 @@ class StatementJSHelper : public nsIXPCScriptable {
   NS_DECL_NSIXPCSCRIPTABLE
 
  private:
-  nsresult getRow(Statement *, JSContext *, JSObject *, JS::Value *);
-  nsresult getParams(Statement *, JSContext *, JSObject *, JS::Value *);
+  nsresult getRow(Statement*, JSContext*, JSObject*, JS::Value*);
+  nsresult getParams(Statement*, JSContext*, JSObject*, JS::Value*);
 };
 
 /**
@@ -38,9 +38,9 @@ class StatementParamsHolder final : public nsISupports {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit StatementParamsHolder(StatementParams *aParams) : mParams(aParams) {}
+  explicit StatementParamsHolder(StatementParams* aParams) : mParams(aParams) {}
 
-  StatementParams *Get() const {
+  StatementParams* Get() const {
     MOZ_ASSERT(mParams);
     return mParams;
   }
@@ -55,9 +55,9 @@ class StatementRowHolder final : public nsISupports {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit StatementRowHolder(StatementRow *aRow) : mRow(aRow) {}
+  explicit StatementRowHolder(StatementRow* aRow) : mRow(aRow) {}
 
-  StatementRow *Get() const {
+  StatementRow* Get() const {
     MOZ_ASSERT(mRow);
     return mRow;
   }

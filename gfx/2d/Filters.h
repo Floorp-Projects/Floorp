@@ -374,10 +374,10 @@ class FilterNode : public external::AtomicRefCounted<FilterNode> {
 
   virtual FilterBackend GetBackendType() = 0;
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) {
+  virtual void SetInput(uint32_t aIndex, SourceSurface* aSurface) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) {
+  virtual void SetInput(uint32_t aIndex, FilterNode* aFilter) {
     MOZ_CRASH("GFX: FilterNode");
   }
 
@@ -390,37 +390,37 @@ class FilterNode : public external::AtomicRefCounted<FilterNode> {
   virtual void SetAttribute(uint32_t aIndex, Float) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Size &) {
+  virtual void SetAttribute(uint32_t aIndex, const Size&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &) {
+  virtual void SetAttribute(uint32_t aIndex, const IntSize&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &) {
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Rect &) {
+  virtual void SetAttribute(uint32_t aIndex, const Rect&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &) {
+  virtual void SetAttribute(uint32_t aIndex, const IntRect&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Point &) {
+  virtual void SetAttribute(uint32_t aIndex, const Point&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &) {
+  virtual void SetAttribute(uint32_t aIndex, const Matrix&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &) {
+  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &) {
+  virtual void SetAttribute(uint32_t aIndex, const Point3D&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Color &) {
+  virtual void SetAttribute(uint32_t aIndex, const Color&) {
     MOZ_CRASH("GFX: FilterNode");
   }
-  virtual void SetAttribute(uint32_t aIndex, const Float *aFloat,
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat,
                             uint32_t aSize) {
     MOZ_CRASH("GFX: FilterNode");
   }
@@ -428,8 +428,8 @@ class FilterNode : public external::AtomicRefCounted<FilterNode> {
   /** Maps a rectangle in filter space back to a rectangle in the space of
    * aSourceNode's first input. aSourceNode should not have an input
    * assigned when calling this function. */
-  virtual IntRect MapRectToSource(const IntRect &aRect, const IntRect &aMax,
-                                  FilterNode *aSourceNode) {
+  virtual IntRect MapRectToSource(const IntRect& aRect, const IntRect& aMax,
+                                  FilterNode* aSourceNode) {
     return aMax;
   }
 

@@ -69,7 +69,7 @@ class SandboxSettings final : public mozISandboxSettings {
 NS_IMPL_ISUPPORTS(SandboxSettings, mozISandboxSettings)
 
 NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(
-    int32_t *aRetVal) {
+    int32_t* aRetVal) {
   *aRetVal = mozilla::GetEffectiveContentSandboxLevel();
   return NS_OK;
 }

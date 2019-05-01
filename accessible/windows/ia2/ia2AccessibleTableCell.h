@@ -17,48 +17,48 @@ class TableCellAccessible;
 class ia2AccessibleTableCell : public IAccessibleTableCell {
  public:
   // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void **);
+  STDMETHODIMP QueryInterface(REFIID, void**);
 
   // IAccessibleTableCell
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_table(
-      /* [out, retval] */ IUnknown **table);
+      /* [out, retval] */ IUnknown** table);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_columnExtent(
-      /* [out, retval] */ long *nColumnsSpanned);
+      /* [out, retval] */ long* nColumnsSpanned);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_columnHeaderCells(
-      /* [out, size_is(,*nColumnHeaderCells,)] */ IUnknown ***cellAccessibles,
-      /* [out, retval] */ long *nColumnHeaderCells);
+      /* [out, size_is(,*nColumnHeaderCells,)] */ IUnknown*** cellAccessibles,
+      /* [out, retval] */ long* nColumnHeaderCells);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_columnIndex(
-      /* [out, retval] */ long *columnIndex);
+      /* [out, retval] */ long* columnIndex);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_rowExtent(
-      /* [out, retval] */ long *nRowsSpanned);
+      /* [out, retval] */ long* nRowsSpanned);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_rowHeaderCells(
-      /* [out, size_is(,*nRowHeaderCells,)] */ IUnknown ***cellAccessibles,
-      /* [out, retval] */ long *nRowHeaderCells);
+      /* [out, size_is(,*nRowHeaderCells,)] */ IUnknown*** cellAccessibles,
+      /* [out, retval] */ long* nRowHeaderCells);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_rowIndex(
-      /* [out, retval] */ long *rowIndex);
+      /* [out, retval] */ long* rowIndex);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_rowColumnExtents(
-      /* [out] */ long *row,
-      /* [out] */ long *column,
-      /* [out] */ long *rowExtents,
-      /* [out] */ long *columnExtents,
-      /* [out, retval] */ boolean *isSelected);
+      /* [out] */ long* row,
+      /* [out] */ long* column,
+      /* [out] */ long* rowExtents,
+      /* [out] */ long* columnExtents,
+      /* [out, retval] */ boolean* isSelected);
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_isSelected(
-      /* [out, retval] */ boolean *isSelected);
+      /* [out, retval] */ boolean* isSelected);
 
  protected:
-  ia2AccessibleTableCell(TableCellAccessible *aTableCell)
+  ia2AccessibleTableCell(TableCellAccessible* aTableCell)
       : mTableCell(aTableCell) {}
 
-  TableCellAccessible *mTableCell;
+  TableCellAccessible* mTableCell;
 };
 
 }  // namespace a11y

@@ -12,8 +12,8 @@
 #include "nsServiceManagerUtils.h"
 #include "prtime.h"
 
-inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI *aAboutURI,
-                                                   nsCString &aModule) {
+inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI* aAboutURI,
+                                                   nsCString& aModule) {
 #ifdef DEBUG
   {
     bool isAbout;
@@ -36,7 +36,7 @@ inline MOZ_MUST_USE nsresult NS_GetAboutModuleName(nsIURI *aAboutURI,
   return NS_OK;
 }
 
-inline nsresult NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule **aModule) {
+inline nsresult NS_GetAboutModule(nsIURI* aAboutURI, nsIAboutModule** aModule) {
   MOZ_ASSERT(aAboutURI, "Must have URI");
 
   nsAutoCString contractID;
@@ -55,7 +55,7 @@ inline PRTime SecondsToPRTime(uint32_t t_sec) {
   usec_per_sec = PR_USEC_PER_SEC;
   return t_usec *= usec_per_sec;
 }
-inline void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec) {
+inline void PrintTimeString(char* buf, uint32_t bufsize, uint32_t t_sec) {
   PRExplodedTime et;
   PRTime t_usec = SecondsToPRTime(t_sec);
   PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);

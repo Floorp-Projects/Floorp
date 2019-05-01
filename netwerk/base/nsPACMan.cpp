@@ -40,7 +40,7 @@ LazyLogModule gProxyLog("proxy");
 
 // Check to see if the underlying request was not an error page in the case of
 // a HTTP request.  For other types of channels, just return true.
-static bool HttpRequestSucceeded(nsIStreamLoader *loader) {
+static bool HttpRequestSucceeded(nsIStreamLoader* loader) {
   nsCOMPtr<nsIRequest> request;
   loader->GetRequest(getter_AddRefs(request));
 
@@ -81,7 +81,7 @@ static uint32_t GetExtraJSContextHeapSize() {
 
 // Read network proxy type from preference
 // Used to verify that the preference is WPAD in nsPACMan::ConfigureWPAD
-nsresult GetNetworkProxyTypeFromPref(int32_t *type) {
+nsresult GetNetworkProxyTypeFromPref(int32_t* type) {
   *type = 0;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
@@ -106,14 +106,14 @@ nsresult GetNetworkProxyTypeFromPref(int32_t *type) {
 
 class ExecuteCallback final : public Runnable {
  public:
-  ExecuteCallback(nsPACManCallback *aCallback, nsresult status)
+  ExecuteCallback(nsPACManCallback* aCallback, nsresult status)
       : Runnable("net::ExecuteCallback"),
         mCallback(aCallback),
         mStatus(status) {}
 
-  void SetPACString(const nsACString &pacString) { mPACString = pacString; }
+  void SetPACString(const nsACString& pacString) { mPACString = pacString; }
 
-  void SetPACURL(const nsACString &pacURL) { mPACURL = pacURL; }
+  void SetPACURL(const nsACString& pacURL) { mPACURL = pacURL; }
 
   NS_IMETHOD Run() override {
     mCallback->OnQueryComplete(mStatus, mPACString, mPACURL);
@@ -136,7 +136,7 @@ class ExecuteCallback final : public Runnable {
 
 class ShutdownThread final : public Runnable {
  public:
-  explicit ShutdownThread(nsIThread *thread)
+  explicit ShutdownThread(nsIThread* thread)
       : Runnable("net::ShutdownThread"), mThread(thread) {}
 
   NS_IMETHOD Run() override {
@@ -153,7 +153,7 @@ class ShutdownThread final : public Runnable {
 
 class WaitForThreadShutdown final : public Runnable {
  public:
-  explicit WaitForThreadShutdown(nsPACMan *aPACMan)
+  explicit WaitForThreadShutdown(nsPACMan* aPACMan)
       : Runnable("net::WaitForThreadShutdown"), mPACMan(aPACMan) {}
 
   NS_IMETHOD Run() override {
@@ -177,7 +177,7 @@ class WaitForThreadShutdown final : public Runnable {
 
 class PACLoadComplete final : public Runnable {
  public:
-  explicit PACLoadComplete(nsPACMan *aPACMan)
+  explicit PACLoadComplete(nsPACMan* aPACMan)
       : Runnable("net::PACLoadComplete"), mPACMan(aPACMan) {}
 
   NS_IMETHOD Run() override {
@@ -197,7 +197,7 @@ class PACLoadComplete final : public Runnable {
 // the URL for the PAC file has been found
 class ConfigureWPADComplete final : public Runnable {
  public:
-  ConfigureWPADComplete(nsPACMan *aPACMan, const nsACString &aPACURISpec)
+  ConfigureWPADComplete(nsPACMan* aPACMan, const nsACString& aPACURISpec)
       : Runnable("net::ConfigureWPADComplete"),
         mPACMan(aPACMan),
         mPACURISpec(aPACURISpec) {}
@@ -224,7 +224,7 @@ class ConfigureWPADComplete final : public Runnable {
 class ExecutePACThreadAction final : public Runnable {
  public:
   // by default we just process the queue
-  explicit ExecutePACThreadAction(nsPACMan *aPACMan)
+  explicit ExecutePACThreadAction(nsPACMan* aPACMan)
       : Runnable("net::ExecutePACThreadAction"),
         mPACMan(aPACMan),
         mCancel(false),
@@ -240,7 +240,7 @@ class ExecutePACThreadAction final : public Runnable {
     mShutdown = aShutdown;
   }
 
-  void SetupPAC(const char *data, uint32_t dataLen, const nsACString &pacURI,
+  void SetupPAC(const char* data, uint32_t dataLen, const nsACString& pacURI,
                 uint32_t extraHeapSize) {
     mSetupPAC = true;
     mSetupPACData.Assign(data, dataLen);
@@ -300,8 +300,8 @@ class ExecutePACThreadAction final : public Runnable {
 
 //-----------------------------------------------------------------------------
 
-PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
-                                 nsPACManCallback *callback,
+PendingPACQuery::PendingPACQuery(nsPACMan* pacMan, nsIURI* uri,
+                                 nsPACManCallback* callback,
                                  bool mainThreadResponse)
     : Runnable("net::PendingPACQuery"),
       mPort(0),
@@ -314,7 +314,7 @@ PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
   uri->GetPort(&mPort);
 }
 
-void PendingPACQuery::Complete(nsresult status, const nsACString &pacString) {
+void PendingPACQuery::Complete(nsresult status, const nsACString& pacString) {
   if (!mCallback) return;
   RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, status);
   runnable->SetPACString(pacString);
@@ -324,7 +324,7 @@ void PendingPACQuery::Complete(nsresult status, const nsACString &pacString) {
     runnable->Run();
 }
 
-void PendingPACQuery::UseAlternatePACFile(const nsACString &pacURL) {
+void PendingPACQuery::UseAlternatePACFile(const nsACString& pacURL) {
   if (!mCallback) return;
 
   RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, NS_OK);
@@ -347,10 +347,10 @@ PendingPACQuery::Run() {
 static bool sThreadLocalSetup = false;
 static uint32_t sThreadLocalIndex = 0xdeadbeef;  // out of range
 
-static const char *kPACIncludePath =
+static const char* kPACIncludePath =
     "network.proxy.autoconfig_url.include_path";
 
-nsPACMan::nsPACMan(nsIEventTarget *mainThreadEventTarget)
+nsPACMan::nsPACMan(nsIEventTarget* mainThreadEventTarget)
     : NeckoTargetHolder(mainThreadEventTarget),
       mLoadPending(false),
       mShutdown(false),
@@ -427,7 +427,7 @@ nsresult nsPACMan::DispatchToPAC(already_AddRefed<nsIRunnable> aEvent,
       aSync ? nsIEventTarget::DISPATCH_SYNC : nsIEventTarget::DISPATCH_NORMAL);
 }
 
-nsresult nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
+nsresult nsPACMan::AsyncGetProxyForURI(nsIURI* uri, nsPACManCallback* callback,
                                        bool mainThreadResponse) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mShutdown) return NS_ERROR_NOT_AVAILABLE;
@@ -452,7 +452,7 @@ nsresult nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
   return DispatchToPAC(query.forget());
 }
 
-nsresult nsPACMan::PostQuery(PendingPACQuery *query) {
+nsresult nsPACMan::PostQuery(PendingPACQuery* query) {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
   if (mShutdown) {
@@ -467,11 +467,11 @@ nsresult nsPACMan::PostQuery(PendingPACQuery *query) {
   return NS_OK;
 }
 
-nsresult nsPACMan::LoadPACFromURI(const nsACString &aSpec) {
+nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec) {
   return LoadPACFromURI(aSpec, true);
 }
 
-nsresult nsPACMan::LoadPACFromURI(const nsACString &aSpec,
+nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec,
                                   bool aResetLoadFailureCount) {
   NS_ENSURE_STATE(!mShutdown);
 
@@ -530,7 +530,7 @@ nsresult nsPACMan::LoadPACFromURI(const nsACString &aSpec,
   return NS_OK;
 }
 
-nsresult nsPACMan::GetPACFromDHCP(nsACString &aSpec) {
+nsresult nsPACMan::GetPACFromDHCP(nsACString& aSpec) {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
   if (!mDHCPClient) {
     LOG(
@@ -554,7 +554,7 @@ nsresult nsPACMan::GetPACFromDHCP(nsACString &aSpec) {
   return rv;
 }
 
-nsresult nsPACMan::ConfigureWPAD(nsACString &aSpec) {
+nsresult nsPACMan::ConfigureWPAD(nsACString& aSpec) {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
   if (mProxyConfigType != nsIProtocolProxyService::PROXYCONFIG_WPAD) {
@@ -581,7 +581,7 @@ nsresult nsPACMan::ConfigureWPAD(nsACString &aSpec) {
   return NS_OK;
 }
 
-void nsPACMan::AssignPACURISpec(const nsACString &aSpec) {
+void nsPACMan::AssignPACURISpec(const nsACString& aSpec) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   mPACURISpec.Assign(aSpec);
 }
@@ -787,9 +787,9 @@ NS_IMPL_ISUPPORTS(nsPACMan, nsIStreamLoaderObserver, nsIInterfaceRequestor,
                   nsIChannelEventSink)
 
 NS_IMETHODIMP
-nsPACMan::OnStreamComplete(nsIStreamLoader *loader, nsISupports *context,
+nsPACMan::OnStreamComplete(nsIStreamLoader* loader, nsISupports* context,
                            nsresult status, uint32_t dataLen,
-                           const uint8_t *data) {
+                           const uint8_t* data) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (mLoader != loader) {
     // If this happens, then it means that LoadPACFromURI was called more
@@ -821,7 +821,7 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader, nsISupports *context,
     // the PAC evaluator (NS_PROXYAUTOCONFIG_CONTRACTID) on the PAC thread,
     // because that's where it will be used.
     RefPtr<ExecutePACThreadAction> pending = new ExecutePACThreadAction(this);
-    pending->SetupPAC(reinterpret_cast<const char *>(data), dataLen, pacURI,
+    pending->SetupPAC(reinterpret_cast<const char*>(data), dataLen, pacURI,
                       GetExtraJSContextHeapSize());
     DispatchToPAC(pending.forget());
 
@@ -846,20 +846,19 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader, nsISupports *context,
 }
 
 NS_IMETHODIMP
-nsPACMan::GetInterface(const nsIID &iid, void **result) {
+nsPACMan::GetInterface(const nsIID& iid, void** result) {
   // In case loading the PAC file requires authentication.
   if (iid.Equals(NS_GET_IID(nsIAuthPrompt))) {
     nsCOMPtr<nsIPromptFactory> promptFac =
         do_GetService("@mozilla.org/prompter;1");
     NS_ENSURE_TRUE(promptFac, NS_ERROR_FAILURE);
-    return promptFac->GetPrompt(nullptr, iid,
-                                reinterpret_cast<void **>(result));
+    return promptFac->GetPrompt(nullptr, iid, reinterpret_cast<void**>(result));
   }
 
   // In case loading the PAC file results in a redirect.
   if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
     NS_ADDREF_THIS();
-    *result = static_cast<nsIChannelEventSink *>(this);
+    *result = static_cast<nsIChannelEventSink*>(this);
     return NS_OK;
   }
 
@@ -867,9 +866,9 @@ nsPACMan::GetInterface(const nsIID &iid, void **result) {
 }
 
 NS_IMETHODIMP
-nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
+nsPACMan::AsyncOnChannelRedirect(nsIChannel* oldChannel, nsIChannel* newChannel,
                                  uint32_t flags,
-                                 nsIAsyncVerifyRedirectCallback *callback) {
+                                 nsIAsyncVerifyRedirectCallback* callback) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
   nsresult rv = NS_OK;
@@ -892,7 +891,7 @@ nsPACMan::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel,
   return NS_OK;
 }
 
-nsresult nsPACMan::Init(nsISystemProxySettings *systemProxySettings) {
+nsresult nsPACMan::Init(nsISystemProxySettings* systemProxySettings) {
   mSystemProxySettings = systemProxySettings;
   mDHCPClient = do_GetService(NS_DHCPCLIENT_CONTRACTID);
   return NS_OK;

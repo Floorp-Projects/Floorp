@@ -14,13 +14,13 @@ class gfxMacFont;
 
 class gfxCoreTextShaper : public gfxFontShaper {
  public:
-  explicit gfxCoreTextShaper(gfxMacFont *aFont);
+  explicit gfxCoreTextShaper(gfxMacFont* aFont);
 
   virtual ~gfxCoreTextShaper();
 
-  bool ShapeText(DrawTarget *aDrawTarget, const char16_t *aText, uint32_t aOffset, uint32_t aLength,
+  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
                  Script aScript, bool aVertical, RoundingFlags aRounding,
-                 gfxShapedText *aShapedText) override;
+                 gfxShapedText* aShapedText) override;
 
   // clean up static objects that may have been cached
   static void Shutdown();
@@ -47,7 +47,7 @@ class gfxCoreTextShaper : public gfxFontShaper {
   CFDictionaryRef mAttributesDictLTR;
   CFDictionaryRef mAttributesDictRTL;
 
-  nsresult SetGlyphsFromRun(gfxShapedText *aShapedText, uint32_t aOffset, uint32_t aLength,
+  nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset, uint32_t aLength,
                             CTRunRef aCTRun);
 
   CTFontRef CreateCTFontWithFeatures(CGFloat aSize, CTFontDescriptorRef aDescriptor);
@@ -56,7 +56,7 @@ class gfxCoreTextShaper : public gfxFontShaper {
   CFDictionaryRef CreateAttrDictWithoutDirection();
 
   static CTFontDescriptorRef CreateFontFeaturesDescriptor(
-      const std::pair<SInt16, SInt16> *aFeatures, size_t aCount);
+      const std::pair<SInt16, SInt16>* aFeatures, size_t aCount);
 
   static CTFontDescriptorRef GetFeaturesDescriptor(FeatureFlags aFeatureFlags);
 

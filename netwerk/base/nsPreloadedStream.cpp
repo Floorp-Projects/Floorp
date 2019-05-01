@@ -14,10 +14,10 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(nsPreloadedStream, nsIInputStream, nsIAsyncInputStream)
 
-nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream *aStream,
-                                     const char *data, uint32_t datalen)
+nsPreloadedStream::nsPreloadedStream(nsIAsyncInputStream* aStream,
+                                     const char* data, uint32_t datalen)
     : mStream(aStream), mOffset(0), mLen(datalen) {
-  mBuf = (char *)moz_xmalloc(datalen);
+  mBuf = (char*)moz_xmalloc(datalen);
   memcpy(mBuf, data, datalen);
 }
 
@@ -30,7 +30,7 @@ nsPreloadedStream::Close() {
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::Available(uint64_t *_retval) {
+nsPreloadedStream::Available(uint64_t* _retval) {
   uint64_t avail = 0;
 
   nsresult rv = mStream->Available(&avail);
@@ -40,7 +40,7 @@ nsPreloadedStream::Available(uint64_t *_retval) {
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::Read(char *aBuf, uint32_t aCount, uint32_t *_retval) {
+nsPreloadedStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
   if (!mLen) return mStream->Read(aBuf, aCount, _retval);
 
   uint32_t toRead = std::min(mLen, aCount);
@@ -52,8 +52,8 @@ nsPreloadedStream::Read(char *aBuf, uint32_t aCount, uint32_t *_retval) {
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
-                                uint32_t aCount, uint32_t *result) {
+nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                                uint32_t aCount, uint32_t* result) {
   if (!mLen) return mStream->ReadSegments(aWriter, aClosure, aCount, result);
 
   *result = 0;
@@ -76,7 +76,7 @@ nsPreloadedStream::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
 }
 
 NS_IMETHODIMP
-nsPreloadedStream::IsNonBlocking(bool *_retval) {
+nsPreloadedStream::IsNonBlocking(bool* _retval) {
   return mStream->IsNonBlocking(_retval);
 }
 
@@ -88,7 +88,7 @@ nsPreloadedStream::CloseWithStatus(nsresult aStatus) {
 
 class RunOnThread : public Runnable {
  public:
-  RunOnThread(nsIAsyncInputStream *aStream, nsIInputStreamCallback *aCallback)
+  RunOnThread(nsIAsyncInputStream* aStream, nsIInputStreamCallback* aCallback)
       : Runnable("net::RunOnThread"), mStream(aStream), mCallback(aCallback) {}
 
   virtual ~RunOnThread() = default;
@@ -104,9 +104,9 @@ class RunOnThread : public Runnable {
 };
 
 NS_IMETHODIMP
-nsPreloadedStream::AsyncWait(nsIInputStreamCallback *aCallback, uint32_t aFlags,
+nsPreloadedStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
                              uint32_t aRequestedCount,
-                             nsIEventTarget *aEventTarget) {
+                             nsIEventTarget* aEventTarget) {
   if (!mLen)
     return mStream->AsyncWait(aCallback, aFlags, aRequestedCount, aEventTarget);
 

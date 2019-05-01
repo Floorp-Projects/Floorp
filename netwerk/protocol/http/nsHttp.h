@@ -141,14 +141,14 @@ enum class SpdyVersion {
 //-----------------------------------------------------------------------------
 
 struct nsHttpAtom {
-  operator const char *() const { return _val; }
-  const char *get() const { return _val; }
+  operator const char*() const { return _val; }
+  const char* get() const { return _val; }
 
-  void operator=(const char *v) { _val = v; }
-  void operator=(const nsHttpAtom &a) { _val = a._val; }
+  void operator=(const char* v) { _val = v; }
+  void operator=(const nsHttpAtom& a) { _val = a._val; }
 
   // private
-  const char *_val;
+  const char* _val;
 };
 
 namespace nsHttp {
@@ -158,37 +158,37 @@ void DestroyAtomTable();
 // The mutex is valid any time the Atom Table is valid
 // This mutex is used in the unusual case that the network thread and
 // main thread might access the same data
-Mutex *GetLock();
+Mutex* GetLock();
 
 // will dynamically add atoms to the table if they don't already exist
-nsHttpAtom ResolveAtom(const char *);
-inline nsHttpAtom ResolveAtom(const nsACString &s) {
+nsHttpAtom ResolveAtom(const char*);
+inline nsHttpAtom ResolveAtom(const nsACString& s) {
   return ResolveAtom(PromiseFlatCString(s).get());
 }
 
 // returns true if the specified token [start,end) is valid per RFC 2616
 // section 2.2
-bool IsValidToken(const char *start, const char *end);
+bool IsValidToken(const char* start, const char* end);
 
-inline bool IsValidToken(const nsACString &s) {
+inline bool IsValidToken(const nsACString& s) {
   return IsValidToken(s.BeginReading(), s.EndReading());
 }
 
 // Strip the leading or trailing HTTP whitespace per fetch spec section 2.2.
-void TrimHTTPWhitespace(const nsACString &aSource, nsACString &aDest);
+void TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest);
 
 // Returns true if the specified value is reasonable given the defintion
 // in RFC 2616 section 4.2.  Full strict validation is not performed
 // currently as it would require full parsing of the value.
-bool IsReasonableHeaderValue(const nsACString &s);
+bool IsReasonableHeaderValue(const nsACString& s);
 
 // find the first instance (case-insensitive comparison) of the given
 // |token| in the |input| string.  the |token| is bounded by elements of
 // |separators| and may appear at the beginning or end of the |input|
 // string.  null is returned if the |token| is not found.  |input| may be
 // null, in which case null is returned.
-const char *FindToken(const char *input, const char *token,
-                      const char *separators);
+const char* FindToken(const char* input, const char* token,
+                      const char* separators);
 
 // This function parses a string containing a decimal-valued, non-negative
 // 64-bit integer.  If the value would exceed INT64_MAX, then false is
@@ -198,13 +198,13 @@ const char *FindToken(const char *input, const char *token,
 //
 // TODO(darin): Replace this with something generic.
 //
-MOZ_MUST_USE bool ParseInt64(const char *input, const char **next,
-                             int64_t *result);
+MOZ_MUST_USE bool ParseInt64(const char* input, const char** next,
+                             int64_t* result);
 
 // Variant on ParseInt64 that expects the input string to contain nothing
 // more than the value being parsed.
-inline MOZ_MUST_USE bool ParseInt64(const char *input, int64_t *result) {
-  const char *next;
+inline MOZ_MUST_USE bool ParseInt64(const char* input, int64_t* result) {
+  const char* next;
   return ParseInt64(input, &next, result) && *next == '\0';
 }
 
@@ -212,36 +212,36 @@ inline MOZ_MUST_USE bool ParseInt64(const char *input, int64_t *result) {
 bool IsPermanentRedirect(uint32_t httpStatus);
 
 // Returns the APLN token which represents the used protocol version.
-const char *GetProtocolVersion(HttpVersion pv);
+const char* GetProtocolVersion(HttpVersion pv);
 
 bool ValidationRequired(bool isForcedValid,
-                        nsHttpResponseHead *cachedResponseHead,
+                        nsHttpResponseHead* cachedResponseHead,
                         uint32_t loadFlags, bool allowStaleCacheContent,
                         bool isImmutable, bool customConditionalRequest,
-                        nsHttpRequestHead &requestHead, nsICacheEntry *entry,
-                        CacheControlParser &cacheControlRequest,
+                        nsHttpRequestHead& requestHead, nsICacheEntry* entry,
+                        CacheControlParser& cacheControlRequest,
                         bool fromPreviousSession,
-                        bool *performBackgroundRevalidation = nullptr);
+                        bool* performBackgroundRevalidation = nullptr);
 
 nsresult GetHttpResponseHeadFromCacheEntry(
-    nsICacheEntry *entry, nsHttpResponseHead *cachedResponseHead);
+    nsICacheEntry* entry, nsHttpResponseHead* cachedResponseHead);
 
-nsresult CheckPartial(nsICacheEntry *aEntry, int64_t *aSize,
-                      int64_t *aContentLength,
-                      nsHttpResponseHead *responseHead);
+nsresult CheckPartial(nsICacheEntry* aEntry, int64_t* aSize,
+                      int64_t* aContentLength,
+                      nsHttpResponseHead* responseHead);
 
-void DetermineFramingAndImmutability(nsICacheEntry *entry,
-                                     nsHttpResponseHead *cachedResponseHead,
-                                     bool isHttps, bool *weaklyFramed,
-                                     bool *isImmutable);
+void DetermineFramingAndImmutability(nsICacheEntry* entry,
+                                     nsHttpResponseHead* cachedResponseHead,
+                                     bool isHttps, bool* weaklyFramed,
+                                     bool* isImmutable);
 
 // Called when an optimization feature affecting active vs background tab load
 // took place.  Called only on the parent process and only updates
 // mLastActiveTabLoadOptimizationHit timestamp to now.
 void NotifyActiveTabLoadOptimization();
 TimeStamp const GetLastActiveTabLoadOptimizationHit();
-void SetLastActiveTabLoadOptimizationHit(TimeStamp const &when);
-bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when);
+void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when);
+bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
 
 HttpVersion GetHttpVersionFromSpdy(SpdyVersion sv);
 
@@ -272,20 +272,20 @@ static inline uint32_t PRTimeToSeconds(PRTime t_usec) {
 #define HTTP_LWS " \t"
 #define HTTP_HEADER_VALUE_SEPS HTTP_LWS ","
 
-void EnsureBuffer(UniquePtr<char[]> &buf, uint32_t newSize, uint32_t preserve,
-                  uint32_t &objSize);
-void EnsureBuffer(UniquePtr<uint8_t[]> &buf, uint32_t newSize,
-                  uint32_t preserve, uint32_t &objSize);
+void EnsureBuffer(UniquePtr<char[]>& buf, uint32_t newSize, uint32_t preserve,
+                  uint32_t& objSize);
+void EnsureBuffer(UniquePtr<uint8_t[]>& buf, uint32_t newSize,
+                  uint32_t preserve, uint32_t& objSize);
 
 // h2=":443"; ma=60; single
 // results in 3 mValues = {{h2, :443}, {ma, 60}, {single}}
 
 class ParsedHeaderPair {
  public:
-  ParsedHeaderPair(const char *name, int32_t nameLen, const char *val,
+  ParsedHeaderPair(const char* name, int32_t nameLen, const char* val,
                    int32_t valLen, bool isQuotedValue);
 
-  ParsedHeaderPair(ParsedHeaderPair const &copy)
+  ParsedHeaderPair(ParsedHeaderPair const& copy)
       : mName(copy.mName),
         mValue(copy.mValue),
         mUnquotedValue(copy.mUnquotedValue),
@@ -302,16 +302,16 @@ class ParsedHeaderPair {
   nsCString mUnquotedValue;
   bool mIsQuotedValue;
 
-  void RemoveQuotedStringEscapes(const char *val, int32_t valLen);
+  void RemoveQuotedStringEscapes(const char* val, int32_t valLen);
 };
 
 class ParsedHeaderValueList {
  public:
-  ParsedHeaderValueList(const char *t, uint32_t len, bool allowInvalidValue);
+  ParsedHeaderValueList(const char* t, uint32_t len, bool allowInvalidValue);
   nsTArray<ParsedHeaderPair> mValues;
 
  private:
-  void ParseNameAndValue(const char *input, bool allowInvalidValue);
+  void ParseNameAndValue(const char* input, bool allowInvalidValue);
 };
 
 class ParsedHeaderValueListList {
@@ -322,7 +322,7 @@ class ParsedHeaderValueListList {
   // Note that ParsedHeaderValueListList is currently used to parse
   // Alt-Svc and Server-Timing header. |allowInvalidValue| is set to true
   // when parsing Alt-Svc for historical reasons.
-  explicit ParsedHeaderValueListList(const nsCString &txt,
+  explicit ParsedHeaderValueListList(const nsCString& txt,
                                      bool allowInvalidValue = true);
   nsTArray<ParsedHeaderValueList> mValues;
 

@@ -20,8 +20,8 @@ namespace mozilla {
 
 void EHABIStackWalkInit();
 
-size_t EHABIStackWalk(const mcontext_t &aContext, void *stackBase, void **aSPs,
-                      void **aPCs, size_t aNumFrames);
+size_t EHABIStackWalk(const mcontext_t& aContext, void* stackBase, void** aSPs,
+                      void** aPCs, size_t aNumFrames);
 
 }  // namespace mozilla
 

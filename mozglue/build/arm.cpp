@@ -27,7 +27,7 @@ enum {
 
 static unsigned get_arm_cpu_flags(void) {
   unsigned flags;
-  FILE *fin;
+  FILE* fin;
   bool armv6_processor = false;
   flags = 0;
   /*Reading /proc/self/auxv would be easier, but that doesn't work reliably on
@@ -42,7 +42,7 @@ static unsigned get_arm_cpu_flags(void) {
     char buf[512];
     while (fgets(buf, 511, fin) != nullptr) {
       if (memcmp(buf, "Features", 8) == 0) {
-        char *p;
+        char* p;
         p = strstr(buf, " edsp");
         if (p != nullptr && (p[5] == ' ' || p[5] == '\n'))
           flags |= MOZILLA_HAS_EDSP_FLAG;

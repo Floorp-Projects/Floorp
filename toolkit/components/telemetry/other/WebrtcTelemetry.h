@@ -26,12 +26,12 @@ class WebrtcTelemetry {
 
   void RecordIceCandidateMask(const uint32_t iceCandidateBitmask, bool success);
 
-  bool GetWebrtcStats(JSContext *cx, JS::MutableHandle<JS::Value> ret);
+  bool GetWebrtcStats(JSContext* cx, JS::MutableHandle<JS::Value> ret);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  bool AddIceInfo(JSContext *cx, JS::Handle<JSObject *> rootObj);
+  bool AddIceInfo(JSContext* cx, JS::Handle<JSObject*> rootObj);
 
   mozilla::Telemetry::Common::AutoHashtable<WebrtcIceCandidateType>
       mWebrtcIceCandidates;

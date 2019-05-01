@@ -52,17 +52,17 @@ int32_t nsCocoaFeatures::ExtractBugFixVersion(int32_t aVersion) {
   return aVersion & 0x0F;
 }
 
-static int intAtStringIndex(NSArray *array, int index) {
-  return [(NSString *)[array objectAtIndex:index] integerValue];
+static int intAtStringIndex(NSArray* array, int index) {
+  return [(NSString*)[array objectAtIndex:index] integerValue];
 }
 
-void nsCocoaFeatures::GetSystemVersion(int &major, int &minor, int &bugfix) {
+void nsCocoaFeatures::GetSystemVersion(int& major, int& minor, int& bugfix) {
   major = minor = bugfix = 0;
 
-  NSString *versionString = [[NSDictionary
+  NSString* versionString = [[NSDictionary
       dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"]
       objectForKey:@"ProductVersion"];
-  NSArray *versions = [versionString componentsSeparatedByString:@"."];
+  NSArray* versions = [versionString componentsSeparatedByString:@"."];
   NSUInteger count = [versions count];
   if (count > 0) {
     major = intAtStringIndex(versions, 0);

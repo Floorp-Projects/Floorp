@@ -10,8 +10,8 @@
 
 using namespace Elf;
 
-unsigned long BaseElf::Hash(const char *symbol) {
-  const unsigned char *sym = reinterpret_cast<const unsigned char *>(symbol);
+unsigned long BaseElf::Hash(const char* symbol) {
+  const unsigned char* sym = reinterpret_cast<const unsigned char*>(symbol);
   unsigned long h = 0, g;
   while (*sym) {
     h = (h << 4) + *sym++;
@@ -22,20 +22,20 @@ unsigned long BaseElf::Hash(const char *symbol) {
   return h;
 }
 
-void *BaseElf::GetSymbolPtr(const char *symbol) const {
+void* BaseElf::GetSymbolPtr(const char* symbol) const {
   return GetSymbolPtr(symbol, Hash(symbol));
 }
 
-void *BaseElf::GetSymbolPtr(const char *symbol, unsigned long hash) const {
-  const Sym *sym = GetSymbol(symbol, hash);
-  void *ptr = nullptr;
+void* BaseElf::GetSymbolPtr(const char* symbol, unsigned long hash) const {
+  const Sym* sym = GetSymbol(symbol, hash);
+  void* ptr = nullptr;
   if (sym && sym->st_shndx != SHN_UNDEF) ptr = GetPtr(sym->st_value);
   DEBUG_LOG("BaseElf::GetSymbolPtr(%p [\"%s\"], \"%s\") = %p",
-            reinterpret_cast<const void *>(this), GetPath(), symbol, ptr);
+            reinterpret_cast<const void*>(this), GetPath(), symbol, ptr);
   return ptr;
 }
 
-const Sym *BaseElf::GetSymbol(const char *symbol, unsigned long hash) const {
+const Sym* BaseElf::GetSymbol(const char* symbol, unsigned long hash) const {
   /* Search symbol with the buckets and chains tables.
    * The hash computed from the symbol name gives an index in the buckets
    * table. The corresponding value in the bucket table is an index in the
@@ -52,10 +52,10 @@ const Sym *BaseElf::GetSymbol(const char *symbol, unsigned long hash) const {
   return nullptr;
 }
 
-bool BaseElf::Contains(void *addr) const { return base.Contains(addr); }
+bool BaseElf::Contains(void* addr) const { return base.Contains(addr); }
 
 #ifdef __ARM_EABI__
-const void *BaseElf::FindExidx(int *pcount) const {
+const void* BaseElf::FindExidx(int* pcount) const {
   if (arm_exidx) {
     *pcount = arm_exidx.numElements();
     return arm_exidx;
@@ -65,8 +65,8 @@ const void *BaseElf::FindExidx(int *pcount) const {
 }
 #endif
 
-already_AddRefed<LibHandle> LoadedElf::Create(const char *path,
-                                              void *base_addr) {
+already_AddRefed<LibHandle> LoadedElf::Create(const char* path,
+                                              void* base_addr) {
   DEBUG_LOG("LoadedElf::Create(\"%s\", %p) = ...", path, base_addr);
 
   uint8_t mapped;
@@ -77,22 +77,22 @@ already_AddRefed<LibHandle> LoadedElf::Create(const char *path,
    * prelinked libraries on glibc unsupported. This is not an interesting
    * use case for now, so don't try supporting that case.
    */
-  if (mincore(const_cast<void *>(base_addr), PageSize(), &mapped))
+  if (mincore(const_cast<void*>(base_addr), PageSize(), &mapped))
     return nullptr;
 
   RefPtr<LoadedElf> elf = new LoadedElf(path);
 
-  const Ehdr *ehdr = Ehdr::validate(base_addr);
+  const Ehdr* ehdr = Ehdr::validate(base_addr);
   if (!ehdr) return nullptr;
 
   Addr min_vaddr = (Addr)-1;  // We want to find the lowest and biggest
   Addr max_vaddr = 0;         // virtual address used by this Elf.
-  const Phdr *dyn = nullptr;
+  const Phdr* dyn = nullptr;
 #ifdef __ARM_EABI__
-  const Phdr *arm_exidx_phdr = nullptr;
+  const Phdr* arm_exidx_phdr = nullptr;
 #endif
 
-  Array<Phdr> phdrs(reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff,
+  Array<Phdr> phdrs(reinterpret_cast<const char*>(ehdr) + ehdr->e_phoff,
                     ehdr->e_phnum);
   for (auto phdr = phdrs.begin(); phdr < phdrs.end(); ++phdr) {
     switch (phdr->p_type) {
@@ -123,8 +123,8 @@ already_AddRefed<LibHandle> LoadedElf::Create(const char *path,
    * can thus be adjusted accordingly.
    */
   if (min_vaddr != 0) {
-    void *min_vaddr_ptr =
-        reinterpret_cast<void *>(static_cast<uintptr_t>(min_vaddr));
+    void* min_vaddr_ptr =
+        reinterpret_cast<void*>(static_cast<uintptr_t>(min_vaddr));
     if (min_vaddr_ptr != base_addr) {
       LOG("%s: %p != %p", elf->GetPath(), min_vaddr_ptr, base_addr);
       return nullptr;
@@ -147,13 +147,13 @@ already_AddRefed<LibHandle> LoadedElf::Create(const char *path,
 #endif
 
   DEBUG_LOG("LoadedElf::Create(\"%s\", %p) = %p", path, base_addr,
-            static_cast<void *>(elf));
+            static_cast<void*>(elf));
 
   ElfLoader::Singleton.Register(elf);
   return elf.forget();
 }
 
-bool LoadedElf::InitDyn(const Phdr *pt_dyn) {
+bool LoadedElf::InitDyn(const Phdr* pt_dyn) {
   Array<Dyn> dyns;
   dyns.InitSize(GetPtr<Dyn>(pt_dyn->p_vaddr), pt_dyn->p_filesz);
 
@@ -162,7 +162,7 @@ bool LoadedElf::InitDyn(const Phdr *pt_dyn) {
     switch (dyn->d_tag) {
       case DT_HASH: {
         DEBUG_LOG("%s 0x%08" PRIxPTR, "DT_HASH", uintptr_t(dyn->d_un.d_val));
-        const Elf::Word *hash_table_header = GetPtr<Elf::Word>(dyn->d_un.d_ptr);
+        const Elf::Word* hash_table_header = GetPtr<Elf::Word>(dyn->d_un.d_ptr);
         symnum = hash_table_header[1];
         buckets.Init(&hash_table_header[2], hash_table_header[0]);
         chains.Init(&*buckets.end());

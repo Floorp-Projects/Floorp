@@ -12,14 +12,14 @@ namespace net {
 
 SimpleBuffer::SimpleBuffer() : mStatus(NS_OK), mAvailable(0) {}
 
-nsresult SimpleBuffer::Write(char *src, size_t len) {
+nsresult SimpleBuffer::Write(char* src, size_t len) {
   NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   if (NS_FAILED(mStatus)) {
     return mStatus;
   }
 
   while (len > 0) {
-    SimpleBufferPage *p = mBufferList.getLast();
+    SimpleBufferPage* p = mBufferList.getLast();
     if (p && (p->mWriteOffset == SimpleBufferPage::kSimpleBufferPageSize)) {
       // no room.. make a new page
       p = nullptr;
@@ -44,14 +44,14 @@ nsresult SimpleBuffer::Write(char *src, size_t len) {
   return NS_OK;
 }
 
-size_t SimpleBuffer::Read(char *dest, size_t maxLen) {
+size_t SimpleBuffer::Read(char* dest, size_t maxLen) {
   NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
   if (NS_FAILED(mStatus)) {
     return 0;
   }
 
   size_t rv = 0;
-  for (SimpleBufferPage *p = mBufferList.getFirst(); p && (rv < maxLen);
+  for (SimpleBufferPage* p = mBufferList.getFirst(); p && (rv < maxLen);
        p = mBufferList.getFirst()) {
     size_t avail = p->mWriteOffset - p->mReadOffset;
     size_t toRead = std::min(avail, (maxLen - rv));
@@ -76,7 +76,7 @@ size_t SimpleBuffer::Available() {
 
 void SimpleBuffer::Clear() {
   NS_ASSERT_OWNINGTHREAD(SimpleBuffer);
-  SimpleBufferPage *p;
+  SimpleBufferPage* p;
   while ((p = mBufferList.popFirst())) {
     delete p;
   }

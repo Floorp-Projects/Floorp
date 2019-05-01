@@ -83,8 +83,8 @@ nsresult nsReadConfig::Init() {
 
 nsReadConfig::~nsReadConfig() { CentralizedAdminPrefManagerFinish(); }
 
-NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic,
-                                    const char16_t *someData) {
+NS_IMETHODIMP nsReadConfig::Observe(nsISupports* aSubject, const char* aTopic,
+                                    const char16_t* someData) {
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, NS_PREFSERVICE_READ_TOPIC_ID)) {
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic,
 /**
  * This is the blocklist for known bad autoconfig files.
  */
-static const char *gBlockedConfigs[] = {"dsengine.cfg"};
+static const char* gBlockedConfigs[] = {"dsengine.cfg"};
 
 nsresult nsReadConfig::readConfigFile() {
   nsresult rv = NS_OK;
@@ -231,7 +231,7 @@ nsresult nsReadConfig::readConfigFile() {
   return NS_OK;
 }  // ReadConfigFile
 
-nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
+nsresult nsReadConfig::openAndEvaluateJSFile(const char* aFileName,
                                              int32_t obscureValue,
                                              bool isEncoded, bool isBinDir) {
   nsresult rv;
@@ -275,7 +275,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
   if (fs64 > UINT32_MAX) return NS_ERROR_FILE_TOO_BIG;
   uint32_t fs = (uint32_t)fs64;
 
-  char *buf = (char *)malloc(fs * sizeof(char));
+  char* buf = (char*)malloc(fs * sizeof(char));
   if (!buf) return NS_ERROR_OUT_OF_MEMORY;
 
   rv = inStr->Read(buf, (uint32_t)fs, &amt);

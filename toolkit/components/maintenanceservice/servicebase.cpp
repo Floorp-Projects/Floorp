@@ -16,7 +16,7 @@
  * @param  sameContent Out parameter, TRUE if the files are equal
  * @return TRUE If there was no error checking the files.
  */
-BOOL VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent) {
+BOOL VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL& sameContent) {
   sameContent = FALSE;
   nsAutoHandle file1(CreateFileW(file1Path, GENERIC_READ, FILE_SHARE_READ,
                                  nullptr, OPEN_EXISTING, 0, nullptr));

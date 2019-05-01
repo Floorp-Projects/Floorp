@@ -41,7 +41,7 @@ nsresult nsJARProtocolHandler::Init() {
   return rv;
 }
 
-nsIMIMEService *nsJARProtocolHandler::MimeService() {
+nsIMIMEService* nsJARProtocolHandler::MimeService() {
   if (!mMimeService) mMimeService = do_GetService("@mozilla.org/mime;1");
 
   return mMimeService.get();
@@ -66,19 +66,19 @@ already_AddRefed<nsJARProtocolHandler> nsJARProtocolHandler::GetSingleton() {
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetScheme(nsACString &result) {
+nsJARProtocolHandler::GetScheme(nsACString& result) {
   result.AssignLiteral("jar");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetDefaultPort(int32_t *result) {
+nsJARProtocolHandler::GetDefaultPort(int32_t* result) {
   *result = -1;  // no port for JAR: URLs
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::GetProtocolFlags(uint32_t *result) {
+nsJARProtocolHandler::GetProtocolFlags(uint32_t* result) {
   // URI_LOADABLE_BY_ANYONE, since it's our inner URI that will matter
   // anyway.
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE;
@@ -89,8 +89,8 @@ nsJARProtocolHandler::GetProtocolFlags(uint32_t *result) {
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
-                             nsIURI *aBaseURI, nsIURI **result) {
+nsJARProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
+                             nsIURI* aBaseURI, nsIURI** result) {
   nsCOMPtr<nsIURI> base(aBaseURI);
   return NS_MutateURI(new nsJARURI::Mutator())
       .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
@@ -99,9 +99,9 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
-                                 nsIChannel **result) {
-  nsJARChannel *chan = new nsJARChannel();
+nsJARProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
+                                 nsIChannel** result) {
+  nsJARChannel* chan = new nsJARChannel();
   if (!chan) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(chan);
 
@@ -123,8 +123,8 @@ nsJARProtocolHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::AllowPort(int32_t port, const char *scheme,
-                                bool *_retval) {
+nsJARProtocolHandler::AllowPort(int32_t port, const char* scheme,
+                                bool* _retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;

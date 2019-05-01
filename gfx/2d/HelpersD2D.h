@@ -27,20 +27,20 @@ namespace gfx {
 
 RefPtr<ID2D1Factory1> D2DFactory();
 
-static inline D2D1_POINT_2F D2DPoint(const Point &aPoint) {
+static inline D2D1_POINT_2F D2DPoint(const Point& aPoint) {
   return D2D1::Point2F(aPoint.x, aPoint.y);
 }
 
-static inline D2D1_SIZE_U D2DIntSize(const IntSize &aSize) {
+static inline D2D1_SIZE_U D2DIntSize(const IntSize& aSize) {
   return D2D1::SizeU(aSize.width, aSize.height);
 }
 
 template <typename T>
-static inline D2D1_RECT_F D2DRect(const T &aRect) {
+static inline D2D1_RECT_F D2DRect(const T& aRect) {
   return D2D1::RectF(aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost());
 }
 
-static inline D2D1_ROUNDED_RECT D2DRoundedRect(const RoundedRect &aRect) {
+static inline D2D1_ROUNDED_RECT D2DRoundedRect(const RoundedRect& aRect) {
   return D2D1::RoundedRect(D2DRect(aRect.rect),
                            aRect.corners.BottomLeft().width,
                            aRect.corners.BottomLeft().height);
@@ -92,7 +92,7 @@ static inline D2D1_INTERPOLATION_MODE D2DInterpolationMode(
   }
 }
 
-static inline D2D1_MATRIX_5X4_F D2DMatrix5x4(const Matrix5x4 &aMatrix) {
+static inline D2D1_MATRIX_5X4_F D2DMatrix5x4(const Matrix5x4& aMatrix) {
   return D2D1::Matrix5x4F(aMatrix._11, aMatrix._12, aMatrix._13, aMatrix._14,
                           aMatrix._21, aMatrix._22, aMatrix._23, aMatrix._24,
                           aMatrix._31, aMatrix._32, aMatrix._33, aMatrix._34,
@@ -100,7 +100,7 @@ static inline D2D1_MATRIX_5X4_F D2DMatrix5x4(const Matrix5x4 &aMatrix) {
                           aMatrix._51, aMatrix._52, aMatrix._53, aMatrix._54);
 }
 
-static inline D2D1_VECTOR_3F D2DVector3D(const Point3D &aPoint) {
+static inline D2D1_VECTOR_3F D2DVector3D(const Point3D& aPoint) {
   return D2D1::Vector3F(aPoint.x, aPoint.y, aPoint.z);
 }
 
@@ -113,20 +113,20 @@ static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode) {
   }
 }
 
-static inline D2D1_MATRIX_3X2_F D2DMatrix(const Matrix &aTransform) {
+static inline D2D1_MATRIX_3X2_F D2DMatrix(const Matrix& aTransform) {
   return D2D1::Matrix3x2F(aTransform._11, aTransform._12, aTransform._21,
                           aTransform._22, aTransform._31, aTransform._32);
 }
 
-static inline D2D1_COLOR_F D2DColor(const Color &aColor) {
+static inline D2D1_COLOR_F D2DColor(const Color& aColor) {
   return D2D1::ColorF(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
-static inline IntSize ToIntSize(const D2D1_SIZE_U &aSize) {
+static inline IntSize ToIntSize(const D2D1_SIZE_U& aSize) {
   return IntSize(aSize.width, aSize.height);
 }
 
-static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat) {
+static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT& aFormat) {
   switch (aFormat.format) {
     case DXGI_FORMAT_A8_UNORM:
     case DXGI_FORMAT_R8_UNORM:
@@ -142,17 +142,17 @@ static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat) {
   }
 }
 
-static inline Rect ToRect(const D2D1_RECT_F &aRect) {
+static inline Rect ToRect(const D2D1_RECT_F& aRect) {
   return Rect(aRect.left, aRect.top, aRect.right - aRect.left,
               aRect.bottom - aRect.top);
 }
 
-static inline Matrix ToMatrix(const D2D1_MATRIX_3X2_F &aTransform) {
+static inline Matrix ToMatrix(const D2D1_MATRIX_3X2_F& aTransform) {
   return Matrix(aTransform._11, aTransform._12, aTransform._21, aTransform._22,
                 aTransform._31, aTransform._32);
 }
 
-static inline Point ToPoint(const D2D1_POINT_2F &aPoint) {
+static inline Point ToPoint(const D2D1_POINT_2F& aPoint) {
   return Point(aPoint.x, aPoint.y);
 }
 
@@ -300,13 +300,13 @@ static inline D2D1_PRIMITIVE_BLEND D2DPrimitiveBlendMode(CompositionOp aOp) {
   }
 }
 
-static inline bool IsPatternSupportedByD2D(const Pattern &aPattern) {
+static inline bool IsPatternSupportedByD2D(const Pattern& aPattern) {
   if (aPattern.GetType() != PatternType::RADIAL_GRADIENT) {
     return true;
   }
 
-  const RadialGradientPattern *pat =
-      static_cast<const RadialGradientPattern *>(&aPattern);
+  const RadialGradientPattern* pat =
+      static_cast<const RadialGradientPattern*>(&aPattern);
 
   if (pat->mRadius1 != 0) {
     return false;
@@ -335,10 +335,10 @@ struct ShaderConstantRectD3D10 {
       : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight) {}
 
   // For easy passing to SetVertexShaderConstantF.
-  operator float *() { return &mX; }
+  operator float*() { return &mX; }
 };
 
-static inline DWRITE_MATRIX DWriteMatrixFromMatrix(Matrix &aMatrix) {
+static inline DWRITE_MATRIX DWriteMatrixFromMatrix(Matrix& aMatrix) {
   DWRITE_MATRIX mat;
   mat.m11 = aMatrix._11;
   mat.m12 = aMatrix._12;
@@ -382,15 +382,15 @@ class AutoDWriteGlyphRun : public DWRITE_GLYPH_RUN {
   UINT16 mAutoIndices[kNumAutoGlyphs];
 };
 
-static inline void DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs,
-                                            ScaledFontDWrite *aFont,
-                                            AutoDWriteGlyphRun *run) {
+static inline void DWriteGlyphRunFromGlyphs(const GlyphBuffer& aGlyphs,
+                                            ScaledFontDWrite* aFont,
+                                            AutoDWriteGlyphRun* run) {
   run->allocate(aGlyphs.mNumGlyphs);
 
-  FLOAT *advances = const_cast<FLOAT *>(run->glyphAdvances);
-  UINT16 *indices = const_cast<UINT16 *>(run->glyphIndices);
-  DWRITE_GLYPH_OFFSET *offsets =
-      const_cast<DWRITE_GLYPH_OFFSET *>(run->glyphOffsets);
+  FLOAT* advances = const_cast<FLOAT*>(run->glyphAdvances);
+  UINT16* indices = const_cast<UINT16*>(run->glyphIndices);
+  DWRITE_GLYPH_OFFSET* offsets =
+      const_cast<DWRITE_GLYPH_OFFSET*>(run->glyphOffsets);
 
   memset(advances, 0, sizeof(FLOAT) * aGlyphs.mNumGlyphs);
   for (unsigned int i = 0; i < aGlyphs.mNumGlyphs; i++) {
@@ -407,14 +407,14 @@ static inline void DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs,
 }
 
 static inline already_AddRefed<ID2D1Geometry> ConvertRectToGeometry(
-    const D2D1_RECT_F &aRect) {
+    const D2D1_RECT_F& aRect) {
   RefPtr<ID2D1RectangleGeometry> rectGeom;
   D2DFactory()->CreateRectangleGeometry(&aRect, getter_AddRefs(rectGeom));
   return rectGeom.forget();
 }
 
 static inline already_AddRefed<ID2D1Geometry> GetTransformedGeometry(
-    ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform) {
+    ID2D1Geometry* aGeometry, const D2D1_MATRIX_3X2_F& aTransform) {
   RefPtr<ID2D1PathGeometry> tmpGeometry;
   D2DFactory()->CreatePathGeometry(getter_AddRefs(tmpGeometry));
   RefPtr<ID2D1GeometrySink> currentSink;
@@ -426,7 +426,7 @@ static inline already_AddRefed<ID2D1Geometry> GetTransformedGeometry(
 }
 
 static inline already_AddRefed<ID2D1Geometry> IntersectGeometry(
-    ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB) {
+    ID2D1Geometry* aGeometryA, ID2D1Geometry* aGeometryB) {
   RefPtr<ID2D1PathGeometry> pathGeom;
   D2DFactory()->CreatePathGeometry(getter_AddRefs(pathGeom));
   RefPtr<ID2D1GeometrySink> sink;
@@ -439,7 +439,7 @@ static inline already_AddRefed<ID2D1Geometry> IntersectGeometry(
 }
 
 static inline already_AddRefed<ID2D1StrokeStyle> CreateStrokeStyleForOptions(
-    const StrokeOptions &aStrokeOptions) {
+    const StrokeOptions& aStrokeOptions) {
   RefPtr<ID2D1StrokeStyle> style;
 
   D2D1_CAP_STYLE capStyle;
@@ -513,10 +513,10 @@ static inline already_AddRefed<ID2D1StrokeStyle> CreateStrokeStyleForOptions(
 // uploads the minimum requirement and possibly downscales. It adjusts the
 // input Matrix to compensate.
 static inline already_AddRefed<ID2D1Bitmap> CreatePartialBitmapForSurface(
-    DataSourceSurface *aSurface, const Matrix &aDestinationTransform,
-    const IntSize &aDestinationSize, ExtendMode aExtendMode,
-    Matrix &aSourceTransform, ID2D1RenderTarget *aRT,
-    const IntRect *aSourceRect = nullptr) {
+    DataSourceSurface* aSurface, const Matrix& aDestinationTransform,
+    const IntSize& aDestinationSize, ExtendMode aExtendMode,
+    Matrix& aSourceTransform, ID2D1RenderTarget* aRT,
+    const IntRect* aSourceRect = nullptr) {
   RefPtr<ID2D1Bitmap> bitmap;
 
   // This is where things get complicated. The source surface was
@@ -673,8 +673,8 @@ static inline already_AddRefed<ID2D1Bitmap> CreatePartialBitmapForSurface(
   }
 }
 
-static inline void AddRectToSink(ID2D1GeometrySink *aSink,
-                                 const D2D1_RECT_F &aRect) {
+static inline void AddRectToSink(ID2D1GeometrySink* aSink,
+                                 const D2D1_RECT_F& aRect) {
   aSink->BeginFigure(D2D1::Point2F(aRect.left, aRect.top),
                      D2D1_FIGURE_BEGIN_FILLED);
   aSink->AddLine(D2D1::Point2F(aRect.right, aRect.top));
@@ -685,18 +685,18 @@ static inline void AddRectToSink(ID2D1GeometrySink *aSink,
 
 class DCCommandSink : public ID2D1CommandSink {
  public:
-  explicit DCCommandSink(ID2D1DeviceContext *aCtx) : mCtx(aCtx) {}
+  explicit DCCommandSink(ID2D1DeviceContext* aCtx) : mCtx(aCtx) {}
 
-  HRESULT STDMETHODCALLTYPE QueryInterface(const IID &aIID, void **aPtr) {
+  HRESULT STDMETHODCALLTYPE QueryInterface(const IID& aIID, void** aPtr) {
     if (!aPtr) {
       return E_POINTER;
     }
 
     if (aIID == IID_IUnknown) {
-      *aPtr = static_cast<IUnknown *>(this);
+      *aPtr = static_cast<IUnknown*>(this);
       return S_OK;
     } else if (aIID == IID_ID2D1CommandSink) {
-      *aPtr = static_cast<ID2D1CommandSink *>(this);
+      *aPtr = static_cast<ID2D1CommandSink*>(this);
       return S_OK;
     }
 
@@ -733,12 +733,12 @@ class DCCommandSink : public ID2D1CommandSink {
   }
 
   STDMETHODIMP SetTextRenderingParams(
-      _In_opt_ IDWriteRenderingParams *textRenderingParams) {
+      _In_opt_ IDWriteRenderingParams* textRenderingParams) {
     mCtx->SetTextRenderingParams(textRenderingParams);
     return S_OK;
   }
 
-  STDMETHODIMP SetTransform(_In_ CONST D2D1_MATRIX_3X2_F *transform) {
+  STDMETHODIMP SetTransform(_In_ CONST D2D1_MATRIX_3X2_F* transform) {
     mCtx->SetTransform(transform);
     return S_OK;
   }
@@ -753,55 +753,55 @@ class DCCommandSink : public ID2D1CommandSink {
     return S_OK;
   }
 
-  STDMETHODIMP Clear(_In_opt_ CONST D2D1_COLOR_F *color) {
+  STDMETHODIMP Clear(_In_opt_ CONST D2D1_COLOR_F* color) {
     mCtx->Clear(color);
     return S_OK;
   }
 
   STDMETHODIMP DrawGlyphRun(
-      D2D1_POINT_2F baselineOrigin, _In_ CONST DWRITE_GLYPH_RUN *glyphRun,
-      _In_opt_ CONST DWRITE_GLYPH_RUN_DESCRIPTION *glyphRunDescription,
-      _In_ ID2D1Brush *foregroundBrush, DWRITE_MEASURING_MODE measuringMode) {
+      D2D1_POINT_2F baselineOrigin, _In_ CONST DWRITE_GLYPH_RUN* glyphRun,
+      _In_opt_ CONST DWRITE_GLYPH_RUN_DESCRIPTION* glyphRunDescription,
+      _In_ ID2D1Brush* foregroundBrush, DWRITE_MEASURING_MODE measuringMode) {
     mCtx->DrawGlyphRun(baselineOrigin, glyphRun, glyphRunDescription,
                        foregroundBrush, measuringMode);
     return S_OK;
   }
 
   STDMETHODIMP DrawLine(D2D1_POINT_2F point0, D2D1_POINT_2F point1,
-                        _In_ ID2D1Brush *brush, FLOAT strokeWidth,
-                        _In_opt_ ID2D1StrokeStyle *strokeStyle) {
+                        _In_ ID2D1Brush* brush, FLOAT strokeWidth,
+                        _In_opt_ ID2D1StrokeStyle* strokeStyle) {
     mCtx->DrawLine(point0, point1, brush, strokeWidth, strokeStyle);
     return S_OK;
   }
 
-  STDMETHODIMP DrawGeometry(_In_ ID2D1Geometry *geometry,
-                            _In_ ID2D1Brush *brush, FLOAT strokeWidth,
-                            _In_opt_ ID2D1StrokeStyle *strokeStyle) {
+  STDMETHODIMP DrawGeometry(_In_ ID2D1Geometry* geometry,
+                            _In_ ID2D1Brush* brush, FLOAT strokeWidth,
+                            _In_opt_ ID2D1StrokeStyle* strokeStyle) {
     mCtx->DrawGeometry(geometry, brush, strokeWidth, strokeStyle);
     return S_OK;
   }
 
-  STDMETHODIMP DrawRectangle(_In_ CONST D2D1_RECT_F *rect,
-                             _In_ ID2D1Brush *brush, FLOAT strokeWidth,
-                             _In_opt_ ID2D1StrokeStyle *strokeStyle) {
+  STDMETHODIMP DrawRectangle(_In_ CONST D2D1_RECT_F* rect,
+                             _In_ ID2D1Brush* brush, FLOAT strokeWidth,
+                             _In_opt_ ID2D1StrokeStyle* strokeStyle) {
     mCtx->DrawRectangle(rect, brush, strokeWidth, strokeStyle);
     return S_OK;
   }
 
   STDMETHODIMP DrawBitmap(
-      _In_ ID2D1Bitmap *bitmap,
-      _In_opt_ CONST D2D1_RECT_F *destinationRectangle, FLOAT opacity,
+      _In_ ID2D1Bitmap* bitmap,
+      _In_opt_ CONST D2D1_RECT_F* destinationRectangle, FLOAT opacity,
       D2D1_INTERPOLATION_MODE interpolationMode,
-      _In_opt_ CONST D2D1_RECT_F *sourceRectangle,
-      _In_opt_ CONST D2D1_MATRIX_4X4_F *perspectiveTransform) {
+      _In_opt_ CONST D2D1_RECT_F* sourceRectangle,
+      _In_opt_ CONST D2D1_MATRIX_4X4_F* perspectiveTransform) {
     mCtx->DrawBitmap(bitmap, destinationRectangle, opacity, interpolationMode,
                      sourceRectangle, perspectiveTransform);
     return S_OK;
   }
 
-  STDMETHODIMP DrawImage(_In_ ID2D1Image *image,
-                         _In_opt_ CONST D2D1_POINT_2F *targetOffset,
-                         _In_opt_ CONST D2D1_RECT_F *imageRectangle,
+  STDMETHODIMP DrawImage(_In_ ID2D1Image* image,
+                         _In_opt_ CONST D2D1_POINT_2F* targetOffset,
+                         _In_opt_ CONST D2D1_RECT_F* imageRectangle,
                          D2D1_INTERPOLATION_MODE interpolationMode,
                          D2D1_COMPOSITE_MODE compositeMode) {
     mCtx->DrawImage(image, targetOffset, imageRectangle, interpolationMode,
@@ -809,47 +809,47 @@ class DCCommandSink : public ID2D1CommandSink {
     return S_OK;
   }
 
-  STDMETHODIMP DrawGdiMetafile(_In_ ID2D1GdiMetafile *gdiMetafile,
-                               _In_opt_ CONST D2D1_POINT_2F *targetOffset) {
+  STDMETHODIMP DrawGdiMetafile(_In_ ID2D1GdiMetafile* gdiMetafile,
+                               _In_opt_ CONST D2D1_POINT_2F* targetOffset) {
     mCtx->DrawGdiMetafile(gdiMetafile, targetOffset);
     return S_OK;
   }
 
-  STDMETHODIMP FillMesh(_In_ ID2D1Mesh *mesh, _In_ ID2D1Brush *brush) {
+  STDMETHODIMP FillMesh(_In_ ID2D1Mesh* mesh, _In_ ID2D1Brush* brush) {
     mCtx->FillMesh(mesh, brush);
     return S_OK;
   }
 
-  STDMETHODIMP FillOpacityMask(_In_ ID2D1Bitmap *opacityMask,
-                               _In_ ID2D1Brush *brush,
-                               _In_opt_ CONST D2D1_RECT_F *destinationRectangle,
-                               _In_opt_ CONST D2D1_RECT_F *sourceRectangle) {
+  STDMETHODIMP FillOpacityMask(_In_ ID2D1Bitmap* opacityMask,
+                               _In_ ID2D1Brush* brush,
+                               _In_opt_ CONST D2D1_RECT_F* destinationRectangle,
+                               _In_opt_ CONST D2D1_RECT_F* sourceRectangle) {
     mCtx->FillOpacityMask(opacityMask, brush, destinationRectangle,
                           sourceRectangle);
     return S_OK;
   }
 
-  STDMETHODIMP FillGeometry(_In_ ID2D1Geometry *geometry,
-                            _In_ ID2D1Brush *brush,
-                            _In_opt_ ID2D1Brush *opacityBrush) {
+  STDMETHODIMP FillGeometry(_In_ ID2D1Geometry* geometry,
+                            _In_ ID2D1Brush* brush,
+                            _In_opt_ ID2D1Brush* opacityBrush) {
     mCtx->FillGeometry(geometry, brush, opacityBrush);
     return S_OK;
   }
 
-  STDMETHODIMP FillRectangle(_In_ CONST D2D1_RECT_F *rect,
-                             _In_ ID2D1Brush *brush) {
+  STDMETHODIMP FillRectangle(_In_ CONST D2D1_RECT_F* rect,
+                             _In_ ID2D1Brush* brush) {
     mCtx->FillRectangle(rect, brush);
     return S_OK;
   }
 
-  STDMETHODIMP PushAxisAlignedClip(_In_ CONST D2D1_RECT_F *clipRect,
+  STDMETHODIMP PushAxisAlignedClip(_In_ CONST D2D1_RECT_F* clipRect,
                                    D2D1_ANTIALIAS_MODE antialiasMode) {
     mCtx->PushAxisAlignedClip(clipRect, antialiasMode);
     return S_OK;
   }
 
-  STDMETHODIMP PushLayer(_In_ CONST D2D1_LAYER_PARAMETERS1 *layerParameters1,
-                         _In_opt_ ID2D1Layer *layer) {
+  STDMETHODIMP PushLayer(_In_ CONST D2D1_LAYER_PARAMETERS1* layerParameters1,
+                         _In_opt_ ID2D1Layer* layer) {
     mCtx->PushLayer(layerParameters1, layer);
     return S_OK;
   }
@@ -864,7 +864,7 @@ class DCCommandSink : public ID2D1CommandSink {
     return S_OK;
   }
 
-  ID2D1DeviceContext *mCtx;
+  ID2D1DeviceContext* mCtx;
 };
 
 class MOZ_STACK_CLASS AutoRestoreFP final {
@@ -892,18 +892,18 @@ class MOZ_STACK_CLASS AutoRestoreFP final {
 // what we expect
 class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink {
  public:
-  explicit StreamingGeometrySink(PathSink *aSink) : mSink(aSink) {}
+  explicit StreamingGeometrySink(PathSink* aSink) : mSink(aSink) {}
 
-  HRESULT STDMETHODCALLTYPE QueryInterface(const IID &aIID, void **aPtr) {
+  HRESULT STDMETHODCALLTYPE QueryInterface(const IID& aIID, void** aPtr) {
     if (!aPtr) {
       return E_POINTER;
     }
 
     if (aIID == IID_IUnknown) {
-      *aPtr = static_cast<IUnknown *>(this);
+      *aPtr = static_cast<IUnknown*>(this);
       return S_OK;
     } else if (aIID == IID_ID2D1SimplifiedGeometrySink) {
-      *aPtr = static_cast<ID2D1SimplifiedGeometrySink *>(this);
+      *aPtr = static_cast<ID2D1SimplifiedGeometrySink*>(this);
       return S_OK;
     }
 
@@ -921,14 +921,14 @@ class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink {
     AutoRestoreFP resetFloatingPoint;
     mSink->MoveTo(ToPoint(aPoint));
   }
-  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F *aLines, UINT aCount) {
+  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F* aLines, UINT aCount) {
     AutoRestoreFP resetFloatingPoint;
     for (UINT i = 0; i < aCount; i++) {
       mSink->LineTo(ToPoint(aLines[i]));
     }
   }
   STDMETHOD_(void, AddBeziers)
-  (const D2D1_BEZIER_SEGMENT *aSegments, UINT aCount) {
+  (const D2D1_BEZIER_SEGMENT* aSegments, UINT aCount) {
     AutoRestoreFP resetFloatingPoint;
     for (UINT i = 0; i < aCount; i++) {
       mSink->BezierTo(ToPoint(aSegments[i].point1),
@@ -951,7 +951,7 @@ class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink {
   }
 
  private:
-  PathSink *mSink;
+  PathSink* mSink;
 };
 
 }  // namespace gfx

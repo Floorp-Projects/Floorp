@@ -12,7 +12,7 @@
 #include "nsTHashtable.h"
 void WebrtcTelemetry::RecordIceCandidateMask(const uint32_t iceCandidateBitmask,
                                              const bool success) {
-  WebrtcIceCandidateType *entry =
+  WebrtcIceCandidateType* entry =
       mWebrtcIceCandidates.GetEntry(iceCandidateBitmask);
   if (!entry) {
     entry = mWebrtcIceCandidates.PutEntry(iceCandidateBitmask);
@@ -26,14 +26,14 @@ void WebrtcTelemetry::RecordIceCandidateMask(const uint32_t iceCandidateBitmask,
   }
 }
 
-bool ReflectIceEntry(const WebrtcTelemetry::WebrtcIceCandidateType *entry,
-                     const WebrtcTelemetry::WebrtcIceCandidateStats *stat,
-                     JSContext *cx, JS::Handle<JSObject *> obj) {
+bool ReflectIceEntry(const WebrtcTelemetry::WebrtcIceCandidateType* entry,
+                     const WebrtcTelemetry::WebrtcIceCandidateStats* stat,
+                     JSContext* cx, JS::Handle<JSObject*> obj) {
   if ((stat->successCount == 0) && (stat->failureCount == 0)) return true;
 
-  const uint32_t &bitmask = entry->GetKey();
+  const uint32_t& bitmask = entry->GetKey();
 
-  JS::Rooted<JSObject *> statsObj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> statsObj(cx, JS_NewPlainObject(cx));
   if (!statsObj) return false;
   if (!JS_DefineProperty(cx, obj,
                          nsPrintfCString("%" PRIu32, bitmask).BeginReading(),
@@ -53,13 +53,13 @@ bool ReflectIceEntry(const WebrtcTelemetry::WebrtcIceCandidateType *entry,
   return true;
 }
 
-bool ReflectIceWebrtc(WebrtcTelemetry::WebrtcIceCandidateType *entry,
-                      JSContext *cx, JS::Handle<JSObject *> obj) {
+bool ReflectIceWebrtc(WebrtcTelemetry::WebrtcIceCandidateType* entry,
+                      JSContext* cx, JS::Handle<JSObject*> obj) {
   return ReflectIceEntry(entry, &entry->mData.webrtc, cx, obj);
 }
 
-bool WebrtcTelemetry::AddIceInfo(JSContext *cx, JS::Handle<JSObject *> iceObj) {
-  JS::Rooted<JSObject *> statsObj(cx, JS_NewPlainObject(cx));
+bool WebrtcTelemetry::AddIceInfo(JSContext* cx, JS::Handle<JSObject*> iceObj) {
+  JS::Rooted<JSObject*> statsObj(cx, JS_NewPlainObject(cx));
   if (!statsObj) return false;
 
   if (!mWebrtcIceCandidates.ReflectIntoJS(ReflectIceWebrtc, cx, statsObj)) {
@@ -69,13 +69,13 @@ bool WebrtcTelemetry::AddIceInfo(JSContext *cx, JS::Handle<JSObject *> iceObj) {
   return JS_DefineProperty(cx, iceObj, "webrtc", statsObj, JSPROP_ENUMERATE);
 }
 
-bool WebrtcTelemetry::GetWebrtcStats(JSContext *cx,
+bool WebrtcTelemetry::GetWebrtcStats(JSContext* cx,
                                      JS::MutableHandle<JS::Value> ret) {
-  JS::Rooted<JSObject *> root_obj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj) return false;
   ret.setObject(*root_obj);
 
-  JS::Rooted<JSObject *> ice_obj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> ice_obj(cx, JS_NewPlainObject(cx));
   if (!ice_obj) return false;
   JS_DefineProperty(cx, root_obj, "IceCandidatesStats", ice_obj,
                     JSPROP_ENUMERATE);

@@ -28,7 +28,7 @@
 //
 // We would like to move away from this binary compatibility requirement
 // in service workers.  See bug 1248628.
-void deserializeAndVerify(const nsCString &serializedSecInfo,
+void deserializeAndVerify(const nsCString& serializedSecInfo,
                           bool hasFailedCertChain,
                           size_t failedCertChainLength = 0) {
   nsCOMPtr<nsISupports> secInfo;

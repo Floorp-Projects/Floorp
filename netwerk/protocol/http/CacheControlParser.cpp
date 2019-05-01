@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace net {
 
-CacheControlParser::CacheControlParser(nsACString const &aHeader)
+CacheControlParser::CacheControlParser(nsACString const& aHeader)
     : Tokenizer(aHeader, nullptr, "-_"),
       mMaxAgeSet(false),
       mMaxAge(0),
@@ -54,7 +54,7 @@ void CacheControlParser::Directive() {
   NS_WARNING("Unexpected input in Cache-control header value");
 }
 
-bool CacheControlParser::SecondsValue(uint32_t *seconds, uint32_t defaultVal) {
+bool CacheControlParser::SecondsValue(uint32_t* seconds, uint32_t defaultVal) {
   SkipWhites();
   if (!CheckChar('=')) {
     *seconds = defaultVal;
@@ -88,17 +88,17 @@ void CacheControlParser::IgnoreDirective() {
   }
 }
 
-bool CacheControlParser::MaxAge(uint32_t *seconds) {
+bool CacheControlParser::MaxAge(uint32_t* seconds) {
   *seconds = mMaxAge;
   return mMaxAgeSet;
 }
 
-bool CacheControlParser::MaxStale(uint32_t *seconds) {
+bool CacheControlParser::MaxStale(uint32_t* seconds) {
   *seconds = mMaxStale;
   return mMaxStaleSet;
 }
 
-bool CacheControlParser::MinFresh(uint32_t *seconds) {
+bool CacheControlParser::MinFresh(uint32_t* seconds) {
   *seconds = mMinFresh;
   return mMinFreshSet;
 }

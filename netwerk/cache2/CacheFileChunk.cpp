@@ -15,7 +15,7 @@ namespace net {
 
 #define kMinBufSize 512
 
-CacheFileChunkBuffer::CacheFileChunkBuffer(CacheFileChunk *aChunk)
+CacheFileChunkBuffer::CacheFileChunkBuffer(CacheFileChunk* aChunk)
     : mChunk(aChunk),
       mBuf(nullptr),
       mBufSize(0),
@@ -32,14 +32,14 @@ CacheFileChunkBuffer::~CacheFileChunkBuffer() {
   }
 }
 
-void CacheFileChunkBuffer::CopyFrom(CacheFileChunkBuffer *aOther) {
+void CacheFileChunkBuffer::CopyFrom(CacheFileChunkBuffer* aOther) {
   MOZ_RELEASE_ASSERT(mBufSize >= aOther->mDataSize);
   mDataSize = aOther->mDataSize;
   memcpy(mBuf, aOther->mBuf, mDataSize);
 }
 
 nsresult CacheFileChunkBuffer::FillInvalidRanges(
-    CacheFileChunkBuffer *aOther, CacheFileUtils::ValidityMap *aMap) {
+    CacheFileChunkBuffer* aOther, CacheFileUtils::ValidityMap* aMap) {
   nsresult rv;
 
   rv = EnsureBufSize(aOther->mDataSize);
@@ -95,7 +95,7 @@ MOZ_MUST_USE nsresult CacheFileChunkBuffer::EnsureBufSize(uint32_t aBufSize) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char *newBuf = static_cast<char *>(realloc(mBuf, aBufSize));
+  char* newBuf = static_cast<char*>(realloc(mBuf, aBufSize));
   if (!newBuf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -167,7 +167,7 @@ uint32_t CacheFileChunkHandle::Offset() {
   return mBuf->mChunk->Index() * kChunkSize;
 }
 
-CacheFileChunkReadHandle::CacheFileChunkReadHandle(CacheFileChunkBuffer *aBuf) {
+CacheFileChunkReadHandle::CacheFileChunkReadHandle(CacheFileChunkBuffer* aBuf) {
   mBuf = aBuf;
   mBuf->mReadHandlesCount++;
 }
@@ -176,10 +176,10 @@ CacheFileChunkReadHandle::~CacheFileChunkReadHandle() {
   mBuf->RemoveReadHandle();
 }
 
-const char *CacheFileChunkReadHandle::Buf() { return mBuf->mBuf; }
+const char* CacheFileChunkReadHandle::Buf() { return mBuf->mBuf; }
 
 CacheFileChunkWriteHandle::CacheFileChunkWriteHandle(
-    CacheFileChunkBuffer *aBuf) {
+    CacheFileChunkBuffer* aBuf) {
   mBuf = aBuf;
   if (mBuf) {
     MOZ_ASSERT(!mBuf->mWriteHandleExists);
@@ -193,7 +193,7 @@ CacheFileChunkWriteHandle::~CacheFileChunkWriteHandle() {
   }
 }
 
-char *CacheFileChunkWriteHandle::Buf() { return mBuf ? mBuf->mBuf : nullptr; }
+char* CacheFileChunkWriteHandle::Buf() { return mBuf ? mBuf->mBuf : nullptr; }
 
 void CacheFileChunkWriteHandle::UpdateDataSize(uint32_t aOffset,
                                                uint32_t aLen) {
@@ -210,8 +210,8 @@ void CacheFileChunkWriteHandle::UpdateDataSize(uint32_t aOffset,
 
 class NotifyUpdateListenerEvent : public Runnable {
  public:
-  NotifyUpdateListenerEvent(CacheFileChunkListener *aCallback,
-                            CacheFileChunk *aChunk)
+  NotifyUpdateListenerEvent(CacheFileChunkListener* aCallback,
+                            CacheFileChunk* aChunk)
       : Runnable("net::NotifyUpdateListenerEvent"),
         mCallback(aCallback),
         mChunk(aChunk) {
@@ -290,7 +290,7 @@ NS_INTERFACE_MAP_BEGIN(CacheFileChunk)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex,
+CacheFileChunk::CacheFileChunk(CacheFile* aFile, uint32_t aIndex,
                                bool aInitByWriter)
     : CacheMemoryConsumer(aFile->mOpenAsMemoryOnly ? MEMORY_ONLY : DONT_REPORT),
       mIndex(aIndex),
@@ -331,9 +331,9 @@ void CacheFileChunk::InitNew() {
   mState = READY;
 }
 
-nsresult CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
+nsresult CacheFileChunk::Read(CacheFileHandle* aHandle, uint32_t aLen,
                               CacheHash::Hash16_t aHash,
-                              CacheFileChunkListener *aCallback) {
+                              CacheFileChunkListener* aCallback) {
   AssertOwnsLock();
 
   LOG(("CacheFileChunk::Read() [this=%p, handle=%p, len=%d, listener=%p]", this,
@@ -378,8 +378,8 @@ nsresult CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
   return rv;
 }
 
-nsresult CacheFileChunk::Write(CacheFileHandle *aHandle,
-                               CacheFileChunkListener *aCallback) {
+nsresult CacheFileChunk::Write(CacheFileHandle* aHandle,
+                               CacheFileChunkListener* aCallback) {
   AssertOwnsLock();
 
   LOG(("CacheFileChunk::Write() [this=%p, handle=%p, listener=%p]", this,
@@ -411,7 +411,7 @@ nsresult CacheFileChunk::Write(CacheFileHandle *aHandle,
   return rv;
 }
 
-void CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback) {
+void CacheFileChunk::WaitForUpdate(CacheFileChunkListener* aCallback) {
   AssertOwnsLock();
 
   LOG(("CacheFileChunk::WaitForUpdate() [this=%p, listener=%p]", this,
@@ -426,7 +426,7 @@ void CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback) {
   }
 #endif
 
-  ChunkListenerItem *item = new ChunkListenerItem();
+  ChunkListenerItem* item = new ChunkListenerItem();
   item->mTarget = CacheFileIOManager::IOTarget();
   if (!item->mTarget) {
     LOG(
@@ -441,7 +441,7 @@ void CacheFileChunk::WaitForUpdate(CacheFileChunkListener *aCallback) {
   mUpdateListeners.AppendElement(item);
 }
 
-nsresult CacheFileChunk::CancelWait(CacheFileChunkListener *aCallback) {
+nsresult CacheFileChunk::CancelWait(CacheFileChunkListener* aCallback) {
   AssertOwnsLock();
 
   LOG(("CacheFileChunk::CancelWait() [this=%p, listener=%p]", this, aCallback));
@@ -450,7 +450,7 @@ nsresult CacheFileChunk::CancelWait(CacheFileChunkListener *aCallback) {
 
   uint32_t i;
   for (i = 0; i < mUpdateListeners.Length(); i++) {
-    ChunkListenerItem *item = mUpdateListeners[i];
+    ChunkListenerItem* item = mUpdateListeners[i];
 
     if (item->mCallback == aCallback) {
       mUpdateListeners.RemoveElementAt(i);
@@ -479,7 +479,7 @@ nsresult CacheFileChunk::NotifyUpdateListeners() {
 
   rv = NS_OK;
   for (uint32_t i = 0; i < mUpdateListeners.Length(); i++) {
-    ChunkListenerItem *item = mUpdateListeners[i];
+    ChunkListenerItem* item = mUpdateListeners[i];
 
     LOG(
         ("CacheFileChunk::NotifyUpdateListeners() - Notifying listener %p "
@@ -561,14 +561,14 @@ nsresult CacheFileChunk::Truncate(uint32_t aOffset) {
   return NS_OK;
 }
 
-nsresult CacheFileChunk::OnFileOpened(CacheFileHandle *aHandle,
+nsresult CacheFileChunk::OnFileOpened(CacheFileHandle* aHandle,
                                       nsresult aResult) {
   MOZ_CRASH("CacheFileChunk::OnFileOpened should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle,
-                                       const char *aBuf, nsresult aResult) {
+nsresult CacheFileChunk::OnDataWritten(CacheFileHandle* aHandle,
+                                       const char* aBuf, nsresult aResult) {
   LOG((
       "CacheFileChunk::OnDataWritten() [this=%p, handle=%p, result=0x%08" PRIx32
       "]",
@@ -597,7 +597,7 @@ nsresult CacheFileChunk::OnDataWritten(CacheFileHandle *aHandle,
   return NS_OK;
 }
 
-nsresult CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
+nsresult CacheFileChunk::OnDataRead(CacheFileHandle* aHandle, char* aBuf,
                                     nsresult aResult) {
   LOG(("CacheFileChunk::OnDataRead() [this=%p, handle=%p, result=0x%08" PRIx32
        "]",
@@ -661,18 +661,18 @@ nsresult CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
   return NS_OK;
 }
 
-nsresult CacheFileChunk::OnFileDoomed(CacheFileHandle *aHandle,
+nsresult CacheFileChunk::OnFileDoomed(CacheFileHandle* aHandle,
                                       nsresult aResult) {
   MOZ_CRASH("CacheFileChunk::OnFileDoomed should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileChunk::OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) {
+nsresult CacheFileChunk::OnEOFSet(CacheFileHandle* aHandle, nsresult aResult) {
   MOZ_CRASH("CacheFileChunk::OnEOFSet should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult CacheFileChunk::OnFileRenamed(CacheFileHandle *aHandle,
+nsresult CacheFileChunk::OnFileRenamed(CacheFileHandle* aHandle,
                                        nsresult aResult) {
   MOZ_CRASH("CacheFileChunk::OnFileRenamed should not be called!");
   return NS_ERROR_UNEXPECTED;
@@ -832,7 +832,7 @@ void CacheFileChunk::BuffersAllocationChanged(uint32_t aFreed,
        static_cast<uint32_t>(ChunksMemoryUsage()), this));
 }
 
-mozilla::Atomic<uint32_t, ReleaseAcquire> &CacheFileChunk::ChunksMemoryUsage()
+mozilla::Atomic<uint32_t, ReleaseAcquire>& CacheFileChunk::ChunksMemoryUsage()
     const {
   static mozilla::Atomic<uint32_t, ReleaseAcquire> chunksMemoryUsage(0);
   static mozilla::Atomic<uint32_t, ReleaseAcquire> prioChunksMemoryUsage(0);

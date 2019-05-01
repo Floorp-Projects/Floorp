@@ -22,8 +22,8 @@
 #include "nsHttpHeaderArray.h"
 #include "mozilla/AutoRestore.h"
 
-nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, uint32_t aPartID,
-                             nsIStreamListener *aListener)
+nsPartChannel::nsPartChannel(nsIChannel* aMultipartChannel, uint32_t aPartID,
+                             nsIStreamListener* aListener)
     : mMultipartChannel(aMultipartChannel),
       mListener(aListener),
       mStatus(NS_OK),
@@ -48,17 +48,17 @@ void nsPartChannel::InitializeByteRange(int64_t aStart, int64_t aEnd) {
   mByteRangeEnd = aEnd;
 }
 
-nsresult nsPartChannel::SendOnStartRequest(nsISupports *aContext) {
+nsresult nsPartChannel::SendOnStartRequest(nsISupports* aContext) {
   return mListener->OnStartRequest(this);
 }
 
-nsresult nsPartChannel::SendOnDataAvailable(nsISupports *aContext,
-                                            nsIInputStream *aStream,
+nsresult nsPartChannel::SendOnDataAvailable(nsISupports* aContext,
+                                            nsIInputStream* aStream,
                                             uint64_t aOffset, uint32_t aLen) {
   return mListener->OnDataAvailable(this, aStream, aOffset, aLen);
 }
 
-nsresult nsPartChannel::SendOnStopRequest(nsISupports *aContext,
+nsresult nsPartChannel::SendOnStopRequest(nsISupports* aContext,
                                           nsresult aStatus) {
   // Drop the listener
   nsCOMPtr<nsIStreamListener> listener;
@@ -67,7 +67,7 @@ nsresult nsPartChannel::SendOnStopRequest(nsISupports *aContext,
 }
 
 void nsPartChannel::SetContentDisposition(
-    const nsACString &aContentDispositionHeader) {
+    const nsACString& aContentDispositionHeader) {
   mContentDispositionHeader = aContentDispositionHeader;
   nsCOMPtr<nsIURI> uri;
   GetURI(getter_AddRefs(uri));
@@ -97,12 +97,12 @@ NS_INTERFACE_MAP_END
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetName(nsACString &aResult) {
+nsPartChannel::GetName(nsACString& aResult) {
   return mMultipartChannel->GetName(aResult);
 }
 
 NS_IMETHODIMP
-nsPartChannel::IsPending(bool *aResult) {
+nsPartChannel::IsPending(bool* aResult) {
   // For now, consider the active lifetime of each part the same as
   // the underlying multipart channel...  This is not exactly right,
   // but it is good enough :-)
@@ -110,7 +110,7 @@ nsPartChannel::IsPending(bool *aResult) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetStatus(nsresult *aResult) {
+nsPartChannel::GetStatus(nsresult* aResult) {
   nsresult rv = NS_OK;
 
   if (NS_FAILED(mStatus)) {
@@ -152,20 +152,20 @@ nsPartChannel::Resume(void) {
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetOriginalURI(nsIURI **aURI) {
+nsPartChannel::GetOriginalURI(nsIURI** aURI) {
   return mMultipartChannel->GetOriginalURI(aURI);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetOriginalURI(nsIURI *aURI) {
+nsPartChannel::SetOriginalURI(nsIURI* aURI) {
   return mMultipartChannel->SetOriginalURI(aURI);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetURI(nsIURI **aURI) { return mMultipartChannel->GetURI(aURI); }
+nsPartChannel::GetURI(nsIURI** aURI) { return mMultipartChannel->GetURI(aURI); }
 
 NS_IMETHODIMP
-nsPartChannel::Open(nsIInputStream **aStream) {
+nsPartChannel::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
@@ -176,7 +176,7 @@ nsPartChannel::Open(nsIInputStream **aStream) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::AsyncOpen(nsIStreamListener *aListener) {
+nsPartChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
@@ -187,7 +187,7 @@ nsPartChannel::AsyncOpen(nsIStreamListener *aListener) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadFlags(nsLoadFlags *aLoadFlags) {
+nsPartChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   *aLoadFlags = mLoadFlags;
   return NS_OK;
 }
@@ -199,12 +199,12 @@ nsPartChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetIsDocument(bool *aIsDocument) {
+nsPartChannel::GetIsDocument(bool* aIsDocument) {
   return NS_GetIsDocumentChannel(this, aIsDocument);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadGroup(nsILoadGroup **aLoadGroup) {
+nsPartChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   *aLoadGroup = mLoadGroup;
   NS_IF_ADDREF(*aLoadGroup);
 
@@ -212,75 +212,75 @@ nsPartChannel::GetLoadGroup(nsILoadGroup **aLoadGroup) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetLoadGroup(nsILoadGroup *aLoadGroup) {
+nsPartChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
   mLoadGroup = aLoadGroup;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetOwner(nsISupports **aOwner) {
+nsPartChannel::GetOwner(nsISupports** aOwner) {
   return mMultipartChannel->GetOwner(aOwner);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetOwner(nsISupports *aOwner) {
+nsPartChannel::SetOwner(nsISupports* aOwner) {
   return mMultipartChannel->SetOwner(aOwner);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
+nsPartChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
   return mMultipartChannel->GetLoadInfo(aLoadInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+nsPartChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
   MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   return mMultipartChannel->SetLoadInfo(aLoadInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks) {
+nsPartChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
   return mMultipartChannel->GetNotificationCallbacks(aCallbacks);
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks) {
+nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
   return mMultipartChannel->SetNotificationCallbacks(aCallbacks);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetSecurityInfo(nsISupports **aSecurityInfo) {
+nsPartChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   return mMultipartChannel->GetSecurityInfo(aSecurityInfo);
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentType(nsACString &aContentType) {
+nsPartChannel::GetContentType(nsACString& aContentType) {
   aContentType = mContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentType(const nsACString &aContentType) {
+nsPartChannel::SetContentType(const nsACString& aContentType) {
   bool dummy;
   net_ParseContentType(aContentType, mContentType, mContentCharset, &dummy);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentCharset(nsACString &aContentCharset) {
+nsPartChannel::GetContentCharset(nsACString& aContentCharset) {
   aContentCharset = mContentCharset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::SetContentCharset(const nsACString &aContentCharset) {
+nsPartChannel::SetContentCharset(const nsACString& aContentCharset) {
   mContentCharset = aContentCharset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentLength(int64_t *aContentLength) {
+nsPartChannel::GetContentLength(int64_t* aContentLength) {
   *aContentLength = mContentLength;
   return NS_OK;
 }
@@ -292,7 +292,7 @@ nsPartChannel::SetContentLength(int64_t aContentLength) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetContentDisposition(uint32_t *aContentDisposition) {
+nsPartChannel::GetContentDisposition(uint32_t* aContentDisposition) {
   if (mContentDispositionHeader.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
   *aContentDisposition = mContentDisposition;
@@ -306,7 +306,7 @@ nsPartChannel::SetContentDisposition(uint32_t aContentDisposition) {
 
 NS_IMETHODIMP
 nsPartChannel::GetContentDispositionFilename(
-    nsAString &aContentDispositionFilename) {
+    nsAString& aContentDispositionFilename) {
   if (mContentDispositionFilename.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
   aContentDispositionFilename = mContentDispositionFilename;
@@ -315,13 +315,13 @@ nsPartChannel::GetContentDispositionFilename(
 
 NS_IMETHODIMP
 nsPartChannel::SetContentDispositionFilename(
-    const nsAString &aContentDispositionFilename) {
+    const nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
 nsPartChannel::GetContentDispositionHeader(
-    nsACString &aContentDispositionHeader) {
+    nsACString& aContentDispositionHeader) {
   if (mContentDispositionHeader.IsEmpty()) return NS_ERROR_NOT_AVAILABLE;
 
   aContentDispositionHeader = mContentDispositionHeader;
@@ -329,13 +329,13 @@ nsPartChannel::GetContentDispositionHeader(
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetPartID(uint32_t *aPartID) {
+nsPartChannel::GetPartID(uint32_t* aPartID) {
   *aPartID = mPartID;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetIsLastPart(bool *aIsLastPart) {
+nsPartChannel::GetIsLastPart(bool* aIsLastPart) {
   *aIsLastPart = mIsLastPart;
   return NS_OK;
 }
@@ -345,27 +345,27 @@ nsPartChannel::GetIsLastPart(bool *aIsLastPart) {
 //
 
 NS_IMETHODIMP
-nsPartChannel::GetIsByteRangeRequest(bool *aIsByteRangeRequest) {
+nsPartChannel::GetIsByteRangeRequest(bool* aIsByteRangeRequest) {
   *aIsByteRangeRequest = mIsByteRangeRequest;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetStartRange(int64_t *aStartRange) {
+nsPartChannel::GetStartRange(int64_t* aStartRange) {
   *aStartRange = mByteRangeStart;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetEndRange(int64_t *aEndRange) {
+nsPartChannel::GetEndRange(int64_t* aEndRange) {
   *aEndRange = mByteRangeEnd;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetBaseChannel(nsIChannel **aReturn) {
+nsPartChannel::GetBaseChannel(nsIChannel** aReturn) {
   NS_ENSURE_ARG_POINTER(aReturn);
 
   *aReturn = mMultipartChannel;
@@ -381,18 +381,18 @@ NS_IMPL_ISUPPORTS(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener,
 
 // No syncronous conversion at this time.
 NS_IMETHODIMP
-nsMultiMixedConv::Convert(nsIInputStream *aFromStream, const char *aFromType,
-                          const char *aToType, nsISupports *aCtxt,
-                          nsIInputStream **_retval) {
+nsMultiMixedConv::Convert(nsIInputStream* aFromStream, const char* aFromType,
+                          const char* aToType, nsISupports* aCtxt,
+                          nsIInputStream** _retval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Stream converter service calls this to initialize the actual stream converter
 // (us).
 NS_IMETHODIMP
-nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
-                                   nsIStreamListener *aListener,
-                                   nsISupports *aCtxt) {
+nsMultiMixedConv::AsyncConvertData(const char* aFromType, const char* aToType,
+                                   nsIStreamListener* aListener,
+                                   nsISupports* aCtxt) {
   NS_ASSERTION(aListener && aFromType && aToType,
                "null pointer passed into multi mixed converter");
 
@@ -409,7 +409,7 @@ nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
 
 // nsIRequestObserver implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnStartRequest(nsIRequest *request) {
+nsMultiMixedConv::OnStartRequest(nsIRequest* request) {
   // we're assuming the content-type is available at this stage
   NS_ASSERTION(mBoundary.IsEmpty(), "a second on start???");
 
@@ -495,7 +495,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request) {
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+nsMultiMixedConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                   uint64_t sourceOffset, uint32_t count) {
   // Failing these assertions may indicate that some of the target listeners of
   // this converter is looping the thead queue, which is harmful to how we
@@ -523,7 +523,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
 }
 
 NS_IMETHODIMP
-nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+nsMultiMixedConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   nsresult rv;
 
   if (mBoundary.IsEmpty()) {  // no token, no love.
@@ -558,7 +558,7 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   return NS_OK;
 }
 
-nsresult nsMultiMixedConv::ConsumeToken(Token const &token) {
+nsresult nsMultiMixedConv::ConsumeToken(Token const& token) {
   nsresult rv;
 
   switch (mParserState) {
@@ -794,7 +794,7 @@ nsresult nsMultiMixedConv::SendStart() {
   // before starting up another "part." that would be bad.
   MOZ_ASSERT(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
-  nsPartChannel *newChannel;
+  nsPartChannel* newChannel;
   newChannel = new nsPartChannel(mChannel, mCurrentPartID++, partListener);
   if (!newChannel) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -866,7 +866,7 @@ nsresult nsMultiMixedConv::SendStop(nsresult aStatus) {
   return rv;
 }
 
-void nsMultiMixedConv::AccumulateData(Token const &aToken) {
+void nsMultiMixedConv::AccumulateData(Token const& aToken) {
   if (!mRawData) {
     // This is the first read of raw data during this FeedInput loop
     // of the incremental tokenizer.  All 'raw' tokens are coming from
@@ -1009,7 +1009,7 @@ nsresult nsMultiMixedConv::ProcessHeader() {
   return NS_OK;
 }
 
-nsresult NS_NewMultiMixedConv(nsMultiMixedConv **aMultiMixedConv) {
+nsresult NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv) {
   MOZ_ASSERT(aMultiMixedConv != nullptr, "null ptr");
   if (!aMultiMixedConv) return NS_ERROR_NULL_POINTER;
 

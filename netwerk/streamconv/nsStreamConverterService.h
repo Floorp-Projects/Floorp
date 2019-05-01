@@ -33,12 +33,12 @@ class nsStreamConverterService : public nsIStreamConverterService {
   virtual ~nsStreamConverterService() = default;
 
   // Responsible for finding a converter for the given MIME-type.
-  nsresult FindConverter(const char *aContractID,
-                         nsTArray<nsCString> **aEdgeList);
+  nsresult FindConverter(const char* aContractID,
+                         nsTArray<nsCString>** aEdgeList);
   nsresult BuildGraph(void);
-  nsresult AddAdjacency(const char *aContractID);
-  nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes,
-                       nsCString &aToRes);
+  nsresult AddAdjacency(const char* aContractID);
+  nsresult ParseFromTo(const char* aContractID, nsCString& aFromRes,
+                       nsCString& aToRes);
 
   // member variables
   nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<nsAtom>>> mAdjacencyList;

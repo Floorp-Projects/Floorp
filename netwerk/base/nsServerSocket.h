@@ -24,23 +24,23 @@ class nsServerSocket : public nsASocketHandler, public nsIServerSocket {
   NS_DECL_NSISERVERSOCKET
 
   // nsASocketHandler methods:
-  virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags) override;
-  virtual void OnSocketDetached(PRFileDesc *fd) override;
-  virtual void IsLocal(bool *aIsLocal) override;
-  virtual void KeepWhenOffline(bool *aKeepWhenOffline) override;
+  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) override;
+  virtual void OnSocketDetached(PRFileDesc* fd) override;
+  virtual void IsLocal(bool* aIsLocal) override;
+  virtual void KeepWhenOffline(bool* aKeepWhenOffline) override;
 
   virtual uint64_t ByteCountSent() override { return 0; }
   virtual uint64_t ByteCountReceived() override { return 0; }
   nsServerSocket();
 
-  virtual void CreateClientTransport(PRFileDesc *clientFD,
-                                     const mozilla::net::NetAddr &clientAddr);
+  virtual void CreateClientTransport(PRFileDesc* clientFD,
+                                     const mozilla::net::NetAddr& clientAddr);
   virtual nsresult SetSocketDefaults() { return NS_OK; }
   virtual nsresult OnSocketListen() { return NS_OK; }
 
  protected:
   virtual ~nsServerSocket();
-  PRFileDesc *mFD;
+  PRFileDesc* mFD;
   nsCOMPtr<nsIServerSocketListener> mListener;
 
  private:

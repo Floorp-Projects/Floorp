@@ -24,8 +24,8 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsAndroidHistory,
                                          nsAndroidHistory::GetSingleton)
 NS_DEFINE_NAMED_CID(NS_ANDROIDHISTORY_CID);
 
-nsresult AndroidHistoryConstructor(nsISupports *aOuter, const nsIID &aIID,
-                                   void **aResult) {
+nsresult AndroidHistoryConstructor(nsISupports* aOuter, const nsIID& aIID,
+                                   void** aResult) {
   if (mozilla::jni::IsFennec()) {
     return nsAndroidHistoryConstructor(aOuter, aIID, aResult);
   }

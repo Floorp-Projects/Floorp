@@ -92,7 +92,7 @@ BOOL StartServiceUpdate(LPCWSTR installDir) {
   UniquePtr<char[]> serviceConfigBuffer = MakeUnique<char[]>(bytesNeeded);
   if (!QueryServiceConfigW(
           svc,
-          reinterpret_cast<QUERY_SERVICE_CONFIGW *>(serviceConfigBuffer.get()),
+          reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get()),
           bytesNeeded, &bytesNeeded)) {
     CloseServiceHandle(svc);
     return FALSE;
@@ -100,8 +100,8 @@ BOOL StartServiceUpdate(LPCWSTR installDir) {
 
   CloseServiceHandle(svc);
 
-  QUERY_SERVICE_CONFIGW &serviceConfig =
-      *reinterpret_cast<QUERY_SERVICE_CONFIGW *>(serviceConfigBuffer.get());
+  QUERY_SERVICE_CONFIGW& serviceConfig =
+      *reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get());
 
   PathUnquoteSpacesW(serviceConfig.lpBinaryPathName);
 
@@ -157,7 +157,7 @@ BOOL StartServiceUpdate(LPCWSTR installDir) {
  *         17002 if the service could not be opened
  */
 DWORD
-StartServiceCommand(int argc, LPCWSTR *argv) {
+StartServiceCommand(int argc, LPCWSTR* argv) {
   DWORD lastState = WaitForServiceStop(SVC_NAME, 5);
   if (lastState != SERVICE_STOPPED) {
     return 20000 + lastState;
@@ -210,14 +210,14 @@ StartServiceCommand(int argc, LPCWSTR *argv) {
  * @return ERROR_SUCCESS if successful
  */
 DWORD
-LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv) {
+LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR* argv) {
   // The service command is the same as the updater.exe command line except
   // it has 4 extra args:
   // 0) The name of the service, automatically added by Windows
   // 1) "MozillaMaintenance" (I think this is redundant with 0)
   // 2) The command being executed, which is "software-update"
   // 3) The path to updater.exe (from argv[0])
-  LPCWSTR *updaterServiceArgv = new LPCWSTR[argc + 2];
+  LPCWSTR* updaterServiceArgv = new LPCWSTR[argc + 2];
   updaterServiceArgv[0] = L"MozillaMaintenance";
   updaterServiceArgv[1] = L"software-update";
 
@@ -295,7 +295,7 @@ BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath) {
  * @return TRUE if successful
  */
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode,
-                        nsAutoHandle &userToken) {
+                        nsAutoHandle& userToken) {
   ImpersonationScope impersonated(userToken);
   if (userToken && !impersonated) {
     return FALSE;
@@ -560,7 +560,7 @@ BOOL DoesFallbackKeyExist() {
  * @param isLocal out parameter which will hold TRUE if the drive is local
  * @return TRUE if the call succeeded
  */
-BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal) {
+BOOL IsLocalFile(LPCWSTR file, BOOL& isLocal) {
   WCHAR rootPath[MAX_PATH + 1] = {L'\0'};
   if (wcslen(file) > MAX_PATH) {
     return FALSE;
@@ -580,7 +580,7 @@ BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal) {
  * @param retValue  Out parameter which will hold the value
  * @return TRUE on success
  */
-static BOOL GetDWORDValue(HKEY key, LPCWSTR valueName, DWORD &retValue) {
+static BOOL GetDWORDValue(HKEY key, LPCWSTR valueName, DWORD& retValue) {
   DWORD regDWORDValueSize = sizeof(DWORD);
   LONG retCode =
       RegQueryValueExW(key, valueName, 0, nullptr,
@@ -597,7 +597,7 @@ static BOOL GetDWORDValue(HKEY key, LPCWSTR valueName, DWORD &retValue) {
  * @return TRUE if the user can actually elevate and the value was obtained
  *         successfully.
  */
-BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation) {
+BOOL IsUnpromptedElevation(BOOL& isUnpromptedElevation) {
   if (!UACHelper::CanUserElevate()) {
     return FALSE;
   }

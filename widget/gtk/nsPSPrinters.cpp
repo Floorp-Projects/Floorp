@@ -36,7 +36,7 @@ nsPSPrinterList::nsPSPrinterList() {
 
 /* Check whether the PostScript module has been disabled at runtime */
 bool nsPSPrinterList::Enabled() {
-  const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
+  const char* val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
   if (val && (val[0] == '0' || !PL_strcasecmp(val, "false"))) return false;
 
   // is the PS module enabled?
@@ -44,13 +44,13 @@ bool nsPSPrinterList::Enabled() {
 }
 
 /* Fetch a list of printers handled by the PostsScript module */
-void nsPSPrinterList::GetPrinterList(nsTArray<nsCString> &aList) {
+void nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList) {
   aList.Clear();
 
   // Query CUPS for a printer list. The default printer goes to the
   // head of the output list; others are appended.
   if (gCupsShim.IsInitialized()) {
-    cups_dest_t *dests;
+    cups_dest_t* dests;
 
     int num_dests = (gCupsShim.mCupsGetDests)(&dests);
     if (num_dests) {
@@ -85,9 +85,9 @@ void nsPSPrinterList::GetPrinterList(nsTArray<nsCString> &aList) {
   if (!list.IsEmpty()) {
     // For each printer (except "default" which was already added),
     // construct a string "PostScript/<name>" and append it to the list.
-    char *state;
+    char* state;
 
-    for (char *name = PL_strtok_r(list.BeginWriting(), " ", &state);
+    for (char* name = PL_strtok_r(list.BeginWriting(), " ", &state);
          nullptr != name; name = PL_strtok_r(nullptr, " ", &state)) {
       if (0 != strcmp(name, "default")) {
         nsAutoCString fullName(NS_POSTSCRIPT_DRIVER_NAME);
@@ -100,7 +100,7 @@ void nsPSPrinterList::GetPrinterList(nsTArray<nsCString> &aList) {
 
 /* Identify the printer type */
 nsPSPrinterList::PrinterType nsPSPrinterList::GetPrinterType(
-    const nsACString &aName) {
+    const nsACString& aName) {
   if (StringBeginsWith(aName, NS_LITERAL_CSTRING(NS_POSTSCRIPT_DRIVER_NAME)))
     return kTypePS;
   else if (StringBeginsWith(aName, NS_LITERAL_CSTRING(NS_CUPS_PRINTER)))

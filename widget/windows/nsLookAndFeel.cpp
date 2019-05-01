@@ -39,7 +39,7 @@ LookAndFeel::OperatingSystemVersion nsLookAndFeel::GetOperatingSystemVersion() {
 
 static nsresult GetColorFromTheme(nsUXThemeClass cls, int32_t aPart,
                                   int32_t aState, int32_t aPropId,
-                                  nscolor &aColor) {
+                                  nscolor& aColor) {
   COLORREF color;
   HRESULT hr = GetThemeColor(nsUXThemeData::GetTheme(cls), aPart, aState,
                              aPropId, &color);
@@ -55,7 +55,7 @@ static int32_t GetSystemParam(long flag, int32_t def) {
   return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
-static nsresult SystemWantsDarkTheme(int32_t &darkThemeEnabled) {
+static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
   if (!IsWin10OrLater()) {
     darkThemeEnabled = 0;
     return NS_OK;
@@ -120,7 +120,7 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor) {
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
   EnsureInit();
 
   nsresult res = NS_OK;
@@ -360,7 +360,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor) {
   return res;
 }
 
-nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult) {
+nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
   nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
   if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
@@ -606,7 +606,7 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult) {
   return res;
 }
 
-nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
+nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float& aResult) {
   nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
   if (NS_SUCCEEDED(res)) return res;
   res = NS_OK;
@@ -626,8 +626,8 @@ nsresult nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult) {
 }
 
 static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
-                           nsString &aFontName, gfxFontStyle &aFontStyle) {
-  const LOGFONTW *ptrLogFont = nullptr;
+                           nsString& aFontName, gfxFontStyle& aFontStyle) {
+  const LOGFONTW* ptrLogFont = nullptr;
   LOGFONTW logFont;
   NONCLIENTMETRICSW ncm;
   char16_t name[LF_FACESIZE];
@@ -742,9 +742,9 @@ static bool GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
   return true;
 }
 
-bool nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
-                                gfxFontStyle &aFontStyle) {
-  CachedSystemFont &cacheSlot = mSystemFontCache[anID];
+bool nsLookAndFeel::GetFontImpl(FontID anID, nsString& aFontName,
+                                gfxFontStyle& aFontStyle) {
+  CachedSystemFont& cacheSlot = mSystemFontCache[anID];
 
   bool status;
   if (cacheSlot.mCacheValid) {
@@ -795,7 +795,7 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
 }
 
 void nsLookAndFeel::SetIntCacheImpl(
-    const nsTArray<LookAndFeelInt> &aLookAndFeelIntCache) {
+    const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
   for (auto entry : aLookAndFeelIntCache) {
     switch (entry.id) {
       case eIntID_UseAccessibilityTheme:
@@ -812,7 +812,7 @@ void nsLookAndFeel::SetIntCacheImpl(
 }
 
 /* static */
-nsresult nsLookAndFeel::GetAccentColor(nscolor &aColor) {
+nsresult nsLookAndFeel::GetAccentColor(nscolor& aColor) {
   nsresult rv;
 
   if (!mDwmKey) {
@@ -847,7 +847,7 @@ nsresult nsLookAndFeel::GetAccentColor(nscolor &aColor) {
 }
 
 /* static */
-nsresult nsLookAndFeel::GetAccentColorText(nscolor &aColor) {
+nsresult nsLookAndFeel::GetAccentColorText(nscolor& aColor) {
   nscolor accentColor;
   nsresult rv = GetAccentColor(accentColor);
   if (NS_WARN_IF(NS_FAILED(rv))) {

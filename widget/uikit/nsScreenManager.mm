@@ -12,21 +12,21 @@
 static LayoutDeviceIntRect gScreenBounds;
 static bool gScreenBoundsSet = false;
 
-UIKitScreen::UIKitScreen(UIScreen *aScreen) { mScreen = [aScreen retain]; }
+UIKitScreen::UIKitScreen(UIScreen* aScreen) { mScreen = [aScreen retain]; }
 
 NS_IMETHODIMP
-UIKitScreen::GetRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t *outHeight) {
+UIKitScreen::GetRect(int32_t* outX, int32_t* outY, int32_t* outWidth, int32_t* outHeight) {
   return GetRectDisplayPix(outX, outY, outWidth, outHeight);
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetAvailRect(int32_t *outX, int32_t *outY, int32_t *outWidth, int32_t *outHeight) {
+UIKitScreen::GetAvailRect(int32_t* outX, int32_t* outY, int32_t* outWidth, int32_t* outHeight) {
   return GetAvailRectDisplayPix(outX, outY, outWidth, outHeight);
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth,
-                               int32_t *outHeight) {
+UIKitScreen::GetRectDisplayPix(int32_t* outX, int32_t* outY, int32_t* outWidth,
+                               int32_t* outHeight) {
   nsIntRect rect = UIKitScreenManager::GetBounds();
   *outX = rect.x;
   *outY = rect.y;
@@ -37,8 +37,8 @@ UIKitScreen::GetRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth,
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetAvailRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth,
-                                    int32_t *outHeight) {
+UIKitScreen::GetAvailRectDisplayPix(int32_t* outX, int32_t* outY, int32_t* outWidth,
+                                    int32_t* outHeight) {
   CGRect rect = [mScreen applicationFrame];
   CGFloat scale = [mScreen scale];
 
@@ -51,17 +51,17 @@ UIKitScreen::GetAvailRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWi
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetPixelDepth(int32_t *aPixelDepth) {
+UIKitScreen::GetPixelDepth(int32_t* aPixelDepth) {
   // Close enough.
   *aPixelDepth = 24;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetColorDepth(int32_t *aColorDepth) { return GetPixelDepth(aColorDepth); }
+UIKitScreen::GetColorDepth(int32_t* aColorDepth) { return GetPixelDepth(aColorDepth); }
 
 NS_IMETHODIMP
-UIKitScreen::GetContentsScaleFactor(double *aContentsScaleFactor) {
+UIKitScreen::GetContentsScaleFactor(double* aContentsScaleFactor) {
   *aContentsScaleFactor = [mScreen scale];
   return NS_OK;
 }
@@ -86,13 +86,13 @@ LayoutDeviceIntRect UIKitScreenManager::GetBounds() {
 }
 
 NS_IMETHODIMP
-UIKitScreenManager::GetPrimaryScreen(nsIScreen **outScreen) {
+UIKitScreenManager::GetPrimaryScreen(nsIScreen** outScreen) {
   NS_IF_ADDREF(*outScreen = mScreen.get());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 UIKitScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop, int32_t inWidth, int32_t inHeight,
-                                  nsIScreen **outScreen) {
+                                  nsIScreen** outScreen) {
   return GetPrimaryScreen(outScreen);
 }

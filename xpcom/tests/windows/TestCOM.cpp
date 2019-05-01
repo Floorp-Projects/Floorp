@@ -73,8 +73,8 @@ class nsTestComFactory final : public nsIFactory {
  public:
   nsTestComFactory() {}
 
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID,
-                            void **aResult);
+  NS_IMETHOD CreateInstance(nsISupports* aOuter, const nsIID& aIID,
+                            void** aResult);
 
   NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
 
@@ -85,13 +85,13 @@ int nsTestComFactory::sDestructions;
 
 NS_IMPL_ISUPPORTS(nsTestComFactory, nsIFactory)
 
-nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
-                                          const nsIID &aIID, void **aResult) {
+nsresult nsTestComFactory::CreateInstance(nsISupports* aOuter,
+                                          const nsIID& aIID, void** aResult) {
   if (aOuter != nullptr) {
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsTestCom *t = new nsTestCom();
+  nsTestCom* t = new nsTestCom();
 
   if (t == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -106,30 +106,29 @@ nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
 
 TEST(TestCOM, WindowsInterop)
 {
-  nsTestComFactory *inst = new nsTestComFactory();
+  nsTestComFactory* inst = new nsTestComFactory();
 
   // Test we can QI nsIFactory to an IClassFactory.
-  IClassFactory *iFactory = nullptr;
-  nsresult rv =
-      inst->QueryInterface(NS_GET_IID(nsIFactory), (void **)&iFactory);
+  IClassFactory* iFactory = nullptr;
+  nsresult rv = inst->QueryInterface(NS_GET_IID(nsIFactory), (void**)&iFactory);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(iFactory);
 
   // Test we can CreateInstance with an IUnknown.
-  IUnknown *iUnknown = nullptr;
+  IUnknown* iUnknown = nullptr;
 
   HRESULT hr = iFactory->LockServer(TRUE);
   ASSERT_TRUE(SUCCEEDED(hr));
-  hr = iFactory->CreateInstance(nullptr, IID_IUnknown, (void **)&iUnknown);
+  hr = iFactory->CreateInstance(nullptr, IID_IUnknown, (void**)&iUnknown);
   ASSERT_TRUE(SUCCEEDED(hr));
   ASSERT_TRUE(iUnknown);
   hr = iFactory->LockServer(FALSE);
   ASSERT_TRUE(SUCCEEDED(hr));
 
   // Test we can QI an IUnknown to nsITestCom.
-  nsITestCom *iTestCom = nullptr;
+  nsITestCom* iTestCom = nullptr;
   GUID testGUID = NS_ITEST_COM_IID;
-  hr = iUnknown->QueryInterface(testGUID, (void **)&iTestCom);
+  hr = iUnknown->QueryInterface(testGUID, (void**)&iTestCom);
   ASSERT_TRUE(SUCCEEDED(hr));
   ASSERT_TRUE(iTestCom);
 

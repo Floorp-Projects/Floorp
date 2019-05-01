@@ -37,7 +37,7 @@ static BOOL UpdateUninstallerVersionString(LPWSTR versionString) {
   }
 
   LONG rv = RegSetValueExW(uninstallKey, L"DisplayVersion", 0, REG_SZ,
-                           reinterpret_cast<const BYTE *>(versionString),
+                           reinterpret_cast<const BYTE*>(versionString),
                            (wcslen(versionString) + 1) * sizeof(WCHAR));
   RegCloseKey(uninstallKey);
   return rv == ERROR_SUCCESS;
@@ -51,10 +51,10 @@ static BOOL UpdateUninstallerVersionString(LPWSTR versionString) {
  * @return OK on success
  */
 static int ReadMaintenanceServiceStrings(
-    LPCWSTR path, MaintenanceServiceStringTable *results) {
+    LPCWSTR path, MaintenanceServiceStringTable* results) {
   // Read in the maintenance service description string if specified.
   const unsigned int kNumStrings = 1;
-  const char *kServiceKeys = "MozillaMaintenanceDescription\0";
+  const char* kServiceKeys = "MozillaMaintenanceDescription\0";
   char serviceStrings[kNumStrings][MAX_TEXT_LEN];
   int result = ReadStrings(path, kServiceKeys, kNumStrings, serviceStrings);
   if (result != OK) {
@@ -76,8 +76,8 @@ static int ReadMaintenanceServiceStrings(
  * @param  D    The fourth part of the version number
  * @return TRUE if successful
  */
-static BOOL GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B, DWORD &C,
-                                     DWORD &D) {
+static BOOL GetVersionNumberFromPath(LPWSTR path, DWORD& A, DWORD& B, DWORD& C,
+                                     DWORD& D) {
   DWORD fileVersionInfoSize = GetFileVersionInfoSizeW(path, 0);
   mozilla::UniquePtr<char[]> fileVersionInfo(new char[fileVersionInfoSize]);
   if (!GetFileVersionInfoW(path, 0, fileVersionInfoSize,
@@ -87,11 +87,11 @@ static BOOL GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B, DWORD &C,
     return FALSE;
   }
 
-  VS_FIXEDFILEINFO *fixedFileInfo =
-      reinterpret_cast<VS_FIXEDFILEINFO *>(fileVersionInfo.get());
+  VS_FIXEDFILEINFO* fixedFileInfo =
+      reinterpret_cast<VS_FIXEDFILEINFO*>(fileVersionInfo.get());
   UINT size;
   if (!VerQueryValueW(fileVersionInfo.get(), L"\\",
-                      reinterpret_cast<LPVOID *>(&fixedFileInfo), &size)) {
+                      reinterpret_cast<LPVOID*>(&fixedFileInfo), &size)) {
     LOG_WARN(("Could not query file version info of old service.  (%d)",
               GetLastError()));
     return FALSE;
@@ -187,7 +187,7 @@ BOOL UpdateServiceDescription(SC_HANDLE serviceHandle) {
  * @return TRUE if the service path is now correct.
  */
 BOOL FixServicePath(SC_HANDLE service, LPCWSTR currentServicePath,
-                    BOOL &servicePathWasWrong) {
+                    BOOL& servicePathWasWrong) {
   // When we originally upgraded the MozillaMaintenance service we
   // would uninstall the service on each upgrade.  This had an
   // intermittent error which could cause the service to use the file
@@ -310,16 +310,16 @@ BOOL SvcInstall(SvcInstallAction action) {
     // Get the service config information, in particular we want the binary
     // path of the service.
     mozilla::UniquePtr<char[]> serviceConfigBuffer(new char[bytesNeeded]);
-    if (!QueryServiceConfigW(schService,
-                             reinterpret_cast<QUERY_SERVICE_CONFIGW *>(
-                                 serviceConfigBuffer.get()),
-                             bytesNeeded, &bytesNeeded)) {
+    if (!QueryServiceConfigW(
+            schService,
+            reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get()),
+            bytesNeeded, &bytesNeeded)) {
       LOG_WARN(("Could open service but could not query service config.  (%d)",
                 GetLastError()));
       return FALSE;
     }
-    QUERY_SERVICE_CONFIGW &serviceConfig =
-        *reinterpret_cast<QUERY_SERVICE_CONFIGW *>(serviceConfigBuffer.get());
+    QUERY_SERVICE_CONFIGW& serviceConfig =
+        *reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get());
 
     // Check if we need to fix the service path
     BOOL servicePathWasWrong;
@@ -649,7 +649,7 @@ BOOL SetUserAccessServiceDACL(SC_HANDLE hService) {
  * @return ERROR_SUCCESS if successful
  */
 DWORD
-SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
+SetUserAccessServiceDACL(SC_HANDLE hService, PACL& pNewAcl,
                          PSECURITY_DESCRIPTOR psd) {
   // Get the current security descriptor needed size
   DWORD needed = 0;

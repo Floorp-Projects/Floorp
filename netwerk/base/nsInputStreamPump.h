@@ -33,12 +33,12 @@ class nsInputStreamPump final : public nsIInputStreamPump,
 
   nsInputStreamPump();
 
-  static nsresult Create(nsInputStreamPump **result, nsIInputStream *stream,
+  static nsresult Create(nsInputStreamPump** result, nsIInputStream* stream,
                          uint32_t segsize = 0, uint32_t segcount = 0,
                          bool closeWhenDone = false,
-                         nsIEventTarget *mainThreadTarget = nullptr);
+                         nsIEventTarget* mainThreadTarget = nullptr);
 
-  typedef void (*PeekSegmentFun)(void *closure, const uint8_t *buf,
+  typedef void (*PeekSegmentFun)(void* closure, const uint8_t* buf,
                                  uint32_t bufLen);
   /**
    * Peek into the first chunk of data that's in the stream. Note that this
@@ -50,7 +50,7 @@ class nsInputStreamPump final : public nsIInputStreamPump,
    *
    * Do not call before asyncRead. Do not call after onStopRequest.
    */
-  nsresult PeekStream(PeekSegmentFun callback, void *closure);
+  nsresult PeekStream(PeekSegmentFun callback, void* closure);
 
   /**
    * Dispatched (to the main thread) by OnStateStop if it's called off main

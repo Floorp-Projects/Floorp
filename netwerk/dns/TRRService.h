@@ -37,31 +37,31 @@ class TRRService : public nsIObserver,
   bool EarlyAAAA() { return mEarlyAAAA; }
   bool DisableIPv6() { return mDisableIPv6; }
   bool DisableECS() { return mDisableECS; }
-  nsresult GetURI(nsCString &result);
-  nsresult GetCredentials(nsCString &result);
+  nsresult GetURI(nsCString& result);
+  nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout() { return mTRRTimeout; }
 
-  LookupStatus CompleteLookup(nsHostRecord *, nsresult,
-                              mozilla::net::AddrInfo *, bool pb,
-                              const nsACString &aOriginSuffix) override;
-  LookupStatus CompleteLookupByType(nsHostRecord *, nsresult,
-                                    const nsTArray<nsCString> *, uint32_t,
+  LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
+                              bool pb,
+                              const nsACString& aOriginSuffix) override;
+  LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
+                                    const nsTArray<nsCString>*, uint32_t,
                                     bool pb) override;
-  void TRRBlacklist(const nsACString &host, const nsACString &originSuffix,
+  void TRRBlacklist(const nsACString& host, const nsACString& originSuffix,
                     bool privateBrowsing, bool aParentsToo);
-  bool IsTRRBlacklisted(const nsACString &aHost,
-                        const nsACString &aOriginSuffix, bool aPrivateBrowsing,
+  bool IsTRRBlacklisted(const nsACString& aHost,
+                        const nsACString& aOriginSuffix, bool aPrivateBrowsing,
                         bool aParentsToo);
-  bool IsExcludedFromTRR(const nsACString &aHost);
+  bool IsExcludedFromTRR(const nsACString& aHost);
 
-  bool MaybeBootstrap(const nsACString &possible, nsACString &result);
+  bool MaybeBootstrap(const nsACString& possible, nsACString& result);
   enum TrrOkay { OKAY_NORMAL = 0, OKAY_TIMEOUT = 1, OKAY_BAD = 2 };
   void TRRIsOkay(enum TrrOkay aReason);
 
  private:
   virtual ~TRRService();
-  nsresult ReadPrefs(const char *name);
-  void GetPrefBranch(nsIPrefBranch **result);
+  nsresult ReadPrefs(const char* name);
+  void GetPrefBranch(nsIPrefBranch** result);
   void MaybeConfirm();
   void MaybeConfirm_locked();
 
@@ -113,7 +113,7 @@ class TRRService : public nsIObserver,
   Atomic<uint32_t, Relaxed> mTRRFailures;
 };
 
-extern TRRService *gTRRService;
+extern TRRService* gTRRService;
 
 }  // namespace net
 }  // namespace mozilla

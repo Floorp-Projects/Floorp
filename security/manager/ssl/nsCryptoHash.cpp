@@ -81,7 +81,7 @@ nsCryptoHash::Init(uint32_t algorithm) {
 }
 
 NS_IMETHODIMP
-nsCryptoHash::InitWithString(const nsACString &aAlgorithm) {
+nsCryptoHash::InitWithString(const nsACString& aAlgorithm) {
   if (aAlgorithm.LowerCaseEqualsLiteral("md5")) return Init(nsICryptoHash::MD5);
 
   if (aAlgorithm.LowerCaseEqualsLiteral("sha1"))
@@ -100,7 +100,7 @@ nsCryptoHash::InitWithString(const nsACString &aAlgorithm) {
 }
 
 NS_IMETHODIMP
-nsCryptoHash::Update(const uint8_t *data, uint32_t len) {
+nsCryptoHash::Update(const uint8_t* data, uint32_t len) {
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -110,7 +110,7 @@ nsCryptoHash::Update(const uint8_t *data, uint32_t len) {
 }
 
 NS_IMETHODIMP
-nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen) {
+nsCryptoHash::UpdateFromStream(nsIInputStream* data, uint32_t aLen) {
   if (!mInitialized) return NS_ERROR_NOT_INITIALIZED;
 
   if (!data) return NS_ERROR_INVALID_ARG;
@@ -145,7 +145,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen) {
       return rv;
     }
 
-    rv = Update(BitwiseCast<uint8_t *>(buffer), read);
+    rv = Update(BitwiseCast<uint8_t*>(buffer), read);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -157,7 +157,7 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen) {
 }
 
 NS_IMETHODIMP
-nsCryptoHash::Finish(bool ascii, nsACString &_retval) {
+nsCryptoHash::Finish(bool ascii, nsACString& _retval) {
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -169,11 +169,11 @@ nsCryptoHash::Finish(bool ascii, nsACString &_retval) {
   mInitialized = false;
 
   if (ascii) {
-    nsDependentCSubstring dataStr(BitwiseCast<char *>(buffer), hashLen);
+    nsDependentCSubstring dataStr(BitwiseCast<char*>(buffer), hashLen);
     return Base64Encode(dataStr, _retval);
   }
 
-  _retval.Assign(BitwiseCast<char *>(buffer), hashLen);
+  _retval.Assign(BitwiseCast<char*>(buffer), hashLen);
   return NS_OK;
 }
 
@@ -186,7 +186,7 @@ NS_IMPL_ISUPPORTS(nsCryptoHMAC, nsICryptoHMAC)
 nsCryptoHMAC::nsCryptoHMAC() : mHMACContext(nullptr) {}
 
 NS_IMETHODIMP
-nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject) {
+nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject* aKeyObject) {
   if (mHMACContext) {
     mHMACContext = nullptr;
   }
@@ -222,7 +222,7 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject) {
 
   NS_ENSURE_TRUE(keyType == nsIKeyObject::SYM_KEY, NS_ERROR_INVALID_ARG);
 
-  PK11SymKey *key;
+  PK11SymKey* key;
   // GetKeyObj doesn't addref the key
   rv = aKeyObject->GetKeyObj(&key);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -242,7 +242,7 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject) {
 }
 
 NS_IMETHODIMP
-nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen) {
+nsCryptoHMAC::Update(const uint8_t* aData, uint32_t aLen) {
   if (!mHMACContext) return NS_ERROR_NOT_INITIALIZED;
 
   if (!aData) return NS_ERROR_INVALID_ARG;
@@ -255,7 +255,7 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen) {
 }
 
 NS_IMETHODIMP
-nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen) {
+nsCryptoHMAC::UpdateFromStream(nsIInputStream* aStream, uint32_t aLen) {
   if (!mHMACContext) return NS_ERROR_NOT_INITIALIZED;
 
   if (!aStream) return NS_ERROR_INVALID_ARG;
@@ -292,7 +292,7 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen) {
       return NS_BASE_STREAM_CLOSED;
     }
 
-    rv = Update(BitwiseCast<uint8_t *>(buffer), read);
+    rv = Update(BitwiseCast<uint8_t*>(buffer), read);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -304,7 +304,7 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen) {
 }
 
 NS_IMETHODIMP
-nsCryptoHMAC::Finish(bool aASCII, nsACString &_retval) {
+nsCryptoHMAC::Finish(bool aASCII, nsACString& _retval) {
   if (!mHMACContext) return NS_ERROR_NOT_INITIALIZED;
 
   uint32_t hashLen = 0;
@@ -316,11 +316,11 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString &_retval) {
   }
 
   if (aASCII) {
-    nsDependentCSubstring dataStr(BitwiseCast<char *>(buffer), hashLen);
+    nsDependentCSubstring dataStr(BitwiseCast<char*>(buffer), hashLen);
     return Base64Encode(dataStr, _retval);
   }
 
-  _retval.Assign(BitwiseCast<char *>(buffer), hashLen);
+  _retval.Assign(BitwiseCast<char*>(buffer), hashLen);
   return NS_OK;
 }
 

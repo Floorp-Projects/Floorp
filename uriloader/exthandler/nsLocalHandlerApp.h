@@ -20,10 +20,10 @@ class nsLocalHandlerApp : public nsILocalHandlerApp {
 
   nsLocalHandlerApp() {}
 
-  nsLocalHandlerApp(const char16_t *aName, nsIFile *aExecutable)
+  nsLocalHandlerApp(const char16_t* aName, nsIFile* aExecutable)
       : mName(aName), mExecutable(aExecutable) {}
 
-  nsLocalHandlerApp(const nsAString &aName, nsIFile *aExecutable)
+  nsLocalHandlerApp(const nsAString& aName, nsIFile* aExecutable)
       : mName(aName), mExecutable(aExecutable) {}
 
  protected:
@@ -42,7 +42,7 @@ class nsLocalHandlerApp : public nsILocalHandlerApp {
    * @param aApp The application to launch (may not be null)
    * @param aArg The argument to pass on the command line
    */
-  nsresult LaunchWithIProcess(const nsCString &aArg);
+  nsresult LaunchWithIProcess(const nsCString& aArg);
 };
 
 // any platforms that need a platform-specific class instead of just

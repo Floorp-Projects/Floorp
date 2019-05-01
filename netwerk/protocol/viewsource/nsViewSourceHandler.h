@@ -26,17 +26,17 @@ class nsViewSourceHandler final : public nsIProtocolHandlerWithDynamicFlags,
 
   // Creates a new nsViewSourceChannel to view the source of an about:srcdoc
   // URI with contents specified by srcdoc.
-  MOZ_MUST_USE nsresult NewSrcdocChannel(nsIURI *aURI, nsIURI *aBaseURI,
-                                         const nsAString &aSrcdoc,
-                                         nsILoadInfo *aLoadInfo,
-                                         nsIChannel **outChannel);
+  MOZ_MUST_USE nsresult NewSrcdocChannel(nsIURI* aURI, nsIURI* aBaseURI,
+                                         const nsAString& aSrcdoc,
+                                         nsILoadInfo* aLoadInfo,
+                                         nsIChannel** outChannel);
 
-  static nsViewSourceHandler *GetInstance();
+  static nsViewSourceHandler* GetInstance();
 
  private:
   ~nsViewSourceHandler();
 
-  static nsViewSourceHandler *gInstance;
+  static nsViewSourceHandler* gInstance;
 };
 
 }  // namespace net

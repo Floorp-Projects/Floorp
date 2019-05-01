@@ -14,7 +14,7 @@ using namespace mozilla::dom;
 NS_IMPL_ISUPPORTS(nsSoundProxy, nsISound)
 
 NS_IMETHODIMP
-nsSoundProxy::Play(nsIURL *aURL) {
+nsSoundProxy::Play(nsIURL* aURL) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
 
   nsCOMPtr<nsIURI> soundURI(aURL);

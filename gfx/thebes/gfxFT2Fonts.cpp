@@ -40,10 +40,10 @@ using namespace mozilla::gfx;
  * gfxFT2Font
  */
 
-bool gfxFT2Font::ShapeText(DrawTarget *aDrawTarget, const char16_t *aText,
+bool gfxFT2Font::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                            uint32_t aOffset, uint32_t aLength, Script aScript,
                            bool aVertical, RoundingFlags aRounding,
-                           gfxShapedText *aShapedText) {
+                           gfxShapedText* aShapedText) {
   if (!gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
                           aVertical, aRounding, aShapedText)) {
     // harfbuzz must have failed(?!), just render raw glyphs
@@ -55,8 +55,8 @@ bool gfxFT2Font::ShapeText(DrawTarget *aDrawTarget, const char16_t *aText,
   return true;
 }
 
-void gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
-                          uint32_t aLength, gfxShapedText *aShapedText) {
+void gfxFT2Font::AddRange(const char16_t* aText, uint32_t aOffset,
+                          uint32_t aLength, gfxShapedText* aShapedText) {
   typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
   const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
@@ -65,7 +65,7 @@ void gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
   gfxFT2LockedFace faceLock(this);
   FT_Face face = faceLock.get();
 
-  CompressedGlyph *charGlyphs = aShapedText->GetCharacterGlyphs();
+  CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs();
 
   const gfxFT2Font::CachedGlyphData *cgd = nullptr, *cgdNext = nullptr;
 
@@ -152,9 +152,9 @@ void gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
   }
 }
 
-gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType> &aUnscaledFont,
-                       cairo_scaled_font_t *aCairoFont, FT_Face aFTFace,
-                       FT2FontEntry *aFontEntry, const gfxFontStyle *aFontStyle)
+gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
+                       cairo_scaled_font_t* aCairoFont, FT_Face aFTFace,
+                       FT2FontEntry* aFontEntry, const gfxFontStyle* aFontStyle)
     : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle),
       mCharGlyphCache(32),
       mFTFace(aFTFace) {
@@ -166,7 +166,7 @@ gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType> &aUnscaledFont,
 
 gfxFT2Font::~gfxFT2Font() {}
 
-already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget *aTarget) {
+already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     NativeFont nativeFont;
     nativeFont.mType = NativeFontType::FREETYPE_FACE;
@@ -182,7 +182,7 @@ already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget *aTarget) {
 }
 
 void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
-                                      CachedGlyphData *gd) {
+                                      CachedGlyphData* gd) {
   if (!face->charmap || face->charmap->encoding != FT_ENCODING_UNICODE) {
     FT_Select_Charmap(face, FT_ENCODING_UNICODE);
   }
@@ -217,14 +217,14 @@ void gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch,
 }
 
 void gfxFT2Font::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes *aSizes) const {
+                                        FontCacheSizes* aSizes) const {
   gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
   aSizes->mFontInstances +=
       mCharGlyphCache.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 void gfxFT2Font::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes *aSizes) const {
+                                        FontCacheSizes* aSizes) const {
   aSizes->mFontInstances += aMallocSizeOf(this);
   AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }

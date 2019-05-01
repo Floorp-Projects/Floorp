@@ -20,24 +20,24 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags)
   InitWithDC(flags);
 }
 
-gfxWindowsSurface::gfxWindowsSurface(IDirect3DSurface9 *surface, uint32_t flags)
+gfxWindowsSurface::gfxWindowsSurface(IDirect3DSurface9* surface, uint32_t flags)
     : mOwnsDC(false), mDC(0), mWnd(nullptr) {
-  cairo_surface_t *surf = cairo_win32_surface_create_with_d3dsurface9(surface);
+  cairo_surface_t* surf = cairo_win32_surface_create_with_d3dsurface9(surface);
   Init(surf);
 }
 
-void gfxWindowsSurface::MakeInvalid(mozilla::gfx::IntSize &size) {
+void gfxWindowsSurface::MakeInvalid(mozilla::gfx::IntSize& size) {
   size = mozilla::gfx::IntSize(-1, -1);
 }
 
-gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize &realSize,
+gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize& realSize,
                                      gfxImageFormat imageFormat)
     : mOwnsDC(false), mWnd(nullptr) {
   mozilla::gfx::IntSize size(realSize);
   if (!mozilla::gfx::Factory::CheckSurfaceSize(size)) MakeInvalid(size);
 
   cairo_format_t cformat = GfxFormatToCairoFormat(imageFormat);
-  cairo_surface_t *surf =
+  cairo_surface_t* surf =
       cairo_win32_surface_create_with_dib(cformat, size.width, size.height);
 
   Init(surf);
@@ -50,7 +50,7 @@ gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize &realSize,
   }
 }
 
-gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf)
+gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t* csurf)
     : mOwnsDC(false), mWnd(nullptr) {
   if (cairo_surface_status(csurf) == 0)
     mDC = cairo_win32_surface_get_dc(csurf);
@@ -72,12 +72,12 @@ void gfxWindowsSurface::InitWithDC(uint32_t flags) {
 }
 
 already_AddRefed<gfxASurface> gfxWindowsSurface::CreateSimilarSurface(
-    gfxContentType aContent, const mozilla::gfx::IntSize &aSize) {
+    gfxContentType aContent, const mozilla::gfx::IntSize& aSize) {
   if (!mSurface || !mSurfaceValid) {
     return nullptr;
   }
 
-  cairo_surface_t *surface;
+  cairo_surface_t* surface;
   if (GetContentType() == gfxContentType::COLOR_ALPHA) {
     // When creating a similar surface to a transparent surface, ensure
     // the new surface uses a DIB. cairo_surface_create_similar won't
@@ -132,7 +132,7 @@ already_AddRefed<gfxImageSurface> gfxWindowsSurface::GetAsImageSurface() {
       CairoSurface() != nullptr,
       "CairoSurface() shouldn't be nullptr when mSurfaceValid is TRUE!");
 
-  cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
+  cairo_surface_t* isurf = cairo_win32_surface_get_image(CairoSurface());
   if (!isurf) return nullptr;
 
   RefPtr<gfxImageSurface> result =

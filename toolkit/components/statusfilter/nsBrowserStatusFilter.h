@@ -44,7 +44,7 @@ class nsBrowserStatusFilter : public nsIWebProgress,
   void ResetMembers();
   bool DelayInEffect() { return mDelayedStatus || mDelayedProgress; }
 
-  static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
+  static void TimeoutHandler(nsITimer* aTimer, void* aClosure);
 
  private:
   nsCOMPtr<nsIWebProgressListener> mListener;

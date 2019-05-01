@@ -23,8 +23,8 @@ class nsLayoutDebuggingTools : public nsILayoutDebuggingTools {
   virtual ~nsLayoutDebuggingTools();
 
   void ForceRefresh();
-  nsresult GetBoolPref(const char *aPrefName, bool *aValue);
-  nsresult SetBoolPrefAndRefresh(const char *aPrefName, bool aNewValue);
+  nsresult GetBoolPref(const char* aPrefName, bool* aValue);
+  nsresult SetBoolPrefAndRefresh(const char* aPrefName, bool aNewValue);
 
   nsCOMPtr<nsIDocShell> mDocShell;
 

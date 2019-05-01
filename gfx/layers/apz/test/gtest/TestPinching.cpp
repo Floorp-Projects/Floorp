@@ -30,7 +30,7 @@ class APZCPinchTester : public APZCBasicTester {
   }
 
   void DoPinchTest(bool aShouldTriggerPinch,
-                   nsTArray<uint32_t> *aAllowedTouchBehaviors = nullptr) {
+                   nsTArray<uint32_t>* aAllowedTouchBehaviors = nullptr) {
     apzc->SetFrameMetrics(GetPinchableFrameMetrics());
     MakeApzcZoomable();
 

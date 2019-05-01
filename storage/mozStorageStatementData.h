@@ -26,15 +26,15 @@ namespace storage {
 
 class StatementData {
  public:
-  StatementData(sqlite3_stmt *aStatement,
+  StatementData(sqlite3_stmt* aStatement,
                 already_AddRefed<BindingParamsArray> aParamsArray,
-                StorageBaseStatementInternal *aStatementOwner)
+                StorageBaseStatementInternal* aStatementOwner)
       : mStatement(aStatement),
         mParamsArray(aParamsArray),
         mStatementOwner(aStatementOwner) {
     MOZ_ASSERT(mStatementOwner, "Must have a statement owner!");
   }
-  StatementData(const StatementData &aSource)
+  StatementData(const StatementData& aSource)
       : mStatement(aSource.mStatement),
         mParamsArray(aSource.mParamsArray),
         mStatementOwner(aSource.mStatementOwner) {
@@ -53,7 +53,7 @@ class StatementData {
    * Return the sqlite statement, fetching it from the storage statement.  In
    * the case of AsyncStatements this may actually create the statement
    */
-  inline int getSqliteStatement(sqlite3_stmt **_stmt) {
+  inline int getSqliteStatement(sqlite3_stmt** _stmt) {
     if (!mStatement) {
       int rc = mStatementOwner->getAsyncStatement(&mStatement);
       NS_ENSURE_TRUE(rc == SQLITE_OK, rc);
@@ -62,7 +62,7 @@ class StatementData {
     return SQLITE_OK;
   }
 
-  operator BindingParamsArray *() const { return mParamsArray; }
+  operator BindingParamsArray*() const { return mParamsArray; }
 
   /**
    * NULLs out our sqlite3_stmt (it is held by the owner) after reseting it and
@@ -103,7 +103,7 @@ class StatementData {
     // Be sure to use the getSqliteStatement helper, since sqlite3_stmt_readonly
     // can only analyze prepared statements and AsyncStatements are prepared
     // lazily.
-    sqlite3_stmt *stmt;
+    sqlite3_stmt* stmt;
     int rc = getSqliteStatement(&stmt);
     if (SQLITE_OK != rc || ::sqlite3_stmt_readonly(stmt)) {
       return 0;
@@ -112,7 +112,7 @@ class StatementData {
   }
 
  private:
-  sqlite3_stmt *mStatement;
+  sqlite3_stmt* mStatement;
   RefPtr<BindingParamsArray> mParamsArray;
 
   /**

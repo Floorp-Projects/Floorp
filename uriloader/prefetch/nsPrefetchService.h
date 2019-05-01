@@ -40,33 +40,33 @@ class nsPrefetchService final : public nsIPrefetchService,
   nsPrefetchService();
 
   nsresult Init();
-  void RemoveNodeAndMaybeStartNextPrefetchURI(nsPrefetchNode *aFinished);
+  void RemoveNodeAndMaybeStartNextPrefetchURI(nsPrefetchNode* aFinished);
   void ProcessNextPrefetchURI();
 
-  void NotifyLoadRequested(nsPrefetchNode *node);
-  void NotifyLoadCompleted(nsPrefetchNode *node);
-  void DispatchEvent(nsPrefetchNode *node, bool aSuccess);
+  void NotifyLoadRequested(nsPrefetchNode* node);
+  void NotifyLoadCompleted(nsPrefetchNode* node);
+  void DispatchEvent(nsPrefetchNode* node, bool aSuccess);
 
  private:
   ~nsPrefetchService();
 
-  nsresult Prefetch(nsIURI *aURI, nsIURI *aReferrerURI, nsINode *aSource,
+  nsresult Prefetch(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
                     bool aExplicit);
 
-  nsresult Preload(nsIURI *aURI, nsIURI *aReferrerURI, nsINode *aSource,
+  nsresult Preload(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
                    nsContentPolicyType aPolicyType);
 
   void AddProgressListener();
   void RemoveProgressListener();
-  nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI, nsINode *aSource,
-                      nsPrefetchNode **node);
+  nsresult EnqueueURI(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
+                      nsPrefetchNode** node);
   void EmptyPrefetchQueue();
 
   void StartPrefetching();
   void StopPrefetching();
   void StopCurrentPrefetchsPreloads(bool aPreload);
   void StopAll();
-  nsresult CheckURIScheme(nsIURI *aURI, nsIURI *aReferrerURI);
+  nsresult CheckURIScheme(nsIURI* aURI, nsIURI* aReferrerURI);
 
   std::deque<RefPtr<nsPrefetchNode>> mPrefetchQueue;
   nsTArray<RefPtr<nsPrefetchNode>> mCurrentNodes;
@@ -99,8 +99,8 @@ class nsPrefetchNode final : public nsIStreamListener,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIREDIRECTRESULTLISTENER
 
-  nsPrefetchNode(nsPrefetchService *aPrefetchService, nsIURI *aURI,
-                 nsIURI *aReferrerURI, nsINode *aSource,
+  nsPrefetchNode(nsPrefetchService* aPrefetchService, nsIURI* aURI,
+                 nsIURI* aReferrerURI, nsINode* aSource,
                  nsContentPolicyType aPolicyType, bool aPreload);
 
   nsresult OpenChannel();

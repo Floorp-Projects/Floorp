@@ -36,34 +36,34 @@ struct CycleCollectorResults;
 
 class nsJSContext : public nsIScriptContext {
  public:
-  nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject *aGlobalObject);
+  nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject* aGlobalObject);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
-  virtual nsIScriptGlobalObject *GetGlobalObject() override;
-  inline nsIScriptGlobalObject *GetGlobalObjectRef() {
+  virtual nsIScriptGlobalObject* GetGlobalObject() override;
+  inline nsIScriptGlobalObject* GetGlobalObjectRef() {
     return mGlobalObjectRef;
   }
 
   virtual nsresult InitContext() override;
   virtual bool IsContextInitialized() override;
 
-  virtual nsresult SetProperty(JS::Handle<JSObject *> aTarget,
-                               const char *aPropName,
-                               nsISupports *aVal) override;
+  virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget,
+                               const char* aPropName,
+                               nsISupports* aVal) override;
 
   virtual bool GetProcessingScriptTag() override;
   virtual void SetProcessingScriptTag(bool aResult) override;
 
-  virtual nsresult InitClasses(JS::Handle<JSObject *> aGlobalObj) override;
+  virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) override;
 
   virtual void WillInitializeContext() override;
   virtual void DidInitializeContext() override;
 
-  virtual void SetWindowProxy(JS::Handle<JSObject *> aWindowProxy) override;
-  virtual JSObject *GetWindowProxy() override;
+  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) override;
+  virtual JSObject* GetWindowProxy() override;
 
   enum IsShrinking { ShrinkingGC, NonShrinkingGC };
 
@@ -77,7 +77,7 @@ class nsJSContext : public nsIScriptContext {
                                 IsShrinking aShrinking = NonShrinkingGC,
                                 int64_t aSliceMillis = 0);
 
-  static void CycleCollectNow(nsICycleCollectorListener *aListener = nullptr);
+  static void CycleCollectNow(nsICycleCollectorListener* aListener = nullptr);
 
   // Run a cycle collector slice, using a heuristic to decide how long to run
   // it.
@@ -88,7 +88,7 @@ class nsJSContext : public nsIScriptContext {
 
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(
-      mozilla::CycleCollectorResults &aResults);
+      mozilla::CycleCollectorResults& aResults);
 
   // Return the longest CC slice time since ClearMaxCCSliceTime() was last
   // called.
@@ -102,11 +102,11 @@ class nsJSContext : public nsIScriptContext {
   // If user has been idle and aDocShell is for an iframe being loaded in an
   // already loaded top level docshell, this will run a CC or GC
   // timer/runner if there is such pending.
-  static void MaybeRunNextCollectorSlice(nsIDocShell *aDocShell,
+  static void MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
                                          JS::GCReason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
-  static void PokeGC(JS::GCReason aReason, JSObject *aObj, int aDelay = 0);
+  static void PokeGC(JS::GCReason aReason, JSObject* aObj, int aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkingGC();
@@ -123,10 +123,10 @@ class nsJSContext : public nsIScriptContext {
 
   static uint32_t CleanupsSinceLastGC();
 
-  nsIScriptGlobalObject *GetCachedGlobalObject() {
+  nsIScriptGlobalObject* GetCachedGlobalObject() {
     // Verify that we have a global so that this
     // does always return a null when GetGlobalObject() is null.
-    JSObject *global = GetWindowProxy();
+    JSObject* global = GetWindowProxy();
     return global ? mGlobalObjectRef.get() : nullptr;
   }
 
@@ -134,17 +134,17 @@ class nsJSContext : public nsIScriptContext {
   virtual ~nsJSContext();
 
   // Helper to convert xpcom datatypes to jsvals.
-  nsresult ConvertSupportsTojsvals(JSContext *aCx, nsISupports *aArgs,
-                                   JS::Handle<JSObject *> aScope,
+  nsresult ConvertSupportsTojsvals(JSContext* aCx, nsISupports* aArgs,
+                                   JS::Handle<JSObject*> aScope,
                                    JS::MutableHandleVector<JS::Value> aArgsOut);
 
-  nsresult AddSupportsPrimitiveTojsvals(JSContext *aCx, nsISupports *aArg,
-                                        JS::Value *aArgv);
+  nsresult AddSupportsPrimitiveTojsvals(JSContext* aCx, nsISupports* aArg,
+                                        JS::Value* aArgv);
 
  private:
   void Destroy();
 
-  JS::Heap<JSObject *> mWindowProxy;
+  JS::Heap<JSObject*> mWindowProxy;
 
   bool mIsInitialized;
   bool mGCOnDestruction;
@@ -154,7 +154,7 @@ class nsJSContext : public nsIScriptContext {
   // context does. It is eventually collected by the cycle collector.
   nsCOMPtr<nsIScriptGlobalObject> mGlobalObjectRef;
 
-  static bool DOMOperationCallback(JSContext *cx);
+  static bool DOMOperationCallback(JSContext* cx);
 };
 
 namespace mozilla {
@@ -167,7 +167,7 @@ void ShutdownJSEnvironment();
 class AsyncErrorReporter final : public mozilla::Runnable {
  public:
   // aWindow may be null if this error report is not associated with a window
-  explicit AsyncErrorReporter(xpc::ErrorReport *aReport)
+  explicit AsyncErrorReporter(xpc::ErrorReport* aReport)
       : Runnable("dom::AsyncErrorReporter"), mReport(aReport) {}
 
   NS_IMETHOD Run() override {
@@ -199,7 +199,7 @@ class nsIJSArgArray : public nsIArray {
   // Bug 312003 describes why this must be "void **", but after calling argv
   // may be cast to JS::Value* and the args found at:
   //    ((JS::Value*)argv)[0], ..., ((JS::Value*)argv)[argc - 1]
-  virtual nsresult GetArgs(uint32_t *argc, void **argv) = 0;
+  virtual nsresult GetArgs(uint32_t* argc, void** argv) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)

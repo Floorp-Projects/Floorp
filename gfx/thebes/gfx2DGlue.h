@@ -18,50 +18,50 @@
 namespace mozilla {
 namespace gfx {
 
-inline Rect ToRect(const gfxRect &aRect) {
+inline Rect ToRect(const gfxRect& aRect) {
   return Rect(Float(aRect.X()), Float(aRect.Y()), Float(aRect.Width()),
               Float(aRect.Height()));
 }
 
-inline RectDouble ToRectDouble(const gfxRect &aRect) {
+inline RectDouble ToRectDouble(const gfxRect& aRect) {
   return RectDouble(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
-inline Matrix ToMatrix(const gfxMatrix &aMatrix) {
+inline Matrix ToMatrix(const gfxMatrix& aMatrix) {
   return Matrix(Float(aMatrix._11), Float(aMatrix._12), Float(aMatrix._21),
                 Float(aMatrix._22), Float(aMatrix._31), Float(aMatrix._32));
 }
 
-inline gfxMatrix ThebesMatrix(const Matrix &aMatrix) {
+inline gfxMatrix ThebesMatrix(const Matrix& aMatrix) {
   return gfxMatrix(aMatrix._11, aMatrix._12, aMatrix._21, aMatrix._22,
                    aMatrix._31, aMatrix._32);
 }
 
-inline Point ToPoint(const gfxPoint &aPoint) {
+inline Point ToPoint(const gfxPoint& aPoint) {
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
-inline Size ToSize(const gfxSize &aSize) {
+inline Size ToSize(const gfxSize& aSize) {
   return Size(Float(aSize.width), Float(aSize.height));
 }
 
-inline gfxPoint ThebesPoint(const Point &aPoint) {
+inline gfxPoint ThebesPoint(const Point& aPoint) {
   return gfxPoint(aPoint.x, aPoint.y);
 }
 
-inline gfxSize ThebesSize(const Size &aSize) {
+inline gfxSize ThebesSize(const Size& aSize) {
   return gfxSize(aSize.width, aSize.height);
 }
 
-inline gfxRect ThebesRect(const Rect &aRect) {
+inline gfxRect ThebesRect(const Rect& aRect) {
   return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
-inline gfxRect ThebesRect(const IntRect &aRect) {
+inline gfxRect ThebesRect(const IntRect& aRect) {
   return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
-inline gfxRect ThebesRect(const RectDouble &aRect) {
+inline gfxRect ThebesRect(const RectDouble& aRect) {
   return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
@@ -96,7 +96,7 @@ inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat) {
   }
 }
 
-inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat) {
+inline gfxContentType ContentForFormat(const SurfaceFormat& aFormat) {
   switch (aFormat) {
     case SurfaceFormat::R5G6B5_UINT16:
     case SurfaceFormat::B8G8R8X8:

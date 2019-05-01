@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsCheckSummedOutputStream, nsBufferedOutputStream,
                             nsISafeOutputStream)
 
 NS_IMETHODIMP
-nsCheckSummedOutputStream::Init(nsIOutputStream *stream, uint32_t bufferSize) {
+nsCheckSummedOutputStream::Init(nsIOutputStream* stream, uint32_t bufferSize) {
   nsresult rv;
   mHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -34,7 +34,7 @@ nsCheckSummedOutputStream::Finish() {
 
   uint32_t written;
   rv = nsBufferedOutputStream::Write(
-      reinterpret_cast<const char *>(mCheckSum.BeginReading()),
+      reinterpret_cast<const char*>(mCheckSum.BeginReading()),
       mCheckSum.Length(), &written);
   NS_ASSERTION(written == mCheckSum.Length(), "Error writing stream checksum");
   NS_ENSURE_SUCCESS(rv, rv);
@@ -43,9 +43,9 @@ nsCheckSummedOutputStream::Finish() {
 }
 
 NS_IMETHODIMP
-nsCheckSummedOutputStream::Write(const char *buf, uint32_t count,
-                                 uint32_t *result) {
-  nsresult rv = mHash->Update(reinterpret_cast<const uint8_t *>(buf), count);
+nsCheckSummedOutputStream::Write(const char* buf, uint32_t count,
+                                 uint32_t* result) {
+  nsresult rv = mHash->Update(reinterpret_cast<const uint8_t*>(buf), count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsBufferedOutputStream::Write(buf, count, result);
@@ -57,7 +57,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsCrc32CheckSumedOutputStream,
                             nsBufferedOutputStream, nsISafeOutputStream)
 
 NS_IMETHODIMP
-nsCrc32CheckSumedOutputStream::Init(nsIOutputStream *stream,
+nsCrc32CheckSumedOutputStream::Init(nsIOutputStream* stream,
                                     uint32_t bufferSize) {
   mCheckSum = ~0;
 
@@ -68,7 +68,7 @@ NS_IMETHODIMP
 nsCrc32CheckSumedOutputStream::Finish() {
   uint32_t written;
   nsresult rv = nsBufferedOutputStream::Write(
-      reinterpret_cast<const char *>(&mCheckSum), sizeof(mCheckSum), &written);
+      reinterpret_cast<const char*>(&mCheckSum), sizeof(mCheckSum), &written);
   NS_ASSERTION(written == sizeof(mCheckSum), "Error writing stream checksum");
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -76,10 +76,10 @@ nsCrc32CheckSumedOutputStream::Finish() {
 }
 
 NS_IMETHODIMP
-nsCrc32CheckSumedOutputStream::Write(const char *buf, uint32_t count,
-                                     uint32_t *result) {
+nsCrc32CheckSumedOutputStream::Write(const char* buf, uint32_t count,
+                                     uint32_t* result) {
   mCheckSum =
-      ComputeCrc32c(mCheckSum, reinterpret_cast<const uint8_t *>(buf), count);
+      ComputeCrc32c(mCheckSum, reinterpret_cast<const uint8_t*>(buf), count);
 
   return nsBufferedOutputStream::Write(buf, count, result);
 }

@@ -12,7 +12,7 @@
 #include "nsCRT.h"
 #include "nsIParserUtils.h"
 
-void ConvertBufToPlainText(nsString &aConBuf, int aFlag) {
+void ConvertBufToPlainText(nsString& aConBuf, int aFlag) {
   nsCOMPtr<nsIParserUtils> utils = do_GetService(NS_PARSERUTILS_CONTRACTID);
   utils->ConvertToPlainText(aConBuf, aFlag, 72, aConBuf);
 }

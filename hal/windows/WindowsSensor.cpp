@@ -35,11 +35,11 @@ class SensorEvent final : public ISensorEvents {
     return count;
   }
 
-  STDMETHODIMP QueryInterface(REFIID iid, void **ppv) {
+  STDMETHODIMP QueryInterface(REFIID iid, void** ppv) {
     if (iid == IID_IUnknown) {
-      *ppv = static_cast<IUnknown *>(this);
+      *ppv = static_cast<IUnknown*>(this);
     } else if (iid == IID_ISensorEvents) {
-      *ppv = static_cast<ISensorEvents *>(this);
+      *ppv = static_cast<ISensorEvents*>(this);
     } else {
       return E_NOINTERFACE;
     }
@@ -49,18 +49,18 @@ class SensorEvent final : public ISensorEvents {
 
   // ISensorEvents interface
 
-  STDMETHODIMP OnEvent(ISensor *aSensor, REFGUID aId,
-                       IPortableDeviceValues *aData) {
+  STDMETHODIMP OnEvent(ISensor* aSensor, REFGUID aId,
+                       IPortableDeviceValues* aData) {
     return S_OK;
   }
 
   STDMETHODIMP OnLeave(REFSENSOR_ID aId) { return S_OK; }
 
-  STDMETHODIMP OnStateChanged(ISensor *aSensor, SensorState state) {
+  STDMETHODIMP OnStateChanged(ISensor* aSensor, SensorState state) {
     return S_OK;
   }
 
-  STDMETHODIMP OnDataUpdated(ISensor *aSensor, ISensorDataReport *aReport) {
+  STDMETHODIMP OnDataUpdated(ISensor* aSensor, ISensorDataReport* aReport) {
     PROPVARIANT v;
     HRESULT hr;
     InfallibleTArray<float> values;

@@ -29,14 +29,14 @@ NS_IMPL_ISUPPORTS(nsDownloader, nsIDownloader, nsIStreamListener,
                   nsIRequestObserver)
 
 NS_IMETHODIMP
-nsDownloader::Init(nsIDownloadObserver *observer, nsIFile *location) {
+nsDownloader::Init(nsIDownloadObserver* observer, nsIFile* location) {
   mObserver = observer;
   mLocation = location;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStartRequest(nsIRequest *request) {
+nsDownloader::OnStartRequest(nsIRequest* request) {
   nsresult rv;
   if (!mLocation) {
     nsCOMPtr<nsIFile> location;
@@ -67,7 +67,7 @@ nsDownloader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStopRequest(nsIRequest *request, nsresult status) {
+nsDownloader::OnStopRequest(nsIRequest* request, nsresult status) {
   if (mSink) {
     mSink->Close();
     mSink = nullptr;
@@ -79,11 +79,11 @@ nsDownloader::OnStopRequest(nsIRequest *request, nsresult status) {
   return NS_OK;
 }
 
-nsresult nsDownloader::ConsumeData(nsIInputStream *in, void *closure,
-                                   const char *fromRawSegment,
+nsresult nsDownloader::ConsumeData(nsIInputStream* in, void* closure,
+                                   const char* fromRawSegment,
                                    uint32_t toOffset, uint32_t count,
-                                   uint32_t *writeCount) {
-  nsDownloader *self = (nsDownloader *)closure;
+                                   uint32_t* writeCount) {
+  nsDownloader* self = (nsDownloader*)closure;
   if (self->mSink) return self->mSink->Write(fromRawSegment, count, writeCount);
 
   *writeCount = count;
@@ -91,7 +91,7 @@ nsresult nsDownloader::ConsumeData(nsIInputStream *in, void *closure,
 }
 
 NS_IMETHODIMP
-nsDownloader::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+nsDownloader::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                               uint64_t sourceOffset, uint32_t count) {
   uint32_t n;
   return inStr->ReadSegments(ConsumeData, this, count, &n);

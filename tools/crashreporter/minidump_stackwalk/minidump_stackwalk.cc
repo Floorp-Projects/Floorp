@@ -83,8 +83,8 @@ using google_breakpad::SimpleSymbolSupplier;
 // information if the minidump was produced as a result of a crash, and
 // call stacks for each thread contained in the minidump.  All information
 // is printed to stdout.
-bool PrintMinidumpProcess(const string &minidump_file,
-                          const std::vector<string> &symbol_args,
+bool PrintMinidumpProcess(const string& minidump_file,
+                          const std::vector<string>& symbol_args,
                           bool machine_readable, bool output_stack_contents) {
   std::vector<string> server_paths;
   std::vector<string> symbol_paths;
@@ -151,7 +151,7 @@ bool PrintMinidumpProcess(const string &minidump_file,
   return true;
 }
 
-void usage(const char *program_name) {
+void usage(const char* program_name) {
   fprintf(stderr,
           "usage: %s [-m|-s] <minidump-file> [<symbol server URL> | "
           "<symbol-path>]+\n"
@@ -162,7 +162,7 @@ void usage(const char *program_name) {
 
 }  // namespace
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   BPLOG_INIT(&argc, &argv);
 
   if (argc < 2) {
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  const char *minidump_file;
+  const char* minidump_file;
   bool machine_readable = false;
   bool output_stack_contents = false;
   int symbol_path_arg;

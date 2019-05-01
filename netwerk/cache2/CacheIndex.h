@@ -112,8 +112,8 @@ static_assert(sizeof(CacheIndexRecord::mHash) +
 
 class CacheIndexEntry : public PLDHashEntryHdr {
  public:
-  typedef const SHA1Sum::Hash &KeyType;
-  typedef const SHA1Sum::Hash *KeyTypePointer;
+  typedef const SHA1Sum::Hash& KeyType;
+  typedef const SHA1Sum::Hash* KeyTypePointer;
 
   explicit CacheIndexEntry(KeyTypePointer aKey) {
     MOZ_COUNT_CTOR(CacheIndexEntry);
@@ -122,7 +122,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
          mRec.get()));
     memcpy(&mRec->mHash, aKey, sizeof(SHA1Sum::Hash));
   }
-  CacheIndexEntry(const CacheIndexEntry &aOther) {
+  CacheIndexEntry(const CacheIndexEntry& aOther) {
     MOZ_ASSERT_UNREACHABLE("CacheIndexEntry copy constructor is forbidden!");
   }
   ~CacheIndexEntry() {
@@ -141,18 +141,18 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   // HashKey(): calculate the hash number
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return (reinterpret_cast<const uint32_t *>(aKey))[0];
+    return (reinterpret_cast<const uint32_t*>(aKey))[0];
   }
 
   // ALLOW_MEMMOVE can we move this class with memmove(), or do we have
   // to use the copy constructor?
   enum { ALLOW_MEMMOVE = true };
 
-  bool operator==(const CacheIndexEntry &aOther) const {
+  bool operator==(const CacheIndexEntry& aOther) const {
     return KeyEquals(&aOther.mRec->mHash);
   }
 
-  CacheIndexEntry &operator=(const CacheIndexEntry &aOther) {
+  CacheIndexEntry& operator=(const CacheIndexEntry& aOther) {
     MOZ_ASSERT(
         memcmp(&mRec->mHash, &aOther.mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     mRec->mFrecency = aOther.mRec->mFrecency;
@@ -195,7 +195,7 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     }
   }
 
-  const SHA1Sum::Hash *Hash() const { return &mRec->mHash; }
+  const SHA1Sum::Hash* Hash() const { return &mRec->mHash; }
 
   bool IsInitialized() const { return !!(mRec->mFlags & kInitializedMask); }
 
@@ -256,16 +256,16 @@ class CacheIndexEntry : public PLDHashEntryHdr {
   }
   // Returns filesize in kilobytes.
   uint32_t GetFileSize() const { return GetFileSize(mRec); }
-  static uint32_t GetFileSize(CacheIndexRecord *aRec) {
+  static uint32_t GetFileSize(CacheIndexRecord* aRec) {
     return aRec->mFlags & kFileSizeMask;
   }
-  static uint32_t IsPinned(CacheIndexRecord *aRec) {
+  static uint32_t IsPinned(CacheIndexRecord* aRec) {
     return aRec->mFlags & kPinnedMask;
   }
   bool IsFileEmpty() const { return GetFileSize() == 0; }
 
-  void WriteToBuf(void *aBuf) {
-    uint8_t *ptr = static_cast<uint8_t *>(aBuf);
+  void WriteToBuf(void* aBuf) {
+    uint8_t* ptr = static_cast<uint8_t*>(aBuf);
     memcpy(ptr, mRec->mHash, sizeof(SHA1Sum::Hash));
     ptr += sizeof(SHA1Sum::Hash);
     NetworkEndian::writeUint32(ptr, mRec->mFrecency);
@@ -285,8 +285,8 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     NetworkEndian::writeUint32(ptr, mRec->mFlags & ~(kDirtyMask | kFreshMask));
   }
 
-  void ReadFromBuf(void *aBuf) {
-    const uint8_t *ptr = static_cast<const uint8_t *>(aBuf);
+  void ReadFromBuf(void* aBuf) {
+    const uint8_t* ptr = static_cast<const uint8_t*>(aBuf);
     MOZ_ASSERT(memcmp(&mRec->mHash, ptr, sizeof(SHA1Sum::Hash)) == 0);
     ptr += sizeof(SHA1Sum::Hash);
     mRec->mFrecency = NetworkEndian::readUint32(ptr);
@@ -317,8 +317,8 @@ class CacheIndexEntry : public PLDHashEntryHdr {
          GetBaseDomainAccessCount(), GetFileSize()));
   }
 
-  static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
-                                           nsILoadContextInfo *aInfo) {
+  static bool RecordMatchesLoadContextInfo(CacheIndexRecord* aRec,
+                                           nsILoadContextInfo* aInfo) {
     MOZ_ASSERT(aInfo);
 
     if (!aInfo->IsPrivate() &&
@@ -386,11 +386,11 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
     LOG(("CacheIndexEntryUpdate::~CacheIndexEntryUpdate()"));
   }
 
-  CacheIndexEntryUpdate &operator=(const CacheIndexEntry &aOther) {
+  CacheIndexEntryUpdate& operator=(const CacheIndexEntry& aOther) {
     MOZ_ASSERT(
         memcmp(&mRec->mHash, &aOther.mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     mUpdateFlags = 0;
-    *(static_cast<CacheIndexEntry *>(this)) = aOther;
+    *(static_cast<CacheIndexEntry*>(this)) = aOther;
     return *this;
   }
 
@@ -436,7 +436,7 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
     CacheIndexEntry::SetFileSize(aFileSize);
   }
 
-  void ApplyUpdate(CacheIndexEntry *aDst) {
+  void ApplyUpdate(CacheIndexEntry* aDst) {
     MOZ_ASSERT(
         memcmp(&mRec->mHash, &aDst->mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     if (mUpdateFlags & kFrecencyUpdatedMask) {
@@ -501,7 +501,7 @@ class CacheIndexStats {
   {
   }
 
-  bool operator==(const CacheIndexStats &aOther) const {
+  bool operator==(const CacheIndexStats& aOther) const {
     return
 #ifdef DEBUG
         aOther.mStateLogged == mStateLogged &&
@@ -566,7 +566,7 @@ class CacheIndexStats {
     return mSize;
   }
 
-  void BeforeChange(const CacheIndexEntry *aEntry) {
+  void BeforeChange(const CacheIndexEntry* aEntry) {
 #ifdef DEBUG_STATS
     if (!mDisableLogging) {
       LOG(("CacheIndexStats::BeforeChange()"));
@@ -611,7 +611,7 @@ class CacheIndexStats {
     }
   }
 
-  void AfterChange(const CacheIndexEntry *aEntry) {
+  void AfterChange(const CacheIndexEntry* aEntry) {
     MOZ_ASSERT(mStateLogged,
                "CacheIndexStats::AfterChange() - state not "
                "logged!");
@@ -677,7 +677,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   CacheIndex();
 
-  static nsresult Init(nsIFile *aCacheDirectory);
+  static nsresult Init(nsIFile* aCacheDirectory);
   static nsresult PreShutdown();
   static nsresult Shutdown();
 
@@ -687,34 +687,34 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // method is called whenever a new handle for a new entry file is created. The
   // newly created entry is not initialized and it must be either initialized
   // with InitEntry() or removed with RemoveEntry().
-  static nsresult AddEntry(const SHA1Sum::Hash *aHash);
+  static nsresult AddEntry(const SHA1Sum::Hash* aHash);
 
   // Inform index about an existing entry that should be present in index. This
   // method is called whenever a new handle for an existing entry file is
   // created. Like in case of AddEntry(), either InitEntry() or RemoveEntry()
   // must be called on the entry, since the entry is not initizlized if the
   // index is outdated.
-  static nsresult EnsureEntryExists(const SHA1Sum::Hash *aHash);
+  static nsresult EnsureEntryExists(const SHA1Sum::Hash* aHash);
 
   // Initialize the entry. It MUST be present in index. Call to AddEntry() or
   // EnsureEntryExists() must precede the call to this method.
-  static nsresult InitEntry(const SHA1Sum::Hash *aHash,
+  static nsresult InitEntry(const SHA1Sum::Hash* aHash,
                             OriginAttrsHash aOriginAttrsHash, bool aAnonymous,
                             bool aPinned);
 
   // Remove entry from index. The entry should be present in index.
-  static nsresult RemoveEntry(const SHA1Sum::Hash *aHash);
+  static nsresult RemoveEntry(const SHA1Sum::Hash* aHash);
 
   // Update some information in entry. The entry MUST be present in index and
   // MUST be initialized. Call to AddEntry() or EnsureEntryExists() and to
   // InitEntry() must precede the call to this method.
   // Pass nullptr if the value didn't change.
   static nsresult UpdateEntry(
-      const SHA1Sum::Hash *aHash, const uint32_t *aFrecency,
-      const bool *aHasAltData, const uint16_t *aOnStartTime,
-      const uint16_t *aOnStopTime, const uint8_t *aContentType,
-      const uint16_t *aBaseDomainAccessCount, const uint32_t aTelemetryReportID,
-      const uint32_t *aSize);
+      const SHA1Sum::Hash* aHash, const uint32_t* aFrecency,
+      const bool* aHasAltData, const uint16_t* aOnStartTime,
+      const uint16_t* aOnStopTime, const uint8_t* aContentType,
+      const uint16_t* aBaseDomainAccessCount, const uint32_t aTelemetryReportID,
+      const uint32_t* aSize);
 
   // Remove all entries from the index. Called when clearing the whole cache.
   static nsresult RemoveAll();
@@ -726,51 +726,51 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // If the optional aCB callback is given, the it will be called with a
   // CacheIndexEntry only if _retval is EXISTS when the method returns.
   static nsresult HasEntry(
-      const nsACString &aKey, EntryStatus *_retval,
-      const std::function<void(const CacheIndexEntry *)> &aCB = nullptr);
+      const nsACString& aKey, EntryStatus* _retval,
+      const std::function<void(const CacheIndexEntry*)>& aCB = nullptr);
   static nsresult HasEntry(
-      const SHA1Sum::Hash &hash, EntryStatus *_retval,
-      const std::function<void(const CacheIndexEntry *)> &aCB = nullptr);
+      const SHA1Sum::Hash& hash, EntryStatus* _retval,
+      const std::function<void(const CacheIndexEntry*)>& aCB = nullptr);
 
   // Returns a hash of the least important entry that should be evicted if the
   // cache size is over limit and also returns a total number of all entries in
   // the index minus the number of forced valid entries and unpinned entries
   // that we encounter when searching (see below)
   static nsresult GetEntryForEviction(bool aIgnoreEmptyEntries,
-                                      SHA1Sum::Hash *aHash, uint32_t *aCnt);
+                                      SHA1Sum::Hash* aHash, uint32_t* aCnt);
 
   // Checks if a cache entry is currently forced valid. Used to prevent an entry
   // (that has been forced valid) from being evicted when the cache size reaches
   // its limit.
-  static bool IsForcedValidEntry(const SHA1Sum::Hash *aHash);
+  static bool IsForcedValidEntry(const SHA1Sum::Hash* aHash);
 
   // Returns cache size in kB.
-  static nsresult GetCacheSize(uint32_t *_retval);
+  static nsresult GetCacheSize(uint32_t* _retval);
 
   // Returns number of entry files in the cache
-  static nsresult GetEntryFileCount(uint32_t *_retval);
+  static nsresult GetEntryFileCount(uint32_t* _retval);
 
   // Synchronously returns the disk occupation and number of entries
   // per-context. Callable on any thread. It will ignore loadContextInfo and get
   // stats for all entries if the aInfo is a nullptr.
-  static nsresult GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize,
-                                uint32_t *aCount);
+  static nsresult GetCacheStats(nsILoadContextInfo* aInfo, uint32_t* aSize,
+                                uint32_t* aCount);
 
   // Asynchronously gets the disk cache size, used for display in the UI.
   static nsresult AsyncGetDiskConsumption(
-      nsICacheStorageConsumptionObserver *aObserver);
+      nsICacheStorageConsumptionObserver* aObserver);
 
   // Returns an iterator that returns entries matching a given context that were
   // present in the index at the time this method was called. If aAddNew is true
   // then the iterator will also return entries created after this call.
   // NOTE: When some entry is removed from index it is removed also from the
   // iterator regardless what aAddNew was passed.
-  static nsresult GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
-                              CacheIndexIterator **_retval);
+  static nsresult GetIterator(nsILoadContextInfo* aInfo, bool aAddNew,
+                              CacheIndexIterator** _retval);
 
   // Returns true if we _think_ that the index is up to date. I.e. the state is
   // READY or WRITING and mIndexNeedsUpdate as well as mShuttingDown is false.
-  static nsresult IsUpToDate(bool *_retval);
+  static nsresult IsUpToDate(bool* _retval);
 
   // Called from CacheStorageService::Clear() and
   // CacheFileContextEvictor::EvictEntries(), sets a flag that blocks
@@ -792,18 +792,18 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   virtual ~CacheIndex();
 
-  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override;
-  nsresult OnFileOpenedInternal(FileOpenHelper *aOpener,
-                                CacheFileHandle *aHandle, nsresult aResult);
-  NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
+  NS_IMETHOD OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) override;
+  nsresult OnFileOpenedInternal(FileOpenHelper* aOpener,
+                                CacheFileHandle* aHandle, nsresult aResult);
+  NS_IMETHOD OnDataWritten(CacheFileHandle* aHandle, const char* aBuf,
                            nsresult aResult) override;
-  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf,
+  NS_IMETHOD OnDataRead(CacheFileHandle* aHandle, char* aBuf,
                         nsresult aResult) override;
-  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
-  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileDoomed(CacheFileHandle* aHandle, nsresult aResult) override;
+  NS_IMETHOD OnEOFSet(CacheFileHandle* aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileRenamed(CacheFileHandle* aHandle, nsresult aResult) override;
 
-  nsresult InitInternal(nsIFile *aCacheDirectory);
+  nsresult InitInternal(nsIFile* aCacheDirectory);
   void PreShutdownInternal();
 
   // This method returns false when index is not initialized or is shut down.
@@ -813,15 +813,15 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // originAttributes and isAnonymous. We don't expect to find a collision
   // since these values are part of the key that we hash and we use a strong
   // hash function.
-  static bool IsCollision(CacheIndexEntry *aEntry,
+  static bool IsCollision(CacheIndexEntry* aEntry,
                           OriginAttrsHash aOriginAttrsHash, bool aAnonymous);
 
   // Checks whether any of the information about the entry has changed.
   static bool HasEntryChanged(
-      CacheIndexEntry *aEntry, const uint32_t *aFrecency,
-      const bool *aHasAltData, const uint16_t *aOnStartTime,
-      const uint16_t *aOnStopTime, const uint8_t *aContentType,
-      const uint16_t *aBaseDomainAccessCount, const uint32_t *aSize);
+      CacheIndexEntry* aEntry, const uint32_t* aFrecency,
+      const bool* aHasAltData, const uint16_t* aOnStartTime,
+      const uint16_t* aOnStopTime, const uint8_t* aContentType,
+      const uint16_t* aBaseDomainAccessCount, const uint32_t* aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.
   void ProcessPendingOperations();
@@ -852,8 +852,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // dirty, i.e. changes that are not present in the index file on the disk.
   // When the log is written successfully, the dirty flag in index file is
   // cleared.
-  nsresult GetFile(const nsACString &aName, nsIFile **_retval);
-  nsresult RemoveFile(const nsACString &aName);
+  nsresult GetFile(const nsACString& aName, nsIFile** _retval);
+  nsresult RemoveFile(const nsACString& aName);
   void RemoveAllIndexFiles();
   void RemoveJournalAndTempFile();
   // Writes journal to the disk and clears dirty flag in index header.
@@ -918,13 +918,13 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   // Following methods perform updating and building of the index.
   // Timer callback that starts update or build process.
-  static void DelayedUpdate(nsITimer *aTimer, void *aClosure);
+  static void DelayedUpdate(nsITimer* aTimer, void* aClosure);
   void DelayedUpdateLocked();
   // Posts timer event that start update or build process.
   nsresult ScheduleUpdateTimer(uint32_t aDelay);
   nsresult SetupDirectoryEnumerator();
-  nsresult InitEntryFromDiskData(CacheIndexEntry *aEntry,
-                                 CacheFileMetadata *aMetaData,
+  nsresult InitEntryFromDiskData(CacheIndexEntry* aEntry,
+                                 CacheFileMetadata* aMetaData,
                                  int64_t aFileSize);
   // Returns true when either a timer is scheduled or event is posted.
   bool IsUpdatePending();
@@ -995,7 +995,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     SHUTDOWN = 6
   };
 
-  static char const *StateString(EState aState);
+  static char const* StateString(EState aState);
   void ChangeState(EState aNewState);
   void NotifyAsyncGetDiskConsumptionCallbacks();
 
@@ -1004,10 +1004,10 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   void ReleaseBuffer();
 
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
-  void AddRecordToIterators(CacheIndexRecord *aRecord);
-  void RemoveRecordFromIterators(CacheIndexRecord *aRecord);
-  void ReplaceRecordInIterators(CacheIndexRecord *aOldRecord,
-                                CacheIndexRecord *aNewRecord);
+  void AddRecordToIterators(CacheIndexRecord* aRecord);
+  void RemoveRecordFromIterators(CacheIndexRecord* aRecord);
+  void ReplaceRecordInIterators(CacheIndexRecord* aOldRecord,
+                                CacheIndexRecord* aNewRecord);
 
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -1071,7 +1071,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // in hashtable that are initialized and are not marked as removed when
   // writing begins.
   uint32_t mProcessEntries;
-  char *mRWBuf;
+  char* mRWBuf;
   uint32_t mRWBufSize;
   uint32_t mRWBufPos;
   RefPtr<CacheHash> mRWHash;
@@ -1124,7 +1124,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   class FrecencyArray {
     class Iterator {
      public:
-      explicit Iterator(nsTArray<CacheIndexRecord *> *aRecs)
+      explicit Iterator(nsTArray<CacheIndexRecord*>* aRecs)
           : mRecs(aRecs), mIdx(0) {
         while (!Done() && !(*mRecs)[mIdx]) {
           mIdx++;
@@ -1133,7 +1133,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
       bool Done() const { return mIdx == mRecs->Length(); }
 
-      CacheIndexRecord *Get() const {
+      CacheIndexRecord* Get() const {
         MOZ_ASSERT(!Done());
         return (*mRecs)[mIdx];
       }
@@ -1147,7 +1147,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
       }
 
      private:
-      nsTArray<CacheIndexRecord *> *mRecs;
+      nsTArray<CacheIndexRecord*>* mRecs;
       uint32_t mIdx;
     };
 
@@ -1157,10 +1157,10 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     FrecencyArray() : mUnsortedElements(0), mRemovedElements(0) {}
 
     // Methods used by CacheIndexEntryAutoManage to keep the array up to date.
-    void AppendRecord(CacheIndexRecord *aRecord);
-    void RemoveRecord(CacheIndexRecord *aRecord);
-    void ReplaceRecord(CacheIndexRecord *aOldRecord,
-                       CacheIndexRecord *aNewRecord);
+    void AppendRecord(CacheIndexRecord* aRecord);
+    void RemoveRecord(CacheIndexRecord* aRecord);
+    void ReplaceRecord(CacheIndexRecord* aOldRecord,
+                       CacheIndexRecord* aNewRecord);
     void SortIfNeeded();
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
@@ -1169,7 +1169,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
    private:
     friend class CacheIndex;
 
-    nsTArray<CacheIndexRecord *> mRecs;
+    nsTArray<CacheIndexRecord*> mRecs;
     uint32_t mUnsortedElements;
     // Instead of removing elements from the array immediately, we null them out
     // and the iterator skips them when accessing the array. The null pointers
@@ -1180,7 +1180,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   FrecencyArray mFrecencyArray;
 
-  nsTArray<CacheIndexIterator *> mIterators;
+  nsTArray<CacheIndexIterator*> mIterators;
 
   // This flag is true iff we are between CacheStorageService:Clear() and
   // processing all contexts to be evicted.  It will make UI to show
@@ -1189,8 +1189,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   class DiskConsumptionObserver : public Runnable {
    public:
-    static DiskConsumptionObserver *Init(
-        nsICacheStorageConsumptionObserver *aObserver) {
+    static DiskConsumptionObserver* Init(
+        nsICacheStorageConsumptionObserver* aObserver) {
       nsWeakPtr observer = do_GetWeakReference(aObserver);
       if (!observer) return nullptr;
 
@@ -1203,7 +1203,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     }
 
    private:
-    explicit DiskConsumptionObserver(nsWeakPtr const &aWeakObserver)
+    explicit DiskConsumptionObserver(nsWeakPtr const& aWeakObserver)
         : Runnable("net::CacheIndex::DiskConsumptionObserver"),
           mObserver(aWeakObserver),
           mSize(0) {}

@@ -47,57 +47,57 @@ class CookieServiceChild : public PCookieServiceChild,
 
   static already_AddRefed<CookieServiceChild> GetSingleton();
 
-  void TrackCookieLoad(nsIChannel *aChannel);
+  void TrackCookieLoad(nsIChannel* aChannel);
 
  protected:
   virtual ~CookieServiceChild();
   void MoveCookies();
 
-  void SerializeURIs(nsIURI *aHostURI, nsIChannel *aChannel,
-                     nsCString &aHostSpec, nsCString &aHostCharset,
-                     nsCString &aOriginatingSpec,
-                     nsCString &aOriginatingCharset);
+  void SerializeURIs(nsIURI* aHostURI, nsIChannel* aChannel,
+                     nsCString& aHostSpec, nsCString& aHostCharset,
+                     nsCString& aOriginatingSpec,
+                     nsCString& aOriginatingCharset);
 
-  nsresult GetCookieStringInternal(nsIURI *aHostURI, nsIChannel *aChannel,
-                                   char **aCookieString);
+  nsresult GetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
+                                   char** aCookieString);
 
   void GetCookieStringFromCookieHashTable(
-      nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource,
+      nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
       bool aFirstPartyStorageAccessGranted, bool aIsSafeTopLevelNav,
-      bool aIsSameSiteForeign, nsIChannel *aChannel, nsCString &aCookieString);
+      bool aIsSameSiteForeign, nsIChannel* aChannel, nsCString& aCookieString);
 
-  nsresult SetCookieStringInternal(nsIURI *aHostURI, nsIChannel *aChannel,
-                                   const char *aCookieString,
-                                   const char *aServerTime, bool aFromHttp);
+  nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
+                                   const char* aCookieString,
+                                   const char* aServerTime, bool aFromHttp);
 
-  void RecordDocumentCookie(nsCookie *aCookie, const OriginAttributes &aAttrs);
+  void RecordDocumentCookie(nsCookie* aCookie, const OriginAttributes& aAttrs);
 
-  void SetCookieInternal(nsCookieAttributes &aCookieAttributes,
-                         const mozilla::OriginAttributes &aAttrs,
-                         nsIChannel *aChannel, bool aFromHttp,
-                         nsICookiePermission *aPermissionService);
+  void SetCookieInternal(nsCookieAttributes& aCookieAttributes,
+                         const mozilla::OriginAttributes& aAttrs,
+                         nsIChannel* aChannel, bool aFromHttp,
+                         nsICookiePermission* aPermissionService);
 
-  uint32_t CountCookiesFromHashTable(const nsCString &aBaseDomain,
-                                     const OriginAttributes &aOriginAttrs);
+  uint32_t CountCookiesFromHashTable(const nsCString& aBaseDomain,
+                                     const OriginAttributes& aOriginAttrs);
 
-  void PrefChanged(nsIPrefBranch *aPrefBranch);
+  void PrefChanged(nsIPrefBranch* aPrefBranch);
 
-  bool RequireThirdPartyCheck(nsILoadInfo *aLoadInfo);
+  bool RequireThirdPartyCheck(nsILoadInfo* aLoadInfo);
 
   mozilla::ipc::IPCResult RecvTrackCookiesLoad(
-      nsTArray<CookieStruct> &&aCookiesList, const OriginAttributes &aAttrs);
+      nsTArray<CookieStruct>&& aCookiesList, const OriginAttributes& aAttrs);
 
   mozilla::ipc::IPCResult RecvRemoveAll();
 
   mozilla::ipc::IPCResult RecvRemoveBatchDeletedCookies(
-      nsTArray<CookieStruct> &&aCookiesList,
-      nsTArray<OriginAttributes> &&aAttrsList);
+      nsTArray<CookieStruct>&& aCookiesList,
+      nsTArray<OriginAttributes>&& aAttrsList);
 
-  mozilla::ipc::IPCResult RecvRemoveCookie(const CookieStruct &aCookie,
-                                           const OriginAttributes &aAttrs);
+  mozilla::ipc::IPCResult RecvRemoveCookie(const CookieStruct& aCookie,
+                                           const OriginAttributes& aAttrs);
 
-  mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct &aCookie,
-                                        const OriginAttributes &aAttrs);
+  mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct& aCookie,
+                                        const OriginAttributes& aAttrs);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -31,14 +31,14 @@ class ProxyAutoConfig {
   ProxyAutoConfig();
   ~ProxyAutoConfig();
 
-  nsresult Init(const nsCString &aPACURI, const nsCString &aPACScriptData,
+  nsresult Init(const nsCString& aPACURI, const nsCString& aPACScriptData,
                 bool aIncludePath, uint32_t aExtraHeapSize,
-                nsIEventTarget *aEventTarget);
+                nsIEventTarget* aEventTarget);
   void SetThreadLocalIndex(uint32_t index);
   void Shutdown();
   void GC();
-  bool MyIPAddress(const JS::CallArgs &aArgs);
-  bool ResolveAddress(const nsCString &aHostName, NetAddr *aNetAddr,
+  bool MyIPAddress(const JS::CallArgs& aArgs);
+  bool ResolveAddress(const nsCString& aHostName, NetAddr* aNetAddr,
                       unsigned int aTimeout);
 
   /**
@@ -75,8 +75,8 @@ class ProxyAutoConfig {
    * @param result
    *        result string as defined above.
    */
-  nsresult GetProxyForURI(const nsCString &aTestURI, const nsCString &aTestHost,
-                          nsACString &result);
+  nsresult GetProxyForURI(const nsCString& aTestURI, const nsCString& aTestHost,
+                          nsACString& result);
 
  private:
   // allow 665ms for myipaddress dns queries. That's 95th percentile.
@@ -85,11 +85,11 @@ class ProxyAutoConfig {
   // used to compile the PAC file and setup the execution context
   nsresult SetupJS();
 
-  bool SrcAddress(const NetAddr *remoteAddress, nsCString &localAddress);
-  bool MyIPAddressTryHost(const nsCString &hostName, unsigned int timeout,
-                          const JS::CallArgs &aArgs, bool *aResult);
+  bool SrcAddress(const NetAddr* remoteAddress, nsCString& localAddress);
+  bool MyIPAddressTryHost(const nsCString& hostName, unsigned int timeout,
+                          const JS::CallArgs& aArgs, bool* aResult);
 
-  JSContextWrapper *mJSContext;
+  JSContextWrapper* mJSContext;
   bool mJSNeedsSetup;
   bool mShutdown;
   nsCString mConcatenatedPACData;

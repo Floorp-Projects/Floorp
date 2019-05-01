@@ -10,7 +10,7 @@
 CEnumFormatEtc::CEnumFormatEtc() : mRefCnt(0), mCurrentIdx(0) {}
 
 // Constructor used by Clone()
-CEnumFormatEtc::CEnumFormatEtc(nsTArray<FormatEtc> &aArray)
+CEnumFormatEtc::CEnumFormatEtc(nsTArray<FormatEtc>& aArray)
     : mRefCnt(0), mCurrentIdx(0) {
   // a deep copy, calls FormatEtc's copy constructor on each
   mFormatList.AppendElements(aArray);
@@ -21,7 +21,7 @@ CEnumFormatEtc::~CEnumFormatEtc() {}
 /* IUnknown impl. */
 
 STDMETHODIMP
-CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv) {
+CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID* ppv) {
   *ppv = nullptr;
 
   if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IEnumFORMATETC))
@@ -56,8 +56,8 @@ CEnumFormatEtc::Release() {
 /* IEnumFORMATETC impl. */
 
 STDMETHODIMP
-CEnumFormatEtc::Next(ULONG aMaxToFetch, FORMATETC *aResult,
-                     ULONG *aNumFetched) {
+CEnumFormatEtc::Next(ULONG aMaxToFetch, FORMATETC* aResult,
+                     ULONG* aNumFetched) {
   // If the method retrieves the number of items requested, the return
   // value is S_OK. Otherwise, it is S_FALSE.
 
@@ -108,12 +108,12 @@ CEnumFormatEtc::Reset(void) {
 }
 
 STDMETHODIMP
-CEnumFormatEtc::Clone(LPENUMFORMATETC *aResult) {
+CEnumFormatEtc::Clone(LPENUMFORMATETC* aResult) {
   // Must return a new IEnumFORMATETC interface with the same iterative state.
 
   if (!aResult) return E_INVALIDARG;
 
-  CEnumFormatEtc *pEnumObj = new CEnumFormatEtc(mFormatList);
+  CEnumFormatEtc* pEnumObj = new CEnumFormatEtc(mFormatList);
 
   if (!pEnumObj) return E_OUTOFMEMORY;
 
@@ -129,7 +129,7 @@ CEnumFormatEtc::Clone(LPENUMFORMATETC *aResult) {
 
 void CEnumFormatEtc::AddFormatEtc(LPFORMATETC aFormat) {
   if (!aFormat) return;
-  FormatEtc *etc = mFormatList.AppendElement();
+  FormatEtc* etc = mFormatList.AppendElement();
   // Make a copy of aFormat
   if (etc) etc->CopyIn(aFormat);
 }

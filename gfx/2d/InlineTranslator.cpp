@@ -18,14 +18,14 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gfx {
 
-InlineTranslator::InlineTranslator(DrawTarget *aDT, void *aFontContext)
+InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
     : mBaseDT(aDT), mFontContext(aFontContext) {}
 
-bool InlineTranslator::TranslateRecording(char *aData, size_t aLen) {
+bool InlineTranslator::TranslateRecording(char* aData, size_t aLen) {
   // an istream like class for reading from memory
   struct MemReader {
-    MemReader(char *aData, size_t aLen) : mData(aData), mEnd(aData + aLen) {}
-    void read(char *s, std::streamsize n) {
+    MemReader(char* aData, size_t aLen) : mData(aData), mEnd(aData + aLen) {}
+    void read(char* s, std::streamsize n) {
       if (n <= (mEnd - mData)) {
         memcpy(s, mData, n);
         mData += n;
@@ -38,8 +38,8 @@ bool InlineTranslator::TranslateRecording(char *aData, size_t aLen) {
     bool eof() { return mData > mEnd; }
     bool good() { return !eof(); }
 
-    char *mData;
-    char *mEnd;
+    char* mData;
+    char* mEnd;
   };
   MemReader reader(aData, aLen);
 
@@ -69,7 +69,7 @@ bool InlineTranslator::TranslateRecording(char *aData, size_t aLen) {
   while (reader.good()) {
     bool success = RecordedEvent::DoWithEvent(
         reader, static_cast<RecordedEvent::EventType>(eventType),
-        [&](RecordedEvent *recordedEvent) {
+        [&](RecordedEvent* recordedEvent) {
           // Make sure that the whole event was read from the stream
           // successfully.
           if (!reader.good()) {
@@ -98,7 +98,7 @@ bool InlineTranslator::TranslateRecording(char *aData, size_t aLen) {
 }
 
 already_AddRefed<DrawTarget> InlineTranslator::CreateDrawTarget(
-    ReferencePtr aRefPtr, const gfx::IntSize &aSize,
+    ReferencePtr aRefPtr, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
   RefPtr<DrawTarget> drawTarget = mBaseDT;
   AddDrawTarget(aRefPtr, drawTarget);
