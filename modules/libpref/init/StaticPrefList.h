@@ -538,6 +538,16 @@ VARCACHE_PREF(
 )
 #endif
 
+// Whether to enable the JavaScript start-up cache. This causes one of the first
+// execution to record the bytecode of the JavaScript function used, and save it
+// in the existing cache entry. On the following loads of the same script, the
+// bytecode would be loaded from the cache instead of being generated once more.
+VARCACHE_PREF(
+  "dom.script_loader.bytecode_cache.enabled",
+   dom_script_loader_bytecode_cache_enabled,
+  bool, true
+)
+
 // IMPORTANT: Keep this in condition in sync with all.js. The value
 // of MOZILLA_OFFICIAL is different between full and artifact builds, so without
 // it being specified there, dump is disabled in artifact builds (see Bug 1490412).
