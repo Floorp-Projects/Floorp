@@ -67,7 +67,8 @@ open class HomeActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_home)
 
-        val appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.libraryFragment)).build()
+        // Add ids to this that we don't want to have a toolbar back button
+        val appBarConfiguration = AppBarConfiguration.Builder().build()
         val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
