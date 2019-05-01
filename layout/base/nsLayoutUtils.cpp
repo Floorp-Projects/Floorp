@@ -3346,7 +3346,7 @@ nsIScrollableFrame* nsLayoutUtils::GetAsyncScrollableAncestorFrame(
 }
 
 void nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
-    nsIFrame* aFrame, RepaintMode aRepaintMode) {
+    nsIFrame* aFrame) {
   nsIFrame* frame = aFrame;
   while (frame) {
     frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
@@ -3365,7 +3365,7 @@ void nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
         !nsLayoutUtils::HasDisplayPort(frame->GetContent())) {
       nsLayoutUtils::SetDisplayPortMargins(frame->GetContent(),
                                            frame->PresShell(), ScreenMargin(),
-                                           0, aRepaintMode);
+                                           0, RepaintMode::Repaint);
     }
   }
 }
