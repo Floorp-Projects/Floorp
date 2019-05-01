@@ -100,6 +100,7 @@
       {
         "name": "register",
         "type": "function",
+        "deprecated": "proxy.register has been deprecated and will be removed in Firefox 71.",
         "description": "Registers the proxy script for the extension.",
         "async": true,
         "parameters": [
@@ -113,6 +114,7 @@
       {
         "name": "unregister",
         "type": "function",
+        "deprecated": "proxy.unregister has been deprecated and will be removed in Firefox 71.",
         "description": "Unregisters the proxy script for the extension.",
         "async": true,
         "parameters": []
@@ -120,8 +122,8 @@
       {
         "name": "registerProxyScript",
         "type": "function",
-        "description": "Registers the proxy script for the extension.",
-        "deprecated": "Please use $(ref:proxy.register)",
+        "deprecated": "proxy.registerProxyScript has been deprecated and will be removed in Firefox 71.",
+        "description": "Registers the proxy script for the extension. This is an alias for proxy.register.",
         "async": true,
         "parameters": [
           {
@@ -181,7 +183,7 @@
       {
         "name": "onError",
         "type": "function",
-        "description": "Notifies about proxy script errors.",
+        "description": "Notifies about errors caused by the invalid use of the proxy API.",
         "parameters": [
           {
             "name": "error",
@@ -192,6 +194,7 @@
       {
         "name": "onProxyError",
         "type": "function",
+        "deprecated": "proxy.onProxyError has been deprecated and will be removed in Firefox 71. Use proxy.onError instead.",
         "description": "Please use $(ref:proxy.onError).",
         "parameters": [
           {
