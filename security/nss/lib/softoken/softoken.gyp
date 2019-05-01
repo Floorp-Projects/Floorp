@@ -10,7 +10,7 @@
       'target_name': 'softokn_static',
       'type': 'static_library',
       'defines': [
-        'NSS_TEST_BUILD',
+        'NSS_STATIC_SOFTOKEN',
       ],
       'dependencies': [
         'softokn_base',

@@ -99,6 +99,7 @@
     'moz_folded_library_name%': '',
     'sanitizer_flags%': 0,
     'test_build%': 0,
+    'static_libs%': 0,
     'no_zdefs%': 0,
     'fuzz%': 0,
     'fuzz_tls%': 0,
@@ -122,6 +123,7 @@
     'variables': {
       'mapfile%': '',
       'test_build%': 0,
+      'static_libs%': 0,
       'debug_optimization_level%': '0',
       'release_optimization_level%': '2',
     },
@@ -141,6 +143,11 @@
           'NSS_FIPS_DISABLED',
           'NSS_NO_INIT_SUPPORT',
         ],
+      }],
+      [ 'static_libs==1', {
+        'variables': {
+          'standalone_static_library': '1',
+        },
       }],
       [ 'OS!="android" and OS!="mac" and OS!="win"', {
         'libraries': [
@@ -257,7 +264,7 @@
             }],
           }]
         ],
-      }, 'test_build==1 and _type=="shared_library"', {
+      }, 'static_libs==1 and _type=="shared_library"', {
         # When linking a shared lib against a static one, XCode doesn't
         # export the latter's symbols by default. -all_load fixes that.
         'xcode_settings': {
