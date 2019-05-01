@@ -138,15 +138,17 @@ pub struct AlphaBatchList {
     pub item_rects: Vec<Vec<PictureRect>>,
     current_batch_index: usize,
     current_z_id: ZBufferId,
+    break_advanced_blend_batches: bool,
 }
 
 impl AlphaBatchList {
-    fn new() -> Self {
+    fn new(break_advanced_blend_batches: bool) -> Self {
         AlphaBatchList {
             batches: Vec::new(),
             item_rects: Vec::new(),
             current_z_id: ZBufferId::invalid(),
             current_batch_index: usize::MAX,
+            break_advanced_blend_batches,
         }
     }
 
@@ -179,6 +181,9 @@ impl AlphaBatchList {
                             break;
                         }
                     }
+                }
+                BlendMode::Advanced(_) if self.break_advanced_blend_batches => {
+                    // don't try to find a batch
                 }
                 _ => {
                     'outer_default: for (batch_index, batch) in self.batches.iter().enumerate().rev().take(10) {
@@ -301,13 +306,14 @@ impl BatchList {
         screen_size: DeviceIntSize,
         regions: Vec<DeviceIntRect>,
         tile_blits: Vec<TileBlit>,
+        break_advanced_blend_batches: bool,
     ) -> Self {
         // The threshold for creating a new batch is
         // one quarter the screen size.
         let batch_area_threshold = (screen_size.width * screen_size.height) as f32 / 4.0;
 
         BatchList {
-            alpha_batch_list: AlphaBatchList::new(),
+            alpha_batch_list: AlphaBatchList::new(break_advanced_blend_batches),
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold),
             regions,
             tile_blits,
@@ -321,23 +327,8 @@ impl BatchList {
         z_id: ZBufferId,
         instance: PrimitiveInstanceData,
     ) {
-        match key.blend_mode {
-            BlendMode::None => {
-                self.opaque_batch_list
-                    .set_params_and_get_batch(key, bounding_rect)
-                    .push(instance);
-            }
-            BlendMode::Alpha |
-            BlendMode::PremultipliedAlpha |
-            BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelConstantTextColor(..) |
-            BlendMode::SubpixelWithBgColor |
-            BlendMode::SubpixelDualSource => {
-                self.alpha_batch_list
-                    .set_params_and_get_batch(key, bounding_rect, z_id)
-                    .push(instance);
-            }
-        }
+        self.set_params_and_get_batch(key, bounding_rect, z_id)
+            .push(instance);
     }
 
     pub fn set_params_and_get_batch(
@@ -356,7 +347,8 @@ impl BatchList {
             BlendMode::PremultipliedDestOut |
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelWithBgColor |
-            BlendMode::SubpixelDualSource => {
+            BlendMode::SubpixelDualSource |
+            BlendMode::Advanced(_) => {
                 self.alpha_batch_list
                     .set_params_and_get_batch(key, bounding_rect, z_id)
             }
@@ -475,18 +467,21 @@ pub struct AlphaBatchBuilder {
     screen_size: DeviceIntSize,
     task_scissor_rect: Option<DeviceIntRect>,
     glyph_fetch_buffer: Vec<GlyphFetchResult>,
+    break_advanced_blend_batches: bool,
 }
 
 impl AlphaBatchBuilder {
     pub fn new(
         screen_size: DeviceIntSize,
         task_scissor_rect: Option<DeviceIntRect>,
+        break_advanced_blend_batches: bool,
     ) -> Self {
         let batch_lists = vec![
             BatchList::new(
                 screen_size,
                 Vec::new(),
                 Vec::new(),
+                break_advanced_blend_batches,
             ),
         ];
 
@@ -495,6 +490,7 @@ impl AlphaBatchBuilder {
             task_scissor_rect,
             screen_size,
             glyph_fetch_buffer: Vec::new(),
+            break_advanced_blend_batches,
         }
     }
 
@@ -507,6 +503,7 @@ impl AlphaBatchBuilder {
             self.screen_size,
             regions,
             tile_blits,
+            self.break_advanced_blend_batches,
         ));
     }
 
@@ -1102,6 +1099,10 @@ impl AlphaBatchBuilder {
                             render_tasks,
                         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
+                        let surface = ctx.surfaces[raster_config.surface_index.0]
+                            .surface
+                            .as_ref();
+
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
                                 let tile_cache = picture.tile_cache.as_ref().unwrap();
@@ -1256,10 +1257,6 @@ impl AlphaBatchBuilder {
                                 }
                             }
                             PictureCompositeMode::Filter(ref filter) => {
-                                let surface = ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: surface must be allocated by now");
                                 assert!(filter.is_visible());
                                 match filter {
                                     FilterOp::Blur(..) => {
@@ -1267,6 +1264,7 @@ impl AlphaBatchBuilder {
                                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                         );
                                         let (uv_rect_address, textures) = surface
+                                            .expect("bug: surface must be allocated by now")
                                             .resolve(
                                                 render_tasks,
                                                 ctx.resource_cache,
@@ -1329,7 +1327,9 @@ impl AlphaBatchBuilder {
                                         let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
 
                                         // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface.resolve_render_task_id();
+                                        let cache_task_id = surface
+                                            .expect("bug: surface must be allocated by now")
+                                            .resolve_render_task_id();
                                         let shadow_uv_rect_address = render_tasks[cache_task_id]
                                             .get_texture_address(gpu_cache)
                                             .as_int();
@@ -1443,6 +1443,7 @@ impl AlphaBatchBuilder {
                                         };
 
                                         let (uv_rect_address, textures) = surface
+                                            .expect("bug: surface must be allocated by now")
                                             .resolve(
                                                 render_tasks,
                                                 ctx.resource_cache,
@@ -1484,12 +1485,6 @@ impl AlphaBatchBuilder {
                                 // This is basically the same as the general filter case above
                                 // except we store a little more data in the filter mode and
                                 // a gpu cache handle in the user data.
-                                let surface = ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: surface must be allocated by now");
-
-
                                 let filter_data = &ctx.data_stores.filter_data[handle];
                                 let filter_mode : i32 = 13 |
                                     ((filter_data.data.r_func.to_int() << 28 |
@@ -1500,6 +1495,7 @@ impl AlphaBatchBuilder {
                                 let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
 
                                 let (uv_rect_address, textures) = surface
+                                    .expect("bug: surface must be allocated by now")
                                     .resolve(
                                         render_tasks,
                                         ctx.resource_cache,
@@ -1535,12 +1531,48 @@ impl AlphaBatchBuilder {
                                     PrimitiveInstanceData::from(instance),
                                 );
                             }
+                            PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
+                                let (uv_rect_address, textures) = surface
+                                    .expect("bug: surface must be allocated by now")
+                                    .resolve(
+                                        render_tasks,
+                                        ctx.resource_cache,
+                                        gpu_cache,
+                                    );
+                                let key = BatchKey::new(
+                                    BatchKind::Brush(
+                                        BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
+                                    ),
+                                    BlendMode::Advanced(mode),
+                                    textures,
+                                );
+                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                    ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                    RasterizationSpace::Local as i32,
+                                    get_shader_opacity(1.0),
+                                    0,
+                                ]);
+
+                                let instance = BrushInstance {
+                                    prim_header_index,
+                                    clip_task_address,
+                                    segment_index: INVALID_SEGMENT_INDEX,
+                                    edge_flags: EdgeAaSegmentMask::empty(),
+                                    brush_flags,
+                                    user_data: uv_rect_address.as_int(),
+                                };
+
+                                self.current_batch_list().push_single_instance(
+                                    key,
+                                    bounding_rect,
+                                    z_id,
+                                    PrimitiveInstanceData::from(instance),
+                                );
+                            }
                             PictureCompositeMode::MixBlend(mode) => {
-                                let surface = ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: surface must be allocated by now");
-                                let cache_task_id = surface.resolve_render_task_id();
+                                let cache_task_id = surface
+                                    .expect("bug: surface must be allocated by now")
+                                    .resolve_render_task_id();
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 let key = BatchKey::new(
@@ -1580,11 +1612,9 @@ impl AlphaBatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
-                                let surface = ctx.surfaces[raster_config.surface_index.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: surface must be allocated by now");
-                                let cache_task_id = surface.resolve_render_task_id();
+                                let cache_task_id = surface
+                                    .expect("bug: surface must be allocated by now")
+                                    .resolve_render_task_id();
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();

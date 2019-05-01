@@ -26,6 +26,8 @@ fn main() {
         "GL_EXT_debug_marker",
         "GL_EXT_texture_filter_anisotropic",
         "GL_KHR_debug",
+        "GL_KHR_blend_equation_advanced",
+        "GL_KHR_blend_equation_advanced_coherent",
     ];
     let gl_reg = Registry::new(
         Api::Gl,
@@ -47,12 +49,14 @@ fn main() {
         "GL_EXT_texture_filter_anisotropic",
         "GL_EXT_texture_format_BGRA8888",
         "GL_EXT_texture_storage",
-        "GL_KHR_debug",
         "GL_OES_EGL_image_external",
         "GL_OES_EGL_image",
         "GL_OES_texture_half_float",
         "GL_EXT_shader_pixel_local_storage",
         "GL_ANGLE_provoking_vertex",
+        "GL_KHR_debug",
+        "GL_KHR_blend_equation_advanced",
+        "GL_KHR_blend_equation_advanced_coherent",
     ];
     let gles_reg = Registry::new(
         Api::Gles2,
