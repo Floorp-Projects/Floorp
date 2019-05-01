@@ -163,12 +163,23 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
   bool runAsLauncher = DoLauncherProcessChecks(argc, argv);
 
 #if defined(MOZ_LAUNCHER_PROCESS)
+  bool forceLauncher = runAsLauncher &&
+                       mozilla::CheckArg(argc, argv, L"force-launcher",
+                                         static_cast<const wchar_t**>(nullptr),
+                                         mozilla::CheckArgFlag::RemoveArg) ==
+                       mozilla::ARG_FOUND;
+
   mozilla::LauncherRegistryInfo::ProcessType desiredType =
       runAsLauncher ? mozilla::LauncherRegistryInfo::ProcessType::Launcher
                     : mozilla::LauncherRegistryInfo::ProcessType::Browser;
+
+  mozilla::LauncherRegistryInfo::CheckOption checkOption =
+      forceLauncher ? mozilla::LauncherRegistryInfo::CheckOption::Force
+                    : mozilla::LauncherRegistryInfo::CheckOption::Default;
+
   mozilla::LauncherRegistryInfo regInfo;
   mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType>
-      runAsType = regInfo.Check(desiredType);
+      runAsType = regInfo.Check(desiredType, checkOption);
 
   if (runAsType.isErr()) {
     mozilla::HandleLauncherError(runAsType);
@@ -178,12 +189,6 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
   runAsLauncher = runAsType.unwrap() ==
                   mozilla::LauncherRegistryInfo::ProcessType::Launcher;
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
-
-  // We must check for force-launcher *after* we do LauncherRegistryInfo checks
-  runAsLauncher |=
-      mozilla::CheckArg(argc, argv, L"force-launcher",
-                        static_cast<const wchar_t**>(nullptr),
-                        mozilla::CheckArgFlag::RemoveArg) == mozilla::ARG_FOUND;
 
   if (!runAsLauncher) {
     // In this case, we will be proceeding to run as the browser.

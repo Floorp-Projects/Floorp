@@ -32,13 +32,20 @@ class LauncherRegistryInfo final {
     ForceDisabled = 2,
   };
 
+  enum class CheckOption {
+    Default,
+    Force,
+  };
+
   LauncherRegistryInfo() : mBinPath(GetFullBinaryPath().get()) {}
 
   LauncherVoidResult ReflectPrefToRegistry(const bool aEnable);
   LauncherResult<EnabledState> IsEnabled();
   LauncherResult<bool> IsTelemetryEnabled();
   LauncherVoidResult ReflectTelemetryPrefToRegistry(const bool aEnable);
-  LauncherResult<ProcessType> Check(const ProcessType aDesiredType);
+  LauncherResult<ProcessType> Check(const ProcessType aDesiredType,
+                                    const CheckOption aOption =
+                                      CheckOption::Default);
   LauncherVoidResult DisableDueToFailure();
 
  private:
