@@ -90,6 +90,7 @@ def make_task_description(config, jobs):
 
         is_nightly = dep_job.attributes.get(
             'nightly', dep_job.attributes.get('shippable', False))
+        build_platform = dep_job.attributes.get('build_platform')
         treeherder = None
         if 'partner' not in config.kind and 'eme-free' not in config.kind:
             treeherder = job.get('treeherder', {})
@@ -97,7 +98,6 @@ def make_task_description(config, jobs):
             dep_th_platform = dep_job.task.get('extra', {}).get(
                 'treeherder', {}).get('machine', {}).get('platform', '')
             build_type = dep_job.attributes.get('build_type')
-            build_platform = dep_job.attributes.get('build_platform')
             treeherder.setdefault('platform', _generate_treeherder_platform(
                 dep_th_platform, build_platform, build_type
             ))
@@ -118,7 +118,7 @@ def make_task_description(config, jobs):
             "Initial Signing for locale '{locale}' for build '"
             "{build_platform}/{build_type}'".format(
                 locale=attributes.get('locale', 'en-US'),
-                build_platform=attributes.get('build_platform'),
+                build_platform=build_platform,
                 build_type=attributes.get('build_type')
             )
         )
@@ -131,13 +131,14 @@ def make_task_description(config, jobs):
             attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
         signing_cert_scope = get_signing_cert_scope_per_platform(
-            dep_job.attributes.get('build_platform'), is_nightly, config
+            build_platform, is_nightly, config
         )
+        worker_type = get_worker_type_for_scope(config, signing_cert_scope)
 
         task = {
             'label': label,
             'description': description,
-            'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
+            'worker-type': worker_type,
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': job['upstream-artifacts'],
                        'max-run-time': job.get('max-run-time', 3600)},
