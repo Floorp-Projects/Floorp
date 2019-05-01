@@ -2059,9 +2059,11 @@ void nsJSContext::MaybePokeCC() {
     return;
   }
 
-  uint32_t sinceLastCCEnd = TimeUntilNow(sLastCCEndTime);
-  if (sinceLastCCEnd && sinceLastCCEnd < NS_CC_DELAY) {
-    return;
+  if (!sLastCCEndTime.IsNull()) {
+    uint32_t sinceLastCCEnd = TimeUntilNow(sLastCCEndTime);
+    if (sinceLastCCEnd < NS_CC_DELAY) {
+      return;
+    }
   }
 
   // If GC hasn't run recently and forget skippable only cycle was run,
