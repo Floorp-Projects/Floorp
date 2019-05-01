@@ -9156,7 +9156,7 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
   MOZ_ASSERT(aDocShell);
 
   // Simulate receiver context for web platform test
-  if (Preferences::GetBool("dom.presentation.testing.simulate-receiver")) {
+  if (StaticPrefs::dom_presentation_testing_simulate_receiver()) {
     RefPtr<Document> doc;
 
     nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
