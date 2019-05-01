@@ -167,6 +167,7 @@ var UrlbarUtils = {
       return { url, postData, mayInheritPrincipal };
     }
 
+    await Services.search.init();
     let engine = Services.search.getEngineByAlias(keyword);
     if (engine) {
       let submission = engine.getSubmission(param, null, "keyword");
