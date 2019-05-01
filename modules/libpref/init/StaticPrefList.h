@@ -663,6 +663,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Enable requestIdleCallback API
+VARCACHE_PREF(
+  "dom.requestIdleCallback.enabled",
+   dom_requestIdleCallback_enabled,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------
