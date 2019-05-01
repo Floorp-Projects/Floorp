@@ -459,6 +459,14 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Enable Performance API
+// Whether nonzero values can be returned from performance.timing.*
+VARCACHE_PREF(
+  "dom.enable_performance",
+   dom_enable_performance,
+  bool, true
+)
+
 // Enable Performance Observer API
 VARCACHE_PREF(
   "dom.enable_performance_observer",

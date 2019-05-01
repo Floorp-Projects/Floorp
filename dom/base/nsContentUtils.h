@@ -2343,13 +2343,6 @@ class nsContentUtils {
   /*
    * Returns true if the performance timing APIs are enabled.
    */
-  static bool IsPerformanceTimingEnabled() {
-    return sIsPerformanceTimingEnabled;
-  }
-
-  /*
-   * Returns true if the performance timing APIs are enabled.
-   */
   static bool IsResourceTimingEnabled() { return sIsResourceTimingEnabled; }
 
   /*
@@ -3485,7 +3478,6 @@ class nsContentUtils {
   static bool sIsHandlingKeyBoardEvent;
   static bool sAllowXULXBL_for_file;
   static uint32_t sHandlingInputTimeout;
-  static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
   static bool sIsPerformanceNavigationTimingEnabled;
   static bool sIsUpgradableDisplayContentPrefEnabled;
