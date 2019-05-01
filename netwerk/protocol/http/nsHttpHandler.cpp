@@ -104,7 +104,6 @@
 #define HTTP_PREF_PREFIX "network.http."
 #define INTL_ACCEPT_LANGUAGES "intl.accept_languages"
 #define BROWSER_PREF_PREFIX "browser.cache."
-#define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
 #define H2MANDATORY_SUITE "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256"
 #define SAFE_HINT_HEADER_VALUE "safeHint.enabled"
 #define SECURITY_PREFIX "security."
@@ -253,7 +252,6 @@ nsHttpHandler::nsHttpHandler()
       mAcceptLanguagesIsDirty(true),
       mPromptTempRedirect(true),
       mEnablePersistentHttpsCaching(false),
-      mDoNotTrackEnabled(false),
       mSafeHintEnabled(false),
       mParentalControlEnabled(false),
       mHandlerActive(false),
@@ -440,7 +438,6 @@ static const char* gCallbackPrefs[] = {
     UA_PREF_PREFIX,
     INTL_ACCEPT_LANGUAGES,
     BROWSER_PREF("disk_cache_ssl"),
-    DONOTTRACK_HEADER_ENABLED,
     H2MANDATORY_SUITE,
     HTTP_PREF("tcp_keepalive.short_lived_connections"),
     HTTP_PREF("tcp_keepalive.long_lived_connections"),
@@ -1762,13 +1759,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   // Tracking options
   //
 
-  if (PREF_CHANGED(DONOTTRACK_HEADER_ENABLED)) {
-    cVar = false;
-    rv = Preferences::GetBool(DONOTTRACK_HEADER_ENABLED, &cVar);
-    if (NS_SUCCEEDED(rv)) {
-      mDoNotTrackEnabled = cVar;
-    }
-  }
   // Hint option
   if (PREF_CHANGED(SAFE_HINT_HEADER_VALUE)) {
     cVar = false;
@@ -2210,7 +2200,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     // depend on this value.
     mSessionStartTime = NowInSeconds();
 
-    if (!mDoNotTrackEnabled) {
+    if (!StaticPrefs::privacy_donottrackheader_enabled()) {
       Telemetry::Accumulate(Telemetry::DNT_USAGE, 2);
     } else {
       Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);

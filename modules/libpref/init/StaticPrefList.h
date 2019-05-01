@@ -2356,6 +2356,13 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 0
 )
 
+// send "do not track" HTTP header, disabled by default
+VARCACHE_PREF(
+  "privacy.donottrackheader.enabled",
+   privacy_donottrackheader_enabled,
+  bool, false
+)
+
 // Lower the priority of network loads for resources on the tracking protection
 // list.  Note that this requires the
 // privacy.trackingprotection.annotate_channels pref to be on in order to have

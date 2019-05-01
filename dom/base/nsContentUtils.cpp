@@ -334,8 +334,6 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
-bool nsContentUtils::sDoNotTrackEnabled = false;
-
 bool nsContentUtils::sAntiTrackingControlCenterUIEnabled = false;
 
 mozilla::LazyLogModule nsContentUtils::sDOMDumpLog("Dump");
@@ -617,9 +615,6 @@ nsresult nsContentUtils::Init() {
 
   Preferences::AddBoolVarCache(&sAllowXULXBL_for_file,
                                "dom.allow_XUL_XBL_for_file");
-
-  Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
-                               "privacy.donottrackheader.enabled", false);
 
   Preferences::AddBoolVarCache(&sUseActivityCursor, "ui.use_activity_cursor",
                                false);
@@ -6971,10 +6966,6 @@ bool nsContentUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
          (aName.LowerCaseEqualsLiteral("content-type") &&
           nsContentUtils::IsAllowedNonCorsContentType(aValue));
-}
-
-bool nsContentUtils::DoNotTrackEnabled() {
-  return nsContentUtils::sDoNotTrackEnabled;
 }
 
 mozilla::LogModule* nsContentUtils::DOMDumpLog() { return sDOMDumpLog; }
