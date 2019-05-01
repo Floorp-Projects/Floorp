@@ -474,6 +474,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Whether resource timing will be gathered and returned by performance.GetEntries*
+VARCACHE_PREF(
+  "dom.enable_resource_timing",
+   dom_enable_resource_timing,
+  bool, true
+)
+
 // Render animations and videos as a solid color
 VARCACHE_PREF(
   "browser.measurement.render_anims_and_video_solid",
