@@ -11,16 +11,6 @@ interface nsIContentSignatureReceiverCallback;
  * An interface for verifying content-signatures, inspired by
  * https://tools.ietf.org/html/draft-thomson-http-content-signature-00
  * described here https://github.com/franziskuskiefer/content-signature/tree/pki
- *
- * A new signature verifier instance should be created for each signature
- * verification - you can create these instances with do_CreateInstance.
- *
- * There are two ways to use this functionality:
- * The first allows a signature to be verified all at once by simply calling
- * verifyContentSignature.
- * The second allows for streaming; call createContext with the signature
- * information (and initial data), call update with more data as it becomes
- * available then, finally, call end to verify the signature.
  */
 [scriptable, uuid(45a5fe2f-c350-4b86-962d-02d5aaaa955a)]
 interface nsIContentSignatureVerifier : nsISupports
@@ -35,7 +25,7 @@ interface nsIContentSignatureVerifier : nsISupports
    *                                url-safe base64 encoded.
    * @param aCertificateChain       The certificate chain to use for verification.
    *                                PEM encoded string.
-   * @param aName                   The (host)name for which the end entity must
+   * @param aHostname               The hostname for which the end entity must
                                     be valid.
    * @returns true if the signature matches the data and aCertificateChain is
    *          valid within aContext, false if not.
@@ -44,78 +34,5 @@ interface nsIContentSignatureVerifier : nsISupports
   boolean verifyContentSignature(in ACString aData,
                                  in ACString aContentSignatureHeader,
                                  in ACString aCertificateChain,
-                                 in ACString aName);
-
-  /**
-   * Creates a context to verify a content signature against data that is added
-   * later with update calls.
-   *
-   * @param aData                   The first chunk of data to be tested.
-   * @param aContentSignatureHeader The signature of the data, url-safe base64
-   *                                encoded.
-   * @param aCertificateChain       The certificate chain to use for
-   *                                verification. PEM encoded string.
-   * @param aName                   The (host)name for which the end entity must
-                                    be valid.
-   */
-  [must_use]
-  void createContext(in ACString aData, in ACString aContentSignatureHeader,
-                     in ACString aCertificateChain, in ACString aName);
-
-  /**
-   * Creates a context to verify a content signature against data that is added
-   * later with update calls.
-   * This does not require the caller to download the certificate chain. It's
-   * done internally.
-   * It requires the x5u parameter to be present in aContentSignatureHeader
-   *
-   * NOTE: Callers have to wait for aCallback to return before invoking anything
-   *       else. Otherwise the ContentSignatureVerifier will fail.
-   *
-   * @param aCallback               Callback that's invoked when the cert chain
-   *                                got fetched.
-   * @param aContentSignatureHeader The signature of the data, url-safe base64
-   *                                encoded, and the x5u value.
-   * @param aName                   The (host)name for which the end entity must
-                                    be valid.
-   */
-  [must_use]
-  void createContextWithoutCertChain(in nsIContentSignatureReceiverCallback aCallback,
-                                     in ACString aContentSignatureHeader,
-                                     in ACString aName);
-
-  /**
-   * Adds data to the context that was used to generate the signature.
-   *
-   * @param aData        More data to be tested.
-   */
-  [must_use]
-  void update(in ACString aData);
-
-  /**
-   * Finalises the signature and returns the result of the signature
-   * verification.
-   *
-   * @returns true if the signature matches the data added with createContext
-   *          and update, false if not.
-   */
-  [must_use]
-  boolean end();
-};
-
-/**
- * Callback for nsIContentSignatureVerifier.
- * { 0x1eb90707, 0xdf59, 0x48b7, \
- *   { 0x9d, 0x42, 0xd8, 0xbf, 0x63, 0x0a, 0xe7, 0x44 } }
- */
-[scriptable, uuid(1eb90707-df59-48b7-9d42-d8bf630ae744)]
-interface nsIContentSignatureReceiverCallback : nsISupports
-{
-  /**
-   * Notification callback that's called by nsIContentSignatureVerifier when
-   * the cert chain is downloaded.
-   * If download and initialisation were successful, successful is true,
-   * otherwise false. If successful is false, the verification must be aborted.
-   */
-  void contextCreated(in boolean successful);
+                                 in ACString aHostname);
 };
