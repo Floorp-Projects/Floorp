@@ -568,11 +568,16 @@ static inline const char* ToCString(ValType type) {
 class AnyRef {
   JSObject* value_;
 
+  explicit AnyRef() : value_((JSObject*)-1) {}
   explicit AnyRef(JSObject* p) : value_(p) {
     MOZ_ASSERT(((uintptr_t)p & 0x03) == 0);
   }
 
  public:
+  // An invalid AnyRef cannot arise naturally from wasm and so can be used as
+  // a sentinel value to indicate failure from an AnyRef-returning function.
+  static AnyRef invalid() { return AnyRef(); }
+
   // Given a void* that comes from compiled wasm code, turn it into AnyRef.
   static AnyRef fromCompiledCode(void* p) { return AnyRef((JSObject*)p); }
 
@@ -1905,7 +1910,12 @@ enum class SymbolicAddress {
 // (and if so, which one) which signals that the C++ calle has already
 // reported an error and thus wasm needs to wasmTrap(Trap::ThrowReported).
 
-enum class FailureMode : uint8_t { Infallible, FailOnNegI32, FailOnNullPtr };
+enum class FailureMode : uint8_t {
+  Infallible,
+  FailOnNegI32,
+  FailOnNullPtr,
+  FailOnInvalidRef
+};
 
 // SymbolicAddressSignature carries type information for a function referred
 // to by a SymbolicAddress.  In order that |argTypes| can be written out as a
