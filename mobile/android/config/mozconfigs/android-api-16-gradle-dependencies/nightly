@@ -31,6 +31,8 @@ ac_add_options --disable-tests
 ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
+export FENNEC_NIGHTLY=1
+
 ac_add_options --with-branding=mobile/android/branding/nightly
 
 export MOZILLA_OFFICIAL=1
